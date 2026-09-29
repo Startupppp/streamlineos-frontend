@@ -91,6 +91,16 @@ describe("EmptyState — semantic structure", () => {
     expect(container.firstElementChild).not.toHaveClass("border-dashed");
   });
 
+  it("fills the content pane like Teams when not compact", () => {
+    const { container } = render(
+      <EmptyState title="No teams yet" className="min-h-full" />,
+    );
+    expect(container.firstElementChild).toHaveClass("min-h-full");
+    expect(container.firstElementChild).toHaveClass("flex-1");
+    expect(container.firstElementChild).toHaveClass("w-full");
+    expect(container.firstElementChild).toHaveClass("border-dashed");
+  });
+
   it("shows the default illustration so the empty state is never a blank canvas", () => {
     render(<EmptyState title="No data" />);
     expect(screen.getByTestId("state-illustration")).toBeInTheDocument();

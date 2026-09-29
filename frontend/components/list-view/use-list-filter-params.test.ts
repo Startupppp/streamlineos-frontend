@@ -186,6 +186,27 @@ describe("list filter params, driven by a spec", () => {
     expect(mockReplace).toHaveBeenCalledTimes(1);
   });
 
+  it("does not resurrect committed search text when the URL is cleared back to its original value", () => {
+    jest.useFakeTimers();
+    const { result, rerender } = renderWith("");
+
+    act(() => result.current.setSearch("annual"));
+    act(() => {
+      jest.advanceTimersByTime(300);
+    });
+
+    mockSearchParams = new URLSearchParams("search=annual");
+    window.history.replaceState(null, "", "/payroll/runs?search=annual");
+    rerender();
+    expect(result.current.localSearch).toBe("annual");
+
+    mockSearchParams = new URLSearchParams();
+    window.history.replaceState(null, "", "/payroll/runs");
+    rerender();
+
+    expect(result.current.localSearch).toBe("");
+  });
+
   it("holds the navigation at 299 ms and releases it on the 300th, so a shorter debounce fails this test", () => {
     jest.useFakeTimers();
     const { result } = renderWith("");

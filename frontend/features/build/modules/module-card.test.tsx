@@ -15,6 +15,7 @@ const moduleRecord: Module = {
   createdBy: "user-1",
   createdAt: null,
   updatedAt: null,
+  version: 1,
 };
 
 it("opens the module as an Issues filter", () => {

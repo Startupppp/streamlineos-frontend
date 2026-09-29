@@ -68,7 +68,8 @@ jest.mock("@animateicons/react/lucide", () => ({
   PlusIcon: ({ ...props }: React.HTMLAttributes<HTMLElement>) => <span {...props} />,
 }));
 
-const mockUseBuildListKeyboard = jest.fn(() => ({ focusedIndex: null, setFocusedIndex: jest.fn() }));
+const defaultKeyboardResult: { focusedIndex: number | null; setFocusedIndex: jest.Mock } = { focusedIndex: null, setFocusedIndex: jest.fn() };
+const mockUseBuildListKeyboard = jest.fn(() => defaultKeyboardResult);
 jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
   useBuildListKeyboard: (...args: Parameters<typeof mockUseBuildListKeyboard>) =>
     mockUseBuildListKeyboard(...args),

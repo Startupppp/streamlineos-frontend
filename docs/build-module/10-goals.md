@@ -102,5 +102,21 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 - [x] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
 - [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
+- [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass.
+- [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data.
+
+### Local browser evidence — 2026-09-29 (partial; release criteria remain open)
+
+- On authenticated local Build QA, `/build/goals` rendered the Goals & OKRs
+  page. Searching for `zz-no-match-qa-sentinel` produced the filtered-empty
+  message; clearing the search input restored the empty-data state and removed
+  `q` from the URL after the debounce. No goal data was created or changed.
+- Direct navigation to the separately specified project projection
+  `/build/6/goals` rendered “Page Not Found”. This is a reproducible route gap,
+  not acceptance evidence for the project Goals contract.
+- This local pass does not verify keyboard/screen-reader behavior,
+  reduced-motion, mobile/high-density layouts, production API state, or
+  ready/error/denied/conflict handling. The two browser acceptance boxes above
+  remain unchecked.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
 - [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).

@@ -36,7 +36,14 @@ export function BuildSidebarSkeleton({
         ))}
       </div>
 
-      <div className={cn("pt-2", isCollapsed ? "space-y-1" : "space-y-0.5")}>
+      <div
+        className={cn(
+          "pt-2",
+          isCollapsed
+            ? "flex flex-col items-center gap-1"
+            : "space-y-0.5",
+        )}
+      >
         {Array.from({ length: 3 }).map((_, index) => (
           <NavRowSkeleton key={index} isCollapsed={isCollapsed} />
         ))}

@@ -8,7 +8,7 @@ const mockUseSearchParams = jest.fn(() => new URLSearchParams());
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: jest.fn(), push: mockRouterPush }),
   usePathname: () => "/build/managed-products/42",
-  useSearchParams: (...args: unknown[]) => mockUseSearchParams(...args),
+  useSearchParams: () => mockUseSearchParams(),
 }));
 
 jest.mock("@/features/build/shared/use-build-list-filters", () => ({

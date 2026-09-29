@@ -330,7 +330,7 @@ two and is an owner decision, not an oversight.
 
 ## B7 — The effect set follows what changed, not which route changed it
 
-**PARTIAL.**
+**DONE.**
 
 - [x] `applyTicketChange` exists and owns the detail route's effect set; `check:ticket-write-module`
       gates writes through it (tickets 43, 45).
@@ -339,12 +339,32 @@ two and is an owner decision, not an oversight.
       `applyTicketChange`'s transaction committed and need no transaction-scoped write, which is what
       let them extract without disturbing the one path that was already correct. The activity write
       runs inside `withSavepoint`, so a failure cannot return 200 over a rolled-back write.
-- [ ] **Bulk still has its 2-effect gap.** The blocker is specific: `notifyNewAssignees` reads one
-      ticket per call, so wiring it to bulk's N tickets is an N+1 (BE-47), and a field-level activity
-      row needs `title`/`type`/`reporterId` that `readMutationTickets` does not project. Unblocking
-      means extending that projection first — a change affecting every caller of
-      `build-ticket-mutation-policy`, which deserves its own pass.
-      **NOT EARNED 2026-09-29 — bulk dispatches two of the four effect families. Earned by extending `readMutationTickets`' projection with `title`/`type`/`reporterId` and widening `BulkTicketEffectDeps`, which touches every caller of `build-ticket-mutation-policy` and deserves its own pass.**
+- [x] **Bulk closes its 2-effect gap** (commit `23db19e26`). `BulkTicketEffectDeps` now carries
+      `activity`, `dispatch` and `transfer` alongside `webhooksDispatch` and `automationRunner`, so a
+      bulk status change writes its `ticket_activity_log` row and sends the IN_REVIEW /
+      CHANGES_REQUESTED notification, and a bulk assignee change notifies the new assignee.
+      Both named blockers were solved rather than routed around. The one-ticket-at-a-time notifier
+      got a batch entry point: `ProjectsTicketsTransferService.notifyAssignedTickets`
+      (`backend/src/modules/build/core/tickets/projects-tickets-transfer.service.ts:237`) takes the
+      whole ticket set and resolves tickets and project keys in two queries whatever the set size,
+      with its own explicit 100-row cap; `notifyNewAssignees` now resolves the target set from the
+      update input and delegates to it. `readMutationTickets`' projection was *not* widened — bulk
+      instead reads `title`/`type`/`reporterId` once per batch for the rows it updated
+      (`build-ticket-bulk-effects.ts:92`) and reverse-maps the previous assignee memberships in one
+      more query (`:115`), so no caller of `build-ticket-mutation-policy` is touched. Both reads are
+      constant in the batch size, which `projects-bulk-write-isolation.spec.ts` asserts at size 1 and
+      size 100.
+      **Verified 2026-09-29 — `npx jest src/modules/build/core/tickets/` (57 of 58 suites pass; the
+      one failure is another lane's in-flight `projects-ticket-relations-soft-delete.spec.ts`, which
+      touches none of these files) and `pnpm typecheck` (exit 0 at 12GB). It proves that
+      `applyTicketChange` and `bulkMutateTickets`, driven over the same TODO→IN_REVIEW change,
+      produce an identical set of activity, notification and automation effects, and that both
+      routes ask the notifier for the same (ticket, new assignee) pair on an assignee change —
+      `bulk-vs-panel-effect-parity.spec.ts`. It does not prove the webhook family agrees: the detail
+      route publishes its status change through `OutboxWriter` and enqueues only `ticket.updated`,
+      while rank and bulk enqueue a second `ticket.status_changed` webhook. That divergence predates
+      this lane and is not the audit-trail hole this box named. Nothing here was exercised against a
+      database: doubles only, typed against the real services.**
 
 ## B9 — One Build list surface
 

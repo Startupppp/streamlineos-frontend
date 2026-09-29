@@ -254,8 +254,8 @@ describe("ProjectSettingsRetentionPage — box 4: no growable list (BLD-RETENTIO
   it("renders exactly two section navigation buttons — static NAV_SECTIONS collection is bounded at compile time", () => {
     mockAccessState = "granted";
     render(<ProjectSettingsRetentionPage projectId={1} />);
-    const policyTab = screen.getByRole("button", { name: "Policy", exact: true });
-    const holdsTab = screen.getByRole("button", { name: "Legal Holds", exact: true });
+    const policyTab = screen.getByRole("button", { name: "Policy" });
+    const holdsTab = screen.getByRole("button", { name: "Legal Holds" });
     expect(policyTab).toBeInTheDocument();
     expect(holdsTab).toBeInTheDocument();
   });

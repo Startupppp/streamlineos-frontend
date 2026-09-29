@@ -57,7 +57,7 @@ export function useProjectTableColumns({
       {
         key: "name",
         header: "Name",
-        className: "min-w-[200px] w-[240px] max-w-[320px]",
+        className: "min-w-[200px] w-[260px] max-w-[360px]",
         cell: (p) => (
           <div
             className={cn(
@@ -106,7 +106,7 @@ export function useProjectTableColumns({
       cols.push({
         key: "status",
         header: "Status",
-        className: "w-[100px]",
+        className: "w-[120px]",
         cell: (p) => {
           const status = p.status ?? "ACTIVE";
           const displayLabel = projectStatusDisplayLabels[status] ?? status;
@@ -180,7 +180,7 @@ export function useProjectTableColumns({
       cols.push({
         key: "lead",
         header: "Lead",
-        className: "w-[130px]",
+        className: "min-w-[148px] w-[160px]",
         cell: (p) =>
           canEdit ? (
             <InlineProjectLead projectId={p.id} manager={p.manager} />
@@ -199,7 +199,7 @@ export function useProjectTableColumns({
               </Avatar>
               <TruncatedText
                 text={getUserDisplayName(p.manager)}
-                className="max-w-[96px] text-xs text-muted-foreground"
+                className="min-w-0 text-xs text-muted-foreground"
               />
             </div>
           ) : (
@@ -324,19 +324,23 @@ export function useProjectTableColumns({
       cols.push({
         key: "progress",
         header: "Progress",
-        className: "w-[110px]",
+        className: "min-w-[120px] w-[132px]",
         cell: (p) => {
           const progressValue =
-            p.progress.total > 0 ? p.progress.percentage : 0;
+            p.progress.total > 0 ? Math.round(p.progress.percentage) : 0;
           return p.progress.total > 0 ? (
-            <div className="flex items-center gap-2">
+            <div className="flex min-w-0 items-center gap-2">
               <Progress
                 value={progressValue}
                 aria-label={`${p.name} progress`}
-                className="h-1 min-w-0 flex-1"
+                valueLabel={`${progressValue}%`}
+                className="h-1.5 min-w-0 flex-1"
               />
-              <span className="w-7 shrink-0 text-right text-micro tabular-nums text-muted-foreground">
-                {Math.round(progressValue)}%
+              <span
+                aria-hidden="true"
+                className="w-8 shrink-0 text-right font-mono text-micro tabular-nums text-muted-foreground"
+              >
+                {progressValue}%
               </span>
             </div>
           ) : (

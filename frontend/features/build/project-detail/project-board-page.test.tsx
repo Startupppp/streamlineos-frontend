@@ -1,5 +1,6 @@
 import React from "react";
 import { render, screen, act, fireEvent } from "@testing-library/react";
+import type { TicketLabel } from "@/hooks/api/build/labels";
 
 const mockNotFound = jest.fn();
 const mockUse = jest.fn();
@@ -33,8 +34,8 @@ jest.mock("@/hooks/api/access", () => ({
 }));
 
 const mockUseProject = jest.fn();
-const mockUseCycles = jest.fn(() => ({ data: [] }));
-const mockUseBulkUpdateTickets = jest.fn(() => ({ mutate: jest.fn(), isPending: false }));
+const mockUseCycles = jest.fn((..._args: unknown[]) => ({ data: [] }));
+const mockUseBulkUpdateTickets = jest.fn((..._args: unknown[]) => ({ mutate: jest.fn(), isPending: false }));
 
 jest.mock("@/hooks/api/build/projects", () => ({
   useProject: (...args: unknown[]) => mockUseProject(...args),
@@ -48,18 +49,18 @@ jest.mock("@/hooks/api/build/tickets", () => ({
   useBulkUpdateTickets: (...args: unknown[]) => mockUseBulkUpdateTickets(...args),
 }));
 
-const mockUseWorkloadCapacity = jest.fn(() => ({}));
+const mockUseWorkloadCapacity = jest.fn((..._args: unknown[]) => ({}));
 jest.mock("@/hooks/api/build/workload-capacity", () => ({
   useWorkloadCapacity: (...args: unknown[]) => mockUseWorkloadCapacity(...args),
 }));
 
-const mockUseOrgLabels = jest.fn(() => ({ data: [] }));
+const mockUseOrgLabels = jest.fn((..._args: unknown[]) => ({ data: [] as TicketLabel[] }));
 jest.mock("@/hooks/api/build/labels", () => ({
   useOrgLabels: (...args: unknown[]) => mockUseOrgLabels(...args),
 }));
 
 const mockExportMutate = jest.fn();
-const mockUseExportTickets = jest.fn(() => ({ mutate: mockExportMutate, isPending: false }));
+const mockUseExportTickets = jest.fn((..._args: unknown[]) => ({ mutate: mockExportMutate, isPending: false }));
 jest.mock("@/hooks/api/build/ticket-import-export", () => ({
   useExportTickets: (...args: unknown[]) => mockUseExportTickets(...args),
 }));
@@ -200,8 +201,21 @@ jest.mock("@/components/ui/skeleton", () => ({
 }));
 
 jest.mock("@/components/ui/empty-state", () => ({
-  EmptyState: ({ title }: { title?: string }) => (
-    <div data-testid="first-run-empty-state">{title}</div>
+  EmptyState: ({
+    title,
+    action,
+  }: {
+    title?: string;
+    action?: { label: string; onClick?: () => void };
+  }) => (
+    <div data-testid="first-run-empty-state">
+      {title}
+      {action ? (
+        <button type="button" onClick={action.onClick}>
+          {action.label}
+        </button>
+      ) : null}
+    </div>
   ),
 }));
 
@@ -672,5 +686,32 @@ describe("ProjectBoardPage — first-run vs filtered-empty empty state", () => {
     renderPage();
     expect(screen.queryByTestId("first-run-empty-state")).toBeNull();
     expect(screen.getByTestId("project-board-content")).toBeDefined();
+  });
+
+  it("offers a create action inside the first-run empty state when the viewer holds build:tickets:create, so a new project has a route out of the empty board", () => {
+    const handleCreateOpenChange = jest.fn();
+    mockUseCan.mockReturnValue(true);
+    mockUseBoardUrlState.mockReturnValue({
+      ...BOARD_URL_STATE_DEFAULT,
+      showFirstRunState: true,
+      allTickets: [],
+      handleCreateOpenChange,
+    });
+    renderPage();
+    const action = screen.getByRole("button", { name: "Create ticket" });
+    fireEvent.click(action);
+    expect(handleCreateOpenChange).toHaveBeenCalledWith(true);
+  });
+
+  it("offers no create action inside the first-run empty state when the viewer lacks build:tickets:create, the FE-44 fail-closed counterpart", () => {
+    mockUseCan.mockReturnValue(false);
+    mockUseBoardUrlState.mockReturnValue({
+      ...BOARD_URL_STATE_DEFAULT,
+      showFirstRunState: true,
+      allTickets: [],
+    });
+    renderPage();
+    expect(screen.getByTestId("first-run-empty-state")).toBeDefined();
+    expect(screen.queryByRole("button", { name: "Create ticket" })).toBeNull();
   });
 });

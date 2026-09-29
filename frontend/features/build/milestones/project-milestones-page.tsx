@@ -404,46 +404,52 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
                 </div>
               </div>
             )}
-            {milestones.length > 0 ? (
-              <>
-                <PmStaggerList className="space-y-2.5" aria-label="Project milestones">
-                  {milestones.map((m) => (
-                    <MilestoneCard
-                      key={m.id}
-                      milestone={m}
-                      onEdit={handleEditTarget}
-                      onDelete={canManage ? handleDeleteTarget : undefined}
-                      selected={selectedMilestoneIds.has(m.id)}
-                      onSelect={handleMilestoneSelect}
-                    />
-                  ))}
-                </PmStaggerList>
-                {(pagination?.hasMore || pager.hasPrevious) ? (
-                  <TablePagination
-                    mode="cursor"
-                    rowCount={milestones.length}
-                    hasMore={pagination?.hasMore ?? false}
-                    hasPrevious={pager.hasPrevious}
-                    onNext={() => pager.goNext(pagination?.nextCursor)}
-                    onPrevious={pager.goPrevious}
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+              <div className="min-h-0 flex-1 overflow-y-auto">
+                {milestones.length > 0 ? (
+                  <PmStaggerList className="space-y-2.5" aria-label="Project milestones">
+                    {milestones.map((m) => (
+                      <MilestoneCard
+                        key={m.id}
+                        milestone={m}
+                        onEdit={handleEditTarget}
+                        onDelete={canManage ? handleDeleteTarget : undefined}
+                        selected={selectedMilestoneIds.has(m.id)}
+                        onSelect={handleMilestoneSelect}
+                      />
+                    ))}
+                  </PmStaggerList>
+                ) : (
+                  <EmptyState
+                    className={CONTENT_FILL_PANEL}
+                    illustrationPreset="projects"
+                    title="No milestones yet"
+                    description={
+                      listFilters.isFiltered
+                        ? undefined
+                        : "Add milestones to track key checkpoints and target dates."
+                    }
+                    filtersActive={listFilters.isFiltered}
+                    onClearFilters={listFilters.clearAll}
+                    action={
+                      listFilters.isFiltered || !canManage
+                        ? undefined
+                        : { label: "Add Milestone", onClick: handleOpenCreate }
+                    }
                   />
-                ) : null}
-              </>
-            ) : (
-              <EmptyState
-                  className={CONTENT_FILL_PANEL}
-                  illustrationPreset="projects"
-                  title="No milestones yet"
-                  description={
-                    listFilters.isFiltered
-                      ? undefined
-                      : "Add milestones to track key checkpoints and target dates."
-                  }
-                  filtersActive={listFilters.isFiltered}
-                  onClearFilters={listFilters.clearAll}
-                  action={listFilters.isFiltered || !canManage ? undefined : { label: "Add Milestone", onClick: handleOpenCreate }}
+                )}
+              </div>
+              {milestones.length > 0 || pager.hasPrevious ? (
+                <TablePagination
+                  mode="cursor"
+                  rowCount={milestones.length}
+                  hasMore={pagination?.hasMore ?? false}
+                  hasPrevious={pager.hasPrevious}
+                  onNext={() => pager.goNext(pagination?.nextCursor)}
+                  onPrevious={pager.goPrevious}
                 />
-            )}
+              ) : null}
+            </div>
           </PmSection>
 
         {createOpen ? (

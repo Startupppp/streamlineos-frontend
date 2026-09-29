@@ -105,3 +105,14 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
 - [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
+
+### Local browser evidence — 2026-09-29 (partial; release criteria remain open)
+
+- Authenticated local Build QA Sandbox `/build/6/updates` showed the empty
+  updates state. Keyboard focus reached **Post Update**; Enter opened the form.
+  Submitting with the required Update body blank showed “Update body is
+  required” and returned focus to that field. Escape closed the sheet and
+  restored focus to **Post Update**. No update was created.
+- Valid posting/editing, API error/conflict, permissions, screen-reader,
+  responsive and production behavior remain unverified; acceptance boxes
+  remain unchecked.

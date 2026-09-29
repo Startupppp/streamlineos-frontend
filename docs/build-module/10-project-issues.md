@@ -396,4 +396,28 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
     ```
 
   - **BROWSER-ONLY** and NOT ticked: `Tab` focus order, focus management in overlays, screen-reader output, `prefers-reduced-motion`, real 375 px layout, and high-density desktop. jsdom cannot observe any of them (FE-123).
+- [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data.
+
+### Local browser evidence — 2026-09-29 (partial; release criteria remain open)
+
+- `/build/6/issues`, authenticated local Build QA Sandbox: searched for a unique
+  no-match sentinel and observed the filtered-empty message. Activating
+  **Clear all filters** with keyboard Space removed `q` from the URL and
+  restored the ticket board, but the search field retained the sentinel.
+- Fixed the stale local search draft in
+  `frontend/components/list-view/use-list-filter-params.ts`; the regression
+  first failed, then the focused hook suite passed 24/24. Repeated the same
+  browser sequence after hot reload: `q` was removed, tickets returned, and
+  the search field was empty. The separate **Clear search** control also
+  removed the query and restored tickets.
+- This verifies one local filtered-empty/search-clear flow only. It does not
+  establish the production, authorization, error/denied/conflict, responsive,
+  or broader accessibility criteria above.
+- Separately inspected the populated board at an explicit 375 × 812 viewport:
+  the mobile module bar is present, issue cards/columns remain reachable via
+  horizontal board scrolling, and the core search/view/filter controls fit the
+  mobile toolbar. This is one visual check, not full mobile or zoom acceptance.
+- At 320 × 700, the Issues toolbar wraps into a second row and the mobile module
+  bar stays visible; at 768 × 900, the board retains its horizontally scrollable
+  columns. This is breakpoint spot-check evidence only.
 - [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; see the open non-browser box above).

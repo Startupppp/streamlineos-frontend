@@ -65,7 +65,7 @@ export const InlineProjectLead = memo(function InlineProjectLead({
           </Avatar>
           <TruncatedText
             text={leadName}
-            className="max-w-[96px] text-xs text-muted-foreground"
+            className="min-w-0 text-xs text-muted-foreground"
           />
         </div>
       ) : (

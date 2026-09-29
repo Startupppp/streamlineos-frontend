@@ -22,6 +22,8 @@ import {
   PmPageShell,
   PmSection,
   PmStaggerList,
+  CONTENT_FILL_PANEL,
+  PM_FILL_SECTION,
 } from "@/components/pm-chrome";
 import { TriageRow } from "./triage-row";
 import type { Ticket } from "@/types/projects";
@@ -263,43 +265,46 @@ export function TriagePage({ projectId }: TriagePageProps) {
         resolution={pageState}
         loading={<TriagePageLoading />}
         onRetry={handleRetry}
-        className="flex-1"
+        className={CONTENT_FILL_PANEL}
       >
         <PmPageShell>
           {tickets.length === 0 ? (
-            <EmptyState
-              illustrationPreset="tasks"
-              title="Nothing to triage"
-              description="All issues have been processed. New issues added to the backlog will appear here."
-              className="flex-1"
-              compact={false}
-            />
+            <PmSection index={0} className={PM_FILL_SECTION}>
+              <EmptyState
+                illustrationPreset="tasks"
+                title="Nothing to triage"
+                description="All issues have been processed. New issues added to the backlog will appear here."
+                className={CONTENT_FILL_PANEL}
+              />
+            </PmSection>
           ) : (
-            <PmSection index={0}>
+            <PmSection index={0} className={PM_FILL_SECTION}>
               {canUpdate && selectedIds.size > 0 && (
                 <BulkActionBar selectedCount={selectedIds.size} members={members} cycles={cycles ?? []} statuses={project?.statuses} onBulkStatus={handleBulkStatus} onBulkPriority={handleBulkPriority} onBulkAssignee={handleBulkAssignee} onBulkCycle={handleBulkCycle} onClear={handleClearTriageKeyboard} />
               )}
-              <PmStaggerList className="flex flex-col gap-2.5">
-                {tickets.map((ticket, index) => (
-                  <div key={ticket.id} className="flex items-start gap-2">
-                    {canUpdate && (
-                      <Checkbox className="mt-4 shrink-0" checked={selectedIds.has(ticket.id)} onCheckedChange={() => handleToggleSelect(ticket.id)} aria-label={`Select ticket ${ticket.ticketNumber}`} />
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <TriageRow
-                        ticket={ticket}
-                        projectKey={project?.key}
-                        isAccepting={pendingAccept.has(ticket.id)}
-                        isDeclining={pendingDecline.has(ticket.id)}
-                        onAccept={handleAccept}
-                        onDecline={handleDecline}
-                        onOpen={handleOpen}
-                        isSelected={triageFocusedIndex === index}
-                      />
+              <div className="min-h-0 flex-1 overflow-y-auto">
+                <PmStaggerList className="flex flex-col gap-2.5">
+                  {tickets.map((ticket, index) => (
+                    <div key={ticket.id} className="flex items-start gap-2">
+                      {canUpdate && (
+                        <Checkbox className="mt-4 shrink-0" checked={selectedIds.has(ticket.id)} onCheckedChange={() => handleToggleSelect(ticket.id)} aria-label={`Select ticket ${ticket.ticketNumber}`} />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <TriageRow
+                          ticket={ticket}
+                          projectKey={project?.key}
+                          isAccepting={pendingAccept.has(ticket.id)}
+                          isDeclining={pendingDecline.has(ticket.id)}
+                          onAccept={handleAccept}
+                          onDecline={handleDecline}
+                          onOpen={handleOpen}
+                          isSelected={triageFocusedIndex === index}
+                        />
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </PmStaggerList>
+                  ))}
+                </PmStaggerList>
+              </div>
               <TablePagination
                 mode="cursor"
                 rowCount={tickets.length}

@@ -61,7 +61,9 @@ function toHexChannel(value: number): string {
 }
 
 function rawDeclaration(css: string, tokenName: string): string | undefined {
-  const pattern = new RegExp(String.raw`--${tokenName}:\s*([^;]+);`);
+  const pattern = new RegExp(
+    String.raw`(?:^|[^a-zA-Z0-9-])--${tokenName}:\s*([^;]+);`,
+  );
   return pattern.exec(css)?.[1].trim();
 }
 
@@ -155,17 +157,12 @@ export function resolvePair(
 export const WCAG_NON_TEXT = 3.0;
 
 export function extractTokenAnyValue(css: string, tokenName: string): string | undefined {
-  const direct = new RegExp(String.raw`--${tokenName}:\s*(#[0-9a-fA-F]{3,8})`).exec(css);
-  if (direct) return direct[1];
-  const viaVar = new RegExp(
-    String.raw`--${tokenName}:\s*var\([^,]+,\s*(#[0-9a-fA-F]{3,8})\s*\)`,
-  ).exec(css);
-  return viaVar?.[1];
+  return extractTokenValue(css, tokenName);
 }
 
 export function ratioOf(css: string, fgToken: string, bgToken: string): number {
-  const fg = extractTokenAnyValue(css, fgToken);
-  const bg = extractTokenAnyValue(css, bgToken);
+  const fg = extractTokenValue(css, fgToken);
+  const bg = extractTokenValue(css, bgToken);
   if (!fg || !bg) throw new Error(`Token not found in CSS: ${fgToken} / ${bgToken}`);
   return contrastRatio(fg, bg);
 }

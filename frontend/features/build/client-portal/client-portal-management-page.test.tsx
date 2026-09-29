@@ -174,21 +174,23 @@ jest.mock("@/hooks/api/portal-access/grants", () => ({
   useProjectClientGrants: (params?: unknown) => mockUseProjectClientGrants(params),
 }));
 
-jest.mock("@/components/ui/cursor-page-controls", () => ({
-  CursorPageControls: ({
-    page,
-    hasNext,
+jest.mock("@/components/ui/table-pagination", () => ({
+  TablePagination: ({
+    pageNumber,
+    hasMore,
     onNext,
     onPrevious,
   }: {
-    page: number;
-    hasNext: boolean;
+    pageNumber?: number;
+    hasMore: boolean;
     onNext: () => void;
     onPrevious: () => void;
   }) => (
-    <div data-testid="cursor-page-controls" data-page={page}>
-      <button onClick={onPrevious}>Previous</button>
-      <button disabled={!hasNext} onClick={onNext}>
+    <div data-testid="cursor-page-controls" data-page={pageNumber ?? 1}>
+      <button type="button" onClick={onPrevious}>
+        Previous
+      </button>
+      <button type="button" disabled={!hasMore} onClick={onNext}>
         Next
       </button>
     </div>

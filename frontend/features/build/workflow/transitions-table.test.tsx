@@ -81,7 +81,7 @@ jest.mock("@animateicons/react/lucide", () => ({
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 
 const mockStatuses: CustomState[] = [
-  { id: 1, name: "Todo", type: "unstarted", color: null, order: 0, wipLimit: null },
+  { id: 1, orgId: "org-1", projectId: 1, name: "Todo", type: "unstarted", color: null, order: 0, wipLimit: null },
 ];
 
 beforeEach(() => {

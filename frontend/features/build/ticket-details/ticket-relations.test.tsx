@@ -3,7 +3,7 @@ import { useProjectBoardTickets } from "@/hooks/api/build/tickets";
 import { TicketRelations } from "./ticket-relations";
 
 let mockCanUpdate = true;
-let mockPageStateResolution: { kind: string; error?: unknown } = { kind: "ready" };
+let mockPageStateResolution: { kind: string; error?: unknown; permission?: string | null } = { kind: "ready" };
 let mockRelationsResult: {
   data: unknown[];
   isLoading: boolean;

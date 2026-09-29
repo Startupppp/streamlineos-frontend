@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 
 let mockSearchParams = new URLSearchParams();
 const mockUseInfiniteProjects = jest.fn();
@@ -85,6 +85,13 @@ describe("ProjectsPage — productId URL param", () => {
 
     const calls = mockUseInfiniteProjects.mock.calls;
     expect(calls[0]?.[0]).toMatchObject({ managedProductId: 3 });
+  });
+
+  it("uses product-scoped copy when rendered from a managed-product route", () => {
+    render(<ProjectsPage managedProductId={3} />);
+
+    expect(screen.getByRole("heading", { name: "Linked Projects" })).toBeInTheDocument();
+    expect(screen.getByText("Projects linked to this managed product")).toBeInTheDocument();
   });
 });
 

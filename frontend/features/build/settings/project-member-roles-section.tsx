@@ -156,8 +156,8 @@ export function ProjectMemberRolesSection({
       {!members.length ? (
         <p className="text-sm text-muted-foreground py-2">No members yet.</p>
       ) : (
-        <div>
-          <div className="divide-y divide-border">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="min-h-0 flex-1 divide-y divide-border overflow-y-auto">
             {members.map((member) => (
               <MemberRoleRow
                 key={member.id}

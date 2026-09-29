@@ -104,3 +104,14 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
 - [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
+
+### Local browser evidence — 2026-09-29 (partial; release criteria remain open)
+
+- Authenticated local Build QA Sandbox `/build/6/files` rendered the existing
+  `download.jpg` file row. Opening **Delete file** exposed a confirmation that
+  named the file and warned deletion cannot be undone. Escape canceled and
+  restored focus to the row action; the file remained present.
+- Permanent deletion was not confirmed, and no file was downloaded/uploaded.
+  Download/upload completion, permission/error states, accessibility beyond
+  the tested focus path, responsive layouts, and production behavior remain
+  unverified; acceptance boxes remain unchecked.

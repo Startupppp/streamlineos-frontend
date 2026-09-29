@@ -41,6 +41,10 @@ jest.mock("./inbox-drafts-panel", () => ({
   InboxDraftsPanel: () => <div data-testid="inbox-drafts-panel" />,
 }));
 
+jest.mock("./inbox-preview-pane", () => ({
+  InboxPreviewPane: () => <div data-testid="inbox-preview-pane" />,
+}));
+
 import { InboxList } from "./inbox-list";
 import { useShellVariant } from "@/components/layout/shell-variant-context";
 

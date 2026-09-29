@@ -159,7 +159,8 @@ export function BuildMoreToolsMenu({
           aria-label="More Build tools"
           className={cn(
             "h-8 w-full justify-start gap-2.5 rounded-md px-2.5 text-label font-medium",
-            isCollapsed && "mx-auto h-8 w-8 justify-center px-0",
+            isCollapsed &&
+              "mx-auto size-8 justify-center p-0 has-[>svg]:px-0",
             anyActive
               ? "bg-primary/10 text-foreground"
               : "text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-foreground",

@@ -24,6 +24,93 @@ import {
 } from "./epics-page-test-harness";
 import { EpicsPage } from "./epics-page";
 import { ApiError } from "@/lib/api-envelope";
+import type { useProjectBoardTickets } from "@/hooks/api/build/ticket-queries";
+
+type BoardResult = ReturnType<typeof useProjectBoardTickets>;
+
+function pendingBoardResult(): BoardResult {
+  return {
+    data: [],
+    total: 0,
+    loadedCount: 0,
+    isTruncated: false,
+    error: null,
+    isError: false,
+    isPending: true,
+    isLoading: true,
+    isLoadingError: false,
+    isRefetchError: false,
+    isSuccess: false,
+    status: "pending",
+    fetchStatus: "idle",
+    dataUpdatedAt: 0,
+    errorUpdatedAt: 0,
+    failureCount: 0,
+    failureReason: null,
+    errorUpdateCount: 0,
+    isFetched: false,
+    isFetchedAfterMount: false,
+    isFetching: false,
+    isInitialLoading: true,
+    isPaused: false,
+    isPlaceholderData: false,
+    isRefetching: false,
+    isStale: true,
+    isEnabled: false,
+    fetchNextPage: jest.fn(),
+    fetchPreviousPage: jest.fn(),
+    hasNextPage: false,
+    hasPreviousPage: false,
+    isFetchNextPageError: false,
+    isFetchingNextPage: false,
+    isFetchPreviousPageError: false,
+    isFetchingPreviousPage: false,
+    refetch: jest.fn(),
+    promise: new Promise<Awaited<BoardResult["promise"]>>(() => undefined),
+  };
+}
+
+function errorBoardResult(error: Error): BoardResult {
+  return {
+    data: [],
+    total: 0,
+    loadedCount: 0,
+    isTruncated: false,
+    error,
+    isError: true,
+    isPending: false,
+    isLoading: false,
+    isLoadingError: true,
+    isRefetchError: false,
+    isSuccess: false,
+    status: "error",
+    fetchStatus: "idle",
+    dataUpdatedAt: 0,
+    errorUpdatedAt: 0,
+    failureCount: 1,
+    failureReason: error,
+    errorUpdateCount: 1,
+    isFetched: true,
+    isFetchedAfterMount: true,
+    isFetching: false,
+    isInitialLoading: false,
+    isPaused: false,
+    isPlaceholderData: false,
+    isRefetching: false,
+    isStale: true,
+    isEnabled: true,
+    fetchNextPage: jest.fn(),
+    fetchPreviousPage: jest.fn(),
+    hasNextPage: false,
+    hasPreviousPage: false,
+    isFetchNextPageError: false,
+    isFetchingNextPage: false,
+    isFetchPreviousPageError: false,
+    isFetchingPreviousPage: false,
+    refetch: jest.fn(),
+    promise: new Promise<Awaited<BoardResult["promise"]>>(() => undefined),
+  };
+}
 
 beforeEach(installEpicsPageMocks);
 
@@ -31,7 +118,7 @@ it("shows skeleton not empty state while access snapshot is still in flight beca
   mockUseAccess.mockReturnValue(ACCESS_LOADING);
   mockUseCan.mockReturnValue(false);
   mockUseProject.mockReturnValue(disabledQueryResult());
-  mockUseProjectBoardTickets.mockReturnValue(disabledQueryResult());
+  mockUseProjectBoardTickets.mockReturnValue(pendingBoardResult());
 
   await act(async () => {
     render(<EpicsPage params={params} />);
@@ -45,7 +132,7 @@ it("shows NoPermissionState not empty state when build:view is denied", async ()
   mockUseAccess.mockReturnValue(ACCESS_DENIED);
   mockUseCan.mockReturnValue(false);
   mockUseProject.mockReturnValue(disabledQueryResult());
-  mockUseProjectBoardTickets.mockReturnValue(disabledQueryResult());
+  mockUseProjectBoardTickets.mockReturnValue(pendingBoardResult());
 
   await act(async () => {
     render(<EpicsPage params={params} />);
@@ -56,13 +143,7 @@ it("shows NoPermissionState not empty state when build:view is denied", async ()
 });
 
 it("renders the error state with the backend message on data fetch failure, not a generic fallback", async () => {
-  mockUseProjectBoardTickets.mockReturnValue({
-    data: undefined,
-    isLoading: false,
-    isError: true,
-    error: new Error("Failed to load tickets"),
-    refetch: jest.fn(),
-  });
+  mockUseProjectBoardTickets.mockReturnValue(errorBoardResult(new Error("Failed to load tickets")));
 
   await act(async () => {
     render(<EpicsPage params={params} />);
@@ -74,13 +155,7 @@ it("renders the error state with the backend message on data fetch failure, not 
 });
 
 it("renders the empty state when there are no epics, distinguishing setup from filtered no-result", async () => {
-  mockUseProjectBoardTickets.mockReturnValue({
-    data: [],
-    isLoading: false,
-    isError: false,
-    error: undefined,
-    refetch: jest.fn(),
-  });
+  readyPage([]);
 
   await act(async () => {
     render(<EpicsPage params={params} />);
@@ -99,15 +174,9 @@ it("renders epic cards when epics are present and user has view access", async (
     rank: "1000", parentTicketId: null, originalEstimate: null, timeSpent: null,
     startDate: null, dueDate: null, moduleId: null, cycleId: null,
     sequenceId: "PROJ-1", estimate: null, createdAt: "2026-09-01", updatedAt: "2026-09-01",
+    version: 1,
   };
-  mockUseProjectBoardTickets.mockReturnValue({
-    data: [epicTicket],
-    isLoading: false,
-    isError: false,
-    error: undefined,
-    refetch: jest.fn(),
-  });
-  mockUseEpicPage.mockReturnValue(epicPageResult([epicTicket]));
+  readyPage([epicTicket]);
 
   await act(async () => {
     render(<EpicsPage params={params} />);
@@ -125,15 +194,9 @@ it("enables keyboard navigation bound to the epic count when epics are present a
     rank: "1001", parentTicketId: null, originalEstimate: null, timeSpent: null,
     startDate: null, dueDate: null, moduleId: null, cycleId: null,
     sequenceId: "PROJ-2", estimate: null, createdAt: "2026-09-01", updatedAt: "2026-09-01",
+    version: 1,
   };
-  mockUseProjectBoardTickets.mockReturnValue({
-    data: [epicTicket],
-    isLoading: false,
-    isError: false,
-    error: undefined,
-    refetch: jest.fn(),
-  });
-  mockUseEpicPage.mockReturnValue(epicPageResult([epicTicket]));
+  readyPage([epicTicket]);
 
   await act(async () => {
     render(<EpicsPage params={params} />);

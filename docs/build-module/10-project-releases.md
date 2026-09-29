@@ -122,3 +122,14 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
 - [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
+
+### Local browser evidence — 2026-09-29 (partial; release criteria remain open)
+
+- Authenticated local Build QA Sandbox `/build/6/releases` loaded into its
+  empty state (zero releases). Keyboard focus reached **New Release**; Enter
+  opened the form. Submitting from the required Name field with both Name and
+  Version blank showed “Name is required” and “Version is required” without
+  creating data. Escape closed the form and restored focus to **New Release**.
+- No release was created. This does not verify valid creation/edit/archive,
+  API/permission/error/conflict states, screen reader, responsive layouts, or
+  production behavior; acceptance boxes remain unchecked.

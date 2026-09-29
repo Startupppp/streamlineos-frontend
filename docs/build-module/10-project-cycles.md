@@ -168,3 +168,15 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
 - [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
+
+### Local browser evidence — 2026-09-29 (partial; release criteria remain open)
+
+- Authenticated local Build QA Sandbox `/build/6/cycles` rendered two draft
+  cycles. Searching for `zz-no-match-qa-sentinel` produced “No results match
+  your filters.”; keyboard traversal reached **Clear filters**, and Space
+  restored both rows and removed `q` from the URL.
+- The empty velocity visualization resolves to the explanatory message
+  “Complete a cycle to see velocity here.” No cycle data was changed.
+- This does not verify mutations, permission-denied/error/conflict cases,
+  screen-reader output, reduced motion, mobile/high-density layouts, or
+  production behavior; acceptance boxes remain unchecked.

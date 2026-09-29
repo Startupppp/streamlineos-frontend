@@ -1,10 +1,11 @@
 import { render, screen, act } from "@testing-library/react";
 import type { ReactNode } from "react";
+import type { UseBuildListKeyboardOptions } from "@/features/build/shared/use-build-list-keyboard";
 
 const mockUseAccess = jest.fn();
 const mockUseCan = jest.fn();
 const mockUseBuildMembers = jest.fn();
-const mockUseBuildListKeyboard = jest.fn(() => ({
+const mockUseBuildListKeyboard = jest.fn((_options: UseBuildListKeyboardOptions) => ({
   focusedIndex: null,
   setFocusedIndex: jest.fn(),
 }));
@@ -73,7 +74,7 @@ jest.mock("@/lib/get-error-message", () => ({
 }));
 
 jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
-  useBuildListKeyboard: (...args: unknown[]) => mockUseBuildListKeyboard(...args),
+  useBuildListKeyboard: (options: UseBuildListKeyboardOptions) => mockUseBuildListKeyboard(options),
 }));
 
 jest.mock("@/features/build/shared/shortcut-help-dialog", () => ({
@@ -276,11 +277,9 @@ describe("MembersPage — keyboard shortcut wiring (BLD-X-FE-ACCESS-011)", () =>
 
   it("the onShortcutHelp callback passed to the keyboard hook opens the help dialog", async () => {
     render(<MembersPage />);
-    const lastCallArgs = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0] as {
-      onShortcutHelp: () => void;
-    };
-    expect(typeof lastCallArgs.onShortcutHelp).toBe("function");
-    await act(async () => { lastCallArgs.onShortcutHelp(); });
+    const lastCallArgs = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0];
+    expect(typeof lastCallArgs?.onShortcutHelp).toBe("function");
+    await act(async () => { lastCallArgs?.onShortcutHelp?.(); });
     expect(screen.getByTestId("shortcut-help-dialog")).toBeInTheDocument();
   });
 });

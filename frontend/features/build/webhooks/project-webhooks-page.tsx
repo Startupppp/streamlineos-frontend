@@ -361,7 +361,7 @@ export function ProjectWebhooksPage({
             onRetry={handleRetry}
             className="flex-1"
           >
-            <div className="flex min-h-0 flex-1 flex-col gap-2">
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
               {canManage && isOnline && commands.selectedIds.size > 0 && (
                 <WebhookBulkBar
                   selectedCount={commands.selectedIds.size}
@@ -374,34 +374,36 @@ export function ProjectWebhooksPage({
                   onClear={commands.clearSelection}
                 />
               )}
-              <PmStaggerList
-                className="space-y-2.5"
-                role="list"
-                aria-label="Webhooks"
-              >
-                <AnimatePresence initial={false}>
-                  {webhookList.map((wh, index) => (
-                    <div key={wh.id} role="listitem">
-                      <WebhookCard
-                        webhook={wh}
-                        projectId={projectId}
-                        onDelete={commands.handleDelete}
-                        onToggle={canManage ? commands.handleToggle : undefined}
-                        onEdit={canManage ? handleEdit : undefined}
-                        canManage={canManage}
-                        density={density}
-                        focused={index === focusedIndex}
-                        expanded={expandedId === wh.id}
-                        onExpandedChange={handleExpandedChange}
-                        selected={commands.selectedIds.has(wh.id)}
-                        onSelectedChange={
-                          canManage ? commands.handleSelectedChange : undefined
-                        }
-                      />
-                    </div>
-                  ))}
-                </AnimatePresence>
-              </PmStaggerList>
+              <div className="min-h-0 flex-1 overflow-y-auto">
+                <PmStaggerList
+                  className="space-y-2.5"
+                  role="list"
+                  aria-label="Webhooks"
+                >
+                  <AnimatePresence initial={false}>
+                    {webhookList.map((wh, index) => (
+                      <div key={wh.id} role="listitem">
+                        <WebhookCard
+                          webhook={wh}
+                          projectId={projectId}
+                          onDelete={commands.handleDelete}
+                          onToggle={canManage ? commands.handleToggle : undefined}
+                          onEdit={canManage ? handleEdit : undefined}
+                          canManage={canManage}
+                          density={density}
+                          focused={index === focusedIndex}
+                          expanded={expandedId === wh.id}
+                          onExpandedChange={handleExpandedChange}
+                          selected={commands.selectedIds.has(wh.id)}
+                          onSelectedChange={
+                            canManage ? commands.handleSelectedChange : undefined
+                          }
+                        />
+                      </div>
+                    ))}
+                  </AnimatePresence>
+                </PmStaggerList>
+              </div>
               <TablePagination
                 mode="cursor"
                 rowCount={webhookList.length}

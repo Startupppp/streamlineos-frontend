@@ -394,6 +394,11 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
           illustrationPreset="ticket"
           title="No tickets yet"
           description="Create your first ticket to get started tracking work."
+          action={
+            canCreateTicket
+              ? { label: "Create ticket", onClick: handleKeyboardCreate }
+              : undefined
+          }
           className="min-h-full w-full flex-1"
         />
       ) : <ProjectBoardContent

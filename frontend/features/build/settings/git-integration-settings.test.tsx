@@ -2,6 +2,7 @@ import { render, screen, fireEvent, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ProjectsGitIntegrationSettings } from "./git-integration-settings";
 import type { CreatedGitConnection } from "@/hooks/api/git-integration";
+import type { UseBuildListKeyboardOptions } from "@/features/build/shared/use-build-list-keyboard";
 
 const mockRouterReplace = jest.fn();
 let mockSearchParamsValue = new URLSearchParams();
@@ -12,12 +13,12 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => mockSearchParamsValue,
 }));
 
-const mockUseBuildListKeyboard = jest.fn(() => ({
+const mockUseBuildListKeyboard = jest.fn((_options: UseBuildListKeyboardOptions) => ({
   focusedIndex: null,
   setFocusedIndex: jest.fn(),
 }));
 jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
-  useBuildListKeyboard: (...args: unknown[]) => mockUseBuildListKeyboard(...args),
+  useBuildListKeyboard: (options: UseBuildListKeyboardOptions) => mockUseBuildListKeyboard(options),
 }));
 
 jest.mock("@/hooks/common/use-online-status", () => ({
@@ -344,9 +345,9 @@ describe("ProjectsGitIntegrationSettings — shortcut help dialog (BLD-X-FE-SETT
   it("the onShortcutHelp callback passed to the keyboard hook opens the dialog — calling it does not throw and transitions open state", async () => {
     mockData = [];
     render(<ProjectsGitIntegrationSettings />);
-    const capturedOptions = mockUseBuildListKeyboard.mock.calls[0]?.[0] as { onShortcutHelp: () => void };
-    expect(typeof capturedOptions.onShortcutHelp).toBe("function");
-    await act(async () => { capturedOptions.onShortcutHelp(); });
+    const capturedOptions = mockUseBuildListKeyboard.mock.calls[0]?.[0];
+    expect(typeof capturedOptions?.onShortcutHelp).toBe("function");
+    await act(async () => { capturedOptions?.onShortcutHelp?.(); });
     expect(screen.getByTestId("shortcut-help-dialog")).toBeInTheDocument();
   });
 });

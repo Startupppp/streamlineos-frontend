@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-export const CONTENT_FILL_PANEL = "flex min-h-full w-full flex-1 flex-col";
+export const CONTENT_FILL_PANEL = "flex min-h-0 w-full flex-1 flex-col";
 
 /** Horizontal page inset used by PageWrapper headers, filters, and content. */
 export const PAGE_CHROME_X = "px-4 sm:px-6 lg:px-8";

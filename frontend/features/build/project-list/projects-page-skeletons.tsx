@@ -6,23 +6,33 @@ import { cn } from "@/lib/utils";
 
 export function GridSkeleton() {
   return (
-    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: 6 }).map((_, i) => (
         <div
           key={i}
-          className={cn(PM_PANEL, "border-l-[3px] border-l-muted p-2 space-y-2")}
+          className={cn(PM_PANEL, "flex flex-col border-l-[3px] border-l-muted p-3")}
         >
-          <div className="flex gap-2">
-            <Skeleton className="h-7 w-7 rounded-md shrink-0" />
+          <div className="flex gap-3">
+            <Skeleton className="h-8 w-8 shrink-0 rounded-md" />
             <div className="min-w-0 flex-1 space-y-1.5">
-              <Skeleton className="h-2.5 w-10 rounded" />
-              <Skeleton className="h-3.5 w-3/4" />
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-2.5 w-10 rounded" />
+                <Skeleton className="h-5 w-16 rounded-full" />
+              </div>
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-3 w-full" />
             </div>
           </div>
-          <Skeleton className="h-1 w-full rounded-full" />
-          <div className="flex justify-between border-t border-border/60 pt-1.5">
-            <Skeleton className="h-2.5 w-14" />
-            <Skeleton className="h-2.5 w-12" />
+          <div className="mt-auto space-y-2 border-t border-border/60 pt-3">
+            <div className="flex items-center gap-1.5">
+              <Skeleton className="h-5 w-5 rounded-full" />
+              <Skeleton className="h-3 w-24" />
+            </div>
+            <Skeleton className="h-1 w-full rounded-full" />
+            <div className="flex justify-between">
+              <Skeleton className="h-3 w-12" />
+              <Skeleton className="h-3 w-16" />
+            </div>
           </div>
         </div>
       ))}

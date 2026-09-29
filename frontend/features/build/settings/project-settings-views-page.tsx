@@ -183,7 +183,7 @@ export function ProjectSettingsViewsPage({ projectId }: ProjectSettingsViewsPage
         />
       }
     >
-      <PmPageShell>
+      <PmPageShell className="overflow-hidden">
         <PageState
           resolution={pageState}
           loading={
@@ -194,11 +194,11 @@ export function ProjectSettingsViewsPage({ projectId }: ProjectSettingsViewsPage
           }
           empty={emptyState}
           onRetry={handleRefetch}
-          className="flex-1"
+          className="flex min-h-0 flex-1 flex-col"
         >
-          <PmSection index={0} className="flex-1">
+          <PmSection index={0} className="flex min-h-0 flex-1 flex-col overflow-hidden">
             {selectedIds.size > 0 ? (
-              <div className="mb-2 flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2">
+              <div className="mb-2 flex shrink-0 items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2">
                 <span className="text-sm font-medium">{selectedIds.size} selected</span>
                 <div className="ml-auto flex items-center gap-1.5">
                   <Button
@@ -214,35 +214,37 @@ export function ProjectSettingsViewsPage({ projectId }: ProjectSettingsViewsPage
                 </div>
               </div>
             ) : null}
-            <PmPanel className="flex min-h-0 flex-col p-2" solid>
-              {pagedViews.map((view) => (
-                <ViewCard
-                  key={view.id}
-                  view={view}
-                  isPinned={view.isPinned}
-                  currentUserId={currentUserId}
-                  onNavigate={handleNavigate}
-                  onTogglePin={handleTogglePin}
-                  onRename={setRenameTarget}
-                  onDelete={handleDelete}
-                  canManage={canManage}
-                  isSelected={selectedIds.has(view.id)}
-                  onToggleSelect={canManage ? handleToggleSelect : undefined}
+            <PmPanel className="flex min-h-0 flex-1 flex-col overflow-hidden p-2" solid>
+              <div className="min-h-0 flex-1 overflow-y-auto">
+                {pagedViews.map((view) => (
+                  <ViewCard
+                    key={view.id}
+                    view={view}
+                    isPinned={view.isPinned}
+                    currentUserId={currentUserId}
+                    onNavigate={handleNavigate}
+                    onTogglePin={handleTogglePin}
+                    onRename={setRenameTarget}
+                    onDelete={handleDelete}
+                    canManage={canManage}
+                    isSelected={selectedIds.has(view.id)}
+                    onToggleSelect={canManage ? handleToggleSelect : undefined}
+                  />
+                ))}
+              </div>
+              {(pagination?.hasMore || pager.hasPrevious) ? (
+                <TablePagination
+                  mode="cursor"
+                  rowCount={pagedViews.length}
+                  hasMore={pagination?.hasMore ?? false}
+                  hasPrevious={pager.hasPrevious}
+                  onNext={() => pager.goNext(pagination?.nextCursor)}
+                  onPrevious={pager.goPrevious}
                 />
-              ))}
+              ) : null}
             </PmPanel>
           </PmSection>
         </PageState>
-        {(pagination?.hasMore || pager.hasPrevious) ? (
-          <TablePagination
-            mode="cursor"
-            rowCount={pagedViews.length}
-            hasMore={pagination?.hasMore ?? false}
-            hasPrevious={pager.hasPrevious}
-            onNext={() => pager.goNext(pagination?.nextCursor)}
-            onPrevious={pager.goPrevious}
-          />
-        ) : null}
       </PmPageShell>
       {canManage ? (
         <CreateViewSheet

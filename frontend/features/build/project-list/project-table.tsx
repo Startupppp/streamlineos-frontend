@@ -60,35 +60,53 @@ function ProjectMobileCard({
 
   return (
     <BuildMobileCard
+      eyebrow={project.key}
       title={project.name}
       status={<ProjectStatusBadge status={status} />}
       person={{ user: project.manager, role: "Lead" }}
-      meta={[
-        {
-          label: "Progress",
-          value:
-            progressValue !== null ? (
-              <span className="font-mono tabular-nums">{progressValue}%</span>
-            ) : (
-              "—"
-            ),
-        },
-        {
-          label: "Target",
-          value: targetDate ? (
-            <span
-              className={cn(
-                "font-mono tabular-nums",
-                dateToneClasses[targetDate.tone],
-              )}
-            >
-              {targetDate.label}
+      footer={
+        <div className="space-y-2">
+          <div className="flex min-w-0 items-center justify-between gap-3 text-label text-muted-foreground">
+            <span className="min-w-0 truncate">
+              Progress{" "}
+              <span className="font-medium font-mono tabular-nums text-foreground">
+                {progressValue !== null ? `${progressValue}%` : "—"}
+              </span>
             </span>
-          ) : (
-            "—"
-          ),
-        },
-      ]}
+            <span className="shrink-0">
+              Target{" "}
+              {targetDate ? (
+                <span
+                  className={cn(
+                    "font-medium font-mono tabular-nums",
+                    dateToneClasses[targetDate.tone],
+                  )}
+                >
+                  {targetDate.label}
+                </span>
+              ) : (
+                <span className="font-medium text-foreground">—</span>
+              )}
+            </span>
+          </div>
+          {progressValue !== null ? (
+            <div
+              className="h-1.5 overflow-hidden rounded-full bg-muted"
+              aria-hidden="true"
+            >
+              <div
+                className={cn(
+                  "h-full rounded-full",
+                  progressValue >= 100
+                    ? "bg-status-success-fill"
+                    : "bg-primary",
+                )}
+                style={{ width: `${progressValue}%` }}
+              />
+            </div>
+          ) : null}
+        </div>
+      }
       actions={
         <ActionsCell
           project={project}
@@ -183,7 +201,7 @@ export const ProjectTable = React.memo(function ProjectTable({
         onRowClick={handleRowClick}
         minWidth="content"
         mobileCard={renderMobileCard}
-        rowClassName={() => "group h-9 hover:bg-primary/[0.035]"}
+        rowClassName={() => "group hover:bg-primary/[0.035]"}
         className="min-h-0 min-w-0 flex-1 overflow-hidden rounded-none border-0 bg-transparent shadow-none"
         emptyState={
           <div className="py-4 text-center text-sm text-muted-foreground">

@@ -5,7 +5,11 @@ import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TablePagination } from "@/components/ui/table-pagination";
-import { PmStaggerList, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
+import {
+  PmStaggerList,
+  CONTENT_FILL_PANEL,
+  PM_FILL_SECTION,
+} from "@/components/pm-chrome";
 import { EpicCard, type EpicCardProps } from "@/features/build/epics/epic-card";
 
 interface EpicsListSectionProps {
@@ -59,76 +63,80 @@ export function EpicsListSection({
   onNextPage,
   onPreviousPage,
 }: EpicsListSectionProps) {
+  const showPager = epics.length > 0 || hasPrevious;
+
   return (
-    <>
-      {epics.length === 0 && !isOnline ? (
-        <div
-          className={cn(
-            CONTENT_FILL_PANEL,
-            "flex flex-col items-center justify-center gap-2 text-center",
-          )}
-          data-testid="offline-state"
-        >
-          <WifiOff className="h-5 w-5 text-muted-foreground" />
-          <p className="text-sm font-semibold text-foreground">
-            You&apos;re offline
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Results may not be up to date. Reconnect to see the latest epics.
-          </p>
-          {epicsUpdatedAt ? (
-            <p
-              className="text-xs text-muted-foreground"
-              data-testid="offline-freshness"
-            >
-              Last updated{" "}
-              {formatDistanceToNow(new Date(epicsUpdatedAt), {
-                addSuffix: true,
-              })}
+    <div className={PM_FILL_SECTION}>
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        {epics.length === 0 && !isOnline ? (
+          <div
+            className={cn(
+              CONTENT_FILL_PANEL,
+              "flex flex-col items-center justify-center gap-2 text-center",
+            )}
+            data-testid="offline-state"
+          >
+            <WifiOff className="h-5 w-5 text-muted-foreground" />
+            <p className="text-sm font-semibold text-foreground">
+              You&apos;re offline
             </p>
-          ) : null}
-        </div>
-      ) : epics.length === 0 ? (
-        <EmptyState
-          className={CONTENT_FILL_PANEL}
-          illustrationPreset="projects"
-          title={isFiltered ? "No epics match your filters" : "No epics yet"}
-          description={
-            isFiltered
-              ? undefined
-              : "Create your first epic to organize related stories and tasks."
-          }
-          filtersActive={isFiltered}
-          onClearFilters={onClearFilters}
-          action={
-            isFiltered || !canCreate
-              ? undefined
-              : { label: "Create Epic", onClick: onOpenCreate }
-          }
-        />
-      ) : (
-        <PmStaggerList className="space-y-2.5">
-          {epics.map((epic) => (
-            <EpicRow
-              key={epic.id}
-              epic={epic}
-              tickets={tickets}
-              unlinkedStories={unlinkedStories}
-              projectId={projectId}
-              projectKey={projectKey}
-              projectStatuses={projectStatuses}
-              canUpdate={canUpdate}
-              selected={selectedIds.has(epic.id)}
-              isDeleting={isDeleting}
-              onEpicSelection={onEpicSelection}
-              onDeleteEpic={onDeleteEpic}
-              onLinkStory={onLinkStory}
-              onCreateStory={onCreateStory}
-            />
-          ))}
-        </PmStaggerList>
-      )}
-      {epics.length > 0 ? (
+            <p className="text-xs text-muted-foreground">
+              Results may not be up to date. Reconnect to see the latest epics.
+            </p>
+            {epicsUpdatedAt ? (
+              <p
+                className="text-xs text-muted-foreground"
+                data-testid="offline-freshness"
+              >
+                Last updated{" "}
+                {formatDistanceToNow(new Date(epicsUpdatedAt), {
+                  addSuffix: true,
+                })}
+              </p>
+            ) : null}
+          </div>
+        ) : epics.length === 0 ? (
+          <EmptyState
+            className={CONTENT_FILL_PANEL}
+            illustrationPreset="projects"
+            title={isFiltered ? "No epics match your filters" : "No epics yet"}
+            description={
+              isFiltered
+                ? undefined
+                : "Create your first epic to organize related stories and tasks."
+            }
+            filtersActive={isFiltered}
+            onClearFilters={onClearFilters}
+            action={
+              isFiltered || !canCreate
+                ? undefined
+                : { label: "Create Epic", onClick: onOpenCreate }
+            }
+          />
+        ) : (
+          <PmStaggerList className="space-y-2.5">
+            {epics.map((epic) => (
+              <EpicRow
+                key={epic.id}
+                epic={epic}
+                tickets={tickets}
+                unlinkedStories={unlinkedStories}
+                projectId={projectId}
+                projectKey={projectKey}
+                projectStatuses={projectStatuses}
+                canUpdate={canUpdate}
+                selected={selectedIds.has(epic.id)}
+                isDeleting={isDeleting}
+                onEpicSelection={onEpicSelection}
+                onDeleteEpic={onDeleteEpic}
+                onLinkStory={onLinkStory}
+                onCreateStory={onCreateStory}
+              />
+            ))}
+          </PmStaggerList>
+        )}
+      </div>
+      {showPager ? (
         <TablePagination
           mode="cursor"
           rowCount={epics.length}
@@ -138,7 +146,7 @@ export function EpicsListSection({
           onPrevious={onPreviousPage}
         />
       ) : null}
-    </>
+    </div>
   );
 }
 

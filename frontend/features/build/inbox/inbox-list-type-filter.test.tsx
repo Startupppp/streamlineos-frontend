@@ -101,7 +101,7 @@ describe("InboxList — type prop wires category to the query and resets paginat
         searchInputRef={searchRef}
       />,
     );
-    await user.click(screen.getByRole("button", { name: /show 30 more/i }));
+    await user.click(screen.getByRole("button", { name: /load older notifications/i }));
     expect(screen.getAllByRole("listitem")).toHaveLength(INBOX_RENDER_PAGE_SIZE * 2);
     rerender(
       <InboxList

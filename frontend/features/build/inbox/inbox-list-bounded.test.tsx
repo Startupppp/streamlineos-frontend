@@ -100,7 +100,7 @@ describe("InboxList — the mounted row count is bounded", () => {
     mockPages([8], false);
     renderInbox();
     expect(screen.getAllByRole("listitem")).toHaveLength(8);
-    expect(screen.queryByRole("button", { name: /show .* more/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /load older notifications/i })).toBeNull();
   });
 
   it("keeps row 51 reachable behind the bound", async () => {
@@ -108,7 +108,7 @@ describe("InboxList — the mounted row count is bounded", () => {
     mockPages([100, 100, 100], false);
     renderInbox();
     expect(screen.queryByText("notification-51")).toBeNull();
-    await user.click(screen.getByRole("button", { name: /show 30 more \(30 of 300\)/i }));
+    await user.click(screen.getByRole("button", { name: /load older notifications/i }));
     expect(screen.getByText("notification-51")).toBeInTheDocument();
     expect(screen.getAllByRole("listitem")).toHaveLength(INBOX_RENDER_PAGE_SIZE * 2);
   });
@@ -117,7 +117,7 @@ describe("InboxList — the mounted row count is bounded", () => {
     const user = userEvent.setup();
     mockPages([100, 100, 100], true);
     renderInbox();
-    await user.click(screen.getByRole("button", { name: /show 30 more/i }));
+    await user.click(screen.getByRole("button", { name: /load older notifications/i }));
     expect(fetchNextPage).not.toHaveBeenCalled();
   });
 });
@@ -144,7 +144,7 @@ describe("InboxList — changing the section prop resets the window", () => {
     const user = userEvent.setup();
     mockPages([100, 100, 100], false);
     const { rerender } = renderInbox({ section: "UNREAD" });
-    await user.click(screen.getByRole("button", { name: /show 30 more/i }));
+    await user.click(screen.getByRole("button", { name: /load older notifications/i }));
     expect(screen.getAllByRole("listitem")).toHaveLength(INBOX_RENDER_PAGE_SIZE * 2);
     rerender(
       <InboxList

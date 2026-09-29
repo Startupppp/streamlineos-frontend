@@ -125,8 +125,16 @@ export function PageState({
         />
       );
     case "empty":
-      return <>{empty ?? children}</>;
+      return (
+        <div className={cn("flex min-h-0 flex-1 flex-col", className)}>
+          {empty ?? children}
+        </div>
+      );
     case "ready":
-      return <>{children}</>;
+      return (
+        <div className={cn("flex min-h-0 flex-1 flex-col", className)}>
+          {children}
+        </div>
+      );
   }
 }

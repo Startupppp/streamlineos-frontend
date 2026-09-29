@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import type { AccessState } from "@/lib/rbac/gate";
 import type { PageStateResolution } from "@/lib/page-state/resolve-page-state";
 import { CustomFieldsSettings } from "./custom-fields-settings";
+import type { CustomFieldItem } from "./custom-fields-settings";
 import { customFieldSchema } from "./custom-fields-schema";
 
 let mockAccessState: AccessState = "denied";
@@ -186,7 +187,7 @@ describe("CustomFieldsSettings — createRef and editRef imperative handles", ()
 
   it("sets editRef.current to the open-edit handler so a keyboard shortcut can open the edit dialog", () => {
     mockAccessState = "granted";
-    const editRef = { current: null as ((f: { id: number; name: string; type: "text"; options?: string[] | null; required?: boolean }) => void) | null };
+    const editRef = { current: null as ((f: CustomFieldItem) => void) | null };
     render(<CustomFieldsSettings projectId={1} editRef={editRef} />);
     expect(typeof editRef.current).toBe("function");
   });

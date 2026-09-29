@@ -20,6 +20,7 @@ import { PageState } from "@/components/shared/page-state";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table.types";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { Button } from "@/components/ui/button";
 import {
@@ -378,6 +379,7 @@ export function WikiPageCollectionTable({
       title={accessLostTitle ?? emptyTitle}
       description={accessLostDescription}
       action={{ label: "Refresh", onClick: handleRetry }}
+      className={CONTENT_FILL_PANEL}
     />
   ) : (
     <EmptyState
@@ -387,6 +389,7 @@ export function WikiPageCollectionTable({
       filtersActive={filtersActive}
       filteredTitle="No results match your filters."
       onClearFilters={handleClearFilters}
+      className={CONTENT_FILL_PANEL}
     />
   );
 
@@ -480,6 +483,7 @@ export function WikiPageCollectionTable({
         loading={<DataTableSkeleton columns={columns.length} />}
         empty={emptyNode}
         onRetry={handleRetry}
+        className={CONTENT_FILL_PANEL}
       >
         {view === "card" ? (
           rows.length === 0 ? (

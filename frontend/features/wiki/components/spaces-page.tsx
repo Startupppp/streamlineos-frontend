@@ -261,8 +261,8 @@ export default function SpacesPage() {
         ) : undefined
       }
     >
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="flex min-h-0 flex-1 flex-col gap-4">
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
           <SearchInput
             value={rawSearch}
             onValueChange={handleSearchChange}
@@ -320,6 +320,7 @@ export default function SpacesPage() {
         <PageState
           resolution={pageState}
           onRetry={handleRetry}
+          className={CONTENT_FILL_PANEL}
           loading={
             <SpacesGrid>
               {Array.from({ length: 6 }).map((_, i) => (

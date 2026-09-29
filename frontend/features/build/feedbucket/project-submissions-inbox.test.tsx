@@ -24,7 +24,7 @@ jest.mock("sonner", () => ({
   toast: { success: jest.fn(), error: jest.fn() },
 }));
 
-const mockUseCan = jest.fn(() => false);
+const mockUseCan = jest.fn((_key: string) => false);
 jest.mock("@/hooks/api/access", () => ({
   useCan: (key: string) => mockUseCan(key),
 }));
@@ -221,7 +221,7 @@ describe("ProjectSubmissionsInbox — delete confirmation", () => {
 
     const deleteBtn = capturedSurface?.columns
       ?.find((c) => c.key === "actions")
-      ?.cell(ROW, 0) as React.ReactElement | undefined;
+      ?.cell(ROW) as React.ReactElement | undefined;
 
     expect(deleteBtn).toBeDefined();
     const { getByRole } = render(deleteBtn as React.ReactElement);

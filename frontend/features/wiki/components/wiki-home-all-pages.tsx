@@ -20,6 +20,7 @@ import { PageState } from "@/components/shared/page-state";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table.types";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { Button } from "@/components/ui/button";
 import {
@@ -87,6 +88,8 @@ export const KB_PAGE_CURSOR_PARAM = "cursor";
 function buildColumns(
   resolveHref: (id: number) => string,
   ownerNames: Map<string, string>,
+  contextRowId: number | null,
+  onContextRowChange: (id: number | null) => void,
 ): DataTableColumn<KbPageCollectionItem>[] {
   return [
     {
@@ -140,10 +143,42 @@ function buildColumns(
       key: "actions",
       header: "",
       cell: (row) => (
-        <AllPagesItemMenu page={row} resolveHref={resolveHref} />
+        <AllPagesRowMenu
+          row={row}
+          resolveHref={resolveHref}
+          contextRowId={contextRowId}
+          onContextRowChange={onContextRowChange}
+        />
       ),
     },
   ];
+}
+
+interface AllPagesRowMenuProps {
+  row: KbPageCollectionItem;
+  resolveHref: (id: number) => string;
+  contextRowId: number | null;
+  onContextRowChange: (id: number | null) => void;
+}
+
+function AllPagesRowMenu({
+  row,
+  resolveHref,
+  contextRowId,
+  onContextRowChange,
+}: AllPagesRowMenuProps) {
+  const handleMenuOpenChange = useCallback(
+    (open: boolean) => onContextRowChange(open ? row.id : null),
+    [onContextRowChange, row.id],
+  );
+  return (
+    <AllPagesItemMenu
+      page={row}
+      resolveHref={resolveHref}
+      menuOpen={contextRowId === row.id}
+      onMenuOpenChange={handleMenuOpenChange}
+    />
+  );
 }
 
 interface AllPagesItemMenuProps {
@@ -416,7 +451,20 @@ export function WikiHomeAllPages({ projectId, onItemCountChange, onRowsChange }:
     return map;
   }, [ownersPage]);
 
-  const columns = useMemo(() => buildColumns(resolveHref, ownerNames), [resolveHref, ownerNames]);
+  const [contextRowId, setContextRowId] = useState<number | null>(null);
+
+  const handleRowContextMenu = useCallback(
+    (row: KbPageCollectionItem, event: React.MouseEvent) => {
+      event.preventDefault();
+      setContextRowId(row.id);
+    },
+    [],
+  );
+
+  const columns = useMemo(
+    () => buildColumns(resolveHref, ownerNames, contextRowId, setContextRowId),
+    [resolveHref, ownerNames, contextRowId],
+  );
 
   const pageState = usePageState({
     permission: "kb:pages:view",
@@ -490,6 +538,7 @@ export function WikiHomeAllPages({ projectId, onItemCountChange, onRowsChange }:
       filtersActive
       filteredTitle="No pages match your filters."
       onClearFilters={handleClearFilters}
+      className={CONTENT_FILL_PANEL}
     />
   ) : (
     <EmptyState
@@ -501,6 +550,7 @@ export function WikiHomeAllPages({ projectId, onItemCountChange, onRowsChange }:
       tertiaryAction={
         canImport ? { label: "Import pages", href: KB_IMPORT } : undefined
       }
+      className={CONTENT_FILL_PANEL}
     />
   );
 
@@ -609,6 +659,7 @@ export function WikiHomeAllPages({ projectId, onItemCountChange, onRowsChange }:
         loading={<DataTableSkeleton columns={columns.length} />}
         empty={emptyNode}
         onRetry={handleRetry}
+        className={CONTENT_FILL_PANEL}
       >
         {view === "card" ? (
           rows.length === 0 ? (
@@ -635,6 +686,7 @@ export function WikiHomeAllPages({ projectId, onItemCountChange, onRowsChange }:
             data={rows}
             columns={columns}
             getRowKey={(row) => row.id}
+            onRowContextMenu={handleRowContextMenu}
             emptyState={emptyNode}
             mobileCard={renderMobileCard}
             pagination={{

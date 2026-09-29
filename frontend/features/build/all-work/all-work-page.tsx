@@ -9,7 +9,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Button } from "@/components/ui/button";
+import { TablePagination } from "@/components/ui/table-pagination";
 import {
   Select,
   SelectContent,
@@ -389,89 +389,80 @@ export function AllWorkPage() {
                 />
               ) : null}
               <div className="flex min-h-0 flex-1 flex-col gap-0">
-                <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
-                  <div
-                    className={cn(
-                      "flex flex-1 flex-col overscroll-contain",
-                      view === "board" ? "h-full min-h-0" : "min-h-full",
-                    )}
-                  >
-                    <AnimatePresence mode="wait" initial={false}>
-                      {view === "list" ? (
-                        <motion.div
-                          key="list-view"
-                          variants={swapVariants}
-                          initial="initial"
-                          animate="animate"
-                          exit="exit"
-                          transition={pmSnappy}
-                        >
-                          <AllWorkListSection
-                            groups={groups}
-                            hasMore={hasMore}
-                            tableSelection={tableSelection}
-                            onSelectionChange={setTableSelection}
-                          />
-                        </motion.div>
-                      ) : null}
-                      {view === "table" ? (
-                        <motion.div
-                          key="table-view"
-                          variants={swapVariants}
-                          initial="initial"
-                          animate="animate"
-                          exit="exit"
-                          transition={pmSnappy}
-                        >
-                          <AllWorkTableSection
-                            tickets={tickets}
-                            tableSelection={tableSelection}
-                            onSelectionChange={setTableSelection}
-                            onTicketClick={handleTicketClickForTable}
-                            sortState={sortState}
-                            hasMore={hasMore}
-                            hasPrevious={hasPrevious}
-                            pageNumber={pageNumber}
-                            onNext={handleNext}
-                            onPrevious={handlePrev}
-                          />
-                        </motion.div>
-                      ) : null}
-                      {view === "board" ? (
-                        <motion.div
-                          key="board-view"
-                          variants={swapVariants}
-                          initial="initial"
-                          animate="animate"
-                          exit="exit"
-                          transition={pmSnappy}
-                          className="flex h-full min-h-0 w-full flex-1 flex-col"
-                        >
-                          <AllWorkBoardSection
-                            groups={groups}
-                            hasMore={hasMore}
-                            tableSelection={tableSelection}
-                            onSelectionChange={setTableSelection}
-                          />
-                        </motion.div>
-                      ) : null}
-                    </AnimatePresence>
-                  </div>
-                </ScrollArea>
-                {view !== "table" && (hasMore || hasPrevious) ? (
-                  <div className="flex items-center justify-center gap-2 border-t py-2">
-                    {hasPrevious ? (
-                      <Button variant="ghost" size="sm" onClick={handlePrev}>
-                        ← Previous
-                      </Button>
+                {view === "table" ? (
+                  <AllWorkTableSection
+                    tickets={tickets}
+                    tableSelection={tableSelection}
+                    onSelectionChange={setTableSelection}
+                    onTicketClick={handleTicketClickForTable}
+                    sortState={sortState}
+                    hasMore={hasMore}
+                    hasPrevious={hasPrevious}
+                    pageNumber={pageNumber}
+                    onNext={handleNext}
+                    onPrevious={handlePrev}
+                  />
+                ) : (
+                  <>
+                    <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
+                      <div
+                        className={cn(
+                          "flex flex-1 flex-col overscroll-contain",
+                          view === "board" ? "h-full min-h-0" : "min-h-full",
+                        )}
+                      >
+                        <AnimatePresence mode="wait" initial={false}>
+                          {view === "list" ? (
+                            <motion.div
+                              key="list-view"
+                              variants={swapVariants}
+                              initial="initial"
+                              animate="animate"
+                              exit="exit"
+                              transition={pmSnappy}
+                            >
+                              <AllWorkListSection
+                                groups={groups}
+                                hasMore={hasMore}
+                                tableSelection={tableSelection}
+                                onSelectionChange={setTableSelection}
+                              />
+                            </motion.div>
+                          ) : null}
+                          {view === "board" ? (
+                            <motion.div
+                              key="board-view"
+                              variants={swapVariants}
+                              initial="initial"
+                              animate="animate"
+                              exit="exit"
+                              transition={pmSnappy}
+                              className="flex h-full min-h-0 w-full flex-1 flex-col"
+                            >
+                              <AllWorkBoardSection
+                                groups={groups}
+                                hasMore={hasMore}
+                                tableSelection={tableSelection}
+                                onSelectionChange={setTableSelection}
+                              />
+                            </motion.div>
+                          ) : null}
+                        </AnimatePresence>
+                      </div>
+                    </ScrollArea>
+                    {hasMore || hasPrevious ? (
+                      <TablePagination
+                        mode="cursor"
+                        rowCount={tickets.length}
+                        pageNumber={pageNumber}
+                        hasMore={hasMore}
+                        hasPrevious={hasPrevious}
+                        onNext={handleNext}
+                        onPrevious={handlePrev}
+                      />
                     ) : null}
-                    {hasMore ? (
-                      <Button variant="ghost" size="sm" onClick={handleNext}>
-                        Next →
-                      </Button>
-                    ) : null}
-                  </div>
-                ) : null}
+                  </>
+                )}
               </div>
             </>
           </PageState>

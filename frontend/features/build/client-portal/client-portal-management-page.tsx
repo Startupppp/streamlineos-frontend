@@ -17,7 +17,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
-import { CursorPageControls } from "@/components/ui/cursor-page-controls";
+import { TablePagination } from "@/components/ui/table-pagination";
 import {
   BUILD_FILTER_ALL,
   useBuildListFilters,
@@ -61,6 +61,7 @@ interface GrantsPagerProps {
   nextCursor: string | null;
   hasMore: boolean;
   isPending: boolean;
+  rowCount: number;
   onCursorChange: (cursor: string | null) => void;
 }
 
@@ -69,6 +70,7 @@ function GrantsPager({
   nextCursor,
   hasMore,
   isPending,
+  rowCount,
   onCursorChange,
 }: GrantsPagerProps) {
   const [trail, setTrail] = useState<string[]>(cursor ? [cursor] : []);
@@ -86,13 +88,15 @@ function GrantsPager({
   }, [onCursorChange, trail]);
 
   return (
-    <CursorPageControls
-      page={trail.length + 1}
-      hasNext={hasMore && nextCursor !== null}
-      disabled={isPending}
+    <TablePagination
+      mode="cursor"
+      rowCount={rowCount}
+      pageNumber={trail.length + 1}
+      hasMore={hasMore && nextCursor !== null}
+      hasPrevious={trail.length > 0}
       onPrevious={handlePrevious}
       onNext={handleNext}
-      className="mt-2"
+      disabled={isPending}
     />
   );
 }
@@ -432,19 +436,22 @@ export function ClientPortalManagementPage({ projectId }: ClientPortalManagement
                 />
               ) : (
                 <>
-                  <PmPanel className="flex min-h-0 flex-1 flex-col overflow-hidden p-0">
-                    {grants.map((grant) => (
-                      <GrantRow key={grant.projectClientGrantId} grant={grant} />
-                    ))}
-                  </PmPanel>
-                  <GrantsPager
-                    key={listFilters.resetKey}
-                    cursor={listFilters.cursor}
-                    nextCursor={grantsPage?.pagination.nextCursor ?? null}
-                    hasMore={grantsPage?.pagination.hasMore ?? false}
-                    isPending={grantsLoading || listFilters.isPending}
-                    onCursorChange={listFilters.setCursor}
-                  />
+                  <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                    <PmPanel className="min-h-0 flex-1 overflow-y-auto p-0">
+                      {grants.map((grant) => (
+                        <GrantRow key={grant.projectClientGrantId} grant={grant} />
+                      ))}
+                    </PmPanel>
+                    <GrantsPager
+                      key={listFilters.resetKey}
+                      cursor={listFilters.cursor}
+                      nextCursor={grantsPage?.pagination.nextCursor ?? null}
+                      hasMore={grantsPage?.pagination.hasMore ?? false}
+                      isPending={grantsLoading || listFilters.isPending}
+                      rowCount={grants.length}
+                      onCursorChange={listFilters.setCursor}
+                    />
+                  </div>
                 </>
               )}
             </TabsContent>

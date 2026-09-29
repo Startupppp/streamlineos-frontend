@@ -199,7 +199,12 @@ export const utilsModule = {
   cn: (...args: unknown[]) => args.filter(Boolean).join(" "),
 };
 
-export const dateFnsModule = { formatDistanceToNow: () => "2 hours ago" };
+export const dateFnsModule = {
+  formatDistanceToNow: () => "2 hours ago",
+  parseISO: (value: string) => new Date(value),
+  isValid: (date: Date) => !Number.isNaN(date.getTime()),
+  format: (date: Date) => date.toISOString().slice(0, 10),
+};
 
 export const animatedIconModule = {
   useAnimatedIcon: () => ({ iconRef: { current: null }, hoverHandlers: {} }),

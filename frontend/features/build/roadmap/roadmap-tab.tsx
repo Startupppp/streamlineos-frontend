@@ -260,8 +260,8 @@ export function RoadmapTab({
         onRetry={handleRetry}
         className={CONTENT_FILL_PANEL}
       >
-        <div className="flex min-h-0 flex-1 flex-col gap-2">
-          <div className="grid min-h-0 flex-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="grid min-h-0 flex-1 gap-3 overflow-y-auto md:grid-cols-2 xl:grid-cols-4">
             {ROADMAP_COLUMNS.map((col) => (
               <PmPanel
                 key={col.status}

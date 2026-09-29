@@ -54,6 +54,15 @@ describe("PageState", () => {
     expect(screen.getByText("body")).toBeInTheDocument();
   });
 
+  it("forwards className to the ready branch so list bodies fill the shell", () => {
+    render(
+      <PageState resolution={{ kind: "ready" }} loading={loading} className="flex-1">
+        <div data-testid="ready-body">body</div>
+      </PageState>,
+    );
+    expect(screen.getByTestId("ready-body").parentElement).toHaveClass("flex-1");
+  });
+
   it("falls back to the children when a non-list surface reports emptiness", () => {
     render(
       <PageState resolution={{ kind: "empty" }} loading={loading}>
@@ -70,6 +79,20 @@ describe("PageState", () => {
       </PageState>,
     );
     expect(screen.getByTestId("skeleton").parentElement).toHaveClass("flex-1");
+  });
+
+  it("forwards className to the empty branch so EmptyState fills the shell like Teams", () => {
+    render(
+      <PageState
+        resolution={{ kind: "empty" }}
+        loading={loading}
+        empty={<div data-testid="empty-body">No rows</div>}
+        className="flex-1"
+      >
+        <div>body</div>
+      </PageState>,
+    );
+    expect(screen.getByTestId("empty-body").parentElement).toHaveClass("flex-1");
   });
 
   it("renders access-restricted, not the empty state, when the caller is denied — the Ticket 26 guarantee at the component boundary", () => {

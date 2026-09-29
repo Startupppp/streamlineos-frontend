@@ -70,24 +70,24 @@ export function BuildMobileCard({
 }: BuildMobileCardProps) {
   const metaItems = meta ?? [];
   return (
-    <div className={cn("flex min-w-0 flex-col gap-2", className)}>
+    <div className={cn("flex min-w-0 flex-col gap-2.5", className)}>
       <div className="flex min-w-0 items-start gap-2">
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 space-y-0.5">
           {eyebrow ? (
-            <div className="truncate text-dense font-medium text-muted-foreground">
+            <div className="truncate font-mono text-dense font-medium text-muted-foreground">
               {eyebrow}
             </div>
           ) : null}
-          <div className="truncate text-sm font-medium text-foreground">
+          <div className="truncate text-sm font-semibold text-foreground">
             {title}
           </div>
         </div>
-        {status ? <div className="shrink-0">{status}</div> : null}
+        {status ? <div className="shrink-0 pt-0.5">{status}</div> : null}
         {actions ? <div className="-mr-1 shrink-0">{actions}</div> : null}
       </div>
 
       {person || metaItems.length > 0 ? (
-        <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+        <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5">
           {person ? <CardPerson person={person} /> : null}
           {metaItems.map((item) => (
             <CardMeta key={item.label} item={item} />

@@ -44,9 +44,12 @@ export function useResumeLastProject(): BuildHeaderAction | null {
   }, [isError, error, project]);
 
   if (!projectId || !project || project.status !== "ACTIVE") return null;
+  const resumeName = `Resume ${project.name}`;
   return {
     id: "resume",
-    label: `Resume ${project.name}`,
+    label: "Resume",
+    ariaLabel: resumeName,
+    title: resumeName,
     href: `/build/${project.id}`,
   };
 }

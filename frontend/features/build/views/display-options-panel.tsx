@@ -11,11 +11,10 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+  MobileOnlyLabelTooltip,
+  RESPONSIVE_ICON_LABEL_TRIGGER_CLASS,
+  ResponsiveIconLabelText,
+} from "@/components/ui/responsive-icon-label";
 import { DisplayToggleRow } from "@/features/build/shared/display-toggle-row";
 import type { ViewType } from "./view-switcher";
 import type {
@@ -256,26 +255,20 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
 
   return (
     <ResponsivePopover>
-      <TooltipProvider delayDuration={200}>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <ResponsivePopoverTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="size-9 shrink-0 gap-1 p-0 text-xs font-normal md:h-9 md:w-auto md:px-2"
-                aria-label="Display options"
-              >
-                <Settings2 className="h-3.5 w-3.5 shrink-0" />
-                <span className="hidden md:inline">Display</span>
-              </Button>
-            </ResponsivePopoverTrigger>
-          </TooltipTrigger>
-          <TooltipContent side="bottom" className="text-xs md:hidden">
-            Display options
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <MobileOnlyLabelTooltip label="Display options">
+        <ResponsivePopoverTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className={RESPONSIVE_ICON_LABEL_TRIGGER_CLASS}
+            aria-label="Display options"
+          >
+            <Settings2 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <ResponsiveIconLabelText>Display</ResponsiveIconLabelText>
+          </Button>
+        </ResponsivePopoverTrigger>
+      </MobileOnlyLabelTooltip>
       <ResponsivePopoverContent
         align="start"
         collisionPadding={16}

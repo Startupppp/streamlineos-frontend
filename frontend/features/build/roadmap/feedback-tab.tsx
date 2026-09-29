@@ -108,7 +108,7 @@ export function FeedbackTab({
   const hasNext = data?.pagination.hasMore ?? false;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       <PageState
         resolution={resolution}
         loading={<FeedbackListSkeleton />}
@@ -128,27 +128,31 @@ export function FeedbackTab({
         onRetry={handleRetry}
         className={CONTENT_FILL_PANEL}
       >
-        <PmStaggerList className="space-y-2">
-          {(data?.data ?? []).map((post) => (
-            <FeedbackRow
-              key={post.id}
-              post={post}
-              roadmapItems={roadmapData?.data ?? []}
-              onDelete={handleSetDeleteTarget}
-              onMerge={handleSetMergeTarget}
-            />
-          ))}
-        </PmStaggerList>
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <PmStaggerList className="space-y-2">
+            {(data?.data ?? []).map((post) => (
+              <FeedbackRow
+                key={post.id}
+                post={post}
+                roadmapItems={roadmapData?.data ?? []}
+                onDelete={handleSetDeleteTarget}
+                onMerge={handleSetMergeTarget}
+              />
+            ))}
+          </PmStaggerList>
+        </div>
       </PageState>
 
-      <TablePagination
-        mode="cursor"
-        rowCount={(data?.data ?? []).length}
-        hasMore={hasNext}
-        hasPrevious={Boolean(cursor)}
-        onNext={handleNext}
-        onPrevious={handlePrev}
-      />
+      {(data?.data ?? []).length > 0 || Boolean(cursor) ? (
+        <TablePagination
+          mode="cursor"
+          rowCount={(data?.data ?? []).length}
+          hasMore={hasNext}
+          hasPrevious={Boolean(cursor)}
+          onNext={handleNext}
+          onPrevious={handlePrev}
+        />
+      ) : null}
 
       <MergeFeedbackDialog post={mergeTarget} onOpenChange={handleMergeDialogChange} />
 
