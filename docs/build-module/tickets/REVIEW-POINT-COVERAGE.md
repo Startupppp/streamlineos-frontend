@@ -213,6 +213,16 @@ two and is an owner decision, not an oversight.
       **Earned by:** applying 1500 and re-running that `EXPLAIN (ANALYZE, BUFFERS)` against a database
       that holds real approvals, confirming the sort node is gone.
 
+      Verified 2026-09-29 — `pnpm typecheck` (exit 0, 10240 MB per BE-139); `node
+      src/scripts/check-migration-rollback.mjs` and `check-migration-discipline.mjs` name no 1500
+      finding once its rollback landed; `check-migration-immutability.mjs` → "every sealed migration
+      still builds the same database"; `check-tenant-indexes.mjs` and `check-partial-index-upserts.mjs`
+      unchanged; `npx jest --runTestsByPath` over the eight approvals and unified-inbox unit specs →
+      **8 suites, 73 tests passed**. What this proves: the DDL is journalled, reversible, immutable-safe
+      and the schema declaration compiles, and the inbox read's behaviour is unchanged. What it does not
+      prove: none of this touches a database, so the index does not exist anywhere and its effect on the
+      plan is still unmeasured.
+
       Two adjacent findings from the same ticket stay open and are **not** this box:
       `idx_project_approvals_approver_status` has no `WHERE deleted_at IS NULL` (a BE-51 gap), and the
       cursor predicate is written as `(created_at < ?) OR (created_at = ? AND id < ?)`, which the
