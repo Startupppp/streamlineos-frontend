@@ -24,16 +24,16 @@ interface ProjectSettingsPortalPageProps {
 }
 
 interface TicketRowProps {
-  ticket: { id: number; ticketNumber: number; title: string; clientVisible: boolean };
-  onToggle: (ticketId: number, clientVisible: boolean) => void;
+  ticket: { id: number; ticketNumber: number; title: string; clientVisible: boolean; version: number };
+  onToggle: (ticketId: number, clientVisible: boolean, version: number) => void;
   isPending: boolean;
   canManage: boolean;
 }
 
 function TicketVisibilityRow({ ticket, onToggle, isPending, canManage }: TicketRowProps) {
   const handleToggle = useCallback(
-    (checked: boolean) => onToggle(ticket.id, checked),
-    [onToggle, ticket.id],
+    (checked: boolean) => onToggle(ticket.id, checked, ticket.version),
+    [onToggle, ticket.id, ticket.version],
   );
 
   return (
@@ -107,9 +107,9 @@ export function ProjectSettingsPortalPage({ projectId }: ProjectSettingsPortalPa
   });
 
   const handleTicketToggle = useCallback(
-    (ticketId: number, clientVisible: boolean) => {
+    (ticketId: number, clientVisible: boolean, version: number) => {
       updateTicket.mutate(
-        { ticketId, clientVisible },
+        { ticketId, clientVisible, version },
         { onError: (err) => toast.error(getErrorMessage(err)) },
       );
     },

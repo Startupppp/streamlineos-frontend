@@ -70,6 +70,7 @@ const ticketVisibilityItemContract = z.object({
   title: z.string(),
   type: z.string(),
   clientVisible: z.boolean(),
+  version: z.number().int(),
 });
 
 const milestoneVisibilityItemContract = z.object({

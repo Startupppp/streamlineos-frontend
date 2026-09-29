@@ -22,6 +22,7 @@ import {
   signInWithMagicToken,
   useAcceptInvitation,
   useDeclineInvitation,
+  useRequestInvitationOtp,
   useValidateInvitation,
 } from "@/hooks/common/auth-hooks";
 import { useConfirmedSessionClaimsRefresh } from "@/hooks/common/use-confirmed-session-claims-refresh";
@@ -29,6 +30,7 @@ import { motion } from "framer-motion";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { ArrowRight } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-envelope";
 import {
   InvitationCard,
   InvitationHero,
@@ -38,7 +40,9 @@ import {
 } from "@/components/auth/invitation-card";
 import {
   invitationAcceptSchema,
+  invitationOtpSchema,
   type InvitationAcceptFormValues,
+  type InvitationOtpFormValues,
   canonicalEmail,
 } from "./invitation-accept-schema";
 
@@ -56,7 +60,7 @@ export default function InvitationPage() {
   const { data: session } = useSession();
   const beginClaimsRefresh = useConfirmedSessionClaimsRefresh();
 
-  const form = useForm<InvitationAcceptFormValues>({
+  const nameForm = useForm<InvitationAcceptFormValues>({
     resolver: zodResolver(invitationAcceptSchema),
     defaultValues: {
       firstName: "",
@@ -64,8 +68,15 @@ export default function InvitationPage() {
     },
   });
 
+  const otpForm = useForm<InvitationOtpFormValues>({
+    resolver: zodResolver(invitationOtpSchema),
+    defaultValues: { emailOtp: "" },
+  });
+
   const [declineOpen, setDeclineOpen] = useState(false);
   const [isCompletingAcceptance, setIsCompletingAcceptance] = useState(false);
+  const [otpStep, setOtpStep] = useState(false);
+  const [pendingNameValues, setPendingNameValues] = useState<InvitationAcceptFormValues | null>(null);
   const acceptingRef = useRef(false);
 
   const {
@@ -76,6 +87,7 @@ export default function InvitationPage() {
 
   const acceptInvitation = useAcceptInvitation();
   const declineInvitation = useDeclineInvitation();
+  const requestInvitationOtp = useRequestInvitationOtp();
 
   const openDecline = useCallback(() => setDeclineOpen(true), []);
 
@@ -116,8 +128,38 @@ export default function InvitationPage() {
     [router],
   );
 
-  const submitNewUser = useCallback(
+  const submitNameStep = useCallback(
     (values: InvitationAcceptFormValues) => {
+      if (!invitationToken) {
+        toast.error("Invalid invitation");
+        return;
+      }
+      setPendingNameValues(values);
+      requestInvitationOtp.mutate(
+        { token: invitationToken },
+        {
+          onSuccess: () => {
+            setOtpStep(true);
+          },
+          onError: (error) => {
+            toast.error(getErrorMessage(error));
+          },
+        },
+      );
+    },
+    [invitationToken, requestInvitationOtp],
+  );
+
+  const handleNameFormSubmit = useCallback(
+    (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      void nameForm.handleSubmit(submitNameStep)(event);
+    },
+    [nameForm, submitNameStep],
+  );
+
+  const submitOtpStep = useCallback(
+    (values: InvitationOtpFormValues) => {
       if (acceptingRef.current) return;
       if (!invitationToken || !invitation) {
         toast.error("Invalid invitation");
@@ -127,8 +169,9 @@ export default function InvitationPage() {
       acceptInvitation.mutate(
         {
           token: invitationToken,
-          firstName: values.firstName || undefined,
-          lastName: values.lastName || undefined,
+          firstName: pendingNameValues?.firstName || undefined,
+          lastName: pendingNameValues?.lastName || undefined,
+          emailOtp: values.emailOtp,
         },
         {
           onSuccess: async (data) => {
@@ -150,16 +193,32 @@ export default function InvitationPage() {
         },
       );
     },
-    [invitationToken, invitation, acceptInvitation, router, autoLoginWithToken],
+    [invitationToken, invitation, acceptInvitation, pendingNameValues, router, autoLoginWithToken],
   );
 
-  const handleNewUserSubmit = useCallback(
+  const handleOtpFormSubmit = useCallback(
     (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      void form.handleSubmit(submitNewUser)(event);
+      void otpForm.handleSubmit(submitOtpStep)(event);
     },
-    [form, submitNewUser],
+    [otpForm, submitOtpStep],
   );
+
+  const handleResendOtp = useCallback(() => {
+    if (!invitationToken) return;
+    requestInvitationOtp.mutate(
+      { token: invitationToken },
+      {
+        onSuccess: () => {
+          otpForm.reset({ emailOtp: "" });
+          toast.success("A new verification code was sent.");
+        },
+        onError: (error) => {
+          toast.error(getErrorMessage(error));
+        },
+      },
+    );
+  }, [invitationToken, requestInvitationOtp, otpForm]);
 
   const handleExistingUserAccept = useCallback(() => {
     if (acceptingRef.current) return;
@@ -226,18 +285,27 @@ export default function InvitationPage() {
   }
 
   if (invitationError || !invitation) {
+    const isExpired =
+      invitationError !== null &&
+      isApiError(invitationError) &&
+      invitationError.status === 404;
     return (
       <div className="w-full max-w-[480px]">
         <InvitationCard>
           <InvitationHero
-            title="Invitation unavailable"
-            description={getErrorMessage(invitationError)}
+            title={isExpired ? "Invitation expired" : "Invitation unavailable"}
+            description={
+              isExpired
+                ? "This invitation link has expired or was already used."
+                : getErrorMessage(invitationError)
+            }
             verified={false}
           />
           <CardContent className="px-6 py-5">
             <p className="mb-4 text-center text-sm text-muted-foreground">
-              Ask an organization administrator to send a new invitation if this
-              link has expired or was replaced.
+              {isExpired
+                ? "Ask an organization administrator to send a new invitation."
+                : "Ask an organization administrator to send a new invitation if this link has expired or was replaced."}
             </p>
             <Button className="w-full" onClick={goToSignIn}>
               Go to sign in
@@ -317,6 +385,84 @@ export default function InvitationPage() {
     );
   }
 
+  if (otpStep) {
+    return (
+      <motion.div
+        className="w-full max-w-[480px]"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.div variants={fadeUp}>
+          <InvitationCard>
+            <InvitationHero
+              title="Verify your email"
+              description={`Enter the 6-digit code sent to ${invitation.email} to confirm your identity.`}
+            />
+            <CardContent className="px-5 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5">
+              <Form {...otpForm}>
+                <form
+                  onSubmit={handleOtpFormSubmit}
+                  className="space-y-4"
+                  aria-busy={acceptInvitation.isPending}
+                >
+                  <FormField
+                    control={otpForm.control}
+                    name="emailOtp"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-foreground text-xs font-medium">
+                          Verification code
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="text"
+                            inputMode="numeric"
+                            maxLength={6}
+                            placeholder="6-digit code"
+                            autoComplete="one-time-code"
+                            disabled={acceptInvitation.isPending}
+                            className="text-center text-lg font-mono tracking-widest"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="space-y-1.5 pt-0.5">
+                    <LoadingButton
+                      type="submit"
+                      className="h-11 w-full gap-2 font-medium"
+                      isPending={acceptInvitation.isPending}
+                      loadingText="Verifying..."
+                    >
+                      Verify & create account
+                      <ArrowRight className="h-4 w-4" />
+                    </LoadingButton>
+
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="h-10 w-full text-muted-foreground hover:text-foreground"
+                      onClick={handleResendOtp}
+                      disabled={
+                        acceptInvitation.isPending || requestInvitationOtp.isPending
+                      }
+                    >
+                      Resend code
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </CardContent>
+          </InvitationCard>
+        </motion.div>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
       className="w-full max-w-[480px]"
@@ -337,15 +483,15 @@ export default function InvitationPage() {
               invitedEmail={invitation.email}
             />
 
-            <Form {...form}>
+            <Form {...nameForm}>
               <form
-                onSubmit={handleNewUserSubmit}
+                onSubmit={handleNameFormSubmit}
                 className="mt-4 space-y-3.5"
-                aria-busy={acceptInvitation.isPending}
+                aria-busy={requestInvitationOtp.isPending}
               >
                 <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2">
                   <FormField
-                    control={form.control}
+                    control={nameForm.control}
                     name="firstName"
                     render={({ field }) => (
                       <FormItem>
@@ -359,7 +505,7 @@ export default function InvitationPage() {
                             type="text"
                             placeholder="Your first name"
                             autoComplete="given-name"
-                            disabled={acceptInvitation.isPending}
+                            disabled={requestInvitationOtp.isPending}
                             className="text-sm"
                           />
                         </FormControl>
@@ -368,7 +514,7 @@ export default function InvitationPage() {
                     )}
                   />
                   <FormField
-                    control={form.control}
+                    control={nameForm.control}
                     name="lastName"
                     render={({ field }) => (
                       <FormItem>
@@ -382,7 +528,7 @@ export default function InvitationPage() {
                             type="text"
                             placeholder="Your last name"
                             autoComplete="family-name"
-                            disabled={acceptInvitation.isPending}
+                            disabled={requestInvitationOtp.isPending}
                             className="text-sm"
                           />
                         </FormControl>
@@ -396,10 +542,10 @@ export default function InvitationPage() {
                   <LoadingButton
                     type="submit"
                     className="h-11 w-full gap-2 font-medium"
-                    isPending={acceptInvitation.isPending}
-                    loadingText="Accepting invitation..."
+                    isPending={requestInvitationOtp.isPending}
+                    loadingText="Sending verification code..."
                   >
-                    Accept invitation
+                    Continue
                     <ArrowRight className="h-4 w-4" />
                   </LoadingButton>
 
@@ -409,7 +555,7 @@ export default function InvitationPage() {
                     className="h-10 w-full text-muted-foreground hover:text-foreground"
                     onClick={openDecline}
                     disabled={
-                      acceptInvitation.isPending || declineInvitation.isPending
+                      requestInvitationOtp.isPending || declineInvitation.isPending
                     }
                   >
                     Decline invitation

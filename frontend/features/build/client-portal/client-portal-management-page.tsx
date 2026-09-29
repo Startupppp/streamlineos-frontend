@@ -30,6 +30,7 @@ import {
   PmPanel,
   PmSection,
 } from "@/components/pm-chrome";
+import { ClientVisibilityPage } from "@/features/build/client-portal/client-visibility-page";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 
@@ -386,13 +387,18 @@ export function ClientPortalManagementPage({ projectId }: ClientPortalManagement
                   description={
                     listFilters.isFiltered
                       ? "No grant matches the current filters. Clear them to see every grant on this project."
-                      : "Grant a client portal membership access to this project from the Client Access settings."
+                      : "Grant a client portal membership access to this project from Client Access settings."
                   }
                   className="min-h-full w-full flex-1"
                   action={
                     listFilters.isFiltered
                       ? { label: "Clear filters", onClick: listFilters.clearAll }
-                      : undefined
+                      : canManage
+                        ? {
+                            label: "Manage grants",
+                            href: "/build/settings/client-access",
+                          }
+                        : undefined
                   }
                 />
               ) : (
@@ -418,12 +424,7 @@ export function ClientPortalManagementPage({ projectId }: ClientPortalManagement
             </TabsContent>
 
             <TabsContent value="visibility" className="mt-0 flex min-h-0 flex-1 flex-col">
-              <EmptyState
-                illustrationPreset="permissions"
-                title="Visibility lives on each item"
-                description="Tickets and milestones already marked visible appear in the client portal. Open Preview to see exactly what a client sees today."
-                className="min-h-full w-full flex-1"
-              />
+              <ClientVisibilityPage projectId={projectId} sectionParamKey="vsec" standalone={false} />
             </TabsContent>
 
             <TabsContent value="preview" className="mt-0 flex min-h-0 flex-1 flex-col">
