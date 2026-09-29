@@ -83,7 +83,7 @@ export function ActionItemFormSheet({
         status: values.status,
       });
     } else {
-      onSubmitCreate({ title: values.title, description, assigneeId, dueDate, status: values.status });
+      onSubmitCreate({ title: values.title, description, assigneeId, dueDate });
     }
   }
 
@@ -134,7 +134,7 @@ export function ActionItemFormSheet({
               <FormMessage />
             </FormItem>
           )} />
-          <div className="grid grid-cols-2 gap-4">
+          <div className={`grid gap-4 ${mode === "edit" ? "grid-cols-2" : "grid-cols-1"}`}>
             <FormField control={form.control} name="assigneeId" render={({ field }) => (
               <FormItem>
                 <FormLabel>Assignee</FormLabel>
@@ -150,21 +150,23 @@ export function ActionItemFormSheet({
                 <FormMessage />
               </FormItem>
             )} />
-            <FormField control={form.control} name="status" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Status</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <FormControl><SelectTrigger className="text-sm"><SelectValue /></SelectTrigger></FormControl>
-                  <SelectContent>
-                    <SelectItem value="open">Open</SelectItem>
-                    <SelectItem value="in_progress">In Progress</SelectItem>
-                    <SelectItem value="done">Done</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )} />
+            {mode === "edit" && (
+              <FormField control={form.control} name="status" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Status</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl><SelectTrigger className="text-sm"><SelectValue /></SelectTrigger></FormControl>
+                    <SelectContent>
+                      <SelectItem value="open">Open</SelectItem>
+                      <SelectItem value="in_progress">In Progress</SelectItem>
+                      <SelectItem value="done">Done</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
+            )}
           </div>
           <FormField control={form.control} name="dueDate" render={({ field }) => (
             <FormItem>

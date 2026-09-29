@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { ProjectApprovalsPage } from "./project-approvals-page";
 import { ApiError } from "@/lib/api-envelope";
 
@@ -76,9 +76,25 @@ jest.mock("@/components/ui/page-wrapper", () => ({
   ),
 }));
 
+const mockDataTableOnChange = jest.fn();
 jest.mock("@/components/ui/data-table", () => ({
-  DataTable: ({ data }: { data: unknown[] }) => (
-    <div data-testid="data-table" data-rows={data.length} />
+  DataTable: ({
+    data,
+    selection,
+  }: {
+    data: unknown[];
+    selection?: { onChange?: (ids: Set<string>) => void };
+  }) => (
+    <div data-testid="data-table" data-rows={data.length}>
+      <button
+        type="button"
+        data-testid="select-row-1"
+        onClick={() => {
+          selection?.onChange?.(new Set(["1"]));
+          mockDataTableOnChange(new Set(["1"]));
+        }}
+      />
+    </div>
   ),
   DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
 }));
@@ -124,7 +140,9 @@ jest.mock("./approvals-toolbar", () => ({
 }));
 
 jest.mock("./approval-bulk-action-bar", () => ({
-  ApprovalBulkActionBar: () => null,
+  ApprovalBulkActionBar: ({ onCancelSelected }: { onCancelSelected?: () => void; selectedCount?: number }) => (
+    <button type="button" data-testid="bulk-cancel-btn" onClick={onCancelSelected} />
+  ),
 }));
 
 jest.mock("./request-approval-sheet", () => ({
@@ -353,4 +371,31 @@ it("shows the Request Approval button when build:approvals:request is granted", 
   mockUseCan.mockReturnValue(true);
   render(<ProjectApprovalsPage projectId={1} />);
   expect(screen.getByRole("button", { name: /request approval/i })).toBeInTheDocument();
+});
+
+describe("BUG-042 — bulk cancel fires updateApproval with a numeric ID even though DataTable yields string IDs", () => {
+  it("does NOT call updateApproval.mutate when no rows are selected (negative control)", () => {
+    const mutateMock = jest.fn();
+    mockUseUpdateApproval.mockReturnValue({ mutate: mutateMock, isPending: false });
+    mockUseCan.mockReturnValue(true);
+    mockUseProjectApprovals.mockReturnValue(baseQueryResult({ data: approvalPages([approvalRow]) }));
+    render(<ProjectApprovalsPage projectId={1} />);
+    fireEvent.click(screen.getByTestId("bulk-cancel-btn"));
+    expect(mutateMock).not.toHaveBeenCalled();
+  });
+
+  it("calls updateApproval.mutate with a numeric approvalId when DataTable onChange yields a string ID (BUG-042 coercion fix)", () => {
+    const mutateMock = jest.fn();
+    mockUseUpdateApproval.mockReturnValue({ mutate: mutateMock, isPending: false });
+    mockUseCan.mockReturnValue(true);
+    mockUseProjectApprovals.mockReturnValue(baseQueryResult({ data: approvalPages([approvalRow]) }));
+    render(<ProjectApprovalsPage projectId={1} />);
+    fireEvent.click(screen.getByTestId("select-row-1"));
+    fireEvent.click(screen.getByTestId("bulk-cancel-btn"));
+    expect(mutateMock).toHaveBeenCalledTimes(1);
+    const callArg = (mutateMock.mock.calls[0] as [{ approvalId: number; status: string }])[0];
+    expect(typeof callArg.approvalId).toBe("number");
+    expect(callArg.approvalId).toBe(1);
+    expect(callArg.status).toBe("cancelled");
+  });
 });

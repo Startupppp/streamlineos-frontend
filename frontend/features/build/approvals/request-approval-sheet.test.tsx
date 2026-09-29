@@ -21,6 +21,9 @@ let currentFormValues: RequestApprovalValues = {
   level: "1",
 };
 
+let mockSetValueRef: jest.Mock = jest.fn();
+let mockDirtyFields: Record<string, boolean> = {};
+
 jest.mock("react-hook-form", () => ({
   useForm: () => ({
     handleSubmit:
@@ -31,12 +34,12 @@ jest.mock("react-hook-form", () => ({
       },
     control: {},
     reset: jest.fn(),
-    formState: { isDirty: false, errors: {} },
+    formState: { isDirty: false, dirtyFields: mockDirtyFields, errors: {} },
     watch: (field: string) => {
       const values: Record<string, unknown> = currentFormValues;
       return values[field] ?? "";
     },
-    setValue: jest.fn(),
+    setValue: (...args: unknown[]) => mockSetValueRef(...args),
   }),
   zodResolver: jest.fn(),
 }));
@@ -45,8 +48,10 @@ jest.mock("@/hooks/api/build/projects", () => ({
   useProject: () => ({ data: { key: "PROJ", id: 42, orgId: "org-1", name: "Test Project", description: null, managedProductId: null, startDate: null, endDate: null, status: "ACTIVE", settings: null } }),
 }));
 
+let mockTicketsData: { data: { id: number; ticketNumber: number; title: string; status: string }[]; hasMore: boolean; nextCursor: null } = { data: [], hasMore: false, nextCursor: null };
+
 jest.mock("@/hooks/api/build/tickets", () => ({
-  useTickets: () => ({ data: { data: [], hasMore: false, nextCursor: null }, isFetching: false }),
+  useTickets: () => ({ data: mockTicketsData, isFetching: false }),
 }));
 
 jest.mock("@/hooks/api/build/milestones", () => ({
@@ -372,5 +377,48 @@ describe("RequestApprovalSheet — entity picker visibility", () => {
     renderSheet();
     expect(screen.queryByTestId("entity-combobox")).toBeNull();
     expect(screen.getByText("Project Budget (auto-selected)")).toBeTruthy();
+  });
+});
+
+describe("BUG-041 — dirtyFields.title guard prevents auto-fill from overwriting a user-typed title", () => {
+  beforeEach(() => {
+    mockSetValueRef = jest.fn();
+    mockDirtyFields = {};
+    mockTicketsData = {
+      data: [{ id: 1, ticketNumber: 7, title: "Fix login bug", status: "open" }],
+      hasMore: false,
+      nextCursor: null,
+    };
+    currentFormValues = {
+      entityType: "task",
+      entityId: "1",
+      title: "Approve task: Fix login bug",
+      approverId: "user-xyz",
+      reason: "",
+      dueAt: "",
+      level: "1",
+    };
+  });
+
+  afterEach(() => {
+    mockTicketsData = { data: [], hasMore: false, nextCursor: null };
+  });
+
+  it("calls setValue with the auto-generated title when dirtyFields.title is not set so pristine forms receive the suggestion", () => {
+    mockDirtyFields = {};
+    renderSheet();
+    const titleCalls = mockSetValueRef.mock.calls.filter(
+      (c) => (c as unknown[])[0] === "title",
+    );
+    expect(titleCalls.length).toBeGreaterThan(0);
+  });
+
+  it("does NOT call setValue for title when dirtyFields.title is true so a user-typed title is preserved (BUG-041 guard)", () => {
+    mockDirtyFields = { title: true };
+    renderSheet();
+    const titleCalls = mockSetValueRef.mock.calls.filter(
+      (c) => (c as unknown[])[0] === "title",
+    );
+    expect(titleCalls).toHaveLength(0);
   });
 });

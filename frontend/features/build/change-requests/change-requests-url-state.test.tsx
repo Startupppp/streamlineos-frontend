@@ -489,3 +489,28 @@ describe("ChangeRequestsPage — URL state for q (server-side text search)", () 
     );
   });
 });
+
+describe("BUG-045 — changeRequestFormSchema.estimateHours must reject negative values with a per-field error", () => {
+  const { changeRequestFormSchema } = jest.requireActual("./change-request-schema") as typeof import("./change-request-schema");
+  const base = { title: "Scope change", description: "", impact: "", status: "submitted", budgetRs: "", timelineDays: "", approvalOwnerId: "none", decisionComment: "" };
+
+  it("rejects a negative estimate so the frontend shows a per-field error rather than a silent backend 400", () => {
+    const result = changeRequestFormSchema.safeParse({ ...base, estimateHours: "-1" });
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts an empty estimate so the field is still optional and blank forms submit correctly", () => {
+    const result = changeRequestFormSchema.safeParse({ ...base, estimateHours: "" });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts a zero estimate confirming the boundary is exclusive of negative not exclusive of zero", () => {
+    const result = changeRequestFormSchema.safeParse({ ...base, estimateHours: "0" });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts a positive estimate so valid estimates still pass", () => {
+    const result = changeRequestFormSchema.safeParse({ ...base, estimateHours: "8.5" });
+    expect(result.success).toBe(true);
+  });
+});

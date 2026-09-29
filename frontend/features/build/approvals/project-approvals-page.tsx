@@ -180,9 +180,10 @@ export function ProjectApprovalsPage({
   const handleBulkCancel = useCallback(() => {
     const count = selectedIds.size;
     for (const id of selectedIds) {
-      if (typeof id !== "number") continue;
+      const numId = Number(id);
+      if (!Number.isFinite(numId) || numId <= 0) continue;
       updateApproval.mutate(
-        { approvalId: id, status: "cancelled" },
+        { approvalId: numId, status: "cancelled" },
         { onError: (e) => toast.error(getErrorMessage(e)) },
       );
     }
