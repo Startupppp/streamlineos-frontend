@@ -172,6 +172,7 @@ export function DocumentsPage() {
 
   const handleNewFolder = useCallback((name: string) => {
     setCustomFolders((prev) => {
+      if (prev.some((folder) => folder.toLowerCase() === name.toLowerCase())) return prev;
       const updated = [...prev, name];
       if (foldersKey) {
         try { localStorage.setItem(foldersKey, JSON.stringify(updated)); } catch { }

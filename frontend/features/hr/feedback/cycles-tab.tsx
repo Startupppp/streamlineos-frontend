@@ -388,6 +388,7 @@ export function CyclesTab() {
                     <Button
                       size="sm"
                       variant="outline"
+                      disabled={updateStatus.isPending}
                       onClick={() => setCloseTarget(cycle)}
                     >
                       Close cycle
