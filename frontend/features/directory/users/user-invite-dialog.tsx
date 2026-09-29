@@ -29,14 +29,101 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useInviteUser } from "@/hooks/api/users";
+import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { CheckCircle2, Mail } from "lucide-react";
 import { USER_INVITE_ROLES } from "@/lib/constants/user-invite-roles";
+import { MANIFEST } from "@/lib/module-manifest";
+import type { ModuleEntry } from "@/lib/module-manifest-schema";
 import {
   inviteUserSchema,
   type InviteUserFormValues,
 } from "./user-invite-schema";
+
+const ADMINISTRABLE_MODULES: readonly ModuleEntry[] = MANIFEST.modules.filter(
+  (m) => m.administrable,
+);
+
+function isModuleStanding(value: string): value is "MEMBER" | "ADMIN" {
+  return value === "MEMBER" || value === "ADMIN";
+}
+
+interface ModuleAccessRowProps {
+  moduleKey: string;
+  displayName: string;
+  currentStanding: string;
+  onStandingChange: (moduleKey: string, standing: string) => void;
+}
+
+function ModuleAccessRow({
+  moduleKey,
+  displayName,
+  currentStanding,
+  onStandingChange,
+}: ModuleAccessRowProps) {
+  const handleChange = useCallback(
+    (value: string) => onStandingChange(moduleKey, value),
+    [moduleKey, onStandingChange],
+  );
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <span className="text-sm">{displayName}</span>
+      <Select value={currentStanding} onValueChange={handleChange}>
+        <SelectTrigger
+          className="w-32 h-9 text-sm"
+          aria-label={`Module access for ${displayName}`}
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="NONE">No access</SelectItem>
+          <SelectItem value="MEMBER">Member</SelectItem>
+          <SelectItem value="ADMIN">Admin</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+interface ModuleAccessSectionProps {
+  field: {
+    value: InviteUserFormValues["moduleAccess"];
+    onChange: (value: InviteUserFormValues["moduleAccess"]) => void;
+  };
+}
+
+function ModuleAccessSection({ field }: ModuleAccessSectionProps) {
+  function handleStandingChange(moduleKey: string, standing: string) {
+    const current = (field.value ?? []).filter(
+      (item) => item.moduleKey !== moduleKey,
+    );
+    if (isModuleStanding(standing)) {
+      field.onChange([...current, { moduleKey, standing }]);
+    } else {
+      field.onChange(current);
+    }
+  }
+
+  return (
+    <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+      {ADMINISTRABLE_MODULES.map((mod) => {
+        const entry = (field.value ?? []).find(
+          (item) => item.moduleKey === mod.id,
+        );
+        return (
+          <ModuleAccessRow
+            key={mod.id}
+            moduleKey={mod.id}
+            displayName={mod.displayName}
+            currentStanding={entry?.standing ?? "NONE"}
+            onStandingChange={handleStandingChange}
+          />
+        );
+      })}
+    </div>
+  );
+}
 
 interface UserInviteDialogProps {
   open: boolean;
@@ -52,44 +139,55 @@ export function UserInviteDialog({
   const [invited, setInvited] = useState(false);
   const [wasResent, setWasResent] = useState(false);
   const { mutate: inviteUser, isPending } = useInviteUser();
+  const canManageRbac = useCan("settings:rbac:manage");
 
   const form = useForm<InviteUserFormValues>({
     resolver: zodResolver(inviteUserSchema),
-    // `role` is deliberately unset: the schema's enum has no empty member, and a
-    // partial default is what `DefaultValues` is for.
     defaultValues: {
       email: defaultEmail ?? "",
       role: undefined,
+      moduleAccess: [],
     },
   });
 
-  const handleOpenChange = useCallback((isOpen: boolean) => {
-    if (!isOpen) {
-      form.reset();
-      setInvited(false);
-      setWasResent(false);
-    }
-    onOpenChange(isOpen);
-  }, [form, onOpenChange]);
+  const handleOpenChange = useCallback(
+    (isOpen: boolean) => {
+      if (!isOpen) {
+        form.reset();
+        setInvited(false);
+        setWasResent(false);
+      }
+      onOpenChange(isOpen);
+    },
+    [form, onOpenChange],
+  );
 
-  const handleCloseDialog = useCallback(() => handleOpenChange(false), [handleOpenChange]);
+  const handleCloseDialog = useCallback(
+    () => handleOpenChange(false),
+    [handleOpenChange],
+  );
 
   function onSubmit(values: InviteUserFormValues) {
     inviteUser(
       {
         email: values.email,
         role: values.role,
+        ...(values.moduleAccess && values.moduleAccess.length > 0
+          ? { moduleAccess: values.moduleAccess }
+          : {}),
       },
       {
         onSuccess: (result) => {
           setInvited(true);
           setWasResent(result.resent);
-          toast.success(result.resent ? "Invitation re-sent!" : "Invitation sent!");
+          toast.success(
+            result.resent ? "Invitation re-sent" : "Invitation sent",
+          );
         },
         onError: (error) => {
           toast.error(getErrorMessage(error));
         },
-      }
+      },
     );
   }
 
@@ -111,15 +209,13 @@ export function UserInviteDialog({
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-status-success-surface">
               <CheckCircle2 className="h-6 w-6 text-status-success-ink" />
             </div>
-            <p className="font-medium text-sm">{wasResent ? "Invitation re-sent!" : "Invitation sent!"}</p>
+            <p className="font-medium text-sm">
+              {wasResent ? "Invitation re-sent!" : "Invitation sent!"}
+            </p>
             <p className="text-xs text-muted-foreground">
               The user will receive an email with instructions to join.
             </p>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleResetInvite}
-            >
+            <Button size="sm" variant="outline" onClick={handleResetInvite}>
               Invite another
             </Button>
           </div>
@@ -131,10 +227,13 @@ export function UserInviteDialog({
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email address <span className="text-destructive">*</span></FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <FormLabel>
+                      Email address{" "}
+                      <span className="text-destructive">*</span>
+                    </FormLabel>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <FormControl>
                         <Input
                           {...field}
                           placeholder="colleague@company.com"
@@ -142,8 +241,8 @@ export function UserInviteDialog({
                           className="pl-9"
                           autoComplete="off"
                         />
-                      </div>
-                    </FormControl>
+                      </FormControl>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -154,7 +253,9 @@ export function UserInviteDialog({
                 name="role"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Role <span className="text-destructive">*</span></FormLabel>
+                    <FormLabel>
+                      Role <span className="text-destructive">*</span>
+                    </FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
@@ -174,6 +275,20 @@ export function UserInviteDialog({
                 )}
               />
 
+              {canManageRbac && (
+                <FormField
+                  control={form.control}
+                  name="moduleAccess"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Module access</FormLabel>
+                      <ModuleAccessSection field={field} />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
               <DialogFooter>
                 <Button
                   type="button"
@@ -183,7 +298,11 @@ export function UserInviteDialog({
                 >
                   Cancel
                 </Button>
-                <LoadingButton type="submit" isPending={isPending} loadingText="Sending…">
+                <LoadingButton
+                  type="submit"
+                  isPending={isPending}
+                  loadingText="Sending…"
+                >
                   Send invitation
                 </LoadingButton>
               </DialogFooter>
