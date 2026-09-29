@@ -117,5 +117,5 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
   - Context action **copy link/key** — reachable only from inside `frontend/features/wiki/components/page-share-popover.tsx`, which `frontend/features/wiki/components/page-document-toolbar.tsx:176` gates on `kb:pages:update`, so a read-only viewer has no path to the page's link.
 - [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
-- [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — **BROWSER VERIFICATION PENDING** (2026-09-29: waived by Tarun; see the open non-browser box above).
-- [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — **BROWSER VERIFICATION PENDING** (2026-09-29: waived by Tarun; see the open non-browser box above).
+- [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; see the open non-browser box above).
+- [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; see the open non-browser box above).

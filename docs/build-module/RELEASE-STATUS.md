@@ -58,14 +58,14 @@ checkbox state of every file under `docs/build-module/`.
   browser session, a non-production authenticated tenant, a non-production database, or a Redis that
   is not the production Upstash instance in `backend/.env`. Inventing a tick for any of them would
   have been a fabrication, so none was added.
-- **Boxes annotated browser-pending: 166**, across the 83 page specifications and `LANE-5-STATUS.md`
+- **Boxes waived out of scope: 166.** Tarun waived browser verification for this pass, so these are marked **OUT OF SCOPE — browser verification** and are not release blockers. They run across the 83 page specifications and `LANE-5-STATUS.md`
   — 80 production-browser-evidence boxes, 72 keyboard/screen-reader/reduced-motion/375 px/high-density
-  boxes, and 14 of the same plus secret-redaction. Tarun waived browser verification for this pass.
+  boxes, and 14 of the same plus secret-redaction.
   157 of the 166 sit where every non-browser criterion on the page is ticked; the other 9 say instead
   that a non-browser box above them is still open.
 - **Boxes left open: 40**, each now carrying one dated 2026-09-29 statement of why and what would
   earn it, above the measured evidence, which was kept. They split:
-  - **(a) browser- or measurement-pending — 12.** Needs a browser: `01-ia-navigation.md` nav
+  - **(a) browser- or measurement-pending — 12.** The five browser ones are covered by the same waiver as the 166 above, leaving **7 that need an instrument no waiver can supply**. Needs a browser: `01-ia-navigation.md` nav
     equivalence, `04-shared-components.md` focus/responsive, `tickets/55` gallery reachability,
     `tickets/ARCHITECTURE-VERIFICATION-2026-09-27.md` release proof, and this file's desktop/mobile
     matrix. Needs a non-production database: `02-schemas.md` composite indexes,
@@ -97,7 +97,9 @@ checkbox state of every file under `docs/build-module/`.
     deliberately-false by design (11, 16, 38, 44, 50, 51, 54) and cannot tick without reverting the
     fix that made them false.
 - **Total across the pack: 1,078 earned of 1,284 boxes** (206 open), counted over every `- [ ]` and
-  `- [x]` under `docs/build-module/**`.
+  `- [x]` under `docs/build-module/**`. With browser verification waived, the in-scope remainder is
+  **40 open boxes, of which 5 are Tarun decisions and 23 are unfinished product work** — the other 166
+  are out of scope, not outstanding.
 
 Counts elsewhere that this pass falsifies:
 
