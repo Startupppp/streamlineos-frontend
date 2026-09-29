@@ -64,16 +64,14 @@ export function ModulesPage({ projectId }: ModulesPageProps) {
     isError,
     error,
     refetch,
-  } = useModulePages(projectId);
+  } = useModulePages(projectId, listFilters.debouncedSearch || undefined);
 
   const pageState = usePageState({ isLoading, isError, error, permission: "build:view" });
   const allModules = modulePages?.pages.flatMap((page) => page.data) ?? [];
-  const q = listFilters.debouncedSearch.toLowerCase();
   const statusFilter = listFilters.value("status");
   const leadFilter = listFilters.value("leadId");
   const modules = allModules.filter(
     (m) =>
-      (!q || m.name.toLowerCase().includes(q)) &&
       (!statusFilter || statusFilter === "all" || m.status === statusFilter) &&
       (!leadFilter || leadFilter === "all" || m.leadId === leadFilter),
   );

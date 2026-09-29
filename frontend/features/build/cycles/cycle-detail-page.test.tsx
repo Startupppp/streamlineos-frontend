@@ -279,7 +279,7 @@ const makeTicket = (id: number, title: string, status = "TODO") => ({
   labels: [], assignee: null, cycle: null,
 });
 
-it("search filter narrows cycleTickets and keyboard receives the reduced itemCount", () => {
+it("sends both the cycle scope and the debounced search term to the board read, so a matching ticket beyond the fetched page is not lost to a browser-side filter", () => {
   mockUseBuildListFilters.mockReturnValue({
     search: "alpha", debouncedSearch: "alpha", cursor: null,
     setSearch: jest.fn(), setCursor: jest.fn(), clearAll: jest.fn(),
@@ -287,12 +287,23 @@ it("search filter narrows cycleTickets and keyboard receives the reduced itemCou
     activeCount: 1, isFiltered: true,
   });
   mockUseProjectBoardTickets.mockReturnValue(baseQueryResult({
+    data: [makeTicket(1, "Alpha sprint task")],
+  }));
+  render(<CycleDetailPage projectId="1" cycleId="5" />);
+  const passed = JSON.stringify(mockUseProjectBoardTickets.mock.calls.at(-1) ?? []);
+  expect(passed).toContain("alpha");
+  expect(passed).toContain("5");
+  const calls = mockUseBuildListKeyboard.mock.calls;
+  expect(calls[calls.length - 1]?.[0]?.itemCount).toBe(1);
+});
+
+it("renders every ticket the board read returned when no search term is set, so nothing is hidden client-side", () => {
+  mockUseProjectBoardTickets.mockReturnValue(baseQueryResult({
     data: [makeTicket(1, "Alpha sprint task"), makeTicket(2, "Beta sprint task")],
   }));
   render(<CycleDetailPage projectId="1" cycleId="5" />);
   const calls = mockUseBuildListKeyboard.mock.calls;
-  const lastArgs = calls[calls.length - 1]?.[0];
-  expect(lastArgs?.itemCount).toBe(1);
+  expect(calls[calls.length - 1]?.[0]?.itemCount).toBe(2);
 });
 
 it("status filter narrows cycleTickets to only the matching status, reflected in keyboard itemCount", () => {

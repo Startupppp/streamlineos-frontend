@@ -46,7 +46,7 @@ export function ShowMoreRowsButton({
       hasNextPage={visibleCount < total}
       isFetchingNextPage={false}
       onLoadMore={onShowMore}
-      label={`Show ${Math.min(LIST_RENDER_PAGE_SIZE, total - visibleCount)} more rows`}
+      label={`Show ${Math.min(LIST_RENDER_PAGE_SIZE, total - visibleCount)} more rows (${visibleCount} of ${total})`}
     />
   );
 }

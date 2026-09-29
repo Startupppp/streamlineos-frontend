@@ -172,7 +172,7 @@ describe("BSN-04-033 — post-commit patch scope for rename mutations", () => {
     const { result } = renderHook(() => useUpdateManagedProduct(), { wrapper: wrap(client) });
 
     await act(async () => {
-      await result.current.mutateAsync({ managedProductId: 5, name: "Renamed product" });
+      await result.current.mutateAsync({ managedProductId: 5, name: "Renamed product", version: 1 });
     });
 
     const patched = client.getQueryData(listKey) as {
@@ -200,7 +200,7 @@ describe("BSN-04-033 — post-commit patch scope for rename mutations", () => {
     const { result } = renderHook(() => useUpdateManagedProduct(), { wrapper: wrap(client) });
 
     await act(async () => {
-      await result.current.mutateAsync({ managedProductId: 5, name: "Renamed product" });
+      await result.current.mutateAsync({ managedProductId: 5, name: "Renamed product", version: 1 });
     });
 
     const patched = client.getQueryData(listKey) as {

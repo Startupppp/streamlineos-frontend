@@ -11,6 +11,7 @@ let mockIsFiltered = false;
 let mockAutomations: ProjectAutomation[] = [];
 let mockIsLoading = false;
 let mockIsError = false;
+let mockAutomationsFilters: Record<string, unknown> | undefined;
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: (_permission: string) => mockAccessState === "granted",
@@ -22,11 +23,11 @@ jest.mock("@/hooks/common/use-online-status", () => ({
 }));
 
 jest.mock("@/hooks/api/build/automations", () => ({
-  useAutomations: () => ({
+  useAutomations: (...args: unknown[]) => ({
     data: {
       pages: [
         {
-          data: mockAutomations,
+          data: ((mockAutomationsFilters = args[1] as Record<string, unknown> | undefined), mockAutomations),
           pagination: { limit: 50, hasMore: false, nextCursor: null },
         },
       ],
@@ -267,16 +268,20 @@ describe("AutomationsPage — filter bar (BLD-X-FE-SETTINGS-004)", () => {
     expect(screen.getByLabelText(/filter by trigger/i)).toBeInTheDocument();
   });
 
-  it("search filter hides non-matching automations — client-side filter narrows the list (BLD-X-FE-SETTINGS-004c)", () => {
+  it("forwards the debounced search term to the read hook so the server filters, and a match beyond the fetched page is not lost to a browser-side filter (BLD-X-FE-SETTINGS-004c)", () => {
     mockAccessState = "granted";
-    mockAutomations = [
-      SAMPLE_AUTOMATION,
-      { ...SAMPLE_AUTOMATION, id: 2, name: "Close ticket", triggerEvent: "ticket.updated" },
-    ];
+    mockAutomations = [SAMPLE_AUTOMATION];
     mockDebouncedSearch = "auto";
     render(<AutomationsPage projectId={1} />);
-    expect(screen.getByText("Auto-assign bugs")).toBeInTheDocument();
-    expect(screen.queryByText("Close ticket")).not.toBeInTheDocument();
+    expect(mockAutomationsFilters).toEqual(expect.objectContaining({ search: "auto" }));
+  });
+
+  it("sends no search key when the box is empty, so an unfiltered list is not narrowed by an empty term", () => {
+    mockAccessState = "granted";
+    mockAutomations = [SAMPLE_AUTOMATION];
+    mockDebouncedSearch = "";
+    render(<AutomationsPage projectId={1} />);
+    expect(mockAutomationsFilters?.["search"]).toBeUndefined();
   });
 
   it("trigger filter hides automations with a different trigger (BLD-X-FE-SETTINGS-004d)", () => {

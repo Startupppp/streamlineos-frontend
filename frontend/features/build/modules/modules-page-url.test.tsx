@@ -153,16 +153,28 @@ beforeEach(() => {
   mockUseBuildListFilters.mockReturnValue(defaultFilters);
 });
 
-it("search filter narrows modules by name and keyboard receives the reduced itemCount", () => {
+it("forwards the debounced search term to the read hook so the server narrows the list, instead of filtering one fetched keyset page in the browser", () => {
   mockUseBuildListFilters.mockReturnValue({
     ...defaultFilters, debouncedSearch: "auth", value: jest.fn(() => ""),
   });
+  mockUseModulePages.mockReturnValue(
+    basePages({ pages: [{ data: [makeModule(1, "Auth Module")] }] }),
+  );
+  render(<ModulesPage projectId={7} />);
+  const passed = mockUseModulePages.mock.calls.at(-1) ?? [];
+  expect(JSON.stringify(passed)).toContain("auth");
+  const lastArgs = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0];
+  expect(lastArgs?.itemCount).toBe(1);
+});
+
+it("sends no search term when the box is empty, so every module the server returned stays on screen", () => {
+  mockUseBuildListFilters.mockReturnValue({ ...defaultFilters, value: jest.fn(() => "") });
   mockUseModulePages.mockReturnValue(
     basePages({ pages: [{ data: [makeModule(1, "Auth Module"), makeModule(2, "Payment Module")] }] }),
   );
   render(<ModulesPage projectId={7} />);
   const lastArgs = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0];
-  expect(lastArgs?.itemCount).toBe(1);
+  expect(lastArgs?.itemCount).toBe(2);
 });
 
 it("status filter shows only modules with the matching status reflected in keyboard itemCount", () => {

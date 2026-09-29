@@ -94,6 +94,7 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
   })();
   const serverFilters = {
     action: resolvedAction,
+    search: listFilters.debouncedSearch || undefined,
   };
 
   const {
@@ -113,9 +114,6 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
   );
 
   const filteredAutomations = allAutomations.filter((automation) => {
-    const q = listFilters.debouncedSearch.toLowerCase();
-    if (q.length > 0 && !automation.name.toLowerCase().includes(q))
-      return false;
     const triggerFilter = listFilters.value("trigger");
     if (
       triggerFilter !== BUILD_FILTER_ALL &&
@@ -355,7 +353,7 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
                 value={listFilters.search}
                 onValueChange={listFilters.setSearch}
                 placeholder="Search automations…"
-                className="min-w-[12rem] flex-1"
+                className="min-w-48 flex-1"
                 aria-label="Search automations"
               />
               <Select

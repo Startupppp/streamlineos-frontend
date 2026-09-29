@@ -113,7 +113,10 @@ export function CycleDetailPage({
     isError: ticketsFailed,
     error: ticketsError,
     refetch: refetchTickets,
-  } = useProjectBoardTickets(projectId);
+  } = useProjectBoardTickets(projectId, {
+    cycle: String(cycleId),
+    q: listFilters.debouncedSearch || undefined,
+  });
   const {
     data: cycles,
     isLoading: cyclesLoading,
@@ -209,7 +212,6 @@ export function CycleDetailPage({
     }));
   }, [boardTickets]);
 
-  const q = listFilters.debouncedSearch.toLowerCase();
   const statusFilter = listFilters.value("status");
   const fromFilter = listFilters.value("from");
   const toFilter = listFilters.value("to");
@@ -219,13 +221,11 @@ export function CycleDetailPage({
     () =>
       allTickets.filter(
         (t) =>
-          t.cycleId === cycleId &&
-          (!q || t.title.toLowerCase().includes(q)) &&
           (!statusFilter || statusFilter === "all" || t.status === statusFilter) &&
           (!dueDateFrom || (t.dueDate != null && t.dueDate >= dueDateFrom)) &&
           (!dueDateTo || (t.dueDate != null && t.dueDate <= dueDateTo)),
       ),
-    [allTickets, cycleId, q, statusFilter, dueDateFrom, dueDateTo],
+    [allTickets, statusFilter, dueDateFrom, dueDateTo],
   );
 
   const handleTicketSelect = useCallback(

@@ -66,6 +66,7 @@ function makeProduct(overrides: Partial<ManagedProduct> = {}): ManagedProduct {
     targetLaunchDate: null,
     successMetrics: null,
     ownerMembershipId: null,
+    version: 1,
     deletedAt: null,
     createdAt: "2026-01-01T00:00:00Z",
     updatedAt: "2026-01-01T00:00:00Z",
@@ -177,7 +178,7 @@ describe("useUpdateManagedProduct — optimistic cache patch", () => {
     const { result } = renderHook(() => useUpdateManagedProduct(), { wrapper: wrapper(client) });
 
     await act(async () => {
-      await result.current.mutateAsync({ managedProductId: 5, name: "New name" });
+      await result.current.mutateAsync({ managedProductId: 5, name: "New name", version: 1 });
     });
 
     const cached = client.getQueryData<ManagedProduct>(
@@ -200,7 +201,7 @@ describe("useUpdateManagedProduct — optimistic cache patch", () => {
     const { result } = renderHook(() => useUpdateManagedProduct(), { wrapper: wrapper(client) });
 
     await act(async () => {
-      await result.current.mutateAsync({ managedProductId: 7, name: "Updated" });
+      await result.current.mutateAsync({ managedProductId: 7, name: "Updated", version: 1 });
     });
 
     const cachedPage = client.getQueryData<ManagedProductsPage>(listKey);

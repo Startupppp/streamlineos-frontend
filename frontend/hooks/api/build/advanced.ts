@@ -241,13 +241,15 @@ type ModulePage = {
   pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 };
 
-export function useModulePages(projectId: number) {
+export function useModulePages(projectId: number, search?: string) {
   const canView = useCan("build:view");
   return useInfiniteQuery<ModulePage>({
-    queryKey: [...buildWorkQueryKeys.projects.modules(projectId), "pages"],
+    queryKey: [...buildWorkQueryKeys.projects.modules(projectId), "pages", { search }],
     initialPageParam: undefined as string | undefined,
     queryFn: async ({ signal, pageParam }) => {
-      const query = pageParam ? { cursor: pageParam, pageSize: "50" } : { pageSize: "50" };
+      const query: Record<string, string> = { pageSize: "50" };
+      if (typeof pageParam === "string" && pageParam) query.cursor = pageParam;
+      if (search) query.search = search;
       const response = await apiClient.get<Module[] | ModulePage>(`/build/${projectId}/modules`, query, signal, moduleListContract);
       if (Array.isArray(response)) {
         return { data: response, pagination: { limit: response.length, hasMore: false, nextCursor: null } };

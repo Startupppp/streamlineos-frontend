@@ -46,6 +46,7 @@ export const ACTION_TYPES = [
 export interface AutomationsFilters {
   action?: AutomationActionType;
   ownerId?: string;
+  search?: string;
 }
 
 export function useAutomations(
@@ -56,6 +57,7 @@ export function useAutomations(
   const baseParams: Record<string, string> = {};
   if (filters?.action) baseParams["action"] = filters.action;
   if (filters?.ownerId) baseParams["ownerId"] = filters.ownerId;
+  if (filters?.search) baseParams["search"] = filters.search;
   return useInfiniteQuery({
     queryKey: [...queryKeys.projects.automations(projectId), filters ?? {}],
     queryFn: ({ signal, pageParam }) => {
