@@ -23,7 +23,7 @@ jest.mock("sonner", () => ({
   toast: { success: jest.fn(), error: jest.fn() },
 }));
 
-const mockUseCan = jest.fn(() => false);
+const mockUseCan = jest.fn((_key: string) => false);
 jest.mock("@/hooks/api/access", () => ({
   useCan: (key: string) => mockUseCan(key),
 }));
@@ -33,7 +33,7 @@ jest.mock("@/hooks/api/build/projects", () => ({
   useProject: (...args: unknown[]) => mockUseProject(...args),
 }));
 
-const mockUseCycles = jest.fn(() => ({ data: [] }));
+const mockUseCycles = jest.fn((..._args: unknown[]) => ({ data: [] }));
 jest.mock("@/hooks/api/build/advanced", () => ({
   useCycles: (...args: unknown[]) => mockUseCycles(...args),
 }));
@@ -105,7 +105,7 @@ jest.mock("@/components/ui/empty-state", () => ({
   ),
 }));
 
-const mockBuildTicketDetailUrl = jest.fn(() => null);
+const mockBuildTicketDetailUrl = jest.fn((..._args: unknown[]) => null);
 jest.mock("@/features/build/ticket-details/build-ticket-detail-url", () => ({
   buildTicketDetailUrl: (...args: unknown[]) => mockBuildTicketDetailUrl(...args),
 }));

@@ -16,7 +16,7 @@ jest.mock("@/hooks/api/use-page-state", () => ({
   usePageState: (opts: unknown) => mockUsePageState(opts),
 }));
 
-const mockUseCan = jest.fn(() => false);
+const mockUseCan = jest.fn((_key: string) => false);
 jest.mock("@/hooks/api/access", () => ({
   useCan: (key: string) => mockUseCan(key),
   useCanState: jest.fn(() => "granted"),
@@ -611,7 +611,7 @@ describe("TeamHomePage — remove member button visibility (BLD-X-FE-TEAMS-DETAI
     mockUseCan.mockReturnValue(true);
     render(<TeamHomePage teamId={1} />);
     expect(
-      screen.getByRole("button", { name: "Remove alice@example.com", exact: true }),
+      screen.getByRole("button", { name: "Remove alice@example.com" }),
     ).toBeInTheDocument();
   });
 
@@ -619,7 +619,7 @@ describe("TeamHomePage — remove member button visibility (BLD-X-FE-TEAMS-DETAI
     mockUseCan.mockReturnValue(false);
     render(<TeamHomePage teamId={1} />);
     expect(
-      screen.queryByRole("button", { name: "Remove alice@example.com", exact: true }),
+      screen.queryByRole("button", { name: "Remove alice@example.com" }),
     ).not.toBeInTheDocument();
   });
 
@@ -634,12 +634,12 @@ describe("TeamHomePage — remove member button visibility (BLD-X-FE-TEAMS-DETAI
     };
     render(<TeamHomePage teamId={1} />);
     expect(
-      screen.getByRole("button", { name: `Remove ${MEMBER_A.email}`, exact: true }),
+      screen.getByRole("button", { name: `Remove ${MEMBER_A.email}` }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: `Remove ${MEMBER_B.email}`, exact: true }),
+      screen.getByRole("button", { name: `Remove ${MEMBER_B.email}` }),
     ).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Remove member", exact: true })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Remove member" })).toBeNull();
   });
 
   it("hides the role badge and shows role select when the viewer has build:teams:manage", () => {

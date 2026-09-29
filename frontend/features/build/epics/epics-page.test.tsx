@@ -23,8 +23,41 @@ import {
 } from "./epics-page-test-harness";
 import { EpicsPage } from "./epics-page";
 import { ApiError } from "@/lib/api-envelope";
+import type { UseQueryResult } from "@tanstack/react-query";
+import type { ProjectWithDetails, Ticket } from "@/types/projects";
 
-const epicRow = { ...EPIC_ROW, version: 1 };
+const epicRow: Ticket = { ...EPIC_ROW, version: 1, health: "at_risk" };
+
+function projectErrorResult(error: Error): UseQueryResult<ProjectWithDetails | null, Error> {
+  return {
+    data: undefined,
+    error,
+    isError: true,
+    isPending: false,
+    isLoading: false,
+    isLoadingError: true,
+    isRefetchError: false,
+    isSuccess: false,
+    status: "error",
+    fetchStatus: "idle",
+    dataUpdatedAt: 0,
+    errorUpdatedAt: 0,
+    failureCount: 1,
+    failureReason: error,
+    errorUpdateCount: 1,
+    isFetched: true,
+    isFetchedAfterMount: true,
+    isFetching: false,
+    isInitialLoading: false,
+    isPaused: false,
+    isPlaceholderData: false,
+    isRefetching: false,
+    isStale: true,
+    isEnabled: true,
+    refetch: jest.fn(),
+    promise: new Promise<ProjectWithDetails | null>(() => undefined),
+  };
+}
 
 beforeEach(installEpicsPageMocks);
 
@@ -189,7 +222,7 @@ describe("EpicsPage — the ? shortcut has a target", () => {
     const calls = mockUseBuildListKeyboard.mock.calls;
     const options = calls[calls.length - 1][0];
     expect(typeof options.onShortcutHelp).toBe("function");
-    act(() => { options.onShortcutHelp(); });
+    act(() => { options.onShortcutHelp?.(); });
     expect(screen.getByRole("dialog")).toHaveTextContent(/shortcut/i);
   });
 
@@ -280,6 +313,7 @@ describe("EpicsPage — the empty state tells a first run apart from a filtered 
       search: "", debouncedSearch: "zzz", setSearch: jest.fn(),
       value: jest.fn(() => "all"), isActive: jest.fn(() => false),
       setValue: jest.fn(), clearAll: jest.fn(), activeCount: 0, isFiltered: true,
+      cursor: null, setCursor: jest.fn(), resetKey: "", isPending: false,
     });
 
     await act(async () => {
@@ -315,26 +349,16 @@ describe("EpicsPage — linking a story carries the concurrency token", () => {
 
 describe("EpicsPage — the failure surface carries the request id", () => {
   it("hands the failing error down so the request id reaches the reader rather than only the message", async () => {
-    mockUseProject.mockReturnValue({
-      data: undefined,
-      isLoading: false,
-      isError: true,
-      error: new ApiError("Epics unavailable", 500, "INTERNAL", { correlationId: "req-epics-7" }),
-      refetch: jest.fn(),
-    });
+    mockUseProject.mockReturnValue(
+      projectErrorResult(new ApiError("Epics unavailable", 500, "INTERNAL", { correlationId: "req-epics-7" })),
+    );
     readyPage([]);
     await act(async () => { render(<EpicsPage params={params} />); });
     expect(screen.getByTestId("error-reference")).toHaveTextContent("req-epics-7");
   });
 
   it("shows no request id for a failure that carries none, so the reference is never invented", async () => {
-    mockUseProject.mockReturnValue({
-      data: undefined,
-      isLoading: false,
-      isError: true,
-      error: new TypeError("Failed to fetch"),
-      refetch: jest.fn(),
-    });
+    mockUseProject.mockReturnValue(projectErrorResult(new TypeError("Failed to fetch")));
     readyPage([]);
     await act(async () => { render(<EpicsPage params={params} />); });
     expect(screen.getByTestId("error-reference")).toHaveTextContent("");

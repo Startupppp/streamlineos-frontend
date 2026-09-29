@@ -1,5 +1,6 @@
 import React from "react";
 import { render, screen, act, fireEvent } from "@testing-library/react";
+import type { TicketLabel } from "@/hooks/api/build/labels";
 
 const mockNotFound = jest.fn();
 const mockUse = jest.fn();
@@ -33,8 +34,8 @@ jest.mock("@/hooks/api/access", () => ({
 }));
 
 const mockUseProject = jest.fn();
-const mockUseCycles = jest.fn(() => ({ data: [] }));
-const mockUseBulkUpdateTickets = jest.fn(() => ({ mutate: jest.fn(), isPending: false }));
+const mockUseCycles = jest.fn((..._args: unknown[]) => ({ data: [] }));
+const mockUseBulkUpdateTickets = jest.fn((..._args: unknown[]) => ({ mutate: jest.fn(), isPending: false }));
 
 jest.mock("@/hooks/api/build/projects", () => ({
   useProject: (...args: unknown[]) => mockUseProject(...args),
@@ -48,18 +49,18 @@ jest.mock("@/hooks/api/build/tickets", () => ({
   useBulkUpdateTickets: (...args: unknown[]) => mockUseBulkUpdateTickets(...args),
 }));
 
-const mockUseWorkloadCapacity = jest.fn(() => ({}));
+const mockUseWorkloadCapacity = jest.fn((..._args: unknown[]) => ({}));
 jest.mock("@/hooks/api/build/workload-capacity", () => ({
   useWorkloadCapacity: (...args: unknown[]) => mockUseWorkloadCapacity(...args),
 }));
 
-const mockUseOrgLabels = jest.fn(() => ({ data: [] }));
+const mockUseOrgLabels = jest.fn((..._args: unknown[]) => ({ data: [] as TicketLabel[] }));
 jest.mock("@/hooks/api/build/labels", () => ({
   useOrgLabels: (...args: unknown[]) => mockUseOrgLabels(...args),
 }));
 
 const mockExportMutate = jest.fn();
-const mockUseExportTickets = jest.fn(() => ({ mutate: mockExportMutate, isPending: false }));
+const mockUseExportTickets = jest.fn((..._args: unknown[]) => ({ mutate: mockExportMutate, isPending: false }));
 jest.mock("@/hooks/api/build/ticket-import-export", () => ({
   useExportTickets: (...args: unknown[]) => mockUseExportTickets(...args),
 }));
