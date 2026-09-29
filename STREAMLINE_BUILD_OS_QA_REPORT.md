@@ -548,14 +548,33 @@ Remediation started 2026-09-29. Work is partitioned into nine lanes with disjoin
 
 | Lane | Bugs | Owns | Migrations | Status |
 |---|---|---|---|---|
-| L1 Onboarding gate | 018, 019, 030 | `lib/wizard-gate.ts`, `lib/onboarding-gate.ts`, employee-onboarding, `hr/onboarding`, `organization/onboarding` | 1601–1605 | in progress |
-| L2 Invite security & client access | 001, 002, 020, 021, 031, 034 | administration invite UI, `build/client-portal`, `organization/core/invitation-*` | 1611–1615 | in progress |
-| L3 Board / issues / epics | 009, 010, 011, 012, 013, 014, 015 | `features/build/{tickets,bugs,backlog,epics,ticket-details}`, `build/core/tickets`, `execution/epics.service.ts` | 1621–1625 | in progress |
-| L4 Modules / cycles / reports | 003, 008, 032, 036, 057 | `features/build/{modules,cycles,reports,overview,roadmap,milestones}`, `execution/{modules,cycles,sprints,iterations}`, `core/{analytics,roadmap}` | 1631–1635 | in progress |
-| L5 Approvals / meetings / incidents / CRs / updates | 040, 041, 042, 043, 044, 045, 046, 048, 049 | `features/build/{approvals,meetings,incidents,change-requests,updates}`, `build/{approvals,meetings,incidents,updates}` | 1641–1645 | in progress |
-| L6 QA / releases / risks / decisions | 022, 023, 024, 025, 026, 027, 028 | `features/build/{qa,releases,governance}`, `build/{qa,governance}`, `core/releases` | 1651–1655 | in progress |
-| L7 Intake / forms / chat / wiki / whiteboard / drafts | 033, 035, 037, 038, 039, 050, 051, 058, 059 | `features/build/{intake,triage,forms,whiteboard,drafts,comments}`, `build/{forms,comment-drafts}`, `execution/whiteboard*` | 1661–1665 | in progress |
-| L8 Products / templates / programs / portfolios | 053, 054, 055, 056 | `features/build/{managed-products,templates,programs,portfolios,goals}`, `build/{managed-products,portfolios}`, `core/project-crud/projects-templates.*` | 1671–1675 | in progress |
-| L9 Global chrome & misc UX | 004, 005, 006, 007/016, 017, 029, 047, 052, 060 | `feedbucket-widget`, `components/layout`, `features/build/{project-create,project-list,navigation,sidebar,shared,ai}`, `features/crm`, `core/project-crud` | 1681–1685 | in progress |
+| L1 Onboarding gate | 018, 019, 030 | `lib/wizard-gate.ts`, `lib/onboarding-gate.ts`, employee-onboarding, `hr/onboarding`, `organization/onboarding` | 1601–1605 | **done** |
+| L2 Invite security & client access | 001, 002, 020, 021, 031, 034 | administration invite UI, `build/client-portal`, `organization/core/invitation-*` | 1611–1615 | **done** (1611 applied to prod) |
+| L3 Board / issues / epics | 009, 010, 011, 012, 013, 014, 015 | `features/build/{tickets,bugs,backlog,epics,ticket-details}`, `build/core/tickets`, `execution/epics.service.ts` | 1621–1625 | **done**; 010/014 reworked in L10 |
+| L4 Modules / cycles / reports | 003, 008, 032, 036, 057 | `features/build/{modules,cycles,reports,overview,roadmap,milestones}`, `execution/{modules,cycles,sprints,iterations}`, `core/{analytics,roadmap}` | 1631–1635 | **done** |
+| L5 Approvals / meetings / incidents / CRs / updates | 040, 041, 042, 043, 044, 045, 046, 048, 049 | `features/build/{approvals,meetings,incidents,change-requests,updates}`, `build/{approvals,meetings,incidents,updates}` | 1641–1645 | **done** |
+| L6 QA / releases / risks / decisions | 022, 023, 024, 025, 026, 027, 028 | `features/build/{qa,releases,governance}`, `build/{qa,governance}`, `core/releases` | 1651–1655 | **done** |
+| L7 Intake / forms / chat / wiki / whiteboard / drafts | 033, 035, 037, 038, 039, 050, 051, 058, 059 | `features/build/{intake,triage,forms,whiteboard,drafts,comments}`, `build/{forms,comment-drafts}`, `execution/whiteboard*` | 1661–1665 | **done** |
+| L8 Products / templates / programs / portfolios | 053, 054, 055, 056 | `features/build/{managed-products,templates,programs,portfolios,goals}`, `build/{managed-products,portfolios}`, `core/project-crud/projects-templates.*` | 1671–1675 | **done** |
+| L9 Global chrome & misc UX | 004, 005, 006, 007/016, 017, 029, 047, 052, 060 | `feedbucket-widget`, `components/layout`, `features/build/{project-create,project-list,navigation,sidebar,shared,ai}`, `features/crm`, `core/project-crud` | 1681–1685 | **done**; 005/006/029/047 moved to L11-L12 |
+
+### Follow-up lanes
+
+| Lane | Bugs | Why it exists | Status |
+|---|---|---|---|
+| L10 Board DnD + backlog scope | 010, 014 | L3 declared 010 browser-only without diagnosing it, and "fixed" 014 by filtering one page of a server-paginated list in the browser (FE-33/FE-105) | in progress |
+| L11 Route bounce + org switch | 047, 029 | L9 blocked on file ownership; the org-switch half lives in `useSwitchOrg` | in progress |
+| L12 CRM client link + overview | 005, 006 | L9 declined 005 as "new scope"; it is the defect that stops the product serving an agency | in progress |
+
+### Corrections made to lane output
+
+These are cases where a lane's reported fix did not hold up and the orchestrator reworked it. Recorded because each is a live trap for the next pass.
+
+- **BUG-008 was misdiagnosed.** L4 caught `23505` and called it the cause. `build.modules` is empty with an untouched identity sequence, which proves the INSERT never reached Postgres. The real cause is a create dialog posting `startDate: ""` for an untouched date picker, accepted by the boundary as a plain optional string and failing at bind time against a `date` column. The same shape was present across several Build DTOs; the contract now lives once in `common/validation/calendar-date.schema.ts`.
+- **BUG-020 was half-fixed.** The OTP gate was placed in the new-user branch only. `acceptAsExistingUser` still issued an auto-login magic link for an account that already holds the invitee's data — the worse half. The gate moved above the branch and consumes the code exactly once.
+- **Migration 1611 would have broken in production.** It used `SERIAL` (BE-37) and granted table privileges but no sequence usage, so every insert as `streamline_app` would have raised 42501. Changed to an identity PK, which needs no separate grant, and verified on production after applying.
+- **BUG-019's fix blocked the user.** L1 added a client-side guard telling them to go back and re-save. The wizard resolves a country from the address but submitted the bank draft's empty one; it now submits the resolved value.
+- **BUG-032 was half-fixed** (the 404s, not the timeline the redirects point at), and the follow-up's `limit: 200` silently clamps to the 100-row cap; the milestone read is now bound to the visible window.
+- **BUG-017's fix was inert.** Keywords were added to a list the typed-search path never reads, and the command list applies its own match on the item value, so the page filter alone changed nothing.
 
 Verification constraints for this remediation: `.env` points at production, so lanes verify by reading code, adding failing-first unit specs, targeted jest and typecheck. Nothing is run against the live database by a lane. Browser-only proof (drag-and-drop pointer events, Feedbucket overlay at 390/768/1366, real focus order) is recorded per bug as **BROWSER-PENDING** rather than claimed.
