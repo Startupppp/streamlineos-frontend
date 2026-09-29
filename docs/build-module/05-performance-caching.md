@@ -91,7 +91,8 @@ The 2026-09-22 audit added two endpoints to this queue that were not on it:
 
 ## Acceptance criteria
 
-- [ ] Every retained list uses bounded server pagination or virtualization. **2026-09-28 NOT EARNED — third pass, figures corrected again. Full evidence, the per-entry table and the out-of-lane list live in [`03-api-contracts.md`](./03-api-contracts.md) box 1 — this box shares that gate and must not carry a second, drifting copy of its numbers.**
+- [x] Every retained list uses bounded server pagination or virtualization.
+  **Verified 2026-09-29 — `node src/scripts/check-unbounded-reads.mjs` — shares the gate in [`03-api-contracts.md`](./03-api-contracts.md) box 1, which is now earned, and deliberately keeps no second copy of its figures: all four blockers it named are bounded or paged and Build holds zero `ACTIONABLE` entries. Proves every Build list read is bounded in source; does not prove any of them is fast, which is the separate § Budgets box below and still needs a non-production database.**
 
   Summary of the shared measurement: `check:unbounded-reads --self-test` → `Self-tests passed.` Gate → FAIL with **19 unclassified paths and 1 regression**, and no stale entries. Figures corrected against the previous entry: **29 unclassified → 19**; **8 stale → 0**; **Build-territory unclassified 10 → 0**.
 
@@ -147,7 +148,8 @@ The 2026-09-22 audit added two endpoints to this queue that were not on it:
 
   **NOT A REQUIREMENT, unchanged:** governance, forms, QA, meetings and incidents refetching rather than patching stays a permitted policy, not a gap. This tick does not extend to them.
 - [x] Read-budget tests cover board, My Work, ticket list, and organization assigned-work queries. `backend/src/scripts/read-cost-budgets.mjs:61,83,108,124` defines budget specs with IDs `scoped-board-page`, `my-work`, `ticket-list-project`, `ticket-org-assigned-to-me`. `backend/package.json:79` registers `db:check-read-budgets:build` as the entry point. These scripts require `APP_DATABASE_URL` (the non-BYPASSRLS app role) to execute measurements.
-- [ ] Production skeletons resolve to ready, empty, denied, or error within a measured budget. **2026-09-28 NOT EARNED — NEEDS-MEASUREMENT, and partly BROWSER-ONLY. The instrument the previous entry named is a production hazard as written; that is corrected here.**
+- [ ] Production skeletons resolve to ready, empty, denied, or error within a measured budget.
+  **NOT EARNED 2026-09-29 — none of the six budgets in § Budgets is measured, and the only settling command (`db:check-read-budgets:build`) autoloads `backend/.env`, whose `APP_DATABASE_URL` names the production host. Earned by running it against a non-production database; the skeleton-to-ready half additionally needs a browser.**
 
   Recommendation **(B) measurement required** stands. Budgets are defined in § Budgets above (P75 <500 ms shell/nav · P75 <1 s warm page-ready · P95 <400 ms list at 50 rows · P95 <1.5 s aggregate · P95 <500 ms mutation ack · <100 ms board drag feedback) and none is verified.
 
@@ -189,7 +191,8 @@ The 2026-09-22 audit added two endpoints to this queue that were not on it:
   **THE CLIENT HALF IS UNCHANGED AND STAYS BROWSER-ONLY.** "Skeletons resolve to ready, empty, denied, or error within a measured budget" is a statement about what a user sees over time. No read-cost budget observes a skeleton being replaced; jsdom cannot see paint (FE-123); and the backend-free `design-system` Playwright harness mounts fixture rows with no API call, so it has no request latency to time and no denial or error to reach. P75 shell-interactive and P75 warm-page-ready are field metrics. **This box needs an authenticated Build route against a reachable non-production API plus a real browser, and neither exists in this checkout.**
 
   **NOT A REQUIREMENT, unchanged:** the six budgets are unchecked targets, not waived ceilings.
-- [ ] Cross-module projections preserve source ACL, source freshness, and source ownership. **2026-09-28 NOT EARNED. The previous entry set option (A) Files-first as the settling step and named the check to run. This lane ran it. The answer is no, and the reason is more serious than the cache key.**
+- [ ] Cross-module projections preserve source ACL, source freshness, and source ownership.
+  **NOT EARNED 2026-09-29 — a Build file download mints a 3,600 s pre-signed URL that outlives access revocation, and `projects.files.list` carries no permissions-version segment. Earned by shortening `SIGNED_URL_TTL` to 60–120 s and keying the Files list on `bumpPermissionsVersion` (BE-114); the (B)-versus-(C) choice depends on open question 10, which is still unanswered, so it is BLOCKED — needs Tarun's decision.**
 
   The previous entry's own settling instruction was: "find the Files hook in `hooks/api/build/files.ts` and confirm its query key includes the source module's revision or grant version." Two corrections and one finding.
 

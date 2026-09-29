@@ -101,6 +101,7 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 - [x] The canonical route and disposition are implemented, with old callers and redirects covered by a route census.
 - [x] The page satisfies the stated user job and success metric without duplicating another module owner.
 - [ ] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
+  **NOT EARNED 2026-09-29 — the itemised remainder below is real product work in `list-view-item.tsx`, `kanban-ticket-card.tsx`, `bulk-action-bar.tsx`, `ticket-quick-actions.tsx` and the page-level empty state. One item inside it is BLOCKED — needs Tarun's decision: writing `cursor` into the URL changes this board's paging model from `useInfiniteQuery` to a keyset page, which is a product decision, not a fix.**
   - Audited item by item 2026-09-28. Closed this pass: the FE-122 negative+positive gate pair for `BulkActionBar` on `build:tickets:update` and `build:tickets:assign` (`bulk-action-bar-statuses.test.tsx`), and the `/` shortcut, which had zero behavioural coverage — three tests plus a `<select>` guard test in `use-build-list-keyboard.test.ts`. `contenteditable` stays untested: jsdom does not implement `isContentEditable`, so the guard's third arm is browser-only (FE-123).
   - **P0, BLOCKED ON THE BACKEND — every inline edit on this page returns 400.** `backend/src/modules/build/core/dto/ticket.schemas.ts:174` makes `version` a required field of the `.strict()` `updateTicketSchema` bound to `PATCH /build/:projectId/tickets/:ticketId` (`projects-tickets.controller.ts:249`). The list projection does not return it: `projects-tickets-read.query.ts:16-42` `TICKET_LIST_COLUMNS` omits `version`, `ticketListRowContract` (`hooks/api/build/build-tickets-core-schema.ts:193`) does not pick it, and `KanbanTicket` (`features/build/shared/types.ts:41`) has no such field. So the board, list, table and kanban card surfaces cannot supply the token the mutation requires, and no frontend change can fix it — the projection has to select `version` first. Corroboration: `backend/src/modules/build/core/dto/ticket-schema-bounds.spec.ts` now fails 10 tests, all of them asserting `updateTicketSchema.safeParse({ … })` succeeds without a version. The detail page is fixed (see `10-project-tickets-issue.md`); this page is not.
   - Core fields. `module` and `rank` render on neither the list row (`list-view-item.tsx`) nor the kanban card (`kanban-ticket-card.tsx`) — there is no `InlineModule` or `InlineRank`. `cycle` is missing from the list row only; `status` is missing from the kanban card (it is column identity there); the list row shows one assignee (`ticket.assigneeId ?? ticket.assignee?.id`), not the assignee set the card renders.
@@ -380,7 +381,7 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
     that import graph.
 - [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
-- [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass.
+- [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; see the open non-browser box above).
   - Keyboard, create-shortcut permission gate: verified in jsdom.
 
     ```text
@@ -395,4 +396,4 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
     ```
 
   - **BROWSER-ONLY** and NOT ticked: `Tab` focus order, focus management in overlays, screen-reader output, `prefers-reduced-motion`, real 375 px layout, and high-density desktop. jsdom cannot observe any of them (FE-123).
-- [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data.
+- [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; see the open non-browser box above).

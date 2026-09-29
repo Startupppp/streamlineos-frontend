@@ -137,7 +137,19 @@ All 9 `/build/workspaces*` endpoints are deleted, along with `src/modules/build/
 
 ## Acceptance criteria
 
-- [ ] Every collection is cursor/page bounded and sorted deterministically. **2026-09-28 NOT EARNED — third pass, and the basis of the verdict changes. The gate has moved decisively: its remaining failures are now ENTIRELY OUTSIDE BUILD, and the Build-owned blocker is three reads classified `ACTIONABLE`, not an unclassified backlog.**
+- [x] Every collection is cursor/page bounded and sorted deterministically.
+  **Verified 2026-09-29 — `node src/scripts/check-unbounded-reads.mjs` + a recount of the four named blockers against the files on disk — proves all four are bounded or paged and that Build territory now holds zero `ACTIONABLE` and zero unclassified entries across both gate sections (48 Build entries, none `ACTIONABLE`); does not prove any plan is index-served, which needs an `EXPLAIN` no checkout here can run, and does not make the gate green repo-wide (it still FAILs on 19 unclassified paths and 1 regression, all outside Build). This box owns the numbers; sibling boxes must point here rather than copy them.**
+
+  **THE 2026-09-29 FIGURES WERE STALE FOR THREE OF THE FOUR, AND THE DOC WAS WRONG, NOT THE CODE.** Re-read every file the previous entry named before believing it, and three of the four blockers had already been repaired on 2026-09-28 while this box still recorded them as live:
+
+  | Named blocker | State on disk 2026-09-29 | Where it was fixed |
+  |---|---|---|
+  | `projects-tickets-read.service.ts` "still serves OFFSET pages by default" | False. `listTickets` ends at `:274` with an unconditional `return this.listTicketsByCursor(...)`; there is no offset path and no paging discriminator in the file, and `:355` reads `.limit(limit + 1)` off a `(sort, createdAt, id)` order. The classification entry is now `KEYSET-MIGRATED`, so a returning offset fails the gate as a regression. | sibling lane, 2026-09-28 |
+  | `build-ticket-bulk-mutation.ts:164` | False. The archive blocker probe is now the aggregate the previous entry specified: `select({ parentTicketId, childCount: count() }) … where(inArray(parentTicketId, ids), notInArray(id, ids), isNull(deletedAt)).groupBy(parentTicketId)` — at most one row per selected parent, and it still counts children outside the selection, so the archive refusal is not under-counted. Classified `BOUNDED`. | sibling lane, 2026-09-28 |
+  | `whiteboard-board-helpers.ts` `loadShares` | False. `:45` carries `.limit(PAGE_SIZE_CAP)` imported from `common/pagination/list-query.schema.ts`, which is BE-24's cap rather than a redeclared literal. Truncation is safe here because the result feeds the manage-access DTO's display list and no access-control decision. Classified `BOUNDED`. | sibling lane, 2026-09-28 |
+  | `GET /build/:projectId/automations` "returns a bare `.limit(100)` array" | False. `projects-automations.service.ts:51-111` decodes a cursor, applies `keysetBeforeId(createdAt, id, pos)`, orders `(createdAt DESC, id DESC)`, over-fetches `limit + 1` and returns `buildCursorPage`; the controller declares `projectAutomationListPageSchema` and validates `listAutomationsQuerySchema`. Seven cases in `projects-automations-pagination.spec.ts` cover reachability past page 1, `hasMore`/`nextCursor` coherence, the absence of any `total` (BE-25), a malformed cursor, and the shared-`createdAt` tiebreak. | backend `f2427ddcc` |
+
+  **Net: no code changed for this box this pass, because none was needed.** The lane that owned it read each named file first, on the standing rule that these gates and their prose are wrong more often than the code is. The gate's own remaining failures are unchanged and out of Build.
 
   `check:unbounded-reads --self-test` → `Self-tests passed.` Gate run, verbatim tail:
 

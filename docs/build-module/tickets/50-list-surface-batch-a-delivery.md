@@ -29,6 +29,7 @@ Batched by blast radius so each batch fits one fresh context window. Land them i
   inbox it is still covered end to end by `feedbucket-submissions-inbox.test.tsx`, which renders the real
   surface and was repaired rather than deleted for that reason.
 - [ ] No page in the batch changes visibly, including its empty and error states
+  **NOT EARNED 2026-09-29 — deliberately false: two of the three migrated pages do change visibly and each change is a correctness fix (FE-47, FE-49, FE-41). Nothing would earn it except reinstating the defects, which is the wrong trade.**
   **Left unchecked deliberately: two of the three migrated pages do change visibly, and the changes are
   corrections rather than regressions.** Reverting them to make this box tickable would mean putting real
   defects back, so the box is left false instead.

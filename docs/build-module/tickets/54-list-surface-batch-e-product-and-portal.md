@@ -44,6 +44,7 @@ The portal pages carry the extra constraint: an external client's list must neve
   actor kinds -- internal management and external portal identity -- and is green at 55 tests across
   `client-portal/`.
 - [ ] Any remaining shared assembly helper with no callers left is deleted
+  **NOT EARNED 2026-09-29 — adjudicated N/A: the premise is false, no shared assembly helper is caller-less. The minimum over the 38 non-test modules in `features/build/shared/` is one caller, and `build-list-surface.tsx` itself imports both `usePageState` and `DataTableSkeleton`. Nothing would earn it while the surface exists.**
   **Left unchecked because the premise is not yet true: no helper is caller-less.** Measured rather than
   assumed -- LANE-50 re-count: **165 files** under `features/build/` import `usePageState` or
   `DataTableSkeleton` directly (command: `grep -rl 'usePageState\|DataTableSkeleton' features/build/
