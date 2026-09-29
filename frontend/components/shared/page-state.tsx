@@ -7,11 +7,18 @@ import type { PageStateResolution } from "@/lib/page-state/resolve-page-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { isTransientNetworkError } from "@/lib/query-error-policy";
+import { signInPathForMissingSession } from "@/lib/auth-session-cookies";
 import { ErrorState } from "./error-state";
 import { DeniedView, FeatureLockedView, QuotaExceededView } from "./page-state-views";
 import type { GateStateProps } from "./page-state-shared";
 
 function SessionExpiredState({ compact = false, className }: GateStateProps) {
+  function handleSignInAgain() {
+    window.location.assign(
+      signInPathForMissingSession(window.location.pathname + window.location.search),
+    );
+  }
+
   return (
     <div
       className={cn(
@@ -44,7 +51,7 @@ function SessionExpiredState({ compact = false, className }: GateStateProps) {
       </p>
       <Button
         size={compact ? "sm" : "default"}
-        onClick={() => window.location.assign("/signin")}
+        onClick={handleSignInAgain}
       >
         Sign in again
       </Button>

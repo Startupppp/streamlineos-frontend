@@ -1,20 +1,31 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { LogIn } from "lucide-react";
 import { toast } from "sonner";
 import { parseAuthErrorCode } from "@/lib/parse-auth-error";
 import { PasswordlessSigninForm, OAuthButtons, SignInAlerts } from "@/features/auth";
 import { useGoogleSignIn } from "@/hooks/common/auth-hooks";
 import { hasGoogleProvider } from "@/lib/auth-providers";
+import {
+  SESSION_EXPIRED_QUERY,
+  SESSION_EXPIRED_VALUE,
+} from "@/lib/auth-session-cookies";
 
 export const dynamic = "force-dynamic";
 
 export default function SignInPage() {
   const [lockedSeconds, setLockedSeconds] = useState<number | null>(null);
+  const [sessionExpired, setSessionExpired] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
+
+    if (params.get(SESSION_EXPIRED_QUERY) === SESSION_EXPIRED_VALUE) {
+      setSessionExpired(true);
+    }
+
     const errorParam = params.get("error");
     if (!errorParam) return;
     const parsed = parseAuthErrorCode(errorParam);
@@ -76,6 +87,15 @@ export default function SignInPage() {
           Use Google or your email for a one-time code
         </p>
       </div>
+
+      {sessionExpired && (
+        <div className="mb-2 flex items-start gap-2.5 rounded-lg border border-status-info-rule bg-status-info-surface px-4 py-3">
+          <LogIn className="h-4 w-4 text-status-info-ink mt-0.5 shrink-0" aria-hidden="true" />
+          <p className="text-sm text-status-info-ink">
+            Your session expired. Sign in again to continue.
+          </p>
+        </div>
+      )}
 
       {lockedSeconds !== null && (
         <SignInAlerts
