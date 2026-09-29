@@ -9,7 +9,7 @@ Both routes become callers that compute a change and delegate, so the effect set
 **Status:** boxes 2–6 earned; box 1 deferred (see note)
 
 - [ ] The rank route and the bulk route delegate to the change module and perform no effect step themselves
-  **NOT EARNED 2026-09-29 — declined on cost, not architecture: a call-through works today through the tenant-db proxy, but it would run per-row access resolution and authorization inside bulk's advisory lock, and bulk has no per-row conflict contract. Earned by pricing those two and widening the two `EffectDeps` interfaces.**
+  **NOT EARNED 2026-09-29 — declined on cost, not architecture: a call-through works today through the tenant-db proxy, but it would run per-row access resolution and authorization inside bulk's advisory lock, and bulk has no per-row conflict contract. The effect-family half is now half closed — backend `460706ebd` (today) added `activity` and `dispatch` to `RankTicketEffectDeps`, so the "a drag writes no activity row and sends no notification" premise in this ticket's opening paragraph is no longer true of rank; `BulkTicketEffectDeps` still declares only `webhooksDispatch` and `automationRunner`. Earned by widening bulk and pricing the two per-row costs.**
 
   **N/A — DECISION 2026-09-27 (Lane 1):** The criterion as written requires rank and bulk to call
   `applyTicketChange` directly. That is architecturally blocked: `applyTicketChange` opens its own

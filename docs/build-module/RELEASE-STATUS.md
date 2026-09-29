@@ -48,6 +48,77 @@ Measured on the merge pushed to both `origin/main` (frontend `70ec2ec8f` onward,
 - Local browser verification on `http://localhost:1000/build/command-center` confirmed the Command Center remains usable when the projects request fails and auxiliary risks/releases requests return validation errors; those panels show local error states instead of replacing the whole route.
 - The live backend still returned the pre-fix `projectId=NaN` response during this browser pass, so the backend route fix is pushed but deployment identity and rollout completion remain unverified.
 
+### 2026-09-29 documentation reconciliation pass
+
+Documentation only — no production code was changed in this repository by this pass. Scope: the
+checkbox state of every file under `docs/build-module/`.
+
+- **Boxes ticked this pass: 0.** Every open box was read against its evidence and none was earnable
+  from this checkout. The boxes that are close each name an instrument this machine cannot supply: a
+  browser session, a non-production authenticated tenant, a non-production database, or a Redis that
+  is not the production Upstash instance in `backend/.env`. Inventing a tick for any of them would
+  have been a fabrication, so none was added.
+- **Boxes annotated browser-pending: 166**, across the 83 page specifications and `LANE-5-STATUS.md`
+  — 80 production-browser-evidence boxes, 72 keyboard/screen-reader/reduced-motion/375 px/high-density
+  boxes, and 14 of the same plus secret-redaction. Tarun waived browser verification for this pass.
+  157 of the 166 sit where every non-browser criterion on the page is ticked; the other 9 say instead
+  that a non-browser box above them is still open.
+- **Boxes left open: 40**, each now carrying one dated 2026-09-29 statement of why and what would
+  earn it, above the measured evidence, which was kept. They split:
+  - **(a) browser- or measurement-pending — 12.** Needs a browser: `01-ia-navigation.md` nav
+    equivalence, `04-shared-components.md` focus/responsive, `tickets/55` gallery reachability,
+    `tickets/ARCHITECTURE-VERIFICATION-2026-09-27.md` release proof, and this file's desktop/mobile
+    matrix. Needs a non-production database: `02-schemas.md` composite indexes,
+    `05-performance-caching.md` skeleton budgets, `performance-followup/cache-policy.md` stale-data
+    bound, `tickets/REVIEW-POINT-COVERAGE.md` approvals index, and the `P1: scalable reads`
+    measured-plans qualifier. Needs a non-production Redis: `cache-policy.md` server invalidation.
+    Needs a deployed-commit probe: this file's deployment-status box.
+  - **(b) blocked on Tarun's decision — 5.** The `99-open-questions.md` process gate (PR-template
+    checkbox versus reviewer awareness); the `10-command-center.md` `view` parameter (does the command
+    center get a second layout at all); the two `99-kill-list.md` copy findings (wire
+    `ClientVisibilityPage` into a route, or withdraw the retention copy that promises a deletion
+    nothing performs); making the concurrency token required on the rank route
+    (`tickets/REVIEW-POINT-COVERAGE.md` stage two); and the signed-URL TTL choice in
+    `05-performance-caching.md`, which depends on open question 10. Neither side of any of the five
+    was implemented. One further *item* — writing a board `cursor` into the URL on
+    `10-project-issues.md`, which changes that board's paging model — is also Tarun's, but it sits
+    inside a box counted under (c).
+  - **(c) genuinely unfinished product work — 23.** Three Build reads classified `ACTIONABLE` plus one
+    bare `.limit(100)` array on `GET /build/:projectId/automations` — `03-api-contracts.md` owns those
+    figures and `05-performance-caching.md` points at it, 2 boxes. Seven `Sheet` escalations with no
+    FE-110 clause (`04-shared-components.md`). A missing soft-delete filter in `listRelations`
+    (`02-schemas.md`). Thirty live Build compatibility redirects, and two parallel survivals
+    (`99-kill-list.md`, 2 boxes). Named per-item remainders on `10-project-wiki`,
+    `10-project-wiki-page`, `10-project-issues` and `LANE-5-STATUS` SPEC 1 (4 boxes). Five rollup
+    boxes in `tickets/ARCHITECTURE-VERIFICATION-2026-09-27.md` — `P0` on bulk's missing two effect
+    families, `P1: repair` and `P2` on unre-measured qualifiers, `P1: honest gates` on the census
+    baseline still scoped by count rather than identity, and the all-68 box. Bulk's 2-effect gap in
+    `tickets/REVIEW-POINT-COVERAGE.md`. Plus seven ticket boxes that are permanent N/A or
+    deliberately-false by design (11, 16, 38, 44, 50, 51, 54) and cannot tick without reverting the
+    fix that made them false.
+- **Total across the pack: 1,078 earned of 1,284 boxes** (206 open), counted over every `- [ ]` and
+  `- [x]` under `docs/build-module/**`.
+
+Counts elsewhere that this pass falsifies:
+
+- **The 68-ticket rollup was stale.** `tickets/ARCHITECTURE-VERIFICATION-2026-09-27.md` recorded "11
+  tickets hold 16 unchecked boxes between them" on 2026-09-28. Re-counted today: **60 of 68 tickets
+  are at zero open boxes and 8 hold exactly one each** (11, 16, 38, 44, 50, 51, 54, 55). The
+  `P1: scalable reads` and `P2: controlled reuse/restructure` boxes each named a ticket-count blocker
+  that has since closed — ticket 14, and tickets 25 and 27 — so both now stay open on their own
+  qualifiers rather than on a count. Corrected in place in that file.
+- **The rank effect gap closed after the six-lane pass was written.** Backend `460706ebd` (today) gave
+  `RankTicketEffectDeps` an `activity` and a `dispatch` member, so a drag to Done does write an
+  activity row and does notify. `BulkTicketEffectDeps` still declares only `webhooksDispatch` and
+  `automationRunner`. The `P0` box and ticket 44 said this of both routes; both are corrected.
+- **The journal figure above and the § Production migrations figure disagree, and both were right when
+  written.** `backend/migrations/meta/_journal.json` holds **1,025 entries** today, with 0 duplicate
+  `idx` and 0 journalled tags lacking a file (re-counted today, file read only, no database). §
+  Production migrations records a production ledger reading of 1,019 journal entries at watermark
+  `1803093634725`; the journal's max `when` is now `1803093640725`, so **six entries post-date that
+  reading**. `pendingCount=0` was true of that reading and is not re-verifiable from here.
+
+
 ## Scope
 
 - The authenticated route manifest contains 75 canonical Build pages, all marked `KEEP`.
@@ -320,9 +391,11 @@ Completed:
   Re-runnable: `python -c "import json,io; j=json.load(io.open('migrations/meta/_journal.json',encoding='utf-8')); e=j['entries']; print(len(e), max(x['when'] for x in e), [(i,x['idx'],x['tag']) for i,x in enumerate(e) if '1197' in x['tag']])"` from `backend/`.
 - [x] Frontend and backend focused tests and typechecks pass.
 - [ ] Authenticated desktop and mobile browser matrices pass for the full Build route census against the production API.
+  **NOT EARNED 2026-09-29 — the desktop sweep passed 2026-09-25 over 74 routes (75 today); the mobile matrix has never run, and this checkout has no browser and no non-production authenticated target. Earned by executing the mobile matrix over the 75-route census with no console errors.**
   <!-- BROWSER-EXCLUDED (2026-09-27). Desktop 74-route sweep passed 2026-09-25 (75 routes now — the wiki/[pageId]/history page was added); mobile matrix explicitly open (see § Browser verification "The mobile matrix remains open"). Settles when the mobile matrix is executed against the production API without console errors. -->
 - [x] Frontend candidate is merged into `origin/main`.
 - [ ] Deployment status for the latest frontend and backend commits is verified.
+  **NOT EARNED 2026-09-29 — which commit is running cannot be determined from either repository: the backend health controller exposes no `version` route and reads no `RAILWAY_GIT_COMMIT_SHA`, and neither repository contains a deploy step. Earned by adding `@Get("version")` to `src/health/health.controller.ts` and a build-SHA read on the frontend, then reading both back.**
   <!-- 2026-09-28 NOT EARNED, and SETTLED as unearnable from this repository. This is a recorded gap, not a requirement: nothing below asks anyone to keep the deployed commit unknowable. The finding is that two small, cheap code changes would make it knowable, and neither has been made.
 
   THE SETTLED FINDING: **which commit is running cannot be determined from this repository, for either service.** That is a property of the code, not of the investigation — no amount of further probing from here changes it.
