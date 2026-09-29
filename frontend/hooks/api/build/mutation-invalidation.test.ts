@@ -231,6 +231,10 @@ describe("useBulkUpdateTickets — invalidation contract", () => {
   });
 
   it("invalidates projectReports.all so cycle burndown reflects bulk status/cycle changes", async () => {
+    client.setQueryData(queryKeys.projects.tickets({ projectId: 42 }), {
+      data: [{ id: 1, version: 1 }, { id: 2, version: 1 }],
+      pagination: { nextCursor: null },
+    });
     const { result } = renderHook(() => useBulkUpdateTickets(42), { wrapper: wrap(client) });
 
     await act(async () => {
@@ -246,6 +250,10 @@ describe("useBulkUpdateTickets — invalidation contract", () => {
   });
 
   it("invalidates dashboard.myIssues() so My Issues widget reflects bulk assignee/status changes", async () => {
+    client.setQueryData(queryKeys.projects.tickets({ projectId: 42 }), {
+      data: [{ id: 1, version: 1 }, { id: 2, version: 1 }],
+      pagination: { nextCursor: null },
+    });
     const { result } = renderHook(() => useBulkUpdateTickets(42), { wrapper: wrap(client) });
 
     await act(async () => {

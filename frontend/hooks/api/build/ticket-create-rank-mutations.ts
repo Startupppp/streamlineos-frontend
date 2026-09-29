@@ -1,7 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import type { UseMutationOptions } from "@tanstack/react-query";
+import type { QueryClient, UseMutationOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type {
@@ -19,6 +19,7 @@ import {
   invalidateTicketUpdateViews,
   patchTicketCollections,
   removeTicketFromCollections,
+  resolveTicketVersions,
   restoreTicketCollections,
   rollbackTicketFields,
   type TicketSnapshots,
@@ -263,7 +264,10 @@ export interface BulkUpdateTicketsInput {
   parentTicketId?: number | null;
   labelIds?: number[];
   archive?: boolean;
+  versions: Record<string, number>;
 }
+
+export type BulkUpdateTicketsVariables = Omit<BulkUpdateTicketsInput, "versions">;
 
 export interface BulkUpdateBlockedTicket {
   ticketId: number;
@@ -287,7 +291,7 @@ interface BulkUpdateTicketsContext {
 
 function toTicketUpdateInput(
   ticket: Ticket,
-  input: BulkUpdateTicketsInput,
+  input: BulkUpdateTicketsVariables,
 ): UpdateTicketInput {
   return {
     ticketId: ticket.id,
@@ -300,19 +304,37 @@ function toTicketUpdateInput(
   };
 }
 
+function attachTicketVersions(
+  queryClient: QueryClient,
+  projectId: number,
+  variables: BulkUpdateTicketsVariables,
+): BulkUpdateTicketsInput {
+  const { versions, missingTicketIds } = resolveTicketVersions(
+    queryClient,
+    projectId,
+    variables.ticketIds,
+  );
+  if (missingTicketIds.length > 0) {
+    throw new Error(
+      `Bulk ticket update blocked: no cached optimistic-concurrency version for ticket id(s) ${missingTicketIds.join(", ")}. Reload the list before retrying.`,
+    );
+  }
+  return { ...variables, versions };
+}
+
 export function useBulkUpdateTickets(projectId: number) {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<
     BulkUpdateTicketsResult,
     Error,
-    BulkUpdateTicketsInput,
+    BulkUpdateTicketsVariables,
     BulkUpdateTicketsContext
   >("build:tickets:update", {
     mutationKey: ["projects", "tickets", "bulk-update"],
-    mutationFn: (data: BulkUpdateTicketsInput) =>
+    mutationFn: (data: BulkUpdateTicketsVariables) =>
       apiClient.post<BulkUpdateTicketsResult>(
         `/build/${projectId}/tickets/bulk`,
-        data,
+        attachTicketVersions(queryClient, projectId, data),
         undefined,
         bulkUpdateResultLazy,
       ),

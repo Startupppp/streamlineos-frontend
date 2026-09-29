@@ -192,6 +192,7 @@ export interface UpdateTicketInput {
 export interface RankTicketInput {
   projectId: number;
   ticketId: number;
+  version: number;
   beforeTicketId?: number | null;
   afterTicketId?: number | null;
   status?: string;

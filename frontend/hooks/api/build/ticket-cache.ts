@@ -1,5 +1,9 @@
 import type { InfiniteData, QueryClient } from "@tanstack/react-query";
-import type { CursorPageResponse, Ticket } from "@/types/projects";
+import type {
+  CursorPageResponse,
+  ProjectWithDetails,
+  Ticket,
+} from "@/types/projects";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
@@ -13,7 +17,7 @@ export type TicketSnapshots = {
   optimistic: Ticket[];
 }[];
 
-function collectionTickets(collection: TicketCollection): Ticket[] {
+export function collectionTickets(collection: TicketCollection): Ticket[] {
   return "pages" in collection
     ? collection.pages.flatMap((page) => page.data)
     : collection.data;
@@ -88,6 +92,43 @@ export function patchTicketCollections(
       });
   }
   return snapshots;
+}
+
+export function resolveTicketVersions(
+  client: QueryClient,
+  projectId: number,
+  ticketIds: number[],
+): { versions: Record<string, number>; missingTicketIds: number[] } {
+  const foundVersions = new Map<number, number>();
+  for (const [, collection] of client.getQueriesData<TicketCollection>({
+    queryKey: buildWorkQueryKeys.projects.tickets({ projectId }),
+  })) {
+    if (!collection) continue;
+    for (const ticket of collectionTickets(collection)) {
+      if (!foundVersions.has(ticket.id)) foundVersions.set(ticket.id, ticket.version);
+    }
+  }
+  const detail = client.getQueryData<ProjectWithDetails | null>(
+    buildWorkQueryKeys.projects.detail(projectId),
+  );
+  for (const ticket of detail?.tickets ?? []) {
+    if (!foundVersions.has(ticket.id)) foundVersions.set(ticket.id, ticket.version);
+  }
+  for (const ticketId of ticketIds) {
+    if (foundVersions.has(ticketId)) continue;
+    const cachedTicket = client.getQueryData<Ticket | null>(
+      buildWorkQueryKeys.projects.ticket(projectId, ticketId),
+    );
+    if (cachedTicket) foundVersions.set(ticketId, cachedTicket.version);
+  }
+  const versions: Record<string, number> = {};
+  const missingTicketIds: number[] = [];
+  for (const ticketId of ticketIds) {
+    const version = foundVersions.get(ticketId);
+    if (version === undefined) missingTicketIds.push(ticketId);
+    else versions[ticketId] = version;
+  }
+  return { versions, missingTicketIds };
 }
 
 export function restoreTicketCollections(
