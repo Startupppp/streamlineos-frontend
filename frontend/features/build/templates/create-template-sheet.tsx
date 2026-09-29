@@ -47,7 +47,7 @@ interface CreateTemplateSheetProps {
 
 export function CreateTemplateSheet({ open, onClose }: CreateTemplateSheetProps) {
   const [tickets, setTickets] = useState<TicketDraft[]>([
-    { title: "", type: "TASK", priority: "MEDIUM", phase: "", estimatedHours: "", order: 0 },
+    { uid: crypto.randomUUID(), title: "", type: "TASK", priority: "MEDIUM", phase: "", estimatedHours: "", order: 0 },
   ]);
   const create = useCreateProjectTemplate();
 
@@ -60,7 +60,7 @@ export function CreateTemplateSheet({ open, onClose }: CreateTemplateSheetProps)
   const addTicket = useCallback(() => {
     setTickets((prev) => [
       ...prev,
-      { title: "", type: "TASK", priority: "MEDIUM", phase: "", estimatedHours: "", order: prev.length },
+      { uid: crypto.randomUUID(), title: "", type: "TASK", priority: "MEDIUM", phase: "", estimatedHours: "", order: prev.length },
     ]);
   }, []);
 
@@ -183,7 +183,7 @@ export function CreateTemplateSheet({ open, onClose }: CreateTemplateSheetProps)
                 </div>
                 {tickets.map((ticket, idx) => (
                   <TicketRow
-                    key={idx}
+                    key={ticket.uid}
                     ticket={ticket}
                     index={idx}
                     isOnlyTicket={tickets.length <= 1}

@@ -145,24 +145,32 @@ jest.mock("@/components/ui/button", () => ({
   Button: (props: React.ButtonHTMLAttributes<HTMLButtonElement>) => <button {...props} />,
 }));
 
+let capturedLoadingButtonIsPending: boolean | undefined;
 jest.mock("@/components/ui/loading-button", () => ({
   LoadingButton: ({
     children,
-    isPending: _isPending,
+    isPending,
     loadingText: _loadingText,
     ...props
   }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
     isPending?: boolean;
     loadingText?: string;
-  }) => <button {...props}>{children}</button>,
+  }) => {
+    capturedLoadingButtonIsPending = isPending;
+    return <button {...props}>{children}</button>;
+  },
 }));
 
 jest.mock("@/components/ui/combobox", () => ({
   Combobox: () => <div data-testid="entity-combobox" />,
 }));
 
+let capturedUserComboboxProjectId: number | undefined;
 jest.mock("@/components/ui/user-combobox", () => ({
-  UserCombobox: () => null,
+  UserCombobox: (props: { projectId?: number }) => {
+    capturedUserComboboxProjectId = props.projectId;
+    return null;
+  },
 }));
 
 const PROJECT_ID = 42;
@@ -377,6 +385,72 @@ describe("RequestApprovalSheet — entity picker visibility", () => {
     renderSheet();
     expect(screen.queryByTestId("entity-combobox")).toBeNull();
     expect(screen.getByText("Project Budget (auto-selected)")).toBeTruthy();
+  });
+});
+
+describe("BUG-040 — submit button uses LoadingButton with isPending so double-clicks are blocked by the disabled state", () => {
+  beforeEach(() => {
+    capturedLoadingButtonIsPending = undefined;
+    currentFormValues = {
+      entityType: "task",
+      entityId: "1",
+      title: "Approve task: Seed",
+      approverId: "user-seed",
+      reason: "",
+      dueAt: "",
+      level: "1",
+    };
+  });
+
+  it("passes isPending=false to LoadingButton when the sheet is idle so the button is enabled", () => {
+    render(
+      <RequestApprovalSheet
+        open
+        onOpenChange={jest.fn()}
+        onSubmit={jest.fn()}
+        isPending={false}
+        projectId={PROJECT_ID}
+      />,
+    );
+    expect(capturedLoadingButtonIsPending).toBe(false);
+  });
+
+  it("passes isPending=true to LoadingButton while a submission is in flight so duplicate clicks are suppressed (BUG-040)", () => {
+    render(
+      <RequestApprovalSheet
+        open
+        onOpenChange={jest.fn()}
+        onSubmit={jest.fn()}
+        isPending={true}
+        projectId={PROJECT_ID}
+      />,
+    );
+    expect(capturedLoadingButtonIsPending).toBe(true);
+  });
+});
+
+describe("BUG-041 — approver picker scoped to project members not the org-wide directory", () => {
+  beforeEach(() => {
+    capturedUserComboboxProjectId = undefined;
+    currentFormValues = {
+      entityType: "task",
+      entityId: "1",
+      title: "Approve task: Seed",
+      approverId: "",
+      reason: "",
+      dueAt: "",
+      level: "1",
+    };
+  });
+
+  it("passes projectId to UserCombobox so MemberPicker fetches project members instead of the uncapped org directory", () => {
+    renderSheet();
+    expect(capturedUserComboboxProjectId).toBe(PROJECT_ID);
+  });
+
+  it("does not pass undefined projectId to UserCombobox when the sheet has a valid projectId (regression guard)", () => {
+    renderSheet();
+    expect(capturedUserComboboxProjectId).not.toBeUndefined();
   });
 });
 

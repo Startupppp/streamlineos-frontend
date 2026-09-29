@@ -96,7 +96,7 @@ export function ManagedProductsPage() {
     limit: PAGE_SIZE,
     status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
     search: listFilters.debouncedSearch.trim() || undefined,
-    ownerId: ownerIdValue || undefined,
+    ownerId: ownerIdValue !== BUILD_FILTER_ALL ? ownerIdValue : undefined,
     sort:
       sortValue && sortValue !== BUILD_FILTER_ALL &&
       (sortValue === "name" || sortValue === "updated" || sortValue === "status")

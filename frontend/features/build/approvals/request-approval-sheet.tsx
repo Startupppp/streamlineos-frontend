@@ -368,6 +368,7 @@ export function RequestApprovalSheet({
                         onChange={field.onChange}
                         placeholder="Search for approver…"
                         excludeUserId={currentUserId}
+                        projectId={projectId}
                       />
                     </FormControl>
                     <FormMessage />

@@ -10,6 +10,7 @@ interface UserComboboxProps {
   allowUnassigned?: boolean;
   excludeUserId?: string;
   className?: string;
+  projectId?: number;
 }
 
 export function UserCombobox({
@@ -20,6 +21,7 @@ export function UserCombobox({
   allowUnassigned = false,
   excludeUserId,
   className,
+  projectId,
 }: UserComboboxProps) {
   function handleChange(userId: string | null) {
     onChange(userId ?? "");
@@ -34,6 +36,7 @@ export function UserCombobox({
       allowUnassigned={allowUnassigned}
       excludeUserId={excludeUserId}
       className={className}
+      projectId={projectId}
     />
   );
 }

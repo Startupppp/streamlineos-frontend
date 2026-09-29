@@ -73,7 +73,10 @@ export function useCreateProgram() {
     mutationFn: (data: CreateProgramInput) =>
       apiClient.post<Program>("/build/programs", data, undefined, programRowContract),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.programs.list() });
+      qc.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.programs.list(),
+        refetchType: "all",
+      });
     },
   });
 }
