@@ -16,7 +16,7 @@ Document overflow was 0 at 1280 and 375 unless noted. `prefers-reduced-motion: r
 - `/build/6/milestones` — ready, MVP Pending, focus “New Milestone”
 - `/build/6/workload` — ready board, 22 tickets; page overflow 0; board scrolls inside (375 scroll width 1488)
 - `/build/6/client-portal` — empty grants, “No grants”; one resize-during-navigation flash of “Something went wrong”, reload was clean
-- `/build/6/wiki` — ready, Untitled draft; detail link `/build/6/wiki/860067` not opened
+- `/build/6/wiki` — ready, Untitled draft; detail `/build/6/wiki/860067` and `/history` opened
 - `/build/6/whiteboard` — empty, focus “New Board”
 - `/build/6/reports` — ready, “No cycle data yet”
 - `/build/6/qa` — empty “No test cases”; 1280 search/suite/priority/automation one row; 375 search plus 36px Filters
@@ -25,7 +25,7 @@ Document overflow was 0 at 1280 and 375 unless noted. `prefers-reduced-motion: r
 - `/build/6/decisions` — empty, focus “New Decision”
 - `/build/6/incidents` — empty, focus “New Incident”
 - `/build/6/intake` — empty, focus “Copy Form URL”
-- `/build/6/forms` — ready, FORM-2; detail `/build/6/forms/2` not opened
+- `/build/6/forms` — ready, FORM-2; detail `/build/6/forms/2` opened (inactive Untitled Form)
 - `/build/6/feedbucket` — empty, focus “Create feedback widget”
 - `/build/6/chat` — empty, focus “Create chat channel”
 - `/build/6/change-requests` — empty, focus “New Change Request”
@@ -57,8 +57,25 @@ Also checked this pass:
 - `/build/inbox` — empty unread, “All caught up”, focus “Unread”
 - `/build/templates` — empty, “No templates yet”. Search labelled “Search templates…” is present. Pressing `/` focused “Search pages, leads, deals, contacts…”, so the keyboard box stays open.
 
-Issues at 1280 only (overflow 0, heading “Build QA Sandbox”) and backlog at the native ~1044 width (overflow 0, rows BQS-1 onward) were seen earlier and still need the missing viewport.
+Later the same pass also measured overflow 0 at 1280 and 375 on:
+
+- `/build/6/backlog`, `/build/6/issues` (board scrolls inside at 375), `/build/6`
+- `/build/roadmap`, `/build/programs`, `/build/portfolios`, `/build/managed-products`
+- `/build/settings/access`, `/build/settings/integrations`, `/build/settings/client-access`
+- `/build/6/wiki/860067`, `/build/6/wiki/860067/history`, `/build/6/forms/2`, `/build/6/tickets/BQS-22`, `/build/6/cycles/9`
+- `/build/command-center`, `/build/approvals`
+- `/portal`, `/portal/6`
+- `/client-portal` and `/client-portal/6` both land on `/accept-invitation?reason=no_token` (“No active session”)
 
 ## Still open
 
-Org routes, detail routes that need a real id, public/portal routes, and the production evidence boxes on the pages above (error, denied, conflict not triggered). Recount `OUT OF SCOPE — browser verification` after this file is saved; that count is the remaining denominator.
+These keyboard boxes stay open because the route could not be measured without creating data or guessing an id:
+
+- Detail with no record: portfolio, managed product (and its insights, projects, roadmap, goals, feedback), team, meeting, incident, Feedbucket submission, goal, QA run
+- Public with no token or published link: `/roadmap/[orgId]`, `/forms/[formToken]`, `/board/[shareToken]`
+- `/intake/6` painted “Submit a request”, then the client settled on “Something went wrong” (hydration mismatch)
+- `/build/templates`: pressing `/` focuses “Search pages, leads, deals, contacts…” instead of “Search templates…”
+
+Every production evidence box stays open. Ready or empty was seen on the pages above. Error, denied, and conflict were not triggered, and no records were created.
+
+`OUT OF SCOPE — browser verification` no longer appears on the page specs. The phrase remains on three ticket notes (`50`, `51`, `55`) that ask for a before/after visual comparison, plus the historical sentence in `RELEASE-STATUS.md`.
