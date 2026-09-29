@@ -74,7 +74,7 @@ function ticketPageContract(rowExtension) {
   });
 }
 
-export function runSelfTest(evaluate, floorFailures, partitionFindings, staleFailures, checkDbCoverage) {
+export function runSelfTest(evaluate, floorFailures, partitionFindings, staleFailures, checkDbCoverage, baselineAdditions) {
   const checks = [];
   const assert = (label, actual, expected) => {
     const ok = JSON.stringify(actual) === JSON.stringify(expected);
@@ -366,6 +366,46 @@ export function runSelfTest(evaluate, floorFailures, partitionFindings, staleFai
       new Set(["id"]),
       new Set(["id", "title"]),
       new Set(),
+    ),
+    [],
+  );
+
+  assert(
+    "SEEDED VIOLATION — a baseline write that adds an entry is refused, so --update-baseline cannot capture new debt",
+    baselineAdditions(
+      { missing: ["a"], extras: [], typeMismatches: [], dbCoverage: [] },
+      { missing: ["a", "b"], extras: [], typeMismatches: [], dbCoverage: [] },
+    ),
+    [{ bucket: "missing", keys: ["b"] }],
+  );
+
+  assert(
+    "SEEDED VIOLATION — an addition in any bucket is caught, not only in missing",
+    baselineAdditions(
+      { missing: [], extras: [], typeMismatches: [], dbCoverage: ["x"] },
+      { missing: [], extras: ["e"], typeMismatches: ["t"], dbCoverage: ["x", "y"] },
+    ),
+    [
+      { bucket: "extras", keys: ["e"] },
+      { bucket: "typeMismatches", keys: ["t"] },
+      { bucket: "dbCoverage", keys: ["y"] },
+    ],
+  );
+
+  assert(
+    "VIOLATION REMOVED — a write that only prunes is permitted",
+    baselineAdditions(
+      { missing: ["a", "b"], extras: [], typeMismatches: [], dbCoverage: [] },
+      { missing: ["a"], extras: [], typeMismatches: [], dbCoverage: [] },
+    ),
+    [],
+  );
+
+  assert(
+    "an identical write is permitted, so a no-op prune is not mistaken for growth",
+    baselineAdditions(
+      { missing: ["a"], extras: [], typeMismatches: [], dbCoverage: [] },
+      { missing: ["a"], extras: [], typeMismatches: [], dbCoverage: [] },
     ),
     [],
   );
