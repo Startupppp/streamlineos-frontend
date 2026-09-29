@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -34,6 +35,8 @@ import {
   type PayrollRunType,
 } from "@/hooks/api/payroll/runs";
 import { usePayrollEntities } from "@/hooks/api/payroll/entities";
+import { usePayrollPolicyCurrent } from "@/hooks/api/payroll/policies";
+import { payrollRunStartGate } from "@/features/payroll/runs/run-start-gate";
 import { useCan } from "@/hooks/api/access";
 import type { PayrollRunListItem } from "@/types/payroll/runs";
 
@@ -61,6 +64,8 @@ export function RunsPageContent() {
   const [newEntityId, setNewEntityId] = useState<string>("");
 
   const canManage = useCan("payroll:runs:manage");
+  const canViewPolicies = useCan("payroll:policies:view");
+  const policy = usePayrollPolicyCurrent();
   const { data: entities } = usePayrollEntities();
   const listParams = {
     cursor,
@@ -141,6 +146,14 @@ export function RunsPageContent() {
     router.push(`/payroll/runs/${row.id}`);
   }
 
+  const setupKnown = !canViewPolicies || !policy.isLoading;
+  const startGate = !setupKnown
+    ? null
+    : payrollRunStartGate({
+        policyReady: canViewPolicies ? Boolean(policy.data?.policy) : true,
+      });
+  const setupPending = startGate?.action === "setup" ? startGate : null;
+
   const needsSource = RUN_TYPES_NEEDING_SOURCE.includes(newRunType);
   const sourceRunOptions = (data?.data ?? []).filter((r) => r.month === newRunMonth);
   const createDisabled = needsSource && sourceRunId === "";
@@ -214,11 +227,15 @@ export function RunsPageContent() {
       title="Payroll Runs"
       subtitle="View and manage payroll runs by month"
       actions={
-        canManage ? (
+        !canManage || startGate === null ? undefined : setupPending ? (
+          <Button size="sm" asChild>
+            <Link href={setupPending.href}>{setupPending.label}</Link>
+          </Button>
+        ) : (
           <Button size="sm" onClick={handleNewRunOpen}>
             New run
           </Button>
-        ) : undefined
+        )
       }
     >
       {(entities?.length ?? 0) > 0 ? (
@@ -290,8 +307,18 @@ export function RunsPageContent() {
             <EmptyState
               illustration={<EmptyPayroll />}
               title="No payroll runs"
-              description="Start your first payroll run to see it here"
-              action={canManage ? { label: "New run", onClick: handleNewRunOpen } : undefined}
+              description={
+                setupPending
+                  ? setupPending.reason
+                  : "Start your first payroll run to see it here"
+              }
+              action={
+                !canManage || startGate === null
+                  ? undefined
+                  : setupPending
+                    ? { label: setupPending.label, href: setupPending.href }
+                    : { label: "New run", onClick: handleNewRunOpen }
+              }
             />
           }
         />
