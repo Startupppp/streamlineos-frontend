@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useUpdateProject } from "@/hooks/api/build/projects";
-import { TEXT_ONE_LINE, TEXT_TWO_LINES } from "@/lib/text-overflow";
+import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { InlineFieldWrapper } from "@/features/build/views/card-inline-fields";
 
 interface InlineProjectFieldProps {
@@ -145,8 +145,8 @@ export const InlineProjectDescription = memo(function InlineProjectDescription({
           <button
             type="button"
             className={cn(
-              TEXT_TWO_LINES,
-              "mt-1 flex-1 text-left text-micro transition-colors",
+              TEXT_ONE_LINE,
+              "w-full text-left text-micro transition-colors",
               preview
                 ? "text-muted-foreground hover:text-foreground"
                 : "text-muted-foreground hover:text-muted-foreground",

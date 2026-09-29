@@ -104,3 +104,21 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
 - [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
+
+### Local browser evidence — 2026-09-29 (partial; release criteria remain open)
+
+- On authenticated local Build QA Sandbox at `/build/6/backlog`, searching for
+  `zz-no-match-qa-sentinel` initially showed the first-run “No tickets yet”
+  state, despite the active query. Added `filtersActive` to the supplied
+  filtered-empty `EmptyState`, activating the expected “No results match your
+  filters.” message and “Clear filters” action.
+- The page-level regression test first failed on the missing flag and then
+  passed after the fix (18/18); changed-file ESLint passed. Retested the exact
+  URL in the browser after hot reload; the filtered-empty explanation and
+  action are present. No records were changed.
+- Not verified here: clear-action result, other filters, permission denial,
+  API error/conflict, screen reader, reduced motion, mobile/high-density, or
+  production behavior. The browser acceptance boxes above remain unchecked.
+- At 375 × 812, a separate visual pass confirmed the table switches to stacked
+  ticket cards without horizontal page overflow; the mobile module navigation
+  remains visible. This does not cover other breakpoints or full mobile tasks.

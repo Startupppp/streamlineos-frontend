@@ -104,3 +104,14 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
 - [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
+
+### Local browser evidence — 2026-09-29 (partial; release criteria remain open)
+
+- Authenticated local Build QA Sandbox `/build/6/client-portal` shows the
+  unpublished warning and empty Grants state. Keyboard activation of the
+  **Visibility** and **Preview** tabs updates the selected tab and
+  `?section=` URL state. Preview reports “Nothing visible to clients yet.”
+- The portal was not published, no grants or visibility permissions changed,
+  and no client data was transmitted. This does not verify grant management,
+  client identity/revocation, access denial, responsive/screen-reader behavior,
+  or production projections; acceptance boxes remain unchecked.

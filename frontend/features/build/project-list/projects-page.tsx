@@ -347,7 +347,7 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
               <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
                 <div className="min-h-0 flex-1 overflow-y-auto">
                   <PmStaggerList
-                    className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3"
+                    className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
                     role="list"
                     aria-label="Projects grid"
                   >
@@ -355,8 +355,7 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
                       <motion.div
                         key={project.id}
                         variants={shouldReduceMotion ? fadeUpReduced : fadeUp}
-                        className="h-full"
-                        role="listitem"
+                        className="h-full min-w-0"
                       >
                         <ProjectCard project={project} />
                       </motion.div>

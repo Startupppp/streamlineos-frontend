@@ -205,6 +205,16 @@ describe("ProjectBacklogPage — surface declarations", () => {
     expect(capturedSurface?.filteredEmpty).toBeDefined();
   });
 
+  it("activates the filtered-empty copy and clear-filters action", () => {
+    renderPage();
+    const emptyState = capturedSurface?.filteredEmpty as React.ReactElement<{
+      filtersActive?: boolean;
+      onClearFilters?: () => void;
+    }>;
+    expect(emptyState.props.filtersActive).toBe(true);
+    expect(emptyState.props.onClearFilters).toEqual(expect.any(Function));
+  });
+
   it("passes minWidth 640px to BuildListSurface", () => {
     renderPage();
     expect(capturedSurface?.minWidth).toBe("640px");

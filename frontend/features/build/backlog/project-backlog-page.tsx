@@ -393,6 +393,7 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
               className="flex-1"
               illustrationPreset="projects"
               title="No tickets yet"
+              filtersActive
               onClearFilters={handleClearFilters}
             />
           }
