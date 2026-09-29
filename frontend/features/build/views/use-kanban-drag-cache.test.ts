@@ -118,6 +118,37 @@ it("omits status from the rank payload when the drag is within the same column, 
   client.clear();
 });
 
+it("fires rankTicket with the correct status when a cross-column drag completes — draggableId is the ticket id as a string, type is TICKET, droppableId is the destination status name: these are the exact shapes @hello-pangea/dnd emits for a virtual-mode drop", async () => {
+  const client = createAppQueryClient();
+  client.setDefaultOptions({ mutations: { retry: false } });
+  const ticket = { id: 7, title: "T", status: "TODO", type: "TASK", rank: "a0", version: 3 };
+  jest.mocked(apiClient.patch).mockReset().mockResolvedValue({ id: 7, rank: "b0", status: "IN_PROGRESS" });
+  const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
+  const { result } = renderHook(() => useKanbanDrag({
+    projectId: 1, statuses: [], rowBy: "none", hideCompleted: false, canManage: true,
+    visibleColumns: [], orderedColumns: [], optimisticTickets: [ticket], optimisticStatuses: [],
+    setOptimisticTickets: jest.fn(), setOptimisticStatuses: jest.fn(), setOptimisticColumnOrder: jest.fn(),
+    isDraggingRef: { current: false }, dragStartRef: { current: null },
+  }), { wrapper });
+  await act(async () => result.current.onDragEnd({
+    draggableId: "7",
+    type: "TICKET",
+    reason: "DROP",
+    mode: "FLUID",
+    source: { droppableId: "TODO", index: 0 },
+    destination: { droppableId: "IN_PROGRESS", index: 0 },
+    combine: null,
+  }));
+  await waitFor(() => expect(apiClient.patch).toHaveBeenCalledTimes(1));
+  expect(apiClient.patch).toHaveBeenCalledWith(
+    expect.stringContaining("/7/rank"),
+    expect.objectContaining({ status: "IN_PROGRESS" }),
+    undefined,
+    expect.anything(),
+  );
+  client.clear();
+});
+
 it("does not call rankTicket when dropping onto the exact same position in the same column, so phantom network requests cannot flip the board back to its server state", async () => {
   const client = createAppQueryClient();
   client.setDefaultOptions({ mutations: { retry: false } });

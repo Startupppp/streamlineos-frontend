@@ -40,7 +40,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, ExternalLink, TicketIcon } from "lucide-react";
+import { Plus, ExternalLink } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { getUserDisplayName } from "@/lib/person-display";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
@@ -184,7 +184,6 @@ export function IntakePage({ projectId }: { projectId: number }) {
                     const url = `/build/${projectId}/tickets/${ticketId}`;
                     if (typeof window !== "undefined") window.open(url, "_blank");
                   },
-                  icon: <TicketIcon className="h-4 w-4" />,
                 },
               });
             } else {

@@ -215,6 +215,7 @@ export interface ProjectAnalytics {
     velocityScore: number;
     overdueTickets: number;
     totalTickets: number;
+    openTickets: number;
   };
 }
 

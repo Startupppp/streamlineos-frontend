@@ -32,7 +32,7 @@ export function useAcceptIntakeRequest() {
         undefined,
         intakeItemContract,
       ),
-    onSuccess: (_: unknown, variables: AcceptIntakeRequestInput) => {
+    onSuccess: (_: IntakeRequest, variables: AcceptIntakeRequestInput) => {
       queryClient.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.intake(variables.projectId),
       });
