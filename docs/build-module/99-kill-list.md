@@ -173,6 +173,37 @@ not picked up again. Retired 2026-09-22 during backlog reconciliation.
   **WHAT WOULD ACTUALLY CLOSE `observable`, and it is a design decision, not a line of code.** A `next.config.ts` redirect is resolved by the Next.js routing layer before any application code runs, so it can never be counted where it lives. Closing this clause means **moving all 28 into `proxy.ts`'s `redirectTo`** — i.e. trading 28 declarative config entries for 28 imperative branches on the Node runtime — and then counting there. That is a real trade with a real cost (config is the better home for a static redirect; code is the only home that can observe one), and nobody has made it. Until it is made, *observable* has no implementation and (A)'s automated expiry stays premature because it would gate removal on a signal that does not exist.
 
   **(B) STANDS at 30 entries, escalation trigger unchanged. NOT EARNED:** *temporary* 30/30 ✓ · *removed after deep-link migration* — the open (A)/(B) choice, blocked on the clause below · *observable* — no implementation, and the cheap partial was refused on purpose.
+
+  **2026-09-29, fourth lane. THE 30 REPRODUCES. ZERO REDIRECTS DELETED, AND THE REASON IS EVIDENCE, NOT CAUTION. `observable` NOW HAS AN IMPLEMENTATION COVERING 2 OF 30, AND THE COVERAGE IS STATED HERE SO IT CANNOT BE MISCITED.**
+
+  Re-derived, `frontend/`: `grep -c 'source: "/build' next.config.ts` → **28** · `permanent` tally over those 28 → **28 false, 0 true** · first/last Build hits → **`:142`** and **`:288`** · `grep -n 'redirectTo(req, "/build' proxy.ts` → **`:177`**, **`:182`** (now `:178` and `:184` after this lane's two counter calls). **Surface: 30. Temporary: 30/30.**
+
+  **TWO NEW MEASUREMENTS THIS LANE, NEITHER PREVIOUSLY TAKEN.**
+
+  | Measurement | Method | Result |
+  |---|---|---|
+  | Does every redirect destination still resolve? | the 28 entries yield 20 distinct destinations; each checked for `app/(authenticated)/<dest>/page.tsx` | **20/20 resolve.** No redirect is a hop into a 404 |
+  | Does any redirect source shadow a live route? | each of the 19 source path shapes checked against the same tree | **zero shadow.** No config redirect is intercepting a page that exists |
+  | Does any non-test file still navigate to a removed path? | `grep -rnE '(href=\|href:\|router\.(push\|replace)\(\|redirect\()' app components features hooks lib`, filtered to the 19 legacy shapes | **zero** |
+  | `sidebar-nav-items.ts` | `grep -nE 'href: "/build' components/layout/sidebar/sidebar-nav-items.ts` | **zero Build hrefs at all** — Build nav is built by `lib/build/build-nav-model.ts`, and it names no legacy path |
+  | saved-view / bookmark seed | `grep -rnE 'DEFAULT_SAVED_VIEWS\|SAVED_VIEW_SEED\|savedViewSeed' features lib hooks | **no such seed exists in this repo** |
+  | vendored contract | `grep -oE '"/build/(goal\|pm-workspaces\|customers\|members\|access\|client-access\|drafts\|workspaces)[^"]*"' contracts/openapi.json | **3 hits — `/build/customers`, `/build/members`, `/build/members/{userId}`** |
+
+  **THE THREE CONTRACT HITS ARE A NAME COLLISION, NOT A CALLER, AND THAT DISTINCTION MATTERS.** `contracts/openapi.json` describes the **backend HTTP API**, whose base URL is the API origin, not the app origin. `/build/members` there is `GET {API}/build/members`, served by the backend and consumed by `hooks/api/build/build-members.ts:56`. The Next.js redirect at `next.config.ts:223` rewrites `{APP}/build/members`. The two strings are identical and the surfaces are disjoint. The same holds for every `hooks/api/build/*.ts` hit on `/build/${projectId}/automations`, `/webhooks`, `/views`, `/bugs`, `/analytics` — all `apiClient` paths. **A grep for a redirect's source path returns API call sites; none of them is an inbound caller of the redirect.** Anyone re-running the census must apply this filter or they will conclude the redirects are heavily used.
+
+  **ZERO DELETED. The deletable set is empty, and it is empty by evidence rather than by nerve.** A redirect is safely deletable on one of three proofs: (1) its destination is gone, so it is a hop into a 404 — **0 of 30**; (2) it shadows a live route, so it is a bug rather than a shim — **0 of 30**; (3) its traffic has been observed at zero for long enough — **0 of 30, because nothing has ever been observed**. Absence of an in-repo `href` is none of the three. Every one of the 30 exists precisely for callers this repository cannot see: a browser bookmark, a link in a sent email, a third-party integration, and — demonstrably in this repo — a **stored** `notifications.link` row. The evidence for that last one is `lib/build/normalize-build-deep-link.ts`, whose `toBuildPath` rewrites `/projects/...` → `/build/...` at **7 call sites** (`features/notifications/notification-bell-panel.tsx:137,:147,:165`, `use-notification-events.ts:109`, `use-notification-inbox.ts:86`, `unified-inbox/inbox-shell.tsx:150,:163,:182,:199`, `features/build/inbox/inbox-preview-pane.tsx:204`). A client-side normalizer for a path shape exists only because that shape is still arriving in data. `grep -rn '/projects/' backend/src` finds **no current emitter**, which means the producer is historical rows, which are exactly what a redirect protects. **So deleting on grep-absence would break live deep links, and this lane deleted nothing.**
+
+  One asymmetry worth a line for whoever removes these: `toBuildPath` normalizes `/projects` but **not** `/product-management`, so the client-side belt covers one of the two proxy families and the server-side brace covers both.
+
+  **`observable` — IMPLEMENTED FOR 2 OF 30. COVERAGE IS 7%. THE BOX DOES NOT TICK ON IT.** `frontend/lib/observability/legacy-redirect.ts` holds a module-private `Map` and `recordLegacyRedirect(source, destination)`, which increments and emits one JSON line (`{"event":"legacy_redirect","source":…,"destination":…,"hits":n}`) on the Node runtime. `proxy.ts:178` and `:184` call it for `/projects` and `/product-management`. Tests: `lib/observability/legacy-redirect.test.ts` (4) and `proxy-legacy-redirect.test.ts` (4, driving the real `proxy()` — the `/projects` branch returns before `getToken`, so no auth fixture is needed). Both counting tests die when the two `recordLegacyRedirect` calls are removed from `proxy.ts`; the two redirect-still-works tests survive that removal, which is the point of pairing them.
+
+  **THE THIRD LANE'S REFUSAL WAS RIGHT ABOUT THE RISK AND THIS LANE ANSWERED IT DIFFERENTLY.** Its objection was that a counter over 7% of the surface would be cited as if the surface were instrumented. That objection is about a missing sentence, not about the code: the fix is to state the denominator where the number is read, which is here. **The counter covers `/projects` and `/product-management` only. It says nothing about the 28 configuration entries and must never be cited as evidence about them.** With the denominator recorded, 2 sources that can be measured beat 2 sources that cannot, and the 28 are no worse off than before.
+
+  **WHY THE 28 STILL CANNOT BE COUNTED, stated once as a mechanism rather than a preference.** Next.js resolves `redirects()` from `next.config.ts` **before** the proxy/middleware layer runs. There is no application frame in which a config redirect hit exists, so no counter can be placed in its path. This is not a missing library; it is the routing order.
+
+  **THE DECISION, in one sentence a non-engineer can answer:** *do we move all 28 Build redirects out of `next.config.ts` and into `proxy.ts` so their traffic can be counted before we delete any of them — or do we accept deleting them on judgement with no traffic data, at the risk of breaking bookmarks and old notification links we cannot see?*
+
+  **NOT EARNED 2026-09-29:** *temporary* 30/30 ✓ · *observable* 2/30, implemented and tested, 28 blocked on the sentence above · *removed after deep-link migration* — 0 removed, and correctly 0, because no redirect meets any of the three deletion proofs.
 - [ ] No removed surface retains a parallel schema, permission, cache key, or endpoint family.
   **NOT EARNED 2026-09-29 — every tombstone claim below still holds, but two parallel survivals remain, so "the only exception is deliberate" is false. Earned when the two named below are removed.**
 
@@ -296,6 +327,35 @@ not picked up again. Retired 2026-09-22 during backlog reconciliation.
   **SETTLES WHEN** step 2 is deployed, after which step 3 is one commit over those five lines, and this survival is closed. There is a second, unrelated dead flag worth a line while someone is in there: nothing in the backend reads `settings.features` at all, so the whole `features: Record<string, boolean>` blob may be dead — measured only for `sprints`, not for its other seventeen keys.
 
   **SURVIVAL 2 needs nothing further; STILL NOT EARNED on survival 1's step 3.**
+
+  **2026-09-29, fifth lane. BOTH SURVIVALS RE-VERIFIED. SURVIVAL 2 IS CLOSED. SURVIVAL 1 HAS NO FRONTEND HALF LEFT — THE ENTIRE REMAINDER IS FIVE BACKEND LINES, AND THIS LANE HAS NO WRITE ACCESS TO THEM, SO THE BOX IS LEFT OPEN RATHER THAN HALF-CLAIMED.**
+
+  Re-derived over `frontend/{app,components,features,hooks,lib}`, this lane, verbatim:
+
+  | Check | Command | Result |
+  |---|---|---|
+  | survival 1, frontend | `grep -rn "modules\.sprints\|modules: { sprints\|features\.sprints"` | **no matches** |
+  | survival 2, frontend | `grep -rn "sprint\.started\|sprint\.completed\|Sprint Started\|Sprint Completed"` | **no matches** |
+
+  **SURVIVAL 2 — CLOSED, and nothing about it is inert.** The pair is gone from all six declaration sites and from both repos' catalogues. There is no frontend half awaiting a backend half here: a trigger the picker does not offer and the enum does not accept cannot be selected, and the runner could never have dispatched it anyway (`runForTicketEvent`'s `TicketEventPayload` makes it impossible by construction, as the second lane established). This survival needs no further work in either repo.
+
+  **SURVIVAL 1 — FIVE BACKEND LINES, RE-MEASURED ON DISK TODAY, AND THE FRONTEND IS ALREADY FULLY RETIRED.** Steps 1 and 2 shipped (`backend b07a933c3`, `frontend 907c3c2cf`). The remainder, with today's line numbers:
+
+  | Part | Site today | State |
+  |---|---|---|
+  | the wire key | `backend/src/modules/build/core/dto/project-core.schemas.ts:26` | `sprints: z.boolean().optional()` — already optional, safe to drop |
+  | the `$type` member | `backend/src/db/schema/build/core.ts:53` | `sprints?: boolean` — already optional, type-only, safe to drop |
+  | provisioning default | `backend/src/modules/build/core/project-crud/projects-provision.service.ts:103` | `modules: input.modules ?? { sprints: true, … }` — **the gate** |
+  | provisioning default | `.../projects-provision.service.ts:218` (was `:215`) | `settings: { modules: { sprints: true, … } }` — **the gate** |
+  | iterations default | `backend/src/modules/build/core/settings/projects-settings-iterations.service.ts:51` | `{ modules: { sprints: false, … } }` — internal literal, unread |
+
+  Readers: `grep -rn "modules\.sprints\|settings\.modules" backend/src` → still **zero**. Nothing consumes the value on either side.
+
+  **THE FRONTEND HALF IS NOT INERT — IT IS DONE, WHICH IS THE OPPOSITE PROBLEM.** This box's usual failure mode in this repository is a frontend change that does nothing until a backend change lands. Survival 1 is the reverse: the frontend already stopped sending the flag and already dropped it from its response contract (non-strict, so a legacy row carrying `sprints: true` is stripped rather than rejected — pinned by the two named tests in step 2). **There is therefore nothing a frontend lane can add here, and no frontend gate that would move.** Attempting to "help" by editing anything on this side would be motion without effect.
+
+  **WHY THE BOX STAYS OPEN INSTEAD OF BEING CALLED DONE.** Two of the five lines are the provisioning defaults, and they may only drop once the step-2 bundle has been deployed long enough that no browser is still parsing projects through the old required-`sprints` contract. That is a deployment fact, not a code fact, and it is not observable from this checkout. Shipping the three safe lines without the two gated ones would leave the flag written by provisioning but absent from the wire schema and the type — incoherent, and it would read to the next lane as finished.
+
+  **SETTLES WHEN** a backend lane, after the step-2 bundle has aged out, removes those five lines in one commit. **The change needed is entirely in `streamlineos-backend`; no frontend work remains.** Worth a line for whoever does it: nothing in the backend reads `settings.features` at all, so its other seventeen keys are candidates for the same treatment — measured only for `sprints`.
 - [ ] Product copy does not advertise removed or unimplemented capabilities.
   **NOT EARNED 2026-09-29 — the public landing and SEO copy is fixed and the misleading Visibility-tab copy is corrected; what remains is BLOCKED — needs Tarun's decision, on two items: whether `ClientVisibilityPage` gets wired into a route (it is reachable from no `app/**` route today) and whether the retention copy's promised deletion gets implemented or withdrawn. Neither side implemented here.**
 
@@ -493,3 +553,21 @@ not picked up again. Retired 2026-09-22 during backlog reconciliation.
   **STILL NOT EARNED, and the blocker is now exactly one line.** Every `components/` finding is fixed, the public marketing copy is clean (`pillars.ts`, `structured-data.tsx`, `floating-composition.tsx` all check out), the gate exists with a non-vacuous self-test and cannot regress, and 14 wording items are held under a shrink-only ceiling with owners attached. The box says product copy "does not advertise removed or unimplemented capabilities", and `testimonials.ts:18` still does, publicly, in a voice nobody here may edit. **SETTLES WHEN** the owner chooses: leave it as a dated quote, remove the testimonial, or source a real replacement.
 
   **AND CLASS 4 IS UNTOUCHED AND STILL RANKS FIRST.** The retention copy promises deletion nothing performs. A vocabulary gate cannot see it — "unimplemented" is not a word — so it is not in the 14 and never will be. It remains the most serious item in this box and the one to route ahead of every wording fix above.
+
+  **2026-09-29, fifth lane. NOTHING IMPLEMENTED ON EITHER SIDE OF EITHER DECISION, DELIBERATELY. This lane's only job here was to put both decisions into a form Tarun can answer without reading any code, because a decision stated as a paragraph of engineering context is a decision that does not get made.**
+
+  Both re-confirmed on disk today: `grep -rn "ClientVisibilityPage" frontend/app` → **no matches** (the component is reachable from no route); `frontend/features/build/settings/project-settings-retention-sections.tsx` still renders all five promises, and `grep -rn "closedTicketRetentionDays\|attachmentRetentionDays\|auditLogRetentionDays" backend/src` still finds only the settings reader/writer — **no deleter**.
+
+  **DECISION 1 — the per-item client visibility screen.**
+
+  > **Should clients be able to be shown or hidden from individual tickets and milestones one at a time — yes, we build that screen into the Client Portal page (about a week of work), or no, we delete the half-finished screen and clients keep seeing everything the portal grant allows?**
+
+  Either answer closes it. "Yes" means real work: the screen is a whole page today and has to be folded into the Client Portal page's tab strip, and its "Load more milestones" control has to be replaced. "No" means deleting `client-visibility-page.tsx` and its two tests. The copy on the Visibility tab already says the feature is not available, so **neither answer requires an urgent copy change** — today's screen is honest and the feature simply does not exist.
+
+  **DECISION 2 — retention. This is the one with a compliance edge and it should be answered first.**
+
+  > **The project settings screen lets a customer set how long we keep closed work items, file attachments and audit logs, and tells them data is deleted on that schedule. Nothing deletes anything — we keep it all forever. Do we (a) build the deletion so the setting is true, or (b) remove those settings and say plainly that data is kept indefinitely?**
+
+  **The state today is the one state that is not acceptable, and that is the whole point of asking.** A customer can set a 90-day attachment retention, be told attachments are deleted after 90 days, and have them kept forever. If that promise was ever relied on in a security questionnaire, a DPA or a GDPR response, it is a false statement already made. **(b) is cheap and can ship this week** — it is a copy-and-control change on one frontend file, and it makes the product truthful immediately; it does not preclude (a) later. **(a) is the right long-term answer and needs a backend retention sweeper plus a `legalHold` reader**, neither of which exists. An engineer cannot choose between them because the choice is about what the company is willing to promise, not about how hard either is.
+
+  **NEITHER SIDE OF EITHER DECISION IS IMPLEMENTED IN THIS PASS, AND THAT IS THE CORRECT OUTCOME.** Wiring the Visibility panel would newly ship an FE-125-banned control; withdrawing the retention copy would silently remove a capability a customer may believe they bought. Both are product commitments. **The box cannot tick until both sentences above are answered, and it does not tick today.**
