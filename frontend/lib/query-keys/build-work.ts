@@ -47,10 +47,8 @@ export const buildWorkQueryKeys = {
       [...base, "projects", "cycles", projectId] as const,
     modules: (projectId: number) =>
       [...base, "projects", "modules", projectId] as const,
-    views: (projectId: number, cursor?: string) =>
-      cursor
-        ? ([...base, "projects", "views", projectId, cursor] as const)
-        : ([...base, "projects", "views", projectId] as const),
+    views: (projectId: number) =>
+      ([...base, "projects", "views", projectId] as const),
     customFields: (projectId: number) =>
       [...base, "projects", projectId, "custom-fields"] as const,
     ticketCustomFieldValues: (projectId: number, ticketId: number) =>

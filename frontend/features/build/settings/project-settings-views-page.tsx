@@ -36,8 +36,11 @@ export function ProjectSettingsViewsPage({ projectId }: ProjectSettingsViewsPage
   const canManage = useCan("build:workspace:manage");
   const listFilters = useBuildListFilters({ withSearch: true });
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const pager = useBuildCursorPager();
-  const { data: viewPage, isLoading, isError, error, refetch } = useViews(projectId, { cursor: pager.cursor });
+  const pager = useBuildCursorPager(listFilters.resetKey);
+  const { data: viewPage, isLoading, isError, error, refetch } = useViews(projectId, {
+    cursor: pager.cursor,
+    search: listFilters.debouncedSearch || undefined,
+  });
   const updateView = useUpdateView();
   const deleteView = useDeleteView();
   const [createOpen, setCreateOpen] = useState(false);
@@ -47,18 +50,14 @@ export function ProjectSettingsViewsPage({ projectId }: ProjectSettingsViewsPage
 
   const pagedViews = viewPage?.data ?? [];
   const pagination = viewPage?.pagination;
-
   const { debouncedSearch } = listFilters;
-  const filteredViews = debouncedSearch
-    ? pagedViews.filter((v) => v.name.toLowerCase().includes(debouncedSearch.toLowerCase()))
-    : pagedViews;
 
   const pageState = usePageState({
     permission: "build:view",
     isLoading,
     isError,
     error,
-    isEmpty: !isLoading && !isError && filteredViews.length === 0 && !pager.hasPrevious,
+    isEmpty: !isLoading && !isError && pagedViews.length === 0 && !pager.hasPrevious,
   });
 
   const handleNavigate = useCallback(
@@ -104,17 +103,17 @@ export function ProjectSettingsViewsPage({ projectId }: ProjectSettingsViewsPage
 
   const handleKeyboardOpen = useCallback(
     (index: number) => {
-      const view = filteredViews[index];
+      const view = pagedViews[index];
       if (view) handleNavigate(view);
     },
-    [filteredViews, handleNavigate],
+    [pagedViews, handleNavigate],
   );
 
   const handleKeyboardEdit = useCallback(
     (index: number) => {
-      setRenameTarget(filteredViews[index] ?? null);
+      setRenameTarget(pagedViews[index] ?? null);
     },
-    [filteredViews],
+    [pagedViews],
   );
 
   const handleKeyboardClear = useCallback(() => setRenameTarget(null), []);
@@ -141,7 +140,7 @@ export function ProjectSettingsViewsPage({ projectId }: ProjectSettingsViewsPage
   }, [selectedIds, projectId, deleteView]);
 
   useBuildListKeyboard({
-    itemCount: filteredViews.length,
+    itemCount: pagedViews.length,
     onOpen: handleKeyboardOpen,
     onCreate: canManage ? handleOpenCreate : undefined,
     onEdit: handleKeyboardEdit,
@@ -150,7 +149,14 @@ export function ProjectSettingsViewsPage({ projectId }: ProjectSettingsViewsPage
     enabled: pageState.kind === "ready",
   });
 
-  const emptyState = (
+  const emptyState = debouncedSearch ? (
+    <EmptyState
+      className={CONTENT_FILL_PANEL}
+      illustrationPreset="projects"
+      title="No views found"
+      description={`No saved views match "${debouncedSearch}".`}
+    />
+  ) : (
     <EmptyState
       className={CONTENT_FILL_PANEL}
       illustrationPreset="projects"
@@ -209,7 +215,7 @@ export function ProjectSettingsViewsPage({ projectId }: ProjectSettingsViewsPage
               </div>
             ) : null}
             <PmPanel className="flex min-h-0 flex-col p-2" solid>
-              {filteredViews.map((view) => (
+              {pagedViews.map((view) => (
                 <ViewCard
                   key={view.id}
                   view={view}

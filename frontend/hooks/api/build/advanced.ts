@@ -277,14 +277,19 @@ export function useCreateModule(options?: Parameters<typeof useMutation>[0]) {
 
 export function useViews(
   projectId: number,
-  params?: { cursor?: string | null },
+  params?: { cursor?: string | null; search?: string },
   options?: Omit<UseQueryOptions<{ data: ProjectView[]; pagination: { limit: number; hasMore: boolean; nextCursor: string | null } }>, "queryKey" | "queryFn" | "enabled">
 ) {
   const canView = useCan("build:view");
+  const queryParams: Record<string, string> = {};
   const cursor = params?.cursor ?? undefined;
+  const search = params?.search || undefined;
+  if (cursor) queryParams.cursor = cursor;
+  if (search) queryParams.search = search;
   return useQuery<{ data: ProjectView[]; pagination: { limit: number; hasMore: boolean; nextCursor: string | null } }>({
-    queryKey: buildWorkQueryKeys.projects.views(projectId, cursor),
-    queryFn: ({ signal }) => apiClient.get(`/build/${projectId}/views`, cursor ? { cursor } : undefined, signal, viewResponseLazy),
+    queryKey: [...buildWorkQueryKeys.projects.views(projectId), queryParams],
+    queryFn: ({ signal }) =>
+      apiClient.get(`/build/${projectId}/views`, Object.keys(queryParams).length > 0 ? queryParams : undefined, signal, viewResponseLazy),
     staleTime: 60_000,
     ...options,
     enabled: canView && !!projectId,
