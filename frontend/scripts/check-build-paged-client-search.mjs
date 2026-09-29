@@ -46,6 +46,10 @@ const ALLOWLIST = new Map([
     "features/build/qa/runs/run-execution-page.tsx",
     "useTestRunDetail returns TestRunDetail with results[] embedded — single run detail, not a paginated list",
   ],
+  [
+    "features/build/settings/project-settings-page.tsx",
+    "filters navigation sections, not a server-backed list",
+  ],
 ]);
 
 function hasProximityMatch(source) {
@@ -73,7 +77,8 @@ function* walkTsx(dir) {
       entry.name.endsWith(".tsx") &&
       !entry.name.endsWith(".test.tsx") &&
       !entry.name.endsWith(".spec.tsx") &&
-      !entry.name.endsWith(".test-harness.tsx")
+      !entry.name.endsWith(".test-harness.tsx") &&
+      !entry.name.endsWith("-test-harness.tsx")
     ) {
       yield full;
     }
