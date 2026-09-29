@@ -24,6 +24,7 @@ The deletion test says it must not simply go: delete the gallery and the complex
   Command: `node node_modules/jest/bin/jest.js --runInBand --no-cache --cacheDirectory D:/agent-work/jest-lane5
   --runTestsByPath features/build/governance/risks-page.test.tsx` — 9 passed, 0 failed.
 - [ ] Every visual case the galleries covered is still reachable in a browser, including overflow and focus order
+  **NOT EARNED 2026-09-29 — browser-only: all 13 gallery cases are present by grep, but overflow widths, computed control heights and focus order are not observable in jsdom. Earned by a Playwright pass over `/design-system/governance-qa` and `/design-system/qa-execution`.**
   **BROWSER-ONLY.** All 13 cases that existed before the split are still present: `RisksTable`,
   `IncidentsTable`, `DecisionsTable`, `ApprovalsTable`, `RisksWithSelection`, five loading-skeleton entries,
   an empty state and an error state live in `governance-qa-gallery.tsx` (route `/design-system/governance-qa`).

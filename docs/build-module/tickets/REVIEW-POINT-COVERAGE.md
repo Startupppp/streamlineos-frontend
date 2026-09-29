@@ -93,6 +93,7 @@ two and is an owner decision, not an oversight.
       for any client not yet sending one. The review prescribed exactly this staging
       ("accept-and-warn, then require"). Flip it once clients send the token — it is one line per schema.
       **Owner decision.**
+      **NOT EARNED 2026-09-29 — BLOCKED — needs Tarun's decision: whether to require the concurrency token on the rank route now, breaking any client not yet sending one, or to keep accept-and-warn. One line per schema once ruled; not implemented here.**
 
 ## A2 / B8 — The roadmap cursor matches its ORDER BY
 
@@ -175,6 +176,7 @@ two and is an owner decision, not an oversight.
       orders by `(created_at DESC, id DESC)` — `db/schema/build/approvals.ts:50`. Correctness is fine;
       the sort is not index-served. **Unmeasured** — no `EXPLAIN` was run, every connection string
       here points at production.
+      **NOT EARNED 2026-09-29 — unmeasured: no `EXPLAIN` can be run from this checkout, because every connection string here points at production. Earned by an `EXPLAIN` on a non-production database, then adding the trailing `(created_at, id)` to the index if the sort is not index-served.**
 
 ## A8 — Collapse the project-access waterfall
 
@@ -342,6 +344,7 @@ two and is an owner decision, not an oversight.
       row needs `title`/`type`/`reporterId` that `readMutationTickets` does not project. Unblocking
       means extending that projection first — a change affecting every caller of
       `build-ticket-mutation-policy`, which deserves its own pass.
+      **NOT EARNED 2026-09-29 — bulk dispatches two of the four effect families. Earned by extending `readMutationTickets`' projection with `title`/`type`/`reporterId` and widening `BulkTicketEffectDeps`, which touches every caller of `build-ticket-mutation-policy` and deserves its own pass.**
 
 ## B9 — One Build list surface
 

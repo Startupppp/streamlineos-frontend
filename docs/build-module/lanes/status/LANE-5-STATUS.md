@@ -78,6 +78,7 @@ A definition without `options` passes any raw URL value straight through.
   - Tests: portal-separation.test.tsx 12 passed (same run above)
 
 - [ ] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
+  - **NOT EARNED 2026-09-29 — SPEC 1's URL-state half is earned; the remainder is that `GrantRow` is read-only, so the grant actions, the bulk action and the `c`/`e` shortcuts this criterion names have no target on `/build/[projectId]/client-portal`. Earned when those controls exist and are tested.**
   - ~~BLOCKED on the backend schema~~ **SUPERSEDED 2026-09-28.** The blocker below was correct when
     written and is now cleared — a sibling lane landed the three fields. Retained verbatim because it
     records what was filed as R6 and what actually shipped. The box stays unchecked for a different

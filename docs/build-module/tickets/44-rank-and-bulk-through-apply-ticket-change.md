@@ -8,7 +8,8 @@ Both routes become callers that compute a change and delegate, so the effect set
 
 **Status:** boxes 2–6 earned; box 1 deferred (see note)
 
-- [ ] The rank route and the bulk route delegate to the change module and perform no effect step themselves — deferred: rank/bulk each carry an inline effect-dispatch block via injected `effectDeps`; they are not direct callers of `applyTicketChange` because that function wraps its own transaction and authorization. Effect computation is diff-based (same principle as the change module) but not a call-through.
+- [ ] The rank route and the bulk route delegate to the change module and perform no effect step themselves
+  **NOT EARNED 2026-09-29 — declined on cost, not architecture: a call-through works today through the tenant-db proxy, but it would run per-row access resolution and authorization inside bulk's advisory lock, and bulk has no per-row conflict contract. Earned by pricing those two and widening the two `EffectDeps` interfaces.**
 
   **N/A — DECISION 2026-09-27 (Lane 1):** The criterion as written requires rank and bulk to call
   `applyTicketChange` directly. That is architecturally blocked: `applyTicketChange` opens its own
