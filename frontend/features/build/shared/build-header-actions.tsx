@@ -43,7 +43,11 @@ function HeaderActionButton({
   if (action.href) {
     return (
       <Button asChild variant={variant} className={merged}>
-        <Link href={action.href}>
+        <Link
+          href={action.href}
+          aria-label={action.ariaLabel}
+          title={action.title}
+        >
           <ActionIcon icon={action.icon} />
           <span className="truncate">{action.label}</span>
         </Link>
@@ -56,10 +60,12 @@ function HeaderActionButton({
       type="button"
       variant={variant}
       className={merged}
+      title={action.title}
+      onClick={action.onSelect}
       disabled={action.disabled}
       isPending={action.isPending}
+      aria-label={action.ariaLabel}
       loadingText={action.loadingLabel}
-      onClick={action.onSelect}
     >
       <ActionIcon icon={action.icon} />
       <span className="truncate">{action.label}</span>
@@ -71,7 +77,11 @@ function OverflowMenuItem({ action }: { action: BuildHeaderAction }) {
   if (action.href) {
     return (
       <DropdownMenuItem asChild disabled={action.disabled}>
-        <Link href={action.href}>
+        <Link
+          href={action.href}
+          aria-label={action.ariaLabel}
+          title={action.title}
+        >
           <ActionIcon icon={action.icon} />
           {action.label}
         </Link>
@@ -79,7 +89,12 @@ function OverflowMenuItem({ action }: { action: BuildHeaderAction }) {
     );
   }
   return (
-    <DropdownMenuItem disabled={action.disabled} onSelect={action.onSelect}>
+    <DropdownMenuItem
+      title={action.title}
+      disabled={action.disabled}
+      onSelect={action.onSelect}
+      aria-label={action.ariaLabel}
+    >
       <ActionIcon icon={action.icon} />
       {action.label}
     </DropdownMenuItem>

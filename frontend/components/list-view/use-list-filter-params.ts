@@ -205,6 +205,13 @@ export function useListFilterParams(spec: ListFilterSpec): ListFilterParams {
     urlValue: search,
     value: search,
   }));
+  if (searchDraft.urlValue !== search) {
+    setSearchDraft(
+      searchDraft.value === search
+        ? { urlValue: search, value: search }
+        : { urlValue: search, value: search },
+    );
+  }
   const localSearch =
     searchDraft.urlValue === search ? searchDraft.value : search;
   const debouncedSearch = useDebouncedValue(localSearch, debounceMs);
@@ -236,7 +243,9 @@ export function useListFilterParams(spec: ListFilterSpec): ListFilterParams {
     }
     if (debouncedSearch === previousDebounced.current) return;
     previousDebounced.current = debouncedSearch;
-    if (debouncedSearch !== search) commitSearch(debouncedSearch);
+    if (debouncedSearch !== search) {
+      commitSearch(debouncedSearch);
+    }
   }, [debouncedSearch, search, commitSearch]);
 
   return useMemo(

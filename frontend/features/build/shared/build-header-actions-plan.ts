@@ -3,6 +3,8 @@ import type { LucideIcon } from "lucide-react";
 export interface BuildHeaderAction {
   id: string;
   label: string;
+  ariaLabel?: string;
+  title?: string;
   icon?: LucideIcon;
   onSelect?: () => void;
   href?: string;

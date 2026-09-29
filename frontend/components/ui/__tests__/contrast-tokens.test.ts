@@ -1,6 +1,7 @@
 import {
   contrastRatio,
   darkCss,
+  extractTokenValue,
   lightCss,
   resolvePair,
   WCAG_AA_NORMAL,
@@ -125,18 +126,9 @@ describe("contrastRatio utility — self-test", () => {
 
 const WCAG_NON_TEXT = 3.0;
 
-function extractTokenAnyValue(css: string, tokenName: string): string | undefined {
-  const direct = new RegExp(String.raw`--${tokenName}:\s*(#[0-9a-fA-F]{3,8})`).exec(css);
-  if (direct) return direct[1];
-  const viaVar = new RegExp(
-    String.raw`--${tokenName}:\s*var\([^,]+,\s*(#[0-9a-fA-F]{3,8})\s*\)`,
-  ).exec(css);
-  return viaVar?.[1];
-}
-
 function ratioOf(css: string, fgToken: string, bgToken: string): number {
-  const fg = extractTokenAnyValue(css, fgToken);
-  const bg = extractTokenAnyValue(css, bgToken);
+  const fg = extractTokenValue(css, fgToken);
+  const bg = extractTokenValue(css, bgToken);
   expect(fg).toBeDefined();
   expect(bg).toBeDefined();
   return contrastRatio(fg as string, bg as string);

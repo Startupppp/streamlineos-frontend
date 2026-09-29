@@ -112,13 +112,23 @@ describe("BuildHeaderActions", () => {
   it("renders an href action as a link", () => {
     render(
       <BuildHeaderActions
-        actions={[{ id: "resume", label: "Resume project", href: "/build/7" }]}
+        actions={[
+          {
+            id: "resume",
+            label: "Resume",
+            ariaLabel: "Resume Build QA Sandbox",
+            title: "Resume Build QA Sandbox",
+            href: "/build/7",
+          },
+        ]}
       />,
     );
-    expect(screen.getAllByRole("link", { name: "Resume project" })[0]).toHaveAttribute(
-      "href",
-      "/build/7",
-    );
+    const link = screen.getAllByRole("link", {
+      name: "Resume Build QA Sandbox",
+    })[0];
+    expect(link).toHaveAttribute("href", "/build/7");
+    expect(link).toHaveAttribute("title", "Resume Build QA Sandbox");
+    expect(link).toHaveTextContent("Resume");
   });
 });
 

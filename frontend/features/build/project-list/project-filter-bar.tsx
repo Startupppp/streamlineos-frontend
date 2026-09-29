@@ -69,6 +69,7 @@ export function ProjectFilterBar({
         {
           id: "filters",
           label: "Filters",
+          presentation: "trigger",
           control: (
             <AddFilterPopover filters={filters} onFiltersChange={onFiltersChange} />
           ),

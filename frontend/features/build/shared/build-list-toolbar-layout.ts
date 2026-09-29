@@ -1,10 +1,13 @@
 import type { ReactNode, RefObject } from "react";
 
+export type BuildToolbarFilterPresentation = "field" | "trigger";
+
 export interface BuildToolbarFilter {
   id: string;
   label: string;
   control: ReactNode;
   active?: boolean;
+  presentation?: BuildToolbarFilterPresentation;
 }
 
 export interface BuildToolbarSearch {
@@ -21,10 +24,10 @@ export const BUILD_TOOLBAR_DRAWER_DESCRIPTION =
   "Narrow this list. Changes apply immediately; close the sheet to return to the results.";
 
 export const BUILD_TOOLBAR_ROOT_CLASS =
-  "grid w-full min-w-0 items-center gap-2 md:flex md:flex-wrap md:overflow-x-hidden";
+  "flex w-full min-w-0 flex-wrap items-center gap-2 md:overflow-x-hidden";
 
 export const BUILD_TOOLBAR_TRAILING_CLASS =
-  "flex min-w-0 items-center gap-2 md:ml-auto md:shrink-0";
+  "flex min-w-0 shrink-0 items-center gap-2 md:ml-auto";
 
 export const BUILD_TOOLBAR_MOBILE_SLOTS = 2;
 
@@ -36,32 +39,46 @@ export interface BuildToolbarLayoutEntry {
 export interface BuildToolbarLayout {
   collapse: boolean;
   filters: BuildToolbarLayoutEntry[];
+  fieldFilterCount: number;
   collapsedActiveCount: number;
   activeCount: number;
   anyActive: boolean;
   mobileColumns: string;
 }
 
-function mobileColumnsFor({
-  collapse,
-  inlineControls,
-  trailing,
+export function isToolbarFieldFilter(filter: BuildToolbarFilter): boolean {
+  return filter.presentation !== "trigger";
+}
+
+export function isToolbarMobileSearchExpanded({
+  isMobile,
+  focused,
+  value,
 }: {
-  collapse: boolean;
-  inlineControls: number;
-  trailing: boolean;
+  isMobile: boolean;
+  focused: boolean;
+  value?: string;
+}): boolean {
+  return isMobile && (focused || Boolean(value));
+}
+
+function mobileColumnsFor({
+  hasSearch,
+  inlineFieldCount,
+}: {
+  hasSearch: boolean;
+  inlineFieldCount: number;
 }): string {
-  if (collapse) return "grid-cols-2";
-  if (trailing && inlineControls > 0) return "grid-cols-[1fr_auto]";
-  return inlineControls >= BUILD_TOOLBAR_MOBILE_SLOTS
-    ? "grid-cols-2"
-    : "grid-cols-1";
+  if (hasSearch) return "";
+  if (inlineFieldCount <= 0) return "";
+  if (inlineFieldCount === 1)
+    return "[&_[data-slot=build-toolbar-filter]]:max-md:flex-1";
+  return "[&_[data-slot=build-toolbar-filter]]:max-md:min-w-0 [&_[data-slot=build-toolbar-filter]]:max-md:flex-1";
 }
 
 export function buildToolbarLayout({
   search,
   filters,
-  trailing = false,
 }: {
   search?: BuildToolbarSearch;
   filters?: readonly BuildToolbarFilter[];
@@ -69,14 +86,23 @@ export function buildToolbarLayout({
 }): BuildToolbarLayout {
   const list = filters ?? [];
   const hasSearch = search !== undefined;
-  const slotCount = (hasSearch ? 1 : 0) + list.length + (trailing ? 1 : 0);
-  const collapse = slotCount > BUILD_TOOLBAR_MOBILE_SLOTS;
-  const inlineFilterCount = collapse ? (hasSearch ? 0 : 1) : list.length;
+  const fieldFilters = list.filter(isToolbarFieldFilter);
+  const fieldSlotCount = (hasSearch ? 1 : 0) + fieldFilters.length;
+  const collapse = fieldSlotCount > BUILD_TOOLBAR_MOBILE_SLOTS;
+  const inlineFieldCount = collapse ? (hasSearch ? 0 : 1) : fieldFilters.length;
 
-  const entries = list.map((filter, index) => ({
-    filter,
-    collapsed: collapse && index >= inlineFilterCount,
-  }));
+  let fieldIndex = 0;
+  const entries = list.map((filter) => {
+    if (!isToolbarFieldFilter(filter)) {
+      return { filter, collapsed: false };
+    }
+    const indexAmongFields = fieldIndex;
+    fieldIndex += 1;
+    return {
+      filter,
+      collapsed: collapse && indexAmongFields >= inlineFieldCount,
+    };
+  });
 
   const activeCount = list.filter((filter) => filter.active).length;
   const collapsedActiveCount = entries.filter(
@@ -86,24 +112,22 @@ export function buildToolbarLayout({
   return {
     collapse,
     filters: entries,
+    fieldFilterCount: fieldFilters.length,
     collapsedActiveCount,
     activeCount,
     anyActive: activeCount > 0 || Boolean(search?.value),
     mobileColumns: mobileColumnsFor({
-      collapse,
-      inlineControls: (hasSearch ? 1 : 0) + inlineFilterCount,
-      trailing,
+      hasSearch,
+      inlineFieldCount,
     }),
   };
 }
 
-/**
- * How many filters stay inline as the viewport grows.
- * Index 0 is always outside. Later filters move into the Filters menu
- * until there is room: 1 at md, 2 at lg, 3 at xl, 4 from 2xl.
- */
-export function toolbarInlineVisibility(index: number, collapsed: boolean): string {
-  const mobile = collapsed ? "max-md:hidden" : "max-md:w-full";
+export function toolbarInlineVisibility(
+  index: number,
+  collapsed: boolean,
+): string {
+  const mobile = collapsed ? "max-md:hidden" : "max-md:min-w-0 max-md:shrink-0";
   const desktop =
     index <= 0
       ? ""
@@ -117,8 +141,10 @@ export function toolbarInlineVisibility(index: number, collapsed: boolean): stri
   return [mobile, desktop].filter(Boolean).join(" ");
 }
 
-/** Drawer copy of a filter. Hidden wherever that filter is already inline. */
-export function toolbarDrawerVisibility(index: number, collapsed: boolean): string {
+export function toolbarDrawerVisibility(
+  index: number,
+  collapsed: boolean,
+): string {
   if (index <= 0) return collapsed ? "md:hidden" : "hidden";
   if (!collapsed) {
     if (index === 1) return "hidden md:block lg:hidden";
@@ -132,12 +158,14 @@ export function toolbarDrawerVisibility(index: number, collapsed: boolean): stri
   return "";
 }
 
-/** Filters button: mobile drawer, plus desktop whenever a filter would overflow. */
-export function toolbarMoreButtonClass(filterCount: number, collapse: boolean): string {
-  const mobile = collapse ? "inline-flex w-full" : "hidden";
+export function toolbarMoreButtonClass(
+  filterCount: number,
+  collapse: boolean,
+): string {
+  const mobile = collapse ? "inline-flex shrink-0" : "hidden";
   if (filterCount <= 1) return `${mobile} md:hidden`;
-  if (filterCount === 2) return `${mobile} md:inline-flex md:w-auto lg:hidden`;
-  if (filterCount === 3) return `${mobile} md:inline-flex md:w-auto xl:hidden`;
-  if (filterCount === 4) return `${mobile} md:inline-flex md:w-auto 2xl:hidden`;
-  return `${mobile} md:inline-flex md:w-auto`;
+  if (filterCount === 2) return `${mobile} md:inline-flex lg:hidden`;
+  if (filterCount === 3) return `${mobile} md:inline-flex xl:hidden`;
+  if (filterCount === 4) return `${mobile} md:inline-flex 2xl:hidden`;
+  return `${mobile} md:inline-flex`;
 }

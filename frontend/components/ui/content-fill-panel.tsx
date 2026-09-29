@@ -3,7 +3,6 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-/** Fill the pane that is left after headers and filters. `min-h-0` lets this shrink so a pager can sit at the bottom; `flex-1` still stretches short pages. */
 export const CONTENT_FILL_PANEL = "flex min-h-0 w-full flex-1 flex-col";
 
 /** Horizontal page inset used by PageWrapper headers, filters, and content. */

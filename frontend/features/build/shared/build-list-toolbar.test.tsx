@@ -1,7 +1,15 @@
 import { createRef } from "react";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { BuildListToolbar } from "./build-list-toolbar";
 import { BuildFilterSelect } from "./build-filter-select";
+
+jest.mock("@/hooks/common/use-mobile", () => ({
+  useIsMobile: jest.fn(() => false),
+}));
+
+const { useIsMobile } = jest.requireMock("@/hooks/common/use-mobile") as {
+  useIsMobile: jest.Mock;
+};
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All statuses" },
@@ -49,6 +57,20 @@ function severityFilter(active = false) {
   };
 }
 
+function filtersTrigger(active = false) {
+  return {
+    id: "filters",
+    label: "Filters",
+    active,
+    presentation: "trigger" as const,
+    control: (
+      <button type="button" aria-label="Filters">
+        Filters
+      </button>
+    ),
+  };
+}
+
 const search = {
   value: "",
   onValueChange: noop,
@@ -57,6 +79,10 @@ const search = {
 };
 
 describe("BuildListToolbar", () => {
+  beforeEach(() => {
+    useIsMobile.mockReturnValue(false);
+  });
+
   it("puts search before every filter in the DOM", () => {
     const { container } = render(
       <BuildListToolbar search={search} filters={[statusFilter()]} />,
@@ -74,25 +100,27 @@ describe("BuildListToolbar", () => {
     expect(screen.queryByRole("button", { name: /^Filters/ })).toBeNull();
   });
 
-  it("keeps search and one filter inline as two equal slots", () => {
+  it("keeps search and one filter inline with search growing and the control hugging", () => {
     const { container } = render(
       <BuildListToolbar search={search} filters={[statusFilter()]} />,
     );
     expect(screen.queryByRole("button", { name: /^Filters/ })).toBeNull();
     const root = container.querySelector("[data-slot=build-list-toolbar]");
-    expect(root?.className).toContain("grid-cols-2");
+    expect(root?.className).toContain("flex");
+    expect(root?.className).not.toContain("grid-cols-");
     const slot = container.querySelector("[data-filter-id=status]");
-    expect(slot?.className).toContain("max-md:w-full");
+    expect(slot?.className).toContain("max-md:shrink-0");
+    expect(slot?.className).not.toContain("max-md:w-full");
     expect(slot?.className).not.toContain("max-md:hidden");
   });
 
   it("gives a lone filter the whole mobile row", () => {
     const { container } = render(<BuildListToolbar filters={[statusFilter()]} />);
     const root = container.querySelector("[data-slot=build-list-toolbar]");
-    expect(root?.className).toContain("grid-cols-1");
+    expect(root?.className).toContain("flex-1");
   });
 
-  it("keeps the collapsed row at two columns", () => {
+  it("keeps the collapsed row as search-grow plus a compact Filters control", () => {
     const { container } = render(
       <BuildListToolbar
         search={search}
@@ -100,7 +128,10 @@ describe("BuildListToolbar", () => {
       />,
     );
     const root = container.querySelector("[data-slot=build-list-toolbar]");
-    expect(root?.className).toContain("grid-cols-2");
+    expect(root?.className).toContain("flex");
+    const filtersTriggerBtn = screen.getByRole("button", { name: /^Filters/ });
+    expect(filtersTriggerBtn.className).toContain("shrink-0");
+    expect(filtersTriggerBtn.className).not.toContain("w-full");
   });
 
   it("collapses a third control into the mobile filters drawer", () => {
@@ -200,33 +231,77 @@ describe("BuildListToolbar", () => {
     await waitFor(() => expect(trigger).toHaveFocus());
   });
 
-  it("shows Clear all inline on desktop and never a chip row", () => {
+  it("does not put Clear all on the toolbar icon row", () => {
     const onClearAll = jest.fn();
     const { container } = render(
       <BuildListToolbar
         search={search}
         filters={[statusFilter(true)]}
         onClearAll={onClearAll}
-      />,
-    );
-    fireEvent.click(screen.getByRole("button", { name: "Clear all" }));
-    expect(onClearAll).toHaveBeenCalledTimes(1);
-    expect(container.querySelectorAll("[data-slot=build-list-toolbar]")).toHaveLength(1);
-  });
-
-  it("moves view and display controls into the drawer rather than a fourth row", async () => {
-    render(
-      <BuildListToolbar
-        search={search}
-        filters={[statusFilter()]}
-        trailingLabel="Display"
         trailing={<button type="button">Grid view</button>}
       />,
     );
-    fireEvent.click(screen.getByRole("button", { name: /^Filters/ }));
-    const dialog = await screen.findByRole("dialog");
-    expect(within(dialog).getByText("Display")).toBeInTheDocument();
-    expect(within(dialog).getByRole("button", { name: "Grid view" })).toBeInTheDocument();
+    const toolbar = container.querySelector("[data-slot=build-list-toolbar]");
+    expect(toolbar).toBeTruthy();
+    expect(
+      within(toolbar as HTMLElement).queryByRole("button", { name: "Clear all" }),
+    ).toBeNull();
+    expect(screen.getByRole("button", { name: "Grid view" })).toBeInTheDocument();
+  });
+
+  it("hides mobile action icons while search is focused and restores them on empty blur", async () => {
+    useIsMobile.mockReturnValue(true);
+    render(
+      <BuildListToolbar
+        search={search}
+        filters={[filtersTrigger()]}
+        trailing={<button type="button">Grid view</button>}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Grid view" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Filters/ })).toBeInTheDocument();
+
+    fireEvent.focus(screen.getByLabelText("Search bugs"));
+    await waitFor(() => {
+      expect(screen.queryByRole("button", { name: "Grid view" })).toBeNull();
+      expect(screen.queryByRole("button", { name: /^Filters/ })).toBeNull();
+    });
+
+    fireEvent.blur(screen.getByLabelText("Search bugs"));
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Grid view" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /^Filters/ })).toBeInTheDocument();
+    });
+  });
+
+  it("keeps view and display controls on the toolbar instead of nesting them in a sheet", () => {
+    render(
+      <BuildListToolbar
+        search={search}
+        filters={[filtersTrigger()]}
+        trailing={<button type="button">Grid view</button>}
+      />,
+    );
+    expect(screen.queryByRole("button", { name: /^Filters$/ })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Grid view" })).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).toBeNull();
+    const filterButtons = screen.getAllByRole("button", { name: /^Filters/ });
+    expect(filterButtons).toHaveLength(1);
+  });
+
+  it("opens a trigger filter directly without a wrapping Filters sheet", () => {
+    const { container } = render(
+      <BuildListToolbar
+        search={search}
+        filters={[filtersTrigger()]}
+        trailing={<button type="button">List view</button>}
+      />,
+    );
+    expect(screen.queryByRole("button", { name: /^Filters/ })).toBeInTheDocument();
+    expect(
+      container.querySelector("[data-filter-id=filters]")?.className,
+    ).not.toContain("max-md:hidden");
+    expect(screen.getByRole("button", { name: "List view" })).toBeInTheDocument();
   });
 
   it("names the search field for assistive technology", () => {
@@ -244,7 +319,9 @@ describe("BuildListToolbar", () => {
     );
     expect(inputRef.current).toBe(screen.getByLabelText("Search bugs"));
 
-    inputRef.current?.focus();
+    act(() => {
+      inputRef.current?.focus();
+    });
     expect(screen.getByLabelText("Search bugs")).toHaveFocus();
   });
 
