@@ -297,7 +297,8 @@ export function ClientPortalManagementPage({ projectId }: ClientPortalManagement
       } else {
         next.set("section", value);
       }
-      router.replace(`${pathname}?${next.toString()}`, { scroll: false });
+      const query = next.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
     },
     [searchParams, router, pathname],
   );

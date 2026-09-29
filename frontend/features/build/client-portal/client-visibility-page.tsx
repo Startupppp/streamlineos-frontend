@@ -146,7 +146,8 @@ export function ClientVisibilityPage({ projectId, sectionParamKey = "section", s
       } else {
         next.set(sectionParamKey, value);
       }
-      router.replace(`${pathname}?${next.toString()}`, { scroll: false });
+      const query = next.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
     },
     [searchParams, router, pathname, sectionParamKey],
   );

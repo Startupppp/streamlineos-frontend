@@ -252,3 +252,28 @@ describe("useBoardUrlState — an applied saved view can be updated in place fro
     expect(mockUpdateViewMutate).not.toHaveBeenCalled();
   });
 });
+
+describe("useBoardUrlState — EPIC tickets are excluded from filteredTickets", () => {
+  it("omits EPIC-type tickets from filteredTickets so they do not inflate column counts on the board", () => {
+    boardState.boardTickets = [
+      { id: 1, ticketNumber: 1, title: "Task A", status: "TODO", type: "TASK", labels: [] },
+      { id: 2, ticketNumber: 2, title: "Epic B", status: "TODO", type: "EPIC", labels: [] },
+      { id: 3, ticketNumber: 3, title: "Bug C", status: "DONE", type: "BUG", labels: [] },
+    ];
+
+    const { result } = renderHook(() => useBoardUrlState(1));
+
+    expect(result.current.filteredTickets.map((t) => t.id)).toEqual([1, 3]);
+  });
+
+  it("does not remove non-EPIC tickets with the filter", () => {
+    boardState.boardTickets = [
+      { id: 10, ticketNumber: 10, title: "Story", status: "IN_PROGRESS", type: "STORY", labels: [] },
+    ];
+
+    const { result } = renderHook(() => useBoardUrlState(1));
+
+    expect(result.current.filteredTickets).toHaveLength(1);
+    expect(result.current.filteredTickets[0]?.type).toBe("STORY");
+  });
+});

@@ -120,7 +120,7 @@ const READY_PROJECT = {
   refetch: jest.fn(),
 };
 
-const TICKET = { id: 1, title: "T-1", status: "TODO", type: "TASK" } as Ticket;
+const TICKET = { id: 1, title: "T-1", status: "TODO", type: "TASK", cycleId: null } as Ticket;
 
 const READY_TICKETS = {
   data: [TICKET],
@@ -296,5 +296,50 @@ describe("ProjectBacklogPage — filter forwarding", () => {
     expect(callArgs).toBeDefined();
     expect(callArgs.q).toBeUndefined();
     expect(callArgs.status).toBeUndefined();
+  });
+
+  it("sends TASK,BUG,STORY,SUBTASK as the default type filter when the user has not chosen a type, so EPICs are excluded from the server query", () => {
+    renderPage();
+    const callArgs = mockUseProjectBoardTickets.mock.calls[0]?.[1] as Record<string, unknown>;
+    expect(callArgs?.type).toBe("TASK,BUG,STORY,SUBTASK");
+  });
+
+  it("uses the user-selected type filter instead of the default when types are chosen", () => {
+    mockSearchParamsContainer.current = new URLSearchParams("type=BUG");
+    renderPage();
+    const callArgs = mockUseProjectBoardTickets.mock.calls[0]?.[1] as Record<string, unknown>;
+    expect(callArgs?.type).toBe("BUG");
+  });
+});
+
+describe("ProjectBacklogPage — unscheduled filter", () => {
+  it("passes only tickets with cycleId === null to BuildListSurface, so scheduled tickets do not appear in the backlog", () => {
+    const scheduled = { ...TICKET, id: 2, title: "In Sprint", cycleId: 5 } as typeof TICKET;
+    const unscheduled = { ...TICKET, id: 3, title: "Backlog", cycleId: null } as typeof TICKET;
+    mockUseProjectBoardTickets.mockReturnValue({
+      ...READY_TICKETS,
+      data: [scheduled, unscheduled],
+    });
+    renderPage();
+    expect(capturedSurface?.rows).toHaveLength(1);
+    expect((capturedSurface?.rows as typeof TICKET[])[0]?.id).toBe(3);
+  });
+});
+
+describe("ProjectBacklogPage — Type and Cycle columns", () => {
+  it("includes a Type column in the column definitions", () => {
+    renderPage();
+    const columnKeys = (capturedSurface?.columns as Array<{ key: string }> | undefined)?.map(
+      (c) => c.key,
+    );
+    expect(columnKeys).toContain("type");
+  });
+
+  it("includes a Cycle column in the column definitions", () => {
+    renderPage();
+    const columnKeys = (capturedSurface?.columns as Array<{ key: string }> | undefined)?.map(
+      (c) => c.key,
+    );
+    expect(columnKeys).toContain("cycle");
   });
 });

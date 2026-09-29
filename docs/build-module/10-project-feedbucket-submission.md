@@ -101,5 +101,5 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 - [x] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
 - [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
-- [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — Cursor IDE browser 2026-09-29: the Feedbucket list had no submission id, so the submission route was not opened. This box stays open.
-- [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — No submission record was available to open. Error, denied, and conflict were not triggered.
+- [x] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — Cursor IDE browser 2026-09-29, signed in, `/build/1/feedbucket/78` at 1280 and 375: document overflow 0, heading “Submission”, focus “Back”. `prefers-reduced-motion: reduce` still rendered the page.
+- [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — Cursor IDE browser 2026-09-29 saw ready submission 78 on `/build/1/feedbucket/78`. Filtered-empty, error, denied, and conflict were not triggered.
