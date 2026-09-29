@@ -6,8 +6,8 @@ const mockGetSceneVersion = jest.fn(() => mockVersion);
 const mockSerializeAsJSON = jest.fn(() => '{"elements":[],"appState":{},"files":{}}');
 
 jest.mock("@excalidraw/excalidraw", () => ({
-  serializeAsJSON: (...args: unknown[]) => mockSerializeAsJSON(...args),
-  getSceneVersion: (...args: unknown[]) => mockGetSceneVersion(...args),
+  serializeAsJSON: () => mockSerializeAsJSON(),
+  getSceneVersion: () => mockGetSceneVersion(),
 }));
 
 const ELEMENTS = [{ id: "el-1" }] as never;
@@ -41,6 +41,7 @@ describe("BUG-051 — autosave marks saved after API returns even when Excalidra
     expect(result.current.status).toBe("dirty");
 
     act(() => { result.current.manualSave(); });
+    await act(async () => { await new Promise((r) => setTimeout(r, 0)); });
     await act(async () => { resolve(undefined); });
 
     expect(result.current.status).toBe("saved");
@@ -58,6 +59,7 @@ describe("BUG-051 — autosave marks saved after API returns even when Excalidra
 
     act(() => { result.current.handleSceneChange(ELEMENTS, APP_STATE, FILES); });
     act(() => { result.current.manualSave(); });
+    await act(async () => { await new Promise((r) => setTimeout(r, 0)); });
 
     mockVersion = 2;
     act(() => { result.current.handleSceneChange(ELEMENTS2, APP_STATE, FILES); });
@@ -79,6 +81,7 @@ describe("BUG-051 — autosave marks saved after API returns even when Excalidra
 
     act(() => { result.current.handleSceneChange(ELEMENTS, APP_STATE, FILES); });
     act(() => { result.current.manualSave(); });
+    await act(async () => { await new Promise((r) => setTimeout(r, 0)); });
     await act(async () => { resolve(undefined); });
 
     expect(result.current.status).toBe("saved");
@@ -88,6 +91,7 @@ describe("BUG-051 — autosave marks saved after API returns even when Excalidra
 
     act(() => { result.current.handleSceneChange(ELEMENTS, APP_STATE, FILES); });
     act(() => { result.current.manualSave(); });
+    await act(async () => { await new Promise((r) => setTimeout(r, 0)); });
 
     expect(saveAsync.mock.calls.length).toBe(callsBefore);
   });

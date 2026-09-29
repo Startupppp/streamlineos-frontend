@@ -94,6 +94,7 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
       selectedCycles.length > 0 ? selectedCycles.join(",") : undefined,
     dueDateFrom: dueDateFrom || undefined,
     dueDateTo: dueDateTo || undefined,
+    unscheduled: true,
   };
   const {
     data,
@@ -122,11 +123,6 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
   const ticketParam = searchParams.get("ticket");
   const selectedTicketId = ticketParam ? parseInt(ticketParam) : null;
 
-  const backlogTickets = useMemo(
-    () => (boardTickets ?? []).filter((t) => t.cycleId === null),
-    [boardTickets],
-  );
-
   const members = useMemo(() => {
     if (!data?.members) return [];
     return data.members.flatMap((m) => {
@@ -143,19 +139,21 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
     });
   }, [data]);
 
+  const tickets = boardTickets ?? [];
+
   const handleTicketSelect = useCallback(
     (id: number) => {
-      const href = buildTicketDetailUrl(projectId, data?.key, id, backlogTickets);
+      const href = buildTicketDetailUrl(projectId, data?.key, id, tickets);
       if (href) requestLeave(() => router.push(href));
     },
-    [router, projectId, data?.key, backlogTickets, requestLeave],
+    [router, projectId, data?.key, tickets, requestLeave],
   );
 
   useEffect(() => {
     if (!selectedTicketId || !data) return;
-    const href = buildTicketDetailUrl(projectId, data.key, selectedTicketId, backlogTickets);
+    const href = buildTicketDetailUrl(projectId, data.key, selectedTicketId, tickets);
     if (href) requestLeave(() => router.replace(href));
-  }, [selectedTicketId, data, backlogTickets, projectId, requestLeave, router]);
+  }, [selectedTicketId, data, tickets, projectId, requestLeave, router]);
 
   const handleBulkUpdate = useCallback(
     (update: Partial<Pick<BulkUpdateTicketsInput, "assigneeId" | "status" | "cycleId" | "priority" | "parentTicketId">>) => {
@@ -391,7 +389,7 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
 
         <BuildListSurface<Ticket>
           permission="build:tickets:view"
-          rows={backlogTickets}
+          rows={tickets}
           columns={columns}
           isLoading={ticketsLoading}
           isError={ticketsError}

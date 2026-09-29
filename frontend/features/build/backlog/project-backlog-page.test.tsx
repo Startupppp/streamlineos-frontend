@@ -313,16 +313,10 @@ describe("ProjectBacklogPage — filter forwarding", () => {
 });
 
 describe("ProjectBacklogPage — unscheduled filter", () => {
-  it("passes only tickets with cycleId === null to BuildListSurface, so scheduled tickets do not appear in the backlog", () => {
-    const scheduled = { ...TICKET, id: 2, title: "In Sprint", cycleId: 5 } as typeof TICKET;
-    const unscheduled = { ...TICKET, id: 3, title: "Backlog", cycleId: null } as typeof TICKET;
-    mockUseProjectBoardTickets.mockReturnValue({
-      ...READY_TICKETS,
-      data: [scheduled, unscheduled],
-    });
+  it("passes unscheduled: true to the server query so the SQL predicate excludes scheduled tickets before pagination, not a client-side slice", () => {
     renderPage();
-    expect(capturedSurface?.rows).toHaveLength(1);
-    expect((capturedSurface?.rows as typeof TICKET[])[0]?.id).toBe(3);
+    const callArgs = mockUseProjectBoardTickets.mock.calls[0]?.[1] as Record<string, unknown>;
+    expect(callArgs?.unscheduled).toBe(true);
   });
 });
 

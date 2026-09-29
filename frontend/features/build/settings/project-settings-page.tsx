@@ -120,6 +120,7 @@ export function ProjectSettingsPage({ params }: PageProps) {
           status: project.status ?? "ACTIVE",
           memberIds:
             project.members?.map((m: { userId: string }) => m.userId) || [],
+          clientId: project.crmClient ? String(project.crmClient.id) : undefined,
         }
       : undefined,
   });

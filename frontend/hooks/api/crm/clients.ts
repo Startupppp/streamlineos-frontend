@@ -39,6 +39,9 @@ const onboardingItemsLazy = lazyContract(() =>
 const onboardingItemLazy = lazyContract(() =>
   import("@/hooks/api/crm/clients-schema").then((m) => m.onboardingItemContract),
 );
+const createClientResultLazy = lazyContract(() =>
+  import("@/hooks/api/crm/clients-schema").then((m) => m.createClientResultSchema),
+);
 export function useClientAccounts(filters?: ClientAccountFilters) {
   return useGatedQuery("crm:clients:read", {
     queryKey: queryKeys.clients.list(filters as Record<string, unknown>),
@@ -95,6 +98,18 @@ export function useClientOnboardingItems(clientId: number) {
     queryFn: ({ signal }) => apiClient.get<OnboardingItem[]>("/clients/onboarding/items", { clientId }, signal, onboardingItemsLazy),
     staleTime: 2 * 60_000,
     enabled: clientId > 0,
+  });
+}
+
+export function useCreateClient() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation<SimpleClient, Error, { name: string }>("crm:clients:update", {
+    mutationKey: ["clients", "create"] as const,
+    mutationFn: (data: { name: string }) =>
+      apiClient.post<SimpleClient>("/clients", data, undefined, createClientResultLazy),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.clients.simpleList() });
+    },
   });
 }
 

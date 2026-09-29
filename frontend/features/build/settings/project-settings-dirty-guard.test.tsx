@@ -45,6 +45,11 @@ jest.mock("@/hooks/api/build/projects", () => ({
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => false,
   useCanState: () => "denied" as const,
+  usePermissionGate: (permission: string) => ({ permission, allowed: false, denied: true, pending: false }),
+}));
+
+jest.mock("@/hooks/api/crm/clients", () => ({
+  useSimpleClientsList: () => ({ data: [], isLoading: false, isError: false, error: null }),
 }));
 
 jest.mock("@/hooks/api/use-page-state", () => ({

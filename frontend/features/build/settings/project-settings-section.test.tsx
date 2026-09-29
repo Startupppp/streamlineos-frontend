@@ -45,6 +45,11 @@ let mockIsOwner = false;
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => mockIsOwner,
   useCanState: () => (mockIsOwner ? "granted" : "denied"),
+  usePermissionGate: (permission: string) => ({ permission, allowed: mockIsOwner, denied: !mockIsOwner, pending: false }),
+}));
+
+jest.mock("@/hooks/api/crm/clients", () => ({
+  useSimpleClientsList: () => ({ data: [], isLoading: false, isError: false, error: null }),
 }));
 
 jest.mock("@/hooks/api/use-page-state", () => ({

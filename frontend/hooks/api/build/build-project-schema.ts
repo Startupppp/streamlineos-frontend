@@ -61,6 +61,10 @@ const projectRowSchema = z.object({
   key: z.string(),
   clientMembershipId: z.number().nullable(),
   managerMembershipId: z.number().nullable(),
+  crmClient: z
+    .object({ id: z.number(), name: z.string().nullable() })
+    .nullable()
+    .optional(),
   startDate: z.string().nullable(),
   endDate: z.string().nullable(),
   status: z.enum(["ACTIVE", "COMPLETED", "ARCHIVED"]).nullable(),
