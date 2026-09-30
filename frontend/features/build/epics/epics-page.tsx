@@ -427,6 +427,7 @@ export function EpicsPage({ params }: PageProps) {
               selectedIds={selectedIds}
               hasMore={hasMoreEpics}
               hasPrevious={visitedCursors.length > 0}
+              pageNumber={visitedCursors.length + 1}
               isDeleting={deleteTicket.isPending}
               onClearFilters={listFilters.clearAll}
               onOpenCreate={handleOpenCreate}

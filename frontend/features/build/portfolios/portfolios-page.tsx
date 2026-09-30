@@ -44,7 +44,7 @@ const PAGE_SIZE = 20;
 export function PortfoliosPage() {
   const canManage = useCan("build:portfolios:manage");
   const listFilters = useBuildListFilters({ filters: PORTFOLIO_FILTER_DEFINITIONS });
-  const { cursor, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
+  const { cursor, pageNumber, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
     listFilters.resetKey,
   );
 
@@ -252,6 +252,7 @@ export function PortfoliosPage() {
             pagination={{
               mode: "cursor",
               pageSize: PAGE_SIZE,
+              pageNumber,
               hasMore: Boolean(data?.pagination.hasMore),
               hasPrevious,
               onNext: handleNextPage,

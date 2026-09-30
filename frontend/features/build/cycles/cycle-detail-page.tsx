@@ -319,29 +319,32 @@ export function CycleDetailPage({
       noInternalScroll
       contentClassName="!p-0"
       filters={
-        <div className="flex min-h-8 w-full flex-wrap items-center gap-2 sm:gap-3">
-          <ViewSwitcher activeView={view} onViewChange={handleViewChange} />
-          <DisplayOptionsPanel
-            viewType={view}
-            options={displayOptions}
-            onChange={setDisplayOptions}
-          />
-          {cycle?.status && (
-            <Badge variant="secondary" className="h-6 text-xs capitalize">
-              <Calendar className="h-3 w-3 mr-1" />
-              {cycle.status}
-            </Badge>
-          )}
-          <BuildListToolbar
-            search={{
-              value: listFilters.search,
-              onValueChange: listFilters.setSearch,
-              placeholder: "Search tickets",
-              inputRef: searchInputRef,
-            }}
-            onClearAll={listFilters.clearAll}
-          />
-        </div>
+        <BuildListToolbar
+          search={{
+            value: listFilters.search,
+            onValueChange: listFilters.setSearch,
+            placeholder: "Search tickets",
+            inputRef: searchInputRef,
+          }}
+          trailing={
+            <div className="flex min-w-0 flex-wrap items-center gap-2 sm:flex-nowrap">
+              <ViewSwitcher activeView={view} onViewChange={handleViewChange} />
+              <DisplayOptionsPanel
+                viewType={view}
+                options={displayOptions}
+                onChange={setDisplayOptions}
+              />
+              {cycle?.status && (
+                <Badge variant="secondary" className="h-6 text-xs capitalize">
+                  <Calendar className="mr-1 h-3 w-3" />
+                  {cycle.status}
+                </Badge>
+              )}
+            </div>
+          }
+          onClearAll={listFilters.clearAll}
+          className="max-md:flex-col max-md:items-stretch max-md:[&>[data-slot=build-toolbar-actions]]:w-full"
+        />
       }
     >
       <div className={cn(PAGE_CHROME_X, "flex min-h-0 flex-1 flex-col")}>

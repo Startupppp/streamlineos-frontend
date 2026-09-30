@@ -62,7 +62,7 @@ type ServerPagination = {
  * can report a real total stays on `"server"`. The fields the other two modes
  * carry are typed `never` so the three cannot be mixed.
  */
-type CursorPagination = {
+type CursorPaginationBase = {
   mode: "cursor";
   pageSize: number;
   /**
@@ -71,15 +71,26 @@ type CursorPagination = {
    */
   pageNumber?: number;
   hasMore: boolean;
-  hasPrevious: boolean;
   onNext: () => void;
-  onPrevious: () => void;
   onPageSizeChange?: (pageSize: number) => void;
   pageSizeOptions?: readonly number[];
   page?: never;
   total?: never;
   onPageChange?: never;
 };
+type CursorPagination = CursorPaginationBase &
+  (
+    | {
+        cursorVariant?: "paged";
+        hasPrevious: boolean;
+        onPrevious: () => void;
+      }
+    | {
+        cursorVariant: "load-more";
+        hasPrevious?: never;
+        onPrevious?: never;
+      }
+  );
 
 export interface DataTableProps<T> {
   data: T[];

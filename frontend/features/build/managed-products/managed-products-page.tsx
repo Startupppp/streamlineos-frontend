@@ -75,7 +75,7 @@ export function ManagedProductsPage() {
   const canDelete = useCan("build:managed-products:delete");
 
   const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
-  const { cursor, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
+  const { cursor, pageNumber, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
     listFilters.resetKey,
   );
 
@@ -346,6 +346,7 @@ export function ManagedProductsPage() {
             pagination={{
               mode: "cursor",
               pageSize: PAGE_SIZE,
+              pageNumber,
               hasMore: Boolean(data?.pagination.hasMore),
               hasPrevious,
               onNext: handleNextPage,

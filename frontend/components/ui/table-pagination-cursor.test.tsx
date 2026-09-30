@@ -2,16 +2,11 @@ import { act, render, renderHook, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 
-/**
- * A keyset list has no total and no page index. The risk is not that the
- * footer looks wrong — it is that someone reintroduces a number by inferring
- * one from the page length, which reads as "312 records" when it means "20 on
- * screen". These assertions pin the absence.
- */
+/** A keyset list shows its walk position without pretending it can jump. */
 describe("TablePagination cursor mode", () => {
   const noop = () => {};
 
-  it("renders prev/next only — no page numbers and no total", () => {
+  it("renders prev/next plus the current walk position, but no fake jump or total", () => {
     render(
       <TablePagination
         mode="cursor"
@@ -25,9 +20,10 @@ describe("TablePagination cursor mode", () => {
 
     expect(screen.getByLabelText("Previous page")).toBeInTheDocument();
     expect(screen.getByLabelText("Next page")).toBeInTheDocument();
+    expect(screen.getByLabelText("Current page 1")).toHaveTextContent("Page 1");
     expect(screen.queryByLabelText("Page 1")).not.toBeInTheDocument();
     expect(screen.queryByText(/of \d/)).not.toBeInTheDocument();
-    expect(screen.getByText("20 results on this page")).toBeInTheDocument();
+    expect(screen.getByText("20 results shown")).toBeInTheDocument();
   });
 
   it("disables next at the end of the list and previous at the head", () => {
@@ -44,6 +40,25 @@ describe("TablePagination cursor mode", () => {
 
     expect(screen.getByLabelText("Next page")).toBeDisabled();
     expect(screen.getByLabelText("Previous page")).toBeDisabled();
+  });
+
+  it("marks the visible cursor position as the current page", () => {
+    render(
+      <TablePagination
+        mode="cursor"
+        rowCount={20}
+        pageNumber={3}
+        hasMore
+        hasPrevious
+        onNext={noop}
+        onPrevious={noop}
+      />,
+    );
+
+    expect(screen.getByLabelText("Current page 3")).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
   });
 
   it("still renders numbered pages in offset mode", () => {
@@ -74,6 +89,44 @@ describe("TablePagination cursor mode", () => {
 
     expect(onNext).toHaveBeenCalledTimes(1);
     expect(onPrevious).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("TablePagination load-more cursor variant", () => {
+  it("reports loaded batches without offering a fake Previous page", async () => {
+    const onNext = jest.fn();
+    render(
+      <TablePagination
+        mode="cursor"
+        cursorVariant="load-more"
+        rowCount={40}
+        pageNumber={2}
+        hasMore
+        onNext={onNext}
+      />,
+    );
+
+    expect(screen.getByText("2 pages loaded")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Previous page")).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Load more" }));
+    expect(onNext).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps a truthful completed footer after the final batch", () => {
+    const onNext = jest.fn();
+    render(
+      <TablePagination
+        mode="cursor"
+        cursorVariant="load-more"
+        rowCount={40}
+        pageNumber={2}
+        hasMore={false}
+        onNext={onNext}
+      />,
+    );
+
+    expect(screen.getByText("2 pages loaded")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "All results loaded" })).toBeDisabled();
   });
 });
 

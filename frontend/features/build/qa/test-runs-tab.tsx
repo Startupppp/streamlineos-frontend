@@ -158,7 +158,7 @@ export function TestRunsTab({ projectId, createNonce = 0 }: TestRunsTabProps) {
     null,
   );
 
-  const { cursor, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
+  const { cursor, pageNumber, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
     listFilters.resetKey,
   );
 
@@ -355,6 +355,7 @@ export function TestRunsTab({ projectId, createNonce = 0 }: TestRunsTabProps) {
         pagination={{
           mode: "cursor",
           pageSize: RUN_PAGE_SIZE,
+          pageNumber,
           hasMore: runsPage?.hasMore ?? false,
           hasPrevious,
           onNext: handleNextPage,

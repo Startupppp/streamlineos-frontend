@@ -27,8 +27,10 @@ const VALUES = {
 } as const;
 
 describe("SubmissionInboxFilters", () => {
-  it("uses full-width mobile select triggers and readable content-aware desktop widths", () => {
-    render(<SubmissionInboxFilters values={VALUES} onChange={jest.fn()} />);
+  it("uses the shared responsive toolbar with readable direct select widths", () => {
+    const { container } = render(
+      <SubmissionInboxFilters values={VALUES} onChange={jest.fn()} />,
+    );
 
     const status = screen.getByRole("combobox", { name: "Filter by status" });
     const type = screen.getByRole("combobox", { name: "Filter by type" });
@@ -38,9 +40,11 @@ describe("SubmissionInboxFilters", () => {
       expect(trigger).toHaveClass("w-full", "min-w-0", "md:w-fit");
     }
 
-    expect(status).toHaveClass("md:min-w-36");
-    expect(type).toHaveClass("md:min-w-32");
-    expect(linked).toHaveClass("md:min-w-44");
+    expect(container.querySelector('[data-slot="build-list-toolbar"]')).toBeTruthy();
+    expect(screen.getByRole("button", { name: /^Filters/ })).toBeInTheDocument();
+    expect(status).toHaveClass("md:min-w-40", "md:max-w-80");
+    expect(type).toHaveClass("md:min-w-40", "md:max-w-80");
+    expect(linked).toHaveClass("md:min-w-40", "md:max-w-80");
     expect(status).not.toHaveClass("w-[130px]");
     expect(type).not.toHaveClass("w-[120px]");
     expect(linked).not.toHaveClass("w-[130px]");

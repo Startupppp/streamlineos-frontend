@@ -247,7 +247,7 @@ function ReleasesReadyTable() {
       isError={false}
       getRowKey={getRowKey}
       mobileCard={renderMobileCard}
-      pagination={{ mode: "cursor", pageSize: 25, hasMore: false, hasPrevious: false, onNext: STUB_NOOP, onPrevious: STUB_NOOP }}
+      pagination={{ mode: "cursor", pageSize: 25, pageNumber: 1, hasMore: false, hasPrevious: false, onNext: STUB_NOOP, onPrevious: STUB_NOOP }}
       empty={<EmptyState className={CONTENT_FILL_PANEL} illustrationPreset="projects" title="No releases yet" />}
     />
   );

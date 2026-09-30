@@ -280,6 +280,7 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
               <TablePagination
                 mode="cursor"
                 rowCount={(data?.data ?? []).length}
+                pageNumber={pager.pageNumber}
                 hasMore={hasNext}
                 hasPrevious={pager.hasPrevious}
                 onNext={handleNext}

@@ -76,7 +76,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
   const [deleteTarget, setDeleteTarget] = useState<Decision | null>(null);
   const [decisionFieldErrors, setDecisionFieldErrors] = useState<readonly ValidationFieldError[]>([]);
 
-  const { cursor, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
+  const { cursor, pageNumber, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
     listFilters.resetKey,
   );
 
@@ -343,6 +343,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
             pagination={{
               mode: "cursor",
               pageSize: GOVERNANCE_PAGE_SIZE,
+              pageNumber,
               hasMore: data?.hasMore ?? false,
               hasPrevious,
               onNext: handleNextPage,

@@ -186,6 +186,7 @@ export function ProjectMemberRolesSection({
             <TablePagination
               mode="cursor"
               rowCount={filteredMembers.length}
+              pageNumber={pager.pageNumber}
               hasMore={pagination?.hasMore ?? false}
               hasPrevious={pager.hasPrevious}
               onNext={() => pager.goNext(pagination?.nextCursor)}

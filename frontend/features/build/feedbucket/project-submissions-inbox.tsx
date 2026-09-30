@@ -294,6 +294,7 @@ export function ProjectSubmissionsInbox({
         pagination={{
           mode: "cursor",
           pageSize: PAGE_SIZE,
+          pageNumber: walk.pageNumber,
           hasMore: data?.pagination.hasMore ?? false,
           hasPrevious: walk.hasPrevious,
           onNext: handleNextPage,

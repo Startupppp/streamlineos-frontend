@@ -333,6 +333,7 @@ export function AllWorkPage() {
             filters={
               <TicketFilterBar
                 presentation="all-work"
+                className="sm:w-auto sm:flex-1"
                 members={buildMembers}
                 projectOptions={projectOptions}
                 showTypeFilter

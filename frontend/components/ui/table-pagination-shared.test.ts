@@ -1,5 +1,23 @@
 import { act, renderHook } from "@testing-library/react";
-import { useCursorPager } from "./table-pagination-shared";
+import { getVisiblePageItems, useCursorPager } from "./table-pagination-shared";
+
+describe("getVisiblePageItems", () => {
+  it("keeps a middle current page visible instead of showing unrelated edge pages", () => {
+    expect(getVisiblePageItems(10, 5)).toEqual([1, "gap", 4, 5, 6, "gap", 10]);
+  });
+
+  it("shows a compact leading window near the start", () => {
+    expect(getVisiblePageItems(10, 2)).toEqual([1, 2, 3, 4, 5, "gap", 10]);
+  });
+
+  it("shows a compact trailing window near the end", () => {
+    expect(getVisiblePageItems(10, 9)).toEqual([1, "gap", 6, 7, 8, 9, 10]);
+  });
+
+  it("clamps an invalid current page before building the window", () => {
+    expect(getVisiblePageItems(10, 99)).toEqual([1, "gap", 6, 7, 8, 9, 10]);
+  });
+});
 
 describe("useCursorPager — URL-backed opt-in", () => {
   it("initialises from the provided cursor so a deep-linked page-2 URL starts at the correct position", () => {

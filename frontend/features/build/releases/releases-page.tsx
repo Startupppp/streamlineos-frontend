@@ -366,6 +366,7 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
             pagination={{
               mode: "cursor",
               pageSize: 25,
+              pageNumber: pager.pageNumber,
               hasMore: pagination?.hasMore ?? false,
               hasPrevious: pager.hasPrevious,
               onNext: () => pager.goNext(pagination?.nextCursor),

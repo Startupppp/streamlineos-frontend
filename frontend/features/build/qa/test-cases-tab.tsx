@@ -62,7 +62,7 @@ export function TestCasesTab({ projectId, createNonce = 0 }: TestCasesTabProps) 
   const [deleteTarget, setDeleteTarget] = useState<TestCase | null>(null);
   const [selectedIds, setSelectedIds] = useState(new Set<string | number>());
 
-  const { cursor, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
+  const { cursor, pageNumber, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
     listFilters.resetKey,
   );
 
@@ -277,6 +277,7 @@ export function TestCasesTab({ projectId, createNonce = 0 }: TestCasesTabProps) 
         pagination={{
           mode: "cursor",
           pageSize: CASE_PAGE_SIZE,
+          pageNumber,
           hasMore: casesPage?.hasMore ?? false,
           hasPrevious,
           onNext: handleNextPage,

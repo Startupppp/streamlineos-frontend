@@ -1,6 +1,21 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { CycleDetailPage } from "./cycle-detail-page";
 
+const mockBuildListToolbar = jest.fn(
+  ({
+    trailing,
+    className,
+  }: {
+    trailing?: React.ReactNode;
+    className?: string;
+  }) => (
+    <div data-testid="build-list-toolbar" className={className}>
+      <div data-testid="toolbar-search" />
+      {trailing}
+    </div>
+  ),
+);
+
 jest.mock("@/hooks/api/build/projects", () => ({
   useProject: jest.fn(),
 }));
@@ -64,7 +79,8 @@ jest.mock("@/features/build/shared/use-build-list-filters", () => ({
 }));
 
 jest.mock("@/features/build/shared/build-list-toolbar", () => ({
-  BuildListToolbar: () => <div data-testid="build-list-toolbar" />,
+  BuildListToolbar: (props: Parameters<typeof mockBuildListToolbar>[0]) =>
+    mockBuildListToolbar(props),
 }));
 
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
@@ -82,9 +98,10 @@ jest.mock("framer-motion", () => ({
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({
-  PageWrapper: ({ children, title }: { children: React.ReactNode; title?: string }) => (
+  PageWrapper: ({ children, title, filters }: { children: React.ReactNode; title?: string; filters?: React.ReactNode }) => (
     <div>
       {title ? <h1>{title}</h1> : null}
+      {filters}
       {children}
     </div>
   ),
@@ -141,12 +158,12 @@ jest.mock("@/features/build/views/list-view", () => ({
 }));
 
 jest.mock("@/features/build/views/view-switcher", () => ({
-  ViewSwitcher: () => null,
+  ViewSwitcher: () => <button type="button">View</button>,
   parseViewType: jest.fn(() => "board"),
 }));
 
 jest.mock("@/features/build/views/display-options-panel", () => ({
-  DisplayOptionsPanel: () => null,
+  DisplayOptionsPanel: () => <button type="button">Display</button>,
   DEFAULT_DISPLAY_OPTIONS: { groupBy: "none", rowBy: "none", showEmptyColumns: false, showEmptyRows: false },
 }));
 
@@ -214,6 +231,7 @@ const CYCLE_ROW = {
 };
 
 beforeEach(() => {
+  mockBuildListToolbar.mockClear();
   mockUseCan.mockReturnValue(true);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseProject.mockReturnValue(
@@ -231,6 +249,21 @@ beforeEach(() => {
   mockUseBuildListKeyboard.mockReturnValue({ focusedIndex: null, setFocusedIndex: jest.fn() });
   mockParseViewType.mockReturnValue("board");
   mockUseBulkUpdateTickets.mockReturnValue({ mutate: jest.fn(), isPending: false });
+});
+
+it("composes search, view, display, and cycle status in one shared responsive toolbar", () => {
+  render(<CycleDetailPage projectId="1" cycleId="5" />);
+
+  expect(screen.getAllByTestId("build-list-toolbar")).toHaveLength(1);
+  const toolbar = screen.getByTestId("build-list-toolbar");
+  expect(toolbar).toContainElement(screen.getByTestId("toolbar-search"));
+  expect(toolbar).toContainElement(screen.getByRole("button", { name: "View" }));
+  expect(toolbar).toContainElement(screen.getByRole("button", { name: "Display" }));
+  expect(toolbar).toHaveTextContent("active");
+
+  const props = mockBuildListToolbar.mock.calls.at(-1)?.[0];
+  expect(props?.className).toContain("max-md:flex-col");
+  expect(props?.trailing).toBeTruthy();
 });
 
 it("renders NoPermissionState when build:cycles:view is denied instead of calling notFound", () => {

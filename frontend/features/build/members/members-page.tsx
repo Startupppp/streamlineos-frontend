@@ -50,7 +50,7 @@ export function MembersPage() {
   const isOnline = useOnlineStatus();
 
   const listFilters = useBuildListFilters({ searchParam: "search" });
-  const { cursor, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
+  const { cursor, pageNumber, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
     listFilters.resetKey,
   );
 
@@ -220,6 +220,7 @@ export function MembersPage() {
               pagination={{
                 mode: "cursor",
                 pageSize: 25,
+                pageNumber,
                 hasMore: hasNext,
                 hasPrevious,
                 onNext: handleNextPage,

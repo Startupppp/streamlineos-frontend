@@ -13,14 +13,6 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCardGrid, StatCard } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { AutomationsIllustration } from "@/components/illustrations";
-import { SearchInput } from "@/components/ui/search-input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -47,6 +39,8 @@ import {
   BUILD_FILTER_ALL,
 } from "@/features/build/shared/use-build-list-filters";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { formSchema, type FormValues } from "./automation-schema";
 import { AutomationCard } from "./automation-card";
 import { NewAutomationButton } from "./new-automation-button";
@@ -347,60 +341,45 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
           onRetry={handleRetry}
         >
           <PmSection index={0} className="shrink-0">
-            <div className="mb-3 flex flex-wrap items-center gap-2">
-              <SearchInput
-                ref={searchInputRef}
-                value={listFilters.search}
-                onValueChange={listFilters.setSearch}
-                placeholder="Search automations…"
-                className="min-w-48 flex-1"
-                aria-label="Search automations"
-              />
-              <Select
-                value={listFilters.value("trigger")}
-                onValueChange={handleTriggerFilterChange}
-              >
-                <SelectTrigger
-                  className="w-44"
-                  aria-label="Filter by trigger"
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {TRIGGER_FILTER_OPTIONS.map((opt) => (
-                    <SelectItem
-                      key={opt.value}
-                      value={opt.value}
-                      className="text-sm"
-                    >
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select
-                value={listFilters.value("action")}
-                onValueChange={handleActionFilterChange}
-              >
-                <SelectTrigger
-                  className="w-40"
-                  aria-label="Filter by action"
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {ACTION_FILTER_OPTIONS.map((opt) => (
-                    <SelectItem
-                      key={opt.value}
-                      value={opt.value}
-                      className="text-sm"
-                    >
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <BuildListToolbar
+              className="mb-3"
+              search={{
+                value: listFilters.search,
+                onValueChange: listFilters.setSearch,
+                placeholder: "Search automations…",
+                label: "Search automations",
+                inputRef: searchInputRef,
+              }}
+              filters={[
+                {
+                  id: "trigger",
+                  label: "Trigger",
+                  active: listFilters.isActive("trigger"),
+                  control: (
+                    <BuildFilterSelect
+                      label="Filter by trigger"
+                      value={listFilters.value("trigger")}
+                      onValueChange={handleTriggerFilterChange}
+                      options={TRIGGER_FILTER_OPTIONS}
+                    />
+                  ),
+                },
+                {
+                  id: "action",
+                  label: "Action",
+                  active: listFilters.isActive("action"),
+                  control: (
+                    <BuildFilterSelect
+                      label="Filter by action"
+                      value={listFilters.value("action")}
+                      onValueChange={handleActionFilterChange}
+                      options={ACTION_FILTER_OPTIONS}
+                    />
+                  ),
+                },
+              ]}
+              onClearAll={listFilters.clearAll}
+            />
           </PmSection>
 
           <PmSection index={1} className="shrink-0">

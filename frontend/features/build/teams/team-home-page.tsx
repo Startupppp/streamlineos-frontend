@@ -492,6 +492,7 @@ export function TeamHomePage({ teamId }: Props) {
                 <TablePagination
                   mode="cursor"
                   rowCount={pageMembers.length}
+                  pageNumber={memberPager.pageNumber}
                   hasMore={Boolean(membersResult.data?.pagination.hasMore)}
                   hasPrevious={memberPager.hasPrevious}
                   onNext={handleMembersNext}

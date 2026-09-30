@@ -73,6 +73,7 @@ export function useBuildCursorPager(resetKey?: string): CursorPager {
   return useMemo(
     () => ({
       cursor: stack[stack.length - 1],
+      pageNumber: stack.length,
       hasPrevious: stack.length > 1,
       goNext,
       goPrevious,

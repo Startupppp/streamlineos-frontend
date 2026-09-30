@@ -130,6 +130,7 @@ export function noop() {
 export const GALLERY_STATIC_PAGINATION = {
   mode: "cursor",
   pageSize: 50,
+  pageNumber: 2,
   hasMore: true,
   hasPrevious: true,
   onNext: noop,
@@ -295,6 +296,7 @@ function ReadyTableInner() {
       pagination={{
         mode: "cursor",
         pageSize: 20,
+        pageNumber: 2,
         hasMore: true,
         hasPrevious: true,
         onNext: handleNext,

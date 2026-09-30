@@ -22,10 +22,11 @@ export type {
 function CursorFooter({
   rowCount,
   pageNumber,
+  cursorVariant = "paged",
   hasMore,
-  hasPrevious,
+  hasPrevious = false,
   onNext,
-  onPrevious,
+  onPrevious = () => {},
   pageSize,
   onPageSizeChange,
   pageSizeOptions,
@@ -34,9 +35,11 @@ function CursorFooter({
   hideOnSinglePage = false,
   showLabels = false,
 }: TablePaginationCursorProps) {
+  const currentPage = Math.max(1, pageNumber ?? 1);
+  const isLoadMore = cursorVariant === "load-more";
   const shouldHide = hideOnSinglePage
     ? !hasPrevious && !hasMore
-    : rowCount === 0 && !hasPrevious;
+    : rowCount === 0 && !hasPrevious && !isLoadMore;
   if (shouldHide) return null;
 
   return (
@@ -44,9 +47,8 @@ function CursorFooter({
       <div className="flex min-w-0 flex-1 items-center gap-1.5">
         <span className="min-w-0 truncate text-left text-xs text-muted-foreground tabular-nums">
           {rowCount === 1
-            ? "1 result on this page"
-            : `${rowCount} results on this page`}
-          {pageNumber ? ` · page ${pageNumber}` : null}
+            ? "1 result shown"
+            : `${rowCount} results shown`}
         </span>
         <PageSizeSelect
           pageSize={pageSize}
@@ -57,29 +59,48 @@ function CursorFooter({
       </div>
 
       <div className="flex shrink-0 flex-nowrap items-center justify-end gap-0.5">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className={cn("h-7", showLabels ? "gap-1 px-2 text-xs" : "px-1.5")}
-          disabled={disabled || !hasPrevious}
-          onClick={onPrevious}
-          aria-label="Previous page"
+        {!isLoadMore ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className={cn("h-7", showLabels ? "gap-1 px-2 text-xs" : "px-1.5")}
+            disabled={disabled || !hasPrevious}
+            onClick={onPrevious}
+            aria-label="Previous page"
+          >
+            <ChevronLeft className="h-3.5 w-3.5" />
+            {showLabels ? "Previous" : null}
+          </Button>
+        ) : null}
+        <span
+          className="min-w-[4.5rem] px-1 text-center text-xs font-medium text-foreground tabular-nums"
+          aria-label={
+            isLoadMore
+              ? `${currentPage} ${currentPage === 1 ? "page" : "pages"} loaded`
+              : `Current page ${currentPage}`
+          }
+          aria-current={isLoadMore ? undefined : "page"}
+          aria-live={isLoadMore ? "polite" : undefined}
         >
-          <ChevronLeft className="h-3.5 w-3.5" />
-          {showLabels ? "Previous" : null}
-        </Button>
+          {isLoadMore
+            ? `${currentPage} ${currentPage === 1 ? "page" : "pages"} loaded`
+            : `Page ${currentPage}`}
+        </span>
         <Button
           type="button"
           variant="outline"
           size="sm"
-          className={cn("h-7", showLabels ? "gap-1 px-2 text-xs" : "px-1.5")}
+          className={cn(
+            "h-7",
+            isLoadMore || showLabels ? "gap-1 px-2 text-xs" : "px-1.5",
+          )}
           disabled={disabled || !hasMore}
           onClick={onNext}
-          aria-label="Next page"
+          aria-label={isLoadMore ? (hasMore ? "Load more" : "All results loaded") : "Next page"}
         >
-          {showLabels ? "Next" : null}
-          <ChevronRight className="h-3.5 w-3.5" />
+          {isLoadMore ? (hasMore ? "Load more" : "All results loaded") : showLabels ? "Next" : null}
+          {isLoadMore && !hasMore ? null : <ChevronRight className="h-3.5 w-3.5" />}
         </Button>
       </div>
     </nav>

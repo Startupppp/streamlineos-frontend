@@ -123,6 +123,7 @@ interface ProjectTableProps {
   projects: ProjectListItem[];
   prefs?: DisplayPrefs;
   hasMore?: boolean;
+  pageNumber?: number;
   onLoadMore?: () => void;
 }
 
@@ -132,6 +133,7 @@ export const ProjectTable = React.memo(function ProjectTable({
   projects,
   prefs,
   hasMore,
+  pageNumber = 1,
   onLoadMore,
 }: ProjectTableProps) {
   const router = useRouter();
@@ -162,8 +164,6 @@ export const ProjectTable = React.memo(function ProjectTable({
   const handleDialogClose = useCallback((open: boolean) => {
     if (!open) setActiveDialog(null);
   }, []);
-
-  const handleNoPreviousPage = useCallback(() => {}, []);
 
   const columns = useProjectTableColumns({
     prefs,
@@ -209,14 +209,14 @@ export const ProjectTable = React.memo(function ProjectTable({
           </div>
         }
         pagination={
-          hasMore && onLoadMore
+          onLoadMore
             ? {
                 mode: "cursor",
+                cursorVariant: "load-more",
                 pageSize: 25,
-                hasMore: true,
-                hasPrevious: false,
+                pageNumber,
+                hasMore: Boolean(hasMore),
                 onNext: onLoadMore,
-                onPrevious: handleNoPreviousPage,
               }
             : undefined
         }

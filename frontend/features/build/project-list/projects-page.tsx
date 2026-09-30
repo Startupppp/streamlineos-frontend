@@ -184,8 +184,6 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
     });
   }, [updateParams]);
 
-  const handleNoOp = useCallback(() => {}, []);
-
   const {
     data,
     isLoading,
@@ -362,14 +360,14 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
                     ))}
                   </PmStaggerList>
                 </div>
-                {hasNextPage ? (
+                {visibleProjects.length > 0 ? (
                   <TablePagination
                     mode="cursor"
+                    cursorVariant="load-more"
                     rowCount={visibleProjects.length}
-                    hasMore={true}
-                    hasPrevious={false}
+                    pageNumber={data?.pages.length ?? 1}
+                    hasMore={Boolean(hasNextPage)}
                     onNext={handleLoadMore}
-                    onPrevious={handleNoOp}
                     disabled={isFetchingNextPage}
                   />
                 ) : null}
@@ -381,6 +379,7 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
                     projects={visibleProjects}
                     prefs={prefs}
                     hasMore={Boolean(hasNextPage)}
+                    pageNumber={data?.pages.length ?? 1}
                     onLoadMore={handleLoadMore}
                   />
                 </div>

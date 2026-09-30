@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { TablePagination } from "@/components/ui/table-pagination";
+import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 import { toast } from "sonner";
 import {
   useFeedbackPosts,
@@ -49,9 +49,15 @@ export function FeedbackTab({
   onCursorChange = () => {},
 }: FeedbackTabProps) {
   const isFiltered = search.trim().length > 0;
+  const pager = useCursorPager(search.trim(), {
+    initialCursor: cursor ?? undefined,
+    onCursorChange: (nextCursor) => onCursorChange(nextCursor ?? null),
+  });
 
   const { data, isLoading, isError, error, refetch } = useFeedbackPosts(
-    isFiltered ? { search: search.trim(), cursor: cursor ?? undefined } : { cursor: cursor ?? undefined },
+    isFiltered
+      ? { search: search.trim(), cursor: pager.cursor }
+      : { cursor: pager.cursor },
   );
   const { data: roadmapData } = useRoadmapItems();
   const deletePost = useDeleteFeedbackPost();
@@ -63,7 +69,7 @@ export function FeedbackTab({
     isLoading,
     isError,
     error,
-    isEmpty: (data?.data ?? []).length === 0 && !cursor,
+    isEmpty: (data?.data ?? []).length === 0 && !pager.hasPrevious,
   });
 
   const handleSetMergeTarget = useCallback((post: FeedbackPost) => {
@@ -98,12 +104,12 @@ export function FeedbackTab({
   }
 
   const handleNext = useCallback(() => {
-    onCursorChange(data?.pagination.nextCursor ?? null);
-  }, [data?.pagination.nextCursor, onCursorChange]);
+    pager.goNext(data?.pagination.nextCursor);
+  }, [data?.pagination.nextCursor, pager]);
 
   const handlePrev = useCallback(() => {
-    onCursorChange(null);
-  }, [onCursorChange]);
+    pager.goPrevious();
+  }, [pager]);
 
   const hasNext = data?.pagination.hasMore ?? false;
 
@@ -143,12 +149,13 @@ export function FeedbackTab({
         </div>
       </PageState>
 
-      {(data?.data ?? []).length > 0 || Boolean(cursor) ? (
+      {(data?.data ?? []).length > 0 || pager.hasPrevious ? (
         <TablePagination
           mode="cursor"
           rowCount={(data?.data ?? []).length}
+          pageNumber={pager.pageNumber}
           hasMore={hasNext}
-          hasPrevious={Boolean(cursor)}
+          hasPrevious={pager.hasPrevious}
           onNext={handleNext}
           onPrevious={handlePrev}
         />

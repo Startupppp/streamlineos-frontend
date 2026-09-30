@@ -51,7 +51,7 @@ export function TeamsListPage() {
   const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS, withSearch: true });
   const leadIdFilter = listFilters.value("leadId");
   const memberIdFilter = listFilters.value("memberId");
-  const { cursor, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
+  const { cursor, pageNumber, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
     listFilters.resetKey,
   );
 
@@ -249,6 +249,7 @@ export function TeamsListPage() {
             pagination={{
               mode: "cursor",
               pageSize: PAGE_SIZE,
+              pageNumber,
               hasMore: Boolean(data?.pagination.hasMore),
               hasPrevious,
               onNext: handleNextPage,

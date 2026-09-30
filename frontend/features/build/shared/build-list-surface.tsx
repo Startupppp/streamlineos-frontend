@@ -9,14 +9,29 @@ import { usePageState } from "@/hooks/api/use-page-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 
-export interface BuildListSurfaceCursorPagination {
+interface BuildListSurfaceCursorPaginationBase {
   mode: "cursor";
   pageSize: number;
+  /** One-based cursor-walk or loaded-batch position. */
+  pageNumber: number;
   hasMore: boolean;
-  hasPrevious?: boolean;
   onNext: () => void;
-  onPrevious?: () => void;
 }
+
+export type BuildListSurfaceCursorPagination =
+  BuildListSurfaceCursorPaginationBase &
+    (
+      | {
+          cursorVariant?: "paged";
+          hasPrevious: boolean;
+          onPrevious: () => void;
+        }
+      | {
+          cursorVariant: "load-more";
+          hasPrevious?: never;
+          onPrevious?: never;
+        }
+    );
 
 export interface BuildListSurfaceServerPagination {
   mode: "server";
@@ -31,8 +46,6 @@ export interface BuildListSurfaceServerPagination {
 export type BuildListSurfacePagination =
   | BuildListSurfaceCursorPagination
   | BuildListSurfaceServerPagination;
-
-const NO_PREVIOUS_PAGE = () => {};
 
 export interface BuildListSurfaceProps<TRow> {
   permission: PermissionKey;
@@ -144,8 +157,6 @@ export function BuildListSurface<TRow>({
               ? pagination
               : {
                   ...pagination,
-                  hasPrevious: pagination.hasPrevious ?? false,
-                  onPrevious: pagination.onPrevious ?? NO_PREVIOUS_PAGE,
                 }
           }
           isLoading={isFetchingMore}

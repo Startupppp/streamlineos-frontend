@@ -407,7 +407,9 @@ export function ProjectApprovalsPage({
             }}
             pagination={{
               mode: "cursor",
+              cursorVariant: "load-more",
               pageSize: 25,
+              pageNumber: data?.pages.length ?? 1,
               hasMore: Boolean(hasNextPage),
               onNext: handleNextPage,
             }}

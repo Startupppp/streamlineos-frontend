@@ -189,6 +189,7 @@ export function ProjectSettingsPortalPage({ projectId }: ProjectSettingsPortalPa
                     <TablePagination
                       mode="cursor"
                       rowCount={tickets.length}
+                      pageNumber={ticketPager.pageNumber}
                       hasMore={ticketPagination?.hasMore ?? false}
                       hasPrevious={ticketPager.hasPrevious}
                       onNext={() => ticketPager.goNext(ticketPagination?.nextCursor)}
@@ -227,6 +228,7 @@ export function ProjectSettingsPortalPage({ projectId }: ProjectSettingsPortalPa
                     <TablePagination
                       mode="cursor"
                       rowCount={milestones.length}
+                      pageNumber={milestonePager.pageNumber}
                       hasMore={milestonePagination?.hasMore ?? false}
                       hasPrevious={milestonePager.hasPrevious}
                       onNext={() => milestonePager.goNext(milestonePagination?.nextCursor)}

@@ -407,6 +407,7 @@ export function ProjectWebhooksPage({
               <TablePagination
                 mode="cursor"
                 rowCount={webhookList.length}
+                pageNumber={pager.pageNumber}
                 hasMore={webhookPage?.hasMore ?? false}
                 hasPrevious={pager.hasPrevious}
                 onNext={handleNextPage}
