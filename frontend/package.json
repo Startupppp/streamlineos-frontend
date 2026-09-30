@@ -182,7 +182,7 @@
     "@xyflow/react": "^12.11.1",
     "@zumer/snapdom": "^2.15.0",
     "ably": "^2.21.0",
-    "axios": ">=1.16.0",
+    "axios": ">=1.18.0",
     "class-variance-authority": "^0.7.1",
     "cmdk": "^1.1.1",
     "cn": "^0.2.6",
@@ -247,22 +247,5 @@
     "tailwindcss": "^4",
     "typescript": "^5",
     "yaml": "2.9.0"
-  },
-  "pnpm": {
-    "overrides": {
-      "fflate": "^0.8.3",
-      "browserslist": "^4.28.9",
-      "baseline-browser-mapping": "^2.11.0",
-      "@humanfs/node": "^0.16.8",
-      "minimatch@<3.1.4": "^3.1.4",
-      "mermaid": "^11.16.1",
-      "lodash-es": "^4.18.1",
-      "uuid": "^11.1.1",
-      "nanoid@<3.3.18": "^3.3.18",
-      "nanoid@4": "^5.1.16"
-    },
-    "ignoredBuiltDependencies": [
-      "esbuild"
-    ]
   }
 }
