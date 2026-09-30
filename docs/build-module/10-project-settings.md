@@ -20,7 +20,7 @@
 ## Above-the-fold text wireframe
 
 ```text
-Scope breadcrumb / title                         Search / saved view / primary action
+Scope breadcrumb / title                         Current project identity
 Purpose or freshness line                       Permission-safe secondary actions
 Filter and layout toolbar (URL-backed)
 Summary or status strip (only decision-useful metrics)
@@ -33,7 +33,7 @@ Priority is identity and next action first, filters/layout second, bounded conte
 ## Elements and interactions
 
 - Title/breadcrumb: clickable ancestors; current title is non-interactive unless inline rename is authorized.
-- Search: debounced, keyboard focused with `/`, reflected in `q`.
+- Search: intentionally absent on this fixed, small settings taxonomy. List-heavy child settings pages own their own scoped search.
 - Filters/group/sort/layout: popovers or segmented controls; every response-shaping value updates the URL.
 - Rows/cards: single click selects/opens preview when useful; explicit title link performs full-page navigation; right click opens the same authorized actions available from the row menu.
 - Inline edits: status, priority, assignee, dates, estimate, and labels only when the mutation is optimistic and reversible. Financial, access, approval, publication, and destructive changes are never optimistic.
@@ -42,7 +42,7 @@ Priority is identity and next action first, filters/layout second, bounded conte
 
 ## URL state
 
-Deep-linkable query parameters: `section and search`. Cursor may be shared only when it is stable for the same normalized filter/sort/access revision. Selection, open menus, drafts, and unsaved form state are not placed in the URL.
+Deep-linkable query parameters: `section`. The retired `q` parameter is removed while preserving the selected section. Cursor, selection, open menus, drafts, and unsaved form state are not placed in the URL.
 
 ## Bulk, keyboard, and context actions
 
@@ -103,7 +103,7 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 - [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [x] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — Cursor IDE browser 2026-09-29, signed in, `/build/6/settings` at 1280 and 375: document overflow 0, heading “Settings”. `prefers-reduced-motion: reduce` still rendered the page.
-- [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — Cursor IDE browser 2026-09-29 saw the ready settings hub (General, Labels, Statuses, Custom Fields, Teams & Roster, Danger Zone). Filtered-empty, error, denied, and conflict were not triggered.
+- [ ] Production browser evidence confirms ready, empty, error, denied, and conflict behavior without modifying real data. — Authenticated local browser 2026-09-30 confirmed the redesigned ready hub, removal of the redundant section search, automatic cleanup of legacy `q` while preserving `section`, readable icon-led navigation, and no horizontal overflow in the tested viewport. Focused Settings regressions pass 6 suites / 63 tests. Empty, error, denied, conflict, and production deployment evidence remain open.
 
 ### Local browser evidence — 2026-09-29 (partial; release criteria remain open)
 

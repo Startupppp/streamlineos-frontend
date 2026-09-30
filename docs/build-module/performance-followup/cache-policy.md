@@ -220,6 +220,11 @@ they record what the code did, and this records what it does.**
   **WHY IT STILL DOES NOT TICK, and it is now one clause of the criterion rather than a whole half.** The box asks to exercise real cache invalidation **and report projections** after each supported mutation. The invalidation is exercised. A *report projection* is a server-rendered payload — what `GET /build/:projectId/reports/velocity` actually returns after the mutation, read through `cache.cached()` under a key ending `:r<report_revision>`. Observing that requires the API and its Redis, and the only Redis configured is `UPSTASH_REDIS_REST_URL` in `backend/.env`, the same file whose `APP_DATABASE_URL` names the production RDS host. There is still no compose file (`git ls-files | grep -iE "docker-compose|compose\.ya?ml|Dockerfile"` → nothing). So the server half is unchanged and unchangeable here: **whether `invalidateNamespace` evicts, under the right `orgId`, after the transaction commits, and whether the next read returns the new projection, is not observable in this checkout.** Same class of blocker as the non-production PostgreSQL in open question 12.
 
   **SETTLES WHEN** a non-production Redis and API exist, and one run records, per mutation, the report payload before and after. Until then the client half is complete and the box is unticked on the two words "report projections" — not on invalidation, not on filtered counts, and not on rollback.
+
+  **2026-09-30 REVALIDATION.** The two client suites now pass 29/29, and the seven Build analytics
+  suites pass 32/32, including the revision-key cache test. The server clause remains unmeasured:
+  there is no local Redis listener or compose fixture, and the only configured Redis URL is the
+  production Upstash endpoint. No request was sent to it.
 - [ ] Separate client freshness settings, server TTL/revision policy and end-to-end stale-data bounds in measurements; report dataset size, cache hit/miss and p95 latency rather than inferred speedups.
   **NOT EARNED 2026-09-29 — clauses 1 and 2 (client freshness settings, server TTL and revision policy) are recorded below with source lines; clause 3, the end-to-end stale-data bound, has no number because it needs a running app and a database. Earned by reporting dataset size, cache hit/miss and p95 latency against a non-production database.**
 
@@ -250,6 +255,12 @@ they record what the code did, and this records what it does.**
   Confirmed statically afterwards, not by a second attempt: the connection opens at `run-read-cost-budgets.mjs:359` and the role is queried at `:365`, before the `--self-test` flag read at `:317` has any effect on control flow. **So the one instrument this clause depends on cannot even be self-tested without an explicit non-production `APP_DATABASE_URL` on the command line.** The attempt failed at authentication so no `EXPLAIN` ran, but it was a connection attempt to the production host and must not be repeated. The Redis half is unchanged: the only configured instance is the production Upstash one, so `INFO STATS` would be a production observation.
 
   **DECISION (B), measurement required, STANDS — and the measurement is now blocked at one level deeper than recorded.** It is not merely that the numbers need a fixture-shaped non-production database; it is that the harness's own dry run needs one too. **NOT A REQUIREMENT:** the absence of dataset size, hit/miss and p95 figures is an unmeasured state, not a waiver, and a p95 derived from a zero-row plan would be worse than none.
+
+  **2026-09-30 REVALIDATION.** No PostgreSQL or Redis listener exists on loopback. Both database
+  variables in `backend/.env` resolve to RDS and the configured Redis URL resolves to Upstash, so no
+  live measurement or nominal read-budget self-test was run. Offline detector tests passed, but they
+  do not provide dataset size, hit/miss, plan buffers, or p95 latency and therefore do not earn this
+  criterion.
 
 ### Server-side, after commit
 

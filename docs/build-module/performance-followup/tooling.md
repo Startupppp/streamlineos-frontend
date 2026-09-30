@@ -22,7 +22,9 @@ They are deliberately **not** wired into `package.json`. That file is shared wit
 
 Finds the migration that defines `build.bump_report_revision()`, extracts the trigger target list from its `FOREACH … ARRAY[…]` loop, binds each SQL alias in the function body to its schema-qualified table, and reports any table or column the body reaches that a script in `migrations/sql/` drops.
 
-Exits 1 on a finding. Today it reports the two references behind P0-1.
+Exits 1 on a finding. Reverified 2026-09-30: the effective definition is
+`migrations/1157_build_report_revision_rename_safe.sql`, six trigger targets were resolved, no
+pending SQL script was present, and the analyser passed with no finding.
 
 **Why it exists.** The function builds its statements as strings and runs them through `EXECUTE`. PostgreSQL records no dependency for a reference inside a string, so `DROP COLUMN` and `DROP TABLE` succeed and the breakage surfaces at runtime, in a trigger, aborting the caller's transaction. No existing gate reads inside a plpgsql body, and the detach migration's own guard is a data check that cannot see code.
 
@@ -38,7 +40,7 @@ Scans `src/modules/build/**` for `CacheService` call sites, normalises each key 
 
 Reports three groups:
 
-- **Invalidated with no reader** — the eviction reaches nothing. Always a defect. Today: `projects:analytics:*:*`, nine sites (P1-1).
+- **Invalidated with no reader** — the eviction reaches nothing. Always a defect.
 - **Cached with no invalidator** — TTL-only staleness. A defect unless the key carries its own revision, which is how the Build reports are built.
 - **Unresolved key arguments** — call sites whose key the tool could not resolve. Listed by file and line, never counted as absent.
 
@@ -54,4 +56,15 @@ Reports three groups:
 
 Both analysers carry `--self-test`, which proves each detector bites on a constructed positive and stays silent on a constructed negative — including the two cases most likely to rot: a rebound name must not resolve to the wrong literal, and a branch-guarded column must not be charged to the other trigger targets.
 
-`__tests__/build-performance-checks.test.mjs` runs both self-test suites and exercises the pure functions directly, 17 assertions under `node:test`. It is a `.mjs` file run by `node --test` rather than a jest spec, because the jest roots and transform config are shared across lanes.
+`__tests__/build-performance-checks.test.mjs` runs both self-test suites and exercises the pure functions directly, 22 assertions under `node:test`. It is a `.mjs` file run by `node --test` rather than a jest spec, because the jest roots and transform config are shared across lanes.
+
+Reverified 2026-09-30: all 22 assertions passed. The cache-key analyser scanned 315 Build files,
+resolved two read shapes and two invalidated shapes, found no orphan in either direction, and still
+reported the five deliberately unresolved `projects-reports.service.ts` call sites. That is a pass
+for every resolved shape, not proof about the five unresolved calls.
+
+The benchmark catalog also now claims `build-org-project-health-summary` and
+`build-resource-allocation` in the Build module. Both are classified complex because they aggregate
+tenant-wide data through multiple joins/CTEs. The committed production-shaped capture predates both,
+so they are explicitly held in `AWAITING_NEXT_CAPTURE`; only a new non-production capture can turn
+that catalog repair into latency evidence.

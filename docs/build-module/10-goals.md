@@ -111,15 +111,10 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
   page. Searching for `zz-no-match-qa-sentinel` produced the filtered-empty
   message; clearing the search input restored the empty-data state and removed
   `q` from the URL after the debounce. No goal data was created or changed.
-- Direct navigation to the separately specified project projection
-  `/build/6/goals` rendered “Page Not Found”. This is a reproducible route gap,
-  not acceptance evidence for the project Goals contract.
-- This local pass does not verify keyboard/screen-reader behavior,
-  reduced-motion, mobile/high-density layouts, production API state, or
-  ready/error/denied/conflict handling. The two browser acceptance boxes above
-  remain unchecked.
-- [x] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — Cursor IDE browser 2026-09-29, signed in, `/build/goals` at 1280 and 375: document overflow 0, heading “Goals & OKRs”. `prefers-reduced-motion: reduce` still rendered the page.
-- [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — Cursor IDE browser 2026-09-29 saw Total Goals 0. Filtered-empty, error, denied, and conflict were not triggered.
-- The two browser acceptance boxes above carry the waiver marker; a second, duplicate copy of
-  them was added below this section by a later pass and is removed here — this page states each
-  criterion once.
+- Direct navigation to `/build/6/goals` rendered “Page Not Found”. This is the
+  expected result for a noncanonical route: the route decision above defines
+  Goals as organization-scoped at `/build/goals`, and current navigation and
+  Command Center callers use that canonical route.
+- This local pass adds no new keyboard/screen-reader, reduced-motion,
+  mobile/high-density, production API, or ready/error/denied/conflict evidence.
+  The production browser-state acceptance box above remains open.
