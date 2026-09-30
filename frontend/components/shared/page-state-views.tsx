@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import type { PageStateResolution } from "@/lib/page-state/resolve-page-state";
 import { humanizeLimitKey, humanizeModuleKey, type GateStateProps } from "./page-state-shared";
 import { NoPermissionState } from "./no-permission-state";
+import { EnableModuleButton } from "./enable-module-button";
 import { ModuleDeniedView, PlanRequiredView } from "./page-state-plan-views";
 
 export { ModuleDeniedView, PlanRequiredView };
@@ -225,7 +226,8 @@ export function ModuleDisabledView({ moduleKey, compact, className }: ModuleDisa
         enabled for your organisation. An administrator can turn it on in settings.
       </p>
 
-      <div className={cn(compact ? "mt-4" : "mt-5")}>
+      <div className={cn("flex flex-col items-center gap-3", compact ? "mt-4" : "mt-5")}>
+        <EnableModuleButton moduleKey={moduleKey} moduleName={moduleName} compact={compact} />
         <Button asChild variant="outline" size={compact ? "sm" : "default"}>
           <Link href="/settings/modules">Manage Modules</Link>
         </Button>

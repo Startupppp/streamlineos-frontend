@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions, UseQueryResult } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { accessAndCrmQueryKeys } from "@/lib/query-keys/access-and-crm";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { lazyContract } from "@/lib/api-envelope";
@@ -84,6 +85,10 @@ export const useAccess = (
   }, [queryClient, orgId]);
 
   return useQuery<AccessResponse, Error>({
+    // The shell draws its own retryable "Couldn't load your organization" and
+    // the permission gate reports `unavailable`; throwing instead replaced the
+    // whole app with the root boundary on one transient 503 (BUG-HRMS-014).
+    ...INLINE_READ_ERROR,
     staleTime: 5 * 60_000,
     refetchOnWindowFocus: "always",
     refetchOnReconnect: true,
