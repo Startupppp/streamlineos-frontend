@@ -18,6 +18,7 @@ import type { InfiniteData } from "@tanstack/react-query";
 import {
   messagePayloadSchema,
   messageUpdatedPayloadSchema,
+  messageEntitiesUpdatedPayloadSchema,
   messageDeletedPayloadSchema,
   reactionUpdatedPayloadSchema,
   typingPayloadSchema,
@@ -222,11 +223,15 @@ export function useChatRealtime(channelId: number | null): {
     };
 
     const messageUpdatedHandler = (msg: InboundMessage) => {
+      const cacheKey = collaborationQueryKeys.chat.messages(channelId);
       const parsed = messageUpdatedPayloadSchema.safeParse(msg.data);
-      if (!parsed.success) return;
+      if (!parsed.success) {
+        if (messageEntitiesUpdatedPayloadSchema.safeParse(msg.data).success)
+          void queryClient.invalidateQueries({ queryKey: cacheKey });
+        return;
+      }
       const payload = parsed.data;
 
-      const cacheKey = collaborationQueryKeys.chat.messages(channelId);
       patchMessagesCache(queryClient, cacheKey, (m) => {
         if (m.id !== payload.id) return m;
         return {

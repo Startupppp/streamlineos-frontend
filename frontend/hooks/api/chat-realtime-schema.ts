@@ -49,6 +49,16 @@ export const messageUpdatedPayloadSchema = z.object({
   updatedAt: z.string(),
 });
 
+/**
+ * `ChatMessagesService.attachEntity`: a record was made from the message (convert
+ * to task). Only `{type, id}` travels — each reader's refetch resolves the card.
+ */
+export const messageEntitiesUpdatedPayloadSchema = z.object({
+  id: z.number(),
+  channelId: z.number(),
+  entities: z.array(z.object({ type: z.string(), id: z.string() })),
+});
+
 export const messageDeletedPayloadSchema = z.object({
   id: z.number(),
   channelId: z.number(),
