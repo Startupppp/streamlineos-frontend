@@ -355,7 +355,7 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
   return (
     <PageWrapper
       title="Backlog"
-      subtitle="Manage and prioritize unscheduled work"
+      subtitle="Manage and prioritize project work"
       actions={<CreateTicketDialog projectId={projectId} />}
       filters={
         <div className={PM_TOOLBAR}>

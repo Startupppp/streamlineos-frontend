@@ -27,7 +27,16 @@ jest.mock("@hello-pangea/dnd", () => ({
 }));
 
 jest.mock("react-window", () => ({
-  List: () => <div data-testid="virtual-ticket-list" />,
+  List: ({
+    listRef,
+  }: {
+    listRef?: (handle: { element: HTMLDivElement | null } | null) => void;
+  }) => {
+    const attach = (node: HTMLDivElement | null) => {
+      listRef?.(node ? { element: node } : null);
+    };
+    return <div data-testid="virtual-ticket-list" ref={attach} />;
+  },
   useDynamicRowHeight: () => ({
     getRowHeight: () => 148,
     getAverageRowHeight: () => 148,
@@ -41,17 +50,51 @@ jest.mock("./kanban-ticket-card", () => ({
 
 import { KanbanVirtualTicketList } from "./kanban-virtual-ticket-list";
 
+function renderList() {
+  const dragStartRef: MutableRefObject<{ x: number; y: number } | null> = {
+    current: null,
+  };
+
+  return render(
+    <KanbanVirtualTicketList
+      tickets={[]}
+      projectId={1}
+      droppableId="TODO"
+      onSelect={jest.fn()}
+      dragStartRef={dragStartRef}
+      canDragTickets
+    />,
+  );
+}
+
 describe("KanbanVirtualTicketList — droppable registration", () => {
   beforeEach(() => {
     droppableInnerRef.mockClear();
   });
 
-  it("attaches provided.innerRef to a real DOM element on the initial render", () => {
+  it("registers the droppable on the list's own scrolling element, because virtual mode reads scroll offset from it to compute the drop index", () => {
+    renderList();
+
+    const list = screen.getByTestId("virtual-ticket-list");
+    expect(droppableInnerRef).toHaveBeenCalledWith(list);
+    expect(droppableInnerRef.mock.calls[0]?.[0]).toBeInstanceOf(HTMLElement);
+  });
+
+  it("does not register a non-scrolling wrapper, which would report scroll offset zero and drop tickets at the wrong index in a scrolled column", () => {
+    renderList();
+
+    const list = screen.getByTestId("virtual-ticket-list");
+    expect(droppableInnerRef).not.toHaveBeenCalledWith(list.parentElement);
+  });
+
+  it("keeps the droppable registered across a re-render, so a drag's own renders cannot unregister it mid-drag", () => {
+    const { rerender } = renderList();
+    droppableInnerRef.mockClear();
+
     const dragStartRef: MutableRefObject<{ x: number; y: number } | null> = {
       current: null,
     };
-
-    render(
+    rerender(
       <KanbanVirtualTicketList
         tickets={[]}
         projectId={1}
@@ -62,8 +105,15 @@ describe("KanbanVirtualTicketList — droppable registration", () => {
       />,
     );
 
-    const list = screen.getByTestId("virtual-ticket-list");
-    expect(droppableInnerRef).toHaveBeenCalledWith(list.parentElement);
-    expect(droppableInnerRef.mock.calls[0]?.[0]).toBeInstanceOf(HTMLElement);
+    expect(droppableInnerRef).not.toHaveBeenCalledWith(null);
+  });
+
+  it("unregisters the droppable on unmount, so a removed column does not leave a stale registration behind", () => {
+    const { unmount } = renderList();
+    droppableInnerRef.mockClear();
+
+    unmount();
+
+    expect(droppableInnerRef).toHaveBeenCalledWith(null);
   });
 });
