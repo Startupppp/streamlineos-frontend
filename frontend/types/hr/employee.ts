@@ -408,7 +408,20 @@ export interface BulkOnboardPreviewRow {
   dependsOnRow: number | null;
 }
 
+/**
+ * BUG-HRMS-002. Seat arithmetic for the upload, so the preview can refuse a row
+ * before the confirm does. `limit` and `available` are null on an unlimited plan.
+ */
+export interface BulkOnboardSeats {
+  limit: number | null;
+  used: number;
+  available: number | null;
+  required: number;
+  blocked: number;
+}
+
 export interface BulkOnboardPreview {
   rows: BulkOnboardPreviewRow[];
   counts: { ready: number; warning: number; error: number; skipped: number };
+  seats: BulkOnboardSeats;
 }

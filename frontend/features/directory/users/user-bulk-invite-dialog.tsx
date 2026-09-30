@@ -36,6 +36,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import { USER_INVITE_ROLES } from "@/lib/constants/user-invite-roles";
+import { InviteSeatNotice } from "./invite-seat-notice";
 import { cn } from "@/lib/utils";
 
 const bulkInviteFormSchema = z.object({
@@ -286,6 +287,12 @@ export function UserBulkInviteDialog({ open, onOpenChange }: UserBulkInviteDialo
         ) : (
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              {/*
+                BUG-HRMS-008. QA sent this with nine seats already held by pending
+                invitations, watched it queue 8 of 10 and then name failures, and
+                found the ceiling only in Billing afterwards.
+              */}
+              <InviteSeatNotice requesting={uniqueEmails.length} />
               <FormField
                 control={form.control}
                 name="emailsRaw"

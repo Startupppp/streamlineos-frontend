@@ -60,6 +60,22 @@ export const bulkOnboardPreviewContract = z.object({
     error: z.number().int(),
     skipped: z.number().int(),
   }),
+  /**
+   * BUG-HRMS-002. An onboarded employee is admitted as an organization member, so
+   * every row spends a plan seat. The preview said "15 rows · 15 ready to create"
+   * with one seat free and the confirm step answered 402 with nothing created.
+   * The backend now reports the seat arithmetic and marks the rows that will not
+   * fit with SEAT_LIMIT, so this surface can say so before the confirm.
+   *
+   * `limit` and `available` are null on an unlimited plan.
+   */
+  seats: z.object({
+    limit: z.number().int().nullable(),
+    used: z.number().int(),
+    available: z.number().int().nullable(),
+    required: z.number().int(),
+    blocked: z.number().int(),
+  }),
 });
 
 export const resendEmployeeInviteResponseContract = z.object({

@@ -39,6 +39,15 @@ jest.mock("@/hooks/api/users", () => ({
 const toastSuccess = jest.fn();
 const toastError = jest.fn();
 
+/**
+ * The dialog now states how many seats are free before the invite is sent
+ * (BUG-HRMS-008). That read goes through `useSeatInfo`, which needs a session; the
+ * cases in this file are about duplicate parsing and submission, so an unlimited
+ * plan keeps the notice silent.
+ */
+jest.mock("@/hooks/api/subscription", () => ({
+  useSeatInfo: () => ({ data: { total: null, used: 1, available: null } }),
+}));
 jest.mock("sonner", () => ({
   toast: {
     success: (message: string) => toastSuccess(message),

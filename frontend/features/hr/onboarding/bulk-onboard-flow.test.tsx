@@ -33,6 +33,9 @@ function flowRow(fileRow: number, overrides: Partial<BulkOnboardFlowRow> = {}): 
   };
 }
 
+/** An unlimited plan: these cases are about row classification, not seats. */
+const UNLIMITED_SEATS = { limit: null, used: 1, available: null, required: 0, blocked: 0 };
+
 function serverRow(row: number, status: BulkOnboardPreviewRow["status"], overrides: Partial<BulkOnboardPreviewRow> = {}): BulkOnboardPreviewRow {
   return { row, email: `s${row}@example.com`, status, codes: [], messages: [], primaryManager: null, secondaryManagers: [], dependsOnRow: null, ...overrides };
 }
@@ -131,6 +134,7 @@ describe("BulkOnboardPanel — commits only Ready and Warning rows after confirm
     Object.defineProperty(file, "text", { value: () => Promise.resolve(csv) });
     previewMutateAsync.mockResolvedValue({
       rows: [serverRow(1, "READY"), serverRow(2, "WARNING", { dependsOnRow: 1 }), serverRow(3, "ERROR")],
+      seats: UNLIMITED_SEATS,
       counts: { ready: 1, warning: 1, error: 1, skipped: 0 },
     });
 
@@ -158,6 +162,70 @@ describe("BulkOnboardPanel — commits only Ready and Warning rows after confirm
   });
 });
 
+describe("BulkOnboardPanel — the seat ceiling is stated before the confirm", () => {
+  /**
+   * BUG-HRMS-002 / BUG-HRMS-008. This said "15 rows · 15 ready to create" with one
+   * seat free and let the confirm answer 402 with nothing created. An employee
+   * record is admitted as a member, so every row spends a seat — the preview has
+   * to say so, and must not offer to create a row the API will refuse.
+   */
+  it("names the free seats, blocks the rows that do not fit, and offers to create only the rest", async () => {
+    const user = userEvent.setup();
+    const csv = [
+      "firstName,lastName,email,designation,department",
+      "Ann,One,ann@example.com,Dev,Engineering",
+      "Bob,Two,bob@example.com,Dev,Engineering",
+      "Cy,Three,cy@example.com,Dev,Engineering",
+    ].join("\n");
+    const file = new File([csv], "people.csv", { type: "text/csv" });
+    Object.defineProperty(file, "text", { value: () => Promise.resolve(csv) });
+    previewMutateAsync.mockResolvedValue({
+      rows: [
+        serverRow(1, "READY"),
+        serverRow(2, "ERROR", { codes: ["SEAT_LIMIT"] }),
+        serverRow(3, "ERROR", { codes: ["SEAT_LIMIT"] }),
+      ],
+      seats: { limit: 10, used: 9, available: 1, required: 3, blocked: 2 },
+      counts: { ready: 1, warning: 0, error: 2, skipped: 0 },
+    });
+
+    render(<BulkOnboardPanel />);
+    await user.upload(screen.getByLabelText("Choose employee onboard file"), file);
+
+    const warning = await screen.findByRole("alert");
+    expect(warning).toHaveTextContent(/1 free seat/);
+    expect(warning).toHaveTextContent(/needs 3/);
+    expect(warning).toHaveTextContent(/2 rows will not be created/);
+    expect(warning).toHaveTextContent(/takes a seat/);
+
+    // The create control offers the one row that fits, not the three uploaded.
+    expect(await screen.findByRole("button", { name: "Create 1 employee" })).toBeEnabled();
+    expect(screen.queryByRole("button", { name: "Create 3 employees" })).toBeNull();
+  });
+
+  it("says nothing about seats on an unlimited plan", async () => {
+    const user = userEvent.setup();
+    const csv = [
+      "firstName,lastName,email,designation,department",
+      "Ann,One,ann@example.com,Dev,Engineering",
+    ].join("\n");
+    const file = new File([csv], "people.csv", { type: "text/csv" });
+    Object.defineProperty(file, "text", { value: () => Promise.resolve(csv) });
+    previewMutateAsync.mockResolvedValue({
+      rows: [serverRow(1, "READY")],
+      seats: UNLIMITED_SEATS,
+      counts: { ready: 1, warning: 0, error: 0, skipped: 0 },
+    });
+
+    render(<BulkOnboardPanel />);
+    await user.upload(screen.getByLabelText("Choose employee onboard file"), file);
+
+    expect(await screen.findByRole("button", { name: "Create 1 employee" })).toBeEnabled();
+    expect(screen.queryByText(/free seat/)).toBeNull();
+    expect(screen.queryByText(/takes a seat/)).toBeNull();
+  });
+});
+
 describe("BulkOnboardPanel — while the reporting policy is still loading", () => {
   it("does not assume a secondary cap: the row reaches the server preview", async () => {
     const user = userEvent.setup();
@@ -167,7 +235,7 @@ describe("BulkOnboardPanel — while the reporting policy is still loading", () 
     ].join("\n");
     const file = new File([csv], "people.csv", { type: "text/csv" });
     Object.defineProperty(file, "text", { value: () => Promise.resolve(csv) });
-    previewMutateAsync.mockResolvedValue({ rows: [serverRow(1, "ERROR", { codes: ["SECONDARY_CAP_EXCEEDED"] })], counts: { ready: 0, warning: 0, error: 1, skipped: 0 } });
+    previewMutateAsync.mockResolvedValue({ rows: [serverRow(1, "ERROR", { codes: ["SECONDARY_CAP_EXCEEDED"] })], counts: { ready: 0, warning: 0, error: 1, skipped: 0 }, seats: UNLIMITED_SEATS });
 
     render(<BulkOnboardPanel />);
     await user.upload(screen.getByLabelText("Choose employee onboard file"), file);
@@ -190,7 +258,7 @@ describe("BulkOnboardPanel — rows keep their file number through preview and r
     ].join("\n");
     const file = new File([csv], "people.csv", { type: "text/csv" });
     Object.defineProperty(file, "text", { value: () => Promise.resolve(csv) });
-    previewMutateAsync.mockResolvedValue({ rows: [serverRow(1, "READY"), serverRow(2, "READY")], counts: { ready: 2, warning: 0, error: 0, skipped: 0 } });
+    previewMutateAsync.mockResolvedValue({ rows: [serverRow(1, "READY"), serverRow(2, "READY")], counts: { ready: 2, warning: 0, error: 0, skipped: 0 }, seats: UNLIMITED_SEATS });
     commitMutate.mockImplementation((_rows: unknown, handlers: { onSuccess: (result: BulkOnboardResult) => void }) =>
       handlers.onSuccess({
         total: 2,

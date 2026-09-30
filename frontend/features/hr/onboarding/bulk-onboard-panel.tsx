@@ -50,6 +50,11 @@ export function BulkOnboardPanel() {
 
   const flow = useBulkOnboardFlow(deptNames, secondaryCap, assignedDefault);
   const heldBack = flow.rows.length - flow.committableCount;
+  // BUG-HRMS-002 / BUG-HRMS-008. An onboarded employee is admitted as a member, so
+  // every row spends a plan seat. The preview said "15 ready to create" with one
+  // seat free and left the 402 to the confirm, which created nothing at all.
+  const seats = flow.seats ?? null;
+  const seatBlocked = seats !== null && seats.blocked > 0;
 
   async function handleDownloadTemplate() {
     try {
@@ -120,7 +125,11 @@ export function BulkOnboardPanel() {
                 <CardDescription className="mt-0.5 text-xs" aria-live="polite">
                   {flow.checking
                     ? `Checking ${plural(flow.rows.length, "row")} against your organisation…`
-                    : `${plural(flow.rows.length, "row")} · ${flow.committableCount} ready to create${heldBack > 0 ? ` · ${heldBack} held back` : ""}`}
+                    : `${plural(flow.rows.length, "row")} · ${flow.committableCount} ready to create${heldBack > 0 ? ` · ${heldBack} held back` : ""}${
+                        seats?.available == null
+                          ? ""
+                          : ` · ${plural(seats.available, "seat")} free`
+                      }`}
                 </CardDescription>
               </div>
               <Button type="button" variant="ghost" size="sm" className="h-8 gap-1" onClick={flow.reset}>
@@ -138,6 +147,20 @@ export function BulkOnboardPanel() {
                   <RefreshCw className="h-3 w-3" aria-hidden="true" />
                   Check again
                 </Button>
+              </div>
+            ) : seatBlocked && !flow.checking ? (
+              <div
+                role="alert"
+                className="flex items-start gap-2 rounded-lg border border-status-danger-rule bg-status-danger-surface px-3 py-2 text-xs text-status-danger-ink"
+              >
+                <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                <span>
+                  {seats?.available === 0
+                    ? `Your plan has no free seats${seats?.limit == null ? "" : ` (${String(seats.limit)} in use)`}. `
+                    : `Your plan has ${plural(seats?.available ?? 0, "free seat")} and this file needs ${String(seats?.required ?? 0)}. `}
+                  {plural(seats?.blocked ?? 0, "row")} will not be created. An employee record takes a seat, so
+                  cancel a pending invitation, remove a member, or add seats first.
+                </span>
               </div>
             ) : heldBack > 0 && !flow.checking ? (
               <div className="flex items-start gap-2 rounded-lg border border-status-warning-rule bg-status-warning-surface px-3 py-2 text-xs text-status-warning-ink">
