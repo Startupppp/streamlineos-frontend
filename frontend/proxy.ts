@@ -31,11 +31,11 @@ export function buildCsp(nonce: string, apiUrl?: string): string {
       })()
     : "";
 
-  /** The journal's public image domain (the blog admin's R2 public bucket), https only. */
+  /** The journal's public image domain (the blog admin's R2 public bucket); https outside development. */
   const blogMediaOrigin = (() => {
     try {
       const u = new URL(process.env.NEXT_PUBLIC_BLOG_MEDIA_ORIGIN ?? "");
-      return u.protocol === "https:" ? u.origin : "";
+      return u.protocol === "https:" || (isDev && u.protocol === "http:") ? u.origin : "";
     } catch {
       return "";
     }
