@@ -173,50 +173,54 @@ export function AutomationSheet({
                 {conditionFields.map((f, idx) => (
                   <div
                     key={f.id}
-                    className="flex items-center gap-1.5 p-2 rounded-lg border border-border bg-muted/40"
+                    className="flex items-start gap-1.5 p-2 rounded-lg border border-border bg-muted/40"
                   >
-                    <Select
-                      value={form.watch(`conditions.${idx}.field`)}
-                      onValueChange={(v) => form.setValue(`conditions.${idx}.field`, v)}
-                    >
-                      <SelectTrigger className={cn(FIELD_CLASS, "flex-1")}>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {CONDITION_FIELDS.map((cf) => (
-                          <SelectItem key={cf} value={cf} className="text-sm capitalize">
-                            {cf}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Select
-                      value={form.watch(`conditions.${idx}.operator`)}
-                      onValueChange={makeConditionOperatorHandler(idx)}
-                    >
-                      <SelectTrigger className={cn(FIELD_CLASS, "w-28")}>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {CONDITION_OPERATORS.map((o) => (
-                          <SelectItem key={o} value={o} className="text-sm">
-                            {o.replace(/_/g, " ")}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {!["is_empty", "is_not_empty"].includes(
-                      form.watch(`conditions.${idx}.operator`),
-                    ) && (
-                      <AutomationValueInput
-                        kind="condition"
-                        discriminant={form.watch(`conditions.${idx}.field`)}
-                        value={form.watch(`conditions.${idx}.value`) ?? ""}
-                        onChange={(v) => form.setValue(`conditions.${idx}.value`, v)}
-                        projectId={projectId}
-                        className={cn(FIELD_CLASS, "w-28")}
-                      />
-                    )}
+                    <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
+                      <Select
+                        value={form.watch(`conditions.${idx}.field`)}
+                        onValueChange={(v) => form.setValue(`conditions.${idx}.field`, v)}
+                      >
+                        <SelectTrigger className={cn(FIELD_CLASS, "min-w-28 flex-1")}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CONDITION_FIELDS.map((cf) => (
+                            <SelectItem key={cf} value={cf} className="text-sm capitalize">
+                              {cf}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select
+                        value={form.watch(`conditions.${idx}.operator`)}
+                        onValueChange={makeConditionOperatorHandler(idx)}
+                      >
+                        <SelectTrigger className={cn(FIELD_CLASS, "min-w-36 flex-1")}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CONDITION_OPERATORS.map((o) => (
+                            <SelectItem key={o} value={o} className="text-sm">
+                              {o.replace(/_/g, " ")}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {!["is_empty", "is_not_empty"].includes(
+                        form.watch(`conditions.${idx}.operator`),
+                      ) && (
+                        <div className="min-w-48 flex-[2_1_12rem]">
+                          <AutomationValueInput
+                            kind="condition"
+                            discriminant={form.watch(`conditions.${idx}.field`)}
+                            value={form.watch(`conditions.${idx}.value`) ?? ""}
+                            onChange={(v) => form.setValue(`conditions.${idx}.value`, v)}
+                            projectId={projectId}
+                            className={cn(FIELD_CLASS, "w-full")}
+                          />
+                        </div>
+                      )}
+                    </div>
                     <RemoveButton onClick={makeRemoveConditionHandler(idx)} />
                   </div>
                 ))}
@@ -242,32 +246,34 @@ export function AutomationSheet({
                 {actionFields.map((f, idx) => (
                   <div
                     key={f.id}
-                    className="flex items-center gap-1.5 p-2 rounded-lg border border-border bg-muted/40"
+                    className="flex items-start gap-1.5 p-2 rounded-lg border border-border bg-muted/40"
                   >
-                    <Select
-                      value={form.watch(`actions.${idx}.type`)}
-                      onValueChange={makeActionTypeHandler(idx)}
-                    >
-                      <SelectTrigger className={cn(FIELD_CLASS, "flex-1")}>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {ACTION_TYPES.map((a) => (
-                          <SelectItem key={a.value} value={a.value} className="text-sm">
-                            {a.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <div className="flex-1 min-w-0">
-                      <AutomationValueInput
-                        kind="action"
-                        discriminant={form.watch(`actions.${idx}.type`)}
-                        value={form.watch(`actions.${idx}.value`)}
-                        onChange={(v) => form.setValue(`actions.${idx}.value`, v)}
-                        projectId={projectId}
-                        className={FIELD_CLASS}
-                      />
+                    <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
+                      <Select
+                        value={form.watch(`actions.${idx}.type`)}
+                        onValueChange={makeActionTypeHandler(idx)}
+                      >
+                        <SelectTrigger className={cn(FIELD_CLASS, "min-w-36 flex-1")}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {ACTION_TYPES.map((a) => (
+                            <SelectItem key={a.value} value={a.value} className="text-sm">
+                              {a.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <div className="min-w-64 flex-[2_1_16rem]">
+                        <AutomationValueInput
+                          kind="action"
+                          discriminant={form.watch(`actions.${idx}.type`)}
+                          value={form.watch(`actions.${idx}.value`)}
+                          onChange={(v) => form.setValue(`actions.${idx}.value`, v)}
+                          projectId={projectId}
+                          className={FIELD_CLASS}
+                        />
+                      </div>
                     </div>
                     <RemoveButton onClick={makeRemoveActionHandler(idx)} />
                   </div>

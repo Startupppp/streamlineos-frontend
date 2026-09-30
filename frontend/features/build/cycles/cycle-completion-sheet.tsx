@@ -4,7 +4,7 @@ import { AlertTriangle } from "lucide-react";
 import { isCompletedTicketStatus } from "@/features/build/shared/completed-status";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Sheet, SheetBody, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetBody, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Cycle, Ticket } from "@/types/projects";
 
@@ -28,18 +28,26 @@ export function CycleCompletionSheet({ cycle, nextCycle, tickets, projectStatuse
       <SheetContent className="flex flex-col overflow-hidden p-0">
         <SheetHeader className="shrink-0 border-b px-6 py-5">
           <SheetTitle className="flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-status-warning-ink" />Complete {cycle?.name ?? "cycle"}</SheetTitle>
+          <SheetDescription>Review unfinished work and confirm this cycle&rsquo;s completion.</SheetDescription>
         </SheetHeader>
         <SheetBody className="px-6 py-4">
           {incompleteCount > 0 ? (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">{incompleteCount} unfinished ticket{incompleteCount === 1 ? " remains" : "s remain"}. Choose where to move them before completing this cycle.</p>
-              <Select value={moveTo} onValueChange={(value) => { if (value === "backlog" || value === "next") onMoveToChange(value); }}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="backlog">Move to backlog</SelectItem>
-                  {nextCycle ? <SelectItem value="next">Move to {nextCycle.name}</SelectItem> : null}
-                </SelectContent>
-              </Select>
+              {nextCycle ? (
+                <Select value={moveTo} onValueChange={(value) => { if (value === "backlog" || value === "next") onMoveToChange(value); }}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="backlog">Move to backlog</SelectItem>
+                    <SelectItem value="next">Move to {nextCycle.name}</SelectItem>
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="rounded-md border border-border bg-muted/30 px-3 py-2">
+                  <p className="text-sm font-medium text-foreground">Move to backlog</p>
+                  <p className="text-xs text-muted-foreground">No next cycle is available.</p>
+                </div>
+              )}
             </div>
           ) : <p className="text-sm text-muted-foreground">All tickets are complete. This cycle is ready to close.</p>}
         </SheetBody>

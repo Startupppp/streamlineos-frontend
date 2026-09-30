@@ -7,7 +7,6 @@ const mockPush = jest.fn();
 const mockReplace = jest.fn();
 const mockUpdateProjectMutate = jest.fn();
 let mockSearchParams = new URLSearchParams();
-let mockDebouncedSearch = "";
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush, replace: mockReplace }),
@@ -96,26 +95,10 @@ jest.mock("@/hooks/common/use-online-status", () => ({
   useOnlineStatus: () => true,
 }));
 
-jest.mock("@/features/build/shared/use-build-list-filters", () => ({
-  useBuildListFilters: () => ({
-    search: mockDebouncedSearch,
-    debouncedSearch: mockDebouncedSearch,
-    setSearch: jest.fn(),
-    clearAll: jest.fn(),
-    activeCount: 0,
-    isFiltered: false,
-    resetKey: "",
-  }),
-}));
-
 const mockUseBuildListKeyboard = jest.fn();
 
 jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
   useBuildListKeyboard: (...args: unknown[]) => mockUseBuildListKeyboard(...args),
-}));
-
-jest.mock("@/features/build/shared/build-list-toolbar", () => ({
-  BuildListToolbar: () => null,
 }));
 
 jest.mock("@/features/build/shared/shortcut-help-dialog", () => ({
@@ -151,32 +134,29 @@ beforeEach(() => {
   mockUseBuildListKeyboard.mockClear();
   mockUseBuildListKeyboard.mockReturnValue({ focusedIndex: null, setFocusedIndex: jest.fn() });
   mockSearchParams = new URLSearchParams();
-  mockDebouncedSearch = "";
 });
 
-describe("ProjectSettingsPage — search filter (BLD-L4-S1-SEARCH)", () => {
-  it("shows all nav sections when the search filter is empty — paired with the filtered test below", async () => {
+describe("ProjectSettingsPage — focused settings navigation", () => {
+  it("shows every settings destination without a redundant search control", async () => {
     await renderPage();
+    expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "General" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Labels" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Statuses" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Custom Fields" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Teams & Roster" })).toBeInTheDocument();
   });
 
-  it("filters nav sections to only those whose label matches debouncedSearch", async () => {
-    mockDebouncedSearch = "lab";
+  it("removes the retired q parameter while preserving the selected section", async () => {
+    mockSearchParams = new URLSearchParams("q=geenr&section=labels");
     await renderPage();
+
+    expect(mockReplace).toHaveBeenCalledWith(
+      "/build/1/settings?section=labels",
+      { scroll: false },
+    );
     expect(screen.getByRole("button", { name: "Labels" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "General" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Statuses" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Custom Fields" })).not.toBeInTheDocument();
-  });
-
-  it("the search is case-insensitive so typing GENERAL matches the General section", async () => {
-    mockDebouncedSearch = "GENERAL";
-    await renderPage();
     expect(screen.getByRole("button", { name: "General" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Labels" })).not.toBeInTheDocument();
   });
 });
 
@@ -187,16 +167,28 @@ describe("ProjectSettingsPage — keyboard shortcut wiring (BLD-L4-S1-KB)", () =
     expect(typeof options?.onShortcutHelp).toBe("function");
   });
 
-  it("passes onClearSelection to useBuildListKeyboard so Esc can clear the search filter", async () => {
+  it("does not register list navigation for the fixed settings taxonomy", async () => {
     await renderPage();
     const options = mockUseBuildListKeyboard.mock.calls[0]?.[0];
+    expect(options?.itemCount).toBe(0);
     expect(typeof options?.onClearSelection).toBe("function");
+    expect(options?.searchInputRef).toBeUndefined();
   });
 
-  it("passes searchInputRef to useBuildListKeyboard so / focuses the search input", async () => {
+  it("gives the desktop settings navigation its own scroll region", async () => {
     await renderPage();
-    const options = mockUseBuildListKeyboard.mock.calls[0]?.[0];
-    expect(options?.searchInputRef).toBeDefined();
+    expect(
+      screen.getByRole("navigation", { name: "Project settings" }),
+    ).toHaveClass("lg:overflow-y-auto", "lg:overscroll-contain");
+  });
+
+  it("bounds the desktop settings workspace so its two panes can scroll independently", async () => {
+    await renderPage();
+    const nav = screen.getByRole("navigation", { name: "Project settings" });
+    expect(nav.parentElement?.parentElement?.parentElement).toHaveClass(
+      "lg:h-[calc(100dvh-9rem)]",
+      "lg:overflow-hidden",
+    );
   });
 
   it("ShortcutHelpDialog is not shown on initial render — paired with the open test below", async () => {

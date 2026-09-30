@@ -11,6 +11,7 @@ import {
   getUserInitials,
 } from "@/lib/person-display";
 import { resolveImageUrl } from "@/lib/utils";
+import { matchesAccessSearch } from "./access-search";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -49,9 +50,10 @@ function RosterSkeleton() {
 
 interface TeamRosterSectionProps {
   projectId: number;
+  search?: string;
 }
 
-export function TeamRosterSection({ projectId }: TeamRosterSectionProps) {
+export function TeamRosterSection({ projectId, search = "" }: TeamRosterSectionProps) {
   const { data, isLoading, isError, error, refetch } = useProjectRoster(projectId);
 
   if (isLoading) {
@@ -71,21 +73,37 @@ export function TeamRosterSection({ projectId }: TeamRosterSectionProps) {
 
   const teams = data?.teams ?? [];
   const members = data?.members ?? [];
+  const filteredTeams = teams.filter((team) =>
+    matchesAccessSearch(search, [team.name, team.key]),
+  );
+  const filteredMembers = members.filter((member) =>
+    matchesAccessSearch(search, [
+      getUserDisplayName(member),
+      member.email,
+    ]),
+  );
+  const hasSearch = Boolean(search.trim());
 
   return (
     <div className="space-y-5">
       <div>
         <SectionLabel>Teams</SectionLabel>
-        {teams.length === 0 ? (
+        {filteredTeams.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No teams assigned yet.{" "}
-            <span className="text-xs">
-              Assign this project from a team&rsquo;s detail page.
-            </span>
+            {hasSearch ? (
+              "No teams match your search."
+            ) : (
+              <>
+                No teams assigned yet.{" "}
+                <span className="text-xs">
+                  Assign this project from a team&rsquo;s detail page.
+                </span>
+              </>
+            )}
           </p>
         ) : (
           <div className="flex flex-wrap gap-1.5">
-            {teams.map((team) => (
+            {filteredTeams.map((team) => (
               <Badge key={team.id} variant="secondary" className="gap-1 text-xs font-normal">
                 <span className="font-mono text-micro opacity-60">{team.key}</span>
                 {team.name}
@@ -97,15 +115,17 @@ export function TeamRosterSection({ projectId }: TeamRosterSectionProps) {
 
       <div>
         <SectionLabel>
-          Effective members ({members.length})
+          Effective members ({filteredMembers.length})
         </SectionLabel>
-        {members.length === 0 ? (
+        {filteredMembers.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No members have access via teams yet.
+            {hasSearch
+              ? "No effective members match your search."
+              : "No members have access via teams yet."}
           </p>
         ) : (
           <div className="divide-y divide-border">
-            {members.map((member) => {
+            {filteredMembers.map((member) => {
               const displayName = getUserDisplayName(member);
               const initials = getUserInitials(member);
               return (

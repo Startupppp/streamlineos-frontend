@@ -25,14 +25,26 @@ interface ProjectSettingsAccessPageProps {
   projectId: number;
 }
 
-export function ProjectSettingsAccessPage({ projectId }: ProjectSettingsAccessPageProps) {
+export function ProjectSettingsAccessPage({
+  projectId,
+}: ProjectSettingsAccessPageProps) {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const listFilters = useBuildListFilters({ withSearch: true });
   const searchInputRef = useRef<HTMLInputElement>(null);
   const canManage = useCan("build:manage");
-  const { data: members, isLoading, isError, error, refetch } = useProjectMembers(projectId);
+  const {
+    data: members,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useProjectMembers(projectId, {
+    search: listFilters.debouncedSearch || undefined,
+  });
 
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
   const handleOpenAddDialog = useCallback(() => setAddDialogOpen(true), []);
 
   const handleKeyboardClear = useCallback(() => {
@@ -58,88 +70,106 @@ export function ProjectSettingsAccessPage({ projectId }: ProjectSettingsAccessPa
 
   return (
     <>
-    <PageWrapper
-      title="Access"
-      subtitle="Manage project membership and roles"
-      actions={
-        canManage ? (
-          <BuildHeaderActions
-            actions={[
-              {
-                id: "add-project-member",
-                label: "Add member",
-                icon: Plus,
-                primary: true,
-                onSelect: handleOpenAddDialog,
-              },
-            ]}
-          />
-        ) : undefined
-      }
-      filters={
-        <BuildListToolbar
-          search={{
-            value: listFilters.search,
-            onValueChange: listFilters.setSearch,
-            placeholder: "Search members…",
-            inputRef: searchInputRef,
-          }}
-          onClearAll={listFilters.activeCount > 0 ? listFilters.clearAll : undefined}
-        />
-      }
-    >
-      <PmPageShell>
-        <PageState
-          resolution={pageState}
-          loading={
-            <DataTableSkeleton
-              rows={6}
-              headers={MEMBER_HEADERS}
-              className="flex-1"
+      <PageWrapper
+        title="Access"
+        subtitle="Manage project membership and roles"
+        actions={
+          canManage ? (
+            <BuildHeaderActions
+              actions={[
+                {
+                  id: "add-project-member",
+                  label: "Add member",
+                  icon: Plus,
+                  primary: true,
+                  onSelect: handleOpenAddDialog,
+                },
+              ]}
             />
-          }
-          onRetry={handleRetry}
-          className="flex-1"
-        >
-          <div className="flex flex-col gap-4">
-            <PmSection index={0}>
-              <PmPanel className="p-4" solid>
-                <div className="mb-3 border-b border-border pb-3">
-                  <h3 className={cn("text-sm font-medium", TEXT_ONE_LINE)}>
-                    Member Roles
-                  </h3>
-                  <p className={cn("mt-0.5 text-xs text-muted-foreground", TEXT_BODY)}>
-                    Project-level roles for each member. Access is governed by
-                    org-level permissions.
-                  </p>
-                </div>
-                <ProjectMemberRolesSection projectId={projectId} />
-              </PmPanel>
-            </PmSection>
+          ) : undefined
+        }
+        filters={
+          <BuildListToolbar
+            search={{
+              value: listFilters.search,
+              onValueChange: listFilters.setSearch,
+              placeholder: "Search members…",
+              inputRef: searchInputRef,
+            }}
+            onClearAll={
+              listFilters.activeCount > 0 ? listFilters.clearAll : undefined
+            }
+          />
+        }
+      >
+        <PmPageShell>
+          <PageState
+            resolution={pageState}
+            loading={
+              <DataTableSkeleton
+                rows={6}
+                headers={MEMBER_HEADERS}
+                className="flex-1"
+              />
+            }
+            onRetry={handleRetry}
+            className="flex-1"
+          >
+            <div className="flex flex-col gap-4">
+              <PmSection index={0}>
+                <PmPanel className="p-4" solid>
+                  <div className="mb-3 border-b border-border pb-3">
+                    <h3 className={cn("text-sm font-medium", TEXT_ONE_LINE)}>
+                      Member Roles
+                    </h3>
+                    <p
+                      className={cn(
+                        "mt-0.5 text-xs text-muted-foreground",
+                        TEXT_BODY,
+                      )}
+                    >
+                      Project-level roles for each member. Access is governed by
+                      org-level permissions.
+                    </p>
+                  </div>
+                  <ProjectMemberRolesSection
+                    projectId={projectId}
+                    search={listFilters.debouncedSearch}
+                  />
+                </PmPanel>
+              </PmSection>
 
-            <PmSection index={1}>
-              <PmPanel className="p-4" solid>
-                <div className="mb-3 border-b border-border pb-3">
-                  <h3 className={cn("text-sm font-medium", TEXT_ONE_LINE)}>
-                    Teams &amp; Roster
-                  </h3>
-                  <p className={cn("mt-0.5 text-xs text-muted-foreground", TEXT_BODY)}>
-                    Teams this project belongs to and their effective members.
-                  </p>
-                </div>
-                <TeamRosterSection projectId={projectId} />
-              </PmPanel>
-            </PmSection>
-          </div>
-        </PageState>
-      </PmPageShell>
-    </PageWrapper>
+              <PmSection index={1}>
+                <PmPanel className="p-4" solid>
+                  <div className="mb-3 border-b border-border pb-3">
+                    <h3 className={cn("text-sm font-medium", TEXT_ONE_LINE)}>
+                      Teams &amp; Roster
+                    </h3>
+                    <p
+                      className={cn(
+                        "mt-0.5 text-xs text-muted-foreground",
+                        TEXT_BODY,
+                      )}
+                    >
+                      Teams this project belongs to and their effective members.
+                    </p>
+                  </div>
+                  <TeamRosterSection
+                    projectId={projectId}
+                    search={listFilters.debouncedSearch}
+                  />
+                </PmPanel>
+              </PmSection>
+            </div>
+          </PageState>
+        </PmPageShell>
+      </PageWrapper>
 
-    <AddProjectMemberDialog
-      projectId={projectId}
-      open={addDialogOpen}
-      onOpenChange={setAddDialogOpen}
-    />
+      <AddProjectMemberDialog
+        projectId={projectId}
+        open={addDialogOpen}
+        onOpenChange={setAddDialogOpen}
+      />
     </>
   );
 }

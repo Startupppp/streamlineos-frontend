@@ -23,6 +23,7 @@ import { PageState } from "@/components/shared/page-state";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import type { ProjectMemberRecord } from "@/types/projects";
 import { resolveImageUrl } from "@/lib/utils";
+import { matchesAccessSearch } from "./access-search";
 
 type ProjectMemberRole = "ADMIN" | "MEMBER" | "VIEWER";
 
@@ -90,7 +91,7 @@ const MemberRoleRow = memo(function MemberRoleRow({
           onValueChange={handleRoleChange}
           disabled={updateRole.isPending}
         >
-          <SelectTrigger className="w-[100px]">
+          <SelectTrigger className="w-32">
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
@@ -112,10 +113,12 @@ const MemberRoleRow = memo(function MemberRoleRow({
 
 interface ProjectMemberRolesSectionProps {
   projectId: number;
+  search?: string;
 }
 
 export function ProjectMemberRolesSection({
   projectId,
+  search = "",
 }: ProjectMemberRolesSectionProps) {
   const canManage = useCan("build:manage");
   const pager = useBuildCursorPager();
@@ -125,7 +128,10 @@ export function ProjectMemberRolesSection({
     isError,
     error,
     refetch,
-  } = useProjectMembers(projectId, { cursor: pager.cursor });
+  } = useProjectMembers(projectId, {
+    cursor: pager.cursor,
+    search: search || undefined,
+  });
 
   const resolution = usePageState({ permission: "build:view", isLoading, isError, error });
 
@@ -149,16 +155,25 @@ export function ProjectMemberRolesSection({
   );
 
   const members = page?.data ?? [];
+  const filteredMembers = members.filter((member) =>
+    matchesAccessSearch(search, [
+      getUserDisplayName(member),
+      member.email,
+      member.role,
+    ]),
+  );
   const pagination = page?.pagination;
 
   return (
     <PageState resolution={resolution} loading={loadingSkeleton} onRetry={handleRetry} compact>
-      {!members.length ? (
-        <p className="text-sm text-muted-foreground py-2">No members yet.</p>
+      {!filteredMembers.length ? (
+        <p className="text-sm text-muted-foreground py-2">
+          {search.trim() ? "No direct members match your search." : "No members yet."}
+        </p>
       ) : (
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <div className="min-h-0 flex-1 divide-y divide-border overflow-y-auto">
-            {members.map((member) => (
+            {filteredMembers.map((member) => (
               <MemberRoleRow
                 key={member.id}
                 member={member}
@@ -170,7 +185,7 @@ export function ProjectMemberRolesSection({
           {(pagination?.hasMore || pager.hasPrevious) ? (
             <TablePagination
               mode="cursor"
-              rowCount={members.length}
+              rowCount={filteredMembers.length}
               hasMore={pagination?.hasMore ?? false}
               hasPrevious={pager.hasPrevious}
               onNext={() => pager.goNext(pagination?.nextCursor)}

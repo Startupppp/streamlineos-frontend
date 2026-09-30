@@ -1,6 +1,15 @@
 "use client";
 
 import { use, useState, useCallback, useEffect, useRef } from "react";
+import {
+  CircleDot,
+  ListChecks,
+  Settings2,
+  ShieldAlert,
+  Tags,
+  UsersRound,
+  type LucideIcon,
+} from "lucide-react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,8 +27,6 @@ import { usePageState } from "@/hooks/api/use-page-state";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
-import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
-import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
 import {
@@ -64,17 +71,49 @@ type SectionId =
 interface NavSection {
   id: SectionId;
   label: string;
+  description: string;
+  icon: LucideIcon;
 }
 
 const BASE_NAV: NavSection[] = [
-  { id: "general", label: "General" },
-  { id: "labels", label: "Labels" },
-  { id: "statuses", label: "Statuses" },
-  { id: "custom-fields", label: "Custom Fields" },
-  { id: "teams", label: "Teams & Roster" },
+  {
+    id: "general",
+    label: "General",
+    description: "Identity, ownership, members, and billing",
+    icon: Settings2,
+  },
+  {
+    id: "labels",
+    label: "Labels",
+    description: "Reusable work classification",
+    icon: Tags,
+  },
+  {
+    id: "statuses",
+    label: "Statuses",
+    description: "Workflow states and limits",
+    icon: CircleDot,
+  },
+  {
+    id: "custom-fields",
+    label: "Custom Fields",
+    description: "Structured project metadata",
+    icon: ListChecks,
+  },
+  {
+    id: "teams",
+    label: "Teams & Roster",
+    description: "Inherited access and staffing",
+    icon: UsersRound,
+  },
 ];
 
-const DANGER_SECTION: NavSection = { id: "danger", label: "Danger Zone" };
+const DANGER_SECTION: NavSection = {
+  id: "danger",
+  label: "Danger Zone",
+  description: "Permanent project actions",
+  icon: ShieldAlert,
+};
 
 function isSectionId(value: string): value is SectionId {
   return (
@@ -93,8 +132,6 @@ export function ProjectSettingsPage({ params }: PageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const listFilters = useBuildListFilters({ withSearch: true });
-  const searchInputRef = useRef<HTMLInputElement>(null);
   const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
   const [isConflict, setIsConflict] = useState(false);
 
@@ -154,24 +191,28 @@ export function ProjectSettingsPage({ params }: PageProps) {
     setSelectedSection(parsedSection);
   }, [parsedSection]);
 
+  useEffect(() => {
+    if (!searchParams.has("q")) return;
+    const next = new URLSearchParams(searchParams.toString());
+    next.delete("q");
+    const query = next.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  }, [pathname, router, searchParams]);
+
   const activeSection: SectionId =
     selectedSection === "danger" && !isOwner ? "general" : selectedSection;
 
   const allNavSections = isOwner ? [...BASE_NAV, DANGER_SECTION] : BASE_NAV;
-  const navSections = listFilters.debouncedSearch
-    ? allNavSections.filter((s) => s.label.toLowerCase().includes(listFilters.debouncedSearch.toLowerCase()))
-    : allNavSections;
 
   const handleShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
-  const handleKeyboardClear = useCallback(() => listFilters.clearAll(), [listFilters]);
   const handleKeyboardOpen = useCallback((_i: number) => {}, []);
+  const handleKeyboardClear = useCallback(() => {}, []);
 
   useBuildListKeyboard({
-    itemCount: navSections.length,
+    itemCount: 0,
     onOpen: handleKeyboardOpen,
     onClearSelection: handleKeyboardClear,
     onShortcutHelp: handleShortcutHelp,
-    searchInputRef,
   });
 
   const handleSectionClick = useCallback(
@@ -250,15 +291,9 @@ export function ProjectSettingsPage({ params }: PageProps) {
   return (
     <PageWrapper
       title="Settings"
-      subtitle={project?.name}
-      filters={
-        <BuildListToolbar
-          search={{ value: listFilters.search, onValueChange: listFilters.setSearch, placeholder: "Filter sections…", inputRef: searchInputRef }}
-          onClearAll={listFilters.activeCount > 0 ? listFilters.clearAll : undefined}
-        />
-      }
+      subtitle={project ? `Configure ${project.name}` : undefined}
     >
-      <PmPageShell>
+      <PmPageShell className="lg:h-full">
         <PageState
           resolution={pageState}
           loading={
@@ -303,41 +338,58 @@ export function ProjectSettingsPage({ params }: PageProps) {
                   <button type="button" className="ml-4 shrink-0 font-medium underline" onClick={handleDismissConflict}>Reload</button>
                 </div>
               )}
-              <div className="flex flex-col gap-4 pb-8 md:flex-row">
-              <PmSection index={0} className="w-full shrink-0 md:w-52">
-                <PmPanel className="p-1.5">
+              <div className="grid gap-5 pb-8 lg:h-[calc(100dvh-9rem)] lg:min-h-0 lg:grid-cols-[17rem_minmax(0,1fr)] lg:overflow-hidden lg:pb-4">
+              <PmSection index={0} className="min-w-0 lg:h-full lg:min-h-0">
+                <PmPanel className="p-2 lg:flex lg:h-full lg:min-h-0 lg:flex-col" solid>
+                  <div className="px-2 pb-2 pt-1">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      Project configuration
+                    </p>
+                  </div>
                   <nav
                     aria-label="Project settings"
-                    className="flex w-full flex-wrap gap-0.5 md:flex-col md:flex-nowrap"
+                    className="grid w-full grid-cols-2 gap-1.5 sm:grid-cols-3 lg:min-h-0 lg:flex-1 lg:grid-cols-1 lg:content-start lg:overflow-y-auto lg:overscroll-contain lg:pr-1"
                   >
-                    {navSections.map((section) => (
-                      <button
-                        key={section.id}
-                        type="button"
-                        data-section={section.id}
-                        onClick={handleSectionClick}
-                        className={cn(
-                          "shrink-0 rounded-md px-3 py-2 text-left text-sm font-medium transition-colors",
-                          TEXT_ONE_LINE,
-                          section.id === "danger" &&
-                            "md:mt-2 md:border-t md:border-border md:pt-2 max-md:ml-1 max-md:border-l max-md:border-border max-md:pl-2",
-                          activeSection === section.id
-                            ? section.id === "danger"
-                              ? "bg-destructive/10 font-medium text-destructive"
-                              : "bg-accent font-medium text-accent-foreground"
-                            : section.id === "danger"
-                              ? "text-destructive hover:bg-destructive/5 hover:text-destructive"
-                              : "text-foreground/80 hover:bg-muted hover:text-foreground",
-                        )}
-                      >
-                        {section.label}
-                      </button>
-                    ))}
+                    {allNavSections.map((section) => {
+                      const Icon = section.icon;
+                      const isActive = activeSection === section.id;
+                      return (
+                        <button
+                          key={section.id}
+                          type="button"
+                          data-section={section.id}
+                          aria-label={section.label}
+                          aria-current={isActive ? "page" : undefined}
+                          onClick={handleSectionClick}
+                          className={cn(
+                            "group flex min-w-0 items-start gap-2.5 rounded-lg border border-transparent px-3 py-2.5 text-left transition-colors",
+                            section.id === "danger" && "lg:mt-2 lg:border-t-border",
+                            isActive
+                              ? section.id === "danger"
+                                ? "border-destructive/20 bg-destructive/10 text-destructive"
+                                : "border-border bg-accent text-accent-foreground shadow-xs"
+                              : section.id === "danger"
+                                ? "text-destructive hover:bg-destructive/5"
+                                : "text-foreground/80 hover:border-border hover:bg-muted/60 hover:text-foreground",
+                          )}
+                        >
+                          <Icon className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                          <span className="min-w-0">
+                            <span className="block text-sm font-semibold leading-5">
+                              {section.label}
+                            </span>
+                            <span className="mt-0.5 hidden text-xs leading-4 text-muted-foreground lg:block">
+                              {section.description}
+                            </span>
+                          </span>
+                        </button>
+                      );
+                    })}
                   </nav>
                 </PmPanel>
               </PmSection>
 
-              <PmSection index={1} className="min-w-0 flex-1">
+              <PmSection index={1} className="min-w-0 flex-1 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain lg:pr-1">
                 {activeSection === "general" ? (
                   <div className="space-y-4">
                     <PmPanel className="p-4" solid>

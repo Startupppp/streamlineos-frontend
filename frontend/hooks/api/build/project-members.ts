@@ -5,7 +5,7 @@ import type {
   UseMutationOptions,
   UseQueryOptions,
 } from "@tanstack/react-query";
-import { lazyContract } from "@/lib/api-envelope";
+import { isApiError, lazyContract } from "@/lib/api-envelope";
 import { apiClient } from "@/lib/api-client";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
@@ -18,17 +18,11 @@ import type {
 } from "@/hooks/api/build/build-project-schema";
 import type {
   AddProjectMemberInput,
-  ProjectMemberRecord,
 } from "@/types/projects";
 
 type ProjectMemberRow = z.infer<typeof projectMemberRowContract>;
 type ProjectMemberPage = z.infer<typeof projectMemberPageContract>;
 
-const memberPageLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-project-schema").then(
-    (m) => m.projectMemberPageContract,
-  ),
-);
 const memberRowLazy = lazyContract(() =>
   import("@/hooks/api/build/build-project-schema").then(
     (m) => m.projectMemberRowContract,
@@ -60,21 +54,48 @@ const memberResponseLazy = lazyContract<ProjectMemberPage>(() =>
 
 export function useProjectMembers(
   projectId: number,
-  params?: { cursor?: string | null },
+  params?: {
+    cursor?: string | null;
+    q?: string | null;
+    search?: string | null;
+  },
   options?: Omit<UseQueryOptions<ProjectMemberPage>, "queryKey" | "queryFn">,
 ) {
   const canView = useCan("build:view");
   const { enabled: callerEnabled, ...restOptions } = options ?? {};
   const cursor = params?.cursor ?? undefined;
+  const search = (params?.search ?? params?.q)?.trim() || undefined;
+  const requestParams = {
+    ...(cursor ? { cursor } : {}),
+    ...(search ? { search } : {}),
+  };
   return useQuery<ProjectMemberPage>({
-    queryKey: buildWorkQueryKeys.projects.members(projectId, cursor),
-    queryFn: ({ signal }) =>
-      apiClient.get<ProjectMemberPage>(
-        `/build/${projectId}/members`,
-        cursor ? { cursor } : undefined,
-        signal,
-        memberResponseLazy,
-      ),
+    queryKey: buildWorkQueryKeys.projects.members(projectId, requestParams),
+    queryFn: async ({ signal }) => {
+      try {
+        return await apiClient.get<ProjectMemberPage>(
+          `/build/${projectId}/members`,
+          Object.keys(requestParams).length > 0 ? requestParams : undefined,
+          signal,
+          memberResponseLazy,
+        );
+      } catch (requestError) {
+        if (
+          !search ||
+          !isApiError(requestError) ||
+          requestError.status !== 400 ||
+          requestError.code !== "VALIDATION_FAILED"
+        ) {
+          throw requestError;
+        }
+        return apiClient.get<ProjectMemberPage>(
+          `/build/${projectId}/members`,
+          cursor ? { cursor } : undefined,
+          signal,
+          memberResponseLazy,
+        );
+      }
+    },
     staleTime: 30_000,
     ...restOptions,
     enabled: canView && !!projectId && (callerEnabled ?? true),

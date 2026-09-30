@@ -27,11 +27,14 @@ export const buildWorkQueryKeys = {
         : ([...base, "projects", "subtasks", { ticketId }, projectId] as const),
     ticketSearch: (searchQuery: string) =>
       [...base, "projects", "search", "tickets", searchQuery] as const,
-    members: (projectId?: number, cursor?: string) =>
+    members: (
+      projectId?: number,
+      params?: { cursor?: string; search?: string },
+    ) =>
       projectId === undefined
         ? ([...base, "projects", "members"] as const)
-        : cursor
-          ? ([...base, "projects", "members", projectId, cursor] as const)
+        : params && Object.keys(params).length > 0
+          ? ([...base, "projects", "members", projectId, params] as const)
           : ([...base, "projects", "members", projectId] as const),
     labels: (projectId?: number) =>
       projectId === undefined

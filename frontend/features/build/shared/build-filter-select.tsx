@@ -7,15 +7,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  FILTER_SELECT_TRIGGER,
-} from "@/components/ui/content-fill-panel";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { cn } from "@/lib/utils";
 
 export const BUILD_FILTER_TRIGGER_CLASS = cn(
   FILTER_SELECT_TRIGGER,
-  "w-full min-w-0 md:w-40",
+  "w-full min-w-0 md:w-fit md:min-w-40 md:max-w-80",
 );
 
 export interface BuildFilterOption {

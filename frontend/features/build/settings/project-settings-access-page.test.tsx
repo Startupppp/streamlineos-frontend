@@ -6,6 +6,14 @@ import { ProjectSettingsAccessPage } from "./project-settings-access-page";
 const mockRefetch = jest.fn();
 
 let mockCanManage = false;
+let mockDebouncedSearch = "";
+
+const mockProjectMemberRolesSection = jest.fn((_props: unknown) => (
+  <div data-testid="project-member-roles-section" />
+));
+const mockTeamRosterSection = jest.fn((_props: unknown) => (
+  <div data-testid="team-roster-section" />
+));
 
 let mockProjectMembers = {
   data: { data: [], pagination: { limit: 25, hasMore: false, nextCursor: null } } as
@@ -33,19 +41,17 @@ jest.mock("@/hooks/api/build/project-members", () => ({
 }));
 
 jest.mock("@/features/build/settings/project-member-roles-section", () => ({
-  ProjectMemberRolesSection: () => (
-    <div data-testid="project-member-roles-section" />
-  ),
+  ProjectMemberRolesSection: (props: unknown) => mockProjectMemberRolesSection(props),
 }));
 
 jest.mock("@/features/build/settings/team-roster-section", () => ({
-  TeamRosterSection: () => <div data-testid="team-roster-section" />,
+  TeamRosterSection: (props: unknown) => mockTeamRosterSection(props),
 }));
 
 jest.mock("@/features/build/shared/use-build-list-filters", () => ({
   useBuildListFilters: () => ({
     search: "",
-    debouncedSearch: "",
+    debouncedSearch: mockDebouncedSearch,
     cursor: null,
     setSearch: jest.fn(),
     setCursor: jest.fn(),
@@ -143,6 +149,7 @@ jest.mock("@/features/build/settings/add-project-member-dialog", () => ({
 beforeEach(() => {
   jest.clearAllMocks();
   mockCanManage = false;
+  mockDebouncedSearch = "";
   mockRefetch.mockResolvedValue(undefined);
   mockProjectMembers = {
     data: { data: [], pagination: { limit: 25, hasMore: false, nextCursor: null } },
@@ -153,6 +160,20 @@ beforeEach(() => {
   };
   mockUsePageState.mockReturnValue({ kind: "ready" });
   mockUseBuildListKeyboard.mockReturnValue({ focusedIndex: null, setFocusedIndex: jest.fn() });
+});
+
+describe("ProjectSettingsAccessPage — member search", () => {
+  it("passes the normalized debounced query to both member surfaces", () => {
+    mockDebouncedSearch = "alice";
+    render(<ProjectSettingsAccessPage projectId={42} />);
+
+    expect(mockProjectMemberRolesSection).toHaveBeenCalledWith(
+      expect.objectContaining({ projectId: 42, search: "alice" }),
+    );
+    expect(mockTeamRosterSection).toHaveBeenCalledWith(
+      expect.objectContaining({ projectId: 42, search: "alice" }),
+    );
+  });
 });
 
 describe("ProjectSettingsAccessPage — usePageState integration (FE-40, FE-41)", () => {

@@ -94,7 +94,10 @@ export function SubmissionInboxFilters({ values, onChange, searchInputRef }: Sub
       />
 
       <Select value={values.status ?? "all"} onValueChange={handleStatusChange}>
-        <SelectTrigger className="h-9 w-[130px] text-sm" aria-label="Filter by status">
+        <SelectTrigger
+          className="h-9 w-full min-w-0 text-sm md:w-fit md:min-w-36"
+          aria-label="Filter by status"
+        >
           <SelectValue placeholder="All statuses" />
         </SelectTrigger>
         <SelectContent>
@@ -108,7 +111,10 @@ export function SubmissionInboxFilters({ values, onChange, searchInputRef }: Sub
       </Select>
 
       <Select value={values.type ?? "all"} onValueChange={handleTypeChange}>
-        <SelectTrigger className="h-9 w-[120px] text-sm" aria-label="Filter by type">
+        <SelectTrigger
+          className="h-9 w-full min-w-0 text-sm md:w-fit md:min-w-32"
+          aria-label="Filter by type"
+        >
           <SelectValue placeholder="All types" />
         </SelectTrigger>
         <SelectContent>
@@ -122,7 +128,10 @@ export function SubmissionInboxFilters({ values, onChange, searchInputRef }: Sub
       </Select>
 
       <Select value={values.linked ?? "all"} onValueChange={handleLinkedChange}>
-        <SelectTrigger className="h-9 w-[130px] text-sm" aria-label="Filter by ticket link">
+        <SelectTrigger
+          className="h-9 w-full min-w-0 text-sm md:w-fit md:min-w-44"
+          aria-label="Filter by ticket link"
+        >
           <SelectValue placeholder="All submissions" />
         </SelectTrigger>
         <SelectContent>

@@ -61,6 +61,9 @@ interface BulkActionBarProps {
   onClear: () => void;
 }
 
+const DYNAMIC_SELECT_TRIGGER_CLASS =
+  "w-fit min-w-40 max-w-[calc(100vw-3rem)] sm:max-w-80";
+
 function ParentPickerPopover({
   projectId,
   excludeIds,
@@ -189,7 +192,7 @@ export const BulkActionBar = memo(function BulkActionBar({
       </span>
       <div className="flex min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto scrollbar-hide sm:ml-auto [&>*]:shrink-0">
         <Select onValueChange={onBulkStatus}>
-          <SelectTrigger className="w-[8.5rem]">
+          <SelectTrigger className={DYNAMIC_SELECT_TRIGGER_CLASS}>
             <SelectValue placeholder="Set Status" />
           </SelectTrigger>
           <SelectContent>
@@ -213,7 +216,7 @@ export const BulkActionBar = memo(function BulkActionBar({
           </SelectContent>
         </Select>
         {canAssign ? <Select onValueChange={onBulkAssignee}>
-          <SelectTrigger className="w-[8.5rem]">
+          <SelectTrigger className={DYNAMIC_SELECT_TRIGGER_CLASS}>
             <SelectValue placeholder="Assign to" />
           </SelectTrigger>
           <SelectContent>
@@ -226,7 +229,7 @@ export const BulkActionBar = memo(function BulkActionBar({
         </Select> : null}
         {onBulkLabel !== undefined && (labels?.length ?? 0) > 0 ? (
           <Select onValueChange={onBulkLabel}>
-            <SelectTrigger className="w-[8.5rem]">
+            <SelectTrigger className={DYNAMIC_SELECT_TRIGGER_CLASS}>
               <SelectValue placeholder="Add Label" />
             </SelectTrigger>
             <SelectContent>
@@ -240,7 +243,7 @@ export const BulkActionBar = memo(function BulkActionBar({
         ) : null}
         {!hideCycle ? (
           <Select onValueChange={onBulkCycle}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className={DYNAMIC_SELECT_TRIGGER_CLASS}>
               <SelectValue placeholder="Move to Cycle" />
             </SelectTrigger>
             <SelectContent>
