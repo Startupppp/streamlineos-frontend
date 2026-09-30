@@ -89,7 +89,7 @@ export const useBulkInviteUsers = () => {
       }>;
     },
     Error,
-    { emails: string[]; role: string }
+    { emails: string[]; role: string; moduleAccess?: InviteUserPayload["moduleAccess"] }
   >("settings:organization:manage", {
     mutationKey: ["users", "bulk-invite"],
     mutationFn: (invitationBatch) =>

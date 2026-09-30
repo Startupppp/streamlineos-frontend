@@ -18,6 +18,7 @@ import {
   HrStartHereChecklist,
   hrSetupIsEmpty,
   useHrSetupSignals,
+  useHrStartHereDismissed,
 } from "@/features/hr/setup";
 import { HrHubQueues } from "./hr-hub-queues";
 import { HrHubMetrics } from "./hr-hub-metrics";
@@ -48,7 +49,11 @@ const RECRUITMENT_CAPABILITIES = new Set([
 export function HrHubPage() {
   const hub = useHrHubSnapshot();
   const setupSignals = useHrSetupSignals();
-  const setupEmpty = hrSetupIsEmpty(setupSignals);
+  // The hub hides its panels behind "Start here" while setup is empty. Once
+  // that checklist is dismissed it renders nothing, so the panels must come
+  // back or the page is a title over a blank body (BUG-HRMS-012).
+  const checklistDismissed = useHrStartHereDismissed();
+  const setupEmpty = hrSetupIsEmpty(setupSignals) && !checklistDismissed;
   const access = hub.data?.capabilities ?? EMPTY_HR_HUB_ACCESS;
   const handleRetry = () => {
     void hub.refetch();

@@ -37,6 +37,9 @@ import { toast } from "sonner";
 import { CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import { USER_INVITE_ROLES } from "@/lib/constants/user-invite-roles";
 import { InviteSeatNotice } from "./invite-seat-notice";
+import { ModuleAccessSection } from "./invite-module-access";
+import { moduleAccessSchema } from "./user-invite-schema";
+import { useCan } from "@/hooks/api/access";
 import { cn } from "@/lib/utils";
 
 const bulkInviteFormSchema = z.object({
@@ -44,6 +47,7 @@ const bulkInviteFormSchema = z.object({
     .string()
     .min(1, "Enter at least one email address"),
   role: z.string().min(1, "Please select a role"),
+  moduleAccess: moduleAccessSchema,
 });
 
 type BulkInviteFormValues = z.infer<typeof bulkInviteFormSchema>;
@@ -58,6 +62,7 @@ interface BulkInviteResult {
   queued: number;
   failures: RowFailure[];
   role: string;
+  moduleAccess: BulkInviteFormValues["moduleAccess"];
 }
 
 interface UserBulkInviteDialogProps {
@@ -91,10 +96,11 @@ function deduplicatePreview(emails: string[]): { unique: string[]; duplicates: s
 export function UserBulkInviteDialog({ open, onOpenChange }: UserBulkInviteDialogProps) {
   const [result, setResult] = useState<BulkInviteResult | null>(null);
   const { mutate: bulkInvite, isPending } = useBulkInviteUsers();
+  const canManageRbac = useCan("settings:rbac:manage");
 
   const form = useForm<BulkInviteFormValues>({
     resolver: zodResolver(bulkInviteFormSchema),
-    defaultValues: { emailsRaw: "", role: "" },
+    defaultValues: { emailsRaw: "", role: "", moduleAccess: [] },
   });
 
   const emailsRaw = form.watch("emailsRaw");
@@ -134,6 +140,7 @@ export function UserBulkInviteDialog({ open, onOpenChange }: UserBulkInviteDialo
     form.reset({
       emailsRaw: retryableFailures.map((failure) => failure.originalEmail).join("\n"),
       role: result.role,
+      moduleAccess: result.moduleAccess,
     });
     setResult(null);
   }, [form, result, retryableFailures]);
@@ -144,8 +151,9 @@ export function UserBulkInviteDialog({ open, onOpenChange }: UserBulkInviteDialo
       form.setError("emailsRaw", { message: "Enter at least one email address" });
       return;
     }
+    const moduleAccess = values.moduleAccess ?? [];
     bulkInvite(
-      { emails, role: values.role },
+      { emails, role: values.role, ...(moduleAccess.length > 0 ? { moduleAccess } : {}) },
       {
         onSuccess: (data) => {
           const queued = data.results.filter((r) => r.success).length;
@@ -156,7 +164,7 @@ export function UserBulkInviteDialog({ open, onOpenChange }: UserBulkInviteDialo
               reason: r.error ?? "Unknown error",
               isDuplicate: r.isDuplicate === true,
             }));
-          setResult({ queued, failures, role: values.role });
+          setResult({ queued, failures, role: values.role, moduleAccess });
           if (queued > 0 && failures.length === 0) {
             toast.success(
               `${queued} invitation${queued !== 1 ? "s" : ""} queued for delivery`,
@@ -246,7 +254,7 @@ export function UserBulkInviteDialog({ open, onOpenChange }: UserBulkInviteDialo
                       >
                         {f.originalEmail}
                       </Badge>
-                      <span className="text-[11px] text-muted-foreground pl-0.5">
+                      <span className="text-dense text-muted-foreground pl-0.5">
                         {f.isDuplicate ? "Duplicate in this batch" : f.reason}
                       </span>
                     </div>
@@ -317,7 +325,7 @@ export function UserBulkInviteDialog({ open, onOpenChange }: UserBulkInviteDialo
                       />
                     </FormControl>
                     {previewDuplicates.length > 0 ? (
-                      <p className="text-[11px] text-status-warning-ink">
+                      <p className="text-dense text-status-warning-ink">
                         Duplicate entries will be collapsed to a single invitation each.
                       </p>
                     ) : null}
@@ -350,6 +358,20 @@ export function UserBulkInviteDialog({ open, onOpenChange }: UserBulkInviteDialo
                   </FormItem>
                 )}
               />
+
+              {canManageRbac && (
+                <FormField
+                  control={form.control}
+                  name="moduleAccess"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Module access for all invitees</FormLabel>
+                      <ModuleAccessSection field={field} />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
               <DialogFooter>
                 <Button

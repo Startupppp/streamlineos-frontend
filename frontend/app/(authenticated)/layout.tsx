@@ -8,7 +8,7 @@ import { resolveWizardGate } from "../../lib/wizard-gate";
 import { prefetchAccess } from "../../lib/prefetch/access";
 import { resolveShellVariant } from "../../lib/shell-variant";
 import { requireSession } from "../../lib/rbac/require-permission";
-import { getServerAccess } from "../../lib/rbac/get-server-access";
+import { getServerAccessResult } from "../../lib/rbac/get-server-access";
 import { AppThemeScript } from "../../components/theme/app-theme-script";
 import { AppThemeProvider } from "../../components/theme/app-theme-provider";
 import { FeedbucketEmbed } from "../../components/feedbucket/feedbucket-embed";
@@ -37,7 +37,11 @@ export default async function DashboardLayout({
   const isSettingsRoute =
     pathname === "/settings" || pathname.startsWith("/settings/");
 
-  const { mfa } = await getServerAccess();
+  // Only an access snapshot that was actually read can demand MFA. A failed
+  // read resolves to a DENIED placeholder whose mfa is unsatisfied, which sent
+  // every HR page to /settings during a transient outage (BUG-HRMS-014).
+  const accessResult = await getServerAccessResult();
+  const mfa = accessResult.ok ? accessResult.access.mfa : undefined;
   if (!isSettingsRoute && mfa?.enforced && !mfa.satisfied)
     redirect("/settings");
 

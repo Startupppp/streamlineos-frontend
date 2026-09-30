@@ -2,6 +2,10 @@ import { render, screen } from "@testing-library/react";
 import { ApiError } from "@/lib/api-envelope";
 import { PageState } from "./page-state";
 
+jest.mock("./enable-module-button", () => ({
+  EnableModuleButton: ({ moduleName }: { moduleName: string }) => <button type="button">Enable {moduleName}</button>,
+}));
+
 const loading = <div data-testid="skeleton" />;
 
 describe("PageState", () => {
@@ -17,6 +21,7 @@ describe("PageState", () => {
       "/settings/modules",
     );
     expect(screen.queryByRole("link", { name: /plan|upgrade|billing/i })).toBeNull();
+    expect(screen.getByRole("button", { name: /enable/i })).toBeInTheDocument();
   });
 
   it("does not offer to enable a module that is already on to a user who was denied it", () => {
