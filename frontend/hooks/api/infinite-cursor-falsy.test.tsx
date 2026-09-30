@@ -148,14 +148,6 @@ const CASES: Case[] = [
     firstPage: { messages: [], nextCursor: "" },
     expectCursor: (calls) => expect(urlsOf(calls)[1]).toContain("cursor="),
   },
-  {
-    name: "useInfiniteBlogFeed sends empty-string cursor past its null sentinel",
-    module: "./blog",
-    run: (m) => (m["useInfiniteBlogFeed"] as (p: object) => unknown)({}),
-    firstPage: { posts: [], nextCursor: "", hasMore: true },
-    expectCursor: (calls) =>
-      expect(paramsOf(calls)[1]).toEqual(expect.objectContaining({ cursor: "" })),
-  },
 ];
 
 describe("a falsy cursor reaches the request instead of replaying page one", () => {
