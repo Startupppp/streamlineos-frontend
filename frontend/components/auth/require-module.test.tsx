@@ -3,6 +3,7 @@ import { RequireModule } from "./require-module";
 
 jest.mock("@/hooks/api/access", () => ({
   useAccess: jest.fn(),
+  useCan: () => false,
 }));
 
 jest.mock("@/hooks/api/entitlements", () => ({

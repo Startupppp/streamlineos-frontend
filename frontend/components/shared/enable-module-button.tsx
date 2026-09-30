@@ -23,12 +23,14 @@ function internalPath(value: string | null): string | null {
  * hunting for Settings → Modules. A plan that does not include the module is
  * refused by the server, and that refusal is shown as-is.
  */
-export function EnableModuleButton({ moduleKey, moduleName, compact }: EnableModuleButtonProps) {
+export function EnableModuleButton(props: EnableModuleButtonProps) {
   const canManage = useCan("settings:manage");
+  return canManage ? <EnableModuleControl {...props} /> : null;
+}
+
+function EnableModuleControl({ moduleKey, moduleName, compact }: EnableModuleButtonProps) {
   const toggle = useToggleOrgModule();
   const router = useRouter();
-
-  if (!canManage) return null;
 
   const enable = () =>
     toggle.mutate(
