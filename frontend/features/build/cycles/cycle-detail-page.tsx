@@ -126,9 +126,7 @@ export function CycleDetailPage({
   } = useCycles(projectId);
   const { data: membersPage } = useProjectMembers(projectId);
   const members = membersPage?.data ?? [];
-  // The board this page renders reads column counts keyed only on projectId.
-  // Warming it here keeps it off the far side of the loading guard.
-  useTicketColumnCounts(projectId);
+  useTicketColumnCounts(projectId, { cycle: String(cycleId) });
 
   const isLoading = projectLoading || cyclesLoading || ticketsLoading;
   const isError = projectFailed || cyclesFailed || ticketsFailed;
@@ -348,11 +346,19 @@ export function CycleDetailPage({
     >
       <div className={cn(PAGE_CHROME_X, "flex min-h-0 flex-1 flex-col")}>
         {cycleTickets.length === 0 ? (
-          <EmptyState
-            illustrationPreset="ticket"
-            title="No tickets in this cycle"
-            description="Add tickets to this cycle to track progress here."
-          />
+          listFilters.debouncedSearch ? (
+            <EmptyState
+              illustrationPreset="ticket"
+              title="No matches"
+              description="No tickets in this cycle match your search."
+            />
+          ) : (
+            <EmptyState
+              illustrationPreset="ticket"
+              title="No tickets in this cycle"
+              description="Add tickets to this cycle to track progress here."
+            />
+          )
         ) : (
           <>
             {view === "board" && (
@@ -365,6 +371,7 @@ export function CycleDetailPage({
                   wipLimits={wipLimits}
                   onTicketSelect={handleTicketSelect}
                   displayOptions={displayOptions}
+                  filters={{ cycle: String(cycleId) }}
                 />
               </div>
             )}

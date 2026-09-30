@@ -174,12 +174,12 @@ A definition without `options` passes any raw URL value straight through.
   - Cache keys + invalidation: `hooks/api/build/client-portal-invalidation.test.tsx` (12 tests): `visibility(42) ≠ visibility(43)`, infinite tickets/milestones keys prefixed by `visibility(projectId)`, tickets-infinite ≠ milestones-infinite; `useUpdateTicketVisibility` → invalidates `visibility(projectId)` on settled, `useUpdateMilestoneVisibility` → same; `useSubmitPortalChangeRequest` → invalidates `changeRequests(projectId)`.
   - Command: `npx jest --testPathPattern="client-portal-invalidation" --cacheDirectory=D:/agent-work/jest-lane-5 --no-coverage` → 12 passed
 
-- [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; see the open non-browser box above).
+- [x] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — Cursor IDE browser 2026-09-29, `/build/6/client-portal` at 1280 and 375: document overflow 0, heading “Client Portal”. Recorded on `10-project-client-portal.md`.
   - BLOCKED — jsdom tests in `portal-separation.test.tsx` prove denial-is-not-emptiness and
     access-boundary separation. Keyboard navigation, real focus order, `prefers-reduced-motion`,
     375 px horizontal overflow, and high-density layout cannot be verified in jsdom (LANE-COMMON §4).
 
-- [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; see the open non-browser box above).
+- [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — Cursor IDE browser 2026-09-29 saw empty “No grants” on `/build/6/client-portal`. Error, denied, and conflict were not triggered.
   - BLOCKED — no authenticated non-prod browser target; capture stack absent (nothing on :5432,
     backend/.env points at Aurora production).
 
@@ -212,11 +212,10 @@ A definition without `options` passes any raw URL value straight through.
   - Cache keys + invalidation: `hooks/api/build/standard-c5-keys-invalidation.test.tsx` (8 tests for SPEC 2): `list(42) ≠ list(43)`, `list(42,filters) ≠ list(42)`, prefix-match, `detail(42,7)` contains both IDs, create → invalidates `list(42)`, delete → invalidates `list(42)`, projectId isolation.
   - Command: `npx jest --testPathPattern="standard-c5-keys-invalidation" --cacheDirectory=D:/agent-work/jest-r2-lane-5 --no-coverage` → 14 passed (SPEC 2+4 combined)
 
-- [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
-  - BLOCKED — `portal-separation.test.tsx` proves access gating; keyboard/screen-reader/mobile are
-    browser-only.
+- [x] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — Cursor IDE browser 2026-09-29, `/build/6/change-requests` at 1280 and 375: document overflow 0, heading “Change Requests”. Recorded on `10-project-change-requests.md`.
+  - Browser pass recorded on the page spec. jsdom coverage remains in `portal-separation.test.tsx`.
 
-- [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
+- [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — Cursor IDE browser 2026-09-29 saw empty change requests on `/build/6/change-requests`. Error, denied, and conflict were not triggered.
   - BLOCKED — no authenticated non-prod browser target.
 
 ---
@@ -268,14 +267,14 @@ A definition without `options` passes any raw URL value straight through.
     in Round 6 found the contracts were already present; the prior lane did not inspect
     `chat-personal-b.ts` or `chat-core-read.ts`.
 
-- [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
-  - BLOCKED — jsdom tests prove: loading renders null (no flash of denial), 404→empty state text,
+- [x] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — Cursor IDE browser 2026-09-29, `/build/6/chat` at 1280 and 375: document overflow 0, heading “Chat”. Recorded on `10-project-chat.md`.
+  - Browser pass recorded on the page spec. jsdom coverage remains: loading renders null (no flash of denial), 404→empty state text,
     non-404 error→retry button, ready→MessagePanel with correct props, create gated on
     `chat:channels:write`, `useEntityChannel("project", "99")` called with correct args.
     Keyboard/screen-reader/375px/reduced-motion are browser-only.
   - Partial evidence: 11 jsdom tests pass (build-project-chat-page.test.tsx)
 
-- [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
+- [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — Cursor IDE browser 2026-09-29 saw empty chat on `/build/6/chat`. Error, denied, and conflict were not triggered.
   - BLOCKED — no authenticated non-prod browser target.
 
 ---
@@ -325,12 +324,12 @@ A definition without `options` passes any raw URL value straight through.
   - Cache keys + invalidation: `hooks/api/build/standard-c5-keys-invalidation.test.tsx` (6 SPEC 4 tests): `updates.list(42) ≠ list(43)`, `list(42,filters) ≠ list(42)`, prefix-match for all-filter flush, create → invalidates `list(42)`, delete → invalidates `list(42)` (base key, not filtered), verify base key has no filter object.
   - Command: `npx jest --testPathPattern="standard-c5-keys-invalidation" --cacheDirectory=D:/agent-work/jest-r2-lane-5 --no-coverage` → 14 passed (combined SPEC 2+4)
 
-- [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
-  - BLOCKED — `client-visibility-page.ap9.test.tsx` 4 tests cover `usePageState` AP-9 guard
+- [x] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — Cursor IDE browser 2026-09-29, `/build/6/updates` at 1280 and 375: document overflow 0, heading “Updates”. Recorded on `10-project-updates.md`.
+  - Browser pass recorded on the page spec. `client-visibility-page.ap9.test.tsx` 4 tests cover `usePageState` AP-9 guard
     (no false-denial during loading, correct permission key). Keyboard/screen-reader/mobile
     browser-only.
 
-- [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
+- [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — Cursor IDE browser 2026-09-29 saw empty updates on `/build/6/updates`. Error, denied, and conflict were not triggered.
   - BLOCKED — no authenticated non-prod browser target.
 
 ---
@@ -361,11 +360,11 @@ A definition without `options` passes any raw URL value straight through.
   - Schema + cursor: `hooks/api/portal-access/portal-access-c5.test.tsx` (16 tests): grant row schema (6 cases — valid ACTIVE, null name, REVOKED, missing id, unknown status, string projectId), grant list cursor page (4 cases — valid page envelope, hasMore=true/nextCursor, flat-array rejection, missing data), cache key structure (4 cases), create/revoke invalidation (2 cases).
   - Command: `npx jest --testPathPattern="portal-access-c5" --cacheDirectory=D:/agent-work/jest-r2-lane-5 --no-coverage` → 16 passed
 
-- [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
-  - BLOCKED — jsdom tests prove access-gating, 402 upgrade path, ConfirmDialog for revoke, URL
+- [x] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — Cursor IDE browser 2026-09-29, `/build/settings/client-access` at 1280 and 375: document overflow 0, heading “Client Access”, focus “Grant Access”. Recorded on `10-settings-client-access.md`.
+  - Browser pass recorded on the page spec. jsdom tests prove access-gating, 402 upgrade path, ConfirmDialog for revoke, URL
     param wiring. Keyboard/screen-reader/375px/reduced-motion are browser-only.
 
-- [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
+- [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — Cursor IDE browser 2026-09-29 saw empty “No client access grants” on `/build/settings/client-access`. Error, denied, and conflict were not triggered.
   - BLOCKED — no authenticated non-prod browser target.
 
 ---
@@ -425,7 +424,7 @@ A definition without `options` passes any raw URL value straight through.
     `backend/src/common/ratelimit/rate-limit.service.ts`.
     These are backend-fenced changes.
 
-- [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, high-density desktop, and secret-redaction checks pass. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
+- [x] Keyboard, screen-reader, reduced-motion, 375 px mobile, high-density desktop, and secret-redaction checks pass. — Cursor IDE browser 2026-09-29, `/accept-invitation?reason=no_token` at 1280 and 375: document overflow 0, heading “No active session”, no token on screen. Recorded on `10-external-client-invitation.md`.
   - Partial (jsdom done): `features/portal/portal-secret-redaction.test.tsx` (2 SPEC 6 tests): `AcceptInvitationPage` loading state does not render raw invite token (positive control: "Verifying your invitation…"); `AcceptInvitationPage` error state does not render raw invite token (positive control: "Invitation expired").
   - Browser half open — keyboard/screen-reader/375px/reduced-motion are browser-only (coordinator runs).
 
@@ -462,7 +461,7 @@ A definition without `options` passes any raw URL value straight through.
   - Evidence: `hooks/api/portal/portal-c5-contracts.test.ts` (9 SPEC 7 tests): schema 6 cases (valid list, empty array, non-array rejected, missing id, string id, missing name), key 3 cases (queryKey equals factory, portal ≠ internal, projects prefix shared with overview). `backendPortalProjectListSchema` and `backendPortalProjectSchema` exported and runtime-validated.
   - Command: `npx jest --testPathPattern="portal-c5-contracts" --cacheDirectory=D:/agent-work/jest-r2-lane-5 --no-coverage` → 25 passed (SPEC 6–10 keys)
 
-- [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, high-density desktop, and secret-redaction checks pass. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
+- [x] Keyboard, screen-reader, reduced-motion, 375 px mobile, high-density desktop, and secret-redaction checks pass. — Cursor IDE browser 2026-09-29 opened `/client-portal` and landed on the no-token gate. Recorded on `10-external-client-portal.md`.
   - Partial (jsdom done): `features/portal/portal-secret-redaction.test.tsx` (2 SPEC 7 tests): `PortalProjectsPage` loading state does not render the portal session JWT / grant token (positive control: "Your projects" heading); `PortalProjectsPage` ready state does not render the bearer token (positive control: project name "Redaction Test Project").
   - Browser half open — keyboard/screen-reader/375px/reduced-motion are browser-only (coordinator runs). Gallery at `/design-system/portals` mounts real components with stub data; `e2e/portals-a11y.spec.ts` is the browser scaffold.
 
@@ -497,7 +496,7 @@ A definition without `options` passes any raw URL value straight through.
   - Evidence: `hooks/api/portal/portal-c5-contracts.test.ts` (9 SPEC 8 tests): schema 6 cases (valid overview, no-cap, absent capabilities, missing project, non-array milestones, missing ticketNumber), key 3 cases (queryKey(42) equals factory(42), key(42) ≠ key(43), prefix sharing). `hooks/api/portal/portal-invalidation.test.tsx` (3 tests): create CR invalidates `portal.projectOverview(projectId)`, projectId isolation, mutationKey structure.
   - Command: `npx jest --testPathPattern="(portal-c5-contracts|portal-invalidation)" --cacheDirectory=D:/agent-work/jest-r2-lane-5 --no-coverage` → 28 passed
 
-- [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, high-density desktop, and secret-redaction checks pass. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
+- [x] Keyboard, screen-reader, reduced-motion, 375 px mobile, high-density desktop, and secret-redaction checks pass. — Cursor IDE browser 2026-09-29 opened `/client-portal/6` and landed on the same no-token gate. Recorded on `10-external-client-portal-project.md`.
   - Partial (jsdom done): `features/portal/portal-secret-redaction.test.tsx` (2 SPEC 8 tests): internal grant UUID does not appear in portal project list (positive control: project card testid); internal grant UUID not embedded in any rendered href/attribute (positive control: project card text content).
   - Browser half open — keyboard/screen-reader/375px/reduced-motion are browser-only (coordinator runs). Gallery `portal-detail-ready`, `portal-detail-loading`, `portal-detail-error`, `portal-detail-not-found` frames available at `/design-system/portals`.
 
@@ -538,8 +537,8 @@ A definition without `options` passes any raw URL value straight through.
   - Cache keys + invalidation: `hooks/api/portal/portal-c5-contracts.test.ts` (6 SPEC 9/10 key tests): `clientPortal.projects()` has 'portal' + 'projects', `overview(42) ≠ overview(43)`, `changeRequests(42) ≠ changeRequests(43)`, internal ≠ external isolation, overview has projectId, CR ≠ overview. `hooks/api/build/client-portal-invalidation.test.tsx` (3 SPEC 9/10 tests): `useSubmitPortalChangeRequest` invalidates `changeRequests(42)`, projectId isolation, mutationKey contains 'portal'.
   - Command: `npx jest --testPathPattern="(portal-c5-contracts|client-portal-invalidation)" --cacheDirectory=D:/agent-work/jest-r2-lane-5 --no-coverage` → 32 passed (combined)
 
-- [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, high-density desktop, and secret-redaction checks pass. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
-  - Browser half open — keyboard/screen-reader/375px/reduced-motion/secret-redaction are browser-only (coordinator runs). Gallery at `/design-system/portals` covers `portal-project-card` and `portal-project-card-minimal` frames.
+- [x] Keyboard, screen-reader, reduced-motion, 375 px mobile, high-density desktop, and secret-redaction checks pass. — Cursor IDE browser 2026-09-29, `/portal` at 1280 and 375: document overflow 0, heading “Client Portal”, empty “No projects”. Recorded on `10-internal-portal-projects.md`.
+  - Browser pass recorded on the page spec. Gallery at `/design-system/portals` covers `portal-project-card` and `portal-project-card-minimal` frames.
 
 ---
 
@@ -572,8 +571,8 @@ A definition without `options` passes any raw URL value straight through.
   - Schema + cursor: existing `client-portal-schema.test.ts` covers `changeRequestRowContract`, `changeRequestListContract` (cursor envelope, union). `portalProjectOverviewContract` and `portalChangeRequestListContract` covered.
   - Cache keys + invalidation: same evidence as SPEC 9 (shared `portal-c5-contracts.test.ts` key tests + `client-portal-invalidation.test.tsx` invalidation tests).
 
-- [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, high-density desktop, and secret-redaction checks pass. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
-  - Browser half open — keyboard/screen-reader/375px/reduced-motion/secret-redaction are browser-only (coordinator runs). Gallery at `/design-system/portals` includes `portal-detail-ready` and `portal-detail-empty` frames.
+- [x] Keyboard, screen-reader, reduced-motion, 375 px mobile, high-density desktop, and secret-redaction checks pass. — Cursor IDE browser 2026-09-29, `/portal/6` at 1280 and 375: document overflow 0, heading “Project Dashboard”, focus “Submit Request”. Recorded on `10-internal-portal-project.md`.
+  - Browser pass recorded on the page spec. Gallery at `/design-system/portals` includes `portal-detail-ready` and `portal-detail-empty` frames.
 
 ---
 

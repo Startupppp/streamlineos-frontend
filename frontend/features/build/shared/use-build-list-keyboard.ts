@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { claimBuildListSearchTarget } from "@/features/build/shared/build-list-search-target";
 
 function isInputTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
@@ -74,6 +75,11 @@ export function useBuildListKeyboard({
   }, [itemCount, focusedIndex]);
 
   useEffect(() => {
+    if (!enabled || !searchInputRef) return;
+    return claimBuildListSearchTarget(searchInputRef);
+  }, [enabled, searchInputRef]);
+
+  useEffect(() => {
     if (!enabled) return;
 
     function handleKeyDown(e: KeyboardEvent) {
@@ -114,8 +120,9 @@ export function useBuildListKeyboard({
           break;
         }
         case "/": {
+          if (!searchInputRef) break;
           e.preventDefault();
-          searchInputRef?.current?.focus();
+          searchInputRef.current?.focus();
           break;
         }
         case "e": {

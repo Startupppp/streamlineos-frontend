@@ -235,6 +235,7 @@ export function RequestApprovalSheet({
 
   useEffect(() => {
     if (!entityId) return;
+    if (form.formState.dirtyFields.title) return;
     const item = entityItems.find((o) => o.value === entityId);
     if (!item) return;
     const prefix = entityTypeTitlePrefix(entityType);
@@ -367,6 +368,7 @@ export function RequestApprovalSheet({
                         onChange={field.onChange}
                         placeholder="Search for approver…"
                         excludeUserId={currentUserId}
+                        projectId={projectId}
                       />
                     </FormControl>
                     <FormMessage />

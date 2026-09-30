@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -265,6 +265,20 @@ export function WhiteboardPage({
   });
 
   useRegisterDirtyState(saveStatus === "dirty");
+
+  const manualSaveRef = useRef(manualSave);
+  useEffect(() => { manualSaveRef.current = manualSave; }, [manualSave]);
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+        e.preventDefault();
+        manualSaveRef.current();
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const handleToggleFullscreen = useCallback(
     () => setIsFullscreen((prev) => !prev),

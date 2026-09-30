@@ -176,8 +176,20 @@ export function StepReview({
       return;
     }
 
+    const resolvedCountryCode = (
+      draft.bank.countryCode.trim() || countryCode
+    ).trim();
+    if (resolvedCountryCode.length < 2) {
+      toast.error(
+        "Add your country on the bank details step before submitting.",
+      );
+      return;
+    }
+    const bank = { ...draft.bank, countryCode: resolvedCountryCode };
+
     if (requirements) {
       const bankFormValues = {
+        countryCode: resolvedCountryCode,
         accountHolder: draft.bank.accountHolder,
         bankName: draft.bank.bankName,
         accountNumber: draft.bank.accountNumber,
@@ -200,7 +212,7 @@ export function StepReview({
     try {
       await submitOnboarding({
         personal: personalParsed.data,
-        bank: draft.bank,
+        bank,
       });
       onClearDraft();
       writeGateCookie(

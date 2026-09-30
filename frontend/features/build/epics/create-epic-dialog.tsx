@@ -24,10 +24,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useQueryClient } from "@tanstack/react-query";
 import { useCreateTicket } from "@/hooks/api/build/tickets";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { activationProps } from "@/lib/keyboard-activation";
 
 interface CreateEpicDialogProps {
@@ -46,6 +48,7 @@ export function CreateEpicDialog({
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const controlled = controlledOpen !== undefined;
   const open = controlled ? controlledOpen : uncontrolledOpen;
+  const queryClient = useQueryClient();
   const createTicket = useCreateTicket();
   const isOnline = useOnlineStatus();
 
@@ -73,6 +76,9 @@ export function CreateEpicDialog({
       },
       {
         onSuccess: () => {
+          void queryClient.invalidateQueries({
+            queryKey: buildWorkQueryKeys.projects.epics(projectId),
+          });
           toast.success("Epic created successfully");
           setOpen(false);
         },

@@ -79,7 +79,8 @@ export function ConvertToTaskDialog({
         type: values.type,
         title: values.title.trim() || undefined,
       });
-      toast.success(`Created ${values.type}`);
+      const typeLabel = values.type === "BUG" ? "Bug" : "Task";
+      toast.success(`${typeLabel} created`);
       onOpenChange(false);
     } catch (e) {
       toast.error(getErrorMessage(e));

@@ -22,6 +22,7 @@ import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pa
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { getValidationFieldErrors, type ValidationFieldError } from "@/lib/api-envelope";
 import { getUserDisplayName, type NamedUser } from "@/lib/person-display";
 import { DecisionFormSheet } from "./decision-form-sheet";
 import {
@@ -73,6 +74,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editDecision, setEditDecision] = useState<Decision | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Decision | null>(null);
+  const [decisionFieldErrors, setDecisionFieldErrors] = useState<readonly ValidationFieldError[]>([]);
 
   const { cursor, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
     listFilters.resetKey,
@@ -131,10 +133,18 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
     (input: CreateDecisionInput) => {
       createDecision.mutate(input, {
         onSuccess: () => {
+          setDecisionFieldErrors([]);
           toast.success("Decision logged");
           setSheetOpen(false);
         },
-        onError: (e) => toast.error(getErrorMessage(e)),
+        onError: (e) => {
+          const fieldErrors = getValidationFieldErrors(e);
+          if (fieldErrors.length > 0) {
+            setDecisionFieldErrors(fieldErrors);
+          } else {
+            toast.error(getErrorMessage(e));
+          }
+        },
       });
     },
     [createDecision],
@@ -144,10 +154,18 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
     (input: UpdateDecisionInput & { decisionId: number }) => {
       updateDecision.mutate(input, {
         onSuccess: () => {
+          setDecisionFieldErrors([]);
           toast.success("Decision updated");
           setEditDecision(null);
         },
-        onError: (e) => toast.error(getErrorMessage(e)),
+        onError: (e) => {
+          const fieldErrors = getValidationFieldErrors(e);
+          if (fieldErrors.length > 0) {
+            setDecisionFieldErrors(fieldErrors);
+          } else {
+            toast.error(getErrorMessage(e));
+          }
+        },
       });
     },
     [updateDecision],
@@ -366,6 +384,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
         onSubmitEdit={handleUpdate}
         isPending={createDecision.isPending || updateDecision.isPending}
         projectId={projectId}
+        serverErrors={decisionFieldErrors}
       />
 
       <ConfirmDialog

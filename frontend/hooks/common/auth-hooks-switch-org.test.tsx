@@ -4,7 +4,7 @@ import { type ReactNode } from "react";
 import type { Session } from "next-auth";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
 import { useGetOrganizations, useSwitchOrg } from "./auth-hooks";
 
@@ -32,6 +32,7 @@ jest.mock("@/lib/api-envelope", () => ({
 
 jest.mock("next/navigation", () => ({
   useRouter: jest.fn(),
+  usePathname: jest.fn(),
   useSearchParams: jest.fn(() => ({ get: jest.fn() })),
 }));
 
@@ -43,6 +44,7 @@ const mockUseSession = useSession as jest.Mock;
 const mockPost = apiClient.post as jest.Mock;
 const mockGet = apiClient.get as jest.Mock;
 const mockUseRouter = useRouter as jest.Mock;
+const mockUsePathname = usePathname as jest.Mock;
 const mockToastError = toast.error as jest.Mock;
 
 let mockUpdate: jest.Mock;
@@ -91,6 +93,7 @@ beforeEach(() => {
     replace: mockReplace,
     refresh: jest.fn(),
   });
+  mockUsePathname.mockReturnValue("/dashboard");
 });
 
 afterEach(() => {
@@ -171,7 +174,8 @@ describe("I6 — useSwitchOrg switch contract and generation fencing", () => {
     expect(clearSpy).not.toHaveBeenCalled();
   });
 
-  it("clears queries and navigates when refresh returns matching orgId", async () => {
+  it("clears queries and navigates to the dashboard when on the dashboard", async () => {
+    mockUsePathname.mockReturnValue("/dashboard");
     mockPost.mockResolvedValueOnce({ orgId: "org-b" });
     mockUpdate.mockResolvedValueOnce(makeSession("org-b"));
 
@@ -191,6 +195,66 @@ describe("I6 — useSwitchOrg switch contract and generation fencing", () => {
     });
 
     expect(clearSpy).toHaveBeenCalled();
+    expect(mockToastError).not.toHaveBeenCalled();
+  });
+
+  it("navigates to the build section root when switching org from a build page (FE-122 positive)", async () => {
+    mockUsePathname.mockReturnValue("/build/123/backlog");
+    mockPost.mockResolvedValueOnce({ orgId: "org-b" });
+    mockUpdate.mockResolvedValueOnce(makeSession("org-b"));
+
+    const { result } = renderHook(() => useSwitchOrg(), {
+      wrapper: makeWrapper(makeClient()),
+    });
+
+    act(() => {
+      result.current.mutate("org-b");
+    });
+
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith("/build");
+    });
+
+    expect(mockToastError).not.toHaveBeenCalled();
+  });
+
+  it("falls back to the dashboard when switching org from an auth-only path (FE-122 negative)", async () => {
+    mockUsePathname.mockReturnValue("/org-setup");
+    mockPost.mockResolvedValueOnce({ orgId: "org-b" });
+    mockUpdate.mockResolvedValueOnce(makeSession("org-b"));
+
+    const { result } = renderHook(() => useSwitchOrg(), {
+      wrapper: makeWrapper(makeClient()),
+    });
+
+    act(() => {
+      result.current.mutate("org-b");
+    });
+
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith("/dashboard");
+    });
+
+    expect(mockToastError).not.toHaveBeenCalled();
+  });
+
+  it("navigates to the hr section root when switching org from an hr page", async () => {
+    mockUsePathname.mockReturnValue("/hr/employees/456");
+    mockPost.mockResolvedValueOnce({ orgId: "org-b" });
+    mockUpdate.mockResolvedValueOnce(makeSession("org-b"));
+
+    const { result } = renderHook(() => useSwitchOrg(), {
+      wrapper: makeWrapper(makeClient()),
+    });
+
+    act(() => {
+      result.current.mutate("org-b");
+    });
+
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith("/hr");
+    });
+
     expect(mockToastError).not.toHaveBeenCalled();
   });
 

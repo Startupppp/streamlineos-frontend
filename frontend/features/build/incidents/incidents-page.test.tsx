@@ -266,3 +266,50 @@ it("shows the New Incident button when build:incidents:manage is granted", () =>
   render(<IncidentsPage projectId={1} />);
   expect(screen.getAllByRole("button", { name: /new incident/i }).length).toBeGreaterThan(0);
 });
+
+describe("BUG-044 — IncidentSlaBadge must show em-dash not On track when no SLA dates are configured", () => {
+  const { IncidentSlaBadge } = jest.requireActual("./incidents-table-columns") as typeof import("./incidents-table-columns");
+  type MinIncident = React.ComponentProps<typeof IncidentSlaBadge>["incident"];
+
+  function makeIncident(overrides: Partial<MinIncident> = {}): MinIncident {
+    return {
+      id: 1,
+      orgId: "org-1",
+      projectId: 1,
+      incidentNumber: 1,
+      title: "Service down",
+      description: null,
+      severity: "high",
+      status: "detected",
+      impact: null,
+      ownerId: null,
+      rootCause: null,
+      customerComms: null,
+      detectedAt: null,
+      respondedAt: null,
+      resolvedAt: null,
+      responseDueAt: null,
+      resolutionDueAt: null,
+      linkedTicketId: null,
+      releaseId: null,
+      createdBy: null,
+      createdAt: "2026-09-01T00:00:00Z",
+      updatedAt: "2026-09-01T00:00:00Z",
+      deletedAt: null,
+      ...overrides,
+    } as MinIncident;
+  }
+
+  it("renders em-dash and not On track when both responseDueAt and resolutionDueAt are null (no SLA configured)", () => {
+    render(<IncidentSlaBadge incident={makeIncident()} />);
+    expect(screen.getByText("—")).toBeInTheDocument();
+    expect(screen.queryByText("On track")).not.toBeInTheDocument();
+  });
+
+  it("renders On track badge when responseDueAt is set to a future time and incident is not resolved (positive control confirms badge still works)", () => {
+    const future = new Date(Date.now() + 86_400_000).toISOString();
+    render(<IncidentSlaBadge incident={makeIncident({ responseDueAt: future })} />);
+    expect(screen.getByText("On track")).toBeInTheDocument();
+    expect(screen.queryByText("—")).not.toBeInTheDocument();
+  });
+});

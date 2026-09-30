@@ -120,7 +120,7 @@ const READY_PROJECT = {
   refetch: jest.fn(),
 };
 
-const TICKET = { id: 1, title: "T-1", status: "TODO", type: "TASK" } as Ticket;
+const TICKET = { id: 1, title: "T-1", status: "TODO", type: "TASK", cycleId: null } as Ticket;
 
 const READY_TICKETS = {
   data: [TICKET],
@@ -296,5 +296,44 @@ describe("ProjectBacklogPage — filter forwarding", () => {
     expect(callArgs).toBeDefined();
     expect(callArgs.q).toBeUndefined();
     expect(callArgs.status).toBeUndefined();
+  });
+
+  it("sends TASK,BUG,STORY,SUBTASK as the default type filter when the user has not chosen a type, so EPICs are excluded from the server query", () => {
+    renderPage();
+    const callArgs = mockUseProjectBoardTickets.mock.calls[0]?.[1] as Record<string, unknown>;
+    expect(callArgs?.type).toBe("TASK,BUG,STORY,SUBTASK");
+  });
+
+  it("uses the user-selected type filter instead of the default when types are chosen", () => {
+    mockSearchParamsContainer.current = new URLSearchParams("type=BUG");
+    renderPage();
+    const callArgs = mockUseProjectBoardTickets.mock.calls[0]?.[1] as Record<string, unknown>;
+    expect(callArgs?.type).toBe("BUG");
+  });
+});
+
+describe("ProjectBacklogPage — unscheduled filter", () => {
+  it("passes unscheduled: true to the server query so the SQL predicate excludes scheduled tickets before pagination, not a client-side slice", () => {
+    renderPage();
+    const callArgs = mockUseProjectBoardTickets.mock.calls[0]?.[1] as Record<string, unknown>;
+    expect(callArgs?.unscheduled).toBe(true);
+  });
+});
+
+describe("ProjectBacklogPage — Type and Cycle columns", () => {
+  it("includes a Type column in the column definitions", () => {
+    renderPage();
+    const columnKeys = (capturedSurface?.columns as Array<{ key: string }> | undefined)?.map(
+      (c) => c.key,
+    );
+    expect(columnKeys).toContain("type");
+  });
+
+  it("includes a Cycle column in the column definitions", () => {
+    renderPage();
+    const columnKeys = (capturedSurface?.columns as Array<{ key: string }> | undefined)?.map(
+      (c) => c.key,
+    );
+    expect(columnKeys).toContain("cycle");
   });
 });

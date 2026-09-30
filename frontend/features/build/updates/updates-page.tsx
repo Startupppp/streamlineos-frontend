@@ -257,7 +257,7 @@ export function UpdatesPage({ projectId }: UpdatesPageProps) {
         title="Post update"
         description="Share progress, blockers, or milestones with your team."
         resolver={zodResolver(createUpdateSchema)}
-        defaultValues={{ body: "" }}
+        defaultValues={{ body: "", status: "published", audience: "internal" }}
         onSubmit={handleCreate}
         isSubmitting={createUpdate.isPending}
         submitLabel="Post"

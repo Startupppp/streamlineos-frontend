@@ -25,10 +25,12 @@ import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
 
 const BACKLOG_TABLE_HEADERS = [
   "ID",
+  "Type",
   "Title",
   "Status",
   "Priority",
   "Assignee",
+  "Cycle",
   "Created",
 ] as const;
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -81,7 +83,7 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
       selectedPriorities.length > 0
         ? selectedPriorities.join(",")
         : undefined,
-    type: selectedTypes.length > 0 ? selectedTypes.join(",") : undefined,
+    type: selectedTypes.length > 0 ? selectedTypes.join(",") : "TASK,BUG,STORY,SUBTASK",
     assigneeId:
       selectedAssignees.length > 0
         ? selectedAssignees.join(",")
@@ -92,6 +94,7 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
       selectedCycles.length > 0 ? selectedCycles.join(",") : undefined,
     dueDateFrom: dueDateFrom || undefined,
     dueDateTo: dueDateTo || undefined,
+    unscheduled: true,
   };
   const {
     data,
@@ -120,8 +123,6 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
   const ticketParam = searchParams.get("ticket");
   const selectedTicketId = ticketParam ? parseInt(ticketParam) : null;
 
-  const tickets = useMemo(() => boardTickets ?? [], [boardTickets]);
-
   const members = useMemo(() => {
     if (!data?.members) return [];
     return data.members.flatMap((m) => {
@@ -137,6 +138,8 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
       ];
     });
   }, [data]);
+
+  const tickets = boardTickets ?? [];
 
   const handleTicketSelect = useCallback(
     (id: number) => {
@@ -203,6 +206,7 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
     [handleTicketSelect],
   );
 
+
   const columns = useMemo<DataTableColumn<Ticket>[]>(
     () => [
       {
@@ -213,6 +217,18 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
           <span className="flex items-center gap-1.5">
             <TicketTypeIcon type={ticket.type} />
             {formatTicketKey(data?.key, ticket.ticketNumber)}
+          </span>
+        ),
+      },
+      {
+        key: "type",
+        header: "Type",
+        className: "hidden sm:table-cell w-[90px] text-dense text-muted-foreground",
+        headerClassName: "hidden sm:table-cell",
+        cell: (ticket) => (
+          <span className="flex items-center gap-1.5">
+            <TicketTypeIcon type={ticket.type} />
+            <span className="capitalize text-xs">{ticket.type.charAt(0) + ticket.type.slice(1).toLowerCase()}</span>
           </span>
         ),
       },
@@ -256,6 +272,14 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
           ) : (
             <span className="text-xs text-muted-foreground">—</span>
           ),
+      },
+      {
+        key: "cycle",
+        header: "Cycle",
+        className: "hidden lg:table-cell w-[130px] text-dense text-muted-foreground",
+        headerClassName: "hidden lg:table-cell",
+        cell: (ticket) =>
+          ticket.cycle?.name ?? (ticket.cycleId != null ? String(ticket.cycleId) : "—"),
       },
       {
         key: "created",

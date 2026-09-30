@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useGatedQuery } from "@/hooks/api/gated-query";
-import { apiClient, isApiError } from "@/lib/api-client";
+import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
@@ -63,25 +63,8 @@ export function usePortfolios(filters?: ListFilters) {
     queryKey: buildWorkQueryKeys.projects.portfolios.list(
       Object.keys(params).length > 0 ? params : undefined,
     ),
-    queryFn: async ({ signal }) => {
-      try {
-        return await apiClient.get<PortfoliosPage>(
-          "/build/portfolios",
-          params,
-          signal,
-          portfolioPageContract,
-        );
-      } catch (error) {
-        if (!isApiError(error) || error.status !== 400) throw error;
-        const { sort: _sort, ...compatibleParams } = params;
-        return apiClient.get<PortfoliosPage>(
-          "/build/portfolios",
-          compatibleParams,
-          signal,
-          portfolioPageContract,
-        );
-      }
-    },
+    queryFn: ({ signal }) =>
+      apiClient.get<PortfoliosPage>("/build/portfolios", params, signal, portfolioPageContract),
     enabled: canView,
     staleTime: 60_000,
   });

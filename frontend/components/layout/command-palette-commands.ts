@@ -73,7 +73,7 @@ export function useCommandRegistry({
         id: "project-cycles",
         label: "Cycles",
         group: "actions",
-        keywords: ["project", "Cycles"],
+        keywords: ["project", "Cycles", "Sprint", "Sprints", "Iteration"],
         icon: RefreshCw,
         isAvailable: projectId !== null,
         execute: () => {

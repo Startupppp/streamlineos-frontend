@@ -68,7 +68,9 @@ export {
   chatMessageContract,
   chatMessagesPageContract,
   chatPollPageContract,
+  chatSendResponseContract,
 } from "./message-schema";
+export type { ChatSendResponse } from "./message-schema";
 export {
   chatCreateTaskContract,
   chatEntityActionOptionsContract,

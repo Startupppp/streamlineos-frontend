@@ -10,6 +10,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import type { CreateUpdateInput } from "./updates-schema";
 
@@ -125,6 +126,50 @@ export function UpdateFormFields({ form, isOpen }: UpdateFormFieldsProps) {
   return (
     <Form {...form}>
       <FormField control={form.control} name="body" render={renderBodyField} />
+      <div className="grid grid-cols-2 gap-4">
+        <FormField
+          control={form.control}
+          name="status"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Visibility</FormLabel>
+              <Select value={field.value ?? "published"} onValueChange={field.onChange}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="published">Published</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="audience"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Audience</FormLabel>
+              <Select value={field.value ?? "internal"} onValueChange={field.onChange}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="internal">Internal</SelectItem>
+                  <SelectItem value="client">Client</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
       <FormField control={form.control} name="wins" render={renderWinsField} />
       <FormField control={form.control} name="risks" render={renderRisksField} />
       <FormField control={form.control} name="next" render={renderNextField} />

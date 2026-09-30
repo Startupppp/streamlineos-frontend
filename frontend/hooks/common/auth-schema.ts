@@ -11,6 +11,10 @@ export const invitationValidateContract = z.object({
   userExists: z.boolean(),
 });
 
+export const requestInvitationOtpContract = z.object({
+  ok: z.literal(true),
+});
+
 export const acceptInvitationContract = z.object({
   ok: z.literal(true),
   autoLoginToken: z.string(),

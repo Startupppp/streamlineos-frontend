@@ -177,6 +177,23 @@ beforeEach(() => {
   useManagedProducts.mockReturnValue(EMPTY_RESULT);
 });
 
+describe("ManagedProductsPage — BUG-053: ownerId sentinel not forwarded to hook", () => {
+  it("calls useManagedProducts with ownerId undefined when no owner filter is in the URL so all products are returned instead of filtering by the literal string 'all'", () => {
+    render(<ManagedProductsPage />);
+    expect(useManagedProducts).toHaveBeenCalledWith(
+      expect.objectContaining({ ownerId: undefined }),
+    );
+  });
+
+  it("does not pass the BUILD_FILTER_ALL sentinel as ownerId to useManagedProducts so the backend predicate is never evaluated against an impossible owner_id value", () => {
+    render(<ManagedProductsPage />);
+    const calls = useManagedProducts.mock.calls;
+    for (const [args] of calls) {
+      expect((args as { ownerId?: string }).ownerId).not.toBe("all");
+    }
+  });
+});
+
 describe("ManagedProductsPage — usePageState integration (BSN-01-027)", () => {
   it("calls usePageState with build:managed-products:view permission so 402 errors get classified correctly", () => {
     render(<ManagedProductsPage />);

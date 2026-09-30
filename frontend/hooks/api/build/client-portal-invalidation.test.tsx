@@ -151,7 +151,7 @@ describe("SPEC 1 — ticket visibility invalidation on settled (Requirement C5)"
     const { result } = renderHook(() => useUpdateTicketVisibility(42), { wrapper });
 
     await act(async () => {
-      result.current.mutate({ ticketId: 7, clientVisible: true });
+      result.current.mutate({ ticketId: 7, clientVisible: true, version: 3 });
       await new Promise((r) => setTimeout(r, 0));
     });
 
@@ -160,6 +160,28 @@ describe("SPEC 1 — ticket visibility invalidation on settled (Requirement C5)"
         queryKey: buildWorkQueryKeys.projects.clientPortal.visibility(42),
       }),
     );
+  });
+
+  it("useUpdateTicketVisibility sends the row's own version in the body, so the server can compare and swap", async () => {
+    (apiClient.patch as jest.Mock).mockResolvedValue({ success: true });
+    const qc = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={qc}>{children}</QueryClientProvider>
+    );
+
+    const { useUpdateTicketVisibility } = await import("./client-portal");
+    const { result } = renderHook(() => useUpdateTicketVisibility(42), { wrapper });
+
+    await act(async () => {
+      result.current.mutate({ ticketId: 7, clientVisible: true, version: 9 });
+      await new Promise((r) => setTimeout(r, 0));
+    });
+
+    const body = (apiClient.patch as jest.Mock).mock.calls.at(-1)?.[1];
+    expect(body).toEqual({ clientVisible: true, version: 9 });
   });
 
   it("useUpdateMilestoneVisibility invalidates visibility(projectId) on settled", async () => {

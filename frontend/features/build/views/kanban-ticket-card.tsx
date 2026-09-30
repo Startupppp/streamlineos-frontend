@@ -207,7 +207,6 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
             projectId={projectId}
             version={version}
             currentDueDate={ticket.dueDate}
-            fallbackDate={ticket.createdAt}
           />
         ) : createdDate ? (
           <span className="inline-flex items-center gap-1 text-dense tabular-nums text-muted-foreground">

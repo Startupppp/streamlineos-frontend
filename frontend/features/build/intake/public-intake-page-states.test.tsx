@@ -54,6 +54,7 @@ function setup(
   mockUseProjectIntakeForm.mockReturnValue({
     data: undefined,
     isLoading: false,
+    isPending: false,
     isError: false,
     isSuccess: false,
     error: null,
@@ -66,7 +67,7 @@ function setup(
 
 describe("PublicIntakePage — dynamic form surface (project has a configured intake form)", () => {
   it("shows a loading skeleton while looking up the intake form", () => {
-    setup({ isLoading: true });
+    setup({ isPending: true });
     const skeletons = document.querySelectorAll(".animate-pulse");
     expect(skeletons.length).toBeGreaterThan(0);
   });

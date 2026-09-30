@@ -22,6 +22,9 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import type { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 import { updateProjectSettingsInputSchema } from "@/lib/validation/projects";
+import { useSimpleClientsList } from "@/hooks/api/crm/clients";
+
+const NONE_SENTINEL = "__none__";
 
 export const formSchema = updateProjectSettingsInputSchema.omit({ projectId: true });
 type FormValues = z.infer<typeof formSchema>;
@@ -58,6 +61,9 @@ export function ProjectInfoSection({
   onSubmit,
   MembersSelector,
 }: ProjectInfoSectionProps) {
+  const { data: clientsGated } = useSimpleClientsList();
+  const clientList = clientsGated ?? [];
+
   return (
     <Form {...form}>
       <form
@@ -121,6 +127,42 @@ export function ProjectInfoSection({
             </FormItem>
           )}
         />
+
+        {clientList.length > 0 && (
+          <FormField
+            control={form.control}
+            name="clientId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Client{" "}
+                  <span className="text-muted-foreground font-normal">(Optional)</span>
+                </FormLabel>
+                <Select
+                  value={field.value || NONE_SENTINEL}
+                  onValueChange={(value) =>
+                    field.onChange(value === NONE_SENTINEL ? undefined : value)
+                  }
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="No client" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value={NONE_SENTINEL}>No client</SelectItem>
+                    {clientList.map((c) => (
+                      <SelectItem key={c.id} value={String(c.id)}>
+                        {c.name ?? "(unnamed)"}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         <div className="space-y-2 pt-2">
           <div className="flex items-center gap-2 text-sm font-medium">

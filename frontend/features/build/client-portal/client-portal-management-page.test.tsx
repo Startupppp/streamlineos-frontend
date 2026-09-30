@@ -61,14 +61,25 @@ jest.mock("@/components/ui/content-fill-panel", () => ({
   CONTENT_FILL_PANEL: "content-fill-panel-class",
 }));
 
+jest.mock("./client-visibility-page", () => ({
+  ClientVisibilityPage: () => <div data-testid="visibility-page-stub" />,
+}));
+
+let capturedTabOnValueChange: ((v: string) => void) | undefined;
+
 jest.mock("@/components/ui/tabs", () => ({
   Tabs: ({
     children,
     value,
+    onValueChange,
   }: {
     children: React.ReactNode;
     value?: string;
-  }) => <div data-active-tab={value}>{children}</div>,
+    onValueChange?: (v: string) => void;
+  }) => {
+    capturedTabOnValueChange = onValueChange;
+    return <div data-active-tab={value}>{children}</div>;
+  },
   TabsList: ({ children }: { children: React.ReactNode }) => (
     <div role="tablist">{children}</div>
   ),
@@ -78,7 +89,15 @@ jest.mock("@/components/ui/tabs", () => ({
   }: {
     children: React.ReactNode;
     value: string;
-  }) => <button role="tab" data-value={value}>{children}</button>,
+  }) => (
+    <button
+      role="tab"
+      data-value={value}
+      onClick={() => capturedTabOnValueChange?.(value)}
+    >
+      {children}
+    </button>
+  ),
   TabsContent: ({
     children,
     value,
@@ -291,6 +310,7 @@ const GRANTS_PAGE = {
 beforeEach(() => {
   jest.clearAllMocks();
   currentSearch = new URLSearchParams();
+  capturedTabOnValueChange = undefined;
   mockUseCan.mockReturnValue(true);
   mockUseOnlineStatus.mockReturnValue(true);
   mockUsePageState.mockReturnValue({ kind: "ready" });
@@ -633,5 +653,50 @@ describe("ClientPortalManagementPage — grants cursor pagination writes the URL
     const { ClientPortalManagementPage } = require("./client-portal-management-page");
     render(<ClientPortalManagementPage projectId={1} />);
     expect(screen.queryByTestId("cursor-page-controls")).toBeNull();
+  });
+});
+
+describe("ClientPortalManagementPage — tab navigation writes the section param (FE-86, BUG-047)", () => {
+  it("clicking Visibility sets section=visibility in the URL so the tab survives a reload (FE-86 positive)", () => {
+    const { ClientPortalManagementPage } = require("./client-portal-management-page");
+    render(<ClientPortalManagementPage projectId={1} />);
+    fireEvent.click(screen.getByRole("tab", { name: /Visibility/i }));
+    const target = mockReplace.mock.calls.at(-1)?.[0] as string;
+    expect(target).toContain("section=visibility");
+    expect(target).not.toContain("section=grants");
+  });
+
+  it("NEGATIVE — clicking Grants removes the section param so the default tab has a clean URL (FE-86, BUG-047 negative)", () => {
+    currentSearch = new URLSearchParams("section=visibility");
+    const { ClientPortalManagementPage } = require("./client-portal-management-page");
+    render(<ClientPortalManagementPage projectId={1} />);
+    fireEvent.click(screen.getByRole("tab", { name: /Grants/i }));
+    const target = mockReplace.mock.calls.at(-1)?.[0] as string;
+    expect(target).not.toContain("section=");
+    expect(target).not.toMatch(/\?$/);
+  });
+
+  it("clicking Preview sets section=preview and does not leave a trailing question mark", () => {
+    const { ClientPortalManagementPage } = require("./client-portal-management-page");
+    render(<ClientPortalManagementPage projectId={1} />);
+    fireEvent.click(screen.getByRole("tab", { name: /Preview/i }));
+    const target = mockReplace.mock.calls.at(-1)?.[0] as string;
+    expect(target).toContain("section=preview");
+    expect(target).not.toMatch(/\?$/);
+  });
+
+  it("active tab defaults to grants when the URL carries no section param", () => {
+    const { ClientPortalManagementPage } = require("./client-portal-management-page");
+    render(<ClientPortalManagementPage projectId={1} />);
+    const activeTabEl = document.querySelector("[data-active-tab]");
+    expect(activeTabEl?.getAttribute("data-active-tab")).toBe("grants");
+  });
+
+  it("active tab reflects section=preview from the URL on mount, so a deep-linked preview tab renders immediately", () => {
+    currentSearch = new URLSearchParams("section=preview");
+    const { ClientPortalManagementPage } = require("./client-portal-management-page");
+    render(<ClientPortalManagementPage projectId={1} />);
+    const activeTabEl = document.querySelector("[data-active-tab]");
+    expect(activeTabEl?.getAttribute("data-active-tab")).toBe("preview");
   });
 });

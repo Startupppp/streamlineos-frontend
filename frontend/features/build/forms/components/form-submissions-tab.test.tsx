@@ -78,6 +78,11 @@ jest.mock("@/components/ui/scroll-area", () => ({
   ScrollArea: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
+jest.mock("@/components/ui/alert", () => ({
+  Alert: ({ children }: { children: React.ReactNode }) => <div role="alert">{children}</div>,
+  AlertDescription: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
+}));
+
 jest.mock("@/features/build/shared/build-mobile-card", () => ({
   BuildMobileCard: () => null,
 }));
@@ -193,4 +198,27 @@ it("shows 'No submissions yet' empty state when there are no submissions", () =>
   render(<FormSubmissionsTab projectId={1} formId={1} />);
   expect(screen.getByTestId("empty-state")).toHaveTextContent("No submissions yet");
   expect(screen.queryByTestId("data-table")).not.toBeInTheDocument();
+});
+
+describe("BUG-059: no-actions warning — form marks submissions Processed with no ticket when actions are absent", () => {
+  it("shows the no-actions warning when hasActions is false so the manager knows why tickets are never created", () => {
+    render(<FormSubmissionsTab projectId={1} formId={1} hasActions={false} />);
+    expect(
+      screen.getByText(/no actions on submit configured/i),
+    ).toBeInTheDocument();
+  });
+
+  it("does not show the no-actions warning when hasActions is true so a correctly configured form shows no spurious alert", () => {
+    render(<FormSubmissionsTab projectId={1} formId={1} hasActions={true} />);
+    expect(
+      screen.queryByText(/no actions on submit configured/i),
+    ).not.toBeInTheDocument();
+  });
+
+  it("does not show the no-actions warning when hasActions is omitted so the default is permissive and existing callers are unaffected", () => {
+    render(<FormSubmissionsTab projectId={1} formId={1} />);
+    expect(
+      screen.queryByText(/no actions on submit configured/i),
+    ).not.toBeInTheDocument();
+  });
 });

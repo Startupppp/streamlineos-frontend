@@ -42,13 +42,19 @@ describe("AdminDeferBanner", () => {
     expect(screen.getByRole("button", { name: /Skip for now/i })).toBeInTheDocument();
   });
 
-  it("offers a member nothing, because the wizard still applies to them", () => {
-    // The paired negative. Decision #7 keeps MEMBER guided, so the control must
-    // not merely be hidden by CSS — it must not exist for them.
+  it("offers a MEMBER a skip button — BUG-018 / FE-122", () => {
     signedInAs("MEMBER");
-    const { container } = render(<AdminDeferBanner />);
+    render(<AdminDeferBanner />);
 
-    expect(container).toBeEmptyDOMElement();
+    expect(screen.getByRole("button", { name: /Skip for now/i })).toBeInTheDocument();
+  });
+
+  it("takes a MEMBER to /dashboard, not /hr, after deferral — BUG-018", async () => {
+    signedInAs("MEMBER");
+    render(<AdminDeferBanner />);
+    await userEvent.click(screen.getByRole("button", { name: /Skip for now/i }));
+
+    expect(push).toHaveBeenCalledWith("/dashboard");
   });
 
   it("writes the deferral marker, never the completion one", async () => {

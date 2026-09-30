@@ -326,9 +326,10 @@ function AllPagesItemMenu({ page, resolveHref, menuOpen: controlledOpen, onMenuO
 interface AllPagesCardGridProps {
   row: KbPageCollectionItem;
   resolveHref: (id: number) => string;
+  ownerName?: string;
 }
 
-function AllPagesCardGrid({ row, resolveHref }: AllPagesCardGridProps) {
+function AllPagesCardGrid({ row, resolveHref, ownerName }: AllPagesCardGridProps) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const handleContextMenu = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -348,7 +349,11 @@ function AllPagesCardGrid({ row, resolveHref }: AllPagesCardGridProps) {
       >
         <StatusBadge status={row.status} />
         <TrustBadge trustState={row.trustState} />
-        <OwnerMissingBadge ownerMembershipId={row.ownerMembershipId} />
+        {ownerName ? (
+          <span className="text-xs text-muted-foreground">{ownerName}</span>
+        ) : (
+          <OwnerMissingBadge ownerMembershipId={row.ownerMembershipId} />
+        )}
       </WikiPageCard>
     </div>
   );
@@ -526,9 +531,13 @@ export function WikiHomeAllPages({ projectId, onItemCountChange, onRowsChange }:
 
   const renderMobileCard = useCallback(
     (row: KbPageCollectionItem) => (
-      <AllPagesCardGrid row={row} resolveHref={resolveHref} />
+      <AllPagesCardGrid
+        row={row}
+        resolveHref={resolveHref}
+        ownerName={row.ownerUserId ? ownerNames.get(row.ownerUserId) : undefined}
+      />
     ),
-    [resolveHref],
+    [resolveHref, ownerNames],
   );
 
   const emptyNode = filtersActive ? (
@@ -668,7 +677,12 @@ export function WikiHomeAllPages({ projectId, onItemCountChange, onRowsChange }:
             <div className="flex flex-col gap-3">
               <div className={WIKI_PAGE_CARD_GRID_CLASS}>
                 {rows.map((row) => (
-                  <AllPagesCardGrid key={row.id} row={row} resolveHref={resolveHref} />
+                  <AllPagesCardGrid
+                    key={row.id}
+                    row={row}
+                    resolveHref={resolveHref}
+                    ownerName={row.ownerUserId ? ownerNames.get(row.ownerUserId) : undefined}
+                  />
                 ))}
               </div>
               <TablePagination

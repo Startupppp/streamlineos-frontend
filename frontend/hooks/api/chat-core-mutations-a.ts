@@ -7,13 +7,14 @@ import { lazyContract } from "@/lib/api-envelope";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { Message, MessagesPage, SendMessageInput, EditMessageInput } from "@/types/chat";
+import type { ChatSendResponse } from "@/hooks/api/chat-schema";
 
 const chatOkContract = lazyContract(() =>
   import("@/hooks/api/chat-schema").then((m) => m.chatOkContract),
 );
 
-const chatMessageContract = lazyContract(() =>
-  import("@/hooks/api/chat-schema").then((m) => m.chatMessageContract),
+const chatSendResponseContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatSendResponseContract),
 );
 
 const chatReactionsContract = lazyContract(() =>
@@ -26,11 +27,11 @@ export function useSendMessage() {
   return useAuthorizedMutation("chat:messages:write", {
     mutationKey: ["chat", "messages", "send"],
     mutationFn: ({ channelId, ...body }: SendMessageInput) =>
-      apiClient.post<Message>(
+      apiClient.post<ChatSendResponse>(
         `/chat/channels/${channelId}/messages`,
         body,
         undefined,
-        chatMessageContract,
+        chatSendResponseContract,
       ),
     onMutate: async (variables) => {
       await queryClient.cancelQueries({

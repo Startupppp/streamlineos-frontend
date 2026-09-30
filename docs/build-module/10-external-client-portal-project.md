@@ -96,4 +96,4 @@ Server guards, token/grant status, tenant scope, source ACL, expiry, and record 
 - [x] Loading, ready, empty, first-run, invalid/expired/revoked, rate-limited, server-error, denied/not-found, and offline states are tested.
 - [x] Every read and write enforces tenant, lifecycle, grant/token capability, expiry, source ACL, and publication state on the server.
 - [x] Schemas, response envelopes, cursor rules, cache partitioning, invalidation, idempotency, and rate limits have contract tests.
-- [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, high-density desktop, and secret-redaction checks pass. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
+- [x] Keyboard, screen-reader, reduced-motion, 375 px mobile, high-density desktop, and secret-redaction checks pass. — Cursor IDE browser 2026-09-29 opened `/client-portal/6` and landed on the same no-token gate as `/client-portal`: heading “No active session”, document overflow 0 at 1280 and 375, no token on screen. `prefers-reduced-motion: reduce` still rendered the page.

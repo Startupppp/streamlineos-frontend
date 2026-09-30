@@ -136,6 +136,32 @@ export const chatMessageContract = z.object({
   replyTo: chatMessageReplyToContract.nullable(),
 });
 
+/**
+ * The POST /chat/channels/:id/messages response — matches `chatRawMessageSchema`
+ * on the backend. Unlike the timeline read, the send endpoint does NOT join
+ * `sender`, `attachments`, or `replyTo`, so parsing through `chatMessageContract`
+ * always fails because `sender` is required-and-non-nullable there.
+ */
+export const chatSendResponseContract = z.object({
+  id: z.number(),
+  orgId: z.string(),
+  channelId: z.number(),
+  senderMembershipId: z.number().nullable(),
+  content: z.string().nullable(),
+  replyToId: z.number().nullable(),
+  isEdited: z.boolean(),
+  isDeleted: z.boolean(),
+  messageType: z.enum(["text", "lead_submission", "system"]),
+  metadata: chatMessageMetadataContract,
+  actionStatus: z.string().nullable(),
+  clientKey: z.string().nullable(),
+  channelPosition: z.number().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export type ChatSendResponse = z.infer<typeof chatSendResponseContract>;
+
 export const chatMessagesPageContract = z.object({
   messages: z.array(chatMessageContract),
   nextCursor: z.number().nullable(),

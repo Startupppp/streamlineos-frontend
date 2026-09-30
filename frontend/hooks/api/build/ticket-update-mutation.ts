@@ -229,6 +229,11 @@ export function useUpdateTicket(
         variables.ticketId,
         variables,
       );
+      if (variables.type !== undefined) {
+        void queryClient.invalidateQueries({
+          queryKey: buildWorkQueryKeys.projects.bugs.detail(projectId, variables.ticketId),
+        });
+      }
       options?.onSettled?.(data, error, variables, context, mutFnCtx);
     },
   });

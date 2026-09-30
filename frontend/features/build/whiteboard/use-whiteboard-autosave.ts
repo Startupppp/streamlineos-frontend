@@ -83,11 +83,15 @@ export function useWhiteboardAutosave({
     setStatus("saving");
     try {
       await saveAsyncRef.current(pending.boardId, sceneData);
-      if (pendingRef.current === pending) {
+      if (pending.boardId === boardIdRef.current) {
+        lastSavedVersionRef.current = currentVersion;
+      }
+      const latestPending = pendingRef.current;
+      const latestVersion = latestPending
+        ? getSceneVersion(latestPending.elements)
+        : currentVersion;
+      if (latestVersion === currentVersion) {
         pendingRef.current = null;
-        if (pending.boardId === boardIdRef.current) {
-          lastSavedVersionRef.current = currentVersion;
-        }
         setStatus("saved");
       }
     } catch {

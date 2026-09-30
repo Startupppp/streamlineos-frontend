@@ -11,6 +11,7 @@ import {
 import { buildUrl } from "@/lib/api-client";
 import { parseApiResponse } from "@/lib/api-envelope";
 import { withCorrelation } from "@/lib/observability/with-correlation";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 async function messageFrom(res: Response, fallback: string): Promise<string> {
   try {
@@ -108,5 +109,6 @@ export function useProjectIntakeForm(projectId: string) {
     enabled: !!projectId,
     retry: false,
     staleTime: 60_000,
+    ...INLINE_READ_ERROR,
   });
 }

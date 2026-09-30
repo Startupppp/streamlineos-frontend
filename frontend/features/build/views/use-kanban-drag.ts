@@ -240,6 +240,7 @@ export function useKanbanDrag({
       rankTicket.mutate({
         projectId,
         ticketId,
+        version: sourceTicket.version,
         beforeTicketId,
         afterTicketId,
         ...(isCrossColumn ? { status: newStatus } : {}),

@@ -194,3 +194,21 @@ describe("meeting detail cache key — scoping invariants", () => {
     expect(detailStr.startsWith(allStr.slice(0, -1))).toBe(true);
   });
 });
+
+describe("BUG-048 — formatEventDate must use the meeting's timezone not the viewer's locale", () => {
+  const { formatEventDate } = jest.requireActual("@/lib/date-utils") as typeof import("@/lib/date-utils");
+
+  const UTC_MIDNIGHT = "2026-09-15T00:00:00Z";
+
+  it("formats the same UTC timestamp differently for UTC vs America/New_York confirming timezone argument is honoured", () => {
+    const utcLabel = formatEventDate(UTC_MIDNIGHT, "UTC");
+    const nyLabel = formatEventDate(UTC_MIDNIGHT, "America/New_York");
+    expect(utcLabel).not.toBe(nyLabel);
+  });
+
+  it("formats the same UTC timestamp consistently for a given timezone so the output is deterministic not locale-dependent", () => {
+    const first = formatEventDate(UTC_MIDNIGHT, "Asia/Kolkata");
+    const second = formatEventDate(UTC_MIDNIGHT, "Asia/Kolkata");
+    expect(first).toBe(second);
+  });
+});

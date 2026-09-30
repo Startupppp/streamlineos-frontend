@@ -28,24 +28,25 @@ export function AdminDeferBanner() {
 
   const userId = session?.user?.id;
   const orgId = session?.orgId;
-  // Asks the gate its own question (FE-52): a client component does not read
-  // the role slug, and the button must never appear for somebody the gate then
-  // refuses to let past.
-  const isAdmin = mayDeferOwnOnboarding(session);
+  const role = session?.user?.role;
+  const canDefer = mayDeferOwnOnboarding(session);
+
+  const destination = role === "ORG_ADMIN" ? "/hr" : "/dashboard";
 
   const handleDefer = useCallback(() => {
     if (!userId || !orgId) return;
     writeGateCookie("onboarding-deferred", `${userId}--${orgId}`);
-    router.push("/hr");
-  }, [orgId, router, userId]);
+    router.push(destination);
+  }, [orgId, router, userId, destination]);
 
-  if (!isAdmin || !userId || !orgId) return null;
+  if (!canDefer || !userId || !orgId) return null;
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-muted/40 px-4 py-3">
       <p className="text-dense text-muted-foreground">
-        You are an administrator. You can set up HR first and fill in your own
-        details whenever you like — this page stays available.
+        {role === "ORG_ADMIN"
+          ? "You are an administrator. You can set up HR first and fill in your own details whenever you like — this page stays available."
+          : "You can fill in your details later — this page stays available."}
       </p>
       <Button
         type="button"

@@ -146,7 +146,7 @@ const analyticsSchema = z.object({
   estimateVsActual: z.array(z.object({ ticketId: z.number(), title: z.string(), estimated: z.string().nullable(), actual: z.number() })),
   healthScore: z.number().optional(),
   healthStatus: z.string().optional(),
-  healthBreakdown: z.object({ completionPct: z.number(), onTimePct: z.number(), velocityScore: z.number(), overdueTickets: z.number(), totalTickets: z.number() }).optional(),
+  healthBreakdown: z.object({ completionPct: z.number(), onTimePct: z.number(), velocityScore: z.number(), overdueTickets: z.number(), totalTickets: z.number(), openTickets: z.number() }).optional(),
 });
 
 export const milestoneListContract = cursorPageContract(milestoneRowSchema);

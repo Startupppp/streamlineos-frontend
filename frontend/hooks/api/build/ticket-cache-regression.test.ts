@@ -94,7 +94,7 @@ it("bulk updates invalidate actual detail, board, cycle and report cache entries
   const client = createAppQueryClient();
   const board = queryKeys.projects.tickets({ projectId: 42, view: "board", status: "OPEN" });
   const keys = [queryKeys.projects.ticket(42, 1), queryKeys.projects.ticket(42, 2), board, queryKeys.projects.cycles(42), queryKeys.projects.analytics(42), queryKeys.projectReports.velocity(42), queryKeys.dashboard.myIssues()];
-  for (const key of keys) client.setQueryData(key, key === board ? { data: [], pagination: { nextCursor: null } } : []);
+  for (const key of keys) client.setQueryData(key, key === board ? { data: [{ id: 1, version: 3, status: "OPEN" }, { id: 2, version: 5, status: "OPEN" }], pagination: { nextCursor: null } } : []);
   jest.mocked(apiClient.post).mockResolvedValue({ updated: 2, ticketIds: [1, 2] });
   const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
   const { result } = renderHook(() => useBulkUpdateTickets(42), { wrapper });
@@ -108,9 +108,9 @@ it("bulk updates patch every loaded ticket collection before refetch completes",
   const board = queryKeys.projects.tickets({ projectId: 42, view: "board" });
   const original = {
     data: [
-      { id: 1, priority: "MEDIUM", title: "One" },
-      { id: 2, priority: "HIGH", title: "Two" },
-      { id: 3, priority: "URGENT", title: "Three" },
+      { id: 1, priority: "MEDIUM", title: "One", version: 1 },
+      { id: 2, priority: "HIGH", title: "Two", version: 4 },
+      { id: 3, priority: "URGENT", title: "Three", version: 2 },
     ],
     pagination: { nextCursor: null },
   };
@@ -127,11 +127,63 @@ it("bulk updates patch every loaded ticket collection before refetch completes",
   expect(client.getQueryData(board)).toEqual({
     ...original,
     data: [
-      { id: 1, priority: "LOW", title: "One" },
-      { id: 2, priority: "LOW", title: "Two" },
-      { id: 3, priority: "URGENT", title: "Three" },
+      { id: 1, priority: "LOW", title: "One", version: 1 },
+      { id: 2, priority: "LOW", title: "Two", version: 4 },
+      { id: 3, priority: "URGENT", title: "Three", version: 2 },
     ],
   });
+  expect(apiClient.post).toHaveBeenCalledWith(
+    "/build/42/tickets/bulk",
+    expect.objectContaining({ versions: { 1: 1, 2: 4 } }),
+    undefined,
+    expect.anything(),
+  );
+  client.clear();
+});
+
+it("bulk update posts each selected ticket's own cached version keyed by id rather than one shared or fabricated token", async () => {
+  const client = createAppQueryClient();
+  const board = queryKeys.projects.tickets({ projectId: 42, view: "board" });
+  client.setQueryData(board, {
+    data: [
+      { id: 1, version: 7, status: "OPEN" },
+      { id: 2, version: 12, status: "OPEN" },
+      { id: 3, version: 2, status: "OPEN" },
+    ],
+    pagination: { nextCursor: null },
+  });
+  jest.mocked(apiClient.post).mockResolvedValue({ updated: 2, ticketIds: [1, 2] });
+  const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
+  const { result } = renderHook(() => useBulkUpdateTickets(42), { wrapper });
+
+  await act(async () => {
+    await result.current.mutateAsync({ ticketIds: [1, 2], status: "DONE" });
+  });
+
+  expect(apiClient.post).toHaveBeenCalledWith(
+    "/build/42/tickets/bulk",
+    { ticketIds: [1, 2], status: "DONE", versions: { 1: 7, 2: 12 } },
+    undefined,
+    expect.anything(),
+  );
+  client.clear();
+});
+
+it("bulk update rejects instead of defaulting a version when a selected ticket has no cached copy anywhere", async () => {
+  const client = createAppQueryClient();
+  const board = queryKeys.projects.tickets({ projectId: 42, view: "board" });
+  client.setQueryData(board, {
+    data: [{ id: 1, version: 7, status: "OPEN" }],
+    pagination: { nextCursor: null },
+  });
+  jest.mocked(apiClient.post).mockResolvedValue({ updated: 1, ticketIds: [1] });
+  const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
+  const { result } = renderHook(() => useBulkUpdateTickets(42), { wrapper });
+
+  await expect(
+    result.current.mutateAsync({ ticketIds: [1, 99], status: "DONE" }),
+  ).rejects.toThrow("99");
+  expect(apiClient.post).not.toHaveBeenCalled();
   client.clear();
 });
 
@@ -144,7 +196,7 @@ it("rank status changes refresh counts, reports and dashboard and call the calle
   jest.mocked(apiClient.patch).mockResolvedValue({ id: 1, rank: "a", status: "DONE" });
   const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
   const { result } = renderHook(() => useRankTicket({ onSettled: settled }), { wrapper });
-  await act(async () => { await result.current.mutateAsync({ projectId: 42, ticketId: 1, status: "DONE", beforeTicketId: null, afterTicketId: null }); });
+  await act(async () => { await result.current.mutateAsync({ projectId: 42, ticketId: 1, version: 1, status: "DONE", beforeTicketId: null, afterTicketId: null }); });
   for (const key of keys) expect(client.getQueryState(key)?.isInvalidated).toBe(true);
   expect(settled).toHaveBeenCalledTimes(1);
   expect(client.getQueryState(queryKeys.projectReports.velocity(99))?.isInvalidated).toBe(false);
@@ -165,7 +217,7 @@ it("rank updates patch an active board without issuing a duplicate list request"
   const { result } = renderHook(() => useRankTicket(), { wrapper });
 
   await act(async () => {
-    await result.current.mutateAsync({ projectId: 42, ticketId: 1, status: "DONE", beforeTicketId: null, afterTicketId: null });
+    await result.current.mutateAsync({ projectId: 42, ticketId: 1, version: 1, status: "DONE", beforeTicketId: null, afterTicketId: null });
   });
 
   expect(client.getQueryData(board)).toEqual({

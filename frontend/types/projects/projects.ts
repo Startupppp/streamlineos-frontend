@@ -79,6 +79,7 @@ export interface ProjectWithDetails extends Project {
   statuses?: ProjectStatusRecord[];
   members?: ProjectMember[];
   tickets?: Ticket[];
+  crmClient?: { id: number; name: string | null } | null;
 }
 
 export type ProjectPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
@@ -215,6 +216,7 @@ export interface ProjectAnalytics {
     velocityScore: number;
     overdueTickets: number;
     totalTickets: number;
+    openTickets: number;
   };
 }
 

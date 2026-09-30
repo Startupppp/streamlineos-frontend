@@ -16,6 +16,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { MeetingTypeBadge, MeetingStatusBadge } from "./meeting-badges";
+import { formatEventDate } from "@/lib/date-utils";
 import { MeetingFormSheet } from "./meeting-form-sheet";
 import { MeetingNotesSection } from "./meeting-notes-section";
 import { AttendeesSection } from "./attendees-section";
@@ -133,7 +134,7 @@ export function MeetingDetailPage({ projectId, meetingId }: MeetingDetailPagePro
   }
 
   const scheduledLabel = meeting.scheduledAt
-    ? new Date(meeting.scheduledAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })
+    ? formatEventDate(meeting.scheduledAt, meeting.timezone)
     : null;
 
   return (

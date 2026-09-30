@@ -1,40 +1,81 @@
 # Browser QA progress — Build module page specs
 
-**Authority:** Tracks signed-in Cursor IDE browser verification for open browser acceptance boxes under `docs/build-module/`.
+**Authority:** Signed-in Cursor IDE browser (`cursor-ide-browser`), view `f64219`, `http://localhost:1000`. No Playwright.
 
-**Denominator (2026-09-29 recount):** `OUT OF SCOPE — browser verification` lines = **167** across **88** files. Broader open browser-ish unchecked lines (keyboard / production evidence / related) = **169**. User asked for 224; the checkable open set is **167** OOS boxes — finish all of them (tick or evidence). No repo file lists 224.
+**Denominator:** There is no file that lists 224. The checkable set started at **167** `OUT OF SCOPE — browser verification` lines. Keyboard/responsive boxes are ticked only after 1280 and 375 checks on that route. Production boxes stay open when error, denied, and conflict were not triggered without changing data.
 
-**Projects:** Build QA Sandbox `/build/6` (BQS); StreamlineOS `/build/1` (STRE) when needed.
+## Passed in the Cursor browser this pass
 
-**Rule:** Mark boxes only after signed-in **cursor-ide-browser** evidence. No Playwright. No `browser_tabs` action `new`.
+Document overflow was 0 at 1280 and 375 unless noted. `prefers-reduced-motion: reduce` stayed on and the page still rendered. Signed in as the existing session, project 6 (Build QA Sandbox) unless noted.
 
-## Status
+- `/build/6/cycles` — ready, QA Sprint 01
+- `/build/6/releases` — empty, “No releases yet”
+- `/build/6/updates` — empty, “No updates yet”
+- `/build/6/files` — ready, download.jpg
+- `/build/6/meetings` — empty, focus “New Meeting”
+- `/build/6/milestones` — ready, MVP Pending, focus “New Milestone”
+- `/build/6/workload` — ready board, 22 tickets; page overflow 0; board scrolls inside (375 scroll width 1488)
+- `/build/6/client-portal` — empty grants, “No grants”; one resize-during-navigation flash of “Something went wrong”, reload was clean
+- `/build/6/wiki` — ready, Untitled draft; detail `/build/6/wiki/860067` and `/history` opened
+- `/build/6/whiteboard` — empty, focus “New Board”
+- `/build/6/reports` — ready, “No cycle data yet”
+- `/build/6/qa` — empty “No test cases”; 1280 search/suite/priority/automation one row; 375 search plus 36px Filters
+- `/build/6/modules` — empty, focus “New Module”
+- `/build/6/epics` — ready, 1 epic
+- `/build/6/decisions` — empty, focus “New Decision”
+- `/build/6/incidents` — empty, focus “New Incident”
+- `/build/6/intake` — empty, focus “Copy Form URL”
+- `/build/6/forms` — ready, FORM-2; detail `/build/6/forms/2` opened (inactive Untitled Form)
+- `/build/6/feedbucket` — empty, focus “Create feedback widget”
+- `/build/6/chat` — empty, focus “Create chat channel”
+- `/build/6/change-requests` — empty, focus “New Change Request”
+- `/build/6/budget` — ready, Planned Budget ₹0, focus “Set Budget”
+- `/build/6/approvals` — empty, focus “Request approval”
+- `/build/6/triage` — ready, BQS-22; pager near the bottom of the 900px pane
+- `/build/6/risks` — ready, Open 0; 375 filter row scrolls inside itself
+- `/build/6/settings` — ready hub
+- `/build/6/settings/workflow` — ready, focus “Save”
+- `/build/6/settings/views` — empty, focus “Create view”
+- `/build/6/settings/fields` — ready description, focus “Add Custom Field”
+- `/build/6/settings/automations` — empty, focus “New Automation”
+- `/build/6/settings/agents` — ready, focus “New token”
+- `/build/6/settings/access` — ready member list, focus “Member”
+- `/build/6/settings/integrations` — ready, focus “Add connection”
+- `/build/6/settings/portal` — ready ticket visibility list
+- `/build/6/settings/iterations` — ready, default cycle length 2 weeks
+- `/build/6/settings/retention` — ready, Policy / Legal Holds
+- `/build/6/settings/integrations/webhooks` — empty, focus “Add Webhook”
+- `/build/6/settings/agents/credentials` — ready API tokens section
 
-| metric | count |
-|---|---|
-| Open OOS browser boxes at start of this attempt | **167** |
-| Closed (ticked) this attempt | **0** |
-| Evidenced but left open (error/denied/conflict not seen) | **0** |
-| Verified in Cursor browser this attempt | **0** |
+Also checked this pass:
 
-## Completed / evidenced this pass
+- `/build` — ready list, Build QA Sandbox; 375 search is 343px and Filters/Display/Grid/List are 36px
+- `/build/all-work` — ready, 50 tickets, overflow 0 at 1280 and 375
+- `/build/my-work` — ready; at 375 the tab list scrolls inside itself
+- `/build/goals` — Total Goals 0, focus “New Goal”
+- `/build/teams` — empty, “No teams yet”
+- `/build/inbox` — empty unread, “All caught up”, focus “Unread”
+- `/build/templates` — empty, “No templates yet”. Pressing `/` focused “Search templates…” at 1280 and 375.
 
-(none)
+Later the same pass also measured overflow 0 at 1280 and 375 on:
 
-## Blocked — provided viewIds not visible to this agent
+- `/build/6/backlog`, `/build/6/issues` (board scrolls inside at 375), `/build/6`
+- `/build/roadmap`, `/build/programs`, `/build/portfolios`, `/build/managed-products`
+- `/build/settings/access`, `/build/settings/integrations`, `/build/settings/client-access`
+- `/build/6/wiki/860067`, `/build/6/wiki/860067/history`, `/build/6/forms/2`, `/build/6/tickets/BQS-22`, `/build/6/cycles/9`
+- `/build/command-center`, `/build/approvals`
+- `/portal`, `/portal/6`
+- `/client-portal` and `/client-portal/6` both land on `/accept-invitation?reason=no_token` (“No active session”)
+- `/intake/6` — legacy form “Submit a request”, overflow 0 at 1280 and 375
+- `/build/1/feedbucket/78` — ready submission, overflow 0 at 1280 and 375
 
-Parent supplied:
+## Still open
 
-- Primary `c79e04` (`http://localhost:1000/build/6/issues`)
-- Fallback `f64219`
-- Fallback `5e7488`
+These keyboard boxes stay open because the route could not be measured without creating data or guessing an id. The org has two projects, `/build/6` and `/build/1`. Portfolios, managed products, teams, and goals are empty for the org. Meetings and incidents are empty on both projects. QA Test Runs is empty on both. Whiteboard is empty on both. StreamlineOS has no forms. The roadmap still has no public link, and form 2 is still inactive with no public token.
 
-Observed:
+- Detail with no record: portfolio, managed product (and its insights, projects, roadmap, goals, feedback), team, meeting, incident, goal, QA run
+- Public with no token or published link: `/roadmap/[orgId]`, `/forms/[formToken]`, `/board/[shareToken]`
 
-1. `browser_tabs` `list` → empty.
-2. `browser_lock` on `c79e04`, `f64219`, `5e7488` → each: `No browser tab available. Please navigate to a page first.`
-3. `browser_navigate` to each viewId → each: `Browser view not found: <id>.`
+Every production evidence box stays open. Ready or empty was seen on the pages above. Error, denied, and conflict were not triggered, and no records were created.
 
-Per instructions: **stopped. Did not create a tab. Did not use Playwright. Did not mark any row complete.**
-
-**Unblock:** run the verification pass from the parent agent that owns those viewIds (or re-share a live viewId after `browser_tabs` list shows it), then resume locking `c79e04` without creating tabs.
+`OUT OF SCOPE — browser verification` no longer appears on the page specs. The phrase remains on three ticket notes (`50`, `51`, `55`) that ask for a before/after visual comparison, plus the historical sentence in `RELEASE-STATUS.md`.

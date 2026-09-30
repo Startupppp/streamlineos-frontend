@@ -10,7 +10,12 @@ jest.mock("@/hooks/api/organization", () => ({
   useOrgMembers: jest.fn(),
 }));
 
+jest.mock("@/hooks/api/crm/clients", () => ({
+  useSimpleClientsList: jest.fn(),
+}));
+
 const mockUseOrgMembers = jest.requireMock("@/hooks/api/organization").useOrgMembers as jest.Mock;
+const mockUseSimpleClientsList = jest.requireMock("@/hooks/api/crm/clients").useSimpleClientsList as jest.Mock;
 
 const MEMBERS = [
   {
@@ -67,10 +72,72 @@ beforeEach(() => {
   mockUseOrgMembers.mockReturnValue({
     data: { data: MEMBERS, hasMore: false, nextCursor: null },
   });
+  mockUseSimpleClientsList.mockReturnValue({ data: [] });
 });
 
 afterEach(() => {
   jest.clearAllMocks();
+});
+
+describe("StepReview features row — BUG-004", () => {
+  it("shows enabled feature labels in the Features row so the Review step reflects choices from the Features step", () => {
+    const draft: WizardDraft = {
+      ...makeDraft([]),
+      features: { backlog: true, kanban: true, bugs: false, qa: true },
+      modules: { epics: false, timeTracking: false, wiki: false },
+    };
+    render(<StepReview draft={draft} />);
+
+    expect(document.body.textContent).toContain("Backlog");
+    expect(document.body.textContent).toContain("Kanban Board");
+    expect(document.body.textContent).toContain("QA / Testing");
+    expect(document.body.textContent).not.toContain("Bug Tracker");
+  });
+
+  it("shows None in the Features row when all features are disabled", () => {
+    const draft: WizardDraft = {
+      ...makeDraft([]),
+      features: { backlog: false, kanban: false },
+      modules: { epics: false, timeTracking: false, wiki: false },
+    };
+    render(<StepReview draft={draft} />);
+
+    expect(screen.getByText("None")).toBeInTheDocument();
+  });
+});
+
+describe("StepReview manager row — BUG-004", () => {
+  it("shows the assigned manager's name in the Manager row", () => {
+    const draft: WizardDraft = { ...makeDraft([]), managerId: "u1" };
+    render(<StepReview draft={draft} />);
+
+    expect(document.body.textContent).toContain("Alice Smith");
+  });
+
+  it("shows Not assigned in the Manager row when no manager is set", () => {
+    render(<StepReview draft={makeDraft([])} />);
+
+    expect(document.body.textContent).toContain("Not assigned");
+  });
+});
+
+describe("StepReview client row — BUG-004", () => {
+  it("shows the client name when a client is selected", () => {
+    mockUseSimpleClientsList.mockReturnValue({
+      data: [{ id: 5, name: "Acme Corp" }],
+    });
+    const draft: WizardDraft = { ...makeDraft([]), clientId: "5" };
+    render(<StepReview draft={draft} />);
+
+    expect(document.body.textContent).toContain("Acme Corp");
+  });
+
+  it("omits the Client row entirely when no client is selected", () => {
+    const draft: WizardDraft = { ...makeDraft([]), clientId: "" };
+    render(<StepReview draft={draft} />);
+
+    expect(document.body.textContent).not.toContain("Client");
+  });
 });
 
 describe("StepReview team row", () => {

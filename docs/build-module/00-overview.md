@@ -133,6 +133,7 @@ Build owns projects, work items, cycles, delivery planning, project governance, 
 - `04-shared-components.md`: deep shared modules and their interfaces.
 - `05-performance-caching.md`: endpoint risks, caching, invalidation, optimistic and realtime rules.
 - `06-prioritized-backlog.md`: P0/P1/P2 dependency order and effort.
+- `07-active-backlog.md`: current grouped implementation packets for parallel agents; it does not replace the evidence documents.
 - `08-build-os-flowcharts.md`: current audience flows, capability map, and competitive positioning.
 - `10-*.md`: self-contained contracts for canonical live pages and approved target pages; redirect-only duplicate-route specs are removed.
 - `99-kill-list.md`: features and routes to remove or refuse.

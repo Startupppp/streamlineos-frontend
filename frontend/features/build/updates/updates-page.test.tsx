@@ -461,3 +461,38 @@ describe("keyboard navigation — CCG-4", () => {
     );
   });
 });
+
+describe("BUG-046 — createUpdateSchema accepts status and audience added in fix", () => {
+  const { createUpdateSchema } = jest.requireActual("./updates-schema") as typeof import("./updates-schema");
+
+  it("rejects when body is missing — schema baseline is still enforced after adding the new fields", () => {
+    const result = createUpdateSchema.safeParse({ status: "published", audience: "internal" });
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts a payload with status=published and audience=internal so the form default values pass validation", () => {
+    const result = createUpdateSchema.safeParse({
+      body: "Sprint 3 completed.",
+      status: "published",
+      audience: "internal",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts a payload with status=draft and audience=client", () => {
+    const result = createUpdateSchema.safeParse({
+      body: "Work in progress.",
+      status: "draft",
+      audience: "client",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects an invalid status value that is not published or draft", () => {
+    const result = createUpdateSchema.safeParse({
+      body: "Sprint 3 completed.",
+      status: "archived",
+    });
+    expect(result.success).toBe(false);
+  });
+});

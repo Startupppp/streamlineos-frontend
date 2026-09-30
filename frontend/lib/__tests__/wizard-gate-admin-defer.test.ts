@@ -35,6 +35,7 @@ function session(overrides: Record<string, unknown> = {}) {
     organizationAccess: "active",
     orgOnboardingCompletedAt: "2026-09-01T00:00:00.000Z",
     userOnboardingCompletedAt: null,
+    enabledModules: ["hr"],
     user: { id: USER, isOrgOwner: false, role: "ORG_ADMIN" },
     ...overrides,
   };
@@ -54,11 +55,9 @@ describe("an org admin may defer their own onboarding wizard", () => {
     expect(resolveWizardGate(session() as never, cookies([DEFERRED]))).toBeNull();
   });
 
-  it("keeps a member in the wizard even with the deferral cookie set", () => {
-    // The cookie is not a bypass anybody can mint for themselves: the gate
-    // checks the standing, not just the cookie.
+  it("lets a MEMBER who chose later go on — BUG-018 / FE-122", () => {
     const member = session({ user: { id: USER, isOrgOwner: false, role: "MEMBER" } });
-    expect(resolveWizardGate(member as never, cookies([DEFERRED]))).toBe("/employee-onboarding");
+    expect(resolveWizardGate(member as never, cookies([DEFERRED]))).toBeNull();
   });
 
   it("does not let a deferral skip org setup, which is a different gate", () => {

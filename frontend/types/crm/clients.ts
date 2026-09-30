@@ -9,7 +9,7 @@ export interface ClientTimelineEvent {
 
 export interface SimpleClient {
   id: number;
-  name: string;
+  name: string | null;
 }
 
 export interface ClientOpportunity {

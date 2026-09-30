@@ -188,6 +188,7 @@ export const ListView = memo(function ListView({
         rankTicket.mutate({
           projectId,
           ticketId: moved.id,
+          version: moved.version,
           beforeTicketId: beforeId,
           afterTicketId: afterId,
         });

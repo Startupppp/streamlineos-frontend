@@ -200,6 +200,7 @@ export function useBoardUrlState(
       hideCompleted,
       statuses,
     );
+    tickets = tickets.filter((t) => t.type !== "EPIC");
     if (qaMatchIds) {
       tickets = tickets.filter((ticket) => qaMatchIds.has(Number(ticket.id)));
     }
@@ -257,7 +258,7 @@ export function useBoardUrlState(
 
   const doneCount = useMemo(() => {
     const completedStatuses = getCompletedStatusNames(statuses);
-    return allTickets.filter((t) => completedStatuses.has(t.status)).length;
+    return allTickets.filter((t) => t.type !== "EPIC" && completedStatuses.has(t.status)).length;
   }, [allTickets, statuses]);
 
   const showEmptyFilterState =

@@ -2,16 +2,10 @@
 
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
+import { TriangleAlert } from "lucide-react";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
-
-const FORM_SUBMISSION_TABLE_HEADERS = [
-  "Submitter",
-  "Status",
-  "Ticket",
-  "Submitted",
-  "Actions",
-] as const;
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +25,14 @@ import type {
   FormSubmissionStatus,
 } from "@/types/projects/forms";
 
+const FORM_SUBMISSION_TABLE_HEADERS = [
+  "Submitter",
+  "Status",
+  "Ticket",
+  "Submitted",
+  "Actions",
+] as const;
+
 const STATUS_VARIANT: Record<
   FormSubmissionStatus,
   "default" | "secondary" | "destructive"
@@ -49,6 +51,7 @@ const STATUS_LABEL: Record<FormSubmissionStatus, string> = {
 interface FormSubmissionsTabProps {
   projectId: number;
   formId: number;
+  hasActions?: boolean;
 }
 
 interface SubmissionActionsCellProps {
@@ -111,6 +114,7 @@ function SubmissionActionsCell({
 export function FormSubmissionsTab({
   projectId,
   formId,
+  hasActions = true,
 }: FormSubmissionsTabProps) {
   const canManage = useCan("build:forms:manage");
   const [viewTarget, setViewTarget] = useState<FormSubmission | null>(null);
@@ -244,6 +248,14 @@ export function FormSubmissionsTab({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 pt-3">
+      {!hasActions && (
+        <Alert variant="default" className="border-warning/40 bg-warning/5">
+          <TriangleAlert className="h-4 w-4 text-warning" />
+          <AlertDescription className="text-sm">
+            This form has no Actions on Submit configured. Submissions will be marked Processed with no ticket created.
+          </AlertDescription>
+        </Alert>
+      )}
       <BuildListSurface<FormSubmission>
         permission="build:forms:manage"
         rows={items}

@@ -97,8 +97,21 @@ jest.mock("@/components/ui/skeleton", () => ({
 }));
 
 jest.mock("./triage-row", () => ({
-  TriageRow: ({ isSelected }: { isSelected?: boolean }) => (
-    <div data-testid="triage-row" data-selected={String(isSelected)} />
+  TriageRow: ({
+    ticket,
+    onAccept,
+    onDecline,
+    isSelected,
+  }: {
+    ticket: { id: number };
+    onAccept?: (id: number) => void;
+    onDecline?: (id: number) => void;
+    isSelected?: boolean;
+  }) => (
+    <div data-testid="triage-row" data-selected={String(isSelected)}>
+      <button type="button" data-testid="accept-btn" onClick={() => onAccept?.(ticket.id)}>Accept</button>
+      <button type="button" data-testid="decline-btn" onClick={() => onDecline?.(ticket.id)}>Decline</button>
+    </div>
   ),
 }));
 
@@ -112,6 +125,17 @@ jest.mock("@/hooks/api/build/project-members", () => ({
 
 jest.mock("@/hooks/api/build/advanced", () => ({
   useCycles: jest.fn(() => ({ data: [] })),
+}));
+
+const mockRemoveTicketFromCollections = jest.fn();
+jest.mock("@/hooks/api/build/ticket-cache", () => ({
+  removeTicketFromCollections: (...args: unknown[]) => mockRemoveTicketFromCollections(...args),
+}));
+
+const mockQueryClient = {};
+jest.mock("@tanstack/react-query", () => ({
+  ...jest.requireActual("@tanstack/react-query"),
+  useQueryClient: () => mockQueryClient,
 }));
 
 jest.mock("@/features/build/shared/bulk-action-bar", () => ({
@@ -386,4 +410,77 @@ it("selecting a row then clicking bulk-cycle invokes useBulkUpdateTickets mutate
     { ticketIds: [99], cycleId: 2 },
     expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
   );
+});
+
+describe("BUG-037 — triage list excludes epics and cycle-assigned tickets, and removes accepted/declined items immediately", () => {
+  const epicTicket = {
+    ...SUBMISSION, id: 200, type: "EPIC", cycleId: null, ticketNumber: 200,
+  };
+  const cycleAssignedTicket = {
+    ...SUBMISSION, id: 201, type: "BUG", cycleId: 5, ticketNumber: 201,
+  };
+
+  beforeEach(() => {
+    mockRemoveTicketFromCollections.mockClear();
+  });
+
+  it("epic-type ticket is not rendered in the triage list even when its status is TODO", () => {
+    mockUseTickets.mockReturnValue(
+      baseTicketsResult({ data: { data: [epicTicket], pagination: { hasMore: false } } }),
+    );
+    render(<TriagePage projectId={1} />);
+    expect(screen.queryByTestId("triage-row")).not.toBeInTheDocument();
+  });
+
+  it("cycle-assigned ticket is not rendered in the triage list even when its status is TODO", () => {
+    mockUseTickets.mockReturnValue(
+      baseTicketsResult({ data: { data: [cycleAssignedTicket], pagination: { hasMore: false } } }),
+    );
+    render(<TriagePage projectId={1} />);
+    expect(screen.queryByTestId("triage-row")).not.toBeInTheDocument();
+  });
+
+  it("regular TODO ticket with no cycleId passes through the filter and is rendered", () => {
+    mockUseTickets.mockReturnValue(
+      baseTicketsResult({ data: { data: [SUBMISSION], pagination: { hasMore: false } } }),
+    );
+    render(<TriagePage projectId={1} />);
+    expect(screen.getByTestId("triage-row")).toBeInTheDocument();
+  });
+
+  it("accept onSuccess calls removeTicketFromCollections so the row disappears immediately without a refetch", async () => {
+    let capturedOnSuccess: (() => void) | undefined;
+    const mutateFn = jest.fn((_vars: unknown, opts: { onSuccess: () => void }) => {
+      capturedOnSuccess = opts.onSuccess;
+    });
+    mockUseUpdateTicket.mockReturnValue({ mutate: mutateFn, isPending: false });
+    mockUseTickets.mockReturnValue(
+      baseTicketsResult({ data: { data: [SUBMISSION], pagination: { hasMore: false } } }),
+    );
+    render(<TriagePage projectId={1} />);
+    await act(async () => { fireEvent.click(screen.getByTestId("accept-btn")); });
+    expect(mutateFn).toHaveBeenCalled();
+    await act(async () => { capturedOnSuccess?.(); });
+    expect(mockRemoveTicketFromCollections).toHaveBeenCalledWith(
+      mockQueryClient, 1, SUBMISSION.id,
+    );
+  });
+
+  it("decline onSuccess calls removeTicketFromCollections with the correct projectId and ticketId", async () => {
+    let capturedOnSuccess: (() => void) | undefined;
+    const mutateFn = jest.fn((_vars: unknown, opts: { onSuccess: () => void }) => {
+      capturedOnSuccess = opts.onSuccess;
+    });
+    mockUseUpdateTicket.mockReturnValue({ mutate: mutateFn, isPending: false });
+    mockUseTickets.mockReturnValue(
+      baseTicketsResult({ data: { data: [SUBMISSION], pagination: { hasMore: false } } }),
+    );
+    render(<TriagePage projectId={1} />);
+    await act(async () => { fireEvent.click(screen.getByTestId("decline-btn")); });
+    expect(mutateFn).toHaveBeenCalled();
+    await act(async () => { capturedOnSuccess?.(); });
+    expect(mockRemoveTicketFromCollections).toHaveBeenCalledWith(
+      mockQueryClient, 1, SUBMISSION.id,
+    );
+  });
 });

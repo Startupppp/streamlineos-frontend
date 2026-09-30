@@ -51,6 +51,16 @@ function makeTickets(count: number): GanttTestTicket[] {
   }));
 }
 
+function makeUndatedTickets(count: number) {
+  return Array.from({ length: count }, (_, i) => ({
+    id: 1000 + i + 1,
+    title: `Unscheduled item ${i + 1}`,
+    status: "TODO",
+    type: "TASK",
+    ticketNumber: 1000 + i + 1,
+  }));
+}
+
 const onTicketClick = jest.fn();
 
 function renderTimeline() {
@@ -104,6 +114,30 @@ describe("GanttView — nothing is lost behind the bound", () => {
     renderTimeline();
     scrollTimelineTo(HEADER_HEIGHT + TOTAL * ROW_HEIGHT - 400);
     expect(screen.getByLabelText(`#${TOTAL} Work item ${TOTAL}`)).toBeInTheDocument();
+  });
+});
+
+describe("GanttView — undated tickets appear as rows", () => {
+  it("renders undated tickets as rows so tickets without dates are never silently dropped from the timeline (BUG-032)", () => {
+    render(
+      <GanttView
+        tickets={makeUndatedTickets(5)}
+        projectId={1}
+        onTicketClick={onTicketClick}
+      />,
+    );
+    expect(screen.getAllByRole("listitem")).toHaveLength(5);
+  });
+
+  it("preserves the total ticket count when dated and undated tickets are mixed so no item is silently omitted (BUG-032)", () => {
+    render(
+      <GanttView
+        tickets={[...makeTickets(3), ...makeUndatedTickets(3)]}
+        projectId={1}
+        onTicketClick={onTicketClick}
+      />,
+    );
+    expect(screen.getAllByRole("listitem")).toHaveLength(6);
   });
 });
 

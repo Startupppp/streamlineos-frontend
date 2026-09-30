@@ -71,6 +71,9 @@ export function IncidentSeverityBadge({ severity }: { severity: string }) {
 }
 
 export function IncidentSlaBadge({ incident }: { incident: Incident }) {
+  if (!incident.responseDueAt && !incident.resolutionDueAt) {
+    return <span className="text-dense text-muted-foreground">—</span>;
+  }
   const state = getSlaState(incident);
   if (state.label === "Met")
     return (

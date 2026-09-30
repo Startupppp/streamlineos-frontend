@@ -170,6 +170,16 @@ const nextConfig: NextConfig = {
       permanent: false,
     },
     {
+      source: "/build/:projectId(\\d+)/gantt",
+      destination: "/build/:projectId/issues?view=timeline",
+      permanent: false,
+    },
+    {
+      source: "/build/:projectId(\\d+)/roadmap",
+      destination: "/build/:projectId/milestones",
+      permanent: false,
+    },
+    {
       source: "/build/:projectId(\\d+)/bugs",
       destination: "/build/:projectId/issues?type=BUG",
       permanent: false,
@@ -296,6 +306,11 @@ const nextConfig: NextConfig = {
     },
     {
       source: "/build/workspaces",
+      destination: "/build",
+      permanent: false,
+    },
+    {
+      source: "/build/projects",
       destination: "/build",
       permanent: false,
     },

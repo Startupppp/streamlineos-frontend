@@ -104,6 +104,7 @@ export const IntakeItemCard = memo(function IntakeItemCard({ item, canManage, on
             size="sm"
             className="text-xs h-7"
             onClick={handleAccept}
+            aria-label="Accept — move to work queue"
           >
             Accept
           </AnimatedIconButton>
@@ -115,6 +116,7 @@ export const IntakeItemCard = memo(function IntakeItemCard({ item, canManage, on
             variant="outline"
             className="text-xs h-7"
             onClick={handleDecline}
+            aria-label="Decline — remove from intake"
           >
             Decline
           </AnimatedIconButton>

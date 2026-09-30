@@ -388,7 +388,7 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
                     <SelectItem value={NONE_SENTINEL}>No client</SelectItem>
                     {clientList.map((c) => (
                       <SelectItem key={c.id} value={String(c.id)}>
-                        {c.name}
+                        {c.name ?? "(unnamed)"}
                       </SelectItem>
                     ))}
                   </SelectContent>
