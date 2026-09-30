@@ -107,6 +107,8 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 
 ## Browser QA evidence (2026-09-29)
 
+- 2026-09-30: `/build/6/approvals` rendered its authenticated empty state and request sheet. Empty submission exposed required item and approver validation. The shared toolbar now renders Status, Type, and Approver directly on desktop; at 375 px the overflow sheet contains two controls rather than a redundant single filter. Escape closed the sheet without creating data. Denied, conflict, and populated decision lifecycles remain open.
+
 - Local route `/build/6/approvals` (Build QA Sandbox, authenticated, `http://localhost:1000`) renders the empty state: heading "Approvals", "No approvals yet". No approval was created, decided, or deleted.
 - Opening Request approval → Request task approval used to replace the page with the Next.js error boundary (`ApiError: Project not found` from `RequestApprovalSheet`). Retested after the fix: the sheet stays open, the task picker becomes "Search tasks…", and the page heading remains "Approvals". Resource timing for that open shows `GET /build/6/tickets?limit=50` (200) and does not call `/build/portal/projects/6/change-requests`, which was the 404. Cancel closes the sheet and leaves the empty list. `request-approval-sheet.test.tsx` and `card-field-estimate.test.tsx`: 42 tests passed.
 - Cursor IDE browser 2026-09-29 rechecked `/build/6/approvals` at 1280 and 375: document overflow 0, empty state “No approvals yet”, focus on “Request approval”, reduced motion still rendered the page. Filtered-empty, error, denied, and conflict were not triggered. The production evidence box stays open for those three.

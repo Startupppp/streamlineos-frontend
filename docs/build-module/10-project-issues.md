@@ -419,6 +419,7 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 - [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [x] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — Cursor IDE browser 2026-09-29, signed in, `/build/6/issues` at 1280 and 375: document overflow 0, heading “Build QA Sandbox”. At 375 the board scrolls inside the page (scroll width 1496, client 343). `prefers-reduced-motion: reduce` still rendered the page.
+- [x] Virtualized board droppable registration is stable. — 2026-09-30: the browser warning `provided.innerRef has not been provided with a HTMLElement` reproduced twice. The virtual ticket list now registers a temporary HTMLElement before handing off to the real scrolling list; real DragDropContext-focused tests pass. Ticket cards were also retested at desktop and 375 px with readable hierarchy, persistent selection, and reachable compact actions.
   - Keyboard, create-shortcut permission gate: verified in jsdom.
 
     ```text

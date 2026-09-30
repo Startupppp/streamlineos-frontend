@@ -84,6 +84,28 @@ describe("KanbanTicketCard — selection does not cost navigation", () => {
     expect(onSelect).toHaveBeenCalledWith(7);
   });
 
+  it("does not bubble title activation into the draggable row", async () => {
+    const onSelect = jest.fn();
+    function handleOuterClick() {
+      onSelect(ticket.id);
+    }
+    render(
+      <div onClick={handleOuterClick}>
+        <KanbanTicketCard
+          ticket={ticket}
+          projectId={1}
+          projectKey="P1"
+          isDragging={false}
+          onSelect={onSelect}
+        />
+      </div>,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: /Fix the broken import/i }));
+
+    expect(onSelect).toHaveBeenCalledTimes(1);
+  });
+
   it("checking the card checkbox selects it without opening the ticket", async () => {
     const onSelectedChange = jest.fn();
     const onSelect = jest.fn();
@@ -130,6 +152,16 @@ describe("KanbanTicketCard — selection does not cost navigation", () => {
     expect(
       screen.getByRole("checkbox", { name: /Select Fix the broken import/i }),
     ).toBeInTheDocument();
+  });
+
+  it("exposes selected state for durable visual styling", () => {
+    renderCard({
+      isSelected: true,
+      onSelectedChange: jest.fn(),
+    });
+
+    expect(screen.getByRole("checkbox")).toBeChecked();
+    expect(screen.getByRole("checkbox").closest("[data-selected='true']")).not.toBeNull();
   });
 
   it("renders no checkbox for a caller that wires no selection", () => {

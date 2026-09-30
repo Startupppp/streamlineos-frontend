@@ -17,9 +17,9 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
 }));
 
 jest.mock("@/features/build/views/ticket-quick-actions", () => ({
-  TicketQuickActions: ({ open }: { open?: boolean }) => (
+  TicketQuickActions: ({ open, className }: { open?: boolean; className?: string }) => (
     <>
-      <button type="button" aria-label="Ticket actions">
+      <button type="button" aria-label="Ticket actions" className={className}>
         x
       </button>
       {open ? (
@@ -104,6 +104,14 @@ describe("a kanban ticket card", () => {
     expect(screen.getByRole("button", { name: ticket.title })).toHaveFocus();
     await userEvent.tab();
     expect(screen.getByRole("button", { name: "Ticket actions" })).toHaveFocus();
+  });
+
+  it("keeps ticket actions visible at narrow viewports where hover is unavailable", () => {
+    renderCard();
+    expect(screen.getByRole("button", { name: "Ticket actions" })).toHaveClass(
+      "opacity-100",
+      "sm:opacity-0",
+    );
   });
 
   it("names the card's own action for what it opens, a menu, and not for one command inside it", () => {
