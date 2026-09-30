@@ -3,9 +3,7 @@
 import {
   memo,
   useCallback,
-  useEffect,
   useMemo,
-  useRef,
   type CSSProperties,
   type KeyboardEvent,
   type MouseEvent,
@@ -179,28 +177,6 @@ export const KanbanVirtualTicketList = memo(function KanbanVirtualTicketList({
   dragStartRef,
   canDragTickets,
 }: KanbanVirtualTicketListProps) {
-  const innerRefCallbackRef = useRef<((element: HTMLElement | null) => void) | null>(null);
-
-  const droppableElementRef = useRef<HTMLElement | null>(null);
-
-  const setDroppableRef = useCallback(
-    (handle: { element: HTMLDivElement | null } | null) => {
-      const element = handle?.element ?? null;
-      if (!element || element === droppableElementRef.current) return;
-      droppableElementRef.current = element;
-      innerRefCallbackRef.current?.(element);
-    },
-    [],
-  );
-
-  useEffect(
-    () => () => {
-      droppableElementRef.current = null;
-      innerRefCallbackRef.current?.(null);
-    },
-    [],
-  );
-
   const heightKey = useMemo(() => tickets.map((ticket) => ticket.id).join("-"), [tickets]);
   const rowHeight = useDynamicRowHeight({
     defaultRowHeight: DEFAULT_ROW_HEIGHT,
@@ -259,29 +235,32 @@ export const KanbanVirtualTicketList = memo(function KanbanVirtualTicketList({
       renderClone={renderClone}
     >
       {(provided, snapshot) => {
-        innerRefCallbackRef.current = provided.innerRef;
         const rowCount = snapshot.isUsingPlaceholder ? tickets.length + 1 : tickets.length;
 
         return (
-          <List<KanbanVirtualRowData>
+          <div
+            ref={provided.innerRef}
             {...provided.droppableProps}
-            listRef={setDroppableRef}
             className={cn(
-              "scrollbar-hide rounded-b-lg px-2 pb-2",
-              stretch ? "min-h-0" : "",
+              "flex min-h-0 flex-col overflow-hidden",
+              stretch ? "min-h-0 flex-1" : "",
               minHeightClass,
               "transition-[background-color,box-shadow] duration-150 ease-out",
               snapshot.isDraggingOver && "bg-primary/[0.07] ring-1 ring-inset ring-primary/15",
             )}
-            style={{ height: "100%" }}
-            defaultHeight={320}
-            rowCount={rowCount}
-            rowHeight={rowHeight}
-            rowComponent={KanbanVirtualRow}
-            rowProps={rowProps}
-            rowKey={getRowKey}
-            overscanCount={OVERSCAN_COUNT}
-          />
+          >
+            <List<KanbanVirtualRowData>
+              className="scrollbar-hide rounded-b-lg px-2 pb-2"
+              style={{ height: "100%" }}
+              defaultHeight={320}
+              rowCount={rowCount}
+              rowHeight={rowHeight}
+              rowComponent={KanbanVirtualRow}
+              rowProps={rowProps}
+              rowKey={getRowKey}
+              overscanCount={OVERSCAN_COUNT}
+            />
+          </div>
         );
       }}
     </Droppable>

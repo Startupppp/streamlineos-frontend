@@ -111,6 +111,17 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
     );
   });
 
+  it("does not forward the unsupported unscheduled filter to the server", () => {
+    const { apiClient } = jest.requireMock("@/lib/api-client");
+    (apiClient.get as jest.Mock).mockResolvedValue({ data: [], nextCursor: null });
+
+    const opts = useCaptureQueryOptions(5, { unscheduled: true } as never);
+    void opts.queryFn({ pageParam: undefined, signal: forwardedSignal });
+
+    const params = (apiClient.get as jest.Mock).mock.calls.at(-1)?.[1] as Record<string, unknown>;
+    expect(params).not.toHaveProperty("unscheduled");
+  });
+
   it("passes module filter as moduleIds to the server", () => {
     const { apiClient } = jest.requireMock("@/lib/api-client");
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [], nextCursor: null });

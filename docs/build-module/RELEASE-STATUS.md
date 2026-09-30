@@ -1,5 +1,19 @@
 # Build Module Release Status
 
+## 2026-09-29 production-backed reconciliation
+
+The local frontend was exercised against the configured production API (`https://api.streamlineos.in`) through the authenticated browser session. `/build` loaded the available projects, including the disposable `Build QA Sandbox`; a unique project search produced the expected filtered-empty state. `/build/6` initially failed because the production `/build/6/analytics` response omitted `healthBreakdown.openTickets` while the frontend contract required it. The frontend contract now treats that field as optional with a default of `0`, preserving compatibility with the deployed response while accepting the newer backend shape. Focused frontend tests passed: 2 suites, 65 tests. After refresh, `/build/6` rendered production-backed summary statistics, status counts, milestone, and recent activity.
+
+This does not close the full API parity packet: the deployed backend still needs to be regenerated and redeployed from the current backend contract, and the broader Build browser matrix remains open. No production mutation, deletion, upload, or customer-data change was performed.
+
+## 2026-09-30 parallel-agent verification
+
+Three scoped implementation agents completed. The backlog request no longer forwards the unsupported `unscheduled` parameter and no longer sends the retired `SUBTASK` type; focused frontend verification passed 3 suites and 44 tests, and production-backed `/build/6/backlog` rendered ticket rows. Project deletion now guards ticket/comment updates with `deleted_at IS NULL`, with focused lifecycle verification passing 4 suites and 23 tests; migration 1540 now has a rollback file. Client-visibility source/OpenAPI parity now includes required ticket `version`, with 12 backend tests passing and the checked-in backend OpenAPI updated.
+
+Remaining production blockers: the hosted backend still lacks the new restore/retention routes until regenerated and deployed, project settings portal still reports “Failed to load project settings,” Issues and some detail surfaces remain incomplete in browser verification, retention self-referential ticket deletion and object-storage cleanup remain unimplemented, and the real application-role database proof is blocked by PAM authentication.
+
+The official backend OpenAPI generator was run successfully on 2026-09-30: 4,101 operations, all exposure-stamped, with 4,087 carrying Zod contracts. The frontend contract was vendored from that artifact; it now contains 12 Build restore routes and the retention-purge operation. Vendor check passes. Full parity is blocked by 21 pre-existing CRM `POST /clients` database-column findings from concurrent non-Build work; no new Build required-field finding remains.
+
 **Updated:** 2026-09-29 (engineering pass and documentation reconciliation; older execution evidence retains its original date). Read § Two findings first — two release-relevant defects landed today that no lane in this checkout can close.
 **Authority:** This is the single release-status document for the Build module. Product contracts remain in the numbered specifications; future competitive work remains in `06-prioritized-backlog.md`.
 

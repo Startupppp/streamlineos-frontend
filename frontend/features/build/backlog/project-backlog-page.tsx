@@ -83,7 +83,7 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
       selectedPriorities.length > 0
         ? selectedPriorities.join(",")
         : undefined,
-    type: selectedTypes.length > 0 ? selectedTypes.join(",") : "TASK,BUG,STORY,SUBTASK",
+    type: selectedTypes.length > 0 ? selectedTypes.join(",") : "TASK,BUG,STORY",
     assigneeId:
       selectedAssignees.length > 0
         ? selectedAssignees.join(",")
@@ -94,7 +94,6 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
       selectedCycles.length > 0 ? selectedCycles.join(",") : undefined,
     dueDateFrom: dueDateFrom || undefined,
     dueDateTo: dueDateTo || undefined,
-    unscheduled: true,
   };
   const {
     data,

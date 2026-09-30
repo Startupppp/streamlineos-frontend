@@ -40,7 +40,9 @@ const intakeItemSchema = z.object({
   submitterEmail: z.string().nullable(),
   submitterName: z.string().nullable(),
   priority: z.enum(["low", "medium", "high", "urgent"]).nullable(),
-  requestType: z.enum(["bug", "feature", "task", "question", "other"]).nullable(),
+  requestType: z
+    .enum(["bug", "feature", "task", "question", "other"])
+    .nullable(),
   linkedWorkItemId: z.number().nullable(),
   declineReason: z.string().nullable(),
   createdAt: z.string().nullable(),
@@ -49,7 +51,11 @@ const intakeItemSchema = z.object({
 
 const intakeListSchema = z.object({
   data: z.array(intakeItemSchema),
-  pagination: z.object({ limit: z.number(), hasMore: z.boolean(), nextCursor: z.string().nullable() }),
+  pagination: z.object({
+    limit: z.number(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
 });
 
 export const viewRowSchema = z.object({
@@ -94,7 +100,14 @@ const whiteboardSharingUpdateSchema = z.object({
   allowExport: z.boolean(),
 });
 
-const excalidrawSceneDataSchema = z.object({ type: z.string().optional(), version: z.number().optional(), source: z.string().optional(), elements: z.array(z.unknown()), appState: z.record(z.string(), z.unknown()).optional(), files: z.record(z.string(), z.unknown()).optional() });
+const excalidrawSceneDataSchema = z.object({
+  type: z.string().optional(),
+  version: z.number().optional(),
+  source: z.string().optional(),
+  elements: z.array(z.unknown()),
+  appState: z.record(z.string(), z.unknown()).optional(),
+  files: z.record(z.string(), z.unknown()).optional(),
+});
 
 const whiteboardDetailSchema = z.object({
   id: z.number(),
@@ -103,7 +116,15 @@ const whiteboardDetailSchema = z.object({
   data: excalidrawSceneDataSchema,
   visibility: z.enum(DB_ENUMS.whiteboard_visibility),
   access: z.enum(["view", "edit", "manage"]),
-  sharing: z.object({ visibility: z.enum(DB_ENUMS.whiteboard_visibility), publicAccess: z.enum(DB_ENUMS.whiteboard_share_role), shareToken: z.string().nullable(), linkExpiresAt: z.string().nullable(), allowExport: z.boolean() }).nullable(),
+  sharing: z
+    .object({
+      visibility: z.enum(DB_ENUMS.whiteboard_visibility),
+      publicAccess: z.enum(DB_ENUMS.whiteboard_share_role),
+      shareToken: z.string().nullable(),
+      linkExpiresAt: z.string().nullable(),
+      allowExport: z.boolean(),
+    })
+    .nullable(),
   shares: z.array(whiteboardShareSchema).nullable(),
   createdBy: z.string().nullable(),
   createdAt: z.string().nullable(),
@@ -134,19 +155,59 @@ const projectBudgetSchema = z.object({
   unratedHours: z.number(),
   currencyMismatch: z.boolean(),
   excludedCurrencyHours: z.number(),
-  memberBreakdown: z.array(z.object({ userId: z.string(), hours: z.number(), cost: z.number(), unratedHours: z.number() })),
+  memberBreakdown: z.array(
+    z.object({
+      userId: z.string(),
+      hours: z.number(),
+      cost: z.number(),
+      unratedHours: z.number(),
+    }),
+  ),
 });
 
 const analyticsSchema = z.object({
-  stateDistribution: z.array(z.object({ status: z.string(), count: z.number() })),
-  priorityBreakdown: z.array(z.object({ priority: z.string().nullable(), count: z.number() })),
-  assigneeCompletion: z.array(z.object({ assigneeId: z.string().nullable(), assigneeName: z.string().nullable(), total: z.number(), completed: z.number() })),
+  stateDistribution: z.array(
+    z.object({ status: z.string(), count: z.number() }),
+  ),
+  priorityBreakdown: z.array(
+    z.object({ priority: z.string().nullable(), count: z.number() }),
+  ),
+  assigneeCompletion: z.array(
+    z.object({
+      assigneeId: z.string().nullable(),
+      assigneeName: z.string().nullable(),
+      total: z.number(),
+      completed: z.number(),
+    }),
+  ),
   volumeOverTime: z.array(z.object({ week: z.string(), count: z.number() })),
-  cycleVelocity: z.array(z.object({ cycleId: z.number(), cycleName: z.string(), completedPoints: z.number() })),
-  estimateVsActual: z.array(z.object({ ticketId: z.number(), title: z.string(), estimated: z.string().nullable(), actual: z.number() })),
+  cycleVelocity: z.array(
+    z.object({
+      cycleId: z.number(),
+      cycleName: z.string(),
+      completedPoints: z.number(),
+    }),
+  ),
+  estimateVsActual: z.array(
+    z.object({
+      ticketId: z.number(),
+      title: z.string(),
+      estimated: z.string().nullable(),
+      actual: z.number(),
+    }),
+  ),
   healthScore: z.number().optional(),
   healthStatus: z.string().optional(),
-  healthBreakdown: z.object({ completionPct: z.number(), onTimePct: z.number(), velocityScore: z.number(), overdueTickets: z.number(), totalTickets: z.number(), openTickets: z.number() }).optional(),
+  healthBreakdown: z
+    .object({
+      completionPct: z.number(),
+      onTimePct: z.number(),
+      velocityScore: z.number(),
+      overdueTickets: z.number(),
+      totalTickets: z.number(),
+      openTickets: z.number().optional().default(0),
+    })
+    .optional(),
 });
 
 export const milestoneListContract = cursorPageContract(milestoneRowSchema);
@@ -156,7 +217,10 @@ export const milestoneUpdateRequestContract = z
     version: z.number().int().positive(),
     name: z.string().min(1).trim().max(200).optional(),
     description: z.string().max(1000).optional(),
-    targetDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    targetDate: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .optional(),
     status: z.enum(["PENDING", "ACHIEVED", "MISSED"]).optional(),
     ownerMembershipId: z.number().int().nullable().optional(),
   })
@@ -167,21 +231,29 @@ export const viewRowContract = viewRowSchema;
 export const viewPageContract = cursorPageContract(viewRowSchema);
 export const viewListContract = z.array(viewRowSchema);
 export const whiteboardListContract = z.array(whiteboardListItemSchema);
-export const whiteboardPageContract = cursorPageContract(whiteboardListItemSchema);
-export const whiteboardResponseContract = whiteboardPageContract.or(whiteboardListContract);
+export const whiteboardPageContract = cursorPageContract(
+  whiteboardListItemSchema,
+);
+export const whiteboardResponseContract = whiteboardPageContract.or(
+  whiteboardListContract,
+);
 export const whiteboardDetailContract = whiteboardDetailSchema;
 export const whiteboardSharingUpdateContract = whiteboardSharingUpdateSchema;
 export const whiteboardSharesContract = z.array(whiteboardShareSchema);
 export const publicWhiteboardContract = publicWhiteboardSchema;
 export const publicWhiteboardUpdateContract = publicWhiteboardUpdateSchema;
 export const projectBudgetContract = projectBudgetSchema;
-export const projectBudgetUpdateContract = z.object({ id: z.number().int(), budget: z.number(), currency: z.string().nullable() });
+export const projectBudgetUpdateContract = z.object({
+  id: z.number().int(),
+  budget: z.number(),
+  currency: z.string().nullable(),
+});
 export const analyticsContract = analyticsSchema;
 export const successContract = z.object({ success: z.literal(true) });
 
 const buildMemberItemSchema = z.object({
   id: z.string(),
-  role: z.enum(['member', 'admin']),
+  role: z.enum(["member", "admin"]),
   addedAt: z.string(),
   name: z.string().nullable(),
   firstName: z.string().nullable(),
