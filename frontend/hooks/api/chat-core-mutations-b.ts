@@ -224,7 +224,7 @@ export function useToggleReaction(channelId: number) {
         .find((m) => m.id === messageId);
       return userId !== undefined && message?.reactions?.[emoji]?.includes(userId)
         ? apiClient.delete<{ reactions: Record<string, string[]> }>(
-            `${url}/${encodeURIComponent(emoji)}`,
+            `/chat/channels/${channelId}/messages/${messageId}/reactions/${encodeURIComponent(emoji)}`,
             undefined,
             undefined,
             chatReactionsContract,
