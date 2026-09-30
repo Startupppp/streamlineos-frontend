@@ -46,14 +46,14 @@ export const TicketQaEvidence = memo(function TicketQaEvidence({
 }: TicketQaEvidenceProps) {
   const isBug = ticketType === "BUG";
   const access = useCanState("build:bugs:view");
-  const { data: bug, isLoading } = useBug(projectId, ticketId, {
+  const { data: bug, isLoading, isError } = useBug(projectId, ticketId, {
     enabled: isBug,
   });
 
   if (!isBug) return null;
   if (access === "denied") return null;
 
-  if (access === "loading" || isLoading) {
+  if (access === "loading" || isLoading || isError) {
     return (
       <div className="space-y-2">
         <Skeleton className="h-4 w-28" />

@@ -12,13 +12,13 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useUpdateTicket, useAddLabelToTicket, useRemoveLabelFromTicket } from "@/hooks/api/build/tickets";
 import { useProjectLabels } from "@/hooks/api/build/projects";
-import { useCycles } from "@/hooks/api/build/advanced";
+import { useCycles, useModules } from "@/hooks/api/build/advanced";
 import { popoverOptionBaseClass, popoverOptionSelectedClass } from "../shared/popover-option-classes";
 import { LabelsSearchCommand } from "../shared/labels-search-command";
 import { typeConfig } from "../shared/types";
 import { TicketTypeIcon } from "../shared/ticket-type-icon";
 import { InlineFieldWrapper } from "./card-inline-fields";
-import { Check, Tag, RefreshCw } from "lucide-react";
+import { Boxes, Check, Tag, RefreshCw } from "lucide-react";
 import type { TicketLabel } from "@/types/projects";
 import { resolveLabelColor } from "@/components/labels/label-colors";
 
@@ -282,6 +282,99 @@ export const InlineCycle = memo(function InlineCycle({
               <RefreshCw className="h-3 w-3 shrink-0 text-muted-foreground" />
               <span className="truncate">{cycle.name}</span>
               {currentCycleId === cycle.id && <Check className="ml-auto h-3 w-3 shrink-0" />}
+            </button>
+          ))}
+        </ResponsivePopoverContent>
+      </ResponsivePopover>
+    </InlineFieldWrapper>
+  );
+});
+
+interface InlineModuleProps {
+  ticketId: number;
+  projectId: number;
+  version: number;
+  currentModuleId?: number | null;
+}
+
+export const InlineModule = memo(function InlineModule({
+  ticketId,
+  projectId,
+  version,
+  currentModuleId,
+}: InlineModuleProps) {
+  const [open, setOpen] = useState(false);
+  const { data: modules = [] } = useModules(projectId);
+  const updateTicket = useUpdateTicket(projectId, {
+    onError: (e) => toast.error(getErrorMessage(e)),
+  });
+
+  const currentModule = modules.find((module) => module.id === currentModuleId);
+
+  function makeModuleHandler(moduleId: number | null) {
+    return function selectModule() {
+      updateTicket.mutate({ ticketId, version, moduleId });
+      setOpen(false);
+    };
+  }
+
+  return (
+    <InlineFieldWrapper>
+      <ResponsivePopover open={open} onOpenChange={setOpen}>
+        <ResponsivePopoverTrigger asChild>
+          <button
+            type="button"
+            className="inline-flex max-w-full items-center gap-1 rounded px-1 py-0.5 transition-colors hover:bg-muted/60"
+            aria-label="Change module"
+          >
+            <Boxes
+              className={cn(
+                "h-3 w-3 shrink-0",
+                currentModule ? "text-foreground" : "text-muted-foreground",
+              )}
+            />
+            <span
+              className={cn(
+                "max-w-[7.5rem] truncate text-micro",
+                currentModule ? "text-foreground" : "text-muted-foreground",
+              )}
+            >
+              {currentModule?.name ?? "No module"}
+            </span>
+          </button>
+        </ResponsivePopoverTrigger>
+        <ResponsivePopoverContent
+          title="Module"
+          className={cn("p-1", INLINE_POPOVER_MIN_CLASS, "min-w-44")}
+          align="start"
+        >
+          <button
+            type="button"
+            onClick={makeModuleHandler(null)}
+            className={cn(
+              popoverOptionBaseClass,
+              currentModuleId == null && popoverOptionSelectedClass,
+            )}
+          >
+            <Boxes className="h-3 w-3 shrink-0 text-muted-foreground" />
+            No module
+            {currentModuleId == null ? <Check className="ml-auto h-3 w-3" /> : null}
+          </button>
+          {modules.map((module) => (
+            <button
+              key={module.id}
+              type="button"
+              onClick={makeModuleHandler(module.id)}
+              className={cn(
+                popoverOptionBaseClass,
+                currentModuleId === module.id && popoverOptionSelectedClass,
+              )}
+            >
+              <Boxes className="h-3 w-3 shrink-0 text-muted-foreground" />
+              <span className="truncate">{module.name}</span>
+              {currentModuleId === module.id ? (
+                <Check className="ml-auto h-3 w-3 shrink-0" />
+              ) : null}
             </button>
           ))}
         </ResponsivePopoverContent>

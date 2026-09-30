@@ -8,6 +8,7 @@ import { usePersonalDashboard } from "@/hooks/api/dashboard";
 import { CalendarDays } from "lucide-react";
 import { format, isToday } from "date-fns";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import Link from "next/link";
 
 interface UpcomingEvent {
   id: number;
@@ -27,29 +28,34 @@ function SectionLabel({ children }: { children: string }) {
 
 function EventRow({ ev }: { ev: UpcomingEvent }) {
   return (
-    <li className="flex items-start gap-3 rounded-lg border border-border/60 px-3 py-2 hover:bg-muted/50 transition-colors">
-      <div className="flex flex-col items-center text-center rounded-md bg-primary/10 px-2 py-1 min-w-[42px] shrink-0">
-        <span className="text-micro font-medium text-primary uppercase">
-          {format(new Date(ev.startTime), "MMM")}
-        </span>
-        <span className="text-lg font-bold leading-none text-primary">
-          {format(new Date(ev.startTime), "d")}
-        </span>
-      </div>
-      <div className="flex-1 min-w-0">
-        <TruncatedText text={ev.title} className="text-sm font-medium" />
-        <p className="text-xs text-muted-foreground">
-          {format(new Date(ev.startTime), "h:mm a")}
-          {" – "}
-          {format(new Date(ev.endTime), "h:mm a")}
-        </p>
-      </div>
-      <Badge
-        variant="outline"
-        className="text-micro h-4 px-1.5 shrink-0 capitalize"
+    <li>
+      <Link
+        href={`/calendar?event=${ev.id}`}
+        className="flex items-start gap-3 rounded-lg border border-border/60 px-3 py-2 hover:bg-muted/50 hover:border-primary/40 transition-colors"
       >
-        {ev.type.toLowerCase()}
-      </Badge>
+        <div className="flex flex-col items-center text-center rounded-md bg-primary/10 px-2 py-1 min-w-[42px] shrink-0">
+          <span className="text-micro font-medium text-primary uppercase">
+            {format(new Date(ev.startTime), "MMM")}
+          </span>
+          <span className="text-lg font-bold leading-none text-primary">
+            {format(new Date(ev.startTime), "d")}
+          </span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <TruncatedText text={ev.title} className="text-sm font-medium" />
+          <p className="text-xs text-muted-foreground">
+            {format(new Date(ev.startTime), "h:mm a")}
+            {" – "}
+            {format(new Date(ev.endTime), "h:mm a")}
+          </p>
+        </div>
+        <Badge
+          variant="outline"
+          className="text-micro h-4 px-1.5 shrink-0 capitalize"
+        >
+          {ev.type.toLowerCase()}
+        </Badge>
+      </Link>
     </li>
   );
 }

@@ -329,6 +329,7 @@ export const buildWorkQueryKeys = {
       [...base, "projects", projectId, "settings", "iterations"] as const,
     agentPulse: (scopeKey: string) =>
       [...base, "projects", "agent-pulse", scopeKey] as const,
+    agentPulseAll: () => [...base, "projects", "agent-pulse"] as const,
     workloadCapacity: (projectId: number, start: string, end: string, teamId?: number) =>
       teamId !== undefined
         ? ([...base, "projects", projectId, "workload-capacity", start, end, teamId] as const)

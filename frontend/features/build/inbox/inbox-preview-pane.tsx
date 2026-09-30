@@ -31,6 +31,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   normalizeBuildDeepLink,
   parseInboxTicketLink,
+  extractBuildProjectId,
 } from "./parse-inbox-ticket-link";
 
 const InboxTicketPreview = dynamic(
@@ -213,6 +214,24 @@ function NotificationFallbackPreview({
   );
 }
 
+function resolveTicketTarget(
+  parsedTarget: ReturnType<typeof parseInboxTicketLink>,
+  notification: Notification,
+): ReturnType<typeof parseInboxTicketLink> {
+  if (parsedTarget) return parsedTarget;
+  const ctx = notification.ticketContext;
+  if (!ctx?.ticketId) return null;
+  const projectId = extractBuildProjectId(notification.link);
+  if (!projectId) return null;
+  return {
+    projectId,
+    ticketId: ctx.ticketId,
+    ticketKey: null,
+    commentId: null,
+    href: normalizeBuildDeepLink(notification.link ?? ""),
+  };
+}
+
 export function InboxPreviewPane({
   notification,
   onClose,
@@ -229,7 +248,8 @@ export function InboxPreviewPane({
       </div>
     );
 
-  const ticketTarget = parseInboxTicketLink(notification.link);
+  const parsedTicketTarget = parseInboxTicketLink(notification.link);
+  const ticketTarget = resolveTicketTarget(parsedTicketTarget, notification);
 
   if (ticketTarget)
     return (

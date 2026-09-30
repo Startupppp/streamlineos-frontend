@@ -39,5 +39,6 @@ export interface Bug {
   linkedTestCaseId: number | null;
   reopenCount: number | null;
   createdByUserId: string | null;
+  version: number;
 }
 

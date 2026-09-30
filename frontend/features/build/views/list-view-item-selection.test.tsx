@@ -53,6 +53,7 @@ jest.mock("./card-inline-fields", () => ({
 jest.mock("./card-inline-extra-fields", () => ({
   InlineType: () => null,
   InlineLabels: () => null,
+  InlineModule: () => null,
 }));
 
 jest.mock("./card-inline-date-fields", () => ({

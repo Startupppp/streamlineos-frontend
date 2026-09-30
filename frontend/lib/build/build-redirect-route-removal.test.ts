@@ -18,6 +18,11 @@ interface RemovedRoute {
   redirectDestination: string;
 }
 
+interface BuildRedirect {
+  source: string;
+  destination: string;
+}
+
 const REMOVED_ROUTES: RemovedRoute[] = [
   {
     route: "/build/access",
@@ -183,13 +188,40 @@ const REMOVED_ROUTES: RemovedRoute[] = [
   },
 ];
 
-function nextConfigRedirects(): { source: string; destination: string }[] {
+const OTHER_BUILD_COMPATIBILITY_REDIRECTS: BuildRedirect[] = [
+  {
+    source: "/build/:projectId(\\\\d+)",
+    destination: "/build/:projectId/workload",
+  },
+  {
+    source: "/build/:projectId(\\\\d+)/gantt",
+    destination: "/build/:projectId/issues?view=timeline",
+  },
+  {
+    source: "/build/:projectId(\\\\d+)/roadmap",
+    destination: "/build/:projectId/milestones",
+  },
+  {
+    source: "/build/projects",
+    destination: "/build",
+  },
+];
+
+function nextConfigRedirects(): {
+  source: string;
+  destination: string;
+  permanent: boolean;
+}[] {
   const source = readFileSync(resolve(ROOT, "next.config.ts"), "utf8");
   return [
     ...source.matchAll(
-      /source:\s*"([^"]+)",\s*(?:has:[\s\S]*?,\s*)?destination:\s*"([^"]+)"/g,
+      /source:\s*"([^"]+)",\s*(?:has:\s*\[[\s\S]*?\],\s*)?destination:\s*"([^"]+)",\s*permanent:\s*(true|false)/g,
     ),
-  ].map((match) => ({ source: match[1], destination: match[2] }));
+  ].map((match) => ({
+    source: match[1],
+    destination: match[2],
+    permanent: match[3] === "true",
+  }));
 }
 
 function everyBuildNavHref(): string[] {
@@ -210,6 +242,32 @@ function everyBuildNavHref(): string[] {
 describe("removed Build redirect routes keep their deep link in next.config.ts", () => {
   it("covers every removed route, so a truncated list cannot pass vacuously", () => {
     expect(REMOVED_ROUTES).toHaveLength(27);
+  });
+
+  it("inventories every declarative Build redirect, including compatibility redirects that did not replace a page in this list", () => {
+    const actual = nextConfigRedirects()
+      .filter(({ source }) => source.startsWith("/build"))
+      .map(({ source, destination }) => ({ source, destination }))
+      .sort((a, b) => a.source.localeCompare(b.source));
+    const expected = [
+      ...REMOVED_ROUTES.map(({ redirectSource: source, redirectDestination: destination }) => ({
+        source,
+        destination,
+      })),
+      ...OTHER_BUILD_COMPATIBILITY_REDIRECTS,
+    ].sort((a, b) => a.source.localeCompare(b.source));
+
+    expect(actual).toEqual(expected);
+    expect(actual).toHaveLength(31);
+  });
+
+  it("keeps every declarative Build compatibility redirect temporary", () => {
+    const buildRedirects = nextConfigRedirects().filter(({ source }) =>
+      source.startsWith("/build"),
+    );
+
+    expect(buildRedirects).toHaveLength(31);
+    expect(buildRedirects.every(({ permanent }) => !permanent)).toBe(true);
   });
 
   it.each(REMOVED_ROUTES)(

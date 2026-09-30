@@ -1,4 +1,7 @@
 import { renderHook, act, waitFor } from "@testing-library/react";
+import { installAbortSignalPolyfill } from "@/test-utils/abort-signal-polyfill";
+
+installAbortSignalPolyfill();
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { PropsWithChildren } from "react";

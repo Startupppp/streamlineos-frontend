@@ -10,8 +10,7 @@ import {
   consumeNotificationStream,
   type IncomingNotification,
 } from "./notification-event-stream";
-import { withCorrelation } from "@/lib/observability/with-correlation";
-import { getBackendToken } from "@/lib/api-client";
+import { request } from "@/lib/api-client";
 import { normalizeBuildDeepLink } from "@/lib/build/normalize-build-deep-link";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
@@ -68,13 +67,8 @@ async function mintStreamToken(): Promise<string | null> {
   const generation = tokenGeneration;
   try {
     if (Date.now() < tokenRetryNotBefore) return null;
-    const backendJwt = await getBackendToken();
-    if (!backendJwt) return null;
-    const response = await fetch(`${BACKEND_URL}/notifications/events/token`, {
+    const response = await request("/notifications/events/token", {
       method: "POST",
-      headers: withCorrelation(
-        new Headers({ Authorization: `Bearer ${backendJwt}` }),
-      ),
     });
     if (!response.ok) {
       if (response.status === 429) {

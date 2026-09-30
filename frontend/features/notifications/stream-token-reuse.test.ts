@@ -1,4 +1,7 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
+import { installAbortSignalPolyfill } from "@/test-utils/abort-signal-polyfill";
+
+installAbortSignalPolyfill();
 import {
   clearStreamToken,
   useNotificationEvents,
@@ -25,10 +28,6 @@ jest.mock("sonner", () => ({
   toast: Object.assign(jest.fn(), { error: jest.fn() }),
 }));
 
-jest.mock("@/lib/api-client", () => ({
-  getBackendToken: jest.fn(async () => "backend-jwt"),
-}));
-
 const consume = jest.mocked(consumeNotificationStream);
 const fetchMock = jest.fn();
 
@@ -44,10 +43,18 @@ beforeEach(() => {
   consume.mockReset();
   fetchMock.mockReset();
   consume.mockImplementation(() => new Promise<void>(() => undefined));
-  fetchMock.mockResolvedValue({
-    ok: true,
-    json: async () => ({ token: "stream-token" }),
-  });
+  fetchMock.mockImplementation((input: RequestInfo | URL) =>
+    Promise.resolve(
+      String(input).includes("/api/auth/session")
+        ? { ok: true, status: 200, json: async () => ({ backendJwt: "backend-jwt" }) }
+        : {
+            ok: true,
+            status: 200,
+            headers: new Headers({ "content-type": "application/json" }),
+            json: async () => ({ token: "stream-token" }),
+          },
+    ),
+  );
   global.fetch = fetchMock as unknown as typeof fetch;
 });
 
@@ -90,11 +97,17 @@ describe("the notification stream token is minted once per stream, not once per 
   });
 
   it("honors Retry-After without minting more tokens during the cooldown", async () => {
-    fetchMock.mockResolvedValue({
-      ok: false,
-      status: 429,
-      headers: new Headers({ "retry-after": "60" }),
-    });
+    fetchMock.mockImplementation((input: RequestInfo | URL) =>
+      Promise.resolve(
+        String(input).includes("/api/auth/session")
+          ? { ok: true, status: 200, json: async () => ({ backendJwt: "backend-jwt" }) }
+          : {
+              ok: false,
+              status: 429,
+              headers: new Headers({ "retry-after": "60" }),
+            },
+      ),
+    );
 
     const stream = renderHook(() => useNotificationEvents());
     await waitFor(() => expect(tokenMints()).toBe(1));

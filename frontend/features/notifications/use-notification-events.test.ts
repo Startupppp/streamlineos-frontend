@@ -15,6 +15,9 @@
  * carried every earlier failure forward and gave up mid-session.
  */
 import { act, renderHook, waitFor } from "@testing-library/react";
+import { installAbortSignalPolyfill } from "@/test-utils/abort-signal-polyfill";
+
+installAbortSignalPolyfill();
 import type { QueryKey } from "@tanstack/react-query";
 import {
   clearStreamToken,
@@ -91,8 +94,7 @@ describe("useNotificationEvents — a single failure must not end the stream", (
     // The failed round must have armed a retry timer. Without one, nothing is
     // pending and the stream is dead until the component remounts.
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
-    await Promise.resolve();
-    expect(jest.getTimerCount()).toBeGreaterThan(0);
+    await waitFor(() => expect(jest.getTimerCount()).toBeGreaterThan(0));
   });
 
   it("resets the backoff when the stream connects, not when it first yields", async () => {

@@ -20,6 +20,9 @@ jest.mock("./card-inline-extra-fields", () => ({
   InlineType: () => null,
   InlineLabels: () => null,
   InlineCycle: () => null,
+  InlineModule: ({ currentModuleId }: { currentModuleId?: number | null }) => (
+    <span>module-editor-{currentModuleId ?? "none"}</span>
+  ),
 }));
 
 jest.mock("./card-inline-date-fields", () => ({
@@ -187,8 +190,8 @@ describe("KanbanTicketCard — right click opens the card's own action menu", ()
   });
 });
 
-describe("KanbanTicketCard — the module renders by name", () => {
-  it("shows the module name when the board knows it", () => {
+describe("KanbanTicketCard — module editing", () => {
+  it("wires the current module into the inline editor", () => {
     render(
       <ModuleNamesProvider modules={[{ id: 3, name: "Payments" }]}>
         <KanbanTicketCard
@@ -200,10 +203,10 @@ describe("KanbanTicketCard — the module renders by name", () => {
         />
       </ModuleNamesProvider>,
     );
-    expect(screen.getByText("Payments")).toBeInTheDocument();
+    expect(screen.getByText("module-editor-3")).toBeInTheDocument();
   });
 
-  it("shows no module chip when the card has no module, so the chip tracks the field", () => {
+  it("keeps the inline editor available when the card has no module", () => {
     render(
       <ModuleNamesProvider modules={[{ id: 3, name: "Payments" }]}>
         <KanbanTicketCard
@@ -215,6 +218,6 @@ describe("KanbanTicketCard — the module renders by name", () => {
         />
       </ModuleNamesProvider>,
     );
-    expect(screen.queryByText("Payments")).not.toBeInTheDocument();
+    expect(screen.getByText("module-editor-none")).toBeInTheDocument();
   });
 });

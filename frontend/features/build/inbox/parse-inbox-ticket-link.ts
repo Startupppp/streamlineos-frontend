@@ -46,6 +46,17 @@ function parseTicketSegment(
   };
 }
 
+export function extractBuildProjectId(link: string | null | undefined): number | null {
+  if (!link) return null;
+  const url = toAbsoluteUrl(link);
+  if (!url) return null;
+  const pathname = toBuildPath(url.pathname);
+  const match = pathname.match(/^\/build\/(\d+)/);
+  if (!match?.[1]) return null;
+  const id = Number.parseInt(match[1], 10);
+  return Number.isFinite(id) ? id : null;
+}
+
 export function parseInboxTicketLink(link: string | null | undefined): InboxTicketLinkTarget | null {
   if (!link) return null;
   const url = toAbsoluteUrl(link);

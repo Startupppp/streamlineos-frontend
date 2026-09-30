@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import type { KanbanTicket, DisplayOptions } from "../shared/types";
 import { TicketQuickActions } from "./ticket-quick-actions";
 import { InlinePriority, InlineAssignee, InlineEstimate } from "./card-inline-fields";
-import { InlineType, InlineLabels, InlineCycle } from "./card-inline-extra-fields";
+import { InlineType, InlineLabels, InlineCycle, InlineModule } from "./card-inline-extra-fields";
 import { InlineDueDate, InlineStartDate } from "./card-inline-date-fields";
 import { TEXT_TWO_LINES } from "@/lib/text-overflow";
 import { getUserDisplayName } from "@/lib/person-display";
@@ -179,7 +179,14 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
           />
         ) : null}
 
-        {moduleName !== null ? (
+        {projectId !== undefined && canUpdate ? (
+          <InlineModule
+            ticketId={ticket.id}
+            projectId={projectId}
+            version={version}
+            currentModuleId={ticket.moduleId}
+          />
+        ) : moduleName !== null ? (
           <Badge variant="secondary" className="max-w-full shrink truncate text-micro font-medium">
             {moduleName}
           </Badge>

@@ -522,6 +522,36 @@ export interface RequestConfig {
   asRealUser?: boolean;
 }
 
+/**
+ * Sends an authenticated request through the same token cache, 401 recovery,
+ * correlation, timeout, and outage circuit as the typed API helpers while
+ * leaving the response body untouched. Use this for streaming handshakes and
+ * other endpoints whose headers or non-JSON body are part of their contract.
+ */
+export async function request(
+  url: string,
+  init: RequestInit,
+  config?: RequestConfig,
+): Promise<Response> {
+  const headers = new Headers(init.headers);
+  for (const [name, value] of Object.entries(config?.headers ?? {}))
+    headers.set(name, value);
+  return authedFetch(
+    buildUrl(url),
+    { ...init, headers },
+    url,
+    config?.signal,
+    config?.timeoutMs !== undefined || config?.asRealUser === true
+      ? {
+          ...(config.timeoutMs !== undefined
+            ? { timeoutMs: config.timeoutMs }
+            : {}),
+          ...(config.asRealUser === true ? { asRealUser: true } : {}),
+        }
+      : undefined,
+  );
+}
+
 async function post<T>(
   url: string,
   data?: unknown,
@@ -645,6 +675,7 @@ async function download(
 }
 
 export const apiClient = {
+  request,
   get,
   post,
   put,

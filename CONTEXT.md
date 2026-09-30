@@ -10,6 +10,21 @@ comments; a synonym is a drift.
 
 ---
 
+## Client relationships
+
+### Client onboarding
+
+The internal checklist that begins when a **Client** relationship is created.
+It records the organization’s operational steps for making that Client ready
+and preserves completed or removed steps as history.
+
+Client onboarding does not activate a Client, grant portal access, or invite a
+portal contact. Those are explicit authorized actions with their own lifecycle.
+It is also distinct from **employee onboarding**, which concerns a worker’s
+employment relationship rather than a customer relationship.
+
+---
+
 ## Ask OS
 
 **Ask OS** is the in-product assistant: one chat surface that can read across

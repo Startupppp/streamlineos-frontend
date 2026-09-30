@@ -185,7 +185,7 @@ export function EventFormFields({
                 <Input
                   type="time"
                   className={cn(
-                    "h-8 w-[5.5rem] min-w-[5.5rem] shrink-0 text-xs",
+                    "w-[5.5rem] min-w-[5.5rem] shrink-0 text-xs",
                     dateTimeError && "border-destructive",
                   )}
                   value={endTime}

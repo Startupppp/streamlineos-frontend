@@ -15,7 +15,7 @@ import { formatTicketKey } from "@/components/shared/format-ticket-key";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { TicketQuickActions } from "./ticket-quick-actions";
 import { InlineStatus, InlinePriority, InlineAssignee, InlineEstimate } from "./card-inline-fields";
-import { InlineType, InlineLabels } from "./card-inline-extra-fields";
+import { InlineType, InlineLabels, InlineModule } from "./card-inline-extra-fields";
 import { InlineDueDate } from "./card-inline-date-fields";
 import { pmSnappy } from "@/lib/motion-presets";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -251,7 +251,14 @@ export const ListViewItem = memo(function ListViewItem({
             {ticket.cycle.name}
           </Badge>
         ) : null}
-        {moduleName !== null ? (
+        {hasProjectId && canUpdate ? (
+          <InlineModule
+            ticketId={ticket.id}
+            projectId={projectId}
+            version={version}
+            currentModuleId={ticket.moduleId}
+          />
+        ) : moduleName !== null ? (
           <Badge
             variant="secondary"
             className={cn(

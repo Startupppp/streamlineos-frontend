@@ -92,6 +92,13 @@ describe("kbPageWithAncestorsContract — server/client schema parity for wiki p
     const parsed = kbPageWithAncestorsContract.safeParse(withoutCanEdit);
     expect(parsed.success).toBe(true);
   });
+
+  it("accepts array-shaped content from a template-created page so pages created from block-array templates render without a contract error", () => {
+    const arrayContent = [{ type: "paragraph", content: [] }, { type: "heading", attrs: { level: 1 }, content: [] }];
+    const parsed = kbPageWithAncestorsContract.safeParse({ ...WIRE_FIXTURE, content: arrayContent });
+    expect(parsed.success).toBe(true);
+    if (parsed.success) expect(Array.isArray(parsed.data.content)).toBe(true);
+  });
 });
 
 describe("kbPageBacklinksPageContract — server/client schema parity", () => {

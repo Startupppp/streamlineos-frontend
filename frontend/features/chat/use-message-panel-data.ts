@@ -49,6 +49,8 @@ export function useMessagePanelData({
 }: MessagePanelProps) {
   const scope = useOrgStorageScope();
   const draftKey = orgScopedStorageKey(`chat:draft:${channelId}`, scope);
+  const draftKeyRef = useRef(draftKey);
+  draftKeyRef.current = draftKey;
   const { data: channel } = useChatChannel(channelId);
   const {
     data: messagesData,
@@ -142,12 +144,13 @@ export function useMessagePanelData({
   const { messageInput, setMessageInput, replyTo, setReplyTo, editingMessage, setEditingMessage, editInput, setEditInput, pendingAttachments, setPendingAttachments, uploading, showEmojiPicker, setShowEmojiPicker, showMentions, setShowMentions, mentionQuery, setMentionQuery, mentionIndex, setMentionIndex, showTicketPicker, setShowTicketPicker, ticketQuery, setTicketQuery, ticketSelectedIndex, setTicketSelectedIndex, inputRef, fileInputRef, emojiRef, messageQueue, pendingEntitiesRef, pendingMentionsRef, setFilteredMentions, handleFileSelect, handlePastedFiles, insertEmoji, insertMention, insertTicket, handleSend, handleEdit, handleInputChange, handleKeyDown } = useMessageComposer({ channelId, draftKey, isOnline, sendMessage, editMessage, markRead, scrollToBottom: (behavior) => scrollToBottomRef.current(behavior), publishTyping, filteredMentions: [] });
 
   useEffect(() => {
+    const key = draftKeyRef.current;
     if (messageInput) {
-      localStorage.setItem(draftKey, messageInput);
+      localStorage.setItem(key, messageInput);
     } else {
-      localStorage.removeItem(draftKey);
+      localStorage.removeItem(key);
     }
-  }, [draftKey, messageInput]);
+  }, [messageInput]);
 
   const { filtered: filteredMentions } = useChatMentions({ orgUsers, channel, currentUserId, query: mentionQuery });
   setFilteredMentions(filteredMentions);

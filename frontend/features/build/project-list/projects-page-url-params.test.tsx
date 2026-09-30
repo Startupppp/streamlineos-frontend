@@ -1,10 +1,12 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, act } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
 let mockSearchParams = new URLSearchParams();
+const mockReplace = jest.fn();
 const mockUseInfiniteProjects = jest.fn();
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: jest.fn(), push: jest.fn() }),
+  useRouter: () => ({ replace: mockReplace, push: jest.fn() }),
   usePathname: () => "/build",
   useSearchParams: () => mockSearchParams,
 }));
@@ -55,6 +57,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockSearchParams = new URLSearchParams();
   mockUseInfiniteProjects.mockReturnValue(emptyProjectsResult());
+  mockReplace.mockReset();
 });
 
 describe("ProjectsPage — productId URL param", () => {
@@ -141,5 +144,36 @@ describe("ProjectsPage — health URL param reaches the server", () => {
     render(<ProjectsPage />);
     const [filters] = mockUseInfiniteProjects.mock.calls.at(-1) as [Record<string, unknown>];
     expect("health" in filters).toBe(false);
+  });
+});
+
+describe("ProjectsPage — search input does not reset mid-keystroke", () => {
+  it("keeps all typed characters in the input without resetting, because the URL write is debounced not immediate", async () => {
+    jest.useFakeTimers();
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    render(<ProjectsPage />);
+
+    const searchInput = screen.getByRole("searchbox");
+    await user.type(searchInput, "hello");
+
+    expect(searchInput).toHaveValue("hello");
+    jest.useRealTimers();
+  });
+
+  it("does not call router.replace on each individual keystroke, only after the 300ms debounce window", async () => {
+    jest.useFakeTimers();
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    render(<ProjectsPage />);
+
+    const searchInput = screen.getByRole("searchbox");
+    await user.type(searchInput, "hi");
+
+    mockReplace.mockClear();
+    act(() => jest.advanceTimersByTime(50));
+    expect(mockReplace).not.toHaveBeenCalled();
+
+    act(() => jest.advanceTimersByTime(300));
+    expect(mockReplace).toHaveBeenCalledTimes(1);
+    jest.useRealTimers();
   });
 });

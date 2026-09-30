@@ -170,9 +170,9 @@ export function EventCreateForm({
               <LoadingButton type="submit" size="sm" className="text-xs px-4 font-medium" disabled={!form.title.trim()} isPending={isPending} loadingText={isEdit ? "Saving…" : "Creating…"}>Save</LoadingButton>
             </div>
           </form>
+          <TicketPickerDialog open={ticketPickerOpen} onOpenChange={onTicketPickerChange} onSelect={onTicketSelect} />
         </DrawerContent>
       </Drawer>
-      <TicketPickerDialog open={ticketPickerOpen} onOpenChange={onTicketPickerChange} onSelect={onTicketSelect} />
     </>
   );
 }
