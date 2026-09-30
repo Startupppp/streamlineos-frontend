@@ -104,6 +104,7 @@ function makeSaved(count: number): SavedMessage[] {
       updatedAt: "2026-01-01T00:00:00.000Z",
       attachments: [],
       replyTo: null,
+      reactions: {},
       channel: null,
     },
   }));

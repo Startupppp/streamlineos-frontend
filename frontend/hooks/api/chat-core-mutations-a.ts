@@ -62,6 +62,7 @@ export function useSendMessage() {
         },
         attachments: [],
         replyTo: null,
+        clientKey: variables.clientKey ?? null,
       };
 
       if (previousData) {
@@ -145,9 +146,11 @@ export function useMarkChannelRead() {
     mutationKey: ["chat", "channels", "mark-read"],
     mutationFn: ({ channelId }: { channelId: number }) =>
       apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/read`, undefined, undefined, chatOkContract),
-    onSuccess: () => {
+    onSuccess: (_, { channelId }) => {
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.unreadTotal() });
+      // The detail read carries this member's `lastReadAt`, which `firstUnreadIndex` reads.
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.channel(channelId) });
     },
   });
 }

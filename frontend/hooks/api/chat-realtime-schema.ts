@@ -37,6 +37,8 @@ export const messagePayloadSchema = z.object({
   messageType: z.enum(["text", "lead_submission", "system"]).optional(),
   attachments: z.array(realtimeAttachmentSchema).optional(),
   idempotencyKey: z.string().optional(),
+  // The sender's per-send key, so the sender's own window can swap its optimistic copy.
+  clientKey: z.string().nullable().optional(),
 });
 
 export const messageUpdatedPayloadSchema = z.object({

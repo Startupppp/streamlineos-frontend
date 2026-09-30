@@ -172,6 +172,8 @@ export interface Message {
   attachments: MessageAttachment[];
   replyTo: MessageReplyTo | null;
   reactions?: Record<string, string[]>;
+  /** Set only on the sender's optimistic copy, so the realtime echo can replace it. */
+  clientKey?: string | null;
 }
 
 export interface TypingIndicator {

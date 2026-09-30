@@ -6,7 +6,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { safeConnect, safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
+import type { InboundMessage } from "ably";
+import { isForgedServerFrame, safeConnect, safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
 import { huddleChannelName } from "@/lib/ably-channels";
 import { useAblyConnection } from "./use-ably-connection";
 
@@ -49,7 +50,8 @@ export function useHuddleRealtime(channelId: number | null): {
     let cancelled = false;
     const subscribed: HuddleEvent[] = [];
 
-    const handleHuddleEvent = () => {
+    const handleHuddleEvent = (msg: InboundMessage) => {
+      if (isForgedServerFrame(msg.name ?? "", msg.clientId)) return;
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.huddle(channelId) });
     };
 

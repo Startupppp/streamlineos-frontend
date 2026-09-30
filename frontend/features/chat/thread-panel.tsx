@@ -98,7 +98,7 @@ export function ThreadPanel({
       inputRef.current.style.height = "auto";
     }
     try {
-      await sendReply.mutateAsync({ content });
+      await sendReply.mutateAsync({ content, clientKey: crypto.randomUUID() });
       bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     } catch (error) {
       setInput(content);
@@ -108,7 +108,7 @@ export function ThreadPanel({
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === "Enter" && !e.shiftKey) {
+      if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
         e.preventDefault();
         handleSend();
       }
