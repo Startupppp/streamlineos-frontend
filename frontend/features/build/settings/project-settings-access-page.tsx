@@ -1,7 +1,9 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useState, useCallback, useRef } from "react";
+import { Plus } from "lucide-react";
 import { usePageState } from "@/hooks/api/use-page-state";
+import { useCan } from "@/hooks/api/access";
 import { useProjectMembers } from "@/hooks/api/build/project-members";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
@@ -9,6 +11,8 @@ import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { PmPageShell, PmPanel, PmSection } from "@/components/pm-chrome";
 import { ProjectMemberRolesSection } from "@/features/build/settings/project-member-roles-section";
 import { TeamRosterSection } from "@/features/build/settings/team-roster-section";
+import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
+import { AddProjectMemberDialog } from "./add-project-member-dialog";
 import { cn } from "@/lib/utils";
 import { TEXT_ONE_LINE, TEXT_BODY } from "@/lib/text-overflow";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
@@ -22,11 +26,14 @@ interface ProjectSettingsAccessPageProps {
 }
 
 export function ProjectSettingsAccessPage({ projectId }: ProjectSettingsAccessPageProps) {
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
   const listFilters = useBuildListFilters({ withSearch: true });
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const canManage = useCan("build:manage");
   const { data: members, isLoading, isError, error, refetch } = useProjectMembers(projectId);
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleOpenAddDialog = useCallback(() => setAddDialogOpen(true), []);
 
   const handleKeyboardClear = useCallback(() => {
     listFilters.clearAll();
@@ -39,6 +46,7 @@ export function ProjectSettingsAccessPage({ projectId }: ProjectSettingsAccessPa
     onOpen: handleKeyboardOpen,
     onClearSelection: handleKeyboardClear,
     searchInputRef,
+    onCreate: canManage ? handleOpenAddDialog : undefined,
   });
 
   const pageState = usePageState({
@@ -49,9 +57,25 @@ export function ProjectSettingsAccessPage({ projectId }: ProjectSettingsAccessPa
   });
 
   return (
+    <>
     <PageWrapper
       title="Access"
       subtitle="Manage project membership and roles"
+      actions={
+        canManage ? (
+          <BuildHeaderActions
+            actions={[
+              {
+                id: "add-project-member",
+                label: "Add member",
+                icon: Plus,
+                primary: true,
+                onSelect: handleOpenAddDialog,
+              },
+            ]}
+          />
+        ) : undefined
+      }
       filters={
         <BuildListToolbar
           search={{
@@ -110,5 +134,12 @@ export function ProjectSettingsAccessPage({ projectId }: ProjectSettingsAccessPa
         </PageState>
       </PmPageShell>
     </PageWrapper>
+
+    <AddProjectMemberDialog
+      projectId={projectId}
+      open={addDialogOpen}
+      onOpenChange={setAddDialogOpen}
+    />
+    </>
   );
 }

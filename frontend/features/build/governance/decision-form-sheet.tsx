@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
+import { isFormFieldPath } from "@/lib/form-field-path";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { decisionFormSchema, type DecisionFormValues } from "./governance-schema";
@@ -87,7 +88,7 @@ export function DecisionFormSheet({
     if (serverErrors && serverErrors !== appliedServerErrorsRef.current && serverErrors.length > 0) {
       appliedServerErrorsRef.current = serverErrors;
       for (const fe of serverErrors) {
-        form.setError(fe.path as keyof DecisionFormValues, { message: fe.message });
+        if (isFormFieldPath(form.getValues(), fe.path)) form.setError(fe.path, { message: fe.message });
       }
     }
   }, [serverErrors, form]);

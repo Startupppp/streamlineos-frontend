@@ -1,6 +1,6 @@
 {
   "capturedAgainst": "(file)",
-  "capturedAt": "2026-09-29T03:35:50.287Z",
+  "capturedAt": "2026-09-29T18:59:32.274Z",
   "missing": [
     "get /access/user-module-access/{userId} [].core",
     "get /build/changelog data[].type",
@@ -367,10 +367,6 @@
     "post /build/templates/{templateId}/apply projectId",
     "post /build/templates/{templateId}/apply ticketsCreated",
     "post /build/{projectId}/releases ticketCount",
-    "post /chat/channels/{channelId}/messages attachments",
-    "post /chat/channels/{channelId}/messages replyTo",
-    "post /chat/channels/{channelId}/messages sender",
-    "post /chat/channels/{channelId}/messages senderId",
     "post /chat/channels/{channelId}/messages/{messageId}/thread attachments",
     "post /chat/channels/{channelId}/messages/{messageId}/thread replyTo",
     "post /chat/channels/{channelId}/messages/{messageId}/thread sender",
@@ -556,7 +552,6 @@
     "get /chat/channels/{channelId}/pins [].pinnedBy",
     "get /chat/saved items[].message.sender",
     "get /clients accounts[].branchId",
-    "get /clients/list [].name",
     "get /clients/{clientId} branchId",
     "get /crm/autonomy/switches switches[].updatedAt",
     "get /crm/support-dashboard supportDashboardStats.avgResolution.value",

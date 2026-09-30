@@ -59,7 +59,6 @@ export type BoardFilters = {
   module?: string;
   dueDateFrom?: string;
   dueDateTo?: string;
-  unscheduled?: boolean;
   orderBy?: TicketOrderBy;
   orderDir?: TicketOrderDir;
   cursor?: string;
@@ -86,7 +85,6 @@ export function useProjectBoardTickets(projectId: number, filters?: BoardFilters
       if (filters?.module) params.moduleIds = filters.module;
       if (filters?.dueDateFrom) params.dueDateFrom = filters.dueDateFrom;
       if (filters?.dueDateTo) params.dueDateTo = filters.dueDateTo;
-      if (filters?.unscheduled) params.unscheduled = true;
       return apiClient.get<CursorPageResponse<Ticket>>(`/build/${projectId}/tickets`, params, signal, ticketListPageLazy);
     },
     initialPageParam: filters?.cursor ?? NO_CURSOR_YET,

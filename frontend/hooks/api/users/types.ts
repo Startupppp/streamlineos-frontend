@@ -129,6 +129,7 @@ export interface UserStats {
 export interface InviteUserPayload {
   email: string;
   role: OrgRole;
+  moduleAccess?: Array<{ moduleKey: string; standing: "MEMBER" | "ADMIN" }>;
 }
 
 export interface Invitation {

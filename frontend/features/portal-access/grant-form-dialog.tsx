@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -13,7 +13,6 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -30,12 +29,15 @@ import {
   useCreateGrant,
   useUpdateGrant,
 } from "@/hooks/api/portal-access/grants";
+import { useProjects } from "@/hooks/api/build/projects";
 import type { ProjectClientGrant } from "@/types/portal-access/grants";
+import type { PortalMembershipRow } from "@/hooks/api/portal-access/portal-access-schema";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { InviteClientDialog } from "./invite-client-dialog";
 
 const grantSchema = z.object({
   portalMembershipId: z.string().min(1, "Membership is required"),
-  projectId: z.string().regex(/^\d+$/, "Project ID must be a number"),
+  projectId: z.string().regex(/^\d+$/, "Project is required"),
   canViewMilestones: z.boolean(),
   canViewTasks: z.boolean(),
   canViewAttachments: z.boolean(),
@@ -89,7 +91,10 @@ export function GrantFormDialog({ open, onOpenChange, mode, defaultValues }: Pro
     mode === "edit" ? defaultValues.projectClientGrantId : "",
   );
   const { data: membershipsPage, isLoading: membershipsLoading } =
-    usePortalMemberships({ limit: 100 });
+    usePortalMemberships({ limit: 100, status: "ACTIVE" });
+  const { data: projectsPage, isLoading: projectsLoading } = useProjects();
+
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   const form = useForm<GrantFormValues>({
     resolver: zodResolver(grantSchema),
@@ -109,6 +114,7 @@ export function GrantFormDialog({ open, onOpenChange, mode, defaultValues }: Pro
     mode === "create" ? createGrant.isPending : updateGrant.isPending;
 
   const memberships = membershipsPage?.data ?? [];
+  const projects = projectsPage?.data ?? [];
 
   function handleSubmit(values: GrantFormValues) {
     if (mode === "create") {
@@ -154,6 +160,21 @@ export function GrantFormDialog({ open, onOpenChange, mode, defaultValues }: Pro
     onOpenChange(false);
   }
 
+  function handleOpenInvite() {
+    setInviteOpen(true);
+  }
+
+  function handleInviteOpenChange(nextOpen: boolean) {
+    setInviteOpen(nextOpen);
+  }
+
+  function handleMembershipInvited(membership: PortalMembershipRow) {
+    form.setValue("portalMembershipId", membership.portalMembershipId);
+  }
+
+  const showEmptyMembershipCta =
+    mode === "create" && !membershipsLoading && memberships.length === 0;
+
   const formId =
     mode === "edit" ? "grant-edit-form" : "grant-create-form";
 
@@ -181,180 +202,210 @@ export function GrantFormDialog({ open, onOpenChange, mode, defaultValues }: Pro
   );
 
   return (
-    <AppDialog
-      open={open}
-      onOpenChange={onOpenChange}
-      title={mode === "edit" ? "Edit Visibility" : "Grant Client Access"}
-      description={
-        mode === "edit"
-          ? "Update which project areas this client can see."
-          : "Grant a client contact read-only visibility into a project."
-      }
-      footer={footer}
-    >
-      <Form {...form}>
-        <form
-          id={formId}
-          onSubmit={form.handleSubmit(handleSubmit)}
-          className="space-y-4"
-          noValidate
-        >
-          <FormField
-            control={form.control}
-            name="portalMembershipId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Portal membership</FormLabel>
-                <Select
-                  value={field.value}
-                  onValueChange={field.onChange}
-                  disabled={mode === "edit" || membershipsLoading}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a membership…" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                    {memberships.map((m) => {
-                      const nameParts = [m.contactFirstName, m.contactLastName].filter(Boolean);
-                      const displayName =
-                        nameParts.length > 0
-                          ? nameParts.join(" ")
-                          : m.portalMembershipId.slice(0, 8) + "…";
-                      return (
-                        <SelectItem
-                          key={m.portalMembershipId}
-                          value={m.portalMembershipId}
-                        >
-                          {displayName}
+    <>
+      <AppDialog
+        open={open}
+        onOpenChange={onOpenChange}
+        title={mode === "edit" ? "Edit Visibility" : "Grant Client Access"}
+        description={
+          mode === "edit"
+            ? "Update which project areas this client can see."
+            : "Grant a client contact read-only visibility into a project."
+        }
+        footer={footer}
+      >
+        <Form {...form}>
+          <form
+            id={formId}
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-4"
+            noValidate
+          >
+            <FormField
+              control={form.control}
+              name="portalMembershipId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Portal membership</FormLabel>
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    disabled={mode === "edit" || membershipsLoading}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a membership…" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+                      {memberships.map((m) => {
+                        const nameParts = [m.contactFirstName, m.contactLastName].filter(Boolean);
+                        const displayName =
+                          nameParts.length > 0
+                            ? nameParts.join(" ")
+                            : m.portalMembershipId.slice(0, 8) + "…";
+                        return (
+                          <SelectItem
+                            key={m.portalMembershipId}
+                            value={m.portalMembershipId}
+                          >
+                            {displayName}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                  {showEmptyMembershipCta && (
+                    <p className="text-xs text-muted-foreground">
+                      No active memberships.{" "}
+                      <button
+                        type="button"
+                        className="underline underline-offset-2 hover:text-foreground"
+                        onClick={handleOpenInvite}
+                      >
+                        Invite a client
+                      </button>{" "}
+                      to create one.
+                    </p>
+                  )}
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="projectId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Project</FormLabel>
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    disabled={mode === "edit" || projectsLoading}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a project…" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+                      {projects.map((p) => (
+                        <SelectItem key={p.id} value={String(p.id)}>
+                          {p.name}
                         </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="projectId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Project ID</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    type="number"
-                    min={1}
-                    placeholder="Numeric project ID"
-                    disabled={mode === "edit"}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <div className="space-y-3 rounded-lg border border-border bg-muted/30 px-4 py-3">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Visibility permissions
-            </p>
-
-            <FormField
-              control={form.control}
-              name="canViewMilestones"
-              render={({ field }) => (
-                <FormItem className="flex items-center gap-3 space-y-0">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <FormLabel className="cursor-pointer font-normal">
-                    View milestones
-                  </FormLabel>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
                 </FormItem>
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="canViewTasks"
-              render={({ field }) => (
-                <FormItem className="flex items-center gap-3 space-y-0">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <FormLabel className="cursor-pointer font-normal">
-                    View tasks
-                  </FormLabel>
-                </FormItem>
-              )}
-            />
+            <div className="space-y-3 rounded-lg border border-border bg-muted/30 px-4 py-3">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                Visibility permissions
+              </p>
 
-            <FormField
-              control={form.control}
-              name="canViewAttachments"
-              render={({ field }) => (
-                <FormItem className="flex items-center gap-3 space-y-0">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <FormLabel className="cursor-pointer font-normal">
-                    View attachments
-                  </FormLabel>
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="canViewMilestones"
+                render={({ field }) => (
+                  <FormItem className="flex items-center gap-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormLabel className="cursor-pointer font-normal">
+                      View milestones
+                    </FormLabel>
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="canViewComments"
-              render={({ field }) => (
-                <FormItem className="flex items-center gap-3 space-y-0">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <FormLabel className="cursor-pointer font-normal">
-                    View comments
-                  </FormLabel>
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="canViewTasks"
+                render={({ field }) => (
+                  <FormItem className="flex items-center gap-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormLabel className="cursor-pointer font-normal">
+                      View tasks
+                    </FormLabel>
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="canSubmitChangeRequests"
-              render={({ field }) => (
-                <FormItem className="flex items-center gap-3 space-y-0">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <FormLabel className="cursor-pointer font-normal">
-                    Submit change requests
-                  </FormLabel>
-                </FormItem>
-              )}
-            />
-          </div>
-        </form>
-      </Form>
-    </AppDialog>
+              <FormField
+                control={form.control}
+                name="canViewAttachments"
+                render={({ field }) => (
+                  <FormItem className="flex items-center gap-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormLabel className="cursor-pointer font-normal">
+                      View attachments
+                    </FormLabel>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="canViewComments"
+                render={({ field }) => (
+                  <FormItem className="flex items-center gap-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormLabel className="cursor-pointer font-normal">
+                      View comments
+                    </FormLabel>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="canSubmitChangeRequests"
+                render={({ field }) => (
+                  <FormItem className="flex items-center gap-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormLabel className="cursor-pointer font-normal">
+                      Submit change requests
+                    </FormLabel>
+                  </FormItem>
+                )}
+              />
+            </div>
+          </form>
+        </Form>
+      </AppDialog>
+
+      <InviteClientDialog
+        open={inviteOpen}
+        onOpenChange={handleInviteOpenChange}
+        onInvited={handleMembershipInvited}
+      />
+    </>
   );
 }

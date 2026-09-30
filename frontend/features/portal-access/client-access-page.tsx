@@ -28,6 +28,7 @@ import {
 import { SemanticBadge } from "@/components/ui/semantic-badge";
 import type { BadgeTone } from "@/components/ui/semantic-badge";
 import { GrantFormDialog } from "./grant-form-dialog";
+import { InviteClientDialog } from "./invite-client-dialog";
 import type { ProjectClientGrant, PortalGrantStatus } from "@/types/portal-access/grants";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -181,6 +182,7 @@ export function ClientAccessPage() {
     useQueryParamOpen("create");
   const [editTarget, setEditTarget] = useState<ProjectClientGrant | null>(null);
   const [revokeTarget, setRevokeTarget] = useState<ProjectClientGrant | null>(null);
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   const { data, isLoading, isError, error, refetch } = useProjectClientGrants({
     cursor: cursorHistory.at(-1),
@@ -237,6 +239,18 @@ export function ClientAccessPage() {
   const handleOpenCreate = useCallback(() => {
     openCreate();
   }, [openCreate]);
+
+  const handleOpenInvite = useCallback(() => {
+    setInviteOpen(true);
+  }, []);
+
+  function handleInviteOpenChange(nextOpen: boolean) {
+    setInviteOpen(nextOpen);
+  }
+
+  function handlePageMembershipInvited() {
+    setInviteOpen(false);
+  }
 
   function handleCreateDialogChange(open: boolean) {
     if (!open) setCreateOpen(false);
@@ -385,7 +399,12 @@ export function ClientAccessPage() {
       filters={pageState.kind === "ready" ? filtersBar : undefined}
       actions={
         pageState.kind === "ready" && canManage ? (
-          <GrantAccessButton onClick={handleOpenCreate} />
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={handleOpenInvite}>
+              Invite Client
+            </Button>
+            <GrantAccessButton onClick={handleOpenCreate} />
+          </div>
         ) : undefined
       }
     >
@@ -494,6 +513,12 @@ export function ClientAccessPage() {
           onConfirm={handleBulkRevoke}
         />
       )}
+
+      <InviteClientDialog
+        open={inviteOpen}
+        onOpenChange={handleInviteOpenChange}
+        onInvited={handlePageMembershipInvited}
+      />
     </PageWrapper>
   );
 }

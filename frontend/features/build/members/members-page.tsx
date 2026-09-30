@@ -174,7 +174,7 @@ export function MembersPage() {
               actions={[
                 {
                   id: "add-member",
-                  label: "Add member",
+                  label: "Add workspace member",
                   icon: Plus,
                   primary: true,
                   onSelect: handleOpenAddDialog,
@@ -235,12 +235,12 @@ export function MembersPage() {
                     title="No members yet"
                     description={
                       canManage
-                        ? "Add the first person who should have access to Build."
+                        ? "Add the first person who should have access to the Build workspace."
                         : "People with access to Build will appear here."
                     }
                     action={
                       canManage
-                        ? { label: "Add member", onClick: handleOpenAddDialog }
+                        ? { label: "Add workspace member", onClick: handleOpenAddDialog }
                         : undefined
                     }
                   />

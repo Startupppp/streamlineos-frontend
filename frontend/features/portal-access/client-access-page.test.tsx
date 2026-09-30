@@ -3,7 +3,18 @@ import { ClientAccessPage } from "./client-access-page";
 import { ApiError } from "@/lib/api-envelope";
 
 jest.mock("@/components/ui/page-wrapper", () => ({
-  PageWrapper: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  PageWrapper: ({
+    children,
+    actions,
+  }: {
+    children: React.ReactNode;
+    actions?: React.ReactNode;
+  }) => (
+    <div>
+      {actions}
+      {children}
+    </div>
+  ),
 }));
 
 jest.mock("@/components/ui/data-table", () => ({
@@ -64,6 +75,17 @@ jest.mock("@/components/ui/confirm-dialog", () => ({
 
 jest.mock("./grant-form-dialog", () => ({
   GrantFormDialog: () => <div data-testid="grant-form-dialog" />,
+}));
+
+jest.mock("./invite-client-dialog", () => ({
+  InviteClientDialog: ({
+    open,
+  }: {
+    open: boolean;
+    onOpenChange: (v: boolean) => void;
+    onInvited: () => void;
+  }) =>
+    open ? <div data-testid="invite-client-dialog" /> : null,
 }));
 
 jest.mock("sonner", () => ({
@@ -421,5 +443,29 @@ describe("ClientAccessPage — bulk revoke selection (Requirement C3)", () => {
     expect(screen.getByText("1 selected")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /clear selection/i }));
     expect(screen.queryByText("1 selected")).not.toBeInTheDocument();
+  });
+});
+
+describe("ClientAccessPage — Invite Client CTA", () => {
+  it("renders the Invite Client button when the user has build:clientvisibility:manage so they can create a membership without leaving the page", () => {
+    mockUseCan.mockReturnValue(true);
+    mockUseProjectClientGrants.mockReturnValue(baseQueryResult({ data: emptyGrantsPage }));
+    render(<ClientAccessPage />);
+    expect(screen.getByRole("button", { name: /invite client/i })).toBeInTheDocument();
+  });
+
+  it("does not render the Invite Client button when the user lacks build:clientvisibility:manage so an unauthorized viewer cannot start an invite flow", () => {
+    mockUseCan.mockReturnValue(false);
+    mockUseProjectClientGrants.mockReturnValue(baseQueryResult({ data: emptyGrantsPage }));
+    render(<ClientAccessPage />);
+    expect(screen.queryByRole("button", { name: /invite client/i })).not.toBeInTheDocument();
+  });
+
+  it("opens the InviteClientDialog when the Invite Client button is clicked", () => {
+    mockUseCan.mockReturnValue(true);
+    mockUseProjectClientGrants.mockReturnValue(baseQueryResult({ data: emptyGrantsPage }));
+    render(<ClientAccessPage />);
+    fireEvent.click(screen.getByRole("button", { name: /invite client/i }));
+    expect(screen.getByTestId("invite-client-dialog")).toBeInTheDocument();
   });
 });

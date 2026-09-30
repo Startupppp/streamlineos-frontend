@@ -225,6 +225,7 @@ export function RequestApprovalSheet({
 
   useEffect(() => {
     form.setValue("entityId", "");
+    if (form.formState.dirtyFields.title) return;
     form.setValue("title", "");
   }, [entityType, form]);
 

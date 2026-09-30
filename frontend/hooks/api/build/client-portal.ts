@@ -182,10 +182,10 @@ export function useUpdateTicketVisibility(projectId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:clientvisibility:manage", {
     mutationKey: ["projects", projectId, "client-visibility", "tickets"],
-    mutationFn: ({ ticketId, clientVisible, version }: { ticketId: number; clientVisible: boolean; version: number }) =>
+    mutationFn: ({ ticketId, clientVisible, version }: { ticketId: number; clientVisible: boolean; version?: number }) =>
       apiClient.patch<{ success: boolean }>(
         `/build/${projectId}/client-visibility/tickets/${ticketId}`,
-        { clientVisible, version },
+        { clientVisible, ...(version === undefined ? {} : { version }) },
         undefined,
         toggleVisibilityContract,
       ),

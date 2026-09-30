@@ -3,7 +3,7 @@
 import { useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { gateCookieName, mayDeferOwnOnboarding } from "@/lib/onboarding-gate";
+import { gateCookieName } from "@/lib/onboarding-gate";
 
 /**
  * V-034. Two things the deferral gate left unsaid.
@@ -77,13 +77,13 @@ export function DeferredOnboardingReminder() {
 export function MemberOnboardingNote() {
   const { data: session } = useSession();
 
-  if (!session || mayDeferOwnOnboarding(session)) return null;
+  const isOwner = session?.user?.isOrgOwner === true;
+  if (!session || isOwner) return null;
 
   return (
     <p className="rounded-xl border border-border bg-muted/40 px-4 py-3 text-dense text-muted-foreground">
-      Your organisation asks every employee to complete this profile before
-      using HR, which is why you were brought here. Finish these steps and
-      you will land back where you were going.
+      Completing your employee profile activates your access to the HR module.
+      You can finish this now or come back to it any time.
     </p>
   );
 }

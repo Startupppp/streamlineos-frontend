@@ -1,6 +1,7 @@
 import type { Session } from "next-auth";
 
-const GATE_COOKIE_MAX_AGE = 5 * 60;
+export const GATE_COOKIE_MAX_AGE = 5 * 60;
+export const ONBOARDING_DEFERRED_MAX_AGE = 7 * 24 * 60 * 60;
 
 /**
  * HRMS-E2E-020. `onboarding-deferred` is deliberately separate from
@@ -55,11 +56,12 @@ export function clearGateCookies(): void {
 export function writeGateCookie(
   cookieName: GateCookieBase,
   scopeId: string,
+  maxAge = GATE_COOKIE_MAX_AGE,
 ): void {
   if (typeof document === "undefined") return;
   const name = gateCookieName(cookieName, scopeId);
   const secure = secureFlag();
-  document.cookie = `${name}=1; path=/; max-age=${GATE_COOKIE_MAX_AGE}; SameSite=Lax${secure}`;
+  document.cookie = `${name}=1; path=/; max-age=${maxAge}; SameSite=Lax${secure}`;
 }
 
 export function clearGateCookie(
@@ -99,6 +101,5 @@ export async function completeOnboardingGate<TExpected, TResult>(
  * (FE-52).
  */
 export function mayDeferOwnOnboarding(session: Session | null | undefined): boolean {
-  const role = session?.user?.role;
-  return role === "ORG_ADMIN" || role === "MEMBER";
+  return session?.user?.isOrgOwner !== true;
 }

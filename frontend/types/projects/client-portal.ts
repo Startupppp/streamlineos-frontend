@@ -50,7 +50,7 @@ export interface ClientVisibilityTicket {
   title: string;
   type: string;
   clientVisible: boolean;
-  version: number;
+  version?: number;
 }
 
 export interface ClientVisibilityMilestone {

@@ -17,7 +17,7 @@ export default async function OrgSetupLayout({
 }) {
   const session = await requireSession();
 
-  const gate = resolveWizardGate(session, await cookies());
+  const gate = resolveWizardGate(session, await cookies(), "/org-setup");
   if (gate !== "/org-setup") redirect(gate ?? "/dashboard");
 
   return (

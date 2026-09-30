@@ -82,7 +82,7 @@ describe("BUG-050 — useDeleteCommentDraftByTicket patches cache immediately so
 
     const { result } = renderHook(() => useDeleteCommentDraftByTicket(), { wrapper: wrap(client) });
 
-    act(() => { result.current.mutate(100); });
+    await act(async () => { result.current.mutate(100); });
 
     const cached = client.getQueryData<CommentDraftListItem[]>(buildWorkQueryKeys.projects.commentDrafts.mine());
     expect(cached?.some((d) => d.ticketId === 100)).toBe(false);
@@ -109,7 +109,7 @@ describe("BUG-050 — useDeleteCommentDraftByTicket patches cache immediately so
 
     const { result } = renderHook(() => useDeleteCommentDraftByTicket(), { wrapper: wrap(client) });
 
-    act(() => { result.current.mutate(100); });
+    await act(async () => { result.current.mutate(100); });
 
     const cached = client.getQueryData<CommentDraftListItem[]>(buildWorkQueryKeys.projects.commentDrafts.mine());
     expect(cached?.find((d) => d.ticketId === 200)).toBeDefined();

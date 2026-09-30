@@ -6,6 +6,7 @@
  */
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { ONBOARDING_DEFERRED_MAX_AGE } from "@/lib/onboarding-gate";
 import { AdminDeferBanner } from "./admin-defer-banner";
 
 const push = jest.fn();
@@ -14,9 +15,6 @@ const session = jest.fn();
 
 jest.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 jest.mock("next-auth/react", () => ({ useSession: () => session() }));
-// Only the cookie write is doubled. `mayDeferOwnOnboarding` stays real, so
-// these assertions exercise the rule the routing gate actually applies rather
-// than a stand-in that could drift away from it.
 jest.mock("@/lib/onboarding-gate", () => ({
   ...jest.requireActual("@/lib/onboarding-gate"),
   writeGateCookie: (...args: unknown[]) => writeGateCookie(...args),
@@ -49,6 +47,13 @@ describe("AdminDeferBanner", () => {
     expect(screen.getByRole("button", { name: /Skip for now/i })).toBeInTheDocument();
   });
 
+  it("does not offer the skip button to an org owner, who uses the org-setup path instead — FE-122 negative", () => {
+    signedInAs("OWNER", { user: { id: "usr-admin", role: "OWNER", isOrgOwner: true } });
+    const { container } = render(<AdminDeferBanner />);
+
+    expect(container).toBeEmptyDOMElement();
+  });
+
   it("takes a MEMBER to /dashboard, not /hr, after deferral — BUG-018", async () => {
     signedInAs("MEMBER");
     render(<AdminDeferBanner />);
@@ -57,17 +62,19 @@ describe("AdminDeferBanner", () => {
     expect(push).toHaveBeenCalledWith("/dashboard");
   });
 
-  it("writes the deferral marker, never the completion one", async () => {
-    // The distinction the whole change rests on: deferring is not finishing,
-    // and writing `onboarding-done` here would tell the product this person had
-    // handed over bank details they have not.
+  it("writes the deferral marker with the 7-day max-age, never the completion one", async () => {
     signedInAs("ORG_ADMIN");
     render(<AdminDeferBanner />);
     await userEvent.click(screen.getByRole("button", { name: /Skip for now/i }));
 
-    expect(writeGateCookie).toHaveBeenCalledWith("onboarding-deferred", "usr-admin--org-qa");
+    expect(writeGateCookie).toHaveBeenCalledWith(
+      "onboarding-deferred",
+      "usr-admin--org-qa",
+      ONBOARDING_DEFERRED_MAX_AGE,
+    );
     expect(writeGateCookie).not.toHaveBeenCalledWith(
       "onboarding-done",
+      expect.anything(),
       expect.anything(),
     );
   });

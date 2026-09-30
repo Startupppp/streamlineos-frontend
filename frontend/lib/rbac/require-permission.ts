@@ -40,10 +40,24 @@ async function getCurrentPath(): Promise<string | null> {
   }
 }
 
+async function getCurrentCallbackPath(): Promise<string | null> {
+  try {
+    const h = await headers();
+    const pathname = resolveRequestPath(h);
+    if (!pathname) return null;
+    const search = h.get("x-search");
+    return search ? `${pathname}?${search}` : pathname;
+  } catch {
+    return null;
+  }
+}
+
 export async function requireSession(): Promise<Session> {
   const session = await getServerAuth();
-  if (!session?.user || session.user.isActive === false)
-    redirect(signInPathForMissingSession());
+  if (!session?.user || session.user.isActive === false) {
+    const callbackPath = await getCurrentCallbackPath();
+    redirect(signInPathForMissingSession(callbackPath ?? undefined));
+  }
   return session;
 }
 
@@ -54,9 +68,13 @@ export async function requirePermission(
   const session = await getServerAuth();
   if (!session?.user) {
     if (options.redirectTo) redirect(options.redirectTo);
-    redirect(signInPathForMissingSession());
+    const callbackPath = await getCurrentCallbackPath();
+    redirect(signInPathForMissingSession(callbackPath ?? undefined));
   }
-  if (session.user.isActive === false) redirect(signInPathForMissingSession());
+  if (session.user.isActive === false) {
+    const callbackPath = await getCurrentCallbackPath();
+    redirect(signInPathForMissingSession(callbackPath ?? undefined));
+  }
 
   const access = await resolveAccessOrFail();
   const perms = Array.isArray(permission) ? permission : [permission];

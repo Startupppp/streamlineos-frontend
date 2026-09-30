@@ -210,6 +210,7 @@ export async function proxy(req: NextRequest) {
     const url = req.nextUrl.clone();
     url.pathname = "/signin";
     url.search = "";
+    url.searchParams.set(SESSION_EXPIRED_QUERY, SESSION_EXPIRED_VALUE);
     url.searchParams.set("callbackUrl", pathname + req.nextUrl.search);
     return NextResponse.redirect(url);
   }

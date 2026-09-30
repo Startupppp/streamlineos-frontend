@@ -258,7 +258,7 @@ describe("useBoardUrlState — EPIC tickets are excluded from filteredTickets", 
     boardState.boardTickets = [
       { id: 1, ticketNumber: 1, title: "Task A", status: "TODO", type: "TASK", labels: [] },
       { id: 2, ticketNumber: 2, title: "Epic B", status: "TODO", type: "EPIC", labels: [] },
-      { id: 3, ticketNumber: 3, title: "Bug C", status: "DONE", type: "BUG", labels: [] },
+      { id: 3, ticketNumber: 3, title: "Bug C", status: "IN_PROGRESS", type: "BUG", labels: [] },
     ];
 
     const { result } = renderHook(() => useBoardUrlState(1));

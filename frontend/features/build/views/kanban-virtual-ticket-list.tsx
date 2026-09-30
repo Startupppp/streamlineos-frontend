@@ -268,7 +268,7 @@ export const KanbanVirtualTicketList = memo(function KanbanVirtualTicketList({
             listRef={setDroppableRef}
             className={cn(
               "scrollbar-hide rounded-b-lg px-2 pb-2",
-              stretch ? "min-h-0" : "",
+              stretch ? "min-h-0 flex-1" : "",
               minHeightClass,
               "transition-[background-color,box-shadow] duration-150 ease-out",
               snapshot.isDraggingOver && "bg-primary/[0.07] ring-1 ring-inset ring-primary/15",

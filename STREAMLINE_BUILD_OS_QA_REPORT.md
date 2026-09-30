@@ -562,9 +562,9 @@ Remediation started 2026-09-29. Work is partitioned into nine lanes with disjoin
 
 | Lane | Bugs | Why it exists | Status |
 |---|---|---|---|
-| L10 Board DnD + backlog scope | 010, 014 | L3 declared 010 browser-only without diagnosing it, and "fixed" 014 by filtering one page of a server-paginated list in the browser (FE-33/FE-105) | in progress |
-| L11 Route bounce + org switch | 047, 029 | L9 blocked on file ownership; the org-switch half lives in `useSwitchOrg` | in progress |
-| L12 CRM client link + overview | 005, 006 | L9 declined 005 as "new scope"; it is the defect that stops the product serving an agency | in progress |
+| L10 Board DnD + backlog scope | 010, 014 | L3 declared 010 browser-only without diagnosing it, and "fixed" 014 by filtering one page of a server-paginated list in the browser (FE-33/FE-105) | **done** |
+| L11 Route bounce + org switch | 047, 029 | L9 blocked on file ownership; the org-switch half lives in `useSwitchOrg` | 029 **done**; 047 **partial** — see below |
+| L12 CRM client link + overview | 005, 006 | L9 declined 005 as "new scope"; it is the defect that stops the product serving an agency | **done** (1701 applied to prod) |
 
 ### Corrections made to lane output
 
@@ -578,3 +578,30 @@ These are cases where a lane's reported fix did not hold up and the orchestrator
 - **BUG-017's fix was inert.** Keywords were added to a list the typed-search path never reads, and the command list applies its own match on the item value, so the page filter alone changed nothing.
 
 Verification constraints for this remediation: `.env` points at production, so lanes verify by reading code, adding failing-first unit specs, targeted jest and typecheck. Nothing is run against the live database by a lane. Browser-only proof (drag-and-drop pointer events, Feedbucket overlay at 390/768/1366, real focus order) is recorded per bug as **BROWSER-PENDING** rather than claimed.
+
+### Verification state at end of remediation
+
+Gates run on the whole tree after every lane drained:
+
+- Backend `pnpm typecheck` — **clean**.
+- Frontend `pnpm type-check` — **clean**. Note it was initially reporting nothing because a corrupt `.next/dev/types/routes.d.ts` silences the entire frontend typecheck; the package script regenerates it first, and doing so surfaced three real errors, one of which meant BUG-036's fix never compiled against the field it reads.
+- Frontend `pnpm type-check:specs` — one error remains in `features/build/intake/public-intake-page-states.test.tsx`, **pre-existing** (last touched in the commit this remediation started from).
+- Frontend jest over `features/build`, `hooks/api/build`, `components/layout`, `lib/build` — **4808 of 4819 pass**. The 11 failures sit in 7 suites, each confirmed pre-existing by checking that the file under test last changed before the session baseline `df0bdd7b8`: `build-nav-route-access-parity` (a `project-chat` route/key mismatch dating to 2026-09-19), `sidebar-nav-inventory`, `sidebar-product-path`, `build-ui-consistency`, `build-cache-sync`, `shell-keyboard`, `meeting-form-sheet`.
+
+Three further corrections were needed after the lanes reported done, all found by running their own new specs:
+
+- **BUG-041 was still broken.** The dirty-title guard was on the auto-fill effect, but a second effect cleared the title on every entity-type change, so a typed title still vanished.
+- **BUG-010's second diagnosis was also wrong.** `react-window`'s `List` does spread rest props onto its outer element, so the dnd data attributes were reaching the DOM all along. The real defect was a `useLayoutEffect` with no dependency array whose cleanup unregistered the droppable after every render. The replacement then had to be hardened again, because the `listRef` handle is rebuilt whenever its deps change and would have reintroduced the same churn.
+- **Three specs asserted the right behaviour the wrong way** — clicking a control that cannot render with an empty selection, reading an optimistic cache before `onMutate` ran, and using a Done ticket the board hides by default.
+
+### Still requiring a browser
+
+Nothing below has been proven in a running app; `.env` points at production, so every lane verified by reading code, adding failing-first specs, and running targeted jest plus typecheck.
+
+- The drag-and-drop pointer path: that `@hello-pangea/dnd` resolves a non-null destination on a real drag once the droppable stays registered.
+- Feedbucket overlay clearance at 390 / 768 / 1366.
+- Real focus order in the template name field (BUG-054) and the wizard review step.
+- `/gantt` and `/roadmap` redirect targets.
+- BUG-047's "Preview bounces to Visibility" variant: the only code defect found in that zone was a trailing `?` on default-tab navigation, which does not explain a move to a *different* tab. Both portal pages are URL-controlled with no effect writing defaults back, so the remaining symptom is unreproduced.
+- The invite OTP flow end to end. This one gates every new signup, so it should be exercised first.
+

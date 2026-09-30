@@ -298,10 +298,10 @@ describe("ProjectBacklogPage — filter forwarding", () => {
     expect(callArgs.status).toBeUndefined();
   });
 
-  it("sends TASK,BUG,STORY,SUBTASK as the default type filter when the user has not chosen a type, so EPICs are excluded from the server query", () => {
+  it("sends only production-supported non-EPIC types by default", () => {
     renderPage();
     const callArgs = mockUseProjectBoardTickets.mock.calls[0]?.[1] as Record<string, unknown>;
-    expect(callArgs?.type).toBe("TASK,BUG,STORY,SUBTASK");
+    expect(callArgs?.type).toBe("TASK,BUG,STORY");
   });
 
   it("uses the user-selected type filter instead of the default when types are chosen", () => {
@@ -312,11 +312,11 @@ describe("ProjectBacklogPage — filter forwarding", () => {
   });
 });
 
-describe("ProjectBacklogPage — unscheduled filter", () => {
-  it("passes unscheduled: true to the server query so the SQL predicate excludes scheduled tickets before pagination, not a client-side slice", () => {
+describe("ProjectBacklogPage — production ticket query contract", () => {
+  it("does not send the unsupported unscheduled query key", () => {
     renderPage();
     const callArgs = mockUseProjectBoardTickets.mock.calls[0]?.[1] as Record<string, unknown>;
-    expect(callArgs?.unscheduled).toBe(true);
+    expect(callArgs).not.toHaveProperty("unscheduled");
   });
 });
 

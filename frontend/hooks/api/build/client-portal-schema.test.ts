@@ -3,8 +3,26 @@ import {
   changeRequestListContract,
   portalChangeRequestItemContract,
   portalChangeRequestListContract,
+  visibilitySummaryContract,
   toggleVisibilityContract,
 } from "./client-portal-schema";
+
+describe("visibilitySummaryContract — rolling deploy compatibility", () => {
+  it("accepts the production API response while older backend instances omit ticket version", () => {
+    const result = visibilitySummaryContract.safeParse({
+      tickets: {
+        data: [{ id: 11, ticketNumber: 42, title: "Fix login", type: "BUG", clientVisible: true }],
+        pagination: { limit: 50, hasMore: false, nextCursor: null },
+      },
+      milestones: {
+        data: [],
+        pagination: { limit: 50, hasMore: false, nextCursor: null },
+      },
+    });
+
+    expect(result.success).toBe(true);
+  });
+});
 
 describe("portalChangeRequestItemContract", () => {
   const fullRow = {

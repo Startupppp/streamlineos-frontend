@@ -184,6 +184,28 @@ describe("SPEC 1 — ticket visibility invalidation on settled (Requirement C5)"
     expect(body).toEqual({ clientVisible: true, version: 9 });
   });
 
+  it("omits version when the rolling-deploy response did not include it", async () => {
+    (apiClient.patch as jest.Mock).mockResolvedValue({ success: true });
+    const qc = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={qc}>{children}</QueryClientProvider>
+    );
+
+    const { useUpdateTicketVisibility } = await import("./client-portal");
+    const { result } = renderHook(() => useUpdateTicketVisibility(42), { wrapper });
+
+    await act(async () => {
+      result.current.mutate({ ticketId: 7, clientVisible: true });
+      await new Promise((r) => setTimeout(r, 0));
+    });
+
+    const body = (apiClient.patch as jest.Mock).mock.calls.at(-1)?.[1];
+    expect(body).toEqual({ clientVisible: true });
+  });
+
   it("useUpdateMilestoneVisibility invalidates visibility(projectId) on settled", async () => {
     (apiClient.patch as jest.Mock).mockResolvedValue({ success: true });
     const qc = new QueryClient({

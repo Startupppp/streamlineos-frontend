@@ -1,5 +1,6 @@
 import { clearRegisteredQueryCache } from "@/lib/query-cache-control";
 import { isRecord } from "@/lib/is-record";
+import { signInPathForMissingSession } from "@/lib/auth-session-cookies";
 import {
   ApiError,
   apiErrorFromResponse,
@@ -207,12 +208,16 @@ async function refreshAfterUnauthorized(
   return refreshAfterUnauthorizedPromise;
 }
 
-function endSession(): void {
+export function endSession(): void {
   if (sessionEnded) return;
   sessionEnded = true;
   clearRegisteredQueryCache();
   void import("next-auth/react").then(({ signOut }) => {
-    void signOut({ callbackUrl: "/signin" });
+    const here =
+      typeof window !== "undefined"
+        ? window.location.pathname + window.location.search
+        : undefined;
+    void signOut({ callbackUrl: signInPathForMissingSession(here) });
   });
 }
 

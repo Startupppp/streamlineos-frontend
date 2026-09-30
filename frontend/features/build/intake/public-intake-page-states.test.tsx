@@ -20,6 +20,7 @@ import {
   useSubmitPublicForm,
 } from "@/hooks/api/build/public-form";
 import { useSubmitIntake } from "@/hooks/api/build/public-intake";
+import { idleQueryResult, successQueryResult, errorQueryResult } from "@/test-utils/query-result";
 import PublicIntakePage from "@/app/(public)/intake/[projectId]/page";
 
 const mockUseProjectIntakeForm = useProjectIntakeForm as jest.MockedFunction<typeof useProjectIntakeForm>;
@@ -46,20 +47,29 @@ const configuredForm = {
   ],
 };
 
+type IntakeFormResult = ReturnType<typeof useProjectIntakeForm>;
+type IntakeFormData = NonNullable<IntakeFormResult["data"]>;
+
+interface IntakeFormState {
+  isPending?: boolean;
+  isSuccess?: boolean;
+  isError?: boolean;
+  data?: IntakeFormData;
+  error?: Error;
+}
+
+function intakeFormResult(state: IntakeFormState): IntakeFormResult {
+  if (state.isError) return errorQueryResult(state.error ?? new Error("intake form unavailable"));
+  if (state.isSuccess && state.data) return successQueryResult(state.data);
+  return idleQueryResult();
+}
+
 function setup(
-  intakeFormOverrides: object,
+  intakeFormOverrides: IntakeFormState,
   submitPublicFormOverrides = {},
   submitIntakeOverrides = {},
 ) {
-  mockUseProjectIntakeForm.mockReturnValue({
-    data: undefined,
-    isLoading: false,
-    isPending: false,
-    isError: false,
-    isSuccess: false,
-    error: null,
-    ...intakeFormOverrides,
-  } as ReturnType<typeof useProjectIntakeForm>);
+  mockUseProjectIntakeForm.mockReturnValue(intakeFormResult(intakeFormOverrides));
   mockUseSubmitPublicForm.mockReturnValue({ ...idleMutation, ...submitPublicFormOverrides } as unknown as ReturnType<typeof useSubmitPublicForm>);
   mockUseSubmitIntake.mockReturnValue({ ...idleMutation, ...submitIntakeOverrides } as unknown as ReturnType<typeof useSubmitIntake>);
   return render(<PublicIntakePage />);

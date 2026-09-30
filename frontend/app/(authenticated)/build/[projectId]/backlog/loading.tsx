@@ -10,7 +10,7 @@ export default function BacklogLoading() {
   return (
     <PageWrapper
       title="Backlog"
-      subtitle="Manage and prioritize unscheduled work"
+      subtitle="Manage and prioritize project work"
       actions={<Skeleton className="h-9 w-28 rounded-md" />}
       filters={
         <div className={FILTER_TOOLBAR_ROW}>

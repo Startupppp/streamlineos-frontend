@@ -28,12 +28,12 @@ export default async function DashboardLayout({
   const cookieStore = await cookies();
   const requestHeaders = await headers();
   const nonce = requestHeaders.get("x-nonce") ?? undefined;
+  const pathname = requestHeaders.get("x-pathname") ?? "";
 
-  const gate = resolveWizardGate(session, cookieStore);
+  const gate = resolveWizardGate(session, cookieStore, pathname);
 
   if (gate) redirect(gate);
 
-  const pathname = requestHeaders.get("x-pathname") ?? "";
   const isSettingsRoute =
     pathname === "/settings" || pathname.startsWith("/settings/");
 

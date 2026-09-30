@@ -24,8 +24,8 @@ interface ProjectSettingsPortalPageProps {
 }
 
 interface TicketRowProps {
-  ticket: { id: number; ticketNumber: number; title: string; clientVisible: boolean; version: number };
-  onToggle: (ticketId: number, clientVisible: boolean, version: number) => void;
+  ticket: { id: number; ticketNumber: number; title: string; clientVisible: boolean; version?: number };
+  onToggle: (ticketId: number, clientVisible: boolean, version?: number) => void;
   isPending: boolean;
   canManage: boolean;
 }
@@ -107,7 +107,7 @@ export function ProjectSettingsPortalPage({ projectId }: ProjectSettingsPortalPa
   });
 
   const handleTicketToggle = useCallback(
-    (ticketId: number, clientVisible: boolean, version: number) => {
+    (ticketId: number, clientVisible: boolean, version?: number) => {
       updateTicket.mutate(
         { ticketId, clientVisible, version },
         { onError: (err) => toast.error(getErrorMessage(err)) },

@@ -100,10 +100,11 @@ export function useAddProjectMember(
           undefined,
           memberRowLazy,
         ),
-      onSuccess: (_, variables) => {
-        queryClient.invalidateQueries({
+      onSuccess: (data, variables, context, mutationContext) => {
+        void queryClient.invalidateQueries({
           queryKey: buildWorkQueryKeys.projects.members(variables.projectId),
         });
+        options?.onSuccess?.(data, variables, context, mutationContext);
       },
     },
   );

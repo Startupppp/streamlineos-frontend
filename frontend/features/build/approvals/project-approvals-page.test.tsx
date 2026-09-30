@@ -374,13 +374,13 @@ it("shows the Request Approval button when build:approvals:request is granted", 
 });
 
 describe("BUG-042 — bulk cancel fires updateApproval with a numeric ID even though DataTable yields string IDs", () => {
-  it("does NOT call updateApproval.mutate when no rows are selected (negative control)", () => {
+  it("offers no bulk cancel control at all until a row is selected (negative control)", () => {
     const mutateMock = jest.fn();
     mockUseUpdateApproval.mockReturnValue({ mutate: mutateMock, isPending: false });
     mockUseCan.mockReturnValue(true);
     mockUseProjectApprovals.mockReturnValue(baseQueryResult({ data: approvalPages([approvalRow]) }));
     render(<ProjectApprovalsPage projectId={1} />);
-    fireEvent.click(screen.getByTestId("bulk-cancel-btn"));
+    expect(screen.queryByTestId("bulk-cancel-btn")).not.toBeInTheDocument();
     expect(mutateMock).not.toHaveBeenCalled();
   });
 

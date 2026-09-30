@@ -92,6 +92,31 @@ const nextConfig: NextConfig = {
       permanent: true,
     },
     {
+      source: "/register",
+      destination: "/signin",
+      permanent: true,
+    },
+    {
+      source: "/auth/login",
+      destination: "/signin",
+      permanent: true,
+    },
+    {
+      source: "/auth/signin",
+      destination: "/signin",
+      permanent: true,
+    },
+    {
+      source: "/auth/register",
+      destination: "/signin",
+      permanent: true,
+    },
+    {
+      source: "/sign-in",
+      destination: "/signin",
+      permanent: true,
+    },
+    {
       source: "/payroll/workers",
       destination: "/payroll/employees",
       permanent: false,
