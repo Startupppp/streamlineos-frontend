@@ -271,9 +271,14 @@ export interface PinnedMessage {
   id: number;
   channelId: number;
   messageId: number;
-  pinnedBy: { id: string; name: string | null };
+  /** The pinner's user id; the person is `pinnedByUser`. */
+  pinnedBy: string | null;
+  pinnedByUser: { id: string; name: string | null } | null;
   pinnedAt: Date | string;
-  message: Message;
+  /** Loaded without `replyTo`; `sender` is null once the sender's membership is gone. */
+  message: Omit<Message, "replyTo" | "metadata" | "actionStatus" | "sender"> & {
+    sender: { id: string; name: string | null; image: string | null } | null;
+  };
 }
 
 /**
