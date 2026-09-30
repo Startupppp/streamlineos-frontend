@@ -3,6 +3,7 @@ import {
   cursorPageContract,
   idCursorPageContract,
 } from "@/hooks/api/cursor-page-schema";
+import { genProjectListPageSchema } from "@/contracts/build-contracts.generated";
 
 const ticketLabelSchema = z.object({
   id: z.number(),
@@ -435,7 +436,7 @@ const buildMemberRowSchema = z.object({
 
 export const ticketLabelListContract = z.array(ticketLabelSchema);
 export const ticketLabelContract = ticketLabelSchema;
-export const projectListPageContract = projectListPageSchema;
+export const projectListPageContract = genProjectListPageSchema;
 export const projectRowContract = projectRowSchema;
 export const projectDetailContract = projectDetailSchema;
 export const projectMemberPageContract =

@@ -144,6 +144,7 @@ export const ticketDetailContract = ticketRowContract.extend({
         id: z.number().int(),
         filename: z.string(),
         url: z.string(),
+        mimeType: z.string().nullable(),
         uploader: userSummarySchema,
       }),
     )
@@ -155,7 +156,7 @@ export const ticketDetailContract = ticketRowContract.extend({
         fileUrl: a.url,
         fileName: a.filename,
         fileSize: null,
-        mimeType: null,
+        mimeType: a.mimeType,
         uploadedBy: a.uploader?.id ?? null,
         createdAt: null,
         uploader: a.uploader ?? undefined,

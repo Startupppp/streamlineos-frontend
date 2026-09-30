@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
 import { DB_ENUMS } from "@/contracts/db-enums.generated";
+import { genProjectAnalyticsSchema } from "@/contracts/build-contracts.generated";
 
 const milestoneOwnerSchema = z.object({
   membershipId: z.number().int(),
@@ -165,50 +166,6 @@ const projectBudgetSchema = z.object({
   ),
 });
 
-const analyticsSchema = z.object({
-  stateDistribution: z.array(
-    z.object({ status: z.string(), count: z.number() }),
-  ),
-  priorityBreakdown: z.array(
-    z.object({ priority: z.string().nullable(), count: z.number() }),
-  ),
-  assigneeCompletion: z.array(
-    z.object({
-      assigneeId: z.string().nullable(),
-      assigneeName: z.string().nullable(),
-      total: z.number(),
-      completed: z.number(),
-    }),
-  ),
-  volumeOverTime: z.array(z.object({ week: z.string(), count: z.number() })),
-  cycleVelocity: z.array(
-    z.object({
-      cycleId: z.number(),
-      cycleName: z.string(),
-      completedPoints: z.number(),
-    }),
-  ),
-  estimateVsActual: z.array(
-    z.object({
-      ticketId: z.number(),
-      title: z.string(),
-      estimated: z.string().nullable(),
-      actual: z.number(),
-    }),
-  ),
-  healthScore: z.number().optional(),
-  healthStatus: z.string().optional(),
-  healthBreakdown: z
-    .object({
-      completionPct: z.number(),
-      onTimePct: z.number(),
-      velocityScore: z.number(),
-      overdueTickets: z.number(),
-      totalTickets: z.number(),
-      openTickets: z.number().optional().default(0),
-    })
-    .optional(),
-});
 
 export const milestoneListContract = cursorPageContract(milestoneRowSchema);
 export const milestoneRowContract = milestoneRowSchema;
@@ -248,7 +205,38 @@ export const projectBudgetUpdateContract = z.object({
   budget: z.number(),
   currency: z.string().nullable(),
 });
-export const analyticsContract = analyticsSchema;
+export const analyticsContract = genProjectAnalyticsSchema.extend({
+  stateDistribution: z.array(
+    z.object({ status: z.string(), count: z.number() }),
+  ),
+  priorityBreakdown: z.array(
+    z.object({ priority: z.string().nullable(), count: z.number() }),
+  ),
+  assigneeCompletion: z.array(
+    z.object({
+      assigneeId: z.string().nullable(),
+      assigneeName: z.string().nullable(),
+      total: z.number(),
+      completed: z.number(),
+    }),
+  ),
+  volumeOverTime: z.array(z.object({ week: z.string(), count: z.number() })),
+  cycleVelocity: z.array(
+    z.object({
+      cycleId: z.number(),
+      cycleName: z.string(),
+      completedPoints: z.number(),
+    }),
+  ),
+  estimateVsActual: z.array(
+    z.object({
+      ticketId: z.number(),
+      title: z.string(),
+      estimated: z.string().nullable(),
+      actual: z.number(),
+    }),
+  ),
+});
 export const successContract = z.object({ success: z.literal(true) });
 
 const buildMemberItemSchema = z.object({
