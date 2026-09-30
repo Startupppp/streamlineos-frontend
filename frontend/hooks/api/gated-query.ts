@@ -6,13 +6,10 @@ import {
   type UseQueryOptions,
   type UseQueryResult,
 } from "@tanstack/react-query";
-import { useAccess } from "@/hooks/api/access";
-import {
-  gated,
-  grantsPermission,
-  permissionGate,
-  type Gated,
-} from "@/lib/rbac/permission-gate";
+import { usePermissionGate } from "@/hooks/api/access";
+import { useQueryClient } from "@tanstack/react-query";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
+import { gated, type Gated } from "@/lib/rbac/permission-gate";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 
 export { gated };
@@ -42,13 +39,9 @@ export function useGatedQuery<
   permission: PermissionKey,
   options: UseQueryOptions<TQueryFnData, TError, TData, TQueryKey>,
 ): GatedQueryResult<TData, TError> {
-  const accessQuery = useAccess();
-  const access = permissionGate(
-    permission,
-    grantsPermission(accessQuery.data, permission),
-    accessQuery.data !== undefined,
-    accessQuery.isError,
-  );
+  /** The gate comes from `usePermissionGate`, the one derivation of it. */
+  const access = usePermissionGate(permission);
+  const queryClient = useQueryClient();
   const query = useQuery({
     ...options,
     enabled: access.allowed && (options.enabled ?? true),
@@ -62,7 +55,9 @@ export function useGatedQuery<
    * surface's existing Retry does the right thing without being rewired.
    */
   const refetch: typeof query.refetch = async (refetchOptions) => {
-    if (accessQuery.isError) await accessQuery.refetch();
+    if (access.unavailable) {
+      await queryClient.refetchQueries({ queryKey: platformCoreQueryKeys.access.me() });
+    }
     return query.refetch(refetchOptions);
   };
 
