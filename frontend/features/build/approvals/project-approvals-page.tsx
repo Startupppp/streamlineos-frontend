@@ -126,18 +126,18 @@ export function ProjectApprovalsPage({
   );
 
   const memberName = useCallback(
-    (userId: string | null): string => {
-      if (!userId) return "—";
-      const m = members.find((x) => x.userId === userId);
+    (membershipId: number | null): string => {
+      if (membershipId == null) return "—";
+      const m = members.find((x) => x.membershipId === membershipId);
       return m?.name ?? m?.email ?? "Unknown";
     },
     [members],
   );
 
   const ownerOf = useCallback(
-    (userId: string | null) => {
-      if (!userId) return null;
-      const m = members.find((x) => x.userId === userId);
+    (membershipId: number | null) => {
+      if (membershipId == null) return null;
+      const m = members.find((x) => x.membershipId === membershipId);
       return m ? { name: m.name ?? undefined, email: m.email } : null;
     },
     [members],
@@ -336,7 +336,7 @@ export function ProjectApprovalsPage({
         <BuildMobileCard
           title={row.title}
           status={<ApprovalStatusBadge status={narrowStatus} />}
-          person={{ user: ownerOf(row.requestedById), role: "Approver" }}
+          person={{ user: ownerOf(row.approverMembershipId), role: "Approver" }}
           meta={[
             { label: "Type", value: entityTypeLabel(row.entityType) },
             {
@@ -459,7 +459,13 @@ export function ProjectApprovalsPage({
         onConfirm={handleDelegate}
         isPending={updateApproval.isPending}
         members={members}
-        currentApproverId={delegateTarget?.requestedById ?? undefined}
+        currentApproverId={
+          delegateTarget
+            ? members.find(
+                (member) => member.membershipId === delegateTarget.approverMembershipId,
+              )?.userId
+            : undefined
+        }
       />
       <ConfirmDialog
         open={!!cancelTarget}

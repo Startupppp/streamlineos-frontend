@@ -26,7 +26,7 @@ import { LabelEditRow } from "./label-edit-row";
 import { TEXT_BODY, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 
-function DeleteLabelButton({ onConfirm }: { onConfirm: () => void }) {
+function DeleteLabelButton({ labelName, onConfirm }: { labelName: string; onConfirm: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
 
   function handleConfirm() {
@@ -44,7 +44,7 @@ function DeleteLabelButton({ onConfirm }: { onConfirm: () => void }) {
             "text-muted-foreground hover:text-status-danger-ink hover:bg-status-danger-surface",
             "transition-all",
           )}
-          aria-label="Delete label"
+          aria-label={`Delete label ${labelName}`}
           {...hoverHandlers}
         >
           <Trash2Icon ref={iconRef} size={14} />
@@ -171,7 +171,7 @@ function LabelListRow({
           {labelChip}
         </div>
       )}
-      {canManage ? <DeleteLabelButton onConfirm={handleDelete} /> : null}
+      {canManage ? <DeleteLabelButton labelName={label.name} onConfirm={handleDelete} /> : null}
     </motion.div>
   );
 }

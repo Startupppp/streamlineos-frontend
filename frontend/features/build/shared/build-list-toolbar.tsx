@@ -246,7 +246,7 @@ export function BuildListToolbar({
           onFocus={handleSearchFocus}
           onBlur={handleSearchBlur}
           className={cn(
-            "min-w-0 flex-1 basis-[12rem]",
+            "min-w-0 flex-1 basis-[12rem] md:max-w-md",
             searchExpanded && "max-md:max-w-none max-md:basis-auto",
           )}
         />

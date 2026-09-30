@@ -23,7 +23,7 @@ const APPROVAL_STATUS_VALUES: ApprovalStatus[] = [
 interface UseApprovalsColumnsParams {
   canDecide: boolean;
   canManage: boolean;
-  memberName: (userId: string | null) => string;
+  memberName: (membershipId: number | null) => string;
   setDecideTarget: (row: Approval) => void;
   setDelegateTarget: (row: Approval) => void;
   handleEscalate: (row: Approval) => void;
@@ -130,7 +130,7 @@ export function useApprovalsColumns({
         key: "approver",
         header: "Approver",
         cell: (row) => {
-          const name = memberName(row.requestedById);
+          const name = memberName(row.approverMembershipId);
           return (
             <TruncatedText
               text={name}
