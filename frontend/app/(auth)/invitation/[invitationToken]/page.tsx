@@ -158,11 +158,60 @@ export default function InvitationPage() {
     [nameForm, submitNameStep],
   );
 
+  const completeExistingUserAccept = useCallback(
+    (emailOtp: string) => {
+      if (acceptingRef.current) return;
+      if (!invitationToken) return;
+      acceptingRef.current = true;
+      const claimsRun = beginClaimsRefresh();
+      acceptInvitation.mutate(
+        { token: invitationToken, emailOtp },
+        {
+          onSuccess: async (data) => {
+            setIsCompletingAcceptance(true);
+            toast.success(
+              `Joined ${invitation?.organizationName ?? "organization"}!`,
+            );
+            if (data?.autoLoginToken) {
+              await autoLoginWithToken(data.autoLoginToken, "/dashboard");
+              return;
+            }
+            const confirmed = await claimsRun.confirmOrWarn();
+            if (!confirmed) {
+              acceptingRef.current = false;
+              setIsCompletingAcceptance(false);
+              return;
+            }
+            router.push("/dashboard");
+          },
+          onError: (error) => {
+            acceptingRef.current = false;
+            toast.error(getErrorMessage(error));
+          },
+        },
+      );
+    },
+    [
+      invitationToken,
+      router,
+      acceptInvitation,
+      invitation,
+      beginClaimsRefresh,
+      autoLoginWithToken,
+    ],
+  );
+
   const submitOtpStep = useCallback(
     (values: InvitationOtpFormValues) => {
       if (acceptingRef.current) return;
       if (!invitationToken || !invitation) {
         toast.error("Invalid invitation");
+        return;
+      }
+      // An existing account joins the org it was invited to; a new one is created
+      // first. Both verify the same code, so the two branches meet here.
+      if (invitation.userExists) {
+        completeExistingUserAccept(values.emailOtp);
         return;
       }
       acceptingRef.current = true;
@@ -193,7 +242,15 @@ export default function InvitationPage() {
         },
       );
     },
-    [invitationToken, invitation, acceptInvitation, pendingNameValues, router, autoLoginWithToken],
+    [
+      invitationToken,
+      invitation,
+      acceptInvitation,
+      pendingNameValues,
+      router,
+      autoLoginWithToken,
+      completeExistingUserAccept,
+    ],
   );
 
   const handleOtpFormSubmit = useCallback(
@@ -220,6 +277,20 @@ export default function InvitationPage() {
     );
   }, [invitationToken, requestInvitationOtp, otpForm]);
 
+  /**
+   * BUG-HRMS-010. An existing account still has to verify the mailbox.
+   *
+   * `POST /organization/invitations/accept` requires `emailOtp` on every path,
+   * because it is a public route: it cannot see that the caller is signed in, so
+   * a signed-in invitee is indistinguishable from anyone else holding the link,
+   * and the link on its own is a bearer token. This button used to accept in one
+   * click with no code, which the API could only ever refuse with a 400 — so an
+   * invitee who already had a StreamlineOS account could never join, whatever
+   * the state of the OTP route.
+   *
+   * It now takes the same code step as a new account, and the OTP form carries
+   * the existing-account branch through `onSuccess`.
+   */
   const handleExistingUserAccept = useCallback(() => {
     if (acceptingRef.current) return;
     if (!invitationToken) return;
@@ -227,43 +298,18 @@ export default function InvitationPage() {
       router.push(`/signin?callbackUrl=/invitation/${invitationToken}`);
       return;
     }
-    acceptingRef.current = true;
-    const claimsRun = beginClaimsRefresh();
-    acceptInvitation.mutate(
+    requestInvitationOtp.mutate(
       { token: invitationToken },
       {
-        onSuccess: async (data) => {
-          setIsCompletingAcceptance(true);
-          toast.success(
-            `Joined ${invitation?.organizationName ?? "organization"}!`,
-          );
-          if (data?.autoLoginToken) {
-            await autoLoginWithToken(data.autoLoginToken, "/dashboard");
-            return;
-          }
-          const confirmed = await claimsRun.confirmOrWarn();
-          if (!confirmed) {
-            acceptingRef.current = false;
-            setIsCompletingAcceptance(false);
-            return;
-          }
-          router.push("/dashboard");
+        onSuccess: () => {
+          setOtpStep(true);
         },
         onError: (error) => {
-          acceptingRef.current = false;
           toast.error(getErrorMessage(error));
         },
       },
     );
-  }, [
-    invitationToken,
-    session,
-    router,
-    acceptInvitation,
-    invitation,
-    beginClaimsRefresh,
-    autoLoginWithToken,
-  ]);
+  }, [invitationToken, session, router, requestInvitationOtp]);
 
   if (isValidating || isCompletingAcceptance) {
     return (
@@ -316,7 +362,9 @@ export default function InvitationPage() {
     );
   }
 
-  if (invitation.userExists) {
+  // `otpStep` first: an existing account now verifies the same code as a new one,
+  // so this card must yield to the OTP form once one has been sent.
+  if (invitation.userExists && !otpStep) {
     const sessionEmail = session?.user?.email;
     const signedInAsOtherAccount =
       sessionEmail !== undefined &&

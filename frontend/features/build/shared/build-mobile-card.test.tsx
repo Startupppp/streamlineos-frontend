@@ -172,6 +172,7 @@ describe("Build list empty states", () => {
           allowed: false,
           denied: true,
           pending: false,
+          unavailable: false,
         }}
       />,
     );

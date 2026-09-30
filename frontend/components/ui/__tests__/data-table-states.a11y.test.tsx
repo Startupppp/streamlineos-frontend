@@ -151,6 +151,7 @@ describe("DataTable — permission-denied empty is a refusal, not a claim of emp
             allowed: false,
             denied: true,
             pending: false,
+            unavailable: false,
           }}
         />
       ),
