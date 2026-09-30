@@ -139,7 +139,9 @@ function refuse(status: number, body: Record<string, unknown>) {
     ok: false,
     status,
     statusText: "Payment Required",
-    headers: new Headers(),
+    // The backend's error envelope; a bare body would read as a gateway
+    // outage and trip the api-client outage circuit for the next case.
+    headers: new Headers({ "content-type": "application/json" }),
     json: () => Promise.resolve(body),
   });
 }

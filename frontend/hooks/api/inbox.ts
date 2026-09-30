@@ -13,7 +13,7 @@ const unifiedInboxCountContract = lazyContract(() =>
   import("@/hooks/api/inbox-schema").then((m) => m.unifiedInboxCountContract),
 );
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
-import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { INLINE_READ_ERROR, isTransientNetworkError } from "@/lib/query-error-policy";
 import type { InboxKind, UnifiedInboxCount, UnifiedInboxResponse } from "@/types/inbox";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
@@ -36,6 +36,9 @@ export function inboxErrorRecoveryInterval(query: {
 }): number | false {
   if (query.state.status !== "error") return false;
   const error = query.state.error;
+  // An origin outage is paced by the api-client outage circuit; a 3s poll on
+  // top only re-fails fast against it (SEC-HRMS-003).
+  if (isTransientNetworkError(error)) return false;
   if (
     isApiError(error) &&
     error.status !== undefined &&
