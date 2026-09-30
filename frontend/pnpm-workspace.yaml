@@ -19,7 +19,7 @@ overrides:
   ajv: ">=8.17.1"
   "@eslint/eslintrc>ajv": "^6.12.6"
   "eslint>ajv": "^6.12.6"
-  dompurify: ">=3.4.12"
+  dompurify: ">=3.4.16"
   picomatch: ">=4.0.4"
   brace-expansion: ">=5.0.12"
   "minimatch@3>brace-expansion": "2.1.7"
