@@ -28,6 +28,7 @@ function unrouted(...reasons: SkipReason[]): ApprovalRoute {
     slaHours: 0,
     dueAt: "2026-09-25T00:00:00.000Z",
     escalation: null,
+    ownerSelfApproval: false,
     explanation: "Nobody can approve this request.",
   };
 }

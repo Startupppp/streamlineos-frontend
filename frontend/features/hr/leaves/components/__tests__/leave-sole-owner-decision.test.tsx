@@ -28,7 +28,7 @@ function candidate(userId: string) {
 function renderFor(userId: string) {
   render(
     <LeaveDecisionButtons
-      request={{ id: 7, status: "PENDING", user: { id: userId, name: "Asha", email: "a@x.test" } }}
+      request={{ id: 7, status: "PENDING", user: { id: userId, name: "Asha", firstName: "Asha", lastName: "Rao", email: "a@x.test" } }}
       currentUserId={OWNER}
       processingId={null}
       onProcess={jest.fn()}
