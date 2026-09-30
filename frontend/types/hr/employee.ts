@@ -301,6 +301,10 @@ export interface OnboardEmployeeInput {
   gender?: string;
   designation: string;
   departmentId?: string;
+  /** BUG-HRMS-006: an org unit of kind LOCATION; the server checks the kind. */
+  locationId?: string;
+  /** BUG-HRMS-007: omitted means FULL_TIME, the column default. */
+  workerType?: string;
   /** Optional since HRM-15: omitted means the backend resolves it by policy. */
   reportingManagerUserId?: string;
   secondaryManagers?: Array<{ managerUserId: string; label?: string }>;
@@ -336,6 +340,10 @@ export interface BulkOnboardEmployeeRow {
   designation: string;
   departmentId?: string;
   department?: string;
+  /** BUG-HRMS-006: an office name, code or id; the server refuses an unknown one. */
+  location?: string;
+  /** BUG-HRMS-007: omitted means FULL_TIME, the column default. */
+  workerType?: string;
   reportingManagerUserId?: string;
   primaryManagerEmail?: string;
   /**

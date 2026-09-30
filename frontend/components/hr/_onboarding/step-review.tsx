@@ -5,6 +5,7 @@ import { z } from "zod";
 import { onboardEmployeeInputSchema } from "../../../lib/validation/hr";
 import { format } from "date-fns";
 import { Check, Lightbulb } from "lucide-react";
+import { formatWorkerTypeLabel } from "@/lib/constants/hr-worker-types";
 
 type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
 
@@ -16,9 +17,11 @@ interface Department {
 interface StepReviewProps {
   form: UseFormReturn<FormValues>;
   allDepartmentOptions: (Department & { isCommon?: boolean })[];
+  /** BUG-HRMS-006: named here so the review shows the office, not its uuid (FE-85). */
+  locations: Array<{ id: string; name: string }>;
 }
 
-export function StepReview({ form, allDepartmentOptions }: StepReviewProps) {
+export function StepReview({ form, allDepartmentOptions, locations }: StepReviewProps) {
   const { getValues } = form;
   const topLevelRole = getValues("topLevelRole") === true;
   const manager = getValues("reportingManagerUserId") ? getValues("reportingManagerRef") : null;
@@ -52,6 +55,8 @@ export function StepReview({ form, allDepartmentOptions }: StepReviewProps) {
           {additional.length > 0 ? (
             <div><span className="text-muted-foreground">Additional managers:</span> <span className="font-medium">{additional.join(", ")}</span></div>
           ) : null}
+          <div><span className="text-muted-foreground">Worker type:</span> <span className="font-medium">{formatWorkerTypeLabel(getValues("workerType") ?? "FULL_TIME")}</span></div>
+          <div><span className="text-muted-foreground">Location:</span> <span className="font-medium">{locations.find((l) => l.id === getValues("locationId"))?.name ?? "Not set"}</span></div>
           <div><span className="text-muted-foreground">Joining:</span> <span className="font-medium">{format(getValues("joiningDate"), "PPP")}</span></div>
         </div>
       </div>

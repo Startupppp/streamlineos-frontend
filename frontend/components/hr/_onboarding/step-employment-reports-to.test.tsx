@@ -85,7 +85,7 @@ function Harness() {
   }
   return (
     <Form {...form}>
-      <StepEmployment form={form} departments={[]} />
+      <StepEmployment form={form} departments={[]} locations={[]} />
       <button type="button" onClick={handleValidate}>
         validate
       </button>

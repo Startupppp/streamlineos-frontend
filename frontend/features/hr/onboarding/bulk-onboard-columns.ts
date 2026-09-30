@@ -51,6 +51,22 @@ export const BULK_ONBOARD_COLUMNS = [
     sample: "Engineering",
   },
   {
+    /** BUG-HRMS-006: a file names an office; the server resolves it by name, code or id. */
+    key: "location",
+    header: "location",
+    required: false,
+    width: 18,
+    sample: "Bengaluru HQ",
+  },
+  {
+    /** BUG-HRMS-007: blank means FULL_TIME, the column default. */
+    key: "workerType",
+    header: "workerType",
+    required: false,
+    width: 14,
+    sample: "FULL_TIME",
+  },
+  {
     key: "primaryManagerEmail",
     header: "primaryManagerEmail",
     required: false,
@@ -232,6 +248,15 @@ const HEADER_ALIASES: Record<string, ColumnKey> = {
   departmentid: "department",
   "department id": "department",
   role: "role",
+  location: "location",
+  "work location": "location",
+  office: "location",
+  locationid: "location",
+  "location id": "location",
+  workertype: "workerType",
+  "worker type": "workerType",
+  "employment type": "workerType",
+  employmenttype: "workerType",
   effectivefrom: "effectiveFrom",
   "effective from": "effectiveFrom",
   "effective date": "effectiveFrom",

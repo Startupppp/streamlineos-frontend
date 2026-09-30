@@ -20,15 +20,22 @@ import { DepartmentCombobox } from "@/components/hr/department-combobox";
 import { StepEmploymentReporting } from "./step-employment-reporting";
 import { useCan } from "@/hooks/api/access";
 import { USER_INVITE_ROLES } from "@/lib/constants/user-invite-roles";
+import { HR_WORKER_TYPES } from "@/lib/constants/hr-worker-types";
 
 type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
 
 interface StepEmploymentProps {
   form: UseFormReturn<FormValues>;
   departments: Array<{ id: string; name: string }>;
+  /** Org units of kind LOCATION. Empty when the org configured none, or when the
+   *  operator cannot read organization settings — hiring stays possible either way. */
+  locations: Array<{ id: string; name: string }>;
 }
 
-export function StepEmployment({ form, departments }: StepEmploymentProps) {
+/** BUG-HRMS-006: Radix Select has no empty value, so "no location" needs a token. */
+const NO_LOCATION = "__none__";
+
+export function StepEmployment({ form, departments, locations }: StepEmploymentProps) {
   const canCreateDept = useCan("hr:employees:manage");
 
   return (
@@ -122,6 +129,61 @@ export function StepEmployment({ form, departments }: StepEmploymentProps) {
                 />
               </PopoverContent>
             </Popover>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={form.control}
+        name="workerType"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Worker Type</FormLabel>
+            <Select value={field.value} onValueChange={field.onChange}>
+              <FormControl>
+                <SelectTrigger><SelectValue placeholder="Select worker type" /></SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {HR_WORKER_TYPES.map((type) => (
+                  <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FormDescription className="text-xs">
+              Contractors, interns and consultants are recorded as such rather than in the designation text.
+            </FormDescription>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={form.control}
+        name="locationId"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Work Location</FormLabel>
+            <Select
+              value={field.value ?? NO_LOCATION}
+              onValueChange={(value) => field.onChange(value === NO_LOCATION ? undefined : value)}
+              disabled={locations.length === 0}
+            >
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder={locations.length === 0 ? "No locations configured" : "Select location"} />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value={NO_LOCATION}>No location</SelectItem>
+                {locations.map((location) => (
+                  <SelectItem key={location.id} value={location.id}>{location.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FormDescription className="text-xs">
+              {locations.length === 0
+                ? "Add offices under Settings → Organization → Locations."
+                : "Where this person works, from the organization's locations."}
+            </FormDescription>
             <FormMessage />
           </FormItem>
         )}
