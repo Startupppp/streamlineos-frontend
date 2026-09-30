@@ -178,6 +178,10 @@ describe("ProjectSettingsPortalPage", () => {
 
     expect(screen.getByText(/#42 Fix login bug/)).toBeInTheDocument();
     expect(screen.getByText(/#43 Add dashboard/)).toBeInTheDocument();
+    expect(screen.getByText("1 of 2 visible on this page")).toBeInTheDocument();
+    expect(screen.getAllByText("Changes save immediately.")).toHaveLength(1);
+    expect(screen.getByText("Visible to clients")).toBeInTheDocument();
+    expect(screen.getByText("Internal only")).toBeInTheDocument();
     const switches = screen.getAllByRole("switch");
     expect(switches).toHaveLength(2);
     expect(switches[0]).toHaveAttribute("aria-checked", "true");
@@ -201,6 +205,7 @@ describe("ProjectSettingsPortalPage", () => {
 
     expect(screen.getByText("Beta release")).toBeInTheDocument();
     expect(screen.getByText("GA launch")).toBeInTheDocument();
+    expect(screen.getByText("1 of 2 visible on this page")).toBeInTheDocument();
     const switches = screen.getAllByRole("switch");
     expect(switches).toHaveLength(2);
   });
