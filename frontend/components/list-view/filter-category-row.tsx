@@ -87,6 +87,7 @@ export interface FilterCategoryRowProps {
   onMouseEnter?: () => void;
   onKeyDown?: (e: KeyboardEvent) => void;
   dense?: boolean;
+  hasSubmenu?: boolean;
 }
 
 export function FilterCategoryRow({
@@ -99,6 +100,7 @@ export function FilterCategoryRow({
   onMouseEnter,
   onKeyDown,
   dense = false,
+  hasSubmenu = true,
 }: FilterCategoryRowProps) {
   const { iconRef } = useAnimatedIcon();
   const shouldReduceMotion = useReducedMotion();
@@ -129,8 +131,8 @@ export function FilterCategoryRow({
     <button
       type="button"
       role="menuitem"
-      aria-haspopup="true"
-      aria-expanded={selected}
+      aria-haspopup={hasSubmenu ? "true" : undefined}
+      aria-expanded={hasSubmenu ? selected : undefined}
       onClick={handleClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
@@ -159,14 +161,20 @@ export function FilterCategoryRow({
           {activeCount}
         </span>
       )}
-      <motion.span
-        aria-hidden
-        className="inline-flex shrink-0 text-muted-foreground"
-        animate={shouldReduceMotion ? undefined : { x: selected ? 2 : 0 }}
-        transition={pmSnappy}
-      >
-        <ChevronRight className="h-4 w-4" />
-      </motion.span>
+      {hasSubmenu ? (
+        <motion.span
+          aria-hidden
+          className="inline-flex shrink-0 text-muted-foreground"
+          animate={shouldReduceMotion ? undefined : { x: selected ? 2 : 0 }}
+          transition={pmSnappy}
+        >
+          <ChevronRight className="h-4 w-4" />
+        </motion.span>
+      ) : (
+        <span className="shrink-0 text-dense font-medium text-muted-foreground">
+          {activeCount > 0 ? "On" : "Add"}
+        </span>
+      )}
     </button>
   );
 }

@@ -52,15 +52,20 @@ export function FilterCategoryList({
       animate="show"
     >
       {visibleCategories.map((cat) => {
-        const selected = resolvedCategory === cat.key;
+        const hasSubmenu = !cat.directAction;
+        const selected = hasSubmenu && resolvedCategory === cat.key;
         function onSelect() {
+          if (cat.directAction) {
+            cat.directAction();
+            return;
+          }
           onSelectCategory(cat.key);
         }
         function onMouseEnter() {
-          if (!isMobile) onSelectCategory(cat.key);
+          if (!isMobile && hasSubmenu) onSelectCategory(cat.key);
         }
         function onKeyDown(e: KeyboardEvent) {
-          onCategoryKeyDown(cat.key, e);
+          if (hasSubmenu) onCategoryKeyDown(cat.key, e);
         }
         return (
           <motion.div
@@ -75,6 +80,7 @@ export function FilterCategoryList({
               activeCount={cat.activeCount}
               selected={selected}
               dense={dense}
+              hasSubmenu={hasSubmenu}
               onSelect={onSelect}
               onMouseEnter={onMouseEnter}
               onKeyDown={onKeyDown}

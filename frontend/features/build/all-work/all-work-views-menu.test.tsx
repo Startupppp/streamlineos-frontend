@@ -45,12 +45,12 @@ beforeEach(() => {
 it("applies a saved view through the menu with Enter and Space, but not other keys", async () => {
   const user = userEvent.setup();
   render(<AllWorkViewsMenu activeView="list" hasActiveFilters={false} />);
-  await user.click(screen.getByRole("button", { name: "Views" }));
+  await user.click(screen.getByRole("button", { name: "Saved views" }));
   const row = screen.getByRole("button", { name: mockView.name });
   fireEvent.keyDown(row, { key: "ArrowDown" });
   expect(mockReplace).not.toHaveBeenCalled();
   fireEvent.keyDown(row, { key: "Enter" });
-  await user.click(screen.getByRole("button", { name: "Views" }));
+  await user.click(screen.getByRole("button", { name: "Saved views" }));
   fireEvent.keyDown(screen.getByRole("button", { name: mockView.name }), { key: " " });
   expect(mockReplace).toHaveBeenCalledTimes(2);
   expect(mockReplace).toHaveBeenLastCalledWith("/build/all-work?priority=urgent&view=list", { scroll: false });
@@ -60,7 +60,7 @@ it("keeps owner pin and delete clicks separate from applying the view", async ()
   const user = userEvent.setup();
   mockCurrentUserId = "owner-1";
   render(<AllWorkViewsMenu activeView="list" hasActiveFilters={false} />);
-  await user.click(screen.getByRole("button", { name: "Views" }));
+  await user.click(screen.getByRole("button", { name: "Saved views" }));
   fireEvent.click(screen.getByRole("button", { name: `Pin ${mockView.name}` }));
   fireEvent.click(screen.getByRole("button", { name: `Delete ${mockView.name}` }));
   expect(mockUpdateView).toHaveBeenCalledWith({ viewId: mockView.id, isPinned: true }, expect.any(Object));
@@ -71,7 +71,7 @@ it("keeps owner pin and delete clicks separate from applying the view", async ()
 it("hides owner-only actions for another user while keeping the view usable", async () => {
   const user = userEvent.setup();
   render(<AllWorkViewsMenu activeView="list" hasActiveFilters={false} />);
-  await user.click(screen.getByRole("button", { name: "Views" }));
+  await user.click(screen.getByRole("button", { name: "Saved views" }));
   expect(screen.queryByRole("button", { name: `Pin ${mockView.name}` })).not.toBeInTheDocument();
   expect(screen.queryByRole("button", { name: `Delete ${mockView.name}` })).not.toBeInTheDocument();
   expect(screen.getByTitle("Personal")).toBeInTheDocument();
@@ -85,7 +85,7 @@ it("clears every filter the shared list owns when a saved view is applied, not t
   );
   const user = userEvent.setup();
   render(<AllWorkViewsMenu activeView="list" hasActiveFilters={false} />);
-  await user.click(screen.getByRole("button", { name: "Views" }));
+  await user.click(screen.getByRole("button", { name: "Saved views" }));
   fireEvent.keyDown(screen.getByRole("button", { name: mockView.name }), {
     key: "Enter",
   });

@@ -25,6 +25,7 @@ import type { StatusConfigEntry } from "@/lib/status-config";
 
 interface UseFilterCommandMenuStateParams {
   defaultOpen?: boolean;
+  simplifySingleOptionCategories?: boolean;
   assigneeLeading?: ReactNode;
   statusItems: StatusFilterOption[];
   statusConfig: Record<string, StatusConfigEntry>;
@@ -48,6 +49,7 @@ interface UseFilterCommandMenuStateParams {
 
 export function useFilterCommandMenuState({
   defaultOpen,
+  simplifySingleOptionCategories = true,
   assigneeLeading,
   statusItems,
   statusConfig,
@@ -71,7 +73,9 @@ export function useFilterCommandMenuState({
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(defaultOpen ?? false);
   const [search, setSearch] = useState("");
-  const [activeCategory, setActiveCategory] = useState<FilterCategory | null>(null);
+  const [activeCategory, setActiveCategory] = useState<FilterCategory | null>(
+    null,
+  );
   const [navDirection, setNavDirection] = useState(1);
   const submenuRef = useRef<HTMLDivElement>(null);
   const categoryListRef = useRef<HTMLDivElement>(null);
@@ -91,10 +95,42 @@ export function useFilterCommandMenuState({
 
   const isSearching = search.trim().length > 0;
 
+  function singleOptionAction(
+    values: readonly { id: string | number }[],
+    onToggle: (value: string) => void,
+  ) {
+    if (!simplifySingleOptionCategories || values.length !== 1)
+      return undefined;
+    const only = values[0];
+    if (!only) return undefined;
+    return () => onToggle(String(only.id));
+  }
+
+  const singleStatusAction =
+    simplifySingleOptionCategories && statusItems.length === 1 && statusItems[0]
+      ? () => onToggleStatus(statusItems[0]!.name)
+      : undefined;
+
   const categories: CategoryDefinition[] = [
-    { key: "status", label: "Status", visible: true, activeCount: selectedStatuses.length },
-    { key: "priority", label: "Priority", visible: true, activeCount: selectedPriorities.length },
-    { key: "type", label: "Type", visible: showTypeFilter, activeCount: selectedTypes.length },
+    {
+      key: "status",
+      label: "Status",
+      visible: true,
+      activeCount: selectedStatuses.length,
+      directAction: singleStatusAction,
+    },
+    {
+      key: "priority",
+      label: "Priority",
+      visible: true,
+      activeCount: selectedPriorities.length,
+    },
+    {
+      key: "type",
+      label: "Type",
+      visible: showTypeFilter,
+      activeCount: selectedTypes.length,
+    },
     {
       key: "assignee",
       label: "Assignee",
@@ -102,8 +138,20 @@ export function useFilterCommandMenuState({
       visible: showAssigneeFilter,
       activeCount: selectedAssignees.length,
     },
-    { key: "label", label: "Label", visible: labels.length > 0, activeCount: selectedLabels.length },
-    { key: "cycle", label: "Cycle", visible: cycles.length > 0, activeCount: selectedCycles.length },
+    {
+      key: "label",
+      label: "Label",
+      visible: labels.length > 0,
+      activeCount: selectedLabels.length,
+      directAction: singleOptionAction(labels, onToggleLabel),
+    },
+    {
+      key: "cycle",
+      label: "Cycle",
+      visible: cycles.length > 0,
+      activeCount: selectedCycles.length,
+      directAction: singleOptionAction(cycles, onToggleCycle),
+    },
     {
       key: "dates",
       label: "Due Dates",
@@ -115,6 +163,7 @@ export function useFilterCommandMenuState({
       label: "Project",
       visible: (projectOptions?.length ?? 0) > 0,
       activeCount: selectedProjectIds.length,
+      directAction: singleOptionAction(projectOptions ?? [], onToggleProject),
     },
   ];
 
@@ -128,7 +177,8 @@ export function useFilterCommandMenuState({
     }
   }, []);
 
-  const firstCategoryKey = visibleCategories[0]?.key ?? null;
+  const firstCategoryKey =
+    visibleCategories.find((category) => !category.directAction)?.key ?? null;
   const resolvedCategory =
     activeCategory ??
     (!isMobile && open && !isSearching ? firstCategoryKey : null);
@@ -205,9 +255,8 @@ export function useFilterCommandMenuState({
     onSwipeRight: handleSwipeRight,
   });
 
-  const mobilePanelKey = search.trim().length > 0
-    ? "search"
-    : activeCategory ?? "categories";
+  const mobilePanelKey =
+    search.trim().length > 0 ? "search" : (activeCategory ?? "categories");
 
   const drillTitle = activeCategory ? categoryTitle(activeCategory) : "Filters";
 

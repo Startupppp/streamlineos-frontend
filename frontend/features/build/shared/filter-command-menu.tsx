@@ -39,6 +39,9 @@ export type { FilterCommandMenuProps } from "./filter-command-menu-types";
 export function FilterCommandMenu({
   activeFilterCount,
   defaultOpen,
+  presentation = "default",
+  simplifySingleOptionCategories = true,
+  triggerLabel = "Add filter",
   statusItems,
   statusConfig,
   members,
@@ -91,6 +94,7 @@ export function FilterCommandMenu({
     categoryListProps,
   } = useFilterCommandMenuState({
     defaultOpen,
+    simplifySingleOptionCategories,
     assigneeLeading: resolveAssigneeLeading(),
     statusItems,
     statusConfig,
@@ -118,7 +122,14 @@ export function FilterCommandMenu({
     return (
       <Drawer open={open} onOpenChange={handleOpenChange}>
         <DrawerTrigger asChild>
-          <FilterTriggerButton activeFilterCount={activeFilterCount} />
+          <FilterTriggerButton
+            activeFilterCount={activeFilterCount}
+            label={triggerLabel}
+            className={cn(
+              presentation === "all-work" &&
+                "h-9 w-auto min-w-28 rounded-lg border-border/80 bg-muted/45 px-3 font-medium shadow-sm hover:border-primary/35 hover:bg-muted/70",
+            )}
+          />
         </DrawerTrigger>
         <DrawerContent className="flex max-h-[min(92dvh,40rem)] flex-col gap-0 overflow-hidden rounded-t-xl border bg-card p-0 shadow-2xl">
           <DrawerHeader className="shrink-0 border-b border-border px-3 py-3 text-left">
@@ -210,11 +221,20 @@ export function FilterCommandMenu({
         <Tooltip>
           <TooltipTrigger asChild>
             <PopoverTrigger asChild>
-              <FilterTriggerButton activeFilterCount={activeFilterCount} />
+              <FilterTriggerButton
+                activeFilterCount={activeFilterCount}
+              label={triggerLabel}
+                className={cn(
+                  presentation === "all-work" &&
+                    "h-9 w-auto min-w-28 rounded-lg border-border/80 bg-muted/45 px-3 font-medium shadow-sm hover:border-primary/35 hover:bg-muted/70",
+                )}
+              />
             </PopoverTrigger>
           </TooltipTrigger>
           <TooltipContent side="bottom" className="text-xs md:hidden">
-            {activeFilterCount > 0 ? `Add filter (${activeFilterCount} active)` : "Add filter"}
+            {activeFilterCount > 0
+              ? `${triggerLabel} (${activeFilterCount} active)`
+              : triggerLabel}
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -222,7 +242,11 @@ export function FilterCommandMenu({
         align="start"
         sideOffset={8}
         collisionPadding={16}
-        className="w-auto max-w-[min(560px,var(--radix-popover-content-available-width))] overflow-hidden rounded-xl border border-border bg-card p-0 shadow-lg"
+        className={cn(
+          "w-auto max-w-[min(560px,var(--radix-popover-content-available-width))] overflow-hidden rounded-xl border border-border bg-card p-0 shadow-lg",
+          presentation === "all-work" &&
+            "w-[min(40rem,calc(100vw-2rem))] max-w-[min(40rem,var(--radix-popover-content-available-width))] rounded-2xl border-border/80 shadow-xl",
+        )}
       >
         {isSearching ? (
           <FilterFlatSearch
@@ -233,8 +257,13 @@ export function FilterCommandMenu({
             {...sharedProps}
           />
         ) : (
-          <div className="flex max-h-[min(480px,var(--radix-popover-content-available-height))]">
-            <div className="flex w-[200px] shrink-0 flex-col border-r border-border">
+          <div className="flex max-h-[min(480px,var(--radix-popover-content-available-height))] min-w-0">
+            <div
+              className={cn(
+                "flex w-[200px] shrink-0 flex-col border-r border-border",
+                presentation === "all-work" && "w-[220px] bg-muted/20",
+              )}
+            >
               <Command
                 shouldFilter={false}
                 className={cn(
@@ -248,6 +277,7 @@ export function FilterCommandMenu({
               >
                 <CommandInput
                   placeholder="Filter by…"
+                  aria-label="Search filter options"
                   className="h-10 text-sm"
                   value={search}
                   onValueChange={handleSearchChange}
@@ -266,7 +296,7 @@ export function FilterCommandMenu({
                   animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, x: 0 }}
                   exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, x: -4 }}
                   transition={pmSnappy}
-                  className="min-w-0 overflow-y-auto bg-muted/15 outline-none"
+                  className="min-w-0 flex-1 overflow-y-auto bg-background outline-none"
                 >
                   {resolvedCategory === "assignee" ? (
                     <AssigneeFilterSubmenu
@@ -274,20 +304,20 @@ export function FilterCommandMenu({
                       onToggleAssignee={sharedProps.onToggleAssignee}
                       onClose={handleSubmenuClose}
                       showTitle
-                      className="w-[280px]"
+                      className={cn("w-[280px]", presentation === "all-work" && "w-full min-w-[300px]")}
                     />
                   ) : (
                     <FilterCategorySubmenu
                       category={resolvedCategory}
                       onClose={handleSubmenuClose}
                       showTitle
-                      className="w-[280px]"
+                      className={cn("w-[280px]", presentation === "all-work" && "w-full min-w-[300px]")}
                       {...sharedProps}
                     />
                   )}
                 </motion.div>
               ) : (
-                <div className="flex w-[280px] items-center justify-center px-6 py-10 text-center text-sm text-muted-foreground">
+                <div className="flex min-w-[280px] flex-1 items-center justify-center px-6 py-10 text-center text-sm text-muted-foreground">
                   Select a filter to refine tickets.
                 </div>
               )}

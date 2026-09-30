@@ -33,7 +33,7 @@ export function OptionRow({
       type="button"
       onClick={onClick}
       className={cn(
-        "flex h-9 w-full items-center gap-2 rounded-md px-3 text-left text-sm",
+        "flex min-h-9 w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm",
         "transition-colors motion-reduce:transition-none",
         "hover:bg-accent hover:text-accent-foreground",
         "focus-visible:outline-none focus-visible:bg-accent",
@@ -54,7 +54,7 @@ export function OptionRow({
       ) : !leading && dotClassName ? (
         <span className={cn("h-2.5 w-2.5 shrink-0 rounded-full", dotClassName)} />
       ) : null}
-      <span className="min-w-0 flex-1 truncate text-left">{label}</span>
+      <span className="min-w-0 flex-1 break-words text-left leading-5">{label}</span>
     </button>
   );
 }

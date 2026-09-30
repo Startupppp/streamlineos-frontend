@@ -117,6 +117,25 @@ const TICKET: Ticket = {
   version: 2,
 };
 
+describe("ListViewItem — All Work responsive hierarchy", () => {
+  it("reserves a full mobile line for the title and exposes its complete accessible name", () => {
+    render(
+      <ListViewItem
+        ticket={{ ...TICKET, title: "A long ticket title that must remain readable" }}
+        onClick={jest.fn()}
+        layout="work-index"
+      />,
+    );
+
+    const title = screen.getByRole("button", {
+      name: "Open A long ticket title that must remain readable",
+    });
+    expect(title.className).toContain("w-full");
+    expect(title.className).toContain("basis-full");
+    expect(title.className).toContain("sm:w-auto");
+  });
+});
+
 describe("ListViewItem — checkbox visibility", () => {
   it("does not render a checkbox when onSelect is not provided", () => {
     render(<ListViewItem ticket={TICKET} onClick={jest.fn()} />);

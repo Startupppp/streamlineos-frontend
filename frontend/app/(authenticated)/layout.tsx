@@ -36,7 +36,8 @@ export default async function DashboardLayout({
 
   const isMfaRemedyRoute = pathname === "/settings";
 
-  const { mfa } = await getServerAccess();
+  const accessResult = await getServerAccessResult();
+  const mfa = accessResult.ok ? accessResult.access.mfa : undefined;
   if (!isMfaRemedyRoute && mfa?.enforced && !mfa.satisfied)
     redirect("/settings");
 

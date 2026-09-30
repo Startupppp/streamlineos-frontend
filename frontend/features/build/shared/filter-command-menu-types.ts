@@ -11,6 +11,9 @@ import type { StatusConfigEntry } from "@/lib/status-config";
 export interface FilterCommandMenuProps {
   activeFilterCount: number;
   defaultOpen?: boolean;
+  presentation?: "default" | "all-work";
+  simplifySingleOptionCategories?: boolean;
+  triggerLabel?: string;
   statusItems: StatusFilterOption[];
   statusConfig: Record<string, StatusConfigEntry>;
   members: Member[];

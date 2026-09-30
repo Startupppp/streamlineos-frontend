@@ -51,6 +51,7 @@ export type TableRow = {
   priority: string | null | undefined;
   points: number | null | undefined;
   ticketNumber: number;
+  projectKey: string | null | undefined;
   sequenceId: string | null | undefined;
   startDate: string | null | undefined;
   dueDate: string | null | undefined;
@@ -76,6 +77,7 @@ export function toTableTicket(t: AllWorkTicket): TableRow {
     priority: t.priority,
     points: t.points,
     ticketNumber: t.ticketNumber,
+    projectKey: t.projectKey,
     sequenceId: undefined,
     startDate: t.startDate,
     dueDate: t.dueDate,

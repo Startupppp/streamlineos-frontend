@@ -44,6 +44,7 @@ export interface ListViewProps {
   showEmptyColumns?: boolean;
   selection?: ListSelection;
   focusedTicketId?: number | null;
+  itemLayout?: "standard" | "work-index";
 }
 
 export interface ListViewItemProps {
@@ -58,6 +59,7 @@ export interface ListViewItemProps {
   isSelected?: boolean;
   onSelect?: (id: string | number, checked: boolean) => void;
   isKeyboardFocused?: boolean;
+  layout?: "standard" | "work-index";
 }
 
 export interface InlineGroupCreateProps {
