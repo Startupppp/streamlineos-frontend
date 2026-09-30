@@ -21,6 +21,14 @@
 import { render, screen } from "@testing-library/react";
 import { LeaveApprovalItem } from "../leave-approval-item";
 
+/**
+ * The decision controls read the requester's own approval route now, so a sole
+ * owner can close a request the router already assigned them (BUG-HRMS-017).
+ * These cases are not about that, so the route says nobody else is needed.
+ */
+jest.mock("@/hooks/api/hr/approvers", () => ({
+  useMyApprover: () => ({ data: undefined }),
+}));
 jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
 
 function makeRequest(user: Record<string, unknown> | null) {

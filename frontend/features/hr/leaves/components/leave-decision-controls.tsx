@@ -20,6 +20,7 @@ import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 import { LeaveStatusBadge } from "./leave-status-badge";
+import { useMyApprover } from "@/hooks/api/hr/approvers";
 import type { LeaveRequest } from "./leaves-shared";
 
 /**
@@ -234,6 +235,22 @@ export function LeaveDecisionButtons({
 }: LeaveDecisionButtonsProps) {
   const status = request.status ?? "PENDING";
   const isSelfRequest = !!currentUserId && request.user?.id === currentUserId;
+  /**
+   * BUG-HRMS-017. A sole owner decides their own leave, because the router already
+   * routed it to them: no rung and no queue member remains, and refusing here left
+   * the request PENDING for ever with balances frozen and nothing on screen but
+   * "Cannot approve own request" and no alternate approver to reach for.
+   *
+   * Read from the same route `PUT /hr/leaves/:id/approve` consults, so this control
+   * and the endpoint answer the same question from the same source rather than each
+   * deciding for itself — which is how they came to disagree. Only fetched for a
+   * self-request; every other row is refused on the requester's identity alone.
+   */
+  const { data: ownRoute } = useMyApprover("leave", { enabled: isSelfRequest });
+  const mayDecideOwn =
+    isSelfRequest &&
+    ownRoute?.ownerSelfApproval === true &&
+    ownRoute.approver?.userId === currentUserId;
   // PUT /hr/leaves/:id/approve|reject require hr:leaves:approve (FE-44). The
   // approvals surfaces are also open to WFH-only deciders, who must not see
   // controls that can only fail for them.
@@ -250,10 +267,10 @@ export function LeaveDecisionButtons({
 
   if (status !== "PENDING" || !canDecide) return <LeaveStatusBadge status={status} />;
 
-  if (isSelfRequest)
+  if (isSelfRequest && !mayDecideOwn)
     return (
       <span className="text-xs text-muted-foreground italic">
-        Cannot approve own request
+        Needs another approver
       </span>
     );
 
