@@ -254,7 +254,7 @@ export function UserBulkInviteDialog({ open, onOpenChange }: UserBulkInviteDialo
                       >
                         {f.originalEmail}
                       </Badge>
-                      <span className="text-[11px] text-muted-foreground pl-0.5">
+                      <span className="text-dense text-muted-foreground pl-0.5">
                         {f.isDuplicate ? "Duplicate in this batch" : f.reason}
                       </span>
                     </div>
@@ -325,7 +325,7 @@ export function UserBulkInviteDialog({ open, onOpenChange }: UserBulkInviteDialo
                       />
                     </FormControl>
                     {previewDuplicates.length > 0 ? (
-                      <p className="text-[11px] text-status-warning-ink">
+                      <p className="text-dense text-status-warning-ink">
                         Duplicate entries will be collapsed to a single invitation each.
                       </p>
                     ) : null}

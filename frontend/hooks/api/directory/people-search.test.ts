@@ -1,3 +1,4 @@
+import { renderHook } from "@testing-library/react";
 import { apiClient } from "@/lib/api-client";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { usePeople } from "./people";
@@ -9,7 +10,7 @@ const mockedGet = apiClient.get as jest.Mock;
 const mockedGated = useGatedQuery as jest.Mock;
 
 function requestedUrl(search: string | undefined): string {
-  usePeople({ limit: 20, search });
+  renderHook(() => usePeople({ limit: 20, search }));
   const [, options] = mockedGated.mock.calls.at(-1);
   options.queryFn({ signal: new AbortController().signal });
   return String(mockedGet.mock.calls.at(-1)[0]);
