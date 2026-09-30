@@ -204,7 +204,9 @@ function InvitationActionCell({
           isPending={isCopyingRow}
           disabled={isCancelling}
           aria-label={`Copy join link for ${invitation.email}`}
-          title="Copy a fresh join link. This replaces any link already sent."
+          // BUG-HRMS-004: the reissue is confirmed in a dialog now, because a
+          // tooltip is not consent for breaking the link already in their inbox.
+          title="Copy a join link. Issuing a new one stops the emailed link working."
         >
           <LinkIcon className="h-4 w-4" />
         </LoadingButton>
