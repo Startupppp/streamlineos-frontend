@@ -1,5 +1,6 @@
 import { renderHook, act } from "@testing-library/react";
 import { QueryClient } from "@tanstack/react-query";
+import { ApiError } from "@/lib/api-envelope";
 import {
   INBOX_ERROR_RECOVERY_MS,
   inboxErrorRecoveryInterval,
@@ -87,6 +88,13 @@ describe("the inbox heals itself after a transient read failure", () => {
     expect(at("error", new Error("Failed to fetch"))).toBe(
       INBOX_ERROR_RECOVERY_MS,
     );
+  });
+
+  it("leaves an origin outage to the api-client outage circuit instead of polling it", () => {
+    expect(
+      at("error", new ApiError("Network error", undefined, "NETWORK_ERROR")),
+    ).toBe(false);
+    expect(at("error", new ApiError("Bad Gateway", 502))).toBe(false);
   });
 
   it("BITE PROOF — a 403 is a verdict, not a blip, so it is never polled", () => {
