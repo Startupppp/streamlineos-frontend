@@ -8,6 +8,8 @@ import {
   shouldReportRouteError,
 } from "./route-error-boundary";
 
+jest.mock("@/components/shared/enable-module-button", () => ({ EnableModuleButton: () => null }));
+
 function networkError(path: string): Error & { digest?: string } {
   return new ApiError(
     `Network error contacting localhost:1500 (GET ${path}). Check your connection and try again.`,
