@@ -59,7 +59,9 @@ export function usePerson(
 export function usePeople(
   params: UsePeopleParams = {},
 ): GatedQueryResult<PeoplePage> {
-  const { cursor, limit = 20, search } = params;
+  const { cursor, limit = 20 } = params;
+  // "Tarun " with a trailing space matched nobody: the server ILIKEs it verbatim.
+  const search = params.search?.trim() || undefined;
   const queryParams: Record<string, unknown> = { cursor, limit };
   if (search) queryParams.search = search;
 
