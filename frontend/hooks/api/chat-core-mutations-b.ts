@@ -217,7 +217,6 @@ export function useToggleReaction(channelId: number) {
     // The backend POST is add-only, so a toggle on an emoji the viewer already
     // reacted with has to be the DELETE, or the reaction can never be removed.
     mutationFn: ({ messageId, emoji }: { messageId: number; emoji: string }) => {
-      const url = `/chat/channels/${channelId}/messages/${messageId}/reactions`;
       const message = queryClient
         .getQueryData<InfiniteData<MessagesPage>>(messagesKey)
         ?.pages.flatMap((page) => page.messages)
@@ -229,7 +228,12 @@ export function useToggleReaction(channelId: number) {
             undefined,
             chatReactionsContract,
           )
-        : apiClient.post<{ reactions: Record<string, string[]> }>(url, { emoji }, undefined, chatReactionsContract);
+        : apiClient.post<{ reactions: Record<string, string[]> }>(
+            `/chat/channels/${channelId}/messages/${messageId}/reactions`,
+            { emoji },
+            undefined,
+            chatReactionsContract,
+          );
     },
     // Both routes answer the message's full reaction map; write it in place.
     onSuccess: ({ reactions }, { messageId }) => {
