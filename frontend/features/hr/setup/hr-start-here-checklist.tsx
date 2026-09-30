@@ -53,13 +53,19 @@ function persistDismissed(scope: string): void {
   dismissListeners.forEach((listener) => listener());
 }
 
-export function HrStartHereChecklist({ signals }: { signals: HrSetupSignals | null }) {
+/** Whether this org's owner dismissed "Start here" (stored per org, in this browser). */
+export function useHrStartHereDismissed(): boolean {
   const scope = useOrgStorageScope();
-  const dismissed = useSyncExternalStore(
+  return useSyncExternalStore(
     subscribeDismissed,
     () => readDismissed(scope),
     () => false,
   );
+}
+
+export function HrStartHereChecklist({ signals }: { signals: HrSetupSignals | null }) {
+  const scope = useOrgStorageScope();
+  const dismissed = useHrStartHereDismissed();
 
   function handleDismiss() {
     persistDismissed(scope);
