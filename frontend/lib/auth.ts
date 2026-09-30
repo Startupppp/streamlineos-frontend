@@ -10,6 +10,7 @@ import axios from "axios";
 import { randomUUID } from "crypto";
 import { headers as nextHeaders } from "next/headers";
 import { BACKEND_URL } from "@/lib/backend-url";
+import { isRecord } from "@/lib/is-record";
 import {
   getBackendJwtFromStore,
   setBackendJwtInStore,
@@ -264,7 +265,12 @@ export const authConfig = {
         const userId = token.id;
         if (userId) {
           invalidateSessionData(userId);
-          const fresh = await fetchSessionData(userId);
+          // An org switch names its target; any other update keeps the session's own org.
+          const requestedOrgId =
+            isRecord(session) && typeof session.orgId === "string"
+              ? session.orgId
+              : token.orgId;
+          const fresh = await fetchSessionData(userId, requestedOrgId);
           if (fresh) {
             const claims = resolveSessionClaims(fresh, token);
             primeSessionData(userId, fresh, claims.orgId);
