@@ -18,6 +18,8 @@ const HEARTBEAT_INTERVAL_MS = 30_000;
 
 const MEETING_PRECONDITION_FAILED = 412;
 const MEETING_TEMPORARILY_UNAVAILABLE = 503;
+/** Opens the calendar accounts sheet, where a Google Calendar account is connected. */
+export const HUDDLE_CONNECT_PATH = "/calendar?accounts=1";
 
 const activeHuddleContract = lazyContract(() =>
   import("@/hooks/api/chat-schema").then((m) => m.chatActiveHuddleContract),
@@ -70,7 +72,15 @@ export function useStartHuddle() {
     onError: (error, channelId) => {
       const message = getErrorMessage(error);
       if (isApiError(error) && error.status === MEETING_PRECONDITION_FAILED) {
-        toast.error(message, { duration: Number.POSITIVE_INFINITY });
+        // No usable Google Calendar connection. Any member can connect their own, which
+        // huddles use before an org-shared one, so the fix is one click away.
+        toast.error(message, {
+          duration: Number.POSITIVE_INFINITY,
+          action: {
+            label: "Connect Google Calendar",
+            onClick: () => window.location.assign(HUDDLE_CONNECT_PATH),
+          },
+        });
         return;
       }
       if (
