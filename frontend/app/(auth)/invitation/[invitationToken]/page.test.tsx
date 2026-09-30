@@ -41,6 +41,17 @@ jest.mock("sonner", () => ({
 
 const acceptMutation = { mutate: jest.fn(), isPending: false };
 const declineMutation = { mutate: jest.fn(), isPending: false };
+/**
+ * Added to the page when the invitation email OTP landed and never stubbed here,
+ * so every test in this file threw on render (BUG-HRMS-010). Succeeding by default
+ * is the code being sent; a test that cares drives the code step itself.
+ */
+const requestOtpMutation = {
+  mutate: jest.fn((_variables: { token: string }, callbacks: { onSuccess: () => void }) => {
+    callbacks.onSuccess();
+  }),
+  isPending: false,
+};
 
 const invitation = {
   email: "new.joiner@acme.test",
@@ -59,6 +70,7 @@ jest.mock("@/hooks/common/auth-hooks", () => ({
   }),
   useAcceptInvitation: () => acceptMutation,
   useDeclineInvitation: () => declineMutation,
+  useRequestInvitationOtp: () => requestOtpMutation,
   useSessionClaimsRefresh: () => jest.fn(),
   signInWithMagicToken: jest.fn(),
 }));
@@ -84,7 +96,7 @@ describe("InvitationPage — a rejected name tells the invitee why", () => {
     const firstName = screen.getByRole("textbox", { name: /first name/i });
     await user.click(firstName);
     await user.paste(OVER_LIMIT_NAME);
-    await user.click(screen.getByRole("button", { name: /accept invitation/i }));
+    await user.click(screen.getByRole("button", { name: /continue/i }));
 
     const message = await screen.findByRole("alert");
     expect(message).toBeVisible();
@@ -93,6 +105,7 @@ describe("InvitationPage — a rejected name tells the invitee why", () => {
     const describedBy = firstName.getAttribute("aria-describedby") ?? "";
     expect(describedBy.split(/\s+/)).toContain(message.id);
     expect(firstName).toHaveAttribute("aria-invalid", "true");
+    expect(requestOtpMutation.mutate).not.toHaveBeenCalled();
     expect(acceptMutation.mutate).not.toHaveBeenCalled();
   });
 
@@ -102,19 +115,19 @@ describe("InvitationPage — a rejected name tells the invitee why", () => {
 
     const firstName = screen.getByRole("textbox", { name: /first name/i });
     await user.type(firstName, "Priya");
-    await user.click(screen.getByRole("button", { name: /accept invitation/i }));
+    await user.click(screen.getByRole("button", { name: /continue/i }));
 
     expect(screen.queryByRole("alert")).toBeNull();
     expect(firstName).toHaveAttribute("aria-invalid", "false");
-    expect(acceptMutation.mutate).toHaveBeenCalledTimes(1);
+    expect(requestOtpMutation.mutate).toHaveBeenCalledTimes(1);
   });
 
-  it("disables the accept control while the acceptance is in flight", () => {
-    acceptMutation.isPending = true;
+  it("disables the control while the verification code is being sent", () => {
+    requestOtpMutation.isPending = true;
     render(<InvitationPage />);
 
     expect(
-      screen.getByRole("button", { name: /accepting invitation/i }),
+      screen.getByRole("button", { name: /sending verification code/i }),
     ).toBeDisabled();
   });
 });
@@ -153,12 +166,23 @@ describe("InvitationPage — an existing account opening the invitation", () => 
     expect(screen.getByRole("button", { name: /sign in & join/i })).toBeEnabled();
   });
 
-  it("accepts once for a signed-in invited account", async () => {
+  it("verifies the invited mailbox once for a signed-in invited account", async () => {
     const user = userEvent.setup();
     sessionState.data = { user: { email: invitation.email } };
     render(<InvitationPage />);
 
     await user.click(screen.getByRole("button", { name: /accept & join/i }));
+
+    // `accept` is public and requires a code on every path, so a one-click accept
+    // for an existing account could only ever have been refused (BUG-HRMS-010).
+    expect(requestOtpMutation.mutate).toHaveBeenCalledTimes(1);
+    expect(acceptMutation.mutate).not.toHaveBeenCalled();
+
+    await user.type(
+      screen.getByRole("textbox", { name: /verification code/i }),
+      "424242",
+    );
+    await user.click(screen.getByRole("button", { name: /verify & create account/i }));
 
     expect(acceptMutation.mutate).toHaveBeenCalledTimes(1);
   });

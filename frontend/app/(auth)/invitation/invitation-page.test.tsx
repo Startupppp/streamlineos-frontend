@@ -22,6 +22,11 @@ interface AcceptCallbacks {
   onError: (error: unknown) => void;
 }
 
+interface RequestOtpCallbacks {
+  onSuccess: () => void;
+  onError: (error: unknown) => void;
+}
+
 interface DeclineCallbacks {
   onSuccess: () => void;
   onError: (error: unknown) => void;
@@ -41,6 +46,16 @@ const routerPush = jest.fn<void, [string]>();
 const acceptMutate =
   jest.fn<void, [AcceptInvitationVariables, AcceptCallbacks]>();
 const declineMutate = jest.fn<void, [{ token: string }, DeclineCallbacks]>();
+/**
+ * Added when the invitation email OTP landed and never stubbed, so every test in
+ * this file threw on render — the whole invitation flow went uncovered through the
+ * release QA found broken (BUG-HRMS-010). Succeeding by default is the OTP being
+ * sent; the code step is then driven explicitly.
+ */
+const requestOtpMutate =
+  jest.fn<void, [{ token: string }, RequestOtpCallbacks]>((_variables, callbacks) => {
+    callbacks.onSuccess();
+  });
 const refreshSessionClaims = jest.fn<Promise<null>, []>();
 const signInWithMagicToken =
   jest.fn<Promise<MagicLinkSignInOutcome>, [string]>();
@@ -60,7 +75,7 @@ const validation: {
   isPending: boolean;
 } = { data: VALID_INVITATION, error: null, isPending: false };
 
-const pendingState = { accept: false, decline: false };
+const pendingState = { accept: false, decline: false, requestOtp: false };
 
 let currentSession: FakeSession | null = null;
 
@@ -115,6 +130,10 @@ jest.mock("@/hooks/common/auth-hooks", () => ({
     mutate: declineMutate,
     isPending: pendingState.decline,
   }),
+  useRequestInvitationOtp: () => ({
+    mutate: requestOtpMutate,
+    isPending: pendingState.requestOtp,
+  }),
   useSessionClaimsRefresh: () => refreshSessionClaims,
 }));
 
@@ -139,13 +158,30 @@ function declineResolves() {
   });
 }
 
+const EMAIL_OTP = "424242";
+
+/**
+ * Acceptance is two steps now: the invitee identifies themselves, the API sends a
+ * code to the invited mailbox, and the code is what actually accepts. The link
+ * alone is a bearer token, so it is no longer accepted as proof of who holds it.
+ */
+async function enterEmailCode() {
+  const user = userEvent.setup();
+  await user.type(
+    screen.getByRole("textbox", { name: /verification code/i }),
+    EMAIL_OTP,
+  );
+  await user.click(screen.getByRole("button", { name: /verify & create account/i }));
+}
+
 async function submitNewJoinerForm() {
   const user = userEvent.setup();
   await user.type(
     screen.getByRole("textbox", { name: /first name/i }),
     "Priya",
   );
-  await user.click(screen.getByRole("button", { name: /accept invitation/i }));
+  await user.click(screen.getByRole("button", { name: /continue/i }));
+  await enterEmailCode();
 }
 
 beforeAll(() => {
@@ -171,8 +207,12 @@ beforeEach(() => {
   validation.isPending = false;
   pendingState.accept = false;
   pendingState.decline = false;
+  pendingState.requestOtp = false;
   acceptMutate.mockImplementation(() => {});
   declineMutate.mockImplementation(() => {});
+  requestOtpMutate.mockImplementation((_variables, callbacks) => {
+    callbacks.onSuccess();
+  });
   refreshSessionClaims.mockResolvedValue(null);
   signInWithMagicToken.mockResolvedValue({ status: "failed" });
 });
@@ -190,7 +230,7 @@ describe("InvitationPage — accepting as a new joiner", () => {
     );
     expect(acceptMutate).toHaveBeenCalledTimes(1);
     expect(acceptMutate).toHaveBeenCalledWith(
-      { token: "invite-token-1", firstName: "Priya", lastName: undefined },
+      { token: "invite-token-1", firstName: "Priya", lastName: undefined, emailOtp: EMAIL_OTP },
       expect.anything(),
     );
     expect(signInWithMagicToken).toHaveBeenCalledTimes(1);
@@ -266,7 +306,15 @@ describe("InvitationPage — accepting as a new joiner", () => {
 });
 
 describe("InvitationPage — accepting as an existing account", () => {
-  it("accepts with the token alone and lands on the dashboard once", async () => {
+  /**
+   * BUG-HRMS-010. This used to accept on the token alone. `accept` is a public
+   * route, so it cannot see that the caller is signed in — a signed-in invitee is
+   * indistinguishable from anyone else holding the link — and it therefore
+   * requires a code on every path. The one-click version could only ever be
+   * refused with a 400, so an invitee who already had an account could never
+   * join, whatever the state of the OTP route.
+   */
+  it("verifies the invited mailbox before joining, then lands on the dashboard once", async () => {
     validation.data = { ...VALID_INVITATION, userExists: true };
     currentSession = { user: { email: "existing@acme.test" } };
     acceptResolvesWith("invite-login-existing");
@@ -276,9 +324,17 @@ describe("InvitationPage — accepting as an existing account", () => {
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: /accept & join/i }));
 
+    expect(requestOtpMutate).toHaveBeenCalledWith(
+      { token: "invite-token-1" },
+      expect.anything(),
+    );
+    expect(acceptMutate).not.toHaveBeenCalled();
+
+    await enterEmailCode();
+
     await waitFor(() => expect(navigation.href).toBe("/dashboard"));
     expect(acceptMutate).toHaveBeenCalledWith(
-      { token: "invite-token-1" },
+      { token: "invite-token-1", emailOtp: EMAIL_OTP },
       expect.anything(),
     );
     expect(signInWithMagicToken).toHaveBeenCalledTimes(1);
@@ -294,6 +350,7 @@ describe("InvitationPage — accepting as an existing account", () => {
     render(<InvitationPage />);
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: /accept & join/i }));
+    await enterEmailCode();
 
     await waitFor(() => expect(routerPush).toHaveBeenCalledWith("/signin"));
     expect(navigation.href).toBe("");
@@ -314,16 +371,22 @@ describe("InvitationPage — accepting as an existing account", () => {
     expect(within(warning).getByText("someone.else@acme.test")).toBeVisible();
   });
 
-  it("two accept events in the same render consume the invitation once", () => {
+  it("two code submissions in the same render consume the invitation once", async () => {
     validation.data = { ...VALID_INVITATION, userExists: true };
     currentSession = { user: { email: "existing@acme.test" } };
 
     render(<InvitationPage />);
-    const accept = screen.getByRole("button", { name: /accept & join/i });
-    fireEvent.click(accept);
-    fireEvent.click(accept);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: /accept & join/i }));
+    await user.type(
+      screen.getByRole("textbox", { name: /verification code/i }),
+      EMAIL_OTP,
+    );
+    const verify = screen.getByRole("button", { name: /verify & create account/i });
+    fireEvent.click(verify);
+    fireEvent.click(verify);
 
-    expect(acceptMutate).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(acceptMutate).toHaveBeenCalledTimes(1));
   });
 });
 

@@ -7,6 +7,8 @@ import {
   type UseQueryResult,
 } from "@tanstack/react-query";
 import { usePermissionGate } from "@/hooks/api/access";
+import { useQueryClient } from "@tanstack/react-query";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { gated, type Gated } from "@/lib/rbac/permission-gate";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 
@@ -37,10 +39,27 @@ export function useGatedQuery<
   permission: PermissionKey,
   options: UseQueryOptions<TQueryFnData, TError, TData, TQueryKey>,
 ): GatedQueryResult<TData, TError> {
+  /** The gate comes from `usePermissionGate`, the one derivation of it. */
   const access = usePermissionGate(permission);
+  const queryClient = useQueryClient();
   const query = useQuery({
     ...options,
     enabled: access.allowed && (options.enabled ?? true),
   });
-  return gated(query, access);
+
+  /**
+   * Retrying a read whose PERMISSION could not be read has to retry the
+   * permission. This query is disabled while access is unavailable, so its own
+   * `refetch` is a no-op — a Retry button wired to it would spin for ever
+   * against a recovered server (BUG-HRMS-014). Composed here so every gated
+   * surface's existing Retry does the right thing without being rewired.
+   */
+  const refetch: typeof query.refetch = async (refetchOptions) => {
+    if (access.unavailable) {
+      await queryClient.refetchQueries({ queryKey: platformCoreQueryKeys.access.me() });
+    }
+    return query.refetch(refetchOptions);
+  };
+
+  return gated({ ...query, refetch }, access);
 }

@@ -63,6 +63,11 @@ const PUBLIC_AUTH_PATHS = new Set([
   "/auth/email-otp",
   "/auth/email-otp/verify",
   "/organization/invitations/validate",
+  // BUG-HRMS-010: the invitee requesting this code has no session yet — that is
+  // the whole point of it. Absent from this set, the call took the authenticated
+  // path: a mutation key it does not need, and `endSession()` on the 401 that a
+  // missing bearer invites, signing the visitor out of an invitation page.
+  "/organization/invitations/request-otp",
   "/organization/invitations/accept",
   "/organization/invitations/decline",
 ]);

@@ -25,6 +25,7 @@ import {
   FormControl,
   FormField,
   FormItem,
+  FormDescription,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
@@ -34,6 +35,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { CheckCircle2, Mail } from "lucide-react";
 import { USER_INVITE_ROLES } from "@/lib/constants/user-invite-roles";
+import { InviteSeatNotice } from "./invite-seat-notice";
 import { MANIFEST } from "@/lib/module-manifest";
 import type { ModuleEntry } from "@/lib/module-manifest-schema";
 import {
@@ -222,6 +224,7 @@ export function UserInviteDialog({
         ) : (
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <InviteSeatNotice requesting={1} />
               <FormField
                 control={form.control}
                 name="email"
@@ -270,6 +273,18 @@ export function UserInviteDialog({
                         ))}
                       </SelectContent>
                     </Select>
+                    {/*
+                      BUG-HRMS-003. QA asked for HR Admin / Manager / Finance /
+                      Viewer here. There are exactly three org standings by design
+                      (BE-102) and a fourth invite role would be a parallel role
+                      system; finer grants go through Module access.
+                    */}
+                    <FormDescription className="text-xs">
+                      Member for everyone; Org Admin for organisation settings and billing.
+                      {canManageRbac
+                        ? " Job-specific access — HR, payroll, finance — is set under Module access below."
+                        : " Job-specific access — HR, payroll, finance — is granted per person under Settings → Access."}
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

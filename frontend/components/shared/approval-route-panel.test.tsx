@@ -7,6 +7,7 @@ function route(overrides: Partial<ApprovalRoute> = {}): ApprovalRoute {
   return {
     kind: "leave",
     subjectUserId: "employee-1",
+    ownerSelfApproval: false,
     permission: "hr:leaves:approve",
     resolvedAt: "2026-09-21T00:00:00.000Z",
     rung: "reporting_manager",

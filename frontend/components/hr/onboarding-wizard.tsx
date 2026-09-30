@@ -16,6 +16,8 @@ import { Check, ChevronRight, ChevronLeft, Loader2 } from "lucide-react";
 import { useOnboardEmployee } from "@/hooks/api/hr";
 import { useOnboardingTemplateDepartments } from "@/hooks/api/hr/onboarding";
 import { DEFAULT_INVITE_ROLE } from "@/lib/constants/user-invite-roles";
+import { DEFAULT_HR_WORKER_TYPE } from "@/lib/constants/hr-worker-types";
+import { useOrgLocations } from "@/hooks/api/org-hierarchy";
 import { useRouter } from "next/navigation";
 import {
   employeeAdmissionGuidance,
@@ -45,7 +47,7 @@ const STEPS = [
 // the fields that step marks required (V-135).
 export const STEP_FIELDS: Record<number, FieldPath<FormValues>[]> = {
   1: ["firstName", "lastName", "email"],
-  2: ["designation", "departmentId", "reportingManagerUserId", "secondaryManagers", "topLevelRole", "topLevelRoleReason", "role", "joiningDate"],
+  2: ["designation", "departmentId", "locationId", "workerType", "reportingManagerUserId", "secondaryManagers", "topLevelRole", "topLevelRoleReason", "role", "joiningDate"],
   3: ["taxId", "monthlySalary"],
   4: [],
 };
@@ -59,6 +61,7 @@ export function OnboardingWizard() {
   const submittingRef = useRef(false);
   const router = useRouter();
   const { data: departments } = useOnboardingTemplateDepartments();
+  const { data: locations } = useOrgLocations({ status: "ACTIVE" });
   const onboardEmployee = useOnboardEmployee();
 
   const allDepartmentOptions = useMemo(() => {
@@ -76,6 +79,7 @@ export function OnboardingWizard() {
       firstName: "", lastName: "", email: "", phone: "",
       whatsappSameAsPhone: true, whatsappNumber: "", gender: undefined,
       designation: "", departmentId: undefined,
+      locationId: undefined, workerType: DEFAULT_HR_WORKER_TYPE,
       reportingManagerUserId: undefined, reportingManagerRef: null, secondaryManagers: [],
       topLevelRole: false, topLevelRoleReason: undefined,
       role: DEFAULT_INVITE_ROLE, employeeId: "", attachToExistingMember: false, joiningDate: new Date(),
@@ -206,11 +210,15 @@ export function OnboardingWizard() {
           <div className="min-h-0 flex-1">
             {currentStep === 1 && <StepPersonalInfo form={form} />}
             {currentStep === 2 && (
-              <StepEmployment form={form} departments={departments ?? []} />
+              <StepEmployment
+                form={form}
+                departments={departments ?? []}
+                locations={locations?.data ?? []}
+              />
             )}
             {currentStep === 3 && <StepSkillsPay form={form} />}
             {currentStep === 4 && <StepBanking form={form} />}
-            {currentStep === 5 && <StepReview form={form} allDepartmentOptions={allDepartmentOptions} />}
+            {currentStep === 5 && <StepReview form={form} allDepartmentOptions={allDepartmentOptions} locations={locations?.data ?? []} />}
           </div>
 
           <div

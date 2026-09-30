@@ -1,5 +1,6 @@
 import type { BulkOnboardEmployeeRow } from "@/types/hr";
 import { isUserInviteRole } from "@/lib/constants/user-invite-roles";
+import { HR_WORKER_TYPE_VALUES, isHrWorkerType } from "@/lib/constants/hr-worker-types";
 import { EMAIL_RE, type ColumnKey, type ParsedRow } from "./bulk-onboard-columns";
 import { validateManagerColumns } from "./bulk-onboard-managers";
 import type { AssignedDefault } from "@/components/hr/reporting-lines/policy-default-primary";
@@ -45,6 +46,8 @@ export function validateAndMap(
   const email = cell(raw, "email").toLowerCase();
   const designation = cell(raw, "designation");
   const department = cell(raw, "department");
+  const location = cell(raw, "location");
+  const workerTypeRaw = cell(raw, "workerType").toUpperCase();
   const phone = cell(raw, "phone");
   const genderRaw = cell(raw, "gender").toUpperCase();
   const roleRaw = cell(raw, "role").toUpperCase();
@@ -80,6 +83,15 @@ export function validateAndMap(
   }
   if (roleRaw && !isUserInviteRole(roleRaw)) {
     errors.push("role must be MEMBER or ORG_ADMIN");
+  }
+  /**
+   * BUG-HRMS-007. Checked here because a mistyped worker type would otherwise
+   * cost a round trip to find out. `location` is not checked locally: the
+   * server resolves it against the org's live locations and refuses an unknown
+   * one rather than inventing an office (BUG-HRMS-006).
+   */
+  if (workerTypeRaw && !isHrWorkerType(workerTypeRaw)) {
+    errors.push(`workerType must be one of ${HR_WORKER_TYPE_VALUES.join(", ")}`);
   }
   const managers = validateManagerColumns(raw, email, secondaryCap, assignedDefault);
   errors.push(...managers.errors);
@@ -137,6 +149,8 @@ export function validateAndMap(
     email,
     designation,
     ...(departmentName ? { department: departmentName } : {}),
+    ...(location ? { location } : {}),
+    ...(isHrWorkerType(workerTypeRaw) ? { workerType: workerTypeRaw } : {}),
     ...(phone ? { phone } : {}),
     ...(isGender(genderRaw) ? { gender: genderRaw } : {}),
     ...(roleRaw ? { role: roleRaw } : {}),

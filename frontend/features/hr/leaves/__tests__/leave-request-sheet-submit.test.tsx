@@ -115,6 +115,7 @@ const ROUTED: ApprovalRoute = {
   slaHours: 24,
   dueAt: "2026-09-26T00:00:00.000Z",
   escalation: null,
+  ownerSelfApproval: false,
   explanation: "Routed to your reporting manager.",
 };
 
@@ -124,6 +125,7 @@ const UNROUTED: ApprovalRoute = {
   approver: null,
   slaHours: 0,
   skipped: [{ rung: "reporting_manager", userId: null, reason: "no-manager" }],
+  ownerSelfApproval: false,
   explanation: "Nobody can approve this request.",
 };
 

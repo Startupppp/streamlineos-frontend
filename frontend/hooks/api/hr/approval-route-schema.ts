@@ -76,6 +76,15 @@ export const approvalRouteContract = z.object({
   escalation: z
     .object({ rung: approvalRungContract, approver: approvalCandidateContract.nullable(), queue: approvalQueueContract.nullable() })
     .nullable(),
+  /**
+   * BUG-HRMS-017. True when the only person who can decide this request is the
+   * person who raised it, because they are the organisation's sole structural
+   * admin and no rung and no queue member remains. The router has always sent a
+   * sole founder's request back to themselves rather than dead-ending them; this
+   * is the flag that lets the decision controls agree with it instead of showing
+   * "Cannot approve own request" over a request nobody else can ever close.
+   */
+  ownerSelfApproval: z.boolean(),
   explanation: z.string(),
 });
 

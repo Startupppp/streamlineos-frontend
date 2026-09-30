@@ -178,7 +178,7 @@ export function ConnectedAppsSection() {
               <Skeleton key={c.toolkit} className="h-16 w-full rounded-md" />
             ))}
           </div>
-        ) : isError ? (
+        ) : isError || access.unavailable ? (
           <ErrorState
             title="Couldn't load connected apps"
             description={getErrorMessage(error)}

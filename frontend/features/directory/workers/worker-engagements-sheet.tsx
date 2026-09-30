@@ -193,7 +193,7 @@ export function WorkerEngagementsSheet({
             />
           ) : isLoading || engagementsQuery.access.pending ? (
             <DataTableSkeleton rows={5} columns={6} />
-          ) : isError ? (
+          ) : isError || engagementsQuery.access.unavailable ? (
             <ErrorState compact onRetry={handleRetry} />
           ) : engagementRows.length === 0 ? (
             <EmptyState

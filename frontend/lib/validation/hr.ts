@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { USER_INVITE_ROLE_VALUES } from "@/lib/constants/user-invite-roles";
+import { HR_WORKER_TYPE_VALUES } from "@/lib/constants/hr-worker-types";
 import { normalizeNamePart } from "@/lib/person-display";
 
 function hasLetterOrDigit(value: string): boolean {
@@ -136,6 +137,14 @@ export const onboardEmployeeInputSchema = z.object({
     .max(120, "Designation must be at most 120 characters")
     .refine(hasLetterOrDigit, "Designation must contain a letter or number"),
   departmentId: z.string().min(1, "Department is required"),
+  /**
+   * BUG-HRMS-006 / BUG-HRMS-007. Both columns have always existed on
+   * `hr_employments`; onboarding simply never offered them, so every hire landed
+   * at no location and as FULL_TIME whatever they actually were. Optional here
+   * because an org that configured no location still has to be able to hire.
+   */
+  locationId: z.string().optional(),
+  workerType: z.enum(HR_WORKER_TYPE_VALUES).optional(),
   reportingManagerUserId: z.string().optional(),
   reportingManagerRef: managerRefDisplaySchema,
   secondaryManagers: z.array(secondaryManagerEntrySchema).max(3, "At most three additional managers").optional(),

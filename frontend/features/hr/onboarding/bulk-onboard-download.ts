@@ -1,5 +1,6 @@
 import { downloadXlsx } from "@/lib/export/xlsx-utils";
 import { BULK_ONBOARD_COLUMNS, MAX_ROWS } from "./bulk-onboard-columns";
+import { HR_WORKER_TYPE_VALUES } from "@/lib/constants/hr-worker-types";
 
 function secondaryNote(slot: number, cap: number): string {
   if (cap === 0) return "Not used: your organisation records no secondary managers. Leave blank.";
@@ -33,6 +34,17 @@ export function buildBulkOnboardInstructionRows(
       notes: departmentNames.length
         ? `Exact department name. Yours: ${departmentNames.join(", ")}`
         : "Exact department name as configured in HR (or numeric department id)",
+    },
+    {
+      field: "location",
+      required: "No",
+      notes:
+        "Office name, code or id from Settings → Organization → Locations. An unknown location refuses the row rather than creating an office.",
+    },
+    {
+      field: "workerType",
+      required: "No",
+      notes: `One of ${HR_WORKER_TYPE_VALUES.join(", ")}. Blank means FULL_TIME.`,
     },
     {
       field: "primaryManagerEmail",

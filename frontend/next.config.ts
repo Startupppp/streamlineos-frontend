@@ -126,6 +126,27 @@ const nextConfig: NextConfig = {
       destination: "/payroll",
       permanent: false,
     },
+    // BUG-HRMS-013. Three paths the product implies but never served. The pages
+    // exist and the sidebar links them correctly; these are the addresses an
+    // operator guesses, bookmarks or reads in a training doc, and each answered
+    // "Page Not Found" instead of the page it names.
+    {
+      source: "/hr/skills",
+      destination: "/hr/employees/skills-matrix",
+      permanent: false,
+    },
+    {
+      source: "/hr/probation",
+      destination: "/hr/onboarding/probation",
+      permanent: false,
+    },
+    // Singular vs plural: the sidebar says /hr/leaves, so half the product's own
+    // prose says /hr/leave.
+    {
+      source: "/hr/leave",
+      destination: "/hr/leaves",
+      permanent: false,
+    },
     {
       source: "/hr/payroll/salary-structures",
       destination: "/payroll/salary-structures",

@@ -96,8 +96,13 @@ export const useAccess = (
 };
 
 export function usePermissionGate(permission: PermissionKey): PermissionGate {
-  const { data } = useAccess();
-  return permissionGate(permission, grantsPermission(data, permission), data !== undefined);
+  const { data, isError } = useAccess();
+  return permissionGate(
+    permission,
+    grantsPermission(data, permission),
+    data !== undefined,
+    isError,
+  );
 }
 
 export function useCan(permissionKey: PermissionKey): boolean {

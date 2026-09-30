@@ -64,6 +64,13 @@ export function UserInvitationsPanel() {
     setOpen: openInvite,
   } = useQueryParamOpen("create");
   const [cancellationInvitationId, setCancellationInvitationId] = useState<string | null>(null);
+  /**
+   * BUG-HRMS-004. Copying a join link REISSUES it, which kills the link already in
+   * the recipient's inbox. That was a tooltip on an icon button: one click, no
+   * confirmation, and the invitee's emailed link stopped working with nobody told.
+   * Asked before the reissue, not reported after it.
+   */
+  const [joinLinkInvitationId, setJoinLinkInvitationId] = useState<string | null>(null);
   const canManageMembership = useCanManageOrganizationMembership();
   const invitationsGate = usePermissionGate("settings:organization:manage");
   const canViewInvitations = invitationsGate.allowed;
@@ -101,8 +108,18 @@ export function UserInvitationsPanel() {
     variables: copyingJoinLinkInvitationId,
   } = useReissueInvitationJoinLink();
 
+  const handleCopyJoinLinkRequest = useCallback(
+    (invitationId: string) => setJoinLinkInvitationId(invitationId),
+    [],
+  );
+
+  const handleJoinLinkDialogChange = useCallback((open: boolean) => {
+    if (!open) setJoinLinkInvitationId(null);
+  }, []);
+
   const handleCopyJoinLink = useCallback(
     (invitationId: string) => {
+      setJoinLinkInvitationId(null);
       void reissueJoinLink(invitationId)
         .then(async (link) => {
           try {
@@ -121,6 +138,10 @@ export function UserInvitationsPanel() {
     },
     [reissueJoinLink],
   );
+  const handleJoinLinkConfirm = useCallback(() => {
+    if (joinLinkInvitationId !== null) handleCopyJoinLink(joinLinkInvitationId);
+  }, [joinLinkInvitationId, handleCopyJoinLink]);
+
   const { mutate: cancel, isPending: isCancelling } = useCancelInvitation();
   const {
     mutate: changeRole,
@@ -266,7 +287,7 @@ export function UserInvitationsPanel() {
         isCancelling,
         onRoleChange: handleRoleChange,
         onResend: handleResend,
-        onCopyJoinLink: handleCopyJoinLink,
+        onCopyJoinLink: handleCopyJoinLinkRequest,
         isCopyingJoinLink,
         copyingJoinLinkInvitationId,
         onCancelRequest: handleCancelRequest,
@@ -277,7 +298,7 @@ export function UserInvitationsPanel() {
       changingRoleVariables?.invitationId,
       copyingJoinLinkInvitationId,
       handleCancelRequest,
-      handleCopyJoinLink,
+      handleCopyJoinLinkRequest,
       handleResend,
       handleRoleChange,
       isCopyingJoinLink,
@@ -399,6 +420,15 @@ export function UserInvitationsPanel() {
       {canManageMembership ? (
         <UserInviteDialog open={inviteOpen} onOpenChange={handleInviteChange} />
       ) : null}
+      <ConfirmDialog
+        open={joinLinkInvitationId !== null}
+        onOpenChange={handleJoinLinkDialogChange}
+        title="Replace the invitation link?"
+        description="Copying a link issues a new one. The link already emailed to this person will stop working, so send them the new one. Their existing link keeps working if you cancel here."
+        confirmLabel="Copy a new link"
+        isPending={isCopyingJoinLink}
+        onConfirm={handleJoinLinkConfirm}
+      />
       <ConfirmDialog
         open={cancellationInvitationId !== null}
         onOpenChange={handleCancelDialogChange}

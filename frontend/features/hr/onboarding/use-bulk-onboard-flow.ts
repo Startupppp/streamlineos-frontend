@@ -4,7 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useBulkOnboardEmployees, useBulkOnboardPreview } from "@/hooks/api/hr/employee-profile";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { BulkOnboardEmployeeRow, BulkOnboardPreviewRow, BulkOnboardResult } from "@/types/hr";
+import type { BulkOnboardEmployeeRow, BulkOnboardPreviewRow, BulkOnboardResult, BulkOnboardSeats } from "@/types/hr";
 import { MAX_ROWS, sourceRowOf } from "./bulk-onboard-columns";
 import { parseFile } from "./bulk-onboard-parse";
 import { validateAndMap, type PreviewRow } from "./bulk-onboard-template";
@@ -80,6 +80,12 @@ export function useBulkOnboardFlow(deptNames: Set<string>, secondaryCap: number 
   const [commit, setCommit] = useState<BulkOnboardCommit | null>(null);
   const [parsing, setParsing] = useState(false);
   const [checkFailed, setCheckFailed] = useState(false);
+  /**
+   * BUG-HRMS-002. An onboarded employee is admitted as a member, so every row
+   * spends a plan seat. Held so the preview can say how many are free before the
+   * confirm, instead of letting the confirm answer 402 for the whole file.
+   */
+  const [seats, setSeats] = useState<BulkOnboardSeats | null>(null);
 
   async function runServerPreview(checked: BulkOnboardFlowRow[]) {
     const payloads = checked.flatMap((row) => (row.payload ? [row.payload] : []));
@@ -88,6 +94,7 @@ export function useBulkOnboardFlow(deptNames: Set<string>, secondaryCap: number 
     try {
       const response = await preview.mutateAsync(payloads);
       setRows(mergeServerPreview(checked, response.rows));
+      setSeats(response.seats);
     } catch (error) {
       setCheckFailed(true);
       toast.error(getErrorMessage(error));
@@ -153,6 +160,7 @@ export function useBulkOnboardFlow(deptNames: Set<string>, secondaryCap: number 
     setRows([]);
     setCommit(null);
     setCheckFailed(false);
+    setSeats(null);
   }
 
   return {
@@ -163,6 +171,7 @@ export function useBulkOnboardFlow(deptNames: Set<string>, secondaryCap: number 
     parsing,
     checking: preview.isPending,
     checkFailed,
+    seats,
     committing: bulkOnboard.isPending,
     committableCount: committable.length,
     handleFile,

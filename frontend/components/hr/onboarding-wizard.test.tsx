@@ -32,6 +32,11 @@ jest.mock("@/hooks/api/hr/onboarding", () => ({
   useOnboardingTemplateDepartments: () => ({ data: [] }),
 }));
 
+/** BUG-HRMS-006: the wizard reads the org's locations for the Job Details step. */
+jest.mock("@/hooks/api/org-hierarchy", () => ({
+  useOrgLocations: () => ({ data: { data: [] } }),
+}));
+
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn() }),
 }));

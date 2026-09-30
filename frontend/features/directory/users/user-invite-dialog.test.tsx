@@ -10,6 +10,11 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => false),
 }));
 
+// The seat notice reads billing; with no seat data it renders nothing.
+jest.mock("@/hooks/api/subscription", () => ({
+  useSeatInfo: jest.fn(() => ({ data: undefined })),
+}));
+
 import { useCan } from "@/hooks/api/access";
 import { useInviteUser } from "@/hooks/api/users";
 
