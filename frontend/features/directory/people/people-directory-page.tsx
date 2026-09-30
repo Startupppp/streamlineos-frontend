@@ -302,7 +302,7 @@ export function PeopleDirectoryPage({
             />
           ) : isLoading || peopleQuery.access.pending ? (
             <DataTableSkeleton rows={12} columns={6} className="min-h-0 w-full flex-1" />
-          ) : isError ? (
+          ) : isError || peopleQuery.access.unavailable ? (
             <ErrorState className={cn(CONTENT_FILL_PANEL, PAGE_BODY_EMPTY_CLASS)} onRetry={handleRetry} />
           ) : rows.length === 0 ? (
             <EmptyState

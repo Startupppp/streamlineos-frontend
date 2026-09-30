@@ -6,6 +6,7 @@ import { accessState } from "@/lib/rbac/gate";
 import { grantsPermission } from "@/lib/rbac/permission-gate";
 import { normalizeOrgModuleKey } from "@/lib/org-module-keys";
 import {
+  pageStateFromError,
   resolvePageState,
   type ModuleAvailability,
   type PageStateResolution,
@@ -22,8 +23,32 @@ export interface UsePageStateOptions {
 }
 
 export function usePageState(options: UsePageStateOptions): PageStateResolution {
-  const { data: access, isLoading: accessLoading } = useAccess();
+  const {
+    data: access,
+    isLoading: accessLoading,
+    isError: accessFailed,
+    error: accessError,
+  } = useAccess();
   const { data: entitlements } = useEntitlements(options.module !== undefined);
+
+  /**
+   * A failed access read is a failed read, not a slow one.
+   *
+   * `accessState` is documented to take the query's own loading flag "rather
+   * than inferring it from the absence of data, because inferring one from the
+   * other is how they were conflated" — and both call sites then passed
+   * `accessLoading || access === undefined`, re-introducing exactly that
+   * inference. When `/me/access` errors, `data` stays undefined for ever, so
+   * every gated page resolved to `loading` for ever and rendered its skeleton
+   * until the tab was closed. That is the infinite skeleton across the HR routes
+   * and why one degraded org sync walled a whole session
+   * (BUG-HRMS-012, BUG-HRMS-014).
+   *
+   * Reported as an error, the surface gets `ErrorState` and a Retry, and a 401
+   * still resolves to session-expired through the usual mapping.
+   */
+  if (accessFailed && access === undefined)
+    return pageStateFromError(accessError) ?? { kind: "error", error: accessError };
 
   const permissionState =
     options.permission === undefined

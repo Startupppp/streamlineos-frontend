@@ -307,7 +307,7 @@ export function WorkersPage() {
             />
           ) : isLoading || workersQuery.access.pending ? (
             <DataTableSkeleton rows={12} columns={6} className="flex-1" />
-          ) : isError ? (
+          ) : isError || workersQuery.access.unavailable ? (
             <ErrorState className={CONTENT_FILL_PANEL} onRetry={handleRetry} />
           ) : rows.length === 0 ? (
             <EmptyState

@@ -33,7 +33,12 @@ export function AssessmentResultsCard({ surveyId }: { surveyId: number }) {
     return <Skeleton className="h-32 w-full" />;
   }
 
-  if (attemptsQuery.isError || certificatesQuery.isError) {
+  if (
+    attemptsQuery.isError ||
+    certificatesQuery.isError ||
+    attemptsQuery.access.unavailable ||
+    certificatesQuery.access.unavailable
+  ) {
     return (
       <ErrorState
         compact

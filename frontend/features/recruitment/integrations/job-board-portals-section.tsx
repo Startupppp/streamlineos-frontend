@@ -172,7 +172,7 @@ export function JobBoardPortalsSection() {
       {access.denied ? (
         // FE-47: a disabled read would render every board as "Inactive".
         <NoPermissionState permission="hr:requisitions:manage" compact />
-      ) : isError ? (
+      ) : isError || access.unavailable ? (
         <ErrorState
           className="flex-1"
           title="Couldn't load recruitment integrations"
