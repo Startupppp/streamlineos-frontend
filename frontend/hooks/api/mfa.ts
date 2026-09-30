@@ -17,6 +17,9 @@ const mfaVerifyContract = lazyContract(() =>
 const mfaDisableContract = lazyContract(() =>
   import("@/hooks/api/auth-schema").then((m) => m.mfaDisableContract),
 );
+const mfaChallengeContract = lazyContract(() =>
+  import("@/hooks/api/auth-schema").then((m) => m.mfaChallengeContract),
+);
 
 export function useMfaStatus() {
   return useQuery({
@@ -45,6 +48,19 @@ export function useMfaVerify() {
     mutationKey: ["mfa", "verify"],
     mutationFn: (data: { token: string } | { backupCode: string }) =>
       apiClient.post<{ enabled: boolean }>("/auth/mfa/verify", data, undefined, mfaVerifyContract),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.mfa.all });
+      qc.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });
+    },
+  });
+}
+
+export function useMfaChallenge() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["mfa", "challenge"],
+    mutationFn: (data: { token: string } | { backupCode: string }) =>
+      apiClient.post<{ satisfied: true }>("/auth/mfa/challenge", data, undefined, mfaChallengeContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.mfa.all });
       qc.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });

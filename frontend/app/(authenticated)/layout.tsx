@@ -34,11 +34,10 @@ export default async function DashboardLayout({
 
   if (gate) redirect(gate);
 
-  const isSettingsRoute =
-    pathname === "/settings" || pathname.startsWith("/settings/");
+  const isMfaRemedyRoute = pathname === "/settings";
 
   const { mfa } = await getServerAccess();
-  if (!isSettingsRoute && mfa?.enforced && !mfa.satisfied)
+  if (!isMfaRemedyRoute && mfa?.enforced && !mfa.satisfied)
     redirect("/settings");
 
   const state = await prefetchAccess();
