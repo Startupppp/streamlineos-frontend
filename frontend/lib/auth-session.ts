@@ -168,15 +168,22 @@ async function performSessionExchange(
   }
 }
 
+/**
+ * `orgId` is the org this browser session selected (`token.orgId`). Omitted, the backend answers
+ * the account's most-recently-activated org, so a switch in any other tab or device moved THIS
+ * session to that org on its next reload (CHAT-008).
+ */
 export async function fetchSessionData(
   userId: string,
+  orgId?: string | null,
 ): Promise<SessionData | null> {
+  const scope = orgId ? `?orgId=${encodeURIComponent(orgId)}` : "";
   const attempts = 2;
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 8_000);
     try {
-      const res = await fetch(`${BACKEND_URL}/auth/session-data/${userId}`, {
+      const res = await fetch(`${BACKEND_URL}/auth/session-data/${userId}${scope}`, {
         headers: withCorrelation(
           new Headers({ "x-internal-secret": INTERNAL_SECRET }),
         ),
@@ -268,7 +275,7 @@ async function fetchSessionDataWithCache(
   if (current) return current;
 
   const generation = sessionDataGenerations.get(userId) ?? 0;
-  const request = fetchSessionData(userId).then((fresh) => {
+  const request = fetchSessionData(userId, scopeOrgId).then((fresh) => {
     if (fresh && (sessionDataGenerations.get(userId) ?? 0) === generation)
       primeSessionData(userId, fresh, scopeOrgId);
     return fresh;

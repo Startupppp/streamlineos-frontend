@@ -15,6 +15,7 @@ jest.mock("./ticket-sidebar", () => ({ TicketSidebar: () => null }));
 jest.mock("./ticket-time-tracker", () => ({ TicketTimeTracker: () => null }));
 jest.mock("./watcher-list", () => ({ WatcherList: () => null }));
 jest.mock("./ticket-git-links", () => ({ TicketGitLinks: () => null }));
+jest.mock("./ticket-related-links", () => ({ TicketRelatedLinks: () => null }));
 
 it("closes the mobile properties drawer from its visible close control", () => {
   const onOpenChange = jest.fn();

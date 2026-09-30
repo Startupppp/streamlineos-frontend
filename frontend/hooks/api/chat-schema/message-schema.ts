@@ -114,6 +114,9 @@ const chatMessageCore = {
   messageType: z.enum(["text", "lead_submission", "system"]),
   metadata: chatMessageMetadataContract,
   actionStatus: z.string().nullable(),
+  // `emoji -> userId[]`, folded by the backend's `foldReactions` on every message read.
+  // Omitting it here let the non-strict parse strip it, so reactions vanished on refetch.
+  reactions: z.record(z.string(), z.array(z.string())).default({}),
   createdAt: z.string(),
   updatedAt: z.string(),
 };

@@ -1,6 +1,37 @@
+import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { useTicketSearch } from "@/hooks/api/build/ticket-search";
+import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 
-const INLINE_TOKEN_PATTERN = /(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`|@[^\s@]+(?:\s[^\s@]+)*)/g;
+/**
+ * URLs are a token of their own only so a key inside one (`…/browse/ACP-52`) is
+ * not linkified; they still render as plain text. Code spans are tokens already.
+ */
+const INLINE_TOKEN_PATTERN = /(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`|https?:\/\/[^\s<>"']+|@[^\s@]+(?:\s[^\s@]+)*|\b[A-Z][A-Z0-9]+-\d+\b)/g;
+const TICKET_KEY_PATTERN = /^[A-Z][A-Z0-9]+-\d+$/;
+
+/**
+ * A key only becomes a link once the org's ticket search returns that exact key,
+ * so `UTF-8` or `SHA-256` stay text and a key the reader cannot see never links.
+ */
+function TicketKeyLink({ ticketKey, isOwn }: { ticketKey: string; isOwn: boolean }) {
+  const { data } = useTicketSearch(ticketKey, { staleTime: 5 * 60_000 });
+  const match = data?.find(
+    (t) => `${t.projectKey}-${t.ticketNumber}`.toUpperCase() === ticketKey,
+  );
+  if (!match) return <span className="break-words break-all">{ticketKey}</span>;
+  return (
+    <Link
+      href={getTicketDetailHref(match.projectId, match.projectKey, match.ticketNumber)}
+      className={cn(
+        "font-mono underline underline-offset-2",
+        isOwn ? "text-primary-foreground" : "text-primary",
+      )}
+    >
+      {ticketKey}
+    </Link>
+  );
+}
 
 function renderInlinePart(part: string, key: number, isOwn: boolean): React.ReactNode {
   if (part.startsWith("**") && part.endsWith("**")) {
@@ -21,6 +52,9 @@ function renderInlinePart(part: string, key: number, isOwn: boolean): React.Reac
         {part.slice(1, -1)}
       </code>
     );
+  }
+  if (TICKET_KEY_PATTERN.test(part)) {
+    return <TicketKeyLink key={key} ticketKey={part} isOwn={isOwn} />;
   }
   if (part.startsWith("@")) {
     return (

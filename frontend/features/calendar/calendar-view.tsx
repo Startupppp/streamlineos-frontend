@@ -267,6 +267,11 @@ export function CalendarView() {
     });
   }, [searchParams, finalizeMutate, router, setAccountsOpen]);
 
+  // `/calendar?accounts=1` lands on the accounts sheet; the huddle "Connect Google Calendar" toast links here.
+  useEffect(() => {
+    if (searchParams.get("accounts") === "1") setAccountsOpen(true);
+  }, [searchParams, setAccountsOpen]);
+
   return (
     <PageWrapper
       title={

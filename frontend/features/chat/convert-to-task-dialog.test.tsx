@@ -44,7 +44,7 @@ describe("ConvertToTaskDialog toast labels — BUG-058: raw enum was shown inste
 
     const projectSelect = screen.getByRole("combobox", { name: /project/i });
     fireEvent.click(projectSelect);
-    const option = await screen.findByText("APP — App");
+    const option = await screen.findByRole("option", { name: "APP — App" });
     fireEvent.click(option);
 
     fireEvent.click(screen.getByRole("button", { name: /create/i }));
@@ -59,12 +59,12 @@ describe("ConvertToTaskDialog toast labels — BUG-058: raw enum was shown inste
 
     const projectSelect = screen.getByRole("combobox", { name: /project/i });
     fireEvent.click(projectSelect);
-    const option = await screen.findByText("APP — App");
+    const option = await screen.findByRole("option", { name: "APP — App" });
     fireEvent.click(option);
 
     const typeSelect = screen.getByRole("combobox", { name: /type/i });
     fireEvent.click(typeSelect);
-    const bugOption = await screen.findByText("Bug");
+    const bugOption = await screen.findByRole("option", { name: "Bug" });
     fireEvent.click(bugOption);
 
     fireEvent.click(screen.getByRole("button", { name: /create/i }));

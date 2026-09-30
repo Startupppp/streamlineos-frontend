@@ -56,6 +56,7 @@ const relatedLinkSchema = z.object({
 });
 
 export const relatedLinkCreateContract = relatedLinkSchema;
+export const relatedLinkListContract = z.array(relatedLinkSchema);
 
 const checklistItemSchema = z.object({
   id: z.number().int(),

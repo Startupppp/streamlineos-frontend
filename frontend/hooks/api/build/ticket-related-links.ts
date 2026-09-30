@@ -5,9 +5,13 @@ import type { UseMutationOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 const relatedLinkCreateLazy = lazyContract(() =>
   import("@/hooks/api/build/build-tickets-subresource-schema").then((m) => m.relatedLinkCreateContract),
+);
+const relatedLinkListLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-subresource-schema").then((m) => m.relatedLinkListContract),
 );
 
 export interface TicketRelatedLink {
@@ -25,6 +29,18 @@ export interface TicketRelatedLink {
 
 const relatedLinksKey = (projectId: number, ticketId: number) =>
   ["projects", projectId, "tickets", ticketId, "related-links"] as const;
+
+export function useTicketRelatedLinks(projectId: number, ticketId: number) {
+  return useGatedQuery("build:tickets:view", {
+    queryKey: relatedLinksKey(projectId, ticketId),
+    queryFn: ({ signal }) =>
+      apiClient.get<TicketRelatedLink[]>(
+        `/build/${projectId}/tickets/${ticketId}/related-links`, undefined, signal, relatedLinkListLazy,
+      ),
+    enabled: projectId > 0 && ticketId > 0,
+    staleTime: 30_000,
+  });
+}
 
 interface AddLinkVars {
   projectId: number;

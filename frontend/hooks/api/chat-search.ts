@@ -19,8 +19,8 @@ const chatPinsContract = lazyContract(() =>
 const chatThreadPageContract = lazyContract(() =>
   import("@/hooks/api/chat-schema").then((m) => m.chatThreadPageContract),
 );
-const chatMessageContract = lazyContract(() =>
-  import("@/hooks/api/chat-schema").then((m) => m.chatMessageContract),
+const chatSendResponseContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatSendResponseContract),
 );
 const chatSearchMessagesContract = lazyContract(() =>
   import("@/hooks/api/chat-schema").then((m) => m.chatSearchMessagesContract),
@@ -34,7 +34,6 @@ const chatSearchUsersContract = lazyContract(() =>
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
-  Message,
   AttachmentInput,
   PinnedMessage,
   ThreadPage,
@@ -42,6 +41,7 @@ import type {
   SearchChannelResult,
   SearchUserResult,
 } from "@/types/chat";
+import type { ChatSendResponse } from "@/hooks/api/chat-schema";
 import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
@@ -123,12 +123,14 @@ export function useSendThreadReply(channelId: number, parentMessageId: number) {
   const queryClient = useQueryClient();
   return useAuthorizedMutation("chat:messages:write", {
     mutationKey: ["chat", "thread", "reply"],
-    mutationFn: (body: { content?: string; attachments?: AttachmentInput[] }) =>
-      apiClient.post<Message>(
+    // The thread POST answers the raw row (`chatRawMessageSchema`), not the joined
+    // timeline shape, so it parses like the main send does.
+    mutationFn: (body: { content?: string; attachments?: AttachmentInput[]; clientKey?: string }) =>
+      apiClient.post<ChatSendResponse>(
         `/chat/channels/${channelId}/messages/${parentMessageId}/thread`,
         body,
         undefined,
-        chatMessageContract,
+        chatSendResponseContract,
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({

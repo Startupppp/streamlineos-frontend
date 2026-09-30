@@ -157,11 +157,13 @@ export function useMessageComposer({
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value; setMessageInput(value); e.target.style.height = "auto"; e.target.style.height = `${Math.min(e.target.scrollHeight, 160)}px`;
     if (value.trim() && Date.now() - lastTypingSent.current > 3000) { lastTypingSent.current = Date.now(); publishTyping(); }
-    const before = value.slice(0, e.target.selectionStart ?? value.length); const hash = before.match(/#([^\s]*)$/); const at = before.match(/@(\w*)$/);
+    const before = value.slice(0, e.target.selectionStart ?? value.length); const hash = before.match(/(?:^|\s)#([^\s]*)$/); const at = before.match(/(?:^|\s)@(\w*)$/);
     if (hash) { setShowTicketPicker(true); setTicketQuery(hash[1]); setTicketSelectedIndex(0); setShowMentions(false); setMentionQuery(""); }
     else { setShowTicketPicker(false); setTicketQuery(""); setShowMentions(!!at); setMentionQuery(at?.[1] ?? ""); setMentionIndex(0); }
   }, [publishTyping]);
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Enter that confirms an IME candidate belongs to the IME, not to send or insert.
+    if (e.nativeEvent.isComposing || e.keyCode === 229) return;
     if (showTicketPicker && (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Escape")) { e.preventDefault(); if (e.key === "Escape") setShowTicketPicker(false); else setTicketSelectedIndex((i) => Math.max(0, Math.min(i + (e.key === "ArrowDown" ? 1 : -1), 9))); return; }
     const mentions = filteredMentionsRef.current;
     if (showMentions && mentions.length) { if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); setMentionIndex((i) => (i + (e.key === "ArrowDown" ? 1 : -1) + mentions.length) % mentions.length); return; } if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); const user = mentions[mentionIndex]; insertMention(user.name ?? "", user.id); return; } if (e.key === "Escape") { setShowMentions(false); return; } }

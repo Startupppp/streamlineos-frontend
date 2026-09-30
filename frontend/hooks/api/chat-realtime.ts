@@ -6,7 +6,7 @@ import type { InboundMessage, ConnectionState, ConnectionStateChange } from "abl
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
-import { safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
+import { isForgedServerFrame, safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
 import { chatChannelName } from "@/lib/ably-channels";
 import type {
   Message,
@@ -18,6 +18,7 @@ import type { InfiniteData } from "@tanstack/react-query";
 import {
   messagePayloadSchema,
   messageUpdatedPayloadSchema,
+  messageEntitiesUpdatedPayloadSchema,
   messageDeletedPayloadSchema,
   reactionUpdatedPayloadSchema,
   typingPayloadSchema,
@@ -30,38 +31,16 @@ const CHAT_EVENTS = ["message", "typing", "message:updated", "message:deleted", 
 type ChatEvent = (typeof CHAT_EVENTS)[number];
 
 /**
- * The four events the SERVER is the only legitimate author of.
- *
- * The chat token grants each of the caller's own channels `["subscribe", "publish", "history"]`
- * (backend ably.service.ts `createChatTokenRequest`), and `publish` is not decoration — the
- * typing indicator is published from the browser. So any member of a channel can also publish
- * a `message` frame onto it, and this hook used to write `payload.senderId` and
- * `payload.senderName` straight into the message cache and into a desktop Notification: a
- * member could make a message appear, in every open window, attributed to a colleague, with
- * text they chose. Nothing was persisted, which is exactly what makes it hard to notice.
- *
- * The discriminator is `clientId`, which Ably stamps on a message from the identity in the
- * publisher's token and which a publisher cannot forge. The backend publishes over REST with
- * the API key and no `clientId` at all (`AblyService.publishChatMessage`/`publishChatEvent`),
- * so a server frame carries none — and a browser frame always carries one, because every chat
- * token is minted with `clientId: <userId>`. A frame on a server-authored event that arrives
- * WITH a clientId was published by a browser and is dropped.
+ * Server-authored events (see `isForgedServerFrame`) are dropped when a browser
+ * published them. `typing` is genuinely browser-published, so it may only speak
+ * for its own publisher.
  */
-const SERVER_AUTHORED_EVENTS: ReadonlySet<string> = new Set([
-  "message",
-  "message:updated",
-  "message:deleted",
-  "reaction:updated",
-]);
-
 export function isTrustedChatFrame(
   event: ChatEvent,
   clientId: string | undefined,
   declaredSenderId: string | undefined,
 ): boolean {
-  if (SERVER_AUTHORED_EVENTS.has(event)) return clientId === undefined || clientId === null;
-  // `typing` is genuinely published by a browser. It may only speak for its own publisher,
-  // so a frame whose payload names someone else is dropped rather than rendered.
+  if (event !== "typing") return !isForgedServerFrame(event, clientId);
   return clientId === undefined || clientId === null || clientId === declaredSenderId;
 }
 
@@ -200,6 +179,20 @@ export function useChatRealtime(channelId: number | null): {
 
         const newMessage = payloadToMessage(payload);
 
+        // Our own send: the optimistic copy (negative id) carries the same clientKey.
+        // Replace it in place instead of appending a second bubble.
+        const isOptimisticCopy = (m: Message) =>
+          m.id < 0 && !!payload.clientKey && m.clientKey === payload.clientKey;
+        if (allExisting.some(isOptimisticCopy)) {
+          return {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              messages: page.messages.map((m) => (isOptimisticCopy(m) ? newMessage : m)),
+            })),
+          };
+        }
+
         const pages = old.pages.map((page, idx) => {
           if (idx !== 0) return page;
           return { ...page, messages: [...page.messages, newMessage] };
@@ -230,11 +223,15 @@ export function useChatRealtime(channelId: number | null): {
     };
 
     const messageUpdatedHandler = (msg: InboundMessage) => {
+      const cacheKey = collaborationQueryKeys.chat.messages(channelId);
       const parsed = messageUpdatedPayloadSchema.safeParse(msg.data);
-      if (!parsed.success) return;
+      if (!parsed.success) {
+        if (messageEntitiesUpdatedPayloadSchema.safeParse(msg.data).success)
+          void queryClient.invalidateQueries({ queryKey: cacheKey });
+        return;
+      }
       const payload = parsed.data;
 
-      const cacheKey = collaborationQueryKeys.chat.messages(channelId);
       patchMessagesCache(queryClient, cacheKey, (m) => {
         if (m.id !== payload.id) return m;
         return {

@@ -29,6 +29,8 @@ import { useChatTypingText } from "./use-chat-typing-text";
 import { useMessageComposer } from "./use-message-composer";
 import { findOwnMember, resolveDirectPartner } from "./channel-member-lookup";
 
+const MARK_READ_DEBOUNCE_MS = 1_000;
+
 export interface MessagePanelProps {
   channelId: number;
   currentUserId: string;
@@ -248,6 +250,34 @@ export function useMessagePanelData({
       markRead.mutate({ channelId });
     }
   }, [channelId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // The open-time mark above runs once, so every message that lands while the
+  // reader is looking at the channel used to count as unread. Re-mark (debounced)
+  // whenever the newest message changes while the tab is visible, and again when
+  // the tab comes back into view.
+  const newestMessageId = messages.at(-1)?.id;
+  const markedNewestRef = useRef<{ channelId: number; messageId: number } | null>(null);
+  useEffect(() => {
+    if (channelId <= 0 || newestMessageId === undefined || newestMessageId < 0) return;
+    const marked = markedNewestRef.current;
+    // The first newest id seen for a channel is covered by the open-time mark.
+    if (marked?.channelId !== channelId) {
+      markedNewestRef.current = { channelId, messageId: newestMessageId };
+      return;
+    }
+    const mark = () => {
+      if (document.visibilityState !== "visible") return;
+      if (markedNewestRef.current?.messageId === newestMessageId) return;
+      markedNewestRef.current = { channelId, messageId: newestMessageId };
+      markRead.mutate({ channelId });
+    };
+    const timer = setTimeout(mark, MARK_READ_DEBOUNCE_MS);
+    document.addEventListener("visibilitychange", mark);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("visibilitychange", mark);
+    };
+  }, [channelId, newestMessageId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const { scrollContainerRef, messagesEndRef, showScrollBtn, scrollToBottom, handleScroll } = useChatScroll({
     channelId,
