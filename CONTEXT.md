@@ -4,9 +4,9 @@ The words this codebase uses for its own concepts, and what each one means
 *here*. A term in this file is the name to use in code, tests, PRDs and review
 comments; a synonym is a drift.
 
-> **Coverage:** the Ask OS lane (2026-09-19) and the Documents lane
-> (2026-09-26). Other domains are not yet written down. Add a section rather
-> than a parallel file.
+> **Coverage:** the Ask OS lane (2026-09-19), the Documents lane
+> (2026-09-26), and the Build lane (2026-10-01). Other domains are not yet
+> written down. Add a section rather than a parallel file.
 
 ---
 
@@ -323,3 +323,88 @@ corpus is empty; the two must never be conflated.
 
 The retrieval plan for a query — exact below the tenant's chunk threshold, ANN
 above it. Always inspectable on the result, never implicit.
+
+---
+
+## Build
+
+The **Build** module is the project-and-ticket delivery surface: it owns
+projects, tickets, cycles, automations, client portal projections, and the
+integrations that connect delivery work to external systems.
+
+Full architecture contract: [`docs/specs/build/module/07-architecture-integrations-prd.md`](docs/specs/build/module/07-architecture-integrations-prd.md).
+
+### Ticket
+
+The canonical work item. One row in `build.tickets`. Carries type (`BUG`,
+`TASK`, `STORY`, `EPIC`), status, priority, assignees, cycle membership,
+hierarchy, comments, attachments, and client visibility.
+
+*Avoid*: **issue**, **task**, and **card** as generic synonyms. Use **Ticket**
+for the row, the type name for a type-specific context.
+
+A Ticket's status is a foreign-keyed reference to `build.project_statuses`; the
+`applyTicketChange` module is the sole path for status transitions and enforces
+WIP limits, version CAS, and all downstream effects.
+
+### Cycle
+
+The canonical iteration record. Stored in `build.cycles`, routed at `/cycles`.
+The display label (`Sprint`, `Cycle`, or a custom term) is a per-project setting
+and never changes the API, storage, permission, or analytics identity.
+
+*Avoid*: **Sprint** as a storage or API term. The `SprintsService` exists but
+throws `GoneException` on all verbs — it is a compatibility tombstone, not an
+implementation.
+
+### Project
+
+A bounded delivery unit with its own members, settings, ticket workflow,
+integrations, and client portal configuration. A Project without a Managed
+Product is an organization-level project. There is no PM Workspace layer.
+
+### Build member
+
+An org-level Build role row in `build.build_members`. Distinct from project
+membership. Carries a Build role and `added_at`; has no PM Workspace
+relationship.
+
+### Portal grant
+
+Authorization for an external client contact to see a declared set of a
+Project's deliverables. Stored in `build.project_client_grants`. Status
+(`ACTIVE`) and `expires_at` are both enforced on every read and mutation — a
+grant past its expiry is refused regardless of its status column.
+
+The `client-portal/` module owns the grant lifecycle. Internal employee preview
+uses the same projection implementation after selecting a grant; it is not a
+separate projection.
+
+### Automation
+
+A rule that fires after a ticket or project event. Evaluation runs via
+`registerAfterCommit` so it never holds the originating transaction. The
+`core/automation/` module owns rule storage, run history, and loop guard.
+Automation *chooses when* a rule runs; the ticket mutation owner
+(`apply-ticket-change.ts`) decides *how* each change executes.
+
+### Webhook delivery
+
+A durable outbox row that carries a typed Build event to a customer HTTP
+endpoint. Written inside the originating transaction via `OutboxWriter.emit`.
+The outbox consumer drives retries; an HTTP 200 from the dispatch path does not
+mean delivered.
+
+### Change request
+
+A governance artifact that records the scope, impact, and approval of a
+production change. Follows the lifecycle `DRAFT → SUBMITTED → APPROVED /
+REJECTED`. Approved change requests may link affected tickets via
+`client-portal/change-request-affected-items.service.ts`.
+
+### Intake
+
+A Form-backed submission from an external source that converts to a Ticket via
+the Triage path. Forms owns intake definitions; Triage owns classification,
+duplicate detection, and conversion. The generic authenticated Intake routes
+are migrating to Forms + Triage (BLD-00 D08).

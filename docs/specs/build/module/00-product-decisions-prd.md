@@ -70,6 +70,13 @@ implementation can close.
 
 - [ ] **BLD-00-D03-A** schema, migrations, services, routes, nav, filters,
   reports, templates, automations, events, portal, and tests use one identity.
+  *Application cutover complete: `build.sprints` dropped
+  (`a-sprint-cycle-05-drop` APPLIED production 2026-09-22); `tickets.sprint_id`
+  removed; `frontend/hooks/api/build/sprints.ts` and
+  `frontend/types/projects/sprints.ts` deleted; `SprintsService` frozen at
+  `backend/src/modules/build/execution/sprints.service.ts` (all verbs throw
+  `GoneException`); `sprint-cycle-drop-invariant.spec.ts` guards regression.
+  Remaining open: portal and reports parity not yet fully verified.*
 
 ## D04 — Ticket BUG Is the Actionable Defect
 
@@ -83,6 +90,12 @@ implementation can close.
 
 - [ ] **BLD-00-D04-A** every QA bug field has a keep/migrate/drop mapping and no
   duplicate actionable lifecycle remains.
+  *Migration complete: `build.bugs` dropped (`b-qa-bug-05-contract-drop` APPLIED
+  production 2026-09-22); `build.work_item_qa_details` at
+  `backend/src/db/schema/build/qa.ts:141` is the QA-evidence extension on
+  canonical tickets; `BugsService` now routes all writes through
+  `BuildTicketCreationService`. Remaining open: full field-by-field parity
+  verification not yet documented.*
 
 ## D05 — Settings Paths Follow Scope Ownership
 

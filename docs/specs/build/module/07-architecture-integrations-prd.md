@@ -1,4 +1,4 @@
-# BLD-07 — Architecture and Cross-Module Integration PRD
+# BLD-07 — Build Architecture Contract
 
 > Acceptance reference only. Dispatch and status live in
 > [`Build execution`](../README.md); do not assign
@@ -11,20 +11,168 @@ StreamlineOS through explicit ownership, tenant-safe links, durable events, and
 permission-safe projections. It does not recreate CRM, Calendar, Meetings,
 Files, Knowledge, Timesheets, Accounting, Chat, Mail, Notifications, or Goals.
 
+---
+
+## Architecture contract
+
+### System diagram
+
+```mermaid
+flowchart TB
+  subgraph API["HTTP layer"]
+    CTL[Controllers]
+  end
+  subgraph CORE["core/ — mutation owners"]
+    AC["core/tickets/apply-ticket-change.ts (deep)"]
+    BUL["core/tickets/build-ticket-bulk-mutation.ts"]
+    PA["core/project-crud/project-access.ts (deep)"]
+  end
+  subgraph SUBS["collaboration sub-modules"]
+    CMT["core/tickets/ comments"]
+    CHK["core/tickets/ checklists"]
+    LNK["core/tickets/ links / relations"]
+  end
+  subgraph SIDE["side-effect owners"]
+    AUT["core/automation/ (after-commit)"]
+    WH["core/webhooks/ (outbox enqueue)"]
+    CP["client-portal/ (portal projection)"]
+    GOV["governance/ (change requests, approvals)"]
+  end
+  CTL --> AC
+  CTL --> BUL
+  CTL --> PA
+  CTL --> CMT
+  CTL --> CHK
+  CTL --> LNK
+  AC -->|OutboxWriter.emit tx| OB[(outbox)]
+  BUL -->|OutboxWriter.emitMany| OB
+  AC -->|registerAfterCommit| AUT
+  WH -->|OutboxWriter.emit tx| OB
+  OB --> NOT[Notifications module]
+  OB --> WH
+  CORE --> DB[(build.* tables)]
+  SIDE --> DB
+  DB --> RDS[(Redis cache)]
+```
+
+### Domain vocabulary
+
+See [CONTEXT.md §Build](../../../../CONTEXT.md#build) for definitions of the
+canonical terms. Short reference:
+
+| Term | One-line meaning |
+|---|---|
+| **Ticket** | Canonical work item; carries BUG, TASK, STORY, EPIC types |
+| **Cycle** | Canonical iteration record; display label is per-project setting |
+| **Project** | Bounded delivery unit with its own members, settings, workflow, integrations |
+| **Build member** | Org-level Build role row in `build.build_members` |
+| **Portal grant** | Authorization for an external contact to see a set of project deliverables |
+| **Automation** | Rule that fires after a ticket or project event via after-commit path |
+| **Webhook delivery** | Durable outbox row carrying a typed Build event to a customer HTTP endpoint |
+| **Change request** | Governance record of a production-change's scope, impact, and approval |
+| **Intake** | Form-backed submission that converts to a Ticket via Triage |
+| **Cycle scope event** | Append-only log of ticket additions and removals from a Cycle |
+
+### Module ownership map
+
+| Module path | Canonical owner of |
+|---|---|
+| `core/tickets/apply-ticket-change.ts` | Ticket status, WIP limits, version, and every downstream effect |
+| `core/tickets/build-ticket-bulk-mutation.ts` | Batch ticket transitions; shares effect interface with above |
+| `core/project-crud/project-access.ts` | Project reachability (owner, manager, member, team); sole caller of membership tables for this decision |
+| `core/automation/` | Automation rule evaluation, run history, loop guard; runs after-commit |
+| `core/webhooks/` | Webhook configuration, signing, delivery enqueue |
+| `core/releases/` | Release lifecycle, `build.release_published` outbox event |
+| `core/settings/` | Project settings, iteration configuration |
+| `client-portal/` | Portal grant lifecycle, external projection, change-request affected items |
+| `governance/` | Change requests, approval routing |
+| `execution/` | Cycle (iteration) CRUD, workload-capacity |
+| `lifecycle/` | Restore and retention purge |
+| `qa/` | QA test suites, test cases, runs; defect details via `build.work_item_qa_details` |
+
+### State transitions
+
+**Ticket workflow** — `applyTicketChange` (`core/tickets/apply-ticket-change.ts`)
+enforces per-project custom statuses, WIP limits, and version CAS on every
+status move regardless of origin (manual / automation / git). Status is a
+foreign-keyed reference to `build.project_statuses`; moving to an unknown
+status raises 400.
+
+**Portal grant** — `ACTIVE` → `REVOKED`. Revocation is immediate; every list,
+detail, download, and mutation enforces `expires_at IS NULL OR expires_at >
+now()` at query time — expiry is not a UI-only label. Source: `client-portal/`
+and `BLD-00 D10`.
+
+**Change request** — `DRAFT` → `SUBMITTED` → `APPROVED` / `REJECTED`. Approved
+change requests may link affected tickets; `client-portal/change-request-
+affected-items.service.ts` owns the link set.
+
+**Webhook delivery** — `PENDING` → `DELIVERED` / `FAILED` → `DEAD_LETTER`.
+Every delivery starts as an outbox row written inside the originating
+transaction; the outbox consumer drives retries. An acknowledged HTTP 200 from
+the dispatch service does not mean delivered — only a confirmed outbox consumer
+completion does.
+
+### Execution mode map
+
+| Effect | Mode | File |
+|---|---|---|
+| Ticket write (status, fields, version) | In-transaction | `core/tickets/apply-ticket-change.ts` |
+| Ticket status event | Outbox `OutboxWriter.emit(tx, …)` | `core/tickets/apply-ticket-change.ts:355` |
+| Bulk ticket events | Outbox `OutboxWriter.emitMany` | `core/tickets/build-ticket-batch-workflow.ts:36` |
+| Automation run | After-commit `registerAfterCommit` | `core/automation/build-automation-runner.service.ts:286` |
+| Automation run history | After-commit (inside automation run) | `core/automation/build-automation-run-history.service.ts` |
+| Webhook delivery enqueue | Outbox `OutboxWriter.emit(tx, …)` | `core/webhooks/projects-webhooks-dispatch.service.ts` |
+| Release published event | Outbox `OutboxWriter.emit(tx, …)` | `core/releases/projects-releases.service.ts:172` |
+| Approval notification | Outbox + after-commit | `approvals/approvals.service.ts:133,161` |
+| Ticket relations event | Outbox `OutboxWriter.emit(tx, …)` | `core/tickets/projects-ticket-relations.service.ts:221` |
+| Cache invalidation | After-commit (namespace) | Per-service via `CacheService.invalidateNamespace` |
+
+The selection rule (BE-83): atomic DB writes go in-transaction; work that must
+not be lost on crash goes through the outbox; work that must not run unless the
+transaction committed uses `registerAfterCommit`.
+
+### Dependency failure behavior
+
+| Dependency | Failure mode | Build behavior |
+|---|---|---|
+| Redis | Unavailable or timeout | Cache miss; DB read executes; no user-visible error unless the read also fails |
+| Outbound webhook endpoint | Timeout / 4xx / 5xx | Outbox row retried with exponential backoff; DEAD_LETTER after max attempts; original request already returned 200 |
+| Git inbound event (GitHub) | Bad signature / parse failure | Webhook HTTP response withheld until durable receipt verified; failure leaves event retryable at source |
+| Git provider (Bitbucket) | Not implemented | Removed from schema, types, and selectors per D12 until the contract exists |
+| AI provider | Unavailable / credit-exhausted | Credit reservation refunded atomically; deterministic non-AI response returned (BE-93) |
+| Notification module | Consumer lag | Outbox row durable; consumer retries independently; delivery is eventually-consistent |
+
+### Capacity assumptions
+
+| Parameter | Value | Source |
+|---|---|---|
+| List page cap | 100 rows | `common/pagination/list-query.schema.ts:4` (`PAGE_SIZE_CAP = 100`) |
+| DB pool per process | 10 connections default on RDS | `backend/src/db/pool.config.ts:378` (`DB_POOL_MAX`) |
+| Concurrency ceiling | `DB_POOL_MAX` = max concurrent in-flight requests | `common/admission/admission.config.ts:3` |
+| Automation lists | 100-row cap per `GET /build/:id/automations` | `common/pagination/list-query.schema.ts` via `PAGE_SIZE_CAP` |
+| Ticket WIP | Per-project custom, enforced at mutation | `core/tickets/apply-ticket-change.ts` |
+| Outbox delivery deadline | Derived from `resolveTransactionGuards` | `common/outbox/outbox-delivery-deadline.ts` |
+
+---
+
 ## Current Architecture Findings
 
-- `sprints` and `cycles` are separate tables with overlapping project, name,
-  dates, status, and ticket-assignment responsibilities.
-- tickets store both `sprintId` and `cycleId`, and the UI exposes both filters
-  and routes.
-- project automation is represented by both `/automations` and
+- `sprints` and `cycles` were separate tables. **Resolved:** Sprint/Cycle
+  contraction complete; see Stage D in `06-prioritized-backlog.md`.
+- tickets stored both `sprintId` and `cycleId`. **Resolved:** `tickets.sprint_id`
+  removed by migration `a-sprint-cycle-04-detach`; `SprintsService` frozen with
+  `GoneException` (`build/execution/sprints.service.ts`).
+- project automation was represented by both `/automations` and
   `/project-automations`.
 - project Calendar, Gantt, Timeline, saved Views, Workflow, Integrations,
   Webhooks, Members, AI, agent policy, and agent credentials are split across
   operational and configuration routes with overlapping ownership.
 - product roadmap and project roadmap can present the same term for different
   jobs.
-- QA bugs and ticket type `BUG` can create dual work-item lifecycles.
+- QA bugs and ticket type `BUG` had dual work-item lifecycles. **Resolved:**
+  `build.bugs` dropped; `build.work_item_qa_details` is the QA-evidence
+  extension on canonical tickets (`backend/src/db/schema/build/qa.ts:141`).
 - generic project Intake overlaps configurable Forms plus Triage, while
   Analytics overlaps the Agile Reports surface.
 - **Resolved 2026-09-23:** PM Workspace is removed entirely (BLD-00 D01), not
@@ -63,14 +211,23 @@ Normative BLD-00 contract:
 - one ticket relation, one permission family, one filter, one analytics owner;
 - cadence, completion, carry-over, velocity, and events use the same record.
 
-- [ ] **BLD-07-001** inventory live Sprint/Cycle rows, links, analytics,
+- [x] **BLD-07-001** inventory live Sprint/Cycle rows, links, analytics,
   templates, automations, views, notifications, and portal projections.
-- [ ] **BLD-07-002** define deterministic merge/mapping rules and conflict
+  *Evidence: pre-migration inventory drove `1197_build_cycle_permissions.sql`
+  and the phase-D migration series; verified 2026-09-23 on production.*
+- [x] **BLD-07-002** define deterministic merge/mapping rules and conflict
   report before migration.
-- [ ] **BLD-07-003** backfill and cutover preserve IDs or provide a complete
+  *Evidence: `backend/src/modules/build/phase-2/sprint-cycle-detach-invariant.spec.ts`
+  pins the invariant; merge rules documented in `06-prioritized-backlog.md` Stage D.*
+- [x] **BLD-07-003** backfill and cutover preserve IDs or provide a complete
   reference map.
-- [ ] **BLD-07-004** delete duplicate columns, tables, services, permissions,
+  *Evidence: migration `a-sprint-cycle-04-detach` detached sprint_id; `cycles.legacy_sprint_id`
+  preserved as audit column; production read-back 2026-09-23 confirmed 103 of 220 tickets retain cycle.*
+- [x] **BLD-07-004** delete duplicate columns, tables, services, permissions,
   routes, hooks, types, and tests after verified cutover.
+  *Evidence: `build.sprints` dropped (`a-sprint-cycle-05-drop` APPLIED); frontend
+  `sprints.ts` and `sprints.types.ts` deleted; `SprintsService` frozen with
+  `GoneException`; `sprint-cycle-drop-invariant.spec.ts` guards against regression.*
 
 ### Defect
 
@@ -82,10 +239,19 @@ Normative BLD-00 contract:
   lifecycle;
 - QA views are filtered projections, not duplicate bug records.
 
-- [ ] **BLD-07-005** compare every QA bug field and behavior with ticket BUG.
-- [ ] **BLD-07-006** migrate unique QA evidence to an extension/relation owned
+- [x] **BLD-07-005** compare every QA bug field and behavior with ticket BUG.
+  *Evidence: field-mapping analysis preceded migration `b-qa-bug-04-contract-freeze`
+  and `b-qa-bug-05-contract-drop`; result documented in `06-prioritized-backlog.md` Stage B.*
+- [x] **BLD-07-006** migrate unique QA evidence to an extension/relation owned
   by QA and link it to the canonical ticket.
-- [ ] **BLD-07-007** remove independent duplicate mutation and route owners.
+  *Evidence: `backend/src/db/schema/build/qa.ts:141` — `build.work_item_qa_details`
+  FK-linked to `tickets` (`fk_work_item_qa_details_org_project_item`); `b-qa-bug-05-contract-drop`
+  dropped `build.bugs` and `test_run_results.linked_bug_id`.*
+- [x] **BLD-07-007** remove independent duplicate mutation and route owners.
+  *Evidence: `build/qa/bugs.service.ts` now routes all writes through
+  `BuildTicketCreationService` and `tickets` + `workItemQaDetails`; no
+  `from(bugs)` / `insert(bugs)` / `update(bugs)` / `delete(bugs)` in non-test,
+  non-migration source (`06-prioritized-backlog.md` historical table).*
 
 ### Roadmap and Planning
 
@@ -301,6 +467,7 @@ queues and records remain on operational pages.
 - [ ] **BLD-07-A02** Sprint/Cycle, bug/ticket, automation, roadmap, calendar,
   view, workflow, and integration duplications are resolved or explicitly
   proven distinct.
+  *Sprint/Cycle and QA Bug: complete (BLD-07-001 through 007 above). Others: open.*
 - [ ] **BLD-07-A03** integration contract tests pass with real module APIs and
   tenant/access isolation.
 - [ ] **BLD-07-A04** durable event retry/replay and provider-failure tests pass.

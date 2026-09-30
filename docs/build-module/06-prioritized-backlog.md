@@ -126,6 +126,12 @@ database over a read-only IAM connection on 2026-09-22:
 
 The contraction is **complete**. It was executed on 2026-09-22 against production over IAM auth after the merged code was deployed. The durable postconditions are summarized in [RELEASE-STATUS.md](./RELEASE-STATUS.md) and the procedure is retained in [MIGRATION-RUNBOOK.md](./MIGRATION-RUNBOOK.md).
 
+**BLD-07 normative row reconciliation (2026-10-01):** BLD-07-001 through
+BLD-07-007 (Sprint/Cycle iteration and QA Bug defect) are now marked `[x]` in
+`docs/specs/build/module/07-architecture-integrations-prd.md` with file-path
+evidence. BLD-00-D03-A and BLD-00-D04-A carry inline evidence notes in
+`00-product-decisions-prd.md`.
+
 **Re-verified independently here on 2026-09-23** over a read-only IAM connection inside a
 `SET TRANSACTION READ ONLY` transaction: 13 catalog assertions confirmed the applied state, including the phase 06 rename. Post-state: 220 tickets, 103 with a
 cycle, 44 of type `BUG`, 5 cycles, 4 archived sprints, migration ledger at 913.
