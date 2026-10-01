@@ -29,7 +29,7 @@ export function BurnupSection({ projectId }: { projectId: number }) {
   const velocity = useVelocityReport(projectId);
   const [cycleId, setCycleId] = useState<number | undefined>(undefined);
 
-  const cycles = velocity.data?.pages.flatMap((page) => page.data) ?? [];
+  const cycles = velocity.data ?? [];
   const activeCycleId =
     cycles.length > 0 ? cycles[cycles.length - 1].cycleId : undefined;
   const selectedCycleId = cycleId ?? activeCycleId;

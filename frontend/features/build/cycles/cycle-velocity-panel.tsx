@@ -14,7 +14,7 @@ const VelocityChart = dynamic(
 
 export function CycleVelocityPanel({ projectId }: { projectId: number }) {
   const { data, isLoading, isError } = useVelocityReport(projectId);
-  const cycles = data?.pages.flatMap((page) => page.data) ?? [];
+  const cycles = data ?? [];
 
   return (
     <section className="space-y-3" aria-labelledby="cycle-velocity-heading">
