@@ -81,7 +81,8 @@ export default async function ArticlePage({ params }: Params) {
           <h1 className="mt-4 break-words font-journal text-4xl leading-tight text-journal-ink sm:text-5xl">{article.title}</h1>
           {article.standfirst ? <p className="mt-5 font-journal text-xl text-journal-muted">{article.standfirst}</p> : null}
           <p className="mt-6 text-sm text-journal-muted">
-            {article.author ? <>By <Link href={`/blogs/author/${article.author.slug}`} className="text-journal-ink underline-offset-4 hover:underline">{article.author.name}</Link><span aria-hidden> · </span></> : null}
+            {/* Underlined, not only a darker ink: inside a line of text, colour alone fails WCAG 1.4.1. */}
+            {article.author ? <>By <Link href={`/blogs/author/${article.author.slug}`} className="text-journal-ink underline underline-offset-4">{article.author.name}</Link><span aria-hidden> · </span></> : null}
             {article.publishedAt ? <time dateTime={article.publishedAt}>{formatJournalDate(article.publishedAt)}</time> : null}
             {isMeaningfulUpdate(article.publishedAt, article.modifiedAt) && article.modifiedAt ? (
               <><span aria-hidden> · </span>Updated <time dateTime={article.modifiedAt}>{formatJournalDate(article.modifiedAt)}</time></>

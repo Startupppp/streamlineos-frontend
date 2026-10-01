@@ -25,7 +25,8 @@ export function PostCard({ post, headingLevel = 3 }: { post: BlogCard; headingLe
       </Heading>
       <p className="mt-2 line-clamp-3 text-journal-muted">{post.excerpt}</p>
       <p className="mt-3 text-sm text-journal-muted">
-        {post.author ? <Link href={`/blogs/author/${post.author.slug}`} className="text-journal-ink hover:underline">{post.author.name}</Link> : null}
+        {/* Underlined, not only a darker ink: inside a line of text, colour alone fails WCAG 1.4.1. */}
+        {post.author ? <Link href={`/blogs/author/${post.author.slug}`} className="text-journal-ink underline underline-offset-4">{post.author.name}</Link> : null}
         {post.author && post.publishedAt ? <span aria-hidden> · </span> : null}
         {post.publishedAt ? <time dateTime={post.publishedAt}>{formatJournalDate(post.publishedAt)}</time> : null}
         <span aria-hidden> · </span>
