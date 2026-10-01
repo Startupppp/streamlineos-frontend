@@ -3,6 +3,11 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { ClientPortalManagementPage as PortalPage } from "./client-portal-management-page";
 
+const mockIsApiError = jest.fn((_e: unknown): _e is { status: number } => false);
+jest.mock("@/lib/api-envelope", () => ({
+  isApiError: (e: unknown) => mockIsApiError(e),
+}));
+
 jest.mock("framer-motion", () => ({
   motion: {
     div: ({ children, ...rest }: React.HTMLAttributes<HTMLDivElement>) => (
@@ -309,6 +314,7 @@ const GRANTS_PAGE = {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockIsApiError.mockReturnValue(false);
   currentSearch = new URLSearchParams();
   capturedTabOnValueChange = undefined;
   mockUseCan.mockReturnValue(true);
@@ -698,5 +704,26 @@ describe("ClientPortalManagementPage — tab navigation writes the section param
     render(<ClientPortalManagementPage projectId={1} />);
     const activeTabEl = document.querySelector("[data-active-tab]");
     expect(activeTabEl?.getAttribute("data-active-tab")).toBe("preview");
+  });
+});
+
+describe("ClientPortalManagementPage — preview section 404 vs generic error (FE-78, FE-122)", () => {
+  it("shows 'No portal published yet' when the preview returns a 404 (no active grant)", () => {
+    const err = { status: 404 };
+    mockIsApiError.mockImplementation((e) => e === err);
+    mockUsePortalPreview.mockReturnValue(baseQuery({ isError: true, error: err }));
+    const { ClientPortalManagementPage } = require("./client-portal-management-page");
+    render(<ClientPortalManagementPage projectId={1} />);
+    expect(screen.getByText("No portal published yet")).toBeInTheDocument();
+  });
+
+  it("NEGATIVE — shows 'Preview unavailable' for a non-404 API error, not the no-grant message", () => {
+    const err = { status: 500 };
+    mockIsApiError.mockImplementation((e) => e === err);
+    mockUsePortalPreview.mockReturnValue(baseQuery({ isError: true, error: err }));
+    const { ClientPortalManagementPage } = require("./client-portal-management-page");
+    render(<ClientPortalManagementPage projectId={1} />);
+    expect(screen.getByText("Preview unavailable")).toBeInTheDocument();
+    expect(screen.queryByText("No portal published yet")).toBeNull();
   });
 });
