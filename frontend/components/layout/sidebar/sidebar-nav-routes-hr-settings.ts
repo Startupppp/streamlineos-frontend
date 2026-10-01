@@ -1,4 +1,4 @@
-import { LayoutDashboard, FileText, ClipboardList, History, SlidersHorizontal, Sliders, FileSearch, LayoutTemplate, Workflow, Plug, GitBranch, ShieldCheck, Lock, Share2, Sparkles, TrendingUp, Shield, Scale, ShieldAlert } from "lucide-react";
+import { FileText, ClipboardList, History, SlidersHorizontal, Sliders, FileSearch, LayoutTemplate, Workflow, Plug, GitBranch, ShieldCheck, Lock, Share2, Sparkles, TrendingUp, Shield, Scale, ShieldAlert } from "lucide-react";
 import type { NavRoute } from "./sidebar-nav-types";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 
@@ -29,13 +29,6 @@ export const HR_SETTINGS_ROUTES: NavRoute[] = [
         exact: true,
         requiredPermission: HR_SETTINGS_PERMISSIONS,
         children: [
-          {
-            label: "Overview",
-            icon: LayoutDashboard,
-            href: "/hr/settings",
-            exact: true,
-            requiredPermission: HR_SETTINGS_PERMISSIONS,
-          },
           {
             label: "Import / Export",
             icon: FileText,
