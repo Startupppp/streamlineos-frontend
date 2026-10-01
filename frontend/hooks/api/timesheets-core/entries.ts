@@ -86,6 +86,37 @@ export function useCreateTimesheetEntry() {
   });
 }
 
+export interface CopyEntriesResult {
+  created: number;
+  failed: number;
+}
+
+/**
+ * Copies a batch of entries one at a time. Looping `useCreateTimesheetEntry`
+ * instead would fire a toast and a week-wide invalidation per row, so a 20-row
+ * copy meant 20 toasts and 20 refetches; here the caller reports once.
+ */
+export function useCopyTimesheetEntries() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("timesheets:entries:create", {
+    mutationKey: ["timesheets", "entries", "copy"],
+    mutationFn: async (rows: CreateEntryInput[]): Promise<CopyEntriesResult> => {
+      let created = 0;
+      let failed = 0;
+      for (const row of rows) {
+        try {
+          await apiClient.post<TimesheetEntry>("/timesheets/entries", row, undefined, entryC);
+          created += 1;
+        } catch {
+          failed += 1;
+        }
+      }
+      return { created, failed };
+    },
+    onSettled: () => invalidateWeekReads(qc),
+  });
+}
+
 export function useDraftEntriesFromAttendance() {
   const qc = useQueryClient();
   return useMutation({

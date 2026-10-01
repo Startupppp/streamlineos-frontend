@@ -10,18 +10,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyReportIllustration } from "@/components/illustrations";
-import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
-import { cn } from "@/lib/utils";
 import { useCan } from "@/hooks/api/access";
 import { useReportsOverview } from "@/hooks/api/timesheets-core/reports";
 import { AiActionsMenu, type AiAction } from "@/components/ai/ai-actions-menu";
@@ -72,6 +63,10 @@ export function ReportsView() {
 
   const startDate = searchParams.get("start") ?? defaults.start;
   const endDate = searchParams.get("end") ?? defaults.end;
+  // Still honoured so an existing deep link keeps filtering; there is no
+  // control that sets it. The picker that used to sit in the filter row offered
+  // "All members" and nothing else - no member list was ever loaded - so it
+  // promised a filter it could not apply. It comes back when it has options.
   const userId = searchParams.get("userId") ?? undefined;
   const activeTab = searchParams.get("tab") ?? "overview";
 
@@ -94,10 +89,6 @@ export function ReportsView() {
     [updateParams],
   );
 
-  const handleUserChange = useCallback(
-    (value: string) => updateParams({ userId: value === "ALL" ? null : value }),
-    [updateParams],
-  );
 
   const handleTabChange = useCallback(
     (value: string) =>
@@ -163,17 +154,6 @@ export function ReportsView() {
         to={endDate}
         onChange={handleDateRangeChange}
       />
-      <Select value={userId ?? "ALL"} onValueChange={handleUserChange}>
-        <SelectTrigger
-          className={cn(FILTER_SELECT_TRIGGER, "w-[160px]")}
-          aria-label="Filter by member"
-        >
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-          <SelectItem value="ALL">All members</SelectItem>
-        </SelectContent>
-      </Select>
     </>
   );
 

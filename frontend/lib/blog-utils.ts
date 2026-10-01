@@ -1,4 +1,3 @@
-import { format } from "date-fns";
 
 export interface TocItem {
   id: string;
@@ -17,13 +16,6 @@ function stripHtml(html: string): string {
     .replace(/&#39;/g, "'")
     .replace(/\s+/g, " ")
     .trim();
-}
-
-export function formatBlogDate(date: Date | string | null | undefined): string {
-  if (!date) return "";
-  const d = typeof date === "string" ? new Date(date) : date;
-  if (Number.isNaN(d.getTime())) return "";
-  return format(d, "MMMM d, yyyy");
 }
 
 function slugifyHeading(text: string): string {

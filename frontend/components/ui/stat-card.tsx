@@ -155,14 +155,19 @@ export interface StatCardGridProps {
    * screen puts the third card off screen behind a hidden scrollbar. Opt in
    * where the cards are the page's headline numbers and none of them may be
    * missed — a scroll a reader does not know to make is a card they never see.
+   *
+   * Pass `2` for a row of five, where one column is 370px of stat cards above
+   * the table the page is actually for. Two-up shows every label in half the
+   * height.
    */
-  stackOnMobile?: boolean;
+  stackOnMobile?: boolean | 2;
 }
 
 export interface StatCardGridSkeletonProps {
   cols?: 2 | 3 | 4 | 5 | 6;
   count?: number;
   className?: string;
+  stackOnMobile?: boolean | 2;
 }
 
 /**
@@ -223,8 +228,10 @@ export function StatCardGrid({
         OVERFLOW_EDGE_FADE_CLASS,
         // The template has to reach the element as a class, not as an inline
         // style, or the `sm:` breakpoint below could never win against it.
-        stackOnMobile &&
+        stackOnMobile === true &&
           "grid-cols-1 sm:[grid-template-columns:var(--stat-card-grid-template)]",
+        stackOnMobile === 2 &&
+          "grid-cols-2 sm:[grid-template-columns:var(--stat-card-grid-template)]",
         className,
       )}
       style={
@@ -265,10 +272,11 @@ export function StatCardGridSkeleton({
   cols = 4,
   count,
   className,
+  stackOnMobile,
 }: StatCardGridSkeletonProps) {
   const itemCount = count ?? cols;
   return (
-    <StatCardGrid cols={cols} className={className}>
+    <StatCardGrid cols={cols} className={className} stackOnMobile={stackOnMobile}>
       {Array.from({ length: itemCount }).map((_, i) => (
         <StatCardSkeleton key={i} />
       ))}

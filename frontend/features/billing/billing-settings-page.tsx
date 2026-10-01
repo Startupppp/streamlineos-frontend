@@ -39,17 +39,23 @@ function BillingPageContent() {
         onValueChange={handleTabChange}
         className="flex flex-col flex-1 min-h-0 gap-0"
       >
+        {/*
+          The three labels alone fill a 390px tab strip; with their icons the
+          third one is cut in half and reads as a broken control even though the
+          strip scrolls (SETTINGS-011). The icons are decoration here — the
+          labels say the same thing — so they stand down below `sm`.
+        */}
         <TabsList className="mb-4">
           <TabsTrigger value="plan">
-            <CreditCard className="h-3.5 w-3.5" />
+            <CreditCard className="h-3.5 w-3.5 max-sm:hidden" />
             Plan
           </TabsTrigger>
           <TabsTrigger value="payments">
-            <Receipt className="h-3.5 w-3.5" />
+            <Receipt className="h-3.5 w-3.5 max-sm:hidden" />
             Invoices & Payments
           </TabsTrigger>
           <TabsTrigger value="profile">
-            <Building2 className="h-3.5 w-3.5" />
+            <Building2 className="h-3.5 w-3.5 max-sm:hidden" />
             Billing Profile
           </TabsTrigger>
         </TabsList>

@@ -6,6 +6,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { useCan } from "@/hooks/api/access";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 import type { ReportOverview } from "@/features/timesheets/report-types";
 import type {
@@ -51,6 +52,11 @@ export function useReportsOverview(query: OverviewQuery = {}, enabled = true) {
     staleTime: 60_000,
     placeholderData: (prev) => prev,
     enabled: enabled && canView,
+    // Primary read on Reports, which renders its own ErrorState; satellite on
+    // Team, where it only feeds one stat card. Either way its failure belongs
+    // inline - thrown to the boundary it takes down the whole Team route for
+    // the sake of a billable percentage.
+    ...INLINE_READ_ERROR,
   });
 }
 
