@@ -27,12 +27,14 @@ Current evidence and reopenings: [Architecture verification, 2026-09-27](./ARCHI
 
 ## Retired 2026-10-01
 
-By owner decision, every ticket re-verified against current code and production was deleted. 60 tickets passed; their files and evidence are recoverable with `git log --diff-filter=D -- docs/build-module/tickets/`. Five remain open:
+By owner decision, every ticket re-verified against current code and production was deleted. 60 tickets passed; their files and evidence are recoverable with `git log --diff-filter=D -- docs/build-module/tickets/`. Eight remain open:
 
 | Ticket | Open criterion |
 |---|---|
 | 01 | 13 deep imports into `build/core` internals remain outside `core/` |
 | 10 | Gallery visual parity needs a browser check |
+| 50, 51 | Batch pages unchanged visibly needs a browser check |
+| 55 | Gallery visual cases reachable needs a browser check |
 | 33 | Velocity report pages once; infinite scroll missing |
 | 47 | 11 of 14 project-scoped lists lack server search |
 | 48 | Org-scoped lists lack server search |
