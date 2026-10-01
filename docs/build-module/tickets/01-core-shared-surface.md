@@ -4,7 +4,7 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** done except fenced-territory callers (see box 2 below)
+**Status:** done
 
 **Architecture constraint (2026-09-27):** This is a backend module interface, not permission to
 create another frontend hooks barrel. Export only intentionally shared contracts/helpers, keep
@@ -21,6 +21,7 @@ barrel. A directory move or barrel by itself does not make private symbols inacc
   - Three files acquired duplicate `"../core"` specifiers from the mechanical rewrite (`execution/epics.service.ts`, `execution/workspace.service.ts`, `forms/submissions.service.ts`) and were merged to one import each — worth noting because a mass import rewrite in this repo has previously injected an import inside another import statement.
   - `meetings-cycle-bridge.spec.ts` was the one case needing judgement: it keeps its leaf `jest.mock("../core/project-access")` while importing the barrel. The mock propagates through the re-export, so the seam still works — verified by running it, **11/11**, rather than by reasoning about it.
   - `pnpm typecheck`: **38 errors, all in peer-owned `src/modules/kb`** and none in Build. `check:module-registration`: 260 of 260 modules reachable.
+  - **Re-verified 2026-10-01.** The original measurement grep used `grep -v 'from "\.\./core/tickets"'` which prefix-matched and silently excluded deep sub-paths like `../core/tickets/ticket-version-conflict.exception`. A re-run with a stricter grep found 16 deep imports in build siblings (including 3 in `build.module.ts` that regressed from a peer merge) plus 8 in external modules (`dashboard`, `common/pagination`, `src/test`, `test/security/rbac-matrix`). All 24 are now fixed. Added 13 symbols to `core/index.ts` barrel. Gate `check:build-core-surface` extended with `findDeepCoreImports` applied to the full repo scan, handling both relative (`../`) and absolute (`src/`) specifiers; self-test passes at 31 pattern checks. `pnpm check:build-core-surface` → **OK — 356 sibling files, 9514 repo files, 0 violations**. `pnpm check:cycles` (madge, 9232 files) → **no circular dependency**. `check:module-registration` → **260/260**. `pnpm typecheck` → 1 error in peer-owned `src/scripts/probe-ask-os-live.ts`. `tsconfig.test.json` → 8 errors in peer-owned `src/modules/kb`. `pnpm jest --testPathPattern="toggle-visibility-version-cas|timesheets-logtime|portfolios-link|programs-link|update-bug-version-cas|list-query.schema.spec|removed-speculative"` → all pass. `epics-wip-capacity` 4 failures are pre-existing (`ProjectsTicketsUpdateService` not wired in that test module before this session). `build-delete-restore` 1 failure is pre-existing (`ticketDelete.deleteTicket` stub incomplete before this session). Backend commit: `c07ad7820`.
 - [x] Symbols that remain internal are not reachable from outside core
 - [x] No behaviour change: module registration and every route are untouched
 - [x] A focused dependency-cycle/boundary check and module-wiring tests pass after the moves; no internal-to-public-barrel back edge is introduced
