@@ -136,7 +136,7 @@ function ConfirmationLive({
           type="button"
           size="sm"
           isPending={isPending}
-          disabled={expired}
+          disabled={expired || cancelPending}
           onClick={handleConfirm}
           className="h-7 px-2.5 text-xs"
         >

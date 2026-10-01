@@ -31,10 +31,11 @@ jest.mock("@/components/markdown/markdown-content", () => ({
 
 const mutate = jest.fn();
 const declineMutate = jest.fn();
+const declineState = { isPending: false };
 
 jest.mock("@/hooks/api/ai-confirm-action", () => ({
   useConfirmAction: () => ({ mutate, isPending: false }),
-  useDeclineProposal: () => ({ mutate: declineMutate, isPending: false }),
+  useDeclineProposal: () => ({ mutate: declineMutate, isPending: declineState.isPending }),
 }));
 
 jest.mock("sonner", () => ({
@@ -343,5 +344,103 @@ describe("discarding a proposal releases it on the server instead of only hiding
     await userEvent.click(await screen.findByRole("button", { name: "Discard" }));
 
     expect(screen.getByText("Cancelled.")).toBeInTheDocument();
+  });
+});
+
+describe("while a decline is in flight the card cannot also be confirmed", () => {
+  beforeEach(() => {
+    declineMutate.mockReset();
+    mutate.mockReset();
+    declineState.isPending = true;
+  });
+
+  afterEach(() => {
+    declineState.isPending = false;
+  });
+
+  it("disables Confirm as well as Discard, because the token stays live for the whole round-trip and clicking Grant would race the decline", async () => {
+    render(
+      <AskOsBubble
+        role="assistant"
+        content="Here is the bonus."
+        streaming={false}
+        reduce={false}
+        directives={[bonusDirective]}
+      />,
+    );
+
+    expect(await screen.findByRole("button", { name: "Discarding\u2026" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Confirm" })).toBeDisabled();
+  });
+
+  it("fires no confirm when Grant is clicked during the decline, so the action cannot run after the user chose to discard", async () => {
+    render(
+      <AskOsBubble
+        role="assistant"
+        content="Here is the bonus."
+        streaming={false}
+        reduce={false}
+        directives={[bonusDirective]}
+      />,
+    );
+
+    await userEvent.click(await screen.findByRole("button", { name: "Confirm" }));
+
+    expect(mutate).not.toHaveBeenCalled();
+  });
+});
+
+describe("a proposal the server has already settled stops being offered", () => {
+  beforeEach(() => {
+    declineMutate.mockReset();
+    declineState.isPending = false;
+  });
+
+  it.each([404, 409])(
+    "dismisses the card on %i, because the row is gone or no longer PROPOSED and re-offering it only repeats the toast",
+    async (status) => {
+      declineMutate.mockImplementation(
+        (_id: number, opts: { onError: (e: unknown) => void }) => {
+          opts.onError(Object.assign(new Error("already settled"), { status }));
+        },
+      );
+
+      render(
+        <AskOsBubble
+          role="assistant"
+          content="Here is the bonus."
+          streaming={false}
+          reduce={false}
+          directives={[bonusDirective]}
+        />,
+      );
+
+      await userEvent.click(await screen.findByRole("button", { name: "Discard" }));
+
+      expect(screen.getByText("Cancelled.")).toBeInTheDocument();
+    },
+  );
+
+  it("keeps the card up on a 500, because a server fault is not evidence the proposal was released", async () => {
+    declineMutate.mockImplementation(
+      (_id: number, opts: { onError: (e: unknown) => void }) => {
+        opts.onError(Object.assign(new Error("boom"), { status: 500 }));
+      },
+    );
+
+    render(
+      <AskOsBubble
+        role="assistant"
+        content="Here is the bonus."
+        streaming={false}
+        reduce={false}
+        directives={[bonusDirective]}
+      />,
+    );
+
+    await userEvent.click(await screen.findByRole("button", { name: "Discard" }));
+
+    expect(screen.queryByText("Cancelled.")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Discard" })).toBeInTheDocument();
   });
 });
