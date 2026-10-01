@@ -297,7 +297,6 @@ export interface ChannelFile {
   id: number;
   messageId: number;
   fileName: string;
-  fileUrl: string;
   fileKey: string;
   fileSize: number;
   mimeType: string;
@@ -308,7 +307,7 @@ export function useChannelFiles(channelId: number) {
   const canRead = useCan("chat:messages:read");
   return useInfiniteQuery({
     ...INLINE_READ_ERROR,
-    queryKey: [...collaborationQueryKeys.chat.all, "channelFiles", channelId] as const,
+    queryKey: collaborationQueryKeys.chat.channelFiles(channelId),
     queryFn: ({ pageParam, signal }) =>
       // The contract reports the end of the list as null, not an absent field.
       apiClient.get<{ files: ChannelFile[]; nextCursor?: number | null }>(

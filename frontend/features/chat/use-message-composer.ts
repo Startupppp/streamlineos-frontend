@@ -8,6 +8,11 @@ const storageUploadContract = lazyContract(() =>
   import("@/hooks/api/chat-extra-schema").then((m) => m.storageUploadContract),
 );
 import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  CHAT_ATTACHMENT_MAX_BYTES,
+  CHAT_ATTACHMENT_SUMMARY,
+  isAllowedChatAttachment,
+} from "./chat-attachment-types";
 import type { Message, MessageMetadata, TicketEntityRef } from "./chat-types";
 import type { TicketSearchResult } from "@/hooks/api/build";
 import type { AttachmentInput, EditMessageInput, SendMessageInput } from "@/types/chat";
@@ -77,7 +82,11 @@ export function useMessageComposer({
     setUploading(true);
     try {
       for (const file of files) {
-        if (file.size > 10 * 1024 * 1024) { toast.error(`${file.name} is too large (max 10MB)`); continue; }
+        if (file.size > CHAT_ATTACHMENT_MAX_BYTES) { toast.error(`${file.name} is too large (max 10MB)`); continue; }
+        // Paste and drag never pass through the picker's `accept`, so the allowlist is
+        // enforced here too — and names what is allowed, which the server's bare
+        // "File type not allowed" did not (CHAT-S06).
+        if (!isAllowedChatAttachment(file)) { toast.error(`${file.name} is not a supported file type. Attach ${CHAT_ATTACHMENT_SUMMARY}.`); continue; }
         const formData = new FormData(); formData.append("file", file); formData.append("folder", "chat");
         try {
           const result = await apiClient.upload<{ key: string; size?: number; mimeType?: string }>("/storage/upload", formData, storageUploadContract);

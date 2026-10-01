@@ -49,3 +49,45 @@ describe("renderFormattedContent ticket keys", () => {
     expect(mockUseTicketSearch).not.toHaveBeenCalled();
   });
 });
+
+describe("renderFormattedContent — CHAT-S04 nested emphasis", () => {
+  it("renders *** as bold italic instead of printing the markers", () => {
+    const { container } = render(
+      <div>{renderFormattedContent("***urgent***", false)}</div>,
+    );
+
+    const strong = container.querySelector("strong");
+    expect(strong?.querySelector("em")?.textContent).toBe("urgent");
+    expect(container.textContent).not.toContain("*");
+  });
+
+  it("renders italic nested inside bold", () => {
+    const { container } = render(
+      <div>{renderFormattedContent("**ship *today* please**", false)}</div>,
+    );
+
+    const strong = container.querySelector("strong");
+    expect(strong?.textContent).toBe("ship today please");
+    expect(strong?.querySelector("em")?.textContent).toBe("today");
+    expect(container.textContent).not.toContain("*");
+  });
+
+  it("renders a code span nested inside bold italic, which is what the composer emits", () => {
+    const { container } = render(
+      <div>{renderFormattedContent("***`npm ci`***", false)}</div>,
+    );
+
+    const code = container.querySelector("strong em code");
+    expect(code?.textContent).toBe("npm ci");
+    expect(container.textContent).not.toContain("*");
+  });
+
+  it("leaves an unpaired marker as text", () => {
+    const { container } = render(
+      <div>{renderFormattedContent("2 ** 3 is not bold", false)}</div>,
+    );
+
+    expect(container.querySelector("strong")).toBeNull();
+    expect(container.textContent).toBe("2 ** 3 is not bold");
+  });
+});
