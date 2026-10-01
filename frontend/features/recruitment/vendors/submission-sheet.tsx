@@ -193,6 +193,7 @@ export function SubmissionSheet({ vendor, onClose }: SubmissionSheetProps) {
               className="border-0 bg-transparent shadow-none"
               title="Couldn't load submissions"
               description={getErrorMessage(error)}
+              error={error}
               onRetry={handleRetry}
             />
           ) : submissions.length === 0 ? (

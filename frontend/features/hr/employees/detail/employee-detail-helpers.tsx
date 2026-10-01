@@ -136,6 +136,7 @@ export function DirectReportsSection({ employeeId }: { employeeId: string }) {
             className="border-0 bg-transparent shadow-none"
             title="Couldn't load direct reports"
             description={getErrorMessage(error)}
+            error={error}
             onRetry={handleRetry}
           />
         </CardContent>
@@ -210,6 +211,7 @@ export function ManagerScorecardSection({ employeeId }: { employeeId: string }) 
             className="border-0 bg-transparent shadow-none"
             title="Couldn't load manager scorecard"
             description={getErrorMessage(error)}
+            error={error}
             onRetry={handleRetry}
           />
         </CardContent>

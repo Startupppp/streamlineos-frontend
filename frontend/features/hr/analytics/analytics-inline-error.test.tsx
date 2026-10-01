@@ -212,3 +212,29 @@ describe("a money-formatting read is decorative, so its failure must not take a 
     expect(screen.queryByText("route error boundary")).not.toBeInTheDocument();
   });
 });
+
+describe("HRMS-B2-027 / HRMS-B3-016 a KPI never reports a figure its read did not return", () => {
+  it("resolves a failed analytics read through PageState rather than an EmptyState that claims emptiness", async () => {
+    respondPerPath({ "/hr/analytics": new ApiError("Internal server error", 500) });
+
+    renderUnderBoundary(<AnalyticsPageClient />);
+
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
+    expect(screen.queryByText("No people to report on yet")).not.toBeInTheDocument();
+  });
+
+  it("marks the attrition rate unmeasured instead of printing 0.0% when its own read 500s", async () => {
+    respondPerPath({
+      "/hr/analytics/attrition": new ApiError("Internal server error", 500),
+    });
+
+    renderUnderBoundary(<AnalyticsPageClient />);
+
+    const label = await screen.findByText("Attrition rate");
+    const card = label.closest("div[class]")?.parentElement ?? label.parentElement;
+
+    expect(card).not.toBeNull();
+    expect(card?.textContent).not.toMatch(/0\.0\s*%/);
+    expect(card?.textContent).toContain("—");
+  });
+});

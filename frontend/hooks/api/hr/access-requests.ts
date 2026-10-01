@@ -6,6 +6,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const accessRequestListC = lazyContract(() =>
   import("@/hooks/api/hr/access-requests-schema").then((m) => m.accessRequestListContract),
@@ -44,6 +45,7 @@ export function useAccessRequests(employeeId?: string) {
     queryFn: ({ signal }) =>
       apiClient.get<AccessRequest[]>("/hr/access-requests", employeeId ? { employeeId } : undefined, signal, accessRequestListC),
     staleTime: 60_000,
+    ...INLINE_READ_ERROR,
   });
 }
 

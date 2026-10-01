@@ -82,6 +82,7 @@ export function ManageReferrersSheet() {
               className="border-0 bg-transparent shadow-none"
               title="Couldn't load external referrers"
               description={getErrorMessage(error)}
+              error={error}
               onRetry={handleRetry}
             />
           ) : referrers.length === 0 ? (

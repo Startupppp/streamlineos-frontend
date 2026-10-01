@@ -25,6 +25,9 @@ interface LeaveApprovalsContentProps {
   allIncomingLeaveRequests: LeaveRequest[];
   currentUserId?: string;
   isLoading?: boolean;
+  isError?: boolean;
+  error?: unknown;
+  onRetry?: () => void;
 }
 
 export function LeaveApprovalsContent({
@@ -32,12 +35,15 @@ export function LeaveApprovalsContent({
   allIncomingLeaveRequests,
   currentUserId,
   isLoading = false,
+  isError = false,
+  error = null,
+  onRetry,
 }: LeaveApprovalsContentProps) {
   const leaveState = usePageState({
     permission: "hr:leaves:view",
     isLoading,
-    isError: false,
-    error: null,
+    isError,
+    error,
   });
 
   const approvedRequests = useMemo(
@@ -102,6 +108,7 @@ export function LeaveApprovalsContent({
           <PageState
             resolution={leaveState}
             compact
+            onRetry={onRetry}
             loading={<Skeleton className="h-24 w-full rounded-xl" />}
           >
             <Tabs defaultValue="all" className="space-y-4">

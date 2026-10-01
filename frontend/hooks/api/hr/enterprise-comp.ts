@@ -286,6 +286,7 @@ export function useBudgetPools(cycleId: number) {
     queryFn: ({ signal }) => apiClient.get(`/hr/enterprise/comp/planning/cycles/${cycleId}/budget-pools`, undefined, signal, _listBudgetPoolsContract),
     staleTime: 60_000,
     enabled: !!cycleId && canManage && hrEnabled,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -320,6 +321,7 @@ export function useVestingSchedule(grantId: number) {
     queryFn: ({ signal }) => apiClient.get(`/hr/enterprise/comp/equity/grants/${grantId}/vesting-schedule`, undefined, signal, _getVestingScheduleContract),
     staleTime: 10 * 60_000,
     enabled: !!grantId && canView && hrEnabled,
+    ...INLINE_READ_ERROR,
   });
 }
 

@@ -97,6 +97,7 @@ export function DelegationSettings({ open, onOpenChange }: Props) {
               compact
               title="Couldn't load delegations"
               description={getErrorMessage(error)}
+              error={error}
               onRetry={handleRetry}
             />
           )}

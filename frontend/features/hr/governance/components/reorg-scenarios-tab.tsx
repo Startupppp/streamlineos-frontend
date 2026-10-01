@@ -106,6 +106,7 @@ export function ReorgScenariosTab() {
         className="flex-1"
         title="Couldn't load reorg scenarios"
         description={getErrorMessage(error)}
+        error={error}
         onRetry={handleRetry}
       />
     );
@@ -129,6 +130,7 @@ export function ReorgScenariosTab() {
               className="border-0 bg-transparent shadow-none"
               title="Couldn't load simulation"
               description={getErrorMessage(simErrorData)}
+              error={simErrorData}
               onRetry={handleSimRetry}
             />
           ) : simulation ? (

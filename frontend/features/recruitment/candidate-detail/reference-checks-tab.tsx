@@ -22,6 +22,7 @@ import {
   Sheet, SheetBody, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger,
 } from "@/components/ui/sheet";
 import { RecruitmentEmptyState } from "@/features/recruitment/components/recruitment-empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { toast } from "sonner";
 import {
   Plus, Trash2, Mail, Phone, Building2, User2,
@@ -121,6 +122,7 @@ export function ReferenceChecksTab({ candidateId }: Props) {
   const handleRelationshipChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setRelationship(e.target.value), []);
   const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value), []);
   const handleCancel = useCallback(() => setSheetOpen(false), []);
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   if (isLoading) {
     return (
@@ -134,17 +136,13 @@ export function ReferenceChecksTab({ candidateId }: Props) {
 
   if (isError) {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-xl border border-status-danger-rule bg-status-danger-surface px-6 py-8 text-center">
-        <div className="text-sm font-medium text-status-danger-ink">
-          Failed to load reference checks
-        </div>
-        <p className="text-xs text-status-danger-ink">
-          {getErrorMessage(error)}
-        </p>
-        <Button variant="outline" size="sm" onClick={() => void refetch()}>
-          Retry
-        </Button>
-      </div>
+      <ErrorState
+        compact
+        title="Couldn't load reference checks"
+        description={getErrorMessage(error)}
+        error={error}
+        onRetry={handleRetry}
+      />
     );
   }
 

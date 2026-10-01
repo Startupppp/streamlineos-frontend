@@ -362,9 +362,13 @@ export function EssBankSection({
   const handleOpen = () => setSheetOpen(true);
   const handleClose = () => setSheetOpen(false);
 
+  function handleRetry() {
+    void refetch();
+  }
+
   return (
     <section id="bank" className="flex min-h-0 w-full flex-1 flex-col gap-3">
-      {!hideToolbar ? (
+      {!hideToolbar && !isError ? (
         <div className="flex shrink-0 items-center justify-end gap-3">
           <Button size="sm" variant="outline" className="h-8 text-xs" onClick={handleOpen}>
             {data?.hasBank ? "Update" : "Add Bank Details"}
@@ -385,7 +389,8 @@ export function EssBankSection({
         <ErrorState
           title="Couldn't load bank details"
           description={getErrorMessage(error)}
-          onRetry={() => void refetch()}
+          error={error}
+          onRetry={handleRetry}
         />
       ) : data?.hasBank && data.masked ? (
         <motion.div

@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { CandidateReferral, CreateReferralInput } from "@/types/hr/recruitment";
@@ -26,6 +27,7 @@ export function useAllReferrals() {
     queryFn: ({ signal }) => apiClient.get<CandidateReferral[]>("/hr/recruitment/referrals", undefined, signal, allReferralsListC),
     staleTime: 60_000,
     enabled: canRequisitions,
+    ...INLINE_READ_ERROR,
   });
 }
 

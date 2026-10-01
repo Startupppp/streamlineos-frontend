@@ -195,12 +195,16 @@ export function EssLoansSection({
   const handleOpenDialog = () => setDialogOpen(true);
   const handleCloseDialog = () => setDialogOpen(false);
 
+  function handleRetry() {
+    void refetch();
+  }
+
   const activeLoans = loans?.filter((l) => l.status === "ACTIVE" || l.status === "APPROVED") ?? [];
   const pastLoans = loans?.filter((l) => l.status !== "ACTIVE" && l.status !== "APPROVED") ?? [];
 
   return (
     <section id="loans" className="flex min-h-0 w-full flex-1 flex-col gap-3">
-      {allowRequests && !hideToolbar ? (
+      {allowRequests && !hideToolbar && !isError ? (
         <div className="flex shrink-0 items-center justify-end gap-3">
           <AnimatedIconButton
             icon={PlusIcon}
@@ -230,7 +234,8 @@ export function EssLoansSection({
           <ErrorState
             title="Couldn't load loans"
             description={getErrorMessage(error)}
-            onRetry={() => void refetch()}
+            error={error}
+            onRetry={handleRetry}
           />
         ) : !loans || loans.length === 0 ? (
           <EmptyState

@@ -16,7 +16,7 @@ import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { downloadBlob } from "@/lib/download-blob";
-import { ErrorState } from "@/components/shared";
+import { ErrorState } from "@/components/shared/error-state";
 import {
   buildLeaveExportBlob,
   leaveExportToastMessage,
@@ -112,6 +112,7 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
       >
         <ErrorState
           description={getErrorMessage(data.errorValue)}
+          error={data.errorValue}
           onRetry={data.onRetryPage}
           className="flex-1"
         />
@@ -194,23 +195,18 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
 
             {data.isAdmin ? (
               <TabsContent value="approvals" className={TAB_PANEL_CLASS}>
-                {data.approvalsError ? (
-                  <ErrorState
-                    description={getErrorMessage(data.approvalsErrorValue)}
+                <div className="space-y-4">
+                  <TeamAvailabilityOverlay />
+                  <LeaveApprovalsContent
+                    incomingLeaveRequests={data.incomingLeaveRequests}
+                    allIncomingLeaveRequests={data.allIncomingLeaveRequests}
+                    currentUserId={session?.user?.id}
+                    isLoading={data.approvalsLoading}
+                    isError={data.approvalsError}
+                    error={data.approvalsErrorValue}
                     onRetry={data.refetchApprovals}
-                    className="flex-1"
                   />
-                ) : (
-                  <div className="space-y-4">
-                    <TeamAvailabilityOverlay />
-                    <LeaveApprovalsContent
-                      incomingLeaveRequests={data.incomingLeaveRequests}
-                      allIncomingLeaveRequests={data.allIncomingLeaveRequests}
-                      currentUserId={session?.user?.id}
-                      isLoading={data.approvalsLoading}
-                    />
-                  </div>
-                )}
+                </div>
               </TabsContent>
             ) : null}
           </div>

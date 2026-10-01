@@ -146,6 +146,7 @@ export function InstanceDetailSheet({ instanceId, onClose, showActions = false }
                 className="border-0 bg-transparent shadow-none"
                 title="Couldn't load instance detail"
                 description={getErrorMessage(error)}
+                error={error}
                 onRetry={handleRetry}
               />
             )}

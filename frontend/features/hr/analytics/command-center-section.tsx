@@ -36,6 +36,8 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { formatMoneyCompact } from "@/lib/format-utils";
 import { activationProps } from "@/lib/keyboard-activation";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const JoinsExitsChart = dynamic(
   () => import("./command-center-charts").then((m) => ({ default: m.JoinsExitsChart })),
@@ -118,7 +120,13 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
     [display],
   );
 
-  const { data: kpis, isLoading: kpisLoading } = useHrCommandCenter(departmentId);
+  const {
+    data: kpis,
+    isLoading: kpisLoading,
+    isError: kpisIsError,
+    error: kpisError,
+    refetch: refetchKpis,
+  } = useHrCommandCenter(departmentId);
   const { data: attrition, isLoading: attritionLoading } = useHrAttritionPlus(departmentId);
   const { data: leaveTrends, isLoading: leaveLoading } = useHrLeaveTrends(departmentId);
   const { data: engagement, isLoading: engagementLoading } = useHrEngagement();
@@ -174,7 +182,22 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
     openDrilldown("cases", "Compliance Cases");
   }
 
+  function handleRetryKpis(): void {
+    void refetchKpis();
+  }
+
   if (kpisLoading) return <SectionSkeleton rows={8} />;
+
+  if (kpisIsError || !kpis) {
+    return (
+      <ErrorState
+        title="Couldn't load the command centre"
+        description={getErrorMessage(kpisError)}
+        error={kpisError}
+        onRetry={handleRetryKpis}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">

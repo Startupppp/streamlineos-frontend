@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from "react";
 import { format } from "date-fns";
-import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -21,6 +20,8 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useCan } from "@/hooks/api/access";
 import { SanitizedHtml } from "@/components/shared/sanitized-html";
+import { ErrorState } from "@/components/shared/error-state";
+import { isApiError } from "@/lib/api-envelope";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FileText } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
@@ -56,15 +57,23 @@ function ContractStatusBadge({ status }: { status: HrContract["status"] }) {
 
 function CertificateViewer({ contractId }: { contractId: number }) {
   const [enabled, setEnabled] = useState(false);
-  const { data, isLoading, isError, error } = useInternshipCertificate(contractId, enabled);
+  const { data, isLoading, isError, error, refetch } = useInternshipCertificate(contractId, enabled);
+  const notIssued = isError && isApiError(error) && error.status === 404;
 
   function handleClick() {
     setEnabled(true);
   }
 
-  if (enabled && isError) {
-    toast.error(getErrorMessage(error));
+  function handleClose() {
     setEnabled(false);
+  }
+
+  function handleOpenChange(open: boolean) {
+    if (!open) setEnabled(false);
+  }
+
+  function handleRetry() {
+    void refetch();
   }
 
   return (
@@ -78,18 +87,43 @@ function CertificateViewer({ contractId }: { contractId: number }) {
         <FileText className="h-3 w-3" />
         Certificate
       </Button>
-      {enabled && !isLoading && !isError && data && (
-        <AlertDialog open onOpenChange={() => setEnabled(false)}>
+      {enabled && (
+        <AlertDialog open onOpenChange={handleOpenChange}>
           <AlertDialogContent className="max-w-2xl">
             <AlertDialogHeader>
               <AlertDialogTitle>Internship Certificate</AlertDialogTitle>
             </AlertDialogHeader>
-            <SanitizedHtml
-              html={data.html}
-              className="prose prose-sm max-h-96 overflow-y-auto rounded-lg border border-border p-4 bg-card"
-            />
+            {isLoading ? (
+              <Skeleton className="h-48 w-full rounded-lg" />
+            ) : notIssued ? (
+              <EmptyState
+                compact
+                title="No certificate issued yet"
+                description="This internship has no certificate on record. One is generated once the internship is completed."
+              />
+            ) : isError ? (
+              <ErrorState
+                compact
+                title="Couldn't load the certificate"
+                description={getErrorMessage(error)}
+                error={error}
+                onRetry={handleRetry}
+              />
+            ) : data ? (
+              <SanitizedHtml
+                html={data.html}
+                className="prose prose-sm max-h-96 overflow-y-auto rounded-lg border border-border p-4 bg-card"
+              />
+            ) : (
+              <ErrorState
+                compact
+                title="Couldn't load the certificate"
+                description="The certificate could not be read, so whether one exists is unknown."
+                onRetry={handleRetry}
+              />
+            )}
             <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setEnabled(false)}>Close</AlertDialogCancel>
+              <AlertDialogCancel onClick={handleClose}>Close</AlertDialogCancel>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

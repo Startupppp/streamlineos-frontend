@@ -138,15 +138,16 @@ export function useInterviewStats(options?: { enabled?: boolean }) {
 
 export function useInterviews(
   params?: InterviewsParams,
-  options?: { enabled?: boolean },
+  options?: { enabled?: boolean; throwOnError?: false },
 ) {
+  const { enabled, ...queryOptions } = options ?? {};
   const queryParams: Record<string, unknown> = { limit: params?.limit ?? 100 };
   if (params?.candidateId) queryParams.candidateId = params.candidateId;
   if (params?.upcoming != null) queryParams.upcoming = params.upcoming ? "true" : "false";
   if (params?.relevant != null) queryParams.relevant = params.relevant ? "true" : "false";
 
   return useGatedQuery("hr:interviews:view", {
-    enabled: options?.enabled ?? true,
+    enabled: enabled ?? true,
     queryKey: humanResourcesQueryKeys.hr.interviews(queryParams),
     queryFn: async ({ signal }): Promise<Interview[]> => {
       const res = await apiClient.get<Interview[] | RecruitmentListResponse<Interview>>(
@@ -158,6 +159,7 @@ export function useInterviews(
       return unwrapRecruitmentItems(res);
     },
     staleTime: 2 * 60_000,
+    ...queryOptions,
   });
 }
 

@@ -67,6 +67,14 @@ export function NineBoxGrid() {
     grouped.set(entry.box, cell);
   }
 
+  function handleRetryCycles(): void {
+    void refetchCycles();
+  }
+
+  function handleRetryNineBox(): void {
+    void refetchNineBox();
+  }
+
   if (pageState.kind !== "ready") {
     return <PageState resolution={pageState} loading={null} className="flex-1">{null}</PageState>;
   }
@@ -76,7 +84,8 @@ export function NineBoxGrid() {
       <ErrorState
         title="Couldn't load review cycles"
         description={getErrorMessage(cyclesErrorData)}
-        onRetry={() => void refetchCycles()}
+        error={cyclesErrorData}
+        onRetry={handleRetryCycles}
         className="flex-1"
       />
     );
@@ -87,7 +96,8 @@ export function NineBoxGrid() {
       <ErrorState
         title="Couldn't load 9-box data"
         description={getErrorMessage(nineBoxErrorData)}
-        onRetry={() => void refetchNineBox()}
+        error={nineBoxErrorData}
+        onRetry={handleRetryNineBox}
         className="flex-1"
       />
     );

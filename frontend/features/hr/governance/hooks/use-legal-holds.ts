@@ -8,6 +8,7 @@ import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const legalHoldListContract = lazyContract(() =>
   import("@/features/hr/governance/hooks/legal-holds-schema").then((m) => m.legalHoldListContract),
@@ -66,6 +67,7 @@ export function useHoldItems(holdId: number | undefined) {
     queryFn: ({ signal }) => apiClient.get(`/hr/governance/legal-holds/${holdId}/items`, undefined, signal, holdItemListContract),
     enabled: canViewHolds && holdId !== undefined,
     staleTime: 30_000,
+    ...INLINE_READ_ERROR,
   });
 }
 
