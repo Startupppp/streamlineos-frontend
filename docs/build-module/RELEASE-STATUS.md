@@ -1,5 +1,21 @@
 # Build Module Release Status
 
+## 2026-10-01 architecture review
+
+All seven review candidates are implemented and recorded in ADRs 0007-0012 and the architecture contract in `docs/specs/build/module/07-architecture-integrations-prd.md`.
+
+| # | Candidate | Result |
+|---|---|---|
+| 1 | Ticket mutation authoritative | Automation, entity actions, agent-pulse drafts, bug and epic delete, lead conversion and recurring spawn route through the ticket-change, comment, label, delete and creation owners. Remaining direct writes are lifecycle cascades (cycle, module, member, custom-state, project archive, retention). |
+| 2 | One wire contract | 309 hook-called operations generate from backend schemas into `contracts/build-contracts.generated.ts`; legacy aliases retired; Build hook schemas are generated schemas plus local transforms. Meeting attendees now carry `userId`. |
+| 3 | Architecture contract | Domain vocabulary, ownership map, state transitions, execution modes, failure behaviour, capacity and diagrams live in the 07 PRD; ADRs 0007-0012. |
+| 4 | Integrations seam | Webhook credentials, deliveries, retry and signing live in Integrations; Git connection secrets moved to `integration_git_connection_credentials`. Migrations 1720-1727 applied in production. |
+| 5 | One portal projection | External and preview identities select a grant, then share `buildPortalProjection`. |
+| 6 | One project-access owner | Writes, members, custom states, budget, entity reads and calendar use `project-access` and `reachableProjectsSql`. |
+| 7 | Subresource facade deleted | Controllers call comment, checklist, link and relation owners directly. |
+
+Gates: backend typecheck, `check:cycles` (9,226 files), `check:module-registration` (260/260) and frontend contract gates (`check:build-contracts`, vendor, parity, response-contracts) pass. `check:contract-drift` fails only on the timesheets `POST /timesheets/entries` request scan. Browser verification of the portal preview, meeting attendees and ticket-comment link preview is pending.
+
 ## 2026-09-30 completion-gate census
 
 The live documentation census contains 1,164 checked and 124 unchecked criteria across 92 files. After deduplicating repeated lane records, 75 unique route/state browser journeys, 16 accessibility/responsive obligations, and approximately 18 engineering, measurement, or release blockers remain. These files are therefore still active acceptance evidence and must not be deleted yet.
