@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { useCan } from "@/hooks/api/access";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type { TimesheetPeriod } from "@/features/timesheets/types";
 
 const teamSummaryC = lazyContract(() =>
@@ -49,5 +50,10 @@ export function useTeamWeekSummary(
     staleTime: 30_000,
     placeholderData: (prev) => prev,
     enabled: enabled && canView,
+    // The Team page draws its own ErrorState with a Try Again for this read.
+    // Without this the provider's default throws the failure to the route
+    // error boundary instead, which replaces the entire page with
+    // "Failed to load team time data" and leaves that ErrorState unreachable.
+    ...INLINE_READ_ERROR,
   });
 }

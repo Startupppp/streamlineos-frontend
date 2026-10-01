@@ -375,25 +375,6 @@ export const accessAndCrmQueryKeys = {
         : ([...base, "crmActivities", "list", params] as const),
   },
 
-  blog: {
-    all: [...base, "blog"] as const,
-    feed: <P>(params?: P) =>
-      params === undefined
-        ? ([...base, "blog", "feed"] as const)
-        : ([...base, "blog", "feed", params] as const),
-  },
-
-  blogAdmin: {
-    all: [...base, "blogAdmin"] as const,
-    posts: (params?: QueryKeyParams) =>
-      params === undefined
-        ? ([...base, "blogAdmin", "posts"] as const)
-        : ([...base, "blogAdmin", "posts", params] as const),
-    post: (postId: string) =>
-      [...base, "blogAdmin", "post", postId] as const,
-    categories: () => [...base, "blogAdmin", "categories"] as const,
-  },
-
   publicBooking: {
     all: [...base, "publicBooking"] as const,
     detail: (token: string) =>

@@ -31,6 +31,16 @@ export function buildCsp(nonce: string, apiUrl?: string): string {
       })()
     : "";
 
+  /** The journal's public image domain (the blog admin's R2 public bucket); https outside development. */
+  const blogMediaOrigin = (() => {
+    try {
+      const u = new URL(process.env.NEXT_PUBLIC_BLOG_MEDIA_ORIGIN ?? "");
+      return u.protocol === "https:" || (isDev && u.protocol === "http:") ? u.origin : "";
+    } catch {
+      return "";
+    }
+  })();
+
   const connectSrc = [
     "'self'",
     "https://fonts.googleapis.com",
@@ -69,7 +79,7 @@ export function buildCsp(nonce: string, apiUrl?: string): string {
     "default-src 'self'",
     `script-src ${scriptSrc}`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "img-src 'self' data: blob: https://api.dicebear.com https://*.r2.cloudflarestorage.com https://*.r2.dev https://lh3.googleusercontent.com https://streamlineos.app https://images.unsplash.com https://www.googletagmanager.com",
+    `img-src 'self' data: blob: https://api.dicebear.com https://*.r2.cloudflarestorage.com https://*.r2.dev https://lh3.googleusercontent.com https://streamlineos.app https://images.unsplash.com https://www.googletagmanager.com${blogMediaOrigin ? ` ${blogMediaOrigin}` : ""}`,
     "font-src 'self' https://fonts.gstatic.com https://esm.sh",
     `connect-src ${connectSrc}`,
     "worker-src 'self' blob:",

@@ -10,6 +10,7 @@ import { ChevronLeftIcon, ChevronRightIcon, XIcon } from "@animateicons/react/lu
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ApprovalRoutePanel } from "@/components/shared/approval-route-panel";
 import { AiActionsMenu, type AiAction } from "@/components/ai";
 import { useCurrentPeriod, usePeriodApproverPreview, useSubmitPeriod, useRecallPeriod, useTimesheetEntries, useTimesheetSettings, fetchTimesheetPeriodSummary } from "@/hooks/api/timesheets-core";
@@ -28,6 +29,7 @@ import { cn } from "@/lib/utils";
 export function MyTimeView({ projectId }: { projectId?: number }) {
   const shouldReduceMotion = useReducedMotion();
   const [rejectionDismissed, setRejectionDismissed] = useState(false);
+  const [confirmingSubmit, setConfirmingSubmit] = useState(false);
 
   const { data: periodDetail, isLoading: periodLoading, isError: periodError, refetch: refetchPeriod } = useCurrentPeriod();
   const { data: settings } = useTimesheetSettings();
@@ -41,7 +43,13 @@ export function MyTimeView({ projectId }: { projectId?: number }) {
   const [draftResult, setDraftResult] = useState<{ week: string; result: AttendanceDraftResult } | null>(
     null,
   );
-  const { data: entriesData, isLoading: entriesLoading } = useTimesheetEntries(
+  const {
+    data: entriesData,
+    isLoading: entriesLoading,
+    isError: entriesError,
+    error: entriesErrorValue,
+    refetch: refetchEntries,
+  } = useTimesheetEntries(
     { startDate: weekStart, endDate: weekEnd, projectId, limit: 100 },
     true,
   );
@@ -79,13 +87,23 @@ export function MyTimeView({ projectId }: { projectId?: number }) {
     (period.status === "OPEN" || period.status === "DRAFT" || period.status === "REJECTED");
   const approverPreview = usePeriodApproverPreview(period?.id ?? null, { enabled: awaitingSubmit });
   const approverSummary = approverPreview.data ? summarizeTimesheetApprover(approverPreview.data) : undefined;
-  const canSubmit = awaitingSubmit && incomplete.length === 0 && approverPreview.data?.kind !== "unowned";
+  // A failed entries read looks exactly like an empty week, so submitting over it
+  // would submit hours the user cannot see.
+  const canSubmit =
+    awaitingSubmit &&
+    !entriesError &&
+    incomplete.length === 0 &&
+    approverPreview.data?.kind !== "unowned";
   const canRecall = isCurrentWeek && period?.status === "SUBMITTED";
 
   const handleSubmit = useCallback(() => {
     if (!period) return;
-    submitPeriod.mutate(period.id);
+    submitPeriod.mutate(period.id, { onSettled: () => setConfirmingSubmit(false) });
   }, [period, submitPeriod]);
+
+  const handleOpenSubmitConfirm = useCallback(() => setConfirmingSubmit(true), []);
+
+  const handleEntriesRetry = useCallback(() => { void refetchEntries(); }, [refetchEntries]);
 
   const handleRecall = useCallback(() => {
     if (!period) return;
@@ -178,15 +196,27 @@ export function MyTimeView({ projectId }: { projectId?: number }) {
             Recall
           </LoadingButton>
         ) : (
-          <LoadingButton
-            size="sm"
-            className="gap-1.5 w-full sm:w-auto"
-            onClick={handleSubmit}
-            isPending={submitPeriod.isPending}
-            disabled={!canSubmit}
-          >
-            Submit week
-          </LoadingButton>
+          <>
+            <LoadingButton
+              size="sm"
+              className="gap-1.5 w-full sm:w-auto"
+              onClick={handleOpenSubmitConfirm}
+              isPending={submitPeriod.isPending}
+              disabled={!canSubmit}
+            >
+              Submit week
+            </LoadingButton>
+            <ConfirmDialog
+              open={confirmingSubmit}
+              onOpenChange={setConfirmingSubmit}
+              title="Submit this week for approval?"
+              description={`${totalHours.toFixed(1)} hours for ${format(parseISO(weekStart), "d MMM")}–${format(parseISO(weekEnd), "d MMM")} go for approval. Editing is locked until the week is approved or you recall it.`}
+              confirmLabel="Submit week"
+              isPending={submitPeriod.isPending}
+              keepOpenOnConfirm
+              onConfirm={handleSubmit}
+            />
+          </>
         )}
       </div>
     </div>
@@ -205,6 +235,16 @@ export function MyTimeView({ projectId }: { projectId?: number }) {
             title="Couldn't load period"
             description="Failed to load your current timesheet period."
             onRetry={handlePeriodRetry}
+            compact
+          />
+        )}
+
+        {entriesError && (
+          <ErrorState
+            title="Couldn't load this week's entries"
+            description="Your hours for this week could not be read, so the week below is not the whole picture."
+            error={entriesErrorValue}
+            onRetry={handleEntriesRetry}
             compact
           />
         )}
