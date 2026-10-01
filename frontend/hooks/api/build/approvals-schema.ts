@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { DB_ENUMS } from "@/contracts/db-enums.generated";
+import { genApprovalsInboxSchema } from "@/contracts/build-contracts.generated";
 
 const APPROVAL_STATUS_VALUES = [
   "requested",
@@ -33,14 +34,7 @@ export const approvalInboxItemContract = z.object({
 
 export const approvalInboxListContract = z.array(approvalInboxItemContract);
 
-export const approvalInboxPageContract = z.object({
-  data: z.array(approvalInboxItemContract),
-  pagination: z.object({
-    limit: z.number().int(),
-    hasMore: z.boolean(),
-    nextCursor: z.string().nullable(),
-  }),
-});
+export const approvalInboxPageContract = genApprovalsInboxSchema;
 
 export const approvalInboxResponseContract = z.union([
   approvalInboxPageContract,

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
 import { DB_ENUMS } from "@/contracts/db-enums.generated";
+import { genMeetingListSchema, genMeetingDetailSchema } from "@/contracts/build-contracts.generated";
 
 const meetingRowContract = z.object({
   id: z.number().int(),
@@ -32,7 +33,7 @@ export const meetingListItemContract = meetingRowContract.extend({
 
 export const meetingListContract = z.array(meetingListItemContract);
 
-export const meetingPageContract = cursorPageContract(meetingListItemContract);
+export const meetingPageContract = genMeetingListSchema;
 
 export const meetingResponseContract = z.union([meetingPageContract, meetingListContract]);
 
@@ -78,11 +79,7 @@ export const standupEntryContract = z.object({
   updatedAt: z.string(),
 });
 
-export const meetingDetailContract = meetingRowContract.extend({
-  attendees: z.array(meetingAttendeeContract),
-  actionItems: z.array(actionItemRowContract),
-  standupEntries: z.array(standupEntryContract),
-});
+export const meetingDetailContract = genMeetingDetailSchema;
 
 export const addAttendeeResultContract = z.object({
   meetingId: z.number().int(),

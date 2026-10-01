@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { genProjectUpdatesSchema } from "@/contracts/build-contracts.generated";
 
 export const updateRowContract = z.object({
   id: z.number().int(),
@@ -24,7 +25,4 @@ export const cursorPaginationContract = z.object({
   nextCursor: z.string().nullable(),
 });
 
-export const updatePageContract = z.object({
-  data: z.array(updateRowContract),
-  pagination: cursorPaginationContract,
-});
+export const updatePageContract = genProjectUpdatesSchema;

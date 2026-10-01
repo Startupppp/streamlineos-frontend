@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
 import { DB_ENUMS } from "@/contracts/db-enums.generated";
-import { genProjectAnalyticsSchema } from "@/contracts/build-contracts.generated";
+import { genProjectAnalyticsSchema, genMilestoneListSchema } from "@/contracts/build-contracts.generated";
 
 const milestoneOwnerSchema = z.object({
   membershipId: z.number().int(),
@@ -167,7 +167,7 @@ const projectBudgetSchema = z.object({
 });
 
 
-export const milestoneListContract = cursorPageContract(milestoneRowSchema);
+export const milestoneListContract = genMilestoneListSchema;
 export const milestoneRowContract = milestoneRowSchema;
 export const milestoneUpdateRequestContract = z
   .object({
