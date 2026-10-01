@@ -1,6 +1,10 @@
 import { z } from "zod";
-import { DB_ENUMS } from "@/contracts/db-enums.generated";
-import { genTicketDetailWireSchema, genTicketListPageSchema } from "@/contracts/build-contracts.generated";
+import {
+  genTicketDetailWireSchema,
+  projectsTicketsCreateTicketResponseSchema,
+  projectsTicketsListTicketsResponseSchema,
+  projectsTicketsGetActivityResponseSchema,
+} from "@/contracts/build-contracts.generated";
 
 const userSummarySchema = z
   .object({
@@ -13,50 +17,22 @@ const userSummarySchema = z
   })
   .nullable();
 
-export const ticketTypeContract = z.enum(DB_ENUMS.ticket_type);
+export const ticketTypeContract = projectsTicketsCreateTicketResponseSchema.shape.type;
 
-export const ticketPriorityContract = z.enum(DB_ENUMS.ticket_priority);
+export const ticketPriorityContract = projectsTicketsCreateTicketResponseSchema.shape.priority;
 
-export const ticketRowContract = z.object({
-  id: z.number().int(),
-  orgId: z.string(),
-  title: z.string(),
-  description: z.string().nullable(),
-  type: ticketTypeContract,
-  status: z.string(),
-  priority: ticketPriorityContract,
-  projectId: z.number().int().nullable(),
-  ticketNumber: z.number().int(),
-  epicId: z.number().int().nullable(),
-  assigneeMembershipId: z.number().int().nullable(),
-  reporterId: z.string().nullable(),
-  reporterMembershipId: z.number().int().nullable(),
-  points: z.number().nullable(),
-  storyPoints: z.number().nullable(),
-  link: z.string().nullable(),
-  rank: z.string(),
-  parentTicketId: z.number().int().nullable(),
-  originalEstimate: z.string().nullable(),
-  timeSpent: z.string(),
-  startDate: z.string().nullable(),
-  dueDate: z.string().nullable(),
-  moduleId: z.number().int().nullable(),
-  cycleId: z.number().int().nullable(),
-  sequenceId: z.string().nullable(),
-  estimate: z.number().nullable(),
-  health: z.enum(["on_track", "at_risk", "off_track"]).nullable(),
-  completionPercentage: z.number(),
-  clientVisible: z.boolean(),
-  isRecurring: z.boolean(),
-  recurrenceRule: z.unknown(),
-  recurrenceParentId: z.number().int().nullable(),
-  recurrenceNextRunAt: z.string().nullable(),
-  customerId: z.number().int().nullable(),
-  version: z.number().int(),
-  deletedAt: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-});
+export const ticketRowContract = projectsTicketsCreateTicketResponseSchema;
+
+export const ticketListRowContract = projectsTicketsListTicketsResponseSchema.shape.data.element;
+
+export const ticketListPageContract = projectsTicketsListTicketsResponseSchema;
+
+export const ticketActivityActionContract =
+  projectsTicketsGetActivityResponseSchema.shape.data.element.shape.action;
+
+export type KnownTicketActivityAction = z.infer<typeof ticketActivityActionContract>;
+
+export const ticketActivityPageContract = projectsTicketsGetActivityResponseSchema;
 
 const commentReactionSchema = z.object({
   emoji: z.string(),
@@ -186,126 +162,4 @@ export const ticketDetailContract = genTicketDetailWireSchema.extend({
         },
       })),
     ),
-});
-
-const paginationContract = z.object({
-  limit: z.number().int(),
-  hasMore: z.boolean(),
-  nextCursor: z.string().nullable(),
-});
-
-export const ticketListRowContract = ticketRowContract
-  .pick({
-    id: true,
-    orgId: true,
-    title: true,
-    type: true,
-    status: true,
-    priority: true,
-    projectId: true,
-    ticketNumber: true,
-    epicId: true,
-    assigneeMembershipId: true,
-    reporterId: true,
-    points: true,
-    storyPoints: true,
-    link: true,
-    rank: true,
-    parentTicketId: true,
-    originalEstimate: true,
-    timeSpent: true,
-    startDate: true,
-    dueDate: true,
-    moduleId: true,
-    cycleId: true,
-    sequenceId: true,
-    estimate: true,
-    health: true,
-    version: true,
-    createdAt: true,
-    updatedAt: true,
-  })
-  .extend({
-    descriptionExcerpt: z.string().optional(),
-    assigneeId: z.string().nullable(),
-    assignee: userSummarySchema,
-    assignees: z.array(
-      z.object({
-        id: z.number().int(),
-        ticketId: z.number().int(),
-        assignedAt: z.string(),
-        assignedBy: z.string().nullable(),
-        userId: z.string(),
-        user: userSummarySchema.unwrap(),
-      }),
-    ),
-    labels: z.array(
-      z.object({
-        id: z.number().int(),
-        ticketId: z.number().int(),
-        labelId: z.number().int(),
-        createdAt: z.string(),
-        label: z.object({
-          id: z.number().int(),
-          orgId: z.string(),
-          name: z.string(),
-          color: z.string().nullable(),
-          createdAt: z.string(),
-        }),
-      }),
-    ),
-    cycle: z
-      .object({
-        id: z.number().int(),
-        name: z.string(),
-        status: z.string(),
-        startDate: z.string(),
-        endDate: z.string(),
-      })
-      .nullable(),
-  });
-
-export const ticketListPageContract = z.object({
-  data: z.array(ticketListRowContract),
-  pagination: paginationContract,
-});
-
-export const ticketActivityActionContract = z.enum([
-  "created",
-  "status_changed",
-  "priority_changed",
-  "assignee_changed",
-  "title_changed",
-  "sprint_changed",
-  "due_date_changed",
-  "comment_added",
-  "comment_updated",
-  "comment_deleted",
-  "label_changed",
-  "estimate_changed",
-  "cycle_changed",
-  "type_changed",
-]);
-
-export type KnownTicketActivityAction = z.infer<typeof ticketActivityActionContract>;
-
-export const ticketActivityPageContract = z.object({
-  data: z.array(
-    z.object({
-      id: z.number().int(),
-      action: z.string(),
-      label: z.string(),
-      fromValue: z.string().nullable(),
-      toValue: z.string().nullable(),
-      createdAt: z.string(),
-      user: z
-        .object({
-          id: z.string().nullable(),
-          name: z.string().nullable(),
-          image: z.string().nullable(),
-        })
-        .nullable(),
-    }),
-  ),
-  pagination: paginationContract,
 });

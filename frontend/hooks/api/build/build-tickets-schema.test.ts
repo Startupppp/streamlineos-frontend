@@ -54,17 +54,17 @@ it("rejects a related ticket with no version, because a stale relatedTicket cach
   ).toThrow(ZodError);
 });
 
-it("still accepts a relation whose related ticket has been deleted (null relatedTicket)", () => {
-  const result = ticketRelationListContract.parse([
-    {
-      id: 2,
-      relationType: "relates_to",
-      relatedTicket: null,
-      direction: "incoming",
-    },
-  ]);
-
-  expect(result[0]?.relatedTicket).toBeNull();
+it("rejects a relation whose relatedTicket is null, because the backend always joins before returning the row", () => {
+  expect(() =>
+    ticketRelationListContract.parse([
+      {
+        id: 2,
+        relationType: "relates_to",
+        relatedTicket: null,
+        direction: "incoming",
+      },
+    ]),
+  ).toThrow();
 });
 
 it("rejects an unknown relation type such as the raw row's absent relationType default", () => {

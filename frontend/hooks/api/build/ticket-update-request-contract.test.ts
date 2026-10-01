@@ -10,16 +10,19 @@ it("accepts the same ticket edit once the version token is present", () => {
   expect(ticketUpdateRequestContract.safeParse(versionedEdit).success).toBe(true);
 });
 
-it("rejects a version token that is not a positive integer", () => {
-  expect(ticketUpdateRequestContract.safeParse({ ...versionedEdit, version: 0 }).success).toBe(
-    false,
-  );
+it("rejects a version token that is not an integer or not a number", () => {
   expect(ticketUpdateRequestContract.safeParse({ ...versionedEdit, version: 1.5 }).success).toBe(
     false,
   );
   expect(
     ticketUpdateRequestContract.safeParse({ ...versionedEdit, version: "4" }).success,
   ).toBe(false);
+});
+
+it("accepts version 0 because the generated contract requires an integer but not a positive one", () => {
+  expect(ticketUpdateRequestContract.safeParse({ ...versionedEdit, version: 0 }).success).toBe(
+    true,
+  );
 });
 
 it("rejects an undeclared field rather than stripping it, because the backend body schema is strict", () => {

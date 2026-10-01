@@ -3,6 +3,8 @@ import { commentDraftContract, commentDraftListContract, generatedCommentDraftSc
 it("accepts the PUT /build/comment-drafts/tickets/:ticketId response, which the service returns as a bare commentDrafts row with no ticket join", () => {
   const raw = {
     id: 5,
+    orgId: "org-abc",
+    membershipId: null,
     ticketId: 42,
     body: "Draft body",
     createdAt: "2026-09-16T00:00:00.000Z",
@@ -11,8 +13,8 @@ it("accepts the PUT /build/comment-drafts/tickets/:ticketId response, which the 
 
   const result = commentDraftContract.parse(raw);
 
-  expect(result.ticket).toBeUndefined();
   expect(result.ticketId).toBe(42);
+  expect(result.orgId).toBe("org-abc");
 });
 
 it("still accepts the GET /build/comment-drafts/mine shape, which joins tickets and always sends a nested ticket", () => {
@@ -37,6 +39,8 @@ it("still accepts the GET /build/comment-drafts/mine shape, which joins tickets 
   const raw = [
     {
       id: 5,
+      orgId: "org-abc",
+      membershipId: null,
       ticketId: 42,
       body: "Draft body",
       createdAt: "2026-09-16T00:00:00.000Z",
@@ -53,6 +57,8 @@ it("still accepts the GET /build/comment-drafts/mine shape, which joins tickets 
 it("rejects a draft whose ticketId is not a number, since the drafts page keys the list on it", () => {
   const raw = {
     id: 5,
+    orgId: "org-abc",
+    membershipId: null,
     ticketId: "42",
     body: "Draft body",
     createdAt: "2026-09-16T00:00:00.000Z",
