@@ -1,3 +1,4 @@
+import { z } from "zod";
 import {
   cyclesListCyclesResponseSchema,
   cyclesCreateCycleResponseSchema,
@@ -31,3 +32,6 @@ export const memberCapacityItemSchema = workloadCapacityCapacityResponseSchema.s
 export const workloadCapacityContract = workloadCapacityCapacityResponseSchema;
 
 export type MemberCapacityItem = WorkloadCapacityCapacityResponse["members"][number];
+
+export type EpicPage = z.infer<typeof epicPageContract>;
+export type EpicItem = EpicPage["data"][number];

@@ -9,6 +9,9 @@ const OPENAPI_PATH = join(FRONTEND_ROOT, "contracts", "openapi.json");
 const OUTPUT_PATH = join(FRONTEND_ROOT, "contracts", "build-contracts.generated.ts");
 export const HOOKS_ROOT = join(FRONTEND_ROOT, "hooks", "api", "build");
 const SHARED_HOOKS_ROOT = join(FRONTEND_ROOT, "hooks", "api");
+const FEATURE_API_CLIENTS = [
+  join(FRONTEND_ROOT, "features", "build", "import-export", "import-export-client.ts"),
+];
 
 const HTTP_METHODS = ["get", "post", "put", "patch", "delete"];
 const SUCCESS_CODES = ["200", "201", "202"];
@@ -166,6 +169,10 @@ export function readSharedHookSources() {
   return sourceFiles(SHARED_HOOKS_ROOT)
     .filter((file) => !file.startsWith(HOOKS_ROOT))
     .map((file) => readFileSync(file, "utf8"));
+}
+
+export function readFeatureApiClientSources() {
+  return FEATURE_API_CLIENTS.filter(existsSync).map((file) => readFileSync(file, "utf8"));
 }
 
 export function exportBase(operationId) {
@@ -392,7 +399,11 @@ export function buildFromDisk() {
   const raw = readFileSync(OPENAPI_PATH, "utf8");
   const hash = sha256hex(raw);
   const document = JSON.parse(raw);
-  const { operations, unmatched } = resolveHookOperations(document, readHookSources(), readSharedHookSources());
+  const { operations, unmatched } = resolveHookOperations(
+    document,
+    readHookSources(),
+    [...readSharedHookSources(), ...readFeatureApiClientSources()],
+  );
   return { hash, operations, unmatched, content: generateContent(document, hash, operations) };
 }
 

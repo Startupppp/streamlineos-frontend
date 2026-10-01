@@ -3306,6 +3306,97 @@ export const submissionsUpdateSubmissionBodySchema = z.strictObject({
 });
 export type SubmissionsUpdateSubmissionBody = z.input<typeof submissionsUpdateSubmissionBodySchema>;
 
+export const ticketImportExportCommitImportResponseSchema = z.object({
+  projectId: z.number().int(),
+  format: z.enum(["csv", "json"]),
+  mode: z.enum(["atomic", "partial"]),
+  idempotencyKey: z.string().nullable(),
+  replayed: z.boolean(),
+  confirmationToken: z.string(),
+  summary: z.object({
+    attempted: z.number().int(),
+    imported: z.number().int(),
+    skipped: z.number().int(),
+    failed: z.number().int(),
+    rolledBack: z.number().int(),
+  }),
+  rows: z.array(z.object({
+    rowNumber: z.number().int(),
+    outcome: z.enum(["IMPORTED", "SKIPPED", "FAILED", "ROLLED_BACK"]),
+    ticketId: z.number().int().nullable(),
+    message: z.string().nullable(),
+  })),
+  issues: z.array(z.object({
+    rowNumber: z.number().int(),
+    field: z.string().nullable(),
+    kind: z.enum(["INVALID", "DUPLICATE_IN_FILE", "DUPLICATE_EXISTING"]),
+    message: z.string(),
+  })),
+});
+export type TicketImportExportCommitImportResponse = z.infer<typeof ticketImportExportCommitImportResponseSchema>;
+
+export const ticketImportExportCommitImportBodySchema = z.strictObject({
+  format: z.enum(["csv", "json"]),
+  content: z.string(),
+  confirmationToken: z.string(),
+  mode: z.enum(["atomic", "partial"]).optional(),
+});
+export type TicketImportExportCommitImportBody = z.input<typeof ticketImportExportCommitImportBodySchema>;
+
+export const ticketImportExportExportTicketsResponseSchema = z.object({
+  format: z.enum(["csv", "json"]),
+  filename: z.string(),
+  contentType: z.string(),
+  rowCount: z.number().int(),
+  content: z.string(),
+});
+export type TicketImportExportExportTicketsResponse = z.infer<typeof ticketImportExportExportTicketsResponseSchema>;
+
+export const ticketImportExportPreviewImportResponseSchema = z.object({
+  format: z.enum(["csv", "json"]),
+  projectId: z.number().int(),
+  fileError: z.string().nullable(),
+  summary: z.object({
+    totalRows: z.number().int(),
+    importable: z.number().int(),
+    invalid: z.number().int(),
+    duplicateInFile: z.number().int(),
+    duplicateExisting: z.number().int(),
+  }),
+  rows: z.array(z.object({
+    rowNumber: z.number().int(),
+    values: z.object({
+      title: z.string(),
+      status: z.string(),
+      description: z.string().nullable().optional(),
+      type: z.enum(["EPIC", "STORY", "TASK", "BUG"]).optional(),
+      priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
+      startDate: z.string().nullable().optional(),
+      dueDate: z.string().nullable().optional(),
+      points: z.number().int().nullable().optional(),
+      storyPoints: z.number().int().nullable().optional(),
+      estimate: z.number().int().nullable().optional(),
+      completionPercentage: z.number().int().optional(),
+      clientVisible: z.boolean().optional(),
+      link: z.string().nullable().optional(),
+    }),
+  })),
+  issues: z.array(z.object({
+    rowNumber: z.number().int(),
+    field: z.string().nullable(),
+    kind: z.enum(["INVALID", "DUPLICATE_IN_FILE", "DUPLICATE_EXISTING"]),
+    message: z.string(),
+  })),
+  confirmationToken: z.string().nullable(),
+});
+export type TicketImportExportPreviewImportResponse = z.infer<typeof ticketImportExportPreviewImportResponseSchema>;
+
+export const ticketImportExportPreviewImportBodySchema = z.strictObject({
+  format: z.enum(["csv", "json"]),
+  content: z.string(),
+});
+export type TicketImportExportPreviewImportBody = z.input<typeof ticketImportExportPreviewImportBodySchema>;
+
 export const incidentsListIncidentsResponseSchema = z.object({
   data: z.array(z.object({
     id: z.number().int(),
@@ -6735,6 +6826,9 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "SubmissionsController_listSubmissions", method: "GET", path: "/build/{projectId}/forms/{formId}/submissions", response: "submissionsListSubmissionsResponseSchema" },
   { operationId: "SubmissionsController_createSubmission", method: "POST", path: "/build/{projectId}/forms/{formId}/submissions", response: "submissionsCreateSubmissionResponseSchema", body: "submissionsCreateSubmissionBodySchema" },
   { operationId: "SubmissionsController_updateSubmission", method: "PATCH", path: "/build/{projectId}/forms/{formId}/submissions/{submissionId}", response: "submissionsUpdateSubmissionResponseSchema", body: "submissionsUpdateSubmissionBodySchema" },
+  { operationId: "TicketImportExportController_commitImport", method: "POST", path: "/build/{projectId}/import-export/tickets", response: "ticketImportExportCommitImportResponseSchema", body: "ticketImportExportCommitImportBodySchema" },
+  { operationId: "TicketImportExportController_exportTickets", method: "GET", path: "/build/{projectId}/import-export/tickets/export", response: "ticketImportExportExportTicketsResponseSchema" },
+  { operationId: "TicketImportExportController_previewImport", method: "POST", path: "/build/{projectId}/import-export/tickets/preview", response: "ticketImportExportPreviewImportResponseSchema", body: "ticketImportExportPreviewImportBodySchema" },
   { operationId: "IncidentsController_listIncidents", method: "GET", path: "/build/{projectId}/incidents", response: "incidentsListIncidentsResponseSchema" },
   { operationId: "IncidentsController_createIncident", method: "POST", path: "/build/{projectId}/incidents", response: "incidentsCreateIncidentResponseSchema", body: "incidentsCreateIncidentBodySchema" },
   { operationId: "IncidentsController_getIncident", method: "GET", path: "/build/{projectId}/incidents/{incidentId}", response: "incidentsGetIncidentResponseSchema" },
