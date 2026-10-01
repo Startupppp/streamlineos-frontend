@@ -109,6 +109,8 @@ export const humanResourcesQueryKeys = {
       params === undefined
         ? ([...base, "hr", "onboardingDocs", "summary"] as const)
         : ([...base, "hr", "onboardingDocs", "summary", params] as const),
+    documentAcknowledgements: () =>
+      [...base, "hr", "documentAcknowledgements"] as const,
     documentsStats: () => [...base, "hr", "documentsStats"] as const,
     documentsExpiry: (days: number) =>
       [...base, "hr", "documentsExpiry", days] as const,

@@ -11,6 +11,12 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(currentQuery),
 }));
 
+jest.mock("@/hooks/api/access", () => ({
+  useCan: () => false,
+  useAccess: () => ({ data: { scopes: {}, modules: {} }, refetch: jest.fn() }),
+  useModuleEnabled: () => true,
+}));
+
 let pageStateKind: "loading" | "denied" = "loading";
 jest.mock("@/hooks/api/use-page-state", () => ({
   usePageState: () =>
