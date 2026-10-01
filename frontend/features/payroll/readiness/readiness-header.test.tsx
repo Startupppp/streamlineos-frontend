@@ -13,6 +13,7 @@ function summary(overrides: Partial<CycleSummary> = {}): CycleSummary {
     state: "blocked",
     headline: "This cycle is blocked.",
     ready: null,
+    inCycle: null,
     blockers: 3,
     blockedPeople: 0,
     waived: 0,
@@ -32,10 +33,9 @@ describe("ReadinessHeader counts what the blockers table lists", () => {
   it("never reads zero while blockers exist that name no person", () => {
     render(
       <ReadinessHeader
-        month="2026-09"
         summary={summary()}
         cutoff={null}
-        updated={null}
+        updatedAt={null}
         canStartRun={false}
         runId={null}
       />,
@@ -49,10 +49,9 @@ describe("ReadinessHeader counts what the blockers table lists", () => {
   it("says how many of the blockers name a person when any do", () => {
     render(
       <ReadinessHeader
-        month="2026-09"
         summary={summary({ blockers: 4, blockedPeople: 2 })}
         cutoff={null}
-        updated={null}
+        updatedAt={null}
         canStartRun={false}
         runId={null}
       />,
@@ -65,10 +64,9 @@ describe("ReadinessHeader counts what the blockers table lists", () => {
   it("carries no detail line when the cycle has no blockers", () => {
     render(
       <ReadinessHeader
-        month="2026-09"
-        summary={summary({ state: "ready", blockers: 0, blockedPeople: 0, ready: 6, isAllClear: true })}
+        summary={summary({ state: "ready", blockers: 0, blockedPeople: 0, ready: 6, inCycle: 6, isAllClear: true })}
         cutoff={null}
-        updated={null}
+        updatedAt={null}
         canStartRun={false}
         runId={null}
       />,
