@@ -21,9 +21,10 @@ interface ReadinessHeaderProps {
 interface CountProps {
   label: string;
   value: number | null;
+  detail?: string;
 }
 
-function Count({ label, value }: CountProps) {
+function Count({ label, value, detail }: CountProps) {
   return (
     <div className="flex min-w-0 flex-col gap-0.5">
       <span className="text-micro uppercase tracking-wide text-muted-foreground">{label}</span>
@@ -32,6 +33,7 @@ function Count({ label, value }: CountProps) {
       ) : (
         <span className="text-sm font-semibold tabular-nums text-foreground">{value}</span>
       )}
+      {detail ? <span className="text-micro text-muted-foreground">{detail}</span> : null}
     </div>
   );
 }
@@ -72,7 +74,17 @@ export function ReadinessHeader({ summary, cutoff, updatedAt, canStartRun, runId
       </div>
       <div className="grid grid-cols-2 gap-3 border-t border-border pt-3 sm:grid-cols-4">
         <Count label="Ready" value={summary.ready} />
-        <Count label="Blocked" value={summary.blockedPeople} />
+        <Count
+          label="Blocked"
+          value={summary.blockers}
+          detail={
+            summary.blockers === 0
+              ? undefined
+              : summary.blockedPeople === 0
+                ? "none named to a person"
+                : `${summary.blockedPeople} named`
+          }
+        />
         <div className="flex min-w-0 flex-col gap-0.5">
           <span className="text-micro uppercase tracking-wide text-muted-foreground">Not in cycle</span>
           <ReadinessBadge state="unmeasured" />
