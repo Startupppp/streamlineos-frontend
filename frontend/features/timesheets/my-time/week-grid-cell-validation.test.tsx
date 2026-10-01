@@ -5,8 +5,19 @@ import type { TimesheetEntry } from "@/features/timesheets";
 
 type Mutation = { mutate: jest.Mock; isPending: boolean; isError: boolean; isSuccess: boolean };
 
+/**
+ * Settles the moment it is called. A mutation that never settles holds the
+ * cell's in-flight lock, which is what `a commit still in flight` exercises.
+ */
 function idleMutation(): Mutation {
-  return { mutate: jest.fn(), isPending: false, isError: false, isSuccess: false };
+  return {
+    mutate: jest.fn((_vars: unknown, options?: { onSettled?: () => void }) =>
+      options?.onSettled?.(),
+    ),
+    isPending: false,
+    isError: false,
+    isSuccess: false,
+  };
 }
 
 const ROW: GridRow = {
@@ -38,13 +49,13 @@ function setup(overrides?: { entryMap?: Map<string, TimesheetEntry>; succeeded?:
   return { view, createEntry, updateEntry, voidEntry };
 }
 
-function blurEvent(cellKey: string) {
+function blurEvent(cellKey: string, date: string = DAYS[0] as string) {
   return {
     currentTarget: {
       dataset: {
         cellKey,
         rowKey: ROW.rowKey,
-        date: DAYS[0],
+        date,
         row: JSON.stringify(ROW),
       },
     },
@@ -130,7 +141,7 @@ describe("pressing Enter commits a cell once, not twice", () => {
     expect(createEntry.mutate).toHaveBeenCalledTimes(1);
   });
 
-  it("still commits a NEW value typed into the same cell after Enter, so the edit is not swallowed on the last row", () => {
+  it("still commits a NEW value typed into the same cell after the first commit landed, so the edit is not swallowed on the last row", () => {
     const { view, createEntry } = setup();
     const cellKey = `${ROW.rowKey}-${DAYS[0]}`;
 
@@ -160,6 +171,61 @@ describe("pressing Enter commits a cell once, not twice", () => {
     expect(createEntry.mutate).toHaveBeenCalledTimes(2);
     expect(createEntry.mutate).toHaveBeenLastCalledWith(
       expect.objectContaining({ hours: 5 }),
+      expect.anything(),
     );
+  });
+});
+
+describe("FE-TS-015 — a cell whose commit is still in flight does not commit again", () => {
+  function inFlightSetup() {
+    const { view, createEntry, updateEntry, voidEntry } = setup();
+    // Hold the mutation open: no onSettled, so the cell's lock is never released.
+    createEntry.mutate.mockImplementation(() => undefined);
+    return { view, createEntry, updateEntry, voidEntry };
+  }
+
+  it("does not create a second entry for the same day while the first create is unresolved", () => {
+    const { view, createEntry } = inFlightSetup();
+    const cellKey = `${ROW.rowKey}-${DAYS[0]}`;
+
+    act(() => view.result.current.handleCellFocus(focusEvent(cellKey, "")));
+    act(() => view.result.current.handleCellChange(changeEvent("2")));
+    act(() => view.result.current.handleCellBlur(blurEvent(cellKey)));
+    expect(createEntry.mutate).toHaveBeenCalledTimes(1);
+
+    act(() => view.result.current.handleCellChange(changeEvent("5")));
+    act(() => view.result.current.handleCellBlur(blurEvent(cellKey)));
+
+    expect(createEntry.mutate).toHaveBeenCalledTimes(1);
+    expect(view.result.current.cellError).toMatch(/still saving/i);
+  });
+
+  it("releases the cell once its commit settles", () => {
+    const { view, createEntry } = setup();
+    const cellKey = `${ROW.rowKey}-${DAYS[0]}`;
+
+    act(() => view.result.current.handleCellFocus(focusEvent(cellKey, "")));
+    act(() => view.result.current.handleCellChange(changeEvent("2")));
+    act(() => view.result.current.handleCellBlur(blurEvent(cellKey)));
+    act(() => view.result.current.handleCellChange(changeEvent("5")));
+    act(() => view.result.current.handleCellBlur(blurEvent(cellKey)));
+
+    expect(createEntry.mutate).toHaveBeenCalledTimes(2);
+    expect(view.result.current.cellError).toBeNull();
+  });
+
+  it("leaves a different cell free to commit while one is saving", () => {
+    const { view, createEntry } = inFlightSetup();
+
+    act(() => view.result.current.handleCellFocus(focusEvent(`${ROW.rowKey}-${DAYS[0]}`, "")));
+    act(() => view.result.current.handleCellChange(changeEvent("2")));
+    act(() => view.result.current.handleCellBlur(blurEvent(`${ROW.rowKey}-${DAYS[0]}`)));
+
+    act(() => view.result.current.handleCellFocus(focusEvent(`${ROW.rowKey}-${DAYS[1]}`, "")));
+    act(() => view.result.current.handleCellChange(changeEvent("3")));
+    act(() => view.result.current.handleCellBlur(blurEvent(`${ROW.rowKey}-${DAYS[1]}`, DAYS[1])));
+
+    expect(createEntry.mutate).toHaveBeenCalledTimes(2);
+    expect(view.result.current.cellError).toBeNull();
   });
 });
