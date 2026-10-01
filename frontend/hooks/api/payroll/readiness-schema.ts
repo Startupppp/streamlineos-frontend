@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
 
 export const readinessStageKeyContract = z.enum([
   "timesheets_approved",
@@ -84,3 +85,31 @@ export const payrollReadinessContract = z.object({
 export type PayrollReadiness = z.infer<typeof payrollReadinessContract>;
 export type ReadinessStage = z.infer<typeof readinessStageContract>;
 export type ReadinessException = z.infer<typeof readinessExceptionContract>;
+
+export const runBlockerSeverityContract = z.enum(["BLOCKER", "WARNING", "INFO"]);
+export const runBlockerStatusContract = z.enum(["OPEN", "RESOLVED", "OVERRIDDEN"]);
+
+export const runBlockerContract = z.object({
+  id: z.number(),
+  code: z.string(),
+  severity: runBlockerSeverityContract,
+  status: runBlockerStatusContract,
+  message: z.string(),
+  metadata: z.record(z.string(), z.unknown()).nullable(),
+  userId: z.string().nullable(),
+  resolvedBy: z.string().nullable(),
+  resolvedAt: z.string().nullable(),
+  overrideReason: z.string().nullable(),
+  createdAt: z.string(),
+  userName: z.string().nullable(),
+  userEmail: z.string().nullable(),
+});
+
+export const runBlockerPageContract = cursorPageContract(runBlockerContract);
+
+export type RunBlocker = z.infer<typeof runBlockerContract>;
+export type RunBlockerSeverity = z.infer<typeof runBlockerSeverityContract>;
+export type RunBlockerPage = {
+  data: RunBlocker[];
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
+};
