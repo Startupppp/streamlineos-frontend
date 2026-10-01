@@ -49,11 +49,11 @@ const BASE_DETAIL = {
   reporter: person("user-a", "Ada"),
   assignees: [],
   watchers: [],
+  members: [],
   labels: [],
   comments: [],
 };
 
-/** The shape `projects-tickets-detail.service.ts` spreads into the response. */
 function withAttachment(overrides: Partial<{
   mimeType: string | null;
   fileUrl: string;
@@ -75,20 +75,11 @@ function withAttachment(overrides: Partial<{
 
 describe("the ticket detail attachment contract maps the backend projection", () => {
   it("carries mimeType through from the backend so images render as image thumbnails, not document tiles", () => {
-    /*
-      projects-tickets-detail.service.ts spreads the full DB row into the attachment,
-      which includes mimeType. The contract previously hardcoded `mimeType: null`,
-      making att.mimeType?.startsWith("image/") always false and rendering every
-      attachment as a document tile (TicketDetailMainSection:179 branch never taken).
-    */
     const detail = ticketDetailContract.parse(withAttachment({ mimeType: "image/png" }));
     expect(detail.attachments[0]?.mimeType).toBe("image/png");
   });
 
   it("maps the backend url alias to fileUrl so storageObjectUrl can build the proxy URL", () => {
-    /*
-      The service aliasess fileUrl -> url. The component reads att.fileUrl.
-    */
     const detail = ticketDetailContract.parse(withAttachment({ fileUrl: "org-1/uploads/Screenshot 2026-09-17 190207.png" }));
     expect(detail.attachments[0]?.fileUrl).toBe("org-1/uploads/Screenshot 2026-09-17 190207.png");
   });

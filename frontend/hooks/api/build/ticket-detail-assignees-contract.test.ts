@@ -53,6 +53,7 @@ const DETAIL_RESPONSE = {
     { id: 2, ticketId: 12, assignedAt: "2026-09-18T10:05:00.000Z", assignedBy: "user-a", user: { userId: "user-b", user: person("user-b", "Blair") } },
   ],
   watchers: [],
+  members: [],
   attachments: [],
   labels: [],
 };

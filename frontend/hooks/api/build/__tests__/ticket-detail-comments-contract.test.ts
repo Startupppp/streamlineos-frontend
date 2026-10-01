@@ -59,6 +59,7 @@ function detailPayload(comments: unknown[]) {
     reporter: AUTHOR,
     assignees: [],
     watchers: [],
+    members: [],
     attachments: [],
     labels: [],
     comments,

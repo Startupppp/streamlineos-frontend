@@ -135,6 +135,8 @@ export const memberCapacityItemSchema = z.object({
   utilizationPercent: z.number().nullable(),
 });
 
-export const workloadCapacityContract = genWorkloadCapacitySchema;
+export const workloadCapacityContract = z.object({
+  members: z.array(memberCapacityItemSchema),
+});
 
 export type MemberCapacityItem = z.infer<typeof memberCapacityItemSchema>;

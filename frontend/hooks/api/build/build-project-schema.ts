@@ -406,8 +406,8 @@ export const projectRosterContract = genProjectRosterSchema;
 export const projectCustomStateListContract = z.array(projectCustomStateSchema);
 export const projectCustomStateContract = projectCustomStateSchema;
 export const bulkReorderStatesResultContract = bulkReorderStatesResultSchema;
-export const buildCustomFieldListContract = genCustomFieldListSchema;
 export const buildCustomFieldContract = buildCustomFieldSchema;
+export const buildCustomFieldListContract = z.array(buildCustomFieldContract);
 export const ticketFieldValueListContract = z.array(ticketFieldValueSchema);
 export const ticketFieldValueCreateContract = z.object({
   success: z.literal(true),
@@ -429,12 +429,22 @@ export const projectWebhookUpdateRequestContract = z
     isActive: z.boolean().optional(),
   })
   .strict();
-export const webhookDeliveryListContract = genWebhookDeliveryListSchema;
+export const webhookDeliveryListContract = z.array(
+  genWebhookDeliveryListSchema.element.extend({
+    status: z.enum(["pending", "success", "failed"]),
+  }),
+);
 export const webhookTestResultContract = webhookTestResultSchema;
 export const projectAutomationListContract = cursorPageContract(
   projectAutomationListItemSchema,
 );
 export const projectAutomationRowContract = projectAutomationRowSchema;
-export const buildMemberPageContract = genBuildMembersSchema;
+export const buildMemberPageContract = genBuildMembersSchema.extend({
+  data: z.array(
+    genBuildMembersSchema.shape.data.element.extend({
+      role: z.enum(["member", "admin"]),
+    }),
+  ),
+});
 export const buildMemberRowContract = buildMemberRowSchema;
 export const successContract = z.object({ success: z.literal(true) });

@@ -265,7 +265,10 @@ export const ticketListRowContract = ticketRowContract
       .nullable(),
   });
 
-export const ticketListPageContract = genTicketListPageSchema;
+export const ticketListPageContract = z.object({
+  data: z.array(ticketListRowContract),
+  pagination: paginationContract,
+});
 
 export const ticketActivityActionContract = z.enum([
   "created",
