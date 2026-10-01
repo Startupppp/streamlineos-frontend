@@ -25,6 +25,17 @@ describe("GET /payroll/runs/{runId}/exceptions is a cursor page, not a bare arra
     expect(schema.properties?.data.type).toBe("array");
   });
 
+  it("declares every pagination field the backend requires, including the total it now sends", () => {
+    const schema = exceptionsResponseSchema();
+    const backendFields = (schema.properties?.pagination.required ?? []).slice().sort();
+    const frontendFields = Object.keys(
+      runExceptionsPageContract.shape.pagination.shape,
+    ).sort();
+
+    expect(backendFields).toContain("total");
+    expect(frontendFields).toEqual(backendFields);
+  });
+
   it("declares every field the vendored contract requires on an item, and no field it omits", () => {
     const schema = exceptionsResponseSchema();
     const backendFields = (schema.properties?.data.items?.required ?? []).slice().sort();
@@ -51,7 +62,7 @@ describe("GET /payroll/runs/{runId}/exceptions is a cursor page, not a bare arra
           userEmail: "ravi@alpha.test",
         },
       ],
-      pagination: { limit: 100, hasMore: false, nextCursor: null },
+      pagination: { limit: 100, hasMore: false, nextCursor: null, total: 1 },
     });
     expect(parsed.success).toBe(true);
   });
