@@ -16,6 +16,7 @@ import {
   BellDot,
   LifeBuoy,
   Users,
+  Sun,
 } from "lucide-react";
 import type { NavGroup } from "./sidebar-nav-types";
 
@@ -56,6 +57,12 @@ export const HOME_NAV_GROUPS: NavGroup[] = [
     label: "For Me",
     product: "home",
     routes: [
+      {
+        label: "My Day",
+        href: "/me",
+        icon: Sun,
+        exact: true,
+      },
       {
         label: "My Team",
         href: "/me/team",
