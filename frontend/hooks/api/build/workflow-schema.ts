@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { genWorkflowTransitionsSchema } from "@/contracts/build-contracts.generated";
 
 export const workflowTransitionContract = z.object({
   id: z.number().int(),
@@ -16,7 +17,7 @@ export const workflowTransitionContract = z.object({
   deletedAt: z.string().nullable(),
 });
 
-export const workflowTransitionListContract = z.array(workflowTransitionContract);
+export const workflowTransitionListContract = genWorkflowTransitionsSchema;
 
 export const projectStatusContract = z.object({
   id: z.number().int(),

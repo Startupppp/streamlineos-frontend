@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { genProjectFilesSchema } from "@/contracts/build-contracts.generated";
 
 export const fileRowContract = z.object({
   id: z.number().int(),
@@ -18,10 +19,7 @@ export const fileCursorPaginationContract = z.object({
   nextCursor: z.string().nullable(),
 });
 
-export const filePageContract = z.object({
-  data: z.array(fileRowContract),
-  pagination: fileCursorPaginationContract,
-});
+export const filePageContract = genProjectFilesSchema;
 
 export const signedUrlContract = z.object({
   url: z.string(),

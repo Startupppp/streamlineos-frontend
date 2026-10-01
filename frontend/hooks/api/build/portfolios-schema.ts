@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
+import { genPortfolioListSchema, genProgramListSchema } from "@/contracts/build-contracts.generated";
 
 const portfolioStatusContract = z.enum(["active", "on_hold", "completed", "archived"]);
 const portfolioHealthContract = z.enum(["on_track", "at_risk", "off_track"]);
@@ -26,7 +27,7 @@ const portfolioListItemContract = portfolioRowContract.omit({ deletedAt: true })
   projectCount: z.number().int(),
 });
 
-export const portfolioPageContract = cursorPageContract(portfolioListItemContract);
+export const portfolioPageContract = genPortfolioListSchema;
 
 const linkedProjectContract = z.object({
   id: z.number().int(),
@@ -67,7 +68,7 @@ export const programListItemContract = programRowContract.omit({ deletedAt: true
   projectCount: z.number().int(),
 });
 
-export const programPageContract = cursorPageContract(programListItemContract);
+export const programPageContract = genProgramListSchema;
 
 export const programDetailContract = programRowContract.extend({
   projects: cursorPageContract(

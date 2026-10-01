@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const OPENAPI_HASH = "sha256:3a4912ddb36a036e2f209fe3c70015a3639a64af317e54b7668d7bc9f316ed07" as const;
+export const OPENAPI_HASH = "sha256:5dbef30c976c50adb026ea7e73f6a25e9f874d3b9b6c40b36e59619043ac87c8" as const;
 
 export const genProjectListPageSchema = z.object({
   data: z.array(z.object({
@@ -166,6 +166,7 @@ export const genProjectBugsSchema = z.array(z.object({
   linkedTestCaseId: z.number().int().nullable(),
   reopenCount: z.number().int().nullable(),
   createdByUserId: z.string().nullable(),
+  version: z.number().int(),
 }));
 
 export const genChangeRequestListSchema = z.object({

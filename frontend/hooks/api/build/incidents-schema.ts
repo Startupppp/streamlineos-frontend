@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { genIncidentPageSchema } from "@/contracts/build-contracts.generated";
 
 export const incidentSeverityContract = z.enum(["critical", "high", "medium", "low"]);
 export const incidentStatusContract = z.enum([
@@ -39,14 +40,7 @@ export const incidentRowContract = z.object({
 
 export const incidentListContract = z.array(incidentRowContract);
 
-export const incidentPageContract = z.object({
-  data: z.array(incidentRowContract),
-  pagination: z.object({
-    limit: z.number().int(),
-    hasMore: z.boolean(),
-    nextCursor: z.string().nullable(),
-  }),
-});
+export const incidentPageContract = genIncidentPageSchema;
 
 export const incidentResponseContract = z.union([incidentPageContract, incidentListContract]);
 

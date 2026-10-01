@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { DB_ENUMS } from "@/contracts/db-enums.generated";
+import { genFormListSchema, genFormRowSchema } from "@/contracts/build-contracts.generated";
 
 export const formRowContract = z.object({
   id: z.number().int(),
@@ -31,14 +32,7 @@ export const formRowContract = z.object({
 
 export const formListContract = z.array(formRowContract);
 
-export const formPageContract = z.object({
-  data: z.array(formRowContract),
-  pagination: z.object({
-    limit: z.number().int(),
-    hasMore: z.boolean(),
-    nextCursor: z.string().nullable(),
-  }),
-});
+export const formPageContract = genFormListSchema;
 
 export const formResponseContract = z.union([formPageContract, formListContract]);
 
