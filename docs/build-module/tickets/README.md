@@ -27,7 +27,7 @@ Current evidence and reopenings: [Architecture verification, 2026-09-27](./ARCHI
 
 ## Retired 2026-10-01
 
-By owner decision, every ticket re-verified against current code and production was deleted. 60 tickets passed; their files and evidence are recoverable with `git log --diff-filter=D -- docs/build-module/tickets/`. Eight remain open:
+By owner decision, every ticket re-verified against current code and production was deleted. 64 tickets passed (01, 33, 47 and 48 after their remaining work landed on 2026-10-02); their files and evidence are recoverable with `git log --diff-filter=D -- docs/build-module/tickets/`. Four remain open, each on a single browser-only criterion:
 
 | Ticket | Open criterion |
 |---|---|
