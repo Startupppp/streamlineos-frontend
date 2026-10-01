@@ -237,6 +237,25 @@ describe("the channel-detail contract mirrors channelDetailSchema, not types/cha
   it("rejects the list row, so the two projections cannot be swapped for one another", () => {
     expect(chatChannelDetailContract.safeParse(CHANNEL).success).toBe(false);
   });
+
+  /**
+   * A member who has just joined a channel and not yet opened it has
+   * `lastReadAt = null` — the column is nullable in the DB and `nullableWireDate()`
+   * in the backend schema. The frontend contract required `z.string()` (non-null),
+   * which caused the full channel-detail parse to fail for any channel where at
+   * least one member had never read a message. The fix is `z.string().nullable()`.
+   */
+  it("accepts a channel-detail member whose lastReadAt is null (never read the channel)", () => {
+    const memberWithNoReads = {
+      ...MEMBER,
+      lastReadAt: null,
+      joinedAt: "2026-08-01T09:00:00.000Z",
+      archivedAt: null,
+      user: { ...MEMBER.user, email: "bob@example.com" },
+    };
+    const detail = { ...CHANNEL_DETAIL, members: [memberWithNoReads] };
+    expect(chatChannelDetailContract.safeParse(detail).success).toBe(true);
+  });
 });
 
 const HUDDLE_PARTICIPANT = {

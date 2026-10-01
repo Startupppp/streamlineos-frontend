@@ -76,7 +76,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
   const [deleteTarget, setDeleteTarget] = useState<Risk | null>(null);
   const [riskFieldErrors, setRiskFieldErrors] = useState<readonly ValidationFieldError[]>([]);
 
-  const { cursor, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
+  const { cursor, pageNumber, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
     listFilters.resetKey,
   );
 
@@ -454,6 +454,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
             pagination={{
               mode: "cursor",
               pageSize: GOVERNANCE_PAGE_SIZE,
+              pageNumber,
               hasMore: data?.hasMore ?? false,
               hasPrevious,
               onNext: handleNextPage,

@@ -546,6 +546,7 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
           <TablePagination
             mode="cursor"
             rowCount={displayedCycles.length}
+            pageNumber={visitedCursors.length + 1}
             hasMore={hasMoreCycles}
             hasPrevious={visitedCursors.length > 0}
             onNext={handleNextPage}

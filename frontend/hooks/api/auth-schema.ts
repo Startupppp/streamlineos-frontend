@@ -53,3 +53,5 @@ export const mfaSetupContract = z.object({
 export const mfaVerifyContract = z.object({ enabled: z.literal(true) });
 
 export const mfaDisableContract = z.object({ disabled: z.literal(true) });
+
+export const mfaChallengeContract = z.object({ satisfied: z.literal(true) });

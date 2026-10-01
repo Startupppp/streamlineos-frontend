@@ -90,4 +90,5 @@ export interface CategoryDefinition {
   leading?: ReactNode;
   visible: boolean;
   activeCount: number;
+  directAction?: () => void;
 }

@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { TablePagination } from "@/components/ui/table-pagination";
+import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 import { toast } from "sonner";
 import {
   useChangelog,
@@ -48,8 +48,14 @@ export function ChangelogTab({
   createOpen,
   onCreateOpenChange,
 }: ChangelogTabProps) {
+  const pager = useCursorPager(undefined, {
+    initialCursor: cursor ?? undefined,
+    onCursorChange: (nextCursor) => onCursorChange(nextCursor ?? null),
+  });
 
-  const { data, isLoading, isError, error, refetch } = useChangelog({ cursor: cursor ?? undefined });
+  const { data, isLoading, isError, error, refetch } = useChangelog({
+    cursor: pager.cursor,
+  });
   const update = useUpdateChangelogEntry();
   const deleteEntry = useDeleteChangelogEntry();
   const canManage = useCan("build:roadmap:manage");
@@ -57,7 +63,7 @@ export function ChangelogTab({
   const [editTarget, setEditTarget] = useState<ChangelogEntry | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ChangelogEntry | null>(null);
 
-  const isEmpty = (data?.data ?? []).length === 0 && !cursor;
+  const isEmpty = (data?.data ?? []).length === 0 && !pager.hasPrevious;
 
   const resolution = usePageState({
     permission: "build:roadmap:view",
@@ -126,12 +132,12 @@ export function ChangelogTab({
   }
 
   const handleNext = useCallback(() => {
-    onCursorChange(data?.pagination.nextCursor ?? null);
-  }, [data?.pagination.nextCursor, onCursorChange]);
+    pager.goNext(data?.pagination.nextCursor);
+  }, [data?.pagination.nextCursor, pager]);
 
   const handlePrev = useCallback(() => {
-    onCursorChange(null);
-  }, [onCursorChange]);
+    pager.goPrevious();
+  }, [pager]);
 
   const hasNext = data?.pagination.hasMore ?? false;
 
@@ -169,12 +175,13 @@ export function ChangelogTab({
             </PmStaggerList>
           </div>
         </PageState>
-        {(data?.data ?? []).length > 0 || Boolean(cursor) ? (
+        {(data?.data ?? []).length > 0 || pager.hasPrevious ? (
           <TablePagination
             mode="cursor"
             rowCount={(data?.data ?? []).length}
+            pageNumber={pager.pageNumber}
             hasMore={hasNext}
-            hasPrevious={Boolean(cursor)}
+            hasPrevious={pager.hasPrevious}
             onNext={handleNext}
             onPrevious={handlePrev}
           />

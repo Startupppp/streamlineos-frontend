@@ -15,7 +15,7 @@ import { formatTicketKey } from "@/components/shared/format-ticket-key";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { TicketQuickActions } from "./ticket-quick-actions";
 import { InlineStatus, InlinePriority, InlineAssignee, InlineEstimate } from "./card-inline-fields";
-import { InlineType, InlineLabels } from "./card-inline-extra-fields";
+import { InlineType, InlineLabels, InlineModule } from "./card-inline-extra-fields";
 import { InlineDueDate } from "./card-inline-date-fields";
 import { pmSnappy } from "@/lib/motion-presets";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -35,6 +35,7 @@ export const ListViewItem = memo(function ListViewItem({
   isSelected,
   onSelect,
   isKeyboardFocused,
+  layout = "standard",
 }: ListViewItemProps) {
   const handleClick = useCallback(() => onClick(ticket.id), [onClick, ticket.id]);
   const handleSelectChange = useCallback(
@@ -85,6 +86,7 @@ export const ListViewItem = memo(function ListViewItem({
       aria-current={isKeyboardFocused ? "true" : undefined}
       className={cn(
         "group flex items-center border-b border-border/50 bg-card transition-colors hover:bg-primary/[0.04] last:border-b-0",
+        layout === "work-index" && "min-h-12 hover:bg-primary/[0.035]",
         isDragging && "shadow-lg ring-1 ring-primary/20 bg-primary/5 rounded-md",
         isKeyboardFocused &&
           "bg-primary/[0.06] ring-1 ring-inset ring-primary/40",
@@ -117,7 +119,13 @@ export const ListViewItem = memo(function ListViewItem({
           <GripVertical className="h-4 w-4" />
         </div>
       )}
-      <div className="flex flex-1 min-w-0 items-center gap-2 px-3 py-1.5">
+      <div
+        className={cn(
+          "flex flex-1 min-w-0 items-center gap-2 px-3 py-1.5",
+          layout === "work-index" &&
+            "flex-wrap gap-x-2 gap-y-1.5 px-3 py-2.5 sm:flex-nowrap sm:px-4",
+        )}
+      >
         {hasProjectId && canUpdate ? (
           <InlineStatus
             ticketId={ticket.id}
@@ -140,22 +148,35 @@ export const ListViewItem = memo(function ListViewItem({
           <TicketTypeIcon type={ticket.type} size="sm" />
         )}
         {showId && (
-          <span className="text-xs text-muted-foreground font-mono flex-shrink-0">
+          <span
+            className={cn(
+              "text-xs text-muted-foreground font-mono flex-shrink-0",
+              layout === "work-index" &&
+                "rounded-md bg-muted/70 px-1.5 py-0.5 font-medium text-foreground/70 ring-1 ring-inset ring-border/50",
+            )}
+          >
             {formatTicketKey(projectKey, ticket.ticketNumber, ticket.sequenceId ?? undefined)}
           </span>
         )}
         <button
           onClick={handleClick}
-          className="min-w-0 flex-1 overflow-hidden text-left text-sm text-foreground hover:underline underline-offset-2"
+          className={cn(
+            "min-w-0 flex-1 overflow-hidden text-left text-sm text-foreground hover:underline underline-offset-2",
+            layout === "work-index" &&
+              "order-first w-full basis-full font-medium leading-5 sm:order-none sm:w-auto sm:basis-0",
+          )}
+          aria-label={`Open ${ticket.title}`}
         >
           <TruncatedText text={ticket.title} />
         </button>
         {showLabels && hasProjectId && canUpdate && (
-          <InlineLabels
-            ticketId={ticket.id}
-            projectId={projectId}
-            currentLabelIds={labelIds}
-          />
+          <span className={cn(layout === "work-index" && "hidden sm:inline-flex")}>
+            <InlineLabels
+              ticketId={ticket.id}
+              projectId={projectId}
+              currentLabelIds={labelIds}
+            />
+          </span>
         )}
         {showPriority && hasProjectId && canUpdate ? (
           <InlinePriority
@@ -168,22 +189,34 @@ export const ListViewItem = memo(function ListViewItem({
           <span className="text-xs font-normal flex-shrink-0 text-muted-foreground">{ticket.priority}</span>
         ) : null}
         {showEstimate && hasProjectId && canUpdate ? (
-          <InlineEstimate
-            ticketId={ticket.id}
-            projectId={projectId}
-            version={version}
-            currentPoints={ticket.points}
-          />
+          <span className={cn(layout === "work-index" && "hidden md:inline-flex")}>
+            <InlineEstimate
+              ticketId={ticket.id}
+              projectId={projectId}
+              version={version}
+              currentPoints={ticket.points}
+            />
+          </span>
         ) : showEstimate && ticket.points != null && ticket.points > 0 ? (
-          <Badge variant="outline" className="text-xs flex-shrink-0">{ticket.points}pt</Badge>
+          <Badge
+            variant="outline"
+            className={cn(
+              "text-xs flex-shrink-0",
+              layout === "work-index" && "hidden md:inline-flex",
+            )}
+          >
+            {ticket.points}pt
+          </Badge>
         ) : null}
         {showDueDate && hasProjectId && canUpdate && (
-          <InlineDueDate
-            ticketId={ticket.id}
-            projectId={projectId}
-            version={version}
-            currentDueDate={ticket.dueDate}
-          />
+          <span className={cn(layout === "work-index" && "hidden md:inline-flex")}>
+            <InlineDueDate
+              ticketId={ticket.id}
+              projectId={projectId}
+              version={version}
+              currentDueDate={ticket.dueDate}
+            />
+          </span>
         )}
         {showAssignee && hasProjectId && canAssign ? (
           <InlineAssignee
@@ -208,10 +241,33 @@ export const ListViewItem = memo(function ListViewItem({
           </span>
         ) : null}
         {showCycle && ticket.cycle ? (
-          <Badge variant="outline" className="text-xs flex-shrink-0">{ticket.cycle.name}</Badge>
+          <Badge
+            variant="outline"
+            className={cn(
+              "text-xs flex-shrink-0",
+              layout === "work-index" && "hidden lg:inline-flex",
+            )}
+          >
+            {ticket.cycle.name}
+          </Badge>
         ) : null}
-        {moduleName !== null ? (
-          <Badge variant="secondary" className="text-xs flex-shrink-0">{moduleName}</Badge>
+        {hasProjectId && canUpdate ? (
+          <InlineModule
+            ticketId={ticket.id}
+            projectId={projectId}
+            version={version}
+            currentModuleId={ticket.moduleId}
+          />
+        ) : moduleName !== null ? (
+          <Badge
+            variant="secondary"
+            className={cn(
+              "text-xs flex-shrink-0",
+              layout === "work-index" && "hidden lg:inline-flex",
+            )}
+          >
+            {moduleName}
+          </Badge>
         ) : null}
         <button
           onClick={handleClick}

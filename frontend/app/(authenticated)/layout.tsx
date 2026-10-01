@@ -8,7 +8,7 @@ import { resolveWizardGate } from "../../lib/wizard-gate";
 import { prefetchAccess } from "../../lib/prefetch/access";
 import { resolveShellVariant } from "../../lib/shell-variant";
 import { requireSession } from "../../lib/rbac/require-permission";
-import { getServerAccess } from "../../lib/rbac/get-server-access";
+import { getServerAccessResult } from "../../lib/rbac/get-server-access";
 import { AppThemeScript } from "../../components/theme/app-theme-script";
 import { AppThemeProvider } from "../../components/theme/app-theme-provider";
 import { FeedbucketEmbed } from "../../components/feedbucket/feedbucket-embed";
@@ -34,11 +34,11 @@ export default async function DashboardLayout({
 
   if (gate) redirect(gate);
 
-  const isSettingsRoute =
-    pathname === "/settings" || pathname.startsWith("/settings/");
+  const isMfaRemedyRoute = pathname === "/settings";
 
-  const { mfa } = await getServerAccess();
-  if (!isSettingsRoute && mfa?.enforced && !mfa.satisfied)
+  const accessResult = await getServerAccessResult();
+  const mfa = accessResult.ok ? accessResult.access.mfa : undefined;
+  if (!isMfaRemedyRoute && mfa?.enforced && !mfa.satisfied)
     redirect("/settings");
 
   const state = await prefetchAccess();

@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseMutationOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { lazyContract } from "@/lib/api-envelope";
 
 const meLoginHistoryContract = lazyContract(() =>
@@ -70,6 +71,10 @@ export function useLoginHistory(params?: { page?: number; limit?: number; succes
       }, signal, meLoginHistoryContract),
     staleTime: 30_000,
     placeholderData: (prev) => prev,
+    // SETTINGS-001: see `useSessions`. Recent sign-ins is one panel on Account
+    // Settings and already draws its own ErrorState with a Retry; throwing to
+    // the route boundary took the other three sections down with it.
+    ...INLINE_READ_ERROR,
   });
 }
 

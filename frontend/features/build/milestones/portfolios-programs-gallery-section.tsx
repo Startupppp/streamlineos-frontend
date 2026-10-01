@@ -89,7 +89,7 @@ function PortfoliosReadyTable() {
       isError={false}
       getRowKey={getRowKey}
       mobileCard={renderMobileCard}
-      pagination={{ mode: "cursor", pageSize: 20, hasMore: false, hasPrevious: false, onNext: NOOP, onPrevious: NOOP }}
+      pagination={{ mode: "cursor", pageSize: 20, pageNumber: 1, hasMore: false, hasPrevious: false, onNext: NOOP, onPrevious: NOOP }}
       empty={<EmptyState className={CONTENT_FILL_PANEL} illustrationPreset="projects" title="No portfolios yet" />}
     />
   );
@@ -142,7 +142,7 @@ function ProgramsReadyTable() {
       isError={false}
       getRowKey={getRowKey}
       mobileCard={renderMobileCard}
-      pagination={{ mode: "cursor", pageSize: 25, hasMore: false, hasPrevious: false, onNext: NOOP, onPrevious: NOOP }}
+      pagination={{ mode: "cursor", pageSize: 25, pageNumber: 1, hasMore: false, hasPrevious: false, onNext: NOOP, onPrevious: NOOP }}
       empty={<EmptyState className={CONTENT_FILL_PANEL} illustrationPreset="projects" title="No programs yet" />}
     />
   );

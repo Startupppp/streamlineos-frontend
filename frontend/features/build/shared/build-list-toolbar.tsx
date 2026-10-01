@@ -51,11 +51,13 @@ interface BuildListToolbarProps {
 function ToolbarFilterSlot({
   filter,
   collapsed,
-  index,
+  fieldIndex,
+  fieldFilterCount,
 }: {
   filter: BuildToolbarFilter;
   collapsed: boolean;
-  index: number;
+  fieldIndex: number | null;
+  fieldFilterCount: number;
 }) {
   return (
     <div
@@ -63,7 +65,9 @@ function ToolbarFilterSlot({
       data-filter-id={filter.id}
       className={cn(
         "min-w-0 w-auto shrink-0 basis-auto",
-        toolbarInlineVisibility(index, collapsed),
+        fieldIndex === null
+          ? "max-md:min-w-0 max-md:shrink-0"
+          : toolbarInlineVisibility(fieldIndex, collapsed, fieldFilterCount),
       )}
     >
       {filter.control}
@@ -136,12 +140,13 @@ export function BuildListToolbar({
 
   const actions = (
     <>
-      {layout.filters.map((entry, index) => (
+      {layout.filters.map((entry) => (
         <ToolbarFilterSlot
           key={entry.filter.id}
           filter={entry.filter}
           collapsed={entry.collapsed}
-          index={index}
+          fieldIndex={entry.fieldIndex}
+          fieldFilterCount={layout.fieldFilterCount}
         />
       ))}
 
@@ -156,7 +161,7 @@ export function BuildListToolbar({
                 className={cn(
                   "justify-center",
                   RESPONSIVE_ICON_LABEL_TRIGGER_CLASS,
-                  toolbarMoreButtonClass(layout.filters.length, layout.collapse),
+                  toolbarMoreButtonClass(layout.fieldFilterCount, layout.collapse),
                 )}
               >
                 <SlidersHorizontal className="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -183,9 +188,13 @@ export function BuildListToolbar({
               tabIndex={-1}
               className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4 outline-none"
             >
-              {layout.filters.map((entry, index) => {
+              {layout.filters.map((entry) => {
                 if (!isToolbarFieldFilter(entry.filter)) return null;
-                const drawerClass = toolbarDrawerVisibility(index, entry.collapsed);
+                const drawerClass = toolbarDrawerVisibility(
+                  entry.fieldIndex ?? 0,
+                  entry.collapsed,
+                  layout.fieldFilterCount,
+                );
                 if (drawerClass === "hidden") return null;
                 return (
                   <div key={entry.filter.id} className={drawerClass}>
@@ -237,7 +246,7 @@ export function BuildListToolbar({
           onFocus={handleSearchFocus}
           onBlur={handleSearchBlur}
           className={cn(
-            "min-w-0 flex-1 basis-[12rem]",
+            "min-w-0 flex-1 basis-[12rem] md:max-w-md",
             searchExpanded && "max-md:max-w-none max-md:basis-auto",
           )}
         />

@@ -91,6 +91,24 @@ describe("ProjectMemberRolesSection — page state transitions", () => {
     expect(screen.getByText("Alice")).toBeInTheDocument();
     expect(screen.getByText("Bob")).toBeInTheDocument();
   });
+
+  it("filters direct members by normalized name, email, and role", () => {
+    const { rerender } = render(
+      <ProjectMemberRolesSection projectId={1} search="  ALICE  " />,
+    );
+    expect(screen.getByText("Alice")).toBeInTheDocument();
+    expect(screen.queryByText("Bob")).not.toBeInTheDocument();
+
+    rerender(<ProjectMemberRolesSection projectId={1} search="viewer" />);
+    expect(screen.queryByText("Alice")).not.toBeInTheDocument();
+    expect(screen.getByText("Bob")).toBeInTheDocument();
+  });
+
+  it("distinguishes a filtered-empty result from a truly empty list", () => {
+    render(<ProjectMemberRolesSection projectId={1} search="no-match" />);
+    expect(screen.getByText("No direct members match your search.")).toBeInTheDocument();
+    expect(screen.queryByText("No members yet.")).not.toBeInTheDocument();
+  });
 });
 
 describe("ProjectMemberRolesSection — build:manage gates", () => {
@@ -98,6 +116,7 @@ describe("ProjectMemberRolesSection — build:manage gates", () => {
     mockCanManage = true;
     render(<ProjectMemberRolesSection projectId={1} />);
     expect(screen.getAllByRole("combobox")).toHaveLength(2);
+    expect(screen.getAllByRole("combobox")[0]).toHaveClass("w-32");
   });
 
   it("shows a read-only role badge for each member when the viewer lacks build:manage", () => {

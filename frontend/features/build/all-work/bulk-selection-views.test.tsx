@@ -56,6 +56,7 @@ interface MockListViewProps {
   selection?: ListSelection;
   onTicketClick?: (id: number) => void;
   onTicketSelect?: (id: number) => void;
+  itemLayout?: "standard" | "work-index";
 }
 
 function getListViewMock(): jest.Mock {
@@ -105,6 +106,13 @@ beforeEach(() => {
 });
 
 describe("AllWorkListSection — selection threading", () => {
+  it("uses the responsive work-index row layout without changing the shared default", () => {
+    render(<AllWorkListSection groups={[GROUP]} />);
+
+    const props = getListViewMock().mock.calls[0]?.[0] as MockListViewProps;
+    expect(props.itemLayout).toBe("work-index");
+  });
+
   it("ListView receives selection when tableSelection and onSelectionChange are provided", () => {
     const selected = new Set<string | number>([10]);
     const onChange = jest.fn();

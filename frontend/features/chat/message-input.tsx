@@ -92,6 +92,9 @@ export function MessageInput({
   const handleFormatBold = useCallback(() => formatSelection("**"), [formatSelection]);
   const handleFormatItalic = useCallback(() => formatSelection("*"), [formatSelection]);
   const handleFormatCode = useCallback(() => formatSelection("`"), [formatSelection]);
+  const handlePreventBlur = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+  }, []);
 
   const handleCancelReply = useCallback(() => setReplyTo(null), [setReplyTo]);
   const handleOpenFileInput = useCallback(() => { fileInputRef.current?.click(); }, [fileInputRef]);
@@ -204,6 +207,7 @@ export function MessageInput({
             <div className="flex items-center justify-between px-3 py-1.5">
               <div className="flex items-center gap-0.5">
                 <button
+                  type="button"
                   onClick={handleOpenFileInput}
                   disabled={uploading}
                   className={cn(
@@ -218,6 +222,7 @@ export function MessageInput({
                   <Paperclip className="h-[18px] w-[18px]" />
                 </button>
                 <button
+                  type="button"
                   onClick={handleToggleEmoji}
                   className={cn(
                     "p-2 rounded-lg hover:bg-muted/60 transition-colors",
@@ -231,6 +236,7 @@ export function MessageInput({
                   <Smile className="h-[18px] w-[18px]" />
                 </button>
                 <button
+                  type="button"
                   onClick={handleInsertMentionAt}
                   className="p-2 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
                   title="Mention someone"
@@ -240,7 +246,9 @@ export function MessageInput({
                 </button>
                 <div className="w-px h-4 bg-border/40 mx-0.5" />
                 <button
+                  type="button"
                   onClick={handleFormatBold}
+                  onMouseDown={handlePreventBlur}
                   className="p-2 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors font-bold"
                   title="Bold (**text**)"
                   aria-label="Bold"
@@ -248,7 +256,9 @@ export function MessageInput({
                   <Bold className="h-[16px] w-[16px]" />
                 </button>
                 <button
+                  type="button"
                   onClick={handleFormatItalic}
+                  onMouseDown={handlePreventBlur}
                   className="p-2 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
                   title="Italic (*text*)"
                   aria-label="Italic"
@@ -256,7 +266,9 @@ export function MessageInput({
                   <Italic className="h-[16px] w-[16px]" />
                 </button>
                 <button
+                  type="button"
                   onClick={handleFormatCode}
+                  onMouseDown={handlePreventBlur}
                   className="p-2 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors font-mono"
                   title="Inline code (`code`)"
                   aria-label="Code"
@@ -269,6 +281,7 @@ export function MessageInput({
                   Shift+Enter for new line
                 </span>
                 <button
+                  type="button"
                   onClick={onSend}
                   disabled={
                     (!messageInput.trim() && pendingAttachments.length === 0) ||

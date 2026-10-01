@@ -34,15 +34,14 @@ export interface TablePaginationOffsetProps extends TablePaginationChrome {
   onPrevious?: never;
 }
 
-export interface TablePaginationCursorProps extends TablePaginationChrome {
+interface TablePaginationCursorBase extends TablePaginationChrome {
   mode: "cursor";
   rowCount: number;
 
+  /** Required by canonical callers; optional here only for legacy non-Build consumers. */
   pageNumber?: number;
   hasMore: boolean;
-  hasPrevious: boolean;
   onNext: () => void;
-  onPrevious: () => void;
   pageSize?: number;
   hideOnSinglePage?: boolean;
   showLabels?: boolean;
@@ -53,6 +52,20 @@ export interface TablePaginationCursorProps extends TablePaginationChrome {
   showEdgeJumps?: never;
 }
 
+export type TablePaginationCursorProps = TablePaginationCursorBase &
+  (
+    | {
+        cursorVariant?: "paged";
+        hasPrevious: boolean;
+        onPrevious: () => void;
+      }
+    | {
+        cursorVariant: "load-more";
+        hasPrevious?: never;
+        onPrevious?: never;
+      }
+  );
+
 export type TablePaginationProps =
   | TablePaginationOffsetProps
   | TablePaginationCursorProps;
@@ -60,14 +73,25 @@ export type TablePaginationProps =
 export const SHELL_CLASS =
   "flex shrink-0 flex-row flex-nowrap items-center justify-between gap-2 border-t border-border/60 bg-card px-2 py-1.5";
 
-export function getVisiblePageItems(totalPages: number): (number | "gap")[] {
+export function getVisiblePageItems(
+  totalPages: number,
+  currentPage: number,
+): (number | "gap")[] {
   const total = Math.max(1, totalPages);
-  if (total <= 4) return Array.from({ length: total }, (_, i) => i + 1);
-  return [1, 2, "gap", total - 1, total];
+  const current = Math.min(Math.max(1, currentPage), total);
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+
+  if (current <= 4) return [1, 2, 3, 4, 5, "gap", total];
+  if (current >= total - 3) {
+    return [1, "gap", total - 4, total - 3, total - 2, total - 1, total];
+  }
+  return [1, "gap", current - 1, current, current + 1, "gap", total];
 }
 
 export interface CursorPager {
   cursor: string | undefined;
+  /** One-based position in the cursor walk. This is display-only, not jumpable. */
+  pageNumber: number;
   hasPrevious: boolean;
   goNext: (nextCursor: string | null | undefined) => void;
   goPrevious: () => void;
@@ -118,6 +142,7 @@ export function useCursorPager(resetKey?: string, urlOptions?: CursorPagerUrlOpt
   return useMemo(
     () => ({
       cursor: stack[stack.length - 1],
+      pageNumber: stack.length,
       hasPrevious: stack.length > 1,
       goNext,
       goPrevious,

@@ -110,7 +110,7 @@ export async function applyMailActionToCaches(
 
     if (action === "archive" || action === "trash") {
       qc.setQueryData<InfiniteData<UnifiedInboxResponse>>(key, (old) => {
-        if (!old) return old;
+        if (!old || !("pages" in old)) return old;
         return {
           ...old,
           pages: old.pages.map((page) => ({
@@ -129,7 +129,7 @@ export async function applyMailActionToCaches(
     } else if (action === "markRead" || action === "markUnread") {
       const nextIsRead = action === "markRead";
       qc.setQueryData<InfiniteData<UnifiedInboxResponse>>(key, (old) => {
-        if (!old) return old;
+        if (!old || !("pages" in old)) return old;
         return {
           ...old,
           pages: old.pages.map((page) => ({

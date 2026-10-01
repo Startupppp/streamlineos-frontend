@@ -131,6 +131,7 @@ export function CalendarView() {
     createSlot,
     isCreateOpen,
     setIsCreateOpen,
+    shouldMountCreate,
     selectedEventId,
     isSlotChoiceOpen,
     setIsSlotChoiceOpen,
@@ -404,9 +405,9 @@ export function CalendarView() {
           </div>
         )}
 
-        {isCreateOpen && (
+        {shouldMountCreate && (
           <EventCreateDialog
-            open
+            open={isCreateOpen}
             onOpenChange={setIsCreateOpen}
             defaultSlot={createSlot}
           />

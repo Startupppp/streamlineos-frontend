@@ -271,12 +271,12 @@ test.describe("Build list responsive contract", () => {
       await page.goto(GALLERY);
     });
 
-    test("filters return inline and the drawer trigger retires", async ({ page }) => {
+    test("one filter remains direct while two filters use the drawer", async ({ page }) => {
       const scope = frame(page, "four-actions-three-filters");
-      for (const id of ["status", "health", "lead"]) {
-        await expect(scope.locator(`[data-filter-id=${id}]`)).toBeVisible();
-      }
-      await expect(scope.getByRole("button", { name: /^Filters/ })).toBeHidden();
+      await expect(scope.locator("[data-filter-id=status]")).toBeVisible();
+      await expect(scope.locator("[data-filter-id=health]")).toBeHidden();
+      await expect(scope.locator("[data-filter-id=lead]")).toBeHidden();
+      await expect(scope.getByRole("button", { name: /^Filters/ })).toBeVisible();
     });
 
     test("the desktop table replaces the mobile cards", async ({ page }) => {
@@ -316,13 +316,13 @@ test.describe("Build list responsive contract", () => {
       expect(Math.abs((actions?.y ?? 0) - (title?.y ?? 0))).toBeLessThan(40);
     });
 
-    test("three visible actions at most, the rest behind one overflow", async ({ page }) => {
+    test("a lone overflow action is promoted inline", async ({ page }) => {
       const scope = frame(page, "four-actions-three-filters");
       const visible = scope.locator(
         "[data-slot=build-header-actions] > .sm\\:inline-flex:visible",
       );
-      expect(await visible.count()).toBeLessThanOrEqual(4);
-      await expect(scope.getByRole("button", { name: "More actions" })).toBeVisible();
+      await expect(visible).toHaveCount(4);
+      await expect(scope.getByRole("button", { name: "More actions" })).toBeHidden();
     });
   });
 
@@ -406,10 +406,10 @@ test.describe("Build list responsive contract", () => {
       await expect(scope.getByRole("button", { name: "Export", exact: true })).toBeFocused();
 
       await page.keyboard.press("Tab");
-      await expect(scope.getByRole("button", { name: "New project", exact: true })).toBeFocused();
+      await expect(scope.getByRole("button", { name: "Archive", exact: true })).toBeFocused();
 
       await page.keyboard.press("Tab");
-      await expect(scope.getByRole("button", { name: "More actions", exact: true })).toBeFocused();
+      await expect(scope.getByRole("button", { name: "New project", exact: true })).toBeFocused();
 
       await page.keyboard.press("Tab");
       await expect(scope.locator("[data-slot=search-input] input")).toBeFocused();
@@ -430,6 +430,8 @@ test.describe("Build list responsive contract", () => {
     });
 
     test("opening the overflow dropdown and pressing Escape returns focus to its trigger", async ({ page }) => {
+      await page.setViewportSize({ width: 375, height: 812 });
+      await page.goto(GALLERY);
       const scope = frame(page, "four-actions-three-filters");
       const trigger = scope.getByRole("button", { name: "More actions", exact: true });
       await trigger.click();
@@ -475,9 +477,14 @@ test.describe("Build list responsive contract", () => {
 
       test("each filter select trigger is named by its visual label", async ({ page }) => {
         const scope = frame(page, "four-actions-three-filters");
-        for (const label of ["Status", "Health", "Lead"]) {
+        await expect(
+          scope.getByRole("combobox", { name: "Status", exact: true }),
+        ).toBeVisible();
+        await scope.getByRole("button", { name: /^Filters/ }).click();
+        const dialog = page.getByRole("dialog");
+        for (const label of ["Health", "Lead"]) {
           await expect(
-            scope.getByRole("combobox", { name: label, exact: true }),
+            dialog.getByRole("combobox", { name: label, exact: true }),
           ).toBeVisible();
         }
       });

@@ -146,7 +146,7 @@ const CustomFieldRow = memo(function CustomFieldRow({
               <button
                 type="button"
                 className="w-7 flex items-center justify-center rounded-lg text-status-danger-ink hover:text-status-danger-ink hover:bg-status-danger-surface transition-colors shrink-0"
-                aria-label="Delete field"
+                aria-label={`Delete field ${field.name}`}
                 {...deleteHoverHandlers}
               >
                 <Trash2Icon ref={deleteIconRef} size={14} />
@@ -459,6 +459,7 @@ export function CustomFieldsSettings({ projectId, search, createRef, editRef }: 
             open={!!editingField}
             onOpenChange={handleCloseEdit}
             title="Edit custom field"
+            description="Update the field name, type, and available options."
             resolver={zodResolver(customFieldSchema)}
             defaultValues={editDefaultValues}
             onSubmit={handleUpdate}

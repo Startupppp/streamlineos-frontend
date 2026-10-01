@@ -119,6 +119,7 @@ export default function KnowledgeBasePage() {
   const tempIdRef = useRef(0);
   const generationRef = useRef(0);
   const initializedRef = useRef(false);
+  const sendingRef = useRef(false);
 
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
@@ -251,7 +252,8 @@ export default function KnowledgeBasePage() {
 
   function sendMessage(text: string) {
     const trimmed = text.trim();
-    if (!trimmed || ask.isPending) return;
+    if (!trimmed || ask.isPending || sendingRef.current) return;
+    sendingRef.current = true;
     setInput("");
     isNearBottomRef.current = true;
     setPending({ question: trimmed });
@@ -274,6 +276,7 @@ export default function KnowledgeBasePage() {
       { question: trimmed, conversationId: activeConversationId ?? undefined, onToken: handleToken, ...scopePayload },
       {
         onSuccess: (data) => {
+          sendingRef.current = false;
           if (generationRef.current !== generation) return;
           const convId = activeConversationId ?? data.conversationId;
           const now = new Date().toISOString();
@@ -296,6 +299,7 @@ export default function KnowledgeBasePage() {
           }
         },
         onError: (error) => {
+          sendingRef.current = false;
           if (generationRef.current !== generation) return;
           if (isAiStreamAbort(error)) {
             setPending((current) => current ? { ...current, error: "Generation stopped. This answer is incomplete." } : current);
@@ -441,7 +445,7 @@ export default function KnowledgeBasePage() {
       title="Knowledge Base"
       subtitle="Chat with your files, notes and wiki — answers are grounded in your content."
       noInternalScroll
-      contentClassName="flex min-h-0 min-w-0 flex-col px-4 sm:px-6 md:pr-36"
+      contentClassName="flex min-h-0 min-w-0 flex-col px-4 sm:px-6"
       actions={
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" className="gap-1.5" onClick={handleToggleConversations} aria-pressed={conversationsOpen}>
@@ -589,9 +593,9 @@ export default function KnowledgeBasePage() {
 
               <div className="shrink-0 border-t border-border bg-background/60 p-3">
                 <div className="flex items-center gap-2">
-                  <Input value={input} onChange={handleInputChange} onKeyDown={handleKeyDown} placeholder="Ask anything about your files, notes and wiki…" className="h-11 min-w-0 flex-1 rounded-xl text-sm" autoFocus />
+                  <Input value={input} onChange={handleInputChange} onKeyDown={handleKeyDown} placeholder="Ask anything about your files, notes and wiki…" className="h-9 min-w-0 flex-1 rounded-xl text-sm" autoFocus />
                   {ask.isPending && <Button variant="outline" onClick={handleStop}>Stop</Button>}
-                  <Button onClick={handleSend} disabled={ask.isPending || !input.trim()} className="h-11 w-11 shrink-0 rounded-xl p-0" aria-label="Send">
+                  <Button onClick={handleSend} disabled={ask.isPending || !input.trim()} className="h-9 w-9 shrink-0 rounded-xl p-0" aria-label="Send">
                     <motion.span whileTap={reduce ? undefined : { scale: 0.85 }}>
                       <Send className="h-4 w-4" />
                     </motion.span>

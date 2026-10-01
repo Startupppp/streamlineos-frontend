@@ -23,9 +23,8 @@ export const chatChannelFilesContract = z.object({
       fileKey: z.string(),
       fileSize: z.number().int(),
       mimeType: z.string(),
-      uploadedAt: z.string(),
-      uploadedBy: z.object({ id: z.string(), name: z.string().nullable() }),
+      createdAt: z.string(),
     }),
   ),
-  nextCursor: z.number().int().optional(),
+  nextCursor: z.number().int().nullable().optional(),
 });

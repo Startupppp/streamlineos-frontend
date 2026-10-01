@@ -23,6 +23,22 @@ export function DataTableFooter({
   pageSizeOptions?: readonly number[];
 }) {
   if (cursor) {
+    if (cursor.cursorVariant === "load-more") {
+      return (
+        <TablePagination
+          mode="cursor"
+          cursorVariant="load-more"
+          rowCount={rowCount}
+          pageNumber={cursor.pageNumber}
+          hasMore={cursor.hasMore}
+          onNext={cursor.onNext}
+          pageSize={limit}
+          onPageSizeChange={cursor.onPageSizeChange}
+          pageSizeOptions={cursor.pageSizeOptions}
+        />
+      );
+    }
+
     return (
       <TablePagination
         mode="cursor"

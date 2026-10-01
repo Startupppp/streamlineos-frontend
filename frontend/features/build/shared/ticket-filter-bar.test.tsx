@@ -29,7 +29,7 @@ jest.mock("@/hooks/api/build/projects", () => ({
  * That criterion is only holdable in a browser.
  */
 
-function renderWith(query: string) {
+function renderWith(query: string, presentation: "default" | "all-work" = "default") {
   mockSearchParams = new URLSearchParams(query);
   window.history.replaceState({}, "", query ? `/build/tickets?${query}` : "/build/tickets");
   return render(
@@ -37,6 +37,7 @@ function renderWith(query: string) {
       statuses={[{ name: "OPEN" }, { name: "DONE" }]}
       members={[{ id: "u1", name: "Priya", firstName: "Priya", lastName: null }]}
       projectId={42}
+      presentation={presentation}
     />,
   );
 }
@@ -65,6 +66,13 @@ describe("ticket filter bar", () => {
     renderWith("");
 
     expect(screen.queryByLabelText(/remove .* filter/i)).not.toBeInTheDocument();
+  });
+
+  it("uses one explicit Filters trigger for the All Work presentation", () => {
+    renderWith("status=OPEN", "all-work");
+
+    expect(screen.getByRole("button", { name: "Filters (1 active)" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /add filter/i })).not.toBeInTheDocument();
   });
 
   it("defers cycle and label reads until filter options are requested", () => {

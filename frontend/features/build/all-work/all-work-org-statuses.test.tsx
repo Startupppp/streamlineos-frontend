@@ -64,6 +64,7 @@ jest.mock("@/features/build/shared/build-filter-select", () => ({
 
 interface FilterBarProps {
   statuses?: OrgStates;
+  presentation?: "default" | "all-work";
 }
 
 const mockTicketFilterBar = jest.fn<null, [FilterBarProps]>(() => null);
@@ -127,7 +128,17 @@ jest.mock("@/components/pm-chrome", () => ({
   CONTENT_FILL_PANEL: "",
 }));
 jest.mock("@/components/ui/page-tabs-toolbar", () => ({
-  PageTabsToolbar: ({ filters }: { filters?: React.ReactNode }) => <div>{filters}</div>,
+  PageTabsToolbar: ({
+    filters,
+    filtersAlwaysVisible,
+  }: {
+    filters?: React.ReactNode;
+    filtersAlwaysVisible?: boolean;
+  }) => (
+    <div data-testid="all-work-toolbar" data-filters-always-visible={filtersAlwaysVisible}>
+      {filters}
+    </div>
+  ),
 }));
 jest.mock("@/components/ui/page-wrapper", () => ({
   PageWrapper: ({ children, filters }: { children?: React.ReactNode; filters?: React.ReactNode }) => (
@@ -172,6 +183,11 @@ describe("AllWorkPage — org-wide statuses passed to TicketFilterBar", () => {
     expect(calls.length).toBeGreaterThan(0);
     expect(calls[0]?.[0]).toBeDefined();
     expect(calls[0]?.[0]?.statuses).toEqual(CUSTOM_STATUSES);
+    expect(calls[0]?.[0]?.presentation).toBe("all-work");
+    expect(document.querySelector('[data-testid="all-work-toolbar"]')).toHaveAttribute(
+      "data-filters-always-visible",
+      "true",
+    );
   });
 
   it("passes undefined statuses (not the hardcoded four) when useOrgCustomStates has not loaded yet", () => {

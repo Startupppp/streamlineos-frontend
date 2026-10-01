@@ -3,6 +3,7 @@
 import { memo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
+import { FolderKanban } from "lucide-react";
 import { ListView } from "@/features/build/views/list-view";
 import type { ListSelection } from "@/features/build/views/list-view-shared";
 import { PmPanel } from "@/components/pm-chrome";
@@ -76,8 +77,11 @@ const GroupSection = memo(function GroupSection({
   const projectKey = group.projectKey ?? "";
 
   return (
-    <PmPanel>
-      <div className="flex min-w-0 items-center gap-2 border-b border-border/50 bg-muted/20 px-3 py-2">
+    <PmPanel className="overflow-hidden ring-1 ring-border/40">
+      <div className="flex min-w-0 items-center gap-2.5 border-b border-border/60 bg-gradient-to-r from-muted/70 via-muted/30 to-transparent px-3 py-2.5 sm:px-4">
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-background/90 text-muted-foreground shadow-sm ring-1 ring-border/60">
+          <FolderKanban className="h-3.5 w-3.5" aria-hidden="true" />
+        </span>
         {projectId !== undefined && (
           <ProjectChip
             projectId={projectId}
@@ -85,10 +89,17 @@ const GroupSection = memo(function GroupSection({
             projectName={group.label}
           />
         )}
-        <TruncatedText text={group.label} className="text-label font-medium text-foreground" />
+        <div className="min-w-0 flex-1">
+          <span className="sr-only">Project: </span>
+          <TruncatedText
+            text={group.label}
+            className="text-label font-semibold text-foreground"
+          />
+        </div>
         <Badge
           variant="secondary"
-          className="h-5 shrink-0 rounded-md bg-primary/10 px-1.5 text-micro font-normal tabular-nums text-primary"
+          aria-label={`${group.tickets.length}${hasMore ? " or more" : ""} tickets`}
+          className="h-6 shrink-0 rounded-full border border-primary/15 bg-primary/10 px-2 text-micro font-semibold tabular-nums text-primary"
         >
           {group.tickets.length}{hasMore ? "+" : ""}
         </Badge>
@@ -99,6 +110,7 @@ const GroupSection = memo(function GroupSection({
         projectKey={firstTicket?.projectKey ?? projectKey}
         projectId={firstTicket?.projectId ?? projectId ?? 0}
         selection={selection}
+        itemLayout="work-index"
       />
     </PmPanel>
   );

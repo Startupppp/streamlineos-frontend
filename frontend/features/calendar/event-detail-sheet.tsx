@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import dynamic from "next/dynamic";
-import { format } from "date-fns";
+import { format, addDays } from "date-fns";
 import Link from "next/link";
 import { Pencil, Sparkles } from "lucide-react";
 import { DownloadIcon, MicIcon, Trash2Icon } from "@animateicons/react/lucide";
@@ -129,9 +129,10 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
   const handleExportDay = useCallback(async () => {
     if (!event) return;
     try {
+      const startDay = new Date(event.start);
       await downloadCalendarExport(
-        format(new Date(event.start), "yyyy-MM-dd"),
-        format(new Date(event.end), "yyyy-MM-dd"),
+        format(startDay, "yyyy-MM-dd"),
+        format(addDays(startDay, 1), "yyyy-MM-dd"),
       );
     } catch (err) {
       toast.error(getErrorMessage(err));

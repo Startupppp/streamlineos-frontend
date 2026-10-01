@@ -52,6 +52,7 @@ export const ListView = memo(function ListView({
   showEmptyRows,
   selection,
   focusedTicketId,
+  itemLayout = "standard",
 }: ListViewProps) {
   const hasRowBy = !!rowBy && rowBy !== "none";
   const shouldReduceMotion = useReducedMotion();
@@ -375,6 +376,7 @@ export const ListView = memo(function ListView({
                 isSelected={selection?.selected.has(ticket.id)}
                 onSelect={selection ? handleItemSelect : undefined}
                 isKeyboardFocused={focusedTicketId === ticket.id}
+                layout={itemLayout}
               />
             ))}
           </div>

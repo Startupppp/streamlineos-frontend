@@ -236,6 +236,7 @@ export function ProjectSettingsViewsPage({ projectId }: ProjectSettingsViewsPage
                 <TablePagination
                   mode="cursor"
                   rowCount={pagedViews.length}
+                  pageNumber={pager.pageNumber}
                   hasMore={pagination?.hasMore ?? false}
                   hasPrevious={pager.hasPrevious}
                   onNext={() => pager.goNext(pagination?.nextCursor)}

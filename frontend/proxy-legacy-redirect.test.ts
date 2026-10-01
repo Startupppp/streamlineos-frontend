@@ -1,6 +1,8 @@
 /**
  * @jest-environment node
  */
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { NextRequest } from "next/server";
 import { proxy } from "./proxy";
 import {
@@ -24,6 +26,15 @@ describe("proxy observes the two code-owned Build compatibility redirects", () =
   afterEach(() => {
     console.info = origInfo;
     resetLegacyRedirectCounts();
+  });
+
+  it("keeps the code-owned Build redirect inventory exact", () => {
+    const source = readFileSync(resolve(process.cwd(), "proxy.ts"), "utf8");
+    const observedSources = [
+      ...source.matchAll(/recordLegacyRedirect\("([^"]+)"/g),
+    ].map((match) => match[1]);
+
+    expect(observedSources).toEqual(["/projects", "/product-management"]);
   });
 
   it("still redirects /projects into /build with the search preserved", async () => {

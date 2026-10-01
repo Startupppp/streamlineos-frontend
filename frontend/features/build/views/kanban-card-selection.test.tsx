@@ -20,6 +20,9 @@ jest.mock("./card-inline-extra-fields", () => ({
   InlineType: () => null,
   InlineLabels: () => null,
   InlineCycle: () => null,
+  InlineModule: ({ currentModuleId }: { currentModuleId?: number | null }) => (
+    <span>module-editor-{currentModuleId ?? "none"}</span>
+  ),
 }));
 
 jest.mock("./card-inline-date-fields", () => ({
@@ -84,6 +87,28 @@ describe("KanbanTicketCard — selection does not cost navigation", () => {
     expect(onSelect).toHaveBeenCalledWith(7);
   });
 
+  it("does not bubble title activation into the draggable row", async () => {
+    const onSelect = jest.fn();
+    function handleOuterClick() {
+      onSelect(ticket.id);
+    }
+    render(
+      <div onClick={handleOuterClick}>
+        <KanbanTicketCard
+          ticket={ticket}
+          projectId={1}
+          projectKey="P1"
+          isDragging={false}
+          onSelect={onSelect}
+        />
+      </div>,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: /Fix the broken import/i }));
+
+    expect(onSelect).toHaveBeenCalledTimes(1);
+  });
+
   it("checking the card checkbox selects it without opening the ticket", async () => {
     const onSelectedChange = jest.fn();
     const onSelect = jest.fn();
@@ -132,6 +157,16 @@ describe("KanbanTicketCard — selection does not cost navigation", () => {
     ).toBeInTheDocument();
   });
 
+  it("exposes selected state for durable visual styling", () => {
+    renderCard({
+      isSelected: true,
+      onSelectedChange: jest.fn(),
+    });
+
+    expect(screen.getByRole("checkbox")).toBeChecked();
+    expect(screen.getByRole("checkbox").closest("[data-selected='true']")).not.toBeNull();
+  });
+
   it("renders no checkbox for a caller that wires no selection", () => {
     renderCard();
 
@@ -155,8 +190,8 @@ describe("KanbanTicketCard — right click opens the card's own action menu", ()
   });
 });
 
-describe("KanbanTicketCard — the module renders by name", () => {
-  it("shows the module name when the board knows it", () => {
+describe("KanbanTicketCard — module editing", () => {
+  it("wires the current module into the inline editor", () => {
     render(
       <ModuleNamesProvider modules={[{ id: 3, name: "Payments" }]}>
         <KanbanTicketCard
@@ -168,10 +203,10 @@ describe("KanbanTicketCard — the module renders by name", () => {
         />
       </ModuleNamesProvider>,
     );
-    expect(screen.getByText("Payments")).toBeInTheDocument();
+    expect(screen.getByText("module-editor-3")).toBeInTheDocument();
   });
 
-  it("shows no module chip when the card has no module, so the chip tracks the field", () => {
+  it("keeps the inline editor available when the card has no module", () => {
     render(
       <ModuleNamesProvider modules={[{ id: 3, name: "Payments" }]}>
         <KanbanTicketCard
@@ -183,6 +218,6 @@ describe("KanbanTicketCard — the module renders by name", () => {
         />
       </ModuleNamesProvider>,
     );
-    expect(screen.queryByText("Payments")).not.toBeInTheDocument();
+    expect(screen.getByText("module-editor-none")).toBeInTheDocument();
   });
 });

@@ -84,9 +84,6 @@ const CALENDAR_DAY_SIGNAL_RE =
   /eachDayOfInterval|startOfMonth|endOfMonth|startOfWeek|getDaysInMonth|daysInMonth|"Sun"|'Sun'|WEEKDAYS/;
 
 const KNOWN_MODULE_CALENDAR_SURFACES = [
-  // Month grid of tickets by dueDate, with prev/next/today and month+year
-  // selects. Duplicates the registered `build` source. Owner: Build.
-  "build/views/calendar-view.tsx",
   // Month grid of holidays with prev/next; the holidays page's DEFAULT view.
   // Duplicates the registered `hr-holidays` source. Owner: HR / ticket 25.
   "hr/holidays/components/calendar-view.tsx",

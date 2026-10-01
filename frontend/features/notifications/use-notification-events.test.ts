@@ -15,6 +15,9 @@
  * carried every earlier failure forward and gave up mid-session.
  */
 import { act, renderHook, waitFor } from "@testing-library/react";
+import { installAbortSignalPolyfill } from "@/test-utils/abort-signal-polyfill";
+
+installAbortSignalPolyfill();
 import type { QueryKey } from "@tanstack/react-query";
 import {
   clearStreamToken,
@@ -91,8 +94,7 @@ describe("useNotificationEvents — a single failure must not end the stream", (
     // The failed round must have armed a retry timer. Without one, nothing is
     // pending and the stream is dead until the component remounts.
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
-    await Promise.resolve();
-    expect(jest.getTimerCount()).toBeGreaterThan(0);
+    await waitFor(() => expect(jest.getTimerCount()).toBeGreaterThan(0));
   });
 
   it("resets the backoff when the stream connects, not when it first yields", async () => {
@@ -132,6 +134,94 @@ describe("useNotificationEvents — a single failure must not end the stream", (
     expect(fetchMock.mock.calls.length).toBeGreaterThan(5);
     // And it is still armed, rather than having quietly given up.
     await waitFor(() => expect(jest.getTimerCount()).toBeGreaterThan(0));
+  });
+});
+
+/**
+ * SEC-HRMS-005. `POST /notifications/events/token` is limited to 30/min per
+ * user and returned 429s: `onOpen` zeroed the backoff the instant a stream
+ * connected, so a stream that opened and then dropped reconnected (and minted
+ * a token) every ~1s forever; and a 429's Retry-After is not CORS-exposed, so
+ * the rate-limited branch waited nothing extra.
+ */
+describe("useNotificationEvents — the token endpoint is never hammered", () => {
+  const fetchMock = jest.fn();
+
+  beforeEach(() => {
+    jest.useFakeTimers();
+    jest.spyOn(Math, "random").mockReturnValue(0);
+    consume.mockReset();
+    fetchMock.mockReset();
+    clearBackendTokenCache();
+    clearStreamToken();
+    global.fetch = fetchMock as unknown as typeof fetch;
+  });
+
+  afterEach(() => {
+    clearStreamToken();
+    jest.runOnlyPendingTimers();
+    jest.useRealTimers();
+    jest.restoreAllMocks();
+  });
+
+  const isTokenCall = (call: unknown[]) =>
+    String(call[0]).includes("/notifications/events/token");
+  const tokenCalls = () => fetchMock.mock.calls.filter(isTokenCall).length;
+
+  function tokenEndpoint(response: () => unknown) {
+    fetchMock.mockImplementation((input: unknown) =>
+      Promise.resolve(
+        String(input).includes("/notifications/events/token")
+          ? response()
+          : { ok: true, json: async () => ({ backendJwt: "jwt-1" }) },
+      ),
+    );
+  }
+
+  const tokenOk = () => ({ ok: true, json: async () => ({ token: "stream-token" }) });
+
+  it("keeps backing off a stream that opens and then drops straight away", async () => {
+    tokenEndpoint(tokenOk);
+    consume.mockImplementation(async (_url, _token, _signal, _onNotification, handlers) => {
+      handlers?.onOpen?.();
+    });
+
+    renderHook(() => useNotificationEvents());
+    await jest.advanceTimersByTimeAsync(20_000);
+
+    // 1s, 2s, 4s, 8s: at most five opens in 20s. Resetting on open made it ~20.
+    expect(consume.mock.calls.length).toBeLessThanOrEqual(5);
+  });
+
+  it("resets the backoff once a stream has stayed up, so the next drop reconnects promptly", async () => {
+    tokenEndpoint(tokenOk);
+    let opens = 0;
+    consume.mockImplementation((_url, _token, _signal, _onNotification, handlers) => {
+      handlers?.onOpen?.();
+      opens += 1;
+      // Four quick drops build the backoff up; the fifth stream stays up 31s.
+      const lifetime = opens === 5 ? 31_000 : 0;
+      return new Promise<void>((resolve) => setTimeout(resolve, lifetime));
+    });
+
+    renderHook(() => useNotificationEvents());
+    await jest.advanceTimersByTimeAsync(15_000 + 31_000);
+    expect(opens).toBe(5);
+
+    await jest.advanceTimersByTimeAsync(1_500);
+    expect(opens).toBe(6);
+  });
+
+  it("waits a minute after a 429 whose Retry-After the browser cannot read", async () => {
+    tokenEndpoint(() => ({ ok: false, status: 429, headers: new Headers(), json: async () => ({}) }));
+    consume.mockImplementation(neverEnding);
+
+    renderHook(() => useNotificationEvents());
+    await jest.advanceTimersByTimeAsync(59_000);
+    expect(tokenCalls()).toBe(1);
+
+    await jest.advanceTimersByTimeAsync(2_000);
+    expect(tokenCalls()).toBe(2);
   });
 });
 

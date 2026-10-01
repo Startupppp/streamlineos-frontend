@@ -284,6 +284,7 @@ export function AllWorkPage() {
         <PmSection index={0} className={cn(PM_FILL_SECTION, "gap-3")}>
           <PageTabsToolbar
             tabsDensity="icons"
+            filtersAlwaysVisible
             tabs={
               <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
                 <AllWorkViewSwitcher
@@ -331,6 +332,8 @@ export function AllWorkPage() {
             }
             filters={
               <TicketFilterBar
+                presentation="all-work"
+                className="sm:w-auto sm:flex-1"
                 members={buildMembers}
                 projectOptions={projectOptions}
                 showTypeFilter

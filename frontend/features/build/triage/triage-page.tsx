@@ -319,6 +319,7 @@ export function TriagePage({ projectId }: TriagePageProps) {
               <TablePagination
                 mode="cursor"
                 rowCount={tickets.length}
+                pageNumber={cursorTrail.length}
                 hasMore={hasMore}
                 hasPrevious={hasPrevious}
                 onNext={() => handleNextPage(ticketPage?.pagination.nextCursor)}

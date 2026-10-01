@@ -99,7 +99,7 @@ export function ExpensesWidget() {
   const enabled = hrEnabled && canViewExpenses;
   const { data, isLoading, error, refetch } = useExpensePageData(
     { page: 1, pageSize: WIDGET_PAGE_SIZE, sortBy: "created", sortOrder: "desc" },
-    { enabled },
+    { enabled, selfService: !canApproveExpenses },
   );
 
   const isApprover = data?.isAdmin ?? canApproveExpenses;

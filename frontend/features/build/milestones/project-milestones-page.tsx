@@ -443,6 +443,7 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
                 <TablePagination
                   mode="cursor"
                   rowCount={milestones.length}
+                  pageNumber={pager.pageNumber}
                   hasMore={pagination?.hasMore ?? false}
                   hasPrevious={pager.hasPrevious}
                   onNext={() => pager.goNext(pagination?.nextCursor)}

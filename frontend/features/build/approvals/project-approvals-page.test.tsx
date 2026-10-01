@@ -2,6 +2,8 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { ProjectApprovalsPage } from "./project-approvals-page";
 import { ApiError } from "@/lib/api-envelope";
 
+let mockSetDelegateTarget: ((row: unknown) => void) | undefined;
+
 jest.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
   useRouter: () => ({ replace: jest.fn() }),
@@ -55,7 +57,11 @@ jest.mock("@/features/build/shared/use-build-list-filters", () => ({
 }));
 
 jest.mock("@/features/build/shared/build-mobile-card", () => ({
-  BuildMobileCard: () => null,
+  BuildMobileCard: ({ person }: { person: { user: { name?: string; email: string } | null; role: string } }) => (
+    <div data-testid="mobile-approver">
+      {person.user?.name ?? person.user?.email ?? "Unknown"}|{person.role}
+    </div>
+  ),
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({
@@ -81,9 +87,11 @@ jest.mock("@/components/ui/data-table", () => ({
   DataTable: ({
     data,
     selection,
+    mobileCard,
   }: {
-    data: unknown[];
+    data: typeof approvalRow[];
     selection?: { onChange?: (ids: Set<string>) => void };
+    mobileCard?: (row: typeof approvalRow) => React.ReactNode;
   }) => (
     <div data-testid="data-table" data-rows={data.length}>
       <button
@@ -94,6 +102,12 @@ jest.mock("@/components/ui/data-table", () => ({
           mockDataTableOnChange(new Set(["1"]));
         }}
       />
+      <button
+        type="button"
+        data-testid="open-delegate"
+        onClick={() => data[0] && mockSetDelegateTarget?.(data[0])}
+      />
+      {data[0] && mobileCard ? mobileCard(data[0]) : null}
     </div>
   ),
   DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
@@ -154,13 +168,18 @@ jest.mock("./decide-dialog", () => ({
 }));
 
 jest.mock("./delegate-dialog", () => ({
-  DelegateDialog: () => null,
+  DelegateDialog: ({ currentApproverId }: { currentApproverId?: string }) => (
+    <div data-testid="delegate-current-approver">{currentApproverId ?? "none"}</div>
+  ),
 }));
 
 jest.mock("./use-approvals-columns", () => ({
-  useApprovalsColumns: jest.fn(() => [
-    { key: "title", header: "Title", cell: (row: { title: string }) => row.title },
-  ]),
+  useApprovalsColumns: jest.fn((params: { setDelegateTarget: (row: unknown) => void }) => {
+    mockSetDelegateTarget = params.setDelegateTarget;
+    return [
+      { key: "title", header: "Title", cell: (row: { title: string }) => row.title },
+    ];
+  }),
   APPROVALS_TABLE_HEADERS: ["Type", "Title", "Approver", "Level", "Due", "Status", "Actions"],
 }));
 
@@ -264,6 +283,7 @@ const approvalRow = {
 };
 
 beforeEach(() => {
+  mockSetDelegateTarget = undefined;
   mockUseCan.mockReturnValue(false);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseProjectApprovals.mockReturnValue(
@@ -275,6 +295,62 @@ beforeEach(() => {
   mockUseDeleteApproval.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUseOrgMembers.mockReturnValue({ data: undefined });
   mockUseBuildListFilters.mockReturnValue(defaultFilters());
+});
+
+const approvalMembers = [
+  {
+    membershipId: 11,
+    userId: "requester-user",
+    role: "MEMBER",
+    joinedAt: "2026-01-01T00:00:00Z",
+    name: "Requesting Person",
+    email: "requester@example.test",
+    image: null,
+    totpEnabled: false,
+  },
+  {
+    membershipId: 22,
+    userId: "approver-user",
+    role: "MANAGER",
+    joinedAt: "2026-01-01T00:00:00Z",
+    name: "Assigned Approver",
+    email: "approver@example.test",
+    image: null,
+    totpEnabled: false,
+  },
+];
+
+it("shows the assigned approver on mobile instead of the requester", () => {
+  mockUseOrgMembers.mockReturnValue({ data: { data: approvalMembers } });
+  mockUseProjectApprovals.mockReturnValue(
+    baseQueryResult({
+      data: approvalPages([
+        { ...approvalRow, requestedById: "requester-user", approverMembershipId: 22 },
+      ]),
+    }),
+  );
+
+  render(<ProjectApprovalsPage projectId={1} />);
+
+  expect(screen.getByTestId("mobile-approver")).toHaveTextContent("Assigned Approver|Approver");
+  expect(screen.getByTestId("mobile-approver")).not.toHaveTextContent("Requesting Person");
+});
+
+it("excludes the assigned approver from delegation by resolving its membership to a user", () => {
+  mockUseOrgMembers.mockReturnValue({ data: { data: approvalMembers } });
+  mockUseProjectApprovals.mockReturnValue(
+    baseQueryResult({
+      data: approvalPages([
+        { ...approvalRow, requestedById: "requester-user", approverMembershipId: 22 },
+      ]),
+    }),
+  );
+
+  render(<ProjectApprovalsPage projectId={1} />);
+  fireEvent.click(screen.getByTestId("open-delegate"));
+
+  expect(screen.getByTestId("delegate-current-approver")).toHaveTextContent("approver-user");
+  expect(screen.getByTestId("delegate-current-approver")).not.toHaveTextContent("requester-user");
 });
 
 it("shows NoPermissionState when build:approvals:view is denied instead of the data table", () => {

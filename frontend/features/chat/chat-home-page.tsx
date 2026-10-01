@@ -22,6 +22,7 @@ import {
 } from "@/features/chat/chat-lazy-fallbacks";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { useIsChatPanelNarrow } from "@/features/chat/use-chat-mobile";
 
 const ChatAblySuite = dynamic(
   () =>
@@ -103,6 +104,7 @@ export function ChatHomePage() {
   const [emptyGroupOpen, setEmptyGroupOpen] = useState(false);
   const [showSearchFocus, setShowSearchFocus] = useState(false);
   const { sidebarCollapsed, handleToggleSidebar } = useChatSidebarCollapse();
+  const isPanelNarrow = useIsChatPanelNarrow();
 
   const writeChannelParam = useCallback(
     (channelId: number | null) => {
@@ -286,9 +288,9 @@ export function ChatHomePage() {
           )}
         </AnimatePresence>
 
-        {activeChannelId && (
+        {activeChannelId && isPanelNarrow && (
           <Sheet open={showInfoPanel} onOpenChange={setShowInfoPanel}>
-            <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 lg:hidden">
+            <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0">
               <SheetTitle className="sr-only">Channel info</SheetTitle>
               <ChannelInfoPanel
                 channelId={activeChannelId}

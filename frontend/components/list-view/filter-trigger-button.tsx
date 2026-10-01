@@ -11,13 +11,14 @@ type FilterTriggerButtonProps = Omit<
   "icon" | "iconSize" | "children"
 > & {
   activeFilterCount: number;
+  label?: string;
 };
 
 export const FilterTriggerButton = forwardRef<
   HTMLButtonElement,
   FilterTriggerButtonProps
 >(function FilterTriggerButton(
-  { activeFilterCount, className, ...props },
+  { activeFilterCount, label = "Add filter", className, ...props },
   ref,
 ) {
   return (
@@ -35,11 +36,11 @@ export const FilterTriggerButton = forwardRef<
       )}
       aria-label={
         activeFilterCount > 0
-          ? `Add filter (${activeFilterCount} active)`
-          : "Add filter"
+          ? `${label} (${activeFilterCount} active)`
+          : label
       }
     >
-      <span className="hidden md:inline">Add filter</span>
+      <span className="hidden md:inline">{label}</span>
       {activeFilterCount > 0 ? (
         <span className="absolute -right-1 -top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-primary px-0.5 text-micro font-normal text-primary-foreground md:static md:ml-0.5 md:h-4 md:min-w-4 md:px-1">
           {activeFilterCount}
@@ -69,7 +70,7 @@ export function MobileFilterSearch({
         onChange={handleChange}
         placeholder="Filter by…"
         className="h-full flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-        aria-label="Search filters"
+        aria-label="Search filter options"
       />
     </div>
   );

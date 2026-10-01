@@ -127,6 +127,7 @@ export const bugRowContract = z.object({
   linkedTestCaseId: z.number().int().nullable(),
   reopenCount: z.number().int().nullable(),
   createdByUserId: z.string().nullable(),
+  version: z.number().int(),
 });
 
 export const bugListContract = z.array(bugRowContract);

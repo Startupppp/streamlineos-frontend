@@ -344,8 +344,10 @@ export function DataTable<T>({
   // An empty page reached by Next still owes the reader a way back.
   const showPagination =
     cursorPag !== null
-      ? (data.length > 0 || cursorPag.hasPrevious) &&
-        (cursorPag.hasMore || cursorPag.hasPrevious || hasPageSizeControl)
+      ? cursorPag.cursorVariant === "load-more"
+        ? data.length > 0
+        : (data.length > 0 || cursorPag.hasPrevious) &&
+          (cursorPag.hasMore || cursorPag.hasPrevious || hasPageSizeControl)
       : totalItems > 0 && (totalPages > 1 || hasPageSizeControl);
   const ariaRowCount = cursorPag !== null ? -1 : totalItems + 1;
   const firstRowNumber = currentPage * pSize + 1;

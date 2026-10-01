@@ -80,7 +80,7 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
   const canManage = useCan("build:changerequests:manage");
 
   const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
-  const { cursor, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
+  const { cursor, pageNumber, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
     listFilters.resetKey,
   );
 
@@ -367,6 +367,7 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
             pagination={{
               mode: "cursor",
               pageSize: PAGE_SIZE,
+              pageNumber,
               hasMore: Boolean(pagination?.hasMore),
               hasPrevious,
               onNext: handleNextPage,

@@ -117,9 +117,23 @@ export function PageTabsToolbar({
   }
 
   return (
-    <div className={cn("flex w-full min-w-0 flex-col gap-2", className)}>
-      <div className="w-full min-w-0">{tabs}</div>
-      <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
+    <div
+      data-slot="page-tabs-toolbar"
+      className={cn(
+        "flex w-full min-w-0 flex-col gap-2 md:flex-row md:flex-wrap md:items-center",
+        className,
+      )}
+    >
+      <div
+        data-slot="page-tabs-toolbar-tabs"
+        className="w-full min-w-0 md:w-auto md:max-w-full md:shrink-0"
+      >
+        {tabs}
+      </div>
+      <div
+        data-slot="page-tabs-toolbar-controls"
+        className="flex w-full min-w-0 flex-wrap items-center gap-2 md:contents"
+      >
         {searchField}
         {filterControls}
         {actionCluster}

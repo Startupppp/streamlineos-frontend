@@ -68,6 +68,10 @@ function memberName(userId: string | null): string {
   return `${owner.firstName ?? ""} ${owner.lastName ?? ""}`.trim();
 }
 
+function approvalMemberName(membershipId: number | null): string {
+  return membershipId == null ? "Unassigned" : `Member ${membershipId}`;
+}
+
 const APPROVAL_STATUS_VALUES: ApprovalStatus[] = [
   "requested", "pending", "approved", "rejected", "changes_requested", "escalated", "cancelled",
 ];
@@ -221,7 +225,7 @@ function ApprovalsTable() {
   const columns = useApprovalsColumns({
     canDecide: true,
     canManage: true,
-    memberName,
+    memberName: approvalMemberName,
     setDecideTarget: noop,
     setDelegateTarget: noop,
     handleEscalate: noop,

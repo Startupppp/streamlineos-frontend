@@ -78,12 +78,13 @@ describe("CustomFieldsSettings — build:manage gates", () => {
   it("shows a Delete button on every field row when the viewer holds build:manage", () => {
     mockAccessState = "granted";
     render(<CustomFieldsSettings projectId={1} />);
-    expect(screen.getAllByRole("button", { name: "Delete field" })).toHaveLength(2);
+    expect(screen.getByRole("button", { name: "Delete field Story Points" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Delete field Priority Label" })).toBeInTheDocument();
   });
 
   it("hides all Delete buttons when the viewer lacks build:manage", () => {
     render(<CustomFieldsSettings projectId={1} />);
-    expect(screen.queryByRole("button", { name: "Delete field" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /delete field/i })).not.toBeInTheDocument();
   });
 
   it("still renders every custom field name when the viewer lacks build:manage", () => {
@@ -121,6 +122,18 @@ describe("CustomFieldsSettings — edit control visibility", () => {
 });
 
 describe("CustomFieldsSettings — edit form submits with changed values", () => {
+  it("describes the edit dialog so its purpose is available to assistive technology", async () => {
+    const user = userEvent.setup();
+    mockAccessState = "granted";
+    render(<CustomFieldsSettings projectId={1} />);
+
+    await user.click(screen.getByRole("button", { name: "Edit field Story Points" }));
+
+    expect(screen.getByRole("dialog")).toHaveAccessibleDescription(
+      "Update the field name, type, and available options.",
+    );
+  });
+
   it("opening the edit dialog for a field pre-fills the field name", async () => {
     const user = userEvent.setup();
     mockAccessState = "granted";

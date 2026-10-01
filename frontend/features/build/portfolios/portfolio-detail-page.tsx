@@ -431,6 +431,7 @@ function PortfolioDetailContent({ portfolioId }: Props) {
               <TablePagination
                 mode="cursor"
                 rowCount={linkedProjects.length}
+                pageNumber={projectsPager.pageNumber}
                 hasMore={data.projects.pagination.hasMore}
                 hasPrevious={projectsPager.hasPrevious}
                 onNext={handleProjectsNext}
@@ -472,6 +473,7 @@ function PortfolioDetailContent({ portfolioId }: Props) {
               <TablePagination
                 mode="cursor"
                 rowCount={linkedPrograms.length}
+                pageNumber={programsPager.pageNumber}
                 hasMore={data.programs.pagination.hasMore}
                 hasPrevious={programsPager.hasPrevious}
                 onNext={handleProgramsNext}

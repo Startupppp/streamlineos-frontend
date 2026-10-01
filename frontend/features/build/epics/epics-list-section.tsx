@@ -27,6 +27,7 @@ interface EpicsListSectionProps {
   selectedIds: Set<string | number>;
   hasMore: boolean;
   hasPrevious: boolean;
+  pageNumber: number;
   isDeleting: boolean;
   onClearFilters: () => void;
   onOpenCreate: () => void;
@@ -53,6 +54,7 @@ export function EpicsListSection({
   selectedIds,
   hasMore,
   hasPrevious,
+  pageNumber,
   isDeleting,
   onClearFilters,
   onOpenCreate,
@@ -140,6 +142,7 @@ export function EpicsListSection({
         <TablePagination
           mode="cursor"
           rowCount={epics.length}
+          pageNumber={pageNumber}
           hasMore={hasMore}
           hasPrevious={hasPrevious}
           onNext={onNextPage}

@@ -10,8 +10,7 @@ import {
   consumeNotificationStream,
   type IncomingNotification,
 } from "./notification-event-stream";
-import { withCorrelation } from "@/lib/observability/with-correlation";
-import { getBackendToken } from "@/lib/api-client";
+import { request } from "@/lib/api-client";
 import { normalizeBuildDeepLink } from "@/lib/build/normalize-build-deep-link";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
@@ -19,6 +18,12 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 const BACKOFF_CEILING_ATTEMPT = 9;
 const MAX_BACKOFF_MS = 5 * 60_000;
 const STREAM_RELEASE_GRACE_MS = 5_000;
+// A stream must stay up this long before its backoff is forgiven; one that
+// opens and drops at once would otherwise reconnect (and mint a token, a
+// 30/min-limited route) every second forever.
+const STREAM_STABLE_MS = 30_000;
+// Retry-After is not CORS-exposed, so a 429 usually arrives without one.
+const RATE_LIMITED_FALLBACK_MS = 60_000;
 
 type AppRouter = ReturnType<typeof useRouter>;
 
@@ -49,24 +54,21 @@ export function clearStreamToken(): void {
 
 function retryAfterDelay(response: Response): number {
   const value = response.headers?.get("retry-after");
-  if (!value) return 0;
+  if (!value) return RATE_LIMITED_FALLBACK_MS;
   const seconds = Number(value);
   if (Number.isFinite(seconds)) return Math.max(0, seconds * 1_000);
   const date = Date.parse(value);
-  return Number.isNaN(date) ? 0 : Math.max(0, date - Date.now());
+  return Number.isNaN(date)
+    ? RATE_LIMITED_FALLBACK_MS
+    : Math.max(0, date - Date.now());
 }
 
 async function mintStreamToken(): Promise<string | null> {
   const generation = tokenGeneration;
   try {
     if (Date.now() < tokenRetryNotBefore) return null;
-    const backendJwt = await getBackendToken();
-    if (!backendJwt) return null;
-    const response = await fetch(`${BACKEND_URL}/notifications/events/token`, {
+    const response = await request("/notifications/events/token", {
       method: "POST",
-      headers: withCorrelation(
-        new Headers({ Authorization: `Bearer ${backendJwt}` }),
-      ),
     });
     if (!response.ok) {
       if (response.status === 429) {
@@ -124,6 +126,7 @@ function openStream(
   const controller = new AbortController();
   let retryCount = 0;
   let retryTimer: ReturnType<typeof setTimeout> | undefined;
+  let stableTimer: ReturnType<typeof setTimeout> | undefined;
   let connecting = false;
 
   const invalidate = () => invalidateNotificationInbox(queryClientRef.current);
@@ -162,7 +165,9 @@ function openStream(
         },
         {
           onOpen: () => {
-            retryCount = 0;
+            stableTimer = setTimeout(() => {
+              retryCount = 0;
+            }, STREAM_STABLE_MS);
           },
           onCountChanged: invalidate,
         },
@@ -171,6 +176,7 @@ function openStream(
     } catch {
       scheduleRetry();
     } finally {
+      clearTimeout(stableTimer);
       connecting = false;
     }
   };
@@ -193,6 +199,7 @@ function openStream(
       controller.abort();
       window.removeEventListener("online", reconnectNow);
       if (retryTimer) clearTimeout(retryTimer);
+      clearTimeout(stableTimer);
     },
   };
 }

@@ -118,8 +118,6 @@ export function AllWorkViewsMenu({
 
   const currentUserId = session?.user?.id as string | undefined;
 
-  if (accessState === "denied" || accessState === "loading") return null;
-
   const handleApply = useCallback(
     (view: ProjectView) => {
       applyViewToParams(view, searchParams, pathname, router, startTransition);
@@ -192,6 +190,8 @@ export function AllWorkViewsMenu({
   const viewList = views ?? [];
   const hasViews = viewList.length > 0;
 
+  if (accessState === "denied" || accessState === "loading") return null;
+
   return (
     <>
       <div className="flex items-center gap-1">
@@ -203,11 +203,11 @@ export function AllWorkViewsMenu({
               icon={BookmarkCheckIcon}
               iconSize={14}
             >
-              <span>Views</span>
+              <span>Saved views</span>
               <ChevronDown className="h-3 w-3 shrink-0 text-muted-foreground" />
             </AnimatedIconButton>
           </ResponsivePopoverTrigger>
-          <ResponsivePopoverContent title="Views" align="start" className="w-72 p-1">
+          <ResponsivePopoverContent title="Saved views" align="start" className="w-72 p-1">
             {isLoading && (
               <div className="space-y-1 p-1">
                 {Array.from({ length: 3 }).map((_, i) => (

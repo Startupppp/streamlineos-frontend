@@ -72,6 +72,7 @@ interface TicketFilterBarProps {
   trailing?: ReactNode;
   mobileSearchFirst?: boolean;
   searchInputRef?: RefObject<HTMLInputElement | null>;
+  presentation?: "default" | "all-work";
 }
 
 function formatDueRange(from: string, to: string): string {
@@ -97,6 +98,7 @@ export function TicketFilterBar({
   trailing,
   mobileSearchFirst = false,
   searchInputRef,
+  presentation = "default",
 }: TicketFilterBarProps) {
   const [filterMounted, setFilterMounted] = useState(false);
   const handleFilterOpen = useCallback(() => setFilterMounted(true), []);
@@ -219,6 +221,9 @@ export function TicketFilterBar({
 
   const filterMenuProps = {
     activeFilterCount,
+    presentation,
+    simplifySingleOptionCategories: true,
+    triggerLabel: presentation === "all-work" ? "Filters" : "Add filter",
     statusItems,
     statusConfig,
     members: members ?? [],
@@ -246,7 +251,12 @@ export function TicketFilterBar({
       ) : (
         <FilterTriggerButton
           activeFilterCount={activeFilterCount}
+          label={presentation === "all-work" ? "Filters" : "Add filter"}
           onClick={handleFilterOpen}
+          className={cn(
+            presentation === "all-work" &&
+              "h-9 w-auto min-w-28 rounded-lg border-border/80 bg-muted/45 px-3 font-medium shadow-sm hover:border-primary/35 hover:bg-muted/70",
+          )}
         />
       )}
 

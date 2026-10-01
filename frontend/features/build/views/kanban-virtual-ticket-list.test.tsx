@@ -1,4 +1,4 @@
-import type { MutableRefObject, ReactNode } from "react";
+import { useEffect, useRef, type MutableRefObject, type ReactNode } from "react";
 
 import { render, screen } from "@testing-library/react";
 
@@ -32,10 +32,12 @@ jest.mock("react-window", () => ({
   }: {
     listRef?: (handle: { element: HTMLDivElement | null } | null) => void;
   }) => {
-    const attach = (node: HTMLDivElement | null) => {
-      listRef?.(node ? { element: node } : null);
-    };
-    return <div data-testid="virtual-ticket-list" ref={attach} />;
+    const elementRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+      listRef?.({ element: elementRef.current });
+      return () => listRef?.(null);
+    }, [listRef]);
+    return <div data-testid="virtual-ticket-list" ref={elementRef} />;
   },
   useDynamicRowHeight: () => ({
     getRowHeight: () => 148,
@@ -80,11 +82,12 @@ describe("KanbanVirtualTicketList — droppable registration", () => {
     expect(droppableInnerRef.mock.calls[0]?.[0]).toBeInstanceOf(HTMLElement);
   });
 
-  it("does not register a non-scrolling wrapper, which would report scroll offset zero and drop tickets at the wrong index in a scrolled column", () => {
+  it("registers an HTMLElement before the virtual list publishes its scrolling element, then replaces it with the list", () => {
     renderList();
 
     const list = screen.getByTestId("virtual-ticket-list");
-    expect(droppableInnerRef).not.toHaveBeenCalledWith(list.parentElement);
+    expect(droppableInnerRef.mock.calls[0]?.[0]).toBe(list.parentElement);
+    expect(droppableInnerRef.mock.calls.at(-1)?.[0]).toBe(list);
   });
 
   it("keeps the droppable registered across a re-render, so a drag's own renders cannot unregister it mid-drag", () => {

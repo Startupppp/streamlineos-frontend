@@ -1,6 +1,7 @@
 "use client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 import { lazyContract } from "@/lib/api-envelope";
@@ -17,12 +18,19 @@ const mfaVerifyContract = lazyContract(() =>
 const mfaDisableContract = lazyContract(() =>
   import("@/hooks/api/auth-schema").then((m) => m.mfaDisableContract),
 );
+const mfaChallengeContract = lazyContract(() =>
+  import("@/hooks/api/auth-schema").then((m) => m.mfaChallengeContract),
+);
 
 export function useMfaStatus() {
   return useQuery({
     queryKey: supportAndWorkflowsQueryKeys.mfa.status(),
     queryFn: ({ signal }) => apiClient.get<{ enabled: boolean }>("/auth/mfa/status", undefined, signal, mfaStatusContract),
     staleTime: 2 * 60_000,
+    // SETTINGS-001: see `useSessions`. `MfaSettings` branches on `isError`, so a
+    // failed read says so rather than taking Account Settings down — and never
+    // reports MFA as off on a read it did not get.
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -45,6 +53,19 @@ export function useMfaVerify() {
     mutationKey: ["mfa", "verify"],
     mutationFn: (data: { token: string } | { backupCode: string }) =>
       apiClient.post<{ enabled: boolean }>("/auth/mfa/verify", data, undefined, mfaVerifyContract),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.mfa.all });
+      qc.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });
+    },
+  });
+}
+
+export function useMfaChallenge() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["mfa", "challenge"],
+    mutationFn: (data: { token: string } | { backupCode: string }) =>
+      apiClient.post<{ satisfied: true }>("/auth/mfa/challenge", data, undefined, mfaChallengeContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.mfa.all });
       qc.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });

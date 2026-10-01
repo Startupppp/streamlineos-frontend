@@ -55,9 +55,11 @@ function makeFiles(count: number): ChannelFile[] {
     id: i + 1,
     messageId: i + 1,
     fileName: `file-${i + 1}.pdf`,
-    mimeType: "application/pdf",
-    fileSize: 1024,
     fileUrl: `/files/${i + 1}`,
+    fileKey: `org-1/file-${i + 1}.pdf`,
+    fileSize: 1024,
+    mimeType: "application/pdf",
+    createdAt: "2026-01-01T00:00:00.000Z",
   }));
 }
 

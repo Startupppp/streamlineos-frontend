@@ -4,7 +4,13 @@ installAbortSignalPolyfill();
 
 process.env.NEXT_PUBLIC_API_URL ??= "http://api.test";
 
-import { apiClient, buildUrl, clearBackendTokenCache, isApiError } from "@/lib/api-client";
+import {
+  apiClient,
+  buildUrl,
+  clearBackendTokenCache,
+  isApiError,
+  resetOutageCircuit,
+} from "@/lib/api-client";
 
 const CONFIGURED_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://api.test").replace(/\/$/, "");
 const CONFIGURED_HOST = new URL(CONFIGURED_BASE).host;
@@ -22,6 +28,8 @@ function jsonResponse(status: number, body: unknown): Response {
 
 beforeEach(() => {
   clearBackendTokenCache();
+  // The first case trips the origin-outage circuit; each case starts closed.
+  resetOutageCircuit();
 });
 
 describe("a transport failure names the endpoint it failed against", () => {

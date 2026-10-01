@@ -123,8 +123,18 @@ describe("TablePagination absorbs the second footer, so there is one pagination 
       />,
     );
 
-    expect(screen.getByText(/page 3/)).toBeInTheDocument();
+    expect(screen.getByLabelText("Current page 3")).toHaveTextContent("Page 3");
     expect(screen.queryByLabelText("Page 3")).not.toBeInTheDocument();
+  });
+
+  it("keeps the current offset page in the numbered window", () => {
+    render(
+      <TablePagination page={5} pageSize={10} total={100} onPageChange={noop} />,
+    );
+
+    expect(screen.getByLabelText("Page 5")).toHaveAttribute("aria-current", "page");
+    expect(screen.getByLabelText("Page 4")).toBeInTheDocument();
+    expect(screen.getByLabelText("Page 6")).toBeInTheDocument();
   });
 
   it("renders nothing for an empty first page, because a footer over no rows reports nothing", () => {

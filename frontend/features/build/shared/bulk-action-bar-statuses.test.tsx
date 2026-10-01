@@ -11,7 +11,13 @@ jest.mock("@/hooks/api/build/ticket-search", () => ({
 }));
 jest.mock("@/components/ui/select", () => ({
   Select: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  SelectTrigger: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  SelectTrigger: ({
+    children,
+    className,
+  }: {
+    children: React.ReactNode;
+    className?: string;
+  }) => <div className={className}>{children}</div>,
   SelectValue: ({ placeholder }: { placeholder?: string }) => <span>{placeholder}</span>,
   SelectContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   SelectItem: ({ value, children }: { value: string; children: React.ReactNode }) => (
@@ -112,6 +118,53 @@ describe("the bulk Set Status menu", () => {
   it("labels a custom state without its underscores rather than echoing the stored enum value", () => {
     renderBar([{ name: "CODE_REVIEW", color: null, type: "started" }]);
     expect(screen.getByText("CODE REVIEW")).toBeInTheDocument();
+  });
+});
+
+describe("BulkActionBar — readable dynamic selections", () => {
+  it("lets data-driven triggers size to their selected text within responsive bounds", () => {
+    grantedKeys = ["build:tickets:update", "build:tickets:assign"];
+    render(
+      <BulkActionBar
+        selectedCount={2}
+        members={[{ id: "member-1", name: "Member with a long display name" }]}
+        cycles={[
+          {
+            id: 1,
+            projectId: 1,
+            orgId: "org-1",
+            name: "Cycle with a long descriptive name",
+            description: null,
+            goal: null,
+            capacity: null,
+            status: "active",
+            version: 1,
+            startDate: "2026-09-01",
+            endDate: "2026-09-30",
+            createdBy: "member-1",
+            createdAt: null,
+            updatedAt: null,
+          },
+        ]}
+        statuses={[{ name: "READY_FOR_CUSTOMER_REVIEW", color: null, type: "started" }]}
+        labels={[{ id: 1, name: "Customer escalation requiring attention" }]}
+        onBulkStatus={noopString}
+        onBulkPriority={noopString}
+        onBulkAssignee={noopString}
+        onBulkCycle={noopString}
+        onBulkLabel={noopString}
+        onClear={noop}
+      />,
+    );
+
+    for (const placeholder of ["Set Status", "Assign to", "Add Label", "Move to Cycle"]) {
+      expect(screen.getByText(placeholder).parentElement).toHaveClass(
+        "w-fit",
+        "min-w-40",
+        "max-w-[calc(100vw-3rem)]",
+        "sm:max-w-80",
+      );
+    }
   });
 });
 

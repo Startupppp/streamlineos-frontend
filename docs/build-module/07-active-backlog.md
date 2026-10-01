@@ -1,6 +1,6 @@
 # Build Active Backlog
 
-Updated 2026-09-29 from the current code, release status, page specifications, and architecture tickets.
+Updated 2026-09-30 from the current code, release status, page specifications, and architecture tickets.
 
 This is the short execution queue for the next implementation sessions. The numbered page specs, architecture tickets, and release status remain the evidence source. Do not delete those evidence files when a packet is finished.
 
@@ -8,7 +8,7 @@ This is the short execution queue for the next implementation sessions. The numb
 
 **Not sellable as a dependable ClickUp, Jira, or Linear replacement yet.** The module has a broad project-work surface, product planning, client portal, forms, feedback, Wiki, QA, reporting, settings, imports, permissions, and cache-sync foundations. It is suitable for a controlled pilot, but release is blocked by the data-lifecycle defect, stale API contract, incomplete browser matrix, missing real fixtures for several product workflows, and the guided freelancer handoff.
 
-Current documentation snapshot: 273 Markdown files, 124 unchecked boxes, 114 unchecked boxes outside architecture tickets, and 98 browser-related unchecked lines by text classification. These are not 124 unique workflows; several are repeated page and release evidence requirements.
+Current documentation snapshot: 273 Markdown files and 124 unchecked boxes. These are not 124 unique workflows; several are repeated page and release evidence requirements.
 
 ## Packet 1 — Release blockers and data lifecycle
 

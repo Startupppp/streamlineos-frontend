@@ -1,6 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import AccessDeniedPage from "./page";
 
+jest.mock("@/components/shared/enable-module-button", () => ({ EnableModuleButton: () => null }));
+
 describe("AccessDeniedPage", () => {
   it("names the module and offers the fix, rather than showing module:hr as a permission", async () => {
     render(

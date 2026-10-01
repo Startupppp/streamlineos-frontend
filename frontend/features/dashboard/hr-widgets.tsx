@@ -199,38 +199,24 @@ export function LeaveBalanceWidget() {
       isEmpty={!balances.length}
       empty={<EmptyWidget message="No leave balances found." />}
     >
-      <div className="grid grid-cols-2 gap-2">
+      <StatCardGrid cols={2}>
         {balances.map((b: LeaveBalance) => {
           const pct = b.daysPerYear
-            ? (parseFloat(b.balance) / b.daysPerYear) * 100
+            ? Math.round((parseFloat(b.balance) / b.daysPerYear) * 100)
             : 0;
+          const tone =
+            pct >= 50 ? ("emerald" as const) : pct >= 20 ? ("amber" as const) : ("red" as const);
           return (
-            <div
+            <StatCard
               key={b.id}
-              className="rounded-lg border border-border/60 p-2.5"
-            >
-              <TruncatedText
-                text={b.leaveTypeName ?? ""}
-                className="text-micro text-muted-foreground"
-              />
-              <div className="flex items-baseline gap-1 mt-0.5">
-                <span className="text-lg font-bold tabular-nums">
-                  {parseFloat(b.balance)}
-                </span>
-                <span className="text-micro text-muted-foreground">
-                  / {b.daysPerYear}
-                </span>
-              </div>
-              <div className="mt-1.5 h-1.5 rounded-full bg-muted overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-primary transition-all"
-                  style={{ width: `${Math.min(pct, 100)}%` }}
-                />
-              </div>
-            </div>
+              label={b.leaveTypeName ?? "Leave"}
+              value={parseFloat(b.balance)}
+              hint={b.daysPerYear ? `of ${b.daysPerYear} days` : undefined}
+              tone={tone}
+            />
           );
         })}
-      </div>
+      </StatCardGrid>
       {(upcomingLeave || latestRequest) && (
         <div className="mt-2.5 space-y-1.5 border-t border-border/60 pt-2.5">
           {upcomingLeave && (

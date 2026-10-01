@@ -1,17 +1,11 @@
 "use client";
 
 import { useEffect, useState, type RefObject } from "react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
-import { SearchInput } from "@/components/ui/search-input";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import {
   ALL_STATUSES,
   ALL_TYPES,
@@ -82,81 +76,119 @@ export function SubmissionInboxFilters({ values, onChange, searchInputRef }: Sub
     onChange("to", inputToDateParam(value));
   }
 
+  function handleClearAll() {
+    setSearchDraft("");
+    for (const key of ["status", "type", "linked", "duplicate", "assigneeId", "search", "from", "to"] as const) {
+      onChange(key, null);
+    }
+  }
+
   return (
-    <div className="flex items-center gap-2 px-3 py-2 border-b border-border flex-wrap">
-      <SearchInput
-        ref={searchInputRef}
-        value={searchDraft}
-        onValueChange={setSearchDraft}
-        placeholder="Search messages…"
-        aria-label="Search submissions"
-        className="w-[200px]"
-      />
-
-      <Select value={values.status ?? "all"} onValueChange={handleStatusChange}>
-        <SelectTrigger className="h-9 w-[130px] text-sm" aria-label="Filter by status">
-          <SelectValue placeholder="All statuses" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All statuses</SelectItem>
-          {ALL_STATUSES.map((status) => (
-            <SelectItem key={status} value={status}>
-              {STATUS_LABELS[status]}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <Select value={values.type ?? "all"} onValueChange={handleTypeChange}>
-        <SelectTrigger className="h-9 w-[120px] text-sm" aria-label="Filter by type">
-          <SelectValue placeholder="All types" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All types</SelectItem>
-          {ALL_TYPES.map((type) => (
-            <SelectItem key={type} value={type}>
-              {TYPE_LABELS[type]}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <Select value={values.linked ?? "all"} onValueChange={handleLinkedChange}>
-        <SelectTrigger className="h-9 w-[130px] text-sm" aria-label="Filter by ticket link">
-          <SelectValue placeholder="All submissions" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All submissions</SelectItem>
-          <SelectItem value="linked">Linked to ticket</SelectItem>
-          <SelectItem value="unlinked">Not linked</SelectItem>
-        </SelectContent>
-      </Select>
-
-      <UserCombobox
-        value={values.assigneeId ?? ""}
-        onChange={handleAssigneeChange}
-        placeholder="Any owner"
-        allowUnassigned
-        className="w-[170px]"
-      />
-
-      <DatePicker
-        ariaLabel="From date"
-        clearable
-        value={dateParamToInput(values.from)}
-        onChange={handleFromChange}
-        placeholder="From date"
-        className="w-[10.5rem]"
-      />
-
-      <DatePicker
-        ariaLabel="To date"
-        clearable
-        value={dateParamToInput(values.to)}
-        onChange={handleToChange}
-        placeholder="To date"
-        className="w-[10.5rem]"
-      />
-    </div>
+    <BuildListToolbar
+      className="border-b border-border px-3 py-2"
+      search={{
+        value: searchDraft,
+        onValueChange: setSearchDraft,
+        placeholder: "Search messages…",
+        label: "Search submissions",
+        inputRef: searchInputRef,
+      }}
+      filters={[
+        {
+          id: "status",
+          label: "Status",
+          active: values.status !== null,
+          control: (
+            <BuildFilterSelect
+              label="Filter by status"
+              value={values.status ?? "all"}
+              onValueChange={handleStatusChange}
+              options={[
+                { value: "all", label: "All statuses" },
+                ...ALL_STATUSES.map((status) => ({ value: status, label: STATUS_LABELS[status] })),
+              ]}
+            />
+          ),
+        },
+        {
+          id: "type",
+          label: "Type",
+          active: values.type !== null,
+          control: (
+            <BuildFilterSelect
+              label="Filter by type"
+              value={values.type ?? "all"}
+              onValueChange={handleTypeChange}
+              options={[
+                { value: "all", label: "All types" },
+                ...ALL_TYPES.map((type) => ({ value: type, label: TYPE_LABELS[type] })),
+              ]}
+            />
+          ),
+        },
+        {
+          id: "linked",
+          label: "Ticket link",
+          active: values.linked !== null,
+          control: (
+            <BuildFilterSelect
+              label="Filter by ticket link"
+              value={values.linked ?? "all"}
+              onValueChange={handleLinkedChange}
+              options={[
+                { value: "all", label: "All submissions" },
+                { value: "linked", label: "Linked to ticket" },
+                { value: "unlinked", label: "Not linked" },
+              ]}
+            />
+          ),
+        },
+        {
+          id: "assignee",
+          label: "Owner",
+          active: values.assigneeId !== null,
+          control: (
+            <UserCombobox
+              value={values.assigneeId ?? ""}
+              onChange={handleAssigneeChange}
+              placeholder="Any owner"
+              allowUnassigned
+              className="w-full min-w-44 md:w-44"
+            />
+          ),
+        },
+        {
+          id: "from",
+          label: "From date",
+          active: values.from !== null,
+          control: (
+            <DatePicker
+              ariaLabel="From date"
+              clearable
+              value={dateParamToInput(values.from)}
+              onChange={handleFromChange}
+              placeholder="From date"
+              className="w-full min-w-40 md:w-40"
+            />
+          ),
+        },
+        {
+          id: "to",
+          label: "To date",
+          active: values.to !== null,
+          control: (
+            <DatePicker
+              ariaLabel="To date"
+              clearable
+              value={dateParamToInput(values.to)}
+              onChange={handleToChange}
+              placeholder="To date"
+              className="w-full min-w-40 md:w-40"
+            />
+          ),
+        },
+      ]}
+      onClearAll={handleClearAll}
+    />
   );
 }

@@ -318,9 +318,10 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
             loadingRows={12}
             pagination={{
               mode: "cursor",
+              cursorVariant: "load-more",
               pageSize: 25,
+              pageNumber: Array.isArray(data) ? 1 : (data?.pages.length ?? 1),
               hasMore: Boolean(hasNextPage),
-              hasPrevious: false,
               onNext: handleNextPage,
             }}
             isFetchingMore={isFetchingNextPage}

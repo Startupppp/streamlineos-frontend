@@ -136,7 +136,7 @@ function ManagedProductsReadyTable() {
       getRowKey={getRowKey}
       mobileCard={renderMobileCard}
       minWidth="720px"
-      pagination={{ mode: "cursor", pageSize: 20, hasMore: true, hasPrevious: true, onNext: handleNext, onPrevious: handlePrevious }}
+      pagination={{ mode: "cursor", pageSize: 20, pageNumber: 2, hasMore: true, hasPrevious: true, onNext: handleNext, onPrevious: handlePrevious }}
       empty={<EmptyState className={CONTENT_FILL_PANEL} illustrationPreset="projects" title="No managed products yet" />}
     />
   );

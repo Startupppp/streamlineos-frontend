@@ -1,8 +1,8 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-const mockStreamAiResult = jest.fn();
+const mockAskMutate = jest.fn();
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
@@ -13,8 +13,17 @@ jest.mock("next-auth/react", () => ({
   useSession: () => ({ data: { user: { id: "user-1" } } }),
 }));
 
-jest.mock("@/hooks/api/ai-result-stream", () => ({
-  streamAiResult: (...args: unknown[]) => mockStreamAiResult(...args),
+jest.mock("@/hooks/api/kb/ask", () => ({
+  ...jest.requireActual("@/hooks/api/kb/ask"),
+  useKbAsk: () => ({
+    mutate: mockAskMutate,
+    isPending: false,
+    isError: false,
+    stop: jest.fn(),
+    resetAttempt: jest.fn(),
+  }),
+  useKbAiAnswerFeedback: () => ({ mutate: jest.fn(), isPending: false }),
+  useCreateKbKnowledgeGap: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -93,11 +102,10 @@ function renderPage() {
   return userEvent.setup({ pointerEventsCheck: 0 });
 }
 
-/** The object `streamAiResult` was handed as the POST body for /kb/ask/stream. */
+/** The object ask.mutate was handed as its first argument (the scoped input). */
 async function sentBody(): Promise<Record<string, unknown>> {
-  await waitFor(() => expect(mockStreamAiResult).toHaveBeenCalled());
-  const request = mockStreamAiResult.mock.calls[0][0] as { body: Record<string, unknown> };
-  return request.body;
+  await waitFor(() => expect(mockAskMutate).toHaveBeenCalled());
+  return mockAskMutate.mock.calls[0][0] as Record<string, unknown>;
 }
 
 async function openScopeSheet(user: ReturnType<typeof userEvent.setup>) {
@@ -112,10 +120,7 @@ async function confirmAndAsk(user: ReturnType<typeof userEvent.setup>) {
 }
 
 beforeEach(() => {
-  mockStreamAiResult.mockReset();
-  mockStreamAiResult.mockResolvedValue({
-    answer: "Twenty days.", citations: [], hasContext: true, conversationId: 9,
-  });
+  mockAskMutate.mockReset();
 });
 
 describe("KnowledgeBasePage — every scope dimension the sheet edits reaches the ask request body", () => {
@@ -244,5 +249,24 @@ describe("KnowledgeBasePage — every scope dimension the sheet edits reaches th
       pageIds: [5],
       ownerMembershipId: 77,
     });
+  });
+});
+
+describe("KnowledgeBasePage — Suggestion placeholder double-send prevention", () => {
+  it("fires the ask request exactly once when the same suggestion button is clicked twice before React re-renders so the user does not receive two responses or an error toast", async () => {
+    renderPage();
+
+    const suggestion = await screen.findByRole("button", {
+      name: "Summarize the key points across my documents",
+    });
+
+    // Fire two clicks synchronously before any React re-render flushes;
+    // the second click happens while sendingRef.current is already true.
+    fireEvent.click(suggestion);
+    fireEvent.click(suggestion);
+
+    await act(async () => {});
+
+    expect(mockAskMutate).toHaveBeenCalledTimes(1);
   });
 });

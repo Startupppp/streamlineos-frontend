@@ -29,6 +29,7 @@ export function useCalendarViewState() {
     end: Date;
   } | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [shouldMountCreate, setShouldMountCreate] = useState(false);
   const createParamConsumedRef = useRef(false);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [isSlotChoiceOpen, setIsSlotChoiceOpen] = useState(false);
@@ -63,10 +64,21 @@ export function useCalendarViewState() {
   );
 
   useEffect(() => {
+    const eventParam = searchParams.get("event");
+    if (eventParam) {
+      setSelectedEventId(eventParam);
+      const next = new URLSearchParams(searchParams.toString());
+      next.delete("event");
+      router.replace(`/calendar${next.size > 0 ? `?${next.toString()}` : ""}`);
+    }
+  }, [searchParams, router]);
+
+  useEffect(() => {
     if (createParamConsumedRef.current) return;
     if (searchParams.get("create") !== "1") return;
     createParamConsumedRef.current = true;
     setCreateSlot(null);
+    setShouldMountCreate(true);
     setIsCreateOpen(true);
     const next = new URLSearchParams(searchParams.toString());
     next.delete("create");
@@ -106,6 +118,7 @@ export function useCalendarViewState() {
 
   const handleOpenCreate = useCallback(() => {
     setCreateSlot(null);
+    setShouldMountCreate(true);
     setIsCreateOpen(true);
   }, []);
 
@@ -183,6 +196,7 @@ export function useCalendarViewState() {
     createSlot,
     isCreateOpen,
     setIsCreateOpen,
+    shouldMountCreate,
     selectedEventId,
     isSlotChoiceOpen,
     setIsSlotChoiceOpen,

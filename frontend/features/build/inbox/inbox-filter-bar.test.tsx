@@ -152,6 +152,49 @@ describe("InboxFilterBar — search debounce", () => {
   });
 });
 
+describe("InboxFilterBar — onQChange stability", () => {
+  it("does not re-fire the debounce when onQChange prop identity changes without a user keystroke", () => {
+    const firstOnQChange = jest.fn();
+    const secondOnQChange = jest.fn();
+    const ref = React.createRef<HTMLInputElement>();
+
+    const { rerender } = render(
+      <InboxFilterBar
+        q={null}
+        type={null}
+        hasActiveFilters={false}
+        onQChange={firstOnQChange}
+        onTypeChange={noop}
+        onClearFilters={noop}
+        searchInputRef={ref}
+      />,
+    );
+
+    act(() => {
+      jest.advanceTimersByTime(300);
+    });
+    jest.clearAllMocks();
+
+    rerender(
+      <InboxFilterBar
+        q={null}
+        type={null}
+        hasActiveFilters={false}
+        onQChange={secondOnQChange}
+        onTypeChange={noop}
+        onClearFilters={noop}
+        searchInputRef={ref}
+      />,
+    );
+
+    act(() => {
+      jest.advanceTimersByTime(300);
+    });
+
+    expect(secondOnQChange).not.toHaveBeenCalled();
+  });
+});
+
 describe("InboxFilterBar — type category select", () => {
   it("renders a combobox with accessible label", () => {
     const ref = React.createRef<HTMLInputElement>();

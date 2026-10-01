@@ -84,7 +84,31 @@ export function useCompleteChecklistItem() {
     mutationKey: ["onboarding", "module-checklists", "complete-item"],
     mutationFn: ({ moduleKey, itemKey }: { moduleKey: string; itemKey: string }) =>
       apiClient.post(`/onboarding/module-checklists/${moduleKey}/items/${itemKey}/complete`, {}, undefined, checklistProgressContract),
-    onSuccess: (_, { moduleKey }) => invalidateChecklist(queryClient, moduleKey),
+    onMutate: async ({ moduleKey, itemKey }: { moduleKey: string; itemKey: string }) => {
+      await queryClient.cancelQueries({ queryKey: platformCoreQueryKeys.onboardingFlow.moduleChecklists() });
+      const snapshot = queryClient.getQueryData<ModuleChecklist[]>(platformCoreQueryKeys.onboardingFlow.moduleChecklists());
+      queryClient.setQueryData<ModuleChecklist[]>(
+        platformCoreQueryKeys.onboardingFlow.moduleChecklists(),
+        (prev) =>
+          prev?.map((checklist) =>
+            checklist.moduleKey === moduleKey
+              ? {
+                  ...checklist,
+                  items: checklist.items.map((item) =>
+                    item.itemKey === itemKey ? { ...item, status: "done" as const } : item,
+                  ),
+                }
+              : checklist,
+          ),
+      );
+      return { snapshot };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.snapshot !== undefined) {
+        queryClient.setQueryData(platformCoreQueryKeys.onboardingFlow.moduleChecklists(), context.snapshot);
+      }
+    },
+    onSettled: (_data, _err, { moduleKey }) => invalidateChecklist(queryClient, moduleKey),
   });
 }
 

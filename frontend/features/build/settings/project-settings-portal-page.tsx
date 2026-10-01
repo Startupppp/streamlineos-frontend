@@ -37,10 +37,13 @@ function TicketVisibilityRow({ ticket, onToggle, isPending, canManage }: TicketR
   );
 
   return (
-    <div className="flex items-center justify-between py-2 border-b border-border/60 last:border-0">
-      <div className="flex min-w-0 flex-col gap-0.5">
-        <span className="text-sm truncate">
+    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-border/60 py-3 last:border-0">
+      <div className="flex min-w-0 flex-col gap-1">
+        <span className="text-sm leading-5">
           #{ticket.ticketNumber} {ticket.title}
+        </span>
+        <span className="text-xs text-muted-foreground">
+          {ticket.clientVisible ? "Visible to clients" : "Internal only"}
         </span>
       </div>
       <Switch
@@ -67,9 +70,12 @@ function MilestoneVisibilityRow({ milestone, onToggle, isPending, canManage }: M
   );
 
   return (
-    <div className="flex items-center justify-between py-2 border-b border-border/60 last:border-0">
-      <div className="flex min-w-0 flex-col gap-0.5">
-        <span className="text-sm truncate">{milestone.name}</span>
+    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-border/60 py-3 last:border-0">
+      <div className="flex min-w-0 flex-col gap-1">
+        <span className="text-sm leading-5">{milestone.name}</span>
+        <span className="text-xs text-muted-foreground">
+          {milestone.clientVisible ? "Visible to clients" : "Internal only"}
+        </span>
       </div>
       <Switch
         checked={milestone.clientVisible}
@@ -96,6 +102,8 @@ export function ProjectSettingsPortalPage({ projectId }: ProjectSettingsPortalPa
   const ticketPagination = data?.tickets.pagination;
   const milestones = data?.milestones.data ?? [];
   const milestonePagination = data?.milestones.pagination;
+  const visibleTicketCount = tickets.filter((ticket) => ticket.clientVisible).length;
+  const visibleMilestoneCount = milestones.filter((milestone) => milestone.clientVisible).length;
   const isEmpty = !isLoading && !isError && tickets.length === 0 && milestones.length === 0 && !ticketPager.hasPrevious && !milestonePager.hasPrevious;
 
   const pageState = usePageState({
@@ -156,8 +164,14 @@ export function ProjectSettingsPortalPage({ projectId }: ProjectSettingsPortalPa
           {(tickets.length > 0 || ticketPager.hasPrevious) ? (
             <PmSection index={0}>
               <PmPanel className="flex min-h-0 flex-col p-0" solid>
-                <div className="px-4 py-3 border-b border-border">
-                  <p className="text-sm font-medium">Tickets</p>
+                <div className="flex flex-wrap items-start justify-between gap-2 border-b border-border px-4 py-3">
+                  <div>
+                    <p className="text-sm font-medium">Tickets</p>
+                    <p className="text-xs text-muted-foreground">Changes save immediately.</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground tabular-nums">
+                    {visibleTicketCount} of {tickets.length} visible on this page
+                  </p>
                 </div>
                 <div className="px-4 py-2">
                   {tickets.map((ticket) => (
@@ -175,6 +189,7 @@ export function ProjectSettingsPortalPage({ projectId }: ProjectSettingsPortalPa
                     <TablePagination
                       mode="cursor"
                       rowCount={tickets.length}
+                      pageNumber={ticketPager.pageNumber}
                       hasMore={ticketPagination?.hasMore ?? false}
                       hasPrevious={ticketPager.hasPrevious}
                       onNext={() => ticketPager.goNext(ticketPagination?.nextCursor)}
@@ -188,8 +203,14 @@ export function ProjectSettingsPortalPage({ projectId }: ProjectSettingsPortalPa
           {(milestones.length > 0 || milestonePager.hasPrevious) ? (
             <PmSection index={1}>
               <PmPanel className="flex min-h-0 flex-col p-0" solid>
-                <div className="px-4 py-3 border-b border-border">
-                  <p className="text-sm font-medium">Milestones</p>
+                <div className="flex flex-wrap items-start justify-between gap-2 border-b border-border px-4 py-3">
+                  <div>
+                    <p className="text-sm font-medium">Milestones</p>
+                    <p className="text-xs text-muted-foreground">Changes save immediately.</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground tabular-nums">
+                    {visibleMilestoneCount} of {milestones.length} visible on this page
+                  </p>
                 </div>
                 <div className="px-4 py-2">
                   {milestones.map((milestone) => (
@@ -207,6 +228,7 @@ export function ProjectSettingsPortalPage({ projectId }: ProjectSettingsPortalPa
                     <TablePagination
                       mode="cursor"
                       rowCount={milestones.length}
+                      pageNumber={milestonePager.pageNumber}
                       hasMore={milestonePagination?.hasMore ?? false}
                       hasPrevious={milestonePager.hasPrevious}
                       onNext={() => milestonePager.goNext(milestonePagination?.nextCursor)}

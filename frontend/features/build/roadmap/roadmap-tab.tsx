@@ -5,7 +5,7 @@ import { WifiOff } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { TablePagination } from "@/components/ui/table-pagination";
+import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 import { toast } from "sonner";
 import {
   useRoadmapItems,
@@ -93,9 +93,22 @@ export function RoadmapTab({
 }: RoadmapTabProps) {
   const isOnline = useOnlineStatus();
   const sortValue = sort ? toRoadmapSort(sort) : undefined;
+  const cursorResetKey = JSON.stringify([
+    search.trim(),
+    status,
+    managedProductId,
+    sortValue,
+    projectId,
+    horizon,
+    ownerId,
+  ]);
+  const pager = useCursorPager(cursorResetKey, {
+    initialCursor: cursor ?? undefined,
+    onCursorChange: (nextCursor) => onCursorChange(nextCursor ?? null),
+  });
   const { data, isLoading, isError, error, refetch } = useRoadmapItems({
     ...(search.trim() ? { search: search.trim() } : {}),
-    cursor: cursor ?? undefined,
+    cursor: pager.cursor,
     ...(status ? { status: toRoadmapStatus(status) } : {}),
     ...(managedProductId !== undefined ? { managedProductId } : {}),
     ...(sortValue ? { sort: sortValue } : {}),
@@ -112,7 +125,7 @@ export function RoadmapTab({
     null,
   );
 
-  const isEmpty = (data?.data ?? []).length === 0 && !cursor;
+  const isEmpty = (data?.data ?? []).length === 0 && !pager.hasPrevious;
   const isFiltered = Boolean(
     search.trim() ||
     status ||
@@ -212,12 +225,12 @@ export function RoadmapTab({
   }
 
   const handleNext = useCallback(() => {
-    onCursorChange(data?.pagination.nextCursor ?? null);
-  }, [data?.pagination.nextCursor, onCursorChange]);
+    pager.goNext(data?.pagination.nextCursor);
+  }, [data?.pagination.nextCursor, pager]);
 
   const handlePrev = useCallback(() => {
-    onCursorChange(null);
-  }, [onCursorChange]);
+    pager.goPrevious();
+  }, [pager]);
 
   const hasNext = data?.pagination.hasMore ?? false;
 
@@ -297,8 +310,9 @@ export function RoadmapTab({
           <TablePagination
             mode="cursor"
             rowCount={(data?.data ?? []).length}
+            pageNumber={pager.pageNumber}
             hasMore={hasNext}
-            hasPrevious={Boolean(cursor)}
+            hasPrevious={pager.hasPrevious}
             onNext={handleNext}
             onPrevious={handlePrev}
           />

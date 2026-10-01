@@ -22,6 +22,7 @@ import { clearStreamToken } from "@/features/notifications/use-notification-even
 import { getErrorMessage } from "@/lib/get-error-message";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { lazyContract } from "@/lib/api-envelope";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type { UserOrganization } from "@/hooks/api/organization-schema";
 import { toast } from "sonner";
 
@@ -154,6 +155,9 @@ export function useValidateInvitation(token: string) {
     staleTime: 60_000,
     enabled: !!token,
     retry: false,
+    // The page draws its own "Invitation expired" card for a revoked link's 404;
+    // the provider default would throw it to the route boundary instead.
+    ...INLINE_READ_ERROR,
   });
 }
 

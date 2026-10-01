@@ -34,6 +34,7 @@ export const BUILD_TOOLBAR_MOBILE_SLOTS = 2;
 export interface BuildToolbarLayoutEntry {
   filter: BuildToolbarFilter;
   collapsed: boolean;
+  fieldIndex: number | null;
 }
 
 export interface BuildToolbarLayout {
@@ -94,13 +95,14 @@ export function buildToolbarLayout({
   let fieldIndex = 0;
   const entries = list.map((filter) => {
     if (!isToolbarFieldFilter(filter)) {
-      return { filter, collapsed: false };
+      return { filter, collapsed: false, fieldIndex: null };
     }
     const indexAmongFields = fieldIndex;
     fieldIndex += 1;
     return {
       filter,
       collapsed: collapse && indexAmongFields >= inlineFieldCount,
+      fieldIndex: indexAmongFields,
     };
   });
 
@@ -126,26 +128,41 @@ export function buildToolbarLayout({
 export function toolbarInlineVisibility(
   index: number,
   collapsed: boolean,
+  fieldFilterCount: number,
 ): string {
   const mobile = collapsed ? "max-md:hidden" : "max-md:min-w-0 max-md:shrink-0";
   const desktop =
     index <= 0
       ? ""
       : index === 1
-        ? "md:hidden lg:block"
+        ? fieldFilterCount === 2
+          ? ""
+          : "md:hidden lg:block"
         : index === 2
-          ? "md:hidden xl:block"
+          ? fieldFilterCount === 3
+            ? "md:hidden lg:block"
+            : "md:hidden xl:block"
           : index === 3
-            ? "md:hidden 2xl:block"
-            : "md:hidden";
+            ? fieldFilterCount === 4
+              ? "md:hidden xl:block"
+              : "md:hidden 2xl:block"
+            : index === 4 && fieldFilterCount === 5
+              ? "md:hidden 2xl:block"
+              : "md:hidden";
   return [mobile, desktop].filter(Boolean).join(" ");
 }
 
 export function toolbarDrawerVisibility(
   index: number,
   collapsed: boolean,
+  fieldFilterCount: number,
 ): string {
   if (index <= 0) return collapsed ? "md:hidden" : "hidden";
+  if (index === 1 && fieldFilterCount === 2)
+    return collapsed ? "md:hidden" : "hidden";
+  if (index === 2 && fieldFilterCount === 3) return "lg:hidden";
+  if (index === 3 && fieldFilterCount === 4) return "xl:hidden";
+  if (index === 4 && fieldFilterCount === 5) return "2xl:hidden";
   if (!collapsed) {
     if (index === 1) return "hidden md:block lg:hidden";
     if (index === 2) return "hidden md:block xl:hidden";
@@ -163,9 +180,9 @@ export function toolbarMoreButtonClass(
   collapse: boolean,
 ): string {
   const mobile = collapse ? "inline-flex shrink-0" : "hidden";
-  if (filterCount <= 1) return `${mobile} md:hidden`;
-  if (filterCount === 2) return `${mobile} md:inline-flex lg:hidden`;
-  if (filterCount === 3) return `${mobile} md:inline-flex xl:hidden`;
-  if (filterCount === 4) return `${mobile} md:inline-flex 2xl:hidden`;
+  if (filterCount <= 2) return `${mobile} md:hidden`;
+  if (filterCount === 3) return `${mobile} md:inline-flex lg:hidden`;
+  if (filterCount === 4) return `${mobile} md:inline-flex xl:hidden`;
+  if (filterCount === 5) return `${mobile} md:inline-flex 2xl:hidden`;
   return `${mobile} md:inline-flex`;
 }

@@ -270,9 +270,10 @@ export function FormSubmissionsTab({
         loadingRows={12}
         pagination={{
           mode: "cursor",
+          cursorVariant: "load-more",
           pageSize: 25,
+          pageNumber: data?.pages.length ?? 1,
           hasMore: Boolean(hasNextPage),
-          hasPrevious: false,
           onNext: handleNextPage,
         }}
         isFetchingMore={isFetchingNextPage}

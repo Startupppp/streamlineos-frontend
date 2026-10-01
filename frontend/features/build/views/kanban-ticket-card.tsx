@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import type { KanbanTicket, DisplayOptions } from "../shared/types";
 import { TicketQuickActions } from "./ticket-quick-actions";
 import { InlinePriority, InlineAssignee, InlineEstimate } from "./card-inline-fields";
-import { InlineType, InlineLabels, InlineCycle } from "./card-inline-extra-fields";
+import { InlineType, InlineLabels, InlineCycle, InlineModule } from "./card-inline-extra-fields";
 import { InlineDueDate, InlineStartDate } from "./card-inline-date-fields";
 import { TEXT_TWO_LINES } from "@/lib/text-overflow";
 import { getUserDisplayName } from "@/lib/person-display";
@@ -40,9 +40,13 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
   const canUpdate = useCan("build:tickets:update");
   const canAssign = useCan("build:tickets:assign");
   const moduleName = useModuleName(ticket.moduleId);
-  const handleActivate = useCallback(() => {
-    onSelect(ticket.id);
-  }, [ticket.id, onSelect]);
+  const handleActivate = useCallback(
+    (event: MouseEvent<HTMLButtonElement>) => {
+      event.stopPropagation();
+      onSelect(ticket.id);
+    },
+    [ticket.id, onSelect],
+  );
   const [menuOpen, setMenuOpen] = useState(false);
   const handleContextMenu = useCallback((event: MouseEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -55,9 +59,10 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
     [ticket.id, onSelectedChange],
   );
 
-  const ticketKey = projectKey
-    ? `${projectKey}-${ticket.ticketNumber}`
-    : `#${ticket.ticketNumber ?? ""}`;
+  const ticketKey =
+    projectKey && ticket.ticketNumber != null
+      ? `${projectKey}-${ticket.ticketNumber}`
+      : `#${ticket.ticketNumber ?? ticket.id}`;
 
   const assigneeUsers =
     ticket.assignees?.flatMap((entry) => (entry.user ? [entry.user] : [])) ?? [];
@@ -79,21 +84,30 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
   const points = ticket.points ?? ticket.storyPoints;
   const createdDate = parseDisplayDate(ticket.createdAt);
   const version = ticket.version;
+  const labelIds =
+    ticket.labels?.flatMap((label) => (label.label ? [label.label.id] : [])) ?? [];
+  const showPlanningRow =
+    projectId !== undefined &&
+    canUpdate &&
+    (showEstimate || showCycle || Boolean(ticket.startDate));
 
   return (
     <div
+      data-selected={isSelected ? "true" : undefined}
       className={cn(
-        "group relative rounded-xl border border-border/70 bg-card px-3 py-2.5 shadow-sm",
+        "group relative rounded-xl border border-border/70 bg-card p-3 shadow-sm",
         "cursor-grab active:cursor-grabbing will-change-transform",
+        "motion-safe:transition-[border-color,box-shadow,transform,background-color] motion-safe:duration-200",
+        isSelected && "border-primary/40 bg-primary/[0.03] ring-1 ring-primary/15",
         isDragging
           ? "z-20 rotate-1 scale-[1.02] border-primary/30 bg-card opacity-95 shadow-xl ring-1 ring-primary/25"
-          : "hover:border-border hover:shadow-md",
+          : "hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-md focus-within:border-primary/30 focus-within:shadow-md",
       )}
       onContextMenu={handleContextMenu}
     >
-      <div className="flex items-start gap-1.5">
+      <div className="flex items-start gap-2">
         {onSelectedChange !== undefined && (
-          <div className="flex-shrink-0 pt-0.5">
+          <div className="flex h-7 flex-shrink-0 items-center pt-0.5">
             <Checkbox
               checked={isSelected ?? false}
               onCheckedChange={handleSelectedChange}
@@ -106,7 +120,8 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
           onClick={handleActivate}
           className={cn(
             TEXT_TWO_LINES,
-            "min-w-0 flex-1 text-left text-sm font-medium leading-snug text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+            "min-w-0 flex-1 rounded-sm text-left text-sm font-semibold leading-snug text-foreground",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
           )}
         >
           {ticket.title}
@@ -119,19 +134,19 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
           onOpen={onSelect}
           open={menuOpen}
           onOpenChange={setMenuOpen}
-          className="-mr-1 -mt-0.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100 focus-within:opacity-100"
+          className="-mr-1 -mt-1 opacity-100 transition-opacity duration-150 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 [&_button]:h-8 [&_button]:w-8"
         />
       </div>
 
       {showDescription && ticket.descriptionExcerpt ? (
-        <p className={cn(TEXT_TWO_LINES, "mt-1 text-dense leading-relaxed text-muted-foreground")}>
+        <p className={cn(TEXT_TWO_LINES, "mt-1.5 text-dense leading-relaxed text-muted-foreground")}>
           {ticket.descriptionExcerpt}
         </p>
       ) : null}
 
-      <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1.5">
+      <div className="mt-2.5 flex min-w-0 flex-wrap items-center gap-1.5">
         {showId ? (
-          <span className="shrink-0 font-mono text-dense tabular-nums text-muted-foreground">
+          <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 font-mono text-micro font-medium tabular-nums text-muted-foreground">
             {ticketKey}
           </span>
         ) : null}
@@ -160,47 +175,56 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
           <InlineLabels
             ticketId={ticket.id}
             projectId={projectId}
-            currentLabelIds={
-              ticket.labels?.flatMap((l) => (l.label ? [l.label.id] : [])) ?? []
-            }
+            currentLabelIds={labelIds}
           />
         ) : null}
 
-        {showEstimate && projectId && canUpdate ? (
-          <InlineEstimate
+        {projectId !== undefined && canUpdate ? (
+          <InlineModule
             ticketId={ticket.id}
             projectId={projectId}
             version={version}
-            currentPoints={points}
+            currentModuleId={ticket.moduleId}
           />
-        ) : null}
-
-        {showCycle && projectId && canUpdate ? (
-          <InlineCycle
-            ticketId={ticket.id}
-            projectId={projectId}
-            version={version}
-            currentCycleId={ticket.cycleId}
-          />
-        ) : null}
-
-        {moduleName !== null ? (
-          <Badge variant="secondary" className="shrink-0 text-micro">
+        ) : moduleName !== null ? (
+          <Badge variant="secondary" className="max-w-full shrink truncate text-micro font-medium">
             {moduleName}
           </Badge>
         ) : null}
-
-        {projectId && canUpdate ? (
-          <InlineStartDate
-            ticketId={ticket.id}
-            projectId={projectId}
-            version={version}
-            currentStartDate={ticket.startDate}
-          />
-        ) : null}
       </div>
 
-      <div className="mt-2.5 flex min-w-0 items-center justify-between gap-2 border-t border-border/60 pt-2">
+      {showPlanningRow && projectId !== undefined ? (
+        <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 rounded-md bg-muted/45 px-1.5 py-1">
+          {showEstimate ? (
+            <InlineEstimate
+              ticketId={ticket.id}
+              projectId={projectId}
+              version={version}
+              currentPoints={points}
+            />
+          ) : null}
+
+          {showCycle ? (
+            <InlineCycle
+              ticketId={ticket.id}
+              projectId={projectId}
+              version={version}
+              currentCycleId={ticket.cycleId}
+            />
+          ) : null}
+
+          {ticket.startDate ? (
+            <InlineStartDate
+              ticketId={ticket.id}
+              projectId={projectId}
+              version={version}
+              currentStartDate={ticket.startDate}
+            />
+          ) : null}
+        </div>
+      ) : null}
+
+      <div className="mt-2.5 flex min-w-0 items-center justify-between gap-2 border-t border-border/60 pt-2.5">
         {showDueDate && projectId && canUpdate ? (
           <InlineDueDate
             ticketId={ticket.id}

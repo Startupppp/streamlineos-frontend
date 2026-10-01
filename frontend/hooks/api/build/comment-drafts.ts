@@ -130,6 +130,7 @@ export function useDeleteCommentDraft() {
       apiClient.delete<{ deleted: boolean }>(`/build/comment-drafts/${draftId}`, undefined, undefined, commentDraftDeletedContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.commentDrafts.mine() });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.agentPulseAll() });
     },
   });
 }
@@ -159,6 +160,7 @@ export function useDeleteCommentDraftByTicket() {
       },
       onSuccess: () => {
         qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.commentDrafts.mine() });
+        qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.agentPulseAll() });
       },
     },
   );
@@ -173,6 +175,7 @@ export function useDeleteAllCommentDrafts() {
       apiClient.delete<{ deleted: boolean }>("/build/comment-drafts/mine", undefined, undefined, commentDraftDeletedContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.commentDrafts.mine() });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.agentPulseAll() });
     },
   });
 }

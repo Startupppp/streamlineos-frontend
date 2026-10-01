@@ -40,19 +40,20 @@ const mockUseRoadmapItems = useRoadmapItems as jest.Mock;
 const mockUseDeleteRoadmapItem = useDeleteRoadmapItem as jest.Mock;
 
 function page(cursor?: string) {
-  return cursor
-    ? {
-        data: { data: [{ id: 2, status: "planned", title: "Second" }], pagination: { limit: 1, hasMore: false, nextCursor: null } },
-        isLoading: false,
-        isError: false,
-        refetch: jest.fn(),
-      }
-    : {
-        data: { data: [{ id: 1, status: "planned", title: "First" }], pagination: { limit: 1, hasMore: true, nextCursor: "cursor-2" } },
-        isLoading: false,
-        isError: false,
-        refetch: jest.fn(),
-      };
+  const position = cursor === "cursor-3" ? 3 : cursor === "cursor-2" ? 2 : 1;
+  return {
+    data: {
+      data: [{ id: position, status: "planned", title: `Page ${position}` }],
+      pagination: {
+        limit: 1,
+        hasMore: position < 3,
+        nextCursor: position === 1 ? "cursor-2" : position === 2 ? "cursor-3" : null,
+      },
+    },
+    isLoading: false,
+    isError: false,
+    refetch: jest.fn(),
+  };
 }
 
 describe("RoadmapTab S04 cursor history", () => {
@@ -62,27 +63,40 @@ describe("RoadmapTab S04 cursor history", () => {
     mockUseRoadmapItems.mockImplementation((filters: { cursor?: string }) => page(filters?.cursor));
   });
 
-  it("walks from the first page to the last page and back without inventing a cursor", async () => {
+  it("walks three pages forward and returns one cursor boundary at a time", async () => {
     let cursor: string | null = null;
     const onCursorChange = (next: string | null) => {
       cursor = next;
     };
-    const view = render(
+    render(
       <RoadmapTab search="" cursor={cursor} onCursorChange={onCursorChange} />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Next page" }));
-    view.rerender(
-      <RoadmapTab search="" cursor={cursor} onCursorChange={onCursorChange} />,
-    );
-    expect(mockUseRoadmapItems.mock.calls.at(-1)?.[0]).toEqual({ cursor: "cursor-2" });
+    await waitFor(() => {
+      expect(mockUseRoadmapItems.mock.calls.at(-1)?.[0]).toEqual({ cursor: "cursor-2" });
+    });
+    expect(screen.getByLabelText("Current page 2")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+    await waitFor(() => {
+      expect(mockUseRoadmapItems.mock.calls.at(-1)?.[0]).toEqual({ cursor: "cursor-3" });
+    });
+    expect(screen.getByLabelText("Current page 3")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
 
     fireEvent.click(screen.getByRole("button", { name: "Previous page" }));
-    view.rerender(
-      <RoadmapTab search="" cursor={cursor} onCursorChange={onCursorChange} />,
-    );
-    expect(mockUseRoadmapItems.mock.calls.at(-1)?.[0]).toEqual({ cursor: undefined });
+    await waitFor(() => {
+      expect(mockUseRoadmapItems.mock.calls.at(-1)?.[0]).toEqual({ cursor: "cursor-2" });
+    });
+    expect(screen.getByLabelText("Current page 2")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Previous page" }));
+    await waitFor(() => {
+      expect(mockUseRoadmapItems.mock.calls.at(-1)?.[0]).toEqual({ cursor: undefined });
+    });
+    expect(screen.getByLabelText("Current page 1")).toBeInTheDocument();
+    expect(cursor).toBeNull();
   });
 
   it("resets cursor history when the list filter changes", async () => {

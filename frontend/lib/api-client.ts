@@ -363,6 +363,58 @@ export async function authedFetch(
   return res;
 }
 
+/**
+ * Origin-outage circuit (SEC-HRMS-003). During an outage every layer above
+ * retries on its own clock — query retry, the route boundary's auto-reset,
+ * polling reads — so one tab hammered a down origin at ~60 req/min. Every
+ * request passes through here, so this is the one place to stop it: a
+ * transport failure or a gateway 502/503/504 opens the circuit for a backoff
+ * window (5s doubling to 60s) during which requests fail fast with the same
+ * NETWORK_ERROR the UI already shows as "Server temporarily unavailable".
+ * The first request after the window is the probe; any other response proves
+ * the origin is back and closes it.
+ *
+ * "Gateway" means a non-JSON body: the backend itself answers 503 (AI
+ * provider down, mail unconfigured, …) in its JSON envelope, and that one
+ * feature being degraded must not black out the whole app.
+ */
+const OUTAGE_BASE_MS = 5_000;
+const OUTAGE_CEILING_MS = 60_000;
+const OUTAGE_STATUSES = new Set([502, 503, 504]);
+let outageUntil = 0;
+let outageBackoffMs = OUTAGE_BASE_MS;
+
+function noteOriginOutage(): void {
+  // Requests already in flight when the outage began all fail together; only
+  // the first may open (and lengthen) the window.
+  if (Date.now() < outageUntil) return;
+  outageUntil = Date.now() + outageBackoffMs;
+  outageBackoffMs = Math.min(OUTAGE_CEILING_MS, outageBackoffMs * 2);
+}
+
+export function resetOutageCircuit(): void {
+  outageUntil = 0;
+  outageBackoffMs = OUTAGE_BASE_MS;
+}
+
+function networkError(
+  url: string,
+  requestInit: Omit<RequestInit, "headers" | "signal" | "credentials">,
+  path: string,
+  cause: string,
+): ApiError {
+  const host = requestHost(url);
+  const upperMethod = (requestInit.method ?? "GET").toUpperCase();
+  const target = host ? `contacting ${host} ` : "";
+  return new ApiError(
+    `Network error ${target}(${upperMethod} ${path}). Check your connection and try again.`,
+    undefined,
+    "NETWORK_ERROR",
+    { method: upperMethod, path, host, cause },
+    path,
+  );
+}
+
 async function fetchOrThrowTransportError(
   url: string,
   requestInit: Omit<RequestInit, "headers" | "signal" | "credentials">,
@@ -370,8 +422,17 @@ async function fetchOrThrowTransportError(
   signal: AbortSignal,
   path: string,
 ): Promise<Response> {
+  if (Date.now() < outageUntil)
+    throw networkError(url, requestInit, path, "Server unavailable; retrying shortly.");
   try {
-    return await fetch(url, { ...requestInit, headers, credentials: "omit", signal });
+    const res = await fetch(url, { ...requestInit, headers, credentials: "omit", signal });
+    if (
+      OUTAGE_STATUSES.has(res.status) &&
+      !(res.headers.get("content-type") ?? "").includes("json")
+    )
+      noteOriginOutage();
+    else resetOutageCircuit();
+    return res;
   } catch (error: unknown) {
     if (error instanceof DOMException && error.name === "TimeoutError") {
       throw new ApiError(
@@ -383,16 +444,12 @@ async function fetchOrThrowTransportError(
     if (error instanceof DOMException && error.name === "AbortError") {
       throw new ApiError("Request was cancelled.", undefined, "ABORTED");
     }
-    const host = requestHost(url);
-    const upperMethod = (requestInit.method ?? "GET").toUpperCase();
-    const cause = error instanceof Error ? error.message : String(error);
-    const target = host ? `contacting ${host} ` : "";
-    throw new ApiError(
-      `Network error ${target}(${upperMethod} ${path}). Check your connection and try again.`,
-      undefined,
-      "NETWORK_ERROR",
-      { method: upperMethod, path, host, cause },
+    noteOriginOutage();
+    throw networkError(
+      url,
+      requestInit,
       path,
+      error instanceof Error ? error.message : String(error),
     );
   }
 }
@@ -463,6 +520,36 @@ export interface RequestConfig {
   signal?: AbortSignal;
   timeoutMs?: number;
   asRealUser?: boolean;
+}
+
+/**
+ * Sends an authenticated request through the same token cache, 401 recovery,
+ * correlation, timeout, and outage circuit as the typed API helpers while
+ * leaving the response body untouched. Use this for streaming handshakes and
+ * other endpoints whose headers or non-JSON body are part of their contract.
+ */
+export async function request(
+  url: string,
+  init: RequestInit,
+  config?: RequestConfig,
+): Promise<Response> {
+  const headers = new Headers(init.headers);
+  for (const [name, value] of Object.entries(config?.headers ?? {}))
+    headers.set(name, value);
+  return authedFetch(
+    buildUrl(url),
+    { ...init, headers },
+    url,
+    config?.signal,
+    config?.timeoutMs !== undefined || config?.asRealUser === true
+      ? {
+          ...(config.timeoutMs !== undefined
+            ? { timeoutMs: config.timeoutMs }
+            : {}),
+          ...(config.asRealUser === true ? { asRealUser: true } : {}),
+        }
+      : undefined,
+  );
 }
 
 async function post<T>(
@@ -588,6 +675,7 @@ async function download(
 }
 
 export const apiClient = {
+  request,
   get,
   post,
   put,

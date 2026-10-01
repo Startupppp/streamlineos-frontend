@@ -146,6 +146,20 @@ describe("KnowledgeBasePage — Copy and feedback controls on the real Ask KB ch
   });
 });
 
+describe("KnowledgeBasePage — Ask input height matches FIELD_CONTROL_CLASS (FE-102)", () => {
+  it("renders the ask input with h-9 height so it is not oversized relative to other standard controls on the page", () => {
+    renderPage();
+    const input = screen.getByPlaceholderText(/ask anything/i);
+    expect(input.className).toContain("h-9");
+  });
+
+  it("does not render the ask input with h-11 so the oversized input class that was breaking the layout is absent", () => {
+    renderPage();
+    const input = screen.getByPlaceholderText(/ask anything/i);
+    expect(input.className).not.toContain("h-11");
+  });
+});
+
 describe("KnowledgeBasePage — Create knowledge gap on an insufficient-evidence answer", () => {
   it("offers to create a knowledge gap when the KB has no relevant content, and reports the asked question", async () => {
     mockAskMutate.mockImplementation((_input, options) =>

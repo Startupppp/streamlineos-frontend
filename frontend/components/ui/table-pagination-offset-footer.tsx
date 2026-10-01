@@ -31,7 +31,7 @@ export function OffsetFooter({
   const currentPage = Math.min(Math.max(1, page), totalPages);
   const from = total === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const to = Math.min(currentPage * pageSize, total);
-  const pageItems = getVisiblePageItems(totalPages);
+  const pageItems = getVisiblePageItems(totalPages, currentPage);
 
   if (total === 0) return null;
 

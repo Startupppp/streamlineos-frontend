@@ -1,4 +1,5 @@
 import type React from "react";
+import { useEffect } from "react";
 import { act, renderHook } from "@testing-library/react";
 
 import { useMessageComposer } from "./use-message-composer";
@@ -94,5 +95,48 @@ describe("Enter during IME composition", () => {
       enter(hook, false);
     });
     expect(sendMessage.mutateAsync).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("#169 — composer clears after send; draft autosave must not contaminate new channels", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("messageInput is empty after a successful send", async () => {
+    const { hook } = harness();
+    act(() => hook.result.current.setMessageInput("hello world"));
+    await act(async () => {
+      await hook.result.current.handleSend();
+    });
+    expect(hook.result.current.messageInput).toBe("");
+  });
+
+  it("draftKey is removed from localStorage after a successful send", async () => {
+    localStorage.setItem("chat:draft:7", "hello world");
+    const { hook } = harness();
+    act(() => hook.result.current.setMessageInput("hello world"));
+    await act(async () => {
+      await hook.result.current.handleSend();
+    });
+    expect(localStorage.getItem("chat:draft:7")).toBeNull();
+  });
+
+  it("draft save effect — draftKey change alone does not write old messageInput to the new channel key", () => {
+    localStorage.setItem("chat:draft:7", "unsent draft");
+    const draftKeyRef = { current: "chat:draft:7" };
+    const { rerender } = renderHook(
+      ({ draftKey, messageInput }: { draftKey: string; messageInput: string }) => {
+        draftKeyRef.current = draftKey;
+        useEffect(() => {
+          const key = draftKeyRef.current;
+          if (messageInput) localStorage.setItem(key, messageInput);
+          else localStorage.removeItem(key);
+        }, [messageInput]);
+      },
+      { initialProps: { draftKey: "chat:draft:7", messageInput: "unsent draft" } },
+    );
+    rerender({ draftKey: "chat:draft:8", messageInput: "unsent draft" });
+    expect(localStorage.getItem("chat:draft:8")).toBeNull();
   });
 });

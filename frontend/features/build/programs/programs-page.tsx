@@ -56,7 +56,7 @@ export function ProgramsPage() {
   const listFilters = useBuildListFilters({
     filters: PROGRAM_FILTER_DEFINITIONS,
   });
-  const { cursor, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
+  const { cursor, pageNumber, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
     listFilters.resetKey,
   );
 
@@ -335,6 +335,7 @@ export function ProgramsPage() {
             pagination={{
               mode: "cursor",
               pageSize: PAGE_SIZE,
+              pageNumber,
               hasMore: Boolean(data?.pagination.hasMore),
               hasPrevious,
               onNext: handleNextPage,

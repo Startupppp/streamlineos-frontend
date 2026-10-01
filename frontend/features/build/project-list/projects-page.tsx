@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 import { Plus } from "lucide-react";
@@ -124,7 +124,29 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
     [searchParams, router, pathname],
   );
 
-  const search = searchParams.get("q") || "";
+  const urlSearch = searchParams.get("q") || "";
+  const [localSearch, setLocalSearch] = useState(() => urlSearch);
+
+  useEffect(() => {
+    setLocalSearch(urlSearch);
+  }, [urlSearch]);
+
+  const debouncedSearch = useDebouncedValue(localSearch, 300);
+
+  const updateParamsRef = useRef(updateParams);
+  useLayoutEffect(() => {
+    updateParamsRef.current = updateParams;
+  });
+
+  const isMountedRef = useRef(false);
+  useEffect(() => {
+    if (!isMountedRef.current) {
+      isMountedRef.current = true;
+      return;
+    }
+    updateParamsRef.current({ q: debouncedSearch || null });
+  }, [debouncedSearch]);
+
   const viewMode =
     VIEW_MODES.find((v) => v === searchParams.get("view")) ?? "list";
   const filterStatus = STATUS_OPTIONS.find(
@@ -147,11 +169,9 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
     [filterStatus, filterHealth, filterManagerId],
   );
 
-  const debouncedSearch = useDebouncedValue(search, 300);
-
   const handleSearchChange = useCallback(
-    (value: string) => updateParams({ q: value || null }),
-    [updateParams],
+    (value: string) => setLocalSearch(value),
+    [],
   );
 
   const handleViewModeChange = useCallback(
@@ -183,8 +203,6 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
       clientId: null,
     });
   }, [updateParams]);
-
-  const handleNoOp = useCallback(() => {}, []);
 
   const {
     data,
@@ -300,7 +318,7 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
         actions={<BuildHeaderActions actions={headerActions} />}
         filters={
           <ProjectFilterBar
-            search={search}
+            search={localSearch}
             onSearchChange={handleSearchChange}
             viewMode={viewMode}
             onViewModeChange={handleViewModeChange}
@@ -362,14 +380,14 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
                     ))}
                   </PmStaggerList>
                 </div>
-                {hasNextPage ? (
+                {visibleProjects.length > 0 ? (
                   <TablePagination
                     mode="cursor"
+                    cursorVariant="load-more"
                     rowCount={visibleProjects.length}
-                    hasMore={true}
-                    hasPrevious={false}
+                    pageNumber={data?.pages.length ?? 1}
+                    hasMore={Boolean(hasNextPage)}
                     onNext={handleLoadMore}
-                    onPrevious={handleNoOp}
                     disabled={isFetchingNextPage}
                   />
                 ) : null}
@@ -381,6 +399,7 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
                     projects={visibleProjects}
                     prefs={prefs}
                     hasMore={Boolean(hasNextPage)}
+                    pageNumber={data?.pages.length ?? 1}
                     onLoadMore={handleLoadMore}
                   />
                 </div>

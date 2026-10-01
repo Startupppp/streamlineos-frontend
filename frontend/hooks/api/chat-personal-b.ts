@@ -297,9 +297,11 @@ export interface ChannelFile {
   id: number;
   messageId: number;
   fileName: string;
-  mimeType: string;
-  fileSize: number;
   fileUrl: string;
+  fileKey: string;
+  fileSize: number;
+  mimeType: string;
+  createdAt: string;
 }
 
 export function useChannelFiles(channelId: number) {

@@ -68,12 +68,13 @@ describe("LabelsSettings — build:manage gates", () => {
   it("shows a Delete button on every label row when the viewer holds build:manage", () => {
     mockAccessState = "granted";
     render(<LabelsSettings />);
-    expect(screen.getAllByRole("button", { name: "Delete label" })).toHaveLength(2);
+    expect(screen.getByRole("button", { name: "Delete label Bug" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Delete label Feature" })).toBeInTheDocument();
   });
 
   it("hides all Delete buttons when the viewer lacks build:manage", () => {
     render(<LabelsSettings />);
-    expect(screen.queryByRole("button", { name: "Delete label" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /delete label/i })).not.toBeInTheDocument();
   });
 
   it("shows an edit control on every label row when the viewer holds build:manage", () => {

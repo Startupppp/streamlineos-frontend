@@ -7,17 +7,19 @@ const moduleAccessItemSchema = z.object({
   standing: z.enum(["MEMBER", "ADMIN"]),
 });
 
+export const moduleAccessSchema = z
+  .array(moduleAccessItemSchema)
+  .max(10)
+  .refine(
+    (items) => new Set(items.map((i) => i.moduleKey)).size === items.length,
+    { message: "Each module may appear at most once" },
+  )
+  .optional();
+
 export const inviteUserSchema = z.object({
   email: inviteEmailSchema,
   role: z.enum(USER_INVITE_ROLE_VALUES),
-  moduleAccess: z
-    .array(moduleAccessItemSchema)
-    .max(10)
-    .refine(
-      (items) => new Set(items.map((i) => i.moduleKey)).size === items.length,
-      { message: "Each module may appear at most once" },
-    )
-    .optional(),
+  moduleAccess: moduleAccessSchema,
 });
 
 export type InviteUserFormValues = z.infer<typeof inviteUserSchema>;

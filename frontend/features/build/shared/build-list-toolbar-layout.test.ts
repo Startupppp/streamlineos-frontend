@@ -152,24 +152,32 @@ describe("isToolbarMobileSearchExpanded", () => {
 });
 
 describe("toolbar viewport visibility", () => {
-  it("keeps the first filter inline and parks later filters in the menu until the screen is wide", () => {
-    expect(toolbarInlineVisibility(0, true)).toBe("max-md:hidden");
-    expect(toolbarInlineVisibility(1, true)).toContain("md:hidden");
-    expect(toolbarInlineVisibility(1, true)).toContain("lg:block");
-    expect(toolbarInlineVisibility(4, true)).toContain("md:hidden");
-    expect(toolbarInlineVisibility(4, true)).not.toContain("2xl:block");
+  it("renders a lone overflow filter directly instead of behind Filters", () => {
+    expect(toolbarInlineVisibility(1, false, 2)).not.toContain("md:hidden");
+    expect(toolbarInlineVisibility(2, true, 3)).toContain("lg:block");
+    expect(toolbarInlineVisibility(3, true, 4)).toContain("xl:block");
+    expect(toolbarInlineVisibility(4, true, 5)).toContain("2xl:block");
   });
 
-  it("hides a drawer field wherever that filter is already inline", () => {
-    expect(toolbarDrawerVisibility(0, false)).toBe("hidden");
-    expect(toolbarDrawerVisibility(0, true)).toBe("md:hidden");
-    expect(toolbarDrawerVisibility(1, true)).toBe("lg:hidden");
+  it("keeps two or more overflow filters in the drawer until their wide breakpoint", () => {
+    expect(toolbarInlineVisibility(1, true, 3)).toContain("lg:block");
+    expect(toolbarInlineVisibility(2, true, 4)).toContain("xl:block");
+    expect(toolbarInlineVisibility(3, true, 5)).toContain("2xl:block");
   });
 
-  it("shows the Filters button on desktop only while a filter would overflow", () => {
+  it("hides drawer fields wherever the direct controls are visible", () => {
+    expect(toolbarDrawerVisibility(0, false, 2)).toBe("hidden");
+    expect(toolbarDrawerVisibility(0, true, 3)).toBe("md:hidden");
+    expect(toolbarDrawerVisibility(1, false, 2)).toBe("hidden");
+    expect(toolbarDrawerVisibility(2, true, 3)).toBe("lg:hidden");
+  });
+
+  it("shows Filters only while at least two controls would overflow", () => {
     expect(toolbarMoreButtonClass(1, false)).toContain("md:hidden");
-    expect(toolbarMoreButtonClass(2, true)).toContain("lg:hidden");
-    expect(toolbarMoreButtonClass(5, true)).toContain("md:inline-flex");
-    expect(toolbarMoreButtonClass(5, true)).not.toContain("lg:hidden");
+    expect(toolbarMoreButtonClass(2, false)).toContain("md:hidden");
+    expect(toolbarMoreButtonClass(3, true)).toContain("lg:hidden");
+    expect(toolbarMoreButtonClass(4, true)).toContain("xl:hidden");
+    expect(toolbarMoreButtonClass(5, true)).toContain("2xl:hidden");
+    expect(toolbarMoreButtonClass(6, true)).not.toContain("2xl:hidden");
   });
 });
