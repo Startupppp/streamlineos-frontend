@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -119,6 +120,10 @@ export function UserInviteDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Invite User</DialogTitle>
+          <DialogDescription>
+            They receive an email with a link to join this organization. The
+            role and module access you pick here apply the moment they accept.
+          </DialogDescription>
         </DialogHeader>
 
         {invited ? (

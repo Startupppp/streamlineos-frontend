@@ -19,3 +19,20 @@ describe("feedbucket widget styles — pointer-events isolation", () => {
     expect(openPanel).toContain("pointer-events: auto");
   });
 });
+
+describe("feedbucket widget styles — narrow-viewport docking (SETTINGS-012)", () => {
+  it("docks the undragged launcher bottom-left and lays it flat below 1024px", () => {
+    const css = getStyles();
+    const block = css.match(/@media \(max-width: 1023px\)\s*\{[\s\S]*?\n\}/)?.[0] ?? "";
+    expect(block).toContain(".widget:not(.positioned)");
+    expect(block).toContain("right: auto");
+    expect(block).toContain("left: 12px");
+    expect(block).toContain("flex-direction: row");
+  });
+
+  it("leaves a dragged launcher where the reader put it", () => {
+    const css = getStyles();
+    const block = css.match(/@media \(max-width: 1023px\)\s*\{[\s\S]*?\n\}/)?.[0] ?? "";
+    expect(block).not.toMatch(/\.widget\s*\{/);
+  });
+});

@@ -1,3 +1,14 @@
+/**
+ * Below the desktop shell the launcher's default anchor -- right edge, vertically
+ * centred -- lands exactly where the app keeps its controls: the module switches
+ * on /settings/modules, a table's trailing columns, a plan card's CTA
+ * (SETTINGS-012, SETTINGS-013). The max-width: 1023px block docks it to the
+ * bottom-left corner instead, clear of the bottom nav and of the right-hand rail
+ * of controls, and lays it flat so it is one button tall rather than four.
+ *
+ * Its :not(.positioned) arm leaves a launcher the reader has dragged where they
+ * put it -- DragManager writes inline left/top, which this could not beat anyway.
+ */
 export function getStyles(): string {
   return `
 :host { all: initial; }
@@ -304,6 +315,23 @@ export function getStyles(): string {
   opacity: 1;
   visibility: visible;
   transition: opacity 180ms ease, visibility 0ms;
+}
+
+/* SETTINGS-012/013: dock clear of the app's right-hand controls below the desktop shell. */
+@media (max-width: 1023px) {
+  .widget:not(.positioned) {
+    top: auto;
+    right: auto;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 76px);
+    left: 12px;
+    transform: none;
+  }
+  .widget:not(.positioned) .launcher { flex-direction: row; }
+  .widget:not(.positioned) .launcher-divider {
+    width: 1px;
+    height: 22px;
+    margin: 0 2px;
+  }
 }
 
 @media (max-width: 480px) {
