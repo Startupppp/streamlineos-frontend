@@ -317,7 +317,7 @@ export function useChannelFiles(channelId: number) {
         signal,
         chatChannelFilesContract,
       ),
-    getNextPageParam: (last) => last.nextCursor,
+    getNextPageParam: (last) => last.nextCursor ?? undefined,
     initialPageParam: NO_ID_CURSOR_YET,
     enabled: canRead && channelId > 0,
   });
