@@ -47,6 +47,8 @@ const DRAFT: TimesheetPeriod = {
   currentApproverMembershipId: null,
   approvalRoute: null,
   rejectionReason: null,
+  approvalDueAt: null,
+  approvalEscalatedAt: null,
   createdAt: "2026-09-07T00:00:00.000Z",
   updatedAt: "2026-09-07T00:00:00.000Z",
 };
