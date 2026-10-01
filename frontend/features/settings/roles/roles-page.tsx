@@ -202,7 +202,16 @@ export function RolesPage() {
           <GroupsPanel />
         </TabsContent>
 
-        <TabsContent value="roles" className="gap-3 overflow-hidden">
+        {/*
+          Below `lg` the stat block, the role list and the permission panel do
+          not fit one viewport, and the tab was height-locked — so the list's
+          pager sat under the fold with nothing to scroll. It scrolls there and
+          stays locked from `lg` up, where the two-column layout does fit.
+        */}
+        <TabsContent
+          value="roles"
+          className="gap-3 max-lg:overflow-y-auto lg:overflow-hidden"
+        >
         <div className="shrink-0">
           {analyticsLoading ? (
             <StatCardGridSkeleton cols={5} count={5} stackOnMobile={2} />
@@ -217,7 +226,7 @@ export function RolesPage() {
           )}
         </div>
 
-        <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-hidden lg:grid-cols-[320px_minmax(0,1fr)] lg:items-stretch">
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 max-lg:shrink-0 lg:grid-cols-[320px_minmax(0,1fr)] lg:items-stretch lg:overflow-hidden">
           <div className="min-h-0 max-lg:h-[min(420px,50dvh)] lg:h-full">
             <RolesListPanel
               isLoading={isLoading}
