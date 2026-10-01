@@ -16,13 +16,9 @@ export const actionItemRowContract = meetingsGetMeetingResponseSchema.shape.acti
 
 export const standupEntryContract = meetingsGetMeetingResponseSchema.shape.standupEntries.element;
 
-export const meetingDetailAttendeeContract = meetingsGetMeetingResponseSchema.shape.attendees.element.extend({
-  userId: meetingsAddAttendeeResponseSchema.shape.userId.optional().default(""),
-});
+export const meetingDetailAttendeeContract = meetingsGetMeetingResponseSchema.shape.attendees.element;
 
-export const meetingDetailContract = meetingsGetMeetingResponseSchema.extend({
-  attendees: meetingDetailAttendeeContract.array(),
-});
+export const meetingDetailContract = meetingsGetMeetingResponseSchema;
 
 export const addAttendeeResultContract = meetingsAddAttendeeResponseSchema;
 

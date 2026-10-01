@@ -55,39 +55,4 @@ export const publicWhiteboardUpdateContract =
 export const projectBudgetContract = projectsBudgetGetBudgetResponseSchema;
 export const projectBudgetUpdateContract =
   projectsBudgetUpdateBudgetResponseSchema;
-export const analyticsContract = projectsReportsGetAnalyticsResponseSchema.extend(
-  {
-    stateDistribution: z.array(
-      z.object({ status: z.string(), count: z.number() }),
-    ),
-    priorityBreakdown: z.array(
-      z.object({ priority: z.string().nullable(), count: z.number() }),
-    ),
-    assigneeCompletion: z.array(
-      z.object({
-        assigneeId: z.string().nullable(),
-        assigneeName: z.string().nullable(),
-        total: z.number(),
-        completed: z.number(),
-      }),
-    ),
-    volumeOverTime: z.array(
-      z.object({ week: z.string(), count: z.number() }),
-    ),
-    cycleVelocity: z.array(
-      z.object({
-        cycleId: z.number(),
-        cycleName: z.string(),
-        completedPoints: z.number(),
-      }),
-    ),
-    estimateVsActual: z.array(
-      z.object({
-        ticketId: z.number(),
-        title: z.string(),
-        estimated: z.string().nullable(),
-        actual: z.number(),
-      }),
-    ),
-  },
-);
+export const analyticsContract = projectsReportsGetAnalyticsResponseSchema;

@@ -14,7 +14,7 @@ import {
   projectsTicketsRankTicketResponseSchema,
   projectsTicketsUpdateTicketResponseSchema,
   projectsTicketsUpdateTicketBodySchema,
-  genTicketColumnCountsSchema,
+  projectsTicketsGetColumnCountsResponseSchema,
   projectsTicketAssociationsGetSubtasksResponseSchema,
   projectsTicketCommentsGetCommentResponseSchema,
   projectsTicketsSearchTicketsResponseSchema,
@@ -56,7 +56,7 @@ export const ticketUpdateResultContract = projectsTicketsUpdateTicketResponseSch
 
 export const ticketUpdateRequestContract = projectsTicketsUpdateTicketBodySchema;
 
-export const columnCountsContract = genTicketColumnCountsSchema;
+export const columnCountsContract = projectsTicketsGetColumnCountsResponseSchema;
 
 export const subtaskListContract = projectsTicketAssociationsGetSubtasksResponseSchema;
 

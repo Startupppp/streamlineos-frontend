@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const OPENAPI_HASH = "sha256:b86c170bb0f4e181768e681a57dea4d5e2971081d4afd4cb389bcb668b13f35d" as const;
+export const OPENAPI_HASH = "sha256:2dc070751f301fcab39e79a40f8a46fe8c00e6d9e7ad9450c8d7ca1635b8e2af" as const;
 
 export const agentTokensListResponseSchema = z.array(z.object({
   id: z.number().int(),
@@ -190,7 +190,21 @@ export const projectsCreateProjectResponseSchema = z.object({
   budget: z.string().nullable(),
   budgetMinor: z.number().int().nullable(),
   budgetCurrency: z.string().nullable(),
-  settings: z.unknown(),
+  settings: z.object({
+    modules: z.object({
+      sprints: z.boolean().optional(),
+      epics: z.boolean(),
+      timeTracking: z.boolean(),
+      wiki: z.boolean(),
+    }),
+    projectType: z.string().optional(),
+    workflow: z.string().optional(),
+    features: z.record(z.string(), z.boolean()).optional(),
+    iterations: z.object({
+      defaultDurationWeeks: z.number(),
+      namingPrefix: z.string(),
+    }).optional(),
+  }).nullable(),
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -1831,7 +1845,21 @@ export const projectsByIdGetProjectResponseSchema = z.object({
   budget: z.string().nullable(),
   budgetMinor: z.number().int().nullable(),
   budgetCurrency: z.string().nullable(),
-  settings: z.unknown(),
+  settings: z.object({
+    modules: z.object({
+      sprints: z.boolean().optional(),
+      epics: z.boolean(),
+      timeTracking: z.boolean(),
+      wiki: z.boolean(),
+    }),
+    projectType: z.string().optional(),
+    workflow: z.string().optional(),
+    features: z.record(z.string(), z.boolean()).optional(),
+    iterations: z.object({
+      defaultDurationWeeks: z.number(),
+      namingPrefix: z.string(),
+    }).optional(),
+  }).nullable(),
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -1889,7 +1917,21 @@ export const projectsByIdUpdateProjectResponseSchema = z.object({
   budget: z.string().nullable(),
   budgetMinor: z.number().int().nullable(),
   budgetCurrency: z.string().nullable(),
-  settings: z.unknown(),
+  settings: z.object({
+    modules: z.object({
+      sprints: z.boolean().optional(),
+      epics: z.boolean(),
+      timeTracking: z.boolean(),
+      wiki: z.boolean(),
+    }),
+    projectType: z.string().optional(),
+    workflow: z.string().optional(),
+    features: z.record(z.string(), z.boolean()).optional(),
+    iterations: z.object({
+      defaultDurationWeeks: z.number(),
+      namingPrefix: z.string(),
+    }).optional(),
+  }).nullable(),
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -1975,12 +2017,35 @@ export const projectsActivityFeedGetProjectActivityResponseSchema = z.object({
 export type ProjectsActivityFeedGetProjectActivityResponse = z.infer<typeof projectsActivityFeedGetProjectActivityResponseSchema>;
 
 export const projectsReportsGetAnalyticsResponseSchema = z.object({
-  stateDistribution: z.unknown(),
-  priorityBreakdown: z.unknown(),
-  assigneeCompletion: z.unknown(),
-  volumeOverTime: z.unknown(),
-  cycleVelocity: z.unknown(),
-  estimateVsActual: z.unknown(),
+  stateDistribution: z.array(z.object({
+    status: z.string(),
+    count: z.number(),
+  })),
+  priorityBreakdown: z.array(z.object({
+    priority: z.string().nullable(),
+    count: z.number(),
+  })),
+  assigneeCompletion: z.array(z.object({
+    assigneeId: z.string().nullable(),
+    assigneeName: z.string().nullable(),
+    total: z.number(),
+    completed: z.number(),
+  })),
+  volumeOverTime: z.array(z.object({
+    week: z.string(),
+    count: z.number(),
+  })),
+  cycleVelocity: z.array(z.object({
+    cycleId: z.number().int(),
+    cycleName: z.string(),
+    completedPoints: z.number(),
+  })),
+  estimateVsActual: z.array(z.object({
+    ticketId: z.number().int(),
+    title: z.string(),
+    estimated: z.string().nullable(),
+    actual: z.number(),
+  })),
   healthScore: z.number().int(),
   healthStatus: z.enum(["NOT_STARTED", "EXCELLENT", "GOOD", "AT_RISK", "CRITICAL"]),
   healthBreakdown: z.object({
@@ -3005,8 +3070,17 @@ export const formsListFormsResponseSchema = z.object({
     name: z.string(),
     description: z.string().nullable(),
     type: z.enum(["task_request", "bug_report", "feature_request", "change_request", "client_approval", "risk_report", "qa_issue", "generic"]),
-    fields: z.unknown(),
-    actions: z.unknown(),
+    fields: z.array(z.object({
+      key: z.string(),
+      label: z.string(),
+      type: z.enum(["text", "long_text", "number", "date", "dropdown", "multiselect", "checkbox", "url", "user", "currency", "rating"]),
+      required: z.boolean(),
+      options: z.array(z.string()).optional(),
+    })),
+    actions: z.array(z.object({
+      type: z.string(),
+      config: z.record(z.string(), z.unknown()).optional(),
+    })),
     isActive: z.boolean(),
     isPublic: z.boolean(),
     publicToken: z.string().nullable(),
@@ -3031,8 +3105,17 @@ export const formsCreateFormResponseSchema = z.object({
   name: z.string(),
   description: z.string().nullable(),
   type: z.enum(["task_request", "bug_report", "feature_request", "change_request", "client_approval", "risk_report", "qa_issue", "generic"]),
-  fields: z.unknown(),
-  actions: z.unknown(),
+  fields: z.array(z.object({
+    key: z.string(),
+    label: z.string(),
+    type: z.enum(["text", "long_text", "number", "date", "dropdown", "multiselect", "checkbox", "url", "user", "currency", "rating"]),
+    required: z.boolean(),
+    options: z.array(z.string()).optional(),
+  })),
+  actions: z.array(z.object({
+    type: z.string(),
+    config: z.record(z.string(), z.unknown()).optional(),
+  })),
   isActive: z.boolean(),
   isPublic: z.boolean(),
   publicToken: z.string().nullable(),
@@ -3080,8 +3163,17 @@ export const formsGetFormResponseSchema = z.object({
   name: z.string(),
   description: z.string().nullable(),
   type: z.enum(["task_request", "bug_report", "feature_request", "change_request", "client_approval", "risk_report", "qa_issue", "generic"]),
-  fields: z.unknown(),
-  actions: z.unknown(),
+  fields: z.array(z.object({
+    key: z.string(),
+    label: z.string(),
+    type: z.enum(["text", "long_text", "number", "date", "dropdown", "multiselect", "checkbox", "url", "user", "currency", "rating"]),
+    required: z.boolean(),
+    options: z.array(z.string()).optional(),
+  })),
+  actions: z.array(z.object({
+    type: z.string(),
+    config: z.record(z.string(), z.unknown()).optional(),
+  })),
   isActive: z.boolean(),
   isPublic: z.boolean(),
   publicToken: z.string().nullable(),
@@ -3100,8 +3192,17 @@ export const formsUpdateFormResponseSchema = z.object({
   name: z.string(),
   description: z.string().nullable(),
   type: z.enum(["task_request", "bug_report", "feature_request", "change_request", "client_approval", "risk_report", "qa_issue", "generic"]),
-  fields: z.unknown(),
-  actions: z.unknown(),
+  fields: z.array(z.object({
+    key: z.string(),
+    label: z.string(),
+    type: z.enum(["text", "long_text", "number", "date", "dropdown", "multiselect", "checkbox", "url", "user", "currency", "rating"]),
+    required: z.boolean(),
+    options: z.array(z.string()).optional(),
+  })),
+  actions: z.array(z.object({
+    type: z.string(),
+    config: z.record(z.string(), z.unknown()).optional(),
+  })),
   isActive: z.boolean(),
   isPublic: z.boolean(),
   publicToken: z.string().nullable(),
@@ -3148,7 +3249,7 @@ export const submissionsListSubmissionsResponseSchema = z.object({
     orgId: z.string(),
     formId: z.number().int(),
     projectId: z.number().int(),
-    values: z.unknown(),
+    values: z.record(z.string(), z.unknown()),
     status: z.enum(["submitted", "processed", "rejected"]),
     submittedByName: z.string().nullable(),
     submittedById: z.string().nullable(),
@@ -3168,7 +3269,7 @@ export const submissionsCreateSubmissionResponseSchema = z.object({
   orgId: z.string(),
   formId: z.number().int(),
   projectId: z.number().int(),
-  values: z.unknown(),
+  values: z.record(z.string(), z.unknown()),
   status: z.enum(["submitted", "processed", "rejected"]),
   submittedByName: z.string().nullable(),
   submittedById: z.string().nullable(),
@@ -3191,7 +3292,7 @@ export const submissionsUpdateSubmissionResponseSchema = z.object({
   orgId: z.string(),
   formId: z.number().int(),
   projectId: z.number().int(),
-  values: z.unknown(),
+  values: z.record(z.string(), z.unknown()),
   status: z.enum(["submitted", "processed", "rejected"]),
   submittedByName: z.string().nullable(),
   submittedById: z.string().nullable(),
@@ -3686,6 +3787,7 @@ export const meetingsGetMeetingResponseSchema = z.object({
     orgId: z.string(),
     meetingId: z.number().int(),
     membershipId: z.number().int(),
+    userId: z.string(),
     attended: z.boolean(),
     createdAt: z.iso.datetime({ offset: true }),
   })),
@@ -4450,7 +4552,10 @@ export const testCasesListCasesResponseSchema = z.object({
     caseNumber: z.number().int(),
     title: z.string(),
     preconditions: z.string().nullable(),
-    steps: z.unknown(),
+    steps: z.array(z.object({
+      action: z.string(),
+      expected: z.string(),
+    })).nullable(),
     expectedResult: z.string().nullable(),
     priority: z.enum(["low", "medium", "high"]),
     component: z.string().nullable(),
@@ -4474,7 +4579,10 @@ export const testCasesCreateCaseResponseSchema = z.object({
   caseNumber: z.number().int(),
   title: z.string(),
   preconditions: z.string().nullable(),
-  steps: z.unknown(),
+  steps: z.array(z.object({
+    action: z.string(),
+    expected: z.string(),
+  })).nullable(),
   expectedResult: z.string().nullable(),
   priority: z.enum(["low", "medium", "high"]),
   component: z.string().nullable(),
@@ -4511,7 +4619,10 @@ export const testCasesUpdateCaseResponseSchema = z.object({
   caseNumber: z.number().int(),
   title: z.string(),
   preconditions: z.string().nullable(),
-  steps: z.unknown(),
+  steps: z.array(z.object({
+    action: z.string(),
+    expected: z.string(),
+  })).nullable(),
   expectedResult: z.string().nullable(),
   priority: z.enum(["low", "medium", "high"]),
   component: z.string().nullable(),
@@ -6499,9 +6610,7 @@ export const genRiskStatsSchema = risksGetRiskStatsResponseSchema;
 export const genProjectRosterSchema = projectResourcesGetRosterResponseSchema;
 export const genIterationSettingsSchema = projectsSettingsIterationsGetSettingsResponseSchema;
 export const genTicketListPageSchema = projectsTicketsListTicketsResponseSchema;
-export const genTicketDetailWireSchema = projectsTicketsGetTicketResponseSchema;
 export const genTicketRelationListSchema = projectsTicketAssociationsListRelationsResponseSchema;
-export const genTicketColumnCountsSchema = projectsTicketsGetColumnCountsResponseSchema;
 export const genProjectUpdatesSchema = updatesListUpdatesResponseSchema;
 export const genProjectViewListSchema = viewsListViewsResponseSchema;
 export const genWebhookPageSchema = projectsWebhooksListWebhooksResponseSchema;

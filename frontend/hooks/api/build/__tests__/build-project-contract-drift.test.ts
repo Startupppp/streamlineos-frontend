@@ -27,6 +27,7 @@ const AUTOMATION = {
 
 const RELEASE = {
   id: 5,
+  orgId: "org-1",
   projectId: 3,
   name: "v1.2",
   version: "1.2.0",
@@ -36,6 +37,7 @@ const RELEASE = {
   releaseDate: null,
   publishedAt: null,
   createdBy: null,
+  deletedAt: null,
   ticketCount: 0,
   createdAt: "2026-09-15T10:00:00.000Z",
   updatedAt: "2026-09-15T10:00:00.000Z",

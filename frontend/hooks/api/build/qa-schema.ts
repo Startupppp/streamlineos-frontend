@@ -1,4 +1,3 @@
-import { z } from "zod";
 import {
   testSuitesListSuitesResponseSchema,
   testCasesCreateCaseResponseSchema,
@@ -14,13 +13,9 @@ export const testSuiteRowContract = testSuitesListSuitesResponseSchema.element;
 
 export const testSuiteListContract = testSuitesListSuitesResponseSchema;
 
-export const testCaseRowContract = testCasesCreateCaseResponseSchema.extend({
-  steps: z.array(z.object({ action: z.string(), expected: z.string() })).nullable(),
-});
+export const testCaseRowContract = testCasesCreateCaseResponseSchema;
 
-export const testCasePageContract = testCasesListCasesResponseSchema.extend({
-  data: testCaseRowContract.array(),
-});
+export const testCasePageContract = testCasesListCasesResponseSchema;
 
 export const testRunListItemContract = testRunsListRunsResponseSchema.shape.data.element;
 

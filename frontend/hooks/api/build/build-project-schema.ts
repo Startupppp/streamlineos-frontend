@@ -1,10 +1,11 @@
-import { z } from "zod";
 import {
   projectsByIdGetProjectResponseSchema,
+  projectsCreateProjectResponseSchema,
   projectsListProjectsResponseSchema,
   projectsListLabelsResponseSchema,
   projectsCreateLabelResponseSchema,
   projectResourcesListMembersResponseSchema,
+  projectResourcesAddMemberResponseSchema,
   projectResourcesUpdateMemberRoleResponseSchema,
   projectResourcesGetRosterResponseSchema,
   projectResourcesListCustomStatesResponseSchema,
@@ -15,6 +16,7 @@ import {
   projectsCustomFieldsGetTicketValuesResponseSchema,
   projectsCustomFieldsUpsertTicketValuesResponseSchema,
   projectsReleasesListReleasesResponseSchema,
+  projectsReleasesCreateReleaseResponseSchema,
   projectsWebhooksListWebhooksResponseSchema,
   projectsWebhooksCreateWebhookResponseSchema,
   projectsWebhooksUpdateWebhookBodySchema,
@@ -25,61 +27,7 @@ import {
   buildMembersListResponseSchema,
   buildMembersAddResponseSchema,
 } from "@/contracts/build-contracts.generated";
-
-const STATE_GROUP_VALUES = [
-  "backlog",
-  "unstarted",
-  "started",
-  "completed",
-  "cancelled",
-] as const;
-
-const projectStatusRowSchema = z.object({
-  id: z.number(),
-  projectId: z.number(),
-  orgId: z.string(),
-  name: z.string(),
-  order: z.number(),
-  color: z.string().nullable(),
-  type: z.enum(STATE_GROUP_VALUES).nullable(),
-  wipLimit: z.number().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-});
-
-const projectRowSchema = z.object({
-  id: z.number(),
-  orgId: z.string(),
-  name: z.string(),
-  description: z.string().nullable(),
-  key: z.string(),
-  clientMembershipId: z.number().nullable(),
-  managerMembershipId: z.number().nullable(),
-  startDate: z.string().nullable(),
-  endDate: z.string().nullable(),
-  status: z.enum(["ACTIVE", "COMPLETED", "ARCHIVED"]).nullable(),
-  priority: z.string().nullable(),
-  dealId: z.number().nullable(),
-  managedProductId: z.number().nullable(),
-  budget: z.string().nullable(),
-  budgetMinor: z.number().nullable(),
-  budgetCurrency: z.string().nullable(),
-  settings: z
-    .object({
-      modules: z.object({
-        epics: z.boolean(),
-        timeTracking: z.boolean(),
-        wiki: z.boolean(),
-      }),
-      projectType: z.string().optional(),
-      workflow: z.string().optional(),
-      features: z.record(z.string(), z.boolean()).optional(),
-    })
-    .nullable(),
-  deletedAt: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-});
+import { z } from "zod";
 
 export const projectDetailMemberContract =
   projectsByIdGetProjectResponseSchema.shape.members.element.transform((m) => ({
@@ -98,49 +46,17 @@ export const projectDetailMemberContract =
     },
   }));
 
-const projectDetailSchema = projectRowSchema.extend({
-  crmClient: projectsByIdGetProjectResponseSchema.shape.crmClient,
-  statuses: z.array(projectStatusRowSchema),
-  members: z.array(projectDetailMemberContract),
-});
-
-const projectMemberRowSchema = z.object({
-  id: z.number(),
-  orgId: z.string(),
-  projectId: z.number(),
-  membershipId: z.number(),
-  role: z.string(),
-  hourlyRate: z.string(),
-  hourlyRateMinor: z.number(),
-  rateCurrency: z.string().nullable(),
-  joinedAt: z.string(),
-});
-
-const projectReleaseRowSchema = z.object({
-  id: z.number(),
-  projectId: z.number(),
-  name: z.string(),
-  version: z.string(),
-  rowVersion: z.number(),
-  description: z.string().nullable(),
-  status: z.enum(["draft", "released", "archived"]),
-  releaseDate: z.string().nullable(),
-  publishedAt: z.string().nullable(),
-  ticketCount: z.number(),
-  createdBy: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-});
-
 export const projectMemberSchema =
   projectResourcesListMembersResponseSchema.shape.data.element;
 export const ticketLabelListContract = projectsListLabelsResponseSchema;
 export const ticketLabelContract = projectsCreateLabelResponseSchema;
 export const projectListPageContract = projectsListProjectsResponseSchema;
-export const projectRowContract = projectRowSchema;
-export const projectDetailContract = projectDetailSchema;
+export const projectRowContract = projectsCreateProjectResponseSchema;
+export const projectDetailContract = projectsByIdGetProjectResponseSchema.extend({
+  members: z.array(projectDetailMemberContract),
+});
 export const projectMemberPageContract = projectResourcesListMembersResponseSchema;
-export const projectMemberRowContract = projectMemberRowSchema;
+export const projectMemberRowContract = projectResourcesAddMemberResponseSchema;
 export const memberRoleContract = projectResourcesUpdateMemberRoleResponseSchema;
 export const projectRosterContract = projectResourcesGetRosterResponseSchema;
 export const projectCustomStateListContract =
@@ -161,7 +77,7 @@ export const projectReleaseListContract =
   projectsReleasesListReleasesResponseSchema;
 export const projectReleaseListItemContract =
   projectsReleasesListReleasesResponseSchema.shape.data.element;
-export const projectReleaseRowContract = projectReleaseRowSchema;
+export const projectReleaseRowContract = projectsReleasesCreateReleaseResponseSchema;
 export const projectWebhookPageContract =
   projectsWebhooksListWebhooksResponseSchema;
 export const projectWebhookListContract = projectWebhookPageContract;
