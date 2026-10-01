@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { backendPath } from "@/test-utils/backend-repo";
 import { backendPermissionNames } from "@/test-utils/permission-catalog";
+import type { PermissionKey } from "@/lib/rbac/permissions";
 
 /**
  * Authority-matrix frontend mirror — PRD §12.
@@ -37,18 +38,8 @@ describe("authority-matrix frontend mirror", () => {
     });
   });
 
-  describe("Row 3 — manage org membership: settings:organization:manage exists in the catalog", () => {
-    it("catalog includes settings:organization:manage", () => {
-      expect(catalogNames.has("settings:organization:manage")).toBe(true);
-    });
-  });
-
-  describe("Row 4 — enable modules: settings:manage exists in the catalog and is absent from all module role templates", () => {
-    const MODULE_ENABLE_KEY = "settings:manage";
-
-    it("catalog includes settings:manage", () => {
-      expect(catalogNames.has(MODULE_ENABLE_KEY)).toBe(true);
-    });
+  describe("Row 4 — enable modules: settings:manage is absent from all module role templates", () => {
+    const MODULE_ENABLE_KEY: PermissionKey = "settings:manage";
 
     it("no backend module role template grants settings:manage", () => {
       const templateFiles = fs

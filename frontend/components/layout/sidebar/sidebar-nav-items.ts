@@ -12,9 +12,10 @@ import { KNOWLEDGE_SUPPORT_NAV_GROUPS } from "./sidebar-nav-groups-knowledge-sup
 import { ADMINISTRATION_NAV_GROUPS } from "./sidebar-nav-groups-administration";
 import { isModuleEnabled, PRODUCT_MODULE_KEY } from "./sidebar-products";
 import { matchesOrgModule } from "@/lib/org-module-keys";
+import type { PermissionKey } from "@/lib/rbac/permissions";
 
 type GrantedScopes = Readonly<Record<string, unknown>>;
-type GrantedPredicate = (permissionKey: string) => boolean;
+type GrantedPredicate = (permissionKey: PermissionKey) => boolean;
 
 const grantedFrom =
   (scopes: GrantedScopes | undefined): GrantedPredicate =>

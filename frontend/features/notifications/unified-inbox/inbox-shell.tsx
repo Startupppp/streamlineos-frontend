@@ -40,6 +40,7 @@ import { InboxDegradedBanner } from "./inbox-degraded-banner";
 import { InboxToolbar } from "./inbox-toolbar";
 import { BulkActionsBar } from "./inbox-bulk-actions";
 import type { InboxVirtualListProps } from "./inbox-virtual-list";
+import { isPermissionKey } from "@/contracts/permission-key.generated";
 
 const InboxVirtualList = dynamic<InboxVirtualListProps>(() =>
   import("./inbox-virtual-list").then((m) => m.InboxVirtualList),
@@ -244,7 +245,7 @@ export function InboxShell() {
         ) : deniedPermission ? (
           <NoPermissionState
             className="flex-1"
-            permission={deniedPermission}
+            permission={isPermissionKey(deniedPermission) ? deniedPermission : undefined}
             description="This inbox view is not available to your role. Other views still work."
           />
         ) : (
