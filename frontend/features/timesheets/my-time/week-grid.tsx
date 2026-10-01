@@ -258,7 +258,7 @@ export function WeekGrid({
           </caption>
           <thead>
             <tr className="bg-muted/40 border-b border-border">
-              <th className="sticky left-0 z-10 bg-muted/40 text-left px-3 py-2 font-medium text-muted-foreground w-48 border-r border-border">
+              <th className="sticky left-0 z-10 bg-muted/40 text-left px-3 py-2 font-medium text-muted-foreground w-28 sm:w-48 border-r border-border">
                 Project / Ticket
               </th>
               {days.map((d) => (
@@ -391,7 +391,9 @@ export function WeekGrid({
         </table>
       </div>
       {gridOverflow.scrolls ? (
-        <p className="text-micro text-muted-foreground sm:hidden">Swipe sideways to reach every day of the week.</p>
+        <p className="text-micro text-muted-foreground">
+          Scroll sideways to reach every day of the week and the weekly total.
+        </p>
       ) : null}
 
       {addingRow ? (
