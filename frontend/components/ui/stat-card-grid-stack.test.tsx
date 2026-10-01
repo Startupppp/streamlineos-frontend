@@ -32,6 +32,27 @@ describe("StatCardGrid stackOnMobile", () => {
     }
   });
 
+  it("lays a row of five two-up below sm", () => {
+    render(
+      <StatCardGrid cols={5} stackOnMobile={2}>
+        <StatCard label="Total Users" value="6" />
+        <StatCard label="Active" value="6" />
+        <StatCard label="Suspended" value="0" />
+        <StatCard label="Archived" value="0" />
+        <StatCard label="Pending Invites" value="8" />
+      </StatCardGrid>,
+    );
+
+    const grid = document.querySelector("[data-slot=stat-card-grid]") as HTMLElement;
+    expect(grid).toHaveClass("grid-cols-2");
+    expect(grid).not.toHaveClass("grid-cols-1");
+    expect(grid).toHaveClass(
+      "sm:[grid-template-columns:var(--stat-card-grid-template)]",
+    );
+    expect(grid.style.gridTemplateColumns).toBe("");
+    expect(screen.getByText("Pending Invites")).toBeInTheDocument();
+  });
+
   it("leaves the default row on its inline template", () => {
     render(
       <StatCardGrid cols={3}>

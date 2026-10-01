@@ -43,6 +43,7 @@ import {
 import { UserDirectoryFilters } from "./user-directory-filters";
 import { getUserTableColumns } from "./user-table-columns";
 import { UserDirectoryActions } from "./user-directory-actions";
+import { UserMobileCard } from "./user-mobile-card";
 import { useUserBulkLifecycle } from "./use-user-bulk-lifecycle";
 import { useEmploymentFacts } from "@/hooks/api/directory/employment";
 import { usePresenceMap } from "@/hooks/api/chat-core-read";
@@ -300,6 +301,13 @@ export function UsersPage() {
     [branchNames, departmentNames, employmentByUserId, handleViewUser, presenceMap],
   );
 
+  const renderMobileCard = useCallback(
+    (user: User) => (
+      <UserMobileCard user={user} presence={presenceMap.get(user.id)} />
+    ),
+    [presenceMap],
+  );
+
   const emptyStateNode = (
     <EmptyState
       illustrationPreset="team"
@@ -393,6 +401,7 @@ export function UsersPage() {
                 columns={columns}
                 getRowKey={(user) => user.id}
                 onRowClick={handleRowClick}
+                mobileCard={renderMobileCard}
                 isLoading={isLoading || isPlaceholderData}
                 emptyState={emptyStateNode}
                 selection={{

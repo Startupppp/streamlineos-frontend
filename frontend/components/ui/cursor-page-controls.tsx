@@ -39,8 +39,14 @@ export function CursorPageControls({
   return (
     <nav
       aria-label="List pages"
+      /*
+       * Below `sm` the two labels plus the rows-per-page select overflow the
+       * row, and `Next` was the half that got cut (SETTINGS-010). The chevrons
+       * carry the meaning on their own at that width; the words come back from
+       * `sm` up, where they fit.
+       */
       className={cn(
-        "flex items-center justify-between gap-3 rounded-xl border border-border/70 px-2 py-2",
+        "flex items-center justify-between gap-2 rounded-xl border border-border/70 px-2 py-2 sm:gap-3",
         className,
       )}
     >
@@ -50,9 +56,10 @@ export function CursorPageControls({
         size="sm"
         disabled={disabled || page <= 1}
         onClick={onPrevious}
+        aria-label="Previous page"
       >
         <ChevronLeft className="h-4 w-4" />
-        Previous
+        <span className="max-sm:hidden">Previous</span>
       </Button>
       <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
         <span>Page {page}</span>
@@ -80,8 +87,9 @@ export function CursorPageControls({
         size="sm"
         disabled={disabled || !hasNext}
         onClick={onNext}
+        aria-label="Next page"
       >
-        Next
+        <span className="max-sm:hidden">Next</span>
         <ChevronRight className="h-4 w-4" />
       </Button>
     </nav>
