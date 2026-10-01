@@ -2,6 +2,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { addDays, differenceInCalendarDays, format, parseISO } from "date-fns";
 import { Copy, Lock, Plus } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { ProjectTicketSelect } from "./project-ticket-select";
 import { describeCell } from "./day-label";
 import {
+  useCopyTimesheetEntries,
   useCreateTimesheetEntry,
   useUpdateTimesheetEntry,
   useVoidTimesheetEntry,
@@ -16,10 +18,28 @@ import {
   useTimesheetHolidays,
 } from "@/hooks/api/timesheets-core";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import type { TimesheetEntry } from "@/features/timesheets";
+import type { CreateEntryInput, TimesheetEntry } from "@/features/timesheets";
 import { deriveRows, isCellLocked, rowKeyOf, type GridRow } from "./week-grid-rows";
 import { useWeekGridCells } from "./use-week-grid-cells";
 import { OVERFLOW_EDGE_FADE_CLASS, useHorizontalOverflow } from "@/hooks/common/use-horizontal-overflow";
+
+export interface CopyLastWeekResult {
+  created: number;
+  skipped: number;
+  failed: number;
+}
+
+/** One line for the whole copy, so a 20-entry week is not 20 toasts. */
+export function describeCopyResult({ created, skipped, failed }: CopyLastWeekResult): string {
+  if (created === 0 && failed === 0)
+    return skipped > 0
+      ? "Nothing to copy — this week already has those entries."
+      : "Last week had no entries to copy.";
+  const parts = [`Copied ${created} ${created === 1 ? "entry" : "entries"}`];
+  if (skipped > 0) parts.push(`${skipped} already logged`);
+  if (failed > 0) parts.push(`${failed} failed`);
+  return `${parts.join(" · ")}.`;
+}
 
 interface WeekGridProps {
   entries: TimesheetEntry[] | undefined;
@@ -45,6 +65,7 @@ export function WeekGrid({
   const createEntry = useCreateTimesheetEntry();
   const updateEntry = useUpdateTimesheetEntry();
   const voidEntry = useVoidTimesheetEntry();
+  const copyEntries = useCopyTimesheetEntries();
 
   const [pendingRows, setPendingRows] = useState<GridRow[]>([]);
   const [addingRow, setAddingRow] = useState(false);
@@ -148,6 +169,8 @@ export function WeekGrid({
     try {
       const result = await prevWeekQuery.refetch();
       const prevEntries = result.data?.data ?? [];
+      let skipped = 0;
+      const rows: CreateEntryInput[] = [];
       for (const e of prevEntries) {
         const dayOff = differenceInCalendarDays(
           parseISO(e.date),
@@ -160,8 +183,11 @@ export function WeekGrid({
         const alreadyExists = entryMap.has(
           `${e.projectId ?? 0}-${e.ticketId ?? 0}-${newDate}`,
         );
-        if (alreadyExists) continue;
-        createEntry.mutate({
+        if (alreadyExists) {
+          skipped += 1;
+          continue;
+        }
+        rows.push({
           date: newDate,
           hours: Number(e.hours),
           projectId: e.projectId ?? undefined,
@@ -171,10 +197,16 @@ export function WeekGrid({
           source: "MANUAL",
         });
       }
+      // Awaited, so "Copying…" outlives the writes it started, and reported
+      // once rather than one toast and one refetch per row.
+      const { created, failed } = await copyEntries.mutateAsync(rows);
+      toast[failed > 0 ? "error" : "success"](
+        describeCopyResult({ created, skipped, failed }),
+      );
     } finally {
       setIsCopying(false);
     }
-  }, [prevWeekQuery, prevWeekStart, weekStart, entryMap, createEntry]);
+  }, [prevWeekQuery, prevWeekStart, weekStart, entryMap, copyEntries]);
 
   if (isLoading) {
     return (
