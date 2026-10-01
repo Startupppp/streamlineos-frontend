@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import { format, startOfWeek, endOfWeek, addWeeks } from "date-fns";
+import { addDays, addWeeks, format, startOfWeek } from "date-fns";
 import { motion, useReducedMotion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,8 @@ import { ErrorState } from "@/components/shared/error-state";
 import { useCan } from "@/hooks/api/access";
 import { useTeamWeekSummary } from "@/hooks/api/timesheets-core/team";
 import { useReportsOverview } from "@/hooks/api/timesheets-core/reports";
+import { useTimesheetSettings } from "@/hooks/api/timesheets-core/settings";
+import { resolveWeekStart, type WeekStartDay } from "@/features/timesheets/my-time/use-week";
 import { PERIOD_STATUS_LABEL } from "@/features/timesheets/types";
 import type { PeriodStatus } from "@/features/timesheets/types";
 import { TeamStats } from "./team-stats";
@@ -36,10 +38,12 @@ const PERIOD_STATUSES: PeriodStatus[] = [
   "LOCKED",
 ];
 
-function getWeekBounds(offset: number) {
+function getWeekBounds(offset: number, weekStartsOn: WeekStartDay) {
   const base = addWeeks(new Date(), offset);
-  const weekStart = startOfWeek(base, { weekStartsOn: 1 });
-  const weekEnd = endOfWeek(base, { weekStartsOn: 1 });
+  const weekStart = startOfWeek(base, { weekStartsOn });
+  // Not `endOfWeek`: that answers with the end of the *day*, and the manager's
+  // week has to be the same seven days the employee's period covers.
+  const weekEnd = addDays(weekStart, 6);
   return {
     weekStart,
     weekEnd,
@@ -58,9 +62,12 @@ export function TeamView() {
   const [selectedRow, setSelectedRow] = useState<TeamMemberRow | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
 
+  const { data: settings } = useTimesheetSettings();
+  const weekStartsOn = resolveWeekStart(settings?.workWeekStart, null);
+
   const { weekStart, weekEnd, startStr, endStr } = useMemo(
-    () => getWeekBounds(weekOffset),
-    [weekOffset],
+    () => getWeekBounds(weekOffset, weekStartsOn),
+    [weekOffset, weekStartsOn],
   );
 
   const {
@@ -70,9 +77,13 @@ export function TeamView() {
     refetch: refetchSummary,
   } = useTeamWeekSummary([], startStr, endStr, canView);
 
+  // The billable share lives in the reports overview, behind its own key. Team
+  // used to call it with the team gate and then read `billableHours ?? 0`, so a
+  // manager without reports access saw a confident 0% billable.
+  const canViewReports = useCan("timesheets:reports:view");
   const { data: overview, isLoading: overviewLoading } = useReportsOverview(
     { startDate: startStr, endDate: endStr },
-    canView,
+    canView && canViewReports,
   );
 
   const allRows = useMemo<TeamMemberRow[]>(
@@ -104,8 +115,8 @@ export function TeamView() {
     const totalHours =
       overview?.totalHours ??
       filteredRows.reduce((s, r) => s + r.totalHours, 0);
-    const billableHours = overview?.billableHours ?? 0;
-    const billablePercent = totalHours > 0 ? (billableHours / totalHours) * 100 : 0;
+    const billablePercent =
+      overview && totalHours > 0 ? (overview.billableHours / totalHours) * 100 : null;
     const submittedCount = filteredRows.filter(
       (r) => r.status === "SUBMITTED" || r.status === "APPROVED",
     ).length;
