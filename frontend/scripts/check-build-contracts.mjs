@@ -4,9 +4,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import {
-  LEGACY_ALIASES,
   buildFromDisk,
-  generateContent,
   normaliseRequestPath,
   resolveHookOperations,
   responseDataSchema,
@@ -34,17 +32,11 @@ export function countGeneratedSchemas(source) {
   return [...source.matchAll(/^export const \w+(?:Response|Body)Schema = /gm)].length;
 }
 
-export function missingLegacyAliases(source) {
-  return LEGACY_ALIASES.map(([alias]) => alias).filter((alias) => !new RegExp(`^export const ${alias} = `, "m").test(source));
-}
-
 export function checkWellFormed(source, minSchemas = MIN_SCHEMAS) {
   const hash = extractOpenapiHash(source);
   if (hash === null) return { ok: false, reason: "no OPENAPI_HASH constant found" };
   const count = countGeneratedSchemas(source);
   if (count < minSchemas) return { ok: false, reason: `only ${count} schemas, below the floor of ${minSchemas}` };
-  const missing = missingLegacyAliases(source);
-  if (missing.length > 0) return { ok: false, reason: `legacy aliases missing: ${missing.join(", ")}` };
   return { ok: true, hash, count };
 }
 
@@ -67,11 +59,9 @@ function runSelfTest() {
   };
 
   const validHash = "a".repeat(64);
-  const aliasLines = LEGACY_ALIASES.map(([alias]) => `export const ${alias} = fooResponseSchema;\n`).join("");
-  const makeSource = (n = MIN_SCHEMAS, aliases = aliasLines) =>
+  const makeSource = (n = MIN_SCHEMAS) =>
     `export const OPENAPI_HASH = "sha256:${validHash}" as const;\n` +
-    Array.from({ length: n }, (_, i) => `export const foo${i}ResponseSchema = z.unknown();\n`).join("") +
-    aliases;
+    Array.from({ length: n }, (_, i) => `export const foo${i}ResponseSchema = z.unknown();\n`).join("");
 
   assert(
     "extracts a valid 64-character sha256 hex hash from the OPENAPI_HASH export",
@@ -83,18 +73,14 @@ function runSelfTest() {
     extractOpenapiHash(`export const OPENAPI_HASH = "sha256:abc" as const;`) === null,
   );
   assert(
-    "counts response and body schema exports but not legacy aliases or types",
+    "counts response and body schema exports but not gen aliases or types",
     countGeneratedSchemas("export const aResponseSchema = x;\nexport const bBodySchema = y;\nexport const genXSchema = a;\nexport type AResponse = z.infer<typeof a>;\n") === 2,
   );
   assert("counts zero schemas in an empty file so a blank file cannot pass", countGeneratedSchemas("") === 0);
-  assert("a file at the schema floor with a hash and every legacy alias is well-formed", checkWellFormed(makeSource()).ok);
+  assert("a file at the schema floor with a hash is well-formed", checkWellFormed(makeSource()).ok);
   assert(
     "a file below the schema floor is malformed so a truncated generate cannot pass",
     checkWellFormed(makeSource(MIN_SCHEMAS - 1)).ok === false,
-  );
-  assert(
-    "a file that drops a legacy alias is malformed so an existing hook import cannot silently break",
-    checkWellFormed(makeSource(MIN_SCHEMAS, aliasLines.split("\n").slice(1).join("\n"))).ok === false,
   );
   assert(
     "a file with no OPENAPI_HASH is malformed even if it has enough schemas",
@@ -243,14 +229,6 @@ function runSelfTest() {
     !resolveHookOperations(doc, ["apiClient.get(`/build/${x}`);"]).operations.some((o) => o.operationId === "W_org"),
   );
   assert(
-    "generation refuses to emit a file that would drop a legacy alias still imported by a hook schema",
-    (() => {
-      const d = { paths: { "/x": { get: { operationId: "X_get", responses: { "200": { content: { "application/json": { schema: { type: "string" } } } } } } } } };
-      const ops = [{ method: "get", path: "/x", operationId: "X_get" }];
-      return throws(() => generateContent(d, validHash, ops));
-    })(),
-  );
-  assert(
     "the committed generated file passes rule 1 on this checkout",
     existsSync(GENERATED_PATH) && checkWellFormed(readFileSync(GENERATED_PATH, "utf8")).ok,
   );
@@ -278,7 +256,7 @@ if (!wellFormed.ok) {
   console.error("  Run: pnpm generate:build-contracts");
   process.exit(1);
 }
-console.log(`rule 1 OK — ${wellFormed.count} generated schemas, OPENAPI_HASH and every legacy alias present.`);
+console.log(`rule 1 OK — ${wellFormed.count} generated schemas and OPENAPI_HASH present.`);
 
 if (!existsSync(OPENAPI_PATH)) {
   console.error("INCONCLUSIVE — check:build-contracts: contracts/openapi.json not found.");

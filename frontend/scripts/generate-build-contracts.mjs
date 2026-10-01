@@ -14,75 +14,6 @@ const HTTP_METHODS = ["get", "post", "put", "patch", "delete"];
 const SUCCESS_CODES = ["200", "201", "202"];
 const IDENTIFIER_RE = /^[A-Za-z_$][A-Za-z0-9_$]*$/;
 
-export const LEGACY_ALIASES = [
-  ["genProjectListPageSchema", "get", "/build"],
-  ["genProjectRowSchema", "get", "/build/{projectId}"],
-  ["genProjectAnalyticsSchema", "get", "/build/{projectId}/analytics"],
-  ["genProjectApprovalsSchema", "get", "/build/{projectId}/approvals"],
-  ["genProjectBugsSchema", "get", "/build/{projectId}/bugs"],
-  ["genChangeRequestListSchema", "get", "/build/{projectId}/change-requests"],
-  ["genClientPortalSettingsSchema", "get", "/build/{projectId}/client-portal/settings"],
-  ["genClientPortalPreviewSchema", "get", "/build/{projectId}/client-portal/preview"],
-  ["genCustomStateListSchema", "get", "/build/{projectId}/custom-states"],
-  ["genCustomFieldListSchema", "get", "/build/{projectId}/custom-fields"],
-  ["genCycleListSchema", "get", "/build/{projectId}/cycles"],
-  ["genDecisionPageSchema", "get", "/build/{projectId}/decisions"],
-  ["genProjectFilesSchema", "get", "/build/{projectId}/files"],
-  ["genFormListSchema", "get", "/build/{projectId}/forms"],
-  ["genFormRowSchema", "get", "/build/{projectId}/forms/{formId}"],
-  ["genIncidentPageSchema", "get", "/build/{projectId}/incidents"],
-  ["genProjectIntakeSchema", "get", "/build/{projectId}/intake"],
-  ["genProjectLabelsSchema", "get", "/build/{projectId}/labels"],
-  ["genMeetingListSchema", "get", "/build/{projectId}/meetings"],
-  ["genMeetingDetailSchema", "get", "/build/{projectId}/meetings/{meetingId}"],
-  ["genBuildMemberPageSchema", "get", "/build/{projectId}/members"],
-  ["genMilestoneListSchema", "get", "/build/{projectId}/milestones"],
-  ["genModuleListSchema", "get", "/build/{projectId}/modules"],
-  ["genReleasePageSchema", "get", "/build/{projectId}/releases"],
-  ["genBurnupReportSchema", "get", "/build/{projectId}/reports/burnup"],
-  ["genCfdReportSchema", "get", "/build/{projectId}/reports/cfd"],
-  ["genCriticalPathSchema", "get", "/build/{projectId}/reports/critical-path"],
-  ["genCycleTimeSchema", "get", "/build/{projectId}/reports/cycle-time"],
-  ["genLeadTimeSchema", "get", "/build/{projectId}/reports/lead-time"],
-  ["genVelocityReportSchema", "get", "/build/{projectId}/reports/velocity"],
-  ["genRiskPageSchema", "get", "/build/{projectId}/risks"],
-  ["genRiskStatsSchema", "get", "/build/{projectId}/risks/stats"],
-  ["genProjectRosterSchema", "get", "/build/{projectId}/roster"],
-  ["genIterationSettingsSchema", "get", "/build/{projectId}/settings/iterations"],
-  ["genTicketListPageSchema", "get", "/build/{projectId}/tickets"],
-  ["genTicketRelationListSchema", "get", "/build/{projectId}/tickets/{ticketId}/relations"],
-  ["genProjectUpdatesSchema", "get", "/build/{projectId}/updates"],
-  ["genProjectViewListSchema", "get", "/build/{projectId}/views"],
-  ["genWebhookPageSchema", "get", "/build/{projectId}/webhooks"],
-  ["genWebhookDeliveryListSchema", "get", "/build/{projectId}/webhooks/{webhookId}/deliveries"],
-  ["genWhiteboardDetailSchema", "get", "/build/{projectId}/whiteboards/{whiteboardId}"],
-  ["genWorkflowTransitionsSchema", "get", "/build/{projectId}/workflow/transitions"],
-  ["genWorkloadCapacitySchema", "get", "/build/{projectId}/workload/capacity"],
-  ["genAutomationPageSchema", "get", "/build/{projectId}/automations"],
-  ["genAgentPulseTopSignalSchema", "get", "/build/agent-pulse/top-signal"],
-  ["genAllWorkPageSchema", "get", "/build/all-work"],
-  ["genApprovalsInboxSchema", "get", "/build/approvals/inbox"],
-  ["genChangelogPageSchema", "get", "/build/changelog"],
-  ["genCommentDraftListSchema", "get", "/build/comment-drafts/mine"],
-  ["genFeedbackPageSchema", "get", "/build/feedback"],
-  ["genTicketLabelListSchema", "get", "/build/labels"],
-  ["genBuildMembersSchema", "get", "/build/members"],
-  ["genOrgCustomStateListSchema", "get", "/build/org-custom-states"],
-  ["genPortalProjectListSchema", "get", "/build/portal/projects"],
-  ["genPortalProjectOverviewSchema", "get", "/build/portal/projects/{projectId}/overview"],
-  ["genPortalChangeRequestListSchema", "get", "/build/portal/projects/{projectId}/change-requests"],
-  ["genPortfolioListSchema", "get", "/build/portfolios"],
-  ["genProgramListSchema", "get", "/build/programs"],
-  ["genOrgReleaseListSchema", "get", "/build/releases"],
-  ["genOrgRiskPageSchema", "get", "/build/risks"],
-  ["genRoadmapPageSchema", "get", "/build/roadmap"],
-  ["genRoadmapPublicationSchema", "get", "/build/roadmap-publication"],
-  ["genScopeDirectorySearchSchema", "get", "/build/scope-directory/search"],
-  ["genTicketSearchSchema", "get", "/build/search/tickets"],
-  ["genTeamListSchema", "get", "/build/teams"],
-  ["genTeamRowSchema", "get", "/build/teams/{teamId}"],
-  ["genOrgViewListSchema", "get", "/build/views"],
-];
 
 function normalise(text) {
   return text.replace(/\r\n/g, "\n");
@@ -221,7 +152,6 @@ export function resolveHookOperations(document, sources, sharedSources = []) {
       for (const p of hits) want(p, call.method);
     }
   }
-  for (const [, method, path] of LEGACY_ALIASES) want(path, method);
   const operations = [...wanted.values()].sort((x, y) =>
     x.path === y.path ? HTTP_METHODS.indexOf(x.method) - HTTP_METHODS.indexOf(y.method) : x.path < y.path ? -1 : 1,
   );
@@ -446,11 +376,6 @@ export function generateContent(document, openapiHash, operations) {
       segments.push(`export type ${pascal(base)}Body = z.input<typeof ${entry.body}>;`, "");
     }
     index.push(entry);
-  }
-  for (const [alias, method, path] of LEGACY_ALIASES) {
-    const target = index.find((e) => e.method === method.toUpperCase() && e.path === path);
-    if (!target?.response) throw new Error(`legacy alias ${alias} has no generated response for ${method} ${path}`);
-    segments.push(`export const ${alias} = ${target.response};`);
   }
   segments.push("", "export const BUILD_CONTRACT_OPERATIONS = [");
   for (const e of index) {
