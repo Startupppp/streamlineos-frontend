@@ -13,6 +13,9 @@ const cycleListContract = lazyContract(() =>
 const cycleRowContract = lazyContract(() =>
   import("@/hooks/api/build/execution-schema").then((m) => m.cycleRowContract),
 );
+const cycleUpdateRowContract = lazyContract(() =>
+  import("@/hooks/api/build/execution-schema").then((m) => m.cycleUpdateRowContract),
+);
 const moduleListContract = lazyContract(() =>
   import("@/hooks/api/build/execution-schema").then((m) => m.moduleResponseContract),
 );
@@ -160,11 +163,13 @@ export function useUpdateCycle(options?: Parameters<typeof useMutation>[0]) {
     ...options,
     mutationKey: ["projects", "cycles", "update"],
     mutationFn: ({ projectId, cycleId, ...data }: UpdateCycleInput) =>
-      apiClient.patch<Cycle>(`/build/${projectId}/cycles/${cycleId}`, data, undefined, cycleRowContract),
+      apiClient.patch<Cycle>(`/build/${projectId}/cycles/${cycleId}`, data, undefined, cycleUpdateRowContract),
     onSuccess: (cycle: Cycle, variables: UpdateCycleInput) => {
       const queryKey = buildWorkQueryKeys.projects.cycles(variables.projectId);
-      queryClient.setQueriesData<Cycle[]>({ queryKey }, (current) =>
-        current?.map((item) => item.id === cycle.id ? { ...item, ...cycle } : item),
+      queryClient.setQueriesData<CyclePage>({ queryKey }, (current) =>
+        current
+          ? { ...current, data: current.data.map((item) => item.id === cycle.id ? { ...item, ...cycle } : item) }
+          : current,
       );
       queryClient.invalidateQueries({ queryKey });
       queryClient.invalidateQueries({
@@ -189,8 +194,10 @@ export function useDeleteCycle(options?: Parameters<typeof useMutation>[0]) {
       apiClient.delete<void>(`/build/${projectId}/cycles/${cycleId}`, undefined, undefined, noContentLazy),
     onSuccess: (_: unknown, variables: { projectId: number; cycleId: number }) => {
       const queryKey = buildWorkQueryKeys.projects.cycles(variables.projectId);
-      queryClient.setQueriesData<Cycle[]>({ queryKey }, (current) =>
-        current?.filter((cycle) => cycle.id !== variables.cycleId),
+      queryClient.setQueriesData<CyclePage>({ queryKey }, (current) =>
+        current
+          ? { ...current, data: current.data.filter((cycle) => cycle.id !== variables.cycleId) }
+          : current,
       );
       queryClient.invalidateQueries({ queryKey });
       queryClient.invalidateQueries({

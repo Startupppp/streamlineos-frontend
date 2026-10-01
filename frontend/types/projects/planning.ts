@@ -18,8 +18,8 @@ export interface ProjectMilestone {
   owner: MilestoneOwner | null;
   linkedTicketCount: number;
   version: number;
-  createdAt: string | null;
-  updatedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ProjectBudgetUpdate {

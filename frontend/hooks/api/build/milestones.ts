@@ -1,7 +1,6 @@
 ﻿"use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { z } from "zod";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -24,22 +23,7 @@ type MilestonePage = {
 };
 
 const milestoneListContract = lazyContract<MilestonePage>(() =>
-  import("@/hooks/api/build/workspace-schema").then((m) =>
-    m.milestoneListContract
-      .or(z.array(m.milestoneRowContract))
-      .transform((value) =>
-        Array.isArray(value)
-          ? {
-              data: value,
-              pagination: {
-                limit: value.length,
-                hasMore: false,
-                nextCursor: null,
-              },
-            }
-          : value,
-      ),
-  ),
+  import("@/hooks/api/build/workspace-schema").then((m) => m.milestoneListContract),
 );
 const milestoneRowContract = lazyContract(() =>
   import("@/hooks/api/build/workspace-schema").then(

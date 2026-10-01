@@ -41,8 +41,8 @@ interface IntakeItem {
   createdAt?: string | Date | null;
   submitterEmail?: string | null;
   submitterName?: string | null;
-  priority?: "low" | "medium" | "high" | "urgent" | null;
-  requestType?: "bug" | "feature" | "task" | "question" | "other" | null;
+  priority?: string | null;
+  requestType?: string | null;
   declineReason?: string | null;
 }
 

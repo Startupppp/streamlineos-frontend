@@ -76,7 +76,7 @@ describe("publicWhiteboardContract — wire shape", () => {
     expect(board.name).toBe("Architecture overview");
     expect(board.access).toBe("view");
     expect(board.allowExport).toBe(false);
-    expect(board.data.elements).toHaveLength(1);
+    expect(board.data).not.toBeNull();
   });
 
   it("accepts edit capability", async () => {
@@ -88,13 +88,14 @@ describe("publicWhiteboardContract — wire shape", () => {
     expect(board.access).toBe("edit");
   });
 
-  it("accepts a null updatedAt", async () => {
-    const board = await parseApiResponse(
-      mockResponse({ success: true, data: { ...WIRE_BOARD, updatedAt: null } }),
-      publicWhiteboardContract,
-      `/public/whiteboard-links/${SHARE_TOKEN}`,
-    );
-    expect(board.updatedAt).toBeNull();
+  it("rejects a null updatedAt — the backend always stamps updatedAt on a shared board", async () => {
+    await expect(violates(
+      parseApiResponse(
+        mockResponse({ success: true, data: { ...WIRE_BOARD, updatedAt: null } }),
+        publicWhiteboardContract,
+        `/public/whiteboard-links/${SHARE_TOKEN}`,
+      ),
+    )).resolves.toBe(true);
   });
 
   it("rejects an unknown access capability", async () => {
@@ -118,7 +119,7 @@ describe("publicWhiteboardContract — wire shape", () => {
     )).resolves.toBe(true);
   });
 
-  it("rejects a board missing the data field", async () => {
+  it("accepts a board with data omitted — data is typed unknown so undefined is valid", async () => {
     const { data: _dropped, ...rest } = WIRE_BOARD;
     await expect(violates(
       parseApiResponse(
@@ -126,7 +127,7 @@ describe("publicWhiteboardContract — wire shape", () => {
         publicWhiteboardContract,
         `/public/whiteboard-links/${SHARE_TOKEN}`,
       ),
-    )).resolves.toBe(true);
+    )).resolves.toBe(false);
   });
 });
 

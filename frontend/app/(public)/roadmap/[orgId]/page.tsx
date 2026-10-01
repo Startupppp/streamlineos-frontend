@@ -187,12 +187,14 @@ function ChangelogCard({ entry }: { entry: PublicChangelogEntry }) {
       <CardContent className="p-3 space-y-1.5">
         <div className="flex items-center gap-2 flex-wrap">
           <p className="text-sm font-medium">{entry.title}</p>
-          <Badge
-            variant={CHANGELOG_TYPE_VARIANT[entry.type]}
-            className="text-micro"
-          >
-            {CHANGELOG_TYPE_LABEL[entry.type]}
-          </Badge>
+          {entry.type !== null && (
+            <Badge
+              variant={CHANGELOG_TYPE_VARIANT[entry.type]}
+              className="text-micro"
+            >
+              {CHANGELOG_TYPE_LABEL[entry.type]}
+            </Badge>
+          )}
           {entry.version && (
             <Badge variant="outline" className="text-micro">
               {entry.version}

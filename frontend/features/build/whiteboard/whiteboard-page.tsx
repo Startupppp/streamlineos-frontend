@@ -37,7 +37,7 @@ import { CreateBoardDialog } from "./create-board-dialog";
 import { useWhiteboardAutosave } from "./use-whiteboard-autosave";
 import { WhiteboardToolbar } from "./whiteboard-toolbar";
 import { ShareDialog } from "./share-dialog";
-import { computeStoredVersion } from "./scene-utils";
+import { computeStoredVersion, isExcalidrawScene } from "./scene-utils";
 import {
   PmPageShell,
   PmPanel,
@@ -239,7 +239,10 @@ export function WhiteboardPage({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
 
-  const initialVersion = computeStoredVersion(detail?.data.elements ?? []);
+  const boardData = detail?.data;
+  const initialVersion = computeStoredVersion(
+    isExcalidrawScene(boardData) ? [...(boardData.elements ?? [])] : [],
+  );
 
   const handleSaveAsync = useCallback(
     async (boardId: number, data: ExcalidrawSceneData) => {

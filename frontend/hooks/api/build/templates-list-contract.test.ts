@@ -14,6 +14,7 @@ const KNOWN_GOOD_TEMPLATE = {
   createdBy: "user-xyz",
   deletedAt: null,
   createdAt: "2026-01-15T09:00:00.000Z",
+  tickets: [],
 };
 
 const KNOWN_GOOD_TICKET = {

@@ -80,8 +80,8 @@ export interface PublicFeedbackPost {
 export interface PublicChangelogEntry {
   id: number;
   title: string;
-  content: string;
+  content: string | null;
   version: string | null;
-  type: ChangelogType;
+  type: ChangelogType | null;
   publishedAt: string | null;
 }
