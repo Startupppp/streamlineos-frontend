@@ -1,8 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
 import { format, parseISO } from "date-fns";
-import { toast } from "sonner";
 import {
   Sheet,
   SheetBody,
@@ -15,7 +13,8 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { BellIcon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { usePeriod } from "@/hooks/api/timesheets-core/periods";
+import { EmptyState } from "@/components/ui/empty-state";
+import { usePeriod, useCanViewPeriodDetail } from "@/hooks/api/timesheets-core/periods";
 import { PERIOD_STATUS_BADGE, PERIOD_STATUS_LABEL } from "@/features/timesheets/types";
 import type { TimesheetPeriod, PeriodEntry } from "@/features/timesheets/types";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -44,11 +43,8 @@ export function MemberDetailSheet({
   onOpenChange,
   memberName,
 }: MemberDetailSheetProps) {
-  const { data: detail, isLoading } = usePeriod(period?.id ?? null);
-
-  const handleRemind = useCallback(() => {
-    toast.success(`Reminder sent to ${memberName}`);
-  }, [memberName]);
+  const canViewDetail = useCanViewPeriodDetail();
+  const { data: detail, isLoading, isError } = usePeriod(period?.id ?? null);
 
   const isMissingOrDraft =
     !period || period.status === "OPEN" || period.status === "DRAFT";
@@ -74,6 +70,12 @@ export function MemberDetailSheet({
         {isMissingOrDraft && (
           <div className="flex items-center justify-between p-3 rounded-lg bg-status-warning-surface border border-status-warning-rule mb-4">
             <p className="text-xs text-status-warning-ink">No timesheet submitted yet</p>
+            {/*
+              There is no per-member remind endpoint: reminders are sent by the
+              org-wide sweep (`TimesheetRemindersSweepService`). The control used
+              to toast "Reminder sent" with no request behind it, which told
+              managers an overdue chase had happened when nothing had.
+            */}
             <AnimatedIconButton
               icon={BellIcon}
               iconSize={14}
@@ -81,7 +83,8 @@ export function MemberDetailSheet({
               size="sm"
               variant="outline"
               className="h-7 text-xs border-status-warning-rule"
-              onClick={handleRemind}
+              disabled
+              title="Manual reminders are coming soon. Reminders currently go out automatically."
             >
               Remind
             </AnimatedIconButton>
@@ -105,7 +108,21 @@ export function MemberDetailSheet({
           </div>
         )}
 
-        {isLoading ? (
+        {!canViewDetail ? (
+          <EmptyState
+            compact
+            illustrationPreset="permissions"
+            title="Access restricted"
+            description="You don't have permission to view this timesheet's entries."
+          />
+        ) : isError ? (
+          <EmptyState
+            compact
+            illustrationPreset="alert"
+            title="Couldn't load this timesheet"
+            description="The entries for this period could not be fetched."
+          />
+        ) : isLoading ? (
           <div className="space-y-3">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="space-y-1.5">
