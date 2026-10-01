@@ -1,61 +1,50 @@
 import { z } from "zod";
-import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
 import {
-  genProjectListPageSchema,
-  genProjectRosterSchema,
-  genWebhookPageSchema,
-  genWebhookDeliveryListSchema,
-  genBuildMembersSchema,
-  genCustomFieldListSchema,
+  projectsByIdGetProjectResponseSchema,
+  projectsListProjectsResponseSchema,
+  projectsListLabelsResponseSchema,
+  projectsCreateLabelResponseSchema,
+  projectResourcesListMembersResponseSchema,
+  projectResourcesUpdateMemberRoleResponseSchema,
+  projectResourcesGetRosterResponseSchema,
+  projectResourcesListCustomStatesResponseSchema,
+  projectResourcesCreateCustomStateResponseSchema,
+  projectResourcesBulkReorderCustomStatesResponseSchema,
+  projectsCustomFieldsCreateFieldResponseSchema,
+  projectsCustomFieldsListFieldsResponseSchema,
+  projectsCustomFieldsGetTicketValuesResponseSchema,
+  projectsCustomFieldsUpsertTicketValuesResponseSchema,
+  projectsReleasesListReleasesResponseSchema,
+  projectsWebhooksListWebhooksResponseSchema,
+  projectsWebhooksCreateWebhookResponseSchema,
+  projectsWebhooksUpdateWebhookBodySchema,
+  projectsWebhooksListDeliveriesResponseSchema,
+  projectsWebhooksSendTestResponseSchema,
+  projectsAutomationsListResponseSchema,
+  projectsAutomationsCreateResponseSchema,
+  buildMembersListResponseSchema,
+  buildMembersAddResponseSchema,
 } from "@/contracts/build-contracts.generated";
 
-const ticketLabelSchema = z.object({
+const STATE_GROUP_VALUES = [
+  "backlog",
+  "unstarted",
+  "started",
+  "completed",
+  "cancelled",
+] as const;
+
+const projectStatusRowSchema = z.object({
   id: z.number(),
+  projectId: z.number(),
   orgId: z.string(),
   name: z.string(),
-  color: z.string(),
+  order: z.number(),
+  color: z.string().nullable(),
+  type: z.enum(STATE_GROUP_VALUES).nullable(),
+  wipLimit: z.number().nullable(),
   createdAt: z.string(),
-});
-
-const projectListItemMemberSchema = z.object({
-  id: z.string(),
-  firstName: z.string().nullable(),
-  lastName: z.string().nullable(),
-  image: z.string().nullable(),
-});
-
-const projectListItemSchema = z.object({
-  id: z.number(),
-  name: z.string(),
-  description: z.string().nullable(),
-  key: z.string(),
-  status: z.enum(["ACTIVE", "COMPLETED", "ARCHIVED"]).nullable(),
-  priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).nullable(),
-  startDate: z.string().nullable(),
-  endDate: z.string().nullable(),
-  managedProductId: z.number().nullable(),
-  manager: z
-    .object({
-      id: z.string(),
-      firstName: z.string().nullable(),
-      lastName: z.string().nullable(),
-      image: z.string().nullable(),
-    })
-    .nullable(),
-  progress: z.object({
-    total: z.number(),
-    done: z.number(),
-    percentage: z.number(),
-  }),
-  health: z.enum(["on_track", "at_risk", "off_track"]),
-  members: z.array(projectListItemMemberSchema),
-  teams: z.array(z.string()),
-});
-
-const projectListPageSchema = z.object({
-  data: z.array(projectListItemSchema),
-  hasMore: z.boolean(),
-  nextCursor: z.number().nullable(),
+  updatedAt: z.string(),
 });
 
 const projectRowSchema = z.object({
@@ -66,10 +55,6 @@ const projectRowSchema = z.object({
   key: z.string(),
   clientMembershipId: z.number().nullable(),
   managerMembershipId: z.number().nullable(),
-  crmClient: z
-    .object({ id: z.number(), name: z.string().nullable() })
-    .nullable()
-    .optional(),
   startDate: z.string().nullable(),
   endDate: z.string().nullable(),
   status: z.enum(["ACTIVE", "COMPLETED", "ARCHIVED"]).nullable(),
@@ -96,47 +81,8 @@ const projectRowSchema = z.object({
   updatedAt: z.string(),
 });
 
-const STATE_GROUP_VALUES = [
-  "backlog",
-  "unstarted",
-  "started",
-  "completed",
-  "cancelled",
-] as const;
-
-const projectStatusRowSchema = z.object({
-  id: z.number(),
-  projectId: z.number(),
-  orgId: z.string(),
-  name: z.string(),
-  order: z.number(),
-  color: z.string().nullable(),
-  type: z.enum(STATE_GROUP_VALUES).nullable(),
-  wipLimit: z.number().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-});
-
-export const projectDetailMemberContract = z
-  .object({
-    id: z.number(),
-    orgId: z.string(),
-    projectId: z.number(),
-    membershipId: z.number(),
-    role: z.string(),
-    user: z.object({
-      id: z.number(),
-      user: z.object({
-        id: z.string(),
-        name: z.string().nullable(),
-        firstName: z.string().nullable(),
-        lastName: z.string().nullable(),
-        email: z.string(),
-        image: z.string().nullable(),
-      }),
-    }),
-  })
-  .transform((m) => ({
+export const projectDetailMemberContract =
+  projectsByIdGetProjectResponseSchema.shape.members.element.transform((m) => ({
     id: m.id,
     projectId: m.projectId,
     userId: m.user.user.id,
@@ -153,129 +99,21 @@ export const projectDetailMemberContract = z
   }));
 
 const projectDetailSchema = projectRowSchema.extend({
+  crmClient: projectsByIdGetProjectResponseSchema.shape.crmClient,
   statuses: z.array(projectStatusRowSchema),
   members: z.array(projectDetailMemberContract),
 });
-
-export const projectMemberSchema = z.object({
-  id: z.string(),
-  name: z.string().nullable(),
-  firstName: z.string().nullable(),
-  lastName: z.string().nullable(),
-  image: z.string().nullable(),
-  email: z.string(),
-  role: z.string(),
-  joinedAt: z.string(),
-});
-
 
 const projectMemberRowSchema = z.object({
   id: z.number(),
   orgId: z.string(),
   projectId: z.number(),
   membershipId: z.number(),
-  userId: z.string().optional(),
   role: z.string(),
   hourlyRate: z.string(),
   hourlyRateMinor: z.number(),
   rateCurrency: z.string().nullable(),
   joinedAt: z.string(),
-});
-
-const memberRoleSchema = z.object({
-  id: z.number(),
-  membershipId: z.number(),
-  role: z.string(),
-  userId: z.string(),
-});
-
-const projectCustomStateSchema = z.object({
-  id: z.number(),
-  orgId: z.string(),
-  projectId: z.number(),
-  name: z.string(),
-  color: z.string().nullable(),
-  order: z.number(),
-  type: z.enum(STATE_GROUP_VALUES).nullable(),
-  wipLimit: z.number().nullable().optional(),
-});
-
-const bulkReorderStatesResultSchema = z.object({
-  items: z.array(z.object({ id: z.number(), order: z.number() })),
-});
-
-const buildCustomFieldSchema = z.object({
-  id: z.number(),
-  orgId: z.string(),
-  projectId: z.number(),
-  name: z.string(),
-  type: z.enum([
-    "text",
-    "number",
-    "date",
-    "user",
-    "select",
-    "multi_select",
-    "checkbox",
-    "url",
-    "currency",
-  ]),
-  options: z.array(z.string()).nullable(),
-  required: z.boolean(),
-  position: z.number(),
-  createdAt: z.string(),
-});
-
-const ticketFieldValueSchema = z.object({
-  id: z.number(),
-  ticketId: z.number(),
-  fieldId: z.number(),
-  value: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  field: z.object({
-    id: z.number(),
-    orgId: z.string(),
-    projectId: z.number(),
-    name: z.string(),
-    type: z.enum([
-      "text",
-      "number",
-      "date",
-      "user",
-      "select",
-      "multi_select",
-      "checkbox",
-      "url",
-      "currency",
-    ]),
-    options: z.array(z.string()).nullable(),
-    required: z.boolean(),
-    position: z.number(),
-    createdAt: z.string(),
-  }),
-});
-
-const projectReleaseListItemSchema = z.object({
-  id: z.number(),
-  projectId: z.number(),
-  name: z.string(),
-  version: z.string(),
-  rowVersion: z.number(),
-  description: z.string().nullable(),
-  status: z.enum(["draft", "released", "archived"]),
-  releaseDate: z.string().nullable(),
-  publishedAt: z.string().nullable(),
-  ticketCount: z.number(),
-  createdBy: z.string().nullable(),
-  createdByUser: z.object({
-    name: z.string().nullable(),
-    firstName: z.string().nullable(),
-    lastName: z.string().nullable(),
-    email: z.string().nullable(),
-  }).nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
 });
 
 const projectReleaseRowSchema = z.object({
@@ -294,157 +132,50 @@ const projectReleaseRowSchema = z.object({
   updatedAt: z.string(),
 });
 
-const projectWebhookSchema = z.object({
-  id: z.number(),
-  orgId: z.string(),
-  projectId: z.number(),
-  url: z.string(),
-  events: z.array(z.string()),
-  isActive: z.boolean(),
-  hasSecret: z.boolean(),
-  secretSetAt: z.string().nullable(),
-  version: z.number(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  lastDeliveryAt: z.string().nullable(),
-  lastDeliveryStatus: z.enum(["success", "failed", "pending"]).nullable(),
-  failureRate: z.number().nullable(),
-});
-
-
-const webhookTestResultSchema = z.object({
-  success: z.boolean(),
-  responseCode: z.number().nullable(),
-});
-
-const projectAutomationConditionSchema = z.object({
-  field: z.string(),
-  operator: z.enum([
-    "equals",
-    "not_equals",
-    "contains",
-    "is_empty",
-    "is_not_empty",
-  ]),
-  value: z.string().optional(),
-});
-
-const projectAutomationActionSchema = z.object({
-  type: z.enum([
-    "set_status",
-    "set_assignee",
-    "set_priority",
-    "add_label",
-    "add_comment",
-  ]),
-  value: z.string(),
-});
-
-const AUTOMATION_TRIGGER_EVENT_VALUES = [
-  "ticket.created",
-  "ticket.updated",
-  "ticket.status_changed",
-  "ticket.assigned",
-] as const;
-
-const automationCreatedByUserSchema = z.object({
-  name: z.string().nullable(),
-  firstName: z.string().nullable(),
-  lastName: z.string().nullable(),
-  email: z.string().nullable(),
-});
-
-const projectAutomationListItemSchema = z.object({
-  id: z.number(),
-  projectId: z.number(),
-  name: z.string(),
-  isActive: z.boolean(),
-  triggerEvent: z.enum(AUTOMATION_TRIGGER_EVENT_VALUES),
-  conditions: z.array(projectAutomationConditionSchema),
-  actions: z.array(projectAutomationActionSchema),
-  createdBy: z.string().nullable(),
-  createdByUser: automationCreatedByUserSchema.nullable(),
-  lastRunAt: z.string().nullable(),
-  lastFailureAt: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-});
-
-const projectAutomationRowSchema = z.object({
-  id: z.number(),
-  orgId: z.string(),
-  projectId: z.number(),
-  name: z.string(),
-  isActive: z.boolean(),
-  triggerEvent: z.enum(AUTOMATION_TRIGGER_EVENT_VALUES),
-  conditions: z.array(projectAutomationConditionSchema),
-  actions: z.array(projectAutomationActionSchema),
-  createdBy: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-});
-
-
-const buildMemberRowSchema = z.object({
-  id: z.number(),
-  orgId: z.string(),
-  membershipId: z.number(),
-  role: z.string(),
-  addedAt: z.string(),
-});
-
-export const ticketLabelListContract = z.array(ticketLabelSchema);
-export const ticketLabelContract = ticketLabelSchema;
-export const projectListPageContract = projectListPageSchema;
+export const projectMemberSchema =
+  projectResourcesListMembersResponseSchema.shape.data.element;
+export const ticketLabelListContract = projectsListLabelsResponseSchema;
+export const ticketLabelContract = projectsCreateLabelResponseSchema;
+export const projectListPageContract = projectsListProjectsResponseSchema;
 export const projectRowContract = projectRowSchema;
 export const projectDetailContract = projectDetailSchema;
-export const projectMemberPageContract =
-  cursorPageContract(projectMemberSchema);
+export const projectMemberPageContract = projectResourcesListMembersResponseSchema;
 export const projectMemberRowContract = projectMemberRowSchema;
-export const memberRoleContract = memberRoleSchema;
-export const projectRosterContract = genProjectRosterSchema;
-export const projectCustomStateListContract = z.array(projectCustomStateSchema);
-export const projectCustomStateContract = projectCustomStateSchema;
-export const bulkReorderStatesResultContract = bulkReorderStatesResultSchema;
-export const buildCustomFieldContract = buildCustomFieldSchema;
-export const buildCustomFieldListContract = z.array(buildCustomFieldContract);
-export const ticketFieldValueListContract = z.array(ticketFieldValueSchema);
-export const ticketFieldValueCreateContract = z.object({
-  success: z.literal(true),
-});
-export const projectReleaseListContract = cursorPageContract(
-  projectReleaseListItemSchema,
-);
-export const projectReleaseListItemContract = projectReleaseListItemSchema;
+export const memberRoleContract = projectResourcesUpdateMemberRoleResponseSchema;
+export const projectRosterContract = projectResourcesGetRosterResponseSchema;
+export const projectCustomStateListContract =
+  projectResourcesListCustomStatesResponseSchema;
+export const projectCustomStateContract =
+  projectResourcesCreateCustomStateResponseSchema;
+export const bulkReorderStatesResultContract =
+  projectResourcesBulkReorderCustomStatesResponseSchema;
+export const buildCustomFieldContract =
+  projectsCustomFieldsCreateFieldResponseSchema;
+export const buildCustomFieldListContract =
+  projectsCustomFieldsListFieldsResponseSchema;
+export const ticketFieldValueListContract =
+  projectsCustomFieldsGetTicketValuesResponseSchema;
+export const ticketFieldValueCreateContract =
+  projectsCustomFieldsUpsertTicketValuesResponseSchema;
+export const projectReleaseListContract =
+  projectsReleasesListReleasesResponseSchema;
+export const projectReleaseListItemContract =
+  projectsReleasesListReleasesResponseSchema.shape.data.element;
 export const projectReleaseRowContract = projectReleaseRowSchema;
-export const projectWebhookPageContract = genWebhookPageSchema;
+export const projectWebhookPageContract =
+  projectsWebhooksListWebhooksResponseSchema;
 export const projectWebhookListContract = projectWebhookPageContract;
-export const projectWebhookRowContract = projectWebhookSchema;
-
-export const projectWebhookUpdateRequestContract = z
-  .object({
-    version: z.number().int().positive(),
-    url: z.string().url().optional(),
-    events: z.array(z.string().min(1)).min(1).optional(),
-    isActive: z.boolean().optional(),
-  })
-  .strict();
-export const webhookDeliveryListContract = z.array(
-  genWebhookDeliveryListSchema.element.extend({
-    status: z.enum(["pending", "success", "failed"]),
-  }),
-);
-export const webhookTestResultContract = webhookTestResultSchema;
-export const projectAutomationListContract = cursorPageContract(
-  projectAutomationListItemSchema,
-);
-export const projectAutomationRowContract = projectAutomationRowSchema;
-export const buildMemberPageContract = genBuildMembersSchema.extend({
-  data: z.array(
-    genBuildMembersSchema.shape.data.element.extend({
-      role: z.enum(["member", "admin"]),
-    }),
-  ),
-});
-export const buildMemberRowContract = buildMemberRowSchema;
-export const successContract = z.object({ success: z.literal(true) });
+export const projectWebhookRowContract =
+  projectsWebhooksCreateWebhookResponseSchema;
+export const projectWebhookUpdateRequestContract =
+  projectsWebhooksUpdateWebhookBodySchema;
+export const webhookDeliveryListContract =
+  projectsWebhooksListDeliveriesResponseSchema;
+export const webhookTestResultContract = projectsWebhooksSendTestResponseSchema;
+export const projectAutomationListContract =
+  projectsAutomationsListResponseSchema;
+export const projectAutomationRowContract =
+  projectsAutomationsCreateResponseSchema;
+export const buildMemberPageContract = buildMembersListResponseSchema;
+export const buildMemberRowContract = buildMembersAddResponseSchema;
+export const successContract = projectsCustomFieldsUpsertTicketValuesResponseSchema;

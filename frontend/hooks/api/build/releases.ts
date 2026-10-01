@@ -1,7 +1,6 @@
 ﻿"use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { z } from "zod";
 import { useCan, useCanState } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -15,17 +14,8 @@ type ReleasePage = {
 };
 
 const projectReleaseListContract = lazyContract<ReleasePage>(() =>
-  import("@/hooks/api/build/build-project-schema").then((m) =>
-    m.projectReleaseListContract
-      .or(z.array(m.projectReleaseListItemContract))
-      .transform((value) =>
-        Array.isArray(value)
-          ? {
-              data: value,
-              pagination: { limit: value.length, hasMore: false, nextCursor: null },
-            }
-          : value,
-      ),
+  import("@/hooks/api/build/build-project-schema").then(
+    (m) => m.projectReleaseListContract,
   ),
 );
 const projectReleaseRowContract = lazyContract(() =>

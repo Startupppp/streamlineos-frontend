@@ -32,10 +32,10 @@ it("accepts the raw project_members row the add-member endpoint returns with no 
     joinedAt: "2026-09-15T00:00:00.000Z",
   });
 
-  expect(result.userId).toBeUndefined();
+  expect(Object.keys(result)).not.toContain("userId");
 });
 
-it("still accepts a fuller project member row that does carry userId", () => {
+it("silently drops an unknown userId field because the backend add-member response does not declare it", () => {
   const result = projectMemberRowContract.parse({
     id: 1,
     orgId: "org-1",
@@ -49,7 +49,7 @@ it("still accepts a fuller project member row that does carry userId", () => {
     joinedAt: "2026-09-15T00:00:00.000Z",
   });
 
-  expect(result.userId).toBe("user-1");
+  expect(Object.keys(result)).not.toContain("userId");
 });
 
 it("rejects a project member row with a non-numeric membershipId", () => {
@@ -77,9 +77,9 @@ describe("projectListPageContract — GET /build response contract", () => {
         description: "Relaunch the platform with the new design",
         key: "ALPHA",
         status: "ACTIVE" as const,
-        priority: "HIGH" as const,
-        startDate: "2026-01-01",
-        endDate: "2026-12-31",
+        priority: "HIGH",
+        startDate: "2026-01-01T00:00:00.000Z",
+        endDate: "2026-12-31T00:00:00.000Z",
         managedProductId: null,
         manager: { id: "user-abc", firstName: "Alice", lastName: "Chen", image: null },
         progress: { total: 20, done: 7, percentage: 35 },
@@ -144,6 +144,7 @@ describe("projectDetailContract — GET /build/{projectId} response contract", (
     key: "ALPHA",
     clientMembershipId: null,
     managerMembershipId: 7,
+    crmClient: null,
     startDate: "2026-01-01",
     endDate: "2026-12-31",
     status: "ACTIVE" as const,

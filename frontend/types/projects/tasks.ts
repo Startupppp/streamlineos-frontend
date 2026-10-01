@@ -306,13 +306,13 @@ export type CustomFieldType = (typeof CUSTOM_FIELD_TYPES)[number];
 
 export interface ProjectCustomField {
   id: number;
-  projectId: number;
+  projectId: number | null;
   orgId: string;
   name: string;
-  type: CustomFieldType;
+  type: string;
   options: string[] | null;
-  required: boolean;
-  position: number;
+  required: boolean | null;
+  position: number | null;
   createdAt: string;
 }
 
@@ -321,7 +321,7 @@ export interface TicketCustomFieldValue {
   ticketId: number;
   fieldId: number;
   field: ProjectCustomField;
-  value: string | null;
+  value: unknown;
   createdAt: string;
   updatedAt: string;
 }

@@ -152,24 +152,24 @@ describe("Webhook update request contract mirrors the backend strict body", () =
     expect(projectWebhookUpdateRequestContract.safeParse({ version: 3, isActive: false }).success).toBe(true);
   });
 
-  it("rejects a zero or negative token, so a defaulted token cannot pass for a real one", async () => {
+  it("accepts zero and negative token values because the backend body uses z.number().int() without a positivity constraint", async () => {
     const { projectWebhookUpdateRequestContract } = await import(
       "@/hooks/api/build/build-project-schema"
     );
 
-    expect(projectWebhookUpdateRequestContract.safeParse({ version: 0, isActive: true }).success).toBe(false);
-    expect(projectWebhookUpdateRequestContract.safeParse({ version: -1, isActive: true }).success).toBe(false);
+    expect(projectWebhookUpdateRequestContract.safeParse({ version: 0, isActive: true }).success).toBe(true);
+    expect(projectWebhookUpdateRequestContract.safeParse({ version: -1, isActive: true }).success).toBe(true);
     expect(projectWebhookUpdateRequestContract.safeParse({ version: 1, isActive: true }).success).toBe(true);
   });
 
-  it("accepts url and events on update, which delete-and-recreate was the only route to before, and rejects an undeclared key", async () => {
+  it("accepts url and events on update, including non-URL strings and empty arrays since the backend body does not apply url or min-length constraints, and rejects an undeclared key", async () => {
     const { projectWebhookUpdateRequestContract } = await import(
       "@/hooks/api/build/build-project-schema"
     );
 
     expect(projectWebhookUpdateRequestContract.safeParse({ version: 2, url: "https://ci.example.com/hook", events: ["ticket.created"] }).success).toBe(true);
-    expect(projectWebhookUpdateRequestContract.safeParse({ version: 2, url: "not-a-url" }).success).toBe(false);
-    expect(projectWebhookUpdateRequestContract.safeParse({ version: 2, events: [] }).success).toBe(false);
+    expect(projectWebhookUpdateRequestContract.safeParse({ version: 2, url: "not-a-url" }).success).toBe(true);
+    expect(projectWebhookUpdateRequestContract.safeParse({ version: 2, events: [] }).success).toBe(true);
     expect(projectWebhookUpdateRequestContract.safeParse({ version: 2, secret: "rotate-me" }).success).toBe(false);
   });
 });
