@@ -11,6 +11,7 @@ import { MAX_HOURS_PER_DAY } from "./log-time-schema";
 
 export const GRID_MAX_HOURS_PER_DAY = MAX_HOURS_PER_DAY;
 const INVALID_HOURS_MESSAGE = `Hours must be between 0 and ${GRID_MAX_HOURS_PER_DAY}.`;
+const IN_FLIGHT_MESSAGE = "Still saving this cell — try that change again in a moment.";
 
 function parseHoursInput(value: string): number | null {
   const trimmed = value.trim();
@@ -80,6 +81,10 @@ export function useWeekGridCells({
 
   const [cellError, setCellError] = useState<string | null>(null);
   const lastCommitted = useRef<{ cellKey: string; value: string } | null>(null);
+  // A create for a cell is not in `entryMap` until it lands, so a second commit
+  // on the same cell while the first is in flight creates a duplicate entry
+  // rather than updating the one being made.
+  const inFlightCells = useRef(new Set<string>());
 
   const saveStatus = useMemo(() => {
     if (cellError) return cellError;
@@ -95,7 +100,8 @@ export function useWeekGridCells({
 
   const commitCell = useCallback(
     (rowKey: string, date: string, value: string, row: GridRow): boolean => {
-      const existing = entryMap.get(`${rowKey}-${date}`);
+      const cellKey = `${rowKey}-${date}`;
+      const existing = entryMap.get(cellKey);
       if (isCellLocked(existing)) {
         setEditingCell(null);
         setCellError(null);
@@ -107,20 +113,36 @@ export function useWeekGridCells({
         setCellError(INVALID_HOURS_MESSAGE);
         return false;
       }
+
+      if (inFlightCells.current.has(cellKey)) {
+        setCellError(IN_FLIGHT_MESSAGE);
+        return false;
+      }
       setCellError(null);
 
+      const settle = () => {
+        inFlightCells.current.delete(cellKey);
+      };
+      const hold = () => {
+        inFlightCells.current.add(cellKey);
+        return { onSettled: settle };
+      };
+
       if (hours > 0 && !existing) {
-        createEntry.mutate({
-          date,
-          hours,
-          projectId: row.projectId ?? undefined,
-          ticketId: row.ticketId ?? undefined,
-          source: "MANUAL",
-        });
+        createEntry.mutate(
+          {
+            date,
+            hours,
+            projectId: row.projectId ?? undefined,
+            ticketId: row.ticketId ?? undefined,
+            source: "MANUAL",
+          },
+          hold(),
+        );
       } else if (hours > 0 && existing && hours !== Number(existing.hours)) {
-        updateEntry.mutate({ entryId: existing.id, data: { hours } });
+        updateEntry.mutate({ entryId: existing.id, data: { hours } }, hold());
       } else if (hours === 0 && existing && !isCellLocked(existing)) {
-        voidEntry.mutate({ entryId: existing.id, reason: "Cleared via grid" });
+        voidEntry.mutate({ entryId: existing.id, reason: "Cleared via grid" }, hold());
       }
       setEditingCell(null);
       return true;
