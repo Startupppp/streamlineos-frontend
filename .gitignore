@@ -15,3 +15,7 @@ architecture-refactor/audit-2026-09-09/logs
 
 # Agent tooling scratch state
 .omc/
+
+.env
+.env.*
+!.env.example
