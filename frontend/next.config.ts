@@ -440,6 +440,12 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // RSS is produced by the backend (the site ships no business route handlers, FE-06). The feed
+  // is served at /blogs/rss.xml on this origin so its links and self-reference stay canonical.
+  rewrites: async () => {
+    const api = (process.env.API_INTERNAL_URL?.trim() || process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
+    return api ? [{ source: "/blogs/rss.xml", destination: `${api}/blog/rss.xml` }] : [];
+  },
   headers: async () => [
     {
       source:

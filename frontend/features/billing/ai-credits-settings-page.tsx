@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Activity, RefreshCw, TrendingDown, TrendingUp, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -42,6 +42,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { formatCredits, formatTokens } from "@/lib/format-ai";
 import { cn } from "@/lib/utils";
 import {
+  loadCheckoutScript,
   openCheckout,
   useCheckoutScript,
   type CheckoutPaymentResponse,
@@ -68,7 +69,17 @@ export function AiCreditsSettingsPage() {
   const purchaseMutation = usePurchaseAiCredits();
   const verifyMutation = useVerifyAiCreditPurchase();
   const canPurchase = useCan("billing:ai-credits:purchase");
-  const { state: scriptState } = useCheckoutScript();
+  const { state: scriptState, retry: retryScript } = useCheckoutScript();
+
+  /*
+   * SETTINGS-014. This page read the checkout script's state but never asked for
+   * the script, so it sat on "idle" and every Buy answered "Payment checkout is
+   * not available" — a dead button, every time, on a page whose wallet and packs
+   * loaded fine. The Plan tab has always loaded it; this is the same line.
+   */
+  useEffect(() => {
+    void loadCheckoutScript();
+  }, []);
 
   const [txnLimit, setTxnLimit] = useState<TxnPageSize>(AI_CREDIT_TRANSACTION_LIMIT);
   const [txnCursors, setTxnCursors] = useState<Array<string | undefined>>([undefined]);
@@ -212,6 +223,10 @@ export function AiCreditsSettingsPage() {
     }
   }
 
+  function handleRetryScript() {
+    retryScript();
+  }
+
   function handleUsageDaysChange(value: string) {
     const parsed = Number(value);
     if (parsed === 7 || parsed === 30 || parsed === 90) {
@@ -313,6 +328,23 @@ export function AiCreditsSettingsPage() {
 
             <div>
               <p className="mb-2 text-sm font-semibold">Credit Packs</p>
+              {scriptState === "failed" && (
+                <div className="mb-3 flex items-center gap-3 rounded-lg border border-status-warning-rule bg-status-warning-surface px-4 py-3 text-sm text-status-warning-ink">
+                  <span className="flex-1">
+                    Payment checkout failed to load. Check your connection and try again.
+                  </span>
+                  <LoadingButton
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={handleRetryScript}
+                    className="shrink-0"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
+                    Retry
+                  </LoadingButton>
+                </div>
+              )}
               {isLoading ? (
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                   {Array.from({ length: 4 }, (_, i) => (
@@ -336,7 +368,9 @@ export function AiCreditsSettingsPage() {
                       pack={pack}
                       canPurchase={canPurchase}
                       isPending={isBusy && selectedPack?.id === pack.id}
-                      isBusy={isBusy}
+                      // Buy stays down until the gateway script is there, so a
+                      // click cannot land on a checkout that cannot open.
+                      isBusy={isBusy || scriptState !== "ready"}
                       onBuy={handleBuyPack}
                     />
                   ))}

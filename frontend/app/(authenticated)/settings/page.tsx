@@ -38,7 +38,7 @@ export default async function SettingsPage() {
               Security
             </h2>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              Change your password and manage account security.
+              Review your signed-in devices and two-factor authentication.
             </p>
           </div>
           <Suspense>

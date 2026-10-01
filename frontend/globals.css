@@ -67,6 +67,32 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
+/* The StreamlineOS Journal (public /blogs). Light-only, like every public page; the palette is the
+   editorial brief's: warm paper, forest ink, fine rules and a copper accent used for decoration
+   and large text only (it is below 4.5:1 on paper). `journal-accent-ink` is its text-safe shade. */
+@theme inline {
+  --color-journal-paper: var(--journal-paper);
+  --color-journal-surface: var(--journal-surface);
+  --color-journal-sage: var(--journal-sage);
+  --color-journal-ink: var(--journal-ink);
+  --color-journal-muted: var(--journal-muted);
+  --color-journal-rule: var(--journal-rule);
+  --color-journal-accent: var(--journal-accent);
+  --color-journal-accent-ink: var(--journal-accent-ink);
+  --font-journal: var(--font-journal-serif), "Iowan Old Style", Georgia, "Times New Roman", serif;
+}
+
+:root {
+  --journal-paper: #f8f7f2;
+  --journal-surface: #ffffff;
+  --journal-sage: #eef0e8;
+  --journal-ink: #263c32;
+  --journal-muted: #59635b;
+  --journal-rule: #daddd4;
+  --journal-accent: #a97450;
+  --journal-accent-ink: #7d5232;
+}
+
 :root {
   --font-geist-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
   --font-geist-mono: "Geist Mono", ui-monospace, SFMono-Regular, monospace;
@@ -2329,3 +2355,41 @@ button.goal-everything-chip[aria-checked="true"]::before {
     min-height: 1.5rem;
   }
 }
+
+/* Journal article body. The HTML comes from the blog admin's renderer (sanitised again on the
+   server); these rules must style everything that renderer emits. Measure ~70 characters. */
+.journal-article {
+  font-family: var(--font-journal);
+  font-size: 1.125rem;
+  line-height: 1.75;
+  color: var(--journal-ink);
+  max-width: 70ch;
+}
+@media (min-width: 768px) {
+  .journal-article { font-size: 1.25rem; line-height: 1.7; }
+}
+.journal-article > * + * { margin-top: 1.25em; }
+.journal-article h2, .journal-article h3, .journal-article h4 { line-height: 1.25; margin-top: 2em; scroll-margin-top: 2rem; font-weight: 600; }
+.journal-article h2 { font-size: 1.6em; }
+.journal-article h3 { font-size: 1.3em; }
+.journal-article h4 { font-size: 0.85em; font-family: var(--font-sans); text-transform: uppercase; letter-spacing: 0.08em; }
+.journal-article a { color: var(--journal-ink); text-decoration: underline; text-decoration-color: var(--journal-accent); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+.journal-article a:hover { text-decoration-color: var(--journal-ink); }
+.journal-article ul { list-style: disc; padding-left: 1.4em; }
+.journal-article ol { list-style: decimal; padding-left: 1.4em; }
+.journal-article li + li { margin-top: 0.4em; }
+.journal-article li > p { margin: 0; }
+.journal-article blockquote { border-left: 3px solid var(--journal-accent); padding-left: 1.1em; font-style: italic; color: var(--journal-muted); }
+.journal-article pre { font-family: var(--font-mono); font-size: 0.85rem; line-height: 1.6; background: var(--journal-sage); padding: 1em 1.25em; border-radius: 4px; overflow-x: auto; white-space: pre; }
+.journal-article :not(pre) > code { font-family: var(--font-mono); font-size: 0.85em; background: var(--journal-sage); padding: 0.1em 0.35em; border-radius: 3px; overflow-wrap: anywhere; }
+.journal-article hr { border: 0; border-top: 1px solid var(--journal-rule); margin: 2.5em 0; }
+.journal-article figure { margin: 2em 0; }
+.journal-article figure img { width: 100%; height: auto; border-radius: 3px; background: var(--journal-sage); }
+.journal-article figcaption { font-family: var(--font-sans); font-size: 0.875rem; color: var(--journal-muted); margin-top: 0.6em; }
+.journal-article .table-scroll { overflow-x: auto; }
+.journal-article table { border-collapse: collapse; width: 100%; font-family: var(--font-sans); font-size: 0.9375rem; line-height: 1.5; }
+.journal-article th, .journal-article td { border: 1px solid var(--journal-rule); padding: 0.55em 0.8em; text-align: left; vertical-align: top; }
+.journal-article th { background: var(--journal-sage); font-weight: 600; }
+.journal-article aside.callout { background: var(--journal-sage); border-left: 3px solid var(--journal-ink); padding: 1em 1.25em; font-family: var(--font-sans); font-size: 1rem; }
+.journal-article aside.callout[data-tone="warning"] { border-left-color: var(--journal-accent); }
+.journal-article aside.callout > * + * { margin-top: 0.75em; }
