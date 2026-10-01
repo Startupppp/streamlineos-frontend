@@ -34,6 +34,7 @@ jest.mock("@/hooks/api/access", () => ({
     unavailable: false,
   }),
   useCanManageOrganizationMembership: () => true,
+  useAccess: () => ({ refetch: jest.fn() }),
 }));
 
 jest.mock("@/hooks/api/users", () => ({

@@ -9,7 +9,7 @@ import { MailIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { usePermissionGate, useCanManageOrganizationMembership } from "@/hooks/api/access";
+import { useAccess, usePermissionGate, useCanManageOrganizationMembership } from "@/hooks/api/access";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { SearchInput } from "@/components/ui/search-input";
 import {
@@ -73,6 +73,7 @@ export function UserInvitationsPanel() {
   const [joinLinkInvitationId, setJoinLinkInvitationId] = useState<string | null>(null);
   const canManageMembership = useCanManageOrganizationMembership();
   const invitationsGate = usePermissionGate("settings:organization:manage");
+  const { refetch: refetchAccess } = useAccess();
   const canViewInvitations = invitationsGate.allowed;
   const canInvite = canManageMembership;
   const canCancelInvitation = canManageMembership;
@@ -251,6 +252,9 @@ export function UserInvitationsPanel() {
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+  const handleRetryAccess = useCallback(() => {
+    void refetchAccess();
+  }, [refetchAccess]);
   const handleClearFilters = useCallback(() => {
     setLocalSearch("");
     updateParams({ q: null, status: null });
@@ -387,6 +391,19 @@ export function UserInvitationsPanel() {
               title="Invitations are restricted"
               description="You do not have permission to view this organization's invitations."
               className="flex-1"
+            />
+          ) : invitationsGate.unavailable ? (
+            /*
+             * SETTINGS-004. The list is gated on /me/access, so a failed access
+             * read left the table in `isLoading` with nothing to retry — a tab
+             * that says "Loading results…" forever while the header above it
+             * counts pending invites. An access read that failed is a failure,
+             * not a wait, and says so.
+             */
+            <ErrorState
+              title="Failed to load invitations"
+              description="Your access could not be checked, so invitations cannot be listed."
+              onRetry={handleRetryAccess}
             />
           ) : isError ? (
             <ErrorState

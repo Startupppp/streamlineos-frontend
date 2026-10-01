@@ -16,10 +16,18 @@ import {
 } from "@/components/ui/dialog";
 import { Shield, ShieldCheck, ShieldOff, Copy, Check } from "lucide-react";
 import { useMfaStatus, useMfaSetup, useMfaVerify, useMfaDisable } from "@/hooks/api/mfa";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 
 export function MfaSettings() {
-  const { data: status, isLoading } = useMfaStatus();
+  const {
+    data: status,
+    isLoading,
+    isError,
+    error,
+    refetch: refetchStatus,
+  } = useMfaStatus();
   const setup = useMfaSetup();
   const verify = useMfaVerify();
   const disable = useMfaDisable();
@@ -74,11 +82,30 @@ export function MfaSettings() {
     });
   }, [backupCodes]);
 
+  const handleRetryStatus = useCallback(() => {
+    void refetchStatus();
+  }, [refetchStatus]);
+
   const handleTokenChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setToken(e.target.value.replace(/\D/g, "").slice(0, 6));
   }, []);
 
   if (isLoading) return null;
+
+  /*
+   * Without this branch an unread status renders as `enabled: false` — the panel
+   * would tell someone with MFA on that they have none, and offer to set it up
+   * again. The read stays inline (SETTINGS-001), so the failure is said here.
+   */
+  if (isError)
+    return (
+      <ErrorState
+        compact
+        title="Two-factor status unavailable"
+        description={getErrorMessage(error)}
+        onRetry={handleRetryStatus}
+      />
+    );
 
   const isEnabled = status?.enabled ?? false;
 
