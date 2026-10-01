@@ -310,13 +310,13 @@ export function useChannelFiles(channelId: number) {
     ...INLINE_READ_ERROR,
     queryKey: [...collaborationQueryKeys.chat.all, "channelFiles", channelId] as const,
     queryFn: ({ pageParam, signal }) =>
-      apiClient.get<{ files: ChannelFile[]; nextCursor?: number }>(
+      apiClient.get<{ files: ChannelFile[]; nextCursor?: number | null }>(
         `/chat/channels/${channelId}/files`,
         pageParam !== undefined ? { cursor: String(pageParam) } : undefined,
         signal,
         chatChannelFilesContract,
       ),
-    getNextPageParam: (last) => last.nextCursor,
+    getNextPageParam: (last) => last.nextCursor ?? undefined,
     initialPageParam: NO_ID_CURSOR_YET,
     enabled: canRead && channelId > 0,
   });
