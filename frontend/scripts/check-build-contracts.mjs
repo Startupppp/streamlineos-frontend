@@ -233,6 +233,11 @@ function runSelfTest() {
     resolved.operations.some((o) => o.operationId === "R_get") && !resolved.operations.some((o) => o.operationId === "R_delete"),
   );
   assert("a hook call with no backend operation is reported as unmatched", resolved.unmatched.includes("post /build/{}/nowhere"));
+  const shared = resolveHookOperations(doc, [], ["apiClient.get(`/build/${p}/releases/${r}`); apiClient.get(`/chat/${c}`);"]);
+  assert(
+    "a Build call from a hook module outside hooks/api/build is covered while its non-Build calls are not",
+    shared.operations.some((o) => o.operationId === "R_get") && !shared.unmatched.some((u) => u.includes("/chat/")),
+  );
   assert(
     "a parameter placeholder never matches a literal segment",
     !resolveHookOperations(doc, ["apiClient.get(`/build/${x}`);"]).operations.some((o) => o.operationId === "W_org"),

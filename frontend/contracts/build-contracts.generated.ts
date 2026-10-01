@@ -3541,6 +3541,12 @@ export const intakeUpdateIntakeBodySchema = z.strictObject({
 });
 export type IntakeUpdateIntakeBody = z.input<typeof intakeUpdateIntakeBodySchema>;
 
+export const projectsGetInvoiceLineDetailResponseSchema = z.object({
+  projectId: z.number().int(),
+  invoiceLineDetail: z.enum(["summary", "raw"]),
+});
+export type ProjectsGetInvoiceLineDetailResponse = z.infer<typeof projectsGetInvoiceLineDetailResponseSchema>;
+
 export const projectResourcesListProjectLabelsResponseSchema = z.array(z.object({
   id: z.number().int(),
   orgId: z.string(),
@@ -5422,6 +5428,24 @@ export const projectsTicketCommentsAddCommentBodySchema = z.strictObject({
 });
 export type ProjectsTicketCommentsAddCommentBody = z.input<typeof projectsTicketCommentsAddCommentBodySchema>;
 
+export const projectsTicketCommentsGetCommentResponseSchema = z.object({
+  id: z.number().int(),
+  orgId: z.string(),
+  ticketId: z.number().int(),
+  body: z.string(),
+  clientVisible: z.boolean(),
+  isEdited: z.boolean(),
+  createdAt: z.iso.datetime({ offset: true }),
+  updatedAt: z.iso.datetime({ offset: true }),
+  author: z.object({
+    id: z.string().nullable(),
+    name: z.string().nullable(),
+    image: z.string().nullable(),
+    email: z.string().nullable(),
+  }).nullable(),
+});
+export type ProjectsTicketCommentsGetCommentResponse = z.infer<typeof projectsTicketCommentsGetCommentResponseSchema>;
+
 export const projectsTicketCommentsEditCommentResponseSchema = z.object({
   updated: z.literal(true),
 });
@@ -5478,6 +5502,19 @@ export const projectsCustomFieldsUpsertTicketValuesBodySchema = z.strictObject({
   })),
 });
 export type ProjectsCustomFieldsUpsertTicketValuesBody = z.input<typeof projectsCustomFieldsUpsertTicketValuesBodySchema>;
+
+export const projectsTicketAssociationsGetGitLinksResponseSchema = z.array(z.object({
+  id: z.number().int(),
+  provider: z.enum(["github", "gitlab", "bitbucket"]),
+  refType: z.enum(["commit", "pull_request", "branch"]),
+  externalId: z.string(),
+  title: z.string().nullable(),
+  url: z.string().nullable(),
+  author: z.string().nullable(),
+  status: z.string().nullable(),
+  createdAt: z.iso.datetime({ offset: true }),
+}));
+export type ProjectsTicketAssociationsGetGitLinksResponse = z.infer<typeof projectsTicketAssociationsGetGitLinksResponseSchema>;
 
 export const projectsTicketAssociationsAddLabelResponseSchema = z.object({
   success: z.literal(true),
@@ -6638,6 +6675,7 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "IntakeController_listIntake", method: "GET", path: "/build/{projectId}/intake", response: "intakeListIntakeResponseSchema" },
   { operationId: "IntakeController_createIntake", method: "POST", path: "/build/{projectId}/intake", response: "intakeCreateIntakeResponseSchema", body: "intakeCreateIntakeBodySchema" },
   { operationId: "IntakeController_updateIntake", method: "PATCH", path: "/build/{projectId}/intake/{requestId}", response: "intakeUpdateIntakeResponseSchema", body: "intakeUpdateIntakeBodySchema" },
+  { operationId: "ProjectsController_getInvoiceLineDetail", method: "GET", path: "/build/{projectId}/invoice-line-detail", response: "projectsGetInvoiceLineDetailResponseSchema" },
   { operationId: "ProjectResourcesController_listProjectLabels", method: "GET", path: "/build/{projectId}/labels", response: "projectResourcesListProjectLabelsResponseSchema" },
   { operationId: "MeetingsController_listMeetings", method: "GET", path: "/build/{projectId}/meetings", response: "meetingsListMeetingsResponseSchema" },
   { operationId: "MeetingsController_createMeeting", method: "POST", path: "/build/{projectId}/meetings", response: "meetingsCreateMeetingResponseSchema", body: "meetingsCreateMeetingBodySchema" },
@@ -6714,12 +6752,14 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "ProjectsTicketChecklistsController_updateChecklistItem", method: "PATCH", path: "/build/{projectId}/tickets/{ticketId}/checklists/{checklistId}/items/{itemId}", response: "projectsTicketChecklistsUpdateChecklistItemResponseSchema", body: "projectsTicketChecklistsUpdateChecklistItemBodySchema" },
   { operationId: "ProjectsTicketChecklistsController_deleteChecklistItem", method: "DELETE", path: "/build/{projectId}/tickets/{ticketId}/checklists/{checklistId}/items/{itemId}" },
   { operationId: "ProjectsTicketCommentsController_addComment", method: "POST", path: "/build/{projectId}/tickets/{ticketId}/comments", response: "projectsTicketCommentsAddCommentResponseSchema", body: "projectsTicketCommentsAddCommentBodySchema" },
+  { operationId: "ProjectsTicketCommentsController_getComment", method: "GET", path: "/build/{projectId}/tickets/{ticketId}/comments/{commentId}", response: "projectsTicketCommentsGetCommentResponseSchema" },
   { operationId: "ProjectsTicketCommentsController_editComment", method: "PATCH", path: "/build/{projectId}/tickets/{ticketId}/comments/{commentId}", response: "projectsTicketCommentsEditCommentResponseSchema", body: "projectsTicketCommentsEditCommentBodySchema" },
   { operationId: "ProjectsTicketCommentsController_deleteComment", method: "DELETE", path: "/build/{projectId}/tickets/{ticketId}/comments/{commentId}" },
   { operationId: "ProjectsTicketCommentsController_addReaction", method: "POST", path: "/build/{projectId}/tickets/{ticketId}/comments/{commentId}/reactions", response: "projectsTicketCommentsAddReactionResponseSchema", body: "projectsTicketCommentsAddReactionBodySchema" },
   { operationId: "ProjectsTicketCommentsController_removeReaction", method: "DELETE", path: "/build/{projectId}/tickets/{ticketId}/comments/{commentId}/reactions/{emoji}" },
   { operationId: "ProjectsCustomFieldsController_getTicketValues", method: "GET", path: "/build/{projectId}/tickets/{ticketId}/custom-field-values", response: "projectsCustomFieldsGetTicketValuesResponseSchema" },
   { operationId: "ProjectsCustomFieldsController_upsertTicketValues", method: "POST", path: "/build/{projectId}/tickets/{ticketId}/custom-field-values", response: "projectsCustomFieldsUpsertTicketValuesResponseSchema", body: "projectsCustomFieldsUpsertTicketValuesBodySchema" },
+  { operationId: "ProjectsTicketAssociationsController_getGitLinks", method: "GET", path: "/build/{projectId}/tickets/{ticketId}/git-links", response: "projectsTicketAssociationsGetGitLinksResponseSchema" },
   { operationId: "ProjectsTicketAssociationsController_addLabel", method: "POST", path: "/build/{projectId}/tickets/{ticketId}/labels", response: "projectsTicketAssociationsAddLabelResponseSchema", body: "projectsTicketAssociationsAddLabelBodySchema" },
   { operationId: "ProjectsTicketAssociationsController_removeLabel", method: "DELETE", path: "/build/{projectId}/tickets/{ticketId}/labels/{labelId}" },
   { operationId: "ProjectsTicketsController_rankTicket", method: "PATCH", path: "/build/{projectId}/tickets/{ticketId}/rank", response: "projectsTicketsRankTicketResponseSchema", body: "projectsTicketsRankTicketBodySchema" },

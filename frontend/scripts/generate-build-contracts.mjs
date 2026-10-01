@@ -8,6 +8,7 @@ const FRONTEND_ROOT = fileURLToPath(new URL("..", import.meta.url));
 const OPENAPI_PATH = join(FRONTEND_ROOT, "contracts", "openapi.json");
 const OUTPUT_PATH = join(FRONTEND_ROOT, "contracts", "build-contracts.generated.ts");
 export const HOOKS_ROOT = join(FRONTEND_ROOT, "hooks", "api", "build");
+const SHARED_HOOKS_ROOT = join(FRONTEND_ROOT, "hooks", "api");
 
 const HTTP_METHODS = ["get", "post", "put", "patch", "delete"];
 const SUCCESS_CODES = ["200", "201", "202"];
@@ -193,7 +194,7 @@ function pathMatches(templatePath, requestPath) {
   return a.every((segment, i) => (segment.startsWith("{") ? b[i] === "{}" : segment === b[i]));
 }
 
-export function resolveHookOperations(document, sources) {
+export function resolveHookOperations(document, sources, sharedSources = []) {
   const wanted = new Map();
   const unmatched = new Set();
   const paths = Object.keys(document.paths ?? {});
@@ -214,6 +215,14 @@ export function resolveHookOperations(document, sources) {
       }
     }
   }
+  for (const src of sharedSources) {
+    for (const call of scanSourceForRequests(src).calls) {
+      if (!call.path.startsWith("/build/") && call.path !== "/build") continue;
+      const hits = paths.filter((p) => pathMatches(p, call.path) && document.paths[p][call.method]);
+      if (hits.length === 0) unmatched.add(`${call.method} ${call.path}`);
+      for (const p of hits) want(p, call.method);
+    }
+  }
   for (const [, method, path] of LEGACY_ALIASES) want(path, method);
   const operations = [...wanted.values()].sort((x, y) =>
     x.path === y.path ? HTTP_METHODS.indexOf(x.method) - HTTP_METHODS.indexOf(y.method) : x.path < y.path ? -1 : 1,
@@ -223,6 +232,12 @@ export function resolveHookOperations(document, sources) {
 
 export function readHookSources(root = HOOKS_ROOT) {
   return sourceFiles(root).map((file) => readFileSync(file, "utf8"));
+}
+
+export function readSharedHookSources() {
+  return sourceFiles(SHARED_HOOKS_ROOT)
+    .filter((file) => !file.startsWith(HOOKS_ROOT))
+    .map((file) => readFileSync(file, "utf8"));
 }
 
 export function exportBase(operationId) {
@@ -454,7 +469,7 @@ export function buildFromDisk() {
   const raw = readFileSync(OPENAPI_PATH, "utf8");
   const hash = sha256hex(raw);
   const document = JSON.parse(raw);
-  const { operations, unmatched } = resolveHookOperations(document, readHookSources());
+  const { operations, unmatched } = resolveHookOperations(document, readHookSources(), readSharedHookSources());
   return { hash, operations, unmatched, content: generateContent(document, hash, operations) };
 }
 
