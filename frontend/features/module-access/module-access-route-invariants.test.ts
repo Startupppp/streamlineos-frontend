@@ -1,6 +1,8 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { ACCESS_MANAGED_MODULES } from "@/lib/rbac/permissions/module-access";
+import { delegableModuleIds } from "@/test-utils/permission-catalog";
+
+const ACCESS_MANAGED_MODULES: readonly string[] = delegableModuleIds();
 import { resolveRouteAccess } from "@/lib/rbac/route-access/route-access";
 
 /**

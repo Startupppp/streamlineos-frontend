@@ -31,6 +31,31 @@ export function extractPermissionNames(source) {
     .filter((name) => !name.includes("${"));
 }
 
+export function extractPermissionObjects(source) {
+  const results = [];
+  for (const block of source.matchAll(/\{([^{}]+)\}/g)) {
+    const body = block[1];
+    const nameM = body.match(/\bname:\s*["']([^"']+)["']/);
+    if (!nameM || nameM[1].includes("${")) continue;
+    const resourceM = body.match(/\bresource:\s*["']([^"']+)["']/);
+    const actionM = body.match(/\baction:\s*["']([^"']+)["']/);
+    const descM = body.match(/\bdescription:\s*["']([^"']+)["']/);
+    if (!resourceM || !actionM || !descM) continue;
+    const entry = {
+      name: nameM[1],
+      resource: resourceM[1],
+      action: actionM[1],
+      description: descM[1],
+    };
+    const scopableM = body.match(/\bscopable:\s*(true|false)/);
+    if (scopableM) entry.scopable = scopableM[1] === "true";
+    const baselineScopeM = body.match(/\bbaselineScope:\s*["']([^"']+)["']/);
+    if (baselineScopeM) entry.baselineScope = baselineScopeM[1];
+    results.push(entry);
+  }
+  return results;
+}
+
 /** Module ids whose ladder is `delegable`; each generates `<id>:access:view|manage`. */
 export function extractDelegableModuleIds(source) {
   return [
@@ -42,6 +67,23 @@ export function extractDelegableModuleIds(source) {
 
 export function moduleAccessPermissions(delegableModuleIds) {
   return delegableModuleIds.flatMap((id) => [`${id}:access:view`, `${id}:access:manage`]);
+}
+
+export function moduleAccessPermissionObjects(delegableModuleIds) {
+  return delegableModuleIds.flatMap((id) => [
+    {
+      name: `${id}:access:view`,
+      resource: `${id}:access`,
+      action: "view",
+      description: `View roles, permissions and assignments for the ${id} module`,
+    },
+    {
+      name: `${id}:access:manage`,
+      resource: `${id}:access`,
+      action: "manage",
+      description: `View access administration for the ${id} module; changing roles, permissions, or assignments additionally requires Module Admin, Module Owner, Org Admin, or Org Owner authority`,
+    },
+  ]);
 }
 
 /**
@@ -92,8 +134,30 @@ export function buildCatalog({
 }) {
   const delegableModuleIds = sortedUnique(extractDelegableModuleIds(moduleRegistrySource));
   const declared = permissionSources.flatMap((source) => extractPermissionNames(source));
+  const allNames = sortedUnique([...declared, ...moduleAccessPermissions(delegableModuleIds)]);
+
+  const detailsByName = new Map();
+  for (const source of permissionSources) {
+    for (const obj of extractPermissionObjects(source)) {
+      if (!detailsByName.has(obj.name)) detailsByName.set(obj.name, obj);
+    }
+  }
+  for (const obj of moduleAccessPermissionObjects(delegableModuleIds)) {
+    if (!detailsByName.has(obj.name)) detailsByName.set(obj.name, obj);
+  }
+
+  const permissionDetails = {};
+  for (const name of allNames) {
+    const entry = detailsByName.get(name);
+    if (entry) {
+      const { name: _n, ...rest } = entry;
+      permissionDetails[name] = rest;
+    }
+  }
+
   return {
-    permissions: sortedUnique([...declared, ...moduleAccessPermissions(delegableModuleIds)]),
+    permissions: allNames,
+    permissionDetails,
     delegableModuleIds,
     memberDefaultPermissions: sortedUnique(extractMemberDefaultPermissions(roleDefaultsSource)),
     ownerOnlyOperations: sortedObject(extractOwnerOnlyOperations(ownerOnlyOperationsSource)),

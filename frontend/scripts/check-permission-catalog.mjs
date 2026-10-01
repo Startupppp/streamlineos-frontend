@@ -52,7 +52,11 @@ import {
   openApiPermissions,
   serializeCatalog,
 } from "./permission-catalog-extract.mjs";
-import { readBackendCatalog } from "./generate-permission-catalog.mjs";
+import {
+  readBackendCatalog,
+  serializePermissionKeyTs,
+  PERMISSION_KEY_TS_PATH,
+} from "./generate-permission-catalog.mjs";
 
 const FRONTEND_ROOT = fileURLToPath(new URL("..", import.meta.url));
 const CATALOG_PATH = join(FRONTEND_ROOT, "contracts", "permission-catalog.json");
@@ -100,6 +104,38 @@ export function wellFormedFailures(catalog) {
     if (orphans.length > 0)
       failures.push(`memberDefaultPermissions has ${orphans.length} key(s) absent from permissions: ${orphans.slice(0, 5).join(", ")}`);
   }
+
+  const details = catalog.permissionDetails;
+  if (details === null || typeof details !== "object" || Array.isArray(details)) {
+    failures.push("permissionDetails is not an object");
+  } else if (Array.isArray(catalog.permissions)) {
+    const missingDetail = catalog.permissions.filter((name) => {
+      const d = details[name];
+      return !d || typeof d.resource !== "string" || typeof d.action !== "string" || typeof d.description !== "string";
+    });
+    if (missingDetail.length > 0)
+      failures.push(`permissionDetails is missing or incomplete for ${missingDetail.length} key(s): ${missingDetail.slice(0, 5).join(", ")}`);
+  }
+
+  return failures;
+}
+
+export function tsUnionAgreementFailures(catalog, tsSource) {
+  const matches = [...tsSource.matchAll(/^\s+\|\s+"([^"]+)"/gm)].map((m) => m[1]);
+  if (matches.length === 0)
+    return ["permission-key.generated.ts contains no union members — possible corruption"];
+  const fromTs = [...matches].sort();
+  const fromJson = [...(catalog.permissions ?? [])].sort();
+  if (fromTs.join("\n") === fromJson.join("\n")) return [];
+  const tsSet = new Set(fromTs);
+  const jsonSet = new Set(fromJson);
+  const onlyInTs = fromTs.filter((k) => !jsonSet.has(k));
+  const onlyInJson = fromJson.filter((k) => !tsSet.has(k));
+  const failures = [];
+  if (onlyInTs.length > 0)
+    failures.push(`TS union has ${onlyInTs.length} key(s) not in JSON: ${onlyInTs.slice(0, 5).join(", ")}`);
+  if (onlyInJson.length > 0)
+    failures.push(`JSON has ${onlyInJson.length} key(s) not in TS union: ${onlyInJson.slice(0, 5).join(", ")}`);
   return failures;
 }
 
@@ -113,7 +149,7 @@ export function contractAgreementFailures(catalog, openApiDocument) {
     .map((name) => `x-permission "${name}" is bound to an operation but is not in the catalogue`);
 }
 
-function runSelfTest() {
+async function runSelfTest() {
   let passed = 0;
   const failures = [];
   const assert = (label, condition) => {
@@ -183,8 +219,12 @@ function runSelfTest() {
     })),
   );
 
+  const healthyPermissions = Array.from({ length: 500 }, (_, i) => `m${String(i).padStart(4, "0")}:a:view`).sort();
   const healthy = {
-    permissions: Array.from({ length: 500 }, (_, i) => `m${String(i).padStart(4, "0")}:a:view`).sort(),
+    permissions: healthyPermissions,
+    permissionDetails: Object.fromEntries(
+      healthyPermissions.map((k) => [k, { resource: "m:r", action: "view", description: "d" }]),
+    ),
     delegableModuleIds: ["a", "b", "c", "d", "e", "f"],
     memberDefaultPermissions: [],
     ownerOnlyOperations: { "org.delete": "reason" },
@@ -206,6 +246,30 @@ function runSelfTest() {
   assert(
     "a member default with no catalogue entry is rejected",
     wellFormedFailures({ ...healthy, memberDefaultPermissions: ["ghost:key:view"] }).length > 0,
+  );
+  assert(
+    "missing permissionDetails is rejected",
+    wellFormedFailures({ ...healthy, permissionDetails: undefined }).length > 0,
+  );
+  assert(
+    "permissionDetails with missing metadata for a key is rejected",
+    wellFormedFailures({ ...healthy, permissionDetails: {} }).length > 0,
+  );
+
+  const { serializePermissionKeyTs: serializeTs } = await import("./generate-permission-catalog.mjs");
+  const twoKeys = ["a:b:view", "a:b:manage"];
+  const tsSource = serializeTs(twoKeys);
+  assert(
+    "TS union matches the keys it was serialised from",
+    tsUnionAgreementFailures({ permissions: twoKeys }, tsSource).length === 0,
+  );
+  assert(
+    "a stale TS union with an extra key is caught hermetically",
+    tsUnionAgreementFailures({ permissions: ["a:b:view"] }, tsSource).length > 0,
+  );
+  assert(
+    "a stale TS union missing a key is caught hermetically",
+    tsUnionAgreementFailures({ permissions: [...twoKeys, "a:b:delete"] }, tsSource).length > 0,
   );
 
   const doc = { paths: { "/hr/leaves": { get: { "x-permission": "hr:leaves:view" } } } };
@@ -239,6 +303,12 @@ function main() {
     );
     process.exit(1);
   }
+  if (!existsSync(PERMISSION_KEY_TS_PATH)) {
+    console.error(
+      "contracts/permission-key.generated.ts is missing. Run `pnpm generate:permission-catalog` with the backend checked out beside this repository and commit the result.",
+    );
+    process.exit(1);
+  }
 
   const vendored = readFileSync(CATALOG_PATH, "utf8");
   let catalog;
@@ -248,6 +318,8 @@ function main() {
     console.error(`contracts/permission-catalog.json is not valid JSON: ${String(error)}`);
     process.exit(1);
   }
+
+  const vendoredTs = readFileSync(PERMISSION_KEY_TS_PATH, "utf8");
 
   let failed = false;
 
@@ -259,7 +331,8 @@ function main() {
   } else {
     console.log(
       `Rule 1 — well-formed: ${catalog.permissions.length} permissions, ${catalog.delegableModuleIds.length} delegable modules, ` +
-        `${catalog.memberDefaultPermissions.length} member defaults, ${Object.keys(catalog.ownerOnlyOperations).length} owner-only operations.`,
+        `${catalog.memberDefaultPermissions.length} member defaults, ${Object.keys(catalog.ownerOnlyOperations).length} owner-only operations, ` +
+        `${Object.keys(catalog.permissionDetails ?? {}).length} metadata entries.`,
     );
   }
 
@@ -279,21 +352,33 @@ function main() {
     }
   }
 
+  const tsAgreement = tsUnionAgreementFailures(catalog, vendoredTs);
+  if (tsAgreement.length > 0) {
+    console.error(`Rule 3 — permission-key.generated.ts disagrees with permission-catalog.json:`);
+    for (const reason of tsAgreement) console.error(`  ${reason}`);
+    console.error("  Regenerate with `pnpm generate:permission-catalog` and commit the result.");
+    failed = true;
+  } else {
+    console.log(`Rule 3 — permission-key.generated.ts union is consistent with the JSON catalogue (${catalog.permissions.length} keys).`);
+  }
+
   if (!backendAvailable) {
     if (failed) {
-      console.error(`Rule 3 — NOT RUN. ${backendUnreachableReason()}`);
+      console.error(`Rule 4 — NOT RUN. ${backendUnreachableReason()}`);
       process.exit(1);
     }
     reportBackendUnreachable(
       "check-permission-catalog",
-      "rule 3 (byte-for-byte regeneration against the backend)",
+      "rule 4 (byte-for-byte regeneration against the backend)",
     );
     return;
   }
 
-  const regenerated = serializeCatalog(readBackendCatalog());
+  const freshCatalog = readBackendCatalog();
+  const regenerated = serializeCatalog(freshCatalog);
+  const regeneratedTs = serializePermissionKeyTs(freshCatalog.permissions);
   if (regenerated !== vendored) {
-    console.error("Rule 3 — DRIFT: contracts/permission-catalog.json is not what the backend produces now.");
+    console.error("Rule 4 — DRIFT: contracts/permission-catalog.json is not what the backend produces now.");
     console.error("  Run `pnpm generate:permission-catalog` and commit the result.");
     const fresh = JSON.parse(regenerated);
     const added = fresh.permissions.filter((name) => !catalog.permissions.includes(name));
@@ -302,12 +387,19 @@ function main() {
     if (removed.length > 0) console.error(`  vendored copy has ${removed.length} permission(s) the backend no longer declares: ${removed.slice(0, 10).join(", ")}`);
     failed = true;
   } else {
-    console.log("Rule 3 — byte-identical to a fresh regeneration from the backend.");
+    console.log("Rule 4a — contracts/permission-catalog.json is byte-identical to a fresh regeneration from the backend.");
+  }
+  if (regeneratedTs !== vendoredTs) {
+    console.error("Rule 4 — DRIFT: contracts/permission-key.generated.ts is not what the backend produces now.");
+    console.error("  Run `pnpm generate:permission-catalog` and commit the result.");
+    failed = true;
+  } else {
+    console.log("Rule 4b — contracts/permission-key.generated.ts is byte-identical to a fresh regeneration from the backend.");
   }
 
   if (failed) process.exit(1);
-  console.log("\nPermission catalogue: vendored copy is current.");
+  console.log("\nPermission catalogue: vendored copies are current.");
 }
 
-if (process.argv.includes("--self-test")) runSelfTest();
+if (process.argv.includes("--self-test")) runSelfTest().catch((e) => { console.error(e); process.exit(1); });
 else main();

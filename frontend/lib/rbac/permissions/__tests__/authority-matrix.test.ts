@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import { PERMISSIONS } from "../roles";
+import { PERMISSIONS } from "../catalog";
 import { backendPath } from "@/test-utils/backend-repo";
 
 /**

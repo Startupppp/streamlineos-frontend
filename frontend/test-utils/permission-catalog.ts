@@ -14,11 +14,25 @@ import { resolve } from "node:path";
  * backend is present). Reading a stale copy is therefore a gate failure, not a
  * silent pass.
  */
+export interface PermissionDetail {
+  readonly resource: string;
+  readonly action: string;
+  readonly description: string;
+  readonly scopable?: boolean;
+  readonly baselineScope?: "own" | "all";
+}
+
 export interface VendoredPermissionCatalog {
   readonly permissions: readonly string[];
+  readonly permissionDetails: Readonly<Record<string, PermissionDetail>>;
   readonly delegableModuleIds: readonly string[];
   readonly memberDefaultPermissions: readonly string[];
   readonly ownerOnlyOperations: Readonly<Record<string, string>>;
+}
+
+/** Full metadata for a single permission key from the vendored catalog. */
+export function permissionDetail(name: string): PermissionDetail | undefined {
+  return permissionCatalog().permissionDetails[name];
 }
 
 export const PERMISSION_CATALOG_PATH = resolve(
