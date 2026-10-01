@@ -2,8 +2,10 @@
 
 import { useQueryClient, type InfiniteData } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
+import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { Message, MessagesPage, SendMessageInput, EditMessageInput } from "@/types/chat";
@@ -136,6 +138,9 @@ export function useDeleteMessage() {
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.all });
+    },
+    onError: (err) => {
+      toast.error(getErrorMessage(err));
     },
   });
 }

@@ -403,6 +403,12 @@ function KbSourcesScopeSheet({
     readyVisible.every((s) => selectedIds.includes(s.id));
   const totalSelected = selectedIds.length + selectedPageIds.length;
   const noneSelected = totalSelected === 0;
+  const hasSourceFilter = kindFilter !== "all" || ownerFilter !== "all";
+
+  function handleClearSourceFilter() {
+    onKindFilterChange("all");
+    onOwnerFilterChange("all");
+  }
 
   const description = noneSelected
     ? "All ready sources and pages will be searched. Select specific items to narrow the answer."
@@ -554,6 +560,8 @@ function KbSourcesScopeSheet({
           sources={sources}
           selectedIds={selectedIds}
           onToggle={handleToggleSource}
+          filtersActive={hasSourceFilter}
+          onClearFilters={handleClearSourceFilter}
         />
 
         <div className="space-y-2">
@@ -657,6 +665,8 @@ interface ScopeSourcesListProps {
   sources: KbSource[];
   selectedIds: number[];
   onToggle: (id: number) => void;
+  filtersActive: boolean;
+  onClearFilters: () => void;
 }
 
 function ScopeSourcesList({
@@ -664,6 +674,8 @@ function ScopeSourcesList({
   sources,
   selectedIds,
   onToggle,
+  filtersActive,
+  onClearFilters,
 }: ScopeSourcesListProps) {
   if (isLoading) {
     return (
@@ -680,7 +692,9 @@ function ScopeSourcesList({
       <EmptyState
         illustrationPreset="knowledge"
         title="No sources yet"
-        description="Upload a file or add a note to see it here."
+        description={filtersActive ? undefined : "Upload a file or add a note to see it here."}
+        filtersActive={filtersActive}
+        onClearFilters={onClearFilters}
       />
     );
   }

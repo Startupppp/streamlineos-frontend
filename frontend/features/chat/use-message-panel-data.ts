@@ -41,11 +41,13 @@ export interface MessagePanelProps {
   onAutoStartHandled?: () => void;
   isSidebarCollapsed?: boolean;
   onToggleSidebar?: () => void;
+  scrollToMessageId?: number | null;
 }
 
 export function useMessagePanelData({
   channelId, currentUserId, onBack, onToggleInfo, showInfoPanel,
   autoStartCall, onAutoStartHandled, isSidebarCollapsed, onToggleSidebar,
+  scrollToMessageId,
 }: MessagePanelProps) {
   const scope = useOrgStorageScope();
   const draftKey = orgScopedStorageKey(`chat:draft:${channelId}`, scope);
@@ -478,7 +480,7 @@ export function useMessagePanelData({
   return {
     header: { onBack, displayName, channel, otherMember, isOtherOnline, memberCount, activeHuddle, isInHuddle, onHuddle: handleHuddle, huddleStartPending: startHuddle.isPending, huddleJoinPending: joinHuddle.isPending, canUseAi, summarizeAction, channelId, onToggleFiles: handleToggleFiles, onToggleSaved: handleToggleSaved, showFilesPanel, showSavedPanel, onToggleInfo, showInfoPanel, isSidebarCollapsed, onToggleSidebar },
     workspace: {
-      messageList: { groupedMessages, messages, isLoading, isError: messagesError, errorMessage: messagesError ? getErrorMessage(messagesErrorValue) : undefined, onRetry: handleRetryMessages, hasNextPage: hasNextPage || hasOlderHeld, isFetchingNextPage, fetchNextPage: handleLoadOlder, currentUserId, channelId, displayName, channelType: channel?.type, editingMessage, editInput, pinnedMessageIds, savedMessageIds, replyCountMap, firstUnreadMessageId, onEditInputChange: setEditInput, onStartEdit: handleStartEdit, onCancelEdit: handleCancelEdit, onSaveEdit: handleEdit, onReply: handleReply, onOpenThread: handleOpenThread, onDelete: handleDelete, onReact: handleReact, onPin: handlePin, onUnpin: handleUnpin, onSave: handleSave, onUnsaveMsg: handleUnsaveMsg, onForward: handleForward, resolveUserName, showScrollBtn, scrollToBottom: handleScrollToBottom, messagesEndRef, scrollContainerRef, onScroll: handleScroll },
+      messageList: { groupedMessages, messages, isLoading, isError: messagesError, errorMessage: messagesError ? getErrorMessage(messagesErrorValue) : undefined, onRetry: handleRetryMessages, hasNextPage: hasNextPage || hasOlderHeld, isFetchingNextPage, fetchNextPage: handleLoadOlder, currentUserId, channelId, displayName, channelType: channel?.type, editingMessage, editInput, pinnedMessageIds, savedMessageIds, replyCountMap, firstUnreadMessageId, onEditInputChange: setEditInput, onStartEdit: handleStartEdit, onCancelEdit: handleCancelEdit, onSaveEdit: handleEdit, onReply: handleReply, onOpenThread: handleOpenThread, onDelete: handleDelete, onReact: handleReact, onPin: handlePin, onUnpin: handleUnpin, onSave: handleSave, onUnsaveMsg: handleUnsaveMsg, onForward: handleForward, resolveUserName, showScrollBtn, scrollToBottom: handleScrollToBottom, messagesEndRef, scrollContainerRef, onScroll: handleScroll, scrollToMessageId },
       messageInput: { channelId, displayName, channelType: channel?.type, messageInput, setMessageInput, inputRef, fileInputRef, replyTo, setReplyTo, pendingAttachments, setPendingAttachments, uploading, onFileSelect: handleFileSelect, showEmojiPicker, setShowEmojiPicker, emojiRef, insertEmoji, showMentions, setShowMentions, mentionQuery, mentionIndex, setMentionIndex, filteredMentions, insertMention, showTicketPicker, ticketQuery, ticketSelectedIndex, onTicketSelect: insertTicket, typingText, sendMessage, onSend: handleSend, onKeyDown: handleKeyDown, onInputChange: handleInputChange, onFilesSelected: handlePastedFiles },
       huddle: activeHuddle && isInHuddle ? { huddle: activeHuddle, channelId, currentUserId } : undefined,
     },

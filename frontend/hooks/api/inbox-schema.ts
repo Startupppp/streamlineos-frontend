@@ -59,6 +59,8 @@ export const unifiedInboxContract = z.object({
         projectId: z.number().int().nullable(),
         ticketId: z.number().int().nullable(),
         dueAt: z.string().nullable(),
+        objectType: z.string(),
+        objectId: z.string(),
       }),
     ]),
   ),

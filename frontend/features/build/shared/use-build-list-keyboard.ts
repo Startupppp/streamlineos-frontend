@@ -10,7 +10,8 @@ function isInputTarget(target: EventTarget | null): boolean {
     tag === "INPUT" ||
     tag === "TEXTAREA" ||
     tag === "SELECT" ||
-    target.isContentEditable
+    target.isContentEditable ||
+    target.closest('[contenteditable="true"]') !== null
   );
 }
 

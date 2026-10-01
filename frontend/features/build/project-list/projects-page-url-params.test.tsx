@@ -176,4 +176,24 @@ describe("ProjectsPage — search input does not reset mid-keystroke", () => {
     expect(mockReplace).toHaveBeenCalledTimes(1);
     jest.useRealTimers();
   });
+
+  it("does not overwrite in-progress typing when the URL round-trip from the debounced value lands mid-keystroke", async () => {
+    jest.useFakeTimers();
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const { rerender } = render(<ProjectsPage />);
+
+    const searchInput = screen.getByRole("searchbox");
+
+    await user.type(searchInput, "hel");
+    act(() => jest.advanceTimersByTime(300));
+
+    await user.type(searchInput, "l");
+
+    mockSearchParams = new URLSearchParams("q=hel");
+    rerender(<ProjectsPage />);
+
+    expect(searchInput).toHaveValue("hell");
+
+    jest.useRealTimers();
+  });
 });

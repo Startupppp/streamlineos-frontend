@@ -54,6 +54,8 @@ function makeApproval(id: number, projectId: number | null = null): UnifiedInbox
     projectId,
     ticketId: null,
     dueAt: null,
+    objectType: "ticket",
+    objectId: `tkt-${id}`,
     sourceModule: "build",
     actor: null,
     isRead: false,

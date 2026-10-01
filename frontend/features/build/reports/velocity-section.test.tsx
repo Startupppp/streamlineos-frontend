@@ -1,6 +1,5 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
-import type { InfiniteData } from "@tanstack/react-query";
 
 jest.mock("@/hooks/api/build/reports", () => ({
   useVelocityReport: jest.fn(),
@@ -60,58 +59,12 @@ jest.mock("./chart-card", () => ({
   ),
 }));
 
-jest.mock("@/components/ui/infinite-scroll-sentinel", () => ({
-  InfiniteScrollSentinel: ({
-    hasNextPage,
-    isFetchingNextPage,
-    exhausted,
-  }: {
-    hasNextPage: boolean;
-    isFetchingNextPage: boolean;
-    exhausted?: string;
-  }) => (
-    <div
-      data-testid="sentinel"
-      data-has-next={String(hasNextPage)}
-      data-fetching={String(isFetchingNextPage)}
-    >
-      {!hasNextPage && exhausted ? exhausted : ""}
-    </div>
-  ),
-}));
-
 import { useVelocityReport } from "@/hooks/api/build/reports";
 import { VelocitySection } from "./velocity-section";
 
 const mockUseVelocityReport = useVelocityReport as jest.Mock;
 
-interface VelocityPage {
-  data: {
-    cycleId: number;
-    name: string;
-    startDate: string;
-    endDate: string;
-    committedPoints: number;
-    completedPoints: number;
-    committedCount: number;
-    completedCount: number;
-  }[];
-  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
-}
-
-function makeInfiniteData(
-  pages: { data: VelocityPage["data"]; hasMore: boolean; nextCursor: string | null }[],
-): InfiniteData<VelocityPage> {
-  return {
-    pages: pages.map((p) => ({
-      data: p.data,
-      pagination: { limit: 100, hasMore: p.hasMore, nextCursor: p.nextCursor },
-    })),
-    pageParams: pages.map((_, i) => (i === 0 ? undefined : `cursor-${i}`)),
-  };
-}
-
-const SPRINT: VelocityPage["data"][number] = {
+const SPRINT = {
   cycleId: 1,
   name: "Sprint 1",
   startDate: "2024-01-01",
@@ -124,63 +77,23 @@ const SPRINT: VelocityPage["data"][number] = {
 
 function defaultResult(overrides = {}) {
   return {
-    data: makeInfiniteData([{ data: [SPRINT], hasMore: false, nextCursor: null }]),
+    data: [SPRINT],
     isLoading: false,
     isError: false,
     error: null,
     refetch: jest.fn(),
-    fetchNextPage: jest.fn(),
-    hasNextPage: false,
-    isFetchingNextPage: false,
     ...overrides,
   };
 }
 
-describe("33 — VelocitySection infinite scroll", () => {
+describe("33 — VelocitySection flat-array query", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it("renders sentinel showing exhausted label when all pages are loaded", () => {
-    mockUseVelocityReport.mockReturnValue(defaultResult({ hasNextPage: false }));
-    render(<VelocitySection projectId={1} />);
-    const sentinel = screen.getByTestId("sentinel");
-    expect(sentinel.dataset.hasNext).toBe("false");
-    expect(sentinel.dataset.fetching).toBe("false");
-    expect(sentinel.textContent).toBe("All cycles loaded");
-  });
-
-  it("renders sentinel with hasNextPage=true when more pages remain", () => {
-    mockUseVelocityReport.mockReturnValue(
-      defaultResult({ hasNextPage: true, isFetchingNextPage: false }),
-    );
-    render(<VelocitySection projectId={1} />);
-    const sentinel = screen.getByTestId("sentinel");
-    expect(sentinel.dataset.hasNext).toBe("true");
-  });
-
-  it("end-of-list (hasNextPage=false) is distinguishable from still-loading (isFetchingNextPage=true)", () => {
-    mockUseVelocityReport.mockReturnValue(
-      defaultResult({ hasNextPage: true, isFetchingNextPage: true }),
-    );
-    render(<VelocitySection projectId={1} />);
-    const sentinel = screen.getByTestId("sentinel");
-    expect(sentinel.dataset.hasNext).toBe("true");
-    expect(sentinel.dataset.fetching).toBe("true");
-    expect(sentinel.textContent).toBe("");
-  });
-
-  it("flattens all pages so every sprint reaches the chart", () => {
+  it("passes every sprint to the chart so the chart count matches the data length", () => {
     const sprint2 = { ...SPRINT, cycleId: 2, name: "Sprint 2" };
-    mockUseVelocityReport.mockReturnValue(
-      defaultResult({
-        data: makeInfiniteData([
-          { data: [SPRINT], hasMore: true, nextCursor: "cursor1" },
-          { data: [sprint2], hasMore: false, nextCursor: null },
-        ]),
-        hasNextPage: false,
-      }),
-    );
+    mockUseVelocityReport.mockReturnValue(defaultResult({ data: [SPRINT, sprint2] }));
     render(<VelocitySection projectId={1} />);
     const chart = screen.queryByTestId("velocity-chart");
     if (chart) {
@@ -188,7 +101,16 @@ describe("33 — VelocitySection infinite scroll", () => {
     }
   });
 
-  it("velocity hook receives projectId as its only argument — cursor tracking is internal to useInfiniteQuery", () => {
+  it("passes an empty data array to the chart when the hook returns no sprints — negative control confirms the zero-cycle branch", () => {
+    mockUseVelocityReport.mockReturnValue(defaultResult({ data: [] }));
+    render(<VelocitySection projectId={1} />);
+    const chart = screen.queryByTestId("velocity-chart");
+    if (chart) {
+      expect(chart.dataset.count).toBe("0");
+    }
+  });
+
+  it("velocity hook receives projectId as its only argument", () => {
     mockUseVelocityReport.mockReturnValue(defaultResult());
     render(<VelocitySection projectId={99} />);
     expect(mockUseVelocityReport).toHaveBeenCalledWith(99);

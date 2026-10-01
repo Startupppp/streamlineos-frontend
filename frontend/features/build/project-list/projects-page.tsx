@@ -127,8 +127,13 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
   const urlSearch = searchParams.get("q") || "";
   const [localSearch, setLocalSearch] = useState(() => urlSearch);
 
+  const lastPushedSearchRef = useRef<string>(urlSearch);
+
   useEffect(() => {
-    setLocalSearch(urlSearch);
+    if (urlSearch !== lastPushedSearchRef.current) {
+      setLocalSearch(urlSearch);
+      lastPushedSearchRef.current = urlSearch;
+    }
   }, [urlSearch]);
 
   const debouncedSearch = useDebouncedValue(localSearch, 300);
@@ -144,6 +149,7 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
       isMountedRef.current = true;
       return;
     }
+    lastPushedSearchRef.current = debouncedSearch;
     updateParamsRef.current({ q: debouncedSearch || null });
   }, [debouncedSearch]);
 

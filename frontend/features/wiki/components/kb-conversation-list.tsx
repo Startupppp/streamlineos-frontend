@@ -208,7 +208,7 @@ export function KbConversationList({
             value={search}
             onChange={handleSearchChange}
             placeholder="Search conversations…"
-            className="flex-1 bg-transparent text-xs focus-visible:outline-none"
+            className="min-w-0 flex-1 bg-transparent text-xs focus-visible:outline-none"
           />
         </div>
       </div>

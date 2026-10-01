@@ -98,7 +98,7 @@ function QuickAddInputContent({ columnId, projectId }: QuickAddInputProps) {
   
 
   return (
-    <div className="absolute top-full left-0 right-0 z-50 p-1.5 bg-muted/20 border-x border-b border-border rounded-b-lg">
+    <div className="absolute top-full left-0 right-0 z-50 p-1.5 bg-muted border-x border-b border-border rounded-b-lg shadow-md">
       <Input
         ref={inputRef}
         value={value}

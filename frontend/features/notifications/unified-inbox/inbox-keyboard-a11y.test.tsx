@@ -132,6 +132,8 @@ function makeApprovalItem(id: number): BuildApprovalInboxItem {
     projectId: 1,
     ticketId: 5,
     dueAt: null,
+    objectType: "ticket",
+    objectId: `tkt-${id}`,
     sourceModule: "build",
     actor: null,
     isRead: false,

@@ -254,6 +254,39 @@ it("removing a dependency invalidates the critical path the dropped edge moves",
   client.clear();
 });
 
+it("rank patches the cached ticket version to the server-returned version so a subsequent inline edit sends the current token", async () => {
+  const client = createAppQueryClient();
+  const board = queryKeys.projects.tickets({ projectId: 42, view: "board" });
+  const ticket = { id: 1, title: "Ticket", rank: "a0", status: "OPEN", version: 3 };
+  client.setQueryData(board, { data: [ticket], pagination: { nextCursor: null } });
+  jest.mocked(apiClient.patch).mockResolvedValue({ id: 1, rank: "a1", status: "DONE", version: 4 });
+  const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
+  const { result } = renderHook(() => useRankTicket(), { wrapper });
+  await act(async () => {
+    await result.current.mutateAsync({ projectId: 42, ticketId: 1, version: 3, status: "DONE", beforeTicketId: null, afterTicketId: null });
+  });
+  const cached = client.getQueryData(board) as { data: typeof ticket[] };
+  expect(cached.data[0]).toMatchObject({ rank: "a1", status: "DONE", version: 4 });
+  client.clear();
+});
+
+it("rank does not touch other tickets version tokens when patching the moved ticket", async () => {
+  const client = createAppQueryClient();
+  const board = queryKeys.projects.tickets({ projectId: 42, view: "board" });
+  const t1 = { id: 1, title: "Moved", rank: "a0", status: "OPEN", version: 3 };
+  const t2 = { id: 2, title: "Other", rank: "b0", status: "OPEN", version: 7 };
+  client.setQueryData(board, { data: [t1, t2], pagination: { nextCursor: null } });
+  jest.mocked(apiClient.patch).mockResolvedValue({ id: 1, rank: "a1", status: "DONE", version: 4 });
+  const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
+  const { result } = renderHook(() => useRankTicket(), { wrapper });
+  await act(async () => {
+    await result.current.mutateAsync({ projectId: 42, ticketId: 1, version: 3, status: "DONE", beforeTicketId: null, afterTicketId: null });
+  });
+  const cached = client.getQueryData(board) as { data: typeof t1[] };
+  expect(cached.data[1]).toMatchObject({ id: 2, version: 7 });
+  client.clear();
+});
+
 it("deleting a ticket invalidates the lists and reports it fed rather than patching them out", async () => {
   const client = createAppQueryClient();
   const board = queryKeys.projects.tickets({ projectId: 42, view: "board" });

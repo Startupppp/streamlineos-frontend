@@ -51,6 +51,8 @@ export type BuildApprovalInboxItem = InboxItemBase & {
   projectId: number | null;
   ticketId: number | null;
   dueAt: string | null;
+  objectType: string;
+  objectId: string;
 };
 
 export type UnifiedInboxItem =

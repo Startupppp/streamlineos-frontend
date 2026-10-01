@@ -207,6 +207,8 @@ function makeApprovalItem(approvalKind: string): BuildApprovalInboxItem {
     projectId: null,
     ticketId: null,
     dueAt: null,
+    objectType: "ticket",
+    objectId: "tkt-1",
     sourceModule: "build",
     actor: null,
     subject: "Approval request",

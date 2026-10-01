@@ -336,6 +336,27 @@ describe("CyclesPage — the completed disclosure is shareable, not local compon
       scroll: false,
     });
   });
+
+  it("can still be collapsed while the status filter is completed, because a disclosure forced open by the filter would otherwise be a control that does nothing when clicked", () => {
+    mockSearchParamsContainer.current = new URLSearchParams("status=completed");
+    mockUseCyclePage.mockReturnValue(baseQueryResult({ data: [COMPLETED_CYCLE] }));
+    render(<CyclesPage projectId={1} />);
+    screen.getByText("Completed (1)").click();
+    expect(mockReplace).toHaveBeenCalledWith(
+      "/build/1/cycles?status=completed&completed=0",
+      { scroll: false },
+    );
+  });
+
+  it("honours an explicit completed=0 over the status filter so a deliberate collapse survives a reload or a shared link", () => {
+    mockSearchParamsContainer.current = new URLSearchParams(
+      "status=completed&completed=0",
+    );
+    mockUseCyclePage.mockReturnValue(baseQueryResult({ data: [COMPLETED_CYCLE] }));
+    render(<CyclesPage projectId={1} />);
+    expect(screen.getByText("Completed (1)")).toBeDefined();
+    expect(screen.queryByText("Closed cycle")).toBeNull();
+  });
 });
 
 describe("CyclesPage — cycle lifecycle actions", () => {
@@ -442,6 +463,18 @@ describe("CyclesPage — q search filter narrows displayed cycles", () => {
     expect(mockUseCyclePage).toHaveBeenCalledWith(
       1,
       expect.objectContaining({ status: "active" }),
+    );
+  });
+
+  it("shows completed cycles immediately when status=completed is the filter so the user sees filtered results without a second click on the disclosure", () => {
+    mockSearchParamsContainer.current = new URLSearchParams("status=completed");
+    const COMPLETED_CYCLE = { id: 10, name: "Q3 Sprint", status: "completed" as const, startDate: "2026-07-01", endDate: "2026-09-30", progress: 100, completedItems: 5, totalItems: 5 };
+    mockUseCyclePage.mockReturnValue(baseQueryResult({ data: [COMPLETED_CYCLE] }));
+    render(<CyclesPage projectId={1} />);
+    expect(screen.getByText("Q3 Sprint")).toBeInTheDocument();
+    expect(mockUseCyclePage).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ status: "completed" }),
     );
   });
 });

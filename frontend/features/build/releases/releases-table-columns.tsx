@@ -32,6 +32,13 @@ interface ReleaseRowHandlers {
   onDelete: (r: Release) => void;
 }
 
+const MARKUP_TAG = /<[^>]*>/g;
+const COLLAPSIBLE_WHITESPACE = /\s+/g;
+
+function releaseNotesText(description: string) {
+  return description.replace(MARKUP_TAG, " ").replace(COLLAPSIBLE_WHITESPACE, " ").trim();
+}
+
 export function ReleaseStatusBadge({ status }: { status: Release["status"] }) {
   const cfg = STATUS_CONFIG[status];
   return (
@@ -87,7 +94,7 @@ export function buildReleasesColumns({
           />
           {r.description ? (
             <TruncatedText
-              text={r.description.replace(/<[^>]*>/g, "")}
+              text={releaseNotesText(r.description)}
               className="text-micro text-muted-foreground"
             />
           ) : null}
@@ -187,7 +194,7 @@ export function ReleaseMobileCard({
         },
         { label: "Tickets", value: release.ticketCount },
         ...(release.description
-          ? [{ label: "Notes", value: release.description.replace(/<[^>]*>/g, "") }]
+          ? [{ label: "Notes", value: releaseNotesText(release.description) }]
           : []),
         ...(release.createdByUser
           ? [{ label: "Created by", value: getUserDisplayName(release.createdByUser) }]

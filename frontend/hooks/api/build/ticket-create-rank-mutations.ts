@@ -207,6 +207,7 @@ export interface RankTicketResponse {
   id: number;
   rank: string;
   status: string;
+  version: number;
 }
 
 export function useRankTicket<TContext = unknown>(
@@ -234,7 +235,7 @@ export function useRankTicket<TContext = unknown>(
     onSuccess: (data, variables, context, mutationContext) => {
       const applyServerRank = (ticket: Ticket) =>
         ticket.id === data.id
-          ? { ...ticket, rank: data.rank, status: data.status }
+          ? { ...ticket, rank: data.rank, status: data.status, version: data.version }
           : ticket;
       patchTicketCollections(queryClient, variables.projectId, applyServerRank);
       queryClient.setQueryData<Ticket | null>(
