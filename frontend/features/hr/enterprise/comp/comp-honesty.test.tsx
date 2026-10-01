@@ -59,9 +59,14 @@ beforeEach(() => {
 describe("HRMS-B2-020 / HRMS-B2-021 the equity and budget panels report a failure as a failure", () => {
   it("opts the vesting and budget-pool reads out of the /hr boundary, so their inline branches are reachable at all", () => {
     const source = readFileSync(COMP_HOOKS, "utf8");
+    const region = source.slice(
+      source.indexOf("export function useBudgetPools"),
+      source.indexOf("export function useRecordExercise"),
+    );
 
     expect(INLINE_READ_ERROR).toEqual({ throwOnError: false });
-    expect(source.match(/\.\.\.INLINE_READ_ERROR,/g) ?? []).toHaveLength(5);
+    expect(region).toContain("export function useVestingSchedule");
+    expect(region.match(/\.\.\.INLINE_READ_ERROR,/g) ?? []).toHaveLength(2);
   });
 
   it("does not claim a grant has no vesting schedule when the read 500d", () => {

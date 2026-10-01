@@ -5,6 +5,7 @@ export const SELF_PERMISSIONS: Permission[] = [
   { name: "self:cases", resource: "self", action: "cases", description: "View and acknowledge disciplinary actions issued to oneself" },
   { name: "self:expenses", resource: "self", action: "expenses", description: "Submit and view own expense claims" },
   { name: "self:leaves", resource: "self", action: "leaves", description: "Submit and view own leave requests" },
+  { name: "self:document-acknowledgements", resource: "self", action: "document-acknowledgements", description: "View and acknowledge documents assigned to oneself" },
   { name: "self:onboarding-docs", resource: "self", action: "onboarding-docs", description: "Upload and view own onboarding documents" },
   { name: "self:onboarding-tasks", resource: "self", action: "onboarding-tasks", description: "View and complete own onboarding tasks" },
   { name: "self:payroll", resource: "self", action: "payroll", description: "Access the ESS payroll portal (salary breakdown, declarations, loan requests, bank details)" },

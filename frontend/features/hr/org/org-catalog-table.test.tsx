@@ -1,5 +1,6 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { OrgCatalogTable } from "./org-catalog-table";
 import { ApiError } from "@/lib/api-envelope";
 
@@ -89,4 +90,15 @@ it("bounds what it mounts instead of rendering every row", () => {
 
   // One page of 20, not all 45 (FE-112).
   expect(screen.getAllByRole("row")).toHaveLength(21);
+});
+
+it("never reports a count the rows do not back: a filter that matches nothing reads zero", async () => {
+  const user = userEvent.setup();
+  renderTable();
+
+  await user.type(screen.getByRole("searchbox"), "nothing-matches-this");
+
+  expect(screen.getByText("0 job roles")).toBeInTheDocument();
+  expect(screen.queryByRole("cell", { name: "Engineer" })).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: /Clear filters/i })).toBeInTheDocument();
 });

@@ -43,7 +43,7 @@ function HolidayFormInner({
           <SheetTitle>{editingHoliday ? "Edit holiday" : "Add holiday"}</SheetTitle>
         </SheetHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col overflow-hidden">
+          <form noValidate onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col overflow-hidden">
             <SheetBody className="px-6 py-5 space-y-4">
               <FormField
                 control={form.control}

@@ -17,11 +17,17 @@ export function OrgChartPage() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const urlSearchValue = searchParams.get("q") ?? "";
-  const [searchDraft, setSearchDraft] = useState({ sourceQuery: urlSearchValue, value: urlSearchValue });
+  const [searchInput, setSearchInput] = useState(urlSearchValue);
   const [selected, setSelected] = useState<OrgChartNode | null>(null);
   const canSeePay = useCan("payroll:salaries:view");
-  const searchInput = searchDraft.sourceQuery === urlSearchValue ? searchDraft.value : urlSearchValue;
+  const [observedQuery, setObservedQuery] = useState(urlSearchValue);
   const debouncedSearch = useDebouncedValue(searchInput.trim(), 300);
+
+  if (urlSearchValue !== observedQuery) {
+    setObservedQuery(urlSearchValue);
+    if (urlSearchValue !== debouncedSearch) setSearchInput(urlSearchValue);
+  }
+
   const validSearch = debouncedSearch.length >= 2 ? debouncedSearch : undefined;
 
   useEffect(() => {
@@ -34,7 +40,7 @@ export function OrgChartPage() {
   }, [debouncedSearch, urlSearchValue, searchParams, router, pathname]);
 
   function handleSearchChange(value: string) {
-    setSearchDraft({ sourceQuery: urlSearchValue, value });
+    setSearchInput(value);
   }
 
   const handleSelect = useCallback((employee: OrgChartNode) => setSelected(employee), []);

@@ -254,6 +254,7 @@ export type ExtendedPermissionKey =
   | "inventory:audit:export"
   | "sales:manage"
   | "sales:view"
+  | "self:document-acknowledgements"
   | "self:onboarding-docs"
   | "self:onboarding-tasks"
   | "self:job-openings"

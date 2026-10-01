@@ -218,6 +218,7 @@ export function PolicyFormSheet({
           </SheetHeader>
           <Form {...form}>
             <form
+              noValidate
               onSubmit={form.handleSubmit(handleFormSubmit)}
               className="flex-1 flex flex-col overflow-hidden"
             >

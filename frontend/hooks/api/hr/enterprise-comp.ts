@@ -167,6 +167,7 @@ export function useTimeDevices(params?: Record<string, unknown>) {
     queryFn: ({ signal }) => apiClient.get("/hr/enterprise/comp/devices", params, signal, _listDevicesContract),
     staleTime: 2 * 60_000,
     enabled: canManage && hrEnabled,
+    ...INLINE_READ_ERROR,
   });
 }
 

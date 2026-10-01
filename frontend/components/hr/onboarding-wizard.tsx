@@ -188,6 +188,7 @@ export function OnboardingWizard() {
                 type="button"
                 onClick={() => step.id < currentStep && setCurrentStep(step.id)}
                 disabled={step.id > currentStep}
+                aria-label={step.label}
                 className={cn(
                   "flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-colors w-full",
                   isCompleted && "bg-primary/10 text-primary cursor-pointer hover:bg-primary/15",

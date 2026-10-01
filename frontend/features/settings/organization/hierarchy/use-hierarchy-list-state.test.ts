@@ -85,6 +85,34 @@ describe("hierarchy list URL state", () => {
     expect(params.get("size")).toBe("100");
   });
 
+  it("keeps a character typed while the URL write is still in flight", () => {
+    jest.useFakeTimers();
+    const { result, rerender } = renderHook(() => useHierarchyListState());
+
+    act(() => result.current.setSearch("No"));
+    act(() => jest.advanceTimersByTime(300));
+    expect(
+      new URL(
+        String(mockReplace.mock.calls.at(-1)?.[0]),
+        "https://example.test",
+      ).searchParams.get("search"),
+    ).toBe("No");
+
+    act(() => result.current.setSearch("Nor"));
+    mockSearchParams = new URLSearchParams("search=No");
+    rerender();
+
+    expect(result.current.search).toBe("Nor");
+
+    act(() => jest.advanceTimersByTime(300));
+    expect(
+      new URL(
+        String(mockReplace.mock.calls.at(-1)?.[0]),
+        "https://example.test",
+      ).searchParams.get("search"),
+    ).toBe("Nor");
+  });
+
   it("debounces server search and removes legacy offset state", () => {
     jest.useFakeTimers();
     mockSearchParams = new URLSearchParams("page=4&size=50");

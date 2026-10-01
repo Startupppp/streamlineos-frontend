@@ -63,7 +63,7 @@ function GoalDetailActions({
   const { iconRef: trashRef, hoverHandlers: trashHandlers } = useAnimatedIcon();
   return (
     <div className="flex items-center gap-2">
-      <Button variant="outline" size="sm" onClick={onEdit}>
+      <Button variant="outline" size="sm" aria-label="Edit" onClick={onEdit}>
         <Pencil className="h-4 w-4 sm:mr-1" />
         <span className="hidden sm:inline">Edit</span>
       </Button>
@@ -71,6 +71,7 @@ function GoalDetailActions({
         variant="outline"
         size="sm"
         className="text-destructive hover:text-destructive"
+        aria-label="Delete"
         onClick={onDelete}
         {...trashHandlers}
       >

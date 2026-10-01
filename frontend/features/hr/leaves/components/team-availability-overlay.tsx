@@ -29,7 +29,7 @@ export function TeamAvailabilityOverlay() {
     endDate: monthView.endDate,
   });
   const pageState = usePageState({
-    permission: "hr:leaves:view",
+    permission: "hr:leaves:read",
     isLoading: query.isLoading,
     isError: query.isError,
     error: query.error,

@@ -180,6 +180,7 @@ export function FnfPageClient() {
 
   const [completeId, setCompleteId] = useState<number | null>(null);
   const [userId, setUserId] = useState("");
+  const [userIdError, setUserIdError] = useState("");
   const [basicDues, setBasicDues] = useState("");
   const [leaveEncashment, setLeaveEncashment] = useState("");
   const [bonusDue, setBonusDue] = useState("");
@@ -189,6 +190,7 @@ export function FnfPageClient() {
 
   const resetForm = useCallback(() => {
     setUserId("");
+    setUserIdError("");
     setBasicDues("");
     setLeaveEncashment("");
     setBonusDue("");
@@ -198,7 +200,11 @@ export function FnfPageClient() {
   }, []);
 
   const handleCreate = useCallback(() => {
-    if (!userId) { toast.error("Employee is required"); return; }
+    if (!userId) {
+      setUserIdError("Employee is required");
+      return;
+    }
+    setUserIdError("");
     create.mutate(
       {
         userId,
@@ -230,6 +236,11 @@ export function FnfPageClient() {
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [completeId, complete]);
+
+  const handleUserIdChange = useCallback((next: string) => {
+    setUserId(next);
+    setUserIdError("");
+  }, []);
 
   const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
 
@@ -315,9 +326,14 @@ export function FnfPageClient() {
           </label>
           <EmployeePicker
             value={userId}
-            onChange={setUserId}
+            onChange={handleUserIdChange}
             placeholder="Select employee…"
           />
+          {userIdError ? (
+            <p id="fnf-employee-error" role="alert" className="text-xs text-destructive">
+              {userIdError}
+            </p>
+          ) : null}
         </div>
 
         <div className="space-y-2">

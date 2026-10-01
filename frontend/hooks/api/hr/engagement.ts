@@ -254,6 +254,7 @@ export function usePollResults(pollId: number) {
     queryFn: ({ signal }) => apiClient.get(`/hr/engagement/polls/${pollId}/results`, undefined, signal, _pollResultsContract),
     staleTime: 30_000,
     enabled: pollId > 0 && canView && hrEnabled,
+    ...INLINE_READ_ERROR,
   });
 }
 

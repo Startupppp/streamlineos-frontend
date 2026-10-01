@@ -16,6 +16,10 @@ describe("a geofence needs a real coordinate pair, not just any text", () => {
     expect(issues({ name: "HQ", lat: "", lng: "" })).toEqual(["lat: Latitude is required", "lng: Longitude is required"]);
   });
 
+  it("accepts a zero coordinate, which is a place and not a missing value", () => {
+    expect(issues({ name: "Null Island", lat: "0", lng: "0" })).toEqual([]);
+  });
+
   it("validates all exported location presets", () => {
     expect(GEOFENCE_PRESETS.length).toBeGreaterThan(0);
     for (const preset of GEOFENCE_PRESETS) {

@@ -34,6 +34,7 @@ jest.mock("@/hooks/api/hr/analytics", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => false,
+  useCanState: () => "granted",
 }));
 
 jest.mock("@/hooks/api/org-display", () => ({
