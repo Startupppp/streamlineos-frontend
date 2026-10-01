@@ -1,2 +1,2 @@
-export type { Permission, PermissionKey } from "./types";
-export { PERMISSIONS } from "./roles";
+export type { Permission } from "./types";
+export type { PermissionKey } from "@/contracts/permission-key.generated";
