@@ -12,7 +12,9 @@ import {
   useArchivedChannels,
   useChatOnlineUsers,
 } from "@/hooks/api/chat-core-read";
+import { useSearchMessages } from "@/hooks/api/chat-search";
 import { useCan } from "@/hooks/api/access";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { cn } from "@/lib/utils";
 import dynamic from "next/dynamic";
 import { ChannelSectionList } from "./channel-section-list";
@@ -203,25 +205,52 @@ export function ChannelSidebar({
     [onlineUsers],
   );
 
-  const filteredChannels = useMemo(() => {
-    if (!search) return channels;
-    const q = search.toLowerCase();
-    return channels.filter(
-      (ch) =>
-        ch.name.toLowerCase().includes(q) ||
-        ch.lastMessage?.content?.toLowerCase().includes(q),
-    );
-  }, [channels, search]);
+  /**
+   * CHAT-003. The conversation list is a page of channels carrying one `lastMessage`
+   * preview each, so filtering it locally can only ever match a channel's name or its
+   * most recent message — a term that is in the history but not in the newest line
+   * answered "No conversations match your search" over a conversation that plainly
+   * contained it. `GET /chat/search/messages` searches message CONTENT across the
+   * caller's channels and already backs the search dialog; this reads it for the
+   * sidebar's own "Messages" scope and unions the channels it names into the match
+   * set, so the local name/preview match stays instant and the server supplies what
+   * the preview cannot see.
+   *
+   * Debounced per FE-87, and the server read is skipped for the People and Channels
+   * scopes, which have their own endpoints in `ChannelSidebarSearchResults`.
+   */
+  const debouncedSearch = useDebouncedValue(search, 300);
+  const { data: messageMatches } = useSearchMessages(
+    debouncedSearch,
+    searchScope === "messages" && !showArchived,
+  );
+  const messageMatchChannelIds = useMemo(
+    () =>
+      new Set((messageMatches?.results ?? []).map((result) => result.channelId)),
+    [messageMatches],
+  );
 
-  const filteredArchivedChannels = useMemo(() => {
-    if (!search) return archivedChannels;
-    const q = search.toLowerCase();
-    return archivedChannels.filter(
-      (ch) =>
-        ch.name.toLowerCase().includes(q) ||
-        ch.lastMessage?.content?.toLowerCase().includes(q),
-    );
-  }, [archivedChannels, search]);
+  const matchesSearch = useCallback(
+    (channel: { id: number; name: string; lastMessage?: { content?: string | null } | null }) => {
+      const q = search.toLowerCase();
+      return (
+        channel.name.toLowerCase().includes(q) ||
+        channel.lastMessage?.content?.toLowerCase().includes(q) === true ||
+        messageMatchChannelIds.has(channel.id)
+      );
+    },
+    [search, messageMatchChannelIds],
+  );
+
+  const filteredChannels = useMemo(
+    () => (search ? channels.filter(matchesSearch) : channels),
+    [channels, search, matchesSearch],
+  );
+
+  const filteredArchivedChannels = useMemo(
+    () => (search ? archivedChannels.filter(matchesSearch) : archivedChannels),
+    [archivedChannels, search, matchesSearch],
+  );
 
   const archivedUnreadCount = useMemo(
     () => archivedChannels.reduce((sum, ch) => sum + ch.unreadCount, 0),

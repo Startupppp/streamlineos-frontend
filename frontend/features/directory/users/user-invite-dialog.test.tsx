@@ -139,3 +139,59 @@ describe("UserInviteDialog — module access payload and standing options", () =
     ).not.toBeInTheDocument();
   });
 });
+
+jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
+
+describe("UserInviteDialog — CHAT-002 a refusal stays on screen", () => {
+  async function submitInvite(mutateMock: jest.Mock) {
+    (useInviteUser as jest.Mock).mockReturnValue({
+      mutate: mutateMock,
+      isPending: false,
+    });
+    (useCan as jest.Mock).mockReturnValue(false);
+
+    const user = userEvent.setup();
+    render(<UserInviteDialog open onOpenChange={jest.fn()} />);
+
+    await user.type(screen.getByLabelText(/email address/i), "b@example.com");
+    const [roleSelect] = screen.getAllByRole("combobox");
+    await user.click(roleSelect);
+    await user.click(screen.getByRole("option", { name: /^Member$/ }));
+    await user.click(screen.getByText("Send invitation"));
+    return user;
+  }
+
+  it("renders the server's refusal in the form, not only as a toast", async () => {
+    const mutateMock = jest.fn((_payload, options) => {
+      options.onError(
+        Object.assign(new Error("Seat limit reached"), { status: 402 }),
+      );
+    });
+
+    await submitInvite(mutateMock);
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("Seat limit reached");
+    expect(screen.getByText("Send invitation")).toBeInTheDocument();
+  });
+
+  it("clears the refusal when the next attempt succeeds", async () => {
+    let fail = true;
+    const mutateMock = jest.fn((_payload, options) => {
+      if (fail) {
+        fail = false;
+        options.onError(new Error("Something broke"));
+        return;
+      }
+      options.onSuccess({ success: true, invitationId: "i1", resent: false });
+    });
+
+    const user = await submitInvite(mutateMock);
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
+
+    await user.click(screen.getByText("Send invitation"));
+
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(screen.getByText("Invitation sent!")).toBeInTheDocument();
+  });
+});

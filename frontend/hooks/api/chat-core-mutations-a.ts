@@ -94,6 +94,13 @@ export function useSendMessage() {
         queryKey: collaborationQueryKeys.chat.messages(variables.channelId),
       });
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
+      // A send that carried attachments just changed what the Shared Files panel
+      // lists. Without this the panel kept its "No files yet" page until a full
+      // reload (CHAT-001).
+      if (variables.attachments && variables.attachments.length > 0)
+        queryClient.invalidateQueries({
+          queryKey: collaborationQueryKeys.chat.channelFiles(variables.channelId),
+        });
     },
   });
 }

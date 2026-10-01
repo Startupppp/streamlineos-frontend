@@ -141,3 +141,82 @@ describe("NewGroupDialog — STRE-142 success toast on create", () => {
     expect(toast.error).toHaveBeenCalled();
   });
 });
+
+describe("NewGroupDialog — CHAT-005 whitespace-only channel name", () => {
+  function renderDialog() {
+    render(
+      <NewGroupDialog
+        open
+        onOpenChange={jest.fn()}
+        onCreated={jest.fn()}
+        hideTrigger
+      />,
+    );
+    return screen.getByPlaceholderText("e.g. design-team");
+  }
+
+  it("keeps Next disabled for a name of only spaces, which used to slugify to '-'", () => {
+    const input = renderDialog();
+
+    fireEvent.change(input, { target: { value: "   " } });
+
+    expect(input).toHaveValue("");
+    expect(screen.getByText("Next: Add Members")).toBeDisabled();
+  });
+
+  it("explains why a punctuation-only name is not a name", () => {
+    const input = renderDialog();
+
+    fireEvent.change(input, { target: { value: " - - " } });
+
+    expect(screen.getByText(/Use letters or numbers/)).toBeInTheDocument();
+    expect(screen.getByText("Next: Add Members")).toBeDisabled();
+  });
+
+  it("still slugifies and accepts a real name", () => {
+    const input = renderDialog();
+
+    fireEvent.change(input, { target: { value: "Design Team" } });
+
+    expect(input).toHaveValue("design-team");
+    expect(screen.getByText("Next: Add Members")).not.toBeDisabled();
+  });
+
+  it("leaves a trailing hyphen alone so a name can be typed through it", () => {
+    const input = renderDialog();
+
+    fireEvent.change(input, { target: { value: "design-" } });
+
+    expect(input).toHaveValue("design-");
+    expect(screen.getByText("Next: Add Members")).not.toBeDisabled();
+  });
+});
+
+describe("NewGroupDialog — CHAT-S03 channel type selection state", () => {
+  it("reports the selected channel type to assistive technology", () => {
+    render(
+      <NewGroupDialog
+        open
+        onOpenChange={jest.fn()}
+        onCreated={jest.fn()}
+        hideTrigger
+      />,
+    );
+
+    const group = screen.getByRole("radio", { name: /Group/ });
+    const publicOption = screen.getByRole("radio", { name: /Public/ });
+    expect(group).toHaveAttribute("aria-checked", "true");
+    expect(publicOption).toHaveAttribute("aria-checked", "false");
+
+    fireEvent.click(publicOption);
+
+    expect(screen.getByRole("radio", { name: /Public/ })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+    expect(screen.getByRole("radio", { name: /Group/ })).toHaveAttribute(
+      "aria-checked",
+      "false",
+    );
+  });
+});
