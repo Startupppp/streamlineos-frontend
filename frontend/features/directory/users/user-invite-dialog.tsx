@@ -34,6 +34,7 @@ import { useInviteUser } from "@/hooks/api/users";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
+import { describeInviteFailure } from "@/features/directory/users/invite-error-message";
 import { CheckCircle2, Mail } from "lucide-react";
 import { USER_INVITE_ROLES } from "@/lib/constants/user-invite-roles";
 import { InviteSeatNotice } from "./invite-seat-notice";
@@ -103,7 +104,7 @@ export function UserInviteDialog({
           );
         },
         onError: (error) => {
-          toast.error(getErrorMessage(error));
+          toast.error(describeInviteFailure("invite", getErrorMessage(error)));
         },
       },
     );

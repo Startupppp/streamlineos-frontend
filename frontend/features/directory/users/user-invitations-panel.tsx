@@ -7,6 +7,7 @@ import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { MailIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
+import { describeInviteFailure } from "@/features/directory/users/invite-error-message";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { useAccess, usePermissionGate, useCanManageOrganizationMembership } from "@/hooks/api/access";
@@ -192,14 +193,8 @@ export function UserInvitationsPanel() {
       resend(invitationId, {
         onSuccess: () =>
           toast.success(kind === "reinvite" ? "Invitation re-sent" : "Invitation resent"),
-        onError: (e) => {
-          const message = getErrorMessage(e);
-          toast.error(
-            message.includes("not found")
-              ? "This invitation can no longer be resent."
-              : message,
-          );
-        },
+        onError: (e) =>
+          toast.error(describeInviteFailure("resend", getErrorMessage(e))),
       }),
     [resend],
   );
@@ -215,7 +210,7 @@ export function UserInvitationsPanel() {
         { invitationId, role },
         {
           onSuccess: () => toast.success("Invitation role updated"),
-          onError: (err) => toast.error(getErrorMessage(err)),
+          onError: (err) => toast.error(describeInviteFailure("invite", getErrorMessage(err))),
         },
       );
     },
@@ -230,12 +225,7 @@ export function UserInvitationsPanel() {
         setCancellationInvitationId(null);
       },
       onError: (e) => {
-        const message = getErrorMessage(e);
-        toast.error(
-          message.includes("not found") || message.includes("already accepted")
-            ? "This invitation can no longer be cancelled."
-            : message,
-        );
+        toast.error(describeInviteFailure("cancel", getErrorMessage(e)));
         setCancellationInvitationId(null);
       },
     });

@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useCallback, type MouseEvent } from "react";
 import Link from "next/link";
 import { Mail, Building2, Briefcase } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -12,6 +12,7 @@ import type { EmployeeListItem } from "@/types/hr";
 interface EmployeeCardProps {
   employee: EmployeeListItem;
   department: string | null;
+  onOpen?: (employee: EmployeeListItem) => void;
 }
 
 /**
@@ -24,7 +25,16 @@ interface EmployeeCardProps {
 export const EmployeeCard = memo(function EmployeeCard({
   employee: emp,
   department,
+  onOpen,
 }: EmployeeCardProps) {
+  const handleClick = useCallback(
+    (event: MouseEvent<HTMLAnchorElement>) => {
+      if (!onOpen || event.metaKey || event.ctrlKey || event.shiftKey) return;
+      event.preventDefault();
+      onOpen(emp);
+    },
+    [onOpen, emp],
+  );
   // Ticket 07: one name policy for the card, the table, the export and the PDF.
   const displayName = getUserDisplayName(emp);
   const initials = getUserInitials(emp);
@@ -46,6 +56,7 @@ export const EmployeeCard = memo(function EmployeeCard({
   return (
     <Link
       href={`/hr/employees/${emp.id}`}
+      onClick={handleClick}
       className="group block h-full min-h-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
     >
       <article

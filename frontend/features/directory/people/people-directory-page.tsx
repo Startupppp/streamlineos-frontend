@@ -1,10 +1,9 @@
 "use client";
 
-import Link from "next/link";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { toast } from "sonner";
-import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import {
@@ -14,7 +13,6 @@ import {
 import { useCan } from "@/hooks/api/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
-import type { DataTableColumn } from "@/components/ui/data-table";
 
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -23,39 +21,19 @@ import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { useCursorPageStack } from "@/hooks/common/use-cursor-page-stack";
 import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
-import { SemanticBadge } from "@/components/ui/semantic-badge";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { PersonFormDialog } from "./person-form-dialog";
 import type { OrganizationPerson } from "@/types/directory/people";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { CONTENT_FILL_PANEL, PAGE_BODY_EMPTY_CLASS } from "@/components/ui/content-fill-panel";
-import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 import {
-  getPersonAccessBadge,
-  getPersonAccessBadgeTone,
-} from "./person-account-access";
+  buildPersonColumns,
+  personDisplayName,
+} from "./person-table-columns";
+import { PersonPeekDrawer } from "./person-peek-drawer";
 
 const PAGE_SIZE = 20;
-
-function formatDate(iso: string): string {
-  return new Intl.DateTimeFormat("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(iso));
-}
-
-function displayName(person: OrganizationPerson): string {
-  if (person.displayName) return person.displayName;
-  return `${person.firstName} ${person.lastName}`.trim();
-}
 
 function AddPersonButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -63,51 +41,6 @@ function AddPersonButton({ onClick }: { onClick: () => void }) {
     <Button onClick={onClick} {...hoverHandlers}>
       <PlusIcon ref={iconRef} size={14} /> Add person record
     </Button>
-  );
-}
-
-function PersonRowActions({
-  person,
-  canEdit,
-  canDelete,
-  onEdit,
-  onDelete,
-}: {
-  person: OrganizationPerson;
-  canEdit: boolean;
-  canDelete: boolean;
-  onEdit: (p: OrganizationPerson) => void;
-  onDelete: (p: OrganizationPerson) => void;
-}) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-
-  const handleEdit = useCallback(() => onEdit(person), [person, onEdit]);
-  const handleDelete = useCallback(() => onDelete(person), [person, onDelete]);
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="w-7"
-          aria-label={`Actions for ${displayName(person)}`}
-          {...hoverHandlers}
-        >
-          <EllipsisIcon ref={iconRef} size={14} />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        {canEdit && (
-          <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
-        )}
-        {canDelete && (
-          <DropdownMenuItem variant="destructive" onClick={handleDelete}>
-            Remove from directory
-          </DropdownMenuItem>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
   );
 }
 
@@ -129,6 +62,8 @@ export function PeopleDirectoryPage({
     useQueryParamOpen("create");
   const [editTarget, setEditTarget] = useState<OrganizationPerson | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<OrganizationPerson | null>(null);
+  const [peekTarget, setPeekTarget] = useState<OrganizationPerson | null>(null);
+  const peekOpenerRef = useRef<HTMLElement | null>(null);
 
   const peopleQuery = usePeople({
     cursor: pagination.cursor,
@@ -139,9 +74,7 @@ export function PeopleDirectoryPage({
 
   const deletePerson = useDeletePerson();
 
-  const canManageRow = canUpdate || canDelete;
-
-  function handleClearSearch() {
+    function handleClearSearch() {
     setSearch("");
   }
 
@@ -174,6 +107,20 @@ export function PeopleDirectoryPage({
     void refetch();
   }
 
+  const handlePeek = useCallback((row: OrganizationPerson) => {
+    peekOpenerRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setPeekTarget(row);
+  }, []);
+
+  const handlePeekOpenChange = useCallback((open: boolean) => {
+    if (open) return;
+    setPeekTarget(null);
+    const opener = peekOpenerRef.current;
+    peekOpenerRef.current = null;
+    if (opener) requestAnimationFrame(() => opener.focus());
+  }, []);
+
   function handleEditRow(row: OrganizationPerson) {
     setEditTarget(row);
   }
@@ -193,82 +140,14 @@ export function PeopleDirectoryPage({
     });
   }
 
-  const columns: DataTableColumn<OrganizationPerson>[] = [
-    {
-      key: "name",
-      header: "Name",
-      className: TABLE_TITLE_CELL,
-      cell: (row) => (
-        <Link
-          href={`${basePath}/${row.organizationPersonId}`}
-          className={cn(
-            "font-medium text-foreground hover:text-primary transition-colors",
-            TEXT_ONE_LINE,
-          )}
-          title={displayName(row)}
-        >
-          {displayName(row)}
-        </Link>
-      ),
-    },
-    {
-      key: "workEmail",
-      header: "Work email",
-      className: "min-w-[160px]",
-      cell: (row) => (
-        <span className={cn("text-sm text-muted-foreground", TEXT_ONE_LINE)}>
-          {row.workEmail ?? "—"}
-        </span>
-      ),
-    },
-    {
-      key: "access",
-      header: "App access",
-      className: "min-w-[9rem]",
-      cell: (row) => (
-        <SemanticBadge
-          tone={getPersonAccessBadgeTone(row)}
-          label={getPersonAccessBadge(row)}
-          size="xs"
-        />
-      ),
-    },
-    {
-      key: "phone",
-      header: "Phone",
-      className: "min-w-[120px]",
-      cell: (row) => (
-        <span className="text-sm text-muted-foreground">
-          {row.phone ?? "—"}
-        </span>
-      ),
-    },
-    {
-      key: "createdAt",
-      header: "Added",
-      className: "w-32 shrink-0",
-      cell: (row) => (
-        <span className="text-sm text-muted-foreground tabular-nums">
-          {formatDate(row.createdAt)}
-        </span>
-      ),
-    },
-    {
-      key: "actions",
-      header: "",
-      className: "w-10",
-      cell: (row) =>
-        canManageRow ? (
-          <PersonRowActions
-            person={row}
-            canEdit={canUpdate}
-            canDelete={canDelete}
-            onEdit={handleEditRow}
-            onDelete={handleDeleteRow}
-          />
-        ) : null,
-    },
-  ];
+  const columns = buildPersonColumns({
+    basePath,
+    canUpdate,
+    canDelete,
+    onPeek: handlePeek,
+    onEdit: handleEditRow,
+    onDelete: handleDeleteRow,
+  });
 
   const rows = data?.data ?? [];
   const pageInfo = data?.pageInfo;
@@ -337,6 +216,13 @@ export function PeopleDirectoryPage({
         </div>
       </div>
 
+      <PersonPeekDrawer
+        person={peekTarget}
+        basePath={basePath}
+        open={peekTarget !== null}
+        onOpenChange={handlePeekOpenChange}
+      />
+
       {createOpen && (
         <PersonFormDialog
           open={createOpen}
@@ -360,7 +246,7 @@ export function PeopleDirectoryPage({
         title="Remove this person from the directory?"
         description={
           <>
-            {deleteTarget ? displayName(deleteTarget) : "This person"} will
+            {deleteTarget ? personDisplayName(deleteTarget) : "This person"} will
             leave the active directory. Their application account, worker
             record, and history remain intact.
           </>
