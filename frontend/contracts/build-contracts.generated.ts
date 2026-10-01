@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const OPENAPI_HASH = "sha256:be219841c59da75da4ff5240d4b55b90ca7f757d709faa22f278274b3032c6cc" as const;
+export const OPENAPI_HASH = "sha256:a0b78a8e8a2df8690f6848ca54995e90ac7d4406a64a9457213024300a2f57fb" as const;
 
 export const agentTokensListResponseSchema = z.array(z.object({
   id: z.number().int(),
@@ -4444,16 +4444,23 @@ export const projectsReportsSnapshotResponseSchema = z.object({
 });
 export type ProjectsReportsSnapshotResponse = z.infer<typeof projectsReportsSnapshotResponseSchema>;
 
-export const projectsReportsVelocityResponseSchema = z.array(z.object({
-  cycleId: z.number().int(),
-  name: z.string(),
-  startDate: z.string(),
-  endDate: z.string(),
-  committedPoints: z.number().int(),
-  completedPoints: z.number().int(),
-  committedCount: z.number().int(),
-  completedCount: z.number().int(),
-}));
+export const projectsReportsVelocityResponseSchema = z.object({
+  data: z.array(z.object({
+    cycleId: z.number().int(),
+    name: z.string(),
+    startDate: z.string(),
+    endDate: z.string(),
+    committedPoints: z.number().int(),
+    completedPoints: z.number().int(),
+    committedCount: z.number().int(),
+    completedCount: z.number().int(),
+  })),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
 export type ProjectsReportsVelocityResponse = z.infer<typeof projectsReportsVelocityResponseSchema>;
 
 export const risksListRisksResponseSchema = z.object({
@@ -5476,6 +5483,7 @@ export const projectsTicketsUpdateTicketBodySchema = z.strictObject({
   }).nullable().optional(),
   customerId: z.number().int().nullable().optional(),
   parentTicketId: z.number().int().nullable().optional(),
+  health: z.enum(["on_track", "at_risk", "off_track"]).nullable().optional(),
 });
 export type ProjectsTicketsUpdateTicketBody = z.input<typeof projectsTicketsUpdateTicketBodySchema>;
 

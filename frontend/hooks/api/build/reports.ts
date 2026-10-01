@@ -1,11 +1,12 @@
 ﻿"use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import type { ProjectsReportsVelocityResponse } from "@/contracts/build-contracts.generated";
 
 const velocityContract = lazyContract(() =>
@@ -30,7 +31,7 @@ const snapshotResultContract = lazyContract(() =>
   import("@/hooks/api/build/reports-schema").then((m) => m.snapshotResultContract),
 );
 
-export type VelocitySprint = ProjectsReportsVelocityResponse[number];
+export type VelocitySprint = ProjectsReportsVelocityResponse["data"][number];
 
 interface BurnupPoint {
   date: string;
@@ -75,15 +76,17 @@ interface CriticalPathReport {
 
 export function useVelocityReport(projectId: number) {
   const canView = useCan("build:view");
-  return useQuery<ProjectsReportsVelocityResponse>({
+  return useInfiniteQuery({
     queryKey: buildWorkQueryKeys.projectReports.velocity(projectId),
-    queryFn: ({ signal }) =>
+    queryFn: ({ pageParam, signal }) =>
       apiClient.get<ProjectsReportsVelocityResponse>(
         `/build/${projectId}/reports/velocity`,
-        { limit: 100 },
+        { limit: 100, ...(pageParam !== undefined ? { cursor: pageParam } : {}) },
         signal,
         velocityContract,
       ),
+    initialPageParam: NO_CURSOR_YET,
+    getNextPageParam: (lastPage) => lastPage.pagination.hasMore ? (lastPage.pagination.nextCursor ?? undefined) : undefined,
     enabled: canView && !!projectId,
     staleTime: 2 * 60_000,
   });

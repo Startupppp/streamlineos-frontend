@@ -4,6 +4,7 @@ import { useMemo, useCallback } from "react";
 import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyLeaderboardIllustration } from "@/components/illustrations";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Gauge } from "lucide-react";
@@ -24,18 +25,27 @@ export function VelocitySection({ projectId }: { projectId: number }) {
     isError,
     error,
     refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   } = useVelocityReport(projectId);
 
   const handleRetry = useCallback(() => refetch(), [refetch]);
+  const handleLoadMore = useCallback(() => fetchNextPage(), [fetchNextPage]);
+
+  const sprints = useMemo(
+    () => data?.pages.flatMap((p) => p.data) ?? [],
+    [data],
+  );
 
   const chartData = useMemo(
     () =>
-      (data ?? []).map((s) => ({
+      sprints.map((s) => ({
         name: s.name,
         Committed: s.committedPoints,
         Completed: s.completedPoints,
       })),
-    [data],
+    [sprints],
   );
 
   const resolution = usePageState({
@@ -63,6 +73,13 @@ export function VelocitySection({ projectId }: { projectId: number }) {
         compact
       >
         <VelocityChart data={chartData} />
+        <InfiniteScrollSentinel
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          onLoadMore={handleLoadMore}
+          label="Load more velocity cycles"
+          exhausted="All cycles loaded"
+        />
       </PageState>
     </ChartCard>
   );
