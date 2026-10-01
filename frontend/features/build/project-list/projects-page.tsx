@@ -1,6 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 import { Plus } from "lucide-react";
@@ -44,6 +52,7 @@ import {
 } from "@/features/build/project-list/project-list-shaping";
 import { buildListSearchParams } from "@/features/build/shared/use-build-list-url-state";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 export { filterVisibleProjects };
 
@@ -219,17 +228,20 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
     hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
-  } = useInfiniteProjects({
-    limit: viewMode === "grid" ? 12 : 25,
-    search: debouncedSearch || undefined,
-    status: activeFilters.status,
-    ...(filterHealth ? { health: filterHealth } : {}),
-    ...(managedProductId !== undefined
-      ? { managedProductId }
-      : filterProductId
-        ? { managedProductId: Number(filterProductId) }
-        : {}),
-  });
+  } = useInfiniteProjects(
+    {
+      limit: viewMode === "grid" ? 12 : 25,
+      search: debouncedSearch || undefined,
+      status: activeFilters.status,
+      ...(filterHealth ? { health: filterHealth } : {}),
+      ...(managedProductId !== undefined
+        ? { managedProductId }
+        : filterProductId
+          ? { managedProductId: Number(filterProductId) }
+          : {}),
+    },
+    INLINE_READ_ERROR,
+  );
 
   const pageState = usePageState({
     permission: "build:view",

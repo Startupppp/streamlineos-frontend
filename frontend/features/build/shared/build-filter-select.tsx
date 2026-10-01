@@ -21,6 +21,16 @@ export interface BuildFilterOption {
   label: string;
 }
 
+const CLEARED_FILTER_ITEM_VALUE = "__build-filter-cleared__";
+
+function toItemValue(value: string): string {
+  return value === "" ? CLEARED_FILTER_ITEM_VALUE : value;
+}
+
+function fromItemValue(value: string): string {
+  return value === CLEARED_FILTER_ITEM_VALUE ? "" : value;
+}
+
 interface BuildFilterSelectProps {
   label: string;
   value: string;
@@ -39,10 +49,11 @@ export function BuildFilterSelect({
   className,
 }: BuildFilterSelectProps) {
   const hasMatch = options.some((option) => option.value === value);
+  const handleValueChange = (next: string) => onValueChange(fromItemValue(next));
   return (
     <Select
-      value={hasMatch ? value : undefined}
-      onValueChange={onValueChange}
+      value={hasMatch ? toItemValue(value) : undefined}
+      onValueChange={handleValueChange}
       disabled={disabled}
     >
       <SelectTrigger
@@ -53,7 +64,11 @@ export function BuildFilterSelect({
       </SelectTrigger>
       <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
         {options.map((option) => (
-          <SelectItem key={option.value} value={option.value} className="font-normal">
+          <SelectItem
+            key={option.value}
+            value={toItemValue(option.value)}
+            className="font-normal"
+          >
             {option.label}
           </SelectItem>
         ))}

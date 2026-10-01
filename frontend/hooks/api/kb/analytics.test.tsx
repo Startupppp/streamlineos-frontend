@@ -47,6 +47,14 @@ describe("kbAnalyticsGapsContract", () => {
       pagination: { limit: 1, hasMore: false, nextCursor: null },
     });
   });
+
+  it("the GAP_ROW test fixture matches the wire shape the backend sends", () => {
+    const result = kbAnalyticsGapsContract.safeParse({
+      data: [GAP_ROW],
+      pagination: PAGINATION,
+    });
+    expect(result.success).toBe(true);
+  });
 });
 
 const PAGE_ANALYTICS_ROW = {
@@ -63,10 +71,7 @@ const PAGE_ANALYTICS_ROW = {
 const GAP_ROW = {
   query: "how to reset password",
   count: 15,
-  lastSeenAt: "2026-09-25T00:00:00.000Z",
-  assigneeId: null,
-  assigneeName: null,
-  status: "open",
+  lastOccurredAt: "2026-09-25T00:00:00.000Z",
 };
 
 const GAP_RELATED_PAGE_ROW = {

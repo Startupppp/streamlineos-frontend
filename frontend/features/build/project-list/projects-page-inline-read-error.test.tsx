@@ -1,24 +1,3 @@
-/**
- * BLD-FE-EMPTY-001 — why /build showed the route error shell for orgs with no projects.
- *
- * throwOnError: readErrorReachesBoundary is the global query default set in
- * createAppQueryClient. readErrorReachesBoundary returns true for a 500 when
- * query.state.data is undefined — which it always is on the first load of an
- * org that owns no projects. The error was thrown to the React error boundary
- * (the route's error.tsx) instead of staying in isError, replacing the whole
- * page with "something went wrong" from the boundary rather than from the
- * page's own PageState error branch.
- *
- * An org that already owned projects was unaffected: readErrorReachesBoundary
- * returns false when query.state.data !== undefined, so the same error stayed
- * inline. The asymmetry meant the page worked for non-empty orgs and broke for
- * empty ones — exactly the failure condition in ticket #54.
- *
- * The fix is to pass INLINE_READ_ERROR when calling useInfiniteProjects from
- * ProjectsPage so the query's throwOnError is false regardless of stale-data
- * state. The probe below is the measurement: a 500 on GET /build must leave
- * the page mounted and showing its own error state, never the boundary.
- */
 import { Component, type ReactNode } from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";

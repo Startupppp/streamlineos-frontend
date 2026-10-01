@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type { KbSpace, CreateSpaceInput, UpdateSpaceInput } from "@/types/kb";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
@@ -63,6 +64,7 @@ export function useKbSpaces(params?: KbSpacesListParams) {
   if (params?.limit !== undefined) queryParams.limit = params.limit;
 
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: [...knowledgeAndSurveysQueryKeys.kb.spaces(), params],
     queryFn: ({ signal }) =>
       apiClient.get<KbSpaceListPage>("/kb/spaces", queryParams, signal, kbSpaceListPageContract),

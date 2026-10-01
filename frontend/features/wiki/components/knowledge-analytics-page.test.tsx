@@ -247,7 +247,6 @@ describe("KnowledgeAnalyticsPage — the reader can choose the window the figure
     render(<KnowledgeAnalyticsPage />);
 
     for (const hook of [
-      useKbAnalyticsOverview,
       useKbNoResults,
       useKnowledgeGaps,
       useCitationReuse,
@@ -257,6 +256,16 @@ describe("KnowledgeAnalyticsPage — the reader can choose the window the figure
         expect.objectContaining({ from: expect.any(String) }),
       );
     }
+    expect(useKbAnalyticsOverview).toHaveBeenCalledWith(
+      expect.objectContaining({ from: expect.any(String) }),
+      "wiki",
+    );
+  });
+
+  it("asks the shared overview route for wiki pages, because it defaults to support articles and counted none of this page's pages", () => {
+    render(<KnowledgeAnalyticsPage />);
+
+    expect(useKbAnalyticsOverview).toHaveBeenCalledWith(expect.anything(), "wiki");
   });
 
   it("sends no lower bound when the reader asks for all time", () => {
@@ -266,6 +275,7 @@ describe("KnowledgeAnalyticsPage — the reader can choose the window the figure
 
     expect(useKbAnalyticsOverview).toHaveBeenCalledWith(
       expect.not.objectContaining({ from: expect.anything() }),
+      "wiki",
     );
     expect(useKnowledgeGaps).toHaveBeenCalledWith(
       expect.not.objectContaining({ from: expect.anything() }),
@@ -290,6 +300,7 @@ describe("KnowledgeAnalyticsPage — the reader can narrow the figures to one sp
     );
     expect(useKbAnalyticsOverview).toHaveBeenCalledWith(
       expect.objectContaining({ spaceId: 42 }),
+      "wiki",
     );
   });
 
@@ -301,6 +312,7 @@ describe("KnowledgeAnalyticsPage — the reader can narrow the figures to one sp
     );
     expect(useKbAnalyticsOverview).toHaveBeenCalledWith(
       expect.not.objectContaining({ spaceId: expect.anything() }),
+      "wiki",
     );
   });
 });

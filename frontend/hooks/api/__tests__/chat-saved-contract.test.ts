@@ -45,4 +45,9 @@ describe("chatSavedMessagesContract accepts what the saved list emits", () => {
     const departed = { ...WIRE_SAVED, message: { ...WIRE_SAVED.message, senderId: null, sender: null } };
     expect(chatSavedMessagesContract.safeParse({ items: [departed], nextCursor: null }).success).toBe(true);
   });
+
+  it("final-page null nextCursor is normalised to undefined so TanStack v5 getNextPageParam terminates pagination", () => {
+    const parsed = chatSavedMessagesContract.parse({ items: [], nextCursor: null });
+    expect(parsed.nextCursor).toBeUndefined();
+  });
 });
