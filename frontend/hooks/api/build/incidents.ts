@@ -83,34 +83,16 @@ export function useIncidents(projectId?: number, filters?: IncidentFilters) {
       projectId ?? 0,
       filters,
     ),
-    queryFn: async ({ pageParam, signal }) => {
-      const response = await apiClient.get<
-        | Incident[]
-        | {
-            data: Incident[];
-            pagination: {
-              limit: number;
-              hasMore: boolean;
-              nextCursor: string | null;
-            };
-          }
-      >(
+    queryFn: ({ pageParam, signal }) =>
+      apiClient.get<{
+        data: Incident[];
+        pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
+      }>(
         `/build/${projectId}/incidents`,
         pageParam ? { ...params, cursor: pageParam } : params,
         signal,
         incidentListContract,
-      );
-      return Array.isArray(response)
-        ? {
-            data: response,
-            pagination: {
-              limit: response.length || 100,
-              hasMore: false,
-              nextCursor: null,
-            },
-          }
-        : response;
-    },
+      ),
     initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canView && !!projectId,

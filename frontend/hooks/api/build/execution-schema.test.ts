@@ -8,6 +8,7 @@ import {
 const FULL_ROW = {
   userId: "user-1",
   membershipId: 11,
+  teams: [] as Array<{ id: number; name: string }>,
   workingDaysInWindow: 5,
   leaveDays: 0,
   halfLeaveDays: 0,

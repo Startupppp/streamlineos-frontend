@@ -1,86 +1,43 @@
 import { z } from "zod";
-import { DB_ENUMS } from "@/contracts/db-enums.generated";
-import { genFormListSchema, genFormRowSchema } from "@/contracts/build-contracts.generated";
+import {
+  formsGetFormResponseSchema,
+  formsListFormsResponseSchema,
+  submissionsListSubmissionsResponseSchema,
+  submissionsCreateSubmissionResponseSchema,
+  submissionsUpdateSubmissionResponseSchema,
+} from "@/contracts/build-contracts.generated";
 
-export const formRowContract = z.object({
-  id: z.number().int(),
-  orgId: z.string(),
-  projectId: z.number().int(),
-  formNumber: z.number().int(),
-  name: z.string(),
-  description: z.string().nullable(),
-  type: z.enum(DB_ENUMS.form_type),
-  fields: z.array(z.object({
-    key: z.string(),
-    label: z.string(),
-    type: z.enum(["text", "long_text", "number", "date", "dropdown", "multiselect", "checkbox", "url", "user", "currency", "rating"]),
-    required: z.boolean(),
-    options: z.array(z.string()).optional(),
+const formFieldSchema = z.object({
+  key: z.string(),
+  label: z.string(),
+  type: z.enum(["text", "long_text", "number", "date", "dropdown", "multiselect", "checkbox", "url", "user", "currency", "rating"]),
+  required: z.boolean(),
+  options: z.array(z.string()).optional(),
+});
+
+const formActionSchema = z.object({
+  type: z.string(),
+  config: z.record(z.string(), z.unknown()).optional(),
+});
+
+const formFieldsSchema = z.array(formFieldSchema);
+const formActionsSchema = z.array(formActionSchema);
+
+export const formRowContract = formsGetFormResponseSchema.transform((row) => ({
+  ...row,
+  fields: formFieldsSchema.parse(row.fields),
+  actions: formActionsSchema.parse(row.actions),
+}));
+
+export const formResponseContract = formsListFormsResponseSchema.transform((page) => ({
+  ...page,
+  data: page.data.map((row) => ({
+    ...row,
+    fields: formFieldsSchema.parse(row.fields),
+    actions: formActionsSchema.parse(row.actions),
   })),
-  actions: z.array(z.object({
-    type: z.string(),
-    config: z.record(z.string(), z.unknown()).optional(),
-  })),
-  isActive: z.boolean(),
-  isPublic: z.boolean(),
-  publicToken: z.string().nullable(),
-  createdBy: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  deletedAt: z.string().nullable(),
-});
+}));
 
-export const formListContract = z.array(formRowContract);
-
-export const formPageContract = z.object({
-  data: z.array(formRowContract),
-  pagination: z.object({
-    limit: z.number().int(),
-    hasMore: z.boolean(),
-    nextCursor: z.string().nullable(),
-  }),
-});
-
-export const formResponseContract = z.union([formPageContract, formListContract]);
-
-export const submissionRowContract = z.object({
-  id: z.number().int(),
-  orgId: z.string(),
-  formId: z.number().int(),
-  projectId: z.number().int(),
-  values: z.record(z.string(), z.unknown()),
-  status: z.enum(["submitted", "processed", "rejected"]),
-  submittedByName: z.string().nullable(),
-  submittedById: z.string().nullable(),
-  convertedTicketId: z.number().int().nullable(),
-  createdAt: z.string(),
-});
-
-export const submissionListContract = z.array(submissionRowContract);
-
-export const submissionPageContract = z.object({
-  data: z.array(submissionRowContract),
-  pagination: z.object({
-    limit: z.number().int(),
-    hasMore: z.boolean(),
-    nextCursor: z.string().nullable(),
-  }),
-});
-
-export const submissionResponseContract = z.union([submissionPageContract, submissionListContract]);
-
-export const submissionCreateResultContract = z.object({
-  id: z.number().int(),
-  orgId: z.string(),
-  formId: z.number().int(),
-  projectId: z.number().int(),
-  values: z.record(z.string(), z.unknown()),
-  status: z.enum(["submitted", "processed", "rejected"]),
-  submittedByName: z.string().nullable(),
-  submittedById: z.string().nullable(),
-  convertedTicketId: z.number().int().nullable(),
-  createdAt: z.string(),
-  createdTicketIds: z.array(z.number().int()),
-  executedActionTypes: z.array(z.string()),
-  skippedActionTypes: z.array(z.string()),
-});
+export const submissionRowContract = submissionsUpdateSubmissionResponseSchema;
+export const submissionResponseContract = submissionsListSubmissionsResponseSchema;
+export const submissionCreateResultContract = submissionsCreateSubmissionResponseSchema;

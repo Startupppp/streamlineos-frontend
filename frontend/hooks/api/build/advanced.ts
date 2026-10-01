@@ -6,7 +6,6 @@ import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
-import { z } from "zod";
 
 const cycleListContract = lazyContract(() =>
   import("@/hooks/api/build/execution-schema").then((m) => m.cycleListContract),
@@ -40,18 +39,6 @@ const analyticsContract = lazyContract(() =>
 );
 const noContentLazy = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
-);
-const viewResponseLazy = lazyContract<{
-  data: ProjectView[];
-  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
-}>(() =>
-  import("@/hooks/api/build/workspace-schema").then((m) =>
-    m.viewPageContract.or(z.array(m.viewRowSchema)).transform((value) =>
-      Array.isArray(value)
-        ? { data: value, pagination: { limit: value.length, hasMore: false, nextCursor: null } }
-        : value,
-    ),
-  ),
 );
 import type {
   Cycle,
@@ -227,8 +214,8 @@ export function useModules(
   return useQuery<Module[]>({
     queryKey: buildWorkQueryKeys.projects.modules(projectId),
     queryFn: async ({ signal }) => {
-      const response = await apiClient.get<Module[] | { data: Module[] }>(`/build/${projectId}/modules`, undefined, signal, moduleListContract);
-      return Array.isArray(response) ? response : response.data;
+      const response = await apiClient.get<{ data: Module[]; pagination: { limit: number; hasMore: boolean; nextCursor: string | null } }>(`/build/${projectId}/modules`, undefined, signal, moduleListContract);
+      return response.data;
     },
     staleTime: 60_000,
     ...options,
@@ -250,10 +237,7 @@ export function useModulePages(projectId: number, search?: string) {
       const query: Record<string, string> = { pageSize: "50" };
       if (typeof pageParam === "string" && pageParam) query.cursor = pageParam;
       if (search) query.search = search;
-      const response = await apiClient.get<Module[] | ModulePage>(`/build/${projectId}/modules`, query, signal, moduleListContract);
-      if (Array.isArray(response)) {
-        return { data: response, pagination: { limit: response.length, hasMore: false, nextCursor: null } };
-      }
+      const response = await apiClient.get<ModulePage>(`/build/${projectId}/modules`, query, signal, moduleListContract);
       return response;
     },
     getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
@@ -291,7 +275,7 @@ export function useViews(
   return useQuery<{ data: ProjectView[]; pagination: { limit: number; hasMore: boolean; nextCursor: string | null } }>({
     queryKey: [...buildWorkQueryKeys.projects.views(projectId), queryParams],
     queryFn: ({ signal }) =>
-      apiClient.get(`/build/${projectId}/views`, Object.keys(queryParams).length > 0 ? queryParams : undefined, signal, viewResponseLazy),
+      apiClient.get(`/build/${projectId}/views`, Object.keys(queryParams).length > 0 ? queryParams : undefined, signal, viewPageContract),
     staleTime: 60_000,
     ...options,
     enabled: canView && !!projectId,
