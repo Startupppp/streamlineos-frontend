@@ -1,30 +1,24 @@
 "use client";
 
-import React, { useState, useCallback, useMemo } from "react";
-import { motion } from "framer-motion";
-import { useHrPendingWfhRequests, useProcessWfhRequest } from "@/hooks/api/hr";
-import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { useMemo } from "react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePageState } from "@/hooks/api/use-page-state";
-import { EmptyApprovalIllustration, EmptyCalendarIllustration } from "@/components/illustrations";
-import { Home, CalendarDays } from "lucide-react";
-import { LoadingButton } from "@/components/ui/loading-button";
-import { useMotionVariants } from "@/lib/motion-variants";
+import { EmptyApprovalIllustration } from "@/components/illustrations";
+import { CalendarDays } from "lucide-react";
 
-import type { LeaveRequest, WfhRequest } from "./leaves-shared";
-import { WfhRequestItem } from "./leaves-shared";
+import type { LeaveRequest } from "./leaves-shared";
 import { LeaveApprovalsList } from "./leave-approvals-list";
-import { WfhApprovalActions } from "./wfh-approval-actions";
+import { WfhApprovalsCard } from "./wfh-approvals-card";
+
+const TAB_TRIGGER_CLASS =
+  "rounded-none border-b-2 border-transparent px-4 pb-3 pt-2 text-xs duration-200 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none";
+const COUNT_CLASS =
+  "ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-muted px-1 text-micro font-semibold text-muted-foreground";
 
 interface LeaveApprovalsContentProps {
   incomingLeaveRequests: LeaveRequest[];
@@ -39,87 +33,12 @@ export function LeaveApprovalsContent({
   currentUserId,
   isLoading = false,
 }: LeaveApprovalsContentProps) {
-  const { staggerContainer, fadeIn } = useMotionVariants();
-  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
-  const [rejectingId, setRejectingId] = useState<number | null>(null);
-  const [rejectionReason, setRejectionReason] = useState("");
-
-  const { data: pendingWfhRequests, isLoading: wfhLoading, isError: wfhError, error: wfhErrorValue, refetch: refetchWfh } = useHrPendingWfhRequests();
-  // Pending WFH is gated on hr:attendance:manage; a leave approver without it
-  // must be told so, not "No pending WFH requests" (FE-47).
-  const wfhState = usePageState({
-    permission: "hr:attendance:manage",
-    isLoading: wfhLoading,
-    isError: wfhError,
-    error: wfhErrorValue,
-  });
-
-  // The team list is read by the parent (useHrLeaveApprovals, gated on
-  // hr:leaves:view), which also owns its error branch; this card owns the
-  // loading and denied branches so neither reads as "No leave requests".
   const leaveState = usePageState({
     permission: "hr:leaves:view",
     isLoading,
     isError: false,
     error: null,
   });
-
-  function handleRetryWfh() {
-    void refetchWfh();
-  }
-  const processWfhRequestMutation = useProcessWfhRequest();
-
-  const handleRejectionReasonChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      setRejectionReason(e.target.value);
-    },
-    [],
-  );
-
-  const handleWfhApprove = useCallback(
-    (requestId: number) => {
-      processWfhRequestMutation.mutate(
-        { requestId, status: "APPROVED" },
-        {
-          onSuccess: () => toast.success("WFH request approved"),
-          onError: (error) => toast.error(getErrorMessage(error)),
-        },
-      );
-    },
-    [processWfhRequestMutation],
-  );
-
-  const handleWfhRejectOpen = useCallback((requestId: number) => {
-    setRejectingId(requestId);
-    setRejectDialogOpen(true);
-  }, []);
-
-  const handleWfhRejectConfirm = useCallback(() => {
-    if (rejectingId === null) return;
-    const reason = rejectionReason.trim();
-    if (!reason) {
-      toast.error("Rejection reason is required");
-      return;
-    }
-    processWfhRequestMutation.mutate(
-      { requestId: rejectingId, status: "REJECTED", rejectionReason: reason },
-      {
-        onSuccess: () => {
-          toast.success("WFH request rejected");
-          setRejectDialogOpen(false);
-          setRejectionReason("");
-          setRejectingId(null);
-        },
-        onError: (error) => toast.error(getErrorMessage(error)),
-      },
-    );
-  }, [rejectingId, rejectionReason, processWfhRequestMutation]);
-
-  const handleRejectCancel = useCallback(() => {
-    setRejectDialogOpen(false);
-    setRejectionReason("");
-    setRejectingId(null);
-  }, []);
 
   const approvedRequests = useMemo(
     () => allIncomingLeaveRequests.filter((r) => r.status === "APPROVED"),
@@ -130,208 +49,99 @@ export function LeaveApprovalsContent({
     [allIncomingLeaveRequests],
   );
 
+  const panels: Array<{
+    value: string;
+    label: string;
+    rows: LeaveRequest[];
+    emptyTitle: string;
+    emptyDescription: string;
+  }> = [
+    {
+      value: "all",
+      label: "All",
+      rows: allIncomingLeaveRequests,
+      emptyTitle: "No leave requests",
+      emptyDescription: "There are no leave requests to display.",
+    },
+    {
+      value: "pending",
+      label: "Pending",
+      rows: incomingLeaveRequests,
+      emptyTitle: "No pending leave requests",
+      emptyDescription: "All leave requests have been processed.",
+    },
+    {
+      value: "approved",
+      label: "Approved",
+      rows: approvedRequests,
+      emptyTitle: "No approved leave requests",
+      emptyDescription: "No leave requests have been approved yet.",
+    },
+    {
+      value: "rejected",
+      label: "Rejected",
+      rows: rejectedRequests,
+      emptyTitle: "No rejected leave requests",
+      emptyDescription: "No leave requests have been rejected.",
+    },
+  ];
+
   return (
-    <>
-      <div className="space-y-6">
-        <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
-                <CalendarDays className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
-              </div>
-              Leave Requests
-              {allIncomingLeaveRequests.length > 0 && (
-                <span className="ml-1 inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-muted text-micro font-semibold text-muted-foreground">
-                  {allIncomingLeaveRequests.length}
-                </span>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0 overflow-x-auto">
-            <PageState
-              resolution={leaveState}
-              compact
-              loading={<Skeleton className="h-24 w-full rounded-xl" />}
-            >
+    <div className="space-y-6">
+      <Card className="overflow-hidden rounded-2xl border border-border/70 bg-card">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-sm font-semibold text-foreground">
+            <CalendarDays className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+            Leave Requests
+            {allIncomingLeaveRequests.length > 0 ? (
+              <span className={COUNT_CLASS}>{allIncomingLeaveRequests.length}</span>
+            ) : null}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="overflow-x-auto pt-0">
+          <PageState
+            resolution={leaveState}
+            compact
+            loading={<Skeleton className="h-24 w-full rounded-xl" />}
+          >
             <Tabs defaultValue="all" className="space-y-4">
-              <TabsList className="bg-transparent border-b rounded-none p-0 gap-0">
-                <TabsTrigger
-                  value="all"
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground pb-3 pt-2 px-4 text-xs duration-200"
-                >
-                  All
-                  <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-muted text-micro font-semibold text-muted-foreground">
-                    {allIncomingLeaveRequests.length}
-                  </span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="pending"
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground pb-3 pt-2 px-4 text-xs duration-200"
-                >
-                  Pending
-                  {incomingLeaveRequests.length > 0 && (
-                    <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-status-warning-fill text-micro font-bold text-white">
-                      {incomingLeaveRequests.length}
-                    </span>
-                  )}
-                </TabsTrigger>
-                <TabsTrigger
-                  value="approved"
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground pb-3 pt-2 px-4 text-xs duration-200"
-                >
-                  Approved
-                  {approvedRequests.length > 0 && (
-                    <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-muted text-micro font-semibold text-muted-foreground">
-                      {approvedRequests.length}
-                    </span>
-                  )}
-                </TabsTrigger>
-                <TabsTrigger
-                  value="rejected"
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground pb-3 pt-2 px-4 text-xs duration-200"
-                >
-                  Rejected
-                  {rejectedRequests.length > 0 && (
-                    <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-muted text-micro font-semibold text-muted-foreground">
-                      {rejectedRequests.length}
-                    </span>
-                  )}
-                </TabsTrigger>
+              <TabsList className="gap-0 rounded-none border-b bg-transparent p-0">
+                {panels.map((panel) => (
+                  <TabsTrigger
+                    key={panel.value}
+                    value={panel.value}
+                    className={TAB_TRIGGER_CLASS}
+                  >
+                    {panel.label}
+                    {panel.rows.length > 0 ? (
+                      <span className={COUNT_CLASS}>{panel.rows.length}</span>
+                    ) : null}
+                  </TabsTrigger>
+                ))}
               </TabsList>
 
-              <TabsContent value="all">
-                {allIncomingLeaveRequests.length === 0 ? (
-                  <EmptyState illustration={<EmptyApprovalIllustration />} title="No leave requests" description="There are no leave requests to display." />
-                ) : (
-                  <LeaveApprovalsList requests={allIncomingLeaveRequests} currentUserId={currentUserId} />
-                )}
-              </TabsContent>
-              <TabsContent value="pending">
-                {incomingLeaveRequests.length === 0 ? (
-                  <EmptyState illustration={<EmptyApprovalIllustration />} title="No pending leave requests" description="All leave requests have been processed." />
-                ) : (
-                  <LeaveApprovalsList requests={incomingLeaveRequests} currentUserId={currentUserId} />
-                )}
-              </TabsContent>
-              <TabsContent value="approved">
-                {approvedRequests.length === 0 ? (
-                  <EmptyState illustration={<EmptyApprovalIllustration />} title="No approved leave requests" description="No leave requests have been approved yet." />
-                ) : (
-                  <LeaveApprovalsList requests={approvedRequests} currentUserId={currentUserId} />
-                )}
-              </TabsContent>
-              <TabsContent value="rejected">
-                {rejectedRequests.length === 0 ? (
-                  <EmptyState illustration={<EmptyApprovalIllustration />} title="No rejected leave requests" description="No leave requests have been rejected." />
-                ) : (
-                  <LeaveApprovalsList requests={rejectedRequests} currentUserId={currentUserId} />
-                )}
-              </TabsContent>
-            </Tabs>
-            </PageState>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <div className="w-7 rounded-lg bg-muted flex items-center justify-center">
-                <Home className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
-              </div>
-              Pending WFH Requests
-              {pendingWfhRequests && pendingWfhRequests.length > 0 && (
-                <span className="ml-1 inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-status-warning-surface text-micro font-semibold text-status-warning-ink">
-                  {pendingWfhRequests.length}
-                </span>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            {wfhState.kind !== "ready" && wfhState.kind !== "empty" ? (
-              <PageState
-                resolution={wfhState}
-                compact
-                onRetry={handleRetryWfh}
-                loading={<Skeleton className="h-16 w-full rounded-xl" />}
-              >
-                {null}
-              </PageState>
-            ) : !pendingWfhRequests || pendingWfhRequests.length === 0 ? (
-              <EmptyState illustration={<EmptyCalendarIllustration />} title="No pending WFH requests" description="All WFH requests have been processed." />
-            ) : (
-              <motion.div
-                className="space-y-3"
-                role="list"
-                aria-label="Pending WFH approvals"
-                variants={staggerContainer}
-                initial="hidden"
-                animate="visible"
-              >
-                {pendingWfhRequests.map((req) => (
-                  <motion.div key={req.id} role="listitem" variants={fadeIn}>
-                    <WfhRequestItem
-                      request={req as WfhRequest}
-                      showUser
-                      actions={
-                        <WfhApprovalActions
-                          requestId={req.id}
-                          isPending={processWfhRequestMutation.isPending}
-                          onApprove={handleWfhApprove}
-                          onRejectOpen={handleWfhRejectOpen}
-                        />
-                      }
+              {panels.map((panel) => (
+                <TabsContent key={panel.value} value={panel.value}>
+                  {panel.rows.length === 0 ? (
+                    <EmptyState
+                      illustration={<EmptyApprovalIllustration />}
+                      title={panel.emptyTitle}
+                      description={panel.emptyDescription}
                     />
-                  </motion.div>
-                ))}
-              </motion.div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+                  ) : (
+                    <LeaveApprovalsList
+                      requests={panel.rows}
+                      currentUserId={currentUserId}
+                    />
+                  )}
+                </TabsContent>
+              ))}
+            </Tabs>
+          </PageState>
+        </CardContent>
+      </Card>
 
-      <Sheet open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-        <SheetContent className="sm:max-w-sm p-0 flex flex-col">
-          <SheetHeader className="p-5 pb-4 border-b">
-            <SheetTitle className="text-base font-semibold">Reject WFH Request</SheetTitle>
-            <p className="text-sm text-muted-foreground">
-              Provide a reason for rejecting this request.
-            </p>
-          </SheetHeader>
-          <div className="flex-1 p-5 space-y-4">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-foreground">
-                Rejection Reason <span className="text-destructive">*</span>
-              </Label>
-              <Textarea
-                placeholder="E.g. Not enough prior notice, project deadline..."
-                value={rejectionReason}
-                onChange={handleRejectionReasonChange}
-                rows={4}
-                className="resize-none text-sm"
-              />
-            </div>
-          </div>
-          <div className="flex gap-2 p-5 pt-4 border-t">
-            <Button variant="outline" className="flex-1 h-9" onClick={handleRejectCancel}>
-              Cancel
-            </Button>
-            <LoadingButton
-              variant="destructive"
-              className="flex-1 h-9"
-              onClick={handleWfhRejectConfirm}
-              isPending={processWfhRequestMutation.isPending}
-              disabled={!rejectionReason.trim()}
-              loadingText="Rejecting…"
-            >
-              Reject Request
-            </LoadingButton>
-          </div>
-        </SheetContent>
-      </Sheet>
-
-      <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
-        {processWfhRequestMutation.isPending && "Processing WFH request..."}
-      </div>
-    </>
+      <WfhApprovalsCard />
+    </div>
   );
 }

@@ -125,6 +125,11 @@ jest.mock("@/hooks/api/use-page-state", () => {
   };
 });
 
+jest.mock("@/hooks/api/payroll/payroll-cutoff", () => ({
+  usePayrollCutoff: () => ({ cutoff: null, month: "2026-10", isLoading: false }),
+  currentPayrollMonth: () => "2026-10",
+}));
+
 jest.mock("@/hooks/api/hr/documents", () => ({
   useMyOnboardingDocs: () => stub({ data: rows([DOCUMENT]) }),
   useUploadMyOnboardingDoc: () => stub(undefined),

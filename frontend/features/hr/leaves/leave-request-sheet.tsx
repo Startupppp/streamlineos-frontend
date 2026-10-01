@@ -17,8 +17,9 @@ import {
 } from "@/lib/date-constraints";
 import { useRequestLeave, useLeavePolicy } from "@/hooks/api/hr";
 import { leaveFormSchema, type LeaveFormValues } from "./leave-request-schema";
-import { countWorkdays } from "./leave-date-helpers";
 import { LeaveRequestFormFields } from "./leave-request-form-fields";
+import { useLeaveRequestValidation } from "./use-leave-request-validation";
+import type { LeaveSpan } from "./leave-overlap";
 import type {
   LeaveType,
   LeaveBalance,
@@ -32,7 +33,10 @@ interface LeaveRequestSheetProps {
   approvalRoute: ApprovalRoute | undefined;
   joiningDate: string | null;
   balances?: LeaveBalance[];
+  existingRequests?: LeaveSpan[];
 }
+
+const NO_EXISTING_REQUESTS: LeaveSpan[] = [];
 
 export function LeaveRequestSheet({
   open,
@@ -41,14 +45,19 @@ export function LeaveRequestSheet({
   approvalRoute,
   joiningDate,
   balances = [],
+  existingRequests = NO_EXISTING_REQUESTS,
 }: LeaveRequestSheetProps) {
   const approverAvailable = approvalRoute !== undefined && approvalRoute.rung !== null;
   const requestLeaveMutation = useRequestLeave();
   const { data: policy } = useLeavePolicy();
-  const leaveMaxDays: Record<string, number> = Object.fromEntries(
-    (policy?.leaveTypes ?? [])
-      .filter((t) => t.daysPerYear > 0)
-      .map((t) => [t.name, t.daysPerYear]),
+  const leaveMaxDays = useMemo<Record<string, number>>(
+    () =>
+      Object.fromEntries(
+        (policy?.leaveTypes ?? [])
+          .filter((t) => t.daysPerYear > 0)
+          .map((t) => [t.name, t.daysPerYear]),
+      ),
+    [policy?.leaveTypes],
   );
   const [attachmentUrl, setAttachmentUrl] = useState<string | null>(null);
 
@@ -58,8 +67,6 @@ export function LeaveRequestSheet({
 
   const form = useForm<LeaveFormValues>({
     resolver: zodResolver(leaveFormSchema),
-    // V-041. Validate as the user goes, so a field that is wrong says so where
-    // it is wrong rather than silently disabling the footer button.
     mode: "onTouched",
     defaultValues: {
       leaveTypeId: "",
@@ -106,41 +113,16 @@ export function LeaveRequestSheet({
     }
   }
 
-  const { requestedDays, balancePreview } = useMemo(() => {
-    if (!watchedLeaveTypeId || !watchedStartDate || !watchedEndDate) {
-      return { requestedDays: 0, balancePreview: null };
-    }
-    const days = watchedHalfDay
-      ? 0.5
-      : countWorkdays(watchedStartDate, watchedEndDate);
-    const selectedType = leaveTypes.find(
-      (t) => t.id.toString() === watchedLeaveTypeId,
-    );
-    if (!selectedType) return { requestedDays: days, balancePreview: null };
-
-    const matchedBal = balances.find((b) => b.leaveTypeId === selectedType.id);
-    if (!matchedBal) return { requestedDays: days, balancePreview: null };
-
-    const available = Number(matchedBal.balance ?? 0);
-    return {
-      requestedDays: days,
-      balancePreview: { available, after: available - days, typeName: selectedType.name },
-    };
-  }, [watchedLeaveTypeId, watchedStartDate, watchedEndDate, watchedHalfDay, leaveTypes, balances]);
-
-  const leaveDayLimitError = useMemo(() => {
-    if (!watchedLeaveTypeId || !watchedStartDate || !watchedEndDate) return null;
-    const selectedType = leaveTypes.find(
-      (t) => t.id.toString() === watchedLeaveTypeId,
-    );
-    if (!selectedType) return null;
-    const maxDays = leaveMaxDays[selectedType.name];
-    if (maxDays === undefined) return null;
-    if (requestedDays > maxDays) {
-      return `${selectedType.name} cannot exceed ${maxDays} days. You selected ${requestedDays} day${requestedDays !== 1 ? "s" : ""}.`;
-    }
-    return null;
-  }, [watchedLeaveTypeId, watchedStartDate, watchedEndDate, requestedDays, leaveTypes, leaveMaxDays]);
+  const validation = useLeaveRequestValidation({
+    leaveTypeId: watchedLeaveTypeId,
+    startDate: watchedStartDate,
+    endDate: watchedEndDate,
+    halfDay: watchedHalfDay,
+    leaveTypes,
+    balances,
+    existingRequests,
+    leaveMaxDays,
+  });
 
   const handleAttachmentUpload = useCallback(
     (url: string) => setAttachmentUrl(url),
@@ -149,8 +131,12 @@ export function LeaveRequestSheet({
 
   const onSubmit = useCallback(
     (data: LeaveFormValues) => {
-      if (leaveDayLimitError) {
-        toast.error(leaveDayLimitError);
+      if (validation.overlapMessage) {
+        toast.error(validation.overlapMessage);
+        return;
+      }
+      if (validation.dayLimitError) {
+        toast.error(validation.dayLimitError);
         return;
       }
       requestLeaveMutation.mutate(
@@ -175,10 +161,19 @@ export function LeaveRequestSheet({
         },
       );
     },
-    [leaveDayLimitError, attachmentUrl, form, onOpenChange, requestLeaveMutation],
+    [validation, attachmentUrl, form, onOpenChange, requestLeaveMutation],
   );
 
   const { isDirty } = form.formState;
+
+  const submitLabel =
+    leaveTypes.length === 0
+      ? "Set up leave types first"
+      : !approverAvailable
+        ? "No approver available"
+        : validation.overlapMessage
+          ? "Dates overlap approved leave"
+          : "Submit leave request";
 
   return (
     <HrSheet
@@ -187,24 +182,15 @@ export function LeaveRequestSheet({
       title="Request leave"
       description="Fill in the details to submit a leave request"
       onSubmit={form.handleSubmit(onSubmit)}
-      submitLabel={
-        leaveTypes.length === 0
-          ? "Set up leave types first"
-          : approverAvailable
-            ? "Submit leave request"
-            : "No approver available"
-      }
+      submitLabel={submitLabel}
       isPending={requestLeaveMutation.isPending}
-      // V-041. Only a reason the LABEL states may disable this button. It used
-      // to also disable on `!isValid && isDirty` — and this form never
-      // maintained `formState.isValid`, so the button disabled itself the
-      // moment the form became dirty, kept the plain "Submit leave request"
-      // label, and never re-enabled: a complete, valid request could not be
-      // submitted and nothing on screen said why. An incomplete form now stays
-      // pressable; `handleSubmit` refuses it and each field says what is wrong.
-      submitDisabled={leaveTypes.length === 0 || !approverAvailable}
+      submitDisabled={
+        leaveTypes.length === 0 ||
+        !approverAvailable ||
+        validation.overlapMessage !== null
+      }
       isDirty={isDirty}
-      onDiscard={() => form.reset()}
+      onDiscard={form.reset}
     >
       <Form {...form}>
         <LeaveRequestFormFields
@@ -216,9 +202,7 @@ export function LeaveRequestSheet({
           leaveEndBounds={leaveEndBounds}
           onStartDateChange={handleLeaveStartDateChange}
           onAttachmentUpload={handleAttachmentUpload}
-          requestedDays={requestedDays}
-          balancePreview={balancePreview}
-          leaveDayLimitError={leaveDayLimitError}
+          validation={validation}
         />
       </Form>
     </HrSheet>

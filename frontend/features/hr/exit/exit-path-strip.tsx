@@ -57,7 +57,7 @@ export function ExitPathStrip({ showReassignPrompt = false }: ExitPathStripProps
           const permitted =
             step.permission === undefined ||
             (access !== undefined && grantsPermission(access, step.permission));
-          const reachable = step.href !== null && permitted;
+          const reachableHref = permitted ? step.href : null;
           const content = (
             <span className="flex min-w-0 flex-1 flex-col gap-0.5">
               <StepBody step={step} />
@@ -65,9 +65,9 @@ export function ExitPathStrip({ showReassignPrompt = false }: ExitPathStripProps
           );
           return (
             <li key={step.key} className="min-w-0">
-              {reachable ? (
+              {reachableHref !== null ? (
                 <Link
-                  href={step.href as string}
+                  href={reachableHref}
                   className={cn(
                     "flex min-h-11 items-start gap-2 rounded-lg border border-border/70 p-3",
                     "transition-colors duration-200 motion-reduce:transition-none",

@@ -44,15 +44,6 @@ export interface LeaveContextResult {
   noPolicyConfigured?: boolean;
 }
 
-export interface LeaveRequestsPage {
-  data: unknown[];
-  pageInfo: {
-    limit: number;
-    hasMore: boolean;
-    nextCursor: number | null;
-  };
-}
-
 export interface HrLeaveType {
   id: number;
   name: string;

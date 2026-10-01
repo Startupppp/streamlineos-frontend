@@ -24,8 +24,8 @@ export function useEmployeeListUrlState(pageSize: number): EmployeeListUrlState 
   const searchParams = useSearchParams();
   const pathname = usePathname();
 
-  const defaults = useMemo(
-    () => ({ size: pageSize, status: "all" as EmployeeStatusFilter }),
+  const defaults = useMemo<{ size: number; status: EmployeeStatusFilter }>(
+    () => ({ size: pageSize, status: "all" }),
     [pageSize],
   );
 

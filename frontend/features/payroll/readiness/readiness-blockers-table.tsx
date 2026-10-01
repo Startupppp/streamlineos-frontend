@@ -85,7 +85,7 @@ export function ReadinessBlockersTable({
             />
           ) : (
             <DataTable
-              data={rows as ReadinessBlockerRow[]}
+              data={[...rows]}
               columns={BLOCKER_COLUMNS}
               getRowKey={rowKey}
               mobileCard={renderMobileCard}

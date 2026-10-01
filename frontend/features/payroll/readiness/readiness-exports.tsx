@@ -29,7 +29,7 @@ export function ReadinessExports({ exports }: ReadinessExportsProps) {
         />
       ) : (
         <DataTable
-          data={exports as ReadinessExport[]}
+          data={[...exports]}
           columns={EXPORT_COLUMNS}
           getRowKey={exportRowKey}
           pagination={{ pageSize: EXPORT_PAGE_SIZE }}

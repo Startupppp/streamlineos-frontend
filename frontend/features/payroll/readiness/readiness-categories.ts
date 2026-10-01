@@ -109,11 +109,9 @@ export const READINESS_CATEGORIES: readonly ReadinessCategory[] = [
   },
 ];
 
-const CATEGORY_BY_KEY: Readonly<Record<ReadinessCategoryKey, ReadinessCategory>> =
-  Object.fromEntries(READINESS_CATEGORIES.map((category) => [category.key, category])) as Record<
-    ReadinessCategoryKey,
-    ReadinessCategory
-  >;
+const CATEGORY_BY_KEY: ReadonlyMap<ReadinessCategoryKey, ReadinessCategory> = new Map(
+  READINESS_CATEGORIES.map((category) => [category.key, category]),
+);
 
 const KEY_BY_CODE: ReadonlyMap<string, ReadinessCategoryKey> = new Map(
   READINESS_CATEGORIES.flatMap((category) =>
@@ -122,7 +120,9 @@ const KEY_BY_CODE: ReadonlyMap<string, ReadinessCategoryKey> = new Map(
 );
 
 export function readinessCategory(key: ReadinessCategoryKey): ReadinessCategory {
-  return CATEGORY_BY_KEY[key];
+  const category = CATEGORY_BY_KEY.get(key);
+  if (!category) throw new Error(`Unknown readiness category: ${key}`);
+  return category;
 }
 
 export function categoryKeyForCode(code: string): ReadinessCategoryKey | null {

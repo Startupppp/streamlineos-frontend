@@ -165,6 +165,8 @@ export const leaveApprovalsContract = z.object({
 
 export type LeavesTeamPage = z.infer<typeof leaveApprovalsContract>;
 
+export type LeavesThisWeekRow = z.infer<typeof leavesThisWeekContract>[number];
+
 export const leavesThisWeekContract = z.array(
   leaveRequestRowSchema.extend({
     leaveType: z.object({ id: z.number().int(), name: z.string() }).nullable(),
@@ -185,6 +187,8 @@ export const leaveRequestsPageContract = z.object({
   data: z.array(leaveRequestWithRelationsSchema),
   pageInfo: idCursorPageInfoSchema,
 });
+
+export type LeaveRequestsPageResult = z.infer<typeof leaveRequestsPageContract>;
 
 const orgHolidayRowSchema = z.object({
   id: z.string(),
