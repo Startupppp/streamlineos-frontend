@@ -31,13 +31,33 @@ export function useCurrentPeriod() {
   });
 }
 
+/**
+ * Period detail is reached from three surfaces, not one: My Time (own entries),
+ * Team and Approvals. Gating the read on `timesheets:entries:view` alone leaves
+ * a manager who holds only team or approvals view with a disabled query, and a
+ * disabled query reports `isLoading: false` with no data — so the detail sheet
+ * renders "no entries" for a timesheet it was never allowed to ask for.
+ *
+ * The caller still has to say which of the three it is; this only decides
+ * whether asking is worth a request at all.
+ */
+export function useCanViewPeriodDetail(): boolean {
+  const canViewEntries = useCan("timesheets:entries:view");
+  const canViewTeam = useCan("timesheets:team:view");
+  const canViewApprovals = useCan("timesheets:approvals:view");
+  return canViewEntries || canViewTeam || canViewApprovals;
+}
+
 export function usePeriod(periodId: number | null) {
-  const canView = useCan("timesheets:entries:view");
+  const canView = useCanViewPeriodDetail();
   return useQuery({
     queryKey: usersAndCommerceQueryKeys.timesheets.period(periodId ?? 0),
     queryFn: ({ signal }) => apiClient.get<PeriodDetail>(`/timesheets/periods/${periodId}`, undefined, signal, periodDetailC),
     staleTime: 15_000,
     enabled: periodId !== null && canView,
+    // The detail sheet is a satellite of Team and Approvals: its failure must
+    // show inside the sheet, not replace the whole route with an error page.
+    ...INLINE_READ_ERROR,
   });
 }
 
