@@ -22,6 +22,11 @@ import {
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { StalledReadNotice } from "@/components/shared/stalled-read-notice";
+import {
+  PANEL_STALLED_AFTER_MS,
+  useStalledAfter,
+} from "@/hooks/common/use-stalled-after";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable } from "@/components/ui/data-table";
 import { useCursorPager } from "@/components/ui/table-pagination";
@@ -249,6 +254,11 @@ export function UserInvitationsPanel() {
     (v: boolean) => setInviteOpen(v),
     [setInviteOpen],
   );
+  const invitationsStalled = useStalledAfter(
+    isLoading || invitationsGate.pending,
+    PANEL_STALLED_AFTER_MS,
+  );
+
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
@@ -412,6 +422,20 @@ export function UserInvitationsPanel() {
               onRetry={handleRetry}
             />
           ) : (
+            <>
+              {invitationsStalled && (
+                /*
+                 * CHAT-F-002. The two error branches above are right and were out
+                 * of reach: a read against an unreachable API holds `isLoading` for
+                 * up to ~61s, so the table showed its loading rows under a header
+                 * counting pending invites and nothing said why.
+                 */
+                <StalledReadNotice
+                  className="mb-3"
+                  subject="invitations"
+                  onRetry={handleRetry}
+                />
+              )}
             <DataTable
               className="flex-1 min-h-0"
               data={rows}
@@ -430,6 +454,7 @@ export function UserInvitationsPanel() {
                 pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
               }}
             />
+            </>
           )}
         </div>
       </PageWrapper>

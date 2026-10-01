@@ -34,6 +34,26 @@ import { ChatDialogHeader } from "./chat-dialog-header";
 
 type ChannelKind = "GROUP" | "PUBLIC" | "PRIVATE";
 
+/**
+ * The name field slugifies as you type, so "what it contains" and "what you typed"
+ * are different questions. Three spaces slugified to `-`, which is non-empty, so
+ * `name.trim()` was truthy and "Next: Add Members" enabled on a name with no
+ * meaningful characters (CHAT-005). A name is valid once it holds at least one
+ * alphanumeric character; a trailing hyphen is left alone because it is what
+ * mid-word typing looks like ("design-" on the way to "design-team").
+ */
+function toChannelSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "")
+    .replace(/^-+/, "");
+}
+
+function isNamedChannel(slug: string): boolean {
+  return /[a-z0-9]/.test(slug);
+}
+
 const CHANNEL_KINDS: {
   value: ChannelKind;
   label: string;
@@ -60,6 +80,37 @@ const CHANNEL_KINDS: {
   },
 ];
 
+function ChannelKindOption({
+  kind,
+  selected,
+  onSelect,
+}: {
+  kind: (typeof CHANNEL_KINDS)[number];
+  selected: boolean;
+  onSelect: (kind: ChannelKind) => void;
+}) {
+  const handleSelect = useCallback(() => onSelect(kind.value), [kind.value, onSelect]);
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={selected}
+      tabIndex={selected ? 0 : -1}
+      onClick={handleSelect}
+      className={cn(
+        "flex items-center gap-3 rounded-xl border-2 p-3 text-left transition-all sm:flex-col sm:gap-1.5 sm:text-center",
+        selected
+          ? "border-primary bg-primary/5 text-foreground"
+          : "border-border/40 text-muted-foreground hover:border-border hover:bg-muted/30",
+      )}
+    >
+      {kind.icon}
+      <span className="text-xs font-semibold">{kind.label}</span>
+      <span className="text-micro leading-tight opacity-70">{kind.description}</span>
+    </button>
+  );
+}
+
 export function NewGroupDialog({
   open,
   onOpenChange,
@@ -76,6 +127,12 @@ export function NewGroupDialog({
   const createPrivate = useCreatePrivateChannel();
   const [channelKind, setChannelKind] = useState<ChannelKind>("GROUP");
   const [name, setName] = useState("");
+  /**
+   * The slugifier drops everything it cannot use, so typing only spaces or
+   * punctuation leaves the field exactly as empty as it started and nothing on screen
+   * says why. This remembers that the last keystroke was rejected, so the hint can.
+   */
+  const [nameRejected, setNameRejected] = useState(false);
   const [description, setDescription] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -89,12 +146,9 @@ export function NewGroupDialog({
 
   const handleNameChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      setName(
-        e.target.value
-          .toLowerCase()
-          .replace(/\s+/g, "-")
-          .replace(/[^a-z0-9-]/g, ""),
-      );
+      const slug = toChannelSlug(e.target.value);
+      setName(slug);
+      setNameRejected(e.target.value.length > 0 && slug === "");
     },
     [],
   );
@@ -146,7 +200,7 @@ export function NewGroupDialog({
     createGroup.isPending || createPublic.isPending || createPrivate.isPending;
 
   const handleCreate = async () => {
-    if (!name.trim() || selectedIds.length === 0) return;
+    if (!isNamedChannel(name) || selectedIds.length === 0) return;
     const payload = {
       name: name.trim(),
       description: description.trim() || undefined,
@@ -166,6 +220,7 @@ export function NewGroupDialog({
       onOpenChange(false);
       toast.success("Channel created");
       setName("");
+      setNameRejected(false);
       setDescription("");
       setAvatarUrl("");
       setSelectedIds([]);
@@ -180,6 +235,7 @@ export function NewGroupDialog({
     if (!nextOpen) {
       setStep("info");
       setName("");
+      setNameRejected(false);
       setDescription("");
       setAvatarUrl("");
       setSelectedIds([]);
@@ -211,25 +267,18 @@ export function NewGroupDialog({
 
         {step === "info" ? (
           <DialogBody className="space-y-4 px-4 py-4">
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+            <div
+              role="radiogroup"
+              aria-label="Channel type"
+              className="grid grid-cols-1 gap-2 sm:grid-cols-3"
+            >
               {CHANNEL_KINDS.map((kind) => (
-                <button
+                <ChannelKindOption
                   key={kind.value}
-                  type="button"
-                  onClick={() => setChannelKind(kind.value)}
-                  className={cn(
-                    "flex items-center gap-3 rounded-xl border-2 p-3 text-left transition-all sm:flex-col sm:gap-1.5 sm:text-center",
-                    channelKind === kind.value
-                      ? "border-primary bg-primary/5 text-foreground"
-                      : "border-border/40 text-muted-foreground hover:border-border hover:bg-muted/30",
-                  )}
-                >
-                  {kind.icon}
-                  <span className="text-xs font-semibold">{kind.label}</span>
-                  <span className="text-micro leading-tight opacity-70">
-                    {kind.description}
-                  </span>
-                </button>
+                  kind={kind}
+                  selected={channelKind === kind.value}
+                  onSelect={setChannelKind}
+                />
               ))}
             </div>
 
@@ -286,9 +335,9 @@ export function NewGroupDialog({
                   autoFocus
                 />
               </div>
-              {!name.trim() && name !== "" && (
+              {(nameRejected || (name !== "" && !isNamedChannel(name))) && (
                 <p className="mt-1 text-xs text-destructive">
-                  Channel name is required
+                  Use letters or numbers — spaces and punctuation alone are not a name
                 </p>
               )}
             </div>
@@ -311,7 +360,7 @@ export function NewGroupDialog({
               iconSize={16}
               iconClassName="ml-1"
               onClick={handleGoToMembers}
-              disabled={!name.trim()}
+              disabled={!isNamedChannel(name)}
               className="h-9 w-full"
             >
               Next: Add Members
@@ -329,6 +378,12 @@ export function NewGroupDialog({
                 onToggle={handleToggleMember}
                 placeholder="Search and add people…"
               />
+              {selectedIds.length === 0 && (
+                <p className="text-micro text-muted-foreground">
+                  A channel needs at least one other person besides you. If nobody is
+                  listed, invite a teammate first under Settings → Users.
+                </p>
+              )}
             </DialogBody>
             <div className="flex shrink-0 gap-2 border-t border-border px-4 py-3">
               <Button

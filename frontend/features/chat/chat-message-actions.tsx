@@ -61,7 +61,12 @@ export function MessageActions({
   onQuickReact: (emoji: string) => void;
 }) {
   return (
-    <div className={cn("absolute -top-3 opacity-0 group-hover:opacity-100 transition-all z-50 pointer-events-none group-hover:pointer-events-auto", isOwn ? "right-0" : "left-0")}>
+    // `focus-within` beside `group-hover` is CHAT-S01. The row was reachable only by
+    // putting the pointer on it, so these controls had no keyboard route at all
+    // (FE-120) and anything floating over that corner of the viewport — the in-app
+    // feedback launcher at 1280x720, a cookie bar, a toast — took Reply, Edit and React
+    // with it. Tabbing to a control now reveals the group it is in.
+    <div className={cn("absolute -top-3 opacity-0 transition-all z-50 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto focus-within:opacity-100 focus-within:pointer-events-auto", isOwn ? "right-0" : "left-0")}>
       <div className="relative flex items-center bg-background border border-border/60 rounded-lg shadow-md overflow-visible pointer-events-auto">
         <IconButton onClick={onReply} className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground" title="Reply" aria-label="Reply"><ReplyIcon size={14} /></IconButton>
         <button onClick={onOpenThread} className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground" title="Open thread" aria-label="Open thread"><MessageSquare className="h-3.5 w-3.5" /></button>

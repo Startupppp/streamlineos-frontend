@@ -14,6 +14,10 @@ import {
   Smile,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  CHAT_ATTACHMENT_ACCEPT,
+  CHAT_ATTACHMENT_SUMMARY,
+} from "./chat-attachment-types";
 import type { TicketSearchResult } from "@/hooks/api/build";
 import { ChatPopoverFallback } from "./chat-lazy-fallbacks";
 import { getChatMobileComposerInsetClassName } from "@/components/layout/mobile/chat-mobile-chrome-layout";
@@ -38,6 +42,48 @@ const EmojiGrid = dynamic(
 );
 
 export type { MessageInputProps } from "./message-input-types";
+
+function markerRunBefore(value: string, index: number, character: string): number {
+  let run = 0;
+  while (index - run > 0 && value[index - run - 1] === character) run += 1;
+  return run;
+}
+
+function markerRunAfter(value: string, index: number, character: string): number {
+  let run = 0;
+  while (index + run < value.length && value[index + run] === character) run += 1;
+  return run;
+}
+
+/**
+ * Whether the selection is already carrying exactly this marker.
+ *
+ * `*` cannot be read in isolation: the `*` next to a bold selection belongs to its
+ * `**` pair, and removing one of them would turn bold into italic rather than
+ * toggling italic. So the run of marker characters on each side has to be the length
+ * this control owns — which lets Italic NEST inside bold (`**x**` → `***x***`) rather
+ * than eat half of it. Three is the one longer run that is still unambiguous: it is
+ * the combined bold-italic form, where each control takes back its own share.
+ */
+function isSameMarker(before: number, after: number, length: number): boolean {
+  if (before !== after) return false;
+  return before === length || (before === 3 && length <= 2);
+}
+
+/**
+ * React has not committed the new value when this runs, so the caret is restored on
+ * the next tick — as it was before the toggle was added.
+ */
+function selectAfterFormat(
+  el: HTMLTextAreaElement,
+  from: number,
+  length: number,
+): void {
+  setTimeout(() => {
+    el.setSelectionRange(from, from + length);
+    el.focus();
+  }, 0);
+}
 
 export function MessageInput({
   displayName,
@@ -72,21 +118,47 @@ export function MessageInput({
   onInputChange,
   onFilesSelected,
 }: MessageInputProps) {
+  /**
+   * Each control toggles its own marker rather than always adding one.
+   *
+   * It only ever added, so pressing Bold then Italic then Code on the same selection
+   * stacked markers around it and pressing a control twice left the markers behind —
+   * the combination the markdown renderer could not read, which is how the composer
+   * produced visible markup in sent messages (CHAT-S04). Removing the marker when the
+   * selection is already wrapped in it makes the control reversible and keeps the
+   * nesting to the levels the renderer handles.
+   */
   const formatSelection = useCallback((marker: string, block = false) => {
     const el = inputRef.current;
     if (!el) return;
     const start = el.selectionStart;
     const end = el.selectionEnd;
     const selected = el.value.slice(start, end);
-    const formatted = block
-      ? `\`\`\`\n${selected || "code"}\n\`\`\``
-      : `${marker}${selected || "text"}${marker}`;
-    const newValue = el.value.slice(0, start) + formatted + el.value.slice(end);
-    setMessageInput(newValue);
-    setTimeout(() => {
-      el.setSelectionRange(start + marker.length, start + marker.length + (selected || "text").length);
-      el.focus();
-    }, 0);
+
+    if (block) {
+      const fenced = `\`\`\`\n${selected || "code"}\n\`\`\``;
+      setMessageInput(el.value.slice(0, start) + fenced + el.value.slice(end));
+      selectAfterFormat(el, start + 4, (selected || "code").length);
+      return;
+    }
+
+    const character = marker[0] ?? "";
+    const before = markerRunBefore(el.value, start, character);
+    const after = markerRunAfter(el.value, end, character);
+
+    if (isSameMarker(before, after, marker.length)) {
+      const unwrapped =
+        el.value.slice(0, start - marker.length) +
+        selected +
+        el.value.slice(end + marker.length);
+      setMessageInput(unwrapped);
+      selectAfterFormat(el, start - marker.length, selected.length);
+      return;
+    }
+
+    const body = selected || "text";
+    setMessageInput(el.value.slice(0, start) + marker + body + marker + el.value.slice(end));
+    selectAfterFormat(el, start + marker.length, body.length);
   }, [inputRef, setMessageInput]);
 
   const handleFormatBold = useCallback(() => formatSelection("**"), [formatSelection]);
@@ -189,7 +261,7 @@ export function MessageInput({
               ref={fileInputRef}
               type="file"
               multiple
-              accept="image/jpeg,image/png,image/gif,image/webp,application/pdf,.doc,.docx,.xls,.xlsx"
+              accept={CHAT_ATTACHMENT_ACCEPT}
               onChange={onFileSelect}
               className="hidden"
               aria-label="Upload file"
@@ -216,7 +288,7 @@ export function MessageInput({
                       ? "text-status-info-ink animate-pulse"
                       : "text-muted-foreground hover:text-foreground",
                   )}
-                  title="Attach file (max 10MB)"
+                  title={`Attach a file — ${CHAT_ATTACHMENT_SUMMARY}, up to 10MB`}
                   aria-label="Attach file"
                 >
                   <Paperclip className="h-[18px] w-[18px]" />
