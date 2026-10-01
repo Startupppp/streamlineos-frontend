@@ -1,9 +1,9 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { delegableModuleIds } from "@/test-utils/permission-catalog";
-
-const ACCESS_MANAGED_MODULES: readonly string[] = delegableModuleIds();
 import { resolveRouteAccess } from "@/lib/rbac/route-access/route-access";
+
+const ACCESS_MANAGED_MODULES = delegableModuleIds();
 
 /**
  * Modules whose access ladder the backend delegates but which have no
@@ -133,9 +133,7 @@ describe("module access route policy", () => {
   it("no exemption outlives the gap it describes", () => {
     const stale = Object.keys(NO_ACCESS_PAGE).filter(
       (moduleKey) =>
-        !ACCESS_MANAGED_MODULES.includes(
-          moduleKey as (typeof ACCESS_MANAGED_MODULES)[number],
-        ) || existsSync(pagePath(moduleKey)),
+        !ACCESS_MANAGED_MODULES.includes(moduleKey) || existsSync(pagePath(moduleKey)),
     );
     expect(stale).toEqual([]);
   });
@@ -150,9 +148,7 @@ describe("module access route policy", () => {
   it("no relocation outlives the module it describes", () => {
     const stale = Object.keys(RELOCATED_ACCESS_PAGE).filter(
       (moduleKey) =>
-        !ACCESS_MANAGED_MODULES.includes(
-          moduleKey as (typeof ACCESS_MANAGED_MODULES)[number],
-        ) || NO_ACCESS_PAGE[moduleKey] !== undefined,
+        !ACCESS_MANAGED_MODULES.includes(moduleKey) || NO_ACCESS_PAGE[moduleKey] !== undefined,
     );
     expect(stale).toEqual([]);
   });

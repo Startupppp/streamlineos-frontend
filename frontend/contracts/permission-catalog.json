@@ -1208,7 +1208,7 @@
     "billing:coupons:manage": {
       "resource": "billing:coupons",
       "action": "manage",
-      "description": "Redeem and validate a promotion code on this organization",
+      "description": "Redeem and validate a promotion code on this organization's own subscription",
       "scopable": false
     },
     "billing:enterprise-quotes:approve": {
@@ -1688,7 +1688,7 @@
     "build:timesheets:manage": {
       "resource": "build:timesheets",
       "action": "manage",
-      "description": "Manage all timesheets (owner/admin: see and edit everyone",
+      "description": "Manage all timesheets (owner/admin: see and edit everyone's)",
       "scopable": true
     },
     "build:timesheets:view": {
@@ -1885,7 +1885,7 @@
     "crm:call-analysis:run": {
       "resource": "crm:call-analysis",
       "action": "run",
-      "description": "Analyse a completed call"
+      "description": "Analyse a completed call's transcript. A transcript that has already been analysed is returned from cache and costs nothing"
     },
     "crm:call-analysis:view": {
       "resource": "crm:call-analysis",
@@ -1895,7 +1895,7 @@
     "crm:call-analysis:view-team": {
       "resource": "crm:call-analysis",
       "action": "view-team",
-      "description": "Read call analyses for calls you were not on, once the rep has shared one or their private window has elapsed, and see the team"
+      "description": "Read call analyses for calls you were not on, once the rep has shared one or their private window has elapsed, and see the team's coaching digest"
     },
     "crm:call-recording-consent:attest": {
       "resource": "crm:call-recording-consent",
@@ -1967,8 +1967,7 @@
     "crm:contacts:view": {
       "resource": "crm:contacts",
       "action": "view",
-      "description": "View CRM contacts",
-      "scopable": true
+      "description": "View CRM contacts"
     },
     "crm:custom-fields:manage": {
       "resource": "crm:custom-fields",
@@ -1983,7 +1982,7 @@
     "crm:customer-health:manage": {
       "resource": "crm:customer-health",
       "action": "manage",
-      "description": "Recompute a customer"
+      "description": "Recompute a customer's health score from its sources and update the score shown on the customer record"
     },
     "crm:customer-health:view": {
       "resource": "crm:customer-health",

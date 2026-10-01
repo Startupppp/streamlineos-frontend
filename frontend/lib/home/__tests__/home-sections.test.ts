@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import {
   HOME_SECTIONS,
@@ -8,6 +8,7 @@ import {
 } from "../home-sections";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 import { backendPath } from "@/test-utils/backend-repo";
+import { backendPermissionNames } from "@/test-utils/permission-catalog";
 
 const FRONTEND_ROOT = resolve(__dirname, "../../..");
 const DASHBOARD_HOOKS = join(FRONTEND_ROOT, "hooks", "api", "dashboard.ts");
@@ -17,19 +18,7 @@ const DASHBOARD_ACCESS = join(
   "dashboard",
   "use-dashboard-access.ts",
 );
-const PERMISSIONS_DIR = join(FRONTEND_ROOT, "lib", "rbac", "permissions");
 const BACKEND_DASHBOARD_CONTROLLER = backendPath("src", "modules", "dashboard", "dashboard.controller.ts");
-
-function frontendCatalogKeys(): Set<string> {
-  const keys = new Set<string>();
-  for (const fileName of readdirSync(PERMISSIONS_DIR)) {
-    if (!fileName.endsWith(".ts")) continue;
-    const source = readFileSync(join(PERMISSIONS_DIR, fileName), "utf8");
-    for (const match of source.matchAll(/name:\s*["']([^"']+)["']/g))
-      keys.add(match[1]);
-  }
-  return keys;
-}
 
 interface BackendRoute {
   path: string;
@@ -63,7 +52,7 @@ function backendDashboardRoutes(): Map<string, BackendRoute> {
 }
 
 describe("Home section access metadata", () => {
-  const catalog = frontendCatalogKeys();
+  const catalog = backendPermissionNames();
 
   it("declares a section for a real surface, so an empty registry cannot pass", () => {
     expect(HOME_SECTIONS.length).toBeGreaterThanOrEqual(15);

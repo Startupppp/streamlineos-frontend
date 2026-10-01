@@ -46,7 +46,9 @@ import {
   buildCatalog,
   extractDelegableModuleIds,
   extractMemberDefaultPermissions,
+  extractModuleAccessPermissionObjects,
   extractOwnerOnlyOperations,
+  extractPermissionObjects,
   extractPermissionNames,
   isPermissionKey,
   openApiPermissions,
@@ -198,6 +200,43 @@ async function runSelfTest() {
   );
   assert("owner-only ids map to their reason", ownerOnly["org.delete"] === "Destroys the tenant.");
 
+  const [apostrophe] = extractPermissionObjects(
+    [
+      "{",
+      "  /* It was declared `scopable: true` once. */",
+      '  name: "hr:timesheets:manage",',
+      '  resource: "hr:timesheets",',
+      '  action: "manage",',
+      `  description: "Edit everyone's timesheets",`,
+      "}",
+    ].join("\n"),
+  );
+  assert(
+    "an apostrophe inside a double-quoted description is kept, not truncated",
+    apostrophe?.description === "Edit everyone's timesheets",
+  );
+  assert("a field named inside a comment is not read as metadata", apostrophe?.scopable === undefined);
+
+  const accessObjects = extractModuleAccessPermissionObjects(
+    [
+      "ACCESS_MANAGED_MODULES.flatMap((moduleKey) => [",
+      "  {",
+      "    name: `${moduleKey}:access:view`,",
+      "    resource: `${moduleKey}:access`,",
+      '    action: "view",',
+      "    description: `View access for the ${moduleKey} module`,",
+      "  },",
+      "]);",
+    ].join("\n"),
+    ["hr", "crm"],
+  );
+  assert(
+    "module-access metadata is expanded from the backend template for every delegable module",
+    accessObjects.length === 2 &&
+      accessObjects[1].name === "crm:access:view" &&
+      accessObjects[1].description === "View access for the crm module",
+  );
+
   const catalog = buildCatalog({
     permissionSources: [permissionSource],
     moduleRegistrySource: registrySource,
@@ -296,6 +335,10 @@ async function runSelfTest() {
   process.exit(0);
 }
 
+function readVendored(path) {
+  return readFileSync(path, "utf8").replaceAll("\r\n", "\n");
+}
+
 function main() {
   if (!existsSync(CATALOG_PATH)) {
     console.error(
@@ -310,7 +353,7 @@ function main() {
     process.exit(1);
   }
 
-  const vendored = readFileSync(CATALOG_PATH, "utf8");
+  const vendored = readVendored(CATALOG_PATH);
   let catalog;
   try {
     catalog = JSON.parse(vendored);
@@ -319,7 +362,7 @@ function main() {
     process.exit(1);
   }
 
-  const vendoredTs = readFileSync(PERMISSION_KEY_TS_PATH, "utf8");
+  const vendoredTs = readVendored(PERMISSION_KEY_TS_PATH);
 
   let failed = false;
 

@@ -762,5 +762,4 @@ export type PermissionKey =
   | "workflows:workflows:delete"
   | "workflows:workflows:publish"
   | "workflows:workflows:update"
-  | "workflows:workflows:view"
-  ;
+  | "workflows:workflows:view";

@@ -26,34 +26,89 @@ export function isPermissionCatalogFile(fileName) {
 
 /** `name: "hr:leaves:view"` entries, skipping template literals the scan cannot resolve. */
 export function extractPermissionNames(source) {
-  return [...source.matchAll(/^\s*name:\s*["'`]([^"'`]+)["'`]/gm)]
+  return [...stripComments(source).matchAll(/^\s*name:\s*["'`]([^"'`]+)["'`]/gm)]
     .map((match) => match[1])
     .filter((name) => !name.includes("${"));
 }
 
+const QUOTED_VALUE = /^(?:"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)'|`((?:[^`\\]|\\.)*)`)/;
+
+function literalField(body, field) {
+  const label = body.match(new RegExp(`\\b${field}:\\s*`));
+  if (!label || label.index === undefined) return undefined;
+  const value = body.slice(label.index + label[0].length).match(QUOTED_VALUE);
+  if (!value) return undefined;
+  return (value[1] ?? value[2] ?? value[3]).replace(/\\(.)/g, "$1");
+}
+
+export function stripComments(source) {
+  let out = "";
+  let quote = null;
+  for (let i = 0; i < source.length; i += 1) {
+    const char = source[i];
+    if (quote !== null) {
+      out += char;
+      if (char === "\\") {
+        out += source[i + 1] ?? "";
+        i += 1;
+      } else if (char === quote) quote = null;
+      continue;
+    }
+    if (char === "/" && source[i + 1] === "*") {
+      const end = source.indexOf("*/", i + 2);
+      i = end === -1 ? source.length : end + 1;
+      continue;
+    }
+    if (char === "/" && source[i + 1] === "/") {
+      const end = source.indexOf("\n", i + 2);
+      i = end === -1 ? source.length : end - 1;
+      continue;
+    }
+    if (char === '"' || char === "'" || char === "`") quote = char;
+    out += char;
+  }
+  return out;
+}
+
 export function extractPermissionObjects(source) {
   const results = [];
-  for (const block of source.matchAll(/\{([^{}]+)\}/g)) {
+  for (const block of stripComments(source).matchAll(/\{([^{}]+)\}/g)) {
     const body = block[1];
-    const nameM = body.match(/\bname:\s*["']([^"']+)["']/);
-    if (!nameM || nameM[1].includes("${")) continue;
-    const resourceM = body.match(/\bresource:\s*["']([^"']+)["']/);
-    const actionM = body.match(/\baction:\s*["']([^"']+)["']/);
-    const descM = body.match(/\bdescription:\s*["']([^"']+)["']/);
-    if (!resourceM || !actionM || !descM) continue;
-    const entry = {
-      name: nameM[1],
-      resource: resourceM[1],
-      action: actionM[1],
-      description: descM[1],
-    };
-    const scopableM = body.match(/\bscopable:\s*(true|false)/);
-    if (scopableM) entry.scopable = scopableM[1] === "true";
-    const baselineScopeM = body.match(/\bbaselineScope:\s*["']([^"']+)["']/);
-    if (baselineScopeM) entry.baselineScope = baselineScopeM[1];
+    const name = literalField(body, "name");
+    if (name === undefined || name.includes("${")) continue;
+    const resource = literalField(body, "resource");
+    const action = literalField(body, "action");
+    const description = literalField(body, "description");
+    if (resource === undefined || action === undefined || description === undefined) continue;
+    const entry = { name, resource, action, description };
+    const scopable = body.match(/\bscopable:\s*(true|false)/);
+    if (scopable) entry.scopable = scopable[1] === "true";
+    const baselineScope = literalField(body, "baselineScope");
+    if (baselineScope !== undefined) entry.baselineScope = baselineScope;
     results.push(entry);
   }
   return results;
+}
+
+const MODULE_PLACEHOLDER = "__module__";
+
+export function extractModuleAccessPermissionObjects(source, delegableModuleIds) {
+  const variable = source.match(/\bname:\s*`\$\{(\w+)\}/);
+  if (!variable) return [];
+  const templated = source.split(`\${${variable[1]}}`).join(MODULE_PLACEHOLDER);
+  const templates = extractPermissionObjects(templated).filter((entry) =>
+    entry.name.startsWith(`${MODULE_PLACEHOLDER}:`),
+  );
+  return delegableModuleIds.flatMap((id) =>
+    templates.map((entry) =>
+      Object.fromEntries(
+        Object.entries(entry).map(([field, value]) => [
+          field,
+          typeof value === "string" ? value.split(MODULE_PLACEHOLDER).join(id) : value,
+        ]),
+      ),
+    ),
+  );
 }
 
 /** Module ids whose ladder is `delegable`; each generates `<id>:access:view|manage`. */
@@ -67,23 +122,6 @@ export function extractDelegableModuleIds(source) {
 
 export function moduleAccessPermissions(delegableModuleIds) {
   return delegableModuleIds.flatMap((id) => [`${id}:access:view`, `${id}:access:manage`]);
-}
-
-export function moduleAccessPermissionObjects(delegableModuleIds) {
-  return delegableModuleIds.flatMap((id) => [
-    {
-      name: `${id}:access:view`,
-      resource: `${id}:access`,
-      action: "view",
-      description: `View roles, permissions and assignments for the ${id} module`,
-    },
-    {
-      name: `${id}:access:manage`,
-      resource: `${id}:access`,
-      action: "manage",
-      description: `View access administration for the ${id} module; changing roles, permissions, or assignments additionally requires Module Admin, Module Owner, Org Admin, or Org Owner authority`,
-    },
-  ]);
 }
 
 /**
@@ -138,21 +176,19 @@ export function buildCatalog({
 
   const detailsByName = new Map();
   for (const source of permissionSources) {
-    for (const obj of extractPermissionObjects(source)) {
-      if (!detailsByName.has(obj.name)) detailsByName.set(obj.name, obj);
+    const objects = [
+      ...extractPermissionObjects(source),
+      ...extractModuleAccessPermissionObjects(source, delegableModuleIds),
+    ];
+    for (const { name, ...detail } of objects) {
+      if (!detailsByName.has(name)) detailsByName.set(name, detail);
     }
-  }
-  for (const obj of moduleAccessPermissionObjects(delegableModuleIds)) {
-    if (!detailsByName.has(obj.name)) detailsByName.set(obj.name, obj);
   }
 
   const permissionDetails = {};
   for (const name of allNames) {
-    const entry = detailsByName.get(name);
-    if (entry) {
-      const { name: _n, ...rest } = entry;
-      permissionDetails[name] = rest;
-    }
+    const detail = detailsByName.get(name);
+    if (detail) permissionDetails[name] = detail;
   }
 
   return {

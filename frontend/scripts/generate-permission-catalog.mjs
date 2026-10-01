@@ -50,7 +50,7 @@ export function readBackendCatalog() {
 
 export function serializePermissionKeyTs(permissions) {
   const body = permissions.map((key) => `  | "${key}"`).join("\n");
-  return ["export type PermissionKey =", body, "  ;", ""].join("\n");
+  return `export type PermissionKey =\n${body};\n`;
 }
 
 function main() {
