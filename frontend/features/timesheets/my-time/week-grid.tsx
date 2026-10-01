@@ -250,7 +250,16 @@ export function WeekGrid({
         data-hidden-right={gridOverflow.hiddenRight}
         className={cn("overflow-x-auto rounded-lg border border-border scrollbar-thin", OVERFLOW_EDGE_FADE_CLASS)}
       >
-        <table className="w-full text-xs" style={{ minWidth: 800 }}>
+        {/*
+          `table-fixed` is load-bearing, not cosmetic. Under the default auto
+          layout a cell's declared width is only a suggestion, so the sticky
+          project column grew to the longest project name — 242px of a 356px
+          scroll port at 390px wide — and, being sticky, it then sat on top of
+          Thu/Fri/Sat at every scroll offset that would have revealed them.
+          Fixed layout makes `w-28 sm:w-48` the real width and lets the
+          `truncate` inside the cell do its job (QA-TS-001).
+        */}
+        <table className="w-full table-fixed text-xs" style={{ minWidth: 800 }}>
           <caption className="sr-only">
             Hours by project and day for the week of{" "}
             {format(parseISO(weekStart), "d MMMM yyyy")}. Use the arrow keys to
@@ -258,7 +267,9 @@ export function WeekGrid({
           </caption>
           <thead>
             <tr className="bg-muted/40 border-b border-border">
-              <th className="sticky left-0 z-10 bg-muted/40 text-left px-3 py-2 font-medium text-muted-foreground w-28 sm:w-48 border-r border-border">
+              {/* Opaque, not `bg-muted/40`: a translucent sticky cell lets the
+                  day columns it is covering show through it (QA-TS-001). */}
+              <th className="sticky left-0 z-10 bg-card text-left px-3 py-2 font-medium text-muted-foreground w-28 sm:w-48 border-r border-border">
                 Project / Ticket
               </th>
               {days.map((d) => (
@@ -290,7 +301,7 @@ export function WeekGrid({
                   key={row.rowKey}
                   className="group hover:bg-muted/20 transition-colors"
                 >
-                  <th scope="row" className="sticky left-0 z-10 bg-card group-hover:bg-muted/20 px-3 py-1.5 text-left font-normal border-r border-border">
+                  <th scope="row" className="sticky left-0 z-10 bg-card group-hover:bg-muted px-3 py-1.5 text-left font-normal border-r border-border">
                     <TruncatedText
                       text={row.projectName}
                       className="font-medium text-foreground"
@@ -372,7 +383,7 @@ export function WeekGrid({
           </tbody>
           <tfoot>
             <tr className="border-t border-border bg-muted/30">
-              <td className="sticky left-0 z-10 bg-muted/30 px-3 py-2 text-xs font-semibold text-muted-foreground border-r border-border">
+              <td className="sticky left-0 z-10 bg-card px-3 py-2 text-xs font-semibold text-muted-foreground border-r border-border">
                 Total
               </td>
               {dayTotals.map((total, i) => (
