@@ -134,7 +134,6 @@ const REMAINING_BY_MODULE: Readonly<Record<string, number>> = {
   "portal-access": 2,
   "workflows": 2,
   "auth": 1,
-  "blog": 2, // main's blog admin tables, arrived on merge
   "calendar": 1,
   "feedbucket": 1,
   "forms": 1,
