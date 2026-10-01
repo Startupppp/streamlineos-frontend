@@ -6,6 +6,7 @@ import {
   ticketTypeContract,
 } from "./build-tickets-core-schema";
 import { DB_ENUMS } from "@/contracts/db-enums.generated";
+import { genTicketColumnCountsSchema } from "@/contracts/build-contracts.generated";
 
 const ticketRelationRelatedTicketSchema = z
   .object({
@@ -176,7 +177,7 @@ export const ticketUpdateRequestContract = z
   })
   .strict();
 
-export const columnCountsContract = z.record(z.string(), z.number().int());
+export const columnCountsContract = genTicketColumnCountsSchema;
 
 export const ticketRowListContract = z.array(ticketRowContract);
 

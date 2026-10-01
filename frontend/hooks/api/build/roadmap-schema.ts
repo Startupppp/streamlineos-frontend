@@ -1,4 +1,10 @@
 import { z } from "zod";
+import {
+  genRoadmapPageSchema,
+  genFeedbackPageSchema,
+  genChangelogPageSchema,
+  genRoadmapPublicationSchema,
+} from "@/contracts/build-contracts.generated";
 
 export const RICE_INPUT_NAMES = ["reach", "impact", "confidence", "effort"] as const;
 export const RICE_SCORE_UNAVAILABLE_REASONS = ["missing_inputs", "non_positive_effort"] as const;
@@ -95,15 +101,7 @@ export const roadmapItemContract = z.object({
   tierWeighting: roadmapTierWeightingContract,
 });
 
-export const roadmapPageContract = z.object({
-  data: z.array(roadmapItemContract),
-  pagination: z.object({
-    limit: z.number().int(),
-    hasMore: z.boolean(),
-    nextCursor: z.string().nullable(),
-  }),
-  total: z.number().int().optional(),
-});
+export const roadmapPageContract = genRoadmapPageSchema;
 
 export const feedbackPostContract = z.object({
   id: z.number().int(),
@@ -130,14 +128,7 @@ export const feedbackPostContract = z.object({
 
 export const feedbackListContract = z.array(feedbackPostContract);
 
-export const feedbackPageContract = z.object({
-  data: z.array(feedbackPostContract),
-  pagination: z.object({
-    limit: z.number().int(),
-    hasMore: z.boolean(),
-    nextCursor: z.string().nullable(),
-  }),
-});
+export const feedbackPageContract = genFeedbackPageSchema;
 
 export const changelogEntryContract = z.object({
   id: z.number().int(),
@@ -156,14 +147,7 @@ export const changelogEntryContract = z.object({
 
 export const changelogListContract = z.array(changelogEntryContract);
 
-export const changelogPageContract = z.object({
-  data: z.array(changelogEntryContract),
-  pagination: z.object({
-    limit: z.number().int(),
-    hasMore: z.boolean(),
-    nextCursor: z.string().nullable(),
-  }),
-});
+export const changelogPageContract = genChangelogPageSchema;
 
 export const templateRowContract = z.object({
   id: z.number().int(),
@@ -255,7 +239,4 @@ export const publicFeedbackResultContract = z.object({
   message: z.string(),
 });
 
-export const roadmapPublicationContract = z.object({
-  token: z.string().nullable(),
-  path: z.string().nullable(),
-});
+export const roadmapPublicationContract = genRoadmapPublicationSchema;

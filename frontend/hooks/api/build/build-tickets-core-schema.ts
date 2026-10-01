@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { DB_ENUMS } from "@/contracts/db-enums.generated";
+import { genTicketDetailWireSchema, genTicketListPageSchema } from "@/contracts/build-contracts.generated";
 
 const userSummarySchema = z
   .object({
@@ -75,7 +76,7 @@ const ticketDetailCommentSchema = z.object({
   reactions: z.array(commentReactionSchema).default([]),
 });
 
-export const ticketDetailContract = ticketRowContract.extend({
+export const ticketDetailContract = genTicketDetailWireSchema.extend({
   comments: z
     .array(ticketDetailCommentSchema)
     .default([])
@@ -264,10 +265,7 @@ export const ticketListRowContract = ticketRowContract
       .nullable(),
   });
 
-export const ticketListPageContract = z.object({
-  data: z.array(ticketListRowContract),
-  pagination: paginationContract,
-});
+export const ticketListPageContract = genTicketListPageSchema;
 
 export const ticketActivityActionContract = z.enum([
   "created",

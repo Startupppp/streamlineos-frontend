@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { DB_ENUMS } from "@/contracts/db-enums.generated";
+import { genTeamListSchema, genTeamRowSchema } from "@/contracts/build-contracts.generated";
 
 export const teamRowContract = z.object({
   id: z.number().int(),
@@ -19,25 +20,9 @@ export const teamListItemContract = teamRowContract
   .omit({ deletedAt: true })
   .extend({ memberCount: z.number().int() });
 
-export const teamPageContract = z.object({
-  data: z.array(teamListItemContract),
-  pagination: z.object({
-    limit: z.number().int(),
-    hasMore: z.boolean(),
-    nextCursor: z.string().nullable(),
-  }),
-});
+export const teamPageContract = genTeamListSchema;
 
-export const teamDetailContract = teamRowContract.extend({
-  members: z.array(z.object({
-    userId: z.string(),
-    firstName: z.string().nullable(),
-    lastName: z.string().nullable(),
-    email: z.string(),
-    image: z.string().nullable(),
-    role: z.string(),
-  })),
-});
+export const teamDetailContract = genTeamRowSchema;
 
 export const teamMemberRowContract = z.object({
   id: z.number().int(),

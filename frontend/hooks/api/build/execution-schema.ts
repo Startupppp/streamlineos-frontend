@@ -1,25 +1,7 @@
 import { z } from "zod";
 import { DB_ENUMS } from "@/contracts/db-enums.generated";
+import { genCycleListSchema, genModuleListSchema, genWorkloadCapacitySchema } from "@/contracts/build-contracts.generated";
 
-const cycleListItemSchema = z.object({
-  id: z.number(),
-  orgId: z.string(),
-  projectId: z.number(),
-  name: z.string(),
-  description: z.string().nullable(),
-  goal: z.string().nullable(),
-  capacity: z.number().nullable(),
-  startDate: z.string(),
-  endDate: z.string(),
-  status: z.enum(DB_ENUMS.cycle_status),
-  version: z.number(),
-  createdBy: z.string(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  totalItems: z.number(),
-  completedItems: z.number(),
-  progress: z.number(),
-});
 
 const cycleRowSchema = z.object({
   id: z.number(),
@@ -119,25 +101,11 @@ const epicRowSchema = z.object({
     .transform((value) => value?.user ?? null),
 });
 
-export const cyclePageContract = z.object({
-  data: z.array(cycleListItemSchema),
-  pagination: z.object({
-    limit: z.number(),
-    hasMore: z.boolean(),
-    nextCursor: z.string().nullable(),
-  }),
-});
+export const cyclePageContract = genCycleListSchema;
 export const cycleListContract = cyclePageContract;
 export const cycleRowContract = cycleRowSchema;
 export const moduleListContract = z.array(moduleListItemSchema);
-export const modulePageContract = z.object({
-  data: z.array(moduleListItemSchema),
-  pagination: z.object({
-    limit: z.number().int().positive(),
-    hasMore: z.boolean(),
-    nextCursor: z.string().nullable(),
-  }),
-});
+export const modulePageContract = genModuleListSchema;
 export const moduleResponseContract = z.union([modulePageContract, moduleListContract]);
 export const moduleRowContract = moduleRowSchema;
 export const epicPageContract = z.object({
@@ -167,8 +135,6 @@ export const memberCapacityItemSchema = z.object({
   utilizationPercent: z.number().nullable(),
 });
 
-export const workloadCapacityContract = z.object({
-  members: z.array(memberCapacityItemSchema),
-});
+export const workloadCapacityContract = genWorkloadCapacitySchema;
 
 export type MemberCapacityItem = z.infer<typeof memberCapacityItemSchema>;

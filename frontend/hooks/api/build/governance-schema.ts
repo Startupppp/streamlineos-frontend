@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { idCursorPageContract } from "@/hooks/api/cursor-page-schema";
 import { DB_ENUMS } from "@/contracts/db-enums.generated";
+import { genRiskPageSchema, genRiskStatsSchema, genDecisionPageSchema } from "@/contracts/build-contracts.generated";
 
 const riskLevelContract = z.enum(DB_ENUMS.risk_probability);
 const riskStatusValueContract = z.enum(DB_ENUMS.risk_status);
@@ -25,7 +25,7 @@ export const riskRowContract = z.object({
   deletedAt: z.string().nullable(),
 });
 
-export const riskPageContract = idCursorPageContract(riskRowContract);
+export const riskPageContract = genRiskPageSchema;
 
 export const riskMatrixCellContract = z.object({
   probability: riskLevelContract,
@@ -33,13 +33,7 @@ export const riskMatrixCellContract = z.object({
   openCount: z.number().int(),
 });
 
-export const riskStatsContract = z.object({
-  total: z.number().int(),
-  open: z.number().int(),
-  closed: z.number().int(),
-  highCritical: z.number().int(),
-  matrix: z.array(riskMatrixCellContract),
-});
+export const riskStatsContract = genRiskStatsSchema;
 
 export type RiskMatrixCell = z.infer<typeof riskMatrixCellContract>;
 export type RiskStats = z.infer<typeof riskStatsContract>;
@@ -64,6 +58,6 @@ export const decisionRowContract = z.object({
   deletedAt: z.string().nullable(),
 });
 
-export const decisionPageContract = idCursorPageContract(decisionRowContract);
+export const decisionPageContract = genDecisionPageSchema;
 
 export const governanceSuccessContract = z.object({ success: z.literal(true) });

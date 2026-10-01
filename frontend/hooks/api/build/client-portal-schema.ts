@@ -1,68 +1,18 @@
 import { z } from "zod";
 import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
 import type { ResponseContract } from "@/lib/api-envelope";
+import {
+  genPortalProjectListSchema,
+  genPortalProjectOverviewSchema,
+  genPortalChangeRequestListSchema,
+} from "@/contracts/build-contracts.generated";
 
-export const portalProjectItemContract = z.object({
-  id: z.number().int(),
-  name: z.string(),
-  key: z.string(),
-  status: z.string(),
-  startDate: z.string().nullable(),
-  targetEndDate: z.string().nullable(),
-});
+export const portalProjectListContract = genPortalProjectListSchema;
 
-export const portalProjectListContract = z.array(portalProjectItemContract);
+export const portalProjectOverviewContract = genPortalProjectOverviewSchema;
 
-export const portalProjectOverviewContract = z.object({
-  project: portalProjectItemContract,
-  milestones: z.array(z.object({
-    id: z.number().int(),
-    name: z.string(),
-    dueDate: z.string().nullable(),
-    status: z.string(),
-  })),
-  tasks: z.array(z.object({
-    id: z.number().int(),
-    ticketNumber: z.number().int(),
-    title: z.string(),
-    status: z.string(),
-    dueDate: z.string().nullable(),
-  })),
-  attachments: z.array(z.object({
-    id: z.number().int(),
-    filename: z.string(),
-    url: z.string(),
-  })),
-  comments: z.array(z.object({
-    id: z.number().int(),
-    body: z.string(),
-    authorName: z.string().nullable(),
-    createdAt: z.string(),
-  })),
-});
-
-export const portalChangeRequestItemContract = z.object({
-  id: z.number().int(),
-  orgId: z.string().optional(),
-  projectId: z.number().int().optional(),
-  crNumber: z.number().int(),
-  title: z.string(),
-  description: z.string().nullable(),
-  impact: z.string().nullable(),
-  status: z.string(),
-  estimateMinutes: z.number().int().nullable(),
-  budgetImpactCents: z.number().int().nullable(),
-  timelineImpactDays: z.number().int().nullable(),
-  decisionComment: z.string().nullable(),
-  requestedById: z.string().nullable().optional(),
-  approvalOwnerId: z.string().nullable().optional(),
-  decidedAt: z.string().nullable().optional(),
-  deletedAt: z.string().nullable().optional(),
-  createdAt: z.string(),
-  updatedAt: z.string().optional(),
-});
-
-export const portalChangeRequestListContract = z.array(portalChangeRequestItemContract);
+export const portalChangeRequestListContract = genPortalChangeRequestListSchema;
+export const portalChangeRequestItemContract = genPortalChangeRequestListSchema.element;
 
 const ticketVisibilityItemContract = z.object({
   id: z.number().int(),

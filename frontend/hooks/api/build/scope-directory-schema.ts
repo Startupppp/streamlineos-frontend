@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { genScopeDirectorySearchSchema } from "@/contracts/build-contracts.generated";
 
 export const scopeDirectoryRefSchema = z.object({
   key: z.string(),
@@ -16,7 +17,4 @@ export const scopeDirectoryResolveContract = z.object({
   data: z.array(scopeDirectoryRefSchema),
 });
 
-export const scopeDirectorySearchContract = z.object({
-  data: z.array(scopeDirectoryRefSchema),
-  nextCursor: z.string().nullable(),
-});
+export const scopeDirectorySearchContract = genScopeDirectorySearchSchema;

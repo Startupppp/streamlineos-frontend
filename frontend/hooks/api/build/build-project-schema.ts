@@ -1,9 +1,13 @@
 import { z } from "zod";
+import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
 import {
-  cursorPageContract,
-  idCursorPageContract,
-} from "@/hooks/api/cursor-page-schema";
-import { genProjectListPageSchema } from "@/contracts/build-contracts.generated";
+  genProjectListPageSchema,
+  genProjectRosterSchema,
+  genWebhookPageSchema,
+  genWebhookDeliveryListSchema,
+  genBuildMembersSchema,
+  genCustomFieldListSchema,
+} from "@/contracts/build-contracts.generated";
 
 const ticketLabelSchema = z.object({
   id: z.number(),
@@ -164,21 +168,6 @@ export const projectMemberSchema = z.object({
   joinedAt: z.string(),
 });
 
-const projectRosterSchema = z.object({
-  teams: z.array(
-    z.object({ id: z.number(), name: z.string(), key: z.string() }),
-  ),
-  members: z.array(
-    z.object({
-      id: z.string(),
-      name: z.string().nullable(),
-      firstName: z.string().nullable(),
-      lastName: z.string().nullable(),
-      email: z.string(),
-      image: z.string().nullable(),
-    }),
-  ),
-});
 
 const projectMemberRowSchema = z.object({
   id: z.number(),
@@ -322,16 +311,6 @@ const projectWebhookSchema = z.object({
   failureRate: z.number().nullable(),
 });
 
-const webhookDeliverySchema = z.object({
-  id: z.number(),
-  webhookId: z.number(),
-  event: z.string(),
-  status: z.enum(["success", "failed", "pending"]),
-  responseCode: z.number().nullable(),
-  attempts: z.number(),
-  lastError: z.string().nullable(),
-  deliveredAt: z.string(),
-});
 
 const webhookTestResultSchema = z.object({
   success: z.boolean(),
@@ -405,26 +384,6 @@ const projectAutomationRowSchema = z.object({
   updatedAt: z.string(),
 });
 
-const buildMemberItemSchema = z.object({
-  id: z.string(),
-  role: z.enum(["member", "admin"]),
-  addedAt: z.string(),
-  name: z.string().nullable(),
-  firstName: z.string().nullable(),
-  lastName: z.string().nullable(),
-  email: z.string(),
-  image: z.string().nullable(),
-  teams: z.array(z.string()),
-});
-
-const buildMemberPageSchema = z.object({
-  data: z.array(buildMemberItemSchema),
-  pagination: z.object({
-    limit: z.number(),
-    hasMore: z.boolean(),
-    nextCursor: z.string().nullable(),
-  }),
-});
 
 const buildMemberRowSchema = z.object({
   id: z.number(),
@@ -443,11 +402,11 @@ export const projectMemberPageContract =
   cursorPageContract(projectMemberSchema);
 export const projectMemberRowContract = projectMemberRowSchema;
 export const memberRoleContract = memberRoleSchema;
-export const projectRosterContract = projectRosterSchema;
+export const projectRosterContract = genProjectRosterSchema;
 export const projectCustomStateListContract = z.array(projectCustomStateSchema);
 export const projectCustomStateContract = projectCustomStateSchema;
 export const bulkReorderStatesResultContract = bulkReorderStatesResultSchema;
-export const buildCustomFieldListContract = z.array(buildCustomFieldSchema);
+export const buildCustomFieldListContract = genCustomFieldListSchema;
 export const buildCustomFieldContract = buildCustomFieldSchema;
 export const ticketFieldValueListContract = z.array(ticketFieldValueSchema);
 export const ticketFieldValueCreateContract = z.object({
@@ -458,8 +417,7 @@ export const projectReleaseListContract = cursorPageContract(
 );
 export const projectReleaseListItemContract = projectReleaseListItemSchema;
 export const projectReleaseRowContract = projectReleaseRowSchema;
-export const projectWebhookPageContract =
-  idCursorPageContract(projectWebhookSchema);
+export const projectWebhookPageContract = genWebhookPageSchema;
 export const projectWebhookListContract = projectWebhookPageContract;
 export const projectWebhookRowContract = projectWebhookSchema;
 
@@ -471,12 +429,12 @@ export const projectWebhookUpdateRequestContract = z
     isActive: z.boolean().optional(),
   })
   .strict();
-export const webhookDeliveryListContract = z.array(webhookDeliverySchema);
+export const webhookDeliveryListContract = genWebhookDeliveryListSchema;
 export const webhookTestResultContract = webhookTestResultSchema;
 export const projectAutomationListContract = cursorPageContract(
   projectAutomationListItemSchema,
 );
 export const projectAutomationRowContract = projectAutomationRowSchema;
-export const buildMemberPageContract = buildMemberPageSchema;
+export const buildMemberPageContract = genBuildMembersSchema;
 export const buildMemberRowContract = buildMemberRowSchema;
 export const successContract = z.object({ success: z.literal(true) });

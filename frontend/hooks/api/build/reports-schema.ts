@@ -1,62 +1,19 @@
 import { z } from "zod";
+import {
+  genVelocityReportSchema,
+  genBurnupReportSchema,
+  genCfdReportSchema,
+  genCriticalPathSchema,
+  genCycleTimeSchema,
+  genLeadTimeSchema,
+} from "@/contracts/build-contracts.generated";
 
-export const velocityContract = z.array(z.object({
-  cycleId: z.number().int(),
-  name: z.string(),
-  startDate: z.string(),
-  endDate: z.string(),
-  committedPoints: z.number().int(),
-  completedPoints: z.number().int(),
-  committedCount: z.number().int(),
-  completedCount: z.number().int(),
-})).max(100);
-
-export const burnupDataContract = z.array(z.object({
-  date: z.string(),
-  scope: z.number(),
-  completed: z.number(),
-})).max(366);
-
-export const cfdDataContract = z.object({
-  dates: z.array(z.string()),
-  groups: z.array(z.string()),
-  series: z.array(z.object({
-    date: z.string(),
-    backlog: z.number(),
-    unstarted: z.number(),
-    started: z.number(),
-    completed: z.number(),
-    cancelled: z.number(),
-  })),
-});
-
-export const criticalPathContract = z.object({
-  criticalPath: z.array(z.object({
-    ticketId: z.number().int(),
-    title: z.string(),
-    estimate: z.number(),
-    earliestStart: z.number(),
-    earliestFinish: z.number(),
-  })),
-  totalDuration: z.number(),
-  nodeCount: z.number().int(),
-  edgeCount: z.number().int(),
-  hasCycle: z.boolean(),
-});
-
-export const cycleTimeContract = z.array(z.object({
-  week: z.string(),
-  avgDays: z.number(),
-  count: z.number().int(),
-}));
-
-export const leadTimeContract = z.array(z.object({
-  week: z.string(),
-  avgDays: z.number(),
-  p50Days: z.number(),
-  p90Days: z.number(),
-  count: z.number().int(),
-}));
+export const velocityContract = genVelocityReportSchema;
+export const burnupDataContract = genBurnupReportSchema;
+export const cfdDataContract = genCfdReportSchema;
+export const criticalPathContract = genCriticalPathSchema;
+export const cycleTimeContract = genCycleTimeSchema;
+export const leadTimeContract = genLeadTimeSchema;
 
 export const snapshotResultContract = z.object({
   captured: z.number().int(),
