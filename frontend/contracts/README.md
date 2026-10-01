@@ -31,7 +31,7 @@ It is the single capability vocabulary for the frontend. It holds five facts, al
 | Key | From |
 |---|---|
 | `permissions` | every literal `name:` in `backend/src/modules/rbac/permissions/*.ts`, plus the generated `<moduleId>:access:view\|manage` for each delegable module |
-| `permissionDetails` | key -> `resource`, `action`, `description` and, where declared, `scopable` / `baselineScope`, read from the same object literals (module-access entries expanded from the backend template) |
+| `permissionDetails` | key -> `resource`, `action`, `description` and, where declared, `scopable` / `baselineScope` / `sensitive`, read from the same object literals (module-access entries expanded from the backend template) |
 | `delegableModuleIds` | `backend/src/common/rbac/module-registry.ts`, entries whose `ladder` is `delegable` |
 | `memberDefaultPermissions` | the block of `permissions/role-defaults.ts` above `ROLE_DEFAULT_PERMISSIONS` |
 | `ownerOnlyOperations` | id -> reason from `backend/src/common/rbac/owner-only-operations.ts` |

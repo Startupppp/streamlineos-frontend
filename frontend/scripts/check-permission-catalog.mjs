@@ -216,6 +216,20 @@ async function runSelfTest() {
     apostrophe?.description === "Edit everyone's timesheets",
   );
   assert("a field named inside a comment is not read as metadata", apostrophe?.scopable === undefined);
+  assert("an unflagged key carries no sensitivity", apostrophe?.sensitive === undefined);
+
+  const [sensitive] = extractPermissionObjects(
+    [
+      "{",
+      '  name: "payroll:bank:view",',
+      '  resource: "payroll:bank",',
+      '  action: "view",',
+      '  description: "View unmasked bank details",',
+      "  sensitive: true,",
+      "}",
+    ].join("\n"),
+  );
+  assert("a key flagged sensitive in the backend stays sensitive in the contract", sensitive?.sensitive === true);
 
   const accessObjects = extractModuleAccessPermissionObjects(
     [

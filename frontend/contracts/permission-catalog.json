@@ -2514,7 +2514,8 @@
     "hr:bank-details:view": {
       "resource": "hr:bank-details",
       "action": "view",
-      "description": "View unmasked employee bank account details (sensitive)"
+      "description": "View unmasked employee bank account details (sensitive)",
+      "sensitive": true
     },
     "hr:benefits:manage": {
       "resource": "hr:benefits",
@@ -2653,12 +2654,14 @@
     "hr:equity:manage": {
       "resource": "hr:equity",
       "action": "manage",
-      "description": "Manage ESOP/equity grants, vesting, and exercises (sensitive)"
+      "description": "Manage ESOP/equity grants, vesting, and exercises (sensitive)",
+      "sensitive": true
     },
     "hr:equity:view": {
       "resource": "hr:equity",
       "action": "view",
-      "description": "View equity grants and vesting (sensitive)"
+      "description": "View equity grants and vesting (sensitive)",
+      "sensitive": true
     },
     "hr:eventstream:view": {
       "resource": "hr:eventstream",
@@ -2880,7 +2883,8 @@
     "hr:legalhold:manage": {
       "resource": "hr:legalhold",
       "action": "manage",
-      "description": "Place and release legal holds (sensitive)"
+      "description": "Place and release legal holds (sensitive)",
+      "sensitive": true
     },
     "hr:legalhold:view": {
       "resource": "hr:legalhold",
@@ -3075,12 +3079,14 @@
     "hr:sensitive:manage": {
       "resource": "hr:sensitive",
       "action": "manage",
-      "description": "Manage employee sensitive fields"
+      "description": "Manage employee sensitive fields",
+      "sensitive": true
     },
     "hr:sensitive:view": {
       "resource": "hr:sensitive",
       "action": "view",
-      "description": "View employee sensitive fields (salary, bank, tax, government ID, medical)"
+      "description": "View employee sensitive fields (salary, bank, tax, government ID, medical)",
+      "sensitive": true
     },
     "hr:shifts:manage": {
       "resource": "hr:shifts",
@@ -3095,12 +3101,14 @@
     "hr:succession:manage": {
       "resource": "hr:succession",
       "action": "manage",
-      "description": "Manage succession plans (sensitive)"
+      "description": "Manage succession plans (sensitive)",
+      "sensitive": true
     },
     "hr:succession:view": {
       "resource": "hr:succession",
       "action": "view",
-      "description": "View succession plans (sensitive)"
+      "description": "View succession plans (sensitive)",
+      "sensitive": true
     },
     "hr:tax:manage": {
       "resource": "hr:tax",
@@ -3871,7 +3879,8 @@
     "payroll:bank:view": {
       "resource": "payroll:bank",
       "action": "view",
-      "description": "View unmasked bank details (sensitive)"
+      "description": "View unmasked bank details (sensitive)",
+      "sensitive": true
     },
     "payroll:components:manage": {
       "resource": "payroll:components",

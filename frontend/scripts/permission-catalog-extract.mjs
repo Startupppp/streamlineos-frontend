@@ -85,6 +85,7 @@ export function extractPermissionObjects(source) {
     if (scopable) entry.scopable = scopable[1] === "true";
     const baselineScope = literalField(body, "baselineScope");
     if (baselineScope !== undefined) entry.baselineScope = baselineScope;
+    if (/(?:^|[\s,{])sensitive:\s*true\b/.test(body)) entry.sensitive = true;
     results.push(entry);
   }
   return results;

@@ -5,4 +5,5 @@ export type Permission = {
   description: string;
   scopable?: boolean;
   baselineScope?: "own" | "all";
+  sensitive?: true;
 };
