@@ -29,12 +29,19 @@ jest.mock("next/navigation", () => ({
   usePathname: () => "/settings/users",
 }));
 
-let gate = { permission: "settings:organization:manage", allowed: true, denied: false, pending: false };
+let gate: {
+  permission: string;
+  allowed: boolean;
+  denied: boolean;
+  pending: boolean;
+  unavailable?: boolean;
+} = { permission: "settings:organization:manage", allowed: true, denied: false, pending: false };
 let canManageMembership = true;
 
 jest.mock("@/hooks/api/access", () => ({
   usePermissionGate: () => gate,
   useCanManageOrganizationMembership: () => canManageMembership,
+  useAccess: () => ({ refetch: jest.fn() }),
 }));
 
 interface InvitationsQueryState {
@@ -214,6 +221,29 @@ describe("UserInvitationsPanel — empty, denied and failure are three distinct 
 
     expect(screen.getByText("Loading results…")).toBeInTheDocument();
     expect(screen.queryByText("Invitations are restricted")).not.toBeInTheDocument();
+    expect(screen.queryByText("No invitations yet")).not.toBeInTheDocument();
+  });
+
+  /**
+   * SETTINGS-004. An access read that failed is a failure, not a wait. While it
+   * was treated as one the tab said "Loading results…" with nothing to retry,
+   * under a header that was counting the pending invites it would not show.
+   */
+  it("renders a retryable failure, not a forever-skeleton, when the access read itself failed", () => {
+    gate = {
+      permission: "settings:organization:manage",
+      allowed: false,
+      denied: false,
+      pending: false,
+      unavailable: true,
+    };
+    queryState = { data: undefined, isLoading: false, isError: false, error: null };
+
+    render(<Panel />);
+
+    expect(screen.getByText("Failed to load invitations")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /try again/i })).toBeInTheDocument();
+    expect(screen.queryByText("Loading results…")).not.toBeInTheDocument();
     expect(screen.queryByText("No invitations yet")).not.toBeInTheDocument();
   });
 });

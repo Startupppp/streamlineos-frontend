@@ -1,6 +1,7 @@
 "use client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 import { lazyContract } from "@/lib/api-envelope";
@@ -26,6 +27,10 @@ export function useMfaStatus() {
     queryKey: supportAndWorkflowsQueryKeys.mfa.status(),
     queryFn: ({ signal }) => apiClient.get<{ enabled: boolean }>("/auth/mfa/status", undefined, signal, mfaStatusContract),
     staleTime: 2 * 60_000,
+    // SETTINGS-001: see `useSessions`. `MfaSettings` branches on `isError`, so a
+    // failed read says so rather than taking Account Settings down — and never
+    // reports MFA as off on a read it did not get.
+    ...INLINE_READ_ERROR,
   });
 }
 
