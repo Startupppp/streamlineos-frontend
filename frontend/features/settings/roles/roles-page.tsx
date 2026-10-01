@@ -205,9 +205,9 @@ export function RolesPage() {
         <TabsContent value="roles" className="gap-3 overflow-hidden">
         <div className="shrink-0">
           {analyticsLoading ? (
-            <StatCardGridSkeleton cols={5} count={5} />
+            <StatCardGridSkeleton cols={5} count={5} stackOnMobile={2} />
           ) : (
-            <StatCardGrid cols={5}>
+            <StatCardGrid cols={5} stackOnMobile={2}>
               <StatCard label="Total Roles" value={analytics?.totalRoles ?? 0} icon={Layers} />
               <StatCard label="Custom Roles" value={analytics?.customRoles ?? 0} icon={ShieldCheck} tone="blue" />
               <StatCard label="Users Assigned" value={analytics?.usersAssigned ?? 0} icon={Users} tone="emerald" />
