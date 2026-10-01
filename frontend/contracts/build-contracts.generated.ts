@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const OPENAPI_HASH = "sha256:5bf47ec0cfa36f50aec836a49704309ff25fc880555cd4f971e7eb696d53839e" as const;
+export const OPENAPI_HASH = "sha256:ccf224ac170149fba04f45faf7df81f5378bfa493785d73d2efc609b99202b09" as const;
 
 export const agentTokensListResponseSchema = z.array(z.object({
   id: z.number().int(),
@@ -94,9 +94,14 @@ export const projectsAiGenerateTicketChecklistResponseSchema = z.object({
 export type ProjectsAiGenerateTicketChecklistResponse = z.infer<typeof projectsAiGenerateTicketChecklistResponseSchema>;
 
 export const projectsAiTicketHandoffResponseSchema = z.object({
-  summary: z.string(),
-  openItems: z.array(z.string()),
-  context: z.string(),
+  currentState: z.string(),
+  keyDecisions: z.array(z.string()),
+  nextAction: z.string(),
+  blockers: z.array(z.string()),
+  citations: z.array(z.object({
+    source: z.enum(["description", "comment", "decision"]),
+    excerpt: z.string(),
+  })),
 });
 export type ProjectsAiTicketHandoffResponse = z.infer<typeof projectsAiTicketHandoffResponseSchema>;
 
@@ -121,15 +126,14 @@ export type ProjectsAiSuggestTicketSubtasksResponse = z.infer<typeof projectsAiS
 export const projectsAiSummarizeTicketResponseSchema = z.object({
   summary: z.string(),
   keyPoints: z.array(z.string()),
-  actionItems: z.array(z.string()),
-  sentiment: z.enum(["positive", "neutral", "negative"]).optional(),
+  blockers: z.array(z.string()),
 });
 export type ProjectsAiSummarizeTicketResponse = z.infer<typeof projectsAiSummarizeTicketResponseSchema>;
 
 export const projectsAiSummarizeTicketCommentsResponseSchema = z.object({
   summary: z.string(),
-  keyPoints: z.array(z.string()),
-  actionItems: z.array(z.string()),
+  themes: z.array(z.string()),
+  openQuestions: z.array(z.string()),
 });
 export type ProjectsAiSummarizeTicketCommentsResponse = z.infer<typeof projectsAiSummarizeTicketCommentsResponseSchema>;
 
@@ -1654,6 +1658,17 @@ export const projectsTemplatesListTemplatesResponseSchema = z.object({
     createdBy: z.string().nullable(),
     deletedAt: z.iso.datetime({ offset: true }).nullable(),
     createdAt: z.iso.datetime({ offset: true }),
+    tickets: z.array(z.object({
+      id: z.number().int(),
+      templateId: z.number().int(),
+      title: z.string(),
+      description: z.string().nullable(),
+      type: z.string(),
+      priority: z.string(),
+      estimatedHours: z.string().nullable(),
+      order: z.number().int(),
+      phase: z.string().nullable(),
+    })),
   })),
   pagination: z.object({
     limit: z.number().int(),
@@ -1672,6 +1687,17 @@ export const projectsTemplatesCreateTemplateResponseSchema = z.object({
   createdBy: z.string().nullable(),
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
+  tickets: z.array(z.object({
+    id: z.number().int(),
+    templateId: z.number().int(),
+    title: z.string(),
+    description: z.string().nullable(),
+    type: z.string(),
+    priority: z.string(),
+    estimatedHours: z.string().nullable(),
+    order: z.number().int(),
+    phase: z.string().nullable(),
+  })),
 });
 export type ProjectsTemplatesCreateTemplateResponse = z.infer<typeof projectsTemplatesCreateTemplateResponseSchema>;
 
@@ -1692,15 +1718,9 @@ export const projectsTemplatesCreateTemplateBodySchema = z.strictObject({
 export type ProjectsTemplatesCreateTemplateBody = z.input<typeof projectsTemplatesCreateTemplateBodySchema>;
 
 export const projectsTemplatesApplyTemplateResponseSchema = z.object({
-  project: z.object({
-    id: z.number().int(),
-    name: z.string(),
-    key: z.string(),
-  }),
-  tickets: z.array(z.object({
-    id: z.number().int(),
-    title: z.string(),
-  })),
+  projectId: z.number().int(),
+  key: z.string(),
+  ticketsCreated: z.number().int(),
 });
 export type ProjectsTemplatesApplyTemplateResponse = z.infer<typeof projectsTemplatesApplyTemplateResponseSchema>;
 
@@ -1845,6 +1865,10 @@ export const projectsByIdGetProjectResponseSchema = z.object({
       }),
     }),
   })),
+  crmClient: z.object({
+    id: z.number().int(),
+    name: z.string(),
+  }).nullable(),
 });
 export type ProjectsByIdGetProjectResponse = z.infer<typeof projectsByIdGetProjectResponseSchema>;
 
@@ -1899,6 +1923,10 @@ export const projectsByIdUpdateProjectResponseSchema = z.object({
       }),
     }),
   })),
+  crmClient: z.object({
+    id: z.number().int(),
+    name: z.string(),
+  }).nullable(),
 });
 export type ProjectsByIdUpdateProjectResponse = z.infer<typeof projectsByIdUpdateProjectResponseSchema>;
 
@@ -4124,6 +4152,7 @@ export const projectsReleasesCreateReleaseResponseSchema = z.object({
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
+  ticketCount: z.number().int(),
 });
 export type ProjectsReleasesCreateReleaseResponse = z.infer<typeof projectsReleasesCreateReleaseResponseSchema>;
 
@@ -4151,6 +4180,7 @@ export const projectsReleasesUpdateReleaseResponseSchema = z.object({
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
+  ticketCount: z.number().int(),
 });
 export type ProjectsReleasesUpdateReleaseResponse = z.infer<typeof projectsReleasesUpdateReleaseResponseSchema>;
 
