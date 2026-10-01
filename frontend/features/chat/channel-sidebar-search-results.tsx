@@ -10,6 +10,11 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { getInitials } from "@/lib/format-utils";
 import { resolveImageUrl } from "@/lib/utils";
 import { toast } from "sonner";
+import { StalledReadNotice } from "@/components/shared/stalled-read-notice";
+import {
+  PANEL_STALLED_AFTER_MS,
+  useStalledAfter,
+} from "@/hooks/common/use-stalled-after";
 import { ChannelSectionList } from "./channel-section-list";
 import type { ChatSearchScope } from "./chat-search-scope";
 import type { Channel } from "./chat-types";
@@ -96,8 +101,13 @@ function PeopleSearchResults({
   onlineUserIds: Set<string>;
   onSelectChannel: (id: number) => void;
 }) {
-  const { data: orgUsers, isLoading } = useChatOrgUsers();
+  const { data: orgUsers, isLoading, refetch } = useChatOrgUsers();
   const createDM = useCreateDMChannel();
+  // CHAT-F-003/F-004: the same ~61s of silent skeleton as the conversation list.
+  const stalled = useStalledAfter(isLoading, PANEL_STALLED_AFTER_MS);
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const filtered = useMemo(() => {
     if (!orgUsers) return [];
@@ -126,6 +136,9 @@ function PeopleSearchResults({
   if (isLoading) {
     return (
       <div className="space-y-2 p-2" aria-busy="true">
+        {stalled && (
+          <StalledReadNotice subject="people" onRetry={handleRetry} />
+        )}
         <span role="status" className="sr-only">
           Loading people…
         </span>

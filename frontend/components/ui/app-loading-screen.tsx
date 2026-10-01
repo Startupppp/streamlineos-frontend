@@ -1,9 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
 import { AppLoadingStalled } from "@/components/ui/app-loading-stalled";
+import {
+  DEFAULT_STALLED_AFTER_MS,
+  useStalledAfter,
+} from "@/hooks/common/use-stalled-after";
 import { cn } from "@/lib/utils";
 
 interface AppLoadingScreenProps {
@@ -15,7 +18,7 @@ interface AppLoadingScreenProps {
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
 
-export const DEFAULT_STALLED_AFTER_MS = 20_000;
+export { DEFAULT_STALLED_AFTER_MS };
 
 /**
  * A branded loading screen with no upper bound is the same defect as a skeleton
@@ -28,12 +31,7 @@ export function AppLoadingScreen({
   stalledAfterMs = DEFAULT_STALLED_AFTER_MS,
 }: AppLoadingScreenProps) {
   const reduce = useReducedMotion();
-  const [stalled, setStalled] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setStalled(true), stalledAfterMs);
-    return () => clearTimeout(timer);
-  }, [stalledAfterMs]);
+  const stalled = useStalledAfter(true, stalledAfterMs);
 
   if (stalled) return <AppLoadingStalled className={className} label={label} />;
 

@@ -4,6 +4,11 @@ import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
+import { StalledReadNotice } from "@/components/shared/stalled-read-notice";
+import {
+  PANEL_STALLED_AFTER_MS,
+  useStalledAfter,
+} from "@/hooks/common/use-stalled-after";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -156,6 +161,12 @@ export function ChannelSidebar({
   const handleRetryChannels = useCallback(() => {
     refetchChannels();
   }, [refetchChannels]);
+  /**
+   * CHAT-F-001/F-004. The error branch below is correct and was simply out of
+   * reach: a read against an unreachable API sits in `isLoading` for up to ~61s
+   * before `isError` can turn true, and the skeleton says nothing in the meantime.
+   */
+  const channelsStalled = useStalledAfter(isLoading, PANEL_STALLED_AFTER_MS);
   const handleToggleGroups = useCallback(
     () => setGroupsCollapsed((p) => !p),
     [],
@@ -349,6 +360,12 @@ export function ChannelSidebar({
             />
           ) : isLoading && !showArchived ? (
             <div className="space-y-2 p-3" aria-busy="true">
+              {channelsStalled && (
+                <StalledReadNotice
+                  subject="conversations"
+                  onRetry={handleRetryChannels}
+                />
+              )}
               <span role="status" className="sr-only">
                 Loading conversations…
               </span>
