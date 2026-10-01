@@ -101,7 +101,17 @@ export const roadmapItemContract = z.object({
   tierWeighting: roadmapTierWeightingContract,
 });
 
-export const roadmapPageContract = genRoadmapPageSchema;
+const roadmapPaginationSchema = z.object({
+  limit: z.number().int(),
+  hasMore: z.boolean(),
+  nextCursor: z.string().nullable(),
+});
+
+export const roadmapPageContract = z.object({
+  data: z.array(roadmapItemContract),
+  pagination: roadmapPaginationSchema,
+  total: z.number().int().optional(),
+});
 
 export const feedbackPostContract = z.object({
   id: z.number().int(),
@@ -147,7 +157,10 @@ export const changelogEntryContract = z.object({
 
 export const changelogListContract = z.array(changelogEntryContract);
 
-export const changelogPageContract = genChangelogPageSchema;
+export const changelogPageContract = z.object({
+  data: z.array(changelogEntryContract),
+  pagination: roadmapPaginationSchema,
+});
 
 export const templateRowContract = z.object({
   id: z.number().int(),

@@ -395,7 +395,7 @@ const buildMemberRowSchema = z.object({
 
 export const ticketLabelListContract = z.array(ticketLabelSchema);
 export const ticketLabelContract = ticketLabelSchema;
-export const projectListPageContract = genProjectListPageSchema;
+export const projectListPageContract = projectListPageSchema;
 export const projectRowContract = projectRowSchema;
 export const projectDetailContract = projectDetailSchema;
 export const projectMemberPageContract =

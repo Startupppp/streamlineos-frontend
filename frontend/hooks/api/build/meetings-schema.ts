@@ -79,7 +79,11 @@ export const standupEntryContract = z.object({
   updatedAt: z.string(),
 });
 
-export const meetingDetailContract = genMeetingDetailSchema;
+export const meetingDetailContract = meetingRowContract.extend({
+  attendees: z.array(meetingAttendeeContract),
+  actionItems: z.array(actionItemRowContract),
+  standupEntries: z.array(standupEntryContract),
+});
 
 export const addAttendeeResultContract = z.object({
   meetingId: z.number().int(),
