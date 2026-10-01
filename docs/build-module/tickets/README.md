@@ -25,6 +25,18 @@ invented runtime tests.
 
 Current evidence and reopenings: [Architecture verification, 2026-09-27](./ARCHITECTURE-VERIFICATION-2026-09-27.md).
 
+## Retired 2026-10-01
+
+By owner decision, every ticket re-verified against current code and production was deleted. 60 tickets passed; their files and evidence are recoverable with `git log --diff-filter=D -- docs/build-module/tickets/`. Five remain open:
+
+| Ticket | Open criterion |
+|---|---|
+| 01 | 13 deep imports into `build/core` internals remain outside `core/` |
+| 10 | Gallery visual parity needs a browser check |
+| 33 | Velocity report pages once; infinite scroll missing |
+| 47 | 11 of 14 project-scoped lists lack server search |
+| 48 | Org-scoped lists lack server search |
+
 Ticket numbers are identifiers, not a safe execution order. Follow dependencies plus the execution plan's file ownership and the current audit priorities; a historical "None" dependency does not override deployment prerequisites.
 
 ## Waves
