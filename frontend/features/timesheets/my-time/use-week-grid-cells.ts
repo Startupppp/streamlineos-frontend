@@ -7,8 +7,9 @@ import type {
 } from "@/hooks/api/timesheets-core";
 import type { TimesheetEntry } from "@/features/timesheets";
 import { isCellLocked, type GridRow } from "./week-grid-rows";
+import { MAX_HOURS_PER_DAY } from "./log-time-schema";
 
-export const GRID_MAX_HOURS_PER_DAY = 24;
+export const GRID_MAX_HOURS_PER_DAY = MAX_HOURS_PER_DAY;
 const INVALID_HOURS_MESSAGE = `Hours must be between 0 and ${GRID_MAX_HOURS_PER_DAY}.`;
 
 function parseHoursInput(value: string): number | null {
