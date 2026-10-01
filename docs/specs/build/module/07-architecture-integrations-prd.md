@@ -34,7 +34,7 @@ flowchart TB
   end
   subgraph SIDE["side-effect owners"]
     AUT["core/automation/ (after-commit)"]
-    WH["core/webhooks/ (outbox enqueue)"]
+    WH["core/webhooks/ (event meaning, mapping)"]
     CP["client-portal/ (portal projection)"]
     GOV["governance/ (change requests, approvals)"]
   end
@@ -47,9 +47,12 @@ flowchart TB
   AC -->|OutboxWriter.emit tx| OB[(outbox)]
   BUL -->|OutboxWriter.emitMany| OB
   AC -->|registerAfterCommit| AUT
-  WH -->|OutboxWriter.emit tx| OB
+  AUT -->|AUTOMATION_TICKET_CHANGE| AC
+  AUT --> CMT
+  WH -->|WebhookEndpointService| INT["integrations/core/ (credentials, delivery)"]
+  INT -->|OutboxWriter.emit tx| OB
   OB --> NOT[Notifications module]
-  OB --> WH
+  OB --> INT
   CORE --> DB[(build.* tables)]
   SIDE --> DB
   DB --> RDS[(Redis cache)]
@@ -80,11 +83,14 @@ canonical terms. Short reference:
 | `core/tickets/apply-ticket-change.ts` | Ticket status, WIP limits, version, and every downstream effect |
 | `core/tickets/build-ticket-bulk-mutation.ts` | Batch ticket transitions; shares effect interface with above |
 | `core/project-crud/project-access.ts` | Project reachability (owner, manager, member, team); sole caller of membership tables for this decision |
-| `core/automation/` | Automation rule evaluation, run history, loop guard; runs after-commit |
-| `core/webhooks/` | Webhook configuration, signing, delivery enqueue |
+| `core/automation/` | Automation rule evaluation, run history, loop guard, after-commit timing; mutates only through `AUTOMATION_TICKET_CHANGE` (bound to `ProjectsTicketsUpdateService`), `ProjectsTicketLabelsService` and `ProjectsTicketCommentsService` as system job `build.automation.apply-action` |
+| `core/webhooks/` | Webhook configuration, event meaning, `integrations_endpoint_id` mapping ID; stores no secrets |
+| `integrations/core/webhook-endpoint.service.ts` | Webhook signing credentials, delivery rows, delivery history, test delivery (`integrations.webhook_credentials`, `integrations.webhook_deliveries`) |
+| `integrations/core/webhook-delivery.service.ts` | Outbox consumer: signing, HTTP transport, retry, circuit breaker |
 | `core/releases/` | Release lifecycle, `build.release_published` outbox event |
 | `core/settings/` | Project settings, iteration configuration |
-| `client-portal/` | Portal grant lifecycle, external projection, change-request affected items |
+| `client-portal/` | Portal grant lifecycle, change-request affected items |
+| `client-portal/portal-projection.ts` | The one portal projection (`buildPortalProjection`, `PortalProjectionService`); external and preview identities only select a grant |
 | `governance/` | Change requests, approval routing |
 | `execution/` | Cycle (iteration) CRUD, workload-capacity |
 | `lifecycle/` | Restore and retention purge |
@@ -122,7 +128,9 @@ completion does.
 | Bulk ticket events | Outbox `OutboxWriter.emitMany` | `core/tickets/build-ticket-batch-workflow.ts:36` |
 | Automation run | After-commit `registerAfterCommit` | `core/automation/build-automation-runner.service.ts:286` |
 | Automation run history | After-commit (inside automation run) | `core/automation/build-automation-run-history.service.ts` |
-| Webhook delivery enqueue | Outbox `OutboxWriter.emit(tx, …)` | `core/webhooks/projects-webhooks-dispatch.service.ts` |
+| Webhook delivery request | Outbox `OutboxWriter.emit(tx, …)` | `integrations/core/webhook-endpoint.service.ts` (`requestDeliveries`) |
+| Webhook delivery | Outbox consumer | `integrations/core/webhook-delivery.service.ts` |
+| Automation actions | After-commit, inside the automation chain | `core/automation/build-automation-actions.service.ts` |
 | Release published event | Outbox `OutboxWriter.emit(tx, …)` | `core/releases/projects-releases.service.ts:172` |
 | Approval notification | Outbox + after-commit | `approvals/approvals.service.ts:133,161` |
 | Ticket relations event | Outbox `OutboxWriter.emit(tx, …)` | `core/tickets/projects-ticket-relations.service.ts:221` |
@@ -181,8 +189,14 @@ transaction committed uses `registerAfterCommit`.
 - Build integrations currently place Git configuration and agent credentials
   on the same module settings page despite different lifecycle and security
   ownership.
-- `projects-ticket-subresources.service.ts` is currently 570 lines and crosses
-  the hard review threshold while owning several ticket subresource jobs.
+- **Resolved 2026-10-01:** `projects-ticket-subresources.service.ts` deleted;
+  controllers reach the comment, checklist, link and relation owners directly
+  (ADR 0012).
+- **Resolved 2026-10-01:** automation wrote tickets, labels and comments
+  directly. It now mutates only through the canonical owners (ADR 0007).
+- **Resolved 2026-10-01:** two portal projections existed; one remains (ADR 0010).
+- **Resolved 2026-10-01:** project reachability had several owners;
+  `project-access.ts` is the sole owner (ADR 0011).
 - frontend request schemas, response contracts, query keys, and backend Zod
   schemas need a declared generation/parity owner.
 - ticket detail responses omit `assignees` from the backend Zod contract while
@@ -192,8 +206,10 @@ transaction committed uses `registerAfterCommit`.
 - ticket `customer_id` still foreign-keys the legacy `clients` table while the
   picker writes CRM organization IDs.
 - Git ingress advertises Bitbucket, verifies non-GitLab providers as GitHub,
-  acknowledges webhooks before durable processing, and stores the webhook
-  secret in the Build schema.
+  and acknowledges webhooks before durable processing. Outbound webhook secrets
+  moved to `integrations.webhook_credentials` (migrations 1720-1724);
+  `build.project_webhooks.secret` and `build.webhook_deliveries` remain until
+  the contraction migration ships.
 - `BuildCalendarSource` emits only ticket due dates, skips deleted-row filters,
   and returns a capped array that the calendar registry treats as complete.
 - charged Build AI calls discard usage metadata through `unwrapAiResult`
