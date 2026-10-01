@@ -1,15 +1,9 @@
 import { z } from "zod";
-import { genAgentPulseTopSignalSchema } from "@/contracts/build-contracts.generated";
+import { agentPulseGetTopSignalResponseSchema } from "@/contracts/build-contracts.generated";
 
-export const agentPulseSignalTypeSchema = z.enum([
-  "delivery_risk",
-  "comment_draft",
-  "overdue_approval",
-  "blocked_milestone",
-  "dependency_change",
-]);
+export const agentPulseSignalTypeSchema = agentPulseGetTopSignalResponseSchema.unwrap().shape.type;
 
-export const agentPulseContract = genAgentPulseTopSignalSchema;
+export const agentPulseContract = agentPulseGetTopSignalResponseSchema;
 
 export type AgentPulseSignalType = z.infer<typeof agentPulseSignalTypeSchema>;
 export type AgentPulseSignal = Exclude<z.infer<typeof agentPulseContract>, null>;

@@ -1,12 +1,12 @@
 import { z } from "zod";
-import { genClientPortalPreviewSchema } from "@/contracts/build-contracts.generated";
+import {
+  clientPortalManagementGetSettingsResponseSchema,
+  clientPortalManagementGetPreviewResponseSchema,
+} from "@/contracts/build-contracts.generated";
 
-export const portalSettingsContract = z.object({
-  portalPublishedAt: z.string().nullable(),
-  grantCount: z.number().int().nonnegative(),
-});
+export const portalSettingsContract = clientPortalManagementGetSettingsResponseSchema;
 
-export const portalPreviewContract = genClientPortalPreviewSchema;
+export const portalPreviewContract = clientPortalManagementGetPreviewResponseSchema;
 
 export type PortalSettings = z.infer<typeof portalSettingsContract>;
 export type PortalPreview = z.infer<typeof portalPreviewContract>;

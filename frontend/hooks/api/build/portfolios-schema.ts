@@ -1,85 +1,22 @@
-import { z } from "zod";
-import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
-import { genPortfolioListSchema, genProgramListSchema } from "@/contracts/build-contracts.generated";
+import {
+  portfoliosListPortfoliosResponseSchema,
+  portfoliosCreatePortfolioResponseSchema,
+  portfoliosGetPortfolioResponseSchema,
+  portfoliosLinkProjectResponseSchema,
+  programsListProgramsResponseSchema,
+  programsCreateProgramResponseSchema,
+} from "@/contracts/build-contracts.generated";
 
-const portfolioStatusContract = z.enum(["active", "on_hold", "completed", "archived"]);
-const portfolioHealthContract = z.enum(["on_track", "at_risk", "off_track"]);
-const projectStatusContract = z.enum(["ACTIVE", "COMPLETED", "ARCHIVED"]);
+export const portfolioRowContract = portfoliosCreatePortfolioResponseSchema;
 
-const portfolioRowContract = z.object({
-  id: z.number().int(),
-  orgId: z.string(),
-  name: z.string(),
-  description: z.string().nullable(),
-  ownerId: z.string().nullable(),
-  status: portfolioStatusContract,
-  health: portfolioHealthContract.nullable(),
-  strategicGoal: z.string().nullable(),
-  createdBy: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  deletedAt: z.string().nullable(),
-});
+export const portfolioPageContract = portfoliosListPortfoliosResponseSchema;
 
-export { portfolioRowContract };
+export const portfolioDetailContract = portfoliosGetPortfolioResponseSchema;
 
-const portfolioListItemContract = portfolioRowContract.omit({ deletedAt: true }).extend({
-  projectCount: z.number().int(),
-});
+export const programRowContract = programsCreateProgramResponseSchema;
 
-export const portfolioPageContract = genPortfolioListSchema;
+export const programPageContract = programsListProgramsResponseSchema;
 
-const linkedProjectContract = z.object({
-  id: z.number().int(),
-  name: z.string(),
-  key: z.string(),
-  status: projectStatusContract,
-  openCount: z.number().int(),
-  doneCount: z.number().int(),
-});
+export const programListItemContract = programsListProgramsResponseSchema.shape.data.element;
 
-const linkedProgramContract = z.object({
-  id: z.number().int(),
-  name: z.string(),
-  status: portfolioStatusContract,
-});
-
-export const portfolioDetailContract = portfolioRowContract.extend({
-  projects: cursorPageContract(linkedProjectContract),
-  programs: cursorPageContract(linkedProgramContract),
-});
-
-export const programRowContract = z.object({
-  id: z.number().int(),
-  orgId: z.string(),
-  portfolioId: z.number().int().nullable(),
-  name: z.string(),
-  description: z.string().nullable(),
-  ownerId: z.string().nullable(),
-  status: portfolioStatusContract,
-  health: portfolioHealthContract.nullable(),
-  createdBy: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  deletedAt: z.string().nullable(),
-});
-
-export const programListItemContract = programRowContract.omit({ deletedAt: true }).extend({
-  projectCount: z.number().int(),
-});
-
-export const programPageContract = genProgramListSchema;
-
-export const programDetailContract = programRowContract.extend({
-  projects: cursorPageContract(
-    z.object({
-      id: z.number().int(),
-      name: z.string(),
-      key: z.string(),
-      status: projectStatusContract,
-      addedAt: z.string(),
-    }),
-  ),
-});
-
-export const portfoliosSuccessContract = z.object({ success: z.literal(true) });
+export const portfoliosSuccessContract = portfoliosLinkProjectResponseSchema;

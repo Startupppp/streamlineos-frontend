@@ -7,11 +7,11 @@ import {
   toggleVisibilityContract,
 } from "./client-portal-schema";
 
-describe("visibilitySummaryContract — rolling deploy compatibility", () => {
-  it("accepts the production API response while older backend instances omit ticket version", () => {
+describe("visibilitySummaryContract", () => {
+  it("accepts the production API response with ticket version", () => {
     const result = visibilitySummaryContract.safeParse({
       tickets: {
-        data: [{ id: 11, ticketNumber: 42, title: "Fix login", type: "BUG", clientVisible: true }],
+        data: [{ id: 11, ticketNumber: 42, title: "Fix login", type: "BUG", clientVisible: true, version: 3 }],
         pagination: { limit: 50, hasMore: false, nextCursor: null },
       },
       milestones: {
@@ -144,6 +144,7 @@ describe("changeRequestRowContract", () => {
 });
 
 const minimalRow = {
+  affectedItemCount: 0,
   id: 1,
   orgId: "org-1",
   projectId: 42,
@@ -168,18 +169,8 @@ const minimalRow = {
   deletedAt: null,
 };
 
-describe("changeRequestListContract — tolerates both backend shapes for rolling deploy", () => {
-  it("normalises a legacy flat array to a page envelope with hasMore false and nextCursor null so the old backend shape does not break the new frontend", () => {
-    const result = changeRequestListContract.safeParse([minimalRow]);
-    expect(result.success).toBe(true);
-    if (!result.success) return;
-    expect(result.data.pagination.hasMore).toBe(false);
-    expect(result.data.pagination.nextCursor).toBeNull();
-    expect(result.data.data).toHaveLength(1);
-    expect(result.data.data[0].id).toBe(1);
-  });
-
-  it("passes the new envelope shape through unchanged so the cursor and hasMore survive", () => {
+describe("changeRequestListContract", () => {
+  it("passes the envelope shape through unchanged so the cursor and hasMore survive", () => {
     const envelope = {
       data: [minimalRow],
       pagination: { limit: 25, hasMore: true, nextCursor: "cursor-abc" },
@@ -205,14 +196,9 @@ describe("changeRequestListContract — tolerates both backend shapes for rollin
 });
 
 describe("toggleVisibilityContract", () => {
-  it("accepts the actual toggle response of id and clientVisible with no success field, filling success in so the mutation's declared return type stays satisfied", () => {
+  it("accepts the actual toggle response of id and clientVisible", () => {
     const result = toggleVisibilityContract.parse({ id: 7, clientVisible: true });
-    expect(result).toEqual({ id: 7, clientVisible: true, success: true });
-  });
-
-  it("still accepts a response that already carries an explicit success field", () => {
-    const result = toggleVisibilityContract.parse({ id: 7, clientVisible: false, success: false });
-    expect(result).toEqual({ id: 7, clientVisible: false, success: false });
+    expect(result).toEqual({ id: 7, clientVisible: true });
   });
 
   it("rejects a clientVisible sent as a string instead of a boolean", () => {

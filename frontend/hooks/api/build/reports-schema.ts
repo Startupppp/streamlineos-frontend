@@ -1,23 +1,22 @@
 import { z } from "zod";
 import {
-  genVelocityReportSchema,
-  genBurnupReportSchema,
-  genCfdReportSchema,
-  genCriticalPathSchema,
-  genCycleTimeSchema,
-  genLeadTimeSchema,
+  projectsReportsVelocityResponseSchema,
+  projectsReportsBurnupResponseSchema,
+  projectsReportsCfdResponseSchema,
+  projectsReportsCriticalPathResponseSchema,
+  projectsReportsGetCycleTimeResponseSchema,
+  projectsReportsGetLeadTimeResponseSchema,
+  projectsReportsSnapshotResponseSchema,
 } from "@/contracts/build-contracts.generated";
 
-export const velocityContract = genVelocityReportSchema;
-export const burnupDataContract = genBurnupReportSchema;
-export const cfdDataContract = genCfdReportSchema;
-export const criticalPathContract = genCriticalPathSchema;
-export const cycleTimeContract = genCycleTimeSchema;
-export const leadTimeContract = genLeadTimeSchema;
+export const velocityContract = projectsReportsVelocityResponseSchema;
+export const burnupDataContract = projectsReportsBurnupResponseSchema;
+export const cfdDataContract = projectsReportsCfdResponseSchema;
+export const criticalPathContract = projectsReportsCriticalPathResponseSchema;
+export const cycleTimeContract = projectsReportsGetCycleTimeResponseSchema;
+export const leadTimeContract = projectsReportsGetLeadTimeResponseSchema;
 
-export const snapshotResultContract = z.object({
-  captured: z.number().int(),
-});
+export const snapshotResultContract = projectsReportsSnapshotResponseSchema;
 
 const customerListItemContract = z.object({
   id: z.number().int(),

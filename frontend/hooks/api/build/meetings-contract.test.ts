@@ -1,8 +1,6 @@
 import {
   meetingListItemContract,
-  meetingListContract,
   meetingPageContract,
-  meetingResponseContract,
   meetingDetailContract,
   actionItemRowContract,
   standupEntryContract,
@@ -38,8 +36,6 @@ const cursorPage = {
   pagination: { limit: 25, hasMore: false, nextCursor: null },
 };
 
-const legacyArray = [meetingListItem];
-
 describe("meetingListItemContract", () => {
   it("accepts a valid list item", () => {
     const result = meetingListItemContract.safeParse(meetingListItem);
@@ -50,20 +46,6 @@ describe("meetingListItemContract", () => {
     const { attendeeCount: _dropped, ...bad } = meetingListItem;
     const result = meetingListItemContract.safeParse(bad);
     expect(result.success).toBe(false);
-  });
-});
-
-describe("meetingListContract (legacy array)", () => {
-  it("accepts a non-empty array", () => {
-    expect(meetingListContract.safeParse(legacyArray).success).toBe(true);
-  });
-
-  it("accepts an empty array", () => {
-    expect(meetingListContract.safeParse([]).success).toBe(true);
-  });
-
-  it("rejects a cursor-page envelope", () => {
-    expect(meetingListContract.safeParse(cursorPage).success).toBe(false);
   });
 });
 
@@ -78,47 +60,17 @@ describe("meetingPageContract (cursor page)", () => {
   });
 
   it("rejects a plain array", () => {
-    expect(meetingPageContract.safeParse(legacyArray).success).toBe(false);
+    expect(meetingPageContract.safeParse([meetingListItem]).success).toBe(false);
   });
 
   it("rejects a page missing the pagination key", () => {
-    const bad = { data: legacyArray };
+    const bad = { data: [meetingListItem] };
     expect(meetingPageContract.safeParse(bad).success).toBe(false);
   });
 
   it("rejects a page where pagination.hasMore is absent", () => {
-    const bad = { data: legacyArray, pagination: { limit: 25, nextCursor: null } };
+    const bad = { data: [meetingListItem], pagination: { limit: 25, nextCursor: null } };
     expect(meetingPageContract.safeParse(bad).success).toBe(false);
-  });
-});
-
-describe("meetingResponseContract (rollout union)", () => {
-  it("accepts a cursor-page envelope during rollout — does NOT produce CONTRACT_VIOLATION", () => {
-    const result = meetingResponseContract.safeParse(cursorPage);
-    expect(result.success).toBe(true);
-  });
-
-  it("accepts a legacy array during rollout", () => {
-    const result = meetingResponseContract.safeParse(legacyArray);
-    expect(result.success).toBe(true);
-  });
-
-  it("rejects a drifted shape where pagination is missing", () => {
-    const bad = { data: legacyArray };
-    const result = meetingResponseContract.safeParse(bad);
-    expect(result.success).toBe(false);
-  });
-
-  it("select normalizer: cursor page extracts .data", () => {
-    const raw = meetingResponseContract.parse(cursorPage);
-    const normalized = Array.isArray(raw) ? raw : raw.data;
-    expect(normalized).toEqual([meetingListItem]);
-  });
-
-  it("select normalizer: legacy array passes through", () => {
-    const raw = meetingResponseContract.parse(legacyArray);
-    const normalized = Array.isArray(raw) ? raw : raw.data;
-    expect(normalized).toEqual(legacyArray);
   });
 });
 

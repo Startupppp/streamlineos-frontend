@@ -183,7 +183,7 @@ export function useUpdateTicketVisibility(projectId: number) {
   return useAuthorizedMutation("build:clientvisibility:manage", {
     mutationKey: ["projects", projectId, "client-visibility", "tickets"],
     mutationFn: ({ ticketId, clientVisible, version }: { ticketId: number; clientVisible: boolean; version?: number }) =>
-      apiClient.patch<{ success: boolean }>(
+      apiClient.patch<{ id: number; clientVisible: boolean }>(
         `/build/${projectId}/client-visibility/tickets/${ticketId}`,
         { clientVisible, ...(version === undefined ? {} : { version }) },
         undefined,
@@ -200,7 +200,7 @@ export function useUpdateMilestoneVisibility(projectId: number) {
   return useAuthorizedMutation("build:clientvisibility:manage", {
     mutationKey: ["projects", projectId, "client-visibility", "milestones"],
     mutationFn: ({ milestoneId, clientVisible }: { milestoneId: number; clientVisible: boolean }) =>
-      apiClient.patch<{ success: boolean }>(
+      apiClient.patch<{ id: number; clientVisible: boolean }>(
         `/build/${projectId}/client-visibility/milestones/${milestoneId}`,
         { clientVisible },
         undefined,

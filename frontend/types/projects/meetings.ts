@@ -1,5 +1,5 @@
 import type { z } from "zod";
-import type { addAttendeeResultContract } from "@/hooks/api/build/meetings-schema";
+import type { meetingDetailAttendeeContract } from "@/hooks/api/build/meetings-schema";
 export type MeetingType = "meeting" | "standup" | "retro" | "planning" | "review";
 export type MeetingStatus = "scheduled" | "in_progress" | "completed" | "cancelled";
 export type ActionItemStatus = "open" | "in_progress" | "done" | "converted" | "cancelled";
@@ -37,7 +37,7 @@ export interface Meeting {
   updatedAt: string;
 }
 
-export type MeetingAttendee = z.infer<typeof addAttendeeResultContract>;
+export type MeetingAttendee = z.infer<typeof meetingDetailAttendeeContract>;
 
 
 

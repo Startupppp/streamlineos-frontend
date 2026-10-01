@@ -10,7 +10,6 @@ import type {
   Meeting,
   MeetingDetail,
   ActionItem,
-  MeetingAttendee,
   StandupEntry,
   CreateMeetingInput,
   UpdateMeetingInput,
@@ -22,11 +21,8 @@ import type {
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 
-const meetingListContract = lazyContract(() =>
-  import("@/hooks/api/build/meetings-schema").then((m) => m.meetingListContract),
-);
-const meetingResponseContract = lazyContract(() =>
-  import("@/hooks/api/build/meetings-schema").then((m) => m.meetingResponseContract),
+const meetingPageContract = lazyContract(() =>
+  import("@/hooks/api/build/meetings-schema").then((m) => m.meetingPageContract),
 );
 const meetingRowContract = lazyContract(() =>
   import("@/hooks/api/build/meetings-schema").then((m) => m.meetingRowContract),
@@ -42,9 +38,6 @@ const actionItemRowContract = lazyContract(() =>
 );
 const convertToTaskResultContract = lazyContract(() =>
   import("@/hooks/api/build/meetings-schema").then((m) => m.convertToTaskResultContract),
-);
-const meetingsSuccessContract = lazyContract(() =>
-  import("@/hooks/api/build/meetings-schema").then((m) => m.meetingsSuccessContract),
 );
 const noContentLazy = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
@@ -82,15 +75,12 @@ export function useMeetings(projectId: number, filters?: MeetingFilters) {
     queryFn: async ({ pageParam, signal }) => {
       const allParams: Record<string, string> = hasParams ? { ...params } : {};
       if (pageParam !== undefined) allParams["cursor"] = pageParam;
-      const response = await apiClient.get<Meeting[] | { data: Meeting[]; pagination: { limit: number; hasMore: boolean; nextCursor: string | null } }>(
+      return apiClient.get<{ data: Meeting[]; pagination: { limit: number; hasMore: boolean; nextCursor: string | null } }>(
         `/build/${projectId}/meetings`,
         Object.keys(allParams).length > 0 ? allParams : undefined,
         signal,
-        meetingResponseContract,
+        meetingPageContract,
       );
-      return Array.isArray(response)
-        ? { data: response, pagination: { limit: response.length || 100, hasMore: false, nextCursor: null } }
-        : response;
     },
     initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
@@ -152,7 +142,7 @@ export function useAddAttendee(projectId: number, meetingId: number) {
   return useAuthorizedMutation("build:meetings:manage", {
     mutationKey: ["projects", projectId, "meetings", meetingId, "attendees", "add"],
     mutationFn: (data: AddAttendeeInput) =>
-      apiClient.post<MeetingAttendee>(`/build/${projectId}/meetings/${meetingId}/attendees`, data, undefined, addAttendeeResultContract),
+      apiClient.post<{ meetingId: number; userId: string }>(`/build/${projectId}/meetings/${meetingId}/attendees`, data, undefined, addAttendeeResultContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.meetings.detail(projectId, meetingId) });
     },

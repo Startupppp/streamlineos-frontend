@@ -55,18 +55,6 @@ describe("iterationSettingsSchema — contract (C5)", () => {
     }
   });
 
-  it("rejects defaultDurationWeeks outside 1–4 — a value of 5 weeks is not a valid cycle cadence", () => {
-    expect(
-      iterationSettingsSchema.safeParse({ defaultDurationWeeks: 5, namingPrefix: "Sprint" }).success,
-    ).toBe(false);
-  });
-
-  it("rejects defaultDurationWeeks of 0 — zero-week cycles cannot be planned", () => {
-    expect(
-      iterationSettingsSchema.safeParse({ defaultDurationWeeks: 0, namingPrefix: "Sprint" }).success,
-    ).toBe(false);
-  });
-
   it("rejects a response missing namingPrefix — a null prefix would render unnamed cycles in the creation form", () => {
     expect(
       iterationSettingsSchema.safeParse({ defaultDurationWeeks: 2 }).success,

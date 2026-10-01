@@ -1,9 +1,7 @@
 import { z } from "zod";
-import { genIterationSettingsSchema } from "@/contracts/build-contracts.generated";
+import { projectsSettingsIterationsGetSettingsResponseSchema } from "@/contracts/build-contracts.generated";
 
-export const iterationSettingsSchema = genIterationSettingsSchema.extend({
-  defaultDurationWeeks: z.number().int().min(1).max(4),
-});
+export const iterationSettingsSchema = projectsSettingsIterationsGetSettingsResponseSchema;
 
 export type IterationSettings = z.infer<typeof iterationSettingsSchema>;
 

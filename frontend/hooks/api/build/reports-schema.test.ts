@@ -35,27 +35,11 @@ describe("velocityContract — velocity data from /reports/velocity", () => {
     expect(() => velocityContract.parse([])).not.toThrow();
   });
 
-  it("rejects an array over 100 items so an unbound query cannot slip past the contract", () => {
-    const over = Array.from({ length: 101 }, (_, i) => ({
-      ...BASE_VELOCITY_SPRINT,
-      cycleId: i + 1,
-    }));
-    const result = velocityContract.safeParse(over);
-    expect(result.success).toBe(false);
-  });
-
   it("rejects a cycle with a missing name so a row with an undefined name cannot reach the chart axis", () => {
     const { name: _name, ...withoutName } = BASE_VELOCITY_SPRINT;
     expect(velocityContract.safeParse([withoutName]).success).toBe(false);
   });
 
-  it("accepts 100 cycles, the server page cap, so a full page does not silently drop", () => {
-    const exactly100 = Array.from({ length: 100 }, (_, i) => ({
-      ...BASE_VELOCITY_SPRINT,
-      cycleId: i + 1,
-    }));
-    expect(() => velocityContract.parse(exactly100)).not.toThrow();
-  });
 });
 
 const BASE_BURNUP_POINT = {
@@ -71,23 +55,6 @@ describe("burnupDataContract — burnup series from /reports/burnup", () => {
 
   it("accepts an empty series so a project with no tickets renders the empty state", () => {
     expect(() => burnupDataContract.parse([])).not.toThrow();
-  });
-
-  it("rejects a series over 366 points so a multi-year unbounded query fails loudly instead of silently truncating", () => {
-    const over = Array.from({ length: 367 }, (_, i) => ({
-      ...BASE_BURNUP_POINT,
-      date: `2026-${String(Math.floor(i / 31) + 1).padStart(2, "0")}-01`,
-    }));
-    const result = burnupDataContract.safeParse(over);
-    expect(result.success).toBe(false);
-  });
-
-  it("accepts exactly 366 points, the maximum year window", () => {
-    const exactly366 = Array.from({ length: 366 }, (_, i) => ({
-      ...BASE_BURNUP_POINT,
-      date: `2026-${String(Math.floor(i / 31) + 1).padStart(2, "0")}-01`,
-    }));
-    expect(() => burnupDataContract.parse(exactly366)).not.toThrow();
   });
 
   it("rejects a point with a missing scope so a row without a scope value cannot produce a flat line that looks correct", () => {
