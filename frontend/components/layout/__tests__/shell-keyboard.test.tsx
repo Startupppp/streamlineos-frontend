@@ -121,6 +121,10 @@ jest.mock("@/components/layout/command-palette", () => ({
   CommandPalette: () => null,
 }));
 
+jest.mock("@/components/layout/header/header-payroll-cutoff", () => ({
+  HeaderPayrollCutoff: () => null,
+}));
+
 jest.mock("@/hooks/api/access", () => ({
   useAccess: () => ({ isLoading: false, isError: false, error: null, refetch: jest.fn() }),
   useCan: () => true,

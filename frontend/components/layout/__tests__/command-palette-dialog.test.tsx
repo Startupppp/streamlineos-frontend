@@ -29,6 +29,16 @@ jest.mock("@/hooks/common/use-debounce", () => ({
   useDebouncedValue: (v: string) => v,
 }));
 
+jest.mock("@/components/command-palette/hooks/use-people-search", () => ({
+  usePalettePeopleSearch: () => ({
+    people: [],
+    canSearchPeople: false,
+    isSearching: false,
+    isError: false,
+  }),
+  PEOPLE_SEARCH_INTEGRITY_MESSAGE: "",
+}));
+
 jest.mock("@/components/command-palette/hooks/use-global-search", () => ({
   GLOBAL_SEARCH_MIN_LENGTH: 2,
   useGlobalSearch: () => ({

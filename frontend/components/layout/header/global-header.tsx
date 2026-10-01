@@ -13,6 +13,7 @@ import { WorkspaceSwitcher } from "./org-switcher";
 import { QuickCreateButton } from "./quick-create-button";
 import { UserAvatarMenu } from "./user-avatar-menu";
 import { SidebarCollapseToggle } from "./sidebar-collapse-toggle";
+import { HeaderPayrollCutoff } from "./header-payroll-cutoff";
 import { useAfterLoad } from "@/hooks/common/use-after-load";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useIsBelowLg } from "@/hooks/common/use-mobile";
@@ -128,6 +129,7 @@ function DesktopHeader({
       <div className="flex shrink-0 items-center gap-1 rounded-xl border border-sidebar-border/70 bg-sidebar-accent/30 p-1">
         {!hideAdminChrome && (
           <>
+            <HeaderPayrollCutoff />
             <QuickCreateButton />
           </>
         )}

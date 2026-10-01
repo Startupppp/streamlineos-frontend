@@ -1,4 +1,4 @@
-import { LayoutDashboard, FileText, ClipboardList, History, SlidersHorizontal, Sliders, FileSearch, LayoutTemplate, Workflow, Plug, GitBranch } from "lucide-react";
+import { LayoutDashboard, FileText, ClipboardList, History, SlidersHorizontal, Sliders, FileSearch, LayoutTemplate, Workflow, Plug, GitBranch, ShieldCheck, Lock, Share2, Sparkles, TrendingUp, Shield, Scale, ShieldAlert } from "lucide-react";
 import type { NavRoute } from "./sidebar-nav-types";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 
@@ -104,4 +104,81 @@ export const HR_SETTINGS_ROUTES: NavRoute[] = [
           },
         ],
       },
+
+  {
+    label: "Access & governance",
+    icon: ShieldCheck,
+    href: "/hr/identity",
+    requiredPermission: "hr:identity:view",
+    children: [
+      {
+        label: "Delegations",
+        icon: Share2,
+        href: "/hr/delegations",
+        requiredPermission: "hr:workflows:manage",
+      },
+      {
+        label: "Policy simulator",
+        icon: Sparkles,
+        href: "/hr/simulator",
+        requiredPermission: "hr:policies:manage",
+      },
+      {
+        label: "HR audit log",
+        icon: TrendingUp,
+        href: "/hr/event-stream",
+        requiredPermission: "hr:eventstream:view",
+      },
+    ],
+  },
+  {
+    label: "HR access",
+    icon: ShieldCheck,
+    href: "/hr/access",
+    requiredPermission: "hr:access:view",
+  },
+  {
+    label: "Compliance & Risk",
+    icon: Shield,
+    href: "/hr/compliance",
+    requiredPermission: "hr:compliance:manage",
+    children: [
+      {
+        label: "Compliance",
+        icon: Scale,
+        href: "/hr/compliance",
+        requiredPermission: "hr:compliance:manage",
+      },
+      {
+        label: "Health & Safety",
+        icon: ShieldAlert,
+        href: "/hr/safety",
+        requiredPermission: "hr:safety:view",
+      },
+      {
+        label: "Emergency",
+        icon: ShieldAlert,
+        href: "/hr/emergency",
+        requiredPermission: "hr:emergency:manage",
+      },
+      {
+        label: "Labor Relations",
+        icon: Scale,
+        href: "/hr/labor-relations",
+        requiredPermission: "hr:labor:view",
+      },
+      {
+        label: "Legal Holds",
+        icon: Lock,
+        href: "/hr/legal-holds",
+        requiredPermission: "hr:legalhold:view",
+      },
+      {
+        label: "Data Retention",
+        icon: Scale,
+        href: "/hr/retention",
+        requiredPermission: "hr:retention:manage",
+      },
+    ],
+  },
 ];
