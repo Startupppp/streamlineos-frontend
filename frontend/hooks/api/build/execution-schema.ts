@@ -1,6 +1,7 @@
 import {
   cyclesListCyclesResponseSchema,
   cyclesCreateCycleResponseSchema,
+  cyclesUpdateCycleResponseSchema,
   modulesListModulesResponseSchema,
   modulesCreateModuleResponseSchema,
   epicsListEpicsResponseSchema,
@@ -11,6 +12,7 @@ import {
 export const cyclePageContract = cyclesListCyclesResponseSchema;
 export const cycleListContract = cyclesListCyclesResponseSchema;
 export const cycleRowContract = cyclesCreateCycleResponseSchema;
+export const cycleUpdateRowContract = cyclesUpdateCycleResponseSchema;
 
 export const moduleListContract = modulesListModulesResponseSchema.shape.data;
 export const modulePageContract = modulesListModulesResponseSchema;

@@ -22,6 +22,7 @@ const formActionSchema = z.object({
 
 const formFieldsSchema = z.array(formFieldSchema);
 const formActionsSchema = z.array(formActionSchema);
+const formValuesSchema = z.record(z.string(), z.unknown());
 
 export const formRowContract = formsGetFormResponseSchema.transform((row) => ({
   ...row,
@@ -38,6 +39,20 @@ export const formResponseContract = formsListFormsResponseSchema.transform((page
   })),
 }));
 
-export const submissionRowContract = submissionsUpdateSubmissionResponseSchema;
-export const submissionResponseContract = submissionsListSubmissionsResponseSchema;
-export const submissionCreateResultContract = submissionsCreateSubmissionResponseSchema;
+export const submissionRowContract = submissionsUpdateSubmissionResponseSchema.transform((row) => ({
+  ...row,
+  values: formValuesSchema.parse(row.values),
+}));
+
+export const submissionResponseContract = submissionsListSubmissionsResponseSchema.transform((page) => ({
+  ...page,
+  data: page.data.map((item) => ({
+    ...item,
+    values: formValuesSchema.parse(item.values),
+  })),
+}));
+
+export const submissionCreateResultContract = submissionsCreateSubmissionResponseSchema.transform((row) => ({
+  ...row,
+  values: formValuesSchema.parse(row.values),
+}));
