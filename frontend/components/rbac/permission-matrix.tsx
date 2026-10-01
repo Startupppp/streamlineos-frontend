@@ -7,6 +7,7 @@ import {
   RotateCcw,
   Users,
   AlertTriangle,
+  ShieldAlert,
 } from "lucide-react";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +26,7 @@ import {
 } from "@/hooks/api/roles";
 import { useAccess, usePermissionCatalog } from "@/hooks/api/access";
 import type { Role } from "@/types/organization";
+import type { Permission } from "@/lib/rbac/permissions";
 import {
   type EditableScope,
   type ScopeMap,
@@ -32,7 +34,7 @@ import {
   scopeMapsEqual,
   toEditableScope,
 } from "./permission-matrix-types";
-import { ModuleSection } from "./permission-matrix-row";
+import { ModuleSection, SensitiveBadge } from "./permission-matrix-row";
 
 interface PermissionMatrixProps {
   role: Role;
@@ -54,6 +56,10 @@ export function PermissionMatrix({
     null,
   );
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [sensitiveGrant, setSensitiveGrant] = useState<{
+    map: ScopeMap;
+    granted: Permission[];
+  } | null>(null);
 
   const isReadOnly = role.isSystem;
   const catalogQuery = usePermissionCatalog();
@@ -61,7 +67,7 @@ export function PermissionMatrix({
   const catalog = useMemo(() => buildCatalog(permissions), [permissions]);
   const includedPermissions = useMemo(
     () =>
-      new Set(
+      new Set<string>(
         permissions
           .filter((permission) => permission.baselineScope)
           .map((permission) => permission.name),
@@ -84,6 +90,15 @@ export function PermissionMatrix({
     return map;
   }, [grantsQuery.data, includedPermissions, permissions]);
 
+  const sensitivePermissions = useMemo(
+    () => permissions.filter((permission) => permission.sensitive),
+    [permissions],
+  );
+  const sensitiveKeys = useMemo(
+    () => new Set<string>(sensitivePermissions.map((permission) => permission.name)),
+    [sensitivePermissions],
+  );
+
   const effective = draft && draft.roleId === role.id ? draft.map : baseline;
   const dirty =
     draft !== null &&
@@ -94,6 +109,17 @@ export function PermissionMatrix({
   const setEffective = useCallback(
     (map: ScopeMap) => setDraft({ roleId: role.id, map }),
     [role.id],
+  );
+
+  const applyGrant = useCallback(
+    (next: ScopeMap) => {
+      const granted = sensitivePermissions.filter(
+        (permission) => next[permission.name] && !effective[permission.name],
+      );
+      if (granted.length > 0) setSensitiveGrant({ map: next, granted });
+      else setEffective(next);
+    },
+    [effective, sensitivePermissions, setEffective],
   );
 
   const isModuleLocked = useCallback(
@@ -116,9 +142,9 @@ export function PermissionMatrix({
       const next = { ...effective };
       if (next[permName]) delete next[permName];
       else next[permName] = "all";
-      setEffective(next);
+      applyGrant(next);
     },
-    [effective, includedPermissions, isReadOnly, setEffective],
+    [applyGrant, effective, includedPermissions, isReadOnly],
   );
 
   const handleSetScope = useCallback(
@@ -148,12 +174,21 @@ export function PermissionMatrix({
           delete next[perm.name];
         }
       }
-      setEffective(next);
+      applyGrant(next);
     },
-    [catalog, effective, isReadOnly, isModuleLocked, setEffective],
+    [applyGrant, catalog, effective, isReadOnly, isModuleLocked],
   );
 
   const handleReset = useCallback(() => setDraft(null), []);
+
+  const handleSensitiveOpenChange = useCallback((open: boolean) => {
+    if (!open) setSensitiveGrant(null);
+  }, []);
+
+  const handleConfirmSensitive = useCallback(() => {
+    if (sensitiveGrant) setEffective(sensitiveGrant.map);
+    setSensitiveGrant(null);
+  }, [sensitiveGrant, setEffective]);
 
   const pendingChanges = useMemo(() => {
     const keys = new Set([...Object.keys(baseline), ...Object.keys(effective)]);
@@ -343,15 +378,42 @@ export function PermissionMatrix({
         isPending={setRolePermissions.isPending}
         keepOpenOnConfirm
         onConfirm={handleSave}
-        content={<PermissionChangeSummary changes={pendingChanges} />}
+        content={<PermissionChangeSummary changes={pendingChanges} sensitiveKeys={sensitiveKeys} />}
+      />
+      <ConfirmDialog
+        open={sensitiveGrant !== null}
+        onOpenChange={handleSensitiveOpenChange}
+        icon={<ShieldAlert className="h-5 w-5 text-status-danger-ink" />}
+        title="Grant sensitive access?"
+        description={`Every member holding the ${role.name} role will be able to use these sensitive permissions.`}
+        confirmLabel="Grant sensitive access"
+        onConfirm={handleConfirmSensitive}
+        content={<SensitiveGrantList permissions={sensitiveGrant?.granted ?? []} />}
       />
     </Card>
   );
 }
 
+function SensitiveGrantList({ permissions }: { permissions: Permission[] }) {
+  return (
+    <ul className="space-y-1.5 text-label">
+      {permissions.map((permission) => (
+        <li key={permission.name}>
+          <span className="block">{permission.description}</span>
+          <span className="block font-mono text-dense text-muted-foreground">
+            {permission.name}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function PermissionChangeSummary({
   changes,
+  sensitiveKeys,
 }: {
+  sensitiveKeys: ReadonlySet<string>;
   changes: {
     added: string[];
     removed: string[];
@@ -375,7 +437,10 @@ function PermissionChangeSummary({
           </p>
           <ul className="mt-1 space-y-0.5 font-mono text-dense text-muted-foreground">
             {added.map((key) => (
-              <li key={key}>{key}</li>
+              <li key={key} className="flex items-center gap-2">
+                {key}
+                {sensitiveKeys.has(key) ? <SensitiveBadge /> : null}
+              </li>
             ))}
           </ul>
         </div>

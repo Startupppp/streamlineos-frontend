@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { ChevronDown, ChevronRight, Lock } from "lucide-react";
+import { ChevronDown, ChevronRight, Lock, ShieldAlert } from "lucide-react";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -19,9 +19,20 @@ import {
   type CatalogModule,
   SCOPE_LABELS,
   SCOPE_OPTIONS,
-  isScopable,
   isEditableScope,
 } from "./permission-matrix-types";
+
+export function SensitiveBadge() {
+  return (
+    <Badge
+      variant="outline"
+      className="h-5 shrink-0 gap-1 px-2 py-0.5 text-micro bg-status-danger-surface text-status-danger-ink border-status-danger-rule"
+    >
+      <ShieldAlert className="h-3 w-3" aria-hidden="true" />
+      Sensitive
+    </Badge>
+  );
+}
 
 export interface PermissionRowProps {
   perm: Permission;
@@ -79,6 +90,7 @@ export function PermissionRow({
               text={perm.description}
               className="block text-label leading-tight"
             />
+            {perm.sensitive ? <SensitiveBadge /> : null}
             {included ? (
               <Badge
                 variant="outline"
@@ -212,7 +224,7 @@ export function ModuleSection({
                     perm={perm}
                     enabled={Boolean(scope)}
                     scope={scope ?? "all"}
-                    scopable={isScopable(perm)}
+                    scopable={perm.scopable === true}
                     disabled={controlsDisabled || included}
                     readOnly={readOnly}
                     included={included}

@@ -28,13 +28,13 @@ const WIRE_RESPONSE = {
     "crm:contacts:view",
     "crm:deals:update",
     "hr:employees:view",
-    "inventory:items:view",
+    "inventory:products:read",
   ],
   scopes: {
     "crm:contacts:view": "all",
     "crm:deals:update": "team",
     "hr:employees:view": "own",
-    "inventory:items:view": "all",
+    "inventory:products:read": "all",
   },
   isOrgOwner: false,
   standing: "MEMBER",
@@ -92,7 +92,7 @@ const WIRE_RESPONSE = {
       ],
     },
     {
-      permissionKey: "inventory:items:view",
+      permissionKey: "inventory:products:read",
       moduleKey: "inventory",
       scope: "all",
       expiresAt: null,
@@ -121,6 +121,12 @@ const WIRE_RESPONSE = {
 
 function parsedResponse(): SimulatedAccess {
   return simulatedAccessContract.parse(WIRE_RESPONSE);
+}
+
+function tableRowOf(text: string): HTMLTableRowElement {
+  const row = screen.getByText(text).closest("tr");
+  if (!row) throw new Error(`no table row contains ${text}`);
+  return row;
 }
 
 function noop(): void {
@@ -180,6 +186,26 @@ describe("EffectiveAccessTable", () => {
           : SCOPE_LABELS[effective ?? "none"];
       expect(row.getByText(expected)).toBeInTheDocument();
     }
+  });
+
+  it("labels resource and action from the catalogue rather than by splitting the key", () => {
+    const [, , hrRow] = parsedResponse().provenance;
+    renderTable([hrRow, { ...hrRow, permissionKey: "hr:attendance:regularize" }]);
+    const employees = within(tableRowOf("hr:employees:view"));
+    expect(employees.getByText("Human Resources · Employees")).toBeInTheDocument();
+    expect(employees.getByText("view")).toBeInTheDocument();
+    const regularize = within(tableRowOf("hr:attendance:regularize"));
+    expect(regularize.getByText("Human Resources · Attendance")).toBeInTheDocument();
+    expect(regularize.getByText("create")).toBeInTheDocument();
+    expect(regularize.queryByText("regularize")).toBeNull();
+  });
+
+  it("falls back to the raw key for a key the catalogue does not know", () => {
+    const [, , hrRow] = parsedResponse().provenance;
+    renderTable([{ ...hrRow, permissionKey: "ghost:thing:poke" }]);
+    const ghost = within(tableRowOf("ghost:thing:poke"));
+    expect(ghost.getByText("Human Resources · ghost:thing:poke")).toBeInTheDocument();
+    expect(ghost.getByText("—")).toBeInTheDocument();
   });
 
   it("never presents team as broader than own, and says why in the UI", () => {
