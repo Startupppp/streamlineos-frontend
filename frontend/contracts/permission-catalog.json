@@ -3551,7 +3551,8 @@
       "resource": "kb:articles",
       "action": "view",
       "description": "View knowledge base articles",
-      "scopable": true
+      "scopable": true,
+      "baselineScope": "all"
     },
     "kb:categories:manage": {
       "resource": "kb:categories",
@@ -3596,7 +3597,8 @@
     "kb:pages:view": {
       "resource": "kb:pages",
       "action": "view",
-      "description": "View wiki pages"
+      "description": "View wiki pages",
+      "baselineScope": "all"
     },
     "kb:reviews:manage": {
       "resource": "kb:reviews",
@@ -3622,7 +3624,8 @@
       "resource": "kb:spaces",
       "action": "view",
       "description": "View knowledge base spaces",
-      "scopable": true
+      "scopable": true,
+      "baselineScope": "all"
     },
     "kb:templates:manage": {
       "resource": "kb:templates",
@@ -4056,12 +4059,14 @@
     "self:onboarding-docs": {
       "resource": "self",
       "action": "onboarding-docs",
-      "description": "Upload and view own onboarding documents"
+      "description": "Upload and view own onboarding documents",
+      "baselineScope": "own"
     },
     "self:onboarding-tasks": {
       "resource": "self",
       "action": "onboarding-tasks",
-      "description": "View and complete own onboarding tasks"
+      "description": "View and complete own onboarding tasks",
+      "baselineScope": "own"
     },
     "self:payroll": {
       "resource": "self",
