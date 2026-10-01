@@ -183,6 +183,7 @@ import { useEpicPage } from "@/hooks/api/build/advanced";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import type { AccessResponse } from "@/hooks/api/access-schema";
 import type { Cycle, Epic, ProjectWithDetails, Ticket } from "@/types/projects";
+import type { EpicPage, EpicItem } from "@/hooks/api/build/execution-schema";
 
 export const mockUseProject = jest.mocked(useProject);
 export const mockUseProjectBoardTickets = jest.mocked(useProjectBoardTickets);
@@ -431,6 +432,50 @@ export const EPIC_ROW = {
   createdAt: "2026-09-01", updatedAt: "2026-09-01", assigneeId: null,
 };
 
+const EPIC_TYPES = ["EPIC", "STORY", "TASK", "BUG"] as const;
+const EPIC_PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
+
+function toEpicItem(t: Epic): EpicItem {
+  return {
+    id: t.id,
+    orgId: t.orgId,
+    title: t.title,
+    description: t.description ?? null,
+    type: EPIC_TYPES.find((v) => v === t.type) ?? "EPIC",
+    status: t.status,
+    priority: EPIC_PRIORITIES.find((v) => v === t.priority) ?? "LOW",
+    health: t.health ?? null,
+    projectId: t.projectId,
+    ticketNumber: t.ticketNumber,
+    cycleId: t.cycleId,
+    epicId: t.epicId,
+    assigneeMembershipId: null,
+    points: t.points,
+    storyPoints: t.storyPoints,
+    startDate: t.startDate,
+    dueDate: t.dueDate,
+    estimate: t.estimate,
+    completionPercentage: 0,
+    rank: t.rank ?? "",
+    timeSpent: t.timeSpent ?? "",
+    version: t.version,
+    dependencyCount: t.dependencyCount ?? 0,
+    deletedAt: null,
+    createdAt: typeof t.createdAt === "string" ? t.createdAt : "",
+    updatedAt: typeof t.updatedAt === "string" ? t.updatedAt : "",
+    assignee: t.assignee
+      ? {
+          id: t.assignee.id,
+          name: t.assignee.name ?? null,
+          firstName: t.assignee.firstName ?? null,
+          lastName: t.assignee.lastName ?? null,
+          image: t.assignee.image ?? null,
+          email: t.assignee.email ?? "",
+        }
+      : null,
+  };
+}
+
 export function epicPageResult(
   rows: Epic[],
   overrides: {
@@ -444,7 +489,7 @@ export function epicPageResult(
   } = {},
 ) {
   const { hasMore = false, nextCursor = null, ...rest } = overrides;
-  const page = { data: rows, pagination: { limit: 25, hasMore, nextCursor } };
+  const page: EpicPage = { data: rows.map(toEpicItem), pagination: { limit: 25, hasMore, nextCursor } };
   if (rest.isError) {
     const result = failedQuery<typeof page>(rest.error instanceof Error ? rest.error : new Error("Epics unavailable"));
     if (!rest.refetch) return result;

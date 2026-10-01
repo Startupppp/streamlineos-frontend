@@ -3,34 +3,11 @@ import { cn } from "@/lib/utils";
 import { useTicketSearch } from "@/hooks/api/build/ticket-search";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 
-/**
- * URLs are a token of their own only so a key inside one (`…/browse/ACP-52`) is
- * not linkified; they still render as plain text. Code spans are tokens already.
- *
- * The three emphasis forms are listed longest-first and match LAZILY, and the two
- * `*` forms deliberately allow a `*` inside. They used to be `\*\*[^*]+\*\*` and
- * `\*[^*]+\*` — "no asterisk inside" — so any nested emphasis matched no token at
- * all and fell through to the plain-text branch: `***text***` and
- * `**bold with *italic* inside**` rendered their own markers on screen, which is
- * what the composer's Bold → Italic → Code sequence produces (CHAT-S04). Nested
- * content is re-tokenised by `renderInline`.
- */
 const INLINE_TOKEN_PATTERN = /(\*\*\*[\s\S]+?\*\*\*|\*\*[\s\S]+?\*\*|\*[\s\S]+?\*|`[^`]+`|https?:\/\/[^\s<>"']+|@[^\s@]+(?:\s[^\s@]+)*|\b[A-Z][A-Z0-9]+-\d+\b)/g;
 
-/**
- * How deep emphasis may nest before the rest is left as text.
- *
- * Each level strips at least one marker pair, so the recursion is already bounded by
- * the length of the line; the cap is here so a pathological line of markers cannot
- * turn into a deep React tree.
- */
 const MAX_INLINE_DEPTH = 4;
 const TICKET_KEY_PATTERN = /^[A-Z][A-Z0-9]+-\d+$/;
 
-/**
- * A key only becomes a link once the org's ticket search returns that exact key,
- * so `UTF-8` or `SHA-256` stay text and a key the reader cannot see never links.
- */
 function TicketKeyLink({ ticketKey, isOwn }: { ticketKey: string; isOwn: boolean }) {
   const { data } = useTicketSearch(ticketKey, { staleTime: 5 * 60_000 });
   const match = data?.find(
@@ -105,10 +82,6 @@ function renderInlinePart(
   );
 }
 
-/**
- * One pass of inline tokenising. Called on a whole line, and again on the inside of
- * each emphasis span so nesting renders rather than printing its markers.
- */
 function renderInline(text: string, isOwn: boolean, depth: number): React.ReactNode {
   if (depth >= MAX_INLINE_DEPTH) return text;
   return text

@@ -55,25 +55,11 @@ function markerRunAfter(value: string, index: number, character: string): number
   return run;
 }
 
-/**
- * Whether the selection is already carrying exactly this marker.
- *
- * `*` cannot be read in isolation: the `*` next to a bold selection belongs to its
- * `**` pair, and removing one of them would turn bold into italic rather than
- * toggling italic. So the run of marker characters on each side has to be the length
- * this control owns — which lets Italic NEST inside bold (`**x**` → `***x***`) rather
- * than eat half of it. Three is the one longer run that is still unambiguous: it is
- * the combined bold-italic form, where each control takes back its own share.
- */
 function isSameMarker(before: number, after: number, length: number): boolean {
   if (before !== after) return false;
   return before === length || (before === 3 && length <= 2);
 }
 
-/**
- * React has not committed the new value when this runs, so the caret is restored on
- * the next tick — as it was before the toggle was added.
- */
 function selectAfterFormat(
   el: HTMLTextAreaElement,
   from: number,
@@ -118,16 +104,6 @@ export function MessageInput({
   onInputChange,
   onFilesSelected,
 }: MessageInputProps) {
-  /**
-   * Each control toggles its own marker rather than always adding one.
-   *
-   * It only ever added, so pressing Bold then Italic then Code on the same selection
-   * stacked markers around it and pressing a control twice left the markers behind —
-   * the combination the markdown renderer could not read, which is how the composer
-   * produced visible markup in sent messages (CHAT-S04). Removing the marker when the
-   * selection is already wrapped in it makes the control reversible and keeps the
-   * nesting to the levels the renderer handles.
-   */
   const formatSelection = useCallback((marker: string, block = false) => {
     const el = inputRef.current;
     if (!el) return;
