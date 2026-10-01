@@ -27,6 +27,7 @@ type LiveProps = {
   confirmLabel?: string;
   onConfirmed: (outcome: ConfirmActionResult) => void;
   onCancelled: () => void;
+  cancelPending?: boolean;
 };
 
 type RecordProps = {
@@ -87,6 +88,7 @@ function ConfirmationLive({
   confirmLabel,
   onConfirmed,
   onCancelled,
+  cancelPending,
 }: LiveProps) {
   const { mutate, isPending } = useConfirmAction();
   const cardTitle = title ?? summary;
@@ -124,11 +126,11 @@ function ConfirmationLive({
           type="button"
           variant="ghost"
           size="sm"
-          disabled={isPending || expired}
+          disabled={isPending || cancelPending || expired}
           onClick={onCancelled}
           className="h-7 px-2.5 text-xs text-muted-foreground hover:text-foreground"
         >
-          Discard
+          {cancelPending ? "Discarding…" : "Discard"}
         </Button>
         <LoadingButton
           type="button"

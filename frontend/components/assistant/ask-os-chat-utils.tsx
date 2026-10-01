@@ -6,7 +6,9 @@ import dynamic from "next/dynamic";
 import { AnimatedLogo } from "@/components/brand/animated-logo";
 import { MarkdownContent } from "@/components/markdown/markdown-content";
 import type { AskAiHistoryMessage } from "@/hooks/api/chat-ai-assistant";
-import type { ConfirmActionResult } from "@/hooks/api/ai-confirm-action";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { useDeclineProposal, type ConfirmActionResult } from "@/hooks/api/ai-confirm-action";
 import { extractAskOsDirective, type AskOsDirective } from "./ask-os-directive-schema";
 
 const AskOsConfirmationCard = dynamic(
@@ -123,13 +125,21 @@ function ConfirmDirectiveSlot({
   const [confirmedOutcome, setConfirmedOutcome] =
     useState<ConfirmActionResult | null>(null);
   const [cancelled, setCancelled] = useState(false);
+  const decline = useDeclineProposal();
 
   function handleConfirmed(outcome: ConfirmActionResult) {
     setConfirmedOutcome(outcome);
   }
 
   function handleCancelled() {
-    setCancelled(true);
+    decline.mutate(directive.proposalId, {
+      onSuccess: () => {
+        setCancelled(true);
+      },
+      onError: (error) => {
+        toast.error(getErrorMessage(error));
+      },
+    });
   }
 
   const { token } = directive;
@@ -164,6 +174,7 @@ function ConfirmDirectiveSlot({
       confirmLabel={directive.confirmLabel}
       onConfirmed={handleConfirmed}
       onCancelled={handleCancelled}
+      cancelPending={decline.isPending}
     />
   );
 }

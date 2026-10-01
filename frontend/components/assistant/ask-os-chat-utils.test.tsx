@@ -30,9 +30,11 @@ jest.mock("@/components/markdown/markdown-content", () => ({
 }));
 
 const mutate = jest.fn();
+const declineMutate = jest.fn();
 
 jest.mock("@/hooks/api/ai-confirm-action", () => ({
   useConfirmAction: () => ({ mutate, isPending: false }),
+  useDeclineProposal: () => ({ mutate: declineMutate, isPending: false }),
 }));
 
 jest.mock("sonner", () => ({
@@ -273,5 +275,73 @@ describe("a confirmed action reports what the backend actually did", () => {
     await userEvent.click(await screen.findByRole("button", { name: "Send" }));
 
     expect(await screen.findByText("Email sent.")).toBeInTheDocument();
+  });
+});
+
+describe("discarding a proposal releases it on the server instead of only hiding the card", () => {
+  beforeEach(() => {
+    declineMutate.mockReset();
+  });
+
+  it("posts the decline for the directive's proposalId, so an identical later request is not handed the same still-live token", async () => {
+    render(
+      <AskOsBubble
+        role="assistant"
+        content="Here is the bonus."
+        streaming={false}
+        reduce={false}
+        directives={[bonusDirective]}
+      />,
+    );
+
+    await userEvent.click(await screen.findByRole("button", { name: "Discard" }));
+
+    expect(declineMutate).toHaveBeenCalledTimes(1);
+    expect(declineMutate.mock.calls[0]?.[0]).toBe(bonusDirective.proposalId);
+  });
+
+  it("keeps the card up when the decline fails, because collapsing to Cancelled would claim a release the server never made", async () => {
+    declineMutate.mockImplementation(
+      (_id: number, opts: { onError: (e: Error) => void }) => {
+        opts.onError(new Error("network down"));
+      },
+    );
+
+    render(
+      <AskOsBubble
+        role="assistant"
+        content="Here is the bonus."
+        streaming={false}
+        reduce={false}
+        directives={[bonusDirective]}
+      />,
+    );
+
+    await userEvent.click(await screen.findByRole("button", { name: "Discard" }));
+
+    expect(screen.queryByText("Cancelled.")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Discard" })).toBeInTheDocument();
+  });
+
+  it("collapses to Cancelled only after the server confirms the decline", async () => {
+    declineMutate.mockImplementation(
+      (_id: number, opts: { onSuccess: () => void }) => {
+        opts.onSuccess();
+      },
+    );
+
+    render(
+      <AskOsBubble
+        role="assistant"
+        content="Here is the bonus."
+        streaming={false}
+        reduce={false}
+        directives={[bonusDirective]}
+      />,
+    );
+
+    await userEvent.click(await screen.findByRole("button", { name: "Discard" }));
+
+    expect(screen.getByText("Cancelled.")).toBeInTheDocument();
   });
 });
