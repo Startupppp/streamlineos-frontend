@@ -190,7 +190,7 @@ function CommentPreviewCard({
               isOwn ? "text-white/40" : "text-muted-foreground",
             )}
           >
-            {data.author.name ?? "Unknown"} &middot; {relativeTime}
+            {data.author?.name ?? "Unknown"} &middot; {relativeTime}
           </p>
         </div>
       </div>

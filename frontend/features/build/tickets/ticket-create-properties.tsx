@@ -41,7 +41,7 @@ const PRIORITIES: { value: TicketPriority; label: string; Icon: typeof Minus }[]
 
 export interface CreateTicketPropertiesValue {
   status: string;
-  priority: TicketPriority | null;
+  priority: string | null;
   assigneeId: string | null;
   points: number | null;
   labelIds: number[];

@@ -1,4 +1,4 @@
-import type { TicketPriority } from "./shared";
+
 
 export interface TicketUser {
   id: string;
@@ -122,6 +122,7 @@ export interface Ticket {
   project?: { id: number; name: string; key: string } | null;
   cycle?: { id: number; name: string; status: string; startDate: string; endDate: string } | null;
   health?: "on_track" | "at_risk" | "off_track" | null;
+  descriptionExcerpt?: string;
   dependencyCount?: number;
   customerId?: number | null;
   customer?: { id: number; name: string } | null;
@@ -153,7 +154,7 @@ export interface CreateTicketInput {
   title: string;
   description?: string;
   type: string;
-  priority?: TicketPriority;
+  priority?: string;
   assigneeId?: string;
   assigneeIds?: string[];
   reporterId?: string;
@@ -173,7 +174,7 @@ export interface UpdateTicketInput {
   description?: string;
   type?: string;
   status?: string;
-  priority?: TicketPriority;
+  priority?: string;
   assigneeId?: string;
   assigneeIds?: string[];
   epicId?: number | null;

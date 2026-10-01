@@ -158,7 +158,9 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
       setEditingAutomation(automation);
       form.reset({
         name: automation.name,
-        triggerEvent: automation.triggerEvent,
+        triggerEvent:
+          formSchema.shape.triggerEvent.options.find((e) => e === automation.triggerEvent) ??
+          "ticket.created",
         conditions: automation.conditions,
         actions: automation.actions,
         isActive: automation.isActive,

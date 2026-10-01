@@ -100,6 +100,9 @@ const STUB_CUSTOM_STATES: CustomState[] = [
     color: null,
     order: 1,
     type: "started",
+    wipLimit: null,
+    createdAt: "2026-01-01T00:00:00Z",
+    updatedAt: "2026-01-01T00:00:00Z",
   },
   {
     id: 2,
@@ -109,6 +112,9 @@ const STUB_CUSTOM_STATES: CustomState[] = [
     color: null,
     order: 2,
     type: "completed",
+    wipLimit: null,
+    createdAt: "2026-01-01T00:00:00Z",
+    updatedAt: "2026-01-01T00:00:00Z",
   },
   {
     id: 3,
@@ -118,6 +124,9 @@ const STUB_CUSTOM_STATES: CustomState[] = [
     color: null,
     order: 3,
     type: "unstarted",
+    wipLimit: null,
+    createdAt: "2026-01-01T00:00:00Z",
+    updatedAt: "2026-01-01T00:00:00Z",
   },
 ];
 

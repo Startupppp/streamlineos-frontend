@@ -135,7 +135,10 @@ export function TicketCustomFields({
     useTicketCustomFieldValues(projectId, ticketId);
   const upsert = useUpsertTicketCustomFieldValues(projectId, ticketId);
 
-  const valueMap = useMemo(() => new Map(values.map((v) => [v.fieldId, v.value])), [values]);
+  const valueMap = useMemo(
+    () => new Map(values.map((v) => [v.fieldId, typeof v.value === "string" ? v.value : null])),
+    [values],
+  );
 
   const handleSave = useCallback(
     (fieldId: number, value: string | null) => {

@@ -54,6 +54,8 @@
     "**/*.test.ts",
     "**/*.test.tsx",
     "**/*.spec.ts",
-    "**/*.spec.tsx"
+    "**/*.spec.tsx",
+    "**/*-test-harness.ts",
+    "**/*-test-harness.tsx"
   ]
 }

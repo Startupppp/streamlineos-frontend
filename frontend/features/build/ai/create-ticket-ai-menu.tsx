@@ -13,10 +13,9 @@ import {
   useTicketDraftSuggestFields,
   type TicketSuggestFieldsResult,
 } from "@/hooks/api/build/ticket-ai";
-import type { TicketPriority } from "@/types/projects";
 
 export interface CreateTicketAiFieldPatch {
-  priority?: TicketPriority;
+  priority?: string;
   points?: number | null;
   labelIds?: number[];
 }

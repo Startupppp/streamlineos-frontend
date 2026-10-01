@@ -91,7 +91,7 @@ export interface ProjectListItem {
   description: string | null;
   key: string;
   status: ProjectStatusValue | null;
-  priority: ProjectPriority | null;
+  priority: string | null;
   health: ProjectHealth;
   managedProductId: number | null;
   startDate: string | Date | null;
