@@ -109,6 +109,654 @@ export const genProjectAnalyticsSchema = z.object({
   }),
 });
 
+export const genProjectApprovalsSchema = z.object({
+  data: z.array(z.object({
+    id: z.number().int(),
+    orgId: z.string(),
+    projectId: z.number().int().nullable(),
+    entityType: z.enum(["task", "milestone", "budget", "release", "change_request", "document", "timesheet", "client_approval"]),
+    entityId: z.number().int(),
+    title: z.string(),
+    reason: z.string().nullable(),
+    requestedById: z.string().nullable(),
+    approverMembershipId: z.number().int().nullable(),
+    status: z.enum(["requested", "pending", "approved", "rejected", "changes_requested", "escalated", "cancelled"]),
+    level: z.number().int(),
+    dueAt: z.string().nullable(),
+    decisionComment: z.string().nullable(),
+    decidedAt: z.string().nullable(),
+    createdBy: z.string().nullable(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    deletedAt: z.string().nullable(),
+  })),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+
+export const genProjectBugsSchema = z.array(z.object({
+  id: z.number().int(),
+  orgId: z.string(),
+  projectId: z.number().int(),
+  ticketNumber: z.number().int(),
+  title: z.string(),
+  description: z.string().nullable(),
+  type: z.string(),
+  status: z.string(),
+  priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
+  assigneeMembershipId: z.number().int().nullable(),
+  reporterId: z.string().nullable(),
+  deletedAt: z.string().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  qaState: z.enum(["new", "triaged", "assigned", "in_progress", "fixed", "ready_for_qa", "verified", "reopened", "closed"]).nullable(),
+  severity: z.enum(["blocker", "critical", "major", "minor", "trivial"]).nullable(),
+  stepsToReproduce: z.string().nullable(),
+  expectedResult: z.string().nullable(),
+  actualResult: z.string().nullable(),
+  environment: z.string().nullable(),
+  browserDevice: z.string().nullable(),
+  affectedReleaseId: z.number().int().nullable(),
+  fixedReleaseId: z.number().int().nullable(),
+  qaOwnerUserId: z.string().nullable(),
+  qaOwnerMembershipId: z.number().int().nullable(),
+  linkedTestCaseId: z.number().int().nullable(),
+  reopenCount: z.number().int().nullable(),
+  createdByUserId: z.string().nullable(),
+}));
+
+export const genChangeRequestListSchema = z.object({
+  data: z.array(z.object({
+    affectedItemCount: z.number().int(),
+    id: z.number().int(),
+    orgId: z.string(),
+    projectId: z.number().int(),
+    crNumber: z.number().int(),
+    title: z.string(),
+    description: z.string().nullable(),
+    impact: z.string().nullable(),
+    estimateMinutes: z.number().int().nullable(),
+    budgetImpactCents: z.number().int().nullable(),
+    timelineImpactDays: z.number().int().nullable(),
+    status: z.enum(["submitted", "under_review", "estimated", "awaiting_approval", "approved", "rejected", "in_progress", "completed"]),
+    requestedById: z.string().nullable(),
+    approvalOwnerId: z.string().nullable(),
+    approvalOwnerMembershipId: z.number().int().nullable(),
+    decisionComment: z.string().nullable(),
+    decidedAt: z.string().nullable(),
+    releaseId: z.number().int().nullable(),
+    clientVisible: z.boolean(),
+    createdBy: z.string().nullable(),
+    createdAt: z.union([z.string(), z.string()]),
+    updatedAt: z.string(),
+    deletedAt: z.string().nullable(),
+  })),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+
+export const genClientPortalSettingsSchema = z.object({
+  portalPublishedAt: z.string().nullable(),
+  grantCount: z.number().int(),
+});
+
+export const genClientPortalPreviewSchema = z.object({
+  project: z.object({
+    id: z.number().int(),
+    name: z.string(),
+    key: z.string(),
+    status: z.string(),
+    startDate: z.string().nullable(),
+    targetEndDate: z.string().nullable(),
+  }),
+  milestones: z.array(z.object({
+    id: z.number().int(),
+    name: z.string(),
+    dueDate: z.string().nullable(),
+    status: z.string(),
+  })),
+  tasks: z.array(z.object({
+    id: z.number().int(),
+    ticketNumber: z.number().int(),
+    title: z.string(),
+    status: z.string(),
+    dueDate: z.string().nullable(),
+  })),
+  attachments: z.array(z.object({
+    id: z.number().int(),
+    filename: z.string(),
+    url: z.string(),
+  })),
+  comments: z.array(z.object({
+    id: z.number().int(),
+    body: z.string(),
+    authorName: z.string(),
+    createdAt: z.string(),
+  })),
+});
+
+export const genCustomStateListSchema = z.array(z.object({
+  id: z.number().int(),
+  orgId: z.string(),
+  projectId: z.number().int(),
+  name: z.string(),
+  order: z.number().int(),
+  color: z.string().nullable(),
+  type: z.enum(["backlog", "unstarted", "started", "completed", "cancelled"]).nullable(),
+  wipLimit: z.number().int().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+}));
+
+export const genCustomFieldListSchema = z.array(z.object({
+  id: z.number().int(),
+  orgId: z.string(),
+  projectId: z.number().int().nullable(),
+  name: z.string(),
+  type: z.string(),
+  options: z.array(z.string()).nullable(),
+  required: z.boolean().nullable(),
+  position: z.number().int().nullable(),
+  createdAt: z.string(),
+}));
+
+export const genCycleListSchema = z.object({
+  data: z.array(z.object({
+    id: z.number().int(),
+    orgId: z.string(),
+    projectId: z.number().int(),
+    name: z.string(),
+    description: z.string().nullable(),
+    goal: z.string().nullable(),
+    capacity: z.number().int().nullable(),
+    startDate: z.string(),
+    endDate: z.string(),
+    status: z.enum(["draft", "active", "completed"]),
+    version: z.number().int(),
+    createdBy: z.string(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    totalItems: z.number().int(),
+    completedItems: z.number().int(),
+    progress: z.number().int(),
+  })),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+
+export const genDecisionPageSchema = z.object({
+  data: z.array(z.object({
+    id: z.number().int(),
+    orgId: z.string(),
+    projectId: z.number().int(),
+    decisionNumber: z.number().int(),
+    title: z.string(),
+    context: z.string().nullable(),
+    decision: z.string().nullable(),
+    optionsConsidered: z.string().nullable(),
+    status: z.enum(["proposed", "accepted", "superseded", "revisit"]),
+    ownerId: z.string().nullable(),
+    decidedAt: z.string().nullable(),
+    revisitAt: z.string().nullable(),
+    linkedTicketId: z.number().int().nullable(),
+    createdBy: z.string().nullable(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    deletedAt: z.string().nullable(),
+  })),
+  hasMore: z.boolean(),
+  nextCursor: z.number().int().nullable(),
+});
+
+export const genProjectFilesSchema = z.object({
+  data: z.array(z.object({
+    id: z.number().int(),
+    orgId: z.string(),
+    projectId: z.number().int(),
+    uploadedByMembershipId: z.number().int(),
+    fileName: z.string(),
+    mimeType: z.string(),
+    sizeBytes: z.number().int(),
+    createdAt: z.union([z.string(), z.string()]),
+    deletedAt: z.string().nullable(),
+  })),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+
+export const genFormListSchema = z.object({
+  data: z.array(z.object({
+    id: z.number().int(),
+    orgId: z.string(),
+    projectId: z.number().int(),
+    formNumber: z.number().int(),
+    name: z.string(),
+    description: z.string().nullable(),
+    type: z.enum(["task_request", "bug_report", "feature_request", "change_request", "client_approval", "risk_report", "qa_issue", "generic"]),
+    fields: z.unknown(),
+    actions: z.unknown(),
+    isActive: z.boolean(),
+    isPublic: z.boolean(),
+    publicToken: z.string().nullable(),
+    createdBy: z.string().nullable(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    deletedAt: z.string().nullable(),
+  })),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+
+export const genFormRowSchema = z.object({
+  id: z.number().int(),
+  orgId: z.string(),
+  projectId: z.number().int(),
+  formNumber: z.number().int(),
+  name: z.string(),
+  description: z.string().nullable(),
+  type: z.enum(["task_request", "bug_report", "feature_request", "change_request", "client_approval", "risk_report", "qa_issue", "generic"]),
+  fields: z.unknown(),
+  actions: z.unknown(),
+  isActive: z.boolean(),
+  isPublic: z.boolean(),
+  publicToken: z.string().nullable(),
+  createdBy: z.string().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  deletedAt: z.string().nullable(),
+});
+
+export const genIncidentPageSchema = z.object({
+  data: z.array(z.object({
+    id: z.number().int(),
+    orgId: z.string(),
+    projectId: z.number().int(),
+    incidentNumber: z.number().int(),
+    title: z.string(),
+    description: z.string().nullable(),
+    severity: z.enum(["critical", "high", "medium", "low"]),
+    status: z.enum(["detected", "investigating", "mitigating", "resolved", "postmortem", "closed"]),
+    impact: z.string().nullable(),
+    ownerId: z.string().nullable(),
+    rootCause: z.string().nullable(),
+    customerComms: z.string().nullable(),
+    detectedAt: z.string().nullable(),
+    respondedAt: z.string().nullable(),
+    resolvedAt: z.string().nullable(),
+    responseDueAt: z.string().nullable(),
+    resolutionDueAt: z.string().nullable(),
+    linkedTicketId: z.number().int().nullable(),
+    releaseId: z.number().int().nullable(),
+    createdBy: z.string().nullable(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    deletedAt: z.string().nullable(),
+  })),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+
+export const genProjectIntakeSchema = z.object({
+  data: z.array(z.object({
+    id: z.number().int(),
+    projectId: z.number().int().nullable(),
+    orgId: z.string(),
+    title: z.string(),
+    description: z.unknown(),
+    source: z.enum(["manual", "web_form", "email"]),
+    status: z.enum(["pending", "accepted", "declined", "duplicate"]),
+    submitterEmail: z.string().nullable(),
+    submitterName: z.string().nullable(),
+    priority: z.string().nullable(),
+    requestType: z.string().nullable(),
+    linkedWorkItemId: z.number().int().nullable(),
+    declineReason: z.string().nullable(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+  })),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+
+export const genProjectLabelsSchema = z.array(z.object({
+  id: z.number().int(),
+  orgId: z.string(),
+  name: z.string(),
+  color: z.string(),
+  createdAt: z.string(),
+}));
+
+export const genMeetingListSchema = z.object({
+  data: z.array(z.object({
+    id: z.number().int(),
+    orgId: z.string(),
+    projectId: z.number().int(),
+    meetingNumber: z.number().int(),
+    title: z.string(),
+    type: z.enum(["meeting", "standup", "retro", "planning", "review"]),
+    status: z.enum(["scheduled", "in_progress", "completed", "cancelled"]),
+    agenda: z.string().nullable(),
+    notes: z.string().nullable(),
+    scheduledAt: z.string().nullable(),
+    endAt: z.string().nullable(),
+    durationMinutes: z.number().int().nullable(),
+    timezone: z.string().nullable(),
+    recurrenceRule: z.unknown(),
+    cycleId: z.number().int().nullable(),
+    createdBy: z.string().nullable(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    deletedAt: z.string().nullable(),
+    attendeeCount: z.number().int(),
+    actionItemCount: z.number().int(),
+    unresolvedActionItemCount: z.number().int(),
+  })),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+
+export const genMeetingDetailSchema = z.object({
+  id: z.number().int(),
+  orgId: z.string(),
+  projectId: z.number().int(),
+  meetingNumber: z.number().int(),
+  title: z.string(),
+  type: z.enum(["meeting", "standup", "retro", "planning", "review"]),
+  status: z.enum(["scheduled", "in_progress", "completed", "cancelled"]),
+  agenda: z.string().nullable(),
+  notes: z.string().nullable(),
+  scheduledAt: z.string().nullable(),
+  endAt: z.string().nullable(),
+  durationMinutes: z.number().int().nullable(),
+  timezone: z.string().nullable(),
+  recurrenceRule: z.unknown(),
+  cycleId: z.number().int().nullable(),
+  createdBy: z.string().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  deletedAt: z.string().nullable(),
+  attendees: z.array(z.object({
+    id: z.number().int(),
+    orgId: z.string(),
+    meetingId: z.number().int(),
+    membershipId: z.number().int(),
+    attended: z.boolean(),
+    createdAt: z.string(),
+  })),
+  actionItems: z.array(z.object({
+    id: z.number().int(),
+    orgId: z.string(),
+    meetingId: z.number().int(),
+    projectId: z.number().int(),
+    title: z.string(),
+    description: z.string().nullable(),
+    assigneeId: z.string().nullable(),
+    dueDate: z.string().nullable(),
+    status: z.enum(["open", "in_progress", "done", "converted", "cancelled"]),
+    convertedTicketId: z.number().int().nullable(),
+    createdBy: z.string().nullable(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    deletedAt: z.string().nullable(),
+  })),
+  standupEntries: z.array(z.object({
+    id: z.number().int(),
+    orgId: z.string(),
+    meetingId: z.number().int(),
+    userId: z.string(),
+    membershipId: z.number().int().nullable(),
+    yesterday: z.string().nullable(),
+    today: z.string().nullable(),
+    blockers: z.string().nullable(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+  })),
+});
+
+export const genBuildMemberPageSchema = z.object({
+  data: z.array(z.object({
+    id: z.string(),
+    name: z.string().nullable(),
+    firstName: z.string().nullable(),
+    lastName: z.string().nullable(),
+    image: z.string().nullable(),
+    email: z.string(),
+    role: z.string(),
+    joinedAt: z.string(),
+  })),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+
+export const genMilestoneListSchema = z.object({
+  data: z.array(z.object({
+    id: z.number().int(),
+    projectId: z.number().int().nullable(),
+    orgId: z.string(),
+    name: z.string(),
+    description: z.string().nullable(),
+    targetDate: z.string().nullable(),
+    status: z.string().nullable(),
+    createdBy: z.string().nullable(),
+    ownerMembershipId: z.number().int().nullable(),
+    owner: z.object({
+      membershipId: z.number().int(),
+      firstName: z.string().nullable(),
+      lastName: z.string().nullable(),
+      image: z.string().nullable(),
+    }).nullable(),
+    linkedTicketCount: z.number().int(),
+    completedTicketCount: z.number().int(),
+    clientVisible: z.boolean(),
+    version: z.number().int(),
+    deletedAt: z.string().nullable(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+  })),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+
+export const genModuleListSchema = z.object({
+  data: z.array(z.object({
+    id: z.number().int(),
+    name: z.string(),
+    orgId: z.string(),
+    status: z.enum(["backlog", "planned", "in-progress", "completed", "paused", "cancelled"]),
+    leadId: z.string().nullable(),
+    endDate: z.string().nullable(),
+    startDate: z.string().nullable(),
+    version: z.number().int(),
+    createdBy: z.string(),
+    projectId: z.number().int(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    description: z.string().nullable(),
+    totalItems: z.number().int(),
+    completedItems: z.number().int(),
+    progress: z.number().int(),
+  })),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+
+export const genReleasePageSchema = z.object({
+  data: z.array(z.object({
+    id: z.number().int(),
+    orgId: z.string(),
+    projectId: z.number().int(),
+    name: z.string(),
+    version: z.string(),
+    rowVersion: z.number().int(),
+    description: z.string().nullable(),
+    status: z.string(),
+    releaseDate: z.string().nullable(),
+    publishedAt: z.string().nullable(),
+    createdBy: z.string().nullable(),
+    createdByUser: z.object({
+      name: z.string().nullable(),
+      firstName: z.string().nullable(),
+      lastName: z.string().nullable(),
+      email: z.string().nullable(),
+    }).nullable(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    ticketCount: z.number().int(),
+  })),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+
+export const genBurnupReportSchema = z.array(z.object({
+  date: z.string(),
+  scope: z.number(),
+  completed: z.number(),
+})).max(366);
+
+export const genCfdReportSchema = z.object({
+  dates: z.array(z.string()),
+  groups: z.array(z.string()),
+  series: z.array(z.object({
+    date: z.string(),
+    backlog: z.number(),
+    unstarted: z.number(),
+    started: z.number(),
+    completed: z.number(),
+    cancelled: z.number(),
+  })),
+});
+
+export const genCriticalPathSchema = z.object({
+  criticalPath: z.array(z.object({
+    ticketId: z.number().int(),
+    title: z.string(),
+    estimate: z.number(),
+    earliestStart: z.number(),
+    earliestFinish: z.number(),
+  })),
+  totalDuration: z.number(),
+  nodeCount: z.number().int(),
+  edgeCount: z.number().int(),
+  hasCycle: z.boolean(),
+});
+
+export const genCycleTimeSchema = z.array(z.object({
+  week: z.string(),
+  avgDays: z.number(),
+  count: z.number().int(),
+}));
+
+export const genLeadTimeSchema = z.array(z.object({
+  week: z.string(),
+  avgDays: z.number(),
+  p50Days: z.number(),
+  p90Days: z.number(),
+  count: z.number().int(),
+}));
+
+export const genVelocityReportSchema = z.array(z.object({
+  cycleId: z.number().int(),
+  name: z.string(),
+  startDate: z.string(),
+  endDate: z.string(),
+  committedPoints: z.number().int(),
+  completedPoints: z.number().int(),
+  committedCount: z.number().int(),
+  completedCount: z.number().int(),
+})).max(100);
+
+export const genRiskPageSchema = z.object({
+  data: z.array(z.object({
+    id: z.number().int(),
+    orgId: z.string(),
+    projectId: z.number().int(),
+    riskNumber: z.number().int(),
+    title: z.string(),
+    description: z.string().nullable(),
+    probability: z.enum(["low", "medium", "high"]),
+    impact: z.enum(["low", "medium", "high"]),
+    status: z.enum(["open", "mitigating", "monitoring", "accepted", "closed"]),
+    ownerId: z.string().nullable(),
+    mitigation: z.string().nullable(),
+    linkedTicketId: z.number().int().nullable(),
+    createdBy: z.string().nullable(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    deletedAt: z.string().nullable(),
+  })),
+  hasMore: z.boolean(),
+  nextCursor: z.number().int().nullable(),
+});
+
+export const genRiskStatsSchema = z.object({
+  total: z.number().int(),
+  open: z.number().int(),
+  closed: z.number().int(),
+  highCritical: z.number().int(),
+  matrix: z.array(z.object({
+    probability: z.enum(["low", "medium", "high"]),
+    impact: z.enum(["low", "medium", "high"]),
+    openCount: z.number().int(),
+  })),
+});
+
+export const genProjectRosterSchema = z.object({
+  teams: z.array(z.object({
+    id: z.number().int(),
+    name: z.string(),
+    key: z.string(),
+  })),
+  members: z.array(z.object({
+    id: z.string(),
+    name: z.string().nullable(),
+    firstName: z.string().nullable(),
+    lastName: z.string().nullable(),
+    email: z.string(),
+    image: z.string().nullable(),
+  })),
+});
+
+export const genIterationSettingsSchema = z.object({
+  defaultDurationWeeks: z.number().int(),
+  namingPrefix: z.string(),
+});
+
 export const genTicketListPageSchema = z.object({
   data: z.array(z.object({
     id: z.number().int(),
@@ -341,41 +989,54 @@ export const genTicketDetailWireSchema = z.object({
   })).optional(),
 });
 
-export const genCustomStateListSchema = z.array(z.object({
+export const genTicketRelationListSchema = z.array(z.object({
   id: z.number().int(),
-  orgId: z.string(),
-  projectId: z.number().int(),
-  name: z.string(),
-  order: z.number().int(),
-  color: z.string().nullable(),
-  type: z.enum(["backlog", "unstarted", "started", "completed", "cancelled"]).nullable(),
-  wipLimit: z.number().int().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
+  relationType: z.enum(["blocks", "blocked_by", "duplicate_of", "relates_to"]),
+  direction: z.enum(["outgoing", "incoming"]),
+  relatedTicket: z.object({
+    id: z.number().int(),
+    title: z.string(),
+    ticketNumber: z.number().int(),
+    status: z.string(),
+    priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
+    type: z.enum(["EPIC", "STORY", "TASK", "BUG"]),
+    points: z.number().int().nullable(),
+    version: z.number().int(),
+    assigneeMembershipId: z.number().int().nullable(),
+    projectId: z.number().int().nullable(),
+    project: z.object({
+      key: z.string(),
+    }).nullable(),
+    assignee: z.object({
+      id: z.string(),
+      name: z.string().nullable(),
+      firstName: z.string().nullable(),
+      lastName: z.string().nullable(),
+      email: z.string(),
+      image: z.string().nullable(),
+    }).nullable(),
+  }),
 }));
 
-export const genCustomFieldListSchema = z.array(z.object({
-  id: z.number().int(),
-  orgId: z.string(),
-  projectId: z.number().int().nullable(),
-  name: z.string(),
-  type: z.string(),
-  options: z.array(z.string()).nullable(),
-  required: z.boolean().nullable(),
-  position: z.number().int().nullable(),
-  createdAt: z.string(),
-}));
+export const genTicketColumnCountsSchema = z.record(z.string(), z.number().int());
 
-export const genBuildMemberPageSchema = z.object({
+export const genProjectUpdatesSchema = z.object({
   data: z.array(z.object({
-    id: z.string(),
-    name: z.string().nullable(),
-    firstName: z.string().nullable(),
-    lastName: z.string().nullable(),
-    image: z.string().nullable(),
-    email: z.string(),
-    role: z.string(),
-    joinedAt: z.string(),
+    id: z.number().int(),
+    orgId: z.string(),
+    projectId: z.number().int(),
+    authorMembershipId: z.number().int(),
+    authorName: z.string(),
+    body: z.string(),
+    wins: z.string().nullable(),
+    risks: z.string().nullable(),
+    next: z.string().nullable(),
+    citations: z.string().nullable(),
+    status: z.enum(["draft", "published"]),
+    audience: z.enum(["internal", "client"]),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    deletedAt: z.string().nullable(),
   })),
   pagination: z.object({
     limit: z.number().int(),
@@ -384,28 +1045,23 @@ export const genBuildMemberPageSchema = z.object({
   }),
 });
 
-export const genReleasePageSchema = z.object({
+export const genProjectViewListSchema = z.object({
   data: z.array(z.object({
     id: z.number().int(),
+    projectId: z.number().int().nullable(),
     orgId: z.string(),
-    projectId: z.number().int(),
+    createdBy: z.string(),
     name: z.string(),
-    version: z.string(),
-    rowVersion: z.number().int(),
-    description: z.string().nullable(),
-    status: z.string(),
-    releaseDate: z.string().nullable(),
-    publishedAt: z.string().nullable(),
-    createdBy: z.string().nullable(),
-    createdByUser: z.object({
-      name: z.string().nullable(),
-      firstName: z.string().nullable(),
-      lastName: z.string().nullable(),
-      email: z.string().nullable(),
-    }).nullable(),
+    filters: z.unknown(),
+    groupBy: z.string().nullable(),
+    orderBy: z.string().nullable(),
+    layoutType: z.enum(["board", "list", "table", "calendar", "gantt"]),
+    isPinned: z.boolean(),
+    visibility: z.enum(["private", "shared"]),
+    displayOptions: z.unknown(),
+    scope: z.enum(["project", "workspace"]),
     createdAt: z.string(),
     updatedAt: z.string(),
-    ticketCount: z.number().int(),
   })),
   pagination: z.object({
     limit: z.number().int(),
@@ -433,6 +1089,81 @@ export const genWebhookPageSchema = z.object({
   })),
   hasMore: z.boolean(),
   nextCursor: z.number().int().nullable(),
+});
+
+export const genWebhookDeliveryListSchema = z.array(z.object({
+  id: z.number().int(),
+  webhookId: z.number().int(),
+  event: z.string(),
+  status: z.string(),
+  responseCode: z.number().int().nullable(),
+  attempts: z.number().int(),
+  lastError: z.string().nullable(),
+  deliveredAt: z.string(),
+}));
+
+export const genWhiteboardDetailSchema = z.object({
+  id: z.number().int(),
+  projectId: z.number().int().nullable(),
+  name: z.string(),
+  data: z.unknown(),
+  visibility: z.enum(["project", "private", "public"]),
+  access: z.enum(["view", "edit", "manage"]),
+  sharing: z.object({
+    visibility: z.enum(["project", "private", "public"]),
+    publicAccess: z.enum(["viewer", "editor"]).nullable(),
+    shareToken: z.string().nullable(),
+    linkExpiresAt: z.string().nullable(),
+    allowExport: z.boolean(),
+  }).nullable(),
+  shares: z.array(z.object({
+    userId: z.string(),
+    role: z.enum(["viewer", "editor"]),
+    name: z.string().nullable(),
+    email: z.string(),
+  })).nullable(),
+  createdBy: z.string().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export const genWorkflowTransitionsSchema = z.array(z.object({
+  id: z.number().int(),
+  orgId: z.string(),
+  projectId: z.number().int(),
+  fromStatusId: z.number().int().nullable(),
+  toStatusId: z.number().int(),
+  name: z.string().nullable(),
+  requiresApproval: z.boolean(),
+  requiredFields: z.array(z.string()),
+  allowedRoles: z.array(z.string()),
+  createdByMembershipId: z.number().int().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  deletedAt: z.string().nullable(),
+}));
+
+export const genWorkloadCapacitySchema = z.object({
+  members: z.array(z.object({
+    userId: z.string(),
+    membershipId: z.number().int(),
+    teams: z.array(z.object({
+      id: z.number().int(),
+      name: z.string(),
+    })),
+    workingDaysInWindow: z.number(),
+    leaveDays: z.number(),
+    halfLeaveDays: z.number(),
+    netCapacityDays: z.number(),
+    capacityHours: z.number().nullable(),
+    loggedHours: z.number(),
+    estimateHours: z.number().nullable(),
+    allocationPercent: z.number().nullable(),
+    varianceHours: z.number().nullable(),
+    isOverAllocated: z.boolean(),
+    isZeroCapacity: z.boolean(),
+    utilizationPercent: z.number().nullable(),
+  })),
 });
 
 export const genAutomationPageSchema = z.object({
@@ -470,13 +1201,19 @@ export const genAutomationPageSchema = z.object({
   }),
 });
 
-export const genTicketLabelListSchema = z.array(z.object({
-  id: z.number().int(),
-  orgId: z.string(),
-  name: z.string(),
-  color: z.string(),
-  createdAt: z.string(),
-}));
+export const genAgentPulseTopSignalSchema = z.object({
+  type: z.enum(["overdue_approval", "blocked_milestone", "delivery_risk", "dependency_change", "comment_draft"]),
+  entityId: z.number().int(),
+  projectId: z.number().int(),
+  title: z.string(),
+  dueAt: z.string().nullable(),
+  evidence: z.string().nullable().optional(),
+  proposedChange: z.string().nullable().optional(),
+  impact: z.string().nullable().optional(),
+  confidence: z.number().int().nullable().optional(),
+  affectedRecordIds: z.array(z.number().int()).nullable().optional(),
+  retryCount: z.number().int().optional(),
+}).nullable();
 
 export const genAllWorkPageSchema = z.object({
   data: z.array(z.object({
@@ -519,3 +1256,443 @@ export const genAllWorkPageSchema = z.object({
   hasMore: z.boolean(),
   total: z.number().int().optional(),
 });
+
+export const genApprovalsInboxSchema = z.object({
+  data: z.array(z.object({
+    id: z.number().int(),
+    projectId: z.number().int().nullable(),
+    projectName: z.string().nullable(),
+    projectKey: z.string().nullable(),
+    entityType: z.enum(["task", "milestone", "budget", "release", "change_request", "document", "timesheet", "client_approval"]),
+    entityId: z.number().int(),
+    title: z.string(),
+    status: z.enum(["requested", "pending", "approved", "rejected", "changes_requested", "escalated", "cancelled"]),
+    level: z.number().int(),
+    dueAt: z.string().nullable(),
+    requestedById: z.string().nullable(),
+    decidedAt: z.string().nullable(),
+  })),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+
+export const genChangelogPageSchema = z.object({
+  data: z.array(z.object({
+    id: z.number().int(),
+    orgId: z.string(),
+    title: z.string(),
+    content: z.string(),
+    version: z.string().nullable(),
+    isPublished: z.boolean(),
+    linkedRoadmapItemId: z.number().int().nullable(),
+    publishedAt: z.string().nullable(),
+    createdBy: z.string().nullable(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+  })),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+
+export const genCommentDraftListSchema = z.array(z.object({
+  id: z.number().int(),
+  orgId: z.string(),
+  membershipId: z.number().int().nullable(),
+  ticketId: z.number().int(),
+  body: z.string(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  ticket: z.object({
+    id: z.number().int(),
+    type: z.enum(["EPIC", "STORY", "TASK", "BUG"]),
+    title: z.string(),
+    projectId: z.number().int().nullable(),
+    status: z.string(),
+    ticketNumber: z.number().int(),
+    projectKey: z.string().nullable(),
+    priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).nullable(),
+    projectName: z.string().nullable(),
+    assignee: z.object({
+      id: z.string(),
+      name: z.string().nullable(),
+      image: z.string().nullable(),
+      lastName: z.string().nullable(),
+      firstName: z.string().nullable(),
+    }).nullable(),
+  }),
+}));
+
+export const genFeedbackPageSchema = z.object({
+  data: z.array(z.object({
+    id: z.number().int(),
+    orgId: z.string(),
+    title: z.string(),
+    description: z.string().nullable(),
+    status: z.enum(["open", "planned", "in_progress", "completed", "declined"]),
+    category: z.string().nullable(),
+    votes: z.number().int(),
+    submittedByName: z.string().nullable(),
+    submittedByEmail: z.string().nullable(),
+    crmContactId: z.number().int().nullable(),
+    crmOrganizationId: z.number().int().nullable(),
+    accountValueSnapshot: z.string().nullable(),
+    accountTierSnapshot: z.enum(["free", "pro", "enterprise"]).nullable(),
+    linkedRoadmapItemId: z.number().int().nullable(),
+    duplicateOfId: z.number().int().nullable(),
+    mergedAt: z.string().nullable(),
+    createdBy: z.string().nullable(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    deletedAt: z.string().nullable(),
+  })),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+
+export const genTicketLabelListSchema = z.array(z.object({
+  id: z.number().int(),
+  orgId: z.string(),
+  name: z.string(),
+  color: z.string(),
+  createdAt: z.string(),
+}));
+
+export const genBuildMembersSchema = z.object({
+  data: z.array(z.object({
+    id: z.string(),
+    role: z.string(),
+    addedAt: z.string(),
+    name: z.string().nullable(),
+    firstName: z.string().nullable(),
+    lastName: z.string().nullable(),
+    email: z.string(),
+    image: z.string().nullable(),
+    teams: z.array(z.string()),
+  })),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+
+export const genOrgCustomStateListSchema = z.array(z.object({
+  name: z.string(),
+  color: z.string().nullable(),
+  type: z.enum(["backlog", "unstarted", "started", "completed", "cancelled"]).nullable(),
+}));
+
+export const genPortalProjectListSchema = z.array(z.object({
+  id: z.number().int(),
+  name: z.string(),
+  key: z.string(),
+  status: z.string(),
+  startDate: z.string().nullable(),
+  targetEndDate: z.string().nullable(),
+}));
+
+export const genPortalProjectOverviewSchema = z.object({
+  project: z.object({
+    id: z.number().int(),
+    name: z.string(),
+    key: z.string(),
+    status: z.string(),
+    startDate: z.string().nullable(),
+    targetEndDate: z.string().nullable(),
+  }),
+  milestones: z.array(z.object({
+    id: z.number().int(),
+    name: z.string(),
+    dueDate: z.string().nullable(),
+    status: z.string(),
+  })),
+  tasks: z.array(z.object({
+    id: z.number().int(),
+    ticketNumber: z.number().int(),
+    title: z.string(),
+    status: z.string(),
+    dueDate: z.string().nullable(),
+  })),
+  attachments: z.array(z.object({
+    id: z.number().int(),
+    filename: z.string(),
+    url: z.string(),
+  })),
+  comments: z.array(z.object({
+    id: z.number().int(),
+    body: z.string(),
+    authorName: z.string(),
+    createdAt: z.string(),
+  })),
+});
+
+export const genPortalChangeRequestListSchema = z.array(z.object({
+  id: z.number().int(),
+  crNumber: z.number().int(),
+  title: z.string(),
+  description: z.string().nullable(),
+  impact: z.string().nullable(),
+  status: z.string(),
+  estimateMinutes: z.number().int().nullable(),
+  budgetImpactCents: z.number().int().nullable(),
+  timelineImpactDays: z.number().int().nullable(),
+  decisionComment: z.string().nullable(),
+  createdAt: z.string(),
+}));
+
+export const genPortfolioListSchema = z.object({
+  data: z.array(z.object({
+    id: z.number().int(),
+    orgId: z.string(),
+    name: z.string(),
+    description: z.string().nullable(),
+    ownerId: z.string().nullable(),
+    status: z.enum(["active", "on_hold", "completed", "archived"]),
+    health: z.enum(["on_track", "at_risk", "off_track"]).nullable(),
+    strategicGoal: z.string().nullable(),
+    createdBy: z.string().nullable(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    projectCount: z.number().int(),
+  })),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+
+export const genProgramListSchema = z.object({
+  data: z.array(z.object({
+    id: z.number().int(),
+    orgId: z.string(),
+    portfolioId: z.number().int().nullable(),
+    name: z.string(),
+    description: z.string().nullable(),
+    ownerId: z.string().nullable(),
+    status: z.enum(["active", "on_hold", "completed", "archived"]),
+    health: z.enum(["on_track", "at_risk", "off_track"]).nullable(),
+    createdBy: z.string().nullable(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    projectCount: z.number().int(),
+  })),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+
+export const genOrgReleaseListSchema = z.object({
+  data: z.array(z.object({
+    id: z.number().int(),
+    orgId: z.string(),
+    projectId: z.number().int(),
+    name: z.string(),
+    version: z.string(),
+    rowVersion: z.number().int(),
+    description: z.string().nullable(),
+    status: z.string(),
+    releaseDate: z.string().nullable(),
+    publishedAt: z.string().nullable(),
+    createdBy: z.string().nullable(),
+    createdByUser: z.object({
+      name: z.string().nullable(),
+      firstName: z.string().nullable(),
+      lastName: z.string().nullable(),
+      email: z.string().nullable(),
+    }).nullable(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    ticketCount: z.number().int(),
+  })),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+
+export const genOrgRiskPageSchema = z.object({
+  data: z.array(z.object({
+    id: z.number().int(),
+    orgId: z.string(),
+    projectId: z.number().int(),
+    riskNumber: z.number().int(),
+    title: z.string(),
+    description: z.string().nullable(),
+    probability: z.enum(["low", "medium", "high"]),
+    impact: z.enum(["low", "medium", "high"]),
+    status: z.enum(["open", "mitigating", "monitoring", "accepted", "closed"]),
+    ownerId: z.string().nullable(),
+    mitigation: z.string().nullable(),
+    linkedTicketId: z.number().int().nullable(),
+    createdBy: z.string().nullable(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    deletedAt: z.string().nullable(),
+  })),
+  hasMore: z.boolean(),
+  nextCursor: z.number().int().nullable(),
+});
+
+export const genRoadmapPageSchema = z.object({
+  data: z.array(z.object({
+    id: z.number().int(),
+    orgId: z.string(),
+    title: z.string(),
+    description: z.string().nullable(),
+    outcome: z.string().nullable(),
+    status: z.enum(["planned", "in_progress", "completed", "cancelled"]),
+    category: z.string().nullable(),
+    isPublic: z.boolean(),
+    projectId: z.number().int().nullable(),
+    epicTicketId: z.number().int().nullable(),
+    targetQuarter: z.string().nullable(),
+    sortOrder: z.number().int(),
+    votes: z.number().int(),
+    reach: z.number().int().nullable(),
+    impact: z.number().int().nullable(),
+    confidence: z.number().int().nullable(),
+    effort: z.number().int().nullable(),
+    ownerMembershipId: z.number().int().nullable(),
+    owner: z.object({
+      name: z.string().nullable(),
+      firstName: z.string().nullable(),
+      lastName: z.string().nullable(),
+      email: z.string(),
+      image: z.string().nullable(),
+    }).nullable(),
+    version: z.number().int(),
+    createdBy: z.string().nullable(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    deletedAt: z.string().nullable(),
+    prioritization: z.object({
+      method: z.string(),
+      score: z.number().nullable(),
+      isComplete: z.boolean(),
+      missingInputs: z.array(z.enum(["reach", "impact", "confidence", "effort"])),
+      unavailableReason: z.enum(["missing_inputs", "non_positive_effort"]).nullable(),
+    }),
+    tierWeighting: z.object({
+      tierWeighted: z.boolean(),
+      tier: z.enum(["free", "pro", "enterprise"]).nullable(),
+      weight: z.number().nullable(),
+      weightedScore: z.number().nullable(),
+      unweightedReason: z.enum(["no_linked_feedback", "no_linked_account", "account_tier_unset", "score_unavailable"]).nullable(),
+      linkedFeedbackCount: z.number().int(),
+      linkedAccountCount: z.number().int(),
+      linkedRevenue: z.number().nullable(),
+      revenueKnownAccountCount: z.number().int(),
+    }),
+  })),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+  total: z.number().int().optional(),
+});
+
+export const genRoadmapPublicationSchema = z.object({
+  token: z.string().nullable(),
+  path: z.string().nullable(),
+});
+
+export const genScopeDirectorySearchSchema = z.object({
+  data: z.array(z.object({
+    key: z.string(),
+    type: z.enum(["product", "project"]),
+    id: z.string(),
+    name: z.string(),
+    parentKey: z.string().nullable(),
+    projectKey: z.string().nullable(),
+    isArchived: z.boolean(),
+    parentPath: z.string().nullable(),
+    clientPortalEnabled: z.boolean().nullable(),
+  })),
+  nextCursor: z.string().nullable(),
+});
+
+export const genTicketSearchSchema = z.array(z.object({
+  id: z.number().int(),
+  title: z.string(),
+  status: z.string(),
+  priority: z.string(),
+  ticketNumber: z.number().int(),
+  projectId: z.number().int(),
+  projectKey: z.string(),
+  projectName: z.string(),
+}));
+
+export const genTeamListSchema = z.object({
+  data: z.array(z.object({
+    id: z.number().int(),
+    orgId: z.string(),
+    name: z.string(),
+    key: z.string(),
+    icon: z.string().nullable(),
+    color: z.string().nullable(),
+    isPrivate: z.boolean(),
+    capacity: z.number().int().nullable(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    memberCount: z.number().int(),
+  })),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+
+export const genTeamRowSchema = z.object({
+  id: z.number().int(),
+  orgId: z.string(),
+  name: z.string(),
+  key: z.string(),
+  icon: z.string().nullable(),
+  color: z.string().nullable(),
+  isPrivate: z.boolean(),
+  capacity: z.number().int().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  deletedAt: z.string().nullable(),
+  members: z.array(z.object({
+    userId: z.string(),
+    firstName: z.string().nullable(),
+    lastName: z.string().nullable(),
+    email: z.string(),
+    image: z.string().nullable(),
+    role: z.string(),
+  })),
+});
+
+export const genOrgViewListSchema = z.array(z.object({
+  id: z.number().int(),
+  projectId: z.number().int().nullable(),
+  orgId: z.string(),
+  createdBy: z.string(),
+  name: z.string(),
+  filters: z.unknown(),
+  groupBy: z.string().nullable(),
+  orderBy: z.string().nullable(),
+  layoutType: z.enum(["board", "list", "table", "calendar", "gantt"]),
+  isPinned: z.boolean(),
+  visibility: z.enum(["private", "shared"]),
+  displayOptions: z.unknown(),
+  scope: z.enum(["project", "workspace"]),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+}));

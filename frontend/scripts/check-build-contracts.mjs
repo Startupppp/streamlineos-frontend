@@ -8,7 +8,7 @@ const FRONTEND_ROOT = fileURLToPath(new URL("..", import.meta.url));
 const OPENAPI_PATH = join(FRONTEND_ROOT, "contracts", "openapi.json");
 const GENERATED_PATH = join(FRONTEND_ROOT, "contracts", "build-contracts.generated.ts");
 
-const MIN_SCHEMAS = 10;
+const MIN_SCHEMAS = 60;
 
 function normalise(text) {
   return text.replace(/\r\n/g, "\n");
