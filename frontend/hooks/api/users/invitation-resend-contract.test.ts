@@ -33,7 +33,7 @@ describe("invitation resend contract", () => {
   it("rejects the former success-only response and any raw token", () => {
     expect(invitationResendContract.safeParse({ success: true }).success).toBe(false);
     expect(
-      invitationResendContract.strict().safeParse({
+      invitationResendContract.safeParse({
         success: true,
         deliveryQueued: true,
         deliveryFailureReason: null,

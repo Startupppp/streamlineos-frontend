@@ -192,7 +192,7 @@ export const invitationResendContract = z.object({
   success: z.literal(true),
   deliveryQueued: z.boolean(),
   deliveryFailureReason: z.string().nullable(),
-});
+}).strict();
 export type InvitationResendResponse = z.infer<typeof invitationResendContract>;
 
 export const invitationJoinLinkContract = z.object({
