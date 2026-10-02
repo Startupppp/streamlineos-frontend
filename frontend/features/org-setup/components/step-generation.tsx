@@ -21,6 +21,7 @@ import {
   useConfirmedSessionClaimsRefresh,
 } from "@/hooks/common/use-confirmed-session-claims-refresh";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isRecord } from "@/lib/is-record";
 import {
   clearAll,
   setCompletionMarker,
@@ -45,9 +46,10 @@ type OrgCreatedResult = {
 
 type StepGenerationProps = {
   data: WizardData;
+  onBackToProducts?: () => void;
 };
 
-export function StepGeneration({ data }: StepGenerationProps) {
+export function StepGeneration({ data, onBackToProducts }: StepGenerationProps) {
   const { data: session } = useSession();
   const beginClaimsRefresh = useConfirmedSessionClaimsRefresh();
   const [completedSteps, setCompletedSteps] = useState(0);
@@ -254,7 +256,14 @@ export function StepGeneration({ data }: StepGenerationProps) {
         setIsPollingAfterTimeout(true);
       } else {
         handleSetupError({
-          kind: "setup-failed",
+          kind:
+            isApiError(err) &&
+            err.status === 402 &&
+            err.code === "MODULE_NOT_ENABLED" &&
+            isRecord(err.details) &&
+            err.details.reason === "not-in-plan"
+              ? "module-not-in-plan"
+              : "setup-failed",
           message: getErrorMessage(err),
         });
       }
@@ -301,6 +310,7 @@ export function StepGeneration({ data }: StepGenerationProps) {
         isRecheckingProvisioning={provisioning.isRechecking}
         showWelcome={showWelcome}
         onRetry={runSetup}
+        onBackToProducts={onBackToProducts}
         onRecheckProvisioning={handleRecheckProvisioning}
         onContinueAnyway={handleContinueAnyway}
         onOpenOrganization={effectiveOrgId ? openOrganization : undefined}

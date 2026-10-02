@@ -166,7 +166,7 @@ export function StepInviteLaunch({
   }, [phase]);
 
   if (phase === "generating") {
-    return <StepGeneration data={data} />;
+    return <StepGeneration data={data} onBackToProducts={onBack} />;
   }
 
   const isPending = phase === "pending";

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { DEFAULT_DATA } from "../lib/constants";
 import type { Invitee, InviteeModuleAccess, WizardData } from "../lib/wizard-data-schema";
@@ -11,7 +11,11 @@ jest.mock("@/hooks/api/subscription", () => ({
 }));
 
 jest.mock("./step-generation", () => ({
-  StepGeneration: () => <div data-testid="generation" />,
+  StepGeneration: ({ onBackToProducts }: { onBackToProducts: () => void }) => (
+    <div data-testid="generation">
+      <button onClick={onBackToProducts}>Return to products</button>
+    </div>
+  ),
 }));
 
 function wizard(invitees: Invitee[] = []): WizardData {
@@ -205,5 +209,31 @@ describe("People step product access", () => {
       />,
     );
     expect(screen.getByText("Access: all enabled products as Org Admin")).toBeInTheDocument();
+  });
+
+  it("returns from a rejected launch to product choices without changing invitees", async () => {
+    const onBack = jest.fn();
+    const onChangeInvitees = jest.fn();
+    const invitees: Invitee[] = [
+      {
+        email: "editor@example.com",
+        role: "MEMBER",
+        moduleAccess: [{ moduleKey: "build", standing: "MEMBER" }],
+      },
+    ];
+    render(
+      <StepInviteLaunch
+        data={wizard(invitees)}
+        onBack={onBack}
+        onChangeInvitees={onChangeInvitees}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Build my organization" }));
+    await waitFor(() => expect(screen.getByTestId("generation")).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: "Return to products" }));
+
+    expect(onBack).toHaveBeenCalledTimes(1);
+    expect(onChangeInvitees).not.toHaveBeenCalled();
   });
 });

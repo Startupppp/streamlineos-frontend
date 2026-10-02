@@ -13,6 +13,7 @@ const mockHasCompletionMarker = jest.fn();
 const mockClearCompletionMarker = jest.fn();
 const mockClearBackendTokenCache = jest.fn();
 const mockLocationReplace = jest.fn();
+const mockIsApiError = jest.fn();
 
 let mockProvisioning: SetupProvisioning = {
   isReady: false,
@@ -78,7 +79,7 @@ jest.mock("@/features/org-setup/lib/draft", () => ({
 jest.mock("@/lib/api-client", () => ({
   clearBackendTokenCache: jest.fn((...args: unknown[]) => mockClearBackendTokenCache(...args)),
   setAutoSignOutSuppressed: jest.fn(),
-  isApiError: jest.fn().mockReturnValue(false),
+  isApiError: jest.fn((error: unknown) => mockIsApiError(error)),
 }));
 
 jest.mock("../lib/setup-payload", () => ({
@@ -136,6 +137,7 @@ function resetMocks() {
   mockClearCompletionMarker.mockReset();
   mockClearBackendTokenCache.mockReset();
   mockLocationReplace.mockReset();
+  mockIsApiError.mockReset().mockReturnValue(false);
   capturedProgressProps = {};
   mockProvisioning = {
     isReady: false,
@@ -160,6 +162,53 @@ beforeAll(() => {
 beforeEach(resetMocks);
 
 import { StepGeneration } from "./step-generation";
+
+describe("StepGeneration — product plan rejection", () => {
+  it("keeps the draft and exposes a return to product choices for the server plan lock", async () => {
+    const onBackToProducts = jest.fn();
+    mockIsApiError.mockReturnValue(true);
+    mockMutateAsync.mockRejectedValue(
+      Object.assign(new Error("Inventory is not available on your plan."), {
+        status: 402,
+        code: "MODULE_NOT_ENABLED",
+        details: { moduleKey: "inventory", reason: "not-in-plan" },
+      }),
+    );
+
+    render(<StepGeneration data={TEST_DATA} onBackToProducts={onBackToProducts} />);
+
+    await waitFor(() => {
+      expect(capturedProgressProps.setupError).toEqual({
+        kind: "module-not-in-plan",
+        message: "Inventory is not available on your plan.",
+      });
+    });
+    expect(capturedProgressProps.onBackToProducts).toBe(onBackToProducts);
+    expect(mockClearAll).not.toHaveBeenCalled();
+    expect(mockSetCompletionMarker).not.toHaveBeenCalled();
+    expect(mockLocationReplace).not.toHaveBeenCalled();
+  });
+
+  it("does not label other module denials as a plan lock", async () => {
+    mockIsApiError.mockReturnValue(true);
+    mockMutateAsync.mockRejectedValue(
+      Object.assign(new Error("You do not have access to Inventory."), {
+        status: 402,
+        code: "MODULE_NOT_ENABLED",
+        details: { moduleKey: "inventory", reason: "user-denied" },
+      }),
+    );
+
+    render(<StepGeneration data={TEST_DATA} />);
+
+    await waitFor(() => {
+      expect(capturedProgressProps.setupError).toEqual({
+        kind: "setup-failed",
+        message: "You do not have access to Inventory.",
+      });
+    });
+  });
+});
 
 describe("StepGeneration — signInWithMagicToken returns false", () => {
   it("ANTI-VACUITY: when signIn succeeds, clearAll IS called", async () => {

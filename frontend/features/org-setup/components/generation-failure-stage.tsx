@@ -12,6 +12,7 @@ import { PREVIEW_EASE } from "../lib/preview-motion";
 
 export type SetupError =
   | { kind: "setup-failed"; message: string }
+  | { kind: "module-not-in-plan"; message: string }
   | { kind: "invites-failed"; message: string };
 
 const SUPPORT_MAILTO = `mailto:${BRAND_SUPPORT_EMAIL}`;
@@ -35,6 +36,7 @@ type GenerationFailureStageProps = {
   workspaceLabel: string;
   setupError: SetupError;
   onRetry: () => void;
+  onBackToProducts?: () => void;
   onOpenOrganization?: () => void;
   onGoToInvitations?: () => void;
   isNavigating?: boolean;
@@ -44,17 +46,21 @@ export function GenerationFailureStage({
   workspaceLabel,
   setupError,
   onRetry,
+  onBackToProducts,
   onOpenOrganization,
   onGoToInvitations,
   isNavigating = false,
 }: GenerationFailureStageProps) {
   const reduceMotion = useReducedMotion();
-  const orgExists = onOpenOrganization !== undefined;
+  const planLocked = setupError.kind === "module-not-in-plan";
+  const orgExists = onOpenOrganization !== undefined && !planLocked;
 
   const title = orgExists
     ? `${workspaceLabel} is ready`
     : `We couldn't finish setting up ${workspaceLabel}`;
-  const subtitle = orgExists
+  const subtitle = planLocked
+    ? "Return to your product choices and remove the unavailable product. Your answers and invitations are saved."
+    : orgExists
     ? "Your organization was created — some invitations didn't go through. Jump in now or invite teammates later from People."
     : "Nothing was lost — your answers are saved. Retry to pick up where you left off.";
 
@@ -128,16 +134,26 @@ export function GenerationFailureStage({
         </div>
 
         <div className="w-full min-w-0 max-w-full space-y-2 md:max-w-sm">
-          <LoadingButton
-            onClick={onRetry}
-            disabled={isNavigating}
-            className="h-11 min-h-11 w-full gap-1.5 sm:h-10 sm:min-h-10"
-          >
-            <RefreshCw className="h-3.5 w-3.5" aria-hidden />
-            Try again
-          </LoadingButton>
+          {planLocked && onBackToProducts ? (
+            <Button
+              onClick={onBackToProducts}
+              disabled={isNavigating}
+              className="h-11 min-h-11 w-full sm:h-10 sm:min-h-10"
+            >
+              Back to Products
+            </Button>
+          ) : (
+            <LoadingButton
+              onClick={onRetry}
+              disabled={isNavigating}
+              className="h-11 min-h-11 w-full gap-1.5 sm:h-10 sm:min-h-10"
+            >
+              <RefreshCw className="h-3.5 w-3.5" aria-hidden />
+              Try again
+            </LoadingButton>
+          )}
 
-          {(onOpenOrganization || onGoToInvitations) && (
+          {!planLocked && (onOpenOrganization || onGoToInvitations) && (
             <div className="flex flex-col gap-1.5 sm:flex-row">
               {onOpenOrganization && (
                 <Button

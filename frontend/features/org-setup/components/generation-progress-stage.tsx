@@ -28,6 +28,7 @@ type GenerationProgressStageProps = {
   isRecheckingProvisioning: boolean;
   showWelcome: boolean;
   onRetry: () => void;
+  onBackToProducts?: () => void;
   onRecheckProvisioning: () => void;
   onContinueAnyway: () => void;
   onOpenOrganization?: () => void;
@@ -46,6 +47,7 @@ export function GenerationProgressStage({
   isRecheckingProvisioning,
   showWelcome,
   onRetry,
+  onBackToProducts,
   onRecheckProvisioning,
   onContinueAnyway,
   onOpenOrganization,
@@ -68,6 +70,7 @@ export function GenerationProgressStage({
         workspaceLabel={workspaceLabel}
         setupError={setupError}
         onRetry={onRetry}
+        onBackToProducts={onBackToProducts}
         onOpenOrganization={onOpenOrganization}
         onGoToInvitations={onGoToInvitations}
         isNavigating={isNavigating}
