@@ -16,3 +16,9 @@ architecture-refactor/audit-2026-09-09/logs
 # Agent tooling scratch state
 .omc/
 .slos3
+
+# Secrets. frontend/.gitignore covers frontend/.env; the repo root was not covered,
+# so a root `git add -A` staged a real .env holding production credentials.
+.env
+.env.*
+!.env.example

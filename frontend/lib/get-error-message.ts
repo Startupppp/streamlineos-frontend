@@ -125,7 +125,7 @@ function validationDetail(error: unknown): string {
     : shown.join("; ");
 }
 
-function extractStatus(error: unknown): number | undefined {
+export function getErrorStatus(error: unknown): number | undefined {
   if (!error || typeof error !== "object") return undefined;
   if ("status" in error && typeof error.status === "number")
     return error.status;
@@ -178,14 +178,14 @@ function codedMessage(error: unknown, message: string): string | undefined {
 
 export function isValidationRefusal(error: unknown): boolean {
   if (isApiError(error) && error.code === "VALIDATION_FAILED") return true;
-  const status = extractStatus(error);
+  const status = getErrorStatus(error);
   if (status !== 400 && status !== 422) return false;
   return VALIDATION_HEADLINE.test(extractMessage(error));
 }
 
 export function getErrorMessage(error: unknown): string {
   const message = extractMessage(error);
-  const status = extractStatus(error);
+  const status = getErrorStatus(error);
 
   if (status === 429) return rateLimitMessage(error);
 
