@@ -19,6 +19,10 @@ export const UNIVERSAL_ROUTES: readonly UniversalRoute[] = [
     reason: "Home. Every active member keeps the cross-module read projection.",
   },
   {
+    path: "/post-invite",
+    reason: "Authenticated invitation landing resolves the fresh effective access before redirecting.",
+  },
+  {
     path: "/me",
     subtree: true,
     reason:

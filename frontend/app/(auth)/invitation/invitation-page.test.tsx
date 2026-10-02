@@ -218,7 +218,7 @@ beforeEach(() => {
 });
 
 describe("InvitationPage — accepting as a new joiner", () => {
-  it("signs the invited account in once and lands on employee onboarding", async () => {
+  it("signs the invited account in once and resolves its authorized landing", async () => {
     acceptResolvesWith("invite-login-1");
     signInWithMagicToken.mockResolvedValue({ status: "signed-in" });
 
@@ -226,7 +226,7 @@ describe("InvitationPage — accepting as a new joiner", () => {
     await submitNewJoinerForm();
 
     await waitFor(() =>
-      expect(navigation.href).toBe("/employee-onboarding"),
+      expect(navigation.href).toBe("/post-invite"),
     );
     expect(acceptMutate).toHaveBeenCalledTimes(1);
     expect(acceptMutate).toHaveBeenCalledWith(
@@ -314,7 +314,7 @@ describe("InvitationPage — accepting as an existing account", () => {
    * refused with a 400, so an invitee who already had an account could never
    * join, whatever the state of the OTP route.
    */
-  it("verifies the invited mailbox before joining, then lands on the dashboard once", async () => {
+  it("verifies the invited mailbox before joining, then resolves its authorized landing once", async () => {
     validation.data = { ...VALID_INVITATION, userExists: true };
     currentSession = { user: { email: "existing@acme.test" } };
     acceptResolvesWith("invite-login-existing");
@@ -332,7 +332,7 @@ describe("InvitationPage — accepting as an existing account", () => {
 
     await enterEmailCode();
 
-    await waitFor(() => expect(navigation.href).toBe("/dashboard"));
+    await waitFor(() => expect(navigation.href).toBe("/post-invite"));
     expect(acceptMutate).toHaveBeenCalledWith(
       { token: "invite-token-1", emailOtp: EMAIL_OTP },
       expect.anything(),

@@ -173,7 +173,7 @@ export default function InvitationPage() {
               `Joined ${invitation?.organizationName ?? "organization"}!`,
             );
             if (data?.autoLoginToken) {
-              await autoLoginWithToken(data.autoLoginToken, "/dashboard");
+              await autoLoginWithToken(data.autoLoginToken, "/post-invite");
               return;
             }
             const confirmed = await claimsRun.confirmOrWarn();
@@ -182,7 +182,7 @@ export default function InvitationPage() {
               setIsCompletingAcceptance(false);
               return;
             }
-            router.push("/dashboard");
+            router.push("/post-invite");
           },
           onError: (error) => {
             acceptingRef.current = false;
@@ -229,7 +229,7 @@ export default function InvitationPage() {
             if (data?.autoLoginToken) {
               await autoLoginWithToken(
                 data.autoLoginToken,
-                "/employee-onboarding",
+                "/post-invite",
               );
             } else {
               router.push("/signin");

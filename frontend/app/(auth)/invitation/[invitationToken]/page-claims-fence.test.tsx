@@ -115,13 +115,13 @@ async function acceptAsExistingUser() {
 }
 
 describe("InvitationPage — joining without an auto-login token waits for a confirmed session", () => {
-  it("sends the invitee to the dashboard once the refresh returns a session", async () => {
+  it("sends the invitee to the authorized landing resolver once the refresh returns a session", async () => {
     mockRefreshSessionClaims.mockResolvedValue(JOINED_SESSION);
 
     await acceptAsExistingUser();
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith("/dashboard");
+      expect(mockPush).toHaveBeenCalledWith("/post-invite");
     });
     expect(mockToastError).not.toHaveBeenCalled();
   });
@@ -136,7 +136,7 @@ describe("InvitationPage — joining without an auto-login token waits for a con
     });
   });
 
-  it("keeps the invitee off the dashboard when the claims refresh times out, because the session still names the previous org", async () => {
+  it("keeps the invitee off the landing resolver when the claims refresh times out, because the session still names the previous org", async () => {
     mockRefreshSessionClaims.mockResolvedValue(null);
 
     await acceptAsExistingUser();
@@ -144,7 +144,7 @@ describe("InvitationPage — joining without an auto-login token waits for a con
     await waitFor(() => {
       expect(mockToastError).toHaveBeenCalled();
     });
-    expect(mockPush).not.toHaveBeenCalledWith("/dashboard");
+    expect(mockPush).not.toHaveBeenCalledWith("/post-invite");
     expect(
       screen.getByRole("button", { name: /verify & create account/i }),
     ).toBeEnabled();
@@ -171,7 +171,7 @@ describe("InvitationPage — joining without an auto-login token waits for a con
     });
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith("/dashboard");
+      expect(mockPush).toHaveBeenCalledWith("/post-invite");
     });
     expect(mockPush).toHaveBeenCalledTimes(1);
     expect(mockToastError).not.toHaveBeenCalled();
