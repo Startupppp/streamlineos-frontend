@@ -14,8 +14,6 @@ import {
 export { useCursorPager } from "./table-pagination-shared";
 export type {
   CursorPager,
-  TablePaginationCursorProps,
-  TablePaginationOffsetProps,
   TablePaginationProps,
 } from "./table-pagination-shared";
 
