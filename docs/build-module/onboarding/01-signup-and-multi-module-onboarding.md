@@ -943,6 +943,7 @@ The first sellable milestone is Build-only onboarding with reliable internal inv
 
 Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
 
+- [x] Per-invite selected-module standing has a strict frontend payload and backend setup event path, with focused source checks on `8cb3277f6`, `3170e3c18`, and `abef63dce`; runtime acceptance remains open below.
 - [ ] Signup and invitation-first identity work for new, existing, wrong-email, expired, and replay paths.
 - [ ] Workspace step has a five-visible-input Build-only default and reversible advanced settings.
 - [ ] Products step selects one or many modules, previews plan limits, and saves adaptive answers, template versions, and custom-field drafts.

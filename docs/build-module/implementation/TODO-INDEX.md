@@ -1,6 +1,6 @@
 # Build documentation TODO index
 
-The checklist inside each current specification is the source of truth for its implementation status. A checked research row below means only that the historical file is inventoried; it does not verify any product behavior. Check a specification item only after recording the current revision and required evidence in the requirement ledger and work claims.
+The Delivery checklist and any inline acceptance checkboxes inside each current specification are the source of truth for its implementation status. Open counts include every unchecked box in that document. A checked research row below means only that the historical file is inventoried; it does not verify any product behavior. Check a specification item only after recording the current revision and required evidence in the requirement ledger and work claims. The 57 current specifications plus this index make 58 canonical Markdown files.
 
 ## Delivery checklist
 
