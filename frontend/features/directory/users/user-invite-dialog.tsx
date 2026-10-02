@@ -228,7 +228,8 @@ export function UserInviteDialog({
                       BUG-HRMS-003. QA asked for HR Admin / Manager / Finance /
                       Viewer here. There are exactly three org standings by design
                       (BE-102) and a fourth invite role would be a parallel role
-                      system; finer grants go through Module access.
+                      system; finer grants go through Module access, whose
+                      presets fill those four jobs (INVITE_ACCESS_PRESETS).
                     */}
                     <FormDescription className="text-xs">
                       Member for everyone; Org Admin for organisation settings and billing.
