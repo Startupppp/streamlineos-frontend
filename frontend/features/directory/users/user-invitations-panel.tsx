@@ -196,8 +196,30 @@ export function UserInvitationsPanel() {
   const handleResend = useCallback(
     (invitationId: string, kind: "resend" | "reinvite" = "resend") =>
       resend(invitationId, {
-        onSuccess: () =>
-          toast.success(kind === "reinvite" ? "Invitation re-sent" : "Invitation resent"),
+        onSuccess: (result) => {
+          if (result.deliveryQueued) {
+            toast.success(
+              kind === "reinvite"
+                ? "Re-invitation link issued; email queued"
+                : "Invitation link renewed; email queued",
+              { description: "Delivery is not yet confirmed. Check status before assuming it arrived." },
+            );
+            return;
+          }
+          const reason = result.deliveryFailureReason?.toLowerCase() ?? "";
+          const description = reason.includes("suppress")
+            ? "This address is suppressed after a bounce or unsubscribe. Review the suppression before another email attempt."
+            : reason.includes("provider")
+              ? "No email provider is configured. Configure delivery before resending, or review the join link option."
+              : "Check email delivery settings before resending, or review the join link option.";
+          toast.warning("Invitation link renewed, but email was not queued", {
+            description,
+            action: {
+              label: "Review link option",
+              onClick: () => setJoinLinkInvitationId(invitationId),
+            },
+          });
+        },
         onError: (e) =>
           toast.error(describeInviteFailure("resend", getErrorMessage(e))),
       }),
