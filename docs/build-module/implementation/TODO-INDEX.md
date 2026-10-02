@@ -8,14 +8,14 @@ The Delivery checklist and any inline acceptance checkboxes inside each current 
 - [ ] Every accepted research finding has an adopted or deferred destination in the research traceability map.
 - [ ] Release gates, tenant/role browser paths, persistence, and operations evidence are complete.
 
-Current specification items: 23 checked; 374 open. Historical research inventory: 116 files.
+Current specification items: 26 checked; 374 open. Historical research inventory: 116 files.
 
 ## Current specifications (57)
 
 - [ ] [architecture/07-architecture-data-api-cache-ai.md](../architecture/07-architecture-data-api-cache-ai.md) — 0 checked, 12 open
 - [ ] [architecture/08-deep-module-reconciliation.md](../architecture/08-deep-module-reconciliation.md) — 0 checked, 12 open
 - [ ] [architecture/screen-data-contracts.md](../architecture/screen-data-contracts.md) — 0 checked, 8 open
-- [ ] [audit/bugs-and-verification.md](../audit/bugs-and-verification.md) — 1 checked, 4 open
+- [ ] [audit/bugs-and-verification.md](../audit/bugs-and-verification.md) — 3 checked, 4 open
 - [ ] [audit/cleanup-manifest.md](../audit/cleanup-manifest.md) — 2 checked, 2 open
 - [ ] [audit/comprehensive-recheck-2026-10-02.md](../audit/comprehensive-recheck-2026-10-02.md) — 1 checked, 3 open
 - [ ] [audit/original-wow-research-crosswalk.md](../audit/original-wow-research-crosswalk.md) — 1 checked, 2 open
@@ -65,7 +65,7 @@ Current specification items: 23 checked; 374 open. Historical research inventory
 - [ ] [implementation/REQUIREMENT-LEDGER.md](REQUIREMENT-LEDGER.md) — 1 checked, 3 open
 - [ ] [implementation/WORK-CLAIMS.md](WORK-CLAIMS.md) — 1 checked, 4 open
 - [ ] [integrations/08-cross-module-client-content-commercial.md](../integrations/08-cross-module-client-content-commercial.md) — 0 checked, 11 open
-- [ ] [onboarding/01-signup-and-multi-module-onboarding.md](../onboarding/01-signup-and-multi-module-onboarding.md) — 1 checked, 48 open
+- [ ] [onboarding/01-signup-and-multi-module-onboarding.md](../onboarding/01-signup-and-multi-module-onboarding.md) — 2 checked, 48 open
 - [ ] [product/00-product-vision-and-decisions.md](../product/00-product-vision-and-decisions.md) — 0 checked, 10 open
 - [ ] [product/customer-value-and-differentiation.md](../product/customer-value-and-differentiation.md) — 1 checked, 7 open
 - [ ] [README.md](../README.md) — 2 checked, 5 open
