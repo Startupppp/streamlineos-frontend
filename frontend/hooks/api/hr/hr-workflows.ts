@@ -19,6 +19,7 @@ import type {
 import { lazyContract } from "@/lib/api-envelope";
 import { queryKeyBase } from "@/lib/query-keys/base";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const noContentC = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
@@ -190,6 +191,7 @@ export function useWorkflowInstanceDetail(instanceId: number | null) {
     queryFn: ({ signal }) => apiClient.get<HrWorkflowInstance>(`/hr/workflows/instances/${instanceId}`, undefined, signal, lazyContract(() => import("@/hooks/api/hr/hr-workflows-schema").then(m => m.workflowInstanceDetailContract))),
     enabled: instanceId !== null,
     staleTime: 30_000,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -228,6 +230,7 @@ export function useMyDelegations(options?: { enabled?: boolean }) {
     queryFn: ({ signal }) => apiClient.get<HrWorkflowDelegation[]>("/hr/workflows/delegations/mine", undefined, signal, lazyContract(() => import("@/hooks/api/hr/hr-workflows-schema").then(m => m.workflowDelegationListContract))),
     staleTime: 2 * 60_000,
     enabled: options?.enabled ?? true,
+    ...INLINE_READ_ERROR,
   });
 }
 

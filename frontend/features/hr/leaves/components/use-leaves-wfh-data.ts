@@ -65,6 +65,11 @@ export function useLeavesWfhData(selfService: boolean) {
     void refetchMy();
   }, [refetchContext, refetchMy]);
 
+  const refetchApprovalsQuery = approvals.refetch;
+  const onRetryApprovals = useCallback(() => {
+    void refetchApprovalsQuery();
+  }, [refetchApprovalsQuery]);
+
   return {
     isAdmin,
     canRequestLeave,
@@ -94,7 +99,7 @@ export function useLeavesWfhData(selfService: boolean) {
     approvalsLoading: approvals.isLoading,
     approvalsError: approvals.isError,
     approvalsErrorValue: approvals.error,
-    refetchApprovals: approvals.refetch,
+    refetchApprovals: onRetryApprovals,
     hasMoreMyRequests: myRequests.hasNextPage,
     isLoadingMoreMyRequests: myRequests.isFetchingNextPage,
     onLoadMoreMyRequests,

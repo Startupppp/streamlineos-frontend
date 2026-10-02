@@ -114,6 +114,7 @@ export function ExpiringDocumentsTable({
         className="flex-1"
         title="Couldn't load expiring documents"
         description={getErrorMessage(error)}
+        error={error}
         onRetry={onRetry}
         compact
       />

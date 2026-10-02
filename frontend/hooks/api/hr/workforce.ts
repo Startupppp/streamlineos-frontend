@@ -9,6 +9,7 @@ import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const workforcePlansContract = lazyContract(() =>
   import("@/hooks/api/hr/workforce-schema").then((m) => m.workforcePlansContract),
@@ -121,6 +122,7 @@ export function useHrAttritionForecast() {
     queryFn: ({ signal }) =>
       apiClient.get("/hr/analytics-plus/workforce/attrition-forecast", undefined, signal, attritionForecastContract),
     staleTime: 30 * 60_000,
+    ...INLINE_READ_ERROR,
   });
 }
 

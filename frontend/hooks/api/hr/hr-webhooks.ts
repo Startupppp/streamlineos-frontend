@@ -18,6 +18,7 @@ const noContentC = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 import { queryKeyBase } from "@/lib/query-keys/base";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const BASE = [...queryKeyBase, "hr", "webhooks"] as const;
 
@@ -60,6 +61,7 @@ export function useHrWebhookDeliveries(subscriptionId: number, limit = 50) {
       }, signal, lazyContract(() => import("@/hooks/api/hr/hr-webhooks-schema").then(m => m.hrWebhookDeliveryListContract)))).items,
     enabled: canManage && subscriptionId > 0,
     staleTime: 15_000,
+    ...INLINE_READ_ERROR,
   });
 }
 

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEmployeeEmployment, useEmployeeSensitive, useUpdateSensitive } from "@/hooks/api/hr/employees";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useCanState } from "@/hooks/api/access";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { Shield, Lock } from "lucide-react";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/empty-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { EyeIcon, EyeOffIcon } from "@animateicons/react/lucide";
@@ -108,6 +109,7 @@ interface Props {
 
 export function EmployeeSensitiveTab({ userId }: Props) {
   const canManage = useCan("hr:sensitive:manage");
+  const employmentAccess = useCanState("hr:employees:view");
   const [editMode, setEditMode] = useState(false);
 
   const { data: employment, isLoading: empLoading, isError: empError, error: empErrorValue, refetch: refetchEmp } = useEmployeeEmployment(userId);
@@ -151,6 +153,14 @@ export function EmployeeSensitiveTab({ userId }: Props) {
         {null}
       </PageState>
     );
+  }
+
+  if (employmentAccess === "loading") {
+    return <Skeleton className="h-14 w-full rounded-xl" />;
+  }
+
+  if (employmentAccess === "denied") {
+    return <NoPermissionState permission="hr:employees:view" className="py-16" />;
   }
 
   if (empLoading || sensitiveLoading) {

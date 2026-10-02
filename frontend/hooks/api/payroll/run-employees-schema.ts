@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
+import { cursorPageWithTotalContract } from "@/hooks/api/cursor-page-schema";
 
 const calcExplainStepContract = z.object({
   steps: z.array(z.string()),
@@ -61,7 +61,7 @@ export const runEmployeeListItemContract = z.object({
   userEmail: z.string(),
 });
 
-export const runListEmployeesResponseContract = cursorPageContract(runEmployeeListItemContract);
+export const runListEmployeesResponseContract = cursorPageWithTotalContract(runEmployeeListItemContract);
 
 export const runEmployeeDetailContract = z.object({
   id: z.number(),

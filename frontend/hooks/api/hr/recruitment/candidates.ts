@@ -165,7 +165,10 @@ function candidateQueryParams(params: CandidatesParams | undefined, limit: numbe
  * consumer here wants a bounded picker list, not a walk of the whole pipeline —
  * `useCandidatesPage` is what pages.
  */
-export function useCandidates(params?: CandidatesParams) {
+export function useCandidates(
+  params?: CandidatesParams,
+  options?: { throwOnError?: false },
+) {
   const queryParams = candidateQueryParams(params, params?.limit ?? 100);
 
   return useGatedQuery("hr:requisitions:view", {
@@ -180,6 +183,7 @@ export function useCandidates(params?: CandidatesParams) {
       return res.data;
     },
     staleTime: 2 * 60_000,
+    ...options,
   });
 }
 

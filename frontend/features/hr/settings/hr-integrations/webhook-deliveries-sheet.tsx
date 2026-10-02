@@ -157,6 +157,7 @@ export function WebhookDeliveriesSheet({ open, onOpenChange, subscription }: Pro
                 className="border-0 bg-transparent shadow-none"
                 title="Couldn't load deliveries"
                 description={getErrorMessage(error)}
+                error={error}
                 onRetry={handleRetry}
               />
             </div>

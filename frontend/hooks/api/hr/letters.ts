@@ -3,6 +3,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { lazyContract } from "@/lib/api-envelope";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
@@ -70,6 +71,7 @@ export function useLetters(employmentId?: number) {
       ),
     staleTime: 60_000,
     enabled: hrEnabled && canView,
+    ...INLINE_READ_ERROR,
   });
 }
 

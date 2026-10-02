@@ -60,6 +60,34 @@ describe("role list URL state", () => {
     expect(params.get("tab")).toBe("details");
   });
 
+  it("keeps a character typed while the URL write is still in flight", () => {
+    jest.useFakeTimers();
+    const { result, rerender } = renderHook(() => useRoleListState());
+
+    act(() => result.current.setSearch("Fi"));
+    act(() => jest.advanceTimersByTime(300));
+    expect(
+      new URL(
+        String(mockReplace.mock.calls.at(-1)?.[0]),
+        "https://example.test",
+      ).searchParams.get("search"),
+    ).toBe("Fi");
+
+    act(() => result.current.setSearch("Fin"));
+    mockSearchParams = new URLSearchParams("search=Fi");
+    rerender();
+
+    expect(result.current.search).toBe("Fin");
+
+    act(() => jest.advanceTimersByTime(300));
+    expect(
+      new URL(
+        String(mockReplace.mock.calls.at(-1)?.[0]),
+        "https://example.test",
+      ).searchParams.get("search"),
+    ).toBe("Fin");
+  });
+
   it("debounces server search and resets the page", () => {
     jest.useFakeTimers();
     mockSearchParams = new URLSearchParams("page=4&size=50");

@@ -1,6 +1,11 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { fireEvent, render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { ApiError } from "@/lib/api-envelope";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+
+const SAFETY_HOOKS = join(process.cwd(), "hooks/api/hr/safety.ts");
 
 const mockUseWellnessPulse = jest.fn();
 const refetch = jest.fn();
@@ -78,5 +83,28 @@ describe("the 7-day wellness pulse card is not silent when its read fails", () =
     expect(screen.queryByRole("alert")).toBeNull();
     expect(screen.getByText("7-day wellness pulse")).toBeInTheDocument();
     expect(screen.getByText("4.2")).toBeInTheDocument();
+  });
+
+  it("keeps the failed pulse read inline instead of throwing it to the /hr boundary, which is what would have hidden the card's own error", () => {
+    const source = readFileSync(SAFETY_HOOKS, "utf8");
+
+    expect(INLINE_READ_ERROR).toEqual({ throwOnError: false });
+    expect(source).toContain("...INLINE_READ_ERROR,");
+  });
+});
+
+describe("the failed read's request id is quotable to support", () => {
+  it("renders the copyable reference the backend echoed on the error envelope", () => {
+    mockUseWellnessPulse.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: new ApiError("Internal server error", 500, undefined, { correlationId: "req-abc123" }),
+      refetch,
+    });
+    render(<SafetyPageContent />);
+    fireEvent.click(screen.getByRole("tab", { name: /wellness/i }));
+    expect(screen.getByText(/reference/i)).toBeInTheDocument();
+    expect(screen.getByText("req-abc123")).toBeInTheDocument();
   });
 });

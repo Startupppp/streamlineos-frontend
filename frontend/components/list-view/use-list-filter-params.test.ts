@@ -186,6 +186,29 @@ describe("list filter params, driven by a spec", () => {
     expect(mockReplace).toHaveBeenCalledTimes(1);
   });
 
+  it("keeps a character typed while the URL write is still in flight", () => {
+    jest.useFakeTimers();
+    const { result, rerender } = renderWith("");
+
+    act(() => result.current.setSearch("annua"));
+    act(() => {
+      jest.advanceTimersByTime(300);
+    });
+    expect(lastParams().get("search")).toBe("annua");
+
+    act(() => result.current.setSearch("annual"));
+    mockSearchParams = new URLSearchParams("search=annua");
+    window.history.replaceState(null, "", "/payroll/runs?search=annua");
+    rerender();
+
+    expect(result.current.localSearch).toBe("annual");
+
+    act(() => {
+      jest.advanceTimersByTime(300);
+    });
+    expect(lastParams().get("search")).toBe("annual");
+  });
+
   it("does not resurrect committed search text when the URL is cleared back to its original value", () => {
     jest.useFakeTimers();
     const { result, rerender } = renderWith("");

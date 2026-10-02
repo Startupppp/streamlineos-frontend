@@ -69,7 +69,7 @@ export function MyAttendancePage() {
                   size="sm"
                   className="h-8 gap-1.5"
                 >
-                  <Link href="/calendar">
+                  <Link href="/calendar" aria-label="Open Calendar">
                     <CalendarDays className="h-3.5 w-3.5" />
                     <span className="hidden sm:inline">Open Calendar</span>
                   </Link>

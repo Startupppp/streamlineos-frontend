@@ -42,8 +42,7 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     prefix: "/blog/admin",
     permission: "blog:posts:manage",
     reason:
-      "Matches the backend gate on the /blog/admin/* endpoints. Authoring is administration, so it is gated on manage rather than on the public read key.",
-    backendRoute: { method: "get", path: "/blog/admin/posts" },
+      "Mirrors no backend operation: the /blog/admin/* write API was removed when editorial work moved to the standalone Journal CMS, and blog.controller.e2e-spec.ts asserts POST /blog/admin/posts now 404s. The route is a permission-gated doorway to that external deployment, gated on the authoring key blog:posts:manage rather than on the anonymous public read.",
   },
   {
     prefix: "/subjects",

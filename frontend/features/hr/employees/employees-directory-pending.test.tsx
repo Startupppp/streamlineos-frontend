@@ -67,4 +67,13 @@ describe("pending invites are not headcount", () => {
     renderStats({ active: 2, pending: 3, inactive: 1 });
     expect(screen.getByTestId("stat-showing")).toHaveTextContent("of 6 matching");
   });
+
+  it("under the Active filter the matching total is the accepted-active count alone", () => {
+    renderStats({ active: 1, pending: 2, inactive: 4 }, "active");
+
+    expect(screen.getByTestId("stat-showing")).toHaveTextContent("of 1 matching");
+    expect(screen.getByTestId("stat-active")).toHaveTextContent("Active: 1");
+    expect(screen.queryByTestId("stat-pending-invite")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("stat-inactive")).not.toBeInTheDocument();
+  });
 });

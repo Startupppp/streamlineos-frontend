@@ -99,6 +99,7 @@ function WellnessPulseCard() {
         compact
         title="Couldn't load the wellness pulse"
         description={getErrorMessage(error)}
+        error={error}
         onRetry={handleRetry}
       />
     );

@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useCan } from "@/hooks/api/access";
@@ -330,18 +331,32 @@ const skillsGapColumns: DataTableColumn<SkillsGapRow>[] = [
 ];
 
 function SkillsGapTab() {
-  const { data, isLoading, isError, error, refetch } = useHrSkillsGap();
-  const gaps = data?.gaps ?? [];
+  const { data, isLoading, isError, error, refetch, access } = useHrSkillsGap();
 
-  if (isError)
-    return <ErrorState title="Couldn't load skills gap data" description={getErrorMessage(error)} onRetry={() => void refetch()} />;
+  function handleRetry() { void refetch(); }
+
+  if (access.denied) return <NoPermissionState permission="hr:analytics:read" compact />;
+
+  if (isError || access.unavailable)
+    return (
+      <ErrorState
+        title="Couldn't load skills gap data"
+        description={getErrorMessage(error)}
+        error={error}
+        onRetry={handleRetry}
+      />
+    );
+
+  if (isLoading || access.pending) return <SectionSkeleton rows={8} />;
+
+  if (data === undefined)
+    return <EmptyChart label="Skills gap data could not be determined" />;
 
   return (
     <DataTable
-      data={gaps}
+      data={data.gaps}
       columns={skillsGapColumns}
       getRowKey={(row) => row.skillName}
-      isLoading={isLoading}
       emptyState={<EmptyChart label="No skills gap data available" />}
       pagination={{ pageSize: 25 }}
     />

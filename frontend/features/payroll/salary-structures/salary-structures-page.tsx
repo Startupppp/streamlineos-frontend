@@ -261,6 +261,7 @@ export function SalaryStructuresPageContent() {
           className="flex-1"
           title="Failed to load templates"
           description={getErrorMessage(error)}
+          error={error}
           onRetry={handleRetry}
         />
       ) : !templates || templates.length === 0 ? (

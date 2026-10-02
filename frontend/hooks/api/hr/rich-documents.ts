@@ -3,6 +3,7 @@
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
@@ -86,6 +87,7 @@ export function useRichDocuments(params?: RichDocumentListParams) {
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
     enabled: hrEnabled && canView,
+    ...INLINE_READ_ERROR,
   });
 }
 

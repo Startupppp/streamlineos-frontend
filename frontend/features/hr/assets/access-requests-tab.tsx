@@ -22,7 +22,8 @@ import { format } from "date-fns";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { SecurityIllustration } from "@/components/illustrations";
-import { ErrorState } from "@/components/shared";
+import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 
 const STATUS_META: Record<string, { label: string; badge: string }> = {
   requested: {
@@ -56,7 +57,8 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
   const [systemName, setSystemName] = useState("");
   const [accessLevel, setAccessLevel] = useState("");
 
-  const { data: requests = [], isLoading, isError, error, refetch } = useAccessRequests();
+  const { data, isLoading, isError, error, refetch, access } = useAccessRequests();
+  const requests = data ?? [];
   const createMutation = useCreateAccessRequest();
   const updateMutation = useUpdateAccessRequest();
 
@@ -107,10 +109,14 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
     );
   }, [updateMutation]);
 
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
   const handleSystemNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSystemName(e.target.value), []);
   const handleAccessLevelChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setAccessLevel(e.target.value), []);
 
-  if (isLoading) {
+  if (isLoading || access.pending) {
     return (
       <div className="space-y-2">
         {Array.from({ length: 10 }).map((_, i) => (
@@ -120,12 +126,17 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
     );
   }
 
-  if (isError) {
+  if (access.denied) {
+    return <NoPermissionState permission={access.permission} className="py-16" />;
+  }
+
+  if (isError || access.unavailable || data === undefined) {
     return (
       <ErrorState
         title="Couldn't load access requests"
         description={getErrorMessage(error)}
-        onRetry={refetch}
+        error={error}
+        onRetry={handleRetry}
         className="py-16"
       />
     );

@@ -9,6 +9,7 @@ const noContentC = lazyContract(() =>
 );
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const listCyclesC = lazyContract(() =>
@@ -70,6 +71,7 @@ export function useReviewCycles() {
     queryFn: ({ signal }) => apiClient.get<ReviewCycle[]>("/hr/performance/cycles", undefined, signal, listCyclesC),
     staleTime: 2 * 60_000,
     enabled: canView && hrEnabled,
+    ...INLINE_READ_ERROR,
   });
 }
 

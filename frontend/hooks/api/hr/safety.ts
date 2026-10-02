@@ -10,6 +10,7 @@ import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-o
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const incidentListContract = lazyContract(() =>
   import("@/hooks/api/hr/safety-schema").then((m) => m.safetyIncidentListContract),
@@ -164,5 +165,6 @@ export function useWellnessPulse(enabled = true) {
     queryFn: ({ signal }) => apiClient.get("/hr/safety/wellness/pulse", undefined, signal, pulseContract),
     staleTime: 120_000,
     enabled,
+    ...INLINE_READ_ERROR,
   });
 }

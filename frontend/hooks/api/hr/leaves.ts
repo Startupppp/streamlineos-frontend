@@ -4,6 +4,7 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import {
   leaveAnalyticsC,
   leaveApprovalsC,
@@ -97,6 +98,7 @@ export function useHrLeaveApprovals(
       hrEnabled &&
       canLeaves &&
       (enabled ?? true),
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -177,6 +179,7 @@ export function useHrLeaveAnalytics(year?: number) {
       }, signal, leaveAnalyticsC),
     staleTime: 120_000,
     enabled: hrEnabled && canView,
+    ...INLINE_READ_ERROR,
   });
 }
 

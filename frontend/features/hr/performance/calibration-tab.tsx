@@ -32,6 +32,10 @@ export function CalibrationTab() {
 
   const { data: cycles = [] } = useReviewCycles();
   const { data: entries = [], isLoading, isError, error, refetch } = useCalibrationEntries(selectedCycleId);
+
+  function handleRetryEntries(): void {
+    void refetch();
+  }
   const { data: membersData } = useOrgMembers(1, 200);
   const upsert = useUpsertCalibrationEntry(selectedCycleId);
   const canManage = useCan("hr:performance:manage");
@@ -220,7 +224,8 @@ export function CalibrationTab() {
               className="flex-1"
               title="Couldn't load calibration entries"
               description={getErrorMessage(error)}
-              onRetry={refetch}
+              error={error}
+              onRetry={handleRetryEntries}
             />
           ) : (
             <Card>

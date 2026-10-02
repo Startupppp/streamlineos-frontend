@@ -2,6 +2,8 @@
 
 import { useHrAttritionAnalytics } from "@/hooks/api/hr/analytics";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Users, UserMinus, TrendingDown } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -21,14 +23,29 @@ interface AttritionSectionProps {
 }
 
 export function AttritionSection({ isLoading }: AttritionSectionProps) {
-  const { data } = useHrAttritionAnalytics();
+  const { data, isError, error, refetch } = useHrAttritionAnalytics();
 
-  if (isLoading || !data) {
+  function handleRetry(): void {
+    void refetch();
+  }
+
+  if (isLoading) {
     return (
       <section className="space-y-4">
         <Skeleton className="h-5 w-44" />
         <StatCardGridSkeleton cols={3} />
       </section>
+    );
+  }
+
+  if (isError || !data) {
+    return (
+      <ErrorState
+        title="Couldn't load attrition analytics"
+        description={getErrorMessage(error)}
+        error={error}
+        onRetry={handleRetry}
+      />
     );
   }
 

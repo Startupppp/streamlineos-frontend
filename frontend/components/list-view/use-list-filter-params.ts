@@ -201,20 +201,15 @@ export function useListFilterParams(spec: ListFilterSpec): ListFilterParams {
     });
   }, [navigate, spec]);
 
-  const [searchDraft, setSearchDraft] = useState(() => ({
-    urlValue: search,
-    value: search,
-  }));
-  if (searchDraft.urlValue !== search) {
-    setSearchDraft(
-      searchDraft.value === search
-        ? { urlValue: search, value: search }
-        : { urlValue: search, value: search },
-    );
-  }
-  const localSearch =
-    searchDraft.urlValue === search ? searchDraft.value : search;
+  const [localSearch, setLocalSearch] = useState(search);
+  const [appliedUrlSearch, setAppliedUrlSearch] = useState(search);
   const debouncedSearch = useDebouncedValue(localSearch, debounceMs);
+
+  if (appliedUrlSearch !== search) {
+    setAppliedUrlSearch(search);
+    if (search !== debouncedSearch) setLocalSearch(search);
+  }
+
   const previousDebounced = useRef(debouncedSearch);
   const immediateSearchRef = useRef<string | null>(null);
 
@@ -227,7 +222,7 @@ export function useListFilterParams(spec: ListFilterSpec): ListFilterParams {
 
   const setSearch = useCallback(
     (value: string) => {
-      setSearchDraft({ urlValue: search, value });
+      setLocalSearch(value);
       if (value || !search) return;
       immediateSearchRef.current = "";
       commitSearch("");

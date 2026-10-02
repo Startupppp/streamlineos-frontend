@@ -272,6 +272,7 @@ export function FilingsTab() {
           className="flex-1"
           title="Couldn't load filings"
           description={getErrorMessage(error)}
+          error={error}
           onRetry={handleRetry}
         />
       ) : (

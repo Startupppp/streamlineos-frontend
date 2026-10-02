@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RecruitmentEmptyState } from "@/features/recruitment/components/recruitment-empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 
 import { useRolloutDocuments, type RolloutDocumentRecord } from "@/hooks/api/hr/recruitment";
@@ -151,6 +152,10 @@ export function DocumentsTab({
 
   const handleGenerateOffer = useCallback(() => setRolloutOpen(true), []);
 
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
   const handleRolloutOpenChange = useCallback((open: boolean) => {
     setRolloutOpen(open);
     if (!open) void refetch();
@@ -169,17 +174,13 @@ export function DocumentsTab({
 
   if (isError) {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-xl border border-status-danger-rule bg-status-danger-surface px-6 py-8 text-center">
-        <div className="text-sm font-medium text-status-danger-ink">
-          Failed to load documents
-        </div>
-        <p className="text-xs text-status-danger-ink">
-          {getErrorMessage(error)}
-        </p>
-        <Button variant="outline" size="sm" onClick={() => void refetch()}>
-          Retry
-        </Button>
-      </div>
+      <ErrorState
+        compact
+        title="Couldn't load offer documents"
+        description={getErrorMessage(error)}
+        error={error}
+        onRetry={handleRetry}
+      />
     );
   }
   const list = docs ?? [];

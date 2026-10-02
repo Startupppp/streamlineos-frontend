@@ -22,7 +22,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { format } from "date-fns";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { ManageReferrersSheet } from "./manage-referrers-sheet";
 
 const STATUS_CONFIG: Record<ExternalReferralStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
@@ -171,10 +172,17 @@ function ExternalReferralCard({ referral, onStatusChange, onMarkReward, isUpdati
 }
 
 export function ExternalReferralsTab() {
-  const { data: referrals = [], isLoading, isError, refetch } = useExternalReferrals();
+  const { data: referrals = [], isLoading, isError, error, refetch } = useExternalReferrals();
   const updateMutation = useUpdateExternalReferral();
   const [rewardReferral, setRewardReferral] = useState<ExternalReferral | null>(null);
   const [pendingId, setPendingId] = useState<number | null>(null);
+
+  const pageState = usePageState({
+    permission: "hr:requisitions:view",
+    isLoading,
+    isError,
+    error,
+  });
 
   const handleStatusChange = useCallback(async (id: number, status: ExternalReferralStatus) => {
     setPendingId(id);
@@ -190,27 +198,19 @@ export function ExternalReferralsTab() {
 
   function handleCloseReward() { setRewardReferral(null); }
 
-  if (isLoading) {
-    return (
-      <div className="space-y-3">
-        {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <ErrorState
-        title="Unable to load external referrals"
-        description="Try again. If this keeps happening, check your permissions or contact an admin."
-        onRetry={() => void refetch()}
-        compact
-      />
-    );
-  }
+  function handleRetry() { void refetch(); }
 
   return (
-    <>
+    <PageState
+      resolution={pageState}
+      compact
+      onRetry={handleRetry}
+      loading={
+        <div className="space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
+        </div>
+      }
+    >
       <div className="flex justify-end mb-3">
         <ManageReferrersSheet />
       </div>
@@ -238,6 +238,6 @@ export function ExternalReferralsTab() {
       {rewardReferral && (
         <RewardSheet referral={rewardReferral} onClose={handleCloseReward} />
       )}
-    </>
+    </PageState>
   );
 }

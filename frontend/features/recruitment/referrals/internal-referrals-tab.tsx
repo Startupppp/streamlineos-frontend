@@ -19,7 +19,8 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { format } from "date-fns";
 import type { CandidateReferral, ReferralStatus } from "@/types/hr/recruitment";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 
 const STATUS_CONFIG: Record<ReferralStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   SUBMITTED: { label: "Submitted", variant: "secondary" },
@@ -163,9 +164,16 @@ function ReferralCard({ referral, onStatusChange, onMarkBonus, isUpdating }: Ref
 }
 
 export function InternalReferralsTab() {
-  const { data: referrals = [], isLoading, isError, refetch } = useAllReferrals();
+  const { data: referrals = [], isLoading, isError, error, refetch } = useAllReferrals();
   const updateMutation = useUpdateReferralStatus();
   const [bonusReferral, setBonusReferral] = useState<CandidateReferral | null>(null);
+
+  const pageState = usePageState({
+    permission: "hr:requisitions:view",
+    isLoading,
+    isError,
+    error,
+  });
 
   const handleStatusChange = useCallback(async (id: number, status: ReferralStatus) => {
     try {
@@ -178,27 +186,19 @@ export function InternalReferralsTab() {
 
   function handleCloseBonusSheet() { setBonusReferral(null); }
 
-  if (isLoading) {
-    return (
-      <div className="space-y-3">
-        {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <ErrorState
-        title="Unable to load referrals"
-        description="Try again. If this keeps happening, check your permissions or contact an admin."
-        onRetry={() => void refetch()}
-        compact
-      />
-    );
-  }
+  function handleRetry() { void refetch(); }
 
   return (
-    <>
+    <PageState
+      resolution={pageState}
+      compact
+      onRetry={handleRetry}
+      loading={
+        <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
+        </div>
+      }
+    >
       {referrals.length === 0 ? (
         <RecruitmentEmptyState
           illustration={<EmptyTeamIllustration />}
@@ -222,6 +222,6 @@ export function InternalReferralsTab() {
       {bonusReferral && (
         <BonusSheet referral={bonusReferral} onClose={handleCloseBonusSheet} />
       )}
-    </>
+    </PageState>
   );
 }

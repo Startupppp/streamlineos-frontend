@@ -39,6 +39,7 @@ import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useMotionVariants } from "@/lib/motion-variants";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useEngagementOverview, useMyMoodHistory, useOrgMoodAggregate } from "@/hooks/api/hr/engagement";
 import { useOrgMembers } from "@/hooks/api/organization";
 import {
@@ -89,6 +90,7 @@ function useRecognitions() {
     queryFn: ({ signal }) => apiClient.get("/hr/recognition", undefined, signal, recognitionListContract),
     staleTime: 60_000,
     enabled: canView && hrEnabled,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -285,6 +287,11 @@ function RecognitionTab() {
     refetch: refetchRec,
   } = useRecognitions();
   const createRecognition = useCreateRecognition();
+
+  function handleRetryRecognitions(): void {
+    void refetchRec();
+  }
+
   // POST /hr/recognition is `hr:engagement:view` (engagement.controller.ts:127).
   const canGiveKudos = useCan("hr:engagement:view");
   const [kudosOpen, setKudosOpen] = useState(false);
@@ -321,7 +328,7 @@ function RecognitionTab() {
         isLoading={recLoading}
         isError={recError}
         error={recErrorData}
-        onRetry={() => void refetchRec()}
+        onRetry={handleRetryRecognitions}
         onGiveKudos={canGiveKudos ? handleGiveKudos : undefined}
       />
 

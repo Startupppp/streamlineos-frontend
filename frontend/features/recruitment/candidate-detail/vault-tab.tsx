@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { useCandidateVault } from "@/hooks/api/hr/recruitment";
 import type { BgvStatus as CandidateBgvStatus } from "@/types/hr";
@@ -38,9 +39,13 @@ export interface VaultTabProps {
 
 export function VaultTab(props: VaultTabProps) {
   const [showUpload, setShowUpload] = useState(false);
-  const { data: docs, isLoading, isError, refetch } = useCandidateVault(props.candidateId);
+  const { data: docs, isLoading, isError, error, refetch } = useCandidateVault(props.candidateId);
 
   const handleToggleUpload = useCallback(() => setShowUpload((p) => !p), []);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const categoryCounts = (docs ?? []).reduce<Record<string, number>>(
     (acc, doc) => {
@@ -67,8 +72,9 @@ export function VaultTab(props: VaultTabProps) {
     return (
       <ErrorState
         title="Unable to load verification documents"
-        description="Try again. If this keeps happening, contact an admin."
-        onRetry={() => void refetch()}
+        description={getErrorMessage(error)}
+        error={error}
+        onRetry={handleRetry}
       />
     );
   }

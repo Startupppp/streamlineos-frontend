@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -105,6 +106,7 @@ export function useExitVerification(userId: string) {
     queryFn: ({ signal }) => apiClient.get(`${BASE}/exit-verification`, { userId }, signal, _getExitVerificationContract),
     enabled: !!userId,
     staleTime: 15_000,
+    ...INLINE_READ_ERROR,
   });
 }
 

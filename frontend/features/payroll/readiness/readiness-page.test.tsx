@@ -118,13 +118,13 @@ function runBlocker(overrides: Partial<RunBlocker> = {}): RunBlocker {
 }
 
 function blockerPage(blockers: RunBlocker[], hasMore = false) {
-  return { data: blockers, pagination: { limit: 100, hasMore, nextCursor: null } };
+  return { data: blockers, pagination: { limit: 100, hasMore, nextCursor: null, total: blockers.length } };
 }
 
-function rosterPage(count: number, hasMore = false) {
+function rosterPage(count: number, hasMore = false, total = count) {
   return {
     data: Array.from({ length: count }, (_, index) => ({ id: index + 1, userId: `usr-${index}`, userName: `Person ${index}` })),
-    pagination: { limit: 100, hasMore, nextCursor: null },
+    pagination: { limit: 100, hasMore, nextCursor: null, total },
   };
 }
 
@@ -251,19 +251,39 @@ describe("PayrollReadinessPage — honest readiness board", () => {
     expect(screen.getAllByRole("link", { name: "Start a run" }).length).toBe(1);
   });
 
-  it("reports Ready only once the cycle population is fully read", () => {
+  it("counts the whole cycle from the server total even when the roster pages", () => {
     mockUsePayrollReadiness.mockReturnValue(idle(ledger({ exceptions: [], run: { id: 12, status: "DRAFT", createdAt: "2026-09-19T00:00:00.000Z" } })));
     mockUsePayrollRunBlockers.mockReturnValue(idle(blockerPage([])));
-    mockUseRunEmployees.mockReturnValue(idle(rosterPage(100, true)));
+    mockUseRunEmployees.mockReturnValue(idle(rosterPage(100, true, 212)));
     mockUsePageState.mockReturnValue({ kind: "ready" });
 
-    const partial = render(<PayrollReadinessPage />);
-    expect(screen.getByText(/The number of employees in it is not/)).toBeInTheDocument();
-    partial.unmount();
-
-    mockUseRunEmployees.mockReturnValue(idle(rosterPage(4)));
     render(<PayrollReadinessPage />);
-    expect(screen.getByText("All 4 employees in cycle are ready.")).toBeInTheDocument();
+
+    expect(screen.getByText("All 212 employees in cycle are ready.")).toBeInTheDocument();
+    expect(screen.queryByText(/The number of employees in it is not/)).not.toBeInTheDocument();
+  });
+
+  it("still refuses a population the roster read has not delivered at all", () => {
+    mockUsePayrollReadiness.mockReturnValue(idle(ledger({ exceptions: [], run: { id: 12, status: "DRAFT", createdAt: "2026-09-19T00:00:00.000Z" } })));
+    mockUsePayrollRunBlockers.mockReturnValue(idle(blockerPage([])));
+    mockUseRunEmployees.mockReturnValue(idle(undefined));
+    mockUsePageState.mockReturnValue({ kind: "ready" });
+
+    render(<PayrollReadinessPage />);
+
+    expect(screen.getByText(/The number of employees in it is not/)).toBeInTheDocument();
+  });
+
+  it("claims no readiness while the blocker list is truncated, because the blocker count is then a floor", () => {
+    mockUsePayrollReadiness.mockReturnValue(idle(ledger({ exceptions: [], run: { id: 12, status: "DRAFT", createdAt: "2026-09-19T00:00:00.000Z" } })));
+    mockUsePayrollRunBlockers.mockReturnValue(idle(blockerPage([], true)));
+    mockUseRunEmployees.mockReturnValue(idle(rosterPage(4)));
+    mockUsePageState.mockReturnValue({ kind: "ready" });
+
+    render(<PayrollReadinessPage />);
+
+    expect(screen.queryByText("All 4 employees in cycle are ready.")).not.toBeInTheDocument();
+    expect(screen.getByText(/Whether every blocker has been seen is not/)).toBeInTheDocument();
   });
 
   it("shows the waiver the payload recorded, with its reason", () => {

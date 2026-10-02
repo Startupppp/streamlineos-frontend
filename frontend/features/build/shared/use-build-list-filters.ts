@@ -112,13 +112,13 @@ export function useBuildListFilters(
   const cursor = searchParams.get(BUILD_LIST_CURSOR_PARAM);
   const [search, setSearchState] = useState(urlSearch);
   const [appliedUrlSearch, setAppliedUrlSearch] = useState(urlSearch);
+  const debouncedSearch = useDebouncedValue(search, debounceMs);
 
   if (appliedUrlSearch !== urlSearch) {
     setAppliedUrlSearch(urlSearch);
-    setSearchState(urlSearch);
+    if (urlSearch !== debouncedSearch) setSearchState(urlSearch);
   }
 
-  const debouncedSearch = useDebouncedValue(search, debounceMs);
   const writtenSearch = useRef<string | null>(null);
 
   useEffect(() => {

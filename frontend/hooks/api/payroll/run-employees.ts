@@ -8,11 +8,6 @@ import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { RunEmployee, RunEmployeeDetail, VarianceData } from "@/types/payroll/runs";
 
-interface RunEmployeesPage {
-  data: RunEmployee[];
-  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
-}
-
 const runListEmployeesC = lazyContract(() =>
   import("@/hooks/api/payroll/run-employees-schema").then((m) => m.runListEmployeesResponseContract),
 );

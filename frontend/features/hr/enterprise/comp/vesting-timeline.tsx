@@ -15,6 +15,10 @@ interface Props {
 export function VestingTimeline({ grantId }: Props) {
   const { data: events, isLoading, isError, error, refetch } = useVestingSchedule(grantId);
 
+  function handleRetry(): void {
+    void refetch();
+  }
+
   if (isLoading) {
     return (
       <div className="space-y-2">
@@ -28,7 +32,8 @@ export function VestingTimeline({ grantId }: Props) {
       <ErrorState
         title="Couldn't load vesting schedule"
         description={getErrorMessage(error)}
-        onRetry={refetch}
+        error={error}
+        onRetry={handleRetry}
         compact
       />
     );

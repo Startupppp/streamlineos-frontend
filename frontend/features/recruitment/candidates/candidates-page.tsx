@@ -222,6 +222,11 @@ export function CandidatesPage() {
     );
   }, [filteredCandidates]);
 
+  const selectAllLabel =
+    selectedIds.size === filteredCandidates.length && filteredCandidates.length > 0
+      ? "Deselect all"
+      : "Select all";
+
   const handleBulkReject = useCallback(() => {
     bulkReject.mutate(
       { candidateIds: Array.from(selectedIds), sendRejectionEmail: true },
@@ -310,6 +315,7 @@ export function CandidatesPage() {
                   size="sm"
                   variant="destructive"
                   className="gap-1.5 text-xs"
+                  aria-label="Reject"
                   onClick={handleOpenBulkReject}
                 >
                   <XCircle className="h-3.5 w-3.5" />
@@ -320,6 +326,7 @@ export function CandidatesPage() {
                     size="sm"
                     variant="outline"
                     className="gap-1.5 text-xs"
+                    aria-label="Compare"
                     onClick={handleOpenCompare}
                   >
                     <GitCompare className="h-3.5 w-3.5" />
@@ -340,15 +347,11 @@ export function CandidatesPage() {
               variant="outline"
               size="sm"
               className="gap-1.5 text-xs"
+              aria-label={selectAllLabel}
               onClick={handleSelectAll}
             >
               <CheckSquare className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">
-                {selectedIds.size === filteredCandidates.length &&
-                filteredCandidates.length > 0
-                  ? "Deselect all"
-                  : "Select all"}
-              </span>
+              <span className="hidden sm:inline">{selectAllLabel}</span>
             </Button>
             <Button
               size="sm"
@@ -356,7 +359,7 @@ export function CandidatesPage() {
               className="gap-1.5 text-xs"
               asChild
             >
-              <Link href="/recruitment/candidates/import">
+              <Link href="/recruitment/candidates/import" aria-label="Import">
                 <Upload className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Import</span>
               </Link>
@@ -364,6 +367,7 @@ export function CandidatesPage() {
             <Button
               size="sm"
               className="gap-1.5 text-xs"
+              aria-label="Add Candidate"
               onClick={handleOpenAddSheet}
             >
               <Plus className="h-3.5 w-3.5" />

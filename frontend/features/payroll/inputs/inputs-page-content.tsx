@@ -17,6 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ErrorState } from "@/components/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { MonthPicker } from "@/features/payroll/shared/month-picker";
 import { formatMonth } from "@/features/payroll/shared/payroll-format";
 import { formatShortDate } from "@/lib/date-utils";
@@ -67,7 +68,8 @@ export function InputsPageContent() {
       <PageWrapper title="Payroll Inputs">
         <ErrorState
           title="Failed to load payroll input periods"
-          description="Could not load data. Please try again."
+          description={getErrorMessage(error)}
+          error={error}
           onRetry={refetch}
         />
       </PageWrapper>

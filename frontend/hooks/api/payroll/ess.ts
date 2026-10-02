@@ -212,6 +212,7 @@ export function useEssLoans() {
     queryFn: ({ signal }) => apiClient.get("/payroll/me/loans", undefined, signal, essLoansContract),
     staleTime: 60_000,
     enabled: canSelf,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -233,6 +234,7 @@ export function useEssBank() {
       apiClient.get("/payroll/me/bank", undefined, signal, essBankDetailsContract),
     staleTime: 300_000,
     enabled: canSelf,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -243,6 +245,7 @@ export function useEssFnf() {
     queryFn: ({ signal }) => apiClient.get<EssFnfSettlement | null>("/payroll/me/fnf", undefined, signal, ownFnfC),
     staleTime: 120_000,
     enabled: canSelf,
+    ...INLINE_READ_ERROR,
   });
 }
 

@@ -22,6 +22,7 @@ export const runExceptionsPageContract = z.object({
     limit: z.number().int(),
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
+    total: z.number().int(),
   }),
 });
 

@@ -142,6 +142,7 @@ export function AutomationRunsSheet({ ruleId, ruleName, onClose }: Props) {
               compact
               title="Couldn't load run history"
               description={getErrorMessage(error)}
+              error={error}
               onRetry={handleRetry}
             />
           )}

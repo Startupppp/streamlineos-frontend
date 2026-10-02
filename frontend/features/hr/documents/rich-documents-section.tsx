@@ -137,6 +137,7 @@ export function RichDocumentsSection() {
           <ErrorState
             title="Couldn't load documents"
             description={getErrorMessage(error)}
+            error={error}
             onRetry={refetch}
             compact
           />

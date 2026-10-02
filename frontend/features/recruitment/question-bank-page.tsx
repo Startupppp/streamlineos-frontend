@@ -10,7 +10,7 @@ import {
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { SearchInput } from "@/components/ui/search-input";
-import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { FILTER_ROW_STACKS_ON_MOBILE, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 import {
   Select,
@@ -119,8 +119,9 @@ export function QuestionBankPage() {
           </AnimatedIconButton>
         </QuestionFormDialog>
       }
+      filtersClassName={FILTER_ROW_STACKS_ON_MOBILE}
       filters={
-        <div className={FILTER_TOOLBAR_ROW}>
+        <>
           <SearchInput placeholder="Search questions..." value={search} onValueChange={handleSearchChange} />
           <Select value={category} onValueChange={setCategory}>
             <SelectTrigger className={cn("w-[150px]", FILTER_SELECT_TRIGGER)}>
@@ -148,7 +149,7 @@ export function QuestionBankPage() {
               ))}
             </SelectContent>
           </Select>
-        </div>
+        </>
       }
     >
       <div className="flex flex-1 min-h-0 flex-col">

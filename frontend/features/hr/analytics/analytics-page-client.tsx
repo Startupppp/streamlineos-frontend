@@ -74,15 +74,17 @@ interface KpiItem {
   tone: "default" | "blue" | "emerald" | "amber" | "red";
 }
 
+const UNMEASURED = "—";
+
 function ExecutiveKPIs({
   totalEmployees,
   attritionRate,
   attendanceLogs,
   isLoading,
 }: {
-  totalEmployees: number;
+  totalEmployees: string | number;
   attritionRate: string;
-  attendanceLogs: number;
+  attendanceLogs: string | number;
   isLoading: boolean;
 }) {
   if (isLoading) {
@@ -98,7 +100,7 @@ function ExecutiveKPIs({
     },
     {
       label: "Attrition rate",
-      value: `${attritionRate}%`,
+      value: attritionRate,
       icon: TrendingDown,
       tone: "red",
     },
@@ -173,15 +175,21 @@ export function AnalyticsPageClient() {
     refetch,
   } = useHrAnalytics();
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
-  const { data: attritionData, isLoading: isAttritionLoading } =
-    useHrAttritionAnalytics();
+  const {
+    data: attritionData,
+    isLoading: isAttritionLoading,
+    isError: isAttritionError,
+  } = useHrAttritionAnalytics();
 
   const isTopLoading =
     isAnalyticsLoading || isAttritionLoading;
 
-  const totalEmployees = data?.headcount.active ?? 0;
-  const attritionRate = attritionData?.attritionRatePercent ?? "0.0";
-  const attendanceLogs = data?.attendance.totalLogsThisMonth ?? 0;
+  const totalEmployees = data ? data.headcount.active : UNMEASURED;
+  const attritionRate =
+    isAttritionError || !attritionData
+      ? UNMEASURED
+      : `${attritionData.attritionRatePercent}%`;
+  const attendanceLogs = data ? data.attendance.totalLogsThisMonth : UNMEASURED;
 
   const handleSectionChange = useCallback((v: string) => {
     if (isSectionTab(v)) setActiveSection(v);

@@ -101,13 +101,15 @@ export function PayrollReadinessPage() {
         isStale,
         blockers: openBlockerCount(rows),
         blockedPeople: blockedPeopleCount(rows),
+        blockedPeopleIsComplete:
+          runBlockers.data !== undefined && !runBlockers.data.pagination.hasMore,
         waived: waivedCount(rows),
         population: {
-          inCycle: roster.data?.data.length ?? 0,
-          isComplete: runId !== null && roster.data !== undefined && !roster.data.pagination.hasMore,
+          inCycle: roster.data?.pagination.total ?? 0,
+          isComplete: runId !== null && roster.data !== undefined,
         },
       }),
-    [isLoading, isStale, rows, roster.data, runId],
+    [isLoading, isStale, rows, roster.data, runBlockers.data, runId],
   );
 
   const counts = useMemo(() => countsByCategory(rows), [rows]);

@@ -21,7 +21,7 @@ export function useHrTeamAvailability(
   window: TeamAvailabilityWindow,
   options?: { enabled?: boolean },
 ) {
-  return useGatedQuery("hr:leaves:view", {
+  return useGatedQuery("hr:leaves:read", {
     queryKey: [
       ...humanResourcesQueryKeys.hr.all,
       "team-availability",

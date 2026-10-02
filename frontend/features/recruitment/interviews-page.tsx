@@ -82,25 +82,25 @@ export function InterviewsPage() {
       actions={
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" asChild>
-            <Link href={INTERVIEW_CALENDAR_HREF}>
+            <Link href={INTERVIEW_CALENDAR_HREF} aria-label="View in calendar">
               <CalendarDays className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">View in calendar</span>
             </Link>
           </Button>
           <Button variant="outline" size="sm" asChild>
-            <Link href="/recruitment/interviewer-performance">
+            <Link href="/recruitment/interviewer-performance" aria-label="Performance">
               <BarChart2 className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Performance</span>
             </Link>
           </Button>
           <Button variant="outline" size="sm" asChild>
-            <Link href="/recruitment/sla-report">
+            <Link href="/recruitment/sla-report" aria-label="SLA Report">
               <CalendarClock className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">SLA Report</span>
             </Link>
           </Button>
           <Button variant="outline" size="sm" asChild>
-            <Link href="/recruitment/sla">
+            <Link href="/recruitment/sla" aria-label="SLA Config">
               <Settings className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">SLA Config</span>
             </Link>
@@ -110,6 +110,7 @@ export function InterviewsPage() {
             iconSize={16}
             size="sm"
             className="gap-1.5"
+            aria-label="Schedule"
             onClick={handleOpenSchedule}
           >
             <span className="hidden sm:inline">Schedule</span>

@@ -2,6 +2,7 @@
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 
@@ -105,6 +106,7 @@ export function useHrDocumentExpiry(
       apiClient.get<HrDocumentExpiryResponse>("/hr/document-expiry", { days }, signal, documentExpiryLazy),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canDocs && (options?.enabled ?? true),
+    ...INLINE_READ_ERROR,
   });
 }
 

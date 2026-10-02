@@ -118,6 +118,10 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
     void refetchRecs();
   }, [refetchRecs]);
 
+  const handleRetryPools = useCallback(() => {
+    void refetchPools();
+  }, [refetchPools]);
+
   if (cycleLoading) return <div className="space-y-3">{Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-xl" />)}</div>;
 
   if (cycleIsError) {
@@ -125,6 +129,7 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
       <ErrorState
         className="flex-1"
         title="Couldn't load this compensation cycle"
+        error={cycleError}
         description={getErrorMessage(cycleError)}
         onRetry={handleRetryCycle}
       />
@@ -155,7 +160,8 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
         <ErrorState
           title="Couldn't load budget pools"
           description={getErrorMessage(poolsError)}
-          onRetry={refetchPools}
+          error={poolsError}
+          onRetry={handleRetryPools}
           compact
         />
       ) : !poolsLoading && pools && pools.length > 0 ? (
@@ -190,6 +196,7 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
         ) : recsIsError ? (
           <ErrorState
             title="Couldn't load recommendations"
+            error={recsError}
             description={getErrorMessage(recsError)}
             onRetry={handleRetryRecs}
             compact

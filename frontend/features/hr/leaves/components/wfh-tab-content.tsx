@@ -110,7 +110,7 @@ export function WfhTabContent({
           : "w-full space-y-4"
       }
     >
-      {!compact && (
+      {!compact && pageState.kind !== "error" && (
         <WfhStatsStrip
           thisMonth={wfhStats.thisMonth}
           pending={wfhStats.pending}

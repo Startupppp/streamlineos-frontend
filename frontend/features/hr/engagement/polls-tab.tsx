@@ -25,6 +25,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { HrSheet } from "@/components/shared/hr-sheet";
+import { ErrorState } from "@/components/shared/error-state";
 import {
   useEngagementPolls,
   useCreatePoll,
@@ -71,7 +72,13 @@ function PollCard({
 }) {
   const [showResults, setShowResults] = useState(false);
   const [voted, setVoted] = useState(false);
-  const { data: results } = usePollResults(showResults ? poll.id : 0);
+  const {
+    data: results,
+    isLoading: resultsLoading,
+    isError: resultsFailed,
+    error: resultsError,
+    refetch: refetchResults,
+  } = usePollResults(showResults ? poll.id : 0);
   const vote = useVotePoll();
   const updatePoll = useUpdatePoll();
 
@@ -89,6 +96,10 @@ function PollCard({
     },
     [poll.id, vote],
   );
+
+  const handleResultsRetry = useCallback(() => {
+    void refetchResults();
+  }, [refetchResults]);
 
   const handleToggleStatus = useCallback(() => {
     const nextStatus = poll.status === "active" ? "closed" : "active";
@@ -157,7 +168,25 @@ function PollCard({
         </div>
       </div>
 
-      {showResults && results?.suppressed ? (
+      {showResults && resultsFailed ? (
+        <ErrorState
+          compact
+          title="Couldn't load poll results"
+          description={getErrorMessage(resultsError)}
+          error={resultsError}
+          onRetry={handleResultsRetry}
+        />
+      ) : showResults && resultsLoading ? (
+        <div className="space-y-2" role="status" aria-label="Loading poll results">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-6 rounded-md" />
+          ))}
+        </div>
+      ) : showResults && results === undefined ? (
+        <p className="text-dense text-muted-foreground" role="status">
+          The results for this poll could not be determined.
+        </p>
+      ) : showResults && results?.suppressed ? (
         <AnonymitySuppressedNotice minResponses={results.minResponses} responses={results.totalVotes} />
       ) : showResults && results ? (
         <div className="space-y-2">
