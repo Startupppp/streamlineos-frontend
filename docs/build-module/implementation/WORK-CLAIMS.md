@@ -18,6 +18,7 @@ This file is the coordination ledger for active and completed implementation pac
 | Package | Slice | Additional owner paths | Boundary |
 |---|---|---|---|
 | `ARCH-14-ACTIVATION` | BLD-INVITE-RESEND-04 response truth | `backend/src/modules/users/users.controller.ts`, `backend/src/modules/users/dto/users-response.schemas.ts`, and focused invitation controller/contract tests belong to the invitation resend agent alongside the already claimed lifecycle service and resend tests. | The idempotent resend response may expose only queue outcome and safe failure reason; never expose or persist the raw token in that response. Frontend presentation is a later serialized handoff. |
+| `ARCH-14-ACTIVATION` | BLD-INVITE-STATUS-PROVENANCE-05 event receipts | The setup provenance agent alone owns one additive `backend/src/db/schema/common/organization-setup-invitation-receipts.ts` table/export, one migration selected after reading the current migration sequence, `backend/src/modules/organization/setup/org-setup-completed-consumer.service.ts`, `org-setup-query.service.ts`, and their focused tests. | Store one bounded recipient result per setup producer event and canonical email in the consumer transaction; query only the exact event. Enforce tenant RLS, unique event/email, replay safety, and legacy null fallback. Do not use inbox `last_error` as a result store or infer from org/email. Target database application and rollback remain separate proof. |
 
 ## Completed or superseded claims
 
