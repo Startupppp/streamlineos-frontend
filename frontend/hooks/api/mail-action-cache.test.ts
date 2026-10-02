@@ -11,7 +11,7 @@ function makeQcWithCountAndInfinite(): QueryClient {
     pages: [
       {
         items: [
-          { kind: "mail" as const, id: "msg-1", accountId: "acc-1", isRead: false },
+          { kind: "mail" as const, id: "msg-1", accountId: 1, isRead: false },
         ],
         nextCursor: null,
       },
@@ -25,34 +25,34 @@ describe("applyMailActionToCaches — unified count entry must not crash the upd
   it("archive does not throw when a flat count entry shares the unified prefix", async () => {
     const qc = makeQcWithCountAndInfinite();
     await expect(
-      applyMailActionToCaches(qc, "msg-1", { action: "archive", accountId: "acc-1" }),
+      applyMailActionToCaches(qc, "msg-1", { action: "archive", accountId: 1 }),
     ).resolves.not.toThrow();
   });
 
   it("markRead does not throw when a flat count entry shares the unified prefix", async () => {
     const qc = makeQcWithCountAndInfinite();
     await expect(
-      applyMailActionToCaches(qc, "msg-1", { action: "markRead", accountId: "acc-1" }),
+      applyMailActionToCaches(qc, "msg-1", { action: "markRead", accountId: 1 }),
     ).resolves.not.toThrow();
   });
 
   it("markUnread does not throw when a flat count entry shares the unified prefix", async () => {
     const qc = makeQcWithCountAndInfinite();
     await expect(
-      applyMailActionToCaches(qc, "msg-1", { action: "markUnread", accountId: "acc-1" }),
+      applyMailActionToCaches(qc, "msg-1", { action: "markUnread", accountId: 1 }),
     ).resolves.not.toThrow();
   });
 
   it("star does not throw when a flat count entry shares the unified prefix", async () => {
     const qc = makeQcWithCountAndInfinite();
     await expect(
-      applyMailActionToCaches(qc, "msg-1", { action: "star", accountId: "acc-1" }),
+      applyMailActionToCaches(qc, "msg-1", { action: "star", accountId: 1 }),
     ).resolves.not.toThrow();
   });
 
   it("archive still removes the message from the infinite page after the guard", async () => {
     const qc = makeQcWithCountAndInfinite();
-    await applyMailActionToCaches(qc, "msg-1", { action: "archive", accountId: "acc-1" });
+    await applyMailActionToCaches(qc, "msg-1", { action: "archive", accountId: 1 });
     const updated = qc.getQueryData<{ pages: Array<{ items: unknown[] }> }>(
       platformCoreQueryKeys.inbox.unified({ limit: 25 }),
     );

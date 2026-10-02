@@ -3,7 +3,7 @@
 import { renderHook } from "@testing-library/react";
 import { useKbPageChildrenLevel } from "./pages";
 
-const mockUseInfiniteQuery = jest.fn(() => ({
+const mockUseInfiniteQuery = jest.fn((_options: unknown) => ({
   data: undefined,
   error: null,
   isError: false,
