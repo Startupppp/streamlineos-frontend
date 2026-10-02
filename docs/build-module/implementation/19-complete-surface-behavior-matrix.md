@@ -92,3 +92,12 @@ Required journeys are new owner, existing user creating another organization, in
 
 An area is implementation complete only when its screen spec names audience, entry, layout, fields, filters/operators, actions, pane/page/dialog behavior, return navigation, loading/empty/error/offline/stale/denied states, permissions, query/command interface, schema, cache invalidation, events/jobs, mobile/accessibility, and acceptance evidence. The product-surface ownership register in document 18 assigns the architecture package; `experience/screens/` owns the visual and interaction detail.
 
+## Delivery checklist
+
+Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [x] Record the universal behavior contract for record families plus detailed Ticket, Intake/Forms/Triage/Feedbucket, onboarding, and client-portal flows; see the [dated cross-check](../audit/comprehensive-recheck-2026-10-02.md) at source revision `a5b8347fb`.
+- [ ] For each record family, record explicit adoption, justified rejection, or deferral of all universal behaviors in its owning screen and API contract.
+- [ ] Verify Ticket comments, status, assignments, links, files, history, conflicts, and effects through the same command path across UI, bulk, import, automation, and AI.
+- [ ] Verify intake conversion and portal actions preserve identity, idempotency, permissions, visibility, and record return navigation.
+- [ ] Close each of the 26 product areas only after screen, schema, query/command, permission, cache/event, mobile, negative, and browser evidence exists.

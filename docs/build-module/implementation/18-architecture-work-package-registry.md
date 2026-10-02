@@ -112,3 +112,12 @@ Every surface below is part of the Build specification. A route or source anchor
 - Advanced tools appear under searchable More; hiding them preserves records and deep links.
 - Desktop collection clicks open a split pane when context should remain; canonical URL, browser history, modifier click, refresh, full-page direct link, and mobile page behavior remain defined in the route/screen specifications.
 
+## Delivery checklist
+
+Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [x] Map 16 accepted architecture decisions, 17 packages, 26 product areas, access layers, and route/naming constraints to owners; see the dated [cross-check](../audit/comprehensive-recheck-2026-10-02.md) at source revision `a5b8347fb`.
+- [ ] Refresh every source anchor and package owner against the implementation revision before parallel edits; record owner changes in [WORK-CLAIMS.md](WORK-CLAIMS.md).
+- [ ] Complete package-specific API, schema, permission, cache, event, migration, and compatibility gates before dependent packages consume the interface.
+- [ ] Verify every one of the 26 areas adopts or explicitly defers the [universal behavior matrix](19-complete-surface-behavior-matrix.md) with screen and runtime evidence.
+- [ ] Preserve route aliases and naming constraints through deep-link, browser history, modifier-click, refresh, mobile, and authorization tests.

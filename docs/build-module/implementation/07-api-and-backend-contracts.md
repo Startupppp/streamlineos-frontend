@@ -71,3 +71,12 @@ The server binds `orgId` and actor from authenticated context. A client-supplied
 
 Every command log/trace includes request/correlation ID, operation, tenant hash/ID under approved logging policy, actor type, project/record IDs, outcome code, duration, query count/budget, cache result, idempotency outcome, and outbox event IDs. Never log bodies, tokens, signed URLs, webhook secrets, OTPs, or unrestricted form/comment text.
 
+## Delivery checklist
+
+Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [ ] Reconcile the proposed success/error envelopes and machine codes with current controllers, shared serializers, generated OpenAPI, and repository conventions; record compatibility adapters before changing callers.
+- [ ] Assign one command or query owner to every Build API family and eliminate duplicate write paths only after route and caller parity is demonstrated.
+- [ ] Define Zod/DTO validation, tenant and actor context, permission key, idempotency key, revision precondition, bounded pagination, and response fields for each changed endpoint.
+- [ ] Exercise negative and happy paths for access denial, stale revision, duplicate retry, rate limit, partial job, and dependency failure; compare browser network and generated client behavior.
+- [ ] Verify request and outbox correlation, query count, cache decision, and safe logs without recording credentials or unrestricted record bodies.

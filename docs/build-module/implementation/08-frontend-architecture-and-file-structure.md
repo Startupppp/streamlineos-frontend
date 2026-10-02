@@ -71,3 +71,11 @@ Permission keys come from the RBAC catalog, query keys from `build-work.ts`, vie
 
 Route: cold-load permission and param validation. Hook: key identity, enabled gate, DTO parse, error/retry, invalidation. Component: states, keyboard, focus, permission-hidden actions, mobile. Route builder: encoding and compatibility. Screen: populated/empty/error/denied/offline/conflict plus pane/history behavior.
 
+## Delivery checklist
+
+Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [ ] Reconcile proposed route, navigation, query-key, permission, and component owners with the current Next.js tree; list exact files to reuse, split, move, or delete before edits.
+- [ ] Implement one canonical record URL and pane/page navigation contract with Back, refresh, modifier click, direct link, mobile, and inaccessible-record behavior.
+- [ ] Centralize filter serialization, query keys, invalidation, and permission-derived visibility while preserving server-side authorization for every action.
+- [ ] Verify each changed page at mobile, tablet, and desktop sizes with loading, empty, stale, denied, conflict, and retry states; record accessibility results.

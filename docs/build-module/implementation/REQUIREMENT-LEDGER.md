@@ -43,3 +43,11 @@ Statuses are `CONFIRMED`, `PROPOSED`, `NEEDS-DECISION`, `IMPLEMENTED`, `VERIFIED
 | BLD-035 | All 16 deep-module decisions have owner, dependency, migration, and acceptance | approved architecture review | engineering/product | all Build | architecture reconciliation | command/query/adapter interfaces | identity decisions | six-layer access | owner/freshness | outbox/effect runtime | package gates | applicable flows | CONFIRMED | runtime evidence remains per package |
 | BLD-036 | Every Build record family addresses the universal behavior matrix | approved architecture review | all roles | all Build records | owning screen specs | owning commands/queries | owning records/links | action/field/client policy | declared owner | declared effects | cross-cutting negatives | desktop/mobile/portal | CONFIRMED | per-record adoption is implementation work |
 
+## Delivery checklist
+
+Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [x] Assign unique BLD-001 through BLD-036 IDs with audience, surface, owner, validation, status, and open evidence columns; see the [dated validation report](../audit/validation-report.md).
+- [ ] Reconcile each accepted requirement with current code and all relevant screen/API/schema packages after every implementation slice.
+- [ ] Link exact tests, browser actions, network/console results, database and cache checks, operations results, and deployed revision before changing a row to VERIFIED.
+- [ ] Reopen any row when a permission, migration, route alias, worker, or client visibility change invalidates its prior evidence.

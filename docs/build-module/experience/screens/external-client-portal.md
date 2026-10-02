@@ -54,3 +54,14 @@ Wiki pages, individual Tickets, milestones, feedback, and other record types can
 
 Exercise new/existing client, multiple grants, wrong identity, expired/replayed magic link, project A/B isolation, unpublished item direct URL, changing artifact during approval, file revocation, duplicate request submission, mobile, keyboard, refresh, Back/Forward, and current-session revocation. Record browser network/console, persisted grant and action rows, signed-file expiry, cache timing, and deployed revision separately.
 
+## Delivery checklist
+
+Track completion in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [ ] Implement audience-bound magic-link exchange and grant-scoped portal shell; remove raw tokens from history and keep internal Build navigation/counts out of responses and UI.
+- [ ] Deliver `/client-portal` with only granted project cards, safe status/milestone/action counts, name/status/waiting filters, bounded cursor pagination, and full-page card navigation.
+- [ ] Deliver `/client-portal/[projectId]` with published overview and capability-filtered tabs that survive refresh; direct tab and record URLs must reauthorize the same grant.
+- [ ] Implement Deliverables, Requests, Approvals, Files, Updates, and conditional Invoices with the specified safe row fields, filters, source-owner commands, revision checks, and portal-only return paths.
+- [ ] Bind signed file access and cache keys to actor/grant/publication revisions; revoke sessions and future URLs immediately, and suppress newly unpublished or cross-project artifacts.
+- [ ] Show accurate expired, revoked, delivery-failed, no-project, no-published-content, filtered-empty, and partial-source states without exposing hidden project names or counts.
+- [ ] Verify new/existing client, wrong identity, A/B project isolation, replayed link, stale approval, duplicate submission, file revocation, Back/Forward, keyboard/mobile, persisted audit, and deployment revision.

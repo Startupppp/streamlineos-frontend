@@ -268,3 +268,14 @@ Implementing these routes during this documentation task; public/financial actio
 ## Further Notes
 
 The [route table](../routes-and-screen-decisions.md) distinguishes existing routes from proposed destinations. The [research map](../../audit/research-traceability.md) explains the evidence and priority behind the decisions.
+
+## Delivery checklist
+
+Track completion in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [ ] Implement `/build` as a temporary authorized landing resolver with access-needed state, then render Command Center through the versioned dashboard layout and bounded widget-query contract.
+- [ ] Deliver `/build/projects` as a dedicated searchable grid/list with My projects default for Members, active/archive tabs, authorized card fields, and the declared owner/client/product/team/health/date filters.
+- [ ] Wire project card to full overview; show health reason, current cycle/milestone, blockers, update, approvals, and budget only when permitted, with exact drill-down predicates.
+- [ ] Implement New project via short form/template/import preview, impact review, idempotent provision job, and durable project navigation; archive must preserve underlying work.
+- [ ] Deliver Teams list/detail, template catalog/version preview, and client delivery index with their own canonical owners instead of duplicate CRM contacts or role grants.
+- [ ] Verify project/member/client field isolation, direct URL and sidebar/More entry, collection return state, filtered-empty, archived and failed jobs, mobile cards, keyboard, audit, and rollup invalidation.

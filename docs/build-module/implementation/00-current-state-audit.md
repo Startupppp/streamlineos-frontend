@@ -50,3 +50,11 @@ This audit proves that source paths and contracts exist. It does not prove a dep
 - No current browser session, external client invitation, payment, webhook endpoint, or provider credential was exercised.
 - Source counts can change after this snapshot; rerun the census before implementation.
 
+## Delivery checklist
+
+Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [x] Record the dated source inventory, reuse/refactor/remove candidates, corrected document references, and explicit verification gaps; see [the validation report](../audit/validation-report.md) for the 2026-10-02 census at `a5b8347fb`.
+- [ ] Refresh route, controller, schema, migration, and test counts on the implementation revision; update every changed source anchor before using this inventory for deletion.
+- [ ] Prove each proposed removal has no remaining route, caller, permission, import, outbox, or external link dependency; record migration and rollback in the [cleanup plan](15-migration-cleanup-and-reuse-plan.md).
+- [ ] Record target database plans, deployed revision, cache and worker health, and representative owner/member/client browser actions for claims still marked Current unverified.

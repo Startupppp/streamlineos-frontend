@@ -157,3 +157,12 @@ An agent stops the affected part and records `BLOCKED` when:
 
 The agent continues independent work outside the blocked seam.
 
+## Delivery checklist
+
+Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [x] Publish the claim-before-edit protocol and package ownership boundaries; active claims and handoffs are recorded in [WORK-CLAIMS.md](WORK-CLAIMS.md).
+- [ ] Before each slice, refresh source and caller inventory, claim one primary seam, and resolve any overlapping file or contract ownership in the claim ledger.
+- [ ] Require each handoff to identify exact files, contract and migration changes, tests with outputs, browser actors/actions, open risks, and removal conditions.
+- [ ] Verify independent work is merged in dependency order, generated contracts are reproducible, and negative role/tenant cases remain green.
+- [ ] Stop or reassign any slice when an authority conflict, missing target data, or unsafe migration blocks an evidence-backed result.

@@ -60,3 +60,12 @@ Signed file URLs are minted only after current authorization, bind file/variant/
 
 Security, baseline export, recovery, and tenant isolation are never paid-plan gates.
 
+## Delivery checklist
+
+Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [ ] Verify enabled-module entry for Org Owner/Admin and explicit Build assignment for Org Member, followed by project, record, field, and action authorization.
+- [ ] Test every Build API and mutation with owner, org admin, assigned member, unassigned member, project outsider, client, expired grant, and wrong-tenant actors.
+- [ ] Prove public form/widget tokens, client grants, signed file URLs, exports, search, AI tools, and cache keys cannot broaden scope or survive revocation.
+- [ ] Audit role and grant changes for atomic version bumps, immediate denial, safe logs, and authorization rechecks in workers and long-running operations.
+- [ ] Attach browser/network, backend negative tests, database isolation, and deployed-revision evidence before marking RBAC behavior verified.

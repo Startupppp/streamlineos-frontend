@@ -137,3 +137,10 @@ The source pack contains explicit competitor observations and historical Build o
 
 The first activation sequence remains PM-011 invitation acceptance → PM-002 module assignment → PM-001 client grant activation. The crosswalk preserves later features without moving them ahead of this sequence.
 
+## Delivery checklist
+
+Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [x] Map original research IDs 1–120, including conditional item 105, to a destination or explicit deferral; the [validation report](./validation-report.md#checks-performed) records 120/120 mappings.
+- [ ] For each candidate differentiation claim, cite current customer demand, a named competitor primary source, and a current Streamline action/persistence result; keep Planned and Deferred rows out of sales claims.
+- [ ] Prove PM-011 invite acceptance, PM-002 Build standing, then PM-001 usable client grant before promoting later WOW rows, as required by the [priority guardrail](#priority-guardrail).

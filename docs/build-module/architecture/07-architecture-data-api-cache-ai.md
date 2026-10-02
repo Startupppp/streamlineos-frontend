@@ -633,3 +633,20 @@ No capability becomes a release claim until the applicable source, static, datab
 ## Reconciled screen interfaces
 
 [Screen data contracts](./screen-data-contracts.md) define the projection and HTTP families. The filter wire contract is FilterEnvelope v1 using group/condition with operator/fieldId; remove predicate/op/field variations during implementation compatibility migration. Dashboards use dashboards/default plus dashboard-query; any legacy command-center endpoint is an adapter to this owner. Workstreams is the UI/domain label for compatible project modules. Chat/Knowledge/Home/Files are source owners; Build owns project associations.
+
+## Delivery checklist
+
+Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [ ] Map every Build route, command, read projection, job, cache, and cross-module handoff to one domain owner and an explicit organization, module, project, record, action, and field policy.
+- [ ] Finish the deep application interfaces for module access, project provisioning, ticket commands, scoped queries, dashboards, portal grants, Files relations, and cross-module references before moving callers or deleting duplicate services.
+- [ ] Add normalized tenant-scoped relationship tables and constraints for authorization-bearing links; migrate custom fields through a typed registry with validation, indexing, revision, and lifecycle rules.
+- [ ] Make backend registered schemas the wire-contract authority, generate frontend clients, enforce strict nested mutation objects, and fail CI on stale output, missing handlers, or restore omissions.
+- [ ] Standardize FilterEnvelope v1, stable cursor pagination, allowlisted sorting, authorized facets/counts, and bounded ticket workspace projections across screens, reports, exports, and AI.
+- [ ] Define tenant-, permission-, filter-, and revision-aware cache keys for each projection; prove invalidation and safe stale/failure behavior after a write or access revocation.
+- [ ] Write domain mutations, audit facts, and outbox records transactionally; verify idempotency keys, registered consumers, retry/backoff, dead-letter recovery, and duplicate delivery.
+- [ ] Route AI reads and proposed mutations through the same scoped interfaces as human users; verify inaccessible-record refusal, confirmation, provenance, token/cost telemetry, and execution-time authority.
+- [ ] Implement low-cardinality traces and metrics, alerts, capacity admission, worker drain, overload degradation, backup/restore, and documented SLO measurement before scale claims.
+- [ ] Enforce file, portal, webhook, import/export, secret, and signed-link controls through the owning services; prove tenant isolation and redaction in API, logs, analytics, and AI context.
+- [ ] Move frontend and backend callers to the documented dependency direction with thin routes, workflow features, domain services, adapters, and generated contracts; remove duplicates only after parity and rollback evidence.
+- [ ] Re-run architecture gates and obtain target-database migration/RLS/query-plan, populated browser, role/tenant, deployed-revision, and outage-recovery evidence for every applicable release claim.

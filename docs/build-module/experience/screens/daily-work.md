@@ -171,3 +171,14 @@ Implementing these routes during this documentation task; public/financial actio
 ## Further Notes
 
 The [route table](../routes-and-screen-decisions.md) distinguishes existing routes from proposed destinations. The [research map](../../audit/research-traceability.md) explains the evidence and priority behind the decisions.
+
+## Delivery checklist
+
+Track completion in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [ ] Implement `/build/my-work` Focus/Today/Upcoming/Overdue/Blocked/Waiting/Drafts/Done with private rank and snooze, canonical ticket links, and typed assignee/creator/status/due filters.
+- [ ] Implement `/build/inbox` as a Build-filtered Home notification projection with read/resolved/snoozed state and safe target links; approval action opens an exact-version decision sheet.
+- [ ] Implement `/build/all-work` list/table/board/calendar/timeline with saved views, full FilterEnvelope v1, bounded selection/export preview, and permission-scoped counts.
+- [ ] Implement `/build/[projectId]/issues` view switcher, ticket card fields, drag/rank/transition validation, work-date Calendar, and Home Calendar handoff for meetings.
+- [ ] Implement `/build/[projectId]/tickets/[ticketKey]` full-page/pane/mobile detail with description, properties, subtasks, relations, comments, files, time, activity, approval, and client-publication actions.
+- [ ] Verify panes, related-ticket history, refresh/direct link/modifier-click, mobile return, stale revision/draft recovery, canonical mutation persistence, cache refresh, and Member/project/tenant/client denials.

@@ -236,3 +236,14 @@ Layout cache expires at version change; widget results use 15 seconds for attent
 
 [Screen contracts](./screens/projects.md) and [screen data interfaces](../architecture/screen-data-contracts.md) use these exact endpoints and schemas.
 
+## Delivery checklist
+
+Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [ ] Deliver a useful default Command Center for each persona with My Work, blockers, approvals, and recent project actions before customization is required.
+- [ ] Implement widget add/remove/resize/reorder and reset-to-default with keyboard and mobile alternatives; persist layout version and per-user scope without affecting teammates.
+- [ ] Implement the documented widget catalog, card fields, drill-down predicates, empty/error/freshness states, and permission-filtered actions rather than placeholder counts.
+- [ ] Reconcile one dashboard schema and endpoint family for layouts, widget configs, and bounded batch data; validate widget limits, revisions, idempotent edits, and migration of old layouts.
+- [ ] Apply tenant/principal/permission-version cache keys, after-commit invalidation, revocation fences, and bounded widget queries; prove no restricted client or project data reaches another viewer.
+- [ ] Implement AI brief as an authorized, cited projection with token budget, stale-data warning, and explicit action confirmation; test no unsupported claim or unauthorized drill-down.
+- [ ] Verify first run, custom layout persistence after reload/device switch, conflict resolution, slow/partial widgets, mobile order, keyboard controls, and p95 data/query targets with recorded evidence.

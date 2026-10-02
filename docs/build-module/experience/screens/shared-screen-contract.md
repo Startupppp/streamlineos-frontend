@@ -90,3 +90,16 @@ Application implementation, live production writes, deployment, and changing est
 ## Further Notes
 
 Feature visibility follows role, persona, selected modules, plan, and project template. A hidden advanced destination remains reachable by authorized deep link. See the screen-specific sections for the owning data module and lifecycle.
+
+## Delivery checklist
+
+Track completion in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [ ] Map every browser route to an existing or approved versioned query/command operation, with `/build`, Inbox, Command Center, and legacy Feedbucket exceptions resolved as described above.
+- [ ] Implement one page shell and card/table/detail anatomy with authorized fields, freshness, allowed actions, accessible focus, and responsive density.
+- [ ] Implement canonical record URLs and pane history for specified record types; prove modifier-click, refresh, Back/Forward, Escape, close-to-origin, and mobile full-screen behavior.
+- [ ] Apply FilterEnvelope v1 limits, typed operators, stable sort, cursor pagination, authorized counts, and explicit timezone semantics to every collection and drill-down.
+- [ ] Require expectedRevision and idempotency for retryable writes; preserve drafts after 409/422/ambiguous outcomes and reconcile committed results before success feedback.
+- [ ] Enforce enabled module, active org membership, explicit Member module assignment, project/record reachability, field policy, and separate client grants at both query and command seams.
+- [ ] Implement private tenant/principal/permission-version cache keys, after-commit invalidation, immediate revocation purge, source freshness, and partial/offline states.
+- [ ] Run the shared browser/DB/audit/role/tenant/mobile/keyboard matrix for each adopting screen; a render or mock-only pass does not close its checklist.

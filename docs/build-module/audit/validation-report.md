@@ -31,6 +31,8 @@ Status: documentation verified; product behavior Planned or Current unverified a
 | Agent coordination | claim ledger plus 17 work packages implementing 16 architecture decisions | Project Provision and Ticket Command are separate claims; one active owner per primary seam; prerequisite, path, handoff, merge, and evidence rules prevent duplicate work |
 | Canonical/research Markdown | 57 canonical; 116 retained research; 173 total | Redundant generated summaries remain removed; implementation layer links existing authorities directly |
 
+The counts above are the 2026-10-02 snapshot. The later [TODO index](../implementation/TODO-INDEX.md) adds one canonical implementation document: the current inventory is 58 canonical, 116 retained research, and 174 total Markdown files. This count change does not alter the dated validation result or the research cleanup manifest.
+
 The [comprehensive recheck](./comprehensive-recheck-2026-10-02.md) records the source-by-source reconciliation, new screen/API corrections, and remaining runtime risks. This pass mechanically compared all 75 current Build routes, both external portal page files, six proposed destinations, 120 original WOW IDs, 100 new value rows, 16 architecture headings, and all local links. It found zero missing or duplicated current routes, zero unmapped original WOW rows, and zero broken local Markdown/image links.
 
 The later start-readiness sample found three **failing normal gates** despite passing self-tests: the execution-plan gate still requires removed `docs/specs/build` files, the route-census snapshot is missing at its old path, and the generated Build contracts have a stale OpenAPI hash. The backend Build core surface gate passed. These failures are recorded in the comprehensive recheck and must be resolved before a feature package is marked integration-ready; they do not invalidate the Markdown link/route coverage checks above.
@@ -59,3 +61,11 @@ The invoked to-spec skill's issue-tracker publication step is unconfigured: no t
 
 After future edits, compare page files to route decision table; verify every route has a detailed section; validate local file/image links; compare cleanup-manifest retained/deleted paths; verify 100 reason IDs and coverage targets; check filter/role ownership consistency; run git diff --check. A source status upgrade requires new environment/revision/actor/action evidence, not another documentation pass.
 
+## Delivery checklist
+
+Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [x] Record the 2026-10-02 static census of 75 Build pages, 29 requirement mappings, 120 original WOW IDs, and research cleanup in [Checks performed](#checks-performed) and the [cleanup manifest](./cleanup-manifest.md); this does not verify application behavior.
+- [ ] Rerun route, requirement, local-link, retained-evidence hash, and whitespace checks at the implementation revision; attach the exact commands, counts, and commit.
+- [ ] Reconcile the dated failing gate sample in the [comprehensive recheck](./comprehensive-recheck-2026-10-02.md#final-start-readiness-gate-sample) with current normal-gate output without rewriting the historical result.
+- [ ] Attach browser, role/tenant, target database, worker/cache, and deployment evidence before any product requirement is promoted to Current verified.

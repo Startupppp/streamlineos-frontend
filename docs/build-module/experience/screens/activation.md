@@ -76,3 +76,15 @@ Changing authentication providers, payroll/tax onboarding implementation, or sen
 ## Further Notes
 
 [Detailed onboarding](../../onboarding/01-signup-and-multi-module-onboarding.md) owns schema and endpoint detail. [RBAC](../../governance/rbac/01-role-model-and-open-risks.md) owns the structural role model.
+
+## Delivery checklist
+
+Track completion in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [ ] Implement invitation-aware signup/signin OTP with resend, autofill, non-enumerating errors, safe callback validation, and first-priority valid invitation handling.
+- [ ] Replace current Welcome/Basics/Launch presentation with Workspace → Products → optional People while keeping the Build-only default to five visible inputs and at most two blocking multi-module questions.
+- [ ] Persist selected modules, reversible defaults, module-specific answers, template preview, custom-field drafts, and invitation rows across refresh and cross-device resume.
+- [ ] Validate per-person Org Member/explicit Org Admin roles and selected-module assignments; preview seats/client quotas and prove the Build-only Member receives Build access on acceptance.
+- [ ] Make activation durable and retryable: one idempotent tenant transaction, bounded module setup, outbox invitations, partial-failure recovery, and truthful launch summary.
+- [ ] Resolve post-auth destination in the stated priority for new owner, existing multi-org owner, invited Member, returning user, and external client; deny unsafe callback and unrelated org.
+- [ ] Verify direct/return navigation, mobile step layout, keyboard OTP and invitation controls, duplicate invites, quota refusal, revoked/expired links, and persisted grant state in browser and DB.

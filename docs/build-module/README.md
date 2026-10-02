@@ -41,6 +41,7 @@ Research files are inputs, not release claims. A screenshot, route, mock, or sou
 17. [Architecture work-package registry](./implementation/18-architecture-work-package-registry.md)
 18. [Complete surface behavior matrix](./implementation/19-complete-surface-behavior-matrix.md)
 19. [Active/completed work claims](./implementation/WORK-CLAIMS.md)
+20. [Delivery checklists and full Markdown status index](./implementation/TODO-INDEX.md)
 
 ## Research inputs
 
@@ -108,3 +109,14 @@ Application implementation also requires an unambiguous work-package claim. An a
 
 Keep product decisions in product, activation in onboarding, page/UI contracts in experience, data/API/cache/AI in architecture, cross-module ownership in integrations, phased verification in delivery, authorization risks in governance/rbac, and coverage/evidence/cleanup records in audit. Retained research packs are historical inputs, not competing target specifications. New implementation work cites a canonical decision plus its evidence/acceptance section.
 
+## Delivery checklist
+
+Track completion in the [requirement ledger](implementation/REQUIREMENT-LEDGER.md) and [work claims](implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [x] Canonical planning, evidence, and historical research locations are linked from this index; checked on the current documentation revision.
+- [x] Current verified, Current unverified, Planned, Conditional, and Deferred are defined here and used as the status vocabulary for the planning set.
+- [ ] Every accepted requirement has a current owner, implementation status, and evidence link in the requirement ledger.
+- [ ] Every active work package has a committed claim and an unambiguous handoff or completion row.
+- [ ] The request-to-commercial-outcome chain works across Build and its owning modules with authorized record links.
+- [ ] Every documented Build screen, route, component, and cross-module action has the required source and runtime evidence.
+- [ ] Release evidence covers browser behavior, permissions, tenant isolation, persistence, deployment, and operations for the sellable scope.

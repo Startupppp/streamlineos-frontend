@@ -78,3 +78,11 @@ Then use the source-aware implementation contracts:
 
 Current source wins for claims about what exists. Accepted ADRs and repository instructions win for architectural invariants. Canonical Build product documents win for intended behavior. Historical research is evidence and input, never implementation authority. A conflict is recorded in the requirement ledger instead of silently choosing a third behavior.
 
+## Delivery checklist
+
+Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [x] Publish the canonical reading order, truth vocabulary, authority registry, and conflict order for this implementation pack; compare the dated document census in the [validation report](../audit/validation-report.md).
+- [ ] Refresh current-source claims and link targets when routes, schemas, or accepted ADRs change; resolve conflicts through the [requirement ledger](REQUIREMENT-LEDGER.md).
+- [ ] Confirm each implementation slice uses the listed canonical owner for routes, permissions, filters, components, events, and screen behavior.
+- [ ] Keep runtime claims open until current browser, role/tenant, persistence, deployment, and operations evidence is attached.

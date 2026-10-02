@@ -345,3 +345,16 @@ Implementing these routes during this documentation task; public/financial actio
 ## Further Notes
 
 The [route table](../routes-and-screen-decisions.md) distinguishes existing routes from proposed destinations. The [research map](../../audit/research-traceability.md) explains the evidence and priority behind the decisions.
+
+## Delivery checklist
+
+Track completion in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [ ] Implement project Updates with draft/preview/publish/acknowledge, audience and health filters, cited AI drafts, and client-safe publication revisions.
+- [ ] Implement project Chat threads with authorized mentions, search, attachment/link previews, and conversion to canonical ticket or decision without duplicate writes.
+- [ ] Implement Meetings list/detail with participant/action filters and notes/decision/action links; schedule or reschedule in Home Calendar with signed return context.
+- [ ] Implement Wiki index/page/history with hierarchy, title/tag/published filters, revision compare/restore, backlinks, comments, and separate internal versus client publication.
+- [ ] Implement Whiteboard full-page canvas with durable versions, linked tickets, export, keyboard alternative, and permission-safe snapshot/share behavior.
+- [ ] Implement Files index and preview with type/uploader/visibility/scan filters, versioned uploads, short-lived signed download, malware state, retention, and linked-record authorization.
+- [ ] Implement Forms list and full builder with versioned fields, destination mapping, publish preview, response detail, and source-preserving conversion into Intake or Ticket.
+- [ ] Verify pane versus full-page openings, mobile/keyboard alternatives, publish/revoke timing, cross-tenant and client field denial, idempotent conversion, file URL expiry, cache refresh, and persisted audit.

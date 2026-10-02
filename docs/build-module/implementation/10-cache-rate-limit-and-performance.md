@@ -59,3 +59,11 @@ Authenticated low-cost CRUD uses admission, query bounds, concurrency, and plan 
 
 Cache outage degrades to bounded authoritative reads. Replica lag-sensitive reads after writes use the primary or revision fence. Permission revoked, conflict, stale, refreshing, offline, retrying, mutating, and optimistic states are visibly distinct.
 
+## Delivery checklist
+
+Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [ ] Declare cache owner, key scope, freshness class, TTL, and invalidation event for every Build query, dashboard widget, report, export, and access-dependent projection.
+- [ ] Prove ticket mutations and membership, module, project, or client-grant revocations invalidate or deny stale views within the documented bounds.
+- [ ] Enforce bounded filters, pagination, dashboard layout and batch limits, date ranges, and named rate tiers; measure p95 latency and query plans on representative tenant sizes.
+- [ ] Exercise cache outage, stale data, worker lag, retry storm, and provider failure; show safe fallback, admission behavior, telemetry, and no cross-tenant cache reuse.

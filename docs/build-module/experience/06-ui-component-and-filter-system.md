@@ -305,3 +305,14 @@ Limits: depth 4, conditions 50, IN values 100, scope IDs 50, search length 500, 
 
 Full screen contracts: [screen index](./screens/README.md). Exact route and alias behavior: [route decisions](./routes-and-screen-decisions.md).
 
+## Delivery checklist
+
+Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [ ] Implement the shared page shell, RecordCard, DataTable, KanbanBoard, DetailPane, forms, empty states, confirmations, and operation feedback with the exact field/permission contracts above.
+- [ ] Use one versioned FilterEnvelope v1 parser and field registry across saved views, dashboards, reports, exports, search, and AI; enforce typed operators, maximum depth, authorized fields, and bounded pagination on the server.
+- [ ] Implement filter-builder chips, nested groups, validation, clear/reset, URL serialization, and migration/error states for removed or inaccessible custom fields.
+- [ ] Persist private/team/project saved views with owner permissions, layout columns, grouping/sort, revision conflicts, and safe defaults; test cross-device reload and revoked access.
+- [ ] Implement command search and collection search with debouncing, permission-aware suggestions, keyboard navigation, source freshness, and no cross-tenant result leakage.
+- [ ] Implement bulk-selection semantics for loaded versus all matching rows with a bounded server snapshot, per-record authorization, preview, idempotent execution, and partial-failure report.
+- [ ] Verify semantic status tokens, focus order, screen reader labels, contrast, 44 px mobile targets, dense-card truncation, timezone/locale rendering, and recoverable network/conflict states.

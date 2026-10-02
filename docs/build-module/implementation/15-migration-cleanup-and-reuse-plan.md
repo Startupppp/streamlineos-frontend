@@ -124,3 +124,12 @@ Keep `frontend/feedbucket-widget/`, `frontend/hooks/api/feedbucket/`, native wid
 
 Do not delete `build.modules`, `/modules`, `hooks/api/build/modules.ts`, module query keys, or create/update Zod schemas during the UI rename. Rename component/file symbols to Workstream only as files are touched; preserve route/API/storage compatibility. A later physical rename needs a separate measured migration and is not currently justified.
 
+## Delivery checklist
+
+Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [ ] Inventory all live routes, imports, callers, persisted IDs, permission keys, integrations, jobs, and deep links before deleting or relocating any Build file or table.
+- [ ] Write per-slice additive migration, bounded backfill, read/write parity, rollback, and removal condition for Workstreams, My Work, Feedbucket mapping, Cycle, and cross-module seams.
+- [ ] Prove Timesheets, CRM, Accounting, Home, and Files own their authoritative data before replacing duplicate Build paths with contextual adapters.
+- [ ] Verify old URLs and client shares still resolve to the same authorized records after migration, including unavailable and revoked cases.
+- [ ] Remove compatibility code only after current callers, production data, and deployed-revision evidence satisfy the documented exit condition.

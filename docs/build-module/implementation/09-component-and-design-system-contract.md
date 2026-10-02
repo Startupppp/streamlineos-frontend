@@ -39,3 +39,11 @@ The card root is an anchor to the canonical record. Checkbox, assignee, status, 
 
 Dropdowns expose a button trigger and roving keyboard menu. Tabs use URL state when deep-linkable. Badges use semantic token variants. Date pickers store UTC/ISO semantics and display actor timezone. File uploaders show validation, per-file progress, cancel/retry, malware-processing state, and authorized preview. Editors sanitize rendered content and preserve draft/revision conflict. Timelines/activity feeds cursor-page and distinguish actor/system events. Notifications/toasts never carry secrets and link to canonical destinations.
 
+## Delivery checklist
+
+Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [ ] Implement the shared page shell, collection views, card/row, detail pane/page, filter builder, saved-view picker, dashboard grid, operation status, and permission state using the existing UI kit.
+- [ ] Validate each card/row uses the specified information hierarchy and seven-signal limit, keyboard semantics, accessible names, truncation, status color plus text, and consistent density.
+- [ ] Exercise sheet, dialog, and full-page actions with focus return, browser history, modifier click, Escape, conflict, upload, and mobile behavior.
+- [ ] Prove canonical components are reused across Tickets, Intake, products, projects, and client delivery without duplicating business rules.

@@ -55,3 +55,12 @@ Build owns event meaning and mapping to Build IDs. Integrations owns provider cr
 
 Webhook deliveries sign the exact bytes, timestamp, event ID, and version; receivers can reject replay. SSRF controls resolve/validate destinations, block private/link-local/metadata ranges, revalidate redirects, restrict protocols/ports, cap response/body/time, and never expose internal error bodies.
 
+## Delivery checklist
+
+Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [ ] Reconcile proposed BuildEvent versions and event owners with the existing outbox registry; document payload compatibility and migration for each producer and consumer.
+- [ ] Prove command write plus outbox insert is atomic and every consumer is idempotent under duplicate, delayed, and out-of-order delivery.
+- [ ] Define durable import/export, notification, webhook, automation, and projection jobs with 202 operation status, retries, backoff, dead-letter handling, and actor-scoped result access.
+- [ ] Test notification deduplication and permission recheck; verify webhook signing, secret rotation, callback allowlists, SSRF controls, and revoked-access behavior.
+- [ ] Record queue lag, failure, replay, and effect-correlation evidence in the operational acceptance run.

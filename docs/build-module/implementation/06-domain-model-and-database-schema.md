@@ -64,3 +64,12 @@ Board column counts, burndown/burnup, velocity, workload totals, overdue flags, 
 
 Free-text descriptions, comments, form answers, client messages, AI context, and file metadata may contain confidential data. Audit logs store identifiers and changed field names, not unrestricted before/after bodies. Grant tokens, webhook secrets, provider tokens, and signed URLs are credentials; store hashes or secret references and never log them.
 
+## Delivery checklist
+
+Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [ ] Reconcile every accepted entity and field with current schema and migrations; document owner, tenant key, lifecycle, unique constraint, foreign key, and compatibility source.
+- [ ] Specify additive migrations and bounded backfills only for concepts current tables cannot represent, including onboarding, dashboard versions, saved filters, idempotency, import outcomes, cross-module references, and discovery links.
+- [ ] Verify composite tenant indexes and query plans on the target database for project, ticket, intake, access, dashboard, report, and client projections; record actual cardinality and latency evidence.
+- [ ] Keep derived totals rebuildable with source revision and computation time; prove permission changes invalidate or deny stale projections.
+- [ ] Review retention and logs for free text, AI context, file metadata, hashes, secrets, signed URLs, and per-tenant deletion or recovery behavior.

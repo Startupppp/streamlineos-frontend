@@ -135,3 +135,16 @@ Cheaper/prettier/all-in-one claims, guaranteed market leadership, and treating t
 ## Further Notes
 
 [Delivery roadmap](../delivery/09-delivery-roadmap-release-gates-and-positioning.md) retains original reason wording and release gates. [Research map](../audit/research-traceability.md) retains contrary/blocked findings. No feature is promoted from Current unverified to Current verified during a docs-only task.
+
+## Delivery checklist
+
+Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [x] Classify the 100 numbered customer needs as baseline, workflow advantage, or differentiation hypothesis with priority and proof required ([value register](#implementation-decisions); [original reasons and release gates](../delivery/09-delivery-roadmap-release-gates-and-positioning.md#11-one-hundred-customer-value-reasons)). This closes the documentation classification only.
+- [ ] Link every reason ID to a requirement, owning work package, route/API, and evidence record; record explicit deferral when the capability is outside the release scope.
+- [ ] Prove the P0 chain in order: cold invite acceptance, positive Build assignment for Organization Members, then atomic client-grant activation and revocation.
+- [ ] Implement and test the P1 connected-work journey: authorized project discovery, canonical ticket/detail navigation, reliable views and filters, and client feedback entering Intake.
+- [ ] Implement the P2 freelancer, project, and product journeys that connect approval, delivery, approved time, invoice state, evidence, prioritization, roadmap, and measured outcome through their owning modules.
+- [ ] Keep P3 scenario, retainer, and enterprise-deployment hypotheses conditional on customer frequency and validated architecture readiness.
+- [ ] Test each claimed reason with a populated persona task, saved result, negative access case, retry/recovery, and mobile behavior; a rendered screen or passing unit test alone does not close the claim.
+- [ ] For every comparative statement, record competitor, plan, configuration, test date, customer segment, completion time, and observed failure or advantage before sales uses it.

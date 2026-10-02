@@ -573,3 +573,20 @@ Every candidate release ends with this record:
 | Decision | GO, CONTROLLED PILOT, or NO-GO, with accountable approver and expiry. |
 
 **Default rule:** missing browser, RBAC, tenant-isolation, data-lifecycle, or deployment-identity evidence for a critical journey yields **NO-GO** for general availability. A controlled pilot must name the cohort, limitations, monitoring, and stop conditions.
+
+## Delivery checklist
+
+Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [ ] Freeze Phase 0 route, permission, schema, API, filter, cache, and owner contracts against current source; assign one work-package owner and acceptance evidence to each open requirement.
+- [ ] Complete Phase 1 cold/new and existing-account invitation acceptance, explicit Build assignment, resumable three-step activation, and first project/ticket with negative retry and tenant cases.
+- [ ] Complete Phase 2 canonical ticket, split-pane/history, scoped board/list/table/backlog/timeline, relations, cycles, custom fields, shared filters, saved views, bulk scope, and equivalent export.
+- [ ] Complete Phase 3 atomic client grants and portal publication, Intake feedback, approvals/change control, Timesheets actions, and Accounting projections with Razorpay/direct-payment ownership.
+- [ ] Complete Phase 4 evidence-to-opportunity-to-priority-to-roadmap-to-release-to-outcome traceability plus portfolio/program, content, workload, governance, and metric drill-down.
+- [ ] Complete Phase 5 automation/webhook run history, bounded retry/replay, governed AI proposal/confirmation, permission recheck, provider metadata, and token/cost audit.
+- [ ] Gate Phase 6 SSO/SCIM, large-tenant controls, retention, private-deployment adapters, and native mobile behind measured customer demand and release readiness.
+- [ ] For each shipped phase, run Gates A–I as applicable: contract completeness, real browser actions, role/tenant negatives, persisted lifecycle, load/query plans, security, operations/recovery, accessibility/mobile, and commercial/support alignment.
+- [ ] Instrument activation, engagement, client delivery, product outcome, and trust metrics with event definitions and denominators; do not substitute page views or source presence for completed customer work.
+- [ ] Implement ClickUp, Trello, Jira, Asana, Linear, and CSV import through inventory, preflight, mapping, dry run, idempotent commit, reconciliation, and safe cutover; make full authorized export available through downgrade.
+- [ ] Recheck all 100 value reasons against the classified [customer-value register](../product/customer-value-and-differentiation.md#implementation-decisions); publish only dated, plan-specific, customer-validated comparative claims.
+- [ ] Record every release candidate in the Section 12 template with exact revisions, tenant/fixture identity, gate evidence, failures, cohort, stop conditions, accountable decision, and expiry; default to NO-GO when critical proof is missing.

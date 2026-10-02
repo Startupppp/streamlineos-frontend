@@ -353,3 +353,13 @@ This document is an overview. [All screen specifications](./screens/README.md) s
 
 [Projects](./screens/projects.md) fills the missing project list/create context. [Client delivery](./screens/client-delivery.md) fills bug feedback and request detail. [Product discovery](./screens/product-discovery.md) expands Feedback/Insights/Goals/Projects/Roadmap into evidence, scoring and measured outcomes. Chat and Knowledge are owning-module projections with Build associations. No duplicate suite source of truth is created.
 
+## Delivery checklist
+
+Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [ ] Reconcile each organization-level page in this catalog with a physical route, sidebar/More entry, audience, canonical query owner, and documented redirect or access-needed state.
+- [ ] Reconcile each project-level page with its project-scoped route and detail/opening mode; keep Intake as bug-feedback home, Triage as processing mode, and Workstreams as the UI label.
+- [ ] Wire record clicks from list/cards/reports/notifications to the matching detail or sheet; preserve record-ID mapping for legacy Feedbucket submissions and browser history/return state.
+- [ ] Make search return only authorized projects, tickets, people, clients, and source records; test keyboard selection, stale index results, and direct-link denial.
+- [ ] Verify every route's loading, empty, filtered-empty, error, inaccessible, archived, and mobile states plus cross-page cache refresh after a mutation.
+- [ ] Record evidence for navigation from freelancer, product, project, content, and client journeys, including role/tenant isolation and canonical destination precedence.

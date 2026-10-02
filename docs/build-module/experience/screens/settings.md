@@ -490,3 +490,16 @@ Implementing these routes during this documentation task; public/financial actio
 ## Further Notes
 
 The [route table](../routes-and-screen-decisions.md) distinguishes existing routes from proposed destinations. The [research map](../../audit/research-traceability.md) explains the evidence and priority behind the decisions.
+
+## Delivery checklist
+
+Track completion in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [ ] Implement Build access and project access/member screens with current Org Owner/Admin bypass, explicit Org Member module assignment, project reachability, permission preview, and immediate revocation.
+- [ ] Implement client grants and portal settings with audience-bound capabilities, published-field preview as the actual client, expiry, resend/revoke, and separate client identity.
+- [ ] Implement workflow, custom-field, saved-view, and cycle designers as revisioned drafts with validation, dependency/impact preview, publish/restore, and no active-policy change before confirmation.
+- [ ] Implement automation rules/runs and AI policy/history with dry-run, bounded allowed actions, tool permissions, token/quota display, failure replay, and human confirmation for consequential changes.
+- [ ] Implement agent credentials, integration mappings, and webhooks with secret references only, rotation/revoke, signed callback verification, attempt history, retry/dead-letter state, and unlink impact.
+- [ ] Implement retention/recovery with legal hold, export/delete preview, future effective policy, durable job status, and auditable restore/irreversible confirmation.
+- [ ] Give every settings section field/section search or declared typed filters, correct short-sheet versus full-builder navigation, mobile form layout, 44 px controls, and safe return to its parent settings page.
+- [ ] Verify each permission and secret change against owner/admin/member/client roles and two tenants, plus stale revision, job retry, post-commit cache purge, persisted audit, browser deep link, and responsive states.

@@ -133,3 +133,14 @@ Implementing these routes during this documentation task; public/financial actio
 ## Further Notes
 
 The [route table](../routes-and-screen-decisions.md) distinguishes existing routes from proposed destinations. The [research map](../../audit/research-traceability.md) explains the evidence and priority behind the decisions.
+
+## Delivery checklist
+
+Track completion in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [ ] Implement project reports with authorized cycle/release/goal/intake/quality/health measures, explicit formulas and freshness, and metric clicks that open the exact filtered source rows.
+- [ ] Implement Workload report with person/team/date capacity, planned versus unplanned work, overload/underuse, and permission-safe allocation drill-down.
+- [ ] Implement Time and Budget from Timesheets/Accounting-owned approved ledgers with billable/non-billable, estimate/actual/variance, currency/rate provenance, and reconciliation status.
+- [ ] Resolve organization budget/reports compatibility routes to the canonical reporting destination without losing saved filters, source IDs, or deep links.
+- [ ] Use FilterEnvelope v1 for report, export, and drill-down parity; bound queries and asynchronous exports, and avoid mixing unknown totals or currencies.
+- [ ] Verify source-row arithmetic, late approvals/reversals, role/client/tenant redaction, mobile chart table alternatives, report refresh after commands, and export audit/revocation.

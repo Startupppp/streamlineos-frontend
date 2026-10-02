@@ -137,3 +137,14 @@ Advanced whiteboard/collaborative canvas, deep QA/incident tooling, scenario sim
 ## Acceptance
 
 Every manifest route appears exactly once above. Every sidebar destination resolves to an existing or explicitly Planned route/view. Test deep link, old link, query preservation, access denial, browser Back, refresh, mobile and source-record mapping. No route implementation changes are included in this documentation commit.
+
+## Delivery checklist
+
+Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [ ] Re-run the route census and reconcile every one of the 75 existing Build page routes to an explicit keep, redirect, merge, or deferred destination in this table.
+- [ ] Implement `/build` as authorized personalized entry and dedicated Projects destination; wire sidebar/More links only to accessible targets.
+- [ ] Implement recorded compatibility redirects and record-ID mappings for Assigned→My Work, Drafts→My Work, bug feedback→Intake, project Modules→Workstreams label, and persona aliases without breaking deep links.
+- [ ] Remove duplicate standalone navigation entries only after their configured canonical views and saved links resolve with the same authorized data.
+- [ ] Verify full-page and intercepted-pane refresh, modifier-click, Back/Forward, close-to-origin, mobile full-screen detail, and direct URL access for every record type.
+- [ ] Run cold-load and role/tenant/client matrices over the route manifest and physical pages; update route snapshot and log any missing or unexplained screen before checking this section.

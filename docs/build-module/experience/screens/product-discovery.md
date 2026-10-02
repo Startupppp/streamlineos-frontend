@@ -229,3 +229,15 @@ Implementing these routes during this documentation task; public/financial actio
 ## Further Notes
 
 The [route table](../routes-and-screen-decisions.md) distinguishes existing routes from proposed destinations. The [research map](../../audit/research-traceability.md) explains the evidence and priority behind the decisions.
+
+## Delivery checklist
+
+Track completion in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [ ] Implement managed-products list and overview with owner/lifecycle/health/segment/tag filters, stable product page links, create/archive commands, and linked project/goal summaries.
+- [ ] Implement feedback capture with source/customer/segment/theme/date/duplicate filters; preserve raw evidence and provenance when deduplicating or routing to Intake.
+- [ ] Implement insights/opportunities with evidence links, confidence, score, age, override reason, experiment/review dates, and source drill-down.
+- [ ] Implement product Goals, Projects, and Roadmap tabs over canonical Build links; prioritize initiatives with stated evidence and connect planned delivery to measurable outcomes.
+- [ ] Complete the trace from feedback → evidence → opportunity → prioritization → roadmap → project/ticket delivery → outcome review without copying source records or losing attribution.
+- [ ] Apply product-scoped permission/field policy, bounded filters, source freshness, client-safe publication preview, and cache invalidation across feedback, goals, roadmap, and delivery.
+- [ ] Verify create/link/unlink, duplicate feedback, score override audit, mobile panes/full pages, saved-filter return, denial across products/tenants, and outcome drill-down to persisted source evidence.

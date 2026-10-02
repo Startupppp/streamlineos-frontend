@@ -938,3 +938,21 @@ Runtime evidence must separately cover UI behavior, database state, network/cons
 12. Remove legacy setup only after migration and rollback gates are closed.
 
 The first sellable milestone is Build-only onboarding with reliable internal invitation acceptance, correct Build access, one useful project template, durable recovery, and measured first value. Multi-module breadth follows the same interfaces after that foundation is proven.
+
+## Delivery checklist
+
+Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [ ] Signup and invitation-first identity work for new, existing, wrong-email, expired, and replay paths.
+- [ ] Workspace step has a five-visible-input Build-only default and reversible advanced settings.
+- [ ] Products step selects one or many modules, previews plan limits, and saves adaptive answers, template versions, and custom-field drafts.
+- [ ] People step carries per-invite organization role and selected module standing through the frontend payload, setup event, and invitation writer without dropping rows.
+- [ ] People step supports multiple invites, optional skip, quota and grantability preview, and separate internal versus client access.
+- [ ] Activation is durable, revisioned, idempotent, resumable across devices, and safe under double submit or worker retry.
+- [ ] Invitation acceptance commits membership and intended module standing, resolves a fresh authorized destination, and explains partial grants.
+- [ ] Client invitation activates only scoped portal grants with a secure magic link.
+- [ ] First-use Build setup creates a useful project, ticket, and guided action without requiring unrelated module configuration.
+- [ ] Request, event, and response schemas reject unknown or unavailable modules, duplicate grants, forbidden roles, and stale revisions.
+- [ ] Authorization, cache invalidation, privacy, and rate limits pass cross-tenant and role-negative tests.
+- [ ] Every step and invitation state works at 375, 768, and desktop widths with keyboard and screen-reader checks.
+- [ ] Browser, target-DB, outbox recovery, performance, and funnel evidence satisfies section 25 before release verification.

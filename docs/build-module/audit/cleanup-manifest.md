@@ -2,7 +2,7 @@
 
 Status: Planned product; documentation consolidation executed on 2026-10-02
 
-The recheck added three canonical documents: the [external client-portal screen contract](../experience/screens/external-client-portal.md), the [original WOW research crosswalk](./original-wow-research-crosswalk.md), and the [comprehensive recheck ledger](./comprehensive-recheck-2026-10-02.md). They do not replace or delete any source research. Canonical Markdown count is now 57; retained research Markdown count remains 116.
+The recheck added three canonical documents: the [external client-portal screen contract](../experience/screens/external-client-portal.md), the [original WOW research crosswalk](./original-wow-research-crosswalk.md), and the [comprehensive recheck ledger](./comprehensive-recheck-2026-10-02.md). They do not replace or delete any source research. The 2026-10-02 recheck counted 57 canonical Markdown files and 116 retained research files. The later [TODO index](../implementation/TODO-INDEX.md) raises the current canonical count to 58 and the total to 174; retained research remains 116.
 
 ## Authorized cleanup
 
@@ -73,7 +73,7 @@ These seven files were created during the specification pass and later proved to
 - Literal repository paths to deleted sources are mapped to retained paths.
 - Legacy /workspace/streamlineos-ci, /workspace/streamlineos-pm and /workspace/streamlineos-ux Markdown source references resolve to the imported retained local source when identifiable. Missing originals remain explicitly historical/unavailable rather than fabricated.
 - Canonical index links all specification folders. No application route manifest or code is changed.
-- The Build index and implementation index link directly to retained authorities instead of the seven deleted summary files. The architecture reconciliation added five unique canonical documents: one 16-decision architecture authority, one agent-coordination contract, one 17-package/26-area registry, one cross-cutting behavior matrix, and one work-claim ledger. The subsequent recheck added three more canonical documents; the validation report now records 57 canonical documents and 18 implementation documents.
+- The Build index and implementation index link directly to retained authorities instead of the seven deleted summary files. The architecture reconciliation added five unique canonical documents: one 16-decision architecture authority, one agent-coordination contract, one 17-package/26-area registry, one cross-cutting behavior matrix, and one work-claim ledger. The subsequent recheck added three more canonical documents; the dated validation report records 57 canonical documents and 18 implementation documents. The later TODO index is the 58th canonical document and the 19th implementation document.
 - Empty duplicate-only directories are not tracked by Git. A shell command to remove empty local folders was rejected by automatic approval review with the reason `blocked by policy`; the 39 file deletions succeeded through verified explicit file patches. Empty local directories may remain.
 
 ## Evidence decision
@@ -85,3 +85,12 @@ No research or evidence file was deleted during the architecture-to-Markdown rec
 ## Cleanup acceptance
 
 Verify all 39 retained counterparts exist, all 46 removed paths do not, source hashes or pre-deletion hashes are recorded, no inbound supported link points to a removed file, relative Markdown links resolve, and all 75 route contracts, 100 customer-value reasons, and requirement entries survive. See the validation report for actual check results.
+
+## Delivery checklist
+
+Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [x] Preserve the pre-deletion SHA-256 mapping for 39 byte-identical research copies and seven redundant generated summaries in [Authorized cleanup](#authorized-cleanup) and [Generated specification consolidation](#generated-specification-consolidation); the [validation report](./validation-report.md#checks-performed) records the matching counts.
+- [x] Record the retained authority and inbound-reference changes in [Reference changes](#reference-changes); the [validation report](./validation-report.md#checks-performed) records zero broken local links and 183 unchanged non-Markdown evidence files at the dated audit.
+- [ ] Before any later Markdown or evidence deletion, classify unique findings and references, compare hashes where duplication is claimed, and append the path, replacement, and result here.
+- [ ] Rerun retained-source, screenshot, and relative-link validation on the final integration revision; preserve unresolved and contradictory research evidence.

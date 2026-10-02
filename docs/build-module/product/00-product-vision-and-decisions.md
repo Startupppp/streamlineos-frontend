@@ -179,3 +179,17 @@ These are product targets. Marketing may use them only after comparative tests a
 - Broad self-hosting until deployment, upgrades, support, and security can be operated reliably.
 - Duplicate CRM, Timesheets, or Accounting ledgers inside Build.
 
+## Delivery checklist
+
+Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [ ] Map each accepted promise and persona journey to a requirement ID, owning work claim, implemented route/API, and current evidence level; keep unbuilt journeys Planned.
+- [ ] Deliver one core work model with tested freelancer, agency, product, project, engineer, content, and client templates; make template terminology and fields configurable without forking record ownership.
+- [ ] Complete Build-alone and multi-module activation, role-aware default navigation, an authorized first project/ticket, and a usable first-session Command Center.
+- [ ] Make Visual and Assist modes call the same validated commands and access policy; require action preview and confirmation for sensitive AI effects.
+- [ ] Verify direct ticket URLs, contextual split panes, return state, client Intake feedback, and secure project/surface-scoped magic-link access in real browser journeys.
+- [ ] Keep CRM, Timesheets, Accounting, Home, and Files authoritative; show permission-checked Build projections, freshness, and safe action handoffs instead of duplicate ledgers.
+- [ ] Enforce Free, Startup, Professional, and Enterprise capabilities through the commercial catalog, including Free client limits, Enterprise policy, top-ups, over-limit recovery, and unchanged authorization.
+- [ ] Measure activation, weekly value, and trust with defined events and denominators; segment results by persona, plan, and organization size.
+- [ ] Validate differentiation with customer task studies and dated competitor comparisons before publishing superiority claims; preserve native mobile, marketplace, residency, and self-hosting deferrals until their release gates pass.
+- [ ] Close the corresponding browser, role/tenant, persistence, performance, accessibility, and operations evidence before calling any journey Current verified.

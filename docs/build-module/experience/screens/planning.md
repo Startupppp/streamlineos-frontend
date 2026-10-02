@@ -388,3 +388,15 @@ Implementing these routes during this documentation task; public/financial actio
 ## Further Notes
 
 The [route table](../routes-and-screen-decisions.md) distinguishes existing routes from proposed destinations. The [research map](../../audit/research-traceability.md) explains the evidence and priority behind the decisions.
+
+## Delivery checklist
+
+Track completion in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [ ] Implement Backlog and Cycles list/detail with bounded issue queries, rank/estimate/owner filters, capacity preview, start/close confirmation, and revision-safe ticket movement.
+- [ ] Implement Epics, Workstreams, and Milestones with linked tickets, target dates, progress from authorized scope, status/owner/date filters, and pane navigation; retain compatible Modules URLs while changing UI labels.
+- [ ] Implement Goals list/detail with owner, metric, baseline/target, check-ins, linked project/product/roadmap records, and explicit outcome versus output progress.
+- [ ] Implement organization Roadmap with horizon/team/product/goal filters, dependencies, confidence and publish preview; every milestone/initiative opens its canonical record.
+- [ ] Implement Portfolios and Programs list/detail with project membership, health, owner, dates, dependency rollups, and proposed stable program detail destination.
+- [ ] Apply FilterEnvelope v1, saved views, authorized counts, cursor pagination, and exact drill-down predicates to each planning collection; keep client/private fields out of unauthorized rollups.
+- [ ] Verify cycle rollover, cross-project links, dependency edits, stale plan conflicts, archive/restore, direct URL/pane history, mobile spatial-view alternative, role/tenant isolation, persisted audit, and cache refresh.

@@ -264,3 +264,18 @@ Priorities require customer evidence before commitment. No third-party marketpla
 - Integration delay/failure/freshness is visible and recoverable.
 - Customer-facing messages and financial/public actions receive a preview and required confirmation.
 
+## Delivery checklist
+
+Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [ ] Standardize tenant-bound ModuleRecordRef, owner-resolved reads, source revision/freshness, and short-lived signed contextual handoffs that reauthorize prefill and return navigation.
+- [ ] Link projects to authorized CRM accounts/contacts/deals and provide reviewed deal-to-project creation plus delivery-to-CRM projections; reconcile lightweight clients when CRM is enabled later.
+- [ ] Open Timesheets quick-log sheets from tickets and full weekly timesheets with context; keep overlap, lock, approval, rates, and ledger writes in Timesheets while Build refreshes permission-safe totals.
+- [ ] Open Accounting estimate, invoice, payment, and reconciliation actions from approved Build records; show source-stamped status while Razorpay and direct/offline payments remain Accounting-owned.
+- [ ] Link Home mail threads and meeting/calendar actions without copying mailbox or event truth; verify spoofed sender, attachment, and prompt-injection defenses for email-to-Intake.
+- [ ] Route upload, scan/quarantine, finalized file reference, client publication, preview, and signed download through Files with current record and grant authorization.
+- [ ] Implement atomic client grant and invitation, narrow magic-link exchange, exact-client preview, publish controls, portal overview/deliverables/requests/approvals/files/updates/invoices, and revocation across sessions and cache.
+- [ ] Route client bug, feedback, request, upload, and comments to Intake with source mapping; use canonical ticket commands after triage or an explicit trusted-source rule.
+- [ ] Deliver content, freelancer, and software product templates as configured Build records and views; test brief fields, content filters, approval/publish transitions, commercial handoffs, and feedback-to-outcome links without new silos.
+- [ ] Prioritize native provider adapters with customer demand evidence; for each selected connector prove least-scope credentials, signed/replay-safe webhooks, unique external IDs, cursor checkpoints, rate-limit backoff, dead-letter/replay, revoke, and visible health.
+- [ ] Browser-test handoff/return, disabled-module history, permission-safe projections, duplicate callbacks, delayed providers, client mobile use, and preview/confirmation for public or financial actions.

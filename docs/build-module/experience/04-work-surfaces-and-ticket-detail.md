@@ -247,3 +247,14 @@ These are deep modules. Their implementations hide policy, tenancy, validation, 
 - Keyboard, screen reader, touch, deep link, refresh, history, optimistic failure, and conflict flows are tested.
 - Network retries cannot create duplicate tickets, comments, time entries, approvals, or notifications.
 
+## Delivery checklist
+
+Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [ ] Unify My Work, All Work, backlog, board, list, calendar, and timeline over canonical ticket IDs and FilterEnvelope v1; preserve saved-view predicates and authorized counts.
+- [ ] Implement collection opening rules: primary click opens ticket pane, direct URL/modifier-click opens full detail, related ticket stacks panes, mobile opens full screen, and Back/close restores origin state.
+- [ ] Build the ticket detail header, description/acceptance, property rail, subtasks/relations, comments, files, activity, approvals, time, and client visibility with the exact fields and allowed actions specified above.
+- [ ] Implement ticket card density and optional fields per saved view; hide inaccessible metadata, show blocked/overdue signals, and provide accessible board/list alternatives.
+- [ ] Wire create, assign, transition, rank, link, comment, attach, time, and publish actions to canonical commands with expectedRevision, idempotency, validation, audit, and conflict-preserving drafts.
+- [ ] Deliver typed filters, removable chips, Clear all, filtered-empty, bounded bulk preview, and saved-view ownership/share permissions consistently across every work collection.
+- [ ] Verify real persisted actions, relation navigation, file access, status conflicts, optimistic rollback, cache invalidation, keyboard/screen-reader use, mobile, and denial for unrelated project/tenant/client actors.
