@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { useCreateModule } from "@/hooks/api/build/advanced";
 import { useUpdateModule } from "@/hooks/api/build/modules";
-import { isApiError } from "@/lib/api-envelope";
+import { isWriteConflict } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { FormSheetChrome } from "@/components/shared";
@@ -187,7 +187,7 @@ export function ModuleFormSheet(props: ModuleFormSheetProps) {
             toast.success("Module updated");
           },
           onError: (err) => {
-            if (isApiError(err) && err.status === 409) {
+            if (isWriteConflict(err)) {
               toast.error(
                 "Another change was saved first. Reload the page and try again.",
               );

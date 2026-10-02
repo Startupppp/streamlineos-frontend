@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { isApiError } from "@/lib/api-envelope";
+import { isWriteConflict } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useDeleteWebhook,
@@ -49,7 +49,7 @@ export function useWebhookListCommands({
 
   const handleMutationError = useCallback(
     (error: unknown, webhookId: number, patch: WebhookConflictPatch) => {
-      if (isApiError(error) && error.status === 409) {
+      if (isWriteConflict(error)) {
         setConflict({ webhookId, patch });
         refetch();
         return;

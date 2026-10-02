@@ -158,3 +158,26 @@ describe("PageState", () => {
     expect(screen.getByText("req-3b1c")).toBeInTheDocument();
   });
 });
+
+describe("PageState — not-found", () => {
+  it("renders the shared not-found state instead of the empty node or the children", () => {
+    render(
+      <PageState resolution={{ kind: "not-found" }} loading={loading} empty={<div>No releases yet</div>}>
+        <div>body</div>
+      </PageState>,
+    );
+    expect(screen.getByRole("heading", { name: "Not found" })).toBeInTheDocument();
+    expect(screen.queryByText("No releases yet")).not.toBeInTheDocument();
+    expect(screen.queryByText("body")).not.toBeInTheDocument();
+  });
+
+  it("keeps the empty node for a genuinely empty result", () => {
+    render(
+      <PageState resolution={{ kind: "empty" }} loading={loading} empty={<div>No releases yet</div>}>
+        <div>body</div>
+      </PageState>,
+    );
+    expect(screen.getByText("No releases yet")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Not found" })).not.toBeInTheDocument();
+  });
+});

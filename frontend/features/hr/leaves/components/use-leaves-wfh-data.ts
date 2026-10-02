@@ -51,7 +51,8 @@ export function useLeavesWfhData(selfService: boolean) {
   const approvedLeavesThisWeek: ApprovedLeave[] = thisWeekData ?? [];
 
   const noPolicyConfigured =
-    context.data?.noPolicyConfigured ?? leaveTypes.length === 0;
+    canRequestLeave &&
+    (context.data?.noPolicyConfigured ?? leaveTypes.length === 0);
 
   const fetchMoreMyRequests = myRequests.fetchNextPage;
   const onLoadMoreMyRequests = useCallback(() => {

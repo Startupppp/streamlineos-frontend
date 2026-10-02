@@ -8,6 +8,12 @@ import { lazyContract } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import {
+  invalidateChatChannelRead,
+  invalidateChatMessageDeleted,
+  invalidateChatMessageEdited,
+  invalidateChatMessageSent,
+} from "@/lib/chat-read-state";
 import type { Message, MessagesPage, SendMessageInput, EditMessageInput } from "@/types/chat";
 import type { ChatSendResponse } from "@/hooks/api/chat-schema";
 
@@ -90,17 +96,11 @@ export function useSendMessage() {
       }
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: collaborationQueryKeys.chat.messages(variables.channelId),
-      });
-      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
-      // A send that carried attachments just changed what the Shared Files panel
-      // lists. Without this the panel kept its "No files yet" page until a full
-      // reload (CHAT-001).
-      if (variables.attachments && variables.attachments.length > 0)
-        queryClient.invalidateQueries({
-          queryKey: collaborationQueryKeys.chat.channelFiles(variables.channelId),
-        });
+      invalidateChatMessageSent(
+        queryClient,
+        variables.channelId,
+        (variables.attachments?.length ?? 0) > 0,
+      );
     },
   });
 }
@@ -120,8 +120,8 @@ export function useEditMessage() {
         undefined,
         chatOkContract,
       ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.all });
+    onSuccess: (_, { channelId }) => {
+      invalidateChatMessageEdited(queryClient, channelId);
     },
   });
 }
@@ -143,8 +143,8 @@ export function useDeleteMessage() {
         undefined,
         chatOkContract,
       ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.all });
+    onSuccess: (_, { channelId }) => {
+      invalidateChatMessageDeleted(queryClient, channelId);
     },
     onError: (err) => {
       toast.error(getErrorMessage(err));
@@ -159,10 +159,7 @@ export function useMarkChannelRead() {
     mutationFn: ({ channelId }: { channelId: number }) =>
       apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/read`, undefined, undefined, chatOkContract),
     onSuccess: (_, { channelId }) => {
-      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
-      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.unreadTotal() });
-      // The detail read carries this member's `lastReadAt`, which `firstUnreadIndex` reads.
-      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.channel(channelId) });
+      invalidateChatChannelRead(queryClient, channelId);
     },
   });
 }

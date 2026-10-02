@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { isTransientNetworkError } from "@/lib/query-error-policy";
 import { signInPathForMissingSession } from "@/lib/auth-session-cookies";
 import { ErrorState } from "./error-state";
+import { NoPermissionState } from "./no-permission-state";
 import { DeniedView, FeatureLockedView, QuotaExceededView } from "./page-state-views";
 import type { GateStateProps } from "./page-state-shared";
 
@@ -116,6 +117,15 @@ export function PageState({
       );
     case "session-expired":
       return <SessionExpiredState className={className} compact={compact} />;
+    case "not-found":
+      return (
+        <NoPermissionState
+          title="Not found"
+          description="This doesn't exist, or you don't have access to it."
+          className={className}
+          compact={compact}
+        />
+      );
     case "error":
       return (
         <ErrorState

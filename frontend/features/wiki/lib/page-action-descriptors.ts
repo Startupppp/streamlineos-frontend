@@ -15,6 +15,7 @@ import {
   KbUnlockIcon,
   type KbIconComponent,
 } from "@/features/wiki/lib/kb-icons";
+import type { PermissionKey } from "@/lib/rbac/permissions";
 
 export const KB_PAGE_ACTION_PERMISSIONS = {
   create: "kb:pages:create",
@@ -23,7 +24,7 @@ export const KB_PAGE_ACTION_PERMISSIONS = {
   delete: "kb:pages:delete",
   export: "kb:pages:export",
   templates: "kb:templates:manage",
-} as const;
+} as const satisfies Record<string, PermissionKey>;
 
 export type KbPagePermissionKey =
   (typeof KB_PAGE_ACTION_PERMISSIONS)[keyof typeof KB_PAGE_ACTION_PERMISSIONS];

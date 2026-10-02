@@ -36,6 +36,10 @@ export function isApiError(error: unknown): error is ApiError {
   return error instanceof ApiError;
 }
 
+export function isWriteConflict(error: unknown): error is ApiError {
+  return isApiError(error) && error.status === 409 && error.code !== "PROJECT_LOCKED";
+}
+
 export function getApiErrorCode(error: unknown): string | undefined {
   return isApiError(error) ? error.code : undefined;
 }

@@ -211,3 +211,26 @@ describe("BuildListSurface — rows render in ready state", () => {
     expect(screen.queryByTestId("data-table")).not.toBeInTheDocument();
   });
 });
+
+describe("BuildListSurface — a 404 is not an empty list", () => {
+  it("renders the not-found state, not the empty node, when the read 404s because the project is gone or unreachable", () => {
+    render(surface({ isError: true, error: new ApiError("Project not found", 404, "NOT_FOUND") }));
+    expect(screen.getByRole("heading", { name: "Not found" })).toBeInTheDocument();
+    expect(screen.getByText("This doesn't exist, or you don't have access to it.")).toBeInTheDocument();
+    expect(screen.queryByText(EMPTY_TEXT)).not.toBeInTheDocument();
+  });
+
+  it("renders Access Restricted, not not-found, when the read is refused with a 403", () => {
+    render(surface({ isError: true, error: new ApiError("Not a project member", 403, "FORBIDDEN") }));
+    expect(screen.getByRole("heading", { name: "Access Restricted" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Not found" })).not.toBeInTheDocument();
+    expect(screen.queryByText(EMPTY_TEXT)).not.toBeInTheDocument();
+  });
+
+  it("still renders the empty node for a successful read that returned no rows", () => {
+    render(surface({ rows: [] }));
+    expect(screen.getByText(EMPTY_TEXT)).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Not found" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Access Restricted" })).not.toBeInTheDocument();
+  });
+});

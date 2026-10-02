@@ -8,6 +8,7 @@ import {
   st,
 } from "./webhook-page-test-harness";
 import { ProjectWebhooksPage } from "./project-webhooks-page";
+import { ApiError } from "@/lib/api-envelope";
 
 describe("ProjectWebhooksPage — edit Sheet (BLD-X-FE-SETTINGS-WH-036)", () => {
   it("opens the Sheet in edit mode when onEdit is called on a webhook card — title changes to Edit Webhook", async () => {
@@ -93,7 +94,7 @@ describe("ProjectWebhooksPage — 409 conflict UX on toggle (BLD-X-FE-SETTINGS-W
       [unknown, { onError?: (e: unknown) => void }],
     ];
     act(() => {
-      options.onError?.({ status: 409, details: { currentVersion: 5 } });
+      options.onError?.(new ApiError("Conflict", 409, "CONFLICT", { currentVersion: 5 }));
     });
     expect(
       screen.getByText("This webhook changed while you were editing"),
@@ -112,7 +113,7 @@ describe("ProjectWebhooksPage — 409 conflict UX on toggle (BLD-X-FE-SETTINGS-W
       [unknown, { onError?: (e: unknown) => void }],
     ];
     act(() => {
-      options.onError?.({ status: 409, details: { currentVersion: 9 } });
+      options.onError?.(new ApiError("Conflict", 409, "CONFLICT", { currentVersion: 9 }));
     });
     mockUpdateMutate.mockClear();
     fireEvent.click(screen.getByRole("button", { name: /keep my changes/i }));
@@ -135,7 +136,7 @@ describe("ProjectWebhooksPage — 409 conflict UX on toggle (BLD-X-FE-SETTINGS-W
       [unknown, { onError?: (e: unknown) => void }],
     ];
     act(() => {
-      options.onError?.({ status: 409, details: { currentVersion: 5 } });
+      options.onError?.(new ApiError("Conflict", 409, "CONFLICT", { currentVersion: 5 }));
     });
     mockUpdateMutate.mockClear();
     fireEvent.click(screen.getByRole("button", { name: /discard my changes/i }));
@@ -169,6 +170,28 @@ describe("ProjectWebhooksPage — 409 conflict UX on toggle (BLD-X-FE-SETTINGS-W
       options.onError?.(new Error("network error"));
     });
     expect(toast.error).toHaveBeenCalledWith(expect.not.stringMatching(/conflict/i));
+  });
+
+  it("a 409 PROJECT_LOCKED from updateWebhook says the project is locked instead of opening the edit-conflict overlay", () => {
+    st.accessState = "granted";
+    st.webhooks = [SAMPLE_WEBHOOK];
+    render(<ProjectWebhooksPage projectId="1" />);
+    fireEvent.click(screen.getAllByRole("button", { name: /toggle-off/i })[0]);
+    const [[, options]] = mockUpdateMutate.mock.calls as [
+      [unknown, { onError?: (e: unknown) => void }],
+    ];
+    const { toast } = jest.requireMock("sonner") as { toast: { error: jest.Mock } };
+    act(() => {
+      options.onError?.(
+        new ApiError("This project is archived. Reopen it before making changes.", 409, "PROJECT_LOCKED", {
+          state: "ARCHIVED",
+        }),
+      );
+    });
+    expect(toast.error).toHaveBeenCalledWith("This project is archived — reopen it to make changes.");
+    expect(
+      screen.queryByText("This webhook changed while you were editing"),
+    ).not.toBeInTheDocument();
   });
 });
 

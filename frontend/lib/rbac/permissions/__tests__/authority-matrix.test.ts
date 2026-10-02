@@ -1,7 +1,5 @@
-import * as fs from "fs";
-import * as path from "path";
-import { backendPath } from "@/test-utils/backend-repo";
-import { backendPermissionNames } from "@/test-utils/permission-catalog";
+import { backendPermissionNames, roleTemplatePermissions } from "@/test-utils/permission-catalog";
+import type { PermissionKey } from "@/lib/rbac/permissions";
 
 /**
  * Authority-matrix frontend mirror — PRD §12.
@@ -21,8 +19,6 @@ import { backendPermissionNames } from "@/test-utils/permission-catalog";
  * superuser path (CLAUDE.md §21).
  */
 
-const BACKEND_RBAC_DIR = backendPath("src", "modules", "rbac");
-
 describe("authority-matrix frontend mirror", () => {
   const catalogNames = backendPermissionNames();
 
@@ -37,33 +33,13 @@ describe("authority-matrix frontend mirror", () => {
     });
   });
 
-  describe("Row 3 — manage org membership: settings:organization:manage exists in the catalog", () => {
-    it("catalog includes settings:organization:manage", () => {
-      expect(catalogNames.has("settings:organization:manage")).toBe(true);
-    });
-  });
-
-  describe("Row 4 — enable modules: settings:manage exists in the catalog and is absent from all module role templates", () => {
-    const MODULE_ENABLE_KEY = "settings:manage";
-
-    it("catalog includes settings:manage", () => {
-      expect(catalogNames.has(MODULE_ENABLE_KEY)).toBe(true);
-    });
+  describe("Row 4 — enable modules: settings:manage is absent from all module role templates", () => {
+    const MODULE_ENABLE_KEY: PermissionKey = "settings:manage";
 
     it("no backend module role template grants settings:manage", () => {
-      const templateFiles = fs
-        .readdirSync(BACKEND_RBAC_DIR)
-        .filter((filename) => /^role-templates.*\.constants\.ts$/.test(filename));
-      expect(templateFiles.length).toBeGreaterThan(0);
-      for (const filename of templateFiles) {
-        const src = fs.readFileSync(path.join(BACKEND_RBAC_DIR, filename), "utf8");
-        const found =
-          src.includes(`"${MODULE_ENABLE_KEY}"`) || src.includes(`'${MODULE_ENABLE_KEY}'`);
-        expect({ file: filename, grantsSettingsManage: found }).toEqual({
-          file: filename,
-          grantsSettingsManage: false,
-        });
-      }
+      const templateGrants = roleTemplatePermissions();
+      expect(templateGrants.size).toBeGreaterThan(0);
+      expect(templateGrants.has(MODULE_ENABLE_KEY)).toBe(false);
     });
   });
 });

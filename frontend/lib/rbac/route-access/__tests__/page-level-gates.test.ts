@@ -3,7 +3,6 @@ import { dirname, join, resolve } from "node:path";
 import { collectAppRoutes } from "../app-routes";
 import { resolveRouteAccess } from "../route-access";
 import { isUniversalRoute } from "../universal-routes";
-import { backendPermissionNames } from "@/test-utils/permission-catalog";
 
 const APP_DIR = resolve(process.cwd(), "app");
 const AUTHENTICATED_DIR = join(APP_DIR, "(authenticated)");
@@ -166,10 +165,6 @@ describe("page-level gates — every authenticated module", () => {
   const pages = auditPages();
   const gatedKeys = [...new Set(pages.flatMap((page) => page.keys))].sort();
 
-  it("reaches the permission catalog, so a silent empty sweep cannot pass", () => {
-    expect(backendPermissionNames().size).toBeGreaterThan(400);
-  });
-
   it("walks every authenticated module directory, not a hand-picked five", () => {
     const modules = authenticatedModuleDirs();
     expect(modules.length).toBeGreaterThan(20);
@@ -239,16 +234,11 @@ describe("page-level gates — every authenticated module", () => {
     expect([...contradicted, ...unreasoned, ...moduleOwned]).toEqual([]);
   });
 
-  it("extracts a real key set from the gates, so the catalog checks below cannot pass on an empty sweep", () => {
+  it("extracts a real key set from every requirePermission gate", () => {
     expect(gatedKeys.length).toBeGreaterThan(150);
     const blindCalls = pages
       .filter((page) => page.via.includes("requirePermission") && page.keys.length === 0)
       .map((page) => page.path);
     expect(blindCalls).toEqual([]);
-  });
-
-  it("asserts only permission keys that exist verbatim in the backend catalog", () => {
-    const names = backendPermissionNames();
-    expect(gatedKeys.filter((key) => !names.has(key))).toEqual([]);
   });
 });

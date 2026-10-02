@@ -23,7 +23,8 @@ export type PageStateResolution =
   | { kind: "loading" }
   | { kind: "ready" }
   | { kind: "empty" }
-  | { kind: "denied"; permission: string | null; message?: string }
+  | { kind: "not-found" }
+  | { kind: "denied"; permission: PermissionKey | null; message?: string }
   | { kind: "module-disabled"; moduleKey: string }
   | { kind: "module-denied"; moduleKey: string }
   | { kind: "plan-required"; moduleKey: string; upgradePath: string }
@@ -73,7 +74,7 @@ export function isSessionExpiredError(error: unknown): boolean {
 export function pageStateFromError(error: unknown): PageStateResolution | null {
   if (!isApiError(error)) return null;
   if (error.status === 401) return { kind: "session-expired" };
-  if (error.status === 404) return { kind: "empty" };
+  if (error.status === 404) return { kind: "not-found" };
   if (error.status === 403)
     return { kind: "denied", permission: null, message: getErrorMessage(error) };
   if (error.status !== 402) return null;

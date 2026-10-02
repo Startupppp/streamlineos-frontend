@@ -11,6 +11,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
+import type { PermissionKey } from "@/lib/rbac/permissions";
 import { usePurchaseOrders } from "@/hooks/api/inventory";
 import { useSalesOrders } from "@/hooks/api/inventory/sales-orders";
 import {
@@ -30,7 +31,7 @@ interface HubCard {
   href: string;
   title: string;
   description: string;
-  permission: string;
+  permission: PermissionKey;
   Icon: React.ComponentType<{ className?: string }>;
 }
 

@@ -23,6 +23,16 @@ describe("AccessDeniedPage", () => {
     expect(screen.getByText("hr:employees:view")).toBeInTheDocument();
   });
 
+  it("never echoes a required value the catalogue does not know, so the URL cannot put arbitrary text on the page", async () => {
+    render(
+      await AccessDeniedPage({
+        searchParams: Promise.resolve({ required: "call:555-0100:now" }),
+      }),
+    );
+    expect(screen.queryByText(/555-0100/)).toBeNull();
+    expect(screen.getByText("Access Restricted")).toBeInTheDocument();
+  });
+
   it("never renders the caller-supplied from query param, so it cannot be used to inject arbitrary text onto a security page", async () => {
     render(
       await AccessDeniedPage({

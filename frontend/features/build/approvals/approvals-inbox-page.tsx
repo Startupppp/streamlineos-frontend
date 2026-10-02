@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { Clock, ListChecks } from "lucide-react";
 import { toast } from "sonner";
-import { isApiError, lazyContract } from "@/lib/api-envelope";
+import { isWriteConflict, lazyContract } from "@/lib/api-envelope";
 import { useApprovalInbox, useDecideApproval } from "@/hooks/api/build/approvals";
 import { useCan } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
@@ -157,7 +157,7 @@ export function ApprovalsInboxPage() {
             setDecideTarget(null);
           },
           onError: (e) => {
-            if (isApiError(e) && e.status === 409) {
+            if (isWriteConflict(e)) {
               toast.error("This approval was already decided. Refresh to see the latest state.");
               void refetch();
             } else {

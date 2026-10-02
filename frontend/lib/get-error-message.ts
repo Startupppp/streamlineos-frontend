@@ -1,4 +1,5 @@
 import { getRetryAfterSeconds, isApiError } from "@/lib/api-envelope";
+import { isRecord } from "@/lib/is-record";
 
 const NETWORK_PATTERN =
   /failed to fetch|networkerror|network request failed|load failed|fetch failed/i;
@@ -155,6 +156,26 @@ function rateLimitMessage(error: unknown): string {
   return endpoint ? `${wait} (${endpoint})` : wait;
 }
 
+function projectLockedMessage(details: unknown): string {
+  const state = isRecord(details) && typeof details.state === "string" ? details.state.trim() : "";
+  const standing = state ? state.toLowerCase() : "archived or completed";
+  return `This project is ${standing} — reopen it to make changes.`;
+}
+
+function moduleUpgradeMessage(details: unknown, message: string): string | undefined {
+  if (!isRecord(details) || typeof details.upgradePath !== "string" || !details.upgradePath)
+    return undefined;
+  const lead = message || "This module is not included in your current plan.";
+  return `${lead} Upgrade your plan in Settings → Billing to use it.`;
+}
+
+function codedMessage(error: unknown, message: string): string | undefined {
+  if (!isApiError(error)) return undefined;
+  if (error.code === "PROJECT_LOCKED") return projectLockedMessage(error.details);
+  if (error.code === "MODULE_NOT_ENABLED") return moduleUpgradeMessage(error.details, message);
+  return undefined;
+}
+
 export function isValidationRefusal(error: unknown): boolean {
   if (isApiError(error) && error.code === "VALIDATION_FAILED") return true;
   const status = getErrorStatus(error);
@@ -167,6 +188,9 @@ export function getErrorMessage(error: unknown): string {
   const status = getErrorStatus(error);
 
   if (status === 429) return rateLimitMessage(error);
+
+  const coded = codedMessage(error, message);
+  if (coded) return coded;
 
   const detail = validationDetail(error);
   if (detail)

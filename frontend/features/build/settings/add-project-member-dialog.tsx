@@ -22,7 +22,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { MemberPicker } from "@/components/members/member-picker";
 import { useAddProjectMember } from "@/hooks/api/build/project-members";
-import { isApiError } from "@/lib/api-envelope";
+import { isWriteConflict } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import {
@@ -65,7 +65,7 @@ export function AddProjectMemberDialog({
   }
 
   function handleAddError(e: unknown) {
-    if (isApiError(e) && e.status === 409) {
+    if (isWriteConflict(e)) {
       toast.error("This person is already a member of this project.");
     } else {
       toast.error(getErrorMessage(e));

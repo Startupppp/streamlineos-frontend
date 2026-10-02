@@ -2,9 +2,10 @@
 
 import { ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { PermissionKey } from "@/lib/rbac/permissions";
 
 interface NoPermissionStateProps {
-  permission?: string;
+  permission?: PermissionKey;
   title?: string;
   description?: string;
   className?: string;

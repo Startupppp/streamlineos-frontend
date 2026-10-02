@@ -12,12 +12,7 @@ import {
   isUniversalRoute,
 } from "../universal-routes";
 import { hasAssignedProductAccess, resolveRouteAccess } from "../route-access";
-import {
-  PERMISSION_CATALOG_PATH,
-  backendPermissionNames as readBackendPermissionNames,
-  delegableModuleIds as readDelegableModuleIds,
-  memberDefaultPermissions,
-} from "@/test-utils/permission-catalog";
+import { memberDefaultPermissions } from "@/test-utils/permission-catalog";
 
 function keysOf(pathname: string): string[] {
   const decision = resolveRouteAccess(pathname);
@@ -29,41 +24,6 @@ function keysOf(pathname: string): string[] {
 
 describe("route-access registry keys", () => {
   const routes = collectAppRoutes("(authenticated)");
-  let backendNames: Set<string>;
-
-  beforeAll(() => {
-    backendNames = readBackendPermissionNames();
-  });
-
-  it("can reach the backend catalog, so a silent empty sweep cannot pass", () => {
-    expect(fs.existsSync(PERMISSION_CATALOG_PATH)).toBe(true);
-    expect(backendNames.size).toBeGreaterThan(400);
-  });
-
-  it("expands the generated module-access keys the literal scan cannot see", () => {
-    expect(readDelegableModuleIds().length).toBeGreaterThan(5);
-    expect(backendNames.has("build:access:view")).toBe(true);
-    expect(backendNames.has("hr:access:manage")).toBe(true);
-  });
-
-  it("has no frontend-only permission key in any route decision", () => {
-    const ghosts = new Set<string>();
-    for (const route of routes)
-      for (const key of keysOf(route.path))
-        if (!backendNames.has(key)) ghosts.add(`${key}  (${route.path})`);
-    expect([...ghosts].sort()).toEqual([]);
-  });
-
-  it("has no frontend-only permission key in a registry extension", () => {
-    const declared = ROUTE_ACCESS_EXTENSIONS.flatMap((entry) => {
-      if (!entry.permission) return [];
-      return Array.isArray(entry.permission)
-        ? entry.permission
-        : [entry.permission];
-    });
-    const ghosts = declared.filter((key) => !backendNames.has(key)).sort();
-    expect(ghosts).toEqual([]);
-  });
 
   it("each backendRoute entry carries the same permission the backend operation declares (x-permission in contracts/openapi.json)", () => {
     // x-permission is an internal stamp, read from the vendored artifact, not a published contract.

@@ -42,7 +42,7 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     prefix: "/blog/admin",
     permission: "blog:posts:manage",
     reason:
-      "Mirrors no backend operation: the /blog/admin/* write API was removed when editorial work moved to the standalone Journal CMS, and blog.controller.e2e-spec.ts asserts POST /blog/admin/posts now 404s. The route is a permission-gated doorway to that external deployment, gated on the authoring key blog:posts:manage rather than on the anonymous public read.",
+      "Redirect stub to the standalone blog admin, which owns editorial writes now that the backend /blog/admin/* operations are retired. It forwards only holders of the authoring key and has no navigation entry.",
   },
   {
     prefix: "/subjects",

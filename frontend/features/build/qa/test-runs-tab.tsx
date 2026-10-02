@@ -325,6 +325,11 @@ export function TestRunsTab({ projectId, createNonce = 0 }: TestRunsTabProps) {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
       <BuildListToolbar
+        search={{
+          value: listFilters.search,
+          onValueChange: listFilters.setSearch,
+          placeholder: "Search test runs…",
+        }}
         filters={[
           {
             id: "status",

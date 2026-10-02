@@ -11,6 +11,8 @@ import { getInitials } from "@/lib/format-utils";
 import { resolveImageUrl } from "@/lib/utils";
 import { toast } from "sonner";
 import { StalledReadNotice } from "@/components/shared/stalled-read-notice";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import {
   PANEL_STALLED_AFTER_MS,
   useStalledAfter,
@@ -101,7 +103,7 @@ function PeopleSearchResults({
   onlineUserIds: Set<string>;
   onSelectChannel: (id: number) => void;
 }) {
-  const { data: orgUsers, isLoading, refetch } = useChatOrgUsers();
+  const { data: orgUsers, isLoading, isError, error, refetch } = useChatOrgUsers();
   const createDM = useCreateDMChannel();
   // CHAT-F-003/F-004: the same ~61s of silent skeleton as the conversation list.
   const stalled = useStalledAfter(isLoading, PANEL_STALLED_AFTER_MS);
@@ -133,59 +135,67 @@ function PeopleSearchResults({
     [createDM, onSelectChannel],
   );
 
-  if (isLoading) {
-    return (
-      <div className="space-y-2 p-2" aria-busy="true">
-        {stalled && (
-          <StalledReadNotice subject="people" onRetry={handleRetry} />
-        )}
-        <span role="status" className="sr-only">
-          Loading people…
-        </span>
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="flex items-center gap-3 px-2 py-2">
-            <Skeleton className="h-10 w-10 rounded-full" />
-            <div className="flex-1 space-y-1.5">
-              <Skeleton className="h-3.5 w-24" />
-              <Skeleton className="h-3 w-36" />
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  if (filtered.length === 0) {
-    return (
-      <EmptyState
-        compact
-        illustrationPreset="mail"
-        title="No people found"
-        description={
-          search.trim()
-            ? "Try a different name or email."
-            : "No people available to message."
-        }
-      />
-    );
-  }
+  const pageState = usePageState({
+    permission: "chat:channels:read",
+    isLoading,
+    isError,
+    error,
+    isEmpty: filtered.length === 0,
+  });
 
   return (
-    <div role="list" aria-label="People">
-      {filtered.map((user) => (
-        <PersonRow
-          key={user.id}
-          userId={user.id}
-          name={user.name}
-          email={user.email}
-          image={user.image}
-          isOnline={onlineUserIds.has(user.id)}
-          isSelf={user.id === currentUserId}
-          isPending={createDM.isPending}
-          onSelect={handleSelectUser}
+    <PageState
+      resolution={pageState}
+      compact
+      onRetry={handleRetry}
+      loading={
+        <div className="space-y-2 p-2" aria-busy="true">
+          {stalled && (
+            <StalledReadNotice subject="people" onRetry={handleRetry} />
+          )}
+          <span role="status" className="sr-only">
+            Loading people…
+          </span>
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex items-center gap-3 px-2 py-2">
+              <Skeleton className="h-10 w-10 rounded-full" />
+              <div className="flex-1 space-y-1.5">
+                <Skeleton className="h-3.5 w-24" />
+                <Skeleton className="h-3 w-36" />
+              </div>
+            </div>
+          ))}
+        </div>
+      }
+      empty={
+        <EmptyState
+          compact
+          illustrationPreset="mail"
+          title="No people found"
+          description={
+            search.trim()
+              ? "Try a different name or email."
+              : "No people available to message."
+          }
         />
-      ))}
-    </div>
+      }
+    >
+      <div role="list" aria-label="People">
+        {filtered.map((user) => (
+          <PersonRow
+            key={user.id}
+            userId={user.id}
+            name={user.name}
+            email={user.email}
+            image={user.image}
+            isOnline={onlineUserIds.has(user.id)}
+            isSelf={user.id === currentUserId}
+            isPending={createDM.isPending}
+            onSelect={handleSelectUser}
+          />
+        ))}
+      </div>
+    </PageState>
   );
 }
 
