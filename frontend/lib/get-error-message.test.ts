@@ -179,3 +179,47 @@ describe("getErrorMessage on a validation refusal", () => {
     ).toBe(false);
   });
 });
+
+describe("getErrorMessage on a coded Build refusal", () => {
+  it("names the locked project's standing and the way out on a 409 PROJECT_LOCKED", () => {
+    const error = new ApiError(
+      "This project is archived. Reopen it before making changes.",
+      409,
+      "PROJECT_LOCKED",
+      { state: "ARCHIVED" },
+    );
+    expect(getErrorMessage(error)).toBe("This project is archived — reopen it to make changes.");
+  });
+
+  it("still explains a PROJECT_LOCKED refusal that carries no state", () => {
+    const error = new ApiError("", 409, "PROJECT_LOCKED");
+    expect(getErrorMessage(error)).toBe(
+      "This project is archived or completed — reopen it to make changes.",
+    );
+  });
+
+  it("keeps an ordinary 409 conflict on its own message", () => {
+    const error = new ApiError("Ticket was changed by someone else", 409, "VERSION_CONFLICT");
+    expect(getErrorMessage(error)).toBe("Ticket was changed by someone else");
+  });
+
+  it("points a plan-locked MODULE_NOT_ENABLED refusal at billing", () => {
+    const error = new ApiError("Build is not included in your current plan.", 402, "MODULE_NOT_ENABLED", {
+      moduleKey: "build",
+      reason: "not-in-plan",
+      upgradePath: "/settings/billing",
+    });
+    expect(getErrorMessage(error)).toBe(
+      "Build is not included in your current plan. Upgrade your plan in Settings → Billing to use it.",
+    );
+  });
+
+  it("does not offer an upgrade for a module an admin switched off", () => {
+    const error = new ApiError("Build is not enabled for your organization.", 402, "MODULE_NOT_ENABLED", {
+      moduleKey: "build",
+      reason: "org-disabled",
+      upgradePath: null,
+    });
+    expect(getErrorMessage(error)).toBe("Build is not enabled for your organization.");
+  });
+});

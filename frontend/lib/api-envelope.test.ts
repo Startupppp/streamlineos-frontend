@@ -1,6 +1,7 @@
 import {
   ApiError,
   isApiError,
+  isWriteConflict,
   parseApiResponse,
   type ApiResponseLike,
 } from "@/lib/api-envelope";
@@ -142,4 +143,18 @@ describe("the two paths cannot disagree", () => {
       expect(error).toBeInstanceOf(ClientApiError);
     },
   );
+});
+
+describe("isWriteConflict", () => {
+  it("treats a 409 stale-write refusal as a conflict the caller can retry", () => {
+    expect(isWriteConflict(new ApiError("Conflict", 409, "CONFLICT"))).toBe(true);
+  });
+
+  it("does not treat a 409 PROJECT_LOCKED refusal as a conflict, because retrying cannot succeed until the project is reopened", () => {
+    expect(isWriteConflict(new ApiError("Locked", 409, "PROJECT_LOCKED", { state: "ARCHIVED" }))).toBe(false);
+  });
+
+  it("does not treat a non-409 refusal as a conflict", () => {
+    expect(isWriteConflict(new ApiError("Forbidden", 403))).toBe(false);
+  });
 });

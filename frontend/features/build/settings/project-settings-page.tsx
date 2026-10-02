@@ -18,7 +18,7 @@ import { useProject, useUpdateProject } from "@/hooks/api/build/projects";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { isApiError } from "@/lib/api-envelope";
+import { isWriteConflict } from "@/lib/api-envelope";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
@@ -276,7 +276,7 @@ export function ProjectSettingsPage({ params }: PageProps) {
             toast.success("Project settings updated");
           },
           onError: (mutationError) => {
-            if (isApiError(mutationError) && mutationError.status === 409) {
+            if (isWriteConflict(mutationError)) {
               setIsConflict(true);
             } else {
               toast.error(getErrorMessage(mutationError));

@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { isApiError } from "@/lib/api-envelope";
+import { isWriteConflict } from "@/lib/api-envelope";
 import type { AllWorkTicket } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
@@ -129,7 +129,7 @@ export function useAllWorkBulk(tickets: AllWorkTicket[]): UseAllWorkBulkReturn {
             });
           }
           for (const reason of outcome.failures) {
-            if (isApiError(reason) && reason.status === 409) {
+            if (isWriteConflict(reason)) {
               conflictIds.push(outcome.projectId);
             } else {
               errorMessages.push(getErrorMessage(reason));
@@ -137,7 +137,7 @@ export function useAllWorkBulk(tickets: AllWorkTicket[]): UseAllWorkBulkReturn {
           }
         } else {
           const reason: unknown = result.reason;
-          if (isApiError(reason) && reason.status === 409) {
+          if (isWriteConflict(reason)) {
             conflictIds.push(0);
           } else {
             errorMessages.push(getErrorMessage(reason));

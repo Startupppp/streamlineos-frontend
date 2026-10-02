@@ -1,10 +1,10 @@
 import { renderHook, act } from "@testing-library/react";
 import { useMyWorkBulk } from "./use-my-work-bulk";
 import type { AllWorkTicket } from "@/types/projects";
+import { ApiError } from "@/lib/api-envelope";
 
 const mockInvalidateQueries = jest.fn();
 const mockPost = jest.fn();
-const mockIsApiError = jest.fn();
 
 jest.mock("@tanstack/react-query", () => ({
   ...jest.requireActual("@tanstack/react-query"),
@@ -20,8 +20,8 @@ jest.mock("@/lib/api-client", () => ({
 }));
 
 jest.mock("@/lib/api-envelope", () => ({
+  ...jest.requireActual("@/lib/api-envelope"),
   lazyContract: (fn: () => Promise<unknown>) => fn,
-  isApiError: (...args: unknown[]) => mockIsApiError(...args),
 }));
 
 jest.mock("@/lib/query-keys/build-work", () => ({
@@ -80,7 +80,6 @@ function makeTicket(id: number, projectId: number): AllWorkTicket {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockIsApiError.mockReturnValue(false);
 });
 
 describe("useMyWorkBulk — Promise.allSettled fan-out", () => {
@@ -140,16 +139,7 @@ describe("useMyWorkBulk — Promise.allSettled fan-out", () => {
   it("surfaces a 409 conflict as a distinct conflict toast, not a generic error", async () => {
     const tickets = [makeTicket(1, 10), makeTicket(2, 20)];
 
-    class ApiError extends Error {
-      status: number;
-      constructor(msg: string, status: number) {
-        super(msg);
-        this.status = status;
-      }
-    }
-
-    const conflictError = new ApiError("Conflict", 409);
-    mockIsApiError.mockImplementation((e: unknown) => e instanceof ApiError);
+    const conflictError = new ApiError("Conflict", 409, "CONFLICT");
     mockPost
       .mockResolvedValueOnce({ updated: 1, ticketIds: [1] })
       .mockRejectedValueOnce(conflictError);
@@ -173,6 +163,35 @@ describe("useMyWorkBulk — Promise.allSettled fan-out", () => {
       ([msg]: [string]) => /conflict/i.test(msg) || /retry/i.test(msg),
     );
     expect(conflictToastCall).toBeTruthy();
+  });
+
+  it("reports a 409 PROJECT_LOCKED as the lock it is, not as a conflict to retry", async () => {
+    const tickets = [makeTicket(1, 10)];
+    mockPost.mockRejectedValueOnce(
+      new ApiError("This project is completed. Reopen it before making changes.", 409, "PROJECT_LOCKED", {
+        state: "COMPLETED",
+      }),
+    );
+
+    const { result } = renderHook(() =>
+      useMyWorkBulk(tickets, "rank", "desc"),
+    );
+
+    act(() => {
+      result.current.setTableSelection(new Set([1]));
+    });
+
+    await act(async () => {
+      result.current.handleBulkAssignee("user-1");
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(toast.error).toHaveBeenCalledWith(
+      "This project is completed — reopen it to make changes.",
+    );
+    expect(toast.error).not.toHaveBeenCalledWith(expect.stringMatching(/had a conflict/));
   });
 
   it("clears selection when sortField changes", () => {

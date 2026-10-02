@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { AddProjectMemberDialog } from "./add-project-member-dialog";
-import type { ApiError } from "@/lib/api-envelope";
+import { ApiError } from "@/lib/api-envelope";
 
 const mockMutate = jest.fn();
 const mockToastSuccess = jest.fn();
@@ -34,11 +34,6 @@ jest.mock("@/components/members/member-picker", () => ({
       onChange={(e) => onChange(e.target.value || null)}
     />
   ),
-}));
-
-jest.mock("@/lib/api-envelope", () => ({
-  isApiError: (e: unknown): e is ApiError =>
-    typeof e === "object" && e !== null && "status" in e,
 }));
 
 jest.mock("@/lib/get-error-message", () => ({
@@ -108,7 +103,7 @@ describe("AddProjectMemberDialog — submit calls project endpoint with correct 
 
 describe("AddProjectMemberDialog — 409 conflict surfaces specific message (FE-78)", () => {
   it("shows 'already a member' message for 409 — not a generic error — so the user knows what happened", async () => {
-    const conflict = { status: 409, message: "already a member" };
+    const conflict = new ApiError("already a member", 409, "CONFLICT");
     mockMutate.mockImplementation(
       (
         _data: unknown,
@@ -130,7 +125,7 @@ describe("AddProjectMemberDialog — 409 conflict surfaces specific message (FE-
   });
 
   it("shows generic error for non-409 failures — paired with 409 test above to confirm 409 path is not vacuous", async () => {
-    const serverError = { status: 500, message: "internal error" };
+    const serverError = new ApiError("internal error", 500);
     mockMutate.mockImplementation(
       (
         _data: unknown,
@@ -142,6 +137,31 @@ describe("AddProjectMemberDialog — 409 conflict surfaces specific message (FE-
     render(<AddProjectMemberDialog projectId={1} open onOpenChange={jest.fn()} />);
     fireEvent.change(screen.getByTestId("member-picker"), {
       target: { value: "user-err" },
+    });
+    fireEvent.submit(screen.getByRole("form", { hidden: true }));
+    await waitFor(() => expect(mockToastError).toHaveBeenCalledTimes(1));
+    expect(mockToastError).not.toHaveBeenCalledWith(
+      "This person is already a member of this project.",
+    );
+  });
+});
+
+describe("AddProjectMemberDialog — a locked project is not reported as an existing member", () => {
+  it("routes a 409 PROJECT_LOCKED through getErrorMessage instead of claiming the person is already a member", async () => {
+    const locked = new ApiError("This project is archived. Reopen it before making changes.", 409, "PROJECT_LOCKED", {
+      state: "ARCHIVED",
+    });
+    mockMutate.mockImplementation(
+      (
+        _data: unknown,
+        callbacks: { onError: (e: unknown) => void },
+      ) => {
+        callbacks.onError(locked);
+      },
+    );
+    render(<AddProjectMemberDialog projectId={1} open onOpenChange={jest.fn()} />);
+    fireEvent.change(screen.getByTestId("member-picker"), {
+      target: { value: "user-locked" },
     });
     fireEvent.submit(screen.getByRole("form", { hidden: true }));
     await waitFor(() => expect(mockToastError).toHaveBeenCalledTimes(1));

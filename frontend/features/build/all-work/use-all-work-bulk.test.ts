@@ -73,23 +73,10 @@ jest.mock("@/lib/query-keys/build-work", () => ({
   },
 }));
 
-jest.mock("@/lib/api-envelope", () => {
-  class FakeApiError extends Error {
-    status?: number;
-    code?: string;
-    constructor(message: string, status?: number, code?: string) {
-      super(message);
-      this.name = "ApiError";
-      this.status = status;
-      this.code = code;
-    }
-  }
-  return {
-    lazyContract: (fn: unknown) => fn,
-    isApiError: (e: unknown) => e instanceof FakeApiError,
-    ApiError: FakeApiError,
-  };
-});
+jest.mock("@/lib/api-envelope", () => ({
+  ...jest.requireActual("@/lib/api-envelope"),
+  lazyContract: (fn: unknown) => fn,
+}));
 
 jest.mock("@/lib/get-error-message", () => ({
   getErrorMessage: (e: unknown) => (e instanceof Error ? e.message : String(e)),
@@ -100,15 +87,14 @@ jest.mock("@/hooks/api/build/build-tickets-subresource-schema", () => ({
 }));
 
 import { useAllWorkBulk } from "./use-all-work-bulk";
+import { ApiError } from "@/lib/api-envelope";
 import type { AllWorkTicket } from "@/types/projects";
 
 type MockedApi = { apiClient: { post: jest.Mock } };
 type MockedToast = { toast: { success: jest.Mock; error: jest.Mock; warning: jest.Mock } };
-type MockedEnvelope = { ApiError: new (msg: string, status?: number, code?: string) => Error & { status?: number } };
 
 const getPost = () => (jest.requireMock("@/lib/api-client") as MockedApi).apiClient.post;
 const getToast = () => (jest.requireMock("sonner") as MockedToast).toast;
-const getFakeApiError = () => (jest.requireMock("@/lib/api-envelope") as MockedEnvelope).ApiError;
 
 function makeTicket(id: number, projectId: number): AllWorkTicket {
   return {
@@ -178,8 +164,7 @@ describe("useAllWorkBulk — partial-failure reporting", () => {
 
 describe("useAllWorkBulk — 409 conflict is retryable, not a generic error", () => {
   it("shows a warning toast when the backend returns 409 so the user knows it is a transient conflict", async () => {
-    const FakeApiError = getFakeApiError();
-    getPost().mockRejectedValueOnce(new FakeApiError("Conflict", 409, "CONFLICT"));
+    getPost().mockRejectedValueOnce(new ApiError("Conflict", 409, "CONFLICT"));
 
     const { result } = renderHook(() => useAllWorkBulk([makeTicket(1, 1)]));
     act(() => { result.current.setTableSelection(new Set([1])); });
@@ -200,6 +185,22 @@ describe("useAllWorkBulk — 409 conflict is retryable, not a generic error", ()
 
     expect(getToast().warning).not.toHaveBeenCalled();
     expect(getToast().error).toHaveBeenCalled();
+  });
+
+  it("reports a 409 PROJECT_LOCKED as the lock it is, not as a retryable concurrent edit", async () => {
+    getPost().mockRejectedValueOnce(
+      new ApiError("This project is archived. Reopen it before making changes.", 409, "PROJECT_LOCKED", {
+        state: "ARCHIVED",
+      }),
+    );
+
+    const { result } = renderHook(() => useAllWorkBulk([makeTicket(1, 1)]));
+    act(() => { result.current.setTableSelection(new Set([1])); });
+
+    await act(async () => { await result.current.handleBulkStatus("DONE"); });
+
+    expect(getToast().warning).not.toHaveBeenCalled();
+    expect(getToast().error).toHaveBeenCalledWith(expect.stringContaining("archived"));
   });
 });
 
@@ -277,8 +278,7 @@ describe("useAllWorkBulk — a failed chunk does not discard the chunk that alre
   });
 
   it("reports a 409 on one chunk as a retryable conflict while the committed chunk still counts", async () => {
-    const FakeApiError = getFakeApiError();
-    const result = renderWithFailingSecondChunk(new FakeApiError("Conflict", 409, "CONFLICT"));
+    const result = renderWithFailingSecondChunk(new ApiError("Conflict", 409, "CONFLICT"));
 
     await act(async () => { await result.current.handleBulkStatus("DONE"); });
 

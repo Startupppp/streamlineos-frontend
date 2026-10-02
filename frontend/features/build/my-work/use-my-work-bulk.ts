@@ -6,7 +6,7 @@ import type { BulkPriority } from "@/features/build/shared/bulk-priority";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
-import { isApiError } from "@/lib/api-envelope";
+import { isWriteConflict } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { lazyContract } from "@/lib/api-envelope";
@@ -58,10 +58,10 @@ async function fanOutBulk(payload: BulkPayload): Promise<number[]> {
   const totalUpdated = succeeded.reduce((acc, r) => acc + r.value.updated, 0);
 
   const conflicts = failed.filter(
-    (r) => isApiError(r.reason) && r.reason.status === 409,
+    (r) => isWriteConflict(r.reason),
   );
   const otherFailures = failed.filter(
-    (r) => !(isApiError(r.reason) && r.reason.status === 409),
+    (r) => !isWriteConflict(r.reason),
   );
 
   if (totalUpdated > 0) {

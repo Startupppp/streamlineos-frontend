@@ -134,11 +134,6 @@ export const mockUpdateMutate = jest.fn();
 export const mockUpdateMutateAsync = jest.fn((_vars?: unknown) => Promise.resolve());
 export const mockDeleteMutateAsync = jest.fn((_webhookId?: unknown) => Promise.resolve());
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
-jest.mock("@/lib/api-envelope", () => ({
-  isApiError: (e: unknown): e is { status: number; details?: unknown } =>
-    typeof e === "object" && e !== null && "status" in e,
-}));
-
 jest.mock("@/features/build/settings/webhook-card", () => ({
   WebhookCard: ({
     webhook,
