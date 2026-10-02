@@ -2,6 +2,8 @@
 
 Status: Planned product; documentation consolidation executed on 2026-10-02
 
+The recheck added three canonical documents: the [external client-portal screen contract](../experience/screens/external-client-portal.md), the [original WOW research crosswalk](./original-wow-research-crosswalk.md), and the [comprehensive recheck ledger](./comprehensive-recheck-2026-10-02.md). They do not replace or delete any source research. Canonical Markdown count is now 57; retained research Markdown count remains 116.
+
 ## Authorized cleanup
 
 Keep PM research in the PM pack, UX patterns in the UX pack, and browser reports beside their evidence. The first cleanup removed 31 mirrored analysis-pack files and eight byte-identical top-level UX summaries after SHA-256 comparison. The second cleanup removed seven generated specification summaries after a section-level ownership and inbound-reference review confirmed that their requirements were already present in the retained canonical specifications. No unique research document, screenshot, test evidence, acceptance evidence, or unresolved finding is deleted.
@@ -71,7 +73,7 @@ These seven files were created during the specification pass and later proved to
 - Literal repository paths to deleted sources are mapped to retained paths.
 - Legacy /workspace/streamlineos-ci, /workspace/streamlineos-pm and /workspace/streamlineos-ux Markdown source references resolve to the imported retained local source when identifiable. Missing originals remain explicitly historical/unavailable rather than fabricated.
 - Canonical index links all specification folders. No application route manifest or code is changed.
-- The Build index and implementation index link directly to retained authorities instead of the seven deleted summary files. The architecture reconciliation added five unique canonical documents: one 16-decision architecture authority, one agent-coordination contract, one 17-package/26-area registry, one cross-cutting behavior matrix, and one work-claim ledger. The validation report now records 54 canonical documents and 18 implementation documents.
+- The Build index and implementation index link directly to retained authorities instead of the seven deleted summary files. The architecture reconciliation added five unique canonical documents: one 16-decision architecture authority, one agent-coordination contract, one 17-package/26-area registry, one cross-cutting behavior matrix, and one work-claim ledger. The subsequent recheck added three more canonical documents; the validation report now records 57 canonical documents and 18 implementation documents.
 - Empty duplicate-only directories are not tracked by Git. A shell command to remove empty local folders was rejected by automatic approval review with the reason `blocked by policy`; the 39 file deletions succeeded through verified explicit file patches. Empty local directories may remain.
 
 ## Evidence decision

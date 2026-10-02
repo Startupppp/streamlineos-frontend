@@ -1,5 +1,7 @@
 # Research traceability
 
+The original CI WOW inventory contains **120** numbered findings. [Original WOW research crosswalk](./original-wow-research-crosswalk.md) maps each original ID to a target or explicit deferral. Its numbering is independent of the [100 prioritized customer-value themes](../product/customer-value-and-differentiation.md); matching numbers do not imply matching features. Historical `HAVE` or `VERIFIED` research labels remain Current unverified for the present application until current actor, action, persistence, and access evidence exists.
+
 ## Approved architecture review reconciliation
 
 | Evidence ID | Source | Classification | Adopted destination | Decision |

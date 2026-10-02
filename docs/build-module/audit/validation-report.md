@@ -9,10 +9,11 @@ Status: documentation verified; product behavior Planned or Current unverified a
 |---|---|---|
 | Route manifest vs actual page inventory | 75/75 | No missing current Build page entry |
 | Route decision rows | 75/75, each exactly once | Keep/consolidate/rename/redirect specified |
-| Detailed route sections | 75/75 plus three proposed destinations | Every existing route has a screen-specific contract |
-| Screen folder | 13 Markdown files | Index, shared contract, ten Build screen groups, activation, and cross-module owning-product catalog |
+| Detailed route sections | 75/75 existing Build routes, six proposed/compatibility destinations, and two external client-portal routes | Every existing route has a screen-specific contract; proposed destinations remain implementation work |
+| Screen folder | 14 Markdown files | Index, shared contract, Build screen groups, activation, external client portal, and cross-module owning-product catalog |
 | Original and architecture requirement coverage | 29 mappings | Prompt, prior-answer, architecture-review, and agent-coordination requirements map to specification and acceptance |
 | Customer-value reasons | 100 sequential IDs | Each includes class, customer need, status, source, priority and proof |
+| Original WOW source crosswalk | 120/120 original numbered rows mapped | Research numbering is independent of the new 100 customer-value reasons; conditional item 105 is retained |
 | Research Markdown inventory | 155 scanned, 116 retained | 39 duplicates removed |
 | Duplicate hash checks before deletion | 39/39 SHA-256 pairs matched | Exactly 31 mirrored copies and eight duplicated summaries |
 | Generated specification consolidation | 7/7 removed with pre-deletion SHA-256 recorded | Repeated overview, role, navigation, route, flow, aggregate, and persona summaries now resolve to retained authorities |
@@ -28,7 +29,11 @@ Status: documentation verified; product behavior Planned or Current unverified a
 | Architecture reconciliation | 16/16 decisions; 26/26 product areas; six access layers | Approved HTML decisions now have durable Markdown owners, dependencies, migration constraints, and acceptance |
 | Cross-cutting behavior | 17 universal behaviors; 15 Ticket capabilities; Intake, activation, and portal flows | Comments, assignment, status, relations, files, effects, client projection, mobile, and lifecycle cannot be omitted silently |
 | Agent coordination | claim ledger plus 17 work packages implementing 16 architecture decisions | Project Provision and Ticket Command are separate claims; one active owner per primary seam; prerequisite, path, handoff, merge, and evidence rules prevent duplicate work |
-| Canonical/research Markdown | 54 canonical; 116 retained research | Redundant generated summaries remain removed; implementation layer links existing authorities directly |
+| Canonical/research Markdown | 57 canonical; 116 retained research; 173 total | Redundant generated summaries remain removed; implementation layer links existing authorities directly |
+
+The [comprehensive recheck](./comprehensive-recheck-2026-10-02.md) records the source-by-source reconciliation, new screen/API corrections, and remaining runtime risks. This pass mechanically compared all 75 current Build routes, both external portal page files, six proposed destinations, 120 original WOW IDs, 100 new value rows, 16 architecture headings, and all local links. It found zero missing or duplicated current routes, zero unmapped original WOW rows, and zero broken local Markdown/image links.
+
+The later start-readiness sample found three **failing normal gates** despite passing self-tests: the execution-plan gate still requires removed `docs/specs/build` files, the route-census snapshot is missing at its old path, and the generated Build contracts have a stale OpenAPI hash. The backend Build core surface gate passed. These failures are recorded in the comprehensive recheck and must be resolved before a feature package is marked integration-ready; they do not invalidate the Markdown link/route coverage checks above.
 
 ## Source availability limitations
 

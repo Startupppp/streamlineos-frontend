@@ -6,6 +6,8 @@ Each slice produces a user-visible outcome across UI, command/query interface, s
 
 Before a slice starts, map it to one or more packages in [the architecture work-package registry](./18-architecture-work-package-registry.md) and claim the primary package in [WORK-CLAIMS.md](./WORK-CLAIMS.md). Slices describe user outcomes; packages control architecture ownership. A slice may depend on several packages, but two active agents may not own the same primary seam.
 
+**Start-order clarification:** Slice 0 first repairs the legacy-path execution-plan and route-census gates and reconciles generated Build contracts; the [current gate results](../audit/comprehensive-recheck-2026-10-02.md#final-start-readiness-gate-sample) show these checks are not yet green. `ARCH-01-MODULE-ACCESS` is the technical prerequisite for invitation acceptance, even though the customer-visible research priority is invite acceptance → automatic Build assignment → client grant activation. Implement the authority before adapting the invite caller, then verify these outcomes in that priority order. Do not create missing legacy Markdown solely to placate the old gate.
+
 | Slice | User-visible outcome | Main files/seams | Data/interfaces | Verification and definition of done |
 |---|---|---|---|---|
 | 0. Contract baseline | Agents implement from one registry without drift | this pack, `CONTEXT.md`, route/nav/query/permission registries, architecture ownership and work claims | no schema | Link/registry/source census passes; no missing master prompt, duplicate requirement ID, conflicting active claim, or unowned primary seam. |

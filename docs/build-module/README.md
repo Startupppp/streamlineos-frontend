@@ -98,6 +98,7 @@ Application implementation also requires an unambiguous work-package claim. An a
 - [Requirements coverage](./audit/requirements-coverage.md): original request mapped to decisions and acceptance.
 - [Research traceability](./audit/research-traceability.md): retained source findings, identifiers and screenshot inventory.
 - [Original WOW research crosswalk](./audit/original-wow-research-crosswalk.md): every numbered original finding mapped to an adopted, conditional, or deferred destination.
+- [Comprehensive recheck](./audit/comprehensive-recheck-2026-10-02.md): source-to-spec reconciliation, corrections, and remaining implementation evidence.
 - [Bugs and verification](./audit/bugs-and-verification.md): historical issues and required closure proof.
 - [Customer value classification](./product/customer-value-and-differentiation.md): 100 reasons with customers, sources, priority and proof.
 - [Cleanup manifest](./audit/cleanup-manifest.md): exact duplicate deletion/retention and reference rewrites.

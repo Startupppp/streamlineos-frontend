@@ -89,6 +89,8 @@ This table is the target UI contract. The current application manifest remains u
 | Destination | Decision | Owner / behavior |
 |---|---|---|
 | /build/projects | Add | Membership-scoped Projects list; reserved static route before dynamic project ID |
+| /build/programs/[programId] | Add | Stable Program detail page; list selection may intercept into a pane, direct link/refresh opens full page |
+| /build/reports | Add compatibility destination | Resolve to `/build/all-work?view=reports` until a dedicated organization report owner is justified; preserve authorized query and saved-view ID |
 | /build/clients | Add | Build delivery index; CRM remains customer/contact/deal owner |
 | /build/[projectId]/intake/[requestId] | Add | Stable intake detail, including mapped legacy bug report |
 | /build/budget | Add compatibility destination | Organization budget overview resolves to governed Reports budget view; explicit route prevents the historical 404 and retains filtered scope |

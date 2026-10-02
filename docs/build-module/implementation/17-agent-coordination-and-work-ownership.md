@@ -12,7 +12,7 @@ This protocol prevents duplicate implementation, overlapping migrations, conflic
 When sources disagree, use this order:
 
 1. current repository source for claims about what exists;
-2. repository `CLAUDE.md`, scoped instructions, accepted ADRs, and `CONTEXT.md` for implementation invariants;
+2. existing scoped `frontend/CLAUDE.md` and `backend/CLAUDE.md`, accepted ADRs, and `CONTEXT.md` for implementation invariants; a root `CLAUDE.md` is absent in this checkout and cannot supply rules until added explicitly;
 3. canonical product, onboarding, experience, architecture, integration, governance, and delivery specifications under `docs/build-module` for intended behavior;
 4. [deep-module reconciliation](../architecture/08-deep-module-reconciliation.md) for architecture ownership and dependency order;
 5. [work-package registry](./18-architecture-work-package-registry.md) for package scope and prerequisites;

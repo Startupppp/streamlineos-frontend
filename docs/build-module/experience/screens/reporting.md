@@ -118,6 +118,10 @@ Audience: organization/Build owners and administrators, plus delegated finance o
 
 **Mobile and acceptance:** stacked project rows show name, currency, baseline, actual, variance, and freshness first; advanced columns expand. Verify populated projects, mixed currencies, revoked access, finance outage, matching CSV/export, stable cursor, budget change drill-down, browser return, and current database query plan. The historical 404 is closed only by a working authorized route, not by this specification.
 
+### Organization reports compatibility destination
+
+Route: Planned `/build/reports` resolves to `/build/all-work?view=reports` after module/report permission checks. This is a stable alias for links and command search, not a second reporting data owner. Preserve an authorized saved-view ID and FilterEnvelope v1 query when redirecting; reject unknown filter fields and strip unauthorized fields. The Reports view uses the same report library, versioned metric definitions, field policies, freshness indicators, and exact filtered drill-down described for project reports above, with organization scope constrained to reachable projects. Report cards show title, metric and formula version, owner, scope, period, last generated time, source freshness, and allowed actions. Filters include project/team/owner IN, period BETWEEN, metric IN, status IN, and saved-view search; create/edit opens the full report builder, while a metric click opens the authorized source collection. Mobile cards preserve metric, period, freshness and drill-down. Acceptance requires a direct alias link, return history, tenant/field denial, consistent dashboard/export results, stale projection state, and source revisions after mutation.
+
 ## Testing Decisions
 
 Test the public command/query behavior and committed state using the shared test matrix. Each section's acceptance paragraph is a required scenario, not a route-render smoke check. Preserve historical pack findings until the same actor/action/lifecycle is verified on the current deployment.
