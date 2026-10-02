@@ -1,33 +1,29 @@
-import { LandingNav } from "./components/landing-nav";
-import { LandingHero } from "./components/landing-hero";
-import { LandingApps } from "./components/landing-apps";
-import { LandingWalkthrough } from "./components/landing-walkthrough";
-import { LandingStats } from "./components/landing-stats";
-import { LandingPillars } from "./components/landing-pillars";
-import { LandingTestimonials } from "./components/landing-testimonials";
-import { LandingPricing } from "./components/landing-pricing";
-import { LandingFAQ } from "./components/landing-faq";
-import { LandingCTA } from "./components/landing-cta";
+import "./home/home.css";
+import { Navbar } from "./home/navbar";
+import { Hero } from "./home/hero";
+import { Problem } from "./home/problem";
+import { ModuleStage } from "./home/module-stage";
+import { FeatureRows } from "./home/feature-rows";
+import { Connected } from "./home/connected";
+import { Pricing } from "./home/pricing";
+import { FAQ } from "./home/faq";
+import { FinalCTA } from "./home/final-cta";
 import { LandingFooter } from "./landing-footer";
-import { LandingPageMotion } from "./landing-page-motion";
 
 export function LandingPage() {
   return (
-    <div className="relative flex min-h-dvh flex-col overflow-x-clip surface-soft text-foreground selection:bg-brand-core/20 selection:text-foreground">
-      <LandingNav />
-      <LandingPageMotion>
-        <main className="relative flex-1 min-w-0 overflow-x-clip">
-          <LandingHero />
-          <LandingApps />
-          <LandingWalkthrough />
-          <LandingStats />
-          <LandingPillars />
-          <LandingTestimonials />
-          <LandingPricing />
-          <LandingFAQ />
-          <LandingCTA />
-        </main>
-      </LandingPageMotion>
+    <div className="lp relative flex min-h-dvh flex-col text-foreground selection:bg-brand-core/20">
+      <Navbar />
+      <main className="min-w-0 flex-1">
+        <Hero />
+        <Problem />
+        <ModuleStage />
+        <FeatureRows />
+        <Connected />
+        <Pricing />
+        <FAQ />
+        <FinalCTA />
+      </main>
       <LandingFooter />
     </div>
   );

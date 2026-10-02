@@ -30,13 +30,6 @@ export type LandingApp = {
   category: AppCategory;
 };
 
-export const APP_CATEGORIES: Record<AppCategory, string> = {
-  people: "People & HR",
-  revenue: "Revenue & CRM",
-  delivery: "Delivery & Ops",
-  platform: "Platform",
-};
-
 export const LANDING_APPS: LandingApp[] = [
   { id: "hr", name: "Human Resources", icon: Users, category: "people" },
   { id: "recruitment", name: "Recruitment", icon: Briefcase, category: "people" },
@@ -60,5 +53,3 @@ export const LANDING_APPS: LandingApp[] = [
   { id: "automation", name: "Automation", icon: GitBranch, category: "platform" },
   { id: "security", name: "Security", icon: Shield, category: "platform" },
 ];
-
-export const HERO_APP_CHIPS = LANDING_APPS.slice(0, 14);
