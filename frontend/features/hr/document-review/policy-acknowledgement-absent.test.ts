@@ -34,6 +34,8 @@ describe("HRMS-UX-020 — policy acknowledgement has no endpoint, so it ships no
     expect(ack.sort()).toEqual([
       "/hr/cases/disciplinary/mine/unacknowledged-count",
       "/hr/cases/disciplinary/{actionId}/acknowledge",
+      "/me/document-acknowledgements",
+      "/me/document-acknowledgements/{ackId}",
       "/payroll/filings/{filingId}/acknowledgement",
     ]);
   });
