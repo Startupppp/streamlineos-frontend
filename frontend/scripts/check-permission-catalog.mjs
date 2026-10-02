@@ -73,6 +73,7 @@ const FLOORS = {
   delegableModuleIds: 5,
   memberDefaultPermissions: 20,
   ownerOnlyOperations: 1,
+  roleTemplatePermissions: 20,
 };
 
 function isSortedUnique(values) {
@@ -83,7 +84,7 @@ function isSortedUnique(values) {
 /** Rule 1. Returns a list of failures; empty means well-formed. */
 export function wellFormedFailures(catalog) {
   const failures = [];
-  for (const field of ["permissions", "delegableModuleIds", "memberDefaultPermissions"]) {
+  for (const field of ["permissions", "delegableModuleIds", "memberDefaultPermissions", "roleTemplatePermissions"]) {
     const values = catalog[field];
     if (!Array.isArray(values)) {
       failures.push(`${field} is not an array`);
@@ -192,6 +193,7 @@ async function runSelfTest() {
       moduleRegistrySource: registrySource,
       roleDefaultsSource,
       ownerOnlyOperationsSource: "",
+      roleTemplateSources: [],
     }).permissionDetails["kb:pages:view"];
   assert(
     "a universal member grant's scope reaches the catalogued metadata as baselineScope",
@@ -256,11 +258,19 @@ async function runSelfTest() {
       accessObjects[1].description === "View access for the crm module",
   );
 
+  const ROLE_TEMPLATE_SOURCE = [
+    "export const HR_TEMPLATES = [",
+    `  { slug: "hr_viewer", permissions: ["hr:access:view", 'crm:access:view', "ghost:key:view"] },`,
+    '  // { slug: "retired", permissions: ["hr:access:manage"] },',
+    "];",
+  ].join("\n");
+
   const catalog = buildCatalog({
     permissionSources: [permissionSource],
     moduleRegistrySource: registrySource,
     roleDefaultsSource: roleDefaults,
     ownerOnlyOperationsSource: `{ "org.delete": { reason: "Destroys the tenant." } }`,
+    roleTemplateSources: [ROLE_TEMPLATE_SOURCE],
   });
   assert(
     "generated module-access keys are folded in",
@@ -268,12 +278,17 @@ async function runSelfTest() {
   );
   assert("the artifact is sorted and unique", isSortedUnique(catalog.permissions));
   assert(
+    "role-template grants are folded in from either quote style, ignoring unknown keys and commented-out templates",
+    JSON.stringify(catalog.roleTemplatePermissions) === JSON.stringify(["crm:access:view", "hr:access:view"]),
+  );
+  assert(
     "serialisation is stable, so byte-for-byte is a meaningful claim",
     serializeCatalog(catalog) === serializeCatalog(buildCatalog({
       permissionSources: [permissionSource],
       moduleRegistrySource: registrySource,
       roleDefaultsSource: roleDefaults,
       ownerOnlyOperationsSource: `{ "org.delete": { reason: "Destroys the tenant." } }`,
+      roleTemplateSources: [ROLE_TEMPLATE_SOURCE],
     })),
   );
 
@@ -286,8 +301,10 @@ async function runSelfTest() {
     delegableModuleIds: ["a", "b", "c", "d", "e", "f"],
     memberDefaultPermissions: [],
     ownerOnlyOperations: { "org.delete": "reason" },
+    roleTemplatePermissions: [],
   };
   healthy.memberDefaultPermissions = healthy.permissions.slice(0, 25);
+  healthy.roleTemplatePermissions = healthy.permissions.slice(0, 25);
   assert("a healthy artifact is well-formed", wellFormedFailures(healthy).length === 0);
   assert(
     "an EMPTY catalogue is rejected — the silent-empty-sweep defect",
@@ -300,6 +317,10 @@ async function runSelfTest() {
   assert(
     "a DUPLICATED entry is rejected",
     wellFormedFailures({ ...healthy, delegableModuleIds: ["a", "a", "b", "c", "d", "e"] }).length > 0,
+  );
+  assert(
+    "an EMPTY role-template grant list is rejected — a template sweep that matched no file",
+    wellFormedFailures({ ...healthy, roleTemplatePermissions: [] }).length > 0,
   );
   assert(
     "a member default with no catalogue entry is rejected",

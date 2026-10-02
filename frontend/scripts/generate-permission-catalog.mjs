@@ -19,6 +19,7 @@ import { backendAvailable, backendPath, backendUnreachableReason } from "./check
 import {
   buildCatalog,
   isPermissionCatalogFile,
+  isRoleTemplateFile,
   serializeCatalog,
   serializePermissionKeyTs,
 } from "./permission-catalog-extract.mjs";
@@ -33,6 +34,7 @@ export const PERMISSION_KEY_TS_PATH = join(
 
 export function readBackendCatalog() {
   const permissionsDir = backendPath("src", "modules", "rbac", "permissions");
+  const rbacDir = backendPath("src", "modules", "rbac");
   return buildCatalog({
     permissionSources: readdirSync(permissionsDir)
       .filter(isPermissionCatalogFile)
@@ -47,6 +49,10 @@ export function readBackendCatalog() {
       backendPath("src", "common", "rbac", "owner-only-operations.ts"),
       "utf8",
     ),
+    roleTemplateSources: readdirSync(rbacDir)
+      .filter(isRoleTemplateFile)
+      .sort()
+      .map((fileName) => readFileSync(join(rbacDir, fileName), "utf8")),
   });
 }
 

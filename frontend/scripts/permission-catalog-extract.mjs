@@ -156,6 +156,19 @@ export function extractOwnerOnlyOperations(source) {
   return entries;
 }
 
+export function isRoleTemplateFile(fileName) {
+  return /^role-templates.*\.constants\.ts$/.test(fileName);
+}
+
+export function extractRoleTemplatePermissions(sources, knownNames) {
+  const known = new Set(knownNames);
+  return sources.flatMap((source) =>
+    [...stripComments(source).matchAll(/["']([a-z][a-z0-9_-]*(?::[a-z0-9_-]+)+)["']/g)]
+      .map((match) => match[1])
+      .filter((name) => known.has(name)),
+  );
+}
+
 const PERMISSION_KEY = /^[a-z][a-z0-9_-]*(?::[a-z0-9_-]+)+$/;
 
 export function isPermissionKey(value) {
@@ -181,6 +194,7 @@ export function buildCatalog({
   moduleRegistrySource,
   roleDefaultsSource,
   ownerOnlyOperationsSource,
+  roleTemplateSources,
 }) {
   const delegableModuleIds = sortedUnique(extractDelegableModuleIds(moduleRegistrySource));
   const declared = permissionSources.flatMap((source) => extractPermissionNames(source));
@@ -213,6 +227,7 @@ export function buildCatalog({
     delegableModuleIds,
     memberDefaultPermissions: sortedUnique(extractMemberDefaultPermissions(roleDefaultsSource)),
     ownerOnlyOperations: sortedObject(extractOwnerOnlyOperations(ownerOnlyOperationsSource)),
+    roleTemplatePermissions: sortedUnique(extractRoleTemplatePermissions(roleTemplateSources, allNames)),
   };
 }
 
