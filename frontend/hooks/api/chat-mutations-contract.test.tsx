@@ -131,7 +131,7 @@ describe("useEditMessage — post-success invalidation", () => {
     mockPatch.mockReset();
   });
 
-  it("invalidates chat.all after a successful edit so every chat surface that renders the edited message is refreshed", async () => {
+  it("refreshes the edited channel's messages", async () => {
     const qc = makeClient();
     const invalidateSpy = jest.spyOn(qc, "invalidateQueries");
     mockPatch.mockResolvedValue({ ok: true } as never);
@@ -142,6 +142,21 @@ describe("useEditMessage — post-success invalidation", () => {
     });
 
     expect(invalidateSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ queryKey: collaborationQueryKeys.chat.messages(3) }),
+    );
+  });
+
+  it("no longer sweeps chat.all, which discarded every other channel's messages, pins and saved messages", async () => {
+    const qc = makeClient();
+    const invalidateSpy = jest.spyOn(qc, "invalidateQueries");
+    mockPatch.mockResolvedValue({ ok: true } as never);
+
+    const { result } = renderHook(() => useEditMessage(), { wrapper: makeWrapper(qc) });
+    await act(async () => {
+      await result.current.mutateAsync({ channelId: 3, messageId: 42, content: "edited" });
+    });
+
+    expect(invalidateSpy).not.toHaveBeenCalledWith(
       expect.objectContaining({ queryKey: collaborationQueryKeys.chat.all }),
     );
   });
@@ -152,7 +167,7 @@ describe("useDeleteMessage — post-success invalidation", () => {
     mockDelete.mockReset();
   });
 
-  it("invalidates chat.all after a successful delete so every chat surface stops rendering the deleted message", async () => {
+  it("refreshes the pins and saved messages of the deleted message's channel, so it stops being rendered there", async () => {
     const qc = makeClient();
     const invalidateSpy = jest.spyOn(qc, "invalidateQueries");
     mockDelete.mockResolvedValue({ ok: true } as never);
@@ -163,6 +178,24 @@ describe("useDeleteMessage — post-success invalidation", () => {
     });
 
     expect(invalidateSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ queryKey: collaborationQueryKeys.chat.pins(3) }),
+    );
+    expect(invalidateSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ queryKey: collaborationQueryKeys.chat.savedMessages() }),
+    );
+  });
+
+  it("no longer sweeps chat.all for a delete the realtime patch already applied", async () => {
+    const qc = makeClient();
+    const invalidateSpy = jest.spyOn(qc, "invalidateQueries");
+    mockDelete.mockResolvedValue({ ok: true } as never);
+
+    const { result } = renderHook(() => useDeleteMessage(), { wrapper: makeWrapper(qc) });
+    await act(async () => {
+      await result.current.mutateAsync({ channelId: 3, messageId: 42 });
+    });
+
+    expect(invalidateSpy).not.toHaveBeenCalledWith(
       expect.objectContaining({ queryKey: collaborationQueryKeys.chat.all }),
     );
   });

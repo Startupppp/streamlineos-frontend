@@ -27,9 +27,12 @@ import type { ForwardableMessage } from "./forward-message-dialog";
 import { useChatMentions } from "./use-chat-mentions";
 import { useChatTypingText } from "./use-chat-typing-text";
 import { useMessageComposer } from "./use-message-composer";
-import { findOwnMember, resolveDirectPartner } from "./channel-member-lookup";
-
-const MARK_READ_DEBOUNCE_MS = 1_000;
+import { resolveDirectPartner } from "./channel-member-lookup";
+import { flattenMessagePages } from "./message-page-merge";
+import { resolveFirstUnreadIndex } from "./chat-read-position";
+import { useChatReadMarker } from "./use-chat-read-marker";
+import { useChatOfflineQueue } from "./use-chat-offline-queue";
+import { useHuddleAutoStart } from "./use-huddle-auto-start";
 
 export interface MessagePanelProps {
   channelId: number;
@@ -83,6 +86,7 @@ export function useMessagePanelData({
   const lastTypingSent = useRef(0);
   const { isConnected: ablyConnected, typingUsers, publishTyping } = useChatRealtime(channelId);
   const { isConnected: ablySocketConnected } = useAblyConnection();
+
   useHuddleRealtime(channelId);
   const { data: activeHuddle } = useActiveHuddle(channelId);
   const startHuddle = useStartHuddle();
@@ -111,29 +115,22 @@ export function useMessagePanelData({
   const typingText = useChatTypingText(typingUsers);
 
   const [threadMessageId, setThreadMessageId] = useState<number | null>(null);
-  const autoStartHandledRef = useRef(false);
-  const markReadCalledRef = useRef<number | null>(null);
-  const joinHuddleCalledRef = useRef<number | null>(null);
 
-  useEffect(() => {
-    if (!autoStartCall) {
-      autoStartHandledRef.current = false;
-      return;
-    }
-    if (autoStartHandledRef.current) return;
-    autoStartHandledRef.current = true;
-    if (activeHuddle) {
-      joinHuddle.mutate({ huddleId: activeHuddle.id, channelId });
-    } else {
-      startHuddle.mutate(channelId);
-    }
-    onAutoStartHandled?.();
-  }, [autoStartCall, channelId, activeHuddle, startHuddle, joinHuddle, onAutoStartHandled]);
+  useHuddleAutoStart({
+    channelId,
+    autoStartCall,
+    onAutoStartHandled,
+    activeHuddle,
+    isInHuddle,
+    startHuddle,
+    joinHuddle,
+  });
 
   const [showSavedPanel, setShowSavedPanel] = useState(false);
   const [showFilesPanel, setShowFilesPanel] = useState(false);
   const [forwardMessage, setForwardMessage] = useState<ForwardableMessage | null>(null);
-  const [isOnline, setIsOnline] = useState(true);
+  const flushQueueRef = useRef<() => Promise<void>>(async () => undefined);
+  const { isOnline } = useChatOfflineQueue(flushQueueRef);
 
   const { data: orgUsers } = useChatOrgUsers();
   const chatUserMap = useMemo(() => buildChatUserMap(orgUsers), [orgUsers]);
@@ -143,7 +140,10 @@ export function useMessagePanelData({
     [chatUserMap],
   );
   const scrollToBottomRef = useRef<(behavior?: ScrollBehavior) => void>(() => undefined);
-  const { messageInput, setMessageInput, replyTo, setReplyTo, editingMessage, setEditingMessage, editInput, setEditInput, pendingAttachments, setPendingAttachments, uploading, showEmojiPicker, setShowEmojiPicker, showMentions, setShowMentions, mentionQuery, setMentionQuery, mentionIndex, setMentionIndex, showTicketPicker, setShowTicketPicker, ticketQuery, setTicketQuery, ticketSelectedIndex, setTicketSelectedIndex, inputRef, fileInputRef, emojiRef, messageQueue, pendingEntitiesRef, pendingMentionsRef, setFilteredMentions, handleFileSelect, handlePastedFiles, insertEmoji, insertMention, insertTicket, handleSend, handleEdit, handleInputChange, handleKeyDown } = useMessageComposer({ channelId, draftKey, isOnline, sendMessage, editMessage, markRead, scrollToBottom: (behavior) => scrollToBottomRef.current(behavior), publishTyping, filteredMentions: [] });
+  const { messageInput, setMessageInput, replyTo, setReplyTo, editingMessage, setEditingMessage, editInput, setEditInput, pendingAttachments, setPendingAttachments, uploading, showEmojiPicker, setShowEmojiPicker, showMentions, setShowMentions, mentionQuery, setMentionQuery, mentionIndex, setMentionIndex, showTicketPicker, setShowTicketPicker, ticketQuery, setTicketQuery, ticketSelectedIndex, setTicketSelectedIndex, inputRef, fileInputRef, emojiRef, pendingEntitiesRef, pendingMentionsRef, setFilteredMentions, handleFileSelect, handlePastedFiles, insertEmoji, insertMention, insertTicket, handleSend, handleEdit, handleInputChange, handleKeyDown, flushMessageQueue } = useMessageComposer({ channelId, draftKey, isOnline, sendMessage, editMessage, markRead, scrollToBottom: (behavior) => scrollToBottomRef.current(behavior), publishTyping, filteredMentions: [] });
+  useEffect(() => {
+    flushQueueRef.current = flushMessageQueue;
+  }, [flushMessageQueue]);
 
   useEffect(() => {
     const key = draftKeyRef.current;
@@ -159,66 +159,21 @@ export function useMessagePanelData({
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (emojiRef.current && !emojiRef.current.contains(e.target as Node))
+      if (
+        emojiRef.current &&
+        e.target instanceof Node &&
+        !emojiRef.current.contains(e.target)
+      )
         setShowEmojiPicker(false);
     };
     if (showEmojiPicker) document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [showEmojiPicker]);
 
-  useEffect(() => {
-    const goOnline = async () => {
-      setIsOnline(true);
-      const queued = [...messageQueue.current];
-      messageQueue.current = [];
-      for (const msg of queued) {
-        try {
-          await sendMessage.mutateAsync({
-            channelId,
-            // Minted when the message was queued, so two `online` events — or a
-            // reconnect that races the send — replay the winner rather than
-            // inserting the message twice.
-            clientKey: msg.clientKey,
-            content: msg.content,
-            replyToId: msg.replyToId,
-            attachments: msg.attachments,
-            metadata: msg.metadata,
-          });
-        } catch {}
-      }
-    };
-    const goOffline = () => setIsOnline(false);
-    window.addEventListener("online", goOnline);
-    window.addEventListener("offline", goOffline);
-    setIsOnline(navigator.onLine);
-    return () => {
-      window.removeEventListener("online", goOnline);
-      window.removeEventListener("offline", goOffline);
-    };
-  }, [channelId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (joinHuddleCalledRef.current === channelId) return;
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("joinHuddle") === "1" && activeHuddle && !isInHuddle) {
-      joinHuddleCalledRef.current = channelId;
-      joinHuddle.mutate({ huddleId: activeHuddle.id, channelId });
-      const url = new URL(window.location.href);
-      url.searchParams.delete("joinHuddle");
-      window.history.replaceState({}, "", url.toString());
-    }
-  }, [activeHuddle, channelId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const messages: Message[] = useMemo(() => {
-    const all =
-      ([...(messagesData?.pages ?? [])].reverse().flatMap((p) => p.messages) as Message[]) ?? [];
-    const seen = new Set<number>();
-    return all.filter((msg) => {
-      if (seen.has(msg.id)) return false;
-      seen.add(msg.id);
-      return true;
-    });
-  }, [messagesData]);
+  const messages = useMemo(
+    () => flattenMessagePages(messagesData),
+    [messagesData],
+  );
 
   const [renderPages, setRenderPages] = useState(1);
   useEffect(() => {
@@ -249,40 +204,11 @@ export function useMessagePanelData({
     refetchHistory: refetchMessages,
   });
 
-  useEffect(() => {
-    if (channelId > 0 && markReadCalledRef.current !== channelId) {
-      markReadCalledRef.current = channelId;
-      markRead.mutate({ channelId });
-    }
-  }, [channelId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // The open-time mark above runs once, so every message that lands while the
-  // reader is looking at the channel used to count as unread. Re-mark (debounced)
-  // whenever the newest message changes while the tab is visible, and again when
-  // the tab comes back into view.
-  const newestMessageId = messages.at(-1)?.id;
-  const markedNewestRef = useRef<{ channelId: number; messageId: number } | null>(null);
-  useEffect(() => {
-    if (channelId <= 0 || newestMessageId === undefined || newestMessageId < 0) return;
-    const marked = markedNewestRef.current;
-    // The first newest id seen for a channel is covered by the open-time mark.
-    if (marked?.channelId !== channelId) {
-      markedNewestRef.current = { channelId, messageId: newestMessageId };
-      return;
-    }
-    const mark = () => {
-      if (document.visibilityState !== "visible") return;
-      if (markedNewestRef.current?.messageId === newestMessageId) return;
-      markedNewestRef.current = { channelId, messageId: newestMessageId };
-      markRead.mutate({ channelId });
-    };
-    const timer = setTimeout(mark, MARK_READ_DEBOUNCE_MS);
-    document.addEventListener("visibilitychange", mark);
-    return () => {
-      clearTimeout(timer);
-      document.removeEventListener("visibilitychange", mark);
-    };
-  }, [channelId, newestMessageId]); // eslint-disable-line react-hooks/exhaustive-deps
+  useChatReadMarker({
+    channelId,
+    newestMessageId: messages.at(-1)?.id,
+    markRead,
+  });
 
   const { scrollContainerRef, messagesEndRef, showScrollBtn, scrollToBottom, handleScroll } = useChatScroll({
     channelId,
@@ -402,15 +328,10 @@ export function useMessagePanelData({
     startHuddle.mutate(channelId);
   }, [activeHuddle, channelId, joinHuddle, startHuddle]);
 
-  const firstUnreadIndex = useMemo(() => {
-    const currentMember = findOwnMember(channel?.members, currentUserId);
-    const lastReadAt = currentMember?.lastReadAt;
-    if (!lastReadAt) return -1;
-    const lastReadTime = new Date(lastReadAt).getTime();
-    return messages.findIndex(
-      (m) => m.createdAt && new Date(m.createdAt).getTime() > lastReadTime,
-    );
-  }, [messages, channel, currentUserId]);
+  const firstUnreadIndex = useMemo(
+    () => resolveFirstUnreadIndex(messages, channel?.members, currentUserId),
+    [messages, channel, currentUserId],
+  );
 
   const firstUnreadMessageId =
     firstUnreadIndex >= 0 ? messages[firstUnreadIndex]?.id : undefined;
