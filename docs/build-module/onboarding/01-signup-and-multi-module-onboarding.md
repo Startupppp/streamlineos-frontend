@@ -948,6 +948,7 @@ Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGE
 - [x] The invitation writer and email outbox use the same ambient tenant transaction in source; four focused service/proxy commit and rollback cases pass. Target database and concurrent worker proof remain open.
 - [x] Reconcile the 2026-10-03 current wizard and payload against the target in the [onboarding source gap](../audit/onboarding-current-state-gap.md); target behavior remains open below.
 - [x] Reject plan-locked setup module selections in source at backend `9fd0b94d2` using a fresh transaction-bound tier read; five suites/109 focused tests, production typecheck, and lint pass. Preview agreement and target database/browser proof remain open.
+- [x] Recover from a plan-locked setup response in frontend `3aba4c3c8` by returning to Products with draft and invitations intact; three focused suites/23 tests and scoped lint pass. Setup-target-aware preview and browser proof remain open.
 - [ ] Signup and invitation-first identity work for new, existing, wrong-email, expired, and replay paths.
 - [ ] Workspace step has a five-visible-input Build-only default and reversible advanced settings.
 - [ ] Products step selects one or many modules, previews plan limits, and saves adaptive answers, template versions, and custom-field drafts.

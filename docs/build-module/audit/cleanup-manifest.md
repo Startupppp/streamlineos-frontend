@@ -2,7 +2,7 @@
 
 Status: Planned product; documentation consolidation executed on 2026-10-02
 
-The recheck added three canonical documents: the [external client-portal screen contract](../experience/screens/external-client-portal.md), the [original WOW research crosswalk](./original-wow-research-crosswalk.md), and the [comprehensive recheck ledger](./comprehensive-recheck-2026-10-02.md). They do not replace or delete any source research. The 2026-10-02 recheck counted 57 canonical Markdown files and 116 retained research files. As of 2026-10-03, the [TODO index](../implementation/TODO-INDEX.md) and two source-gap audits bring the inventory to 60 canonical Markdown files and 116 retained research files, 176 total. The generated TODO index is the live count authority.
+The recheck added three canonical documents: the [external client-portal screen contract](../experience/screens/external-client-portal.md), the [original WOW research crosswalk](./original-wow-research-crosswalk.md), and the [comprehensive recheck ledger](./comprehensive-recheck-2026-10-02.md). They do not replace or delete any source research. The 2026-10-02 recheck counted 57 canonical Markdown files and 116 retained research files. As of 2026-10-03, the [TODO index](../implementation/TODO-INDEX.md), two source-gap audits, and the [migration chain gap](./migration-chain-gap.md) bring the inventory to 61 canonical Markdown files and 116 retained research files, 177 total. The generated TODO index is the live count authority.
 
 ## Authorized cleanup
 

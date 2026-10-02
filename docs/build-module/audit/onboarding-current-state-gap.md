@@ -18,6 +18,24 @@ Status: Current unverified in a running application; source audit recorded 2026-
 
 The source observations do not prove browser behavior, database persistence, mail delivery, or deployment. The [client portal audit](./client-portal-activation-gap.md) owns external client activation; an internal organization invitation cannot substitute for a portal grant.
 
+## Setup eligibility preview contract
+
+The existing `/billing/entitlements` read is scoped to the current session organization. A new owner's organization does not exist until `POST /org/setup/complete`, and an existing user's current organization need not be the selected setup target. The plan catalog is not an effective entitlement. The planned `POST /org/setup/selection/preview` must therefore accept selected module keys and explicit target intent. The server resolves an existing target from authenticated membership or derives the prospective new-organization trial from its own plan policy; it never trusts a client-supplied tier. The response includes contract version, target kind, effective/prospective plan source, selected module eligibility with stable reason codes, current quota or prospective limits, policy revision/as-of time, and expiry. Do not use a shared HTTP cache. An optional private Redis projection must key actor, session, draft and plan versions, expire within 60 seconds, and invalidate on plan or access changes. Completion repeats the fresh authoritative guard, since a preview cannot reserve a subscription state. Frontend `3aba4c3c8` already preserves the draft and returns to Products on an authoritative `MODULE_NOT_ENABLED` plan refusal; the preview and deployed browser proof remain open.
+
+## Setup invitation outcome provenance
+
+Before backend `e1001a934`, `org-setup-query.service.ts` selected invitation status by organization and email. Since `invitations` and `invitation_events` did not carry a setup producer event ID, a preexisting pending invitation could mask a failed attempt in the current setup event. Timestamps and inviter identity are not reliable correlations; resends reuse invitation IDs and manual invites may race. Do not overload `inbox_records.last_error` with successful recipient data.
+
+Add an organization-scoped receipt keyed by `(organization_id, producer_event_id, canonical_email)` with a nullable invitation ID, bounded result (`SKIPPED_SELF`, `REFUSED`, `QUEUED`, `DELIVERY_FAILED`), allowlisted reason code, and creation time. The producer event and invitation references must remain in the same organization; require a unique event/email key, event lookup index, tenant RLS, and retention tied to outbox cleanup. The setup consumer writes one deduplicated recipient receipt in its existing transaction, including whole-batch savepoint failures. Setup status pairs the latest setup outbox event to its exact inbox record and reads only that event's receipts. A queued receipt may be upgraded to accepted/revoked by its own invitation ID; a legacy event without receipts returns no per-recipient breakdown rather than a guessed status. Migrate schema first, deploy writer then reader, and test replay, rollback, duplicate email, old pending invitation, resend, suppression, cross-tenant access, and event cleanup on a target database.
+
+Backend `e1001a934` implements the additive receipt table, same-org event and invitation foreign keys, tenant RLS, consumer write, exact-event query, and legacy null fallback in source. Its migration `1728` is journalled; 104 setup tests, 38 migration-integrity tests, production typecheck, and scoped lint pass. Database application, rollback, RLS catalog proof, and browser refresh remain Current unverified.
+
+The additive `1728` receipt migration is not a repair for historical cold-build ordering. Migration `0965_ar02_canonical_tenant_fks_3.sql` references `invitations(org_id,id)` before any matching unique index appears in the checked-in earlier SQL. Treat [BLD-MIGRATION-CHAIN-01](./migration-chain-gap.md) as a separate open deployment gate until a disposable database proves the full chain.
+
+## Resend worker outcome correlation
+
+`invitation-lifecycle.service.ts` records immediate queue refusal, while the retry worker later changes only `email_outbox`. The invitation list currently derives `deliveryFailed` from invitation events after the latest resend timestamp. Appending a delayed failure from an older email would mislabel a newer resend. The planned seam is an opaque, same-organization resend-generation correlation: use the new `RESENT` event ID to label its email outbox row in the same transaction, then project the terminal status of only that exact row in the owner invitation read. Keep old uncorrelated rows on a conservative historical fallback. Do not match email address, subject, or timestamps; do not let the generic Email worker mutate invitations. Queue acceptance, retrying, sent, and terminal failure must remain distinct states. An Email-owned claim/CAS follow-up must prevent competing workers or manual handoff from overwriting terminal transport state.
+
 ## Sequenced implementation
 
 1. Close the no-migration plan eligibility guard and test Free, trial, mixed, stale preview, Build-only, and retry paths.
@@ -32,6 +50,12 @@ The source observations do not prove browser behavior, database persistence, mai
 
 - [x] Reconcile the current wizard, backend endpoints, draft storage, invitation payload, and launch destination against the three-step target without claiming runtime verification.
 - [x] Add the transaction-bound fresh-tier plan guard at backend `9fd0b94d2`; five focused suites/109 tests, production typecheck, and scoped lint pass for Free, trial, Build-only, mixed selection, and replay. Target database rollback and concurrent subscription transition proof remain open.
+- [x] Add source recovery for an authoritative plan-lock 402 at frontend `3aba4c3c8`: Back to Products preserves draft/invitees and suppresses a false ready state; three focused suites/23 tests and scoped lint pass. Browser proof remains open.
+- [x] Identify the exact setup invitation status provenance gap and choose event-scoped receipts over organization/email or inbox error text; implementation and target database proof remain open.
+- [ ] Implement authenticated, setup-target-aware eligibility preview and prove 402 recovery on a deployed browser with owner, existing-user, and wrong-organization paths.
+- [x] Write and read one event-scoped receipt per deduplicated setup invitee in source at backend `e1001a934`, with same-org FKs, additive migration `1728`, and legacy null fallback; focused source checks pass.
+- [ ] Apply migration `1728` to a disposable target database; prove tenant RLS/FKs, rollback, replay, older pending invite, and owner/member browser refresh before closing the recipient-status defect.
+- [ ] Correlate each resent invitation generation with its own email outbox row and derive later terminal failure from that row; separately prove worker claim/CAS safety against duplicate or stale transport writes.
 - [ ] Define and migrate a revisioned, identity-scoped pre-organization draft and activation run with idempotent recovery and privacy bounds.
 - [ ] Replace the current required Basics form and inferred goal modules with at most five Build-only inputs and explicit single/multi-product selection.
 - [ ] Add adaptive module questions, immutable template previews, custom-field drafts, and accurate plan/quota previews without extra mandatory steps.

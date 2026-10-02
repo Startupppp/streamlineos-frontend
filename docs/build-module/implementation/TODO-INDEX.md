@@ -1,6 +1,6 @@
 # Build documentation TODO index
 
-The Delivery checklist and any inline acceptance checkboxes inside each current specification are the source of truth for its implementation status. Open counts include every unchecked box in that document. A checked research row below means only that the historical source is linked in the research traceability map; it does not verify any product behavior. Check a specification item only after recording the current revision and required evidence in the requirement ledger and work claims. The 59 current specifications plus this index make 60 canonical Markdown files.
+The Delivery checklist and any inline acceptance checkboxes inside each current specification are the source of truth for its implementation status. Open counts include every unchecked box in that document. A checked research row below means only that the historical source is linked in the research traceability map; it does not verify any product behavior. Check a specification item only after recording the current revision and required evidence in the requirement ledger and work claims. The 60 current specifications plus this index make 61 canonical Markdown files.
 
 ## Delivery checklist
 
@@ -8,18 +8,19 @@ The Delivery checklist and any inline acceptance checkboxes inside each current 
 - [ ] Every accepted research finding has an adopted or deferred destination in the research traceability map.
 - [ ] Release gates, tenant/role browser paths, persistence, and operations evidence are complete.
 
-Current specification items: 41 checked; 385 open. Historical research traceability: 116 mapped of 116 files.
+Current specification items: 50 checked; 392 open. Historical research traceability: 116 mapped of 116 files.
 
-## Current specifications (59)
+## Current specifications (60)
 
 - [ ] [architecture/07-architecture-data-api-cache-ai.md](../architecture/07-architecture-data-api-cache-ai.md) — 0 checked, 12 open
 - [ ] [architecture/08-deep-module-reconciliation.md](../architecture/08-deep-module-reconciliation.md) — 0 checked, 12 open
 - [ ] [architecture/screen-data-contracts.md](../architecture/screen-data-contracts.md) — 0 checked, 8 open
-- [ ] [audit/bugs-and-verification.md](../audit/bugs-and-verification.md) — 8 checked, 4 open
+- [ ] [audit/bugs-and-verification.md](../audit/bugs-and-verification.md) — 12 checked, 5 open
 - [ ] [audit/cleanup-manifest.md](../audit/cleanup-manifest.md) — 2 checked, 2 open
 - [ ] [audit/client-portal-activation-gap.md](../audit/client-portal-activation-gap.md) — 3 checked, 5 open
 - [ ] [audit/comprehensive-recheck-2026-10-02.md](../audit/comprehensive-recheck-2026-10-02.md) — 1 checked, 3 open
-- [ ] [audit/onboarding-current-state-gap.md](../audit/onboarding-current-state-gap.md) — 2 checked, 6 open
+- [ ] [audit/migration-chain-gap.md](../audit/migration-chain-gap.md) — 1 checked, 3 open
+- [ ] [audit/onboarding-current-state-gap.md](../audit/onboarding-current-state-gap.md) — 5 checked, 9 open
 - [ ] [audit/original-wow-research-crosswalk.md](../audit/original-wow-research-crosswalk.md) — 1 checked, 2 open
 - [ ] [audit/requirements-coverage.md](../audit/requirements-coverage.md) — 1 checked, 3 open
 - [ ] [audit/research-traceability.md](../audit/research-traceability.md) — 2 checked, 3 open
@@ -67,7 +68,7 @@ Current specification items: 41 checked; 385 open. Historical research traceabil
 - [ ] [implementation/REQUIREMENT-LEDGER.md](REQUIREMENT-LEDGER.md) — 1 checked, 3 open
 - [ ] [implementation/WORK-CLAIMS.md](WORK-CLAIMS.md) — 1 checked, 4 open
 - [ ] [integrations/08-cross-module-client-content-commercial.md](../integrations/08-cross-module-client-content-commercial.md) — 0 checked, 11 open
-- [ ] [onboarding/01-signup-and-multi-module-onboarding.md](../onboarding/01-signup-and-multi-module-onboarding.md) — 5 checked, 49 open
+- [ ] [onboarding/01-signup-and-multi-module-onboarding.md](../onboarding/01-signup-and-multi-module-onboarding.md) — 6 checked, 49 open
 - [ ] [product/00-product-vision-and-decisions.md](../product/00-product-vision-and-decisions.md) — 0 checked, 10 open
 - [ ] [product/customer-value-and-differentiation.md](../product/customer-value-and-differentiation.md) — 1 checked, 7 open
 - [ ] [README.md](../README.md) — 2 checked, 5 open
