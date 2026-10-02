@@ -6,6 +6,7 @@ import { UserCombobox } from "@/components/ui/user-combobox";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { AlertCircle, CheckCircle, Search } from "lucide-react";
 import { useExitVerification } from "@/hooks/api/hr/enterprise-ops-identity";
@@ -14,10 +15,15 @@ export function ExitVerificationView() {
   const [userId, setUserId] = useState("");
   const [queryId, setQueryId] = useState("");
 
-  const { data, isLoading, isError, error, refetch } = useExitVerification(queryId);
+  const { data, isLoading, isError, error, refetch, access } = useExitVerification(queryId);
+  const undetermined = Boolean(queryId) && !isLoading && !isError && data === undefined;
 
   function handleSearch() {
     setQueryId(userId.trim());
+  }
+
+  function handleRetry() {
+    void refetch();
   }
 
   return (
@@ -55,11 +61,26 @@ export function ExitVerificationView() {
         />
       )}
 
+      {undetermined && access.denied && (
+        <NoPermissionState permission={access.permission} compact />
+      )}
+
+      {undetermined && !access.denied && (
+        <ErrorState
+          title="Couldn't determine exit verification status"
+          description={getErrorMessage(error)}
+          error={error}
+          onRetry={handleRetry}
+          compact
+        />
+      )}
+
       {isError && queryId && (
         <ErrorState
           title="Couldn't load exit verification"
           description={getErrorMessage(error)}
-          onRetry={refetch}
+          error={error}
+          onRetry={handleRetry}
           compact
         />
       )}

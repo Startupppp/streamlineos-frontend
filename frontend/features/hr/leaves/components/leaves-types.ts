@@ -11,6 +11,7 @@ export interface LeaveType {
   name: string;
   /** V-049. The configured policy's name. Optional until the backend half lands. */
   policyName?: string | null;
+  daysPerYear?: number | null;
 }
 
 export interface LeaveRequest {
@@ -60,7 +61,7 @@ export interface ApprovedLeave {
 
 export interface WfhRequest {
   id: number;
-  date: string;
+  date: string | Date;
   reason: string | null;
   status: string | null;
   rejectionReason?: string | null;

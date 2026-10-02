@@ -1,53 +1,72 @@
 import type { NavGroup, NavRoute } from "./sidebar-nav-types";
 
-/** Routes a brand-new HR org does not need until Settings → Advanced. */
-const WEEK_ONE_HIDDEN_LABELS = new Set([
-  "Compensation & Benefits",
-  "Performance",
-  "Assets",
-  "Workforce",
-  "HR operations",
-  "Compliance & Risk",
-  "Access & governance",
-  "Exit Management",
-  "People analytics",
-  "HR access",
-]);
+export const HR_NAV_CHROME_KILLS: readonly string[] = [
+  "/hr/service-delivery",
+  "/hr/reimbursements",
+  "/hr/simulator",
+  "/hr/settings/company",
+];
 
-const WEEK_ONE_HIDDEN_CHILD_HREFS = new Set([
+const CHROME_KILLS = new Set(HR_NAV_CHROME_KILLS);
+
+export const HR_NAV_ADVANCED_HREFS: readonly string[] = [
   "/hr/employees/skills-matrix",
   "/hr/employees/find-expert",
   "/hr/employees/manager-coverage",
   "/hr/employees/reporting-requests",
   "/hr/employees/reporting-changes",
   "/hr/org",
-  "/hr/positions",
   "/hr/rosters",
   "/hr/overtime",
   "/hr/geofencing",
-  "/hr/biometric",
-  "/hr/devices",
   "/hr/work-logs",
   "/hr/handbook",
-  "/hr/background-verification",
-  "/hr/document-types",
-  "/hr/document-review",
   "/hr/email-templates",
-]);
+  "/hr/background-verification",
+  "/hr/engagement",
+  "/hr/accommodations",
+  "/hr/compensation-planning",
+  "/hr/equity",
+  "/hr/workforce",
+  "/hr/workforce-cost",
+  "/hr/contingent",
+  "/hr/performance",
+  "/hr/performance/analytics",
+  "/hr/goals",
+  "/hr/kpis",
+  "/hr/feedback",
+  "/hr/compliance",
+  "/hr/safety",
+  "/hr/emergency",
+  "/hr/labor-relations",
+  "/hr/legal-holds",
+  "/hr/retention",
+  "/hr/event-stream",
+];
 
-function trimChildren(route: NavRoute): NavRoute {
-  if (!route.children?.length) return route;
-  const children = route.children.filter((child) => !WEEK_ONE_HIDDEN_CHILD_HREFS.has(child.href));
-  return { ...route, children: children.length > 0 ? children : undefined };
+const ADVANCED_HREFS = new Set(HR_NAV_ADVANCED_HREFS);
+
+export function isHrNavChromeKilled(href: string): boolean {
+  return CHROME_KILLS.has(href);
 }
 
-/** Hide enterprise HR nav until the admin turns on Advanced in HR settings. */
+function isHidden(href: string, showAdvanced: boolean): boolean {
+  if (CHROME_KILLS.has(href)) return true;
+  return !showAdvanced && ADVANCED_HREFS.has(href);
+}
+
+function keepRoute(route: NavRoute, showAdvanced: boolean): NavRoute[] {
+  if (isHidden(route.href, showAdvanced)) return [];
+  if (!route.children?.length) return [route];
+  const children = route.children.flatMap((child) => keepRoute(child, showAdvanced));
+  return [{ ...route, children: children.length > 0 ? children : undefined }];
+}
+
 export function applyHrWeekOneNav(groups: NavGroup[], showAdvanced: boolean): NavGroup[] {
-  if (showAdvanced) return groups;
-  return groups.map((group) => ({
-    ...group,
-    routes: group.routes
-      .filter((route) => !WEEK_ONE_HIDDEN_LABELS.has(route.label))
-      .map(trimChildren),
-  }));
+  return groups
+    .map((group) => ({
+      ...group,
+      routes: group.routes.flatMap((route) => keepRoute(route, showAdvanced)),
+    }))
+    .filter((group) => group.routes.length > 0);
 }

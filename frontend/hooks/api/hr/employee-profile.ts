@@ -240,6 +240,7 @@ export function useEmployeeSensitive(employmentId: number | undefined) {
       ),
     enabled: hrEnabled && !!employmentId && canViewSensitive,
     staleTime: 30_000,
+    ...INLINE_READ_ERROR,
   });
 }
 

@@ -8,6 +8,7 @@ import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const positionListContract = lazyContract(() =>
   import("@/features/hr/governance/hooks/positions-schema").then((m) => m.positionListContract),
@@ -115,6 +116,7 @@ export function useSimulateScenario(scenarioId: number | undefined) {
     queryFn: ({ signal }) => apiClient.get(`/hr/governance/scenarios/${scenarioId}/simulate`, undefined, signal, simulationResultContract),
     enabled: canViewPositions && scenarioId !== undefined,
     staleTime: 0,
+    ...INLINE_READ_ERROR,
   });
 }
 

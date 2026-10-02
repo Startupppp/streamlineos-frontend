@@ -1,365 +1,33 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import {
-  ChevronDownIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-} from "@animateicons/react/lucide";
-import { AlertCircle, Building2, Network } from "lucide-react";
+import { PersonDrawer } from "@/components/shared";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
-import { ErrorState } from "@/components/shared";
-import { PageState } from "@/components/shared/page-state";
-import { usePageState } from "@/hooks/api/use-page-state";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  FILTER_TOOLBAR_ROW,
-  PAGE_BODY_EMPTY_CLASS,
-} from "@/components/ui/content-fill-panel";
+import { useCan } from "@/hooks/api/access";
+import { PAGE_BODY_EMPTY_CLASS, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SearchInput } from "@/components/ui/search-input";
-import { Skeleton } from "@/components/ui/skeleton";
-import { TruncatedText } from "@/components/ui/truncated-text";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { resolveImageUrl } from "@/lib/utils";
 import type { OrgChartNode } from "./types";
-import {
-  splitOrgChartRoots,
-  topLevelRootsHeading,
-  unassignedRootsHeading,
-} from "./org-chart-roots";
-import { useHrOrgChart } from "./use-org-chart";
-
-const PAGE_SIZE = 20;
-
-interface PageButtonsProps {
-  page: number;
-  hasNext: boolean;
-  disabled: boolean;
-  onPrevious: () => void;
-  onNext: () => void;
-}
-
-function PageButtons({
-  page,
-  hasNext,
-  disabled,
-  onPrevious,
-  onNext,
-}: PageButtonsProps) {
-  if (page === 1 && !hasNext) return null;
-
-  return (
-    <nav aria-label="Organization chart pages" className="flex items-center gap-2">
-      <AnimatedIconButton
-        icon={ChevronLeftIcon}
-        type="button"
-        variant="outline"
-        size="sm"
-        disabled={disabled || page === 1}
-        onClick={onPrevious}
-      >
-        Previous
-      </AnimatedIconButton>
-      <span className="text-xs font-medium tabular-nums text-muted-foreground">
-        Page {page}
-      </span>
-      <AnimatedIconButton
-        icon={ChevronRightIcon}
-        type="button"
-        variant="outline"
-        size="sm"
-        disabled={disabled || !hasNext}
-        onClick={onNext}
-      >
-        Next
-      </AnimatedIconButton>
-    </nav>
-  );
-}
-
-function BranchSkeleton() {
-  return (
-    <div className="space-y-2 border-l border-border/60 pl-4">
-      {Array.from({ length: 3 }, (_, index) => (
-        <Skeleton key={index} className="h-14 w-full rounded-lg" />
-      ))}
-    </div>
-  );
-}
-
-function PersonSummary({ employee }: { employee: OrgChartNode }) {
-  return (
-    <>
-      <Avatar className="h-9 w-9 shrink-0">
-        <AvatarImage src={resolveImageUrl(employee.image)} />
-        <AvatarFallback className="bg-primary/10 text-xs text-primary">
-          {employee.name?.charAt(0).toUpperCase() || "?"}
-        </AvatarFallback>
-      </Avatar>
-      <div className="min-w-0 flex-1">
-        <TruncatedText text={employee.name ?? "Unnamed"} className="text-sm font-semibold" />
-        <TruncatedText
-          text={employee.designation ?? employee.role ?? ""}
-          className="text-xs text-muted-foreground"
-        />
-      </div>
-      {employee.departmentName ? (
-        <span className="hidden shrink-0 items-center gap-1 text-xs text-muted-foreground sm:inline-flex">
-          <Building2 className="h-3.5 w-3.5" aria-hidden="true" />
-          {employee.departmentName}
-        </span>
-      ) : null}
-    </>
-  );
-}
-
-function OrgChartBranch({
-  employee,
-  lineage,
-}: {
-  employee: OrgChartNode;
-  lineage: readonly string[];
-}) {
-  const [expanded, setExpanded] = useState(false);
-  const [cursors, setCursors] = useState<Array<string | undefined>>([undefined]);
-  const cursor = cursors.at(-1);
-  const isCycle = lineage.includes(employee.id);
-  const query = useHrOrgChart(
-    { parentId: employee.id, cursor, limit: PAGE_SIZE },
-    { enabled: expanded && employee.hasDirectReports && !isCycle },
-  );
-  const childLineage = [...lineage, employee.id];
-  const children = (query.data?.data ?? []).filter(
-    (child) => !childLineage.includes(child.id),
-  );
-
-  function handleToggle() {
-    setExpanded((current) => !current);
-  }
-
-  function handlePrevious() {
-    setCursors((current) => current.slice(0, -1));
-  }
-
-  function handleNext() {
-    const nextCursor = query.data?.pageInfo.nextCursor;
-    if (nextCursor) setCursors((current) => [...current, nextCursor]);
-  }
-
-  function handleRetry() {
-    void query.refetch();
-  }
-
-  return (
-    <li className="min-w-72 space-y-2">
-      <div className="flex min-w-0 items-center gap-2 rounded-lg border border-border bg-card p-2 shadow-panel">
-        {employee.hasDirectReports && !isCycle ? (
-          <AnimatedIconButton
-            icon={expanded ? ChevronDownIcon : ChevronRightIcon}
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 shrink-0"
-            aria-label={`${expanded ? "Collapse" : "Expand"} direct reports for ${employee.name}`}
-            aria-expanded={expanded}
-            onClick={handleToggle}
-          />
-        ) : (
-          <span className="h-7 w-7 shrink-0" aria-hidden="true" />
-        )}
-        <PersonSummary employee={employee} />
-      </div>
-
-      {expanded ? (
-        <div className="ml-4 space-y-2 border-l border-border/60 pl-4">
-          {query.isPending ? <BranchSkeleton /> : null}
-          {query.isError ? (
-            <ErrorState
-              compact
-              title="Couldn't load direct reports"
-              description={getErrorMessage(query.error)}
-              onRetry={handleRetry}
-            />
-          ) : null}
-          {query.isSuccess && children.length === 0 ? (
-            <p className="py-2 text-xs text-muted-foreground">No visible direct reports.</p>
-          ) : null}
-          {children.length > 0 ? (
-            <ul className="space-y-2">
-              {children.map((child) => (
-                <OrgChartBranch key={child.id} employee={child} lineage={childLineage} />
-              ))}
-            </ul>
-          ) : null}
-          {query.data ? (
-            <PageButtons
-              page={cursors.length}
-              hasNext={query.data.pageInfo.hasMore}
-              disabled={query.isFetching}
-              onPrevious={handlePrevious}
-              onNext={handleNext}
-            />
-          ) : null}
-        </div>
-      ) : null}
-    </li>
-  );
-}
-
-function OrgChartCollection({ search }: { search?: string }) {
-  const [cursors, setCursors] = useState<Array<string | undefined>>([undefined]);
-  const cursor = cursors.at(-1);
-  const query = useHrOrgChart({ search, cursor, limit: PAGE_SIZE });
-
-  function handlePrevious() {
-    setCursors((current) => current.slice(0, -1));
-  }
-
-  function handleNext() {
-    const nextCursor = query.data?.pageInfo.nextCursor;
-    if (nextCursor) setCursors((current) => [...current, nextCursor]);
-  }
-
-  function handleRetry() {
-    void query.refetch();
-  }
-
-  // The route has no server guard and useOrgChart is gated on hr:employees:view:
-  // a denied caller got an endless skeleton (a disabled query stays pending).
-  const pageState = usePageState({
-    permission: "hr:employees:view",
-    isLoading: query.isPending,
-    isError: query.isError,
-    error: query.error,
-  });
-
-  if (pageState.kind !== "ready" || query.isPending || query.isError) {
-    return (
-      <PageState
-        resolution={pageState}
-        className="flex-1 min-h-0"
-        onRetry={handleRetry}
-        loading={
-          <div className="flex min-h-0 flex-1 flex-col gap-2">
-            {Array.from({ length: 9 }, (_, index) => (
-              <Skeleton key={index} className="h-14 w-full rounded-lg" />
-            ))}
-          </div>
-        }
-      >
-        {null}
-      </PageState>
-    );
-  }
-
-  if (query.data.data.length === 0) {
-    return (
-      <EmptyState
-        className={PAGE_BODY_EMPTY_CLASS}
-        illustrationPreset="companies"
-        title={search ? "No people found" : "No reporting structure found"}
-        description={
-          search
-            ? "Try a different name, designation, or department."
-            : "Active employees will appear here when reporting lines are assigned."
-        }
-      />
-    );
-  }
-
-  const emptyNodes: OrgChartNode[] = [];
-  const { owner, topLevel, unassigned } = search
-    ? { owner: query.data.data, topLevel: emptyNodes, unassigned: emptyNodes }
-    : splitOrgChartRoots(query.data.data);
-  const topLevelHeading = topLevelRootsHeading();
-  const unassignedHeading = unassignedRootsHeading(
-    owner.length + topLevel.length > 0,
-  );
-
-  return (
-    <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
-      <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-auto p-3">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Network className="h-4 w-4" aria-hidden="true" />
-          {search
-            ? "Search results; expand a person to load their direct reports."
-            : "People you can see who report to nobody above them. Expand a person to load one branch at a time."}
-        </div>
-        {owner.length > 0 ? (
-          <ul className="min-w-max space-y-2">
-            {owner.map((employee) => (
-              <OrgChartBranch key={employee.id} employee={employee} lineage={[]} />
-            ))}
-          </ul>
-        ) : null}
-        {topLevel.length > 0 ? (
-          // V-026. A deliberate top-level role is its own group, so it is never
-          // drawn as a second CEO beside the owner, and never confused with
-          // someone who is only missing a manager.
-          <section className="min-w-max space-y-2 rounded-lg border border-border bg-muted/20 p-3">
-            <div className="flex items-start gap-2">
-              <Network className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-              <div className="space-y-1">
-                <h2 className="text-sm font-semibold text-foreground">
-                  {topLevelHeading.title}
-                </h2>
-                <p className="max-w-prose text-xs leading-relaxed text-muted-foreground">
-                  {topLevelHeading.description}
-                </p>
-              </div>
-            </div>
-            <ul className="space-y-2">
-              {topLevel.map((employee) => (
-                <OrgChartBranch key={employee.id} employee={employee} lineage={[]} />
-              ))}
-            </ul>
-          </section>
-        ) : null}
-        {unassigned.length > 0 ? (
-          <section className="min-w-max space-y-2 rounded-lg border border-dashed border-border bg-muted/30 p-3">
-            <div className="flex items-start gap-2">
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-              <div className="space-y-1">
-                <h2 className="text-sm font-semibold text-foreground">
-                  {unassignedHeading.title}
-                </h2>
-                <p className="max-w-prose text-xs leading-relaxed text-muted-foreground">
-                  {unassignedHeading.description}
-                </p>
-              </div>
-            </div>
-            <ul className="space-y-2">
-              {unassigned.map((employee) => (
-                <OrgChartBranch key={employee.id} employee={employee} lineage={[]} />
-              ))}
-            </ul>
-          </section>
-        ) : null}
-        <PageButtons
-          page={cursors.length}
-          hasNext={query.data.pageInfo.hasMore}
-          disabled={query.isFetching}
-          onPrevious={handlePrevious}
-          onNext={handleNext}
-        />
-      </CardContent>
-    </Card>
-  );
-}
+import { OrgChartCollection } from "./org-chart-collection";
 
 export function OrgChartPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const urlSearchValue = searchParams.get("q") ?? "";
-  const [searchDraft, setSearchDraft] = useState({ sourceQuery: urlSearchValue, value: urlSearchValue });
-  const searchInput = searchDraft.sourceQuery === urlSearchValue ? searchDraft.value : urlSearchValue;
+  const [searchInput, setSearchInput] = useState(urlSearchValue);
+  const [selected, setSelected] = useState<OrgChartNode | null>(null);
+  const canSeePay = useCan("payroll:salaries:view");
+  const [observedQuery, setObservedQuery] = useState(urlSearchValue);
   const debouncedSearch = useDebouncedValue(searchInput.trim(), 300);
+
+  if (urlSearchValue !== observedQuery) {
+    setObservedQuery(urlSearchValue);
+    if (urlSearchValue !== debouncedSearch) setSearchInput(urlSearchValue);
+  }
+
   const validSearch = debouncedSearch.length >= 2 ? debouncedSearch : undefined;
 
   useEffect(() => {
@@ -372,8 +40,13 @@ export function OrgChartPage() {
   }, [debouncedSearch, urlSearchValue, searchParams, router, pathname]);
 
   function handleSearchChange(value: string) {
-    setSearchDraft({ sourceQuery: urlSearchValue, value });
+    setSearchInput(value);
   }
+
+  const handleSelect = useCallback((employee: OrgChartNode) => setSelected(employee), []);
+  const handleDrawerOpenChange = useCallback((open: boolean) => {
+    if (!open) setSelected(null);
+  }, []);
 
   return (
     <PageWrapper
@@ -401,8 +74,57 @@ export function OrgChartPage() {
           description="Enter at least two characters to search the organization."
         />
       ) : (
-        <OrgChartCollection key={validSearch ?? "roots"} search={validSearch} />
+        <OrgChartCollection
+          key={validSearch ?? "roots"}
+          search={validSearch}
+          onSelect={handleSelect}
+        />
       )}
+
+      <PersonDrawer
+        open={selected !== null}
+        onOpenChange={handleDrawerOpenChange}
+        person={
+          selected
+            ? {
+                userId: selected.id,
+                name: selected.name,
+                image: selected.image,
+                designation: selected.designation ?? selected.role,
+                departmentName: selected.departmentName,
+              }
+            : null
+        }
+        canSeePay={canSeePay}
+        profileHref={selected ? `/hr/employees/${selected.id}` : undefined}
+        sections={{ overview: <OrgChartPersonOverview node={selected} /> }}
+      />
     </PageWrapper>
+  );
+}
+
+function OrgChartPersonOverview({ node }: { node: OrgChartNode | null }) {
+  if (!node) return null;
+  return (
+    <dl className="space-y-2 text-dense">
+      <div className="flex gap-2">
+        <dt className="w-32 shrink-0 text-muted-foreground">Designation</dt>
+        <dd className="min-w-0 text-foreground">
+          {node.designation ?? node.role ?? "Not recorded"}
+        </dd>
+      </div>
+      <div className="flex gap-2">
+        <dt className="w-32 shrink-0 text-muted-foreground">Department</dt>
+        <dd className="min-w-0 text-foreground">
+          {node.departmentName ?? "Not recorded"}
+        </dd>
+      </div>
+      <div className="flex gap-2">
+        <dt className="w-32 shrink-0 text-muted-foreground">Direct reports</dt>
+        <dd className="min-w-0 text-foreground">
+          {node.hasDirectReports ? "Yes" : "None visible to you"}
+        </dd>
+      </div>
+    </dl>
   );
 }

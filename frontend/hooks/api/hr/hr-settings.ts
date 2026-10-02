@@ -3,6 +3,7 @@
 import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const noContentC = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
@@ -152,6 +153,7 @@ export function useHrWfhRequests() {
     queryFn: ({ signal }) => apiClient.get<WfhRequest[]>("/me/time-off/wfh", undefined, signal, lazyContract(() => import("@/hooks/api/hr/hr-settings-schema").then(m => m.wfhRequestListContract))),
     staleTime: 2 * 60_000,
     enabled: canSelf,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -163,6 +165,7 @@ export function useHrPendingWfhRequests(options?: { enabled?: boolean }) {
     queryFn: ({ signal }) => apiClient.get<WfhRequest[]>("/hr/wfh/pending", undefined, signal, lazyContract(() => import("@/hooks/api/hr/hr-settings-schema").then(m => m.wfhRequestListContract))),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canAttendance && (options?.enabled ?? true),
+    ...INLINE_READ_ERROR,
   });
 }
 

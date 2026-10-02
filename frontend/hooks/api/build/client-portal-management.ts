@@ -1,10 +1,12 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type { PortalSettings, PortalPreview } from "@/hooks/api/build/client-portal-management-schema";
 
 const portalSettingsContract = lazyContract(() =>
@@ -20,7 +22,7 @@ const portalPreviewContract = lazyContract(() =>
 );
 
 export function usePortalSettings(projectId: number) {
-  return useQuery<PortalSettings>({
+  return useGatedQuery<PortalSettings>("build:clientvisibility:manage", {
     queryKey: buildWorkQueryKeys.projects.clientPortal.settings(projectId),
     queryFn: ({ signal }) =>
       apiClient.get<PortalSettings>(
@@ -31,8 +33,8 @@ export function usePortalSettings(projectId: number) {
       ),
     enabled: !!projectId,
     staleTime: 30_000,
-    throwOnError: false,
     retry: false,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -77,7 +79,7 @@ export function useUnpublishPortal(projectId: number) {
 }
 
 export function usePortalPreview(projectId: number) {
-  return useQuery<PortalPreview>({
+  return useGatedQuery<PortalPreview>("build:clientvisibility:manage", {
     queryKey: buildWorkQueryKeys.projects.clientPortal.preview(projectId),
     queryFn: ({ signal }) =>
       apiClient.get<PortalPreview>(
@@ -88,7 +90,7 @@ export function usePortalPreview(projectId: number) {
       ),
     enabled: !!projectId,
     staleTime: 30_000,
-    throwOnError: false,
     retry: false,
+    ...INLINE_READ_ERROR,
   });
 }

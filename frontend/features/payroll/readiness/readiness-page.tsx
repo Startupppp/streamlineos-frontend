@@ -1,137 +1,177 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { format, parseISO } from "date-fns";
+import { useCallback, useMemo, useState } from "react";
+import { AlertTriangle } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
-import { Skeleton } from "@/components/ui/skeleton";
-import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
 import { MonthPicker } from "@/features/payroll/shared/month-picker";
 import { formatMonth } from "@/features/payroll/shared/payroll-format";
+import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
-import { usePayrollReadiness } from "@/hooks/api/payroll/readiness";
-import type { PayrollReadiness } from "@/hooks/api/payroll/readiness-schema";
+import { usePayrollReadiness, usePayrollRunBlockers, READINESS_PAGE_LIMIT } from "@/hooks/api/payroll/readiness";
+import { useRunEmployees } from "@/hooks/api/payroll/run-employees";
+import { currentPayrollMonth } from "@/hooks/api/payroll/payroll-cutoff";
+import { formatDateTime } from "@/lib/date-utils";
+import { statusToneClasses } from "@/lib/design-tokens";
+import { cn } from "@/lib/utils";
+import {
+  blockedPeopleCount,
+  countsByCategory,
+  openBlockerCount,
+  readinessBlockerRows,
+  waivedCount,
+} from "./readiness-blockers";
+import { ReadinessBlockersTable } from "./readiness-blockers-table";
+import type { ReadinessCategoryKey } from "./readiness-categories";
+import { ReadinessExports } from "./readiness-exports";
+import { ReadinessHeader } from "./readiness-header";
 import { ReadinessStageList } from "./readiness-stage-list";
-import { ReadinessExceptions } from "./readiness-exceptions";
-
-function currentYearMonth(): string {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-}
-
-type ReadinessExport = PayrollReadiness["exports"][number];
-
-function stamp(value: string): string {
-  return format(parseISO(value), "MMM d, h:mm a");
-}
-
-const EXPORT_COLUMNS: DataTableColumn<ReadinessExport>[] = [
-  { key: "id", header: "Export", cell: (row) => <span className="text-dense tabular-nums">#{row.id}</span> },
-  {
-    key: "range",
-    header: "Window",
-    cell: (row) => (
-      <span className="text-dense tabular-nums">
-        {format(parseISO(row.dateRangeStart), "MMM d")} – {format(parseISO(row.dateRangeEnd), "MMM d")}
-      </span>
-    ),
-  },
-  { key: "hours", header: "Hours", headerClassName: "text-right", className: "text-right tabular-nums", cell: (row) => `${Number(row.totalHours).toFixed(1)}h` },
-  { key: "workers", header: "Workers", headerClassName: "text-right", className: "text-right tabular-nums", cell: (row) => row.workerCount },
-  { key: "exportedAt", header: "Exported", cell: (row) => <span className="text-dense text-muted-foreground">{stamp(row.exportedAt)}</span> },
-  {
-    key: "receivedAt",
-    header: "Received",
-    cell: (row) => (
-      <span className="text-dense text-muted-foreground">
-        {row.receivedAt ? stamp(row.receivedAt) : row.ackAt ? "Implied by acknowledgement" : "Not yet"}
-      </span>
-    ),
-  },
-  {
-    key: "ack",
-    header: "Acknowledged",
-    cell: (row) => (
-      <span className="text-dense text-muted-foreground">{row.ackAt ? `${row.ackStatus ?? "Acknowledged"} · ${stamp(row.ackAt)}` : "Awaiting payroll"}</span>
-    ),
-  },
-];
+import { summariseCycle } from "./readiness-summary";
+import { ReadinessTiles, ReadinessTilesSkeleton } from "./readiness-tiles";
 
 function ReadinessSkeleton() {
   return (
-    <div className="flex flex-1 min-h-0 flex-col gap-4">
-      <StatCardGridSkeleton cols={4} count={4} />
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Skeleton className="h-72 rounded-xl" />
-        <Skeleton className="h-72 rounded-xl" />
-      </div>
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
+      <Skeleton className="h-36 rounded-xl" />
+      <ReadinessTilesSkeleton />
+      <Skeleton className="h-64 rounded-xl" />
     </div>
   );
 }
 
 export function PayrollReadinessPage() {
-  const [month, setMonth] = useState(currentYearMonth);
-  const { data, isLoading, isError, error, refetch } = usePayrollReadiness(month);
-  const pageState = usePageState({ permission: "payroll:runs:view", module: "payroll", isLoading, isError, error });
+  const [month, setMonth] = useState(currentPayrollMonth);
+  const [activeCategory, setActiveCategory] = useState<ReadinessCategoryKey | null>(null);
+
+  const readiness = usePayrollReadiness(month);
+  const runId = readiness.data?.run?.id ?? null;
+  const runBlockers = usePayrollRunBlockers(month, runId);
+  const roster = useRunEmployees(runId ?? 0, { limit: READINESS_PAGE_LIMIT });
+
+  const canStartRun = useCan("payroll:runs:create");
+
+  const isLoading = readiness.isLoading || runBlockers.isLoading || roster.isLoading;
+  const hardError = readiness.isError && readiness.data === undefined;
+  const isStale =
+    readiness.data !== undefined && (readiness.isError || runBlockers.isError || roster.isError);
+
+  const pageState = usePageState({
+    permission: "payroll:runs:view",
+    module: "payroll",
+    isLoading,
+    isError: hardError,
+    error: readiness.error,
+  });
 
   const handleRetry = useCallback(() => {
-    void refetch();
-  }, [refetch]);
+    void readiness.refetch();
+    void runBlockers.refetch();
+    void roster.refetch();
+  }, [readiness, runBlockers, roster]);
 
-  const blockers = data?.exceptions.filter((exception) => exception.severity === "blocker").length ?? 0;
-  const subtitle = data?.cutoff
-    ? `${formatMonth(month)} · ${data.cutoff.title} ${format(parseISO(data.cutoff.date), "MMM d")}`
-    : formatMonth(month);
+  const handleMonthChange = useCallback((next: string) => {
+    setMonth(next);
+    setActiveCategory(null);
+  }, []);
+
+  const handleSelectCategory = useCallback((key: ReadinessCategoryKey) => {
+    setActiveCategory((current) => (current === key ? null : key));
+  }, []);
+
+  const handleClearFilter = useCallback(() => {
+    setActiveCategory(null);
+  }, []);
+
+  const rows = useMemo(
+    () => readinessBlockerRows(readiness.data, runBlockers.data?.data),
+    [readiness.data, runBlockers.data],
+  );
+
+  const visibleRows = useMemo(
+    () => (activeCategory === null ? rows : rows.filter((row) => row.categoryKey === activeCategory)),
+    [rows, activeCategory],
+  );
+
+  const summary = useMemo(
+    () =>
+      summariseCycle({
+        isLoading,
+        isStale,
+        blockers: openBlockerCount(rows),
+        blockedPeople: blockedPeopleCount(rows),
+        blockedPeopleIsComplete:
+          runBlockers.data !== undefined && !runBlockers.data.pagination.hasMore,
+        waived: waivedCount(rows),
+        population: {
+          inCycle: roster.data?.pagination.total ?? 0,
+          isComplete: runId !== null && roster.data !== undefined,
+        },
+      }),
+    [isLoading, isStale, rows, roster.data, runBlockers.data, runId],
+  );
+
+  const counts = useMemo(() => countsByCategory(rows), [rows]);
+  const staleTone = statusToneClasses("warning");
 
   return (
     <PageWrapper
       variant="display"
       title="Payroll readiness"
-      subtitle={subtitle}
-      actions={<MonthPicker value={month} onChange={setMonth} yearRange={[-2, 0]} className="w-44" />}
+      subtitle={formatMonth(month)}
+      actions={<MonthPicker value={month} onChange={handleMonthChange} yearRange={[-2, 0]} className="w-44" />}
     >
       <PageState resolution={pageState} loading={<ReadinessSkeleton />} onRetry={handleRetry} className="flex-1">
-        {data ? (
-          <div className="flex flex-1 min-h-0 flex-col gap-4">
-            <StatCardGrid cols={4}>
-              <StatCard
-                label="Awaiting approval"
-                value={data.timesheets.awaitingApproval}
-                tone={data.timesheets.awaitingApproval > 0 ? "amber" : "emerald"}
-                href="/timesheets/approvals"
+        {readiness.data ? (
+          <div className="flex min-h-0 flex-1 flex-col gap-4">
+            {isStale ? (
+              <div
+                role="status"
+                aria-label="Readiness is out of date"
+                className={cn(
+                  "flex items-start gap-2 rounded-lg border p-3",
+                  staleTone.surface,
+                  staleTone.rule,
+                )}
+              >
+                <AlertTriangle className={cn("mt-0.5 h-4 w-4 shrink-0", staleTone.ink)} aria-hidden />
+                <p className={cn("text-dense leading-snug", staleTone.inkStrong)}>
+                  This refresh failed, so the board is out of date. Last good read{" "}
+                  {readiness.dataUpdatedAt ? formatDateTime(new Date(readiness.dataUpdatedAt).toISOString()) : "unknown"}.
+                </p>
+              </div>
+            ) : null}
+            <ReadinessHeader
+              summary={summary}
+              cutoff={readiness.data.cutoff}
+              updatedAt={readiness.dataUpdatedAt || null}
+              canStartRun={canStartRun}
+              runId={runId}
+            />
+            {readiness.data.cutoff === null ? (
+              <EmptyState
+                compact
+                illustrationPreset="calendar"
+                title="This cycle has no cut-off date"
+                description="Readiness is measured against a pay cycle. Add the month's cut-off in the payroll calendar to date this board."
+                action={{ label: "Open payroll calendar", href: "/payroll/calendar" }}
               />
-              <StatCard
-                label="Not submitted"
-                value={data.timesheets.unsubmitted}
-                tone={data.timesheets.unsubmitted > 0 ? "amber" : "emerald"}
-                href="/timesheets/overdue"
-              />
-              <StatCard
-                label="Approved, not exported"
-                value={`${Number(data.timesheets.approvedHoursNotExported).toFixed(1)}h`}
-                tone={data.timesheets.approvedEntriesNotExported > 0 ? "amber" : "emerald"}
-                href="/timesheets/payroll"
-              />
-              <StatCard label="Blockers" value={blockers} tone={blockers > 0 ? "red" : "emerald"} />
-            </StatCardGrid>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-              <ReadinessStageList stages={data.stages} />
-              <ReadinessExceptions exceptions={data.exceptions} />
-            </div>
-            <section className="rounded-xl border border-border bg-card p-4 space-y-3" aria-label="Payroll exports">
-              <h3 className="text-sm font-semibold text-foreground">Exports covering this month</h3>
-              {data.exports.length === 0 ? (
-                <EmptyState
-                  compact
-                  title="No exports yet"
-                  description="No approved hours have been exported for this month yet."
-                />
-              ) : (
-                <DataTable data={data.exports} columns={EXPORT_COLUMNS} getRowKey={(row) => row.id} />
-              )}
-            </section>
+            ) : null}
+            <ReadinessTiles
+              counts={counts}
+              runBlockersAvailable={runId !== null && runBlockers.data !== undefined}
+              activeCategory={activeCategory}
+              onSelect={handleSelectCategory}
+            />
+            <ReadinessBlockersTable
+              rows={visibleRows}
+              activeCategory={activeCategory}
+              onClearFilter={handleClearFilter}
+              truncated={runBlockers.data?.pagination.hasMore ?? false}
+            />
+            <ReadinessStageList stages={readiness.data.stages} />
+            <ReadinessExports exports={readiness.data.exports} />
           </div>
         ) : null}
       </PageState>

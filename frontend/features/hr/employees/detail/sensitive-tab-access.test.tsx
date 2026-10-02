@@ -11,7 +11,11 @@ const mockUseEmployeeSensitive = jest.fn();
 const accessLoading = { data: undefined, isLoading: true };
 
 const accessGranted = {
-  data: { isOrgOwner: false, scopes: { "hr:sensitive:view": "all" }, modules: {} },
+  data: {
+    isOrgOwner: false,
+    scopes: { "hr:sensitive:view": "all", "hr:employees:view": "all" },
+    modules: {},
+  },
   isLoading: false,
 };
 
@@ -60,6 +64,13 @@ function loadingQuery() {
 jest.mock("@/hooks/api/access", () => ({
   useAccess: () => mockUseAccess(),
   useCan: (key: string) => mockUseCan(key),
+  useCanState: (key: string) => {
+    const snapshot = mockUseAccess();
+    if (snapshot.isLoading || !snapshot.data) return "loading";
+    return snapshot.data.isOrgOwner || key in snapshot.data.scopes
+      ? "granted"
+      : "denied";
+  },
 }));
 
 jest.mock("@/hooks/api/entitlements", () => ({

@@ -46,6 +46,7 @@ export function SettingsPageContent() {
           className="flex-1"
           title="Failed to load settings"
           description={getErrorMessage(error)}
+          error={error}
           onRetry={refetch}
         />
       </PageWrapper>

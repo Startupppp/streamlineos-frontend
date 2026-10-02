@@ -225,7 +225,7 @@ export function OrganizationStructurePage() {
         actions={
           <div className="flex items-center gap-2">
             <Button asChild variant="outline" size="sm" className="h-8 gap-1.5">
-              <Link href="/settings/organization">
+              <Link href="/settings/organization" aria-label="Org settings">
                 <Settings className="size-3.5" />
                 <span className="hidden sm:inline">Org settings</span>
               </Link>

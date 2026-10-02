@@ -4,6 +4,7 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import {
   leaveAnalyticsC,
   leaveApprovalsC,
@@ -28,9 +29,13 @@ import type {
   HrLeaveType,
   LeaveContextResult,
   LeavePolicyResponse,
-  LeaveRequestsPage,
 } from "@/hooks/api/hr/leaves-types";
-import type { HrHolidayRow, LeavesTeamPage } from "@/hooks/api/hr/leaves-schema";
+import type {
+  HrHolidayRow,
+  LeaveRequestsPageResult,
+  LeavesTeamPage,
+  LeavesThisWeekRow,
+} from "@/hooks/api/hr/leaves-schema";
 import { NULL_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 export interface LeaveTeamListParams {
@@ -93,6 +98,7 @@ export function useHrLeaveApprovals(
       hrEnabled &&
       canLeaves &&
       (enabled ?? true),
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -101,7 +107,7 @@ export function useHrLeavesThisWeek(options?: { enabled?: boolean }) {
   const identity = useLeaveQueryIdentity();
   return useQuery({
     queryKey: leaveThisWeekKey(identity),
-    queryFn: ({ signal }) => apiClient.get<unknown[]>("/me/time-off/team-calendar", undefined, signal, leavesThisWeekC),
+    queryFn: ({ signal }) => apiClient.get<LeavesThisWeekRow[]>("/me/time-off/team-calendar", undefined, signal, leavesThisWeekC),
     staleTime: 2 * 60_000,
     enabled:
       Boolean(identity.orgId && identity.userId) &&
@@ -116,7 +122,7 @@ export function useHrMyLeaveRequests(enabled = true) {
   return useQuery({
     queryKey: leaveMyRequestsKey(identity),
     queryFn: ({ signal }) =>
-      apiClient.get<LeaveRequestsPage>(
+      apiClient.get<LeaveRequestsPageResult>(
         "/me/time-off/requests",
         { limit: 100 }, signal, leaveRequestsPageC,
       ),
@@ -132,7 +138,7 @@ export function useHrMyLeaveRequestsInfinite(enabled = true) {
   return useInfiniteQuery({
     queryKey: leaveMyRequestsPagesKey(identity),
     queryFn: ({ pageParam, signal }) =>
-      apiClient.get<LeaveRequestsPage>("/me/time-off/requests", {
+      apiClient.get<LeaveRequestsPageResult>("/me/time-off/requests", {
         limit: 50,
         ...(pageParam !== null ? { cursor: pageParam } : {}),
       }, signal, leaveRequestsPageC),
@@ -173,6 +179,7 @@ export function useHrLeaveAnalytics(year?: number) {
       }, signal, leaveAnalyticsC),
     staleTime: 120_000,
     enabled: hrEnabled && canView,
+    ...INLINE_READ_ERROR,
   });
 }
 

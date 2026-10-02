@@ -86,6 +86,7 @@ export function LettersHistoryTable({ letters, isLoading, isError, error, onRetr
         className="flex-1"
         title="Couldn't load letters"
         description={getErrorMessage(error)}
+        error={error}
         onRetry={onRetry}
         compact
       />

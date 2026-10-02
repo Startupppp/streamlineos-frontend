@@ -12,11 +12,13 @@ import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCanState } from "@/hooks/api/access";
 import { useTimeDevices, useDeleteTimeDevice, type TimeDevice } from "@/hooks/api/hr/enterprise-comp";
 
 interface Props {
@@ -41,6 +43,7 @@ export function DevicesTable({ canManage, onAdd, onEdit }: Props) {
   const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
   const page = cursorHistory.length;
   const cursor = cursorHistory.at(-1);
+  const access = useCanState("hr:biometric:manage");
   const { data, isLoading, isFetching, isError, error, refetch } = useTimeDevices({ cursor });
   const deleteMut = useDeleteTimeDevice();
   const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -70,11 +73,21 @@ export function DevicesTable({ canManage, onAdd, onEdit }: Props) {
     e.stopPropagation();
   }
 
-  if (isLoading) {
+  if (isLoading || access === "loading") {
     return (
       <div className="space-y-2">
         {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-lg" />)}
       </div>
+    );
+  }
+
+  if (access === "denied") {
+    return (
+      <NoPermissionState
+        className={CONTENT_FILL_PANEL}
+        permission="hr:biometric:manage"
+        compact
+      />
     );
   }
 
@@ -89,7 +102,18 @@ export function DevicesTable({ canManage, onAdd, onEdit }: Props) {
     );
   }
 
-  const devices = data?.data ?? [];
+  if (data === undefined) {
+    return (
+      <ErrorState
+        className={CONTENT_FILL_PANEL}
+        title="Couldn't determine the device list"
+        description="The device list was never read, so whether any are registered is unknown."
+        onRetry={handleRetry}
+      />
+    );
+  }
+
+  const devices = data.data;
 
   if (!devices.length) {
     return (

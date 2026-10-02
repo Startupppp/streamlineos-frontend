@@ -34,7 +34,12 @@ import {
 } from "lucide-react";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { ErrorState } from "@/components/shared/error-state";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
+import type { PageStateResolution } from "@/lib/page-state/resolve-page-state";
 
 const CREATE_ACTIONS = [
   { label: "New requisition", href: "/recruitment/requisitions" },
@@ -47,12 +52,45 @@ const CREATE_ACTIONS = [
 ] as const;
 
 
+function AttentionItems({ items }: { items: readonly { label: string; href: string }[] }) {
+  return (
+    <>
+      {items.map((item) => (
+        <Link
+          key={item.label}
+          href={item.href}
+          className="flex items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-xs font-medium text-foreground hover:bg-muted/60 transition-colors"
+        >
+          {item.label}
+          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+        </Link>
+      ))}
+    </>
+  );
+}
+
+function QueueSkeletonRows() {
+  return (
+    <>
+      {Array.from({ length: 12 }).map((_, i) => (
+        <div key={i} className="px-5 py-3 flex items-center gap-3">
+          <Skeleton className="h-8 w-8 rounded-lg" />
+          <div className="flex-1 space-y-1.5">
+            <Skeleton className="h-3.5 w-40" />
+            <Skeleton className="h-2.5 w-24" />
+          </div>
+        </div>
+      ))}
+    </>
+  );
+}
+
 function QueueSection({
   title,
   count,
   viewAllHref,
-  isLoading,
-  isError,
+  resolution,
+  onRetry,
   isEmpty,
   emptyLabel,
   children,
@@ -60,8 +98,8 @@ function QueueSection({
   title: string;
   count: number;
   viewAllHref: string;
-  isLoading: boolean;
-  isError?: boolean;
+  resolution: PageStateResolution;
+  onRetry: () => void;
   isEmpty: boolean;
   emptyLabel: string;
   children: React.ReactNode;
@@ -84,33 +122,47 @@ function QueueSection({
         </Button>
       </div>
       <div className="divide-y divide-border/50">
-        {isLoading ? (
-          Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="px-5 py-3 flex items-center gap-3">
-              <Skeleton className="h-8 w-8 rounded-lg" />
-              <div className="flex-1 space-y-1.5">
-                <Skeleton className="h-3.5 w-40" />
-                <Skeleton className="h-2.5 w-24" />
-              </div>
-            </div>
-          ))
-        ) : isError ? (
-          <p className="text-xs text-status-danger-ink py-8 text-center">Failed to load {title.toLowerCase()}</p>
-        ) : isEmpty ? (
-          <p className="text-xs text-muted-foreground py-8 text-center">{emptyLabel}</p>
-        ) : (
-          children
-        )}
+        <PageState
+          resolution={resolution}
+          compact
+          onRetry={onRetry}
+          loading={<QueueSkeletonRows />}
+        >
+          {isEmpty ? (
+            <p className="text-xs text-muted-foreground py-8 text-center">{emptyLabel}</p>
+          ) : (
+            children
+          )}
+        </PageState>
       </div>
     </div>
   );
 }
 
 export function RecruitmentCommandCenterPage() {
-  const { data: stats, isLoading: statsLoading, isError: statsError, refetch: refetchStats } = useRecruitmentStats();
-  const { data: openJobs, isLoading: jobsLoading, isError: jobsError } = useJobPostings({ status: "OPEN" });
-  const { data: allInterviews, isLoading: interviewsLoading, isError: interviewsError } = useInterviews({ relevant: true });
-  const { data: newCandidates, isLoading: candidatesLoading, isError: candidatesError } = useCandidates({ status: "NEW" });
+  const { data: stats, isLoading: statsLoading, isError: statsError, error: statsErrorValue, refetch: refetchStats } = useRecruitmentStats();
+  const { data: openJobs, isLoading: jobsLoading, isError: jobsError, error: jobsErrorValue, refetch: refetchJobs } = useJobPostings({ status: "OPEN" }, INLINE_READ_ERROR);
+  const { data: allInterviews, isLoading: interviewsLoading, isError: interviewsError, error: interviewsErrorValue, refetch: refetchInterviews } = useInterviews({ relevant: true }, INLINE_READ_ERROR);
+  const { data: newCandidates, isLoading: candidatesLoading, isError: candidatesError, error: candidatesErrorValue, refetch: refetchCandidates } = useCandidates({ status: "NEW" }, INLINE_READ_ERROR);
+
+  const jobsState = usePageState({
+    permission: "hr:requisitions:view",
+    isLoading: jobsLoading,
+    isError: jobsError,
+    error: jobsErrorValue,
+  });
+  const interviewsState = usePageState({
+    permission: "hr:interviews:view",
+    isLoading: interviewsLoading,
+    isError: interviewsError,
+    error: interviewsErrorValue,
+  });
+  const candidatesState = usePageState({
+    permission: "hr:requisitions:view",
+    isLoading: candidatesLoading,
+    isError: candidatesError,
+    error: candidatesErrorValue,
+  });
 
   const interviewsToday = useMemo(
     () => (allInterviews ?? []).filter((i) => isToday(new Date(i.scheduledAt))),
@@ -134,14 +186,30 @@ export function RecruitmentCommandCenterPage() {
     void refetchStats();
   }, [refetchStats]);
 
-  const attentionItems = [
-    ...(overdueFeedback.length > 0
+  const handleRetryJobs = useCallback(() => {
+    void refetchJobs();
+  }, [refetchJobs]);
+
+  const handleRetryInterviews = useCallback(() => {
+    void refetchInterviews();
+  }, [refetchInterviews]);
+
+  const handleRetryCandidates = useCallback(() => {
+    void refetchCandidates();
+  }, [refetchCandidates]);
+
+  const interviewsReadable = interviewsState.kind === "ready";
+  const jobsReadable = jobsState.kind === "ready";
+
+  const interviewsAttentionItems =
+    overdueFeedback.length > 0
       ? [{ label: `${overdueFeedback.length} interview${overdueFeedback.length > 1 ? "s" : ""} awaiting feedback`, href: "/recruitment/interviews" }]
-      : []),
-    ...(rolesWithNoApplicants.length > 0
+      : [];
+  const jobsAttentionItems =
+    rolesWithNoApplicants.length > 0
       ? [{ label: `${rolesWithNoApplicants.length} open role${rolesWithNoApplicants.length > 1 ? "s" : ""} with no applicants`, href: "/recruitment/jobs" }]
-      : []),
-  ];
+      : [];
+  const attentionItems = [...interviewsAttentionItems, ...jobsAttentionItems];
 
   return (
     <PageWrapper
@@ -167,8 +235,9 @@ export function RecruitmentCommandCenterPage() {
       <div className="flex flex-1 min-h-0 flex-col gap-5">
         {statsError ? (
           <ErrorState
-            title="Unable to load recruitment data"
-            description="Try again. If this keeps happening, check your permissions or contact an admin."
+            title="Couldn't load recruitment data"
+            description={getErrorMessage(statsErrorValue)}
+            error={statsErrorValue}
             onRetry={handleRetryStats}
           />
         ) : (
@@ -179,8 +248,8 @@ export function RecruitmentCommandCenterPage() {
               <StatCardGrid cols={6}>
                 <StatCard label="Open Roles" value={stats?.openJobs ?? 0} icon={Layers} tone="default" />
                 <StatCard label="New This Week" value={stats?.newCandidates ?? 0} icon={Users} tone="accent" />
-                <StatCard label="Interviews Today" value={interviewsToday.length} icon={Calendar} tone="blue" />
-                <StatCard label="Awaiting Feedback" value={overdueFeedback.length} icon={MessageSquare} tone={overdueFeedback.length > 0 ? "amber" : "default"} />
+                <StatCard label="Interviews Today" value={interviewsReadable ? interviewsToday.length : "—"} icon={Calendar} tone="blue" />
+                <StatCard label="Awaiting Feedback" value={interviewsReadable ? overdueFeedback.length : "—"} icon={MessageSquare} tone={interviewsReadable && overdueFeedback.length > 0 ? "amber" : "default"} />
                 <StatCard label="Hired This Month" value={stats?.hiredThisMonth ?? 0} icon={UserCheck} tone="emerald" />
                 <StatCard label="Avg Days to Hire" value={stats?.avgTimeToHireDays ?? "—"} icon={Clock} tone="default" />
               </StatCardGrid>
@@ -192,8 +261,8 @@ export function RecruitmentCommandCenterPage() {
                   title="New applicants to review"
                   count={newCandidates?.length ?? 0}
                   viewAllHref="/recruitment/candidates/intake"
-                  isLoading={candidatesLoading}
-                  isError={candidatesError}
+                  resolution={candidatesState}
+                  onRetry={handleRetryCandidates}
                   isEmpty={!newCandidates?.length}
                   emptyLabel="No new applicants right now"
                 >
@@ -220,8 +289,8 @@ export function RecruitmentCommandCenterPage() {
                   title="Interviews today"
                   count={interviewsToday.length}
                   viewAllHref="/recruitment/interviews"
-                  isLoading={interviewsLoading}
-                  isError={interviewsError}
+                  resolution={interviewsState}
+                  onRetry={handleRetryInterviews}
                   isEmpty={!interviewsToday.length}
                   emptyLabel="No interviews scheduled today"
                 >
@@ -243,8 +312,8 @@ export function RecruitmentCommandCenterPage() {
                   title="Roles with no applicants"
                   count={rolesWithNoApplicants.length}
                   viewAllHref="/recruitment/jobs"
-                  isLoading={jobsLoading}
-                  isError={jobsError}
+                  resolution={jobsState}
+                  onRetry={handleRetryJobs}
                   isEmpty={!rolesWithNoApplicants.length}
                   emptyLabel="Every open role has applicants"
                 >
@@ -276,19 +345,27 @@ export function RecruitmentCommandCenterPage() {
                     </h2>
                   </div>
                   <div className="p-3 space-y-1">
-                    {attentionItems.length === 0 ? (
+                    {interviewsReadable && jobsReadable && attentionItems.length === 0 ? (
                       <p className="text-xs text-muted-foreground py-6 text-center">Nothing needs attention</p>
                     ) : (
-                      attentionItems.map((item) => (
-                        <Link
-                          key={item.label}
-                          href={item.href}
-                          className="flex items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-xs font-medium text-foreground hover:bg-muted/60 transition-colors"
+                      <>
+                        <PageState
+                          resolution={interviewsState}
+                          compact
+                          onRetry={handleRetryInterviews}
+                          loading={<Skeleton className="h-8 rounded-lg" />}
                         >
-                          {item.label}
-                          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                        </Link>
-                      ))
+                          <AttentionItems items={interviewsAttentionItems} />
+                        </PageState>
+                        <PageState
+                          resolution={jobsState}
+                          compact
+                          onRetry={handleRetryJobs}
+                          loading={<Skeleton className="h-8 rounded-lg" />}
+                        >
+                          <AttentionItems items={jobsAttentionItems} />
+                        </PageState>
+                      </>
                     )}
                   </div>
                 </div>

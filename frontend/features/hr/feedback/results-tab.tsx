@@ -20,6 +20,10 @@ export function ResultsTab() {
   // Surface gate only; the per-employee read keeps its own branches below.
   const pageState = usePageState({ permission: "hr:performance:view", isLoading: false, isError: false, error: null });
 
+  function handleRetry(): void {
+    void refetch();
+  }
+
   // Picking an employee loads their results; a separate Search button repeated the pick.
   function handleSubjectChange(id: string) {
     setSearched(id.trim());
@@ -65,7 +69,8 @@ export function ResultsTab() {
         <ErrorState
           title="Couldn't load feedback results"
           description={getErrorMessage(error)}
-          onRetry={refetch}
+          error={error}
+          onRetry={handleRetry}
           className={CONTENT_FILL_PANEL}
         />
       )}

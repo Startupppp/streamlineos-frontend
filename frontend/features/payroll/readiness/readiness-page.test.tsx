@@ -1,7 +1,7 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import { PayrollReadinessPage } from "./readiness-page";
-import type { PayrollReadiness } from "@/hooks/api/payroll/readiness-schema";
+import type { PayrollReadiness, RunBlocker } from "@/hooks/api/payroll/readiness-schema";
 
 jest.mock("next/link", () => ({
   __esModule: true,
@@ -42,10 +42,31 @@ jest.mock("@/hooks/api/use-page-state", () => ({
   usePageState: (...args: Parameters<typeof mockUsePageState>) => mockUsePageState(...args),
 }));
 
-const mockUsePayrollReadiness = jest.fn();
-jest.mock("@/hooks/api/payroll/readiness", () => ({
-  usePayrollReadiness: (...args: [string]) => mockUsePayrollReadiness(...args),
+const mockUseCan = jest.fn();
+jest.mock("@/hooks/api/access", () => ({
+  useCan: (...args: [string]) => mockUseCan(...args),
 }));
+
+const mockUsePayrollReadiness = jest.fn();
+const mockUsePayrollRunBlockers = jest.fn();
+jest.mock("@/hooks/api/payroll/readiness", () => ({
+  READINESS_PAGE_LIMIT: 100,
+  usePayrollReadiness: (...args: [string]) => mockUsePayrollReadiness(...args),
+  usePayrollRunBlockers: (...args: [string, number | null]) => mockUsePayrollRunBlockers(...args),
+}));
+
+const mockUseRunEmployees = jest.fn();
+jest.mock("@/hooks/api/payroll/run-employees", () => ({
+  useRunEmployees: (...args: unknown[]) => mockUseRunEmployees(...args),
+}));
+
+function idle(data?: unknown) {
+  return { data, isLoading: false, isError: false, error: undefined, dataUpdatedAt: 1_760_000_000_000, refetch: jest.fn() };
+}
+
+function pending() {
+  return { data: undefined, isLoading: true, isError: false, error: undefined, dataUpdatedAt: 0, refetch: jest.fn() };
+}
 
 function ledger(overrides: Partial<PayrollReadiness> = {}): PayrollReadiness {
   return {
@@ -56,33 +77,9 @@ function ledger(overrides: Partial<PayrollReadiness> = {}): PayrollReadiness {
     inputs: { status: "open", lockedAt: null },
     run: null,
     stages: [
-      {
-        key: "timesheets_approved",
-        label: "Timesheets approved",
-        status: "pending",
-        owner: { label: "Timesheet approvers", permission: "timesheets:approvals:manage" },
-        at: null,
-        detail: "3 awaiting a decision, 2 not yet submitted, 0 rejected.",
-        action: { label: "Review 3 submitted", href: "/timesheets/approvals" },
-      },
-      {
-        key: "timesheets_exported",
-        label: "Hours exported to payroll",
-        status: "done",
-        owner: { label: "Timesheet administrator", permission: "timesheets:payroll:export" },
-        at: "2026-09-14T09:00:00.000Z",
-        detail: "Export #41 sent 40.00h for 1 workers.",
-        action: { label: "Export approved hours", href: "/timesheets/payroll" },
-      },
-      {
-        key: "handoff_received",
-        label: "Received by payroll",
-        status: "blocked",
-        owner: { label: "Payroll administrator", permission: "payroll:runs:manage" },
-        at: null,
-        detail: "Export #41 has not been recorded by payroll yet.",
-        action: null,
-      },
+      { key: "timesheets_approved", label: "Timesheets approved", status: "pending", owner: { label: "Timesheet approvers", permission: "timesheets:approvals:manage" }, at: null, detail: "3 awaiting a decision, 2 not yet submitted, 0 rejected.", action: { label: "Review 3 submitted", href: "/timesheets/approvals" } },
+      { key: "timesheets_exported", label: "Hours exported to payroll", status: "done", owner: { label: "Timesheet administrator", permission: "timesheets:payroll:export" }, at: "2026-09-14T09:00:00.000Z", detail: "Export #41 sent 40.00h for 1 workers.", action: { label: "Export approved hours", href: "/timesheets/payroll" } },
+      { key: "handoff_received", label: "Received by payroll", status: "blocked", owner: { label: "Payroll administrator", permission: "payroll:runs:manage" }, at: null, detail: "Export #41 has not been recorded by payroll yet.", action: null },
     ],
     exports: [
       { id: 41, exportedAt: "2026-09-14T09:00:00.000Z", dateRangeStart: "2026-09-01", dateRangeEnd: "2026-09-30", entryCount: 5, totalHours: "40.00", workerCount: 1, receivedAt: null, ackStatus: null, ackAt: null, ackNote: null },
@@ -101,13 +98,46 @@ function ledger(overrides: Partial<PayrollReadiness> = {}): PayrollReadiness {
   };
 }
 
+function runBlocker(overrides: Partial<RunBlocker> = {}): RunBlocker {
+  return {
+    id: 7,
+    code: "MISSING_BANK_ACCOUNT",
+    severity: "BLOCKER",
+    status: "OPEN",
+    message: "Employee has no bank account on file. Cannot disburse salary.",
+    metadata: null,
+    userId: "usr-ravi",
+    resolvedBy: null,
+    resolvedAt: null,
+    overrideReason: null,
+    createdAt: "2026-09-20T06:00:00.000Z",
+    userName: "Ravi",
+    userEmail: "ravi@example.com",
+    ...overrides,
+  };
+}
+
+function blockerPage(blockers: RunBlocker[], hasMore = false) {
+  return { data: blockers, pagination: { limit: 100, hasMore, nextCursor: null, total: blockers.length } };
+}
+
+function rosterPage(count: number, hasMore = false, total = count) {
+  return {
+    data: Array.from({ length: count }, (_, index) => ({ id: index + 1, userId: `usr-${index}`, userName: `Person ${index}` })),
+    pagination: { limit: 100, hasMore, nextCursor: null, total },
+  };
+}
+
 beforeEach(() => {
   jest.clearAllMocks();
-  mockUsePayrollReadiness.mockReturnValue({ data: undefined, isLoading: true, isError: false, error: undefined, refetch: jest.fn() });
+  mockUseCan.mockReturnValue(false);
+  mockUsePayrollReadiness.mockReturnValue(pending());
+  mockUsePayrollRunBlockers.mockReturnValue(pending());
+  mockUseRunEmployees.mockReturnValue(pending());
   mockUsePageState.mockReturnValue({ kind: "loading" });
 });
 
-describe("PayrollReadinessPage — one chain across timesheets and payroll", () => {
+describe("PayrollReadinessPage — honest readiness board", () => {
   it("keeps the title and month picker while loading, and shows no denial until access is known", () => {
     render(<PayrollReadinessPage />);
 
@@ -116,8 +146,16 @@ describe("PayrollReadinessPage — one chain across timesheets and payroll", () 
     expect(screen.queryByText("Access Restricted")).not.toBeInTheDocument();
   });
 
+  it("never flashes a Ready pill or a zero blocker count while loading", () => {
+    render(<PayrollReadinessPage />);
+
+    expect(screen.queryByText("Ready")).not.toBeInTheDocument();
+    expect(screen.queryByText("Blocked")).not.toBeInTheDocument();
+    expect(screen.queryByText("0")).not.toBeInTheDocument();
+  });
+
   it("shows the denial the access snapshot resolved, never an empty ledger", () => {
-    mockUsePayrollReadiness.mockReturnValue({ data: undefined, isLoading: false, isError: false, error: undefined, refetch: jest.fn() });
+    mockUsePayrollReadiness.mockReturnValue(idle(undefined));
     mockUsePageState.mockReturnValue({ kind: "denied", permission: "payroll:runs:view" });
 
     render(<PayrollReadinessPage />);
@@ -125,9 +163,11 @@ describe("PayrollReadinessPage — one chain across timesheets and payroll", () 
     expect(screen.getByText("Access Restricted")).toBeInTheDocument();
   });
 
-  it("offers a retry when the ledger cannot be loaded", () => {
+  it("offers a retry when the board cannot be loaded at all", () => {
     const refetch = jest.fn();
-    mockUsePayrollReadiness.mockReturnValue({ data: undefined, isLoading: false, isError: true, error: new Error("boom"), refetch });
+    mockUsePayrollReadiness.mockReturnValue({ ...idle(undefined), isError: true, error: new Error("boom"), refetch });
+    mockUsePayrollRunBlockers.mockReturnValue(idle(undefined));
+    mockUseRunEmployees.mockReturnValue(idle(undefined));
     mockUsePageState.mockReturnValue({ kind: "error", error: new Error("boom") });
 
     render(<PayrollReadinessPage />);
@@ -136,31 +176,127 @@ describe("PayrollReadinessPage — one chain across timesheets and payroll", () 
     expect(refetch).toHaveBeenCalled();
   });
 
-  it("renders each stage with its owner and next action, the cut-off, the blockers and the export chain", () => {
-    mockUsePayrollReadiness.mockReturnValue({ data: ledger(), isLoading: false, isError: false, error: undefined, refetch: jest.fn() });
+  it("renders the handoff chain, the blocker row and the export evidence from real data", () => {
+    mockUsePayrollReadiness.mockReturnValue(idle(ledger({ run: { id: 12, status: "DRAFT", createdAt: "2026-09-19T00:00:00.000Z" } })));
+    mockUsePayrollRunBlockers.mockReturnValue(idle(blockerPage([runBlocker()])));
+    mockUseRunEmployees.mockReturnValue(idle(rosterPage(3)));
     mockUsePageState.mockReturnValue({ kind: "ready" });
 
     render(<PayrollReadinessPage />);
 
-    expect(screen.getByText(/Attendance cut-off Sep 25/)).toBeInTheDocument();
     expect(screen.getByText("Timesheets approved")).toBeInTheDocument();
     expect(screen.getByText("Timesheet approvers")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Review 3 submitted" })).toHaveAttribute("href", "/timesheets/approvals");
-    expect(screen.queryByRole("link", { name: "Export approved hours" })).not.toBeInTheDocument();
-    expect(screen.getByText("Export #41 has not been recorded by payroll yet.")).toBeInTheDocument();
-    expect(screen.getByText(/Asha's 2026-09-07 to 2026-09-13 period is DRAFT/)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Reconcile period" })).toHaveAttribute("href", "/timesheets/approvals?period=99");
+    expect(screen.getAllByText(/Asha's 2026-09-07 to 2026-09-13 period is DRAFT/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Ravi").length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/no bank account on file/).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("link", { name: "Fix" })[0]).toHaveAttribute("href", "/payroll/runs/12?tab=exceptions");
     expect(screen.getByText("Awaiting payroll")).toBeInTheDocument();
     expect(screen.getByText("1/3")).toBeInTheDocument();
   });
 
-  it("says plainly when nothing needs attention and nothing was exported", () => {
-    mockUsePayrollReadiness.mockReturnValue({ data: ledger({ exceptions: [], exports: [] }), isLoading: false, isError: false, error: undefined, refetch: jest.fn() });
+  it("labels every category it cannot source as Not measured and leaves it inert", () => {
+    mockUsePayrollReadiness.mockReturnValue(idle(ledger()));
+    mockUsePayrollRunBlockers.mockReturnValue(idle(undefined));
+    mockUseRunEmployees.mockReturnValue(idle(undefined));
     mockUsePageState.mockReturnValue({ kind: "ready" });
 
     render(<PayrollReadinessPage />);
 
-    expect(screen.getByText("Nothing is missing from this pay period's inputs.")).toBeInTheDocument();
-    expect(screen.getByText("No approved hours have been exported for this month yet.")).toBeInTheDocument();
+    for (const label of ["Overtime", "Reimbursements", "F&F", "Leave / LOP", "Joiners", "Exits", "Bank / KYC", "Structure"]) {
+      expect(screen.queryByRole("button", { name: new RegExp(label) })).not.toBeInTheDocument();
+    }
+    expect(screen.getByRole("button", { name: /Attendance/ })).toBeInTheDocument();
+    expect(screen.getAllByText("Not measured").length).toBeGreaterThan(8);
+  });
+
+  it("never paints Ready when a refresh failed, and names the last good read", () => {
+    mockUsePayrollReadiness.mockReturnValue({ ...idle(ledger({ exceptions: [] })), isError: true });
+    mockUsePayrollRunBlockers.mockReturnValue(idle(undefined));
+    mockUseRunEmployees.mockReturnValue(idle(undefined));
+    mockUsePageState.mockReturnValue({ kind: "ready" });
+
+    render(<PayrollReadinessPage />);
+
+    expect(screen.getByRole("status", { name: "Readiness is out of date" })).toHaveTextContent(/This refresh failed/);
+    expect(screen.getByText("Out of date")).toBeInTheDocument();
+    expect(screen.queryByText(/employees in cycle are ready/)).not.toBeInTheDocument();
+  });
+
+  it("invents no cut-off date when the cycle has none, and asks for one instead", () => {
+    mockUsePayrollReadiness.mockReturnValue(idle(ledger({ cutoff: null })));
+    mockUsePayrollRunBlockers.mockReturnValue(idle(undefined));
+    mockUseRunEmployees.mockReturnValue(idle(undefined));
+    mockUsePageState.mockReturnValue({ kind: "ready" });
+
+    render(<PayrollReadinessPage />);
+
+    expect(screen.getByText("This cycle has no cut-off date")).toBeInTheDocument();
+    expect(screen.queryByLabelText(/Payroll cutoff/)).not.toBeInTheDocument();
+  });
+
+  it("hides the run affordance from a role without payroll:runs:create", () => {
+    mockUsePayrollReadiness.mockReturnValue(idle(ledger()));
+    mockUsePayrollRunBlockers.mockReturnValue(idle(undefined));
+    mockUseRunEmployees.mockReturnValue(idle(undefined));
+    mockUsePageState.mockReturnValue({ kind: "ready" });
+
+    render(<PayrollReadinessPage />);
+
+    expect(screen.queryByRole("link", { name: "Start a run" })).not.toBeInTheDocument();
+
+    mockUseCan.mockReturnValue(true);
+    render(<PayrollReadinessPage />);
+
+    expect(screen.getAllByRole("link", { name: "Start a run" }).length).toBe(1);
+  });
+
+  it("counts the whole cycle from the server total even when the roster pages", () => {
+    mockUsePayrollReadiness.mockReturnValue(idle(ledger({ exceptions: [], run: { id: 12, status: "DRAFT", createdAt: "2026-09-19T00:00:00.000Z" } })));
+    mockUsePayrollRunBlockers.mockReturnValue(idle(blockerPage([])));
+    mockUseRunEmployees.mockReturnValue(idle(rosterPage(100, true, 212)));
+    mockUsePageState.mockReturnValue({ kind: "ready" });
+
+    render(<PayrollReadinessPage />);
+
+    expect(screen.getByText("All 212 employees in cycle are ready.")).toBeInTheDocument();
+    expect(screen.queryByText(/The number of employees in it is not/)).not.toBeInTheDocument();
+  });
+
+  it("still refuses a population the roster read has not delivered at all", () => {
+    mockUsePayrollReadiness.mockReturnValue(idle(ledger({ exceptions: [], run: { id: 12, status: "DRAFT", createdAt: "2026-09-19T00:00:00.000Z" } })));
+    mockUsePayrollRunBlockers.mockReturnValue(idle(blockerPage([])));
+    mockUseRunEmployees.mockReturnValue(idle(undefined));
+    mockUsePageState.mockReturnValue({ kind: "ready" });
+
+    render(<PayrollReadinessPage />);
+
+    expect(screen.getByText(/The number of employees in it is not/)).toBeInTheDocument();
+  });
+
+  it("claims no readiness while the blocker list is truncated, because the blocker count is then a floor", () => {
+    mockUsePayrollReadiness.mockReturnValue(idle(ledger({ exceptions: [], run: { id: 12, status: "DRAFT", createdAt: "2026-09-19T00:00:00.000Z" } })));
+    mockUsePayrollRunBlockers.mockReturnValue(idle(blockerPage([], true)));
+    mockUseRunEmployees.mockReturnValue(idle(rosterPage(4)));
+    mockUsePageState.mockReturnValue({ kind: "ready" });
+
+    render(<PayrollReadinessPage />);
+
+    expect(screen.queryByText("All 4 employees in cycle are ready.")).not.toBeInTheDocument();
+    expect(screen.getByText(/Whether every blocker has been seen is not/)).toBeInTheDocument();
+  });
+
+  it("shows the waiver the payload recorded, with its reason", () => {
+    mockUsePayrollReadiness.mockReturnValue(idle(ledger({ exceptions: [], run: { id: 12, status: "DRAFT", createdAt: "2026-09-19T00:00:00.000Z" } })));
+    mockUsePayrollRunBlockers.mockReturnValue(
+      idle(blockerPage([runBlocker({ status: "OVERRIDDEN", overrideReason: "Paid by cheque this month" })])),
+    );
+    mockUseRunEmployees.mockReturnValue(idle(rosterPage(4)));
+    mockUsePageState.mockReturnValue({ kind: "ready" });
+
+    render(<PayrollReadinessPage />);
+
+    expect(screen.getAllByText("Waived").length).toBeGreaterThan(1);
+    expect(screen.getAllByText("Paid by cheque this month").length).toBeGreaterThan(0);
   });
 });

@@ -171,7 +171,9 @@ describe("UserInviteDialog — CHAT-002 a refusal stays on screen", () => {
     await submitInvite(mutateMock);
 
     const alert = await screen.findByRole("alert");
-    expect(alert).toHaveTextContent("Seat limit reached");
+    expect(alert).toHaveTextContent(
+      "No seat is available for another member. Free a seat or raise the limit, then invite again.",
+    );
     expect(screen.getByText("Send invitation")).toBeInTheDocument();
   });
 

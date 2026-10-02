@@ -637,6 +637,7 @@ export type PermissionKey =
   | "sales:view"
   | "self:attendance"
   | "self:cases"
+  | "self:document-acknowledgements"
   | "self:expenses"
   | "self:job-openings"
   | "self:leaves"
@@ -1416,6 +1417,7 @@ export const PERMISSION_METADATA: Readonly<Record<PermissionKey, PermissionMetad
   "sales:view": { resource: "sales", action: "view", description: "View sales module" },
   "self:attendance": { resource: "self", action: "attendance", description: "Check in/out own attendance" },
   "self:cases": { resource: "self", action: "cases", description: "View and acknowledge disciplinary actions issued to oneself" },
+  "self:document-acknowledgements": { resource: "self", action: "document-acknowledgements", description: "View and acknowledge documents assigned to oneself", baselineScope: "own" },
   "self:expenses": { resource: "self", action: "expenses", description: "Submit and view own expense claims" },
   "self:job-openings": { resource: "self", action: "job-openings", description: "Browse internal job openings and apply to them" },
   "self:leaves": { resource: "self", action: "leaves", description: "Submit and view own leave requests" },

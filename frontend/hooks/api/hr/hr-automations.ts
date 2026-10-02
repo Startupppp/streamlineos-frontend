@@ -19,6 +19,7 @@ const noContentC = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 import { queryKeyBase } from "@/lib/query-keys/base";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const BASE = [...queryKeyBase, "hr", "automations"] as const;
 
@@ -84,6 +85,7 @@ export function useHrAutomationRuns(ruleId?: number, params?: { cursor?: string;
     staleTime: 15_000,
     placeholderData: keepPreviousData,
     enabled: canView && hrEnabled,
+    ...INLINE_READ_ERROR,
   });
 }
 

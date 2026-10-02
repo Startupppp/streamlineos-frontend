@@ -38,7 +38,6 @@ import { matchesOrgModule } from "@/lib/org-module-keys";
 import { useProject } from "@/hooks/api/build/projects";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
 import { useEntitlements } from "@/hooks/api/entitlements";
-import { cn } from "@/lib/utils";
 import { useCommandPalette } from "@/components/command-palette";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 import {
@@ -49,6 +48,16 @@ import {
 import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCommandRegistry } from "./command-palette-commands";
+import { PalettePeopleGroup } from "@/components/command-palette/components/palette-people-group";
+import {
+  COMMAND_ARROW_CLASS,
+  COMMAND_GROUP_CLASS,
+  COMMAND_ITEM_CLASS,
+  COMMAND_SHORTCUT_CLASS,
+  ItemIcon,
+} from "@/components/command-palette/components/palette-item";
+import { isHrNavChromeKilled } from "./sidebar/hr-week-one-nav";
+import { usePalettePeopleSearch } from "@/components/command-palette/hooks/use-people-search";
 
 
 const ENTITY_TYPES = [
@@ -79,40 +88,6 @@ const ENTITY_LABELS: Record<EntityType, string> = {
   client: "Clients",
   ticket: "Tickets",
 };
-
-
-function ItemIcon({
-  icon: Icon,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-}) {
-  return (
-    <span
-      className={cn(
-        "flex h-7 w-7 shrink-0 items-center justify-center rounded-md",
-        "bg-muted text-muted-foreground",
-        "transition-colors duration-150",
-        "group-data-[selected=true]:bg-primary/10 group-data-[selected=true]:text-foreground",
-      )}
-    >
-      <span className="flex items-center justify-center [&_svg]:!h-4 [&_svg]:!w-4">
-        <Icon />
-      </span>
-    </span>
-  );
-}
-
-const COMMAND_ITEM_CLASS =
-  "group flex items-center gap-2.5 rounded-md px-2 py-1.5 text-foreground data-[selected=true]:bg-primary/5 data-[selected=true]:text-foreground";
-
-const COMMAND_ARROW_CLASS =
-  "h-3.5 w-3.5 text-muted-foreground shrink-0 group-data-[selected=true]:text-foreground transition-colors";
-
-const COMMAND_SHORTCUT_CLASS =
-  "text-muted-foreground group-data-[selected=true]:text-foreground";
-
-const COMMAND_GROUP_CLASS =
-  "[&_[cmdk-group-heading]]:text-muted-foreground";
 
 
 export function CommandPaletteDialogBody() {
@@ -181,6 +156,7 @@ export function CommandPaletteDialogBody() {
     return [...navGroups, ...projectNavGroups].flatMap((group) =>
       flattenNavRoutes(group.routes)
         .filter((r) => {
+          if (isHrNavChromeKilled(r.href)) return false;
           if (seen.has(r.href)) return false;
           seen.add(r.href);
           return true;
@@ -203,6 +179,7 @@ export function CommandPaletteDialogBody() {
     error: searchError,
     retry: retrySearch,
   } = useGlobalSearch(debouncedQuery);
+  const peopleSearch = usePalettePeopleSearch(debouncedQuery);
 
   const handleSelect = useCallback(
     (href: string) => {
@@ -281,11 +258,16 @@ export function CommandPaletteDialogBody() {
     }));
   }, [navGroups]);
 
-  const hasResults = filteredPages.length > 0 || entityResults.length > 0;
+  const hasResults =
+    filteredPages.length > 0 ||
+    entityResults.length > 0 ||
+    peopleSearch.people.length > 0 ||
+    peopleSearch.isError;
   const showSearchError =
     isSearchError && query.length >= GLOBAL_SEARCH_MIN_LENGTH;
   const showEmpty =
     !isSearching &&
+    !peopleSearch.isSearching &&
     !showSearchError &&
     query.length >= GLOBAL_SEARCH_MIN_LENGTH &&
     !hasResults;
@@ -301,11 +283,11 @@ export function CommandPaletteDialogBody() {
     <CommandDialog open={paletteOpen} onOpenChange={handleOpenChange}>
       <div className="relative">
         <CommandInput
-          placeholder="Search pages, leads, deals, contacts…"
+          placeholder="Search people, pages and actions…"
           value={query}
           onValueChange={setQuery}
         />
-        {isSearching && (
+        {(isSearching || peopleSearch.isSearching) && (
           <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 animate-spin text-muted-foreground pointer-events-none" />
         )}
       </div>
@@ -331,10 +313,38 @@ export function CommandPaletteDialogBody() {
                 No results for &ldquo;{query}&rdquo;
               </p>
               <p className="text-xs text-muted-foreground">
-                Try a page name, lead, deal, or contact
+                Try a name, a page or an action
               </p>
             </div>
           </CommandEmpty>
+        )}
+
+        <PalettePeopleGroup search={peopleSearch} onSelect={handleSelect} />
+
+        {actionsCommands.length > 0 && (
+          <>
+            <CommandGroup heading="Actions" className={COMMAND_GROUP_CLASS}>
+              {actionsCommands.map((cmd) => (
+                <CommandItem
+                  key={cmd.id}
+                  value={`${cmd.label} ${cmd.keywords.join(" ")}`}
+                  onSelect={cmd.execute}
+                  className={COMMAND_ITEM_CLASS}
+                >
+                  <ItemIcon icon={cmd.icon} />
+                  <span className="flex-1 text-sm text-foreground">
+                    {cmd.label}
+                  </span>
+                  {cmd.shortcut && (
+                    <CommandShortcut className={COMMAND_SHORTCUT_CLASS}>
+                      {cmd.shortcut}
+                    </CommandShortcut>
+                  )}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+            <CommandSeparator className="my-1" />
+          </>
         )}
 
         {ENTITY_TYPES.map((type) => {
@@ -412,35 +422,6 @@ export function CommandPaletteDialogBody() {
 
         {!query && (
           <>
-            {actionsCommands.length > 0 && (
-              <>
-                <CommandGroup
-                  heading={projectId !== null ? "This project" : "Actions"}
-                  className={COMMAND_GROUP_CLASS}
-                >
-                  {actionsCommands.map((cmd) => (
-                    <CommandItem
-                      key={cmd.id}
-                      value={cmd.keywords.join(" ")}
-                      onSelect={cmd.execute}
-                      className={COMMAND_ITEM_CLASS}
-                    >
-                      <ItemIcon icon={cmd.icon} />
-                      <span className="flex-1 text-sm text-foreground">
-                        {cmd.label}
-                      </span>
-                      {cmd.shortcut && (
-                        <CommandShortcut className={COMMAND_SHORTCUT_CLASS}>
-                          {cmd.shortcut}
-                        </CommandShortcut>
-                      )}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-                <CommandSeparator className="my-1" />
-              </>
-            )}
-
             {navCommands.length > 0 && (
               <>
                 <CommandGroup heading="Navigation" className={COMMAND_GROUP_CLASS}>

@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
@@ -35,5 +36,6 @@ export function useComplianceCalendar(year: number, month: number) {
       }, signal, complianceCalendarLazy),
     staleTime: 5 * 60_000,
     enabled: canManage,
+    ...INLINE_READ_ERROR,
   });
 }

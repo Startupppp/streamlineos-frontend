@@ -278,7 +278,7 @@ export function LeaveDecisionButtons({
     <>
       <LoadingButton
         size="sm"
-        className="h-7 rounded-full bg-status-success-fill hover:bg-status-success-fill-hover text-white text-dense font-semibold px-3 gap-1 border-0 transition-colors duration-200"
+        className="min-h-11 rounded-full md:h-7 md:min-h-0 bg-status-success-fill hover:bg-status-success-fill-hover text-white text-dense font-semibold px-3 gap-1 border-0 transition-colors duration-200"
         isPending={processingId === request.id}
         onClick={handleApprove}
       >
@@ -287,7 +287,7 @@ export function LeaveDecisionButtons({
       </LoadingButton>
       <Button
         size="sm"
-        className="h-7 rounded-full bg-transparent border border-destructive/30 text-destructive hover:bg-destructive/10 text-dense font-semibold px-3 gap-1 transition-colors duration-200"
+        className="min-h-11 rounded-full md:h-7 md:min-h-0 bg-transparent border border-destructive/30 text-destructive hover:bg-destructive/10 text-dense font-semibold px-3 gap-1 transition-colors duration-200"
         disabled={processingId === request.id}
         onClick={handleReject}
       >

@@ -2,6 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
@@ -117,6 +118,7 @@ export function useCandidateActivity(candidateId: number) {
     queryFn: ({ signal }) => apiClient.get<CandidateActivityEvent[]>(`/hr/recruitment/candidates/${candidateId}/activity`, undefined, signal, activityContract),
     staleTime: 60_000,
     enabled: canView && !!candidateId,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -128,6 +130,7 @@ export function useCandidateVault(candidateId: number) {
       apiClient.get<VaultDocument[]>(`/hr/recruitment/candidates/${candidateId}/vault`, undefined, signal, vaultDocumentListContract),
     staleTime: 2 * 60_000,
     enabled: canViewVault && !!candidateId,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -177,6 +180,7 @@ export function useRolloutDocuments(candidateId: number) {
       ),
     staleTime: 2 * 60_000,
     enabled: !!candidateId,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -247,6 +251,7 @@ export function useCandidateReferrals(candidateId: number) {
       apiClient.get<CandidateReferral[]>(`/hr/recruitment/candidates/${candidateId}/referral`, undefined, signal, referralListContract),
     enabled: canView && candidateId > 0,
     staleTime: 2 * 60_000,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -335,6 +340,7 @@ export function useReferenceChecks(candidateId: number) {
       apiClient.get<ReferenceCheck[]>(`/hr/recruitment/candidates/${candidateId}/reference-checks`, undefined, signal, referenceCheckListContract),
     staleTime: 2 * 60_000,
     enabled: candidateId > 0,
+    ...INLINE_READ_ERROR,
   });
 }
 

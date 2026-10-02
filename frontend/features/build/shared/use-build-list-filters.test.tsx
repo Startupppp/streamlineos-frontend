@@ -121,6 +121,25 @@ describe("useBuildListFilters", () => {
     expect(result.current.debouncedSearch).toBe("ty");
   });
 
+  it("keeps a character typed while the URL write is still in flight", () => {
+    const { result, rerender } = renderHook(() =>
+      useBuildListFilters({ filters: FILTERS }),
+    );
+
+    act(() => result.current.setSearch("lo"));
+    act(() => { jest.advanceTimersByTime(300); });
+    expect(lastParams().get("q")).toBe("lo");
+
+    act(() => result.current.setSearch("log"));
+    setUrl("q=lo");
+    rerender();
+
+    expect(result.current.search).toBe("log");
+
+    act(() => { jest.advanceTimersByTime(300); });
+    expect(lastParams().get("q")).toBe("log");
+  });
+
   it("clears every filter and the search in one write", () => {
     setUrl("status=open&severity=high&q=login&cursor=abc");
     const { result } = renderHook(() => useBuildListFilters({ filters: FILTERS }));

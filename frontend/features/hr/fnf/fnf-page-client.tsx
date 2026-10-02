@@ -2,6 +2,7 @@
 
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useState, useCallback } from "react";
+import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -179,6 +180,7 @@ export function FnfPageClient() {
 
   const [completeId, setCompleteId] = useState<number | null>(null);
   const [userId, setUserId] = useState("");
+  const [userIdError, setUserIdError] = useState("");
   const [basicDues, setBasicDues] = useState("");
   const [leaveEncashment, setLeaveEncashment] = useState("");
   const [bonusDue, setBonusDue] = useState("");
@@ -188,6 +190,7 @@ export function FnfPageClient() {
 
   const resetForm = useCallback(() => {
     setUserId("");
+    setUserIdError("");
     setBasicDues("");
     setLeaveEncashment("");
     setBonusDue("");
@@ -197,7 +200,11 @@ export function FnfPageClient() {
   }, []);
 
   const handleCreate = useCallback(() => {
-    if (!userId) { toast.error("Employee is required"); return; }
+    if (!userId) {
+      setUserIdError("Employee is required");
+      return;
+    }
+    setUserIdError("");
     create.mutate(
       {
         userId,
@@ -230,6 +237,11 @@ export function FnfPageClient() {
     });
   }, [completeId, complete]);
 
+  const handleUserIdChange = useCallback((next: string) => {
+    setUserId(next);
+    setUserIdError("");
+  }, []);
+
   const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
 
   const handleSheetOpenChange = useCallback((open: boolean) => {
@@ -258,23 +270,30 @@ export function FnfPageClient() {
 
   return (
     <PageWrapper
-      title="Final settlement"
-      subtitle="Manage final settlements for separated employees"
+      title="Full and final draft"
+      subtitle="Record what a separated employee is owed. Payroll runs the settlement itself — this page saves a draft and does not pay anything."
+      backHref="/hr/exit"
+      backLabel="Back to Exit"
       actions={
-        canCreate ? (
-          <Button size="sm" onClick={handleOpenSheet} className="gap-1.5">
-            <Plus className="h-3.5 w-3.5" />
-            Create settlement
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" className="gap-1.5" asChild>
+            <Link href="/payroll/fnf">Open payroll settlement</Link>
           </Button>
-        ) : undefined
+          {canCreate ? (
+            <Button size="sm" onClick={handleOpenSheet} className="gap-1.5">
+              <Plus className="h-3.5 w-3.5" />
+              Create draft
+            </Button>
+          ) : null}
+        </div>
       }
     >
       <PageState resolution={pageState} loading={loadingSkeleton} onRetry={handleRetry} className="flex-1">
         {!items?.length ? (
           <EmptyState
             illustration={<EmptyExpensesIllustration className="h-24 w-24" />}
-            title="No final settlements on record"
-            description="Final settlements for separated employees will appear here."
+            title="No full and final drafts on record"
+            description="A draft for a separated employee appears here once you create one. Payroll settles it from the payroll side."
             compact
           />
         ) : (
@@ -307,9 +326,14 @@ export function FnfPageClient() {
           </label>
           <EmployeePicker
             value={userId}
-            onChange={setUserId}
+            onChange={handleUserIdChange}
             placeholder="Select employee…"
           />
+          {userIdError ? (
+            <p id="fnf-employee-error" role="alert" className="text-xs text-destructive">
+              {userIdError}
+            </p>
+          ) : null}
         </div>
 
         <div className="space-y-2">

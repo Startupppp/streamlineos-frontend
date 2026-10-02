@@ -638,6 +638,7 @@
     "sales:view",
     "self:attendance",
     "self:cases",
+    "self:document-acknowledgements",
     "self:expenses",
     "self:job-openings",
     "self:leaves",
@@ -4041,6 +4042,12 @@
       "action": "cases",
       "description": "View and acknowledge disciplinary actions issued to oneself"
     },
+    "self:document-acknowledgements": {
+      "resource": "self",
+      "action": "document-acknowledgements",
+      "description": "View and acknowledge documents assigned to oneself",
+      "baselineScope": "own"
+    },
     "self:expenses": {
       "resource": "self",
       "action": "expenses",
@@ -4745,6 +4752,7 @@
     "ownership:transfer:respond",
     "self:attendance",
     "self:cases",
+    "self:document-acknowledgements",
     "self:expenses",
     "self:job-openings",
     "self:leaves",

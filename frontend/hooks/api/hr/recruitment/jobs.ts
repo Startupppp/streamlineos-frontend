@@ -132,7 +132,10 @@ export type JobPostingsParams = {
  * Backend returns `{ items, total, pagination }`.
  * Hooks normalize to a flat JobPosting[] so list UIs keep working.
  */
-export function useJobPostings(params?: JobPostingsParams) {
+export function useJobPostings(
+  params?: JobPostingsParams,
+  options?: { throwOnError?: false },
+) {
   const canRequisitions = useCan("hr:requisitions:view");
   const pageSize = params?.pageSize ?? 100;
   const queryParams = {
@@ -153,6 +156,7 @@ export function useJobPostings(params?: JobPostingsParams) {
     },
     staleTime: 2 * 60_000,
     enabled: canRequisitions,
+    ...options,
   });
 }
 

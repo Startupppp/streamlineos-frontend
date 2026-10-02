@@ -3,6 +3,10 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { useAccess } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 
@@ -40,6 +44,7 @@ export const CARD_GROUPS: CardGroup[] = [
         description: "Job roles and levels used by HR records",
         href: "/hr/org",
         permission: "hr:employees:view",
+        advanced: true,
       },
       {
         title: "Permissions & Roles",
@@ -52,6 +57,7 @@ export const CARD_GROUPS: CardGroup[] = [
         description: "Delivery providers, templates, and events",
         href: "/settings/notifications/providers",
         permission: "notifications:providers:view",
+        advanced: true,
       },
     ],
   },
@@ -94,7 +100,6 @@ export const CARD_GROUPS: CardGroup[] = [
         description: "Approval chains and HR process flows",
         href: "/hr/settings/workflows",
         permission: "hr:workflows:view",
-        advanced: true,
       },
       {
         title: "Automations",
@@ -126,14 +131,12 @@ export const CARD_GROUPS: CardGroup[] = [
         description: "Dynamic HR forms and intake",
         href: "/hr/settings/forms",
         permission: "hr:forms:view",
-        advanced: true,
       },
       {
         title: "Custom Fields",
         description: "Employee attribute extensions",
         href: "/hr/settings/custom-fields",
         permission: "hr:custom-fields:manage",
-        advanced: true,
       },
     ],
   },
@@ -151,13 +154,6 @@ export const CARD_GROUPS: CardGroup[] = [
         description: "Webhooks, connected apps and devices",
         href: "/hr/settings/integrations",
         permission: "hr:integrations:manage",
-        advanced: true,
-      },
-      {
-        title: "Policy & Workflow Simulator",
-        description: "Dry-run policies and approval flows on sample employees",
-        href: "/hr/simulator",
-        permission: "hr:policies:manage",
         advanced: true,
       },
     ],
@@ -211,8 +207,25 @@ interface Props {
   isAdvanced: boolean;
 }
 
+function HubGridSkeleton() {
+  return (
+    <div className="space-y-8 pb-6">
+      {[0, 1].map((group) => (
+        <section key={group} className="space-y-3">
+          <Skeleton className="h-3 w-32" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            {[0, 1, 2, 3].map((card) => (
+              <Skeleton key={card} className="h-24 rounded-xl" />
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
+}
+
 export function HubGrid({ isAdvanced }: Props) {
-  const { data: access } = useAccess();
+  const { data: access, isLoading, isError, error, refetch } = useAccess();
   const canOpen = (card: CardDef) => {
     if (access?.isOrgOwner) return true;
     const required = Array.isArray(card.permission)
@@ -233,7 +246,30 @@ export function HubGrid({ isAdvanced }: Props) {
         0,
       );
 
+  const pageState = usePageState({
+    isLoading,
+    isError,
+    error,
+    isEmpty: accessibleGroups.length === 0,
+  });
+
+  function handleRetry() {
+    void refetch();
+  }
+
   return (
+    <PageState
+      resolution={pageState}
+      loading={<HubGridSkeleton />}
+      onRetry={handleRetry}
+      empty={
+        <EmptyState
+          illustrationPreset="settings"
+          title="No settings available to you"
+          description="Your role does not include any HR configuration yet. Ask an administrator for the settings permissions you need."
+        />
+      }
+    >
     <div className="space-y-8 pb-6">
       {!isAdvanced && hiddenCount > 0 && (
         <p className="text-xs text-muted-foreground">
@@ -259,5 +295,6 @@ export function HubGrid({ isAdvanced }: Props) {
         );
       })}
     </div>
+    </PageState>
   );
 }

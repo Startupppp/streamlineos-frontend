@@ -70,9 +70,11 @@ describe("BUG-007 a failing costing read stays on the page instead of failing th
 
   it("opts all three costing reads out of the boundary, so none of them can render Failed to load the HR module", () => {
     const source = readFileSync(HOOKS, "utf8");
-    const optOuts = source.match(/\.\.\.INLINE_READ_ERROR,/g) ?? [];
+    const costing = source.slice(source.indexOf("export function useWorkforceCostSummary("));
+    const optOuts = costing.match(/\.\.\.INLINE_READ_ERROR,/g) ?? [];
 
     expect(INLINE_READ_ERROR).toEqual({ throwOnError: false });
+    expect(costing).toContain("export function useCostByLocation(");
     expect(optOuts).toHaveLength(3);
   });
 

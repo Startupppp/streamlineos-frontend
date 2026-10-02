@@ -457,14 +457,6 @@
       "as": 1,
       "nonNull": 0
     },
-    "features/hr/leaves/components/leave-approvals.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
-    "features/hr/leaves/components/leaves-wfh-content.tsx": {
-      "as": 5,
-      "nonNull": 0
-    },
     "features/hr/leaves/components/wfh-tab-content.tsx": {
       "as": 1,
       "nonNull": 0
