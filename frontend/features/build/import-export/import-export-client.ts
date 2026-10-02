@@ -1,15 +1,31 @@
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { IDEMPOTENCY_HEADER } from "@/lib/idempotency-key";
-import {
-  importPreviewSchema,
-  importReportSchema,
-  ticketExportSchema,
-  type ImportFormat,
-  type ImportMode,
-  type TicketExport,
-  type TicketImportPreview,
-  type TicketImportReport,
+import type {
+  ImportFormat,
+  ImportMode,
+  TicketExport,
+  TicketImportPreview,
+  TicketImportReport,
 } from "./import-export-contract";
+
+const previewContract = lazyContract(() =>
+  import("@/contracts/build-contracts.generated").then(
+    (m) => m.ticketImportExportPreviewImportResponseSchema,
+  ),
+);
+
+const commitContract = lazyContract(() =>
+  import("@/contracts/build-contracts.generated").then(
+    (m) => m.ticketImportExportCommitImportResponseSchema,
+  ),
+);
+
+const exportContract = lazyContract(() =>
+  import("@/contracts/build-contracts.generated").then(
+    (m) => m.ticketImportExportExportTicketsResponseSchema,
+  ),
+);
 
 export interface PreviewTicketImportInput {
   projectId: number;
@@ -43,7 +59,7 @@ export function previewTicketImport(
     `/build/${input.projectId}/import-export/tickets/preview`,
     { format: input.format, content: input.content },
     input.signal ? { signal: input.signal } : undefined,
-    importPreviewSchema,
+    previewContract,
   );
 }
 
@@ -62,7 +78,7 @@ export function commitTicketImport(
       headers: { [IDEMPOTENCY_HEADER]: input.idempotencyKey },
       ...(input.signal ? { signal: input.signal } : {}),
     },
-    importReportSchema,
+    commitContract,
   );
 }
 
@@ -75,6 +91,6 @@ export function exportTickets(input: ExportTicketsInput): Promise<TicketExport> 
     `/build/${input.projectId}/import-export/tickets/export`,
     params,
     input.signal,
-    ticketExportSchema,
+    exportContract,
   );
 }

@@ -36,7 +36,7 @@ const ALLOWLIST = new Map([
   ],
   [
     "features/build/settings/project-settings-views-page.tsx",
-    "PRE-EXISTING GAP: useViews is cursor-paged; filter is client-side; requires a separate ticket",
+    "useViews forwards search server-side; cursor resets on term change — fixed in ticket 48",
   ],
   [
     "features/build/settings/project-settings-fields-page.tsx",

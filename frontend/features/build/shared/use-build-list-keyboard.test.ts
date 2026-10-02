@@ -337,6 +337,23 @@ describe("useBuildListKeyboard — the input guard covers every editable target"
     expect(result.current.focusedIndex).toBeNull();
     select.remove();
   });
+
+  it("j does not move focus when the target is a contenteditable=false atomic node inside a contenteditable=true editor, because the user is mid-composition in a rich-text field", () => {
+    const editor = document.createElement("div");
+    editor.setAttribute("contenteditable", "true");
+    const atomicNode = document.createElement("span");
+    atomicNode.setAttribute("contenteditable", "false");
+    editor.appendChild(atomicNode);
+    document.body.appendChild(editor);
+    const { result } = setup();
+
+    act(() => {
+      fireEvent.keyDown(atomicNode, { key: "j" });
+    });
+
+    expect(result.current.focusedIndex).toBeNull();
+    editor.remove();
+  });
 });
 
 describe("useBuildListKeyboard — c creates and e edits, so no page needs its own keydown listener", () => {

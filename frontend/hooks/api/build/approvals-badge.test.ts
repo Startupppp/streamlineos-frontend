@@ -67,7 +67,8 @@ jest.mock("@/lib/api-envelope", () => ({
 }));
 
 jest.mock("@/hooks/api/build/approvals-schema", () => ({
-  approvalInboxListContract: { parse: (v: unknown) => v },
+  approvalInboxPageContract: { parse: (v: unknown) => v },
+  approvalPageContract: { parse: (v: unknown) => v },
   approvalRowContract: { parse: (v: unknown) => v },
 }));
 

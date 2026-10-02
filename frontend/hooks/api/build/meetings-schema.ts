@@ -1,98 +1,25 @@
-import { z } from "zod";
-import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
-import { DB_ENUMS } from "@/contracts/db-enums.generated";
+import {
+  meetingsListMeetingsResponseSchema,
+  meetingsCreateMeetingResponseSchema,
+  meetingsGetMeetingResponseSchema,
+  meetingsAddAttendeeResponseSchema,
+  actionItemsConvertToTaskResponseSchema,
+} from "@/contracts/build-contracts.generated";
 
-const meetingRowContract = z.object({
-  id: z.number().int(),
-  orgId: z.string(),
-  projectId: z.number().int(),
-  meetingNumber: z.number().int(),
-  title: z.string(),
-  type: z.enum(DB_ENUMS.meeting_type),
-  status: z.enum(DB_ENUMS.project_meeting_status),
-  agenda: z.string().nullable(),
-  notes: z.string().nullable(),
-  scheduledAt: z.string().nullable(),
-  endAt: z.string().nullable(),
-  durationMinutes: z.number().int().nullable(),
-  timezone: z.string().nullable(),
-  recurrenceRule: z.unknown(),
-  cycleId: z.number().int().nullable(),
-  createdBy: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  deletedAt: z.string().nullable(),
-});
+export const meetingRowContract = meetingsCreateMeetingResponseSchema;
 
-export const meetingListItemContract = meetingRowContract.extend({
-  attendeeCount: z.number().int(),
-  actionItemCount: z.number().int(),
-  unresolvedActionItemCount: z.number().int(),
-});
+export const meetingPageContract = meetingsListMeetingsResponseSchema;
 
-export const meetingListContract = z.array(meetingListItemContract);
+export const meetingListItemContract = meetingsListMeetingsResponseSchema.shape.data.element;
 
-export const meetingPageContract = cursorPageContract(meetingListItemContract);
+export const actionItemRowContract = meetingsGetMeetingResponseSchema.shape.actionItems.element;
 
-export const meetingResponseContract = z.union([meetingPageContract, meetingListContract]);
+export const standupEntryContract = meetingsGetMeetingResponseSchema.shape.standupEntries.element;
 
-export { meetingRowContract };
+export const meetingDetailAttendeeContract = meetingsGetMeetingResponseSchema.shape.attendees.element;
 
-export const actionItemRowContract = z.object({
-  id: z.number().int(),
-  orgId: z.string(),
-  meetingId: z.number().int(),
-  projectId: z.number().int(),
-  title: z.string(),
-  description: z.string().nullable(),
-  assigneeId: z.string().nullable(),
-  dueDate: z.string().nullable(),
-  status: z.enum(DB_ENUMS.action_item_status),
-  convertedTicketId: z.number().int().nullable(),
-  createdBy: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  deletedAt: z.string().nullable(),
-});
+export const meetingDetailContract = meetingsGetMeetingResponseSchema;
 
-const meetingAttendeeContract = z.object({
-  id: z.number().int(),
-  orgId: z.string(),
-  meetingId: z.number().int(),
-  membershipId: z.number().int(),
-  userId: z.string().optional().default(""),
-  attended: z.boolean(),
-  createdAt: z.string(),
-});
+export const addAttendeeResultContract = meetingsAddAttendeeResponseSchema;
 
-export const standupEntryContract = z.object({
-  id: z.number().int(),
-  orgId: z.string(),
-  meetingId: z.number().int(),
-  userId: z.string(),
-  membershipId: z.number().int().nullable(),
-  yesterday: z.string().nullable(),
-  today: z.string().nullable(),
-  blockers: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-});
-
-export const meetingDetailContract = meetingRowContract.extend({
-  attendees: z.array(meetingAttendeeContract),
-  actionItems: z.array(actionItemRowContract),
-  standupEntries: z.array(standupEntryContract),
-});
-
-export const addAttendeeResultContract = z.object({
-  meetingId: z.number().int(),
-  userId: z.string(),
-  attended: z.boolean().optional(),
-});
-
-export const convertToTaskResultContract = z.object({
-  actionItem: actionItemRowContract,
-  ticketId: z.number().int(),
-});
-
-export const meetingsSuccessContract = z.object({ success: z.literal(true) });
+export const convertToTaskResultContract = actionItemsConvertToTaskResponseSchema;

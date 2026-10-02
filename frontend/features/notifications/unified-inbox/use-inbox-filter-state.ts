@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import type { ReadonlyURLSearchParams } from "next/navigation";
 import type { InboxKind } from "@/types/inbox";
 import {
@@ -94,10 +94,19 @@ export function useInboxFilterState(
     [view, q, unreadOnly, category, priority, kindOverride, group, from, to, module],
   );
 
+  const routerRef = useRef(router);
+  useEffect(() => {
+    routerRef.current = router;
+  }, [router]);
+
+  const [, startTransition] = useTransition();
+
   useEffect(() => {
     const params = filterStateToSearchParams(filterState);
-    router.replace(`?${params.toString()}`, { scroll: false });
-  }, [router, filterState]);
+    startTransition(() => {
+      routerRef.current.replace(`?${params.toString()}`, { scroll: false });
+    });
+  }, [filterState]);
 
   const queryParams = useMemo(() => buildQueryParams(filterState), [filterState]);
 

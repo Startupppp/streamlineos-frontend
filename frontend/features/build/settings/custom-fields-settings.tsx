@@ -43,6 +43,7 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { CUSTOM_FIELD_TYPES } from "@/types/projects/tasks";
 import type { CustomFieldType } from "@/types/projects/tasks";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -60,7 +61,7 @@ const FIELD_TYPES: Array<{ value: CustomFieldType; label: string }> = [
   { value: "user", label: "User" },
 ];
 
-const fieldTypeColors: Record<CustomFieldType, string> = {
+const fieldTypeColors: Record<string, string> = {
   text: "bg-muted text-muted-foreground",
   number: "bg-category-blue-surface text-category-blue-ink",
   date: "bg-category-amber-surface text-category-amber-ink",
@@ -75,9 +76,9 @@ const fieldTypeColors: Record<CustomFieldType, string> = {
 export interface CustomFieldItem {
   id: number;
   name: string;
-  type: CustomFieldType;
+  type: string;
   options?: string[] | null;
-  required?: boolean;
+  required?: boolean | null;
 }
 
 interface CustomFieldRowProps {
@@ -331,7 +332,7 @@ export function CustomFieldsSettings({ projectId, search, createRef, editRef }: 
   const editDefaultValues = useMemo<CustomFieldFormValues>(
     () => ({
       fieldName: editingField?.name ?? "",
-      fieldType: editingField?.type ?? "text",
+      fieldType: CUSTOM_FIELD_TYPES.find((t) => t === editingField?.type) ?? "text",
       options: editingField?.options?.join(", ") ?? "",
     }),
     [editingField],

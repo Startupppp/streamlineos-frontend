@@ -11,7 +11,6 @@ import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { z } from "zod";
-import { z as zod } from "zod";
 import type {
   projectMemberPageContract,
   projectMemberRowContract,
@@ -34,21 +33,8 @@ const memberRoleLazy = lazyContract(() =>
   ),
 );
 const memberResponseLazy = lazyContract<ProjectMemberPage>(() =>
-  import("@/hooks/api/build/build-project-schema").then((m) =>
-    m.projectMemberPageContract
-      .or(zod.array(m.projectMemberSchema))
-      .transform((value) =>
-        Array.isArray(value)
-          ? {
-              data: value,
-              pagination: {
-                limit: value.length,
-                hasMore: false,
-                nextCursor: null,
-              },
-            }
-          : value,
-      ),
+  import("@/hooks/api/build/build-project-schema").then(
+    (m) => m.projectMemberPageContract,
   ),
 );
 

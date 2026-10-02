@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { knowledgeGapsKeys } from "./knowledge-gaps";
 import type { z } from "zod";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
@@ -200,6 +201,9 @@ export function useUpdateSupportKbArticle() {
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: [...accountingAndSupportQueryKeys.supportKb.all, "articles"] });
       qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.supportKb.article(variables.id) });
+      if (variables.status === "published") {
+        qc.invalidateQueries({ queryKey: knowledgeGapsKeys.all });
+      }
     },
   });
 }

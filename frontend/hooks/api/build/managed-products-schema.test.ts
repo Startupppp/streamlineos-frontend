@@ -22,6 +22,7 @@ function baseRow(status: string) {
     targetLaunchDate: null,
     successMetrics: null,
     ownerMembershipId: null,
+    owner: null as { id: string; firstName: string | null; lastName: string | null; email: string; image: string | null } | null,
     version: 1,
     deletedAt: null,
     createdAt: "2026-09-22T00:00:00.000Z",
@@ -113,8 +114,9 @@ it("keeps the resolved owner projection the detail endpoint sends, because z.obj
   });
 });
 
-it("parses a list row that omits owner, because only the detail endpoint resolves it", () => {
-  expect(() => managedProductRowContract.parse(baseRow("active"))).not.toThrow();
+it("rejects a row that omits owner entirely, because the backend always sends it (null when unset)", () => {
+  const { owner: _owner, ...withoutOwner } = baseRow("active");
+  expect(() => managedProductRowContract.parse(withoutOwner)).toThrow();
 });
 
 it("parses a detail row whose owner is null, because a managed product need not have an owner membership", () => {

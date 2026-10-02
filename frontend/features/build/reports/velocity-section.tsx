@@ -4,6 +4,7 @@ import { useMemo, useCallback } from "react";
 import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyLeaderboardIllustration } from "@/components/illustrations";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Gauge } from "lucide-react";
@@ -11,7 +12,6 @@ import { useVelocityReport } from "@/hooks/api/build/reports";
 import { ChartCard } from "./chart-card";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
-import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 
 const VelocityChart = dynamic(
   () => import("./velocity-chart").then((m) => ({ default: m.VelocityChart })),
@@ -33,14 +33,19 @@ export function VelocitySection({ projectId }: { projectId: number }) {
   const handleRetry = useCallback(() => refetch(), [refetch]);
   const handleLoadMore = useCallback(() => fetchNextPage(), [fetchNextPage]);
 
+  const sprints = useMemo(
+    () => data?.pages.flatMap((p) => p.data) ?? [],
+    [data],
+  );
+
   const chartData = useMemo(
     () =>
-      (data?.pages.flatMap((p) => p.data) ?? []).map((s) => ({
+      sprints.map((s) => ({
         name: s.name,
         Committed: s.committedPoints,
         Completed: s.completedPoints,
       })),
-    [data],
+    [sprints],
   );
 
   const resolution = usePageState({

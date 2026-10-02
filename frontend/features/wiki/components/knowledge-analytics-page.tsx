@@ -6,7 +6,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
+import {
+  StatCard,
+  StatCardGrid,
+  StatCardGridSkeleton,
+} from "@/components/ui/stat-card";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -79,7 +83,13 @@ const TRUST_VARIANT: Record<
   verification_expired: "destructive",
 };
 
-const NoResultsRow = memo(function NoResultsRow({ row, rank }: { row: KbNoResultRow; rank: number }) {
+const NoResultsRow = memo(function NoResultsRow({
+  row,
+  rank,
+}: {
+  row: KbNoResultRow;
+  rank: number;
+}) {
   return (
     <div className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted/40 transition-colors">
       <span className="text-xs text-muted-foreground w-5 shrink-0 tabular-nums">
@@ -93,7 +103,11 @@ const NoResultsRow = memo(function NoResultsRow({ row, rank }: { row: KbNoResult
   );
 });
 
-const PageAnalyticsTableRow = memo(function PageAnalyticsTableRow({ row }: { row: KbPageAnalyticsRow }) {
+const PageAnalyticsTableRow = memo(function PageAnalyticsTableRow({
+  row,
+}: {
+  row: KbPageAnalyticsRow;
+}) {
   return (
     <div className="grid grid-cols-[1fr_3rem_3rem_3rem_auto_auto_5rem] items-center gap-3 px-3 py-2 hover:bg-muted/40 transition-colors">
       <Link
@@ -211,9 +225,14 @@ const GapTableRow = memo(function GapTableRow({
         tabIndex={0}
         aria-expanded={isSelected}
         aria-label={`Gap: ${row.query ?? "(empty)"}`}
-        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleSelectClick(); }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") handleSelectClick();
+        }}
       >
-        <TruncatedText text={row.query ?? "(empty)"} className="flex-1 text-sm" />
+        <TruncatedText
+          text={row.query ?? "(empty)"}
+          className="flex-1 text-sm"
+        />
         <span className="text-xs tabular-nums text-muted-foreground shrink-0">
           {row.count}
         </span>
@@ -282,10 +301,24 @@ const GapTableRow = memo(function GapTableRow({
             placeholder="Select member…"
             className="flex-1"
           />
-          <Button size="sm" type="submit" disabled={isAssigning || !assignValue.trim()} className="h-7 px-2 text-xs">
+          <Button
+            size="sm"
+            type="submit"
+            disabled={isAssigning || !assignValue.trim()}
+            className="h-7 px-2 text-xs"
+          >
             Assign
           </Button>
-          <Button size="sm" type="button" variant="ghost" className="h-7 px-2 text-xs" onClick={() => { setAssignOpen(false); setAssignValue(""); }}>
+          <Button
+            size="sm"
+            type="button"
+            variant="ghost"
+            className="h-7 px-2 text-xs"
+            onClick={() => {
+              setAssignOpen(false);
+              setAssignValue("");
+            }}
+          >
             Cancel
           </Button>
         </form>
@@ -303,10 +336,24 @@ const GapTableRow = memo(function GapTableRow({
             onChange={(e) => setDismissValue(e.target.value)}
             autoFocus
           />
-          <Button size="sm" type="submit" disabled={isDismissing || !dismissValue.trim()} className="h-7 px-2 text-xs">
+          <Button
+            size="sm"
+            type="submit"
+            disabled={isDismissing || !dismissValue.trim()}
+            className="h-7 px-2 text-xs"
+          >
             Dismiss
           </Button>
-          <Button size="sm" type="button" variant="ghost" className="h-7 px-2 text-xs" onClick={() => { setDismissOpen(false); setDismissValue(""); }}>
+          <Button
+            size="sm"
+            type="button"
+            variant="ghost"
+            className="h-7 px-2 text-xs"
+            onClick={() => {
+              setDismissOpen(false);
+              setDismissValue("");
+            }}
+          >
             Cancel
           </Button>
         </form>
@@ -355,15 +402,30 @@ export default function KnowledgeAnalyticsPage() {
     spaceId !== undefined ||
     staleOnly;
 
-  const [selectedGapQuery, setSelectedGapQuery] = useState<string | undefined>(undefined);
+  const [selectedGapQuery, setSelectedGapQuery] = useState<string | undefined>(
+    undefined,
+  );
 
   const { data: spacesPage } = useKbSpaces();
   const spaces = spacesPage?.data ?? [];
 
-  const { data: overview, isLoading: overviewLoading, isError: overviewError, error: overviewQueryError, refetch: refetchOverview } =
-    useKbAnalyticsOverview(spaceId !== undefined ? { ...range, spaceId } : range);
-  const { data: noResults = [], isLoading: noResultsLoading, isError: noResultsError, error: noResultsQueryError, refetch: refetchNoResults } =
-    useKbNoResults(range);
+  const {
+    data: overview,
+    isLoading: overviewLoading,
+    isError: overviewError,
+    error: overviewQueryError,
+    refetch: refetchOverview,
+  } = useKbAnalyticsOverview(
+    spaceId !== undefined ? { ...range, spaceId } : range,
+    "wiki",
+  );
+  const {
+    data: noResults = [],
+    isLoading: noResultsLoading,
+    isError: noResultsError,
+    error: noResultsQueryError,
+    refetch: refetchNoResults,
+  } = useKbNoResults(range);
   const {
     data: pageAnalytics = [],
     isLoading: pagesLoading,
@@ -373,9 +435,7 @@ export default function KnowledgeAnalyticsPage() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = usePageAnalytics(
-    staleOnly ? { spaceId, staleOnly: true } : { spaceId },
-  );
+  } = usePageAnalytics(staleOnly ? { spaceId, staleOnly: true } : { spaceId });
   const {
     gaps = [],
     isLoading: gapsLoading,
@@ -466,7 +526,8 @@ export default function KnowledgeAnalyticsPage() {
 
   const pageState = usePageState({
     permission: "kb:analytics:view",
-    isLoading: overviewLoading || noResultsLoading || pagesLoading || gapsLoading,
+    isLoading:
+      overviewLoading || noResultsLoading || pagesLoading || gapsLoading,
     isError: overviewError || noResultsError || pagesError || gapsError,
     error: overviewError
       ? overviewQueryError
@@ -494,337 +555,346 @@ export default function KnowledgeAnalyticsPage() {
           />
         }
       >
-      <div className="flex flex-wrap items-center gap-2 mb-4">
-        <Select value={rangePreset} onValueChange={handleRangeChange}>
-          <SelectTrigger className="w-44" aria-label="Date range">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {ANALYTICS_RANGE_PRESETS.map((preset) => (
-              <SelectItem key={preset} value={preset}>
-                {ANALYTICS_RANGE_LABELS[preset]}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select
-          value={spaceId === undefined ? ALL_SPACES_VALUE : String(spaceId)}
-          onValueChange={handleSpaceChange}
-        >
-          <SelectTrigger className="w-52" aria-label="Space">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL_SPACES_VALUE}>All spaces</SelectItem>
-            {spaces.map((space) => (
-              <SelectItem key={space.id} value={String(space.id)}>
-                {space.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button
-          type="button"
-          variant={staleOnly ? "default" : "outline"}
-          size="sm"
-          aria-pressed={staleOnly}
-          onClick={handleStaleOnlyToggle}
-          className="gap-1"
-        >
-          <KbClockIcon className="h-3.5 w-3.5" />
-          Stale high-use only
-        </Button>
-        {isFiltered ? (
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          <Select value={rangePreset} onValueChange={handleRangeChange}>
+            <SelectTrigger className="w-44" aria-label="Date range">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {ANALYTICS_RANGE_PRESETS.map((preset) => (
+                <SelectItem key={preset} value={preset}>
+                  {ANALYTICS_RANGE_LABELS[preset]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={spaceId === undefined ? ALL_SPACES_VALUE : String(spaceId)}
+            onValueChange={handleSpaceChange}
+          >
+            <SelectTrigger className="w-52" aria-label="Space">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_SPACES_VALUE}>All spaces</SelectItem>
+              {spaces.map((space) => (
+                <SelectItem key={space.id} value={String(space.id)}>
+                  {space.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button
             type="button"
-            variant="ghost"
+            variant={staleOnly ? "default" : "outline"}
             size="sm"
-            onClick={handleClearFilters}
+            aria-pressed={staleOnly}
+            onClick={handleStaleOnlyToggle}
+            className="gap-1"
           >
-            Clear filters
+            <KbClockIcon className="h-3.5 w-3.5" />
+            Stale high-use only
           </Button>
-        ) : null}
-      </div>
+          {isFiltered ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleClearFilters}
+            >
+              Clear filters
+            </Button>
+          ) : null}
+        </div>
 
-      {overview ? (
-      <StatCardGrid cols={5} className="mb-4">
-        <StatCard
-          label="Article views"
-          value={overview.totalViews}
-          icon={KbEyeIcon}
-          tone="blue"
-        />
-        <StatCard
-          label="Searches"
-          value={overview.searches}
-          icon={KbSearchIcon}
-          tone="violet"
-        />
-        <StatCard
-          label="Helpful ratio"
-          value={formatRatioAsPercent(overview.helpfulRatio)}
-          icon={KbThumbsUpIcon}
-          tone="emerald"
-        />
-        <StatCard
-          label="Search success"
-          value={formatRatioAsPercent(overview.searchSuccessRate)}
-          icon={KbBarChart2Icon}
-          tone="amber"
-        />
-        <StatCard
-          label="Tickets deflected"
-          value={overview.ticketsDeflected}
-          icon={KbCheckCircleIcon}
-          tone="emerald"
-        />
-      </StatCardGrid>
-      ) : null}
-
-      {(reviewSla || citationReuse) && (
-      <StatCardGrid cols={2} className="mb-4">
-        {reviewSla ? (
-          <StatCard
-            label="Review SLA met"
-            value={formatRatioAsPercent(reviewSla.slaRate)}
-            icon={KbClockIcon}
-            tone="amber"
-          />
-        ) : null}
-        {citationReuse ? (
-          <StatCard
-            label="Reused citations"
-            value={citationReuse.length}
-            icon={KbLink2Icon}
-            tone="violet"
-          />
-        ) : null}
-      </StatCardGrid>
-      )}
-
-      <div className="space-y-4">
-        <section className="space-y-2">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-foreground">
-              No-result searches
-            </h2>
-            {noResults.length > 0 && (
-              <span className="text-xs text-muted-foreground">
-                {noResults.length} queries
-              </span>
-            )}
-          </div>
-          {noResults.length === 0 ? (
-            <EmptyState
-              illustration={
-                <KbSearchIcon className="h-6 w-6 text-muted-foreground" />
-              }
-              title={
-                isFiltered
-                  ? "No searches match these filters"
-                  : "No zero-result searches"
-              }
-              description={
-                isFiltered
-                  ? "Widen the window or clear the filters to see zero-result searches."
-                  : "All recent searches returned at least one result."
-              }
-              compact
+        {overview ? (
+          <StatCardGrid cols={5} className="mb-4">
+            <StatCard
+              label="Article views"
+              value={overview.totalViews}
+              icon={KbEyeIcon}
+              tone="blue"
             />
-          ) : (
-            <div className="rounded-lg border border-border bg-card divide-y divide-border/60">
-              <div className="flex items-center gap-3 px-3 py-2 border-b border-border">
-                <span className="text-xs font-medium text-muted-foreground w-5">
-                  #
-                </span>
-                <span className="flex-1 text-xs font-medium text-muted-foreground">
-                  Query
-                </span>
-                <span className="text-xs font-medium text-muted-foreground">
-                  Count
-                </span>
-              </div>
-              {noResults.map((row, i) => (
-                <NoResultsRow key={i} row={row} rank={i + 1} />
-              ))}
-            </div>
-          )}
-        </section>
-
-        <section className="space-y-2">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-foreground">Top pages</h2>
-            {pageAnalytics.length > 0 && (
-              <span className="text-xs text-muted-foreground">
-                {pageAnalytics.length} pages
-              </span>
-            )}
-          </div>
-          {pageAnalytics.length === 0 ? (
-            <EmptyState
-              illustration={
-                <KbFileTextIcon className="h-6 w-6 text-muted-foreground" />
-              }
-              title={
-                isFiltered ? "No pages match these filters" : "No page data yet"
-              }
-              description={
-                isFiltered
-                  ? "Widen the window, pick another space, or clear the filters."
-                  : "Page view data will appear here once users start reading pages."
-              }
-              compact
+            <StatCard
+              label="Searches"
+              value={overview.searches}
+              icon={KbSearchIcon}
+              tone="violet"
             />
-          ) : (
-            <div className="rounded-lg border border-border bg-card divide-y divide-border/60">
-              <div className="grid grid-cols-[1fr_3rem_3rem_3rem_auto_auto_5rem] items-center gap-3 px-3 py-2 border-b border-border">
-                <span className="text-xs font-medium text-muted-foreground">
-                  Title
-                </span>
-                <span className="text-xs font-medium text-muted-foreground text-right">
-                  Views
-                </span>
-                <span className="text-xs font-medium text-muted-foreground text-right">
-                  Cmts
-                </span>
-                <span className="text-xs font-medium text-muted-foreground text-right">
-                  Vers
-                </span>
-                <span className="text-xs font-medium text-muted-foreground">
-                  Status
-                </span>
-                <span className="text-xs font-medium text-muted-foreground">
-                  Trust
-                </span>
-                <span className="text-xs font-medium text-muted-foreground text-right">
-                  Updated
-                </span>
-              </div>
-              {pageAnalytics.map((row) => (
-                <PageAnalyticsTableRow key={row.id} row={row} />
-              ))}
-              <InfiniteScrollSentinel
-                hasNextPage={!!hasNextPage}
-                isFetchingNextPage={isFetchingNextPage}
-                onLoadMore={handleLoadMorePages}
-                label="Load more pages"
+            <StatCard
+              label="Helpful ratio"
+              value={formatRatioAsPercent(overview.helpfulRatio)}
+              icon={KbThumbsUpIcon}
+              tone="emerald"
+            />
+            <StatCard
+              label="Search success"
+              value={formatRatioAsPercent(overview.searchSuccessRate)}
+              icon={KbBarChart2Icon}
+              tone="amber"
+            />
+            <StatCard
+              label="Tickets deflected"
+              value={overview.ticketsDeflected}
+              icon={KbCheckCircleIcon}
+              tone="emerald"
+            />
+          </StatCardGrid>
+        ) : null}
+
+        {(reviewSla || citationReuse) && (
+          <StatCardGrid cols={2} className="mb-4">
+            {reviewSla ? (
+              <StatCard
+                label="Review SLA met"
+                value={formatRatioAsPercent(reviewSla.slaRate)}
+                icon={KbClockIcon}
+                tone="amber"
               />
-            </div>
-          )}
-        </section>
+            ) : null}
+            {citationReuse ? (
+              <StatCard
+                label="Reused citations"
+                value={citationReuse.length}
+                icon={KbLink2Icon}
+                tone="violet"
+              />
+            ) : null}
+          </StatCardGrid>
+        )}
 
-        <section className="space-y-2">
-          <div className="flex items-center justify-between">
-            <div>
+        <div className="space-y-4">
+          <section className="space-y-2">
+            <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold text-foreground">
-                Knowledge gaps
+                No-result searches
               </h2>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Searches that returned no results — write pages to close these
-                gaps.
-              </p>
+              {noResults.length > 0 && (
+                <span className="text-xs text-muted-foreground">
+                  {noResults.length} queries
+                </span>
+              )}
             </div>
-            {gaps.length > 0 && (
-              <span className="text-xs text-muted-foreground">
-                {gaps.length} gaps
-              </span>
-            )}
-          </div>
-          {gaps.length === 0 ? (
-            <EmptyState
-              illustration={
-                <KbSearchIcon className="h-6 w-6 text-muted-foreground" />
-              }
-              title={
-                isFiltered ? "No gaps match these filters" : "No knowledge gaps"
-              }
-              description={
-                isFiltered
-                  ? "Widen the window or clear the filters to see knowledge gaps."
-                  : "All searches are finding relevant content."
-              }
-              compact
-            />
-          ) : (
-            <div className="rounded-lg border border-border bg-card divide-y divide-border/60">
-              <div className="flex items-center gap-3 px-3 py-2 border-b border-border">
-                <span className="flex-1 text-xs font-medium text-muted-foreground">
-                  Query
-                </span>
-                <span className="text-xs font-medium text-muted-foreground shrink-0">
-                  Count
-                </span>
-                <span className="text-xs font-medium text-muted-foreground shrink-0 w-28 text-right">
-                  Last searched
-                </span>
-                <span className="text-xs font-medium text-muted-foreground shrink-0 w-24 text-right">
-                  Action
-                </span>
-              </div>
-              {gaps.map((row, i) => (
-                <div key={i}>
-                  <GapTableRow
-                    row={row}
-                    onCreatePage={handleCreatePageFromGap}
-                    isCreating={createPage.isPending}
-                    isSelected={selectedGapQuery === row.query}
-                    onSelect={handleGapRowSelect}
-                    onAssign={handleAssignGap}
-                    isAssigning={assignGap.isPending}
-                    onDismiss={handleDismissGap}
-                    isDismissing={dismissGap.isPending}
-                    onCreateFix={handleCreateGapFix}
-                    isCreatingFix={createGapFix.isPending}
-                  />
-                  {selectedGapQuery === row.query && (
-                    <div className="px-3 py-2 bg-muted/30 border-t border-border/40">
-                      <p className="text-xs font-medium text-muted-foreground mb-2">
-                        Pages containing this query
-                      </p>
-                      {relatedPagesLoading ? (
-                        <div className="space-y-1">
-                          {Array.from({ length: 3 }).map((_, s) => (
-                            <Skeleton key={s} className="h-7 w-full rounded" />
-                          ))}
-                        </div>
-                      ) : relatedPages.length === 0 ? (
-                        <p className="text-xs text-muted-foreground italic">
-                          No existing pages mention this query.
-                        </p>
-                      ) : (
-                        <div className="space-y-1">
-                          {relatedPages.map((page) => (
-                            <Link
-                              key={page.id}
-                              href={pageHref(page.id)}
-                              className="flex items-center gap-2 text-xs text-foreground hover:underline py-0.5"
-                            >
-                              <KbFileTextIcon className="h-3 w-3 text-muted-foreground shrink-0" />
-                              {page.title || "Untitled"}
-                            </Link>
-                          ))}
-                          <InfiniteScrollSentinel
-                            hasNextPage={!!hasNextRelated}
-                            isFetchingNextPage={isFetchingNextRelated}
-                            onLoadMore={handleLoadMoreRelated}
-                            label="Load more related pages"
-                          />
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
-              <InfiniteScrollSentinel
-                hasNextPage={!!hasNextGaps}
-                isFetchingNextPage={isFetchingNextGaps}
-                onLoadMore={handleLoadMoreGaps}
-                label="Load more gaps"
+            {noResults.length === 0 ? (
+              <EmptyState
+                illustration={
+                  <KbSearchIcon className="h-6 w-6 text-muted-foreground" />
+                }
+                title={
+                  isFiltered
+                    ? "No searches match these filters"
+                    : "No zero-result searches"
+                }
+                description={
+                  isFiltered
+                    ? "Widen the window or clear the filters to see zero-result searches."
+                    : "All recent searches returned at least one result."
+                }
+                compact
               />
+            ) : (
+              <div className="rounded-lg border border-border bg-card divide-y divide-border/60">
+                <div className="flex items-center gap-3 px-3 py-2 border-b border-border">
+                  <span className="text-xs font-medium text-muted-foreground w-5">
+                    #
+                  </span>
+                  <span className="flex-1 text-xs font-medium text-muted-foreground">
+                    Query
+                  </span>
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Count
+                  </span>
+                </div>
+                {noResults.map((row, i) => (
+                  <NoResultsRow key={i} row={row} rank={i + 1} />
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section className="space-y-2">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-foreground">
+                Top pages
+              </h2>
+              {pageAnalytics.length > 0 && (
+                <span className="text-xs text-muted-foreground">
+                  {pageAnalytics.length} pages
+                </span>
+              )}
             </div>
-          )}
-        </section>
-      </div>
+            {pageAnalytics.length === 0 ? (
+              <EmptyState
+                illustration={
+                  <KbFileTextIcon className="h-6 w-6 text-muted-foreground" />
+                }
+                title={
+                  isFiltered
+                    ? "No pages match these filters"
+                    : "No page data yet"
+                }
+                description={
+                  isFiltered
+                    ? "Widen the window, pick another space, or clear the filters."
+                    : "Page view data will appear here once users start reading pages."
+                }
+                compact
+              />
+            ) : (
+              <div className="rounded-lg border border-border bg-card divide-y divide-border/60">
+                <div className="grid grid-cols-[1fr_3rem_3rem_3rem_auto_auto_5rem] items-center gap-3 px-3 py-2 border-b border-border">
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Title
+                  </span>
+                  <span className="text-xs font-medium text-muted-foreground text-right">
+                    Views
+                  </span>
+                  <span className="text-xs font-medium text-muted-foreground text-right">
+                    Cmts
+                  </span>
+                  <span className="text-xs font-medium text-muted-foreground text-right">
+                    Vers
+                  </span>
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Status
+                  </span>
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Trust
+                  </span>
+                  <span className="text-xs font-medium text-muted-foreground text-right">
+                    Updated
+                  </span>
+                </div>
+                {pageAnalytics.map((row) => (
+                  <PageAnalyticsTableRow key={row.id} row={row} />
+                ))}
+                <InfiniteScrollSentinel
+                  hasNextPage={!!hasNextPage}
+                  isFetchingNextPage={isFetchingNextPage}
+                  onLoadMore={handleLoadMorePages}
+                  label="Load more pages"
+                />
+              </div>
+            )}
+          </section>
+
+          <section className="space-y-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-semibold text-foreground">
+                  Knowledge gaps
+                </h2>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Searches that returned no results — write pages to close these
+                  gaps.
+                </p>
+              </div>
+              {gaps.length > 0 && (
+                <span className="text-xs text-muted-foreground">
+                  {gaps.length} gaps
+                </span>
+              )}
+            </div>
+            {gaps.length === 0 ? (
+              <EmptyState
+                illustration={
+                  <KbSearchIcon className="h-6 w-6 text-muted-foreground" />
+                }
+                title={
+                  isFiltered
+                    ? "No gaps match these filters"
+                    : "No knowledge gaps"
+                }
+                description={
+                  isFiltered
+                    ? "Widen the window or clear the filters to see knowledge gaps."
+                    : "All searches are finding relevant content."
+                }
+                compact
+              />
+            ) : (
+              <div className="rounded-lg border border-border bg-card divide-y divide-border/60">
+                <div className="flex items-center gap-3 px-3 py-2 border-b border-border">
+                  <span className="flex-1 text-xs font-medium text-muted-foreground">
+                    Query
+                  </span>
+                  <span className="text-xs font-medium text-muted-foreground shrink-0">
+                    Count
+                  </span>
+                  <span className="text-xs font-medium text-muted-foreground shrink-0 w-28 text-right">
+                    Last searched
+                  </span>
+                  <span className="text-xs font-medium text-muted-foreground shrink-0 w-24 text-right">
+                    Action
+                  </span>
+                </div>
+                {gaps.map((row, i) => (
+                  <div key={i}>
+                    <GapTableRow
+                      row={row}
+                      onCreatePage={handleCreatePageFromGap}
+                      isCreating={createPage.isPending}
+                      isSelected={selectedGapQuery === row.query}
+                      onSelect={handleGapRowSelect}
+                      onAssign={handleAssignGap}
+                      isAssigning={assignGap.isPending}
+                      onDismiss={handleDismissGap}
+                      isDismissing={dismissGap.isPending}
+                      onCreateFix={handleCreateGapFix}
+                      isCreatingFix={createGapFix.isPending}
+                    />
+                    {selectedGapQuery === row.query && (
+                      <div className="px-3 py-2 bg-muted/30 border-t border-border/40">
+                        <p className="text-xs font-medium text-muted-foreground mb-2">
+                          Pages containing this query
+                        </p>
+                        {relatedPagesLoading ? (
+                          <div className="space-y-1">
+                            {Array.from({ length: 3 }).map((_, s) => (
+                              <Skeleton
+                                key={s}
+                                className="h-7 w-full rounded"
+                              />
+                            ))}
+                          </div>
+                        ) : relatedPages.length === 0 ? (
+                          <p className="text-xs text-muted-foreground italic">
+                            No existing pages mention this query.
+                          </p>
+                        ) : (
+                          <div className="space-y-1">
+                            {relatedPages.map((page) => (
+                              <Link
+                                key={page.id}
+                                href={pageHref(page.id)}
+                                className="flex items-center gap-2 text-xs text-foreground hover:underline py-0.5"
+                              >
+                                <KbFileTextIcon className="h-3 w-3 text-muted-foreground shrink-0" />
+                                {page.title || "Untitled"}
+                              </Link>
+                            ))}
+                            <InfiniteScrollSentinel
+                              hasNextPage={!!hasNextRelated}
+                              isFetchingNextPage={isFetchingNextRelated}
+                              onLoadMore={handleLoadMoreRelated}
+                              label="Load more related pages"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+                <InfiniteScrollSentinel
+                  hasNextPage={!!hasNextGaps}
+                  isFetchingNextPage={isFetchingNextGaps}
+                  onLoadMore={handleLoadMoreGaps}
+                  label="Load more gaps"
+                />
+              </div>
+            )}
+          </section>
+        </div>
       </PageState>
     </PageWrapper>
   );

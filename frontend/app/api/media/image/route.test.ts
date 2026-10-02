@@ -186,6 +186,25 @@ describe("the key is untrusted input", () => {
     expect(response.status).toBe(400);
     expect(mockFetch).not.toHaveBeenCalled();
   });
+
+  it("accepts a key whose filename contains spaces so Screenshot captures do not 400", async () => {
+    /*
+      Real screenshot filenames contain spaces: "Screenshot 2026-09-17 190207.png".
+      The browser encodes them as %20 in the URL, which searchParams.get() decodes
+      back to spaces before the regex runs. The previous OBJECT_KEY pattern
+      /^[a-zA-Z0-9][a-zA-Z0-9/_.-]*$/ had no space in its character class, so it
+      rejected every key whose last segment contained a space, producing 400
+      "Invalid image reference" instead of the image bytes.
+    */
+    const KEY_WITH_SPACES = `${ORG_A}/uploads/Screenshot 2026-09-17 190207.png`;
+    mockFetch.mockResolvedValue(upstreamOk("image/png"));
+
+    const response = await GET(imgTagRequest(KEY_WITH_SPACES));
+
+    expect(response.status).toBe(200);
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    expect(mockFetch.mock.calls[0]?.[0]).toContain(encodeURIComponent(KEY_WITH_SPACES));
+  });
 });
 
 describe("same-origin content is never allowed to become first-party markup", () => {

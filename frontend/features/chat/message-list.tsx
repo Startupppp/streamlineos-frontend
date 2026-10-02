@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useCallback, memo } from "react";
+import { Fragment, useCallback, memo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -158,6 +158,7 @@ interface MessageListProps {
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
   scrollContainerRef: React.RefObject<HTMLDivElement | null>;
   onScroll: (e: React.UIEvent<HTMLDivElement>) => void;
+  scrollToMessageId?: number | null;
 }
 
 const ScrollToBottomButton = React.forwardRef<
@@ -211,9 +212,17 @@ export function MessageList({
   messagesEndRef,
   scrollContainerRef,
   onScroll,
+  scrollToMessageId,
 }: MessageListProps) {
   const handleFetchNextPage = useCallback(() => fetchNextPage(), [fetchNextPage]);
   const handleRetry = useCallback(() => onRetry?.(), [onRetry]);
+
+  useEffect(() => {
+    if (!scrollToMessageId) return;
+    document
+      .getElementById(`message-${scrollToMessageId}`)
+      ?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [scrollToMessageId]);
 
   /*
    * Before the empty layout, and before the entity-action provider mounts a

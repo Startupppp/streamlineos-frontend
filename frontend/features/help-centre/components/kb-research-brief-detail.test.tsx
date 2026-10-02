@@ -51,6 +51,7 @@ function brief(overrides: Record<string, unknown> = {}) {
     citations: [],
     errorMessage: null,
     rating: null,
+    approvedAt: null,
     createdAt: "2026-09-01T00:00:00.000Z",
     updatedAt: "2026-09-01T00:05:00.000Z",
     ...overrides,
@@ -70,14 +71,41 @@ const { useKbSpace } = jest.requireMock("@/hooks/api/kb/spaces") as {
   useKbSpace: jest.Mock;
 };
 
+describe("KbResearchBriefDetail — approval gate (FE-184)", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    useKbSpace.mockReturnValue({ data: undefined });
+  });
+
+  it("does NOT offer convert-to-page for a completed brief before a manager has approved it, because approvedAt is null when a brief first completes and approval must be taken first", () => {
+    mockBrief();
+
+    render(<KbResearchBriefDetail briefId={1} basePath="/knowledge/research-briefs" />);
+
+    expect(
+      screen.queryByRole("button", { name: /convert to page/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows 'Approve for publishing' for a completed unapproved brief, so a manager can progress the workflow", () => {
+    mockBrief();
+
+    render(<KbResearchBriefDetail briefId={1} basePath="/knowledge/research-briefs" />);
+
+    expect(
+      screen.getByRole("button", { name: /approve for publishing/i }),
+    ).toBeInTheDocument();
+  });
+});
+
 describe("KbResearchBriefDetail — convert to page", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     useKbSpace.mockReturnValue({ data: undefined });
   });
 
-  it("offers a convert-to-page action for a completed brief, so the backend convert route has a caller", () => {
-    mockBrief();
+  it("offers a convert-to-page action for an approved completed brief, so the backend convert route has a caller", () => {
+    mockBrief({ approvedAt: "2026-09-01T00:05:00.000Z" });
 
     render(<KbResearchBriefDetail briefId={1} basePath="/knowledge/research-briefs" />);
 
@@ -99,7 +127,7 @@ describe("KbResearchBriefDetail — convert to page", () => {
       mutate,
       isPending: false,
     } as unknown as ReturnType<typeof useConvertResearchBriefToPage>);
-    mockBrief();
+    mockBrief({ approvedAt: "2026-09-01T00:05:00.000Z" });
 
     render(<KbResearchBriefDetail briefId={1} basePath="/knowledge/research-briefs" />);
     fireEvent.click(screen.getByRole("button", { name: /convert to page/i }));

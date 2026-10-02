@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { useDeleteCycle, useUpdateCycle } from "./advanced";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type { Cycle } from "@/types/projects";
+import type { CyclePage } from "./advanced";
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn().mockReturnValue(true),
@@ -76,6 +77,11 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
+const CYCLE_PAGE: CyclePage = {
+  data: [CYCLE],
+  pagination: { limit: 25, hasMore: false, nextCursor: null },
+};
+
 it("PATCHes the canonical cycle route and merges the response into the rendered list", async () => {
   const updated = {
     ...CYCLE,
@@ -85,7 +91,7 @@ it("PATCHes the canonical cycle route and merges the response into the rendered 
   getApiClient().patch.mockResolvedValue(updated);
   const client = makeClient();
   const queryKey = buildWorkQueryKeys.projects.cycles(42);
-  client.setQueryData(queryKey, [CYCLE]);
+  client.setQueryData([...queryKey, {}], CYCLE_PAGE);
   const { result } = renderHook(() => useUpdateCycle(), { wrapper: wrap(client) });
 
   await act(async () => {
@@ -98,7 +104,8 @@ it("PATCHes the canonical cycle route and merges the response into the rendered 
     undefined,
     expect.anything(),
   );
-  expect(client.getQueryData<Cycle[]>(queryKey)).toEqual([
+  const cached = client.getQueryData<CyclePage>([...queryKey, {}]);
+  expect(cached?.data).toEqual([
     expect.objectContaining({ id: 5, status: "completed", totalItems: 6, progress: 50 }),
   ]);
 });
@@ -107,7 +114,11 @@ it("DELETEs the canonical cycle route and removes the cycle from the rendered li
   getApiClient().delete.mockResolvedValue(undefined);
   const client = makeClient();
   const queryKey = buildWorkQueryKeys.projects.cycles(42);
-  client.setQueryData(queryKey, [CYCLE, { ...CYCLE, id: 6, name: "Iteration 6" }]);
+  const twoItemPage: CyclePage = {
+    data: [CYCLE, { ...CYCLE, id: 6, name: "Iteration 6" }],
+    pagination: { limit: 25, hasMore: false, nextCursor: null },
+  };
+  client.setQueryData([...queryKey, {}], twoItemPage);
   const { result } = renderHook(() => useDeleteCycle(), { wrapper: wrap(client) });
 
   await act(async () => {
@@ -120,5 +131,22 @@ it("DELETEs the canonical cycle route and removes the cycle from the rendered li
     undefined,
     expect.anything(),
   );
-  expect(client.getQueryData<Cycle[]>(queryKey)?.map((cycle) => cycle.id)).toEqual([6]);
+  const cached = client.getQueryData<CyclePage>([...queryKey, {}]);
+  expect(cached?.data?.map((cycle) => cycle.id)).toEqual([6]);
+});
+
+it("does not call map on a CyclePage object when updating a cycle — reports t2.map is not a function", async () => {
+  const updated = { ...CYCLE, name: "Renamed", version: 2, updatedAt: "2026-09-26T00:00:00.000Z" };
+  getApiClient().patch.mockResolvedValue(updated);
+  const client = makeClient();
+  const queryKey = buildWorkQueryKeys.projects.cycles(42);
+  client.setQueryData([...queryKey, {}], CYCLE_PAGE);
+  const { result } = renderHook(() => useUpdateCycle(), { wrapper: wrap(client) });
+
+  await act(async () => {
+    await result.current.mutateAsync({ projectId: 42, cycleId: 5, version: 1, name: "Renamed" });
+  });
+
+  const cached = client.getQueryData<CyclePage>([...queryKey, {}]);
+  expect(cached?.data?.[0]?.name).toBe("Renamed");
 });

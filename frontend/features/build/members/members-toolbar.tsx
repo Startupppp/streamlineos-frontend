@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 import { SlidersHorizontalIcon } from "@animateicons/react/lucide";
 import { type DisplayProps, DISPLAY_PROP_ITEMS } from "./display-props";
 
-export function WorkspaceRoleBadge({ role }: { role: "member" | "admin" }) {
+export function WorkspaceRoleBadge({ role }: { role: string }) {
   if (role === "admin") {
     return (
       <Badge className="h-[18px] px-1.5 text-micro font-normal bg-primary/10 text-foreground border border-primary/20 hover:bg-primary/10">

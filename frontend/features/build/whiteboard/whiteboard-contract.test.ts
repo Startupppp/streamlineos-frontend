@@ -83,9 +83,9 @@ describe("whiteboardDetailContract", () => {
     expect(whiteboardDetailContract.safeParse(detailViewerAccess).success).toBe(true);
   });
 
-  it("rejects a record missing the data field", () => {
-    const { data: _dropped, ...bad } = detailWithSharing;
-    expect(whiteboardDetailContract.safeParse(bad).success).toBe(false);
+  it("accepts a detail record with data omitted — data is typed unknown so undefined is valid", () => {
+    const { data: _dropped, ...withoutData } = detailWithSharing;
+    expect(whiteboardDetailContract.safeParse(withoutData).success).toBe(true);
   });
 
   it("rejects a record with an unknown access level", () => {
@@ -120,8 +120,8 @@ describe("publicWhiteboardContract", () => {
     expect(publicWhiteboardContract.safeParse({ ...publicBoard, access: "manage" }).success).toBe(false);
   });
 
-  it("accepts null updatedAt", () => {
-    expect(publicWhiteboardContract.safeParse({ ...publicBoard, updatedAt: null }).success).toBe(true);
+  it("rejects null updatedAt — the backend always stamps an updatedAt on a shared board", () => {
+    expect(publicWhiteboardContract.safeParse({ ...publicBoard, updatedAt: null }).success).toBe(false);
   });
 });
 

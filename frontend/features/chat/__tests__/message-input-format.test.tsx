@@ -161,3 +161,87 @@ describe("#170 — format buttons must preserve textarea selection and have corr
     expect(setMessageInput).toHaveBeenCalledWith("`hello` world");
   });
 });
+
+describe("MessageInput — CHAT-S04 format controls toggle", () => {
+  it("removes the ** markers when the selection is already bold", async () => {
+    const setMessageInput = jest.fn();
+    const inputRef = createRef<HTMLTextAreaElement>();
+    render(
+      <MessageInput {...makeProps("**hello** world", setMessageInput, inputRef)} />,
+    );
+
+    const textarea = screen.getByRole("textbox") as HTMLTextAreaElement;
+    textarea.focus();
+    textarea.setSelectionRange(2, 7);
+
+    await userEvent.click(screen.getByRole("button", { name: "Bold" }));
+
+    expect(setMessageInput).toHaveBeenCalledWith("hello world");
+  });
+
+  it("removes the backticks when the selection is already a code span", async () => {
+    const setMessageInput = jest.fn();
+    const inputRef = createRef<HTMLTextAreaElement>();
+    render(
+      <MessageInput {...makeProps("`hello` world", setMessageInput, inputRef)} />,
+    );
+
+    const textarea = screen.getByRole("textbox") as HTMLTextAreaElement;
+    textarea.focus();
+    textarea.setSelectionRange(1, 6);
+
+    await userEvent.click(screen.getByRole("button", { name: "Code" }));
+
+    expect(setMessageInput).toHaveBeenCalledWith("hello world");
+  });
+
+  it("still nests a different marker rather than toggling the one already there", async () => {
+    const setMessageInput = jest.fn();
+    const inputRef = createRef<HTMLTextAreaElement>();
+    render(
+      <MessageInput {...makeProps("**hello** world", setMessageInput, inputRef)} />,
+    );
+
+    const textarea = screen.getByRole("textbox") as HTMLTextAreaElement;
+    textarea.focus();
+    textarea.setSelectionRange(2, 7);
+
+    await userEvent.click(screen.getByRole("button", { name: "Italic" }));
+
+    expect(setMessageInput).toHaveBeenCalledWith("***hello*** world");
+  });
+});
+
+describe("MessageInput — CHAT-S04 bold-italic combined form", () => {
+  it("Italic takes back one marker from ***text***", async () => {
+    const setMessageInput = jest.fn();
+    const inputRef = createRef<HTMLTextAreaElement>();
+    render(
+      <MessageInput {...makeProps("***hello*** world", setMessageInput, inputRef)} />,
+    );
+
+    const textarea = screen.getByRole("textbox") as HTMLTextAreaElement;
+    textarea.focus();
+    textarea.setSelectionRange(3, 8);
+
+    await userEvent.click(screen.getByRole("button", { name: "Italic" }));
+
+    expect(setMessageInput).toHaveBeenCalledWith("**hello** world");
+  });
+
+  it("Bold takes back two markers from ***text***", async () => {
+    const setMessageInput = jest.fn();
+    const inputRef = createRef<HTMLTextAreaElement>();
+    render(
+      <MessageInput {...makeProps("***hello*** world", setMessageInput, inputRef)} />,
+    );
+
+    const textarea = screen.getByRole("textbox") as HTMLTextAreaElement;
+    textarea.focus();
+    textarea.setSelectionRange(3, 8);
+
+    await userEvent.click(screen.getByRole("button", { name: "Bold" }));
+
+    expect(setMessageInput).toHaveBeenCalledWith("*hello* world");
+  });
+});

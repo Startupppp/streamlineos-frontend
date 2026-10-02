@@ -50,17 +50,22 @@ export interface ProjectFileSignedUrl {
   expiresIn: number;
 }
 
-export function useProjectFiles(projectId: number) {
+export function useProjectFiles(projectId: number, filters?: { q?: string }) {
   const canView = useCan("build:files:view");
+  const keyFilters = filters?.q ? { q: filters.q } : undefined;
   const query = useInfiniteQuery({
-    queryKey: buildWorkQueryKeys.projects.files.list(projectId),
-    queryFn: ({ signal, pageParam }) =>
-      apiClient.get<ProjectFilePage>(
+    queryKey: buildWorkQueryKeys.projects.files.list(projectId, keyFilters),
+    queryFn: ({ signal, pageParam }) => {
+      const params: Record<string, string> = {};
+      if (pageParam !== undefined) params["cursor"] = pageParam;
+      if (filters?.q) params["q"] = filters.q;
+      return apiClient.get<ProjectFilePage>(
         `/build/${projectId}/files`,
-        pageParam !== undefined ? { cursor: pageParam } : {},
+        params,
         signal,
         filePageContract,
-      ),
+      );
+    },
     initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (page) => page.pagination.nextCursor ?? undefined,
     enabled: canView && !!projectId,

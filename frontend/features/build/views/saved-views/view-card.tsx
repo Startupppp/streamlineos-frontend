@@ -28,7 +28,7 @@ export interface ViewItem {
   name: string;
   layoutType: string;
   isPinned: boolean;
-  filters?: Record<string, unknown> | null;
+  filters?: unknown;
   visibility?: "private" | "shared";
   createdBy?: string;
 }
@@ -85,7 +85,7 @@ export const ViewCard = memo(function ViewCard({
     [onToggleSelect, view.id],
   );
 
-  const filterCount = view.filters ? Object.keys(view.filters).length : 0;
+  const filterCount = view.filters && typeof view.filters === "object" ? Object.keys(view.filters).length : 0;
   const meta = LAYOUT_META[view.layoutType] ?? LAYOUT_META["board"];
   const isOwner = canManage && (!view.createdBy || view.createdBy === currentUserId);
   const isPrivate = view.visibility === "private";

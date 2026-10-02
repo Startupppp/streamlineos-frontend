@@ -23,9 +23,6 @@ const whiteboardSharingUpdateContract = lazyContract(() =>
 const whiteboardSharesContract = lazyContract(() =>
   import("@/hooks/api/build/workspace-schema").then((m) => m.whiteboardSharesContract),
 );
-const successContract = lazyContract(() =>
-  import("@/hooks/api/build/workspace-schema").then((m) => m.successContract),
-);
 const noContentLazy = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
@@ -61,7 +58,7 @@ export interface WhiteboardShareEntry {
 
 export interface WhiteboardSharing {
   visibility: WhiteboardVisibility;
-  publicAccess: WhiteboardShareRole;
+  publicAccess: WhiteboardShareRole | null;
   shareToken: string | null;
   linkExpiresAt: string | null;
   allowExport: boolean;
@@ -69,16 +66,16 @@ export interface WhiteboardSharing {
 
 export interface WhiteboardDetail {
   id: number;
-  projectId: number;
+  projectId: number | null;
   name: string;
-  data: ExcalidrawSceneData;
+  data: unknown;
   visibility: WhiteboardVisibility;
   access: WhiteboardAccess;
   sharing: WhiteboardSharing | null;
   shares: WhiteboardShareEntry[] | null;
   createdBy: string | null;
-  createdAt: string | null;
-  updatedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface UpdateWhiteboardInput {

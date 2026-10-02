@@ -150,7 +150,7 @@ export function TestRunsTab({ projectId, createNonce = 0 }: TestRunsTabProps) {
   const canManage = useCan("build:qa:manage");
   const listFilters = useBuildListFilters({
     filters: FILTER_DEFINITIONS,
-    withSearch: false,
+    withSearch: true,
   });
 
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -164,6 +164,7 @@ export function TestRunsTab({ projectId, createNonce = 0 }: TestRunsTabProps) {
 
   const statusValue = listFilters.value("status");
   const queryFilters = {
+    q: listFilters.debouncedSearch || undefined,
     status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
     cursor: cursor !== undefined ? Number(cursor) : undefined,
   };

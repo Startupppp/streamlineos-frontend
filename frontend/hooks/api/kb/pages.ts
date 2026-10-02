@@ -170,6 +170,7 @@ export function useKbPageChildrenLevel(
 ) {
   const canView = useCan("kb:pages:view");
   return useInfiniteQuery({
+    ...INLINE_READ_ERROR,
     queryKey: [
       ...treeLevelKey({ parentId: nodeId, spaceId }),
       "infinite",

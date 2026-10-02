@@ -21,10 +21,10 @@ import { NOTIFICATION_FALLBACK_INTERVAL_MS } from "@/lib/query-request-policies"
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 const approvalInboxPageContract = lazyContract(() =>
-  import("@/hooks/api/build/approvals-schema").then((m) => m.approvalInboxResponseContract),
+  import("@/hooks/api/build/approvals-schema").then((m) => m.approvalInboxPageContract),
 );
 const approvalPageContract = lazyContract(() =>
-  import("@/hooks/api/build/approvals-schema").then((m) => m.approvalResponseContract),
+  import("@/hooks/api/build/approvals-schema").then((m) => m.approvalPageContract),
 );
 const approvalRowContract = lazyContract(() =>
   import("@/hooks/api/build/approvals-schema").then((m) => m.approvalRowContract),
@@ -57,19 +57,6 @@ type ApprovalInboxPage = {
 
 type ApprovalInboxCache = ApprovalInboxItem[] | InfiniteData<ApprovalInboxPage>;
 
-function normalizeApprovalPage<T>(response: {
-  data: T[];
-  pagination: ApprovalInboxPage["pagination"];
-} | T[]): { data: T[]; pagination: ApprovalInboxPage["pagination"] } {
-  if (Array.isArray(response)) {
-    return {
-      data: response,
-      pagination: { limit: response.length || 100, hasMore: false, nextCursor: null },
-    };
-  }
-  return response;
-}
-
 function removeInboxApproval(
   cache: ApprovalInboxCache | undefined,
   approvalId: number,
@@ -99,12 +86,12 @@ export function useApprovalInbox(filters?: InboxFilters) {
       if (activeFilters?.q) params["q"] = activeFilters.q;
       if (activeFilters?.from) params["from"] = activeFilters.from;
       if (activeFilters?.to) params["to"] = activeFilters.to;
-      return normalizeApprovalPage(await apiClient.get(
+      return apiClient.get(
         "/build/approvals/inbox",
         Object.keys(params).length > 0 ? params : undefined,
         signal,
         approvalInboxPageContract,
-      ));
+      );
     },
     initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
@@ -147,12 +134,12 @@ export function useProjectApprovals(projectId: number, filters?: ApprovalFilters
       projectId,
       Object.keys(params).length > 0 ? params : undefined,
     ),
-    queryFn: async ({ pageParam, signal }) => normalizeApprovalPage(await apiClient.get(
+    queryFn: async ({ pageParam, signal }) => apiClient.get(
       `/build/${projectId}/approvals`,
       pageParam !== undefined ? { ...params, cursor: pageParam } : params,
       signal,
       approvalPageContract,
-    )),
+    ),
     initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canView && !!projectId,

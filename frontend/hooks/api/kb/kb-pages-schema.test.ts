@@ -2,6 +2,9 @@ import {
   kbPageBacklinkContract,
   kbPageBacklinksPageContract,
   kbPageWithAncestorsContract,
+  kbPageListItemContract,
+  kbPageListContract,
+  kbPageContract,
 } from "./kb-pages-schema";
 import { kbPageCommentListContract } from "./kb-comments-schema";
 
@@ -133,5 +136,119 @@ describe("kbPageCommentListContract — server/client schema parity", () => {
 
   it("rejects a bare array so a comments contract regression is caught", () => {
     expect(kbPageCommentListContract.safeParse([]).success).toBe(false);
+  });
+});
+
+const KB_PAGE_LIST_ITEM_FIXTURE = {
+  id: 42,
+  orgId: "org-abc",
+  spaceId: null,
+  parentPageId: null,
+  sortOrder: 100,
+  projectId: null,
+  title: "New Page",
+  icon: null,
+  coverImage: null,
+  status: "draft",
+  contentType: "note",
+  trustState: "unverified",
+  visibility: "org",
+  publicToken: null,
+  publicSlug: null,
+  isLocked: false,
+  createdAt: "2026-09-01T00:00:00.000Z",
+  updatedAt: "2026-09-01T00:00:00.000Z",
+  deletedAt: null,
+  createdByMembershipId: 5,
+  lastEditedByMembershipId: 5,
+  deletedByMembershipId: null,
+  ownerMembershipId: null,
+  verifiedByMembershipId: null,
+  createdById: "user-xyz",
+  lastEditedById: "user-xyz",
+  deletedById: null,
+  ownerUserId: null,
+  verifiedById: null,
+  verifiedUntil: null,
+  nextReviewAt: null,
+  aclRevision: 1,
+  contentRevision: 1,
+  legalHold: false,
+  legalHoldReason: null,
+  aclRevisionChangedAt: null,
+  publicTokenHash: null,
+  publicTokenRevision: 1,
+  externalId: null,
+  externalSource: null,
+  slug: null,
+  excerpt: null,
+  categoryId: null,
+  views: 0,
+  helpfulCount: 0,
+  notHelpfulCount: 0,
+  seoTitle: null,
+  seoDescription: null,
+  reviewIntervalDays: null,
+  publishedAt: null,
+  archivedAt: null,
+  verifiedAt: null,
+};
+
+describe("kbPageListItemContract — backend-required fields must be required in the frontend contract so cache defaults do not mask backend regressions (FE-28)", () => {
+  it("rejects a payload missing legalHold so a backend regression that drops the NOT NULL column is caught at the contract boundary rather than silently defaulting on every cache entry", () => {
+    const { legalHold: _lh, ...withoutLegalHold } = KB_PAGE_LIST_ITEM_FIXTURE;
+    expect(kbPageListItemContract.safeParse(withoutLegalHold).success).toBe(false);
+  });
+
+  it("rejects a payload missing legalHoldReason so an omitted nullable DB column is surfaced as a contract violation rather than silently replaced with null", () => {
+    const { legalHoldReason: _lhr, ...withoutLegalHoldReason } = KB_PAGE_LIST_ITEM_FIXTURE;
+    expect(kbPageListItemContract.safeParse(withoutLegalHoldReason).success).toBe(false);
+  });
+});
+
+describe("kbPageListItemContract — server/client schema parity for the recent and favorites list endpoints (FE-28)", () => {
+  it("parses a complete KB_PAGE_LIST_COLUMNS wire fixture for a newly created page without error so a freshly inserted row does not break the recent pages strip", () => {
+    expect(kbPageListItemContract.safeParse(KB_PAGE_LIST_ITEM_FIXTURE).success).toBe(true);
+  });
+
+  it("parses a list containing both a pre-existing published page and a newly created draft page without error so the wiki does not become unloadable after the first create", () => {
+    const existing = {
+      ...KB_PAGE_LIST_ITEM_FIXTURE,
+      id: 1,
+      status: "published",
+      trustState: "verified",
+      ownerMembershipId: 1,
+      ownerUserId: "user-existing",
+    };
+    const newPage = { ...KB_PAGE_LIST_ITEM_FIXTURE, id: 42 };
+    expect(kbPageListContract.safeParse([existing, newPage]).success).toBe(true);
+  });
+});
+
+const KB_PAGE_CREATE_FIXTURE = {
+  ...KB_PAGE_LIST_ITEM_FIXTURE,
+  content: null,
+  contentText: "",
+};
+
+describe("kbPageContract — backend-required fields must be required so the create response is fully validated (FE-28)", () => {
+  it("rejects a create-response payload missing legalHold so a backend that omits the field is caught before onSuccess caches a KbPage with a silently defaulted value", () => {
+    const { legalHold: _lh, ...withoutLegalHold } = KB_PAGE_CREATE_FIXTURE;
+    expect(kbPageContract.safeParse(withoutLegalHold).success).toBe(false);
+  });
+});
+
+describe("kbPageContract — server/client schema parity for the create and update response (FE-28)", () => {
+  it("parses a complete KB_PAGE_COLUMNS wire fixture for a newly created page without error so the create mutation resolves rather than falling to onError", () => {
+    expect(kbPageContract.safeParse(KB_PAGE_CREATE_FIXTURE).success).toBe(true);
+  });
+
+  it("parses the create response when content is a rich-text document object so a page created from a template does not break the mutation", () => {
+    const templatePage = {
+      ...KB_PAGE_CREATE_FIXTURE,
+      content: { type: "doc", content: [{ type: "paragraph", content: [] }] },
+      contentText: "Template paragraph",
+    };
+    expect(kbPageContract.safeParse(templatePage).success).toBe(true);
   });
 });

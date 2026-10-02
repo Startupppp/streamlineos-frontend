@@ -82,6 +82,12 @@ function readChannelParam(params: ReadonlyURLSearchParams): number | null {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 }
 
+function readMessageParam(params: ReadonlyURLSearchParams): number | null {
+  const raw = params.get("message");
+  const parsed = raw ? Number(raw) : NaN;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
 export function ChatHomePage() {
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
@@ -221,6 +227,7 @@ export function ChatHomePage() {
         onAutoStartHandled={handleAutoStartHandled}
         isSidebarCollapsed={sidebarCollapsed}
         onToggleSidebar={handleToggleSidebar}
+        scrollToMessageId={readMessageParam(searchParams)}
       />
     ) : (
       <EmptyChatState

@@ -221,17 +221,21 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const showCompleted = searchParams.get("completed") === "1";
+  const completedParam = searchParams.get("completed");
+  const showCompleted =
+    completedParam === "1" ||
+    (completedParam !== "0" && resolvedCycleStatus === "completed");
 
   const handleToggleCompleted = useCallback(() => {
     const next = new URLSearchParams(searchParams.toString());
-    if (showCompleted) next.delete("completed");
-    else next.set("completed", "1");
+    if (!showCompleted) next.set("completed", "1");
+    else if (resolvedCycleStatus === "completed") next.set("completed", "0");
+    else next.delete("completed");
     const query = next.toString();
     router.replace(query ? `${pathname}?${query}` : pathname, {
       scroll: false,
     });
-  }, [pathname, router, searchParams, showCompleted]);
+  }, [pathname, router, searchParams, showCompleted, resolvedCycleStatus]);
 
   const handleEdit = useCallback((cycle: Cycle) => {
     setEditTarget(cycle);

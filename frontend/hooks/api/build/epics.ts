@@ -6,7 +6,9 @@ import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
-import type { Epic } from "@/types/projects";
+import type { EpicPage, EpicItem } from "@/hooks/api/build/execution-schema";
+
+export type { EpicPage, EpicItem };
 
 const epicPageContract = lazyContract(() =>
   import("@/hooks/api/build/execution-schema").then((m) => m.epicPageContract),
@@ -20,11 +22,6 @@ export interface EpicListFilters {
   cursor?: string;
   limit?: number;
 }
-
-export type EpicPage = {
-  data: Epic[];
-  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
-};
 
 function epicPageQuery(projectId: number, filters?: EpicListFilters) {
   const queryParams: Record<string, string> = {};
@@ -59,12 +56,12 @@ export function useEpicPage(
 export function useEpics(
   projectId: number,
   options?: Omit<
-    UseQueryOptions<EpicPage, Error, Epic[]>,
+    UseQueryOptions<EpicPage, Error, EpicItem[]>,
     "queryKey" | "queryFn" | "enabled" | "select"
   >,
 ) {
   const canView = useCan("build:tickets:view");
-  return useQuery<EpicPage, Error, Epic[]>({
+  return useQuery<EpicPage, Error, EpicItem[]>({
     ...epicPageQuery(projectId),
     select: (page) => page.data,
     ...options,

@@ -4,6 +4,11 @@ import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
+import { StalledReadNotice } from "@/components/shared/stalled-read-notice";
+import {
+  PANEL_STALLED_AFTER_MS,
+  useStalledAfter,
+} from "@/hooks/common/use-stalled-after";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -12,7 +17,9 @@ import {
   useArchivedChannels,
   useChatOnlineUsers,
 } from "@/hooks/api/chat-core-read";
+import { useSearchMessages } from "@/hooks/api/chat-search";
 import { useCan } from "@/hooks/api/access";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { cn } from "@/lib/utils";
 import dynamic from "next/dynamic";
 import { ChannelSectionList } from "./channel-section-list";
@@ -156,6 +163,12 @@ export function ChannelSidebar({
   const handleRetryChannels = useCallback(() => {
     refetchChannels();
   }, [refetchChannels]);
+  /**
+   * CHAT-F-001/F-004. The error branch below is correct and was simply out of
+   * reach: a read against an unreachable API sits in `isLoading` for up to ~61s
+   * before `isError` can turn true, and the skeleton says nothing in the meantime.
+   */
+  const channelsStalled = useStalledAfter(isLoading, PANEL_STALLED_AFTER_MS);
   const handleToggleGroups = useCallback(
     () => setGroupsCollapsed((p) => !p),
     [],
@@ -203,25 +216,52 @@ export function ChannelSidebar({
     [onlineUsers],
   );
 
-  const filteredChannels = useMemo(() => {
-    if (!search) return channels;
-    const q = search.toLowerCase();
-    return channels.filter(
-      (ch) =>
-        ch.name.toLowerCase().includes(q) ||
-        ch.lastMessage?.content?.toLowerCase().includes(q),
-    );
-  }, [channels, search]);
+  /**
+   * CHAT-003. The conversation list is a page of channels carrying one `lastMessage`
+   * preview each, so filtering it locally can only ever match a channel's name or its
+   * most recent message — a term that is in the history but not in the newest line
+   * answered "No conversations match your search" over a conversation that plainly
+   * contained it. `GET /chat/search/messages` searches message CONTENT across the
+   * caller's channels and already backs the search dialog; this reads it for the
+   * sidebar's own "Messages" scope and unions the channels it names into the match
+   * set, so the local name/preview match stays instant and the server supplies what
+   * the preview cannot see.
+   *
+   * Debounced per FE-87, and the server read is skipped for the People and Channels
+   * scopes, which have their own endpoints in `ChannelSidebarSearchResults`.
+   */
+  const debouncedSearch = useDebouncedValue(search, 300);
+  const { data: messageMatches } = useSearchMessages(
+    debouncedSearch,
+    searchScope === "messages" && !showArchived,
+  );
+  const messageMatchChannelIds = useMemo(
+    () =>
+      new Set((messageMatches?.results ?? []).map((result) => result.channelId)),
+    [messageMatches],
+  );
 
-  const filteredArchivedChannels = useMemo(() => {
-    if (!search) return archivedChannels;
-    const q = search.toLowerCase();
-    return archivedChannels.filter(
-      (ch) =>
-        ch.name.toLowerCase().includes(q) ||
-        ch.lastMessage?.content?.toLowerCase().includes(q),
-    );
-  }, [archivedChannels, search]);
+  const matchesSearch = useCallback(
+    (channel: { id: number; name: string; lastMessage?: { content?: string | null } | null }) => {
+      const q = search.toLowerCase();
+      return (
+        channel.name.toLowerCase().includes(q) ||
+        channel.lastMessage?.content?.toLowerCase().includes(q) === true ||
+        messageMatchChannelIds.has(channel.id)
+      );
+    },
+    [search, messageMatchChannelIds],
+  );
+
+  const filteredChannels = useMemo(
+    () => (search ? channels.filter(matchesSearch) : channels),
+    [channels, search, matchesSearch],
+  );
+
+  const filteredArchivedChannels = useMemo(
+    () => (search ? archivedChannels.filter(matchesSearch) : archivedChannels),
+    [archivedChannels, search, matchesSearch],
+  );
 
   const archivedUnreadCount = useMemo(
     () => archivedChannels.reduce((sum, ch) => sum + ch.unreadCount, 0),
@@ -349,6 +389,12 @@ export function ChannelSidebar({
             />
           ) : isLoading && !showArchived ? (
             <div className="space-y-2 p-3" aria-busy="true">
+              {channelsStalled && (
+                <StalledReadNotice
+                  subject="conversations"
+                  onRetry={handleRetryChannels}
+                />
+              )}
               <span role="status" className="sr-only">
                 Loading conversations…
               </span>

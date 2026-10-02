@@ -62,6 +62,5 @@ export const chatSavedMessagesContract = z.object({
       }),
     }),
   ),
-  // buildIdCursorPage sends null on the last page; declaring only optional rejected every final page.
-  nextCursor: z.number().nullable().optional(),
+  nextCursor: z.number().nullable().optional().transform((v) => v ?? undefined),
 });

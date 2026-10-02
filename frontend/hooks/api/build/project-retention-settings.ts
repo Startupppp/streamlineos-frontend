@@ -13,8 +13,8 @@ import type {
 } from "@/features/build/settings/project-settings-retention-schema";
 
 const retentionSettingsContract = lazyContract(() =>
-  import("@/features/build/settings/project-settings-retention-schema").then(
-    (m) => m.projectRetentionSettingsContract,
+  import("@/contracts/build-contracts.generated").then(
+    (m) => m.projectsRetentionSettingsGetSettingsResponseSchema,
   ),
 );
 

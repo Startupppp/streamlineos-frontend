@@ -208,6 +208,7 @@ export function ChatBubble({
 
   return (
     <div
+      id={`message-${message.id}`}
       data-pending={isPendingSend ? "true" : undefined}
       aria-busy={isPendingSend || undefined}
       className={cn(
@@ -357,6 +358,13 @@ export function ChatBubble({
                 </span>
               )}
               {isOwn && <CheckCheck className="h-3.5 w-3.5 text-primary-foreground/70" />}
+              {isPinned && (
+                <Pin
+                  className={cn("h-3 w-3", isOwn ? "text-primary-foreground/70" : "text-muted-foreground")}
+                  aria-label="Pinned message"
+                  role="img"
+                />
+              )}
             </div>
           </div>
         )}

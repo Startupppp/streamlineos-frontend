@@ -2,8 +2,10 @@
 
 import { useQueryClient, type InfiniteData } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
+import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { Message, MessagesPage, SendMessageInput, EditMessageInput } from "@/types/chat";
@@ -92,6 +94,13 @@ export function useSendMessage() {
         queryKey: collaborationQueryKeys.chat.messages(variables.channelId),
       });
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
+      // A send that carried attachments just changed what the Shared Files panel
+      // lists. Without this the panel kept its "No files yet" page until a full
+      // reload (CHAT-001).
+      if (variables.attachments && variables.attachments.length > 0)
+        queryClient.invalidateQueries({
+          queryKey: collaborationQueryKeys.chat.channelFiles(variables.channelId),
+        });
     },
   });
 }
@@ -136,6 +145,9 @@ export function useDeleteMessage() {
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.all });
+    },
+    onError: (err) => {
+      toast.error(getErrorMessage(err));
     },
   });
 }

@@ -69,6 +69,34 @@ const SCOPE_PROPS = {
   onPageSelectionChange: jest.fn(),
 };
 
+describe("KbSourcesSheet scope mode — kind filter active with no matching sources shows filter-empty state (FE-183)", () => {
+  it("shows 'No results match your filters.' instead of 'No sources yet' when the Files kind filter is active and sources is empty, because 'No sources yet' falsely implies the workspace has no sources when the user may have notes that are simply hidden by the filter", () => {
+    render(<KbSourcesSheet {...SCOPE_PROPS} kindFilter="file" sources={[]} />);
+
+    expect(screen.queryByText("No sources yet")).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/no results match your filters/i),
+    ).toBeInTheDocument();
+  });
+
+  it("shows a 'Clear filters' button so the user can reset the kind filter without closing and reopening the scope sheet when filtering by Notes produces an empty list", () => {
+    render(<KbSourcesSheet {...SCOPE_PROPS} kindFilter="note" sources={[]} />);
+
+    expect(
+      screen.getByRole("button", { name: /clear filters/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("positive control: still shows 'No sources yet' when kind filter is 'all' and sources is empty, confirming the genuine-empty state is not replaced when no filter is active", () => {
+    render(<KbSourcesSheet {...SCOPE_PROPS} kindFilter="all" sources={[]} />);
+
+    expect(screen.getByText("No sources yet")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /clear filters/i }),
+    ).not.toBeInTheDocument();
+  });
+});
+
 describe("KbSourcesSheet scope mode — all six scope dimensions are present and editable before send", () => {
   it("renders one status button per backend-accepted status scope and no more", () => {
     render(<KbSourcesSheet {...SCOPE_PROPS} />);

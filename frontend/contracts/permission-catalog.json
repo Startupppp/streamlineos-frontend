@@ -765,6 +765,3927 @@
     "workflows:workflows:update",
     "workflows:workflows:view"
   ],
+  "permissionDetails": {
+    "accounting:access:manage": {
+      "resource": "accounting:access",
+      "action": "manage",
+      "description": "View access administration for the accounting module; changing roles, permissions, or assignments additionally requires Module Admin, Module Owner, Org Admin, or Org Owner authority"
+    },
+    "accounting:access:view": {
+      "resource": "accounting:access",
+      "action": "view",
+      "description": "View roles, permissions and assignments for the accounting module"
+    },
+    "accounting:accounts:create": {
+      "resource": "accounting:accounts",
+      "action": "create",
+      "description": "Create accounts"
+    },
+    "accounting:accounts:manage": {
+      "resource": "accounting:accounts",
+      "action": "manage",
+      "description": "Manage all chart of accounts settings and archiving"
+    },
+    "accounting:accounts:read": {
+      "resource": "accounting:accounts",
+      "action": "read",
+      "description": "View chart of accounts"
+    },
+    "accounting:accounts:update": {
+      "resource": "accounting:accounts",
+      "action": "update",
+      "description": "Update accounts"
+    },
+    "accounting:ai:use": {
+      "resource": "accounting:ai",
+      "action": "use",
+      "description": "Use AI features in the accounting module (variance narration, reconciliation explanation, document extraction)"
+    },
+    "accounting:approvals:decide": {
+      "resource": "accounting:approvals",
+      "action": "decide",
+      "description": "Approve or reject accounting approval requests"
+    },
+    "accounting:approvals:read": {
+      "resource": "accounting:approvals",
+      "action": "read",
+      "description": "View accounting approval workflows"
+    },
+    "accounting:assets:create": {
+      "resource": "accounting:assets",
+      "action": "create",
+      "description": "Register new fixed assets"
+    },
+    "accounting:assets:manage": {
+      "resource": "accounting:assets",
+      "action": "manage",
+      "description": "Manage depreciation, disposals, and revaluations"
+    },
+    "accounting:assets:read": {
+      "resource": "accounting:assets",
+      "action": "read",
+      "description": "View fixed assets register"
+    },
+    "accounting:assets:update": {
+      "resource": "accounting:assets",
+      "action": "update",
+      "description": "Update fixed asset details"
+    },
+    "accounting:attachments:manage": {
+      "resource": "accounting:attachments",
+      "action": "manage",
+      "description": "Attach files to accounting documents, and remove them"
+    },
+    "accounting:attachments:read": {
+      "resource": "accounting:attachments",
+      "action": "read",
+      "description": "List and download files attached to accounting documents"
+    },
+    "accounting:audit:export": {
+      "resource": "accounting:audit",
+      "action": "export",
+      "description": "Export accounting audit trail"
+    },
+    "accounting:audit:read": {
+      "resource": "accounting:audit",
+      "action": "read",
+      "description": "View accounting audit trail"
+    },
+    "accounting:banking:import": {
+      "resource": "accounting:banking",
+      "action": "import",
+      "description": "Import bank statements"
+    },
+    "accounting:banking:manage": {
+      "resource": "accounting:banking",
+      "action": "manage",
+      "description": "Manage bank accounts and categorise transactions"
+    },
+    "accounting:banking:read": {
+      "resource": "accounting:banking",
+      "action": "read",
+      "description": "View bank accounts and transactions"
+    },
+    "accounting:banking:reconcile": {
+      "resource": "accounting:banking",
+      "action": "reconcile",
+      "description": "Reconcile bank accounts"
+    },
+    "accounting:budgets:approve": {
+      "resource": "accounting:budgets",
+      "action": "approve",
+      "description": "Approve budgets"
+    },
+    "accounting:budgets:create": {
+      "resource": "accounting:budgets",
+      "action": "create",
+      "description": "Create budgets"
+    },
+    "accounting:budgets:read": {
+      "resource": "accounting:budgets",
+      "action": "read",
+      "description": "View budgets and actuals"
+    },
+    "accounting:budgets:update": {
+      "resource": "accounting:budgets",
+      "action": "update",
+      "description": "Update budgets"
+    },
+    "accounting:collections:manage": {
+      "resource": "accounting:collections",
+      "action": "manage",
+      "description": "Manage collections actions and escalations"
+    },
+    "accounting:collections:read": {
+      "resource": "accounting:collections",
+      "action": "read",
+      "description": "View collections queue and overdue accounts"
+    },
+    "accounting:create": {
+      "resource": "accounting",
+      "action": "create",
+      "description": "Create accounting records"
+    },
+    "accounting:credit-notes:create": {
+      "resource": "accounting:credit-notes",
+      "action": "create",
+      "description": "Create credit notes"
+    },
+    "accounting:credit-notes:manage": {
+      "resource": "accounting:credit-notes",
+      "action": "manage",
+      "description": "Manage and apply credit notes"
+    },
+    "accounting:credit-notes:read": {
+      "resource": "accounting:credit-notes",
+      "action": "read",
+      "description": "View credit notes"
+    },
+    "accounting:dimensions:manage": {
+      "resource": "accounting:dimensions",
+      "action": "manage",
+      "description": "Create and manage tracking dimensions"
+    },
+    "accounting:dimensions:read": {
+      "resource": "accounting:dimensions",
+      "action": "read",
+      "description": "View tracking dimensions and cost centres"
+    },
+    "accounting:forecast:manage": {
+      "resource": "accounting:forecast",
+      "action": "manage",
+      "description": "Create and manage financial forecasts"
+    },
+    "accounting:forecast:read": {
+      "resource": "accounting:forecast",
+      "action": "read",
+      "description": "View financial forecasts"
+    },
+    "accounting:general-ledger:read": {
+      "resource": "accounting:general-ledger",
+      "action": "read",
+      "description": "View general ledger balances and transactions"
+    },
+    "accounting:journal:approve": {
+      "resource": "accounting:journal",
+      "action": "approve",
+      "description": "Approve journal entries awaiting review"
+    },
+    "accounting:journal:create": {
+      "resource": "accounting:journal",
+      "action": "create",
+      "description": "Create draft journal entries"
+    },
+    "accounting:journal:manage": {
+      "resource": "accounting:journal",
+      "action": "manage",
+      "description": "Post and manage journal entries"
+    },
+    "accounting:journal:post": {
+      "resource": "accounting:journal",
+      "action": "post",
+      "description": "Post journal entries to the ledger"
+    },
+    "accounting:journal:read": {
+      "resource": "accounting:journal",
+      "action": "read",
+      "description": "View journal entries"
+    },
+    "accounting:manage": {
+      "resource": "accounting",
+      "action": "manage",
+      "description": "Create and edit accounts and post manual journal entries"
+    },
+    "accounting:payables:approve": {
+      "resource": "accounting:payables",
+      "action": "approve",
+      "description": "Approve AP bills for payment"
+    },
+    "accounting:payables:manage": {
+      "resource": "accounting:payables",
+      "action": "manage",
+      "description": "Create, edit, and void AP bills"
+    },
+    "accounting:payables:read": {
+      "resource": "accounting:payables",
+      "action": "read",
+      "description": "View accounts payable bills and balances"
+    },
+    "accounting:payment-runs:approve": {
+      "resource": "accounting:payment-runs",
+      "action": "approve",
+      "description": "Approve payment runs for execution"
+    },
+    "accounting:payment-runs:manage": {
+      "resource": "accounting:payment-runs",
+      "action": "manage",
+      "description": "Create and manage payment runs"
+    },
+    "accounting:payment-runs:read": {
+      "resource": "accounting:payment-runs",
+      "action": "read",
+      "description": "View payment runs"
+    },
+    "accounting:periods:manage": {
+      "resource": "accounting:periods",
+      "action": "manage",
+      "description": "Open and close accounting periods"
+    },
+    "accounting:periods:read": {
+      "resource": "accounting:periods",
+      "action": "read",
+      "description": "View accounting periods and their status"
+    },
+    "accounting:periods:reopen": {
+      "resource": "accounting:periods",
+      "action": "reopen",
+      "description": "Reopen a closed accounting period"
+    },
+    "accounting:read": {
+      "resource": "accounting",
+      "action": "read",
+      "description": "Read accounting data"
+    },
+    "accounting:receivables:approve": {
+      "resource": "accounting:receivables",
+      "action": "approve",
+      "description": "Approve AR invoices for sending"
+    },
+    "accounting:receivables:manage": {
+      "resource": "accounting:receivables",
+      "action": "manage",
+      "description": "Create, edit, and void AR invoices"
+    },
+    "accounting:receivables:read": {
+      "resource": "accounting:receivables",
+      "action": "read",
+      "description": "View accounts receivable invoices and balances"
+    },
+    "accounting:recurring:manage": {
+      "resource": "accounting:recurring",
+      "action": "manage",
+      "description": "Create and manage recurring transaction templates"
+    },
+    "accounting:recurring:read": {
+      "resource": "accounting:recurring",
+      "action": "read",
+      "description": "View recurring transaction templates"
+    },
+    "accounting:reimbursements:approve": {
+      "resource": "accounting:reimbursements",
+      "action": "approve",
+      "description": "Approve reimbursement requests"
+    },
+    "accounting:reimbursements:manage": {
+      "resource": "accounting:reimbursements",
+      "action": "manage",
+      "description": "Process and manage reimbursements"
+    },
+    "accounting:reimbursements:read": {
+      "resource": "accounting:reimbursements",
+      "action": "read",
+      "description": "View reimbursement requests"
+    },
+    "accounting:reminders:manage": {
+      "resource": "accounting:reminders",
+      "action": "manage",
+      "description": "Configure and send payment reminders"
+    },
+    "accounting:reminders:read": {
+      "resource": "accounting:reminders",
+      "action": "read",
+      "description": "View payment reminders and schedules"
+    },
+    "accounting:report": {
+      "resource": "accounting",
+      "action": "report",
+      "description": "Generate Trial Balance, P&L, and other accounting reports"
+    },
+    "accounting:reports:export": {
+      "resource": "accounting:reports",
+      "action": "export",
+      "description": "Export accounting reports"
+    },
+    "accounting:reports:read": {
+      "resource": "accounting:reports",
+      "action": "read",
+      "description": "View accounting reports"
+    },
+    "accounting:settings:manage": {
+      "resource": "accounting:settings",
+      "action": "manage",
+      "description": "Manage accounting module settings and configuration"
+    },
+    "accounting:settings:read": {
+      "resource": "accounting:settings",
+      "action": "read",
+      "description": "View accounting module settings"
+    },
+    "accounting:taxes:manage": {
+      "resource": "accounting:taxes",
+      "action": "manage",
+      "description": "Manage tax rates and prepare tax returns"
+    },
+    "accounting:taxes:pay": {
+      "resource": "accounting:taxes",
+      "action": "pay",
+      "description": "Submit and pay tax returns"
+    },
+    "accounting:taxes:read": {
+      "resource": "accounting:taxes",
+      "action": "read",
+      "description": "View tax rates, returns, and filings"
+    },
+    "accounting:update": {
+      "resource": "accounting",
+      "action": "update",
+      "description": "Update accounting records"
+    },
+    "accounting:vendor-credits:create": {
+      "resource": "accounting:vendor-credits",
+      "action": "create",
+      "description": "Create vendor credits"
+    },
+    "accounting:vendor-credits:manage": {
+      "resource": "accounting:vendor-credits",
+      "action": "manage",
+      "description": "Manage and apply vendor credits"
+    },
+    "accounting:vendor-credits:read": {
+      "resource": "accounting:vendor-credits",
+      "action": "read",
+      "description": "View vendor credits"
+    },
+    "accounting:view": {
+      "resource": "accounting",
+      "action": "view",
+      "description": "View chart of accounts, journal entries, and accounting reports"
+    },
+    "ai:chat:use": {
+      "resource": "ai:chat",
+      "action": "use",
+      "description": "Use the AI chat assistant"
+    },
+    "ai:executive-brief:generate": {
+      "resource": "ai:executive-brief",
+      "action": "generate",
+      "description": "Trigger generation of a new executive brief"
+    },
+    "ai:executive-brief:view": {
+      "resource": "ai:executive-brief",
+      "action": "view",
+      "description": "View the AI-generated cross-module executive brief"
+    },
+    "ai:feedback:create": {
+      "resource": "ai:feedback",
+      "action": "create",
+      "description": "Submit thumbs-up/down feedback on AI responses"
+    },
+    "ai:summaries:create": {
+      "resource": "ai:summaries",
+      "action": "create",
+      "description": "Persist AI-generated summary snapshots"
+    },
+    "ai:summaries:view": {
+      "resource": "ai:summaries",
+      "action": "view",
+      "description": "View AI-generated summary snapshots and diffs"
+    },
+    "ai:usage:view": {
+      "resource": "ai:usage",
+      "action": "view",
+      "description": "View organization-wide AI usage, spend, latency and acceptance"
+    },
+    "audit-log:read": {
+      "resource": "audit-log",
+      "action": "read",
+      "description": "View the audit log"
+    },
+    "billing:affiliate:manage": {
+      "resource": "billing:affiliate",
+      "action": "manage",
+      "description": "Manage affiliate program",
+      "scopable": false
+    },
+    "billing:ai-credits:purchase": {
+      "resource": "billing:ai-credits",
+      "action": "purchase",
+      "description": "Purchase AI credit packs",
+      "scopable": false
+    },
+    "billing:ai-credits:view": {
+      "resource": "billing:ai-credits",
+      "action": "view",
+      "description": "View AI credits wallet and history",
+      "scopable": false
+    },
+    "billing:analytics:view": {
+      "resource": "billing:analytics",
+      "action": "view",
+      "description": "View revenue analytics (platform admin only)",
+      "scopable": false
+    },
+    "billing:coupons:manage": {
+      "resource": "billing:coupons",
+      "action": "manage",
+      "description": "Redeem and validate a promotion code on this organization's own subscription",
+      "scopable": false
+    },
+    "billing:enterprise-quotes:approve": {
+      "resource": "billing:enterprise-quotes",
+      "action": "approve",
+      "description": "Approve/reject/send enterprise quotes",
+      "scopable": false
+    },
+    "billing:enterprise-quotes:create": {
+      "resource": "billing:enterprise-quotes",
+      "action": "create",
+      "description": "Create enterprise quotes",
+      "scopable": false
+    },
+    "billing:enterprise-quotes:view": {
+      "resource": "billing:enterprise-quotes",
+      "action": "view",
+      "description": "View enterprise quotes",
+      "scopable": false
+    },
+    "billing:marketplace:install": {
+      "resource": "billing:marketplace",
+      "action": "install",
+      "description": "Install and uninstall marketplace apps",
+      "scopable": false
+    },
+    "billing:marketplace:view": {
+      "resource": "billing:marketplace",
+      "action": "view",
+      "description": "View marketplace apps",
+      "scopable": false
+    },
+    "billing:profile:update": {
+      "resource": "billing:profile",
+      "action": "update",
+      "description": "Update billing profile and GST details",
+      "scopable": false
+    },
+    "billing:profile:view": {
+      "resource": "billing:profile",
+      "action": "view",
+      "description": "View billing profile and GST details",
+      "scopable": false
+    },
+    "billing:promotions:manage": {
+      "resource": "billing:promotions",
+      "action": "manage",
+      "description": "Create, update and deactivate platform promotion codes (vendor operators only)",
+      "scopable": false
+    },
+    "billing:promotions:view": {
+      "resource": "billing:promotions",
+      "action": "view",
+      "description": "View platform promotion codes (vendor operators only)",
+      "scopable": false
+    },
+    "billing:referrals:manage": {
+      "resource": "billing:referrals",
+      "action": "manage",
+      "description": "Create and manage referrals",
+      "scopable": false
+    },
+    "billing:referrals:view": {
+      "resource": "billing:referrals",
+      "action": "view",
+      "description": "View referrals sent from this organisation",
+      "scopable": false
+    },
+    "billing:seats:view": {
+      "resource": "billing:seats",
+      "action": "view",
+      "description": "View seat usage and availability",
+      "scopable": false
+    },
+    "billing:subscription:manage": {
+      "resource": "billing:subscription",
+      "action": "manage",
+      "description": "Change subscription plan, complete checkout and verify payments",
+      "scopable": false
+    },
+    "billing:subscription:view": {
+      "resource": "billing:subscription",
+      "action": "view",
+      "description": "View subscription plan and payment status",
+      "scopable": false
+    },
+    "blog:access:manage": {
+      "resource": "blog:access",
+      "action": "manage",
+      "description": "View access administration for the blog module; changing roles, permissions, or assignments additionally requires Module Admin, Module Owner, Org Admin, or Org Owner authority"
+    },
+    "blog:access:view": {
+      "resource": "blog:access",
+      "action": "view",
+      "description": "View roles, permissions and assignments for the blog module"
+    },
+    "blog:ai:use": {
+      "resource": "blog:ai",
+      "action": "use",
+      "description": "Use AI assist on blog posts (improve, summarize, suggest title)"
+    },
+    "blog:categories:manage": {
+      "resource": "blog:categories",
+      "action": "manage",
+      "description": "Create, edit and delete blog categories"
+    },
+    "blog:posts:manage": {
+      "resource": "blog:posts",
+      "action": "manage",
+      "description": "Create, edit, publish, archive and delete blog posts"
+    },
+    "branch:create": {
+      "resource": "branch",
+      "action": "create",
+      "description": "Create branches"
+    },
+    "branch:delete": {
+      "resource": "branch",
+      "action": "delete",
+      "description": "Delete branches"
+    },
+    "branch:update": {
+      "resource": "branch",
+      "action": "update",
+      "description": "Update branches"
+    },
+    "branch:view": {
+      "resource": "branch",
+      "action": "view",
+      "description": "View branches"
+    },
+    "build:access:manage": {
+      "resource": "build:access",
+      "action": "manage",
+      "description": "View access administration for the build module; changing roles, permissions, or assignments additionally requires Module Admin, Module Owner, Org Admin, or Org Owner authority"
+    },
+    "build:access:view": {
+      "resource": "build:access",
+      "action": "view",
+      "description": "View roles, permissions and assignments for the build module"
+    },
+    "build:ai:use": {
+      "resource": "build:ai",
+      "action": "use",
+      "description": "Use AI features on projects (summary, risks, client update, plan, task extraction, Q&A)"
+    },
+    "build:approvals:decide": {
+      "resource": "build:approvals",
+      "action": "decide",
+      "description": "Approve/reject/request-changes on approvals assigned to you"
+    },
+    "build:approvals:manage": {
+      "resource": "build:approvals",
+      "action": "manage",
+      "description": "Cancel/escalate/delegate/reassign approvals (privileged)"
+    },
+    "build:approvals:request": {
+      "resource": "build:approvals",
+      "action": "request",
+      "description": "Request an approval on an entity"
+    },
+    "build:approvals:view": {
+      "resource": "build:approvals",
+      "action": "view",
+      "description": "View approvals"
+    },
+    "build:bugs:create": {
+      "resource": "build:bugs",
+      "action": "create",
+      "description": "Report new bugs"
+    },
+    "build:bugs:delete": {
+      "resource": "build:bugs",
+      "action": "delete",
+      "description": "Delete bugs"
+    },
+    "build:bugs:update": {
+      "resource": "build:bugs",
+      "action": "update",
+      "description": "Update bug details and status"
+    },
+    "build:bugs:view": {
+      "resource": "build:bugs",
+      "action": "view",
+      "description": "View bugs"
+    },
+    "build:changerequests:create": {
+      "resource": "build:changerequests",
+      "action": "create",
+      "description": "Submit new change requests"
+    },
+    "build:changerequests:manage": {
+      "resource": "build:changerequests",
+      "action": "manage",
+      "description": "Estimate, approve, reject, and progress change requests"
+    },
+    "build:changerequests:view": {
+      "resource": "build:changerequests",
+      "action": "view",
+      "description": "View change requests"
+    },
+    "build:clientvisibility:manage": {
+      "resource": "build:clientvisibility",
+      "action": "manage",
+      "description": "Toggle client-visibility of project items"
+    },
+    "build:create": {
+      "resource": "projects",
+      "action": "create",
+      "description": "Create projects"
+    },
+    "build:customers:manage": {
+      "resource": "build:customers",
+      "action": "manage",
+      "description": "Manage CRM organization links on projects",
+      "scopable": false
+    },
+    "build:customers:view": {
+      "resource": "build:customers",
+      "action": "view",
+      "description": "View CRM organizations for project customer linking",
+      "scopable": false
+    },
+    "build:cycles:manage": {
+      "resource": "build:cycles",
+      "action": "manage",
+      "description": "Manage cycles"
+    },
+    "build:cycles:view": {
+      "resource": "build:cycles",
+      "action": "view",
+      "description": "View cycles"
+    },
+    "build:decisions:manage": {
+      "resource": "build:decisions",
+      "action": "manage",
+      "description": "Create, update, and delete project decisions"
+    },
+    "build:decisions:view": {
+      "resource": "build:decisions",
+      "action": "view",
+      "description": "View project decisions"
+    },
+    "build:delete": {
+      "resource": "projects",
+      "action": "delete",
+      "description": "Delete projects"
+    },
+    "build:files:manage": {
+      "resource": "build:files",
+      "action": "manage",
+      "description": "Upload and delete project files"
+    },
+    "build:files:view": {
+      "resource": "build:files",
+      "action": "view",
+      "description": "View project files"
+    },
+    "build:forms:manage": {
+      "resource": "build:forms",
+      "action": "manage",
+      "description": "Create, update, and delete project forms and submissions"
+    },
+    "build:forms:view": {
+      "resource": "build:forms",
+      "action": "view",
+      "description": "View project forms and submissions"
+    },
+    "build:goals:manage": {
+      "resource": "build:goals",
+      "action": "manage",
+      "description": "Create, update, and check in on goals and OKRs"
+    },
+    "build:goals:view": {
+      "resource": "build:goals",
+      "action": "view",
+      "description": "View goals and OKRs"
+    },
+    "build:incidents:manage": {
+      "resource": "build:incidents",
+      "action": "manage",
+      "description": "Create, update, and resolve project incidents"
+    },
+    "build:incidents:view": {
+      "resource": "build:incidents",
+      "action": "view",
+      "description": "View project incidents and SLA timelines"
+    },
+    "build:manage": {
+      "resource": "projects",
+      "action": "manage",
+      "description": "Full project management (owner/admin: see and edit all projects)",
+      "scopable": true
+    },
+    "build:managed-products:create": {
+      "resource": "build:managed-products",
+      "action": "create",
+      "description": "Create managed products"
+    },
+    "build:managed-products:delete": {
+      "resource": "build:managed-products",
+      "action": "delete",
+      "description": "Delete managed products"
+    },
+    "build:managed-products:update": {
+      "resource": "build:managed-products",
+      "action": "update",
+      "description": "Update managed products"
+    },
+    "build:managed-products:view": {
+      "resource": "build:managed-products",
+      "action": "view",
+      "description": "View managed products"
+    },
+    "build:meetings:manage": {
+      "resource": "build:meetings",
+      "action": "manage",
+      "description": "Create, update, and delete project meetings and action items"
+    },
+    "build:meetings:view": {
+      "resource": "build:meetings",
+      "action": "view",
+      "description": "View project meetings, standups, and action items"
+    },
+    "build:members:manage": {
+      "resource": "build:members",
+      "action": "manage",
+      "description": "Manage workspace members on projects",
+      "scopable": false
+    },
+    "build:members:view": {
+      "resource": "build:members",
+      "action": "view",
+      "description": "View workspace members list for project assignment",
+      "scopable": false
+    },
+    "build:portal:view": {
+      "resource": "build:portal",
+      "action": "view",
+      "description": "Access the client portal"
+    },
+    "build:portfolios:manage": {
+      "resource": "build:portfolios",
+      "action": "manage",
+      "description": "Create, update, and delete portfolios"
+    },
+    "build:portfolios:view": {
+      "resource": "build:portfolios",
+      "action": "view",
+      "description": "View portfolios and programs"
+    },
+    "build:programs:manage": {
+      "resource": "build:programs",
+      "action": "manage",
+      "description": "Create, update, and delete programs"
+    },
+    "build:programs:view": {
+      "resource": "build:programs",
+      "action": "view",
+      "description": "View programs"
+    },
+    "build:qa:execute": {
+      "resource": "build:qa",
+      "action": "execute",
+      "description": "Record test results in QA test runs"
+    },
+    "build:qa:manage": {
+      "resource": "build:qa",
+      "action": "manage",
+      "description": "Create, edit, and delete QA test suites, cases, and runs"
+    },
+    "build:qa:restore": {
+      "resource": "build:qa",
+      "action": "restore",
+      "description": "Restore soft-deleted test suites, test cases and test runs"
+    },
+    "build:qa:view": {
+      "resource": "build:qa",
+      "action": "view",
+      "description": "View QA test suites, cases, and runs"
+    },
+    "build:releases:restore": {
+      "resource": "build:releases",
+      "action": "restore",
+      "description": "Restore soft-deleted project releases"
+    },
+    "build:restore": {
+      "resource": "projects",
+      "action": "restore",
+      "description": "Restore a soft-deleted project or project template"
+    },
+    "build:risks:manage": {
+      "resource": "build:risks",
+      "action": "manage",
+      "description": "Create, update, and delete project risks"
+    },
+    "build:risks:view": {
+      "resource": "build:risks",
+      "action": "view",
+      "description": "View project risks"
+    },
+    "build:roadmap:manage": {
+      "resource": "build:roadmap",
+      "action": "manage",
+      "description": "Manage roadmap items, feedback, and changelog entries"
+    },
+    "build:roadmap:restore": {
+      "resource": "build:roadmap",
+      "action": "restore",
+      "description": "Restore soft-deleted roadmap items and feedback posts"
+    },
+    "build:roadmap:view": {
+      "resource": "build:roadmap",
+      "action": "view",
+      "description": "View the product roadmap, feedback, and changelog"
+    },
+    "build:teams:create": {
+      "resource": "build:teams",
+      "action": "create",
+      "description": "Create teams"
+    },
+    "build:teams:delete": {
+      "resource": "build:teams",
+      "action": "delete",
+      "description": "Delete teams"
+    },
+    "build:teams:manage": {
+      "resource": "build:teams",
+      "action": "manage",
+      "description": "Add or remove team members"
+    },
+    "build:teams:update": {
+      "resource": "build:teams",
+      "action": "update",
+      "description": "Update team details"
+    },
+    "build:teams:view": {
+      "resource": "build:teams",
+      "action": "view",
+      "description": "View teams and their members"
+    },
+    "build:tickets:assign": {
+      "resource": "build:tickets",
+      "action": "assign",
+      "description": "Assign tickets"
+    },
+    "build:tickets:create": {
+      "resource": "build:tickets",
+      "action": "create",
+      "description": "Create tickets"
+    },
+    "build:tickets:delete": {
+      "resource": "build:tickets",
+      "action": "delete",
+      "description": "Delete tickets"
+    },
+    "build:tickets:restore": {
+      "resource": "build:tickets",
+      "action": "restore",
+      "description": "Restore a soft-deleted ticket or ticket comment"
+    },
+    "build:tickets:update": {
+      "resource": "build:tickets",
+      "action": "update",
+      "description": "Update tickets"
+    },
+    "build:tickets:view": {
+      "resource": "build:tickets",
+      "action": "view",
+      "description": "View tickets"
+    },
+    "build:timesheets:create": {
+      "resource": "build:timesheets",
+      "action": "create",
+      "description": "Create timesheet entries"
+    },
+    "build:timesheets:manage": {
+      "resource": "build:timesheets",
+      "action": "manage",
+      "description": "Manage all timesheets (owner/admin: see and edit everyone's)",
+      "scopable": true
+    },
+    "build:timesheets:view": {
+      "resource": "build:timesheets",
+      "action": "view",
+      "description": "View timesheets"
+    },
+    "build:update": {
+      "resource": "projects",
+      "action": "update",
+      "description": "Update projects"
+    },
+    "build:updates:manage": {
+      "resource": "build:updates",
+      "action": "manage",
+      "description": "Post and delete project status updates"
+    },
+    "build:updates:view": {
+      "resource": "build:updates",
+      "action": "view",
+      "description": "View project status updates"
+    },
+    "build:view": {
+      "resource": "projects",
+      "action": "view",
+      "description": "View projects"
+    },
+    "build:whiteboards:manage": {
+      "resource": "build:whiteboards",
+      "action": "manage",
+      "description": "Create, edit, share and delete project whiteboards"
+    },
+    "build:whiteboards:restore": {
+      "resource": "build:whiteboards",
+      "action": "restore",
+      "description": "Restore soft-deleted project whiteboards"
+    },
+    "build:workflow:manage": {
+      "resource": "build:workflow",
+      "action": "manage",
+      "description": "Create, update, and delete workflow transition rules and WIP limits"
+    },
+    "build:workflow:view": {
+      "resource": "build:workflow",
+      "action": "view",
+      "description": "View workflow transition rules and WIP limits"
+    },
+    "build:workspace:manage": {
+      "resource": "build:workspace",
+      "action": "manage",
+      "description": "Manage project milestones, views, pages and intake requests"
+    },
+    "build:workspace:restore": {
+      "resource": "build:workspace",
+      "action": "restore",
+      "description": "Restore soft-deleted project milestones"
+    },
+    "calendar:admin:manage": {
+      "resource": "calendar:admin",
+      "action": "manage",
+      "description": "Configure organisation-wide calendar settings and sources"
+    },
+    "calendar:ai:use": {
+      "resource": "calendar:ai",
+      "action": "use",
+      "description": "Use AI meeting preparation and follow-up features"
+    },
+    "calendar:events:export": {
+      "resource": "calendar:events",
+      "action": "export",
+      "description": "Export organisation calendar events as CSV"
+    },
+    "calendar:read": {
+      "resource": "calendar",
+      "action": "read",
+      "description": "View calendar events"
+    },
+    "calendar:write": {
+      "resource": "calendar",
+      "action": "write",
+      "description": "Create and manage calendar events"
+    },
+    "chat:channels:read": {
+      "resource": "chat:channels",
+      "action": "read",
+      "description": "View chat channels"
+    },
+    "chat:channels:write": {
+      "resource": "chat:channels",
+      "action": "write",
+      "description": "Create and update chat channels"
+    },
+    "chat:huddles:moderate": {
+      "resource": "chat:huddles",
+      "action": "moderate",
+      "description": "Kick participants from an active huddle"
+    },
+    "chat:huddles:start": {
+      "resource": "chat:huddles",
+      "action": "start",
+      "description": "Start a voice or video huddle in a channel"
+    },
+    "chat:invite-links:manage": {
+      "resource": "chat:invite-links",
+      "action": "manage",
+      "description": "Mint or regenerate channel invite links"
+    },
+    "chat:messages:pin": {
+      "resource": "chat:messages",
+      "action": "pin",
+      "description": "Pin or unpin messages in a channel"
+    },
+    "chat:messages:read": {
+      "resource": "chat:messages",
+      "action": "read",
+      "description": "Read chat messages"
+    },
+    "chat:messages:write": {
+      "resource": "chat:messages",
+      "action": "write",
+      "description": "Send and edit chat messages"
+    },
+    "chat:org-settings:manage": {
+      "resource": "chat:org-settings",
+      "action": "manage",
+      "description": "Manage organisation-wide chat settings"
+    },
+    "compliance:subject-requests:execute": {
+      "resource": "compliance:subject-requests",
+      "action": "execute",
+      "description": "Run a data subject erasure or export across every region. Also requires being named as a subject request operator for this deployment"
+    },
+    "compliance:subject-requests:view": {
+      "resource": "compliance:subject-requests",
+      "action": "view",
+      "description": "Read the record of data subject requests: which regions were visited, what each did, and whether the request may be reported as complete"
+    },
+    "crm:access:manage": {
+      "resource": "crm:access",
+      "action": "manage",
+      "description": "View access administration for the crm module; changing roles, permissions, or assignments additionally requires Module Admin, Module Owner, Org Admin, or Org Owner authority"
+    },
+    "crm:access:view": {
+      "resource": "crm:access",
+      "action": "view",
+      "description": "View roles, permissions and assignments for the crm module"
+    },
+    "crm:activities:manage": {
+      "resource": "crm:activities",
+      "action": "manage",
+      "description": "Log, edit, complete and remove activities on the timeline"
+    },
+    "crm:activities:view": {
+      "resource": "crm:activities",
+      "action": "view",
+      "description": "Read the unified timeline of calls, emails, meetings, notes and tasks"
+    },
+    "crm:ai:use": {
+      "resource": "crm:ai",
+      "action": "use",
+      "description": "Use CRM AI features (scoring, enrichment, briefs, email generation)"
+    },
+    "crm:assignment-rules:manage": {
+      "resource": "crm:assignment-rules",
+      "action": "manage",
+      "description": "Manage lead assignment rules"
+    },
+    "crm:automations:manage": {
+      "resource": "crm:automations",
+      "action": "manage",
+      "description": "Manage CRM automation rules"
+    },
+    "crm:autonomy:manage": {
+      "resource": "crm:autonomy",
+      "action": "manage",
+      "description": "Turn autonomous CRM action types on or off for the organisation"
+    },
+    "crm:autonomy:repair": {
+      "resource": "crm:autonomy",
+      "action": "repair",
+      "description": "Choose which classes of data problem the CRM may repair unattended, and run the repair loop"
+    },
+    "crm:autonomy:reverse": {
+      "resource": "crm:autonomy",
+      "action": "reverse",
+      "description": "Reverse an autonomous CRM action"
+    },
+    "crm:autonomy:view": {
+      "resource": "crm:autonomy",
+      "action": "view",
+      "description": "Review what the CRM decided and did on its own",
+      "scopable": true
+    },
+    "crm:call-analysis:run": {
+      "resource": "crm:call-analysis",
+      "action": "run",
+      "description": "Analyse a completed call's transcript. A transcript that has already been analysed is returned from cache and costs nothing"
+    },
+    "crm:call-analysis:view": {
+      "resource": "crm:call-analysis",
+      "action": "view",
+      "description": "Read the analysis of a completed call: talk ratio, question rate, objections and how they were handled, competitors named, and whether a next step was committed"
+    },
+    "crm:call-analysis:view-team": {
+      "resource": "crm:call-analysis",
+      "action": "view-team",
+      "description": "Read call analyses for calls you were not on, once the rep has shared one or their private window has elapsed, and see the team's coaching digest"
+    },
+    "crm:call-recording-consent:attest": {
+      "resource": "crm:call-recording-consent",
+      "action": "attest",
+      "description": "Record where a call took place and who consented to it being recorded, and read the ledger of calls the consent rule refused to analyse"
+    },
+    "crm:campaigns:manage": {
+      "resource": "crm:campaigns",
+      "action": "manage",
+      "description": "Create, update, and delete CRM campaigns"
+    },
+    "crm:campaigns:view": {
+      "resource": "crm:campaigns",
+      "action": "view",
+      "description": "View CRM campaigns, attribution reports, and ROI metrics"
+    },
+    "crm:clients:manage": {
+      "resource": "crm:clients",
+      "action": "manage",
+      "description": "Manage client accounts"
+    },
+    "crm:clients:read": {
+      "resource": "crm:clients",
+      "action": "read",
+      "description": "View client accounts",
+      "scopable": true
+    },
+    "crm:clients:update": {
+      "resource": "crm:clients",
+      "action": "update",
+      "description": "Update client accounts"
+    },
+    "crm:commission-accruals:rebuild": {
+      "resource": "crm:commission-accruals",
+      "action": "rebuild",
+      "description": "Re-derive the stored decomposition of commission earnings over a date range, without changing any amount"
+    },
+    "crm:commission-earnings:approve": {
+      "resource": "crm:commission-earnings",
+      "action": "approve",
+      "description": "Approve a calculated commission earning for payment"
+    },
+    "crm:commission-earnings:calculate": {
+      "resource": "crm:commission-earnings",
+      "action": "calculate",
+      "description": "Compute what a won deal earned under the plan version in force on its close date"
+    },
+    "crm:commission-earnings:view": {
+      "resource": "crm:commission-earnings",
+      "action": "view",
+      "description": "Read commission earnings and the derivation behind each one",
+      "scopable": true
+    },
+    "crm:commission-plans:manage": {
+      "resource": "crm:commission-plans",
+      "action": "manage",
+      "description": "Create commission plans, publish a new dated version of their rules, and assign people to them"
+    },
+    "crm:commission-plans:view": {
+      "resource": "crm:commission-plans",
+      "action": "view",
+      "description": "Read commission plans, every dated version of their rules, and which version was in force on a date"
+    },
+    "crm:contacts:manage": {
+      "resource": "crm:contacts",
+      "action": "manage",
+      "description": "Manage CRM contacts"
+    },
+    "crm:contacts:view": {
+      "resource": "crm:contacts",
+      "action": "view",
+      "description": "View CRM contacts"
+    },
+    "crm:custom-fields:manage": {
+      "resource": "crm:custom-fields",
+      "action": "manage",
+      "description": "Create, edit and remove CRM custom field definitions"
+    },
+    "crm:custom-fields:view": {
+      "resource": "crm:custom-fields",
+      "action": "view",
+      "description": "View CRM custom field definitions"
+    },
+    "crm:customer-health:manage": {
+      "resource": "crm:customer-health",
+      "action": "manage",
+      "description": "Recompute a customer's health score from its sources and update the score shown on the customer record"
+    },
+    "crm:customer-health:view": {
+      "resource": "crm:customer-health",
+      "action": "view",
+      "description": "Read customer health scores and the usage, engagement, support and sentiment inputs each one decomposes into",
+      "scopable": true
+    },
+    "crm:customer360:view": {
+      "resource": "crm:customer360",
+      "action": "view",
+      "description": "View Customer 360 aggregated profile (respects per-module permissions)"
+    },
+    "crm:data-quality:assign": {
+      "resource": "crm:data-quality",
+      "action": "assign",
+      "description": "Assign data quality findings to a person, or hand them back to the queue"
+    },
+    "crm:data-quality:resolve": {
+      "resource": "crm:data-quality",
+      "action": "resolve",
+      "description": "Resolve or dismiss data quality findings in bulk, reverse a resolution, and run the producers"
+    },
+    "crm:data-quality:view": {
+      "resource": "crm:data-quality",
+      "action": "view",
+      "description": "View CRM data quality dashboard"
+    },
+    "crm:deals:approve": {
+      "resource": "crm:deals",
+      "action": "approve",
+      "description": "Approve or reject deal stage transitions"
+    },
+    "crm:deals:create": {
+      "resource": "crm:deals",
+      "action": "create",
+      "description": "Create CRM deals"
+    },
+    "crm:deals:delete": {
+      "resource": "crm:deals",
+      "action": "delete",
+      "description": "Delete CRM deals"
+    },
+    "crm:deals:forecast": {
+      "resource": "crm:deals",
+      "action": "forecast",
+      "description": "Capture and view forecast snapshots"
+    },
+    "crm:deals:manage": {
+      "resource": "crm:deals",
+      "action": "manage",
+      "description": "Manage deal forecasts and overrides"
+    },
+    "crm:deals:read": {
+      "resource": "crm:deals",
+      "action": "read",
+      "description": "View CRM deals",
+      "scopable": true
+    },
+    "crm:deals:update": {
+      "resource": "crm:deals",
+      "action": "update",
+      "description": "Update CRM deals"
+    },
+    "crm:email-templates:manage": {
+      "resource": "crm:email-templates",
+      "action": "manage",
+      "description": "Manage CRM email templates"
+    },
+    "crm:imports:manage": {
+      "resource": "crm:imports",
+      "action": "manage",
+      "description": "Bring a CRM export into StreamlineOS, and take an import back out"
+    },
+    "crm:incentives:approve": {
+      "resource": "crm:incentives",
+      "action": "approve",
+      "description": "Approve incentives"
+    },
+    "crm:incentives:read": {
+      "resource": "crm:incentives",
+      "action": "read",
+      "description": "View incentives"
+    },
+    "crm:ingress:submit": {
+      "resource": "crm:ingress",
+      "action": "submit",
+      "description": "Deliver a normalised inbound communication event into the CRM"
+    },
+    "crm:issues:escalate": {
+      "resource": "crm:issues",
+      "action": "escalate",
+      "description": "Escalate an issue, task or complaint above its owner"
+    },
+    "crm:issues:manage": {
+      "resource": "crm:issues",
+      "action": "manage",
+      "description": "Raise, edit and move internal issues, internal tasks and customer complaints"
+    },
+    "crm:issues:view": {
+      "resource": "crm:issues",
+      "action": "view",
+      "description": "View internal issues, internal tasks and customer complaints",
+      "scopable": true
+    },
+    "crm:leads:assign": {
+      "resource": "crm:leads",
+      "action": "assign",
+      "description": "Assign CRM leads"
+    },
+    "crm:leads:create": {
+      "resource": "crm:leads",
+      "action": "create",
+      "description": "Create CRM leads"
+    },
+    "crm:leads:delete": {
+      "resource": "crm:leads",
+      "action": "delete",
+      "description": "Delete CRM leads",
+      "scopable": true
+    },
+    "crm:leads:update": {
+      "resource": "crm:leads",
+      "action": "update",
+      "description": "Update CRM leads",
+      "scopable": true
+    },
+    "crm:leads:view": {
+      "resource": "crm:leads",
+      "action": "view",
+      "description": "View CRM leads",
+      "scopable": true
+    },
+    "crm:lifecycle-triggers:run": {
+      "resource": "crm:lifecycle-triggers",
+      "action": "run",
+      "description": "Run a renewal sweep: open renewal opportunities for contracts that are due or at risk, and offer them to the autonomous outbound loop"
+    },
+    "crm:lifecycle-triggers:view": {
+      "resource": "crm:lifecycle-triggers",
+      "action": "view",
+      "description": "Read the renewal and churn trigger log: which contracts opened a renewal conversation, why, and what the outbound loop answered",
+      "scopable": true
+    },
+    "crm:lifecycle:manage": {
+      "resource": "crm:lifecycle",
+      "action": "manage",
+      "description": "File a lifecycle signal, renew a customer contract into its next term, or close it as churned or cancelled"
+    },
+    "crm:lifecycle:view": {
+      "resource": "crm:lifecycle",
+      "action": "view",
+      "description": "Read the renewal book: which customer contracts come up when, what they are worth, and the signals behind each risk score",
+      "scopable": true
+    },
+    "crm:offer-fulfillment:create": {
+      "resource": "crm:offer-fulfillment",
+      "action": "create",
+      "description": "Create CRM offer → Inventory SKU fulfillment mappings"
+    },
+    "crm:offer-fulfillment:delete": {
+      "resource": "crm:offer-fulfillment",
+      "action": "delete",
+      "description": "Delete CRM offer → Inventory SKU fulfillment mappings"
+    },
+    "crm:offer-fulfillment:update": {
+      "resource": "crm:offer-fulfillment",
+      "action": "update",
+      "description": "Update CRM offer → Inventory SKU fulfillment mappings"
+    },
+    "crm:offer-fulfillment:view": {
+      "resource": "crm:offer-fulfillment",
+      "action": "view",
+      "description": "View CRM offer → Inventory SKU fulfillment mappings"
+    },
+    "crm:organizations:manage": {
+      "resource": "crm:organizations",
+      "action": "manage",
+      "description": "Manage CRM organizations"
+    },
+    "crm:organizations:merge": {
+      "resource": "crm:organizations",
+      "action": "merge",
+      "description": "Merge duplicate CRM organizations/companies"
+    },
+    "crm:organizations:view": {
+      "resource": "crm:organizations",
+      "action": "view",
+      "description": "View CRM organizations"
+    },
+    "crm:pricebooks:manage": {
+      "resource": "crm:pricebooks",
+      "action": "manage",
+      "description": "Manage price books and quote settings"
+    },
+    "crm:products:manage": {
+      "resource": "crm:products",
+      "action": "manage",
+      "description": "Manage the CRM product catalog"
+    },
+    "crm:quotes:approve": {
+      "resource": "crm:quotes",
+      "action": "approve",
+      "description": "Approve or reject quotes requiring approval"
+    },
+    "crm:quotes:create": {
+      "resource": "crm:quotes",
+      "action": "create",
+      "description": "Create CRM quotes"
+    },
+    "crm:quotes:delete": {
+      "resource": "crm:quotes",
+      "action": "delete",
+      "description": "Delete CRM quotes"
+    },
+    "crm:quotes:read": {
+      "resource": "crm:quotes",
+      "action": "read",
+      "description": "View CRM quotes",
+      "scopable": true
+    },
+    "crm:quotes:update": {
+      "resource": "crm:quotes",
+      "action": "update",
+      "description": "Update CRM quotes"
+    },
+    "crm:reporting:manage": {
+      "resource": "crm:reporting",
+      "action": "manage",
+      "description": "Create, edit and delete report definitions, and compile one without running it"
+    },
+    "crm:reporting:run": {
+      "resource": "crm:reporting",
+      "action": "run",
+      "description": "Run a report and return its rows"
+    },
+    "crm:reporting:view": {
+      "resource": "crm:reporting",
+      "action": "view",
+      "description": "View saved report definitions and the log of report runs"
+    },
+    "crm:reports:export": {
+      "resource": "crm:reports",
+      "action": "export",
+      "description": "Export CRM reports"
+    },
+    "crm:reports:view": {
+      "resource": "crm:reports",
+      "action": "view",
+      "description": "View CRM reports"
+    },
+    "crm:scoring-rules:manage": {
+      "resource": "crm:scoring-rules",
+      "action": "manage",
+      "description": "Manage lead scoring rules"
+    },
+    "crm:segments:manage": {
+      "resource": "crm:segments",
+      "action": "manage",
+      "description": "Create, edit and delete CRM segments"
+    },
+    "crm:segments:view": {
+      "resource": "crm:segments",
+      "action": "view",
+      "description": "View saved CRM segments and evaluate one to see how many parties it matches and who they are"
+    },
+    "crm:sequences:manage": {
+      "resource": "crm:sequences",
+      "action": "manage",
+      "description": "Manage CRM email/call sequences"
+    },
+    "crm:settings:manage": {
+      "resource": "crm:settings",
+      "action": "manage",
+      "description": "Manage CRM configuration (pipelines, stages, options, validation rules, blueprints)"
+    },
+    "crm:settings:view": {
+      "resource": "crm:settings",
+      "action": "view",
+      "description": "View CRM configuration (pipelines, stages, options, validation rules, blueprints)"
+    },
+    "crm:sla:manage": {
+      "resource": "crm:sla",
+      "action": "manage",
+      "description": "Manage CRM SLA policies"
+    },
+    "crm:targets:manage": {
+      "resource": "crm:targets",
+      "action": "manage",
+      "description": "Manage targets"
+    },
+    "crm:targets:view": {
+      "resource": "crm:targets",
+      "action": "view",
+      "description": "View targets"
+    },
+    "crm:tasks:update": {
+      "resource": "crm:tasks",
+      "action": "update",
+      "description": "Update, complete, and snooze CRM tasks",
+      "scopable": true
+    },
+    "crm:tasks:view": {
+      "resource": "crm:tasks",
+      "action": "view",
+      "description": "View CRM tasks and inbox",
+      "scopable": true
+    },
+    "crm:territories:manage": {
+      "resource": "crm:territories",
+      "action": "manage",
+      "description": "Manage CRM territories"
+    },
+    "crm:web-forms:manage": {
+      "resource": "crm:web-forms",
+      "action": "manage",
+      "description": "Manage CRM web forms"
+    },
+    "dashboard:customer-executive:view": {
+      "resource": "dashboard:customer-executive",
+      "action": "view",
+      "description": "View Customer Executive dashboard"
+    },
+    "dashboard:sales:view": {
+      "resource": "dashboard:sales",
+      "action": "view",
+      "description": "View Sales dashboard"
+    },
+    "dashboard:support:view": {
+      "resource": "dashboard:support",
+      "action": "view",
+      "description": "View Support CRM dashboard"
+    },
+    "directory:access:manage": {
+      "resource": "directory:access",
+      "action": "manage",
+      "description": "View access administration for the directory module; changing roles, permissions, or assignments additionally requires Module Admin, Module Owner, Org Admin, or Org Owner authority"
+    },
+    "directory:access:view": {
+      "resource": "directory:access",
+      "action": "view",
+      "description": "View roles, permissions and assignments for the directory module"
+    },
+    "directory:people:create": {
+      "resource": "directory:people",
+      "action": "create",
+      "description": "Add people to the org directory"
+    },
+    "directory:people:delete": {
+      "resource": "directory:people",
+      "action": "delete",
+      "description": "Soft-delete people from the org directory"
+    },
+    "directory:people:update": {
+      "resource": "directory:people",
+      "action": "update",
+      "description": "Update people records in the org directory"
+    },
+    "directory:people:view": {
+      "resource": "directory:people",
+      "action": "view",
+      "description": "View the org people directory"
+    },
+    "directory:workers:manage": {
+      "resource": "directory:workers",
+      "action": "manage",
+      "description": "Create and update workforce worker records"
+    },
+    "directory:workers:terminate": {
+      "resource": "directory:workers",
+      "action": "terminate",
+      "description": "Terminate workforce workers"
+    },
+    "directory:workers:view": {
+      "resource": "directory:workers",
+      "action": "view",
+      "description": "View workforce worker records"
+    },
+    "feedbucket:access:manage": {
+      "resource": "feedbucket:access",
+      "action": "manage",
+      "description": "View access administration for the feedbucket module; changing roles, permissions, or assignments additionally requires Module Admin, Module Owner, Org Admin, or Org Owner authority"
+    },
+    "feedbucket:access:view": {
+      "resource": "feedbucket:access",
+      "action": "view",
+      "description": "View roles, permissions and assignments for the feedbucket module"
+    },
+    "feedbucket:submissions:ai": {
+      "resource": "feedbucket:submissions",
+      "action": "ai",
+      "description": "Run AI triage analysis on feedback submissions"
+    },
+    "feedbucket:submissions:assign": {
+      "resource": "feedbucket:submissions",
+      "action": "assign",
+      "description": "Assign feedback submissions to team members"
+    },
+    "feedbucket:submissions:delete": {
+      "resource": "feedbucket:submissions",
+      "action": "delete",
+      "description": "Delete feedback submissions"
+    },
+    "feedbucket:submissions:manage": {
+      "resource": "feedbucket:submissions",
+      "action": "manage",
+      "description": "Manage feedback submissions (convert to ticket, etc.)"
+    },
+    "feedbucket:submissions:update": {
+      "resource": "feedbucket:submissions",
+      "action": "update",
+      "description": "Update feedback submissions"
+    },
+    "feedbucket:submissions:view": {
+      "resource": "feedbucket:submissions",
+      "action": "view",
+      "description": "View feedback submissions"
+    },
+    "feedbucket:widgets:create": {
+      "resource": "feedbucket:widgets",
+      "action": "create",
+      "description": "Create feedback widgets"
+    },
+    "feedbucket:widgets:delete": {
+      "resource": "feedbucket:widgets",
+      "action": "delete",
+      "description": "Delete feedback widgets"
+    },
+    "feedbucket:widgets:manage": {
+      "resource": "feedbucket:widgets",
+      "action": "manage",
+      "description": "Manage feedback widgets (rotate keys, etc.)"
+    },
+    "feedbucket:widgets:update": {
+      "resource": "feedbucket:widgets",
+      "action": "update",
+      "description": "Update feedback widgets"
+    },
+    "feedbucket:widgets:view": {
+      "resource": "feedbucket:widgets",
+      "action": "view",
+      "description": "View feedback widgets"
+    },
+    "hr:access:manage": {
+      "resource": "hr:access",
+      "action": "manage",
+      "description": "View access administration for the hr module; changing roles, permissions, or assignments additionally requires Module Admin, Module Owner, Org Admin, or Org Owner authority"
+    },
+    "hr:access:view": {
+      "resource": "hr:access",
+      "action": "view",
+      "description": "View roles, permissions and assignments for the hr module"
+    },
+    "hr:accommodations:manage": {
+      "resource": "hr:accommodations",
+      "action": "manage",
+      "description": "Manage accommodation requests and adjustment tasks"
+    },
+    "hr:accommodations:view": {
+      "resource": "hr:accommodations",
+      "action": "view",
+      "description": "View workplace accommodation requests"
+    },
+    "hr:alumni:read": {
+      "resource": "hr:alumni",
+      "action": "read",
+      "description": "Read alumni records"
+    },
+    "hr:alumni:write": {
+      "resource": "hr:alumni",
+      "action": "write",
+      "description": "Write alumni records"
+    },
+    "hr:analytics:read": {
+      "resource": "hr:analytics",
+      "action": "read",
+      "description": "Read HR analytics"
+    },
+    "hr:announcements:manage": {
+      "resource": "hr:announcements",
+      "action": "manage",
+      "description": "Create and manage announcements"
+    },
+    "hr:announcements:view": {
+      "resource": "hr:announcements",
+      "action": "view",
+      "description": "View announcements"
+    },
+    "hr:assets:manage": {
+      "resource": "hr:assets",
+      "action": "manage",
+      "description": "Manage assets"
+    },
+    "hr:assets:view": {
+      "resource": "hr:assets",
+      "action": "view",
+      "description": "View assets"
+    },
+    "hr:attendance:manage": {
+      "resource": "hr:attendance",
+      "action": "manage",
+      "description": "Manage attendance records",
+      "scopable": true
+    },
+    "hr:attendance:regularize": {
+      "resource": "hr:attendance",
+      "action": "create",
+      "description": "Submit attendance regularization requests"
+    },
+    "hr:attendance:view": {
+      "resource": "hr:attendance",
+      "action": "view",
+      "description": "View attendance records"
+    },
+    "hr:audit:view": {
+      "resource": "hr:audit",
+      "action": "view",
+      "description": "View HR audit logs"
+    },
+    "hr:automations:manage": {
+      "resource": "hr:automations",
+      "action": "manage",
+      "description": "Manage HR automation rules"
+    },
+    "hr:automations:view": {
+      "resource": "hr:automations",
+      "action": "view",
+      "description": "View HR automation rules and run logs"
+    },
+    "hr:bank-details:view": {
+      "resource": "hr:bank-details",
+      "action": "view",
+      "description": "View unmasked employee bank account details (sensitive)",
+      "sensitive": true
+    },
+    "hr:benefits:manage": {
+      "resource": "hr:benefits",
+      "action": "manage",
+      "description": "Manage benefit plans, enrollment windows, and review claims"
+    },
+    "hr:benefits:view": {
+      "resource": "hr:benefits",
+      "action": "view",
+      "description": "View employee benefit plans and enrollments"
+    },
+    "hr:biometric:manage": {
+      "resource": "hr:biometric",
+      "action": "manage",
+      "description": "Manage biometric devices"
+    },
+    "hr:bonuses:manage": {
+      "resource": "hr:bonuses",
+      "action": "manage",
+      "description": "Manage bonuses"
+    },
+    "hr:career-ladders:manage": {
+      "resource": "hr:career-ladders",
+      "action": "manage",
+      "description": "Manage career ladders"
+    },
+    "hr:cases:confidential": {
+      "resource": "hr:cases",
+      "action": "manage",
+      "description": "Access confidential case data and notes"
+    },
+    "hr:cases:manage": {
+      "resource": "hr:cases",
+      "action": "manage",
+      "description": "Create and manage HR cases, investigations, and disciplinary actions"
+    },
+    "hr:cases:view": {
+      "resource": "hr:cases",
+      "action": "view",
+      "description": "View HR cases and disciplinary actions"
+    },
+    "hr:communications:send": {
+      "resource": "hr:communications",
+      "action": "manage",
+      "description": "Send bulk HR emails and communications"
+    },
+    "hr:compensation:manage": {
+      "resource": "hr:compensation",
+      "action": "manage",
+      "description": "Manage compensation planning cycles, calibration, and budgets"
+    },
+    "hr:compliance:manage": {
+      "resource": "hr:compliance",
+      "action": "manage",
+      "description": "Manage compliance records"
+    },
+    "hr:contracts:manage": {
+      "resource": "hr:contracts",
+      "action": "manage",
+      "description": "Manage contingent contracts"
+    },
+    "hr:contracts:view": {
+      "resource": "hr:contracts",
+      "action": "view",
+      "description": "View contingent contracts"
+    },
+    "hr:custom-fields:manage": {
+      "resource": "hr:custom-fields",
+      "action": "manage",
+      "description": "Manage HR custom field definitions"
+    },
+    "hr:documents:manage": {
+      "resource": "hr:documents",
+      "action": "manage",
+      "description": "Manage documents",
+      "scopable": true
+    },
+    "hr:documents:publish": {
+      "resource": "hr:documents",
+      "action": "publish",
+      "description": "Classify company documents and publish them to the knowledge base"
+    },
+    "hr:documents:view": {
+      "resource": "hr:documents",
+      "action": "view",
+      "description": "View documents",
+      "scopable": true
+    },
+    "hr:email-templates:manage": {
+      "resource": "hr:email-templates",
+      "action": "manage",
+      "description": "Manage HR email templates"
+    },
+    "hr:emergency:manage": {
+      "resource": "hr:emergency",
+      "action": "manage",
+      "description": "Manage emergency events and safety check-ins"
+    },
+    "hr:employees:create": {
+      "resource": "hr:employees",
+      "action": "create",
+      "description": "Create new employees"
+    },
+    "hr:employees:delete": {
+      "resource": "hr:employees",
+      "action": "delete",
+      "description": "Delete employees"
+    },
+    "hr:employees:manage": {
+      "resource": "hr:employees",
+      "action": "manage",
+      "description": "Manage employees",
+      "scopable": true
+    },
+    "hr:employees:update": {
+      "resource": "hr:employees",
+      "action": "update",
+      "description": "Update employee information"
+    },
+    "hr:employees:view": {
+      "resource": "hr:employees",
+      "action": "view",
+      "description": "View employee records",
+      "scopable": true
+    },
+    "hr:engagement:manage": {
+      "resource": "hr:engagement",
+      "action": "manage",
+      "description": "Manage engagement features and view aggregated analytics"
+    },
+    "hr:engagement:view": {
+      "resource": "hr:engagement",
+      "action": "view",
+      "description": "View engagement hub (mood, recognition, polls, communities)"
+    },
+    "hr:equity:manage": {
+      "resource": "hr:equity",
+      "action": "manage",
+      "description": "Manage ESOP/equity grants, vesting, and exercises (sensitive)",
+      "sensitive": true
+    },
+    "hr:equity:view": {
+      "resource": "hr:equity",
+      "action": "view",
+      "description": "View equity grants and vesting (sensitive)",
+      "sensitive": true
+    },
+    "hr:eventstream:view": {
+      "resource": "hr:eventstream",
+      "action": "view",
+      "description": "View the immutable HR event stream and BI exports"
+    },
+    "hr:exit:approve": {
+      "resource": "hr:exit",
+      "action": "approve",
+      "description": "Final approval for resignations and terminations"
+    },
+    "hr:exit:create": {
+      "resource": "hr:exit",
+      "action": "create",
+      "description": "Submit resignations and initiate exits"
+    },
+    "hr:exit:manage": {
+      "resource": "hr:exit",
+      "action": "manage",
+      "description": "Manage employee exits and offboarding"
+    },
+    "hr:exit:view": {
+      "resource": "hr:exit",
+      "action": "view",
+      "description": "View exits, resignations, and offboarding progress"
+    },
+    "hr:expenses:approve": {
+      "resource": "hr:expenses",
+      "action": "approve",
+      "description": "Approve expense requests",
+      "scopable": true
+    },
+    "hr:expenses:create": {
+      "resource": "hr:expenses",
+      "action": "create",
+      "description": "Create expense requests"
+    },
+    "hr:expenses:manage": {
+      "resource": "hr:expenses",
+      "action": "manage",
+      "description": "Manage expense requests"
+    },
+    "hr:expenses:read": {
+      "resource": "hr:expenses",
+      "action": "read",
+      "description": "Read expense requests"
+    },
+    "hr:expenses:view": {
+      "resource": "hr:expenses",
+      "action": "view",
+      "description": "View expenses"
+    },
+    "hr:export:manage": {
+      "resource": "hr:export",
+      "action": "manage",
+      "description": "Export HR entity data (employees, attendance, assets, leave balances, documents)"
+    },
+    "hr:feedback:manage": {
+      "resource": "hr:feedback",
+      "action": "manage",
+      "description": "Manage feedback"
+    },
+    "hr:feedback:view": {
+      "resource": "hr:feedback",
+      "action": "view",
+      "description": "View 360 feedback cycles"
+    },
+    "hr:forms:manage": {
+      "resource": "hr:forms",
+      "action": "manage",
+      "description": "Build and manage HR forms and review submissions"
+    },
+    "hr:forms:view": {
+      "resource": "hr:forms",
+      "action": "view",
+      "description": "View HR forms and submissions"
+    },
+    "hr:geofencing:manage": {
+      "resource": "hr:geofencing",
+      "action": "manage",
+      "description": "Manage geofence locations"
+    },
+    "hr:goals:manage": {
+      "resource": "hr:goals",
+      "action": "manage",
+      "description": "Manage goals"
+    },
+    "hr:goals:view": {
+      "resource": "hr:goals",
+      "action": "view",
+      "description": "View goals"
+    },
+    "hr:handbook:manage": {
+      "resource": "hr:handbook",
+      "action": "manage",
+      "description": "Manage the employee handbook"
+    },
+    "hr:headcount:read": {
+      "resource": "hr:headcount",
+      "action": "read",
+      "description": "Read headcount planning"
+    },
+    "hr:helpdesk:create": {
+      "resource": "hr:helpdesk",
+      "action": "create",
+      "description": "Create HR helpdesk tickets"
+    },
+    "hr:helpdesk:manage": {
+      "resource": "hr:helpdesk",
+      "action": "manage",
+      "description": "Administer employee support: every queue, routing and SLA configuration"
+    },
+    "hr:helpdesk:queue-admin": {
+      "resource": "hr:helpdesk",
+      "action": "queue-admin",
+      "description": "Work the Admin employee support queue"
+    },
+    "hr:helpdesk:queue-finance": {
+      "resource": "hr:helpdesk",
+      "action": "queue-finance",
+      "description": "Work the Finance employee support queue"
+    },
+    "hr:helpdesk:queue-hr": {
+      "resource": "hr:helpdesk",
+      "action": "queue-hr",
+      "description": "Work the HR employee support queue"
+    },
+    "hr:helpdesk:queue-it": {
+      "resource": "hr:helpdesk",
+      "action": "queue-it",
+      "description": "Work the IT employee support queue"
+    },
+    "hr:helpdesk:queue-legal": {
+      "resource": "hr:helpdesk",
+      "action": "queue-legal",
+      "description": "Work the Legal employee support queue"
+    },
+    "hr:helpdesk:view": {
+      "resource": "hr:helpdesk",
+      "action": "view",
+      "description": "Open the employee support agent view"
+    },
+    "hr:identity:manage": {
+      "resource": "hr:identity",
+      "action": "manage",
+      "description": "Manage joiner/mover/leaver access provisioning"
+    },
+    "hr:identity:view": {
+      "resource": "hr:identity",
+      "action": "view",
+      "description": "View identity provisioning and access lifecycle"
+    },
+    "hr:import:manage": {
+      "resource": "hr:import",
+      "action": "manage",
+      "description": "Create, preview, commit, and roll back HR bulk import jobs"
+    },
+    "hr:integrations:manage": {
+      "resource": "hr:integrations",
+      "action": "manage",
+      "description": "Manage HR integrations"
+    },
+    "hr:interviews:manage": {
+      "resource": "hr:interviews",
+      "action": "manage",
+      "description": "Schedule interviews and submit scorecards"
+    },
+    "hr:interviews:view": {
+      "resource": "hr:interviews",
+      "action": "view",
+      "description": "View interviews and scorecards"
+    },
+    "hr:kpis:manage": {
+      "resource": "hr:kpis",
+      "action": "manage",
+      "description": "Manage KPIs and competency frameworks"
+    },
+    "hr:kpis:view": {
+      "resource": "hr:kpis",
+      "action": "view",
+      "description": "View KPIs and competency frameworks"
+    },
+    "hr:labor:manage": {
+      "resource": "hr:labor",
+      "action": "manage",
+      "description": "Manage union relations and collective agreements"
+    },
+    "hr:labor:view": {
+      "resource": "hr:labor",
+      "action": "view",
+      "description": "View union memberships, agreements, and labor cases"
+    },
+    "hr:leaves:approve": {
+      "resource": "hr:leaves",
+      "action": "approve",
+      "description": "Approve/reject leave requests",
+      "scopable": true
+    },
+    "hr:leaves:create": {
+      "resource": "hr:leaves",
+      "action": "create",
+      "description": "Create leave requests"
+    },
+    "hr:leaves:manage": {
+      "resource": "hr:leaves",
+      "action": "manage",
+      "description": "Manage leave requests"
+    },
+    "hr:leaves:read": {
+      "resource": "hr:leaves",
+      "action": "read",
+      "description": "Read leave requests"
+    },
+    "hr:leaves:view": {
+      "resource": "hr:leaves",
+      "action": "view",
+      "description": "View leave requests"
+    },
+    "hr:legalhold:manage": {
+      "resource": "hr:legalhold",
+      "action": "manage",
+      "description": "Place and release legal holds (sensitive)",
+      "sensitive": true
+    },
+    "hr:legalhold:view": {
+      "resource": "hr:legalhold",
+      "action": "view",
+      "description": "View legal holds and investigation locks"
+    },
+    "hr:loans:manage": {
+      "resource": "hr:loans",
+      "action": "manage",
+      "description": "Approve, disburse, and manage loan adjustments (skip/foreclose)"
+    },
+    "hr:loans:view": {
+      "resource": "hr:loans",
+      "action": "view",
+      "description": "View employee loan requests and EMI schedules"
+    },
+    "hr:offers:approve": {
+      "resource": "hr:offers",
+      "action": "approve",
+      "description": "Approve or reject offers submitted for approval"
+    },
+    "hr:offers:manage": {
+      "resource": "hr:offers",
+      "action": "manage",
+      "description": "Create, edit, and submit offers for approval"
+    },
+    "hr:offers:view": {
+      "resource": "hr:offers",
+      "action": "view",
+      "description": "View candidate offers"
+    },
+    "hr:onboarding:manage": {
+      "resource": "hr:onboarding",
+      "action": "manage",
+      "description": "Manage onboarding",
+      "scopable": true
+    },
+    "hr:onboarding:tasks:complete": {
+      "resource": "hr:onboarding:tasks",
+      "action": "complete",
+      "description": "Complete own or assigned employee onboarding tasks",
+      "scopable": false
+    },
+    "hr:onboarding:tasks:view": {
+      "resource": "hr:onboarding:tasks",
+      "action": "view",
+      "description": "View employee onboarding tasks",
+      "scopable": false
+    },
+    "hr:payroll:approve": {
+      "resource": "hr:payroll",
+      "action": "approve",
+      "description": "Approve payroll"
+    },
+    "hr:payroll:export": {
+      "resource": "hr:payroll",
+      "action": "export",
+      "description": "Export payroll reports, journal files, and bank payout files"
+    },
+    "hr:payroll:generate": {
+      "resource": "hr:payroll",
+      "action": "generate",
+      "description": "Generate payroll"
+    },
+    "hr:payroll:lock": {
+      "resource": "hr:payroll",
+      "action": "lock",
+      "description": "Lock an approved payroll run to freeze the snapshot"
+    },
+    "hr:payroll:manage": {
+      "resource": "hr:payroll",
+      "action": "manage",
+      "description": "Manage payroll templates, policy settings, components, and calendar"
+    },
+    "hr:payroll:publish": {
+      "resource": "hr:payroll",
+      "action": "publish",
+      "description": "Publish payslips to the employee portal or via email"
+    },
+    "hr:payroll:reopen": {
+      "resource": "hr:payroll",
+      "action": "reopen",
+      "description": "Reopen an approved or locked payroll run with a reason"
+    },
+    "hr:payroll:view": {
+      "resource": "hr:payroll",
+      "action": "view",
+      "description": "View payroll information",
+      "scopable": true
+    },
+    "hr:payrolls:manage": {
+      "resource": "hr:payrolls",
+      "action": "manage",
+      "description": "Manage payroll runs"
+    },
+    "hr:payrolls:read": {
+      "resource": "hr:payrolls",
+      "action": "read",
+      "description": "Read payroll runs"
+    },
+    "hr:performance:manage": {
+      "resource": "hr:performance",
+      "action": "manage",
+      "description": "Manage performance reviews"
+    },
+    "hr:performance:view": {
+      "resource": "hr:performance",
+      "action": "view",
+      "description": "View performance reviews"
+    },
+    "hr:policies:manage": {
+      "resource": "hr:policies",
+      "action": "manage",
+      "description": "Create, update, activate, and archive HR policies"
+    },
+    "hr:policies:view": {
+      "resource": "hr:policies",
+      "action": "view",
+      "description": "View HR policies"
+    },
+    "hr:positions:manage": {
+      "resource": "hr:positions",
+      "action": "manage",
+      "description": "Manage positions, headcount, and reorg simulations"
+    },
+    "hr:positions:view": {
+      "resource": "hr:positions",
+      "action": "view",
+      "description": "View positions and reorg scenarios"
+    },
+    "hr:probation:manage": {
+      "resource": "hr:probation",
+      "action": "manage",
+      "description": "Manage probation reviews, extensions, and confirmations"
+    },
+    "hr:probation:view": {
+      "resource": "hr:probation",
+      "action": "view",
+      "description": "View probation reviews and due confirmations"
+    },
+    "hr:reporting-lines:manage": {
+      "resource": "hr:reporting-lines",
+      "action": "manage",
+      "description": "Set and schedule reporting managers, run bulk reporting changes, and confirm fallback managers"
+    },
+    "hr:reporting-lines:override": {
+      "resource": "hr:reporting-lines",
+      "action": "override",
+      "description": "Configure the reporting manager policy, exceed the repeated-change threshold, and make emergency reporting changes"
+    },
+    "hr:reporting-lines:review": {
+      "resource": "hr:reporting-lines",
+      "action": "review",
+      "description": "Review employee requests to correct their reporting manager"
+    },
+    "hr:requisitions:manage": {
+      "resource": "hr:requisitions",
+      "action": "manage",
+      "description": "Manage and approve job requisitions"
+    },
+    "hr:requisitions:view": {
+      "resource": "hr:requisitions",
+      "action": "view",
+      "description": "View job requisitions"
+    },
+    "hr:retention:manage": {
+      "resource": "hr:retention",
+      "action": "manage",
+      "description": "Manage data retention policies and deletion/anonymization requests"
+    },
+    "hr:safety:manage": {
+      "resource": "hr:safety",
+      "action": "manage",
+      "description": "Manage safety incidents and view wellness analytics"
+    },
+    "hr:safety:view": {
+      "resource": "hr:safety",
+      "action": "view",
+      "description": "View safety incidents and submit wellness check-ins"
+    },
+    "hr:salary:manage": {
+      "resource": "hr:salary",
+      "action": "manage",
+      "description": "Manage salary structures"
+    },
+    "hr:salary:view": {
+      "resource": "hr:salary",
+      "action": "view",
+      "description": "View salary structures",
+      "scopable": true
+    },
+    "hr:sensitive:manage": {
+      "resource": "hr:sensitive",
+      "action": "manage",
+      "description": "Manage employee sensitive fields",
+      "sensitive": true
+    },
+    "hr:sensitive:view": {
+      "resource": "hr:sensitive",
+      "action": "view",
+      "description": "View employee sensitive fields (salary, bank, tax, government ID, medical)",
+      "sensitive": true
+    },
+    "hr:shifts:manage": {
+      "resource": "hr:shifts",
+      "action": "manage",
+      "description": "Manage shifts, rosters, and swap requests"
+    },
+    "hr:shifts:view": {
+      "resource": "hr:shifts",
+      "action": "view",
+      "description": "View shift templates and assignments"
+    },
+    "hr:succession:manage": {
+      "resource": "hr:succession",
+      "action": "manage",
+      "description": "Manage succession plans (sensitive)",
+      "sensitive": true
+    },
+    "hr:succession:view": {
+      "resource": "hr:succession",
+      "action": "view",
+      "description": "View succession plans (sensitive)",
+      "sensitive": true
+    },
+    "hr:tax:manage": {
+      "resource": "hr:tax",
+      "action": "manage",
+      "description": "Review and approve tax declarations"
+    },
+    "hr:tax:view": {
+      "resource": "hr:tax",
+      "action": "view",
+      "description": "View tax declarations"
+    },
+    "hr:templates:manage": {
+      "resource": "hr:templates",
+      "action": "manage",
+      "description": "Create and manage HR templates"
+    },
+    "hr:templates:view": {
+      "resource": "hr:templates",
+      "action": "view",
+      "description": "View HR templates"
+    },
+    "hr:travel:create": {
+      "resource": "hr:travel",
+      "action": "create",
+      "description": "Submit travel requests"
+    },
+    "hr:travel:manage": {
+      "resource": "hr:travel",
+      "action": "manage",
+      "description": "Approve travel requests"
+    },
+    "hr:travel:view": {
+      "resource": "hr:travel",
+      "action": "view",
+      "description": "View travel requests"
+    },
+    "hr:workflows:approve": {
+      "resource": "hr:workflows",
+      "action": "approve",
+      "description": "Act on HR workflow approvals"
+    },
+    "hr:workflows:manage": {
+      "resource": "hr:workflows",
+      "action": "manage",
+      "description": "Manage HR approval workflow definitions"
+    },
+    "hr:workflows:view": {
+      "resource": "hr:workflows",
+      "action": "view",
+      "description": "View HR approval workflows and instances"
+    },
+    "hr:workforce:manage": {
+      "resource": "hr:workforce",
+      "action": "manage",
+      "description": "Manage workforce plans, hiring plans, and headcount budgets"
+    },
+    "integrations:connections:manage": {
+      "resource": "integrations:connections",
+      "action": "manage",
+      "description": "Connect and manage external app accounts"
+    },
+    "integrations:connections:view": {
+      "resource": "integrations:connections",
+      "action": "view",
+      "description": "View connected external app accounts"
+    },
+    "integrations:git:manage": {
+      "resource": "integrations:git",
+      "action": "manage",
+      "description": "Connect, edit and remove repository connections"
+    },
+    "integrations:git:view": {
+      "resource": "integrations:git",
+      "action": "view",
+      "description": "View repository connections and their webhook targets"
+    },
+    "inventory:3pl:manage": {
+      "resource": "inventory:3pl",
+      "action": "manage",
+      "description": "Manage 3PL warehouse connections"
+    },
+    "inventory:access:manage": {
+      "resource": "inventory:access",
+      "action": "manage",
+      "description": "View access administration for the inventory module; changing roles, permissions, or assignments additionally requires Module Admin, Module Owner, Org Admin, or Org Owner authority"
+    },
+    "inventory:access:view": {
+      "resource": "inventory:access",
+      "action": "view",
+      "description": "View roles, permissions and assignments for the inventory module"
+    },
+    "inventory:adjustments:approve": {
+      "resource": "inventory:adjustments",
+      "action": "approve",
+      "description": "Approve a stock adjustment raised by someone else"
+    },
+    "inventory:adjustments:post": {
+      "resource": "inventory:adjustments",
+      "action": "post",
+      "description": "Post an approved stock adjustment to the ledger"
+    },
+    "inventory:ai:manage": {
+      "resource": "inventory:ai",
+      "action": "manage",
+      "description": "Dismiss or update AI-generated inventory insights"
+    },
+    "inventory:ai:propose": {
+      "resource": "inventory:ai",
+      "action": "propose",
+      "description": "Propose AI-generated reorder draft POs and confirm them"
+    },
+    "inventory:ai:read": {
+      "resource": "inventory:ai",
+      "action": "read",
+      "description": "Read AI-assisted inventory surfaces: the operations brief, the digest, insight explanations and supplier-delay signals"
+    },
+    "inventory:allocation:override": {
+      "resource": "inventory:allocation",
+      "action": "override",
+      "description": "Override FEFO or a near-expiry block when allocating a lot, with a recorded reason"
+    },
+    "inventory:audit:export": {
+      "resource": "inventory:audit",
+      "action": "export",
+      "description": "Take an immutable, checksummed audit export of the inventory ledger and audit trail"
+    },
+    "inventory:audit:read": {
+      "resource": "inventory:audit",
+      "action": "read",
+      "description": "Read the inventory audit trail — who changed which record, and when"
+    },
+    "inventory:channels:manage": {
+      "resource": "inventory:channels",
+      "action": "manage",
+      "description": "Manage sales channel stock publications"
+    },
+    "inventory:customer-returns:manage": {
+      "resource": "inventory:customer-returns",
+      "action": "manage",
+      "description": "Manage customer returns"
+    },
+    "inventory:dock:manage": {
+      "resource": "inventory:dock",
+      "action": "manage",
+      "description": "Book and manage dock appointments: which vehicle is at which door, and when"
+    },
+    "inventory:export": {
+      "resource": "inventory:export",
+      "action": "export",
+      "description": "Export inventory data"
+    },
+    "inventory:import": {
+      "resource": "inventory:import",
+      "action": "import",
+      "description": "Import inventory data"
+    },
+    "inventory:kits:assemble": {
+      "resource": "inventory:kits",
+      "action": "assemble",
+      "description": "Assemble and disassemble kits: consume components and create the kit SKU, moving valuation with them"
+    },
+    "inventory:labels:print": {
+      "resource": "inventory:labels",
+      "action": "print",
+      "description": "Print barcode labels, goods-receipt notes and pick lists"
+    },
+    "inventory:labor:read": {
+      "resource": "inventory:labor",
+      "action": "read",
+      "description": "Read the warehouse labour board: units per hour and performance against standard, by named person",
+      "scopable": true
+    },
+    "inventory:landed-cost:manage": {
+      "resource": "inventory:landed-cost",
+      "action": "manage",
+      "description": "Raise landed-cost vouchers and apply freight, duty and handling into inventory cost layers"
+    },
+    "inventory:loads:manage": {
+      "resource": "inventory:loads",
+      "action": "manage",
+      "description": "Manage loads and containers"
+    },
+    "inventory:packages:manage": {
+      "resource": "inventory:packages",
+      "action": "manage",
+      "description": "Manage shipment packages"
+    },
+    "inventory:picking:review": {
+      "resource": "inventory:picking",
+      "action": "review",
+      "description": "Own and resolve pick exceptions raised by pickers"
+    },
+    "inventory:picking:substitute": {
+      "resource": "inventory:picking",
+      "action": "substitute",
+      "description": "Swap a different SKU in at the shelf, rewriting the sales-order line and its reservation"
+    },
+    "inventory:products:create": {
+      "resource": "inventory:products",
+      "action": "create",
+      "description": "Create products"
+    },
+    "inventory:products:delete": {
+      "resource": "inventory:products",
+      "action": "delete",
+      "description": "Delete products"
+    },
+    "inventory:products:read": {
+      "resource": "inventory:products",
+      "action": "read",
+      "description": "View products",
+      "scopable": true
+    },
+    "inventory:products:update": {
+      "resource": "inventory:products",
+      "action": "update",
+      "description": "Update products"
+    },
+    "inventory:projects:manage": {
+      "resource": "inventory:projects",
+      "action": "manage",
+      "description": "Create and edit construction projects and their material requirements. Reserving stock against a line is a separate key (inventory:stock:reserve)"
+    },
+    "inventory:projects:read": {
+      "resource": "inventory:projects",
+      "action": "read",
+      "description": "View construction projects and the material each site still needs, including what is at risk of missing its date",
+      "scopable": true
+    },
+    "inventory:purchase-orders:approve": {
+      "resource": "inventory:purchase-orders",
+      "action": "approve",
+      "description": "Approve purchase orders"
+    },
+    "inventory:purchase-orders:create": {
+      "resource": "inventory:purchase-orders",
+      "action": "create",
+      "description": "Create purchase orders"
+    },
+    "inventory:purchase-orders:read": {
+      "resource": "inventory:purchase-orders",
+      "action": "read",
+      "description": "View purchase orders",
+      "scopable": true
+    },
+    "inventory:purchase-orders:receive": {
+      "resource": "inventory:purchase-orders",
+      "action": "receive",
+      "description": "Receive purchase orders"
+    },
+    "inventory:purchase-orders:update": {
+      "resource": "inventory:purchase-orders",
+      "action": "update",
+      "description": "Update purchase orders"
+    },
+    "inventory:quality:inspect": {
+      "resource": "inventory:quality",
+      "action": "inspect",
+      "description": "Perform quality inspections"
+    },
+    "inventory:quality:plans:manage": {
+      "resource": "inventory:quality:plans",
+      "action": "manage",
+      "description": "Author and version the inspection plans that decide which arrivals must be inspected before they become available"
+    },
+    "inventory:quality:read": {
+      "resource": "inventory:quality",
+      "action": "read",
+      "description": "View quality inspections and holds"
+    },
+    "inventory:quality:recall": {
+      "resource": "inventory:quality",
+      "action": "recall",
+      "description": "Manage product recalls"
+    },
+    "inventory:quality:release": {
+      "resource": "inventory:quality",
+      "action": "release",
+      "description": "Release quality holds"
+    },
+    "inventory:replenishment:manage": {
+      "resource": "inventory:replenishment",
+      "action": "manage",
+      "description": "Manage reorder rules and replenishment"
+    },
+    "inventory:replenishment:read": {
+      "resource": "inventory:replenishment",
+      "action": "read",
+      "description": "View replenishment proposals, transfer recommendations and forecast drift",
+      "scopable": true
+    },
+    "inventory:reports:read": {
+      "resource": "inventory:reports",
+      "action": "read",
+      "description": "View inventory reports"
+    },
+    "inventory:sales-orders:confirm": {
+      "resource": "inventory:sales-orders",
+      "action": "confirm",
+      "description": "Confirm sales orders"
+    },
+    "inventory:sales-orders:create": {
+      "resource": "inventory:sales-orders",
+      "action": "create",
+      "description": "Create sales orders"
+    },
+    "inventory:sales-orders:invoice": {
+      "resource": "inventory:sales-orders",
+      "action": "invoice",
+      "description": "Invoice sales orders"
+    },
+    "inventory:sales-orders:read": {
+      "resource": "inventory:sales-orders",
+      "action": "read",
+      "description": "View sales orders",
+      "scopable": true
+    },
+    "inventory:sales-orders:ship": {
+      "resource": "inventory:sales-orders",
+      "action": "ship",
+      "description": "Ship sales orders"
+    },
+    "inventory:sales-orders:update": {
+      "resource": "inventory:sales-orders",
+      "action": "update",
+      "description": "Update sales orders"
+    },
+    "inventory:settings:manage": {
+      "resource": "inventory:settings",
+      "action": "manage",
+      "description": "Manage inventory settings and configuration"
+    },
+    "inventory:shipments:manage": {
+      "resource": "inventory:shipments",
+      "action": "manage",
+      "description": "Manage outbound shipments"
+    },
+    "inventory:stock:adjust": {
+      "resource": "inventory:stock",
+      "action": "adjust",
+      "description": "Adjust stock levels"
+    },
+    "inventory:stock:read": {
+      "resource": "inventory:stock",
+      "action": "read",
+      "description": "View stock levels",
+      "scopable": true
+    },
+    "inventory:stock:reconcile": {
+      "resource": "inventory:stock",
+      "action": "reconcile",
+      "description": "Reconcile stock ledger discrepancies"
+    },
+    "inventory:stock:reserve": {
+      "resource": "inventory:stock",
+      "action": "reserve",
+      "description": "Reserve stock against sales orders or transfers"
+    },
+    "inventory:stock:transfer": {
+      "resource": "inventory:stock",
+      "action": "transfer",
+      "description": "Transfer stock between warehouses"
+    },
+    "inventory:transit:abandon": {
+      "resource": "inventory:transit",
+      "action": "abandon",
+      "description": "Abandon or return-to-source stock stranded in transit by a short receipt"
+    },
+    "inventory:valuation:read": {
+      "resource": "inventory:valuation",
+      "action": "read",
+      "description": "View inventory valuation and costing reports"
+    },
+    "inventory:vendor-returns:manage": {
+      "resource": "inventory:vendor-returns",
+      "action": "manage",
+      "description": "Manage vendor returns"
+    },
+    "inventory:vendors:manage": {
+      "resource": "inventory:vendors",
+      "action": "manage",
+      "description": "Manage vendors"
+    },
+    "inventory:vendors:read": {
+      "resource": "inventory:vendors",
+      "action": "read",
+      "description": "View vendors"
+    },
+    "inventory:warehouses:manage": {
+      "resource": "inventory:warehouses",
+      "action": "manage",
+      "description": "Manage warehouses"
+    },
+    "inventory:warehouses:read": {
+      "resource": "inventory:warehouses",
+      "action": "read",
+      "description": "View warehouses"
+    },
+    "inventory:warehouses:scope-all": {
+      "resource": "inventory:warehouses",
+      "action": "scope-all",
+      "description": "See and transact in every warehouse, bypassing warehouse assignment"
+    },
+    "inventory:webhooks:manage": {
+      "resource": "inventory:webhooks",
+      "action": "manage",
+      "description": "Manage inventory webhooks"
+    },
+    "kb:ai:generate": {
+      "resource": "kb:ai",
+      "action": "generate",
+      "description": "Generate AI answers from the knowledge base"
+    },
+    "kb:analytics:view": {
+      "resource": "kb:analytics",
+      "action": "view",
+      "description": "View knowledge base analytics"
+    },
+    "kb:articles:create": {
+      "resource": "kb:articles",
+      "action": "create",
+      "description": "Create knowledge base articles"
+    },
+    "kb:articles:delete": {
+      "resource": "kb:articles",
+      "action": "delete",
+      "description": "Delete knowledge base articles"
+    },
+    "kb:articles:manage": {
+      "resource": "kb:articles",
+      "action": "manage",
+      "description": "Manage knowledge base articles"
+    },
+    "kb:articles:update": {
+      "resource": "kb:articles",
+      "action": "update",
+      "description": "Update knowledge base articles"
+    },
+    "kb:articles:view": {
+      "resource": "kb:articles",
+      "action": "view",
+      "description": "View knowledge base articles",
+      "scopable": true
+    },
+    "kb:categories:manage": {
+      "resource": "kb:categories",
+      "action": "manage",
+      "description": "Manage knowledge base categories"
+    },
+    "kb:pages:create": {
+      "resource": "kb:pages",
+      "action": "create",
+      "description": "Create wiki pages"
+    },
+    "kb:pages:delete": {
+      "resource": "kb:pages",
+      "action": "delete",
+      "description": "Delete wiki pages (soft-delete subtree)"
+    },
+    "kb:pages:export": {
+      "resource": "kb:pages",
+      "action": "export",
+      "description": "Export pages to markdown or html"
+    },
+    "kb:pages:import": {
+      "resource": "kb:pages",
+      "action": "import",
+      "description": "Import pages from markdown, html, or zip"
+    },
+    "kb:pages:manage": {
+      "resource": "kb:pages",
+      "action": "manage",
+      "description": "Lock/unlock pages and manage wiki workspace"
+    },
+    "kb:pages:purge": {
+      "resource": "kb:pages",
+      "action": "purge",
+      "description": "Permanently delete wiki pages and empty the trash"
+    },
+    "kb:pages:update": {
+      "resource": "kb:pages",
+      "action": "update",
+      "description": "Update wiki pages"
+    },
+    "kb:pages:view": {
+      "resource": "kb:pages",
+      "action": "view",
+      "description": "View wiki pages"
+    },
+    "kb:reviews:manage": {
+      "resource": "kb:reviews",
+      "action": "manage",
+      "description": "Create, approve, and reject page review requests"
+    },
+    "kb:reviews:view": {
+      "resource": "kb:reviews",
+      "action": "view",
+      "description": "View page review requests"
+    },
+    "kb:settings:manage": {
+      "resource": "kb:settings",
+      "action": "manage",
+      "description": "Manage knowledge base settings"
+    },
+    "kb:spaces:manage": {
+      "resource": "kb:spaces",
+      "action": "manage",
+      "description": "Manage knowledge base spaces"
+    },
+    "kb:spaces:view": {
+      "resource": "kb:spaces",
+      "action": "view",
+      "description": "View knowledge base spaces",
+      "scopable": true
+    },
+    "kb:templates:manage": {
+      "resource": "kb:templates",
+      "action": "manage",
+      "description": "Create and delete wiki page templates"
+    },
+    "mail:ai:use": {
+      "resource": "mail:ai",
+      "action": "use",
+      "description": "Use AI inbox summary, thread summary, and draft generation"
+    },
+    "mail:inbox:view": {
+      "resource": "mail:inbox",
+      "action": "view",
+      "description": "View unified mail inbox and messages"
+    },
+    "mail:messages:manage": {
+      "resource": "mail:messages",
+      "action": "manage",
+      "description": "Archive, trash, star, and mark email messages"
+    },
+    "mail:messages:send": {
+      "resource": "mail:messages",
+      "action": "send",
+      "description": "Send and reply to emails"
+    },
+    "notifications:broadcasts:manage": {
+      "resource": "notifications:broadcasts",
+      "action": "manage",
+      "description": "Create, schedule, send, and cancel broadcasts"
+    },
+    "notifications:broadcasts:view": {
+      "resource": "notifications:broadcasts",
+      "action": "view",
+      "description": "View broadcasts"
+    },
+    "notifications:events:manage": {
+      "resource": "notifications:events",
+      "action": "manage",
+      "description": "Edit event policy and emit test events"
+    },
+    "notifications:events:view": {
+      "resource": "notifications:events",
+      "action": "view",
+      "description": "View the notification event catalog"
+    },
+    "notifications:policy:manage": {
+      "resource": "notifications:policy",
+      "action": "manage",
+      "description": "Set organization notification policy defaults"
+    },
+    "notifications:policy:view": {
+      "resource": "notifications:policy",
+      "action": "view",
+      "description": "View notification policy defaults"
+    },
+    "notifications:providers:manage": {
+      "resource": "notifications:providers",
+      "action": "manage",
+      "description": "Configure, test, and remove notification providers"
+    },
+    "notifications:providers:view": {
+      "resource": "notifications:providers",
+      "action": "view",
+      "description": "View notification providers"
+    },
+    "notifications:templates:manage": {
+      "resource": "notifications:templates",
+      "action": "manage",
+      "description": "Create, edit, and delete notification templates"
+    },
+    "notifications:templates:view": {
+      "resource": "notifications:templates",
+      "action": "view",
+      "description": "View notification templates"
+    },
+    "onboarding:module-checklists:manage": {
+      "resource": "onboarding:module-checklists",
+      "action": "manage",
+      "description": "Complete, skip, and dismiss module setup checklist items",
+      "scopable": false
+    },
+    "onboarding:module-checklists:view": {
+      "resource": "onboarding:module-checklists",
+      "action": "view",
+      "description": "View module setup checklists",
+      "scopable": false
+    },
+    "onboarding:tours:view": {
+      "resource": "onboarding:tours",
+      "action": "view",
+      "description": "View and progress guided tours",
+      "scopable": false
+    },
+    "ownership:modules:manage": {
+      "resource": "ownership:modules",
+      "action": "manage",
+      "description": "Initiate, cancel or force-set module ownership transfers"
+    },
+    "ownership:modules:view": {
+      "resource": "ownership:modules",
+      "action": "view",
+      "description": "View module ownership assignments and transfer history"
+    },
+    "ownership:org:transfer": {
+      "resource": "ownership:org",
+      "action": "transfer",
+      "description": "Initiate an organization ownership transfer handshake"
+    },
+    "ownership:transfer:respond": {
+      "resource": "ownership:transfer",
+      "action": "respond",
+      "description": "Accept or decline an ownership transfer directed at you"
+    },
+    "party:contacts:manage": {
+      "resource": "party:contacts",
+      "action": "manage",
+      "description": "Create, update, and delete contacts for a business party"
+    },
+    "party:contacts:view": {
+      "resource": "party:contacts",
+      "action": "view",
+      "description": "View contacts linked to a business party"
+    },
+    "party:duplicates:view": {
+      "resource": "party:duplicates",
+      "action": "view",
+      "description": "See parties the system believes may be the same organisation"
+    },
+    "party:merges:manage": {
+      "resource": "party:merges",
+      "action": "manage",
+      "description": "Merge two parties, and reverse a merge"
+    },
+    "party:parties:create": {
+      "resource": "party:parties",
+      "action": "create",
+      "description": "Create business parties"
+    },
+    "party:parties:delete": {
+      "resource": "party:parties",
+      "action": "delete",
+      "description": "Soft-delete business parties"
+    },
+    "party:parties:update": {
+      "resource": "party:parties",
+      "action": "update",
+      "description": "Update business parties"
+    },
+    "party:parties:view": {
+      "resource": "party:parties",
+      "action": "view",
+      "description": "View business parties (customers, vendors, partners)"
+    },
+    "party:roles:manage": {
+      "resource": "party:roles",
+      "action": "manage",
+      "description": "Assign and remove the roles a party holds"
+    },
+    "party:subject-types:manage": {
+      "resource": "party:subject-types",
+      "action": "manage",
+      "description": "Declare and change the subject types the organisation transacts"
+    },
+    "party:subjects:manage": {
+      "resource": "party:subjects",
+      "action": "manage",
+      "description": "Create, update and delete subjects, and link them to parties"
+    },
+    "party:subjects:view": {
+      "resource": "party:subjects",
+      "action": "view",
+      "description": "View the things the business transacts, and their declared types"
+    },
+    "payments:audit:view": {
+      "resource": "payments:audit",
+      "action": "view",
+      "description": "View payment provider audit log",
+      "scopable": false
+    },
+    "payments:credentials:manage": {
+      "resource": "payments:credentials",
+      "action": "manage",
+      "description": "Add, rotate, and disconnect provider credentials",
+      "scopable": false
+    },
+    "payments:live:activate": {
+      "resource": "payments:live",
+      "action": "activate",
+      "description": "Activate live payment processing",
+      "scopable": false
+    },
+    "payments:manual-methods:manage": {
+      "resource": "payments:manual-methods",
+      "action": "manage",
+      "description": "Configure manual/offline payment methods",
+      "scopable": false
+    },
+    "payments:providers:manage": {
+      "resource": "payments:providers",
+      "action": "manage",
+      "description": "Connect, configure, and disable payment providers",
+      "scopable": false
+    },
+    "payments:providers:view": {
+      "resource": "payments:providers",
+      "action": "view",
+      "description": "View configured payment providers and readiness",
+      "scopable": false
+    },
+    "payments:test:run": {
+      "resource": "payments:test",
+      "action": "run",
+      "description": "Run test transactions against a payment provider",
+      "scopable": false
+    },
+    "payments:webhooks:manage": {
+      "resource": "payments:webhooks",
+      "action": "manage",
+      "description": "Generate, verify, and retry payment webhooks",
+      "scopable": false
+    },
+    "payments:webhooks:view": {
+      "resource": "payments:webhooks",
+      "action": "view",
+      "description": "View webhook health and event history",
+      "scopable": false
+    },
+    "payroll:access:manage": {
+      "resource": "payroll:access",
+      "action": "manage",
+      "description": "View access administration for the payroll module; changing roles, permissions, or assignments additionally requires Module Admin, Module Owner, Org Admin, or Org Owner authority"
+    },
+    "payroll:access:view": {
+      "resource": "payroll:access",
+      "action": "view",
+      "description": "View roles, permissions and assignments for the payroll module"
+    },
+    "payroll:accounting:manage": {
+      "resource": "payroll:accounting",
+      "action": "manage",
+      "description": "Create, post, reverse, and reconcile payroll journal batches"
+    },
+    "payroll:accounting:view": {
+      "resource": "payroll:accounting",
+      "action": "view",
+      "description": "View payroll journal batches and accounting reconciliation"
+    },
+    "payroll:bank:manage": {
+      "resource": "payroll:bank",
+      "action": "manage",
+      "description": "Manage bank transfer batches and mark paid"
+    },
+    "payroll:bank:view": {
+      "resource": "payroll:bank",
+      "action": "view",
+      "description": "View unmasked bank details (sensitive)",
+      "sensitive": true
+    },
+    "payroll:components:manage": {
+      "resource": "payroll:components",
+      "action": "manage",
+      "description": "Manage salary components (earnings and deductions)"
+    },
+    "payroll:components:view": {
+      "resource": "payroll:components",
+      "action": "view",
+      "description": "View salary components"
+    },
+    "payroll:fnf:manage": {
+      "resource": "payroll:fnf",
+      "action": "manage",
+      "description": "Manage final settlements"
+    },
+    "payroll:fnf:view": {
+      "resource": "payroll:fnf",
+      "action": "view",
+      "description": "View final settlements"
+    },
+    "payroll:payslips:manage": {
+      "resource": "payroll:payslips",
+      "action": "manage",
+      "description": "Publish and manage payslips"
+    },
+    "payroll:payslips:view": {
+      "resource": "payroll:payslips",
+      "action": "view",
+      "description": "View payslips"
+    },
+    "payroll:policies:manage": {
+      "resource": "payroll:policies",
+      "action": "manage",
+      "description": "Manage payroll policies"
+    },
+    "payroll:policies:view": {
+      "resource": "payroll:policies",
+      "action": "view",
+      "description": "View payroll policies"
+    },
+    "payroll:reports:export": {
+      "resource": "payroll:reports",
+      "action": "export",
+      "description": "Export payroll reports"
+    },
+    "payroll:reports:view": {
+      "resource": "payroll:reports",
+      "action": "view",
+      "description": "View payroll reports"
+    },
+    "payroll:runs:approve": {
+      "resource": "payroll:runs",
+      "action": "approve",
+      "description": "Approve payroll runs"
+    },
+    "payroll:runs:create": {
+      "resource": "payroll:runs",
+      "action": "create",
+      "description": "Create payroll runs"
+    },
+    "payroll:runs:manage": {
+      "resource": "payroll:runs",
+      "action": "manage",
+      "description": "Generate, recalculate, lock, reopen and close payroll runs"
+    },
+    "payroll:runs:update": {
+      "resource": "payroll:runs",
+      "action": "update",
+      "description": "Update payroll runs"
+    },
+    "payroll:runs:view": {
+      "resource": "payroll:runs",
+      "action": "view",
+      "description": "View payroll runs",
+      "scopable": true
+    },
+    "payroll:salaries:update": {
+      "resource": "payroll:salaries",
+      "action": "update",
+      "description": "Update employee salaries"
+    },
+    "payroll:salaries:view": {
+      "resource": "payroll:salaries",
+      "action": "view",
+      "description": "View employee salary structures"
+    },
+    "payroll:settings:manage": {
+      "resource": "payroll:settings",
+      "action": "manage",
+      "description": "Manage payroll module settings"
+    },
+    "payroll:tax:manage": {
+      "resource": "payroll:tax",
+      "action": "manage",
+      "description": "Manage tax declarations and statutory rules"
+    },
+    "payroll:tax:view": {
+      "resource": "payroll:tax",
+      "action": "view",
+      "description": "View tax and statutory configurations"
+    },
+    "payroll:templates:manage": {
+      "resource": "payroll:templates",
+      "action": "manage",
+      "description": "Manage salary structure templates"
+    },
+    "payroll:templates:view": {
+      "resource": "payroll:templates",
+      "action": "view",
+      "description": "View salary structure templates"
+    },
+    "reports:create": {
+      "resource": "reports",
+      "action": "create",
+      "description": "Create reports"
+    },
+    "reports:export": {
+      "resource": "reports",
+      "action": "export",
+      "description": "Export reports"
+    },
+    "reports:generate": {
+      "resource": "reports",
+      "action": "generate",
+      "description": "Generate reports"
+    },
+    "reports:schedule": {
+      "resource": "reports",
+      "action": "schedule",
+      "description": "Schedule reports"
+    },
+    "reports:view": {
+      "resource": "reports",
+      "action": "view",
+      "description": "View reports"
+    },
+    "sales:manage": {
+      "resource": "sales",
+      "action": "manage",
+      "description": "Manage sales module"
+    },
+    "sales:view": {
+      "resource": "sales",
+      "action": "view",
+      "description": "View sales module"
+    },
+    "self:attendance": {
+      "resource": "self",
+      "action": "attendance",
+      "description": "Check in/out own attendance"
+    },
+    "self:cases": {
+      "resource": "self",
+      "action": "cases",
+      "description": "View and acknowledge disciplinary actions issued to oneself"
+    },
+    "self:expenses": {
+      "resource": "self",
+      "action": "expenses",
+      "description": "Submit and view own expense claims"
+    },
+    "self:job-openings": {
+      "resource": "self",
+      "action": "job-openings",
+      "description": "Browse internal job openings and apply to them"
+    },
+    "self:leaves": {
+      "resource": "self",
+      "action": "leaves",
+      "description": "Submit and view own leave requests"
+    },
+    "self:onboarding-docs": {
+      "resource": "self",
+      "action": "onboarding-docs",
+      "description": "Upload and view own onboarding documents"
+    },
+    "self:onboarding-tasks": {
+      "resource": "self",
+      "action": "onboarding-tasks",
+      "description": "View and complete own onboarding tasks"
+    },
+    "self:payroll": {
+      "resource": "self",
+      "action": "payroll",
+      "description": "Access the ESS payroll portal (salary breakdown, declarations, loan requests, bank details)"
+    },
+    "self:payslips": {
+      "resource": "self",
+      "action": "payslips",
+      "description": "View own payslips"
+    },
+    "self:recruitment": {
+      "resource": "self",
+      "action": "recruitment",
+      "description": "View assigned interviews and submit own hiring feedback"
+    },
+    "self:referrals": {
+      "resource": "self",
+      "action": "referrals",
+      "description": "Submit candidate referrals and track own referrals"
+    },
+    "self:support": {
+      "resource": "self",
+      "action": "support",
+      "description": "Raise employee support requests and follow own requests"
+    },
+    "settings:api-tokens:read": {
+      "resource": "settings:api-tokens",
+      "action": "read",
+      "description": "View personal API tokens"
+    },
+    "settings:api-tokens:write": {
+      "resource": "settings:api-tokens",
+      "action": "write",
+      "description": "Create and revoke personal API tokens"
+    },
+    "settings:automations:manage": {
+      "resource": "settings:automations",
+      "action": "manage",
+      "description": "Create, edit, and run automation rules"
+    },
+    "settings:automations:view": {
+      "resource": "settings:automations",
+      "action": "view",
+      "description": "View automation rules and run history"
+    },
+    "settings:custom-fields:manage": {
+      "resource": "settings:custom-fields",
+      "action": "manage",
+      "description": "Manage custom fields"
+    },
+    "settings:custom-fields:view": {
+      "resource": "settings:custom-fields",
+      "action": "view",
+      "description": "View custom field definitions"
+    },
+    "settings:email-templates:manage": {
+      "resource": "settings:email-templates",
+      "action": "manage",
+      "description": "Manage email templates"
+    },
+    "settings:impersonate:manage": {
+      "resource": "settings:impersonate",
+      "action": "manage",
+      "description": "Log in as another organization member to troubleshoot their access"
+    },
+    "settings:manage": {
+      "resource": "settings",
+      "action": "manage",
+      "description": "Manage settings"
+    },
+    "settings:mfa": {
+      "resource": "settings",
+      "action": "mfa",
+      "description": "Manage MFA settings for the organization"
+    },
+    "settings:onboarding:manage": {
+      "resource": "settings:onboarding",
+      "action": "manage",
+      "description": "Manage onboarding settings"
+    },
+    "settings:organization:manage": {
+      "resource": "settings:organization",
+      "action": "manage",
+      "description": "Manage members, invitations, and organization structure",
+      "scopable": false
+    },
+    "settings:rbac:manage": {
+      "resource": "settings:rbac",
+      "action": "manage",
+      "description": "Manage RBAC permissions"
+    },
+    "settings:record-layouts:manage": {
+      "resource": "settings:record-layouts",
+      "action": "manage",
+      "description": "Arrange which fields a record type shows, in what order, and under which headings"
+    },
+    "settings:view": {
+      "resource": "settings",
+      "action": "view",
+      "description": "View settings"
+    },
+    "settings:webhooks:manage": {
+      "resource": "settings:webhooks",
+      "action": "manage",
+      "description": "Manage webhooks"
+    },
+    "sign:access:manage": {
+      "resource": "sign:access",
+      "action": "manage",
+      "description": "View access administration for the sign module; changing roles, permissions, or assignments additionally requires Module Admin, Module Owner, Org Admin, or Org Owner authority"
+    },
+    "sign:access:view": {
+      "resource": "sign:access",
+      "action": "view",
+      "description": "View roles, permissions and assignments for the sign module"
+    },
+    "sign:admin:manage": {
+      "resource": "sign:admin",
+      "action": "manage",
+      "description": "Manage SignOS admin settings, branding, and watermark policy"
+    },
+    "sign:audit:view": {
+      "resource": "sign:audit",
+      "action": "view",
+      "description": "View the SignOS audit trail"
+    },
+    "sign:bulk_send:run": {
+      "resource": "sign:bulk_send",
+      "action": "run",
+      "description": "Run SignOS bulk send jobs"
+    },
+    "sign:certificate:download": {
+      "resource": "sign:certificate",
+      "action": "download",
+      "description": "Download SignOS certificates and final signed PDFs"
+    },
+    "sign:documents:upload": {
+      "resource": "sign:documents",
+      "action": "upload",
+      "description": "Upload documents to a SignOS envelope"
+    },
+    "sign:documents:view": {
+      "resource": "sign:documents",
+      "action": "view",
+      "description": "View SignOS documents"
+    },
+    "sign:envelope:correct": {
+      "resource": "sign:envelope",
+      "action": "correct",
+      "description": "Correct recipients or extend expiration on a sent envelope"
+    },
+    "sign:envelope:create": {
+      "resource": "sign:envelope",
+      "action": "create",
+      "description": "Create and edit SignOS envelopes"
+    },
+    "sign:envelope:send": {
+      "resource": "sign:envelope",
+      "action": "send",
+      "description": "Send and resend SignOS envelopes"
+    },
+    "sign:envelope:view": {
+      "resource": "sign:envelope",
+      "action": "view",
+      "description": "View SignOS envelopes you sent or were assigned",
+      "scopable": true
+    },
+    "sign:envelope:void": {
+      "resource": "sign:envelope",
+      "action": "void",
+      "description": "Void a sent SignOS envelope"
+    },
+    "sign:template:manage": {
+      "resource": "sign:template",
+      "action": "manage",
+      "description": "Create, publish, and manage SignOS templates"
+    },
+    "storage:files:manage": {
+      "resource": "storage:files",
+      "action": "manage",
+      "description": "Initiate and complete presigned multipart uploads on behalf of the organization"
+    },
+    "storage:quarantine:manage": {
+      "resource": "storage:quarantine",
+      "action": "manage",
+      "description": "Release, reject, retain and permanently delete quarantined files"
+    },
+    "storage:quarantine:view": {
+      "resource": "storage:quarantine",
+      "action": "view",
+      "description": "View file quarantine records and scan results"
+    },
+    "support:access:manage": {
+      "resource": "support:access",
+      "action": "manage",
+      "description": "View access administration for the support module; changing roles, permissions, or assignments additionally requires Module Admin, Module Owner, Org Admin, or Org Owner authority"
+    },
+    "support:access:view": {
+      "resource": "support:access",
+      "action": "view",
+      "description": "View roles, permissions and assignments for the support module"
+    },
+    "support:ai:invoke": {
+      "resource": "support:ai",
+      "action": "invoke",
+      "description": "Use support AI features (reply/macro improvement, translation)"
+    },
+    "support:ai:view": {
+      "resource": "support:ai",
+      "action": "view",
+      "description": "View support AI reporting and insights"
+    },
+    "support:channels:manage": {
+      "resource": "support:channels",
+      "action": "manage",
+      "description": "Configure support channels (email inbox, chat, WhatsApp, SMS)"
+    },
+    "support:csat:manage": {
+      "resource": "support:csat",
+      "action": "manage",
+      "description": "Create, update and delete CSAT surveys"
+    },
+    "support:csat:view": {
+      "resource": "support:csat",
+      "action": "view",
+      "description": "View CSAT surveys and responses"
+    },
+    "support:kb:manage": {
+      "resource": "support:kb",
+      "action": "manage",
+      "description": "Create, edit, and publish knowledge base articles and categories"
+    },
+    "support:kb:view": {
+      "resource": "support:kb",
+      "action": "view",
+      "description": "View and browse knowledge base articles"
+    },
+    "support:knowledge-gaps:manage": {
+      "resource": "support:knowledge-gaps",
+      "action": "manage",
+      "description": "Trigger gap detection, draft KB articles from gaps, and dismiss gaps"
+    },
+    "support:knowledge-gaps:view": {
+      "resource": "support:knowledge-gaps",
+      "action": "view",
+      "description": "View knowledge gap analysis and clustered support questions"
+    },
+    "support:macros:manage": {
+      "resource": "support:macros",
+      "action": "manage",
+      "description": "Create and edit canned responses and ticket routing rules"
+    },
+    "support:macros:view": {
+      "resource": "support:macros",
+      "action": "view",
+      "description": "View canned responses and ticket routing rules"
+    },
+    "support:portal:tickets:create": {
+      "resource": "support:portal:tickets",
+      "action": "create",
+      "description": "Create support tickets via the customer portal"
+    },
+    "support:portal:tickets:reply": {
+      "resource": "support:portal:tickets",
+      "action": "reply",
+      "description": "Reply to own support tickets via the customer portal"
+    },
+    "support:portal:tickets:view": {
+      "resource": "support:portal:tickets",
+      "action": "view",
+      "description": "View own support tickets via the customer portal"
+    },
+    "support:queues:manage": {
+      "resource": "support:queues",
+      "action": "manage",
+      "description": "Create and manage support ticket queues"
+    },
+    "support:reports:view": {
+      "resource": "support:reports",
+      "action": "view",
+      "description": "View support reports and analytics"
+    },
+    "support:settings:manage": {
+      "resource": "support:settings",
+      "action": "manage",
+      "description": "Manage support SLA policies, business hours, and routing settings"
+    },
+    "support:tags:manage": {
+      "resource": "support:tags",
+      "action": "manage",
+      "description": "Create and manage support ticket tags"
+    },
+    "support:tickets:create": {
+      "resource": "support:tickets",
+      "action": "create",
+      "description": "Create support tickets"
+    },
+    "support:tickets:internal_note": {
+      "resource": "support:tickets",
+      "action": "internal_note",
+      "description": "Post internal notes on support tickets",
+      "scopable": true
+    },
+    "support:tickets:manage": {
+      "resource": "support:tickets",
+      "action": "manage",
+      "description": "Manage support tickets",
+      "scopable": true
+    },
+    "support:tickets:reply": {
+      "resource": "support:tickets",
+      "action": "reply",
+      "description": "Post public replies on support tickets",
+      "scopable": true
+    },
+    "support:tickets:view": {
+      "resource": "support:tickets",
+      "action": "view",
+      "description": "View support tickets, messages, and activity",
+      "scopable": true
+    },
+    "surveys:access:manage": {
+      "resource": "surveys:access",
+      "action": "manage",
+      "description": "View access administration for the surveys module; changing roles, permissions, or assignments additionally requires Module Admin, Module Owner, Org Admin, or Org Owner authority"
+    },
+    "surveys:access:view": {
+      "resource": "surveys:access",
+      "action": "view",
+      "description": "View roles, permissions and assignments for the surveys module"
+    },
+    "surveys:ai:use": {
+      "resource": "surveys:ai",
+      "action": "use",
+      "description": "Use AI assist on surveys (summarize responses)"
+    },
+    "surveys:analytics:view": {
+      "resource": "surveys:analytics",
+      "action": "view",
+      "description": "View survey analytics and reports"
+    },
+    "surveys:assessments:manage": {
+      "resource": "surveys:assessments",
+      "action": "manage",
+      "description": "Manage assessment scoring, attempts, and certificates"
+    },
+    "surveys:automations:manage": {
+      "resource": "surveys:automations",
+      "action": "manage",
+      "description": "Manage survey automations and lead routing rules"
+    },
+    "surveys:create": {
+      "resource": "surveys",
+      "action": "create",
+      "description": "Create surveys"
+    },
+    "surveys:delete": {
+      "resource": "surveys",
+      "action": "delete",
+      "description": "Delete or archive surveys",
+      "scopable": true
+    },
+    "surveys:live:host": {
+      "resource": "surveys:live",
+      "action": "host",
+      "description": "Host live survey sessions"
+    },
+    "surveys:participants:manage": {
+      "resource": "surveys:participants",
+      "action": "manage",
+      "description": "Import, invite, and remind survey participants"
+    },
+    "surveys:participants:view": {
+      "resource": "surveys:participants",
+      "action": "view",
+      "description": "View survey participants and collectors"
+    },
+    "surveys:publish": {
+      "resource": "surveys",
+      "action": "publish",
+      "description": "Publish, pause, and close surveys",
+      "scopable": true
+    },
+    "surveys:responses:export": {
+      "resource": "surveys:responses",
+      "action": "export",
+      "description": "Export survey responses"
+    },
+    "surveys:responses:view": {
+      "resource": "surveys:responses",
+      "action": "view",
+      "description": "View survey responses"
+    },
+    "surveys:update": {
+      "resource": "surveys",
+      "action": "update",
+      "description": "Edit survey builder content",
+      "scopable": true
+    },
+    "surveys:view": {
+      "resource": "surveys",
+      "action": "view",
+      "description": "View surveys, assessments, live sessions, and lead qualification forms",
+      "scopable": true
+    },
+    "tasks:read": {
+      "resource": "tasks",
+      "action": "read",
+      "description": "View tasks, sequences, analytics, and queue"
+    },
+    "tasks:write": {
+      "resource": "tasks",
+      "action": "write",
+      "description": "Create, update, delete, and complete tasks and sequences"
+    },
+    "timesheets:access:manage": {
+      "resource": "timesheets:access",
+      "action": "manage",
+      "description": "View access administration for the timesheets module; changing roles, permissions, or assignments additionally requires Module Admin, Module Owner, Org Admin, or Org Owner authority"
+    },
+    "timesheets:access:view": {
+      "resource": "timesheets:access",
+      "action": "view",
+      "description": "View roles, permissions and assignments for the timesheets module"
+    },
+    "timesheets:approvals:manage": {
+      "resource": "timesheets:approvals",
+      "action": "manage",
+      "description": "Approve, reject, reopen, and lock timesheets",
+      "scopable": true
+    },
+    "timesheets:approvals:view": {
+      "resource": "timesheets:approvals",
+      "action": "view",
+      "description": "View the timesheet approval queue",
+      "scopable": true
+    },
+    "timesheets:audit:view": {
+      "resource": "timesheets:audit",
+      "action": "view",
+      "description": "View the timesheet audit trail"
+    },
+    "timesheets:billing:export": {
+      "resource": "timesheets:billing",
+      "action": "export",
+      "description": "Export approved billable hours"
+    },
+    "timesheets:billing:invoice": {
+      "resource": "timesheets:billing",
+      "action": "invoice",
+      "description": "Create invoice drafts from approved billable hours"
+    },
+    "timesheets:billing:view": {
+      "resource": "timesheets:billing",
+      "action": "view",
+      "description": "View the billing queue and uninvoiced hours"
+    },
+    "timesheets:budgets:manage": {
+      "resource": "timesheets:budgets",
+      "action": "manage",
+      "description": "Create and manage project budgets"
+    },
+    "timesheets:budgets:view": {
+      "resource": "timesheets:budgets",
+      "action": "view",
+      "description": "View project budgets and burn"
+    },
+    "timesheets:entries:create": {
+      "resource": "timesheets:entries",
+      "action": "create",
+      "description": "Log time and submit timesheets"
+    },
+    "timesheets:entries:update": {
+      "resource": "timesheets:entries",
+      "action": "update",
+      "description": "Edit own draft or rejected time entries"
+    },
+    "timesheets:entries:view": {
+      "resource": "timesheets:entries",
+      "action": "view",
+      "description": "View time entries and timesheets",
+      "scopable": true
+    },
+    "timesheets:entries:void": {
+      "resource": "timesheets:entries",
+      "action": "void",
+      "description": "Void time entries with a reason"
+    },
+    "timesheets:exceptions:manage": {
+      "resource": "timesheets:exceptions",
+      "action": "manage",
+      "description": "Resolve, dismiss, and run timesheet exception detection"
+    },
+    "timesheets:exceptions:view": {
+      "resource": "timesheets:exceptions",
+      "action": "view",
+      "description": "View timesheet exceptions and data-quality issues",
+      "scopable": true
+    },
+    "timesheets:payroll:export": {
+      "resource": "timesheets:payroll",
+      "action": "export",
+      "description": "Run payroll exports and manage payroll mapping"
+    },
+    "timesheets:payroll:view": {
+      "resource": "timesheets:payroll",
+      "action": "view",
+      "description": "View payroll queue and export history",
+      "scopable": true
+    },
+    "timesheets:rates:manage": {
+      "resource": "timesheets:rates",
+      "action": "manage",
+      "description": "Manage bill rates and rate cards"
+    },
+    "timesheets:rates:view": {
+      "resource": "timesheets:rates",
+      "action": "view",
+      "description": "View bill rates and rate cards"
+    },
+    "timesheets:reports:view": {
+      "resource": "timesheets:reports",
+      "action": "view",
+      "description": "View timesheet reports and analytics",
+      "scopable": true
+    },
+    "timesheets:settings:manage": {
+      "resource": "timesheets:settings",
+      "action": "manage",
+      "description": "Manage timesheet settings and policies"
+    },
+    "timesheets:settings:view": {
+      "resource": "timesheets:settings",
+      "action": "view",
+      "description": "View timesheet settings"
+    },
+    "timesheets:team:view": {
+      "resource": "timesheets:team",
+      "action": "view",
+      "description": "View team timesheets and submission status",
+      "scopable": true
+    },
+    "workflows:access:manage": {
+      "resource": "workflows:access",
+      "action": "manage",
+      "description": "View access administration for the workflows module; changing roles, permissions, or assignments additionally requires Module Admin, Module Owner, Org Admin, or Org Owner authority"
+    },
+    "workflows:access:view": {
+      "resource": "workflows:access",
+      "action": "view",
+      "description": "View roles, permissions and assignments for the workflows module"
+    },
+    "workflows:analytics:view": {
+      "resource": "workflows:analytics",
+      "action": "view",
+      "description": "View workflow analytics"
+    },
+    "workflows:approvals:manage": {
+      "resource": "workflows:approvals",
+      "action": "manage",
+      "description": "Approve or reject workflow approvals"
+    },
+    "workflows:approvals:view": {
+      "resource": "workflows:approvals",
+      "action": "view",
+      "description": "View workflow approvals"
+    },
+    "workflows:executions:manage": {
+      "resource": "workflows:executions",
+      "action": "manage",
+      "description": "Cancel or retry workflow executions"
+    },
+    "workflows:executions:view": {
+      "resource": "workflows:executions",
+      "action": "view",
+      "description": "View workflow executions"
+    },
+    "workflows:schedules:manage": {
+      "resource": "workflows:schedules",
+      "action": "manage",
+      "description": "Manage workflow schedules"
+    },
+    "workflows:secrets:manage": {
+      "resource": "workflows:secrets",
+      "action": "manage",
+      "description": "Manage workflow secrets"
+    },
+    "workflows:templates:view": {
+      "resource": "workflows:templates",
+      "action": "view",
+      "description": "View workflow templates"
+    },
+    "workflows:variables:manage": {
+      "resource": "workflows:variables",
+      "action": "manage",
+      "description": "Manage workflow variables"
+    },
+    "workflows:workflows:create": {
+      "resource": "workflows:workflows",
+      "action": "create",
+      "description": "Create workflows"
+    },
+    "workflows:workflows:delete": {
+      "resource": "workflows:workflows",
+      "action": "delete",
+      "description": "Delete workflows"
+    },
+    "workflows:workflows:publish": {
+      "resource": "workflows:workflows",
+      "action": "publish",
+      "description": "Publish workflows"
+    },
+    "workflows:workflows:update": {
+      "resource": "workflows:workflows",
+      "action": "update",
+      "description": "Update workflows"
+    },
+    "workflows:workflows:view": {
+      "resource": "workflows:workflows",
+      "action": "view",
+      "description": "View workflows"
+    }
+  },
   "delegableModuleIds": [
     "accounting",
     "blog",

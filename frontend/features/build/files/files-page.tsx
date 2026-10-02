@@ -14,6 +14,7 @@ import {
 } from "@/hooks/api/build/project-files";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
+import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -158,8 +159,10 @@ export function FilesPage({ projectId }: FilesPageProps) {
   const canManage = useCan("build:files:manage");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const listFilters = useBuildListFilters({ filters: [], withSearch: true });
+
   const { data, isLoading, isError, error, refetch, hasNextPage, fetchNextPage, isFetchingNextPage } =
-    useProjectFiles(projectId);
+    useProjectFiles(projectId, { q: listFilters.debouncedSearch || undefined });
   const uploadFile = useUploadProjectFile(projectId);
   const deleteFile = useDeleteProjectFile(projectId);
 
@@ -253,6 +256,14 @@ export function FilesPage({ projectId }: FilesPageProps) {
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
         {data.length === 0 ? (
+          listFilters.debouncedSearch ? (
+            <EmptyState
+              className="flex-1 min-h-0"
+              illustrationPreset="documents"
+              title="No files match your search"
+              description="Try a different search term."
+            />
+          ) : (
           <EmptyState
             className="flex-1 min-h-0"
             illustrationPreset="documents"
@@ -260,6 +271,7 @@ export function FilesPage({ projectId }: FilesPageProps) {
             description="Upload files to share documents, images, and resources with your project team."
             action={canManage ? { label: "Upload file", onClick: handleUploadClick } : undefined}
           />
+          )
         ) : (
           <>
             <div className="flex flex-col gap-3">

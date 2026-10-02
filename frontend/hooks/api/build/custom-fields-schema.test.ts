@@ -17,10 +17,10 @@ describe("buildCustomFieldContract (BLD-X-BE-SETTINGS-CF-001)", () => {
     expect(buildCustomFieldContract.safeParse(validField).success).toBe(true);
   });
 
-  it("rejects unknown field type — z.string() over an enum would silently accept this", () => {
+  it("accepts an unknown field type because the backend declares type as an open string", () => {
     expect(
       buildCustomFieldContract.safeParse({ ...validField, type: "rating" }).success
-    ).toBe(false);
+    ).toBe(true);
   });
 
   it("accepts every valid field type value", () => {
@@ -99,10 +99,10 @@ describe("buildCustomFieldListContract (BLD-X-BE-SETTINGS-CF-002)", () => {
     expect(buildCustomFieldListContract.safeParse(validField).success).toBe(false);
   });
 
-  it("rejects an array containing a field with an unknown type", () => {
+  it("accepts an array containing a field with an unknown type because the backend declares type as an open string", () => {
     expect(
       buildCustomFieldListContract.safeParse([{ ...validField, type: "file" }]).success
-    ).toBe(false);
+    ).toBe(true);
   });
 
   it("rejects an array containing a field missing required fields", () => {

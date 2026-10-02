@@ -91,7 +91,7 @@ export interface ProjectListItem {
   description: string | null;
   key: string;
   status: ProjectStatusValue | null;
-  priority: ProjectPriority | null;
+  priority: string | null;
   health: ProjectHealth;
   managedProductId: number | null;
   startDate: string | Date | null;
@@ -157,34 +157,34 @@ export interface ProjectView {
   orgId: string;
   createdBy: string;
   name: string;
-  filters: Record<string, unknown>;
+  filters: unknown;
   groupBy: string | null;
   orderBy: string | null;
   layoutType: ViewLayoutType;
   isPinned: boolean;
   visibility: "private" | "shared";
   scope: "project" | "workspace";
-  displayOptions: Record<string, unknown> | null;
-  createdAt: string | Date | null;
-  updatedAt: string | Date | null;
+  displayOptions: unknown;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface IntakeRequest {
   id: number;
-  projectId: number;
+  projectId: number | null;
   orgId: string;
   title: string;
-  description: unknown | null;
+  description: unknown;
   source: IntakeSource;
   status: IntakeStatus;
   submitterEmail: string | null;
   submitterName: string | null;
-  priority: "low" | "medium" | "high" | "urgent" | null;
-  requestType: "bug" | "feature" | "task" | "question" | "other" | null;
+  priority: string | null;
+  requestType: string | null;
   linkedWorkItemId: number | null;
   declineReason: string | null;
-  createdAt: string | Date | null;
-  updatedAt: string | Date | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ProjectAnalytics {

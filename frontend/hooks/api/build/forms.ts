@@ -56,17 +56,13 @@ export function useForms(projectId: number, filters?: FormFilters) {
       projectId,
       Object.keys(params).length > 0 ? params : undefined,
     ),
-    queryFn: async ({ pageParam, signal }) => {
-      const response = await apiClient.get<ProjectForm[] | { data: ProjectForm[]; pagination: { limit: number; hasMore: boolean; nextCursor: string | null } }>(
+    queryFn: ({ pageParam, signal }) =>
+      apiClient.get<{ data: ProjectForm[]; pagination: { limit: number; hasMore: boolean; nextCursor: string | null } }>(
         `/build/${projectId}/forms`,
         pageParam !== undefined ? { ...params, cursor: pageParam } : params,
         signal,
         formListContract,
-      );
-      return Array.isArray(response)
-        ? { data: response, pagination: { limit: response.length || 100, hasMore: false, nextCursor: null } }
-        : response;
-    },
+      ),
     initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canView && !!projectId,
@@ -125,17 +121,13 @@ export function useFormSubmissions(projectId: number, formId: number) {
   const canManage = useCan("build:forms:manage");
   return useInfiniteQuery({
     queryKey: buildWorkQueryKeys.projects.forms.submissions(projectId, formId),
-    queryFn: async ({ pageParam, signal }) => {
-      const response = await apiClient.get<FormSubmission[] | { data: FormSubmission[]; pagination: { limit: number; hasMore: boolean; nextCursor: string | null } }>(
+    queryFn: ({ pageParam, signal }) =>
+      apiClient.get<{ data: FormSubmission[]; pagination: { limit: number; hasMore: boolean; nextCursor: string | null } }>(
         `/build/${projectId}/forms/${formId}/submissions`,
         pageParam !== undefined ? { cursor: pageParam } : undefined,
         signal,
         submissionListContract,
-      );
-      return Array.isArray(response)
-        ? { data: response, pagination: { limit: response.length || 100, hasMore: false, nextCursor: null } }
-        : response;
-    },
+      ),
     initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canManage && !!projectId && !!formId,

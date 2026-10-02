@@ -59,6 +59,7 @@ type TestCaseFilters = {
 };
 
 interface TestRunFilters {
+  q?: string;
   status?: string;
   cursor?: number;
 }
@@ -142,6 +143,7 @@ export function useDeleteTestCase() {
 export function useTestRuns(projectId?: number, filters?: TestRunFilters) {
   const canView = useCan("build:qa:view");
   const params: Record<string, string> = {};
+  if (filters?.q) params["q"] = filters.q;
   if (filters?.status) params["status"] = filters.status;
   if (filters?.cursor !== undefined) params["cursor"] = String(filters.cursor);
 

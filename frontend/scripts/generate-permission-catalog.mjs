@@ -23,6 +23,11 @@ import {
 
 const FRONTEND_ROOT = fileURLToPath(new URL("..", import.meta.url));
 export const CATALOG_PATH = join(FRONTEND_ROOT, "contracts", "permission-catalog.json");
+export const PERMISSION_KEY_TS_PATH = join(
+  FRONTEND_ROOT,
+  "contracts",
+  "permission-key.generated.ts",
+);
 
 export function readBackendCatalog() {
   const permissionsDir = backendPath("src", "modules", "rbac", "permissions");
@@ -43,6 +48,11 @@ export function readBackendCatalog() {
   });
 }
 
+export function serializePermissionKeyTs(permissions) {
+  const body = permissions.map((key) => `  | "${key}"`).join("\n");
+  return `export type PermissionKey =\n${body};\n`;
+}
+
 function main() {
   if (!backendAvailable) {
     console.error(`Cannot regenerate the permission catalogue. ${backendUnreachableReason()}`);
@@ -50,11 +60,15 @@ function main() {
   }
   const catalog = readBackendCatalog();
   writeFileSync(CATALOG_PATH, serializeCatalog(catalog), "utf8");
+  writeFileSync(PERMISSION_KEY_TS_PATH, serializePermissionKeyTs(catalog.permissions), "utf8");
   console.log(
     `Wrote contracts/permission-catalog.json — ${catalog.permissions.length} permissions, ` +
       `${catalog.delegableModuleIds.length} delegable modules, ` +
       `${catalog.memberDefaultPermissions.length} member defaults, ` +
       `${Object.keys(catalog.ownerOnlyOperations).length} owner-only operations.`,
+  );
+  console.log(
+    `Wrote contracts/permission-key.generated.ts — ${catalog.permissions.length} keys in PermissionKey union.`,
   );
 }
 

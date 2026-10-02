@@ -270,7 +270,7 @@ export function ShareDialog({ projectId, whiteboard, open, onOpenChange }: Share
               <div className="flex items-center justify-between gap-3">
                 <Label className="text-xs text-muted-foreground shrink-0">Anyone can</Label>
                 <Select
-                  value={sharing.publicAccess}
+                  value={sharing.publicAccess ?? undefined}
                   onValueChange={selectPublicAccess}
                   disabled={updateSharing.isPending}
                 >

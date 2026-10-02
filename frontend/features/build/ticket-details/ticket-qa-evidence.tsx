@@ -53,7 +53,7 @@ export const TicketQaEvidence = memo(function TicketQaEvidence({
   if (!isBug) return null;
   if (access === "denied") return null;
 
-  if (access === "loading" || isLoading || isError) {
+  if (access === "loading" || isLoading) {
     return (
       <div className="space-y-2">
         <Skeleton className="h-4 w-28" />
@@ -62,6 +62,7 @@ export const TicketQaEvidence = memo(function TicketQaEvidence({
       </div>
     );
   }
+  if (isError) return null;
 
   if (!bug) return null;
 

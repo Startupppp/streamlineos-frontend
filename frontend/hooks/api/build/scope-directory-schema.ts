@@ -1,22 +1,10 @@
-import { z } from "zod";
+import {
+  scopeDirectorySearchResponseSchema,
+  scopeDirectoryResolveResponseSchema,
+} from "@/contracts/build-contracts.generated";
 
-export const scopeDirectoryRefSchema = z.object({
-  key: z.string(),
-  type: z.enum(["product", "project"]),
-  id: z.string(),
-  name: z.string(),
-  parentKey: z.string().nullable(),
-  projectKey: z.string().nullable(),
-  isArchived: z.boolean(),
-  parentPath: z.string().nullable(),
-  clientPortalEnabled: z.boolean().nullable(),
-});
+export const scopeDirectoryRefSchema = scopeDirectorySearchResponseSchema.shape.data.element;
 
-export const scopeDirectoryResolveContract = z.object({
-  data: z.array(scopeDirectoryRefSchema),
-});
+export const scopeDirectoryResolveContract = scopeDirectoryResolveResponseSchema;
 
-export const scopeDirectorySearchContract = z.object({
-  data: z.array(scopeDirectoryRefSchema),
-  nextCursor: z.string().nullable(),
-});
+export const scopeDirectorySearchContract = scopeDirectorySearchResponseSchema;

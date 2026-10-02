@@ -117,7 +117,7 @@ const PRIORITY_OPTIONS: { value: ProjectPriorityValue; label: string }[] = [
   { value: "LOW", label: "Low" },
 ];
 
-const priorityDotColors: Record<ProjectPriorityValue, string> = {
+const priorityDotColors: Record<string, string> = {
   URGENT: "bg-status-danger-fill",
   HIGH: "bg-status-warning-fill",
   MEDIUM: "bg-status-warning-fill",
@@ -125,7 +125,7 @@ const priorityDotColors: Record<ProjectPriorityValue, string> = {
 };
 
 interface InlineProjectPriorityProps extends InlineProjectFieldProps {
-  currentPriority: ProjectPriorityValue | null;
+  currentPriority: string | null;
 }
 
 export const InlineProjectPriority = memo(function InlineProjectPriority({

@@ -42,8 +42,8 @@ const kbPageBaseContract = z.object({
   nextReviewAt: z.string().nullable(),
   aclRevision: z.number().int(),
   contentRevision: z.number().int(),
-  legalHold: z.boolean().optional().default(false),
-  legalHoldReason: z.string().nullable().optional().default(null),
+  legalHold: z.boolean(),
+  legalHoldReason: z.string().nullable(),
 });
 
 export const kbPageContract = kbPageBaseContract;

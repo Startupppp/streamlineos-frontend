@@ -15,24 +15,8 @@ type TemplateListPage = {
   pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 };
 
-export function normalizeTemplateListResponse(
-  response: TemplateListPage | ProjectTemplate[],
-): TemplateListPage {
-  if (Array.isArray(response)) {
-    return {
-      data: response,
-      pagination: { limit: response.length || 100, hasMore: false, nextCursor: null },
-    };
-  }
-  return response;
-}
-
 const templateListContract = lazyContract<TemplateListPage>(() =>
-  import("@/hooks/api/build/roadmap-schema").then((m) =>
-    m.templateListContract
-      .or(z.array(m.templateRowContract))
-      .transform(normalizeTemplateListResponse),
-  ),
+  import("@/hooks/api/build/roadmap-schema").then((m) => m.templateListContract),
 );
 const templateRowContract = lazyContract(() =>
   import("@/hooks/api/build/roadmap-schema").then((m) => m.templateRowContract),

@@ -47,6 +47,7 @@ it("accepts a release row where createdBy is null since the column may be unset"
   const { projectReleaseListContract } = await import("@/hooks/api/build/build-project-schema");
   const rowWithNullCreatedBy = {
     id: 1,
+    orgId: "org-abc",
     projectId: 1,
     name: "v1",
     version: "1.0.0",
@@ -122,6 +123,7 @@ it("accepts a release row whose createdByUser is the four-field user object the 
     data: [
       {
         id: 1,
+        orgId: "org-abc",
         projectId: 1,
         name: "v1",
         version: "1.0.0",

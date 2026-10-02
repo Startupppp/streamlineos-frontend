@@ -15,10 +15,10 @@ const publicWhiteboardUpdateContract = lazyContract(() =>
 
 export interface PublicWhiteboard {
   name: string;
-  data: ExcalidrawSceneData;
+  data: unknown;
   access: "view" | "edit";
   allowExport: boolean;
-  updatedAt: string | null;
+  updatedAt: string;
 }
 
 export function usePublicWhiteboard(token: string) {
@@ -44,7 +44,7 @@ export function useUpdatePublicWhiteboard(token: string) {
   return useMutation({
     mutationKey: ["whiteboards", "public", "update"],
     mutationFn: (data: ExcalidrawSceneData) =>
-      apiClient.patch<{ success: boolean; updatedAt: string | null }>(
+      apiClient.patch<{ success: boolean; updatedAt: string }>(
         `/public/whiteboard-links/${token}`,
         { data },
         undefined,

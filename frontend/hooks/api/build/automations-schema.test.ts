@@ -75,12 +75,12 @@ describe("projectAutomationListContract — cursor page envelope (BLD-X-BE-SETTI
     expect(() => projectAutomationListContract.parse(raw)).toThrow();
   });
 
-  it("rejects an automation with an unknown triggerEvent — z.string() over an enum would silently accept this", () => {
+  it("accepts an automation with an unknown triggerEvent because the backend declares triggerEvent as an open string", () => {
     const raw = {
       data: [{ ...VALID_LIST_ITEM, triggerEvent: "ticket.unknown_event" }],
       pagination: VALID_PAGINATION,
     };
-    expect(() => projectAutomationListContract.parse(raw)).toThrow();
+    expect(() => projectAutomationListContract.parse(raw)).not.toThrow();
   });
 });
 

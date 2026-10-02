@@ -1,182 +1,30 @@
-import { z } from "zod";
-import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
-import type { ResponseContract } from "@/lib/api-envelope";
+import {
+  clientPortalListPortalProjectsResponseSchema,
+  clientPortalGetProjectOverviewResponseSchema,
+  clientPortalListPortalChangeRequestsResponseSchema,
+  changeRequestsCreateChangeRequestResponseSchema,
+  changeRequestsListChangeRequestsResponseSchema,
+  changeRequestAffectedItemsLinkTicketResponseSchema,
+  changeRequestAffectedItemsListAffectedTicketsResponseSchema,
+  clientVisibilityGetVisibilitySummaryResponseSchema,
+  clientVisibilityToggleTicketVisibilityResponseSchema,
+} from "@/contracts/build-contracts.generated";
 
-export const portalProjectItemContract = z.object({
-  id: z.number().int(),
-  name: z.string(),
-  key: z.string(),
-  status: z.string(),
-  startDate: z.string().nullable(),
-  targetEndDate: z.string().nullable(),
-});
+export const portalProjectListContract = clientPortalListPortalProjectsResponseSchema;
 
-export const portalProjectListContract = z.array(portalProjectItemContract);
+export const portalProjectOverviewContract = clientPortalGetProjectOverviewResponseSchema;
 
-export const portalProjectOverviewContract = z.object({
-  project: portalProjectItemContract,
-  milestones: z.array(z.object({
-    id: z.number().int(),
-    name: z.string(),
-    dueDate: z.string().nullable(),
-    status: z.string(),
-  })),
-  tasks: z.array(z.object({
-    id: z.number().int(),
-    ticketNumber: z.number().int(),
-    title: z.string(),
-    status: z.string(),
-    dueDate: z.string().nullable(),
-  })),
-  attachments: z.array(z.object({
-    id: z.number().int(),
-    filename: z.string(),
-    url: z.string(),
-  })),
-  comments: z.array(z.object({
-    id: z.number().int(),
-    body: z.string(),
-    authorName: z.string().nullable(),
-    createdAt: z.string(),
-  })),
-});
+export const portalChangeRequestListContract = clientPortalListPortalChangeRequestsResponseSchema;
+export const portalChangeRequestItemContract = clientPortalListPortalChangeRequestsResponseSchema.element;
 
-export const portalChangeRequestItemContract = z.object({
-  id: z.number().int(),
-  orgId: z.string().optional(),
-  projectId: z.number().int().optional(),
-  crNumber: z.number().int(),
-  title: z.string(),
-  description: z.string().nullable(),
-  impact: z.string().nullable(),
-  status: z.string(),
-  estimateMinutes: z.number().int().nullable(),
-  budgetImpactCents: z.number().int().nullable(),
-  timelineImpactDays: z.number().int().nullable(),
-  decisionComment: z.string().nullable(),
-  requestedById: z.string().nullable().optional(),
-  approvalOwnerId: z.string().nullable().optional(),
-  decidedAt: z.string().nullable().optional(),
-  deletedAt: z.string().nullable().optional(),
-  createdAt: z.string(),
-  updatedAt: z.string().optional(),
-});
+export const visibilitySummaryContract = clientVisibilityGetVisibilitySummaryResponseSchema;
 
-export const portalChangeRequestListContract = z.array(portalChangeRequestItemContract);
+export const toggleVisibilityContract = clientVisibilityToggleTicketVisibilityResponseSchema;
 
-const ticketVisibilityItemContract = z.object({
-  id: z.number().int(),
-  ticketNumber: z.number().int(),
-  title: z.string(),
-  type: z.string(),
-  clientVisible: z.boolean(),
-  version: z.number().int().optional(),
-});
+export const changeRequestRowContract = changeRequestsCreateChangeRequestResponseSchema;
 
-const milestoneVisibilityItemContract = z.object({
-  id: z.number().int(),
-  name: z.string(),
-  clientVisible: z.boolean(),
-});
+export const changeRequestListContract = changeRequestsListChangeRequestsResponseSchema;
 
-function visibilityPageContract<T>(rowContract: ResponseContract<T>) {
-  return cursorPageContract(rowContract).or(
-    z.array(rowContract).transform((rows) => ({
-      data: rows,
-      pagination: { limit: rows.length || 100, hasMore: false, nextCursor: null },
-    })),
-  );
-}
+export const changeRequestAffectedItemContract = changeRequestAffectedItemsLinkTicketResponseSchema;
 
-export const visibilitySummaryContract = z.object({
-  tickets: visibilityPageContract(ticketVisibilityItemContract),
-  milestones: visibilityPageContract(milestoneVisibilityItemContract),
-});
-
-export const toggleVisibilityContract = z
-  .object({
-    id: z.number().int(),
-    clientVisible: z.boolean(),
-    success: z.boolean().optional(),
-  })
-  .transform((row) => ({ ...row, success: row.success ?? true }));
-
-export const CHANGE_REQUEST_STATUSES = [
-  "submitted",
-  "under_review",
-  "estimated",
-  "awaiting_approval",
-  "approved",
-  "rejected",
-  "in_progress",
-  "completed",
-] as const;
-
-export const changeRequestRowContract = z.object({
-  id: z.number().int(),
-  orgId: z.string(),
-  projectId: z.number().int(),
-  crNumber: z.number().int(),
-  title: z.string(),
-  description: z.string().nullable(),
-  impact: z.string().nullable(),
-  estimateMinutes: z.number().int().nullable(),
-  budgetImpactCents: z.number().int().nullable(),
-  timelineImpactDays: z.number().int().nullable(),
-  status: z.enum(CHANGE_REQUEST_STATUSES),
-  requestedById: z.string().nullable(),
-  approvalOwnerId: z.string().nullable(),
-  approvalOwnerMembershipId: z.number().int().nullable(),
-  decisionComment: z.string().nullable(),
-  decidedAt: z.string().nullable(),
-  releaseId: z.number().int().nullable(),
-  clientVisible: z.boolean(),
-  createdBy: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  deletedAt: z.string().nullable(),
-});
-
-const crPagePaginationContract = z.object({
-  limit: z.number(),
-  hasMore: z.boolean(),
-  nextCursor: z.string().nullable(),
-});
-
-export const changeRequestListContract = z.union([
-  z.array(changeRequestRowContract).transform((rows) => ({
-    data: rows,
-    pagination: {
-      limit: rows.length,
-      hasMore: false,
-      nextCursor: null,
-    } satisfies z.infer<typeof crPagePaginationContract>,
-  })),
-  z.object({
-    data: z.array(changeRequestRowContract),
-    pagination: crPagePaginationContract,
-  }),
-]);
-
-const changeRequestAffectedTicketSummaryContract = z.object({
-  id: z.number().int(),
-  title: z.string(),
-  ticketNumber: z.number().int(),
-  status: z.string(),
-  priority: z.string(),
-  type: z.string(),
-});
-
-export const changeRequestAffectedItemContract = z.object({
-  id: z.number().int(),
-  orgId: z.string(),
-  changeRequestId: z.number().int(),
-  ticketId: z.number().int(),
-  createdAt: z.string(),
-  createdBy: z.string().nullable(),
-  ticket: changeRequestAffectedTicketSummaryContract,
-});
-
-export const changeRequestAffectedItemListContract = cursorPageContract(
-  changeRequestAffectedItemContract,
-);
+export const changeRequestAffectedItemListContract = changeRequestAffectedItemsListAffectedTicketsResponseSchema;

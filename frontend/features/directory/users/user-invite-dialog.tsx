@@ -56,6 +56,18 @@ export function UserInviteDialog({
 }: UserInviteDialogProps) {
   const [invited, setInvited] = useState(false);
   const [wasResent, setWasResent] = useState(false);
+  /**
+   * The refusal, kept on screen.
+   *
+   * A toast was the only thing this form said when an invitation was refused, and a
+   * toast is transient and lives in one corner of the viewport — anything floating
+   * there, and a reader who looked away for four seconds, sees a form that went
+   * "Sending…" and then came back unchanged with no success and no error. That is how
+   * a plan-limit or already-a-member refusal reads as "the button does nothing"
+   * (CHAT-002). The toast still fires; this is the copy that stays until the next
+   * attempt.
+   */
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const { mutate: inviteUser, isPending } = useInviteUser();
   const canManageRbac = useCan("settings:rbac:manage");
 
@@ -74,6 +86,7 @@ export function UserInviteDialog({
         form.reset();
         setInvited(false);
         setWasResent(false);
+        setSubmitError(null);
       }
       onOpenChange(isOpen);
     },
@@ -86,6 +99,7 @@ export function UserInviteDialog({
   );
 
   function onSubmit(values: InviteUserFormValues) {
+    setSubmitError(null);
     inviteUser(
       {
         email: values.email,
@@ -96,6 +110,7 @@ export function UserInviteDialog({
       },
       {
         onSuccess: (result) => {
+          setSubmitError(null);
           setInvited(true);
           setWasResent(result.resent);
           toast.success(
@@ -103,7 +118,9 @@ export function UserInviteDialog({
           );
         },
         onError: (error) => {
-          toast.error(getErrorMessage(error));
+          const message = getErrorMessage(error);
+          setSubmitError(message);
+          toast.error(message);
         },
       },
     );
@@ -113,6 +130,7 @@ export function UserInviteDialog({
     form.reset();
     setInvited(false);
     setWasResent(false);
+    setSubmitError(null);
   }, [form]);
 
   return (
@@ -143,8 +161,20 @@ export function UserInviteDialog({
           </div>
         ) : (
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-4"
+              noValidate
+            >
               <InviteSeatNotice requesting={1} />
+              {submitError ? (
+                <p
+                  role="alert"
+                  className="rounded-md bg-status-danger-surface px-3 py-2 text-xs text-status-danger-ink"
+                >
+                  {submitError}
+                </p>
+              ) : null}
               <FormField
                 control={form.control}
                 name="email"

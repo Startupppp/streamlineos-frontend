@@ -52,10 +52,19 @@ const kbAnalyticsGapRelatedPagesContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-analytics-schema").then((m) => m.kbAnalyticsGapRelatedPagesContract),
 );
 
-export function useKbAnalyticsOverview(range?: KbAnalyticsRange) {
+export type KbAnalyticsPageScope = "support" | "wiki";
+
+export function useKbAnalyticsOverview(
+  range?: KbAnalyticsRange,
+  scope?: KbAnalyticsPageScope,
+) {
   const canViewAnalytics = useCan("kb:analytics:view");
-  const queryParams: Record<string, unknown> = { ...range };
+  const queryParams: Record<string, unknown> = {
+    ...range,
+    ...(scope !== undefined ? { scope } : {}),
+  };
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.analyticsOverview(queryParams),
     queryFn: ({ signal }) => apiClient.get<KbAnalyticsOverview>("/kb/analytics/overview", queryParams, signal, kbAnalyticsOverviewContract),
     staleTime: 5 * 60_000,

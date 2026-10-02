@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
-import { render, screen } from "@testing-library/react";
+import { Component, type ReactNode } from "react";
+import { render, screen, waitFor } from "@testing-library/react";
 import {
   QueryClient,
   QueryClientProvider,
@@ -10,6 +10,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { Asset } from "@/types/hr";
+import { createAppQueryClient } from "@/components/providers/query-provider";
+import { ApiError } from "@/lib/api-envelope";
+import { authenticatedScope } from "@/lib/query-scope";
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
@@ -238,5 +241,67 @@ describe("AssetsPage assignment summary", () => {
     // Paired with the totals, so a card bound to the wrong aggregate cannot pass.
     expect(screen.getByText("Total Assets").closest("div")?.parentElement)
       .toHaveTextContent("4");
+  });
+});
+
+class RouteSegmentBoundary extends Component<
+  { children: ReactNode; onFired: () => void },
+  { failed: boolean }
+> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  componentDidUpdate(_: unknown, prev: { failed: boolean }) {
+    if (!prev.failed && this.state.failed) this.props.onFired();
+  }
+
+  render() {
+    if (this.state.failed) return <div data-testid="boundary-fallback">boundary</div>;
+    return this.props.children;
+  }
+}
+
+describe("AssetsPage read-error stays inline, not at the route boundary", () => {
+  let consoleError: jest.SpyInstance;
+
+  beforeEach(() => {
+    consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    consoleError.mockRestore();
+  });
+
+  it("keeps a 500 from the assets endpoint inline so the whole page does not crash", async () => {
+    (apiClient.get as jest.Mock).mockImplementation((path: string) => {
+      if (path === "/hr/assets") return Promise.reject(new ApiError("backend down", 500));
+      return new Promise(() => {});
+    });
+
+    const client = createAppQueryClient(authenticatedScope("org-1", "user-1"));
+    const defaults = client.getDefaultOptions();
+    client.setDefaultOptions({
+      ...defaults,
+      queries: { ...defaults.queries, retry: false },
+    });
+
+    render(
+      <RouteSegmentBoundary onFired={() => {}}>
+        <QueryClientProvider client={client}>
+          <AssetsPage />
+        </QueryClientProvider>
+      </RouteSegmentBoundary>,
+    );
+
+    await waitFor(() => {
+      const inlineError = screen.queryByText("Something went wrong");
+      const boundaryFallback = screen.queryByTestId("boundary-fallback");
+      expect(inlineError ?? boundaryFallback).toBeInTheDocument();
+    });
+
+    expect(screen.queryByTestId("boundary-fallback")).not.toBeInTheDocument();
   });
 });

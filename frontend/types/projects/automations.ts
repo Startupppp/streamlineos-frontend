@@ -34,7 +34,7 @@ export interface ProjectAutomation {
   projectId: number;
   name: string;
   isActive: boolean;
-  triggerEvent: AutomationTriggerEvent;
+  triggerEvent: string;
   conditions: AutomationCondition[];
   actions: AutomationAction[];
   createdBy: string | null;

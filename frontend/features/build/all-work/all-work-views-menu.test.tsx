@@ -7,7 +7,7 @@ const mockView: ProjectView = {
   id: 12, projectId: null, orgId: "org-1", createdBy: "owner-1",
   name: "My urgent work", filters: { priority: "urgent" }, groupBy: null,
   orderBy: null, layoutType: "list", isPinned: false, visibility: "private",
-  scope: "workspace", displayOptions: null, createdAt: null, updatedAt: null,
+  scope: "workspace", displayOptions: null, createdAt: "2026-01-01T00:00:00.000Z", updatedAt: "2026-01-01T00:00:00.000Z",
 };
 
 const mockReplace = jest.fn();

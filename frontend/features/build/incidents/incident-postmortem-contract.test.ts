@@ -74,6 +74,11 @@ describe("incident detail contract carries the postmortem collections", () => {
       updates: [],
       decisions: [DECISION],
       followUpActions: [],
+      childrenPagination: {
+        updates: { limit: 100, hasMore: false, nextCursor: null },
+        decisions: { limit: 100, hasMore: false, nextCursor: null },
+        followUpActions: { limit: 100, hasMore: false, nextCursor: null },
+      },
     });
     expect(parsed.decisions).toHaveLength(1);
     expect(parsed.decisions[0]?.decision).toBe("Fail over to the secondary region");
@@ -86,6 +91,11 @@ describe("incident detail contract carries the postmortem collections", () => {
       updates: [],
       decisions: [],
       followUpActions: [FOLLOW_UP],
+      childrenPagination: {
+        updates: { limit: 100, hasMore: false, nextCursor: null },
+        decisions: { limit: 100, hasMore: false, nextCursor: null },
+        followUpActions: { limit: 100, hasMore: false, nextCursor: null },
+      },
     });
     expect(parsed.followUpActions).toHaveLength(1);
     expect(parsed.followUpActions[0]?.title).toBe("Add a write-latency alert");

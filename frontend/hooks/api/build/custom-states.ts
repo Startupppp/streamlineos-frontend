@@ -1,7 +1,6 @@
 "use client";
 
 import { z } from "zod";
-
 import { useRef } from "react";
 import { useQuery, useMutation, useQueryClient, type UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
@@ -22,21 +21,17 @@ const bulkReorderStatesResultContract = lazyContract(() =>
 );
 
 import type { projectCustomStateContract as projectCustomStateContractDef } from "@/hooks/api/build/build-project-schema";
+import type { ProjectResourcesListOrgCustomStatesResponse } from "@/contracts/build-contracts.generated";
 
 const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 export type CustomState = z.infer<typeof projectCustomStateContractDef>;
 
-const orgCustomStateItemSchema = z.object({
-  name: z.string(),
-  color: z.string().nullable(),
-  type: z.string().nullable(),
-});
-export type OrgCustomStateItem = z.infer<typeof orgCustomStateItemSchema>;
+export type OrgCustomStateItem = ProjectResourcesListOrgCustomStatesResponse[number];
 
 const orgCustomStateListContract = lazyContract(() =>
-  Promise.resolve(z.array(orgCustomStateItemSchema)),
+  import("@/contracts/build-contracts.generated").then((m) => m.projectResourcesListOrgCustomStatesResponseSchema),
 );
 
 type StateUpdateInput = {

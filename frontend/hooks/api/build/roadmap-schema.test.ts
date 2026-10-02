@@ -345,7 +345,7 @@ it("parses a GET /build/changelog page whose rows carry type, matching the full 
   expect(() => changelogPageContract.parse(page)).not.toThrow();
 });
 
-it("accepts the flat projectId/key/ticketsCreated shape applyTemplate actually returns, not the nested project/tickets shape its backend ResponseSchema declares", () => {
+it("accepts the flat projectId/key/ticketsCreated shape the applyTemplate wire contract now declares", () => {
   const result = applyTemplateResultContract.parse({
     projectId: 42,
     key: "PRJ-001",

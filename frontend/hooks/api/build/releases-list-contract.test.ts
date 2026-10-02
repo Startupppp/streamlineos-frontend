@@ -28,6 +28,7 @@ function firstRowKeys(parsed: { data: object[] }): string[] {
 
 const RELEASE_ROW = {
   id: 5,
+  orgId: "org-abc",
   projectId: 10,
   name: "v1.2.0",
   version: "1.2.0",

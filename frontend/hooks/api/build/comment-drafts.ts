@@ -78,6 +78,7 @@ export function useUpsertCommentDraft() {
     mutationFn: ({ ticketId, body }: { ticketId: number; body: string }) =>
       apiClient.put<CommentDraft>(`/build/comment-drafts/tickets/${ticketId}`, { body }, undefined, commentDraftContract),
     onSuccess: (draft) => {
+      void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.agentPulseAll() });
       const listKey = buildWorkQueryKeys.projects.commentDrafts.mine();
       const current = qc.getQueryData<CommentDraftListItem[]>(listKey);
       const index = current?.findIndex((d) => d.ticketId === draft.ticketId) ?? -1;
@@ -193,6 +194,7 @@ export function useGenerateCommentDraft() {
       ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.commentDrafts.mine() });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.agentPulseAll() });
     },
   });
 }

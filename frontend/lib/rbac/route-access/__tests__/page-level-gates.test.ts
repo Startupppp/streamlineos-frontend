@@ -7,7 +7,6 @@ import { backendPermissionNames } from "@/test-utils/permission-catalog";
 
 const APP_DIR = resolve(process.cwd(), "app");
 const AUTHENTICATED_DIR = join(APP_DIR, "(authenticated)");
-const FRONTEND_CATALOG_DIR = resolve(process.cwd(), "lib", "rbac", "permissions");
 const PERMISSION_KEY = /^[a-z][a-z0-9_-]*(?::[a-z0-9_-]+)+$/;
 
 export interface SessionOnlySurface {
@@ -156,18 +155,6 @@ function sessionOnlyByDesign(routePath: string): boolean {
   return SESSION_ONLY_BY_DESIGN.some((surface) => matchesSurface(routePath, surface));
 }
 
-function frontendPermissionKeys(): Set<string> {
-  const source = readdirSync(FRONTEND_CATALOG_DIR)
-    .filter((name) => name === "types.ts" || name.startsWith("permission-key-"))
-    .map((name) => readFileSync(join(FRONTEND_CATALOG_DIR, name), "utf8"))
-    .join("\n");
-  return new Set(
-    [...source.matchAll(/\|\s*["']([^"']+)["']/g)]
-      .map((match) => match[1])
-      .filter((value) => PERMISSION_KEY.test(value)),
-  );
-}
-
 function authenticatedModuleDirs(): string[] {
   return readdirSync(AUTHENTICATED_DIR, { withFileTypes: true })
     .filter((entry) => entry.isDirectory() && !/^[(@_]/.test(entry.name))
@@ -179,9 +166,8 @@ describe("page-level gates — every authenticated module", () => {
   const pages = auditPages();
   const gatedKeys = [...new Set(pages.flatMap((page) => page.keys))].sort();
 
-  it("reaches both permission catalogs, so a silent empty sweep cannot pass", () => {
+  it("reaches the permission catalog, so a silent empty sweep cannot pass", () => {
     expect(backendPermissionNames().size).toBeGreaterThan(400);
-    expect(frontendPermissionKeys().size).toBeGreaterThan(400);
   });
 
   it("walks every authenticated module directory, not a hand-picked five", () => {
@@ -264,10 +250,5 @@ describe("page-level gates — every authenticated module", () => {
   it("asserts only permission keys that exist verbatim in the backend catalog", () => {
     const names = backendPermissionNames();
     expect(gatedKeys.filter((key) => !names.has(key))).toEqual([]);
-  });
-
-  it("asserts only permission keys that exist verbatim in the frontend catalog", () => {
-    const keys = frontendPermissionKeys();
-    expect(gatedKeys.filter((key) => !keys.has(key))).toEqual([]);
   });
 });

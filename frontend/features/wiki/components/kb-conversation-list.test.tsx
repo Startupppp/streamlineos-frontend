@@ -79,6 +79,15 @@ afterEach(() => {
   Reflect.deleteProperty(globalThis, "IntersectionObserver");
 });
 
+describe("KbConversationList search input layout — flex shrink (FE-182)", () => {
+  it("search input carries min-w-0 so it can shrink below its content width inside a flex row, because without it the input overflows the container when the sidebar is narrow", () => {
+    render(<KbConversationList {...baseProps} />);
+
+    const input = screen.getByPlaceholderText("Search conversations…");
+    expect(input.classList.contains("min-w-0")).toBe(true);
+  });
+});
+
 describe("KbConversationList sentinel", () => {
   it("calls onLoadMore when the sentinel scrolls into view instead of requiring a button click", () => {
     const onLoadMore = jest.fn();

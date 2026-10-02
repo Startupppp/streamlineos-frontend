@@ -32,6 +32,7 @@ import {
 } from "@/components/pm-chrome";
 import { ClientVisibilityPage } from "@/features/build/client-portal/client-visibility-page";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-envelope";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 
 const PORTAL_TABS = ["grants", "visibility", "preview"] as const;
@@ -163,7 +164,7 @@ function PublicationStateBanner({
 }
 
 function PreviewSection({ projectId }: { projectId: number }) {
-  const { data, isLoading, isError } = usePortalPreview(projectId);
+  const { data, isLoading, isError, error } = usePortalPreview(projectId);
 
   if (isLoading) {
     return (
@@ -176,6 +177,17 @@ function PreviewSection({ projectId }: { projectId: number }) {
   }
 
   if (isError || !data) {
+    if (isApiError(error) && error.status === 404) {
+      return (
+        <EmptyState
+          illustrationPreset="projects"
+          title="No portal published yet"
+          description="Publish a grant to preview the client view."
+          compact
+          className={CONTENT_FILL_PANEL}
+        />
+      );
+    }
     return (
       <EmptyState
         illustrationPreset="projects"
