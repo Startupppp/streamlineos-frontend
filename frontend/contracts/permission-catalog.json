@@ -4045,7 +4045,8 @@
     "self:document-acknowledgements": {
       "resource": "self",
       "action": "document-acknowledgements",
-      "description": "View and acknowledge documents assigned to oneself"
+      "description": "View and acknowledge documents assigned to oneself",
+      "baselineScope": "own"
     },
     "self:expenses": {
       "resource": "self",
