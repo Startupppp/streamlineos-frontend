@@ -13,7 +13,7 @@ jest.mock("@/hooks/api/entitlements", () => ({
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: jest.fn(), push: jest.fn() }),
-  usePathname: () => "/build",
+  usePathname: () => "/build/projects",
   useSearchParams: () => new URLSearchParams(),
 }));
 

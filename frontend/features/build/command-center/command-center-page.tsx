@@ -353,7 +353,7 @@ export function CommandCenterPage() {
                     icon={Briefcase}
                     tone="default"
                     index={0}
-                    href="/build"
+                    href="/build/projects"
                   />
                 </motion.div>
                 <motion.div

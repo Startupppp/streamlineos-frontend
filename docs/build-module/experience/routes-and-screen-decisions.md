@@ -2,13 +2,13 @@
 
 Status: Planned
 
-This table is the target UI contract. The current application manifest remains unchanged by this documentation revision. Existing routes were checked against 75 page files on 2026-10-02. A screen hidden from the sidebar remains reachable by authorized deep link. No underlying data is deleted as part of screen consolidation.
+This table is the target UI contract. The original 75 page files were checked on 2026-10-02; the dedicated Projects route brings the current Build page count to 76. The `/build` redirect and Projects destination remain Current unverified until browser and role evidence is recorded. A screen hidden from the sidebar remains reachable by authorized deep link. No underlying data is deleted as part of screen consolidation.
 
-## Existing routes — 75 decisions
+## Existing routes — 76 decisions
 
 | Existing route | Decision | Target/destination | Screen contract | Opening |
 |---|---|---|---|---|
-| `/build` | Personalized redirect | `saved allowed landing; default /build/command-center` | [Build entry](./screens/projects.md) | temporary server redirect after access resolution |
+| `/build` | Authorized redirect; saved preference Planned | `/build/command-center` by default; legacy Projects query to `/build/projects` | [Build entry](./screens/projects.md) | server redirect after module and permission access resolution |
 | `/build/[projectId]` | Keep | `/build/[projectId]` | [Project overview](./screens/projects.md) | ticket pane; milestone pane; cycle detail full page; client context opens owning module |
 | `/build/[projectId]/approvals` | Keep | `/build/[projectId]/approvals` | [Project approvals](./screens/client-delivery.md) | decision sheet; file preview; ticket pane |
 | `/build/[projectId]/backlog` | Keep | `/build/[projectId]/backlog` | [Backlog](./screens/planning.md) | ticket pane; target cycle/release planning sheet |
@@ -76,6 +76,7 @@ This table is the target UI contract. The current application manifest remains u
 | `/build/portfolios` | Keep | `/build/portfolios` | [Portfolios](./screens/planning.md) | portfolio full page; risk pane |
 | `/build/portfolios/[portfolioId]` | Keep | `/build/portfolios/[portfolioId]` | [Portfolio detail](./screens/planning.md) | project full page; risk/decision pane; scenario preview |
 | `/build/programs` | Keep | `/build/programs` | [Programs](./screens/planning.md) | program pane/full-page promotion; project full page |
+| `/build/projects` | Keep; dedicated Projects destination | `/build/projects` | [Projects](./screens/projects.md) | project full page; project creation sheet; authorized list and filters |
 | `/build/roadmap` | Keep | `/build/roadmap` | [Organization roadmap](./screens/planning.md) | initiative pane; ticket pane; external projection preview |
 | `/build/settings/access` | Keep | `/build/settings/access` | [Build access](./screens/settings.md) | short edit sheet; complex workflow/rule builder full page; privileged impact confirmation |
 | `/build/settings/client-access` | Keep | `/build/settings/client-access` | [Client grants](./screens/settings.md) | short edit sheet; complex workflow/rule builder full page; privileged impact confirmation |
@@ -88,7 +89,6 @@ This table is the target UI contract. The current application manifest remains u
 
 | Destination | Decision | Owner / behavior |
 |---|---|---|
-| /build/projects | Add | Membership-scoped Projects list; reserved static route before dynamic project ID |
 | /build/programs/[programId] | Add | Stable Program detail page; list selection may intercept into a pane, direct link/refresh opens full page |
 | /build/reports | Add compatibility destination | Resolve to `/build/all-work?view=reports` until a dedicated organization report owner is justified; preserve authorized query and saved-view ID |
 | /build/clients | Add | Build delivery index; CRM remains customer/contact/deal owner |
@@ -142,8 +142,8 @@ Every manifest route appears exactly once above. Every sidebar destination resol
 
 Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
 
-- [ ] Re-run the route census and reconcile every one of the 75 existing Build page routes to an explicit keep, redirect, merge, or deferred destination in this table.
-- [ ] Implement `/build` as authorized personalized entry and dedicated Projects destination; wire sidebar/More links only to accessible targets.
+- [ ] Re-run the route census and reconcile every one of the 76 existing Build page routes to an explicit keep, redirect, merge, or deferred destination in this table.
+- [ ] Add saved authorized landing preference to the `/build` default redirect and verify the dedicated Projects destination, sidebar/More links, and denied routes in a browser with role fixtures.
 - [ ] Implement recorded compatibility redirects and record-ID mappings for Assigned→My Work, Drafts→My Work, bug feedback→Intake, project Modules→Workstreams label, and persona aliases without breaking deep links.
 - [ ] Remove duplicate standalone navigation entries only after their configured canonical views and saved links resolve with the same authorized data.
 - [ ] Verify full-page and intercepted-pane refresh, modifier-click, Back/Forward, close-to-origin, mobile full-screen detail, and direct URL access for every record type.

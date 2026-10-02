@@ -277,7 +277,7 @@ const nextConfig: NextConfig = {
     },
     {
       source: "/build/pm-workspaces",
-      destination: "/build",
+      destination: "/build/projects",
       permanent: false,
     },
     {
@@ -347,17 +347,12 @@ const nextConfig: NextConfig = {
     },
     {
       source: "/build/workspaces/:pmWorkspaceId",
-      destination: "/build",
+      destination: "/build/projects",
       permanent: false,
     },
     {
       source: "/build/workspaces",
-      destination: "/build",
-      permanent: false,
-    },
-    {
-      source: "/build/projects",
-      destination: "/build",
+      destination: "/build/projects",
       permanent: false,
     },
     {

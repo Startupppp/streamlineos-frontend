@@ -1,8 +1,8 @@
 {
   "version": 3,
   "source": "frontend/app",
-  "count": 84,
-  "buildPageCount": 75,
+  "count": 85,
+  "buildPageCount": 76,
   "relatedRouteCount": 9,
   "routes": [
     {
@@ -286,6 +286,10 @@
       "file": "frontend/app/(authenticated)/build/programs/page.tsx"
     },
     {
+      "path": "/build/projects",
+      "file": "frontend/app/(authenticated)/build/projects/page.tsx"
+    },
+    {
       "path": "/build/roadmap",
       "file": "frontend/app/(authenticated)/build/roadmap/page.tsx"
     },
@@ -349,7 +353,7 @@
     "decisionsSource": "docs/build-module/experience/routes-and-screen-decisions.md",
     "codePresent": true,
     "decisionsPresent": true,
-    "declaredCount": 75,
+    "declaredCount": 76,
     "code": [
       {
         "route": "/build",
@@ -624,6 +628,10 @@
         "decision": "KEEP"
       },
       {
+        "route": "/build/projects",
+        "decision": "KEEP"
+      },
+      {
         "route": "/build/roadmap",
         "decision": "KEEP"
       },
@@ -655,8 +663,8 @@
     "decisions": [
       {
         "route": "/build",
-        "decision": "Personalized redirect",
-        "destination": "`saved allowed landing; default /build/command-center`"
+        "decision": "Authorized redirect; saved preference Planned",
+        "destination": "`/build/command-center` by default; legacy Projects query to `/build/projects`"
       },
       {
         "route": "/build/[projectId]",
@@ -992,6 +1000,11 @@
         "route": "/build/programs",
         "decision": "Keep",
         "destination": "`/build/programs`"
+      },
+      {
+        "route": "/build/projects",
+        "decision": "Keep; dedicated Projects destination",
+        "destination": "`/build/projects`"
       },
       {
         "route": "/build/roadmap",

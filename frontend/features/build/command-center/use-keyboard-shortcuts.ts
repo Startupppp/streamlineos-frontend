@@ -57,7 +57,7 @@ export function useKeyboardShortcuts(
 
       if (pendingKey === "g" && e.key === "p") {
         setPendingKey(null);
-        requestLeave(() => router.push("/build"));
+        requestLeave(() => router.push("/build/projects"));
         return;
       }
 

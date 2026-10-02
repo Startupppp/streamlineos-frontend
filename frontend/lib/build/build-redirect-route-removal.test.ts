@@ -100,19 +100,19 @@ const REMOVED_ROUTES: RemovedRoute[] = [
     route: "/build/pm-workspaces",
     appDir: "pm-workspaces",
     redirectSource: "/build/pm-workspaces",
-    redirectDestination: "/build",
+    redirectDestination: "/build/projects",
   },
   {
     route: "/build/workspaces",
     appDir: "workspaces",
     redirectSource: "/build/workspaces",
-    redirectDestination: "/build",
+    redirectDestination: "/build/projects",
   },
   {
     route: "/build/workspaces/[pmWorkspaceId]",
     appDir: join("workspaces", "[pmWorkspaceId]"),
     redirectSource: "/build/workspaces/:pmWorkspaceId",
-    redirectDestination: "/build",
+    redirectDestination: "/build/projects",
   },
   {
     route: "/build/workspaces/[pmWorkspaceId]/overview",
@@ -201,10 +201,6 @@ const OTHER_BUILD_COMPATIBILITY_REDIRECTS: BuildRedirect[] = [
     source: "/build/:projectId(\\\\d+)/roadmap",
     destination: "/build/:projectId/milestones",
   },
-  {
-    source: "/build/projects",
-    destination: "/build",
-  },
 ];
 
 function nextConfigRedirects(): {
@@ -258,7 +254,7 @@ describe("removed Build redirect routes keep their deep link in next.config.ts",
     ].sort((a, b) => a.source.localeCompare(b.source));
 
     expect(actual).toEqual(expected);
-    expect(actual).toHaveLength(31);
+    expect(actual).toHaveLength(30);
   });
 
   it("keeps every declarative Build compatibility redirect temporary", () => {
@@ -266,7 +262,7 @@ describe("removed Build redirect routes keep their deep link in next.config.ts",
       source.startsWith("/build"),
     );
 
-    expect(buildRedirects).toHaveLength(31);
+    expect(buildRedirects).toHaveLength(30);
     expect(buildRedirects.every(({ permanent }) => !permanent)).toBe(true);
   });
 

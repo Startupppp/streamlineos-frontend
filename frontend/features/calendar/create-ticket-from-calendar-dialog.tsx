@@ -160,7 +160,7 @@ export function CreateTicketFromCalendarDialog({
                       <div className="flex flex-col items-start gap-1 py-2 text-xs text-muted-foreground">
                         <span>No projects found.</span>
                         <Link
-                          href="/build"
+                          href="/build/projects"
                           className="text-primary underline-offset-2 hover:underline"
                         >
                           <FolderOpenIcon size={12} className="inline mr-1" />

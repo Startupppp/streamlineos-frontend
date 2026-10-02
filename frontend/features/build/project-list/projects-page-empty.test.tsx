@@ -6,7 +6,7 @@ const project = jest.fn();
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: jest.fn(), push: jest.fn() }),
-  usePathname: () => "/build",
+  usePathname: () => "/build/projects",
   useSearchParams: () => new URLSearchParams(),
 }));
 

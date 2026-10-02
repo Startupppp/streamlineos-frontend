@@ -270,7 +270,7 @@ export function AllWorkPage() {
         }
         filtersActive={hasActiveFilters}
         onClearFilters={handleClearFilters}
-        action={!hasActiveFilters ? { label: "All Projects", href: "/build" } : undefined}
+        action={!hasActiveFilters ? { label: "All Projects", href: "/build/projects" } : undefined}
       />
     );
 

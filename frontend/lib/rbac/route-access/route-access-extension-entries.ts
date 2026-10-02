@@ -1,6 +1,16 @@
 import type { RouteAccessExtension } from "./route-access-extension-types";
+import { BUILD_PROJECT_VIEW_EXTENSIONS } from "./build-project-view-extension-entries";
 
 export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
+  ...BUILD_PROJECT_VIEW_EXTENSIONS,
+  {
+    prefix: "/build",
+    exact: true,
+    product: "build",
+    permission: "build:view",
+    reason: "Build entry requires enabled-module access before choosing its landing page.",
+    backendRoute: { method: "get", path: "/build" },
+  },
   {
     prefix: "/billing/invoices",
     product: "finance",

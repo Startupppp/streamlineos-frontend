@@ -111,6 +111,28 @@ describe("resolveBuildNavModel — permission filtering", () => {
 });
 
 describe("resolveBuildNavModel — org module filtering", () => {
+  it("shows project Wiki only when Knowledge is enabled and page read access is granted", () => {
+    const access = accessWith([...ALL_BUILD_PERMISSIONS, "kb:pages:view"], {
+      kb: true,
+    });
+    const enabled = resolveBuildNavModel({ scope: projectScope, access, pinnedIds: [] });
+    expect(enabled.moreTools.some((d) => d.id === "project-wiki")).toBe(true);
+
+    const disabledModule = resolveBuildNavModel({
+      scope: projectScope,
+      access: accessWith([...ALL_BUILD_PERMISSIONS, "kb:pages:view"], { kb: false }),
+      pinnedIds: [],
+    });
+    expect(disabledModule.moreTools.some((d) => d.id === "project-wiki")).toBe(false);
+
+    const missingPermission = resolveBuildNavModel({
+      scope: projectScope,
+      access: accessWith(ALL_BUILD_PERMISSIONS, { kb: true }),
+      pinnedIds: [],
+    });
+    expect(missingPermission.moreTools.some((d) => d.id === "project-wiki")).toBe(false);
+  });
+
   it("hides the Feedback tool from moreTools when feedbucket is disabled even if the permission is held", () => {
     const model = resolveBuildNavModel({
       scope: projectScope,

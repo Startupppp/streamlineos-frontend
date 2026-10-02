@@ -196,7 +196,7 @@ export function DashboardDeferredBody({
   const handleDeferredVisible = useCallback(() => {
     setDeferredVisible(true);
   }, []);
-  const handleGoToProjects = useCallback(() => router.push("/build"), [router]);
+  const handleGoToProjects = useCallback(() => router.push("/build/projects"), [router]);
   const handleRetryTickets = useCallback(
     () => void refetchTickets(),
     [refetchTickets],

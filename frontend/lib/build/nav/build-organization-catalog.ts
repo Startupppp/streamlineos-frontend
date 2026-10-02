@@ -30,7 +30,7 @@ export function buildOrganizationCatalog(): BuildScopeCatalog {
       {
         id: "org-projects",
         label: "Projects",
-        href: BUILD_ROOT_PATH,
+        href: `${BUILD_ROOT_PATH}/projects`,
         icon: Briefcase,
         requiredPermission: "build:view",
         exact: true,

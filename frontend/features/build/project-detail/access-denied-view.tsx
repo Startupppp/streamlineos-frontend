@@ -61,7 +61,7 @@ export function AccessDeniedView({ projectName, hint }: { projectName: string; h
           <p className="text-xs text-muted-foreground mb-5">{hint}</p>
         )}
         {!hint && <div className="mb-5" />}
-        <Link href="/build">
+        <Link href="/build/projects">
           <Button variant="outline" className="gap-2">
             <ArrowLeft className="h-4 w-4" />
             Back to Projects

@@ -29,9 +29,9 @@ const diskRoutes = new Set(
   collectPageFilePaths(APP_BUILD_DIR).map(absolutePathToRoute),
 );
 
-describe("BLD-001 — build route manifest covers all 75 authenticated build pages bidirectionally", () => {
-  it("manifest has 75 entries so the coverage check cannot pass vacuously with an empty or truncated list", () => {
-    expect(BUILD_ROUTE_MANIFEST).toHaveLength(75);
+describe("BLD-001 — build route manifest covers all 76 authenticated build pages bidirectionally", () => {
+  it("manifest has 76 entries so the coverage check cannot pass vacuously with an empty or truncated list", () => {
+    expect(BUILD_ROUTE_MANIFEST).toHaveLength(76);
   });
 
   it("no longer tracks the twenty-six routes whose next.config.ts redirect now serves the URL, because a manifest entry without a page is a phantom disposition", () => {
@@ -74,6 +74,7 @@ describe("BLD-001 — build route manifest covers all 75 authenticated build pag
       "/build/goals",
       "/build/goals/[goalId]",
       "/build/command-center",
+      "/build/projects",
       "/build/all-work",
       "/build/managed-products",
       "/build/roadmap",

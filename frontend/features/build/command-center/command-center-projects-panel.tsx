@@ -58,7 +58,7 @@ export function ProjectsPanel({
                 </Button>
               ) : null}
               <Button variant="ghost" size="sm" className="gap-1 text-xs" asChild>
-                <Link href="/build">
+                <Link href="/build/projects">
                   All <ArrowRight className="h-3 w-3" />
                 </Link>
               </Button>
@@ -80,7 +80,7 @@ export function ProjectsPanel({
                 action={
                   canCreateProject
                     ? { label: "New project", onClick: onCreateProject }
-                    : { label: "All projects", href: "/build" }
+                    : { label: "All projects", href: "/build/projects" }
                 }
               />
             ) : (

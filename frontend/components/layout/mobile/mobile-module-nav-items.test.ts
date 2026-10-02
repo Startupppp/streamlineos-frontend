@@ -152,12 +152,12 @@ describe("mobile module nav items", () => {
           label: "Projects",
           product: "build",
           routes: [
-            { label: "Projects", icon: Briefcase, href: "/build", exact: true },
+            { label: "Projects", icon: Briefcase, href: "/build/projects", exact: true },
             { label: "Inbox", icon: Inbox, href: "/build/inbox" },
           ],
         },
       ]);
-      expect(isMobileNavRouteActive("/build", tabs[0]!, tabs)).toBe(true);
+      expect(isMobileNavRouteActive("/build/projects", tabs[0]!, tabs)).toBe(true);
       expect(isMobileNavRouteActive("/build/inbox", tabs[0]!, tabs)).toBe(false);
     });
 

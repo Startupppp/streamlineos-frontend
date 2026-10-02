@@ -7,7 +7,7 @@ const mockUseInfiniteProjects = jest.fn();
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: mockReplace, push: jest.fn() }),
-  usePathname: () => "/build",
+  usePathname: () => "/build/projects",
   useSearchParams: () => mockSearchParams,
 }));
 

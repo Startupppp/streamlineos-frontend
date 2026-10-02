@@ -64,6 +64,9 @@ describe("parseInboxTicketLink", () => {
 
 describe("normalizeBuildDeepLink", () => {
   it("rewrites /projects paths to /build for client-side navigation", () => {
+    expect(normalizeBuildDeepLink("/projects?view=active")).toBe(
+      "/build/projects?view=active",
+    );
     expect(normalizeBuildDeepLink("/projects/1")).toBe("/build/1");
     expect(normalizeBuildDeepLink("/projects/1/feedbucket/9")).toBe(
       "/build/1/feedbucket/9",

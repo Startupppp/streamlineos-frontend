@@ -78,7 +78,7 @@ export const QUICK_CREATE_GROUPS: CreateGroup[] = [
       {
         id: "new-project",
         label: "New project",
-        href: "/build?create=1",
+        href: "/build/projects?create=1",
         icon: FolderPlus,
         permission: "build:create",
         module: "BUILD",

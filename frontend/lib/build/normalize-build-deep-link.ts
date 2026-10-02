@@ -7,7 +7,8 @@ function toAbsoluteUrl(raw: string): URL | null {
 }
 
 export function toBuildPath(pathname: string): string {
-  if (pathname === "/projects" || pathname.startsWith("/projects/"))
+  if (pathname === "/projects") return "/build/projects";
+  if (pathname.startsWith("/projects/"))
     return `/build${pathname.slice("/projects".length)}`;
   return pathname;
 }

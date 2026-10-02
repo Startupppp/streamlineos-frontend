@@ -128,6 +128,7 @@ const BUILD_ROUTE_MANIFEST: readonly BuildRouteManifestEntry[] = [
   { route: "/build/portfolios", decision: "KEEP", target: null },
   { route: "/build/portfolios/[portfolioId]", decision: "KEEP", target: null },
   { route: "/build/programs", decision: "KEEP", target: null },
+  { route: "/build/projects", decision: "KEEP", target: null },
   { route: "/build/roadmap", decision: "KEEP", target: null },
   { route: "/build/settings/access", decision: "KEEP", target: null },
   { route: "/build/settings/client-access", decision: "KEEP", target: null },
