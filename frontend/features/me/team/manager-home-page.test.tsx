@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { ManagerHomePage } from "./manager-home-page";
 import type { ManagerHome } from "@/hooks/api/hr/manager-home-schema";
 
@@ -41,6 +41,24 @@ jest.mock("@/hooks/api/hr/manager-home", () => ({
   useManagerHome: () => mockUseManagerHome(),
 }));
 
+const mockUsePayrollCutoff = jest.fn();
+jest.mock("@/hooks/api/payroll/payroll-cutoff", () => ({
+  usePayrollCutoff: () => mockUsePayrollCutoff(),
+}));
+
+const mockUseCan = jest.fn();
+jest.mock("@/hooks/api/access", () => ({
+  useCan: (key: string) => mockUseCan(key),
+  useModuleEnabled: () => true,
+}));
+
+const mockApproveMutate = jest.fn();
+jest.mock("@/hooks/api/hr/leave-request-mutations", () => ({
+  useApproveLeaveDedicated: () => ({ mutate: mockApproveMutate, isPending: false }),
+}));
+
+jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
+
 function home(overrides: Partial<ManagerHome> = {}): ManagerHome {
   return {
     isManager: true,
@@ -69,10 +87,17 @@ function home(overrides: Partial<ManagerHome> = {}): ManagerHome {
   };
 }
 
+function settled(data: ManagerHome) {
+  mockUseManagerHome.mockReturnValue({ data, isLoading: false, isError: false, error: undefined, refetch: jest.fn() });
+  mockUsePageState.mockReturnValue({ kind: "ready" });
+}
+
 beforeEach(() => {
   jest.clearAllMocks();
   mockUseManagerHome.mockReturnValue({ data: undefined, isLoading: true, isError: false, error: undefined, refetch: jest.fn() });
   mockUsePageState.mockReturnValue({ kind: "loading" });
+  mockUsePayrollCutoff.mockReturnValue({ cutoff: null, month: "2026-09", isLoading: false });
+  mockUseCan.mockReturnValue(false);
 });
 
 describe("ManagerHomePage — a reporting manager's one view", () => {
@@ -80,7 +105,7 @@ describe("ManagerHomePage — a reporting manager's one view", () => {
     render(<ManagerHomePage />);
 
     expect(screen.getByRole("heading", { name: "My team" })).toBeInTheDocument();
-    expect(screen.queryByText(/Nobody reports to you/)).not.toBeInTheDocument();
+    expect(screen.queryByTestId("pending-decisions-strip")).not.toBeInTheDocument();
   });
 
   it("offers a retry when the team cannot be loaded", () => {
@@ -90,23 +115,45 @@ describe("ManagerHomePage — a reporting manager's one view", () => {
 
     render(<ManagerHomePage />);
 
-    screen.getByRole("button", { name: "Retry" }).click();
+    fireEvent.click(screen.getByRole("button", { name: "Retry" }));
     expect(refetch).toHaveBeenCalled();
   });
 
-  it("tells a member with no direct reports so, instead of an empty dashboard", () => {
-    mockUseManagerHome.mockReturnValue({ data: home({ isManager: false, reports: [], approvals: { leave: 0, wfh: 0, timesheets: 0, workflows: 0, items: [] }, missingTimesheets: [], upcomingLeave: [], probationDue: [] }), isLoading: false, isError: false, error: undefined, refetch: jest.fn() });
-    mockUsePageState.mockReturnValue({ kind: "ready" });
+  it("gives a non-manager an honest panel back to their own day, not an empty dashboard", () => {
+    settled(home({ isManager: false, reports: [], approvals: { leave: 0, wfh: 0, timesheets: 0, workflows: 0, items: [] }, missingTimesheets: [], upcomingLeave: [], probationDue: [] }));
 
     render(<ManagerHomePage />);
 
-    expect(screen.getByText("Nobody reports to you yet")).toBeInTheDocument();
-    expect(screen.queryByText("Needs my decision")).not.toBeInTheDocument();
+    expect(screen.getByText("You are not a reporting manager")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Back to my day" })).toHaveAttribute("href", "/me");
+    expect(screen.queryByTestId("pending-decisions-strip")).not.toBeInTheDocument();
+  });
+
+  it("says a manager with no reports so, in the ticket's words", () => {
+    settled(home({ reports: [], approvals: { leave: 0, wfh: 0, timesheets: 0, workflows: 0, items: [] }, missingTimesheets: [], upcomingLeave: [], probationDue: [] }));
+
+    render(<ManagerHomePage />);
+
+    expect(screen.getByText("No direct reports assigned")).toBeInTheDocument();
+    expect(screen.getByText("Ask HR to set your reporting line.")).toBeInTheDocument();
+  });
+
+  it("puts the pending decisions strip before the roster, and sticks it at narrow widths", () => {
+    settled(home());
+
+    render(<ManagerHomePage />);
+
+    const strip = screen.getByTestId("pending-decisions-strip");
+    expect(strip).toHaveTextContent("2 awaiting my decision");
+    expect(strip.className).toContain("sticky");
+    expect(within(strip).getByRole("link", { name: /Open Action Center/ })).toHaveAttribute("href", "/hr/approvals");
+
+    const roster = screen.getByText("Direct reports");
+    expect(strip.compareDocumentPosition(roster) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it("shows the decisions waiting, the roster with today's status, missing timesheets, upcoming leave and probation", () => {
-    mockUseManagerHome.mockReturnValue({ data: home(), isLoading: false, isError: false, error: undefined, refetch: jest.fn() });
-    mockUsePageState.mockReturnValue({ kind: "ready" });
+    settled(home());
 
     render(<ManagerHomePage />);
 
@@ -122,29 +169,79 @@ describe("ManagerHomePage — a reporting manager's one view", () => {
   });
 
   it("prints each upcoming leave's own status, so the list evidences its heading (HRMS-E2E-021)", () => {
-    mockUseManagerHome.mockReturnValue({ data: home(), isLoading: false, isError: false, error: undefined, refetch: jest.fn() });
-    mockUsePageState.mockReturnValue({ kind: "ready" });
+    settled(home());
     render(<ManagerHomePage />);
     expect(screen.getByLabelText("Leave status: Approved")).toBeInTheDocument();
   });
 
   it("shows a non-approved status as it is instead of hiding it under the Approved heading", () => {
     const pending = { userId: "usr-asha", name: "Asha", startDate: "2026-09-20", endDate: "2026-09-22", leaveTypeId: 1, status: "PENDING" as const };
-    mockUseManagerHome.mockReturnValue({ data: home({ upcomingLeave: [pending] }), isLoading: false, isError: false, error: undefined, refetch: jest.fn() });
-    mockUsePageState.mockReturnValue({ kind: "ready" });
+    settled(home({ upcomingLeave: [pending] }));
     render(<ManagerHomePage />);
     expect(screen.getByLabelText("Leave status: Pending")).toBeInTheDocument();
     expect(screen.queryByLabelText("Leave status: Approved")).not.toBeInTheDocument();
   });
 
   it("says plainly when nothing is waiting", () => {
-    mockUseManagerHome.mockReturnValue({ data: home({ approvals: { leave: 0, wfh: 0, timesheets: 0, workflows: 0, items: [] }, missingTimesheets: [], upcomingLeave: [], probationDue: [] }), isLoading: false, isError: false, error: undefined, refetch: jest.fn() });
-    mockUsePageState.mockReturnValue({ kind: "ready" });
+    settled(home({ approvals: { leave: 0, wfh: 0, timesheets: 0, workflows: 0, items: [] }, missingTimesheets: [], upcomingLeave: [], probationDue: [] }));
 
     render(<ManagerHomePage />);
 
     expect(screen.getByText("Nothing is waiting on your decision.")).toBeInTheDocument();
     expect(screen.getByText("Every past period on your team is submitted.")).toBeInTheDocument();
     expect(screen.getByText("No approved leave in the next two weeks.")).toBeInTheDocument();
+  });
+
+  it("never shows pay, CTC or compensation on the roster, and never links to the unscoped directory", () => {
+    settled(home());
+
+    render(<ManagerHomePage />);
+
+    expect(document.body.textContent).not.toMatch(/ctc|cost to company|compensation|gross|net pay/i);
+    for (const link of screen.getAllByRole("link")) {
+      expect(link.getAttribute("href")).not.toMatch(/^\/hr\/employees/);
+      expect(link.getAttribute("href")).not.toMatch(/^\/directory/);
+    }
+  });
+
+  it("omits the payroll-adjacent line when no cycle is configured and states it when one is", () => {
+    settled(home());
+    const { unmount } = render(<ManagerHomePage />);
+    expect(screen.queryByText(/may affect this payroll cycle/)).not.toBeInTheDocument();
+    unmount();
+
+    mockUsePayrollCutoff.mockReturnValue({ cutoff: { title: "Sep inputs cutoff", date: "2026-09-25T00:00:00.000Z" }, month: "2026-09", isLoading: false });
+    settled(home());
+    render(<ManagerHomePage />);
+    expect(screen.getByText(/2 unsettled timesheets on your team may affect this payroll cycle\./)).toBeInTheDocument();
+  });
+
+  it("offers a quick approve only to a manager who may decide leave", () => {
+    settled(home());
+    const { unmount } = render(<ManagerHomePage />);
+    expect(screen.queryByRole("button", { name: /Approve leave for Asha/ })).not.toBeInTheDocument();
+    unmount();
+
+    mockUseCan.mockImplementation((key: string) => key === "hr:leaves:approve");
+    settled(home());
+    render(<ManagerHomePage />);
+    fireEvent.click(screen.getByRole("button", { name: "Approve leave for Asha" }));
+    expect(mockApproveMutate).toHaveBeenCalledWith({ leaveId: 5 }, expect.anything());
+  });
+
+  it("opens the person drawer from a roster row with pay withheld", () => {
+    settled(home());
+
+    render(<ManagerHomePage />);
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Open" })[0]);
+
+    expect(screen.getByRole("tab", { name: "Overview" })).toBeInTheDocument();
+    expect(screen.getByText("asha@example.test")).toBeInTheDocument();
+
+    const payTab = screen.getByRole("tab", { name: "Pay" });
+    fireEvent.mouseDown(payTab);
+    fireEvent.click(payTab);
+    expect(screen.getByText("Pay details restricted")).toBeInTheDocument();
   });
 });

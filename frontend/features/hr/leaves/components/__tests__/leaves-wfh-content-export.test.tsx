@@ -1,6 +1,7 @@
 import * as React from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 /**
  * HRMS-E2E-022. The export button has to end in a file or in a message — never
@@ -97,9 +98,16 @@ const MINE_FOUR = {
 
 let minePages: unknown = MINE_EMPTY;
 
+let mockQueryString = "";
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: jest.fn(), replace: jest.fn(), prefetch: jest.fn() }),
-  useSearchParams: () => new URLSearchParams(),
+  useRouter: () => ({
+    push: jest.fn(),
+    prefetch: jest.fn(),
+    replace: (href: string) => {
+      mockQueryString = String(href).split("?")[1] ?? "";
+    },
+  }),
+  useSearchParams: () => new URLSearchParams(mockQueryString),
   usePathname: () => "/hr/leaves",
 }));
 
@@ -125,6 +133,14 @@ jest.mock("@/hooks/api/use-page-state", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
+  useCanState: () => "allowed",
+  usePermissionGate: (permission: string) => ({
+    permission,
+    allowed: true,
+    denied: false,
+    pending: false,
+    unavailable: false,
+  }),
   useAccess: () => ({ data: { isOrgOwner: false, scopes: {} }, isLoading: false }),
   useModuleEnabled: () => true,
 }));
@@ -187,9 +203,11 @@ import { LeavesWfhContent } from "@/features/hr/leaves/components/leaves-wfh-con
 
 function renderPage() {
   return render(
+    <QueryClientProvider client={new QueryClient()}>
     <TooltipProvider>
       <LeavesWfhContent />
-    </TooltipProvider>,
+    </TooltipProvider>
+    </QueryClientProvider>,
   );
 }
 
@@ -205,6 +223,7 @@ async function clickExport() {
 describe("LeavesWfhContent — leave export never ends in silence", () => {
   beforeEach(() => {
     exceljsFails = false;
+    mockQueryString = "";
     minePages = MINE_EMPTY;
     downloadBlob.mockClear();
     toastSuccess.mockClear();
@@ -247,9 +266,9 @@ describe("LeavesWfhContent — leave export never ends in silence", () => {
   });
 
   it("exports the approvals the admin is looking at, not their own empty list", async () => {
+    mockQueryString = "tab=approvals";
     renderPage();
 
-    fireEvent.mouseDown(screen.getByRole("tab", { name: /Approvals/ }));
     await clickExport();
 
     expect(downloadBlob).toHaveBeenCalledTimes(1);

@@ -26,6 +26,7 @@ import { ResignationCard } from "@/features/hr/exit/resignation-card";
 import { ResignationFormSheet } from "@/features/hr/exit/resignation-form-sheet";
 import { ResignationReviewSheets } from "@/features/hr/exit/resignation-review-sheets";
 import { useResignationReview } from "@/features/hr/exit/use-resignation-review";
+import { ExitPathStrip } from "@/features/hr/exit/exit-path-strip";
 
 const ACTIVE_RESIGNATION_STATUSES = ["SUBMITTED", "PENDING_HR", "HR_APPROVED"];
 
@@ -145,6 +146,10 @@ export function ExitManagementPage() {
       subtitle="Resignations, exit interviews, and offboarding"
       actions={primaryAction ?? undefined}
     >
+      <div className="mb-3 shrink-0">
+        <ExitPathStrip showReassignPrompt={hasActiveResignation || (resignations?.length ?? 0) > 0} />
+      </div>
+
       {!resignations?.length ? (
         <EmptyState
           illustration={<EmptyPersonIllustration className="h-24 w-24" />}

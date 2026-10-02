@@ -99,10 +99,10 @@ export function HrHubActivity({
         <div className="flex flex-wrap items-center gap-3 border-t border-border/60 px-3.5 py-2">
           {access.canCases && (
             <Link
-              href="/hr/service-delivery"
+              href="/hr/cases"
               className="text-micro font-medium text-status-info-ink hover:underline"
             >
-              Service delivery
+              Employee relations
             </Link>
           )}
           {access.canProbation && (

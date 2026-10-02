@@ -17,19 +17,29 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { FileUpload } from "@/components/storage/file-upload";
 import Link from "next/link";
 
 import { isWeekend } from "./leave-date-helpers";
 import { leaveTypeOptionLabel } from "./leave-type-option-label";
-import { LeaveBalancePreview, LeaveLimitError } from "./leave-balance-preview";
+import {
+  LeaveBalancePreview,
+  LeaveBalanceUnavailable,
+  LeaveLimitError,
+  LeaveOverlapBlocked,
+  LeaveRequestHint,
+} from "./leave-balance-preview";
+import { LeaveHalfDayFields, LeavePriorityField } from "./leave-request-policy-fields";
 import type { LeaveFormValues } from "./leave-request-schema";
+import type { LeaveRequestValidation } from "./use-leave-request-validation";
 import type { LeaveType, LeaveBalance } from "./components/leaves-shared";
 import type { ApprovalRoute } from "@/hooks/api/hr/approval-route-schema";
 import { ApprovalRoutePanel, summarizeApprovalRoute } from "@/components/shared/approval-route-panel";
 import { useNoApproverFix } from "./no-approver-fix";
+
+const FIELD_LABEL_CLASS =
+  "text-xs font-semibold text-foreground/80 uppercase tracking-wider";
 
 interface LeaveRequestFormFieldsProps {
   form: UseFormReturn<LeaveFormValues>;
@@ -40,9 +50,7 @@ interface LeaveRequestFormFieldsProps {
   leaveEndBounds: { fromDate?: Date; fromYear?: number; toYear?: number };
   onStartDateChange: (value: string) => void;
   onAttachmentUpload: (key: string) => void;
-  requestedDays: number;
-  balancePreview: { available: number; after: number; typeName: string } | null;
-  leaveDayLimitError: string | null;
+  validation: LeaveRequestValidation;
 }
 
 export function LeaveRequestFormFields({
@@ -53,12 +61,9 @@ export function LeaveRequestFormFields({
   leaveEndBounds,
   onStartDateChange,
   onAttachmentUpload,
-  requestedDays,
-  balancePreview,
-  leaveDayLimitError,
+  validation,
 }: LeaveRequestFormFieldsProps) {
   const noApproverAction = useNoApproverFix(approvalRoute);
-  const watchedHalfDay = form.watch("halfDay");
 
   return (
     <div className="space-y-5">
@@ -67,17 +72,14 @@ export function LeaveRequestFormFields({
         name="leaveTypeId"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
-              Leave Type
-            </FormLabel>
+            <FormLabel className={FIELD_LABEL_CLASS}>Leave Type</FormLabel>
             {leaveTypes.length === 0 ? (
               <div className="space-y-2 rounded-lg border border-dashed border-status-warning-rule bg-status-warning-surface px-3 py-3">
                 <p className="text-sm font-medium text-foreground">
                   No leave types configured
                 </p>
                 <p className="text-xs leading-relaxed text-muted-foreground">
-                  Set up leave types (for example Casual, Sick, Unpaid) before
-                  employees can request leave.
+                  Set up leave types before employees can request leave.
                 </p>
                 <Button
                   variant="outline"
@@ -113,9 +115,7 @@ export function LeaveRequestFormFields({
       />
 
       <div className="space-y-1.5">
-        <p className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
-          Date Range
-        </p>
+        <p className={FIELD_LABEL_CLASS}>Date Range (IST)</p>
         <div className="grid grid-cols-2 gap-3">
           <FormField
             control={form.control}
@@ -166,91 +166,12 @@ export function LeaveRequestFormFields({
         </div>
       </div>
 
-      <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-3">
-        <FormField
-          control={form.control}
-          name="halfDay"
-          render={({ field }) => (
-            <FormItem className="flex items-center gap-2.5">
-              <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-              <FormLabel className="text-xs font-medium text-foreground !mt-0 cursor-pointer">
-                Half Day Request
-              </FormLabel>
-            </FormItem>
-          )}
-        />
+      {validation.overlapMessage ? (
+        <LeaveOverlapBlocked message={validation.overlapMessage} />
+      ) : null}
 
-        {watchedHalfDay && (
-          <FormField
-            control={form.control}
-            name="halfDayPeriod"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-xs font-medium text-muted-foreground">
-                  Period
-                </FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger className="text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                    <SelectItem value="AM">AM (Morning — first half)</SelectItem>
-                    <SelectItem value="PM">PM (Afternoon — second half)</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
-      </div>
-
-      <FormField
-        control={form.control}
-        name="priority"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
-              Priority
-            </FormLabel>
-            <Select onValueChange={field.onChange} value={field.value}>
-              <FormControl>
-                <SelectTrigger className="text-sm">
-                  <SelectValue placeholder="Select priority" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                <SelectItem value="LOW">
-                  <span className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-status-success-fill" />
-                    Low
-                  </span>
-                </SelectItem>
-                <SelectItem value="MEDIUM">
-                  <span className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-status-warning-fill" />
-                    Medium
-                  </span>
-                </SelectItem>
-                <SelectItem value="HIGH">
-                  <span className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-status-danger-fill" />
-                    High
-                  </span>
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      <LeaveHalfDayFields form={form} />
+      <LeavePriorityField form={form} />
 
       <ApprovalRoutePanel
         route={approvalRoute && summarizeApprovalRoute(approvalRoute)}
@@ -264,13 +185,11 @@ export function LeaveRequestFormFields({
         name="reason"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
-              Reason
-            </FormLabel>
+            <FormLabel className={FIELD_LABEL_CLASS}>Reason</FormLabel>
             <FormControl>
               <Textarea
                 placeholder="E.g. Family function, Doctor appointment..."
-                className="resize-none text-sm min-h-[80px]"
+                className="min-h-[80px] resize-none text-sm"
                 rows={3}
                 {...field}
               />
@@ -281,9 +200,9 @@ export function LeaveRequestFormFields({
       />
 
       <div className="space-y-1.5">
-        <label className="text-xs font-semibold text-foreground/80 uppercase tracking-wider block">
+        <label className={`${FIELD_LABEL_CLASS} block`}>
           Attach Document{" "}
-          <span className="normal-case font-normal text-muted-foreground tracking-normal">
+          <span className="font-normal normal-case tracking-normal text-muted-foreground">
             (Optional)
           </span>
         </label>
@@ -295,11 +214,22 @@ export function LeaveRequestFormFields({
         />
       </div>
 
-      {balancePreview && (
-        <LeaveBalancePreview preview={balancePreview} requestedDays={requestedDays} />
-      )}
+      {validation.balancePreview ? (
+        <LeaveBalancePreview
+          preview={validation.balancePreview}
+          requestedDays={validation.requestedDays}
+        />
+      ) : null}
 
-      {leaveDayLimitError && <LeaveLimitError message={leaveDayLimitError} />}
+      {validation.balanceUnavailableFor ? (
+        <LeaveBalanceUnavailable typeName={validation.balanceUnavailableFor} />
+      ) : null}
+
+      {validation.lopHint ? <LeaveRequestHint message={validation.lopHint} /> : null}
+
+      {validation.dayLimitError ? (
+        <LeaveLimitError message={validation.dayLimitError} />
+      ) : null}
     </div>
   );
 }

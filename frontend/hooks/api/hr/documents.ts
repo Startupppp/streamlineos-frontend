@@ -124,23 +124,42 @@ export interface MyOnboardingDoc {
   remarks: string | null;
   version: number | null;
   createdAt: string | null;
+  hasFile?: boolean;
+  fileName?: string;
+  fileSize?: number | null;
+  mimeType?: string | null;
+  reviewerName?: string | null;
+  updatedAt?: string | null;
 }
 
-interface MyOnboardingDocsResponse {
+export interface MyOnboardingDocsResponse {
   data: MyOnboardingDoc[];
   pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
-const MY_DOCS_LIMIT = 100;
+export const MY_DOCS_PAGE_SIZE = 25;
 
-export function useMyOnboardingDocs(options?: { enabled?: boolean }) {
+export interface MyOnboardingDocsParams {
+  cursor?: string;
+  limit?: number;
+  status?: MyOnboardingDocStatus;
+}
+
+export function useMyOnboardingDocs(
+  options?: { enabled?: boolean } & MyOnboardingDocsParams,
+) {
   const canView = useCan("self:onboarding-docs");
-  const params = { limit: MY_DOCS_LIMIT };
+  const params = {
+    limit: options?.limit ?? MY_DOCS_PAGE_SIZE,
+    ...(options?.cursor ? { cursor: options.cursor } : {}),
+    ...(options?.status ? { status: options.status } : {}),
+  };
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.onboardingDocs(params),
     queryFn: ({ signal }) =>
       apiClient.get<MyOnboardingDocsResponse>("/hr/onboarding-docs/me", params, signal, myOnboardingDocsLazy),
     staleTime: 60_000,
+    placeholderData: keepPreviousData,
     enabled: canView && (options?.enabled ?? true),
   });
 }

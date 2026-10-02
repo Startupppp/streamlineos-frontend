@@ -91,6 +91,10 @@ jest.mock("@/components/layout/header/org-switcher", () => ({
   WorkspaceSwitcher: () => null,
 }));
 
+jest.mock("@/components/layout/header/header-payroll-cutoff", () => ({
+  HeaderPayrollCutoff: () => null,
+}));
+
 jest.mock("@/components/layout/header/quick-create-button", () => ({
   QuickCreateButton: () => null,
 }));

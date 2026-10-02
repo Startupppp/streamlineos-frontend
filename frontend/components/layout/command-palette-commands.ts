@@ -1,6 +1,6 @@
 "use client";
 
-import { type ComponentType, useMemo } from "react";
+import { useMemo } from "react";
 import {
   Plus,
   Kanban,
@@ -11,17 +11,10 @@ import {
   LayoutDashboard,
 } from "lucide-react";
 import { useCan } from "@/hooks/api/access";
+import { useHrmsCommands } from "./command-palette-hrms-commands";
+import type { CommandPaletteCommand } from "./command-palette-command-types";
 
-export interface CommandPaletteCommand {
-  id: string;
-  label: string;
-  group: string;
-  keywords: string[];
-  shortcut?: string;
-  icon: ComponentType<{ className?: string }>;
-  isAvailable: boolean;
-  execute(): void | Promise<void>;
-}
+export type { CommandPaletteCommand } from "./command-palette-command-types";
 
 export function useCommandRegistry({
   projectId,
@@ -33,9 +26,11 @@ export function useCommandRegistry({
   handleCreateTicket: () => void;
 }): CommandPaletteCommand[] {
   const canCreateTicket = useCan("build:tickets:create");
+  const hrmsCommands = useHrmsCommands(handleSelect);
 
   return useMemo<CommandPaletteCommand[]>(
     () => [
+      ...hrmsCommands,
       {
         id: "create-ticket",
         label: "Create ticket",
@@ -126,6 +121,6 @@ export function useCommandRegistry({
         execute: () => handleSelect("/build/my-work"),
       },
     ],
-    [canCreateTicket, projectId, handleSelect, handleCreateTicket],
+    [canCreateTicket, hrmsCommands, projectId, handleSelect, handleCreateTicket],
   );
 }

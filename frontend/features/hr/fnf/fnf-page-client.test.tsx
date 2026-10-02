@@ -47,7 +47,7 @@ jest.mock("@/hooks/api/hr/fnf", () => ({
 import { FnfPageClient } from "./fnf-page-client";
 
 describe("FnfPageClient — a failed settlements read shows an error, not an empty list", () => {
-  it("renders the shared error state with a retry that refetches, under the Final settlement title", () => {
+  it("renders the shared error state with a retry that refetches, under the page title", () => {
     const refetch = jest.fn();
     const error = new Error("upstream down");
     mockUseFnfSettlements.mockReturnValue({ data: undefined, isLoading: false, isError: true, error, refetch });
@@ -57,7 +57,7 @@ describe("FnfPageClient — a failed settlements read shows an error, not an emp
 
     expect(mockUsePageState).toHaveBeenCalledWith({ permission: "hr:payroll:view", isLoading: false, isError: true, error });
 
-    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Final settlement");
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Full and final draft");
     expect(screen.getByText("Couldn't load final settlements")).toBeInTheDocument();
     expect(screen.queryByText("No final settlements on record")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /retry|try again/i }));

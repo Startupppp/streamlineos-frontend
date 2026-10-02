@@ -1,6 +1,7 @@
 import * as React from "react";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 type MutationStub = {
   mutate: jest.Mock;
@@ -60,9 +61,16 @@ const TEAM_PAGES = {
   pageParams: [null, 2],
 };
 
+let mockQueryString = "";
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: jest.fn(), replace: jest.fn(), prefetch: jest.fn() }),
-  useSearchParams: () => new URLSearchParams(),
+  useRouter: () => ({
+    push: jest.fn(),
+    prefetch: jest.fn(),
+    replace: (href: string) => {
+      mockQueryString = String(href).split("?")[1] ?? "";
+    },
+  }),
+  useSearchParams: () => new URLSearchParams(mockQueryString),
   usePathname: () => "/hr/leaves",
 }));
 
@@ -88,6 +96,14 @@ jest.mock("@/hooks/api/use-page-state", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
+  useCanState: () => "allowed",
+  usePermissionGate: (permission: string) => ({
+    permission,
+    allowed: true,
+    denied: false,
+    pending: false,
+    unavailable: false,
+  }),
   useAccess: () => ({ data: { isOrgOwner: false, scopes: {} }, isLoading: false }),
   useModuleEnabled: () => true,
 }));
@@ -124,25 +140,30 @@ jest.mock("@/features/hr/leaves/wfh-request-sheet", () => ({
 
 import { LeavesWfhContent } from "@/features/hr/leaves/components/leaves-wfh-content";
 
-describe("LeavesWfhContent — approvals read GET /hr/leaves/team as a cursor envelope", () => {
-  it("counts pending approvals across every loaded page, not from a retired `pending` field", () => {
-    render(
+function renderPage() {
+  return render(
+    <QueryClientProvider client={new QueryClient()}>
       <TooltipProvider>
         <LeavesWfhContent />
-      </TooltipProvider>,
-    );
+      </TooltipProvider>
+    </QueryClientProvider>,
+  );
+}
+
+describe("LeavesWfhContent — approvals read GET /hr/leaves/team as a cursor envelope", () => {
+  beforeEach(() => {
+    mockQueryString = "";
+  });
+
+  it("counts pending approvals across every loaded page, not from a retired `pending` field", () => {
+    renderPage();
 
     expect(screen.getByRole("tab", { name: /Approvals\s*2/ })).toBeInTheDocument();
   });
 
   it("lists every loaded page under All and only PENDING rows under Pending", () => {
-    render(
-      <TooltipProvider>
-        <LeavesWfhContent />
-      </TooltipProvider>,
-    );
-
-    fireEvent.mouseDown(screen.getByRole("tab", { name: /Approvals/ }));
+    mockQueryString = "tab=approvals";
+    renderPage();
 
     const allPanel = screen.getByRole("tabpanel", { name: /^All/ });
     expect(within(allPanel).getByText("Ada Lovelace")).toBeInTheDocument();
@@ -155,5 +176,19 @@ describe("LeavesWfhContent — approvals read GET /hr/leaves/team as a cursor en
     expect(within(pendingPanel).getByText("Ada Lovelace")).toBeInTheDocument();
     expect(within(pendingPanel).getByText("Hedy Lovelace")).toBeInTheDocument();
     expect(within(pendingPanel).queryByText("Grace Lovelace")).not.toBeInTheDocument();
+  });
+
+  it("restores the Work from home tab from ?tab=wfh", () => {
+    mockQueryString = "tab=wfh";
+    renderPage();
+
+    expect(screen.getByRole("tab", { name: /Work from home/ })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.getByRole("tab", { name: /My leaves/ })).toHaveAttribute(
+      "aria-selected",
+      "false",
+    );
   });
 });

@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function ApprovalsLoading() {
   return (
     <PageWrapper
-      title="Approvals"
+      title="Action Center"
       subtitle="Review and act on pending approval requests"
       actions={<Skeleton className="h-9 w-32 rounded-md" />}
     >

@@ -40,7 +40,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useCan } from "@/hooks/api/access";
 import { useRunExceptions, useResolveException, useOverrideException } from "@/hooks/api/payroll/run-exceptions";
-import type { PayrollException, PayrollExceptionSeverity, PayrollExceptionStatus } from "@/types/payroll/runs";
+import type { PayrollExceptionSeverity, PayrollExceptionStatus } from "@/types/payroll/runs";
+import type { RunException } from "@/hooks/api/payroll/run-exceptions-schema";
 
 const SEVERITY_CONFIG: Record<
   PayrollExceptionSeverity,
@@ -70,11 +71,11 @@ interface ExceptionsTabProps {
 export function ExceptionsTab({ runId, isLocked }: ExceptionsTabProps) {
   const [filterSeverity, setFilterSeverity] = useState<PayrollExceptionSeverity | "all">("all");
   const [filterStatus, setFilterStatus] = useState<PayrollExceptionStatus | "all">("all");
-  const [overrideTarget, setOverrideTarget] = useState<PayrollException | null>(null);
+  const [overrideTarget, setOverrideTarget] = useState<RunException | null>(null);
   const canUpdate = useCan("payroll:runs:update");
   const canManage = useCan("payroll:runs:manage");
 
-  const { data: exceptions, isLoading, isError, refetch } = useRunExceptions(
+  const { data: exceptionsPage, isLoading, isError, refetch } = useRunExceptions(
     runId,
     filterSeverity !== "all" || filterStatus !== "all"
       ? {
@@ -93,7 +94,10 @@ export function ExceptionsTab({ runId, isLocked }: ExceptionsTabProps) {
     defaultValues: { reason: "" },
   });
 
-  const grouped = (exceptions ?? []).reduce<Record<PayrollExceptionSeverity, PayrollException[]>>(
+  const exceptions = exceptionsPage?.data ?? [];
+  const hasMoreExceptions = exceptionsPage?.pagination.hasMore ?? false;
+
+  const grouped = exceptions.reduce<Record<PayrollExceptionSeverity, RunException[]>>(
     (acc, ex) => {
       acc[ex.severity].push(ex);
       return acc;
@@ -101,7 +105,7 @@ export function ExceptionsTab({ runId, isLocked }: ExceptionsTabProps) {
     { BLOCKER: [], WARNING: [], INFO: [] },
   );
 
-  function handleResolve(ex: PayrollException) {
+  function handleResolve(ex: RunException) {
     resolveMutation.mutate(
       { exceptionId: ex.id },
       {
@@ -111,7 +115,7 @@ export function ExceptionsTab({ runId, isLocked }: ExceptionsTabProps) {
     );
   }
 
-  function handleOverrideRequest(ex: PayrollException) {
+  function handleOverrideRequest(ex: RunException) {
     setOverrideTarget(ex);
     form.reset({ reason: "" });
   }
@@ -143,7 +147,7 @@ export function ExceptionsTab({ runId, isLocked }: ExceptionsTabProps) {
     setFilterStatus(val as PayrollExceptionStatus | "all");
   }
 
-  const allEmpty = !isLoading && !isError && (exceptions ?? []).length === 0;
+  const allEmpty = !isLoading && !isError && exceptions.length === 0;
 
   function handleRetry() {
     void refetch();
@@ -255,6 +259,12 @@ export function ExceptionsTab({ runId, isLocked }: ExceptionsTabProps) {
           </div>
         );
       })}
+
+      {hasMoreExceptions && (
+        <p className="text-dense text-muted-foreground">
+          Showing the first page of exceptions for this run. More remain — resolve these and refresh to see the rest.
+        </p>
+      )}
 
       <AlertDialog open={!!overrideTarget} onOpenChange={handleOverrideCancel}>
         <AlertDialogContent>

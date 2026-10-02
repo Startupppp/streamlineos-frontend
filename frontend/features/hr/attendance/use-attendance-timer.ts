@@ -11,6 +11,12 @@ import {
   useHrHolidaysForCalendar,
 } from "@/hooks/api/hr";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { classifyPunchFailure, type PunchFailureKind } from "./punch-failure";
+
+export interface PunchFailure {
+  kind: PunchFailureKind;
+  message: string;
+}
 
 export function useAttendanceTimer() {
   const [now, setNow] = useState(new Date());
@@ -47,20 +53,32 @@ export function useAttendanceTimer() {
       ? `Today is a holiday (${todayHolidayName}) — check-in is not available`
       : null;
 
+  const [punchFailure, setPunchFailure] = useState<PunchFailure | null>(null);
+  const [punchAcknowledgement, setPunchAcknowledgement] = useState(0);
+
   const checkInMutation = useHrCheckIn({
     onSuccess: () => {
       toast.success("Clocked in successfully");
       setLocalCooldown(0);
+      setPunchFailure(null);
+      setPunchAcknowledgement((count) => count + 1);
     },
-    onError: (err) => toast.error(getErrorMessage(err)),
+    onError: (err) => {
+      const message = getErrorMessage(err);
+      setPunchFailure({ kind: classifyPunchFailure(message), message });
+    },
   });
 
   const checkOutMutation = useHrCheckOut({
     onSuccess: () => {
       toast.success("Clocked out successfully");
       setLocalCooldown(120);
+      setPunchAcknowledgement((count) => count + 1);
     },
-    onError: (err) => toast.error(getErrorMessage(err)),
+    onError: (err) => {
+      const message = getErrorMessage(err);
+      setPunchFailure({ kind: classifyPunchFailure(message), message });
+    },
   });
 
   const [localBreakOverride, setLocalBreakOverride] = useState<boolean | null>(
@@ -176,8 +194,16 @@ export function useAttendanceTimer() {
     void refetchStatus();
   }, [refetchStatus]);
 
+  const dismissPunchFailure = useCallback(() => setPunchFailure(null), []);
+
   const dailyStats = statusData?.dailyStats;
   const checkInTime = statusData?.todayLog?.checkIn;
+  const checkOutTime = statusData?.todayLog?.checkOut;
+  const lastPunchLabel = checkOutTime
+    ? `Checked out · ${format(new Date(checkOutTime), "h:mm a")}`
+    : checkInTime
+      ? `Checked in · ${format(new Date(checkInTime), "h:mm a")}`
+      : null;
   const cooldownLabel = `${Math.floor(localCooldown / 60)}:${String(localCooldown % 60).padStart(2, "0")}`;
 
   const statusLabel = isBlockedDay
@@ -210,6 +236,10 @@ export function useAttendanceTimer() {
     handleCheckIn,
     handleCheckOut,
     handleBreakToggle,
+    punchFailure,
+    dismissPunchFailure,
+    punchAcknowledgement,
+    lastPunchLabel,
     isCheckingIn: checkInMutation.isPending,
     isCheckingOut: checkOutMutation.isPending,
     isTogglingBreak: breakMutation.isPending,

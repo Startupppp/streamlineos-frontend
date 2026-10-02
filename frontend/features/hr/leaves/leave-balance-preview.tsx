@@ -1,6 +1,7 @@
 "use client";
 
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Info } from "lucide-react";
+import { statusToneClasses } from "@/lib/design-tokens";
 
 interface BalancePreview {
   available: number;
@@ -64,6 +65,47 @@ export function LeaveLimitError({ message }: { message: string }) {
     <div className="flex items-start gap-2.5 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
       <AlertCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
       <p className="text-xs text-destructive">{message}</p>
+    </div>
+  );
+}
+
+export function LeaveBalanceUnavailable({ typeName }: { typeName: string | null }) {
+  const tone = statusToneClasses("neutral");
+  return (
+    <div
+      className={`flex items-start gap-2.5 rounded-lg border p-3 ${tone.surface} ${tone.rule} ${tone.ink}`}
+    >
+      <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+      <p className="text-dense">
+        No balance is available for {typeName ?? "this leave type"} yet. You can
+        still submit; your approver sees the balance your policy records.
+      </p>
+    </div>
+  );
+}
+
+export function LeaveRequestHint({ message }: { message: string }) {
+  const tone = statusToneClasses("warning");
+  return (
+    <div
+      className={`flex items-start gap-2.5 rounded-lg border p-3 ${tone.surface} ${tone.rule} ${tone.ink}`}
+      role="note"
+    >
+      <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+      <p className="text-dense">{message}</p>
+    </div>
+  );
+}
+
+export function LeaveOverlapBlocked({ message }: { message: string }) {
+  const tone = statusToneClasses("danger");
+  return (
+    <div
+      className={`flex items-start gap-2.5 rounded-lg border p-3 ${tone.surface} ${tone.rule} ${tone.ink}`}
+      role="alert"
+    >
+      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+      <p className="text-dense">{message}</p>
     </div>
   );
 }

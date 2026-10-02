@@ -16,6 +16,7 @@ import { useDebouncedValue } from "@/hooks/common/use-debounce";
 
 import { ReviewTable, type EmployeeDocSummary } from "@/features/hr/document-review/review-table";
 import { ReviewSheet } from "@/features/hr/document-review/review-sheet";
+import { DocumentAcknowledgementsPanel } from "@/features/hr/document-review/document-acknowledgements-panel";
 
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -153,6 +154,10 @@ export function DocumentReviewPage() {
         </div>
       }
     >
+      <div className="mb-3 shrink-0">
+        <DocumentAcknowledgementsPanel />
+      </div>
+
       <div className="flex flex-1 min-h-0 flex-col">
         <ReviewTable
           list={list}

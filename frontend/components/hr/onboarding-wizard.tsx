@@ -102,7 +102,17 @@ export function OnboardingWizard() {
     const fields = STEP_FIELDS[currentStep];
     if (fields) {
       const valid = await form.trigger(fields);
-      if (!valid) return;
+      if (!valid) {
+        const firstInvalid = fields.find((field) => form.getFieldState(field).error);
+        if (firstInvalid) {
+          form.setFocus(firstInvalid);
+          toast.error(
+            form.getFieldState(firstInvalid).error?.message ??
+              "Fill in the highlighted fields to continue.",
+          );
+        }
+        return;
+      }
     }
     if (currentStep === 1) {
       const email = form.getValues("email")?.toLowerCase().trim();
@@ -233,18 +243,18 @@ export function OnboardingWizard() {
               size="sm"
               onClick={handlePrev}
               disabled={currentStep === 1 || onboardEmployee.isPending}
-              className="gap-1"
+              className="min-h-11 gap-1 sm:min-h-0"
             >
               <ChevronLeft className="h-3.5 w-3.5" />
               Back
             </Button>
 
             {currentStep < STEPS.length ? (
-              <Button type="button" size="sm" onClick={handleNext} className="gap-1" disabled={isCheckingEmail}>
+              <Button type="button" size="sm" onClick={handleNext} className="min-h-11 gap-1 sm:min-h-0" disabled={isCheckingEmail}>
                 {isCheckingEmail ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Checking...</> : <>Next<ChevronRight className="h-3.5 w-3.5" /></>}
               </Button>
             ) : (
-              <LoadingButton type="submit" size="sm" isPending={onboardEmployee.isPending} loadingText="Saving..." className="gap-1 min-w-[100px]">
+              <LoadingButton type="submit" size="sm" isPending={onboardEmployee.isPending} loadingText="Saving..." className="min-h-11 gap-1 min-w-[100px] sm:min-h-0">
                 <Check className="h-3.5 w-3.5" />Submit
               </LoadingButton>
             )}
