@@ -5,7 +5,7 @@
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { collectAppRoutes } from "@/lib/rbac/route-access/app-routes";
-import { backendPermissionNames } from "@/test-utils/permission-catalog";
+import type { PermissionKey } from "@/lib/rbac/permissions";
 
 const APP_DIR = resolve(process.cwd(), "app");
 const FRONTEND_ROOT = resolve(process.cwd());
@@ -15,7 +15,7 @@ type Classification =
       readonly kind: "prefetch";
       readonly helper: string;
       readonly module: string;
-      readonly gate: string;
+      readonly gate: PermissionKey | "enforceRouteAccess";
     }
   | { readonly kind: "no-prefetch"; readonly reason: string; readonly evidence: string };
 
@@ -261,7 +261,6 @@ describe("the settings prefetch census", () => {
 
   it("reads real route files, so an empty sweep cannot pass", () => {
     expect(routes.length).toBe(23);
-    expect(backendPermissionNames().size).toBeGreaterThan(400);
   });
 
   it("classifies every settings route on disk", () => {
@@ -339,16 +338,6 @@ describe("a prefetch classification is backed by real wiring", () => {
       expect([route, gateCall < source.indexOf(`${helper}(`)]).toEqual([route, true]);
     },
   );
-
-  it("asserts only permission keys that exist verbatim in the backend catalog", () => {
-    const names = backendPermissionNames();
-    const unknown = prefetched
-      .map((entry) => entry.classification.gate)
-      .filter((gate) => gate !== "enforceRouteAccess")
-      .filter((gate) => !names.has(gate));
-
-    expect(unknown).toEqual([]);
-  });
 
   it("every prefetch module resolves its gate before issuing a protected read", () => {
     for (const relative of [SETTINGS_ADMIN, SETTINGS_BILLING]) {

@@ -45,7 +45,7 @@ function ListSurface({ state }: { state: "loading" | "empty" | "error" | "denied
         />
       ) : null}
       {state === "denied" ? (
-        <NoPermissionState permission="accounting:invoices:view" />
+        <NoPermissionState permission="accounting:receivables:read" />
       ) : null}
     </PageWrapper>
     </TooltipProvider>
@@ -126,9 +126,9 @@ describe("state primitives carry the semantics screen readers need", () => {
   });
 
   it("NoPermissionState is a status region naming the missing permission", () => {
-    render(<NoPermissionState permission="accounting:invoices:view" />);
+    render(<NoPermissionState permission="accounting:receivables:read" />);
     expect(screen.getByRole("status")).toBeInTheDocument();
-    expect(screen.getByText("accounting:invoices:view")).toBeInTheDocument();
+    expect(screen.getByText("accounting:receivables:read")).toBeInTheDocument();
   });
 
   it("EmptyState leads with a heading so it is not an unlabelled region", () => {

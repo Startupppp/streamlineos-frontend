@@ -23,7 +23,7 @@ export type PageStateResolution =
   | { kind: "loading" }
   | { kind: "ready" }
   | { kind: "empty" }
-  | { kind: "denied"; permission: string | null; message?: string }
+  | { kind: "denied"; permission: PermissionKey | null; message?: string }
   | { kind: "module-disabled"; moduleKey: string }
   | { kind: "module-denied"; moduleKey: string }
   | { kind: "plan-required"; moduleKey: string; upgradePath: string }

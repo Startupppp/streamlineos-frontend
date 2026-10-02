@@ -1,9 +1,9 @@
 import { MANIFEST } from "@/lib/module-manifest";
 
 const NAMESPACE_TO_MODULE = new Map<string, string>();
-for (const module of MANIFEST.modules) {
-  for (const namespace of module.administersNamespaces) {
-    NAMESPACE_TO_MODULE.set(namespace, module.id);
+for (const manifestModule of MANIFEST.modules) {
+  for (const namespace of manifestModule.administersNamespaces) {
+    NAMESPACE_TO_MODULE.set(namespace, manifestModule.id);
   }
 }
 
@@ -20,15 +20,4 @@ export function namespaceOf(permissionKey: string): string {
 
 export function administeringModuleOf(permissionKey: string): string {
   return moduleOwningNamespace(namespaceOf(permissionKey));
-}
-
-export function actionOf(permissionKey: string): string {
-  const segments = permissionKey.split(":");
-  return segments[segments.length - 1] ?? permissionKey;
-}
-
-export function resourceOf(permissionKey: string): string {
-  const segments = permissionKey.split(":");
-  if (segments.length < 3) return permissionKey;
-  return segments.slice(1, -1).join(":");
 }

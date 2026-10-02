@@ -47,7 +47,7 @@ export function PermissionScopeSelector({
 
   useEffect(() => {
     if (!data) return;
-    const available = new Set(data.map((permission) => permission.name));
+    const available = new Set<string>(data.map((permission) => permission.name));
     const valid = value.filter((permission) => available.has(permission));
     if (valid.length !== value.length) onChange(valid);
   }, [data, onChange, value]);

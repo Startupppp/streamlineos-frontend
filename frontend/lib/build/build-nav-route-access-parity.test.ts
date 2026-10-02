@@ -1,12 +1,9 @@
-import { readdirSync, readFileSync } from "node:fs";
-import { join, resolve } from "node:path";
 import { resolveRouteAccess } from "@/lib/rbac/route-access/route-access";
 import { buildScopeCatalog, splitDestinationHref } from "./build-nav-model";
 import { BUILD_MY_WORK_DESTINATIONS } from "./nav/build-stable-destinations";
 import { resolveBuildScope } from "./build-scope";
 import type { BuildNavDestination } from "./nav/build-nav-destination";
 import type { PermissionKey } from "@/lib/rbac/permissions";
-import { backendPermissionNames } from "@/test-utils/permission-catalog";
 
 const SCOPE_PATHS = [
   "/build",
@@ -93,18 +90,6 @@ describe("BSN-04-001 permission matrix — every primary destination across all 
       .map((destination) => destination.id);
     expect(withoutPermission).toEqual([]);
   });
-
-  it("the backend catalog has enough keys that a missing import cannot pass vacuously", () => {
-    expect(backendPermissionNames().size).toBeGreaterThan(200);
-  });
-
-  it("every nav permission key exists in the backend catalog so useCan is never permanently false", () => {
-    const catalog = backendPermissionNames();
-    const missing = destinations.flatMap((destination) =>
-      keysOf(destination.requiredPermission).filter((key) => !catalog.has(key)),
-    );
-    expect(missing).toEqual([]);
-  });
 });
 
 type CrossScopeCase = [
@@ -159,45 +144,4 @@ describe("BSN-01-026 cross-scope deep links — project extensions do not over-m
       expect(resolved).toContain(basePermission);
     },
   );
-});
-
-const FEATURES_BUILD_DIR = resolve(process.cwd(), "features", "build");
-const USE_CAN_KEY = /\buseCan\s*\(\s*["']([^"']+)["']\s*\)/g;
-const PERMISSION_KEY_SHAPE = /^[a-z][a-z0-9_-]*(?::[a-z0-9_-]+)+$/;
-
-function walkTsxFiles(dir: string): string[] {
-  const out: string[] = [];
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    const full = join(dir, entry.name);
-    if (entry.isDirectory()) out.push(...walkTsxFiles(full));
-    else if (entry.name.endsWith(".tsx")) out.push(full);
-  }
-  return out;
-}
-
-function collectBuildUseCanKeys(): string[] {
-  const out: string[] = [];
-  for (const filePath of walkTsxFiles(FEATURES_BUILD_DIR)) {
-    const source = readFileSync(filePath, "utf8");
-    let match: RegExpExecArray | null;
-    USE_CAN_KEY.lastIndex = 0;
-    while ((match = USE_CAN_KEY.exec(source)) !== null) {
-      const key = match[1];
-      if (PERMISSION_KEY_SHAPE.test(key)) out.push(key);
-    }
-  }
-  return out;
-}
-
-const BUILD_USE_CAN_KEYS = [...new Set(collectBuildUseCanKeys())].sort();
-
-describe("BSN-04-001 — every useCan key in a Build component exists in the backend catalog", () => {
-  it("finds a non-trivial number of distinct keys, so a broken filesystem walk cannot pass vacuously", () => {
-    expect(BUILD_USE_CAN_KEYS.length).toBeGreaterThan(30);
-  });
-
-  it("names no key the backend catalog lacks, so no row action, create action, setting, badge or command is permanently disabled", () => {
-    const catalog = backendPermissionNames();
-    expect(BUILD_USE_CAN_KEYS.filter((key) => !catalog.has(key))).toEqual([]);
-  });
 });

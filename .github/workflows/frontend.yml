@@ -805,15 +805,18 @@ jobs:
       # been enforced in CI.
       #
       # A vendored copy that goes stale is worse than no copy, so this gate is
-      # the load-bearing half and TWO of its three rules are hermetic:
+      # the load-bearing half and THREE of its five rules are hermetic:
       # rule 1 floors and shape, rule 2 cross-checks every `x-permission` in the
-      # vendored OpenAPI contract against the catalogue. Both were bite-proved in
-      # a frontend-only tree: dropping one route-bound permission exits 1 naming
-      # it, and emptying the catalogue exits 1 — WITH the opt-in set, so the
-      # opt-in cannot mask them. It downgrades only rule 3, the byte-for-byte
-      # regeneration against the backend, which is reported PARTIAL here and
-      # NOT RUN rather than silently skipped. To make rule 3 blocking, add a
-      # checkout of Startupppp/streamlineos-backend and set STREAMLINE_BACKEND_ROOT.
+      # vendored OpenAPI contract against the catalogue, rule 3 requires the
+      # generated TypeScript adapter to be byte-identical to a serialisation of
+      # the JSON. Rules 1-2 were bite-proved in a frontend-only tree: dropping one
+      # route-bound permission exits 1 naming it, and emptying the catalogue
+      # exits 1 — WITH the opt-in set, so the opt-in cannot mask them. It
+      # downgrades only rules 4-5, the byte-for-byte regeneration against the
+      # backend sources and the agreement with the backend's evaluated
+      # PERMISSIONS, which are reported PARTIAL here and NOT RUN rather than
+      # silently skipped. To make them blocking, add a checkout of
+      # Startupppp/streamlineos-backend and set STREAMLINE_BACKEND_ROOT.
       - name: Vendored permission catalogue is well-formed and agrees with the API contract
         if: ${{ !cancelled() }}
         env:

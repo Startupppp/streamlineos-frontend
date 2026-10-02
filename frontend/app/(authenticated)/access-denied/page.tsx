@@ -4,6 +4,7 @@ import {
 } from "@/components/shared/page-state-views";
 import { fromModuleDenial } from "@/lib/page-state/resolve-page-state";
 import { moduleDenialReasonContract } from "@/lib/page-state/page-state-schema";
+import { isPermissionKey } from "@/contracts/permission-key.generated";
 
 const MODULE_REQUIRED_PREFIX = "module:";
 
@@ -35,7 +36,7 @@ function resolveAccessDeniedState(
     );
   }
 
-  return { kind: "denied", permission: required };
+  return { kind: "denied", permission: isPermissionKey(required) ? required : null };
 }
 
 export default async function AccessDeniedPage({ searchParams }: AccessDeniedPageProps) {

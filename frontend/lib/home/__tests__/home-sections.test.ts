@@ -6,9 +6,7 @@ import {
   homeSectionModule,
   homeSectionPermission,
 } from "../home-sections";
-import type { PermissionKey } from "@/lib/rbac/permissions";
 import { backendPath } from "@/test-utils/backend-repo";
-import { backendPermissionNames } from "@/test-utils/permission-catalog";
 
 const FRONTEND_ROOT = resolve(__dirname, "../../..");
 const DASHBOARD_HOOKS = join(FRONTEND_ROOT, "hooks", "api", "dashboard.ts");
@@ -52,11 +50,8 @@ function backendDashboardRoutes(): Map<string, BackendRoute> {
 }
 
 describe("Home section access metadata", () => {
-  const catalog = backendPermissionNames();
-
   it("declares a section for a real surface, so an empty registry cannot pass", () => {
     expect(HOME_SECTIONS.length).toBeGreaterThanOrEqual(15);
-    expect(catalog.size).toBeGreaterThan(400);
   });
 
   it("gives every section a unique id and a non-empty label and endpoint", () => {
@@ -66,13 +61,6 @@ describe("Home section access metadata", () => {
       expect(section.label.length).toBeGreaterThan(2);
       expect(section.endpoint.startsWith("/")).toBe(true);
     }
-  });
-
-  it("uses only permission keys that exist in the catalog", () => {
-    const ghosts = HOME_SECTIONS.map((section) => homeSectionPermission(section.id))
-      .filter((key): key is PermissionKey => key !== null)
-      .filter((key) => !catalog.has(key));
-    expect(ghosts).toEqual([]);
   });
 
   it("throws rather than guessing for an unknown section id", () => {
