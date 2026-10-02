@@ -35,6 +35,15 @@ Retain source evidence, map findings to canonical interfaces, and close only on 
 
 Do not expand a historical severity into a new release blocker without attribution. Do not call RBAC broken because a UI preset is restricted. Compare current catalog, intended role and observed behavior; findings remain verification work until reproduced.
 
+## Current source findings (2026-10-03)
+
+| Finding | Current source evidence | Required correction | Closure evidence |
+|---|---|---|---|
+| BLD-INVITE-DELIVERY-01 | `EmailOutboxService.enqueueManyOnly` can return `queued: false` for suppression or no provider; `InvitationCreateService.bulkInvite` currently ignores the outcome while setup records successful invitation rows | Keep invitation persistence and email delivery as separate outcomes; record a failed delivery event and show a partial setup result with truthful recipient status | Focused suppression/no-provider/resend tests, database event and outbox rows, owner status after refresh, recovered delivery, and a real recipient link |
+| BLD-MODULE-REVOKE-01 | Direct standing removal can leave group, personal, or delegated permission sources active; focused red regression cases were added under ARCH-01 | Write an explicit per-user module deny in the same transaction as revocation, and clear it only on authorized regrant | Focused source tests plus target database, cache revocation, live session, job/export/file/AI, and Org Owner/Admin negatives |
+
+These findings are source-level and remain Current unverified as deployed behavior until the named runtime evidence is collected.
+
 ## Testing Decisions
 
 For every closure record: frontend/backend/worker revisions; environment and synthetic tenants; actor/principal and exact role/grant; initial state; action; persisted DB/API result; console/network; audit/outbox/job/cache evidence; unauthorized/cross-tenant negative; responsive path. Existing focused tests support closure but cannot substitute browser/persistence/deployment evidence.
@@ -56,4 +65,5 @@ Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGE
 - [x] Preserve the historical BUG/PM/UX chronology and map each named finding to a planned seam and closure evidence in [Implementation Decisions](#implementation-decisions) and [research traceability](./research-traceability.md#adopted-decisions-and-bug-hooks).
 - [ ] Reproduce each open high-priority finding on a named current frontend/backend/worker revision, actor, tenant, and initial state; keep contested BUG-007 unattributed until its original condition is reviewed.
 - [ ] Verify invite acceptance, Build standing, and client grant activation in that order with actual membership/grant rows, usable entry, retry, and wrong-identity/project negatives.
+- [ ] Close BLD-INVITE-DELIVERY-01 and BLD-MODULE-REVOKE-01 with the exact source correction, focused negative checks, persisted event/access state, cache behavior, and owner/member browser paths.
 - [ ] Attach network/console, audit/outbox/cache, target DB, responsive, and unauthorized-role evidence before marking an individual bug closed.
