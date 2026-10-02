@@ -124,6 +124,7 @@ import { useProject, useProjectBoardTickets, useUpdateTicket, useDeleteTicket, u
 import { useCan, useAccess } from "@/hooks/api/access";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import { useEpicPage } from "@/hooks/api/build/advanced";
+import type { EpicItem } from "@/hooks/api/build/execution-schema";
 import { useExportTickets } from "@/hooks/api/build/ticket-import-export";
 import { downloadTextFile } from "@/features/build/import-export/download-text-file";
 import { toast } from "sonner";
@@ -137,7 +138,7 @@ const mockUseAccess = useAccess as jest.Mock;
 const mockUseBuildListFilters = useBuildListFilters as jest.Mock;
 const mockUseEpicPage = useEpicPage as jest.Mock;
 
-function epicPage(rows: unknown[]) {
+function epicPage(rows: EpicItem[]) {
   return {
     data: { data: rows, pagination: { limit: 25, hasMore: false, nextCursor: null } },
     isLoading: false,
@@ -153,8 +154,14 @@ const ACCESS_GRANTED = {
   isLoading: false,
 };
 
-const EPIC_A = { id: 1, orgId: "o1", projectId: 1, title: "Epic Alpha", type: "EPIC", status: "TODO", priority: "MEDIUM", ticketNumber: 1, epicId: null, reporterId: "u1", points: null, storyPoints: null, link: null, rank: "1000", parentTicketId: null, originalEstimate: null, timeSpent: null, startDate: null, dueDate: null, moduleId: null, cycleId: null, sequenceId: "P-1", estimate: null, createdAt: "2026-09-01", updatedAt: "2026-09-01", assigneeId: null };
-const EPIC_B = { ...EPIC_A, id: 2, title: "Epic Beta", ticketNumber: 2, sequenceId: "P-2", status: "IN_PROGRESS" };
+const EPIC_A: EpicItem = {
+  id: 1, orgId: "o1", projectId: 1, title: "Epic Alpha", description: null, type: "EPIC", status: "TODO",
+  priority: "MEDIUM", health: null, ticketNumber: 1, cycleId: null, epicId: null, assigneeMembershipId: null,
+  points: null, storyPoints: null, startDate: null, dueDate: null, estimate: null, completionPercentage: 0,
+  rank: "1000", timeSpent: "", version: 1, dependencyCount: 0, deletedAt: null,
+  createdAt: "2026-09-01", updatedAt: "2026-09-01", assignee: null,
+};
+const EPIC_B: EpicItem = { ...EPIC_A, id: 2, title: "Epic Beta", ticketNumber: 2, status: "IN_PROGRESS" };
 
 const makeMutation = () => ({ mutate: jest.fn(), mutateAsync: jest.fn(), isPending: false });
 

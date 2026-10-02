@@ -33,8 +33,9 @@ export function ApDocumentNewPage({
   const pageState = usePageState({
     permission: "accounting:payables:manage",
     isLoading: bookQuery.isLoading,
-    isError: false,
-    isEmpty: !bookQuery.isLoading && !bookQuery.data,
+    isError: bookQuery.isError,
+    error: bookQuery.error,
+    isEmpty: !bookQuery.isLoading && !bookQuery.isError && !bookQuery.data,
   });
 
   function handleSaved(document: ApDocumentDetail): void {

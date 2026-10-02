@@ -64,6 +64,7 @@ export function useKbAnalyticsOverview(
     ...(scope !== undefined ? { scope } : {}),
   };
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.analyticsOverview(queryParams),
     queryFn: ({ signal }) => apiClient.get<KbAnalyticsOverview>("/kb/analytics/overview", queryParams, signal, kbAnalyticsOverviewContract),
     staleTime: 5 * 60_000,

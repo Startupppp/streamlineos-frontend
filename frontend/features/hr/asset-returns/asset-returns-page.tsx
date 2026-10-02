@@ -37,7 +37,7 @@ export function AssetReturnsPage() {
   const { data: employeesRaw } = useHrEmployees({ limit: 100 });
   const employees = useMemo(() => unwrapEmployees(employeesRaw), [employeesRaw]);
 
-  const { data: assignedAssetsData } = useHrAssetList({ status: "ASSIGNED", limit: 100 });
+  const { data: assignedAssetsData, error: assignedAssetsError } = useHrAssetList({ status: "ASSIGNED", limit: 100 });
 
   const allAssignedAssets = useMemo<Asset[]>(() => {
     const rows = assignedAssetsData?.data ?? [];
@@ -205,6 +205,7 @@ export function AssetReturnsPage() {
         open={sheetOpen}
         onOpenChange={handleSheetOpenChange}
         assetOptions={assetOptions}
+        assetLoadError={assignedAssetsError ? getErrorMessage(assignedAssetsError) : undefined}
         allAssignedAssets={allAssignedAssets}
         selectedAssetId={selectedAssetId}
         resolvedUserId={resolvedUserId}

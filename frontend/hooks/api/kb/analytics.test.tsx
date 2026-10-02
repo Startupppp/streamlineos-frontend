@@ -22,7 +22,10 @@ import {
   useKnowledgeGaps,
   useGapRelatedPages,
 } from "./analytics";
-import { kbAnalyticsGapsContract } from "./kb-analytics-schema";
+import {
+  kbAnalyticsGapRelatedPagesContract,
+  kbAnalyticsGapsContract,
+} from "./kb-analytics-schema";
 
 const PAGINATION = { limit: 50, hasMore: false, nextCursor: null };
 
@@ -77,9 +80,8 @@ const GAP_ROW = {
 const GAP_RELATED_PAGE_ROW = {
   id: 10,
   title: "Password reset guide",
-  slug: "password-reset",
-  spaceId: 2,
-  score: 0.85,
+  status: "published",
+  updatedAt: "2026-09-25T00:00:00.000Z",
 };
 
 let client: QueryClient;
@@ -176,6 +178,14 @@ describe("useKnowledgeGaps — wire-shape is visible through selectFlatPages, ga
 });
 
 describe("useGapRelatedPages — wire-shape is visible through selectFlatPages, pages alias preserved", () => {
+  it("the GAP_RELATED_PAGE_ROW fixture matches the wire shape the backend sends, which declares status and updatedAt rather than slug, spaceId and score", () => {
+    const result = kbAnalyticsGapRelatedPagesContract.safeParse({
+      data: [GAP_RELATED_PAGE_ROW],
+      pagination: PAGINATION,
+    });
+    expect(result.success).toBe(true);
+  });
+
   it("exposes flat rows under the pages property when the wire sends { data: [], pagination }", async () => {
     mockGet.mockResolvedValue({ data: [GAP_RELATED_PAGE_ROW], pagination: PAGINATION });
 

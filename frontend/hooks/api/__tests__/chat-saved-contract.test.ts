@@ -46,7 +46,7 @@ describe("chatSavedMessagesContract accepts what the saved list emits", () => {
     expect(chatSavedMessagesContract.safeParse({ items: [departed], nextCursor: null }).success).toBe(true);
   });
 
-  it("final-page null nextCursor is normalised to undefined so TanStack v5 getNextPageParam terminates pagination", () => {
+  it("normalises a final-page null nextCursor to undefined, the value TanStack v5 reads as no next page", () => {
     const parsed = chatSavedMessagesContract.parse({ items: [], nextCursor: null });
     expect(parsed.nextCursor).toBeUndefined();
   });

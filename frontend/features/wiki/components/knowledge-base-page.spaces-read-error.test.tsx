@@ -133,6 +133,8 @@ it("keeps a spaces fetch 400 off the route boundary so the knowledge-base page s
     expect(queries.some((q) => q.state.status === "error")).toBe(true);
   });
 
-  expect(screen.queryByTestId("boundary-fallback")).not.toBeInTheDocument();
-  expect(screen.getByText("Ask your knowledge base")).toBeInTheDocument();
+  await waitFor(() => {
+    expect(screen.queryByTestId("boundary-fallback")).not.toBeInTheDocument();
+    expect(screen.getByText("Ask your knowledge base")).toBeInTheDocument();
+  });
 });
