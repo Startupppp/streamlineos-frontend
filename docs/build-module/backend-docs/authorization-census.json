@@ -1,3 +1,0 @@
-{
-  "_pointer": "This file has been replaced. The generated census lives at backend/docs/build-module/authorization-census.json. Regenerate with: cd backend && pnpm check:build-authz-census (generator: backend/scripts/build-authorization-census.mjs). This root copy was stale — it named build:sprints:view and build:sprints:manage which no longer appear in source. Do not hand-edit either copy."
-}
