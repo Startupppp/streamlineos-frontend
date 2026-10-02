@@ -42,8 +42,7 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     prefix: "/blog/admin",
     permission: "blog:posts:manage",
     reason:
-      "Matches the backend gate on the /blog/admin/* endpoints. Authoring is administration, so it is gated on manage rather than on the public read key.",
-    backendRoute: { method: "get", path: "/blog/admin/posts" },
+      "Redirect stub to the standalone blog admin, which owns editorial writes now that the backend /blog/admin/* operations are retired. It forwards only holders of the authoring key and has no navigation entry.",
   },
   {
     prefix: "/subjects",
