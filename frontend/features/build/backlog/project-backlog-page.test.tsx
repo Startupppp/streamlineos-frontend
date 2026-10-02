@@ -24,8 +24,21 @@ jest.mock("sonner", () => ({
 }));
 
 const mockUseCan = jest.fn((_key: string) => false);
+const mockAccessScopes: { current: Record<string, string> } = {
+  current: { "build:view": "all" },
+};
 jest.mock("@/hooks/api/access", () => ({
   useCan: (key: string) => mockUseCan(key),
+  useAccess: () => ({
+    data: { isOrgOwner: false, scopes: mockAccessScopes.current, modules: {} },
+    isLoading: false,
+    isError: false,
+    error: null,
+  }),
+}));
+
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
 }));
 
 const mockUseProject = jest.fn();
@@ -142,6 +155,7 @@ beforeEach(() => {
   mockUseProject.mockReturnValue(READY_PROJECT);
   mockUseProjectBoardTickets.mockReturnValue(READY_TICKETS);
   mockUseCan.mockReturnValue(false);
+  mockAccessScopes.current = { "build:view": "all" };
 });
 
 function renderPage() {
@@ -256,6 +270,22 @@ describe("ProjectBacklogPage — project loading guard", () => {
     renderPage();
     expect(screen.queryByTestId("project-load-fallback")).toBeNull();
     expect(screen.getByTestId("build-list-surface")).toBeDefined();
+  });
+
+  it("tells a caller without build:view they lack access rather than that the project is unavailable", () => {
+    mockAccessScopes.current = {};
+    mockUseProject.mockReturnValue({ ...READY_PROJECT, data: undefined });
+    renderPage();
+    expect(screen.getByText("Access Restricted")).toBeDefined();
+    expect(screen.queryByText("Project unavailable")).toBeNull();
+    expect(screen.queryByTestId("build-list-surface")).toBeNull();
+  });
+
+  it("still says the project is unavailable to a caller holding build:view whose project read came back empty", () => {
+    mockUseProject.mockReturnValue({ ...READY_PROJECT, data: null });
+    renderPage();
+    expect(screen.getByText("Project unavailable")).toBeDefined();
+    expect(screen.queryByText("Access Restricted")).toBeNull();
   });
 });
 

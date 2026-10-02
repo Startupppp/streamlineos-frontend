@@ -35,6 +35,8 @@ import { HouseIcon, PlusIcon, DownloadIcon } from "@animateicons/react/lucide";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { downloadBlob } from "@/lib/download-blob";
 import { ErrorState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import {
   buildLeaveExportBlob,
   leaveExportToastMessage,
@@ -134,6 +136,14 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
     setActiveTab(value);
   }, []);
 
+  const myLeavesState = usePageState({
+    permission: "self:leaves",
+    isLoading: contextLoading || myLoading,
+    isError: contextError || myError,
+    error: contextErrorValue ?? myErrorValue,
+  });
+  const myLeavesDenied = myLeavesState.kind === "denied";
+
   const balances = (contextData?.balances ?? []) as LeaveBalance[];
   const leaveTypes = (contextData?.types ?? []) as LeaveType[];
   const joiningDate = contextData?.joiningDate ?? null;
@@ -161,7 +171,8 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
   // PROVISIONAL: the backend flag wins; the configured-types fallback keeps the
   // page honest until /me/time-off ships it.
   const noPolicyConfigured =
-    contextData?.noPolicyConfigured ?? leaveTypes.length === 0;
+    !myLeavesDenied &&
+    (contextData?.noPolicyConfigured ?? leaveTypes.length === 0);
   const availableHint = buildAvailableHint(
     balances,
     joiningDate,
@@ -207,7 +218,7 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
     ? "Request leave and work from home."
     : "Manage leave requests, work from home, and approvals.";
 
-  if (contextLoading || myLoading) {
+  if (myLeavesState.kind === "loading") {
     return (
       <PageWrapper
         title={title}
@@ -223,7 +234,7 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
     );
   }
 
-  if (contextError || myError) {
+  if (myLeavesState.kind === "error") {
     const handleRetry = () => {
       void refetchContext();
       void refetchMy();
@@ -259,12 +270,14 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
           filtersClassName="flex-col items-stretch gap-3 overflow-visible pb-3 [&>*]:w-full"
           filters={
             <>
-              <LeavesSummaryStrip
-                totalAvailable={totalAvailable}
-                availableHint={availableHint}
-                pendingCount={pendingCount}
-                approvedDays={approvedDays}
-              />
+              {myLeavesDenied ? null : (
+                <LeavesSummaryStrip
+                  totalAvailable={totalAvailable}
+                  availableHint={availableHint}
+                  pendingCount={pendingCount}
+                  approvedDays={approvedDays}
+                />
+              )}
 
               <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide">
                 <TabsList className="w-full shrink-0 md:w-auto">
@@ -362,20 +375,22 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
               {/* V-051. Nothing can be requested against a policy that does not
                   exist, so the my-leaves panel guides into setup instead of
                   showing an empty list that looks like a spent balance. */}
-              {noPolicyConfigured ? (
-                <LeavesNoPolicyEmptyState />
-              ) : (
-                <LeavesTabContent
-                  balances={balances}
-                  myLeaveRequests={myLeaveRequests}
-                  approvedLeavesThisWeek={selfService ? [] : approvedLeavesThisWeek}
-                  compact={selfService}
-                  onRequestLeave={canRequestLeave ? handleOpenLeaveSheet : undefined}
-                  hasMore={hasMoreMyRequests}
-                  isLoadingMore={isLoadingMoreMyRequests}
-                  onLoadMore={() => void fetchMoreMyRequests()}
-                />
-              )}
+              <PageState resolution={myLeavesState} loading={null}>
+                {noPolicyConfigured ? (
+                  <LeavesNoPolicyEmptyState />
+                ) : (
+                  <LeavesTabContent
+                    balances={balances}
+                    myLeaveRequests={myLeaveRequests}
+                    approvedLeavesThisWeek={selfService ? [] : approvedLeavesThisWeek}
+                    compact={selfService}
+                    onRequestLeave={canRequestLeave ? handleOpenLeaveSheet : undefined}
+                    hasMore={hasMoreMyRequests}
+                    isLoadingMore={isLoadingMoreMyRequests}
+                    onLoadMore={() => void fetchMoreMyRequests()}
+                  />
+                )}
+              </PageState>
             </TabsContent>
 
             <TabsContent value="wfh" className={TAB_PANEL_CLASS}>

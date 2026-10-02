@@ -19,6 +19,8 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { ProjectLoadFallback } from "@/features/build/shared/project-load-fallback";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
 import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
@@ -102,6 +104,13 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
     error: projectErrorValue,
     refetch: refetchProject,
   } = useProject(projectId);
+  const projectState = usePageState({
+    permission: "build:view",
+    isLoading: projectLoading,
+    isError: projectError,
+    error: projectErrorValue,
+    isEmpty: !data,
+  });
   const {
     data: boardTickets,
     isLoading: ticketsLoading,
@@ -321,7 +330,7 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
     [data?.key],
   );
 
-  if (projectLoading) {
+  if (projectState.kind === "loading") {
     return (
       <PageWrapper title="Backlog" subtitle="Loading...">
         <DataTableSkeleton mobileCards rows={12} headers={BACKLOG_TABLE_HEADERS} className="flex-1 min-h-0" />
@@ -329,7 +338,7 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
     );
   }
 
-  if (projectError) {
+  if (projectState.kind === "error" || (projectError && projectState.kind === "empty")) {
     return (
       <ProjectLoadFallback
         title="Backlog"
@@ -339,16 +348,24 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
     );
   }
 
-  if (!data)
+  if (projectState.kind !== "ready" || !data)
     return (
       <PageWrapper title="Backlog">
-        <EmptyState
-          className="flex-1"
-          illustrationPreset="projects"
-          title="Project unavailable"
-          description="This project could not be loaded. Pick another project to carry on."
-          action={{ label: "All Projects", href: "/build" }}
-        />
+        <PageState
+          resolution={projectState}
+          loading={null}
+          empty={
+            <EmptyState
+              className="flex-1"
+              illustrationPreset="projects"
+              title="Project unavailable"
+              description="This project could not be loaded. Pick another project to carry on."
+              action={{ label: "All Projects", href: "/build" }}
+            />
+          }
+        >
+          {null}
+        </PageState>
       </PageWrapper>
     );
 
