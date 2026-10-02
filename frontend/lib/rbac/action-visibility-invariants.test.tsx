@@ -115,6 +115,11 @@ jest.mock("@/features/build/views/view-switcher", () => ({
   ViewSwitcher: () => null,
 }));
 
+jest.mock("@/hooks/api/build/advanced", () => ({
+  ...jest.requireActual("@/hooks/api/build/advanced"),
+  useModules: () => ({ data: [] }),
+}));
+
 jest.mock("@/features/settings/webhooks/webhook-card", () => ({
   WebhookCard: () => null,
   WebhookCardSkeleton: () => null,
