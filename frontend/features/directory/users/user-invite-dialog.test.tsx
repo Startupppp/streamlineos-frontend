@@ -123,6 +123,49 @@ describe("UserInviteDialog — module access payload and standing options", () =
     );
   });
 
+  it.each([
+    ["HR Admin", [{ moduleKey: "hr", standing: "ADMIN" }]],
+    ["Finance", [{ moduleKey: "payroll", standing: "ADMIN" }, { moduleKey: "accounting", standing: "ADMIN" }]],
+  ])("BUG-HRMS-003: the %s preset sends a Member with those module grants, never Org Admin", async (preset, grants) => {
+    const mutateMock = jest.fn();
+    (useInviteUser as jest.Mock).mockReturnValue({ mutate: mutateMock, isPending: false });
+    (useCan as jest.Mock).mockReturnValue(true);
+
+    const user = userEvent.setup();
+    render(<UserInviteDialog open onOpenChange={jest.fn()} />);
+
+    await user.type(screen.getByLabelText(/email address/i), "test@example.com");
+    const [roleSelect] = screen.getAllByRole("combobox");
+    await user.click(roleSelect);
+    await user.click(screen.getByRole("option", { name: /^Member$/ }));
+    await user.click(screen.getByRole("button", { name: preset }));
+    await user.click(screen.getByText("Send invitation"));
+
+    expect(mutateMock).toHaveBeenCalledWith(
+      { email: "test@example.com", role: "MEMBER", moduleAccess: grants },
+      expect.anything(),
+    );
+  });
+
+  it("BUG-HRMS-003: the Viewer preset clears grants back to a plain Member", async () => {
+    const mutateMock = jest.fn();
+    (useInviteUser as jest.Mock).mockReturnValue({ mutate: mutateMock, isPending: false });
+    (useCan as jest.Mock).mockReturnValue(true);
+
+    const user = userEvent.setup();
+    render(<UserInviteDialog open onOpenChange={jest.fn()} />);
+
+    await user.type(screen.getByLabelText(/email address/i), "test@example.com");
+    const [roleSelect] = screen.getAllByRole("combobox");
+    await user.click(roleSelect);
+    await user.click(screen.getByRole("option", { name: /^Member$/ }));
+    await user.click(screen.getByRole("button", { name: "HR Admin" }));
+    await user.click(screen.getByRole("button", { name: "Viewer" }));
+    await user.click(screen.getByText("Send invitation"));
+
+    expect(mutateMock).toHaveBeenCalledWith({ email: "test@example.com", role: "MEMBER" }, expect.anything());
+  });
+
   it("OWNER standing is never offered in any module standing selector", async () => {
     (useCan as jest.Mock).mockReturnValue(true);
 

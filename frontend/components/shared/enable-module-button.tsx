@@ -22,6 +22,10 @@ function internalPath(value: string | null): string | null {
  * who lands on "Module not enabled" can turn it on where they stand instead of
  * hunting for Settings → Modules. A plan that does not include the module is
  * refused by the server, and that refusal is shown as-is.
+ *
+ * QA left Payroll off because the cost of enabling it on a trial was unknown.
+ * `EntitlementsService.setModuleEnabled` writes `org_modules` and never touches
+ * billing, so the copy says so.
  */
 export function EnableModuleButton(props: EnableModuleButtonProps) {
   const canManage = useCan("settings:manage");
@@ -54,7 +58,7 @@ function EnableModuleControl({ moduleKey, moduleName, compact }: EnableModuleBut
         {toggle.isPending ? "Enabling…" : `Enable ${moduleName}`}
       </Button>
       <p className="max-w-xs text-xs text-muted-foreground">
-        You can switch it off again in Settings → Modules. Switching it off keeps its data.
+        Turning a module on does not change your bill. You can switch it off again in Settings → Modules; switching it off keeps its data.
       </p>
     </>
   );
