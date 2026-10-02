@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Sparkles, Quote } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { FloatingComposition } from "@/components/brand/floating-composition";
 
 const EASE_OUT_QUART = [0.22, 1, 0.36, 1] as const;
@@ -47,29 +47,6 @@ export function AuthRightPanel() {
       <div className="relative z-10 flex-1 min-h-0 flex items-center justify-center px-12 py-8">
         <FloatingComposition size="auth" />
       </div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.4, ease: EASE_OUT_QUART }}
-        className="relative z-10 px-12 pb-12"
-      >
-        <div className="flex items-center gap-4 rounded-2xl border border-border bg-white/85 backdrop-blur-sm px-5 py-4 shadow-[0_18px_44px_-22px_rgba(30,64,175,0.15)]">
-          <span className="h-10 w-10 rounded-full inline-flex items-center justify-center text-xs font-bold text-white shrink-0 bg-status-info-fill">
-            AM
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="text-label text-foreground leading-snug mb-1.5">
-              <Quote className="inline h-3 w-3 text-status-info-ink mr-1 -mt-1" />
-              StreamlineOS replaced five separate tools. Our weekly status meeting is gone.
-            </p>
-            <p className="text-dense font-mono text-muted-foreground">
-              <span className="font-semibold text-foreground not-italic">Arjun Mehta</span>
-              {" · "}CTO, FinScale
-            </p>
-          </div>
-        </div>
-      </motion.div>
     </div>
   );
 }
