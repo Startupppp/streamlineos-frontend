@@ -29,7 +29,7 @@ export function Connected() {
         <div className="mt-12 grid gap-10 md:grid-cols-3 md:gap-8">
           {SHARED.map((item) => (
             <div key={item.record} className="border-t border-border pt-6">
-              <h3 className="w-fit rounded-md border border-status-info-rule bg-status-info-surface px-2 py-0.5 text-sm font-medium text-brand-deep">
+              <h3 className="w-fit rounded-md border border-status-info-rule bg-status-info-surface px-2 py-0.5 text-sm font-medium text-status-info-ink">
                 {item.record}
               </h3>
               <p className="mt-4 leading-relaxed text-foreground">{item.body}</p>

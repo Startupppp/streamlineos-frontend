@@ -63,7 +63,7 @@ function FeatureRow({ story, flip }: { story: Story; flip: boolean }) {
   return (
     <div className="grid items-center gap-10 lg:grid-cols-12 lg:gap-16">
       <div className={`lg:col-span-5 ${flip ? "lg:order-2" : ""}`}>
-        <p className="flex items-center gap-2 text-sm font-medium text-brand-deep">
+        <p className="flex items-center gap-2 text-sm font-medium text-status-info-ink">
           {story.path[0]}
           <ArrowRight className="size-3.5" aria-label="to" />
           {story.path[1]}
@@ -75,7 +75,7 @@ function FeatureRow({ story, flip }: { story: Story; flip: boolean }) {
         <ul className="mt-7 space-y-3">
           {story.bullets.map((bullet) => (
             <li key={bullet} className="flex gap-3 text-foreground">
-              <Check className="mt-1 size-4 shrink-0 text-brand-deep" aria-hidden />
+              <Check className="mt-1 size-4 shrink-0 text-status-info-ink" aria-hidden />
               {bullet}
             </li>
           ))}

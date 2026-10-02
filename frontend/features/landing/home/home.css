@@ -10,7 +10,7 @@
 
   /* Primary buttons are brand blue on this page, not the app's ink. Set on the
      token so the shared pricing grid follows without being edited. */
-  --primary: var(--brand-deep);
+  --primary: var(--status-info-fill);
 
   --lpf-bg: #0c0f16;
   --lpf-panel: #131823;
@@ -30,7 +30,7 @@ html:has(.lp) {
 }
 
 .lp :is(a, button, summary):focus-visible {
-  outline: 2px solid var(--brand-deep);
+  outline: 2px solid var(--status-info-fill);
   outline-offset: 3px;
   border-radius: 6px;
 }

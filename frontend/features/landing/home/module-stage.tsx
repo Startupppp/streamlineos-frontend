@@ -137,7 +137,7 @@ export function ModuleStage() {
             {i === active ? (
               <motion.span
                 layoutId="lp-tab-pill"
-                className="absolute inset-0 rounded-lg bg-brand-deep"
+                className="absolute inset-0 rounded-lg bg-status-info-fill"
                 transition={{ duration: reduce ? 0 : 0.35, ease: EASE_OUT }}
               />
             ) : null}
@@ -160,7 +160,7 @@ export function ModuleStage() {
           <ul className="mt-6 space-y-3">
             {current.bullets.map((bullet) => (
               <li key={bullet} className="flex gap-3 leading-relaxed text-foreground">
-                <Check className="mt-1 size-4 shrink-0 text-brand-deep" aria-hidden />
+                <Check className="mt-1 size-4 shrink-0 text-status-info-ink" aria-hidden />
                 {bullet}
               </li>
             ))}

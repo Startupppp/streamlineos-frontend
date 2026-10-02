@@ -21,7 +21,7 @@ export function Hero() {
     <section className="overflow-x-clip pt-14 sm:pt-20">
       <div className={`${CONTAINER} text-center`}>
         <p className="lp-rise inline-flex items-center gap-2 rounded-full border border-border/70 bg-card px-3.5 py-1.5 text-label font-medium text-foreground">
-          <span className="size-1.5 rounded-full bg-brand-deep" aria-hidden />
+          <span className="size-1.5 rounded-full bg-status-info-fill" aria-hidden />
           All-in-one business OS
         </p>
 
