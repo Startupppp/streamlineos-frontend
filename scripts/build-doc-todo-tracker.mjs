@@ -8,20 +8,6 @@ const researchPrefixes = [
   "streamlineos-pm-pack/",
   "streamlineos-ux/",
 ];
-const informationalHeadings = new Set([
-  "purpose",
-  "truth labels",
-  "research inputs",
-  "how to read this document",
-  "how to use this document",
-  "document map",
-  "contents",
-  "sources",
-  "source notes",
-  "folder maintenance",
-  "delivery checklist",
-]);
-
 function normalized(value) {
   return value.split(sep).join("/");
 }
@@ -39,37 +25,6 @@ function markdownFiles(directory) {
 function isResearch(path) {
   const name = normalized(relative(root, path));
   return researchPrefixes.some((prefix) => name.startsWith(prefix));
-}
-
-function tasksFor(source) {
-  const headings = [...source.matchAll(/^##\s+(.+?)\s*$/gm)]
-    .map((match) => match[1].replaceAll("`", ""))
-    .filter((heading) => !informationalHeadings.has(heading.toLowerCase()));
-  const unique = [...new Set(headings)];
-  return [
-    "- [ ] Reconcile this document against the current implementation and its requirement IDs.",
-    ...unique.map(
-      (heading) =>
-        `- [ ] ${heading}: implement the accepted behavior and record focused verification.`,
-    ),
-    "- [ ] Capture applicable browser, role/tenant, persistence, and operations evidence before closing this document.",
-  ];
-}
-
-function appendChecklist(path) {
-  const source = readFileSync(path, "utf8");
-  if (/^## Delivery checklist\s*$/m.test(source)) return;
-  const ledger = normalized(relative(resolve(path, ".."), join(root, "implementation", "REQUIREMENT-LEDGER.md")));
-  const claims = normalized(relative(resolve(path, ".."), join(root, "implementation", "WORK-CLAIMS.md")));
-  const section = [
-    "## Delivery checklist",
-    "",
-    `Track completion in the [requirement ledger](${ledger}) and [work claims](${claims}). An unchecked item stays open until evidence is recorded on the current branch.`,
-    "",
-    ...tasksFor(source),
-    "",
-  ].join("\n");
-  writeFileSync(path, `${source.trimEnd()}\n\n${section}`, "utf8");
 }
 
 function indexText(files) {
@@ -121,15 +76,17 @@ if (mode !== "--apply" && mode !== "--check")
   throw new Error("Use --apply or --check");
 const files = markdownFiles(root);
 const canonical = files.filter((path) => !isResearch(path) && path !== indexPath);
+const missing = canonical.filter(
+  (path) => !/^## Delivery checklist\s*$/m.test(readFileSync(path, "utf8")),
+);
+if (missing.length > 0) {
+  process.stderr.write(`${missing.length} current specifications lack specific Delivery checklists.\n`);
+  process.exit(1);
+}
 if (mode === "--apply") {
-  for (const path of canonical) appendChecklist(path);
-  const currentFiles = markdownFiles(root);
-  writeFileSync(indexPath, indexText(currentFiles), "utf8");
-  process.stdout.write(`Updated ${canonical.length} current specifications and indexed ${currentFiles.length} Markdown files.\n`);
+  writeFileSync(indexPath, indexText(files), "utf8");
+  process.stdout.write(`Refreshed index for ${canonical.length} current specifications and ${files.length} Markdown files.\n`);
 } else {
-  const missing = canonical.filter(
-    (path) => !/^## Delivery checklist\s*$/m.test(readFileSync(path, "utf8")),
-  );
   const expected = indexText(files);
   const actual = readFileSync(indexPath, "utf8");
   if (missing.length > 0 || actual !== expected) {
