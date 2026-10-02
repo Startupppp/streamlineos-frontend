@@ -1,6 +1,6 @@
 # Build documentation TODO index
 
-The Delivery checklist and any inline acceptance checkboxes inside each current specification are the source of truth for its implementation status. Open counts include every unchecked box in that document. A checked research row below means only that the historical file is inventoried; it does not verify any product behavior. Check a specification item only after recording the current revision and required evidence in the requirement ledger and work claims. The 57 current specifications plus this index make 58 canonical Markdown files.
+The Delivery checklist and any inline acceptance checkboxes inside each current specification are the source of truth for its implementation status. Open counts include every unchecked box in that document. A checked research row below means only that the historical source is linked in the research traceability map; it does not verify any product behavior. Check a specification item only after recording the current revision and required evidence in the requirement ledger and work claims. The 59 current specifications plus this index make 60 canonical Markdown files.
 
 ## Delivery checklist
 
@@ -8,16 +8,18 @@ The Delivery checklist and any inline acceptance checkboxes inside each current 
 - [ ] Every accepted research finding has an adopted or deferred destination in the research traceability map.
 - [ ] Release gates, tenant/role browser paths, persistence, and operations evidence are complete.
 
-Current specification items: 26 checked; 374 open. Historical research inventory: 116 files.
+Current specification items: 41 checked; 385 open. Historical research traceability: 116 mapped of 116 files.
 
-## Current specifications (57)
+## Current specifications (59)
 
 - [ ] [architecture/07-architecture-data-api-cache-ai.md](../architecture/07-architecture-data-api-cache-ai.md) — 0 checked, 12 open
 - [ ] [architecture/08-deep-module-reconciliation.md](../architecture/08-deep-module-reconciliation.md) — 0 checked, 12 open
 - [ ] [architecture/screen-data-contracts.md](../architecture/screen-data-contracts.md) — 0 checked, 8 open
-- [ ] [audit/bugs-and-verification.md](../audit/bugs-and-verification.md) — 3 checked, 4 open
+- [ ] [audit/bugs-and-verification.md](../audit/bugs-and-verification.md) — 8 checked, 4 open
 - [ ] [audit/cleanup-manifest.md](../audit/cleanup-manifest.md) — 2 checked, 2 open
+- [ ] [audit/client-portal-activation-gap.md](../audit/client-portal-activation-gap.md) — 3 checked, 5 open
 - [ ] [audit/comprehensive-recheck-2026-10-02.md](../audit/comprehensive-recheck-2026-10-02.md) — 1 checked, 3 open
+- [ ] [audit/onboarding-current-state-gap.md](../audit/onboarding-current-state-gap.md) — 2 checked, 6 open
 - [ ] [audit/original-wow-research-crosswalk.md](../audit/original-wow-research-crosswalk.md) — 1 checked, 2 open
 - [ ] [audit/requirements-coverage.md](../audit/requirements-coverage.md) — 1 checked, 3 open
 - [ ] [audit/research-traceability.md](../audit/research-traceability.md) — 2 checked, 3 open
@@ -29,7 +31,7 @@ Current specification items: 26 checked; 374 open. Historical research inventory
 - [ ] [experience/04-work-surfaces-and-ticket-detail.md](../experience/04-work-surfaces-and-ticket-detail.md) — 0 checked, 7 open
 - [ ] [experience/05-page-catalog-and-flows.md](../experience/05-page-catalog-and-flows.md) — 0 checked, 6 open
 - [ ] [experience/06-ui-component-and-filter-system.md](../experience/06-ui-component-and-filter-system.md) — 0 checked, 7 open
-- [ ] [experience/routes-and-screen-decisions.md](../experience/routes-and-screen-decisions.md) — 0 checked, 6 open
+- [ ] [experience/routes-and-screen-decisions.md](../experience/routes-and-screen-decisions.md) — 1 checked, 5 open
 - [ ] [experience/screens/activation.md](../experience/screens/activation.md) — 0 checked, 7 open
 - [ ] [experience/screens/client-delivery.md](../experience/screens/client-delivery.md) — 0 checked, 7 open
 - [ ] [experience/screens/collaboration.md](../experience/screens/collaboration.md) — 0 checked, 8 open
@@ -38,7 +40,7 @@ Current specification items: 26 checked; 374 open. Historical research inventory
 - [ ] [experience/screens/external-client-portal.md](../experience/screens/external-client-portal.md) — 0 checked, 7 open
 - [ ] [experience/screens/planning.md](../experience/screens/planning.md) — 0 checked, 7 open
 - [ ] [experience/screens/product-discovery.md](../experience/screens/product-discovery.md) — 0 checked, 7 open
-- [ ] [experience/screens/projects.md](../experience/screens/projects.md) — 0 checked, 6 open
+- [ ] [experience/screens/projects.md](../experience/screens/projects.md) — 1 checked, 6 open
 - [ ] [experience/screens/quality.md](../experience/screens/quality.md) — 0 checked, 6 open
 - [ ] [experience/screens/README.md](../experience/screens/README.md) — 0 checked, 4 open
 - [ ] [experience/screens/reporting.md](../experience/screens/reporting.md) — 0 checked, 6 open
@@ -65,126 +67,126 @@ Current specification items: 26 checked; 374 open. Historical research inventory
 - [ ] [implementation/REQUIREMENT-LEDGER.md](REQUIREMENT-LEDGER.md) — 1 checked, 3 open
 - [ ] [implementation/WORK-CLAIMS.md](WORK-CLAIMS.md) — 1 checked, 4 open
 - [ ] [integrations/08-cross-module-client-content-commercial.md](../integrations/08-cross-module-client-content-commercial.md) — 0 checked, 11 open
-- [ ] [onboarding/01-signup-and-multi-module-onboarding.md](../onboarding/01-signup-and-multi-module-onboarding.md) — 2 checked, 48 open
+- [ ] [onboarding/01-signup-and-multi-module-onboarding.md](../onboarding/01-signup-and-multi-module-onboarding.md) — 5 checked, 49 open
 - [ ] [product/00-product-vision-and-decisions.md](../product/00-product-vision-and-decisions.md) — 0 checked, 10 open
 - [ ] [product/customer-value-and-differentiation.md](../product/customer-value-and-differentiation.md) — 1 checked, 7 open
 - [ ] [README.md](../README.md) — 2 checked, 5 open
 
 ## Historical research and evidence (116)
 
-- [x] [streamlineos-analysis-pack/00-ci-cut-v1.md](../streamlineos-analysis-pack/00-ci-cut-v1.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-analysis-pack/00-ci-cut-v2.md](../streamlineos-analysis-pack/00-ci-cut-v2.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-analysis-pack/01-ci/CI-COMPLETENESS-STATUS.md](../streamlineos-analysis-pack/01-ci/CI-COMPLETENESS-STATUS.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-analysis-pack/01-ci/CI-GAP-REGISTER-live.md](../streamlineos-analysis-pack/01-ci/CI-GAP-REGISTER-live.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/100-REASONS.md](../streamlineos-analysis-pack/01-ci/competitor-deep/100-REASONS.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/100-WOW-REASONS.md](../streamlineos-analysis-pack/01-ci/competitor-deep/100-WOW-REASONS.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/asana/ACCOUNT.md](../streamlineos-analysis-pack/01-ci/competitor-deep/asana/ACCOUNT.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/asana/BUILD-GAPS.md](../streamlineos-analysis-pack/01-ci/competitor-deep/asana/BUILD-GAPS.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/asana/FEATURES.md](../streamlineos-analysis-pack/01-ci/competitor-deep/asana/FEATURES.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/asana/PAGE-INVENTORY.md](../streamlineos-analysis-pack/01-ci/competitor-deep/asana/PAGE-INVENTORY.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/clickup/ACCOUNT.md](../streamlineos-analysis-pack/01-ci/competitor-deep/clickup/ACCOUNT.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/clickup/BUILD-GAPS.md](../streamlineos-analysis-pack/01-ci/competitor-deep/clickup/BUILD-GAPS.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/clickup/COMPUTERUSE-BRIEF.md](../streamlineos-analysis-pack/01-ci/competitor-deep/clickup/COMPUTERUSE-BRIEF.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/clickup/FEATURES.md](../streamlineos-analysis-pack/01-ci/competitor-deep/clickup/FEATURES.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/clickup/PAGE-INVENTORY.md](../streamlineos-analysis-pack/01-ci/competitor-deep/clickup/PAGE-INVENTORY.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/FEATURES-PUBLIC-DOCS.md](../streamlineos-analysis-pack/01-ci/competitor-deep/FEATURES-PUBLIC-DOCS.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/FILTERS-PUBLIC-DOCS.md](../streamlineos-analysis-pack/01-ci/competitor-deep/FILTERS-PUBLIC-DOCS.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/HAVE-TODAY.md](../streamlineos-analysis-pack/01-ci/competitor-deep/HAVE-TODAY.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/jira/ACCOUNT.md](../streamlineos-analysis-pack/01-ci/competitor-deep/jira/ACCOUNT.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/jira/BUILD-GAPS.md](../streamlineos-analysis-pack/01-ci/competitor-deep/jira/BUILD-GAPS.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/jira/FEATURES.md](../streamlineos-analysis-pack/01-ci/competitor-deep/jira/FEATURES.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/jira/PAGE-INVENTORY.md](../streamlineos-analysis-pack/01-ci/competitor-deep/jira/PAGE-INVENTORY.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/linear/ACCOUNT.md](../streamlineos-analysis-pack/01-ci/competitor-deep/linear/ACCOUNT.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/linear/BUILD-GAPS.md](../streamlineos-analysis-pack/01-ci/competitor-deep/linear/BUILD-GAPS.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/linear/FEATURES.md](../streamlineos-analysis-pack/01-ci/competitor-deep/linear/FEATURES.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/linear/PAGE-INVENTORY.md](../streamlineos-analysis-pack/01-ci/competitor-deep/linear/PAGE-INVENTORY.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/monday/ACCOUNT.md](../streamlineos-analysis-pack/01-ci/competitor-deep/monday/ACCOUNT.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/monday/BUILD-GAPS.md](../streamlineos-analysis-pack/01-ci/competitor-deep/monday/BUILD-GAPS.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/monday/FEATURES.md](../streamlineos-analysis-pack/01-ci/competitor-deep/monday/FEATURES.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/monday/PAGE-INVENTORY.md](../streamlineos-analysis-pack/01-ci/competitor-deep/monday/PAGE-INVENTORY.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/README.md](../streamlineos-analysis-pack/01-ci/competitor-deep/README.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-analysis-pack/01-ci/READING-INDEX-CI.md](../streamlineos-analysis-pack/01-ci/READING-INDEX-CI.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-analysis-pack/README-DOWNLOAD.md](../streamlineos-analysis-pack/README-DOWNLOAD.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-pm-pack/01-freeze-completeness/CLAUDE-IMPLEMENT-NOW.md](../streamlineos-pm-pack/01-freeze-completeness/CLAUDE-IMPLEMENT-NOW.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-pm-pack/01-freeze-completeness/COMPLETENESS-DELTA-WATCHLIST.md](../streamlineos-pm-pack/01-freeze-completeness/COMPLETENESS-DELTA-WATCHLIST.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-pm-pack/01-freeze-completeness/NOW-FREEZE-v1.md](../streamlineos-pm-pack/01-freeze-completeness/NOW-FREEZE-v1.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-pm-pack/01-freeze-completeness/PHASE4-OUTCOME-SUMMARY.md](../streamlineos-pm-pack/01-freeze-completeness/PHASE4-OUTCOME-SUMMARY.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-pm-pack/01-freeze-completeness/PRD-PM-001-client-portal-grant.md](../streamlineos-pm-pack/01-freeze-completeness/PRD-PM-001-client-portal-grant.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-pm-pack/01-freeze-completeness/PRD-PM-002-build-role-at-invite.md](../streamlineos-pm-pack/01-freeze-completeness/PRD-PM-002-build-role-at-invite.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-pm-pack/01-freeze-completeness/PRD-PM-011-invite-accept.md](../streamlineos-pm-pack/01-freeze-completeness/PRD-PM-011-invite-accept.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-pm-pack/01-freeze-completeness/provisional-roadmap-v0.md](../streamlineos-pm-pack/01-freeze-completeness/provisional-roadmap-v0.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-pm-pack/01-freeze-completeness/READING-INDEX-ALL.md](../streamlineos-pm-pack/01-freeze-completeness/READING-INDEX-ALL.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-pm-pack/01-freeze-completeness/READING-INDEX-Council-Freeze.md](../streamlineos-pm-pack/01-freeze-completeness/READING-INDEX-Council-Freeze.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-pm-pack/01-freeze-completeness/SCOPE-COMPLETENESS-v2.md](../streamlineos-pm-pack/01-freeze-completeness/SCOPE-COMPLETENESS-v2.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-pm-pack/02-competitor-deep/100-WOW-REASONS-PM.md](../streamlineos-pm-pack/02-competitor-deep/100-WOW-REASONS-PM.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-pm-pack/02-competitor-deep/FILTERS.md](../streamlineos-pm-pack/02-competitor-deep/FILTERS.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-pm-pack/02-competitor-deep/GAP-BY-ICP.md](../streamlineos-pm-pack/02-competitor-deep/GAP-BY-ICP.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-pm-pack/02-competitor-deep/ICP-JTBD.md](../streamlineos-pm-pack/02-competitor-deep/ICP-JTBD.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-pm-pack/02-competitor-deep/ICP-ROADMAP-TOP15.md](../streamlineos-pm-pack/02-competitor-deep/ICP-ROADMAP-TOP15.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-pm-pack/02-competitor-deep/JIRA-DEEP-FOLD.md](../streamlineos-pm-pack/02-competitor-deep/JIRA-DEEP-FOLD.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-pm-pack/02-competitor-deep/LINEAR-DEEP-FOLD.md](../streamlineos-pm-pack/02-competitor-deep/LINEAR-DEEP-FOLD.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-pm-pack/02-competitor-deep/PM-OWNED-REASONS.md](../streamlineos-pm-pack/02-competitor-deep/PM-OWNED-REASONS.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-pm-pack/02-competitor-deep/README.md](../streamlineos-pm-pack/02-competitor-deep/README.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-pm-pack/02-competitor-deep/REASON-FRAMING.md](../streamlineos-pm-pack/02-competitor-deep/REASON-FRAMING.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-pm-pack/02-competitor-deep/SHIP-DESPERATE.md](../streamlineos-pm-pack/02-competitor-deep/SHIP-DESPERATE.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-pm-pack/02-competitor-deep/UX-PATTERNS.md](../streamlineos-pm-pack/02-competitor-deep/UX-PATTERNS.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-pm-pack/02-competitor-deep/WOW-CRITERIA.md](../streamlineos-pm-pack/02-competitor-deep/WOW-CRITERIA.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-pm-pack/02-competitor-deep/WOW-HAVE.md](../streamlineos-pm-pack/02-competitor-deep/WOW-HAVE.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-pm-pack/README-PM-DOWNLOAD.md](../streamlineos-pm-pack/README-PM-DOWNLOAD.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/ADMIN-PROMOTE-UX.md](../streamlineos-ux/ADMIN-PROMOTE-UX.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/CLIENT-PORTAL-CHROME.md](../streamlineos-ux/CLIENT-PORTAL-CHROME.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/competitor-deep/asana/UX-NOTES.md](../streamlineos-ux/competitor-deep/asana/UX-NOTES.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/competitor-deep/clickup/UX-NOTES.md](../streamlineos-ux/competitor-deep/clickup/UX-NOTES.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/competitor-deep/DESIGN-REASONS.md](../streamlineos-ux/competitor-deep/DESIGN-REASONS.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/competitor-deep/FILTERS-BUILD-CRAFT.md](../streamlineos-ux/competitor-deep/FILTERS-BUILD-CRAFT.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/competitor-deep/ICP-UX-LENSES.md](../streamlineos-ux/competitor-deep/ICP-UX-LENSES.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/competitor-deep/jira/UX-NOTES.md](../streamlineos-ux/competitor-deep/jira/UX-NOTES.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/competitor-deep/linear/UX-NOTES.md](../streamlineos-ux/competitor-deep/linear/UX-NOTES.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/competitor-deep/monday/UX-NOTES.md](../streamlineos-ux/competitor-deep/monday/UX-NOTES.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/competitor-deep/patterns/ACTIVATION.md](../streamlineos-ux/competitor-deep/patterns/ACTIVATION.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/competitor-deep/patterns/EMPTY-DENY-LOADING.md](../streamlineos-ux/competitor-deep/patterns/EMPTY-DENY-LOADING.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/competitor-deep/patterns/FILTER-GRAMMAR.md](../streamlineos-ux/competitor-deep/patterns/FILTER-GRAMMAR.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/competitor-deep/patterns/MORE-TOOLS-DENSITY.md](../streamlineos-ux/competitor-deep/patterns/MORE-TOOLS-DENSITY.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/competitor-deep/patterns/ROLE-HONESTY.md](../streamlineos-ux/competitor-deep/patterns/ROLE-HONESTY.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/competitor-deep/README.md](../streamlineos-ux/competitor-deep/README.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/competitor-deep/SHIP-DESPERATE.md](../streamlineos-ux/competitor-deep/SHIP-DESPERATE.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/competitor-deep/UX-PATTERNS.md](../streamlineos-ux/competitor-deep/UX-PATTERNS.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/competitor-deep/WOW-HAVE.md](../streamlineos-ux/competitor-deep/WOW-HAVE.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/COMPLETENESS-UX-THEMES.md](../streamlineos-ux/COMPLETENESS-UX-THEMES.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/CW-004-CYCLE-DEPTH.md](../streamlineos-ux/CW-004-CYCLE-DEPTH.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/DESIGN-COMPLETENESS-STATUS.md](../streamlineos-ux/DESIGN-COMPLETENESS-STATUS.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/DUE-TRIAGE-TEMPLATES.md](../streamlineos-ux/DUE-TRIAGE-TEMPLATES.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/EPIC-RELEASE-LINK-DEPTH.md](../streamlineos-ux/EPIC-RELEASE-LINK-DEPTH.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/evidence/apply-template/report.md](../streamlineos-ux/evidence/apply-template/report.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/evidence/approvals-budget/report.md](../streamlineos-ux/evidence/approvals-budget/report.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/evidence/client-portal/report.md](../streamlineos-ux/evidence/client-portal/report.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/evidence/client-portal/ui-notes.md](../streamlineos-ux/evidence/client-portal/ui-notes.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/evidence/due-triage-templates/report.md](../streamlineos-ux/evidence/due-triage-templates/report.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/evidence/filters-portfolios/report.md](../streamlineos-ux/evidence/filters-portfolios/report.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/evidence/forms-automations/report.md](../streamlineos-ux/evidence/forms-automations/report.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/evidence/milestones/report.md](../streamlineos-ux/evidence/milestones/report.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/evidence/modules/report.md](../streamlineos-ux/evidence/modules/report.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/evidence/ops-pack/report.md](../streamlineos-ux/evidence/ops-pack/report.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/evidence/portfolio-link/verification.md](../streamlineos-ux/evidence/portfolio-link/verification.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/evidence/reports/00-navigation.md](../streamlineos-ux/evidence/reports/00-navigation.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/evidence/reports/01-empty-agile.md](../streamlineos-ux/evidence/reports/01-empty-agile.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/evidence/reports/02-overview-filled.md](../streamlineos-ux/evidence/reports/02-overview-filled.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/evidence/risks-decisions/report.md](../streamlineos-ux/evidence/risks-decisions/report.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/evidence/template-create/report.md](../streamlineos-ux/evidence/template-create/report.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/evidence/workload-workflow-webhooks/report.md](../streamlineos-ux/evidence/workload-workflow-webhooks/report.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/evidence/workload-workflow-webhooks/webhooks.md](../streamlineos-ux/evidence/workload-workflow-webhooks/webhooks.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/evidence/workload-workflow-webhooks/workflow.md](../streamlineos-ux/evidence/workload-workflow-webhooks/workflow.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/evidence/workload-workflow-webhooks/workload.md](../streamlineos-ux/evidence/workload-workflow-webhooks/workload.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/FILLED-DATA-OWNER-NOTES.md](../streamlineos-ux/FILLED-DATA-OWNER-NOTES.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/FILTERS-PORTFOLIOS-OWNER.md](../streamlineos-ux/FILTERS-PORTFOLIOS-OWNER.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/FORMS-AUTOMATIONS.md](../streamlineos-ux/FORMS-AUTOMATIONS.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/MEMBER2-INVITE.md](../streamlineos-ux/MEMBER2-INVITE.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/phase3-designer-independent.md](../streamlineos-ux/phase3-designer-independent.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/PM-001-design-challenge.md](../streamlineos-ux/PM-001-design-challenge.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/PORTFOLIO-PROJECT-LINK.md](../streamlineos-ux/PORTFOLIO-PROJECT-LINK.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/PROGRAM-PROJECT-LINK.md](../streamlineos-ux/PROGRAM-PROJECT-LINK.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/READING-INDEX-DESIGN.md](../streamlineos-ux/READING-INDEX-DESIGN.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/REPORTS-CRAFT.md](../streamlineos-ux/REPORTS-CRAFT.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/SURFACE_LEDGER_COMPLETENESS_OWNER.md](../streamlineos-ux/SURFACE_LEDGER_COMPLETENESS_OWNER.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/surface-ledger-draft.md](../streamlineos-ux/surface-ledger-draft.md) — inventoried reference; implementation is tracked in current specifications
-- [x] [streamlineos-ux/UX-016-invite-accept-handoff.md](../streamlineos-ux/UX-016-invite-accept-handoff.md) — inventoried reference; implementation is tracked in current specifications
+- [x] [streamlineos-analysis-pack/00-ci-cut-v1.md](../streamlineos-analysis-pack/00-ci-cut-v1.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-analysis-pack/00-ci-cut-v2.md](../streamlineos-analysis-pack/00-ci-cut-v2.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-analysis-pack/01-ci/CI-COMPLETENESS-STATUS.md](../streamlineos-analysis-pack/01-ci/CI-COMPLETENESS-STATUS.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-analysis-pack/01-ci/CI-GAP-REGISTER-live.md](../streamlineos-analysis-pack/01-ci/CI-GAP-REGISTER-live.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/100-REASONS.md](../streamlineos-analysis-pack/01-ci/competitor-deep/100-REASONS.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/100-WOW-REASONS.md](../streamlineos-analysis-pack/01-ci/competitor-deep/100-WOW-REASONS.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/asana/ACCOUNT.md](../streamlineos-analysis-pack/01-ci/competitor-deep/asana/ACCOUNT.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/asana/BUILD-GAPS.md](../streamlineos-analysis-pack/01-ci/competitor-deep/asana/BUILD-GAPS.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/asana/FEATURES.md](../streamlineos-analysis-pack/01-ci/competitor-deep/asana/FEATURES.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/asana/PAGE-INVENTORY.md](../streamlineos-analysis-pack/01-ci/competitor-deep/asana/PAGE-INVENTORY.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/clickup/ACCOUNT.md](../streamlineos-analysis-pack/01-ci/competitor-deep/clickup/ACCOUNT.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/clickup/BUILD-GAPS.md](../streamlineos-analysis-pack/01-ci/competitor-deep/clickup/BUILD-GAPS.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/clickup/COMPUTERUSE-BRIEF.md](../streamlineos-analysis-pack/01-ci/competitor-deep/clickup/COMPUTERUSE-BRIEF.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/clickup/FEATURES.md](../streamlineos-analysis-pack/01-ci/competitor-deep/clickup/FEATURES.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/clickup/PAGE-INVENTORY.md](../streamlineos-analysis-pack/01-ci/competitor-deep/clickup/PAGE-INVENTORY.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/FEATURES-PUBLIC-DOCS.md](../streamlineos-analysis-pack/01-ci/competitor-deep/FEATURES-PUBLIC-DOCS.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/FILTERS-PUBLIC-DOCS.md](../streamlineos-analysis-pack/01-ci/competitor-deep/FILTERS-PUBLIC-DOCS.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/HAVE-TODAY.md](../streamlineos-analysis-pack/01-ci/competitor-deep/HAVE-TODAY.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/jira/ACCOUNT.md](../streamlineos-analysis-pack/01-ci/competitor-deep/jira/ACCOUNT.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/jira/BUILD-GAPS.md](../streamlineos-analysis-pack/01-ci/competitor-deep/jira/BUILD-GAPS.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/jira/FEATURES.md](../streamlineos-analysis-pack/01-ci/competitor-deep/jira/FEATURES.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/jira/PAGE-INVENTORY.md](../streamlineos-analysis-pack/01-ci/competitor-deep/jira/PAGE-INVENTORY.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/linear/ACCOUNT.md](../streamlineos-analysis-pack/01-ci/competitor-deep/linear/ACCOUNT.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/linear/BUILD-GAPS.md](../streamlineos-analysis-pack/01-ci/competitor-deep/linear/BUILD-GAPS.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/linear/FEATURES.md](../streamlineos-analysis-pack/01-ci/competitor-deep/linear/FEATURES.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/linear/PAGE-INVENTORY.md](../streamlineos-analysis-pack/01-ci/competitor-deep/linear/PAGE-INVENTORY.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/monday/ACCOUNT.md](../streamlineos-analysis-pack/01-ci/competitor-deep/monday/ACCOUNT.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/monday/BUILD-GAPS.md](../streamlineos-analysis-pack/01-ci/competitor-deep/monday/BUILD-GAPS.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/monday/FEATURES.md](../streamlineos-analysis-pack/01-ci/competitor-deep/monday/FEATURES.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/monday/PAGE-INVENTORY.md](../streamlineos-analysis-pack/01-ci/competitor-deep/monday/PAGE-INVENTORY.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-analysis-pack/01-ci/competitor-deep/README.md](../streamlineos-analysis-pack/01-ci/competitor-deep/README.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-analysis-pack/01-ci/READING-INDEX-CI.md](../streamlineos-analysis-pack/01-ci/READING-INDEX-CI.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-analysis-pack/README-DOWNLOAD.md](../streamlineos-analysis-pack/README-DOWNLOAD.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-pm-pack/01-freeze-completeness/CLAUDE-IMPLEMENT-NOW.md](../streamlineos-pm-pack/01-freeze-completeness/CLAUDE-IMPLEMENT-NOW.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-pm-pack/01-freeze-completeness/COMPLETENESS-DELTA-WATCHLIST.md](../streamlineos-pm-pack/01-freeze-completeness/COMPLETENESS-DELTA-WATCHLIST.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-pm-pack/01-freeze-completeness/NOW-FREEZE-v1.md](../streamlineos-pm-pack/01-freeze-completeness/NOW-FREEZE-v1.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-pm-pack/01-freeze-completeness/PHASE4-OUTCOME-SUMMARY.md](../streamlineos-pm-pack/01-freeze-completeness/PHASE4-OUTCOME-SUMMARY.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-pm-pack/01-freeze-completeness/PRD-PM-001-client-portal-grant.md](../streamlineos-pm-pack/01-freeze-completeness/PRD-PM-001-client-portal-grant.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-pm-pack/01-freeze-completeness/PRD-PM-002-build-role-at-invite.md](../streamlineos-pm-pack/01-freeze-completeness/PRD-PM-002-build-role-at-invite.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-pm-pack/01-freeze-completeness/PRD-PM-011-invite-accept.md](../streamlineos-pm-pack/01-freeze-completeness/PRD-PM-011-invite-accept.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-pm-pack/01-freeze-completeness/provisional-roadmap-v0.md](../streamlineos-pm-pack/01-freeze-completeness/provisional-roadmap-v0.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-pm-pack/01-freeze-completeness/READING-INDEX-ALL.md](../streamlineos-pm-pack/01-freeze-completeness/READING-INDEX-ALL.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-pm-pack/01-freeze-completeness/READING-INDEX-Council-Freeze.md](../streamlineos-pm-pack/01-freeze-completeness/READING-INDEX-Council-Freeze.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-pm-pack/01-freeze-completeness/SCOPE-COMPLETENESS-v2.md](../streamlineos-pm-pack/01-freeze-completeness/SCOPE-COMPLETENESS-v2.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-pm-pack/02-competitor-deep/100-WOW-REASONS-PM.md](../streamlineos-pm-pack/02-competitor-deep/100-WOW-REASONS-PM.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-pm-pack/02-competitor-deep/FILTERS.md](../streamlineos-pm-pack/02-competitor-deep/FILTERS.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-pm-pack/02-competitor-deep/GAP-BY-ICP.md](../streamlineos-pm-pack/02-competitor-deep/GAP-BY-ICP.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-pm-pack/02-competitor-deep/ICP-JTBD.md](../streamlineos-pm-pack/02-competitor-deep/ICP-JTBD.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-pm-pack/02-competitor-deep/ICP-ROADMAP-TOP15.md](../streamlineos-pm-pack/02-competitor-deep/ICP-ROADMAP-TOP15.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-pm-pack/02-competitor-deep/JIRA-DEEP-FOLD.md](../streamlineos-pm-pack/02-competitor-deep/JIRA-DEEP-FOLD.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-pm-pack/02-competitor-deep/LINEAR-DEEP-FOLD.md](../streamlineos-pm-pack/02-competitor-deep/LINEAR-DEEP-FOLD.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-pm-pack/02-competitor-deep/PM-OWNED-REASONS.md](../streamlineos-pm-pack/02-competitor-deep/PM-OWNED-REASONS.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-pm-pack/02-competitor-deep/README.md](../streamlineos-pm-pack/02-competitor-deep/README.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-pm-pack/02-competitor-deep/REASON-FRAMING.md](../streamlineos-pm-pack/02-competitor-deep/REASON-FRAMING.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-pm-pack/02-competitor-deep/SHIP-DESPERATE.md](../streamlineos-pm-pack/02-competitor-deep/SHIP-DESPERATE.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-pm-pack/02-competitor-deep/UX-PATTERNS.md](../streamlineos-pm-pack/02-competitor-deep/UX-PATTERNS.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-pm-pack/02-competitor-deep/WOW-CRITERIA.md](../streamlineos-pm-pack/02-competitor-deep/WOW-CRITERIA.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-pm-pack/02-competitor-deep/WOW-HAVE.md](../streamlineos-pm-pack/02-competitor-deep/WOW-HAVE.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-pm-pack/README-PM-DOWNLOAD.md](../streamlineos-pm-pack/README-PM-DOWNLOAD.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/ADMIN-PROMOTE-UX.md](../streamlineos-ux/ADMIN-PROMOTE-UX.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/CLIENT-PORTAL-CHROME.md](../streamlineos-ux/CLIENT-PORTAL-CHROME.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/competitor-deep/asana/UX-NOTES.md](../streamlineos-ux/competitor-deep/asana/UX-NOTES.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/competitor-deep/clickup/UX-NOTES.md](../streamlineos-ux/competitor-deep/clickup/UX-NOTES.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/competitor-deep/DESIGN-REASONS.md](../streamlineos-ux/competitor-deep/DESIGN-REASONS.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/competitor-deep/FILTERS-BUILD-CRAFT.md](../streamlineos-ux/competitor-deep/FILTERS-BUILD-CRAFT.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/competitor-deep/ICP-UX-LENSES.md](../streamlineos-ux/competitor-deep/ICP-UX-LENSES.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/competitor-deep/jira/UX-NOTES.md](../streamlineos-ux/competitor-deep/jira/UX-NOTES.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/competitor-deep/linear/UX-NOTES.md](../streamlineos-ux/competitor-deep/linear/UX-NOTES.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/competitor-deep/monday/UX-NOTES.md](../streamlineos-ux/competitor-deep/monday/UX-NOTES.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/competitor-deep/patterns/ACTIVATION.md](../streamlineos-ux/competitor-deep/patterns/ACTIVATION.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/competitor-deep/patterns/EMPTY-DENY-LOADING.md](../streamlineos-ux/competitor-deep/patterns/EMPTY-DENY-LOADING.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/competitor-deep/patterns/FILTER-GRAMMAR.md](../streamlineos-ux/competitor-deep/patterns/FILTER-GRAMMAR.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/competitor-deep/patterns/MORE-TOOLS-DENSITY.md](../streamlineos-ux/competitor-deep/patterns/MORE-TOOLS-DENSITY.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/competitor-deep/patterns/ROLE-HONESTY.md](../streamlineos-ux/competitor-deep/patterns/ROLE-HONESTY.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/competitor-deep/README.md](../streamlineos-ux/competitor-deep/README.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/competitor-deep/SHIP-DESPERATE.md](../streamlineos-ux/competitor-deep/SHIP-DESPERATE.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/competitor-deep/UX-PATTERNS.md](../streamlineos-ux/competitor-deep/UX-PATTERNS.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/competitor-deep/WOW-HAVE.md](../streamlineos-ux/competitor-deep/WOW-HAVE.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/COMPLETENESS-UX-THEMES.md](../streamlineos-ux/COMPLETENESS-UX-THEMES.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/CW-004-CYCLE-DEPTH.md](../streamlineos-ux/CW-004-CYCLE-DEPTH.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/DESIGN-COMPLETENESS-STATUS.md](../streamlineos-ux/DESIGN-COMPLETENESS-STATUS.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/DUE-TRIAGE-TEMPLATES.md](../streamlineos-ux/DUE-TRIAGE-TEMPLATES.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/EPIC-RELEASE-LINK-DEPTH.md](../streamlineos-ux/EPIC-RELEASE-LINK-DEPTH.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/evidence/apply-template/report.md](../streamlineos-ux/evidence/apply-template/report.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/evidence/approvals-budget/report.md](../streamlineos-ux/evidence/approvals-budget/report.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/evidence/client-portal/report.md](../streamlineos-ux/evidence/client-portal/report.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/evidence/client-portal/ui-notes.md](../streamlineos-ux/evidence/client-portal/ui-notes.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/evidence/due-triage-templates/report.md](../streamlineos-ux/evidence/due-triage-templates/report.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/evidence/filters-portfolios/report.md](../streamlineos-ux/evidence/filters-portfolios/report.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/evidence/forms-automations/report.md](../streamlineos-ux/evidence/forms-automations/report.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/evidence/milestones/report.md](../streamlineos-ux/evidence/milestones/report.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/evidence/modules/report.md](../streamlineos-ux/evidence/modules/report.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/evidence/ops-pack/report.md](../streamlineos-ux/evidence/ops-pack/report.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/evidence/portfolio-link/verification.md](../streamlineos-ux/evidence/portfolio-link/verification.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/evidence/reports/00-navigation.md](../streamlineos-ux/evidence/reports/00-navigation.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/evidence/reports/01-empty-agile.md](../streamlineos-ux/evidence/reports/01-empty-agile.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/evidence/reports/02-overview-filled.md](../streamlineos-ux/evidence/reports/02-overview-filled.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/evidence/risks-decisions/report.md](../streamlineos-ux/evidence/risks-decisions/report.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/evidence/template-create/report.md](../streamlineos-ux/evidence/template-create/report.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/evidence/workload-workflow-webhooks/report.md](../streamlineos-ux/evidence/workload-workflow-webhooks/report.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/evidence/workload-workflow-webhooks/webhooks.md](../streamlineos-ux/evidence/workload-workflow-webhooks/webhooks.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/evidence/workload-workflow-webhooks/workflow.md](../streamlineos-ux/evidence/workload-workflow-webhooks/workflow.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/evidence/workload-workflow-webhooks/workload.md](../streamlineos-ux/evidence/workload-workflow-webhooks/workload.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/FILLED-DATA-OWNER-NOTES.md](../streamlineos-ux/FILLED-DATA-OWNER-NOTES.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/FILTERS-PORTFOLIOS-OWNER.md](../streamlineos-ux/FILTERS-PORTFOLIOS-OWNER.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/FORMS-AUTOMATIONS.md](../streamlineos-ux/FORMS-AUTOMATIONS.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/MEMBER2-INVITE.md](../streamlineos-ux/MEMBER2-INVITE.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/phase3-designer-independent.md](../streamlineos-ux/phase3-designer-independent.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/PM-001-design-challenge.md](../streamlineos-ux/PM-001-design-challenge.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/PORTFOLIO-PROJECT-LINK.md](../streamlineos-ux/PORTFOLIO-PROJECT-LINK.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/PROGRAM-PROJECT-LINK.md](../streamlineos-ux/PROGRAM-PROJECT-LINK.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/READING-INDEX-DESIGN.md](../streamlineos-ux/READING-INDEX-DESIGN.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/REPORTS-CRAFT.md](../streamlineos-ux/REPORTS-CRAFT.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/SURFACE_LEDGER_COMPLETENESS_OWNER.md](../streamlineos-ux/SURFACE_LEDGER_COMPLETENESS_OWNER.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/surface-ledger-draft.md](../streamlineos-ux/surface-ledger-draft.md) — mapped historical reference; implementation is tracked in current specifications
+- [x] [streamlineos-ux/UX-016-invite-accept-handoff.md](../streamlineos-ux/UX-016-invite-accept-handoff.md) — mapped historical reference; implementation is tracked in current specifications

@@ -1,6 +1,6 @@
 # Signup and multi-module onboarding
 
-Status: planned target with an evidence-backed current-state baseline
+Status: Planned target with a Current unverified source baseline; see the [2026-10-03 onboarding source gap](../audit/onboarding-current-state-gap.md).
 Owners: Product, Design, Platform, Identity, Billing, and each selected module
 Applies to: solo professionals, freelancers, agencies, software product teams, and larger organizations
 Companion decisions: [Product vision and decisions](../product/00-product-vision-and-decisions.md)
@@ -24,11 +24,11 @@ The following is **Current unverified**. It was found in source during planning 
 
 - Sign-in and account creation share the passwordless surface in `frontend/app/(auth)/signin/page.tsx`. Email OTP and Google sign-in are exposed through the auth feature and `backend/src/modules/auth/auth.controller.ts`.
 - Organization setup is a three-step route at `frontend/app/org-setup/page.tsx`: `welcome -> basics -> invite`. The routing gate is centralized in `frontend/lib/wizard-gate.ts`.
-- Draft state is stored locally and can hydrate a server session. The current client contract is in `frontend/hooks/api/org-setup.ts` and `frontend/hooks/api/org-setup-schema.ts`.
+- Draft step and data are stored locally. The page reads a server setup session but does not persist draft edits through a revisioned server write. The current client contract is in `frontend/hooks/api/org-setup.ts` and `frontend/hooks/api/org-setup-schema.ts`.
 - Current setup endpoints are `GET /org/setup/session`, `GET /org/setup/status`, `POST /org/setup/complete`, and `POST /org/setup/skip` in `backend/src/modules/organization/setup/org.controller.ts`.
 - Goal selection derives enabled modules in `frontend/features/org-setup/lib/constants.ts`. Chat and Knowledge are always added by that client logic.
 - The draft schema already contains country, timezone, currency, fiscal-year start, business address, and tax ID, but `frontend/features/org-setup/lib/setup-payload.ts` does not send currency, fiscal-year start, business address, or tax ID to completion.
-- The current completion payload supports organization basics, an array of module keys, and up to 50 invitees. Setup invitees carry only email and organization role. They do not carry module standing, project grants, or client grants.
+- The current completion payload supports organization basics, an array of module keys, and up to 50 invitees. Setup invitees now carry email, organization role, and selected module standing through backend `8cb3277f6` and frontend `3170e3c18`; project grants and client grants remain absent. Runtime acceptance remains unverified.
 - `backend/src/db/schema/common/onboarding.ts` provides reusable onboarding flow sessions, module setup checklists, and guided-tour state.
 - Organization membership, invitations, invitation module access, and onboarding markers exist in `backend/src/db/schema/common/auth.ts`. General user invitations already support per-module `MEMBER` or `ADMIN` standing through `backend/src/modules/users/users.controller.ts` and the organization invitation services.
 - Organization module entitlement is owned by `backend/src/modules/access/entitlements.service.ts`; effective access is deny by default for non-core modules and plan locks are checked when modules are enabled through that service.
@@ -944,10 +944,14 @@ The first sellable milestone is Build-only onboarding with reliable internal inv
 Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
 
 - [x] Per-invite selected-module standing has a strict frontend payload and backend setup event path, with focused source checks on `8cb3277f6`, `3170e3c18`, and `abef63dce`; runtime acceptance remains open below.
-- [x] Enqueue-time mail failures are represented separately from persisted invitations in bulk results and setup status at backend `9046fc768`; focused 8-suite/170-test checks pass, while replay, atomic outbox, and browser proof remain open.
+- [x] Enqueue-time mail failures are represented separately from persisted invitations in bulk results and setup status at backend `9046fc768`; focused 8-suite/170-test checks pass, while replay and browser proof remain open.
+- [x] The invitation writer and email outbox use the same ambient tenant transaction in source; four focused service/proxy commit and rollback cases pass. Target database and concurrent worker proof remain open.
+- [x] Reconcile the 2026-10-03 current wizard and payload against the target in the [onboarding source gap](../audit/onboarding-current-state-gap.md); target behavior remains open below.
+- [x] Reject plan-locked setup module selections in source at backend `9fd0b94d2` using a fresh transaction-bound tier read; five suites/109 focused tests, production typecheck, and lint pass. Preview agreement and target database/browser proof remain open.
 - [ ] Signup and invitation-first identity work for new, existing, wrong-email, expired, and replay paths.
 - [ ] Workspace step has a five-visible-input Build-only default and reversible advanced settings.
 - [ ] Products step selects one or many modules, previews plan limits, and saves adaptive answers, template versions, and custom-field drafts.
+- [ ] Verify setup plan eligibility, preview agreement, and error states on the target database and browser, including mixed-selection rollback and concurrent subscription transitions.
 - [ ] People step carries per-invite organization role and selected module standing through the frontend payload, setup event, and invitation writer without dropping rows.
 - [ ] People step supports multiple invites, optional skip, quota and grantability preview, and separate internal versus client access.
 - [ ] Activation is durable, revisioned, idempotent, resumable across devices, and safe under double submit or worker retry.

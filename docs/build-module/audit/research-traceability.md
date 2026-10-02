@@ -23,7 +23,7 @@ Research and screenshots were produced on historical tenants/deployments. They r
 |---|---|---|---|---|
 | Cold invite blank/fragile path | PM-011, BUG-001 | Identity-bound accept and durable handoff; activation screen | First | Cold browser acceptance then persisted module/project access |
 | Invite missing Build standing | PM-002, BUG-002 | Explicit invitation module access applied atomically | Second | Member opens Build and assigned project without admin repair |
-| False client success/project loader | PM-001, BUG-005, BUG-006 | Persist grant and usable entry before success; scoped project loader | Third | Client exchange, real approved artifact, revoke/expiry/wrong-project negatives |
+| False client success/project loader | PM-001, BUG-005, BUG-006 | [Portal activation source audit](./client-portal-activation-gap.md): persist grant and usable entry before success; enforce publication and scoped project reads | Third | Client exchange, real approved artifact, revoke/expiry/wrong-project negatives |
 | Empty discovery despite membership | CW-001, UX-022 | Projects/counts use same scoped query | Next | Member assigned project appears in list, counts and direct URL |
 | Member cannot contribute | CW-002, UX-023 | Productive Build Member; restricted Viewer is custom module role | Next | Create/update in granted project; denied elsewhere |
 | Missing current-cycle chrome | CW-004, UX-024 | Explicit current cycle on overview and work view | Next | Linked ticket, list and header agree |

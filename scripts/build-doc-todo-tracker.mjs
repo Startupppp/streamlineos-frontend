@@ -3,6 +3,7 @@ import { join, relative, resolve, sep } from "node:path";
 
 const root = resolve("docs/build-module");
 const indexPath = join(root, "implementation", "TODO-INDEX.md");
+const traceabilityPath = join(root, "audit", "research-traceability.md");
 const researchPrefixes = [
   "streamlineos-analysis-pack/",
   "streamlineos-pm-pack/",
@@ -27,9 +28,19 @@ function isResearch(path) {
   return researchPrefixes.some((prefix) => name.startsWith(prefix));
 }
 
+function researchTraceability(files) {
+  const traceability = readFileSync(traceabilityPath, "utf8");
+  return files.filter(isResearch).map((path) => ({
+    path,
+    mapped: traceability.includes(
+      `](${normalized(relative(join(root, "audit"), path))})`,
+    ),
+  }));
+}
+
 function indexText(files) {
   const canonical = files.filter((path) => !isResearch(path) && path !== indexPath);
-  const research = files.filter(isResearch);
+  const research = researchTraceability(files);
   const counts = canonical.map((path) => {
     const source = readFileSync(path, "utf8");
     return {
@@ -43,7 +54,7 @@ function indexText(files) {
   const lines = [
     "# Build documentation TODO index",
     "",
-    "The Delivery checklist and any inline acceptance checkboxes inside each current specification are the source of truth for its implementation status. Open counts include every unchecked box in that document. A checked research row below means only that the historical file is inventoried; it does not verify any product behavior. Check a specification item only after recording the current revision and required evidence in the requirement ledger and work claims. The 57 current specifications plus this index make 58 canonical Markdown files.",
+    `The Delivery checklist and any inline acceptance checkboxes inside each current specification are the source of truth for its implementation status. Open counts include every unchecked box in that document. A checked research row below means only that the historical source is linked in the research traceability map; it does not verify any product behavior. Check a specification item only after recording the current revision and required evidence in the requirement ledger and work claims. The ${canonical.length} current specifications plus this index make ${canonical.length + 1} canonical Markdown files.`,
     "",
     "## Delivery checklist",
     "",
@@ -51,7 +62,7 @@ function indexText(files) {
     "- [ ] Every accepted research finding has an adopted or deferred destination in the research traceability map.",
     "- [ ] Release gates, tenant/role browser paths, persistence, and operations evidence are complete.",
     "",
-    `Current specification items: ${totalChecked} checked; ${totalOpen} open. Historical research inventory: ${research.length} files.`,
+    `Current specification items: ${totalChecked} checked; ${totalOpen} open. Historical research traceability: ${research.filter(({ mapped }) => mapped).length} mapped of ${research.length} files.`,
     "",
     `## Current specifications (${canonical.length})`,
     "",
@@ -62,10 +73,10 @@ function indexText(files) {
     lines.push(`- [${open === 0 ? "x" : " "}] [${label}](${relativePath}) — ${checked} checked, ${open} open`);
   }
   lines.push("", `## Historical research and evidence (${research.length})`, "");
-  for (const path of research) {
+  for (const { path, mapped } of research) {
     const relativePath = normalized(relative(join(root, "implementation"), path));
     const label = normalized(relative(root, path));
-    lines.push(`- [x] [${label}](${relativePath}) — inventoried reference; implementation is tracked in current specifications`);
+    lines.push(`- [${mapped ? "x" : " "}] [${label}](${relativePath}) — ${mapped ? "mapped" : "unmapped"} historical reference; implementation is tracked in current specifications`);
   }
   lines.push("");
   return lines.join("\n");
@@ -79,8 +90,10 @@ const canonical = files.filter((path) => !isResearch(path) && path !== indexPath
 const missing = canonical.filter(
   (path) => !/^## Delivery checklist\s*$/m.test(readFileSync(path, "utf8")),
 );
-if (missing.length > 0) {
-  process.stderr.write(`${missing.length} current specifications lack specific Delivery checklists.\n`);
+const unmapped = researchTraceability(files).filter(({ mapped }) => !mapped);
+if (missing.length > 0 || unmapped.length > 0) {
+  process.stderr.write(`${missing.length} current specifications lack Delivery checklists; ${unmapped.length} historical research files lack traceability links.\n`);
+  for (const { path } of unmapped) process.stderr.write(`${normalized(relative(root, path))}\n`);
   process.exit(1);
 }
 if (mode === "--apply") {

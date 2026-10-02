@@ -142,7 +142,7 @@ Every manifest route appears exactly once above. Every sidebar destination resol
 
 Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
 
-- [ ] Re-run the route census and reconcile every one of the 76 existing Build page routes to an explicit keep, redirect, merge, or deferred destination in this table.
+- [x] Re-run the route census and reconcile all 76 Build page routes to a decision in this table at frontend `062007959`; `pnpm check:route-census` reports 76 pages and zero weak cold-load gates. Browser and role evidence remains open below.
 - [ ] Add saved authorized landing preference to the `/build` default redirect and verify the dedicated Projects destination, sidebar/More links, and denied routes in a browser with role fixtures.
 - [ ] Implement recorded compatibility redirects and record-ID mappings for Assigned→My Work, Drafts→My Work, bug feedback→Intake, project Modules→Workstreams label, and persona aliases without breaking deep links.
 - [ ] Remove duplicate standalone navigation entries only after their configured canonical views and saved links resolve with the same authorized data.

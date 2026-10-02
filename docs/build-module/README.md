@@ -43,6 +43,12 @@ Research files are inputs, not release claims. A screenshot, route, mock, or sou
 19. [Active/completed work claims](./implementation/WORK-CLAIMS.md)
 20. [Delivery checklists and full Markdown status index](./implementation/TODO-INDEX.md)
 
+## Tracking delivery
+
+Each current specification ends with a `Delivery checklist`. Work from its smallest evidence-backed item, record the implementation revision and test result in the [requirement ledger](./implementation/REQUIREMENT-LEDGER.md) and [work claims](./implementation/WORK-CLAIMS.md), then check that item. A source-only correction can be checked when its wording explicitly limits the claim to source and focused tests. Keep browser, target database, role, tenant, and deployment items open until those actions have been observed. Historical research files retain their original bytes; the TODO index tracks whether each is mapped in [research traceability](./audit/research-traceability.md).
+
+From the repository root, run `pnpm update:build-doc-todos` after a checklist edit and `pnpm check:build-doc-todos` to verify that every current specification has a checklist, every retained research file has a traceability link, and the index is current.
+
 ## Research inputs
 
 - `streamlineos-analysis-pack/`: competitor inventory, capability evidence, filter research, and gap analysis.
