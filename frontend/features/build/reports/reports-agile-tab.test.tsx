@@ -179,6 +179,23 @@ function settled<T>(data: T) {
   };
 }
 
+function velocityPage(sprints: typeof VELOCITY_DATA) {
+  return { data: sprints, pagination: { limit: 100, hasMore: false, nextCursor: null } };
+}
+
+function settledVelocity(sprints: typeof VELOCITY_DATA) {
+  return {
+    data: { pages: [velocityPage(sprints)], pageParams: [undefined] },
+    isLoading: false,
+    isError: false,
+    error: null,
+    refetch: jest.fn(),
+    fetchNextPage: jest.fn(),
+    hasNextPage: false,
+    isFetchingNextPage: false,
+  };
+}
+
 function loading() {
   return {
     data: undefined,
@@ -226,7 +243,7 @@ const LEAD_DATA = [
 beforeEach(() => {
   jest.clearAllMocks();
   mockUsePageState.mockReturnValue({ kind: "ready" });
-  mockUseVelocityReport.mockReturnValue(settled([]));
+  mockUseVelocityReport.mockReturnValue(settledVelocity([]));
   mockUseBurnupReport.mockReturnValue(settled([]));
   mockUseCycleTimeReport.mockReturnValue(settled([]));
   mockUseLeadTimeReport.mockReturnValue(settled([]));
@@ -270,7 +287,7 @@ describe("VelocitySection — page states", () => {
   });
 
   it("renders the velocity chart when sprint data is present — positive control confirms rows reach the chart", () => {
-    mockUseVelocityReport.mockReturnValue(settled(VELOCITY_DATA));
+    mockUseVelocityReport.mockReturnValue(settledVelocity(VELOCITY_DATA));
     render(<VelocitySection projectId={1} />);
     expect(screen.getByTestId("velocity-chart")).toBeInTheDocument();
     expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
@@ -315,7 +332,7 @@ describe("BurnupSection — page states", () => {
   });
 
   it("renders the burnup chart when burnup points are present — positive control confirms data reaches the chart", () => {
-    mockUseVelocityReport.mockReturnValue(settled(VELOCITY_DATA));
+    mockUseVelocityReport.mockReturnValue(settledVelocity(VELOCITY_DATA));
     mockUseBurnupReport.mockReturnValue(settled(BURNUP_DATA));
     render(<BurnupSection projectId={1} />);
     expect(screen.getByTestId("burnup-chart")).toBeInTheDocument();

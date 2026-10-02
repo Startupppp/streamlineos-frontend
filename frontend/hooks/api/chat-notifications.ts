@@ -6,12 +6,17 @@ import type { InboundMessage } from "ably";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { isForgedServerFrame, safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
 import { chatChannelName, notificationsChannelName } from "@/lib/ably-channels";
 import { reauthorizeAblyClients } from "@/lib/ably";
 import type { Channel } from "@/types/chat";
 import { isRecord } from "@/lib/is-record";
+import {
+  chatAlertDecision,
+  chatAlertIsRaised,
+  viewerChannelState,
+} from "@/lib/chat-alert-policy";
+import { invalidateChatUnreadState } from "@/lib/chat-read-state";
 
 /**
  * An Ably message body is `any`, so asserting it into a payload interface
@@ -96,16 +101,17 @@ export function useChatGlobalNotifications(
           const channelType = current?.type;
           const channelDisplayName = current?.name;
 
-          queryClient.invalidateQueries({
-            queryKey: collaborationQueryKeys.chat.myChannels(),
-            exact: true,
-          });
-          queryClient.invalidateQueries({
-            queryKey: collaborationQueryKeys.chat.unreadTotal(),
-            exact: true,
-          });
+          invalidateChatUnreadState(queryClient);
 
-          if (channelId === activeChannelIdRef.current) return;
+          const decision = chatAlertDecision({
+            kind: "message",
+            channelId,
+            senderId: payload.senderId,
+            currentUserId: currentUserIdRef.current,
+            activeChannelId: activeChannelIdRef.current,
+            viewer: viewerChannelState(current, currentUserIdRef.current),
+          });
+          if (!chatAlertIsRaised(decision)) return;
 
           const senderName = payload.senderName ?? "Someone";
           const title =
@@ -163,10 +169,18 @@ export function useChatGlobalNotifications(
       const data: unknown = msg.data;
       if (!isRecord(data) || typeof data.channelId !== "number") return;
       const channelId = data.channelId;
-      if (channelsRef.current?.some((c) => c.id === channelId)) return;
-      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels(), exact: true });
-      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.unreadTotal(), exact: true });
-      if (channelId === activeChannelIdRef.current) return;
+      const loaded = channelsRef.current?.find((c) => c.id === channelId);
+      if (loaded !== undefined) return;
+      invalidateChatUnreadState(queryClient);
+      const decision = chatAlertDecision({
+        kind: event === "notification:mention" ? "mention" : "message",
+        channelId,
+        senderId: data.senderId,
+        currentUserId: currentUserIdRef.current,
+        activeChannelId: activeChannelIdRef.current,
+        viewer: viewerChannelState(loaded, currentUserIdRef.current),
+      });
+      if (!chatAlertIsRaised(decision)) return;
       const senderName = typeof data.senderName === "string" && data.senderName ? data.senderName : "Someone";
       const mention = event === "notification:mention";
       toast(mention ? `${senderName} mentioned you` : senderName, {

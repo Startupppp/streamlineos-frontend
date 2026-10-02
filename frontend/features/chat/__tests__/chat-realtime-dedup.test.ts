@@ -1,99 +1,139 @@
 import type { InfiniteData } from "@tanstack/react-query";
-import type { MessagesPage } from "@/types/chat";
+import type { Message, MessagesPage } from "@/types/chat";
+import {
+  flattenMessagePages,
+  mergeInboundMessage,
+} from "../message-page-merge";
 
-type MsgRow = { id: number };
-
-function dedupBySet(messages: MsgRow[]): MsgRow[] {
-  const seen = new Set<number>();
-  return messages.filter((msg) => {
-    if (seen.has(msg.id)) return false;
-    seen.add(msg.id);
-    return true;
-  });
-}
-
-function ablyHandlerDedup(
-  old: InfiniteData<MessagesPage>,
-  incomingId: number,
-): boolean {
-  const allExisting = old.pages.flatMap((p) => p.messages);
-  return allExisting.some((m) => m.id === incomingId);
-}
-
-function makeInfiniteData(pages: Array<{ messages: MsgRow[] }>): InfiniteData<MessagesPage> {
+function makeMsg(id: number, overrides: Partial<Message> = {}): Message {
   return {
-    pages: pages as MessagesPage[],
-    pageParams: pages.map((_, i) => i),
+    id,
+    channelId: 1,
+    senderId: "u1",
+    content: `msg ${id}`,
+    replyToId: null,
+    isEdited: false,
+    isDeleted: false,
+    messageType: "text",
+    metadata: null,
+    actionStatus: null,
+    createdAt: "2026-01-01T00:00:00Z",
+    updatedAt: "2026-01-01T00:00:00Z",
+    sender: { id: "u1", name: "Alice", image: null },
+    attachments: [],
+    replyTo: null,
+    ...overrides,
   };
 }
 
-describe("chat message deduplication — render-time Set dedup", () => {
-  it("passes through unique messages unchanged", () => {
-    const messages: MsgRow[] = [{ id: 1 }, { id: 2 }, { id: 3 }];
-    expect(dedupBySet(messages)).toEqual(messages);
+function makeInfiniteData(
+  pages: Array<{ messages: Message[] }>,
+): InfiniteData<MessagesPage> {
+  return {
+    pages: pages.map((page) => ({ ...page, nextCursor: null })) as MessagesPage[],
+    pageParams: pages.map((_, index) => index),
+  };
+}
+
+function idsIn(data: InfiniteData<MessagesPage>): number[] {
+  return data.pages.flatMap((page) => page.messages.map((m) => m.id));
+}
+
+describe("flattenMessagePages — the render-time dedup the panel actually uses", () => {
+  it("drops a message that appears in two pages", () => {
+    const data = makeInfiniteData([
+      { messages: [makeMsg(3)] },
+      { messages: [makeMsg(1), makeMsg(2), makeMsg(3)] },
+    ]);
+
+    expect(flattenMessagePages(data).map((m) => m.id)).toEqual([1, 2, 3]);
   });
 
-  it("removes second occurrence of the same id", () => {
-    const messages: MsgRow[] = [{ id: 1 }, { id: 2 }, { id: 1 }];
-    const result = dedupBySet(messages);
-    expect(result).toHaveLength(2);
-    expect(result.map((m) => m.id)).toEqual([1, 2]);
+  it("returns pages oldest-first, because the server sends newest page first", () => {
+    const data = makeInfiniteData([
+      { messages: [makeMsg(10), makeMsg(11)] },
+      { messages: [makeMsg(8), makeMsg(9)] },
+    ]);
+
+    expect(flattenMessagePages(data).map((m) => m.id)).toEqual([8, 9, 10, 11]);
   });
 
-  it("keeps the first occurrence when duplicating across pages", () => {
-    const pagesFlat: MsgRow[] = [
-      { id: 10 },
-      { id: 11 },
-      { id: 12 },
-      { id: 10 },
-      { id: 13 },
-    ];
-    const result = dedupBySet(pagesFlat);
-    expect(result.map((m) => m.id)).toEqual([10, 11, 12, 13]);
+  it("keeps the first copy of a duplicate, so the older page's row wins", () => {
+    const data = makeInfiniteData([
+      { messages: [makeMsg(5, { content: "newer copy" })] },
+      { messages: [makeMsg(5, { content: "older copy" })] },
+    ]);
+
+    expect(flattenMessagePages(data)[0]?.content).toBe("older copy");
   });
 
-  it("handles an empty list without error", () => {
-    expect(dedupBySet([])).toEqual([]);
-  });
-
-  it("handles a single-element list", () => {
-    expect(dedupBySet([{ id: 99 }])).toEqual([{ id: 99 }]);
+  it("returns an empty list for an unloaded cache rather than throwing", () => {
+    expect(flattenMessagePages(undefined)).toEqual([]);
   });
 });
 
-describe("chat message deduplication — Ably handler dedup", () => {
-  it("returns true (duplicate) when id already exists in any page", () => {
+describe("mergeInboundMessage — the realtime handler's dedup", () => {
+  it("appends a genuinely new message to the newest page", () => {
+    const data = makeInfiniteData([{ messages: [makeMsg(1)] }]);
+
+    expect(idsIn(mergeInboundMessage(data, makeMsg(2), null))).toEqual([1, 2]);
+  });
+
+  it("ignores a message already in the cache, so a replayed frame cannot duplicate it", () => {
+    const data = makeInfiniteData([{ messages: [makeMsg(1), makeMsg(2)] }]);
+
+    const merged = mergeInboundMessage(data, makeMsg(2), null);
+
+    expect(idsIn(merged)).toEqual([1, 2]);
+    expect(merged).toBe(data);
+  });
+
+  it("replaces our own optimistic copy in place instead of showing a second bubble", () => {
     const data = makeInfiniteData([
-      { messages: [{ id: 1 }, { id: 2 }] as MsgRow[] },
-      { messages: [{ id: 3 }] as MsgRow[] },
+      { messages: [makeMsg(1), makeMsg(-1, { clientKey: "key-a" })] },
     ]);
-    expect(ablyHandlerDedup(data, 2)).toBe(true);
+
+    const merged = mergeInboundMessage(data, makeMsg(42), "key-a");
+
+    expect(idsIn(merged)).toEqual([1, 42]);
   });
 
-  it("returns false (new) when id is not in any page", () => {
+  it("appends rather than replacing when the clientKey does not match any optimistic row", () => {
     const data = makeInfiniteData([
-      { messages: [{ id: 1 }, { id: 2 }] as MsgRow[] },
+      { messages: [makeMsg(-1, { clientKey: "key-a" })] },
     ]);
-    expect(ablyHandlerDedup(data, 5)).toBe(false);
+
+    expect(idsIn(mergeInboundMessage(data, makeMsg(42), "key-b"))).toEqual([
+      -1, 42,
+    ]);
   });
 
-  it("handles pages with no messages", () => {
-    const data = makeInfiniteData([{ messages: [] }]);
-    expect(ablyHandlerDedup(data, 1)).toBe(false);
-  });
-
-  it("detects duplicate in the first page when message arrives again via Ably", () => {
+  it("never treats a persisted message as an optimistic copy, even on a clientKey match", () => {
     const data = makeInfiniteData([
-      { messages: [{ id: 100 }, { id: 101 }] as MsgRow[] },
+      { messages: [makeMsg(7, { clientKey: "key-a" })] },
     ]);
-    expect(ablyHandlerDedup(data, 100)).toBe(true);
-    expect(ablyHandlerDedup(data, 102)).toBe(false);
+
+    expect(idsIn(mergeInboundMessage(data, makeMsg(42), "key-a"))).toEqual([
+      7, 42,
+    ]);
   });
 
-  it("does not mutate the cache object (returns old on duplicate)", () => {
-    const data = makeInfiniteData([{ messages: [{ id: 7 }] as MsgRow[] }]);
-    const isDuplicate = ablyHandlerDedup(data, 7);
-    expect(isDuplicate).toBe(true);
-    expect(data.pages[0]?.messages).toHaveLength(1);
+  it("appends when the frame carries no clientKey, so a blank key matches nothing", () => {
+    const data = makeInfiniteData([
+      { messages: [makeMsg(-1, { clientKey: "" })] },
+    ]);
+
+    expect(idsIn(mergeInboundMessage(data, makeMsg(42), ""))).toEqual([-1, 42]);
+  });
+
+  it("finds the optimistic copy on a later page too", () => {
+    const data = makeInfiniteData([
+      { messages: [makeMsg(1)] },
+      { messages: [makeMsg(-9, { clientKey: "key-z" })] },
+    ]);
+
+    expect(idsIn(mergeInboundMessage(data, makeMsg(99), "key-z"))).toEqual([
+      1, 99,
+    ]);
   });
 });

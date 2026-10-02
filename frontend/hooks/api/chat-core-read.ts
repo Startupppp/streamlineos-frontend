@@ -10,6 +10,7 @@ import { reportError } from "@/lib/observability/error-reporter";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { isPresenceStatus, type PresenceStatus } from "@/lib/presence";
+import { chatChannelReadEnabled } from "@/features/chat/chat-read-position";
 import type {
   Channel,
   ChannelPage,
@@ -208,7 +209,7 @@ export function useChatChannel(channelId: number) {
     queryKey: collaborationQueryKeys.chat.channel(channelId),
     queryFn: ({ signal }) => apiClient.get<ChatChannelDetailWire>(`/chat/channels/${channelId}`, undefined, signal, channelDetailContract),
     staleTime: 2 * 60_000,
-    enabled: canRead && channelId > 0,
+    enabled: chatChannelReadEnabled(canRead, channelId),
   });
 }
 
@@ -226,7 +227,7 @@ export function useChatMessages(channelId: number) {
       ),
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     initialPageParam: NO_ID_CURSOR_YET,
-    enabled: canRead && channelId > 0,
+    enabled: chatChannelReadEnabled(canRead, channelId),
   });
 }
 
@@ -272,7 +273,7 @@ export function useChatPoll(
         pollPageContract,
       ),
     staleTime: 2 * 60_000,
-    enabled: enabled && canRead && channelId > 0,
+    enabled: enabled && chatChannelReadEnabled(canRead, channelId),
     refetchInterval: enabled && canRead ? CHAT_POLL_FALLBACK_INTERVAL_MS : false,
   });
 }

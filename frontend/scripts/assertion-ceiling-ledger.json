@@ -1,5 +1,5 @@
 {
-  "note": "Rule 4 of check-type-assertions.mjs: a per-file ZERO-GROWTH ceiling on plain `as X` and non-null `!` assertions in application code. Seeded at the head count. It may only ever go DOWN: --update-ledger refuses to raise a number, and the gate fails both when a file gains an assertion and when an entry outlives its site. `as const` is excluded by decision (it narrows, it does not force). Specs are outside this gate entirely — see the rule 4 header.",
+  "note": "Rule 4 of check-type-assertions.mjs: a per-file ZERO-GROWTH ceiling on plain `as X` and non-null `!` assertions in application code. Seeded at the head count. It may only ever go DOWN: --update-ledger refuses to raise a number, and the gate fails both when a file gains an assertion and when an entry outlives its site. `as const` is excluded by decision (it narrows, it does not force). Specs are outside this gate entirely \u2014 see the rule 4 header.",
   "files": {
     "app/(authenticated)/build/[projectId]/cycles/[cycleId]/not-found.tsx": {
       "as": 1,
@@ -290,10 +290,6 @@
       "nonNull": 0
     },
     "features/chat/use-huddle-events.ts": {
-      "as": 2,
-      "nonNull": 0
-    },
-    "features/chat/use-message-panel-data.ts": {
       "as": 2,
       "nonNull": 0
     },
