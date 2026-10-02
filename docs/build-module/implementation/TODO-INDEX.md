@@ -8,65 +8,67 @@ The Delivery checklist and any inline acceptance checkboxes inside each current 
 - [ ] Every accepted research finding has an adopted or deferred destination in the research traceability map.
 - [ ] Release gates, tenant/role browser paths, persistence, and operations evidence are complete.
 
+Current specification items: 23 checked; 373 open. Historical research inventory: 116 files.
+
 ## Current specifications (57)
 
-- [ ] [architecture/07-architecture-data-api-cache-ai.md](../architecture/07-architecture-data-api-cache-ai.md) — 12 open items
-- [ ] [architecture/08-deep-module-reconciliation.md](../architecture/08-deep-module-reconciliation.md) — 12 open items
-- [ ] [architecture/screen-data-contracts.md](../architecture/screen-data-contracts.md) — 8 open items
-- [ ] [audit/bugs-and-verification.md](../audit/bugs-and-verification.md) — 3 open items
-- [ ] [audit/cleanup-manifest.md](../audit/cleanup-manifest.md) — 2 open items
-- [ ] [audit/comprehensive-recheck-2026-10-02.md](../audit/comprehensive-recheck-2026-10-02.md) — 3 open items
-- [ ] [audit/original-wow-research-crosswalk.md](../audit/original-wow-research-crosswalk.md) — 2 open items
-- [ ] [audit/requirements-coverage.md](../audit/requirements-coverage.md) — 3 open items
-- [ ] [audit/research-traceability.md](../audit/research-traceability.md) — 3 open items
-- [ ] [audit/validation-report.md](../audit/validation-report.md) — 3 open items
-- [ ] [CLAUDE-MASTER-IMPLEMENTATION-PROMPT.md](../CLAUDE-MASTER-IMPLEMENTATION-PROMPT.md) — 4 open items
-- [ ] [delivery/09-delivery-roadmap-release-gates-and-positioning.md](../delivery/09-delivery-roadmap-release-gates-and-positioning.md) — 12 open items
-- [ ] [experience/02-personas-navigation-and-sidebars.md](../experience/02-personas-navigation-and-sidebars.md) — 6 open items
-- [ ] [experience/03-command-center-and-personal-dashboards.md](../experience/03-command-center-and-personal-dashboards.md) — 7 open items
-- [ ] [experience/04-work-surfaces-and-ticket-detail.md](../experience/04-work-surfaces-and-ticket-detail.md) — 7 open items
-- [ ] [experience/05-page-catalog-and-flows.md](../experience/05-page-catalog-and-flows.md) — 6 open items
-- [ ] [experience/06-ui-component-and-filter-system.md](../experience/06-ui-component-and-filter-system.md) — 7 open items
-- [ ] [experience/routes-and-screen-decisions.md](../experience/routes-and-screen-decisions.md) — 6 open items
-- [ ] [experience/screens/activation.md](../experience/screens/activation.md) — 7 open items
-- [ ] [experience/screens/client-delivery.md](../experience/screens/client-delivery.md) — 7 open items
-- [ ] [experience/screens/collaboration.md](../experience/screens/collaboration.md) — 8 open items
-- [ ] [experience/screens/cross-module-products.md](../experience/screens/cross-module-products.md) — 7 open items
-- [ ] [experience/screens/daily-work.md](../experience/screens/daily-work.md) — 6 open items
-- [ ] [experience/screens/external-client-portal.md](../experience/screens/external-client-portal.md) — 7 open items
-- [ ] [experience/screens/planning.md](../experience/screens/planning.md) — 7 open items
-- [ ] [experience/screens/product-discovery.md](../experience/screens/product-discovery.md) — 7 open items
-- [ ] [experience/screens/projects.md](../experience/screens/projects.md) — 6 open items
-- [ ] [experience/screens/quality.md](../experience/screens/quality.md) — 6 open items
-- [ ] [experience/screens/README.md](../experience/screens/README.md) — 4 open items
-- [ ] [experience/screens/reporting.md](../experience/screens/reporting.md) — 6 open items
-- [ ] [experience/screens/settings.md](../experience/screens/settings.md) — 8 open items
-- [ ] [experience/screens/shared-screen-contract.md](../experience/screens/shared-screen-contract.md) — 8 open items
-- [ ] [governance/rbac/01-role-model-and-open-risks.md](../governance/rbac/01-role-model-and-open-risks.md) — 12 open items
-- [ ] [governance/rbac/README.md](../governance/rbac/README.md) — 6 open items
-- [ ] [implementation/00-current-state-audit.md](00-current-state-audit.md) — 3 open items
-- [ ] [implementation/06-domain-model-and-database-schema.md](06-domain-model-and-database-schema.md) — 5 open items
-- [ ] [implementation/07-api-and-backend-contracts.md](07-api-and-backend-contracts.md) — 5 open items
-- [ ] [implementation/08-frontend-architecture-and-file-structure.md](08-frontend-architecture-and-file-structure.md) — 4 open items
-- [ ] [implementation/09-component-and-design-system-contract.md](09-component-and-design-system-contract.md) — 4 open items
-- [ ] [implementation/10-cache-rate-limit-and-performance.md](10-cache-rate-limit-and-performance.md) — 4 open items
-- [ ] [implementation/11-events-jobs-notifications-and-integrations.md](11-events-jobs-notifications-and-integrations.md) — 5 open items
-- [ ] [implementation/12-security-tenant-isolation-and-rbac.md](12-security-tenant-isolation-and-rbac.md) — 5 open items
-- [ ] [implementation/13-validation-errors-and-failure-states.md](13-validation-errors-and-failure-states.md) — 4 open items
-- [ ] [implementation/14-testing-browser-verification-and-acceptance.md](14-testing-browser-verification-and-acceptance.md) — 4 open items
-- [ ] [implementation/15-migration-cleanup-and-reuse-plan.md](15-migration-cleanup-and-reuse-plan.md) — 5 open items
-- [ ] [implementation/16-implementation-roadmap.md](16-implementation-roadmap.md) — 4 open items
-- [ ] [implementation/17-agent-coordination-and-work-ownership.md](17-agent-coordination-and-work-ownership.md) — 4 open items
-- [ ] [implementation/18-architecture-work-package-registry.md](18-architecture-work-package-registry.md) — 4 open items
-- [ ] [implementation/19-complete-surface-behavior-matrix.md](19-complete-surface-behavior-matrix.md) — 4 open items
-- [ ] [implementation/README.md](README.md) — 3 open items
-- [ ] [implementation/REQUIREMENT-LEDGER.md](REQUIREMENT-LEDGER.md) — 3 open items
-- [ ] [implementation/WORK-CLAIMS.md](WORK-CLAIMS.md) — 4 open items
-- [ ] [integrations/08-cross-module-client-content-commercial.md](../integrations/08-cross-module-client-content-commercial.md) — 11 open items
-- [ ] [onboarding/01-signup-and-multi-module-onboarding.md](../onboarding/01-signup-and-multi-module-onboarding.md) — 48 open items
-- [ ] [product/00-product-vision-and-decisions.md](../product/00-product-vision-and-decisions.md) — 10 open items
-- [ ] [product/customer-value-and-differentiation.md](../product/customer-value-and-differentiation.md) — 7 open items
-- [ ] [README.md](../README.md) — 5 open items
+- [ ] [architecture/07-architecture-data-api-cache-ai.md](../architecture/07-architecture-data-api-cache-ai.md) — 0 checked, 12 open
+- [ ] [architecture/08-deep-module-reconciliation.md](../architecture/08-deep-module-reconciliation.md) — 0 checked, 12 open
+- [ ] [architecture/screen-data-contracts.md](../architecture/screen-data-contracts.md) — 0 checked, 8 open
+- [ ] [audit/bugs-and-verification.md](../audit/bugs-and-verification.md) — 1 checked, 3 open
+- [ ] [audit/cleanup-manifest.md](../audit/cleanup-manifest.md) — 2 checked, 2 open
+- [ ] [audit/comprehensive-recheck-2026-10-02.md](../audit/comprehensive-recheck-2026-10-02.md) — 1 checked, 3 open
+- [ ] [audit/original-wow-research-crosswalk.md](../audit/original-wow-research-crosswalk.md) — 1 checked, 2 open
+- [ ] [audit/requirements-coverage.md](../audit/requirements-coverage.md) — 1 checked, 3 open
+- [ ] [audit/research-traceability.md](../audit/research-traceability.md) — 2 checked, 3 open
+- [ ] [audit/validation-report.md](../audit/validation-report.md) — 1 checked, 3 open
+- [ ] [CLAUDE-MASTER-IMPLEMENTATION-PROMPT.md](../CLAUDE-MASTER-IMPLEMENTATION-PROMPT.md) — 1 checked, 4 open
+- [ ] [delivery/09-delivery-roadmap-release-gates-and-positioning.md](../delivery/09-delivery-roadmap-release-gates-and-positioning.md) — 0 checked, 12 open
+- [ ] [experience/02-personas-navigation-and-sidebars.md](../experience/02-personas-navigation-and-sidebars.md) — 0 checked, 6 open
+- [ ] [experience/03-command-center-and-personal-dashboards.md](../experience/03-command-center-and-personal-dashboards.md) — 0 checked, 7 open
+- [ ] [experience/04-work-surfaces-and-ticket-detail.md](../experience/04-work-surfaces-and-ticket-detail.md) — 0 checked, 7 open
+- [ ] [experience/05-page-catalog-and-flows.md](../experience/05-page-catalog-and-flows.md) — 0 checked, 6 open
+- [ ] [experience/06-ui-component-and-filter-system.md](../experience/06-ui-component-and-filter-system.md) — 0 checked, 7 open
+- [ ] [experience/routes-and-screen-decisions.md](../experience/routes-and-screen-decisions.md) — 0 checked, 6 open
+- [ ] [experience/screens/activation.md](../experience/screens/activation.md) — 0 checked, 7 open
+- [ ] [experience/screens/client-delivery.md](../experience/screens/client-delivery.md) — 0 checked, 7 open
+- [ ] [experience/screens/collaboration.md](../experience/screens/collaboration.md) — 0 checked, 8 open
+- [ ] [experience/screens/cross-module-products.md](../experience/screens/cross-module-products.md) — 0 checked, 7 open
+- [ ] [experience/screens/daily-work.md](../experience/screens/daily-work.md) — 0 checked, 6 open
+- [ ] [experience/screens/external-client-portal.md](../experience/screens/external-client-portal.md) — 0 checked, 7 open
+- [ ] [experience/screens/planning.md](../experience/screens/planning.md) — 0 checked, 7 open
+- [ ] [experience/screens/product-discovery.md](../experience/screens/product-discovery.md) — 0 checked, 7 open
+- [ ] [experience/screens/projects.md](../experience/screens/projects.md) — 0 checked, 6 open
+- [ ] [experience/screens/quality.md](../experience/screens/quality.md) — 0 checked, 6 open
+- [ ] [experience/screens/README.md](../experience/screens/README.md) — 0 checked, 4 open
+- [ ] [experience/screens/reporting.md](../experience/screens/reporting.md) — 0 checked, 6 open
+- [ ] [experience/screens/settings.md](../experience/screens/settings.md) — 0 checked, 8 open
+- [ ] [experience/screens/shared-screen-contract.md](../experience/screens/shared-screen-contract.md) — 0 checked, 8 open
+- [ ] [governance/rbac/01-role-model-and-open-risks.md](../governance/rbac/01-role-model-and-open-risks.md) — 0 checked, 12 open
+- [ ] [governance/rbac/README.md](../governance/rbac/README.md) — 1 checked, 6 open
+- [ ] [implementation/00-current-state-audit.md](00-current-state-audit.md) — 1 checked, 3 open
+- [ ] [implementation/06-domain-model-and-database-schema.md](06-domain-model-and-database-schema.md) — 0 checked, 5 open
+- [ ] [implementation/07-api-and-backend-contracts.md](07-api-and-backend-contracts.md) — 0 checked, 5 open
+- [ ] [implementation/08-frontend-architecture-and-file-structure.md](08-frontend-architecture-and-file-structure.md) — 0 checked, 4 open
+- [ ] [implementation/09-component-and-design-system-contract.md](09-component-and-design-system-contract.md) — 0 checked, 4 open
+- [ ] [implementation/10-cache-rate-limit-and-performance.md](10-cache-rate-limit-and-performance.md) — 0 checked, 4 open
+- [ ] [implementation/11-events-jobs-notifications-and-integrations.md](11-events-jobs-notifications-and-integrations.md) — 0 checked, 5 open
+- [ ] [implementation/12-security-tenant-isolation-and-rbac.md](12-security-tenant-isolation-and-rbac.md) — 0 checked, 5 open
+- [ ] [implementation/13-validation-errors-and-failure-states.md](13-validation-errors-and-failure-states.md) — 0 checked, 4 open
+- [ ] [implementation/14-testing-browser-verification-and-acceptance.md](14-testing-browser-verification-and-acceptance.md) — 0 checked, 4 open
+- [ ] [implementation/15-migration-cleanup-and-reuse-plan.md](15-migration-cleanup-and-reuse-plan.md) — 0 checked, 5 open
+- [ ] [implementation/16-implementation-roadmap.md](16-implementation-roadmap.md) — 1 checked, 4 open
+- [ ] [implementation/17-agent-coordination-and-work-ownership.md](17-agent-coordination-and-work-ownership.md) — 1 checked, 4 open
+- [ ] [implementation/18-architecture-work-package-registry.md](18-architecture-work-package-registry.md) — 1 checked, 4 open
+- [ ] [implementation/19-complete-surface-behavior-matrix.md](19-complete-surface-behavior-matrix.md) — 1 checked, 4 open
+- [ ] [implementation/README.md](README.md) — 1 checked, 3 open
+- [ ] [implementation/REQUIREMENT-LEDGER.md](REQUIREMENT-LEDGER.md) — 1 checked, 3 open
+- [ ] [implementation/WORK-CLAIMS.md](WORK-CLAIMS.md) — 1 checked, 4 open
+- [ ] [integrations/08-cross-module-client-content-commercial.md](../integrations/08-cross-module-client-content-commercial.md) — 0 checked, 11 open
+- [ ] [onboarding/01-signup-and-multi-module-onboarding.md](../onboarding/01-signup-and-multi-module-onboarding.md) — 1 checked, 48 open
+- [ ] [product/00-product-vision-and-decisions.md](../product/00-product-vision-and-decisions.md) — 0 checked, 10 open
+- [ ] [product/customer-value-and-differentiation.md](../product/customer-value-and-differentiation.md) — 1 checked, 7 open
+- [ ] [README.md](../README.md) — 2 checked, 5 open
 
 ## Historical research and evidence (116)
 

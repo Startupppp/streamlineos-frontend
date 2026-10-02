@@ -75,6 +75,16 @@ function appendChecklist(path) {
 function indexText(files) {
   const canonical = files.filter((path) => !isResearch(path) && path !== indexPath);
   const research = files.filter(isResearch);
+  const counts = canonical.map((path) => {
+    const source = readFileSync(path, "utf8");
+    return {
+      path,
+      open: [...source.matchAll(/^- \[ \]/gm)].length,
+      checked: [...source.matchAll(/^- \[[xX]\]/gm)].length,
+    };
+  });
+  const totalOpen = counts.reduce((sum, item) => sum + item.open, 0);
+  const totalChecked = counts.reduce((sum, item) => sum + item.checked, 0);
   const lines = [
     "# Build documentation TODO index",
     "",
@@ -86,15 +96,15 @@ function indexText(files) {
     "- [ ] Every accepted research finding has an adopted or deferred destination in the research traceability map.",
     "- [ ] Release gates, tenant/role browser paths, persistence, and operations evidence are complete.",
     "",
+    `Current specification items: ${totalChecked} checked; ${totalOpen} open. Historical research inventory: ${research.length} files.`,
+    "",
     `## Current specifications (${canonical.length})`,
     "",
   ];
-  for (const path of canonical) {
-    const source = readFileSync(path, "utf8");
-    const open = [...source.matchAll(/^- \[ \]/gm)].length;
+  for (const { path, open, checked } of counts) {
     const relativePath = normalized(relative(join(root, "implementation"), path));
     const label = normalized(relative(root, path));
-    lines.push(`- [${open === 0 ? "x" : " "}] [${label}](${relativePath}) — ${open} open item${open === 1 ? "" : "s"}`);
+    lines.push(`- [${open === 0 ? "x" : " "}] [${label}](${relativePath}) — ${checked} checked, ${open} open`);
   }
   lines.push("", `## Historical research and evidence (${research.length})`, "");
   for (const path of research) {
