@@ -73,10 +73,17 @@ describe("resolvePageState", () => {
       .toBe("denied");
   });
 
-  it("renders a missing record as an empty state", () => {
+  it("renders a missing or unreachable record as not-found, never as an empty state", () => {
     expect(pageStateFromError(new ApiError("Not found", 404, "NOT_FOUND"))).toEqual({
-      kind: "empty",
+      kind: "not-found",
     });
+  });
+
+  it("resolves a 404 read to not-found even when the list it left behind is empty", () => {
+    const error = new ApiError("Project not found", 404, "NOT_FOUND");
+    expect(
+      resolvePageState({ ...idle, access: "granted", isError: true, error, isEmpty: true }),
+    ).toEqual({ kind: "not-found" });
   });
 
   it("degrades a malformed denial payload rather than throwing inside a render", () => {

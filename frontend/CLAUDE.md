@@ -54,7 +54,7 @@ Cite rules by ID in review (`FE-22`). `(gate: x)` names the `pnpm` check that fa
 
 ## 3. Access & Page State
 
-**FE-40.** Decide what a gated surface renders with `<PageState resolution={usePageState(...)}>`, never a boolean. It owns the branch order: access-loading → module unavailable → denied → loading → error → empty → ready. (gate: check:page-state-usage)
+**FE-40.** Decide what a gated surface renders with `<PageState resolution={usePageState(...)}>`, never a boolean. It owns the branch order: access-loading → module unavailable → denied → loading → error → empty → ready. A 404 read resolves to `not-found` ("doesn't exist, or you don't have access"), never to `empty`. (gate: check:page-state-usage)
 **FE-41.** **Always pass `error` to `usePageState`.** *Why:* omit it and every 402 becomes "Something went wrong" while tests still pass.
 
 ```tsx
