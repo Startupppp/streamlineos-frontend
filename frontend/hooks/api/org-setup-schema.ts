@@ -1,5 +1,40 @@
 import { z } from "zod";
 
+export const ORG_MODULE_KEYS = [
+  "hr",
+  "crm",
+  "build",
+  "accounting",
+  "inventory",
+  "kb",
+  "chat",
+  "support",
+  "surveys",
+  "payroll",
+  "sign",
+  "timesheets",
+] as const;
+
+export type OrgModuleKey = (typeof ORG_MODULE_KEYS)[number];
+export const MAX_INVITEE_MODULE_ACCESS = 10;
+
+export const inviteeModuleAccessSchema = z
+  .array(
+    z
+      .object({
+        moduleKey: z.enum(ORG_MODULE_KEYS),
+        standing: z.enum(["MEMBER", "ADMIN"]),
+      })
+      .strict(),
+  )
+  .max(MAX_INVITEE_MODULE_ACCESS)
+  .refine(
+    (items) => new Set(items.map((item) => item.moduleKey)).size === items.length,
+    "Each module can be assigned once per invitee.",
+  );
+
+export type InviteeModuleAccess = z.infer<typeof inviteeModuleAccessSchema>[number];
+
 export const orgSetupSessionContract = z.object({
   id: z.number().int(),
   type: z.string(),
@@ -19,16 +54,18 @@ export const orgSetupSessionContract = z.object({
   updatedAt: z.string().optional(),
 });
 
-const ORG_SETUP_INVITEE_ROLES = ["OWNER", "ORG_ADMIN", "MEMBER"] as const;
+const ORG_SETUP_INVITEE_ROLES = ["ORG_ADMIN", "MEMBER"] as const;
 
 export const MAX_ORG_SETUP_INVITEES = 50;
+export const MAX_ORG_SETUP_INVITE_BATCHES = 8;
 
 export const orgSetupInviteeRoleSchema = z.enum(ORG_SETUP_INVITEE_ROLES);
 
-const orgSetupInviteeSchema = z
+export const orgSetupInviteeSchema = z
   .object({
     email: z.string(),
     role: orgSetupInviteeRoleSchema,
+    moduleAccess: inviteeModuleAccessSchema.optional(),
   })
   .strict();
 

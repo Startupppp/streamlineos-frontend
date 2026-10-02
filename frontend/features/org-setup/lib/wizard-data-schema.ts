@@ -1,21 +1,17 @@
 import { z } from "zod";
-
-export const ORG_MODULE_KEYS = [
-  "hr",
-  "crm",
-  "build",
-  "accounting",
-  "inventory",
-  "kb",
-  "chat",
-  "support",
-  "surveys",
-  "payroll",
-  "sign",
-  "timesheets",
-] as const;
-
-export type OrgModuleKey = (typeof ORG_MODULE_KEYS)[number];
+import {
+  ORG_MODULE_KEYS,
+  inviteeModuleAccessSchema,
+} from "@/hooks/api/org-setup-schema";
+export {
+  ORG_MODULE_KEYS,
+  MAX_INVITEE_MODULE_ACCESS,
+  inviteeModuleAccessSchema,
+} from "@/hooks/api/org-setup-schema";
+export type {
+  InviteeModuleAccess,
+  OrgModuleKey,
+} from "@/hooks/api/org-setup-schema";
 
 const optionalString = z.string().optional().catch(undefined);
 
@@ -23,6 +19,7 @@ export const inviteeSchema = z.object({
   email: z.string(),
   role: z.string(),
   department: z.string().optional(),
+  moduleAccess: inviteeModuleAccessSchema.optional(),
 });
 
 export const wizardDataSchema = z.object({
