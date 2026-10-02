@@ -322,6 +322,7 @@ const OUTCOME_LABEL: Record<string, string> = {
 const OUTCOME_REASON_LABEL: Record<string, string> = {
   already_member: "already a member",
   invitation_revoked: "declined or revoked",
+  email_not_sent: "email not sent",
   unknown: "not sent",
 };
 
