@@ -1,7 +1,7 @@
 # ICP roadmap — Top 15 SHIP (CI SoT + PM JTBD overlay)
-**Lane:** PM · **Updated:** 2026-10-01 (IST)  
-**Source of truth:** `/workspace/streamlineos-ci/competitor-deep/100-WOW-REASONS.md` → section **Top 15 SHIP** (rows #3, #1, #2, #6, #12, #7, #23, #24, #9, #13, #31, #8, #10, #46, #21)  
-**Do not invent a parallel Top 15.** This file maps CI ranks → Freelancer / Product Manager / Project Manager JTBD + Freeze / Completeness Next / Later.  
+**Lane:** PM · **Updated:** 2026-10-01 (IST)
+**Source of truth:** `../../streamlineos-analysis-pack/01-ci/competitor-deep/100-WOW-REASONS.md` → section **Top 15 SHIP** (rows #3, #1, #2, #6, #12, #7, #23, #24, #9, #13, #31, #8, #10, #46, #21)
+**Do not invent a parallel Top 15.** This file maps CI ranks → Freelancer / Product Manager / Project Manager JTBD + Freeze / Completeness Next / Later.
 **Freeze implement order unchanged:** **PM-011 → PM-002 → PM-001** (even when CI desperation ranks client grant above invite — eng still ships invite path first).
 
 **ICP JTBD SoT:** `ICP-JTBD.md`
@@ -85,7 +85,7 @@ CI Filters top-8 are all **SHIP** (see `100-WOW-REASONS.md`). Intersection with 
 
 ## Explicit non-claims
 
-- Do not market Client Portal as UNIQUE HAVE until CI #3 ships and guest NF VERIFIED (HAVE-conditional #105).  
-- Do not treat CI Top 15 password/SSO as Freeze.  
-- Do not pad with all-in-one / cheaper / modern UI.  
+- Do not market Client Portal as UNIQUE HAVE until CI #3 ships and guest NF VERIFIED (HAVE-conditional #105).
+- Do not treat CI Top 15 password/SSO as Freeze.
+- Do not pad with all-in-one / cheaper / modern UI.
 - Protect filter chips + URL (CI #100) while shipping Labels/Epic — PARITY, not wow HAVE.

@@ -1,0 +1,53 @@
+# Documentation validation report
+
+Date: 2026-10-02, Asia/Calcutta
+Status: documentation verified; product behavior Planned or Current unverified as labeled
+
+## Checks performed
+
+| Check | Result | Meaning |
+|---|---|---|
+| Route manifest vs actual page inventory | 75/75 | No missing current Build page entry |
+| Route decision rows | 75/75, each exactly once | Keep/consolidate/rename/redirect specified |
+| Detailed route sections | 75/75 plus three proposed destinations | Every existing route has a screen-specific contract |
+| Screen folder | 13 Markdown files | Index, shared contract, ten Build screen groups, activation, and cross-module owning-product catalog |
+| Original requirement coverage | 25 mappings | Prompt and prior-answer requirements map to specification and acceptance |
+| Customer-value reasons | 100 sequential IDs | Each includes class, customer need, status, source, priority and proof |
+| Research Markdown inventory | 155 scanned, 116 retained | 39 duplicates removed |
+| Duplicate hash checks before deletion | 39/39 SHA-256 pairs matched | Exactly 31 mirrored copies and eight duplicated summaries |
+| Generated specification consolidation | 7/7 removed with pre-deletion SHA-256 recorded | Repeated overview, role, navigation, route, flow, aggregate, and persona summaries now resolve to retained authorities |
+| Remaining duplicate Markdown groups | 0 | No byte-identical retained copies |
+| Evidence preservation | 183/183 non-Markdown files unchanged | Includes all 162 images plus source artifacts; hashes match original inventory |
+| References rewritten | 26 initial research files, imported CI archive references, and canonical Build indexes | Retained authorities replace removed mirrors and summaries |
+| Markdown links | All relative file/image links checked | Final check requires zero missing targets |
+| Role/filter vocabulary | Reconciled | Org Viewer removed as structural role; one FilterEnvelope v1 |
+| Whitespace | git diff --check passed | Changed tracked documentation has no whitespace errors |
+| Source-aware implementation pack | 14 consolidated files | Product/role/navigation/route/flow wrappers removed; existing canonical authorities are linked directly |
+| Current source census | 75 pages; 53 controllers; 354 HTTP verbs; 38 schema files/86 table declarations | Source anchors only; no runtime-complete claim |
+| Implementation requirement ledger | 33/33 unique `BLD-*` IDs | Each requirement maps role, route, UI, interface, schema, permission, cache, events, tests, evidence and status |
+| Canonical/research Markdown | 49 canonical; 116 retained research | Redundant generated summaries removed; implementation layer links existing authorities directly |
+
+## Source availability limitations
+
+Historical sources mention QA ledgers/reports and deleted release documents that were not included in the supplied packs: original QA surface/role matrices, member/client pass reports, BUG-001 detail, BUILD-OS-BUGS, RELEASE-GATE and TESTING-SUMMARY. Their historical references are retained as unavailable original evidence, not converted into fabricated local proof. The referenced D-build.webp is absent; D-dashboard.webp and actual project screenshots remain available. Brace-group competitor path notation is shorthand, not a real file; actual competitor feature files are retained individually.
+
+Only three representative Streamline screenshots were visually reviewed in the planning audit. The remaining images are inventoried and retained, not claimed visually/currently verified. Research ID extraction found 213 distinct textual IDs; reuse across lanes is disambiguated by source.
+
+## Completion interpretation
+
+The missing documentation decisions are filled: activation variants, per-route screens, persona flows, pane/history/redirection, exact card fields, typed filters, interfaces/projections, dashboard behavior, ownership, CRM/Timesheets/Accounting owning screens, cleanup/evidence, a paste-ready Claude implementation contract, and release proof. Existing plan catalog and permission keys stay authoritative. No high-impact implementation choice is intentionally left as “ask product later.”
+
+The source-aware implementation layer additionally defines schema ownership, backend/frontend file seams, wire and error envelopes, cache/rate-limit policy, event/job contracts, negative security tests, evidence levels, migration gates, and independently verifiable vertical slices. `CONTEXT.md` now points at the existing architecture contract instead of the absent `docs/specs/build` path.
+
+Specification coverage does not certify the running product. No app code, route manifest, schema migration, production data, deployment, real invitations or payment actions were changed or verified here. Browser/DB/role/tenant/security/load/deployment evidence remains required by delivery and RBAC gates.
+
+## Operational limitations
+
+Automatic approval review rejected shell directory-cleanup commands with “blocked by policy.” File cleanup completed safely through explicit verified patches: 39 byte-identical research copies and seven generated summaries. Untracked empty local directories may remain; Git does not preserve them and they do not affect the documentation set. No permission request or destructive fallback was used.
+
+The invoked to-spec skill's issue-tracker publication step is unconfigured: no tracker and ready-for-agent label configuration was supplied. This task's requested local specifications are complete; tracker publication was not claimed. Tracker setup uses /setup-matt-pocock-skills.
+
+## Revalidation checklist
+
+After future edits, compare page files to route decision table; verify every route has a detailed section; validate local file/image links; compare cleanup-manifest retained/deleted paths; verify 100 reason IDs and coverage targets; check filter/role ownership consistency; run git diff --check. A source status upgrade requires new environment/revision/actor/action evidence, not another documentation pass.
+

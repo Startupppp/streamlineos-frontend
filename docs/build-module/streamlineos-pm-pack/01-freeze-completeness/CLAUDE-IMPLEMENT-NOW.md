@@ -8,12 +8,12 @@ You are implementing **only** the frozen Now set for StreamlineOS Build (`https:
 - Auth today: email OTP; sessions fragile — don’t invent SSO in Slice 1 of PM-011, but never claim success without durable state.
 
 ## Authoritative specs (read fully before coding)
-1. `/workspace/streamlineos-pm/PRD-PM-011-invite-accept.md`
-2. `/workspace/streamlineos-pm/PRD-PM-002-build-role-at-invite.md`
-3. `/workspace/streamlineos-pm/PRD-PM-001-client-portal-grant.md`
-4. Design notes: `/workspace/streamlineos-ux/PM-001-design-challenge.md` + UX-016/016b/017/017b/019/020 in Designer packet
+1. `PRD-PM-011-invite-accept.md`
+2. `PRD-PM-002-build-role-at-invite.md`
+3. `PRD-PM-001-client-portal-grant.md`
+4. Design notes: `../../streamlineos-ux/PM-001-design-challenge.md` + UX-016/016b/017/017b/019/020 in Designer packet
 5. Bugs: `/workspace/streamlineos-build-qa/bugs/BUG-001.md` and R1 reports under `/workspace/streamlineos-build-qa/`
-6. CI bar: `/workspace/streamlineos-build-ci-cut-v2.md`
+6. CI bar: `../../streamlineos-analysis-pack/00-ci-cut-v2.md`
 
 ## Implement in this order (do not reorder)
 
@@ -54,7 +54,7 @@ All AC in the three PRDs checked by QA with evidence; CI invite/portal rows no l
 
 
 ## Amendments post Freeze approve (Designer + Tester)
-- Design handoffs (required read): `/workspace/streamlineos-ux/UX-016-invite-accept-handoff.md`, `/workspace/streamlineos-ux/PM-001-design-challenge.md`
+- Design handoffs (required read): `../../streamlineos-ux/UX-016-invite-accept-handoff.md`, `../../streamlineos-ux/PM-001-design-challenge.md`
 - **Release blockers (QA):**
   1. PM-011 FIXED only after dual apex+www fresh-profile + hydrate negatives
   2. PM-002 FIXED only when cold invite → `/build` with no Roles surgery; project roster remains explicit

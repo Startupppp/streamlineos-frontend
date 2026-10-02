@@ -1,12 +1,12 @@
 # StreamlineOS Build — CI Cut v2 (2026-09-30)
 
-**Audience:** Principal Competitor Analyst  
-**Product focus:** StreamlineOS Build module (`https://www.streamlineos.in/build`)  
-**Scope Contract:** v1.0 (frozen)  
-**Access date (all sources):** 2026-09-30  
-**Research mode:** Public web only (WebSearch/WebFetch official pages) + **Owner/Council signed-in ledger** labeled **VERIFIED/REPORTED** (not this agent's browser)  
-**Prior cut:** `/workspace/streamlineos-build-ci-first-cut.md` (v1 intact)  
-**Cycle goal (ASSUMED):** trust + activation of Build  
+**Audience:** Principal Competitor Analyst
+**Product focus:** StreamlineOS Build module (`https://www.streamlineos.in/build`)
+**Scope Contract:** v1.0 (frozen)
+**Access date (all sources):** 2026-09-30
+**Research mode:** Public web only (WebSearch/WebFetch official pages) + **Owner/Council signed-in ledger** labeled **VERIFIED/REPORTED** (not this agent's browser)
+**Prior cut:** `00-ci-cut-v1.md` (v1 intact)
+**Cycle goal (ASSUMED):** trust + activation of Build
 
 **Status legend:** `AVAILABLE` | `BETA` | `ANNOUNCED` | `DEPRECATED` | `REPORTED` | `INFERRED` | `UNKNOWN` | `VERIFIED` (in-product Owner/Council)
 
@@ -474,7 +474,7 @@ Already moved: roles, email-domain, API token settings, webhooks settings, integ
 
 ---
 
-*End of CI Cut v2 — 2026-09-30. v1 preserved at `/workspace/streamlineos-build-ci-first-cut.md`. H-PM LOCKED; H-Builder CLOSED; guest/portal interaction still UNKNOWN pending Tester verification.*
+*End of CI Cut v2 — 2026-09-30. v1 preserved at `00-ci-cut-v1.md`. H-PM LOCKED; H-Builder CLOSED; guest/portal interaction still UNKNOWN pending Tester verification.*
 
 ## Freeze v1 CI delta (2026-09-30 council)
 

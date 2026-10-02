@@ -79,16 +79,16 @@
 
 ## Now / Next / Later / Not Now
 
-**Now (quality + wedge unlock)**  
+**Now (quality + wedge unlock)**
 PM-001, PM-002, PM-003, PM-004, PM-007 · Capacity reserved for defect re-verify + instrumentation.
 
-**Next**  
+**Next**
 PM-005, PM-006, PM-008 · Coherent Client portal + activation polish.
 
-**Later**  
+**Later**
 PM-009 · Advanced automation/API packaging; portfolio/program depth.
 
-**Not Now**  
+**Not Now**
 PM-010 feature sprawl; H-Builder/custom app studio; native mobile; copying competitor breadth; paid upsell experiments before activation trusts.
 
 ## PRDs (outline only — full PRD after Phase 4 + Tester)
@@ -96,9 +96,9 @@ PM-010 feature sprawl; H-Builder/custom app studio; native mobile; copying compe
 Ship full PRDs for **PM-001, PM-002, PM-003, PM-004** first. Each must include: problem, JTBD, evidence, goals/non-goals, stories, states, permissions, analytics, a11y, security/privacy, rollout, risks, AC, DoD. Implementation slices small enough for independent Claude/eng verify.
 
 ## Release gates (apply per Now item)
-1. **Code complete** — flagged  
-2. **Test complete** — original + adjacent negatives + happy path (Tester)  
-3. **Operationally ready** — docs/support, observability, rollback  
+1. **Code complete** — flagged
+2. **Test complete** — original + adjacent negatives + happy path (Tester)
+3. **Operationally ready** — docs/support, observability, rollback
 4. **Outcome validated** — metric moved vs baseline (PM-007)
 
 ## Cross-role review requests
@@ -116,7 +116,7 @@ No consensus until R1–R4 responses. Historical bugs ≠ current VERIFIED. Comp
 
 ## Patch 2026-09-30 · CI v2 + BUG-001
 
-**CI Cut v2 absorbed:** `/workspace/streamlineos-build-ci-cut-v2.md`
+**CI Cut v2 absorbed:** `../../streamlineos-analysis-pack/00-ci-cut-v2.md`
 - Direct-for-job: Linear / Jira / ClickUp (High) · Direct-for-suite: Zoho/Odoo · H-Builder closed
 - Auth/session **BEHIND** → strengthens PM-004
 - Client portal guest UNKNOWN → PM-001/006 gated on Tester

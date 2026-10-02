@@ -19,7 +19,7 @@
 
 ## Rollup
 - `100-REASONS.md` — **120** reasons (seed + PUBLIC-DOC + filter hypotheses)
-- PM fold: `/workspace/streamlineos-pm/competitor-deep/FILTERS.md` — **115** ICP-framed; Filters ClickUp/Linear/Jira **UI-VERIFIED**
+- PM fold: `../../../streamlineos-pm-pack/02-competitor-deep/FILTERS.md` — **115** ICP-framed; Filters ClickUp/Linear/Jira **UI-VERIFIED**
 - Status: Filters priority **DONE** for ClickUp/Linear/Jira. Deeper non-filter UI walks **IN PROGRESS**. monday/Asana still Error-9 gated.
 
 ## Signed-in walk status (2026-10-01 IST, updated after Aditya 1:1)

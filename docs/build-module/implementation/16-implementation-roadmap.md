@@ -1,0 +1,28 @@
+# 16 — Vertical implementation roadmap
+
+Status: Planned
+
+Each slice produces a user-visible outcome across UI, command/query interface, schema if needed, permission, cache, events, tests, browser proof, and operational evidence. Detailed product priority remains in [delivery roadmap](../delivery/09-delivery-roadmap-release-gates-and-positioning.md).
+
+| Slice | User-visible outcome | Main files/seams | Data/interfaces | Verification and definition of done |
+|---|---|---|---|---|
+| 0. Contract baseline | Agents implement from one registry without drift | this pack, `CONTEXT.md`, route/nav/query/permission registries | no schema | Link/registry/source census passes; no missing master prompt or duplicate requirement ID. |
+| 1. Invite acceptance | Invited internal user lands in the intended org/module safely | onboarding UI, invitation controller/module access | invitation idempotency and membership/module assignment | new/existing/wrong-email/expired/replay/concurrent acceptance in DB and browser. |
+| 2. Module access assignment | Org Member sees Build only after explicit assignment | access UI, Build member/project access seams | membership/access cache version | owner/admin/member negative matrix and immediate revocation. |
+| 3. Client grant activation | Client receives usable scoped portal access | client portal UI/services | grant revision/capabilities/token | atomic activate, expired/revoked/wrong-project, signed files, browser magic link. |
+| 4. Three-step onboarding | Owner activates one or many modules with few inputs | org setup routes/features; module adapters | durable setup session, preview, activation idempotency | all six journeys, resume/retry, five-control Build path, invited People batch. |
+| 5. Projects destination | Users can find/create/import projects from one page | Planned `/build/projects`, nav catalog, project/import seams | project projection/import job | empty/populated/filter/mobile; create/import/retry/plan/access. |
+| 6. Ticket command parity | Every Ticket mutation has identical rules/effects | `apply-ticket-change.ts` and adapters/hooks | CAS/idempotency/audit/outbox/cache | UI/bulk/import/AI/automation parity, conflicts, WIP, tenant and browser. |
+| 7. My Work/Inbox consolidation | Assigned work, drafts, and attention are focused | My Work/Inbox screens/query keys | attention projection | counts and records authorized; Back/pane/mobile/offline; old aliases redirect. |
+| 8. Intake and Triage | Feedback/bugs become governed requests and Tickets | Intake/Triage/Feedbucket adapters | explicit legacy mapping and conversion idempotency | submission-detail mapping, duplicate/accept/decline/convert, client visibility. |
+| 9. Product discovery chain | PM traces evidence to outcome | managed products/roadmap/goals/Tickets | evidence/opportunity/score/outcome links | score source/override, roadmap-to-delivery, post-release outcome proof. |
+| 10. Command Center | Each user has a safe customizable command view | dashboard UI/query module | dashboard/layout versions and batch query | 24-widget layout, 12 batch, partial errors, permission, restore/conflict/mobile. |
+| 11. Cross-module delivery loop | Client/time/invoice/calendar/file actions retain context | owning-module adapters/deep links | versioned projections/reference links | unavailable/stale/revoked, correct return, no duplicate ledgers. |
+| 12. Quality/release/reporting | Delivery has QA, release, risk, capacity, and outcome proof | quality/report screens/services | immutable evidence/projections | target DB, bounded query plans, browser/report/export equivalence. |
+| 13. Governed automation/AI | Users automate and use fewer screens without bypass | automation runner, Ask OS tools/actions | proposal/idempotency/run history | tool visibility, confirmation, replay, token/cost, permissions, loop/rate guard. |
+| 14. Scale and launch | Product is operable for solo to large tenants | admission/cache/jobs/telemetry/deploy | indexes, retention, archival | load, cache outage, worker lag/DLQ, backup/restore, rollback, release gates. |
+
+## Slice file checklist
+
+Each implementation ticket names exact existing files after a fresh inventory, proposed files with responsibilities, migration and rollback, endpoint/DTO, permission key, query keys, invalidation, events/jobs, tests by evidence level, browser actors/data/actions, observability, risks, and ledger IDs. A slice is not done while its compatibility adapter has no removal condition or its verification relies only on source/tests.
+

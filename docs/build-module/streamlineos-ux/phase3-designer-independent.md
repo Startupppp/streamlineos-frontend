@@ -1,7 +1,7 @@
 # Phase 3 — Principal Product Designer Independent Pass
-Product: StreamlineOS · Build module · Access 2026-09-30  
-Role observed: Org Owner (Account A) · Viewport: 1280×800 desktop  
-Evidence base: Surface Ledger `/workspace/streamlineos-ux/surface-ledger-draft.md`  
+Product: StreamlineOS · Build module · Access 2026-09-30
+Role observed: Org Owner (Account A) · Viewport: 1280×800 desktop
+Evidence base: Surface Ledger `surface-ledger-draft.md`
 Truth rule: only VERIFIED friction from Owner session; Member/guest paths marked UNTESTED.
 
 ---
@@ -155,27 +155,27 @@ Scoring: 1 poor · 3 adequate · 5 excellent. Evidence-tied.
 ## 7. Three design levels (priority problems)
 
 ### A. Session + auth trust (UX-001)
-1. **Minimum repair:** Persist `callbackUrl` through OTP; longer session; “session expiring” toast  
-2. **Coherent improvement:** Magic-link + optional password; device trust checkbox  
-3. **Differentiating bet:** Passkey/SSO + “resume exact board cell” deep links  
+1. **Minimum repair:** Persist `callbackUrl` through OTP; longer session; “session expiring” toast
+2. **Coherent improvement:** Magic-link + optional password; device trust checkbox
+3. **Differentiating bet:** Passkey/SSO + “resume exact board cell” deep links
 Effort: M / L / XL · Trade-off: security vs friction
 
 ### B. Activation to first issue (UX-002,005,006)
-1. **Minimum:** Post-org-setup deep-link `/build` + emphasize Create issue on empty project  
-2. **Coherent:** Opinionated “Quick project” (one screen) vs Advanced wizard  
-3. **Differentiating:** Template that seeds 1 cycle + 3 sample issues + portal draft  
+1. **Minimum:** Post-org-setup deep-link `/build` + emphasize Create issue on empty project
+2. **Coherent:** Opinionated “Quick project” (one screen) vs Advanced wizard
+3. **Differentiating:** Template that seeds 1 cycle + 3 sample issues + portal draft
 Effort: S / M / L
 
 ### C. More tools / roles overwhelm (UX-010,011)
-1. **Minimum:** Group + pin favorites  
-2. **Coherent:** Searchable MoreToolsDrawer + Build role presets  
-3. **Differentiating:** “Role modes” (Delivery / Client / Admin) that hide irrelevant chrome  
+1. **Minimum:** Group + pin favorites
+2. **Coherent:** Searchable MoreToolsDrawer + Build role presets
+3. **Differentiating:** “Role modes” (Delivery / Client / Admin) that hide irrelevant chrome
 Effort: M / L / XL
 
 ### D. Client portal wedge (UX-009)
-1. **Minimum:** Empty-state checklist to publish  
-2. **Coherent:** Guest preview + permission summary before invite  
-3. **Differentiating:** Portal tied to Releases (“share this release”) — unique vs pure PM  
+1. **Minimum:** Empty-state checklist to publish
+2. **Coherent:** Guest preview + permission summary before invite
+3. **Differentiating:** Portal tied to Releases (“share this release”) — unique vs pure PM
 Effort: S / M / L
 
 ---
@@ -232,21 +232,21 @@ Viewport: Desktop primary; Tablet collapse sidebar; Mobile UNTESTED — recommen
 
 ## 11. Prioritized design backlog
 
-**Quick wins:** UX-006 first-issue CTA; UX-008 cycles copy; UX-009 portal checklist; UX-014 surface import on empty Issues; UX-015 de-clutter rail  
-**Foundational system:** EmptyState/ViewSwitcher/MoreToolsDrawer contracts; dual-settings IA (UX-012); density tokens  
-**Journey redesigns:** UX-001 auth/session; UX-002/005 activation wizard; UX-010/011 roles+tools progressive disclosure  
-**Differentiating experiments:** Release-linked Client portal; Role modes; Quick project template with sample cycle  
+**Quick wins:** UX-006 first-issue CTA; UX-008 cycles copy; UX-009 portal checklist; UX-014 surface import on empty Issues; UX-015 de-clutter rail
+**Foundational system:** EmptyState/ViewSwitcher/MoreToolsDrawer contracts; dual-settings IA (UX-012); density tokens
+**Journey redesigns:** UX-001 auth/session; UX-002/005 activation wizard; UX-010/011 roles+tools progressive disclosure
+**Differentiating experiments:** Release-linked Client portal; Role modes; Quick project template with sample cycle
 
 ---
 
 ## 12. Experiment brief (uncertain bet)
 
-**Hypothesis:** An opinionated “Quick project” (1 screen, seeds 3 issues + 1 cycle draft) increases day-1 activation (first issue <10 min) vs full wizard without hurting 7-day retention.  
-**Cohort:** New orgs, Build goal selected, week 1 trial  
-**Variants:** A = current wizard; B = Quick project default + “Advanced” link  
-**Primary metric:** Time-to-first-issue; secondary: project-created rate  
-**Guardrails:** 7-day return rate; support tickets; feature-discovery of Cycles (not collapse)  
-**Duration/sample:** caveat — need PM instrumentation; suggest ≥2 weeks or 200 orgs  
+**Hypothesis:** An opinionated “Quick project” (1 screen, seeds 3 issues + 1 cycle draft) increases day-1 activation (first issue <10 min) vs full wizard without hurting 7-day retention.
+**Cohort:** New orgs, Build goal selected, week 1 trial
+**Variants:** A = current wizard; B = Quick project default + “Advanced” link
+**Primary metric:** Time-to-first-issue; secondary: project-created rate
+**Guardrails:** 7-day return rate; support tickets; feature-discovery of Cycles (not collapse)
+**Duration/sample:** caveat — need PM instrumentation; suggest ≥2 weeks or 200 orgs
 **Decision rule:** Ship B if time-to-first-issue ↓ ≥30% and 7-day return not ↓ >5%
 
 ---
@@ -254,21 +254,21 @@ Viewport: Desktop primary; Tablet collapse sidebar; Mobile UNTESTED — recommen
 ## 13. Handoff specs (implementation-ready sketches)
 
 ### UX-006 — Project home zero-issues
-- **Desktop:** Below status cards, full-width primary `Create issue`; secondary `Import issues`  
-- **States:** Default; loading create; permission-denied (Member without create)  
-- **AC:** Given 0 issues, CTA visible without scroll at 1280×800; Given ≥1 issue, CTA moves to header `+` only  
+- **Desktop:** Below status cards, full-width primary `Create issue`; secondary `Import issues`
+- **States:** Default; loading create; permission-denied (Member without create)
+- **AC:** Given 0 issues, CTA visible without scroll at 1280×800; Given ≥1 issue, CTA moves to header `+` only
 
 ### UX-009 — Client portal unpublished
-- Checklist: (1) Publish portal (2) Choose visible views (3) Invite guest  
-- **AC:** Unpublished state never looks like “broken empty”; Publish is single primary  
+- Checklist: (1) Publish portal (2) Choose visible views (3) Invite guest
+- **AC:** Unpublished state never looks like “broken empty”; Publish is single primary
 
 ### UX-010 — MoreToolsDrawer
-- Groups: Plan | Execute | Quality | Collaborate | Automate  
-- Search filters by name  
-- **AC:** All current tools reachable; default shows ≤8 pinned  
+- Groups: Plan | Execute | Quality | Collaborate | Automate
+- Search filters by name
+- **AC:** All current tools reachable; default shows ≤8 pinned
 
 ### UX-001 — OTP callback restore
-- **AC:** Given `callbackUrl=/build/47/issues`, after OTP user lands on Board not Dashboard  
+- **AC:** Given `callbackUrl=/build/47/issues`, after OTP user lands on Board not Dashboard
 
 ---
 
@@ -285,10 +285,10 @@ Viewport: Desktop primary; Tablet collapse sidebar; Mobile UNTESTED — recommen
 ---
 
 ## 15. Preserve (do not “fix”)
-- Empty-state pattern with single primary CTA  
-- Multi-view Issues (Board→Workload)  
-- Import dry-run  
-- Build OS ↔ Home OS module switcher (distinctive suite expression)  
+- Empty-state pattern with single primary CTA
+- Multi-view Issues (Board→Workload)
+- Import dry-run
+- Build OS ↔ Home OS module switcher (distinctive suite expression)
 - H-PM information architecture (Projects → Issues/Backlog/Cycles/Releases)
 
 ---

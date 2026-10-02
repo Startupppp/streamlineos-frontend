@@ -1,8 +1,8 @@
 # WOW criteria — Aditya’s bar (StreamlineOS Build)
-**Lane:** PM · **Updated:** 2026-10-01 (IST)  
-**Audience:** Aditya, council, Completeness prioritisation  
-**Companion:** `WOW-HAVE.md` · `SHIP-DESPERATE.md` · `100-WOW-REASONS-PM.md` · `ICP-ROADMAP-TOP15.md`  
-**Authoritative pack (SoT):** `/workspace/streamlineos-ci/competitor-deep/100-WOW-REASONS.md` + `HAVE-TODAY.md` — PM files are ICP overlays only; do not invent a parallel fluff bank.  
+**Lane:** PM · **Updated:** 2026-10-01 (IST)
+**Audience:** Aditya, council, Completeness prioritisation
+**Companion:** `WOW-HAVE.md` · `SHIP-DESPERATE.md` · `100-WOW-REASONS-PM.md` · `ICP-ROADMAP-TOP15.md`
+**Authoritative pack (SoT):** `../../streamlineos-analysis-pack/01-ci/competitor-deep/100-WOW-REASONS.md` + `HAVE-TODAY.md` — PM files are ICP overlays only; do not invent a parallel fluff bank.
 **Non-goal:** Pad to 100 with fluff. Honest shortfall > invented wow.
 
 ---

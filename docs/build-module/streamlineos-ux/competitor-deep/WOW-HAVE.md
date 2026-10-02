@@ -1,7 +1,7 @@
 # Design WOW — HAVE (aligned to CI strict bar)
 
-**Updated:** 2026-10-01  
-**Source of truth for HAVE count:** CI `/workspace/streamlineos-ci/competitor-deep/HAVE-TODAY.md`  
+**Updated:** 2026-10-01
+**Source of truth for HAVE count:** CI `../../streamlineos-analysis-pack/01-ci/competitor-deep/HAVE-TODAY.md`
 **Bar:** Build VERIFIED + Directs **largely lack**. Table-stakes PARITY ≠ HAVE. Fluff out.
 
 ## Strict HAVE (4) — Design craft stance

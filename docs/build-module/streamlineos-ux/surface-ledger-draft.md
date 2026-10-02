@@ -60,7 +60,7 @@ Access date: 2026-09-30 · Role: new Org Owner (Account A) · Viewport: 1280×80
 - Notices: HR not enabled (red); 14-day trial banner
 - Floating: ASK OS, capture utilities
 - Status: VERIFIED
-- Evidence: `/workspace/streamlineos-ux/D-dashboard.webp`
+- Evidence: `D-dashboard.webp`
 
 ### D-006 · Build OS — All Projects (default)
 - Route: `/build`
@@ -143,7 +143,7 @@ Role/email: Account A Owner · `[REDACTED-TEST-EMAIL]` · org `PXC-Design-A-2026
 - `/build/47/settings`: General, Labels, Statuses, Custom Fields, Teams & Roster, Danger Zone
 
 ### More tools inventory (VERIFIED)
-**Org-level Build:** Roadmap, Goals, Approvals, Templates, Client access, Members & access  
+**Org-level Build:** Roadmap, Goals, Approvals, Templates, Client access, Members & access
 **Project More tools:** Triage, Epics, Milestones, Workload, Meetings, Approvals, QA and tests, Incidents, Change requests, Intake, Chat, Wiki, Whiteboard, Agile reports, Budget, Risks, Decisions, Forms, Workflow, Modules, Automations, Webhooks
 
 ### Import (VERIFIED)
@@ -166,4 +166,4 @@ Role/email: Account A Owner · `[REDACTED-TEST-EMAIL]` · org `PXC-Design-A-2026
 
 
 ## Completeness Wave Owner batch
-See `/workspace/streamlineos-ux/SURFACE_LEDGER_COMPLETENESS_OWNER.md` (D-100…D-251).
+See `SURFACE_LEDGER_COMPLETENESS_OWNER.md` (D-100…D-251).

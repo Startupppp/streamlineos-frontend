@@ -1,6 +1,6 @@
 # CI Gap Register — Completeness Wave (live)
-**Updated:** 2026-09-30 · Access/research date for competitor claims: 2026-09-30  
-**Method:** Score Build surfaces as `D-`/`T-` ledger IDs land. Labels: BEHIND | PARITY | AHEAD | UNIQUE | UNKNOWN. Competitor status: AVAILABLE | BETA | ANNOUNCED | …  
+**Updated:** 2026-09-30 · Access/research date for competitor claims: 2026-09-30
+**Method:** Score Build surfaces as `D-`/`T-` ledger IDs land. Labels: BEHIND | PARITY | AHEAD | UNIQUE | UNKNOWN. Competitor status: AVAILABLE | BETA | ANNOUNCED | …
 **Directs for job:** Linear · Jira · ClickUp · (suite) Zoho Projects/One · Odoo
 
 ## Seed scores (pre-census, from Freeze evidence)
@@ -38,7 +38,7 @@ Gap register covers every ledger ID in final Surface Ledger with a competitive l
 
 ## Owner batch D-100…D-251 (2026-09-30) — scored
 
-Source: `/workspace/streamlineos-ux/SURFACE_LEDGER_COMPLETENESS_OWNER.md` · Role: Owner · Empty-state heavy (new org).  
+Source: `../../streamlineos-ux/SURFACE_LEDGER_COMPLETENESS_OWNER.md` · Role: Owner · Empty-state heavy (new org).
 Directs: Linear · Jira Cloud · ClickUp · Zoho Projects (suite) · monday.com. Labels from public competitor posture (CI cut v2) + Owner VERIFIED surfaces.
 
 ### Build chrome / org IA
@@ -104,11 +104,11 @@ Directs: Linear · Jira Cloud · ClickUp · Zoho Projects (suite) · monday.com.
 
 ### Still UNKNOWN (need Member/Client/Account B + filled data)
 
-- Permission-differentiated filters/cards per role  
-- Create-issue for non-Owner presets  
-- Guest portal NF  
-- Whether Agent access / AI widgets are AVAILABLE vs vapor  
-- Mobile / a11y  
+- Permission-differentiated filters/cards per role
+- Create-issue for non-Owner presets
+- Guest portal NF
+- Whether Agent access / AI widgets are AVAILABLE vs vapor
+- Mobile / a11y
 
 ### Append log
 
@@ -120,7 +120,7 @@ Directs: Linear · Jira Cloud · ClickUp · Zoho Projects (suite) · monday.com.
 
 ## Member batch T01…T24 (2026-09-30) — scored
 
-Source: `/workspace/streamlineos-build-qa/SURFACE_LEDGER_COMPLETENESS.md` + `ROLE_MATRIX.md`  
+Source: `/workspace/streamlineos-build-qa/SURFACE_LEDGER_COMPLETENESS.md` + `ROLE_MATRIX.md`
 Role: Build Module Member + project Member · 30 VERIFIED surfaces.
 
 ### Role-differential gaps (Owner D- vs Member T-)
@@ -165,8 +165,8 @@ Append log: BUG-007 closed as method artifact pending real Account B isolation p
 
 ## More-tools & hierarchy competitive bars (public sources, 2026-09-30)
 
-**Method:** Official competitor docs/features/help only (WebSearch/WebFetch). Build evidence = Owner D-102…D-251 + Member T12–T23 empty-state VERIFIED (new org / light project). Access date for all competitor URLs below: **2026-09-30**.  
-**Confidence:** HIGH where official docs/features pages fetched; MEDIUM where help-center SEO or vendor feature pages only; LOW if inferred from marketing without feature doc.  
+**Method:** Official competitor docs/features/help only (WebSearch/WebFetch). Build evidence = Owner D-102…D-251 + Member T12–T23 empty-state VERIFIED (new org / light project). Access date for all competitor URLs below: **2026-09-30**.
+**Confidence:** HIGH where official docs/features pages fetched; MEDIUM where help-center SEO or vendor feature pages only; LOW if inferred from marketing without feature doc.
 **Gap rule:** Empty shell + Direct AVAILABLE & deep craft = **BEHIND** (craft). Surface named with no Direct equivalent = potential **UNIQUE** only after populated workflow VERIFIED — else do not claim AHEAD.
 
 ### Hierarchy shells — Products / Portfolios / Programs / Teams
@@ -357,7 +357,7 @@ Append log: BUG-007 closed as method artifact pending real Account B isolation p
 
 ## Owner filled-data Cycle/Epic/Release (2026-09-30) — scored
 
-Source: `/workspace/streamlineos-ux/FILLED-DATA-OWNER-NOTES.md` · Owner VERIFIED creates.
+Source: `../../streamlineos-ux/FILLED-DATA-OWNER-NOTES.md` · Owner VERIFIED creates.
 
 | Artifact | Was (empty census) | Now | Gap vs Directs |
 | --- | --- | --- | --- |
@@ -366,7 +366,7 @@ Source: `/workspace/streamlineos-ux/FILLED-DATA-OWNER-NOTES.md` · Owner VERIFIE
 | Release `PXC-Release-1` v1.0.0 Draft | Empty shell | Create **VERIFIED** | **PARITY-seeking** vs Jira Releases; publish/changelog UNKNOWN |
 | Issues `?status=TODO` Board+List | Filter unknown | Non-empty filter **VERIFIED** | **PARITY** filter hygiene vs Directs (partial — other filters UNTESTED) |
 
-**Freeze:** unchanged (Cycles craft depth stays Next).  
+**Freeze:** unchanged (Cycles craft depth stays Next).
 **Watchlist:** CW Cycles craft softens from “route empty” to “exists but not Linear-class.”
 
 Append log: Owner filled-data scored.
@@ -390,7 +390,7 @@ Source: Designer Owner VERIFIED (room) · `pxctestera…` → Build Module Admin
 
 ## CW-004 cycle depth (2026-09-30) — rescore
 
-Source: `/workspace/streamlineos-ux/CW-004-CYCLE-DEPTH.md` · Owner VERIFIED.
+Source: `../../streamlineos-ux/CW-004-CYCLE-DEPTH.md` · Owner VERIFIED.
 
 | Capability | Status | Gap |
 | --- | --- | --- |

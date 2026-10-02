@@ -1,7 +1,7 @@
 # CI Completeness Status — StreamlineOS Build
-**Updated:** 2026-09-30 (Asia/Calcutta)  
-**Lane:** Completeness Wave CI (Principal Competitor Analyst)  
-**Artifacts:** `/workspace/streamlineos-ci/CI-GAP-REGISTER-live.md` · `/workspace/streamlineos-build-ci-cut-v2.md` · Owner/Member ledgers
+**Updated:** 2026-09-30 (Asia/Calcutta)
+**Lane:** Completeness Wave CI (Principal Competitor Analyst)
+**Artifacts:** `CI-GAP-REGISTER-live.md` · `../00-ci-cut-v2.md` · Owner/Member ledgers
 
 ---
 
@@ -92,10 +92,10 @@ Until those land, gap register keeps **UNKNOWN** for guest UX, Admin power, and 
 
 ## Pointers
 
-- Live gaps: `/workspace/streamlineos-ci/CI-GAP-REGISTER-live.md`
-- Owner ledger: `/workspace/streamlineos-ux/SURFACE_LEDGER_COMPLETENESS_OWNER.md`
+- Live gaps: `CI-GAP-REGISTER-live.md`
+- Owner ledger: `../../streamlineos-ux/SURFACE_LEDGER_COMPLETENESS_OWNER.md`
 - Member ledger + matrix: `/workspace/streamlineos-build-qa/SURFACE_LEDGER_COMPLETENESS.md` · `ROLE_MATRIX.md`
-- Scope Done (product census): `/workspace/streamlineos-pm/SCOPE-COMPLETENESS-v2.md`
+- Scope Done (product census): `../../streamlineos-pm-pack/01-freeze-completeness/SCOPE-COMPLETENESS-v2.md`
 
 
 ### Update 2026-09-30 Owner filled-data

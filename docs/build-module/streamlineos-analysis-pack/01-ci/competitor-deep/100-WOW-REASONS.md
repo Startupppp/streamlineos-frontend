@@ -1,6 +1,6 @@
 # 100 Wow Reasons — StreamlineOS Build (Aditya bar)
-**Lane:** CI competitor-deep · **Updated:** 2026-10-01 ~18:30 IST  
-**ICP:** Freelancers (F) · Product managers (PM) · Project managers (PjM)  
+**Lane:** CI competitor-deep · **Updated:** 2026-10-01 ~18:30 IST
+**ICP:** Freelancers (F) · Product managers (PM) · Project managers (PjM)
 **Freeze:** unchanged (PM-011 → PM-002 → PM-001). **No eng.** This file reframes competitive reasons only.
 
 ## Bar (reject / accept)
@@ -177,7 +177,7 @@
 
 | Rank | # | Feature | Why this rank |
 | --- | --- | --- | --- |
-| 1 | 3 | Client grant → guest magic-link | Wedge dead; UNIQUE-vs-Linear blocked; F/PjM desperate | 
+| 1 | 3 | Client grant → guest magic-link | Wedge dead; UNIQUE-vs-Linear blocked; F/PjM desperate |
 | 2 | 1 | Cold invite accept → Build | No teammate = no product; all ICPs |
 | 3 | 2 | Invite grants Build module access | Accept without `/build` is false activation |
 | 4 | 6 | Grant Access projects loader | Blocks grant before guest even starts |
@@ -195,7 +195,7 @@
 
 ## SHORTFALL
 
-**Numeric target:** Met (≥100 SHIP+HAVE).  
+**Numeric target:** Met (≥100 SHIP+HAVE).
 
 **Quality shortfall (evidence, not padding avoided):**
 
@@ -208,11 +208,11 @@
 
 ## Sources (read, not invented)
 
-- `/workspace/streamlineos-ci/competitor-deep/100-REASONS.md`
+- `100-REASONS.md`
 - `/workspace/streamlineos-ci/competitor-deep/{clickup,linear,jira}/FEATURES.md` + `BUILD-GAPS.md`
-- `/workspace/streamlineos-pm/competitor-deep/FILTERS.md` · `REASON-FRAMING.md` · `GAP-BY-ICP.md` · `PM-OWNED-REASONS.md` · `ICP-JTBD.md`
-- `/workspace/streamlineos-ci/CI-GAP-REGISTER-live.md` · `CI-COMPLETENESS-STATUS.md`
-- `/workspace/streamlineos-build-ci-cut-v2.md`
+- `../../../streamlineos-pm-pack/02-competitor-deep/FILTERS.md` · `REASON-FRAMING.md` · `GAP-BY-ICP.md` · `PM-OWNED-REASONS.md` · `ICP-JTBD.md`
+- `../CI-GAP-REGISTER-live.md` · `CI-COMPLETENESS-STATUS.md`
+- `../../00-ci-cut-v2.md`
 - Build craft: `FILTERS-BUILD-CRAFT.md`, `CLIENT-PORTAL-CHROME.md`, `APPROVALS-BUDGET.md`, Completeness delta watchlist
 
 ## Companion files
