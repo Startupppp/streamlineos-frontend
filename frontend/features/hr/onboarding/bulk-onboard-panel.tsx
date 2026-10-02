@@ -156,7 +156,7 @@ export function BulkOnboardPanel() {
                 <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                 <span>
                   {seats?.available === 0
-                    ? `Your plan has no free seats${seats?.limit == null ? "" : ` (${String(seats.limit)} in use)`}. `
+                    ? `Your plan has no free seats${seats?.limit == null ? "" : ` (${String(seats.used)} of ${String(seats.limit)} in use)`}. `
                     : `Your plan has ${plural(seats?.available ?? 0, "free seat")} and this file needs ${String(seats?.required ?? 0)}. `}
                   {plural(seats?.blocked ?? 0, "row")} will not be created. An employee record takes a seat, so
                   cancel a pending invitation, remove a member, or add seats first.
