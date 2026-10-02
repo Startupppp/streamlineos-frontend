@@ -4,7 +4,6 @@ import { PRICING } from "@/lib/pricing";
 import { BRAND_NAME } from "@/lib/branding";
 import { Frame } from "./frame";
 import { HeroScreen } from "./hero-screen";
-import { LogoStrip } from "./proof";
 import { CONTAINER } from "./section";
 
 export function SignInAction({ className = "" }: { className?: string }) {
@@ -52,10 +51,6 @@ export function Hero() {
             <HeroScreen />
           </Frame>
         </div>
-      </div>
-
-      <div className={`${CONTAINER} mt-10 sm:mt-14`}>
-        <LogoStrip caption="Customer logos appear here once approved" />
       </div>
     </section>
   );
