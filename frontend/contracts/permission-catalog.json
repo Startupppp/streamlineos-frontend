@@ -4039,6 +4039,11 @@
       "action": "cases",
       "description": "View and acknowledge disciplinary actions issued to oneself"
     },
+    "self:document-acknowledgements": {
+      "resource": "self",
+      "action": "document-acknowledgements",
+      "description": "View and acknowledge documents assigned to oneself"
+    },
     "self:expenses": {
       "resource": "self",
       "action": "expenses",

@@ -637,6 +637,7 @@ export type PermissionKey =
   | "sales:view"
   | "self:attendance"
   | "self:cases"
+  | "self:document-acknowledgements"
   | "self:expenses"
   | "self:job-openings"
   | "self:leaves"
