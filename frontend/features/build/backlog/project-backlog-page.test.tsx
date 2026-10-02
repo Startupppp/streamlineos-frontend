@@ -2,6 +2,7 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import type { BuildListSurfaceProps } from "@/features/build/shared/build-list-surface";
 import type { Ticket } from "@/types/projects";
+import { ApiError } from "@/lib/api-envelope";
 
 const mockReplace = jest.fn();
 const mockPush = jest.fn();
@@ -270,6 +271,19 @@ describe("ProjectBacklogPage — project loading guard", () => {
     renderPage();
     expect(screen.queryByTestId("project-load-fallback")).toBeNull();
     expect(screen.getByTestId("build-list-surface")).toBeDefined();
+  });
+
+  it("routes a 404 project read to the not-found fallback rather than the project-unavailable empty state", () => {
+    mockUseProject.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: new ApiError("Project not found", 404, "NOT_FOUND"),
+      refetch: jest.fn(),
+    });
+    renderPage();
+    expect(screen.getByTestId("project-load-fallback")).toBeDefined();
+    expect(screen.queryByText("Project unavailable")).toBeNull();
   });
 
   it("tells a caller without build:view they lack access rather than that the project is unavailable", () => {

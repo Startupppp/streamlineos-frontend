@@ -338,7 +338,7 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
     );
   }
 
-  if (projectState.kind === "error" || (projectError && projectState.kind === "empty")) {
+  if (projectState.kind === "error" || projectState.kind === "not-found") {
     return (
       <ProjectLoadFallback
         title="Backlog"
