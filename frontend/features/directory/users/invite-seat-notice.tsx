@@ -2,6 +2,7 @@
 
 import { AlertCircle } from "lucide-react";
 import { useSeatInfo } from "@/hooks/api/subscription";
+import { SEAT_RULE } from "@/lib/billing/seat-rule";
 
 /**
  * BUG-HRMS-008. How many seats are actually free, said before the invite is sent.
@@ -31,12 +32,12 @@ export function InviteSeatNotice({ requesting }: { requesting?: number }) {
       <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
       <span>
         {available === 0
-          ? `No seats are free on your plan${seats.total === null ? "" : ` (${String(seats.total)} in use)`}.`
+          ? `No seats are free on your plan (${String(seats.used)} of ${String(seats.total ?? seats.used)} in use).`
           : `${String(available)} of ${String(seats.total ?? available)} seats free.`}{" "}
         {shortBy > 0
           ? `This invite needs ${String(requesting)}, so ${String(shortBy)} will be refused. `
           : ""}
-        A pending invitation holds a seat until it is accepted, declined or cancelled.
+        {SEAT_RULE} A pending invitation holds its seat until it is accepted, declined or cancelled.
       </span>
     </div>
   );

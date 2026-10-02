@@ -1,6 +1,7 @@
 import { render } from "@testing-library/react";
 import { EventFormFields } from "./event-form-fields";
 import type { RecurrenceState } from "./event-form-state";
+import { defaultRecurrenceState } from "./event-recurrence-schema";
 
 jest.mock("./event-attendees-picker", () => ({
   EventAttendeesPicker: () => null,
@@ -17,7 +18,7 @@ jest.mock("@/components/ui/date-picker", () => ({
   ),
 }));
 
-const recurrence: RecurrenceState = { type: "none" };
+const recurrence: RecurrenceState = defaultRecurrenceState();
 
 const baseProps = {
   title: "",

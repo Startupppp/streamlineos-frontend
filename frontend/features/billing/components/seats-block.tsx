@@ -11,6 +11,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useSeatInfo, useSubscription } from "@/hooks/api/subscription";
 import type { StatTone } from "@/components/ui/stat-card";
+import { SEAT_RULE } from "@/lib/billing/seat-rule";
 
 function utilizationColor(percent: number): string {
   if (percent >= 90) return "text-status-danger-ink";
@@ -172,7 +173,7 @@ export function SeatsBlock() {
         <div className="flex items-start gap-2 rounded-lg bg-muted/40 px-3 py-2">
           <Info className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
           <p className="text-xs text-muted-foreground">
-            Seats are reserved when you send invitations. Active members consume one seat each.
+            {SEAT_RULE}
           </p>
         </div>
       )}

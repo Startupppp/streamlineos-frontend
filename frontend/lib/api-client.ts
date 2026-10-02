@@ -159,6 +159,16 @@ const TOKEN_REFRESH_SKEW_MS = 30_000;
 const TOKEN_FALLBACK_TTL_MS = 8 * 60 * 1_000;
 
 const TOKEN_UNAVAILABLE_BACKOFF_MS = 3_000;
+/**
+ * BUG-HRMS-011/012/019. Every authenticated request awaits this one shared
+ * session read before its own 30s deadline starts, and it had no deadline of
+ * its own: a stalled `/api/auth/session` left every query on the page pending,
+ * which reads as a skeleton that never ends. The route's server side spends at
+ * most 8s + 8s, so 20s only trips on a real stall — and a stall is a TIMEOUT
+ * error the page can show with Retry, not a missing token that signs the user
+ * out.
+ */
+const SESSION_TOKEN_TIMEOUT_MS = 20_000;
 let tokenUnavailableUntil = 0;
 
 function readTokenExpiry(token: string): number | null {
@@ -248,8 +258,12 @@ export async function getBackendToken(
   const generation = tokenGeneration;
   fetchingTokenPromise = (async () => {
     let minted: string | null = null;
+    let timedOut = false;
     try {
-      const res = await fetch("/api/auth/session", { credentials: "include" });
+      const res = await fetch("/api/auth/session", {
+        credentials: "include",
+        signal: AbortSignal.timeout(SESSION_TOKEN_TIMEOUT_MS),
+      });
       if (!res.ok) return null;
       const data: unknown = await res.json();
       if (
@@ -267,11 +281,15 @@ export async function getBackendToken(
       };
       tokenUnavailableUntil = 0;
       return minted;
-    } catch {
+    } catch (error: unknown) {
+      if (error instanceof DOMException && error.name === "TimeoutError") {
+        timedOut = true;
+        throw new ApiError("Request timed out. Please try again.", undefined, "TIMEOUT");
+      }
       return null;
     } finally {
       if (generation === tokenGeneration) {
-        if (minted === null)
+        if (minted === null && !timedOut)
           tokenUnavailableUntil = Date.now() + TOKEN_UNAVAILABLE_BACKOFF_MS;
         fetchingTokenPromise = null;
       }

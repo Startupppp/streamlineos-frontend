@@ -36,7 +36,7 @@ jest.mock("@/components/layout/mobile/chat-mobile-chrome-layout", () => ({
 function makeProps(
   messageInput: string,
   setMessageInput: jest.Mock,
-  inputRef: React.RefObject<HTMLTextAreaElement>,
+  inputRef: React.RefObject<HTMLTextAreaElement | null>,
 ): MessageInputProps {
   return {
     channelId: 7,

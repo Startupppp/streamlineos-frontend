@@ -58,6 +58,8 @@ const baseProps = {
     },
   ],
   isFetchingNextPage: false,
+  hasNextPage: false,
+  onLoadMore: jest.fn(),
   onSelect: jest.fn(),
   onNewChat: jest.fn(),
   onRename: jest.fn(),
