@@ -17,6 +17,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { downloadBlob } from "@/lib/download-blob";
 import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import {
   buildLeaveExportBlob,
   leaveExportToastMessage,
@@ -43,6 +45,12 @@ interface LeavesWfhContentProps {
 export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps) {
   const { data: session } = useSession();
   const data = useLeavesWfhData(selfService);
+  const myLeavesState = usePageState({
+    permission: "self:leaves",
+    isLoading: data.isLoading,
+    isError: data.isError,
+    error: data.errorValue,
+  });
   const { activeTab, onTabChange } = useUrlTab(LEAVE_TABS, "my-leaves");
   const [wfhStatusFilter, setWfhStatusFilter] = useState("ALL");
 
@@ -165,6 +173,7 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
             ) : null}
 
             <TabsContent value="my-leaves" className={TAB_PANEL_CLASS}>
+              <PageState resolution={myLeavesState} loading={null}>
               {data.noPolicyConfigured ? (
                 <LeavesNoPolicyEmptyState />
               ) : (
@@ -183,6 +192,7 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
                   onLoadMore={data.onLoadMoreMyRequests}
                 />
               )}
+              </PageState>
             </TabsContent>
 
             <TabsContent value="wfh" className={TAB_PANEL_CLASS}>
