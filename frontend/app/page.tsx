@@ -10,7 +10,7 @@ import { faqs } from "@/features/landing/data/faqs";
 import { PRICING } from "@/lib/pricing";
 
 const HOME_TITLE = `${BRAND_NAME} — HR, Projects, CRM & Payroll in One Platform`;
-const HOME_DESCRIPTION = `Run HR, payroll, projects, CRM, chat & accounting on one affordable AI-powered platform. Free for up to ${PRICING.freeSeatLimit} seats — no credit card needed.`;
+const HOME_DESCRIPTION = `Run HR, sales, delivery, finance and support on one platform. Free for up to ${PRICING.freeSeatLimit} seats — no credit card needed.`;
 
 export const metadata: Metadata = {
   title: HOME_TITLE,

@@ -1,0 +1,97 @@
+/*
+ * Marketing landing page only.
+ *
+ * The product mockups stay dark on a light page, and the app's own dark theme
+ * is keyed to `.dark` on <html>, so the frames cannot borrow it. Their palette
+ * lives here, scoped to `.lp`, and is read from Tailwind as `bg-(--lpf-panel)`.
+ */
+.lp {
+  --lp-canvas: #f3f5f8;
+
+  /* Primary buttons are brand blue on this page, not the app's ink. Set on the
+     token so the shared pricing grid follows without being edited. */
+  --primary: var(--brand-deep);
+
+  --lpf-bg: #0c0f16;
+  --lpf-panel: #131823;
+  --lpf-raise: #1b2230;
+  --lpf-rule: #252d3d;
+  --lpf-ink: #e6eaf2;
+  --lpf-dim: #8a94a8;
+  --lpf-accent: #8b9bff;
+  --lpf-good: #4cc38a;
+  --lpf-warn: #e2a84b;
+
+  background: var(--lp-canvas);
+}
+
+html:has(.lp) {
+  scroll-behavior: smooth;
+}
+
+.lp :is(a, button, summary):focus-visible {
+  outline: 2px solid var(--brand-deep);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.lp-frame {
+  box-shadow:
+    0 0 0 1px rgb(12 15 22 / 0.04),
+    0 2px 4px rgb(12 15 22 / 0.06),
+    0 40px 80px -32px rgb(20 30 70 / 0.35);
+}
+
+/* A mockup that runs off its container instead of ending in a box. */
+.lp-crop {
+  overflow: hidden;
+  mask-image: linear-gradient(to bottom, black 72%, transparent);
+}
+
+/* The one orchestrated moment: the hero settles in on load. CSS, not JS, so the
+   headline paints before hydration. */
+@keyframes lp-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+.lp-rise {
+  animation: lp-rise 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* The hero mockup trails the scroll slightly. Browsers without scroll-driven
+   animations simply leave it still. */
+@keyframes lp-drift {
+  to {
+    transform: translateY(-56px);
+  }
+}
+
+@supports (animation-timeline: scroll()) {
+  .lp-drift {
+    animation: lp-drift linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 900px;
+  }
+}
+
+.lp details > summary {
+  list-style: none;
+}
+
+.lp details > summary::-webkit-details-marker {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:has(.lp) {
+    scroll-behavior: auto;
+  }
+
+  .lp-rise,
+  .lp-drift {
+    animation: none;
+  }
+}
