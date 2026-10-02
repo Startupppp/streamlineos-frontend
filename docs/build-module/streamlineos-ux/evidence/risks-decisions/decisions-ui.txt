@@ -1,0 +1,10 @@
+URL: https://www.streamlineos.in/build/47/decisions
+Initial empty state: Decisions Log; No decisions recorded; Record key project decisions to maintain a clear audit trail.
+Header CTA: New Decision; empty-state CTA: Log Decision.
+Search: Search decisions.
+Filters and observed options:
+  Status: All statuses, Proposed, Accepted, Superseded, Revisit.
+  Owner: All owners, PXC Designer A, PXC Test Member.
+Created: PXC-Decision-1 (row ID DEC-1).
+Filled row: Proposed; owner —; decided —; revisit —.
+Dialog CTA: Log Decision; optional Context, Decision, Options Considered, Owner, Decided At, Revisit At, Linked Ticket.

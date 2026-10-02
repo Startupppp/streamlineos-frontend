@@ -1,0 +1,197 @@
+{
+  "product": "Linear",
+  "walk_date": "2026-10-01",
+  "timezone": "Asia/Calcutta",
+  "workspace": "tarunchintakunta",
+  "team": "TAR",
+  "plan_scope": "free-only",
+  "session": "signed-in existing session",
+  "goal": "UI-VERIFIED signed-in walk beyond Filters (Filters retained)",
+  "urls": {
+    "active": "https://linear.app/tarunchintakunta/team/TAR/active",
+    "views": "https://linear.app/tarunchintakunta/team/TAR/views/issues",
+    "inbox": "https://linear.app/tarunchintakunta/inbox",
+    "my_issues": "https://linear.app/tarunchintakunta/my-issues/assigned",
+    "projects": "https://linear.app/tarunchintakunta/projects/all",
+    "workspace_views": "https://linear.app/tarunchintakunta/views",
+    "agent": "https://linear.app/tarunchintakunta/agent",
+    "team_overview": "https://linear.app/tarunchintakunta/team/TAR/overview",
+    "team_documents": "https://linear.app/tarunchintakunta/team/TAR/documents",
+    "cycles": "https://linear.app/tarunchintakunta/team/TAR/cycles",
+    "integrations": "https://linear.app/tarunchintakunta/settings/integrations",
+    "github": "https://linear.app/tarunchintakunta/settings/integrations/github",
+    "issue_templates": "https://linear.app/tarunchintakunta/settings/issue-templates",
+    "slas": "https://linear.app/tarunchintakunta/settings/sla",
+    "initiatives": "https://linear.app/tarunchintakunta/settings/initiatives",
+    "asks": "https://linear.app/tarunchintakunta/settings/asks",
+    "ai_agents": "https://linear.app/tarunchintakunta/settings/ai",
+    "triage_probe": "https://linear.app/tarunchintakunta/team/TAR/triage",
+    "roadmap_probe": "https://linear.app/tarunchintakunta/team/TAR/roadmap",
+    "insights_probe": "https://linear.app/tarunchintakunta/insights"
+  },
+  "filters": {
+    "fields": [
+      "AI filter",
+      "Advanced filter",
+      "Status",
+      "Assignee",
+      "Agent",
+      "Agent Session",
+      "Creator",
+      "Priority",
+      "Labels",
+      "Relations",
+      "Suggested label",
+      "Dates",
+      "Project",
+      "Project properties",
+      "Subscribers",
+      "Auto-closed",
+      "Content",
+      "Links",
+      "Template"
+    ],
+    "status_values": [
+      "Backlog",
+      "Todo",
+      "In Progress",
+      "Done",
+      "Canceled",
+      "Duplicate"
+    ],
+    "agent_session_values": [
+      "Active",
+      "Error",
+      "Dismissed",
+      "Merged"
+    ],
+    "relation_values": [
+      "Parent issues",
+      "Sub-issues",
+      "Blocked issues",
+      "Blocking issues",
+      "Recurring issues",
+      "Issues with relations",
+      "Duplicates"
+    ],
+    "date_subfields": [
+      "Due date",
+      "Created date",
+      "Updated date",
+      "Started date",
+      "Completed date",
+      "Auto-closed date",
+      "Triaged date",
+      "Time in current status"
+    ],
+    "date_custom_operator": "in",
+    "date_units": [
+      "Day",
+      "Month",
+      "Quarter",
+      "Half-year",
+      "Year"
+    ],
+    "advanced": {
+      "available": true,
+      "group_operator_toggle": [
+        "and",
+        "or"
+      ],
+      "nested_groups": true,
+      "group_delete_control": true
+    },
+    "ai_filter_suggestions": [
+      "assigned to me",
+      "completed in the last month",
+      "due in the next 2 weeks"
+    ]
+  },
+  "custom_views": {
+    "list_reachable": true,
+    "initial_state": "empty",
+    "tabs": [
+      "Issues",
+      "Projects"
+    ],
+    "new_view_builder": [
+      "name",
+      "optional description",
+      "save to Tarunchintakunta",
+      "Cancel",
+      "Create view"
+    ],
+    "mutated": false
+  },
+  "evidence": [
+    "evidence/filters-active.png",
+    "evidence/filters-field-menu.png",
+    "evidence/filters-ai-suggestions.png",
+    "evidence/filters-status-options.png",
+    "evidence/filters-relations-options.png",
+    "evidence/filters-date-custom.png",
+    "evidence/filters-advanced-empty.png",
+    "evidence/filters-advanced-and.png",
+    "evidence/filters-advanced-nested.png",
+    "evidence/custom-views-empty.png",
+    "evidence/custom-view-builder.png",
+    "evidence/inbox.png",
+    "evidence/my-issues.png",
+    "evidence/projects.png",
+    "evidence/views.png",
+    "evidence/agent.png",
+    "evidence/team-overview.png",
+    "evidence/team-documents.png",
+    "evidence/cycles.png",
+    "evidence/github-settings.png",
+    "evidence/integrations-catalog.png",
+    "evidence/issue-templates.png",
+    "evidence/slas.png",
+    "evidence/initiatives.png",
+    "evidence/asks.png",
+    "evidence/ai-agents.png",
+    "evidence/not-found-insights-roadmap.png",
+    "evidence/triage-redirect-all-issues.png"
+  ],
+  "errors": [],
+  "notes": [
+    "No login wall, OTP, CAPTCHA, Error 9, paid flow, or purchase encountered.",
+    "New custom view builder was opened and cancelled without saving.",
+    "Beyond-Filters surfaces were inspected read-only; 15 non-filter surfaces were UI-verified.",
+    "No create, enable, invite, connect, save, share, upgrade, or purchase action was performed.",
+    "Triage, Roadmap, and Insights were recorded as route outcomes rather than counted as verified product surfaces."
+  ],
+  "surfaces": {
+    "ui_verified_non_filter_count": 15,
+    "ui_verified_non_filter": [
+      "Inbox",
+      "My issues",
+      "Projects",
+      "Views / Custom Views",
+      "Agent",
+      "Team overview",
+      "Team Documents",
+      "Cycles",
+      "Integrations / GitHub",
+      "Integrations catalog",
+      "Issue Templates",
+      "SLAs",
+      "Initiatives",
+      "Asks",
+      "AI & Agents"
+    ],
+    "route_outcomes": {
+      "Triage": "Redirected to team All issues; no separate triage surface exposed",
+      "Roadmap": "Team route Not found; workspace route redirected to Projects",
+      "Insights/Dashboards": "Insights route Not found; analytics integrations visible"
+    },
+    "free_only_notes": [
+      "No paid CTA activated",
+      "SLAs explicitly Business/Enterprise; Add rule disabled",
+      "Asks explicitly Business/Enterprise",
+      "Code Intelligence explicitly Business; Coding sessions marked Available on Basic",
+      "Initiatives toggle observed off; not enabled"
+    ],
+    "mutated": false
+  }
+}

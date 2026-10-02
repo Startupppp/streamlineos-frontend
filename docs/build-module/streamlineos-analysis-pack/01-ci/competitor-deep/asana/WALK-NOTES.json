@@ -1,0 +1,67 @@
+{
+  "competitor": "Asana",
+  "product": "StreamlineOS Build CI",
+  "started_at": "2026-10-01T09:11:00+05:30",
+  "status": "BLOCKED",
+  "plan_intent": "free_only",
+  "purchase_attempted": false,
+  "workspace_requested": "PXC-CI-Asana-20261001",
+  "account": {
+    "disposable_mail_provider": "mail.tm",
+    "credentials_file": ".account-secrets.json",
+    "credentials_file_mode": "0600",
+    "email_verified": true,
+    "onboarding_step_reached": 3
+  },
+  "auth_modalities_observed": [
+    "Google",
+    "Microsoft",
+    "email address + Continue",
+    "password field in onboarding step 1"
+  ],
+  "actions": [
+    "Opened Asana login",
+    "Opened public create-account flow",
+    "Submitted disposable email",
+    "Verified Asana email",
+    "Completed full-name/password onboarding step",
+    "Reached job-title onboarding step",
+    "Avoided the job-title field and clicked Continue with it empty",
+    "Selected the suggested Technology & software industry chip",
+    "Stopped after the renderer crashed during personalization"
+  ],
+  "surfaces_observed": [
+    "login",
+    "create account",
+    "verification handoff",
+    "account setup step 1",
+    "account setup step 2",
+    "account setup industry selection"
+  ],
+  "signed_in_surfaces_walked": 0,
+  "project_created": false,
+  "tasks_created": 0,
+  "filters": {
+    "status": "not_evaluated",
+    "fields": [],
+    "operators": [],
+    "saved_views": [],
+    "reason": "No authenticated view rendered"
+  },
+  "blocker": {
+    "type": "browser_renderer_crash",
+    "message": "Aw, Snap! Something went wrong while displaying this webpage.",
+    "error_code": "9",
+    "reproduced": true,
+    "step": "industry-chip personalization transition",
+    "evidence": [
+      "evidence/01-account-setup-job-title.png",
+      "evidence/02-account-setup-crash-error9.png",
+      "evidence/03-industry-chip-selected.png",
+      "evidence/04-crash-after-industry-chip.png"
+    ]
+  },
+  "captcha_or_turnstile": false,
+  "notes": "Job-title field was not clicked on resume; Continue with it empty worked. Selecting Technology & software reproduced the renderer crash during personalization. Per instruction, stopped; no filter grammar or signed-in feature claims were invented.",
+  "resumed_at": "2026-10-01T09:20:00+05:30"
+}

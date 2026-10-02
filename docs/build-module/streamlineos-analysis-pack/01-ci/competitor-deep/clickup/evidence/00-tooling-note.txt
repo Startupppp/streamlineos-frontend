@@ -1,0 +1,18 @@
+ClickUp competitor deep walk — tooling note
+Date: 2026-10-01 Asia/Calcutta
+
+Executor tools advertised this session:
+- ListMachines, WebSearch, WebFetch, Shell, Read, AwaitShell,
+  CopyToBox, CopyFromBox, UploadFile, DownloadFile, GetMcpTools, CallMcpTool
+- MCP: cursor-github, cursor-origin only
+
+NOT advertised (required by parent + box-desktop skill):
+- Task (subagent_type=computerUse / computer_use)
+- Screenshot (read-only desktop)
+- RequestUserForm / request_box_help
+
+Parent rule: Use computerUse Task subagent for ALL GUI.
+Do NOT use Playwright/CDP/xdotool/Shell browser automation.
+
+Outcome: Cannot complete signed-in ClickUp walk without violating box-desktop
+boundary. Disposable mail.tm inbox prepared; account NOT created.

@@ -1,0 +1,35 @@
+{
+  "status": "BLOCKED",
+  "site": "monday.com",
+  "workspace": "PXC-CI-Monday-20261001",
+  "plan_path": "free signup; no payment or upgrade",
+  "account_created": true,
+  "onboarding_completed": {
+    "use_case": "Work",
+    "focus": "Projects & tasks",
+    "team_invites": "skipped with Remind me later"
+  },
+  "email_verification": "monday new-device email code completed from disposable mailbox",
+  "auth_modalities_observed": ["email+password", "Google", "Microsoft", "Email Code"],
+  "board_created": false,
+  "items_created": 0,
+  "filters_reached": false,
+  "blocker": {
+    "url": "https://pxc-ci-monday-20261001.monday.com/boards",
+    "description": "Chrome repeatedly displayed 'Aw, Snap! Something went wrong while displaying this webpage.' Error code: 9 after reloads. The signed-in workspace did not render.",
+    "evidence": [
+      "evidence/onboarding-team.png",
+      "evidence/crash-after-onboarding.png",
+      "evidence/app-crash.png"
+    ]
+  },
+  "files": [
+    "ACCOUNT.md",
+    "PAGE-INVENTORY.md",
+    "FEATURES.md",
+    "BUILD-GAPS.md",
+    "WALK-NOTES.json",
+    ".account-secrets.json",
+    "evidence/"
+  ]
+}

@@ -1,0 +1,253 @@
+{
+  "status": "UI-VERIFIED",
+  "competitor": "ClickUp",
+  "date": "2026-10-01",
+  "workspace": "Vaivammcapital",
+  "plan_constraint": "Free only; no upgrade or paid action",
+  "target": {
+    "name": "Project 1",
+    "list_url": "https://app.clickup.com/90161684021/v/l/2kz0w7hn-336",
+    "views_checked": [
+      "List",
+      "Board",
+      "Table"
+    ]
+  },
+  "filters": {
+    "status": "UI-VERIFIED",
+    "fields": [
+      "Status",
+      "Tags",
+      "Due date",
+      "Priority",
+      "Assignee",
+      "Archived",
+      "Assigned comment",
+      "Created by",
+      "Date closed",
+      "Date created",
+      "Date updated",
+      "Date done",
+      "Dependency",
+      "Duration",
+      "Location/List",
+      "Recurring",
+      "Start date",
+      "Status is closed",
+      "Time estimate",
+      "Time tracked",
+      "Sprint points",
+      "Follower",
+      "Task Type",
+      "Last status change",
+      "Task Name",
+      "Task Description"
+    ],
+    "operators_ui_verified": {
+      "Status": [
+        "Is",
+        "Is not"
+      ],
+      "Tags": [
+        "Is",
+        "Is not",
+        "Is set",
+        "Is not set"
+      ],
+      "Due date": [
+        "Is",
+        "Is not",
+        "Is set",
+        "Is not set"
+      ],
+      "Priority": [
+        "Is (default shown)",
+        "Select an option / Change priority"
+      ],
+      "Assignee": [
+        "Is (default shown)",
+        "Select assignee"
+      ]
+    },
+    "assignee_menu": [
+      "Unassigned",
+      "Me",
+      "Me Mode",
+      "signed-in user",
+      "Agents",
+      "Onboarding Assistant",
+      "Create Agent"
+    ],
+    "and_or": [
+      "AND",
+      "OR"
+    ],
+    "nested": true,
+    "saved_filters": {
+      "state": "No saved filters yet",
+      "action": "Save new filter"
+    },
+    "actions": [
+      "Add filter",
+      "Add nested filter",
+      "Clear filter",
+      "Clear all",
+      "Close"
+    ]
+  },
+  "evidence": [
+    "evidence/filters-list-field-menu.png",
+    "evidence/filters-list-and-or-tags-operators.png",
+    "evidence/filters-assignee-me-mode.png",
+    "evidence/filters-saved-none.png",
+    "evidence/filters-board.png",
+    "evidence/filters-table-field-menu.png",
+    "evidence/inbox-home.png",
+    "evidence/planner.png",
+    "evidence/teams.png",
+    "evidence/whiteboards.png",
+    "evidence/docs.png",
+    "evidence/dashboards.png",
+    "evidence/forms.png",
+    "evidence/time-tracking.png",
+    "evidence/goals.png",
+    "evidence/views.png",
+    "evidence/automations.png",
+    "evidence/templates.png"
+  ],
+  "notes": "No login wall appeared. Beyond-Filters walk completed with 9 non-filter surfaces UI-verified and screenshot evidence, plus Views, Automations, and Templates. No paid upgrade; no persistent mutations.",
+  "walk_scope": "Beyond Filters: signed-in sidebar, hubs, Project 1 views, automations, and task templates",
+  "surfaces": {
+    "home_inbox": {
+      "url": "https://app.clickup.com/90161684021/inbox?tab=primary",
+      "status": "UI-VERIFIED",
+      "evidence": "evidence/inbox-home.png",
+      "notes": [
+        "Primary/Other/Later/Cleared",
+        "Filter and Customize Inbox",
+        "Home sidebar taxonomy visible"
+      ]
+    },
+    "planner": {
+      "url": "https://app.clickup.com/90161684021/calendar",
+      "status": "UI-VERIFIED",
+      "evidence": "evidence/planner.png",
+      "notes": [
+        "Google Calendar and Microsoft Outlook connect",
+        "meeting notes",
+        "time blocking",
+        "team schedules",
+        "automatic time blocking"
+      ]
+    },
+    "ai": {
+      "url": "https://app.clickup.com/90161684021/ai/brain",
+      "status": "UI-VERIFIED",
+      "notes": [
+        "Ask or Create",
+        "Skills",
+        "Artifacts",
+        "Analytics",
+        "Connections",
+        "Super Agents"
+      ]
+    },
+    "teams": {
+      "url": "https://app.clickup.com/90161684021/teams-pulse/teams",
+      "status": "UI-VERIFIED",
+      "evidence": "evidence/teams.png",
+      "notes": [
+        "Teams Hub",
+        "Create Team",
+        "Browse People",
+        "capacity and activity cards"
+      ]
+    },
+    "whiteboards": {
+      "url": "https://app.clickup.com/90161684021/hubs/whiteboards",
+      "status": "UI-VERIFIED",
+      "evidence": "evidence/whiteboards.png",
+      "notes": [
+        "All/My Whiteboards",
+        "New Whiteboard",
+        "Org Chart, Action Plan, Customer Journey templates"
+      ]
+    },
+    "docs": {
+      "url": "https://app.clickup.com/90161684021/docs",
+      "status": "UI-VERIFIED",
+      "evidence": "evidence/docs.png",
+      "notes": [
+        "All/My/Shared/Private/Meeting Notes/Archived",
+        "Import/New Doc",
+        "starter cards"
+      ]
+    },
+    "dashboards": {
+      "url": "https://app.clickup.com/90161684021/hubs/dashboards",
+      "status": "UI-VERIFIED",
+      "evidence": "evidence/dashboards.png",
+      "notes": [
+        "All/My/Shared/Private",
+        "New Dashboard",
+        "Simple, AI, Time Tracking, Project Management templates"
+      ]
+    },
+    "forms": {
+      "url": "https://app.clickup.com/90161684021/forms",
+      "status": "UI-VERIFIED",
+      "evidence": "evidence/forms.png",
+      "notes": [
+        "All/My Forms",
+        "New Form",
+        "No Forms found empty state"
+      ]
+    },
+    "time_tracking": {
+      "url": "https://app.clickup.com/90161684021/time",
+      "status": "UI-VERIFIED",
+      "evidence": "evidence/time-tracking.png",
+      "notes": [
+        "My timesheet/All timesheets/Approvals",
+        "Timesheet and Time entries",
+        "add-entry sources"
+      ]
+    },
+    "goals": {
+      "url": "https://app.clickup.com/90161684021/goals",
+      "status": "UI-VERIFIED",
+      "evidence": "evidence/goals.png",
+      "notes": [
+        "Set a Goal empty state",
+        "measurable targets and real-time progress copy"
+      ]
+    },
+    "views": {
+      "url": "https://app.clickup.com/90161684021/v/l/2kz0w7hn-336",
+      "status": "UI-VERIFIED",
+      "evidence": "evidence/views.png",
+      "notes": [
+        "view chooser exposed List, Gantt, Calendar, Doc Wiki, Board, Table, Whiteboard, Timeline, Activity, Workload Capacity and more",
+        "Private view and Pin view"
+      ]
+    },
+    "automations": {
+      "url": "https://app.clickup.com/90161684021/v/l/2kz0w7hn-336",
+      "status": "UI-VERIFIED",
+      "evidence": "evidence/automations.png",
+      "notes": [
+        "AI Fields: Create AI Field, Summary, Progress Updates",
+        "Create Automation, Auto assign, Auto follow, Manage automations"
+      ]
+    },
+    "templates": {
+      "url": "https://app.clickup.com/90161684021/v/l/2kz0w7hn-336",
+      "status": "UI-VERIFIED",
+      "evidence": "evidence/templates.png",
+      "notes": [
+        "Use Template, Create instantly, Save as template, Update existing template",
+        "Template Center filters and Task type context"
+      ]
+    }
+  }
+}

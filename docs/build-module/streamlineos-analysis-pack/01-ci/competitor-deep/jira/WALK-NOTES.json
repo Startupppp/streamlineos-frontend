@@ -1,0 +1,222 @@
+{
+  "product": "Atlassian Jira Cloud",
+  "run_timestamp": "2026-10-01T18:10:00+05:30",
+  "status": "COMPLETED",
+  "account_status": "SIGNED-IN",
+  "site": "https://pxc-cijira2026100.atlassian.net",
+  "space": "CI Jira",
+  "free_only": {
+    "payment_step_seen": false,
+    "paid_upgrade_selected": false,
+    "note": "No billing or upgrade action opened. Gating/upsell signals: Sprints requires a backlog and is off; Plans empty; Docs promotes Confluence; Marketplace catalogs add-ons; See plans shell control visible. No explicit payment wall appeared."
+  },
+  "steps": [
+    "Opened Atlassian Home and dismissed the cookie banner with Only necessary.",
+    "Opened the Jira Software free signup route and provisioned the Jira site.",
+    "Completed onboarding with Software development, Kanban template, and CI Jira space name.",
+    "Opened the Jira board and the issue list at /issues/?jql=.",
+    "Verified Basic mode, More filters, and the expanded Default filters sidebar group.",
+    "Switched to JQL mode and verified autocomplete for EMPTY, currentUser(), AND, OR, ORDER BY, and status operators including WAS and CHANGED.",
+    "Opened /jira/your-work; it redirected successfully to the For you personal-work view.",
+    "Did not create sample issues because 13 seeded work items were already present.",
+    "Verified the CI Jira Kanban board at /jira/software/projects/KAN/boards/2 with To Do, In Progress, In Review, and Done columns.",
+    "Checked the board backlog route; it returned the Jira 404 view because the view does not exist in this board.",
+    "Verified Summary, List, and Development views for the CI Jira space.",
+    "Checked Space settings Features: Sprints was disabled with Requires a backlog; Estimation was off and Standups in Jira was on.",
+    "Verified Plans (No plans yet), Dashboards (Default dashboard), Automation templates, Marketplace app discovery, project settings, Atlassian Goals, and the Confluence Docs promotion.",
+    "Checked Versions and Components routes; both redirected to Settings > Details and were not available in this team-managed space.",
+    "No payment, billing, upgrade, app installation, plan creation, or settings change was performed."
+  ],
+  "filters": {
+    "status": "UI-VERIFIED",
+    "basic_fields": [
+      "Search work",
+      "Space",
+      "Assignee",
+      "Type",
+      "Status",
+      "More filters"
+    ],
+    "more_filter_visible_slice": [
+      "Affects versions",
+      "Agent Sessions",
+      "Attachment",
+      "Comment",
+      "Components",
+      "Created",
+      "Creator",
+      "Description",
+      "Development",
+      "Due date"
+    ],
+    "more_filter_total_shown_by_ui": 41,
+    "operators": [
+      "=",
+      "!=",
+      "IS",
+      "IS NOT",
+      "IN",
+      "NOT IN",
+      "WAS",
+      "WAS NOT",
+      "WAS IN",
+      "WAS NOT IN",
+      "CHANGED"
+    ],
+    "functions_or_values": [
+      "EMPTY",
+      "currentUser()"
+    ],
+    "boolean_and_order_tokens": [
+      "AND",
+      "OR",
+      "ORDER BY"
+    ],
+    "saved_filters": [
+      "My open work items",
+      "Reported by me",
+      "All work items",
+      "Open work items",
+      "Done work items",
+      "Viewed recently",
+      "Created recently",
+      "Resolved recently",
+      "Updated recently",
+      "View all filters"
+    ],
+    "modes": [
+      "Basic",
+      "JQL"
+    ]
+  },
+  "nav_inventory": [
+    "For you",
+    "Projects/Home entry",
+    "Filters",
+    "Dashboards",
+    "Apps",
+    "Recent",
+    "Starred",
+    "Plans",
+    "Spaces",
+    "Assets",
+    "Teams",
+    "Goals"
+  ],
+  "result_count": "13 of 13",
+  "evidence": [
+    "evidence/filters-basic-more-options.png",
+    "evidence/filters-jql-functions.png",
+    "evidence/filters-jql-operators.png",
+    "evidence/board-kanban.png",
+    "evidence/features-settings.png",
+    "evidence/summary.png",
+    "evidence/list.png",
+    "evidence/development.png",
+    "evidence/plans.png",
+    "evidence/dashboards.png",
+    "evidence/automation.png",
+    "evidence/marketplace.png",
+    "evidence/project-settings.png",
+    "evidence/goals.png",
+    "evidence/docs.png"
+  ],
+  "non_filter_surfaces": [
+    {
+      "surface": "Boards",
+      "status": "UI-VERIFIED",
+      "url": "/jira/software/projects/KAN/boards/2",
+      "notes": "Kanban board with To Do, In Progress, In Review, Done; search, Filter, Group, share, Automation."
+    },
+    {
+      "surface": "Backlog",
+      "status": "NOT_AVAILABLE",
+      "url": "/jira/software/projects/KAN/boards/2/backlog",
+      "notes": "Redirected to Jira 404: view does not exist in this board."
+    },
+    {
+      "surface": "Sprints",
+      "status": "UI-VERIFIED_GATED",
+      "url": "/jira/software/projects/KAN/settings/features",
+      "notes": "Disabled; Requires a backlog. Estimation off; Standups in Jira on."
+    },
+    {
+      "surface": "Summary",
+      "status": "UI-VERIFIED",
+      "url": "/jira/software/projects/KAN/summary",
+      "notes": "KPI cards, Filter, status overview, Epic progress, Reports promotion; Reports destination 404."
+    },
+    {
+      "surface": "List",
+      "status": "UI-VERIFIED",
+      "url": "/jira/software/projects/KAN/list",
+      "notes": "Sortable project list with Search work, Filter, Group, inline edits; 3 of 3."
+    },
+    {
+      "surface": "Development",
+      "status": "UI-VERIFIED",
+      "url": "/jira/software/projects/KAN/development",
+      "notes": "Beta delivery metrics and related-work tabs; zero metrics/no provider data."
+    },
+    {
+      "surface": "Plans/Roadmaps",
+      "status": "UI-VERIFIED_EMPTY",
+      "url": "/jira/plans",
+      "notes": "No plans yet; Create plan and getting-started guide."
+    },
+    {
+      "surface": "Dashboards",
+      "status": "UI-VERIFIED",
+      "url": "/jira/dashboards",
+      "notes": "Search, Owner/Space/Group filters, Create dashboard, Default dashboard sharing metadata."
+    },
+    {
+      "surface": "Forms",
+      "status": "NOT_PRESENT",
+      "url": "/jira/software/projects/KAN/settings",
+      "notes": "No Forms item in observed project settings navigation."
+    },
+    {
+      "surface": "Automations",
+      "status": "UI-VERIFIED",
+      "url": "/jira/software/projects/KAN/settings/automation",
+      "notes": "Flows, Audit log, Templates, Usage, Create flow; starter recipes and template filters."
+    },
+    {
+      "surface": "Releases/Versions",
+      "status": "NOT_AVAILABLE",
+      "url": "/jira/software/projects/KAN/settings/versions",
+      "notes": "Redirected to Settings > Details."
+    },
+    {
+      "surface": "Components",
+      "status": "NOT_AVAILABLE",
+      "url": "/jira/software/projects/KAN/settings/components",
+      "notes": "Redirected to Settings > Details."
+    },
+    {
+      "surface": "Apps/Marketplace",
+      "status": "UI-VERIFIED",
+      "url": "/jira/marketplace/discover",
+      "notes": "Over 1,000 apps; search and Pricing, Trust signals, Categories, Use cases, More filters."
+    },
+    {
+      "surface": "Project settings",
+      "status": "UI-VERIFIED",
+      "url": "/jira/software/projects/KAN/settings/details",
+      "notes": "Details, Access, Notifications, Automation, Fields, Work types, Features, Custom filters, Timeline, Toolchain, Apps."
+    },
+    {
+      "surface": "Goals",
+      "status": "UI-VERIFIED_EXTERNAL",
+      "url": "https://home.atlassian.com/o/5afc753f-a8eb-4824-bca5-f10427af15d2/goals?cloudId=72321958-4646-472f-b23e-fe0fa76ea62b",
+      "notes": "Goal directory with 23 goals, search, filters, create-first-goal CTA."
+    },
+    {
+      "surface": "Confluence/Docs",
+      "status": "UI-VERIFIED_PROMOTION",
+      "url": "/jira/software/projects/KAN/pages",
+      "notes": "Empty Docs integration promotion with Try Confluence now and Discover Confluence."
+    }
+  ]
+}

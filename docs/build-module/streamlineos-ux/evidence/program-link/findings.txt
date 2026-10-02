@@ -1,0 +1,5 @@
+Program list showed PXC-Program-1 Projects=0.
+Program Actions menu exposed only Edit and Delete.
+Edit Program fields: Name, Description, Portfolio, Status, Health, Owner; no Projects/Linked Projects field.
+No program detail/open action or add/link project UI observed.
+Portfolio PXC-Portfolio-1 detail shows Linked Projects (1) containing PXC-Project-Alpha and Programs (1) containing PXC-Program-1.
