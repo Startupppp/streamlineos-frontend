@@ -71,7 +71,7 @@ Entry points: Settings from its project/Build sidebar, admin search and permissi
 
 **Filters and operators:** client/contact/project/state/surface IN; expiry before. Stable field IDs, typed values and FilterEnvelope v1 are required. Removable chips, Clear all and filtered-empty explanation are mandatory for collections; form settings use field/section search instead of invented work filters.
 
-**Primary and secondary flows:** create grant; resend/rotate; revoke; exact client preview. Create/edit validates client-side for feedback and server-side for authority. Publish/enable/access/secret changes show effect before confirmation; drafts do not mutate active policy.
+**Primary and secondary flows:** create grant; resend/rotate; revoke; exact client preview. A Member without grant permission sees an actionable Request client access flow addressed to a grantable administrator, with project and reason; this request does not activate a grant or reveal other clients. The project picker queries only reachable projects and separates empty, denied, and failed states. Create/edit validates client-side for feedback and server-side for authority. Publish/enable/access/secret changes show effect before confirmation; drafts do not mutate active policy.
 
 **Opening and return:** short edit sheet; complex workflow/rule builder full page; privileged impact confirmation. Direct record links reconstruct the full detail; mobile pane is full screen. Back/close restores authorized origin query, scroll anchor and focus. Complex external handoffs include safe return context.
 
@@ -83,7 +83,7 @@ Entry points: Settings from its project/Build sidebar, admin search and permissi
 
 **Mobile:** inherited drawer, full-screen record, sticky action and 44 px targets. Use compact card rows and expandable property groups.
 
-**Lifecycle decision:** Never raw token in list. Grant persists and link entry available before success; delivery retry visible.
+**Lifecycle decision:** Never raw token in list. Grant persists and link entry available before success; delivery retry visible. A request-access submission is a distinct approval/notification record with its own status and audit; it never silently grants portal access.
 
 **Acceptance:** demonstrate create grant with authorized persisted state and audit; prove filters produce the declared matching records; verify the specified click/return/deep-link behavior; deny unrelated tenant/project and inappropriate role; retry without duplicate side effects; refresh grants, portal sessions/files/notifications after change. Include populated, empty, filtered-empty, failure, keyboard and mobile evidence.
 

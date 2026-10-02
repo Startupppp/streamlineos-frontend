@@ -18,5 +18,6 @@ These screen contracts supplement the overview catalog. The route decision table
 10. [Reporting](./reporting.md)
 11. [Settings](./settings.md)
 12. [Routes and decisions](../routes-and-screen-decisions.md)
+13. [External client portal](./external-client-portal.md)
 
 Persona is a default configuration, not an access role. Every screen is governed by effective access. A target endpoint in these contracts is a proposed wire contract, not a claim that it is currently implemented.

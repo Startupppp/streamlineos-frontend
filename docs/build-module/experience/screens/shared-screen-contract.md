@@ -23,6 +23,10 @@ Every screen below inherits this contract and overrides it only through an expli
 
 ## Implementation Decisions
 
+### UI route and data interface are separate
+
+`Route:` names a browser destination. A page's illustrative `GET /build/...` line is a proposed projection shape, not an approved backend operation, a generated operation ID, or evidence that such an endpoint exists. Before implementation, the owning work package must map the screen to the current controller/OpenAPI operation or propose one versioned query interface in [screen data contracts](../../architecture/screen-data-contracts.md). Do not implement a duplicate endpoint merely because its UI route appears here. Special cases are explicit: `/build` is an authorized redirect, Command Center uses the dashboard query interface, Inbox uses the owning notification projection, and legacy Feedbucket routes resolve identity then redirect.
+
 ### Layout and component appearance
 
 Header: breadcrumb, title, scope, freshness, one primary action and at most two secondary actions. Toolbar: saved view, search, filter, group, sort, display. Content: collection or detail; 8 px spacing scale, 16–24 px content padding, semantic colors, visible focus, compact/comfortable density.

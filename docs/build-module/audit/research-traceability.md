@@ -1,5 +1,14 @@
 # Research traceability
 
+## Approved architecture review reconciliation
+
+| Evidence ID | Source | Classification | Adopted destination | Decision |
+|---|---|---|---|---|
+| `AR-2026-10-02` | local HTML architecture review generated from source snapshot `a5b8347fb` | Current unverified source/static evidence plus Planned recommendations | [architecture/08-deep-module-reconciliation.md](../architecture/08-deep-module-reconciliation.md) | Preserve six deep modules, adopt 16 architecture decisions, dependency order, six access layers, and the honest gate snapshot. The Markdown is self-contained and does not depend on the temporary HTML. |
+| `AR-2026-10-02-SURFACES` | 26-area product-surface ownership matrix in the same review | Planned ownership over Current unverified route/source anchors | [implementation/18-architecture-work-package-registry.md](../implementation/18-architecture-work-package-registry.md) | Every Build area has a canonical owner rule and principal architecture package. |
+| `AR-2026-10-02-BEHAVIOR` | universal behavior, Ticket, Intake, onboarding, portal, and access matrices in the same review | Planned | [implementation/19-complete-surface-behavior-matrix.md](../implementation/19-complete-surface-behavior-matrix.md) | Cross-cutting behavior is mandatory per record family; silence cannot be interpreted as deferral. |
+| `AR-2026-10-02-COORDINATION` | owner request to prevent overlapping, repeated, and incomplete agent work | Planned implementation process | [implementation/17-agent-coordination-and-work-ownership.md](../implementation/17-agent-coordination-and-work-ownership.md); [implementation/WORK-CLAIMS.md](../implementation/WORK-CLAIMS.md) | One active claim per primary seam, explicit prerequisites and path classes, vertical completion, and durable handoff history. |
+
 Status: Current unverified historical research; Planned adopted product behavior
 
 ## Interpretation

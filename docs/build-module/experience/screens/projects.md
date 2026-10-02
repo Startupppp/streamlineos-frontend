@@ -39,7 +39,7 @@ Entry points: persona sidebar or More, scoped parent record, command search, not
 
 **Opening and return:** 302 to saved allowed landing; default /build/command-center. Direct record links reconstruct the full detail; mobile pane is full screen. Back/close restores authorized origin query, scroll anchor and focus. Complex external handoffs include safe return context.
 
-**Data/API/schema:** proposed `GET /build` returns the named projection or bounded items/pageInfo collection; domain changes use canonical POST/PATCH commands with expectedRevision and Idempotency-Key. Build owns this record or its explicit project association. The architecture catalog and dashboard/onboarding contracts take precedence over illustrative screen GET paths for specialized batch/activation operations.
+**Data/API/schema:** `/build` is a browser entry resolver, not a Build collection endpoint. The server resolves authenticated organization, enabled-module access, optional saved landing, and a safe destination; it returns a temporary navigation redirect or an access-needed state. No record mutation occurs. The landing preference is versioned and actor-scoped; callback validation follows the onboarding contract.
 
 **Access and cache:** Read and action permissions plus canonical record/project reachability are required. Invalidate navigation and access; use private tenant/principal/scope/permissionVersion keys and after-commit data-version events. Shared layout never expands access.
 
@@ -67,7 +67,7 @@ Entry points: persona sidebar or More, scoped parent record, command search, not
 
 **Opening and return:** widget record pane; metric opens exact filtered collection; complex editor full page. Direct record links reconstruct the full detail; mobile pane is full screen. Back/close restores authorized origin query, scroll anchor and focus. Complex external handoffs include safe return context.
 
-**Data/API/schema:** proposed `GET /build/command-center` returns the named projection or bounded items/pageInfo collection; domain changes use canonical POST/PATCH commands with expectedRevision and Idempotency-Key. Build owns this record or its explicit project association. The architecture catalog and dashboard/onboarding contracts take precedence over illustrative screen GET paths for specialized batch/activation operations.
+**Data/API/schema:** the browser route is `/build/command-center`; the canonical target reads are `GET /build/dashboards/default` or `GET /build/dashboards/:id` for the versioned layout and `POST /build/dashboard-query` for a bounded widget batch. Layout writes use the revisioned dashboard command and `Idempotency-Key` where retryable. Widget results contain source revision, generated time, freshness, allowed drill-down, and per-widget error; the dashboard specification owns exact Zod/layout limits. An older command-center endpoint is a compatibility adapter only.
 
 **Access and cache:** Read and action permissions plus canonical record/project reachability are required. Invalidate dashboard/layout/widget namespace; use private tenant/principal/scope/permissionVersion keys and after-commit data-version events. Shared layout never expands access.
 

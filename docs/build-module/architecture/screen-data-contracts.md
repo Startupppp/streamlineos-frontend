@@ -52,6 +52,7 @@ All paths below are API paths, separate from UI route URLs. Existing controllers
 | My Work / Inbox | GET /build/my-work; GET Home unified inbox with module=build | private focus/snooze commands; notification owner marks read |
 | Configuration | GET /build/projects/:id/settings/:kind | PUT revisioned draft; POST /validate, /publish, /restore |
 | Dashboards | GET /build/dashboards/default and /:id; POST /build/dashboard-query | POST dashboard; PUT revisioned layout; POST /restore |
+| Organization budget | UI `/build/budget` resolves to the governed budget report view; bounded organization budget projection query uses FilterEnvelope v1 and field policy | Budget change delegates to project budget/approval owner; time and money actions delegate to Timesheets and Accounting |
 | Portal | GET /build/client-grants and authorized preview | POST create/exchange/revoke/rotate under portal authority |
 | Integrations | GET integration connection/mapping/status/run projection | POST connect/test/sync/pause/reconcile; vault owns secrets |
 | Collaboration | GET Build project associations to Chat, Knowledge, Home, Files | writes in owning module with signed safe return context |

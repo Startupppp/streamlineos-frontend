@@ -64,7 +64,7 @@ Entry points: persona sidebar or More, scoped parent record, command search, not
 
 **Opening and return:** notification target pane; document/editor full page; approval sheet. Direct record links reconstruct the full detail; mobile pane is full screen. Back/close restores authorized origin query, scroll anchor and focus. Complex external handoffs include safe return context.
 
-**Data/API/schema:** proposed `GET /build/inbox` returns the named projection or bounded items/pageInfo collection; domain changes use canonical POST/PATCH commands with expectedRevision and Idempotency-Key. Build owns this record or its explicit project association. The architecture catalog and dashboard/onboarding contracts take precedence over illustrative screen GET paths for specialized batch/activation operations.
+**Data/API/schema:** `/build/inbox` is the browser route. The notification owner supplies the authorized unified inbox projection filtered to Build, with stable target reference, event ID, created time, read state, allowed action, and source revision. Build resolves each target through its owning record query and may add a Build attention projection without duplicating notification delivery state. Mark-read/snooze commands use the owning notification interface; record actions use their domain commands. The exact HTTP operation is selected from the generated contract during the package inventory.
 
 **Access and cache:** Read and action permissions plus canonical record/project reachability are required. Invalidate unified notification state, inbox counts; use private tenant/principal/scope/permissionVersion keys and after-commit data-version events. Shared layout never expands access.
 

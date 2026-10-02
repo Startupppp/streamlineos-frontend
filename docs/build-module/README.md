@@ -36,6 +36,11 @@ Research files are inputs, not release claims. A screenshot, route, mock, or sou
 12. [Cross-module product screen catalog](./experience/screens/cross-module-products.md)
 13. [Paste-ready Claude implementation prompt](./CLAUDE-MASTER-IMPLEMENTATION-PROMPT.md)
 14. [Source-aware implementation contract](./implementation/README.md)
+15. [Deep-module reconciliation and ownership](./architecture/08-deep-module-reconciliation.md)
+16. [Agent coordination and work ownership](./implementation/17-agent-coordination-and-work-ownership.md)
+17. [Architecture work-package registry](./implementation/18-architecture-work-package-registry.md)
+18. [Complete surface behavior matrix](./implementation/19-complete-surface-behavior-matrix.md)
+19. [Active/completed work claims](./implementation/WORK-CLAIMS.md)
 
 ## Research inputs
 
@@ -80,15 +85,19 @@ The chain is the primary differentiator to build and verify. Each link must pres
 
 A change to navigation, permissions, lifecycle, source-of-truth ownership, public links, money movement, or AI mutation requires an update to the relevant canonical document before implementation. Each delivery ticket must cite the section it implements and the evidence needed to close it.
 
+Application implementation also requires an unambiguous work-package claim. An agent must claim one package, identify its primary seam and paths, verify prerequisites, and record its handoff in `implementation/WORK-CLAIMS.md`. Parallel work is allowed only for packages whose primary seams and file sets do not overlap.
+
 
 
 ## Complete screen and audit set
 
 - [Detailed screens](./experience/screens/README.md): activation, projects, daily work, discovery, planning, clients, collaboration, quality, reporting, settings.
+- [External client portal screens](./experience/screens/external-client-portal.md): granted projects, project overview, conditional deliverables, requests, approvals, files, updates, and invoices.
 - [Route decisions](./experience/routes-and-screen-decisions.md): 75 existing routes, planned additions, aliases, redirects, removed navigation and deferrals.
 - [Screen data contracts](./architecture/screen-data-contracts.md): authoritative domain projections and interface families.
 - [Requirements coverage](./audit/requirements-coverage.md): original request mapped to decisions and acceptance.
 - [Research traceability](./audit/research-traceability.md): retained source findings, identifiers and screenshot inventory.
+- [Original WOW research crosswalk](./audit/original-wow-research-crosswalk.md): every numbered original finding mapped to an adopted, conditional, or deferred destination.
 - [Bugs and verification](./audit/bugs-and-verification.md): historical issues and required closure proof.
 - [Customer value classification](./product/customer-value-and-differentiation.md): 100 reasons with customers, sources, priority and proof.
 - [Cleanup manifest](./audit/cleanup-manifest.md): exact duplicate deletion/retention and reference rewrites.

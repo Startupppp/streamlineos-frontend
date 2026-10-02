@@ -178,11 +178,11 @@ Entry points: persona sidebar or More, scoped parent record, command search, not
 
 **Filters and operators:** type=BUG preset; preserve allowed prior filters. Stable field IDs, typed values and FilterEnvelope v1 are required. Removable chips, Clear all and filtered-empty explanation are mandatory for collections; form settings use field/section search instead of invented work filters.
 
-**Primary and secondary flows:** redirect only; capture handled by Intake. Create/edit validates client-side for feedback and server-side for authority. Click a primary action opens the appropriate short sheet or full editor; after successful commit reconcile the canonical record and close only when input is safely persisted.
+**Primary and secondary flows:** navigate to the canonical Intake Bug reports view after authorization; Feedbucket capture and widget configuration remain available from the appropriate Intake settings actions. This compatibility route performs no record mutation.
 
 **Opening and return:** 302 /intake?view=bug-reports after scope check. Direct record links reconstruct the full detail; mobile pane is full screen. Back/close restores authorized origin query, scroll anchor and focus. Complex external handoffs include safe return context.
 
-**Data/API/schema:** proposed `GET /build/projects/:projectId/feedbucket` returns the named projection or bounded items/pageInfo collection; domain changes use canonical POST/PATCH commands with expectedRevision and Idempotency-Key. Legacy endpoints are compatibility reads only. The architecture catalog and dashboard/onboarding contracts take precedence over illustrative screen GET paths for specialized batch/activation operations.
+**Data/API/schema:** this browser route resolves project reachability and redirects to `/build/[projectId]/intake?view=bug-reports`. The canonical Intake query reads source-preserving Feedbucket submissions through the Triage projection. Existing Feedbucket capture endpoints remain owned by the capture adapter; no new list query or mutation is created for the redirect.
 
 **Access and cache:** Read and action permissions plus canonical record/project reachability are required. Invalidate legacy mapping/intake; use private tenant/principal/scope/permissionVersion keys and after-commit data-version events. Shared layout never expands access.
 
@@ -206,11 +206,11 @@ Entry points: persona sidebar or More, scoped parent record, command search, not
 
 **Filters and operators:** none. Stable field IDs, typed values and FilterEnvelope v1 are required. Removable chips, Clear all and filtered-empty explanation are mandatory for collections; form settings use field/section search instead of invented work filters.
 
-**Primary and secondary flows:** resolve mapping. Create/edit validates client-side for feedback and server-side for authority. Click a primary action opens the appropriate short sheet or full editor; after successful commit reconcile the canonical record and close only when input is safely persisted.
+**Primary and secondary flows:** resolve the unique legacy identity mapping, authorize the mapped request, then redirect to its canonical Intake detail. The compatibility route performs no mutation; a missing or inaccessible mapping gives a neutral recoverable state.
 
 **Opening and return:** 302 /intake/[requestId]; neutral not-found if missing/inaccessible. Direct record links reconstruct the full detail; mobile pane is full screen. Back/close restores authorized origin query, scroll anchor and focus. Complex external handoffs include safe return context.
 
-**Data/API/schema:** proposed `GET /build/projects/:projectId/feedbucket/:submissionId` returns one revisioned detail projection and separately paged heavy sections; domain changes use canonical POST/PATCH commands with expectedRevision and Idempotency-Key. Legacy endpoints are compatibility reads only. The architecture catalog and dashboard/onboarding contracts take precedence over illustrative screen GET paths for specialized batch/activation operations.
+**Data/API/schema:** an authorized resolver looks up `(organizationId, projectId, provider, legacySubmissionId)` and returns `canonicalRequestId` plus mapping revision. The browser redirects to `/build/[projectId]/intake/[requestId]`; that page reads the canonical Intake detail and paged evidence. The old route introduces no second detail owner.
 
 **Access and cache:** Read and action permissions plus canonical record/project reachability are required. Invalidate legacy mapping/grant versions; use private tenant/principal/scope/permissionVersion keys and after-commit data-version events. Shared layout never expands access.
 
@@ -234,7 +234,7 @@ Entry points: persona sidebar or More, scoped parent record, command search, not
 
 **Filters and operators:** grant status/contact/surface IN; expiry before; visible record type. Stable field IDs, typed values and FilterEnvelope v1 are required. Removable chips, Clear all and filtered-empty explanation are mandatory for collections; form settings use field/section search instead of invented work filters.
 
-**Primary and secondary flows:** publish reviewed projection; grant invite; revoke; preview client. Create/edit validates client-side for feedback and server-side for authority. Click a primary action opens the appropriate short sheet or full editor; after successful commit reconcile the canonical record and close only when input is safely persisted.
+**Primary and secondary flows:** preview the exact client-visible projection and its empty states; Publish opens a confirmation showing project, audience, visible surfaces, record counts, and effective time before the versioned publish command. Unpublish shows the impact on active grants. Grant invitation and revocation use the grant owner; success waits for persisted activation and a usable entry state. A failed authorized-project loader distinguishes no reachable projects, permission denial, and network failure with a retry that preserves form input.
 
 **Opening and return:** preview full portal context; grant sheet; artifact pane. Direct record links reconstruct the full detail; mobile pane is full screen. Back/close restores authorized origin query, scroll anchor and focus. Complex external handoffs include safe return context.
 
@@ -246,7 +246,7 @@ Entry points: persona sidebar or More, scoped parent record, command search, not
 
 **Mobile:** inherited drawer, full-screen record, sticky action and 44 px targets. Use compact card rows and expandable property groups.
 
-**Lifecycle decision:** Success only when grant persists and entry is available; unpublished records stay inaccessible. Preview follows client policy.
+**Lifecycle decision:** Success only when grant persists and entry is available; unpublished records stay inaccessible. Preview follows client policy. Publication confirmation is required on both Publish and Unpublish; a preview never changes active visibility.
 
 **Acceptance:** demonstrate publish reviewed projection with authorized persisted state and audit; prove filters produce the declared matching records; verify the specified click/return/deep-link behavior; deny unrelated tenant/project and inappropriate role; retry without duplicate side effects; refresh portal published revisions, grants/sessions/files/notifications after change. Include populated, empty, filtered-empty, failure, keyboard and mobile evidence.
 

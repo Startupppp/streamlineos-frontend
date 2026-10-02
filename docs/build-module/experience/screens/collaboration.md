@@ -290,7 +290,7 @@ Entry points: persona sidebar or More, scoped parent record, command search, not
 
 **Filters and operators:** state/audience/owner/destination IN; date between. Stable field IDs, typed values and FilterEnvelope v1 are required. Removable chips, Clear all and filtered-empty explanation are mandatory for collections; form settings use field/section search instead of invented work filters.
 
-**Primary and secondary flows:** create; duplicate; publish/unpublish; copy URL; inspect submissions. Create/edit validates client-side for feedback and server-side for authority. Click a primary action opens the appropriate short sheet or full editor; after successful commit reconcile the canonical record and close only when input is safely persisted.
+**Primary and secondary flows:** Create opens an unsaved builder draft; Cancel discards the local draft and leaves the list unchanged. Explicit Save draft or Publish persists a named, validated form and returns a canonical form ID. Duplicate uses an idempotent command; publish/unpublish, copy URL, and inspect submissions follow the saved form. Create/edit validates client-side for feedback and server-side for authority; close only after a committed result.
 
 **Opening and return:** form full builder; submissions Intake filtered. Direct record links reconstruct the full detail; mobile pane is full screen. Back/close restores authorized origin query, scroll anchor and focus. Complex external handoffs include safe return context.
 
@@ -302,7 +302,7 @@ Entry points: persona sidebar or More, scoped parent record, command search, not
 
 **Mobile:** inherited drawer, full-screen record, sticky action and 44 px targets. Use compact card rows and expandable property groups.
 
-**Lifecycle decision:** Public submitters need no internal seat; rate limits, abuse, consent and attachment scan enforced.
+**Lifecycle decision:** Public submitters need no internal seat; rate limits, abuse, consent and attachment scan enforced. Opening or cancelling New Form must not create an untitled server record; if autosave is introduced, the user first opts into a named recoverable draft.
 
 **Acceptance:** demonstrate create with authorized persisted state and audit; prove filters produce the declared matching records; verify the specified click/return/deep-link behavior; deny unrelated tenant/project and inappropriate role; retry without duplicate side effects; refresh forms, public descriptors, intake after change. Include populated, empty, filtered-empty, failure, keyboard and mobile evidence.
 

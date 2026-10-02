@@ -186,7 +186,12 @@ All mutations require an idempotency key, strict schema, expected revision where
 | `POST /build/client-grants` | Create typed client grant | Build Admin and client-visibility permission |
 | `POST /build/client-grants/:id/revoke` | Revoke grant immediately | Build Admin and client-visibility permission |
 | `POST /build/client-grants/:id/rotate-link` | Invalidate previous link and issue replacement | Build Admin plus recent authentication where policy requires |
+| `POST /build/client-access-requests` | Ask a grantable administrator to review client access for a reachable project | Build Member with project reach; does not confer grant authority |
+| `GET /build/client-access-requests` | Show own requests or a scoped administrator review queue | requester sees own; grantable administrator sees authorized projects |
+| `POST /build/client-access-requests/:id/decide` | Approve for separate grant review or decline with reason | grantable administrator; cannot directly issue grant without the grant command |
 | `POST /access/explain` | Safe access explanation for admins | Organization Admin or Build Admin; response is redacted |
+
+The client-access-request paths are **Planned** target operations, not current controller claims. Before adding a table, the owning package checks whether the existing Approval record can represent a typed access request with project scope, requester, intended client/contact reference, reason, state, reviewer, decision reason, revision, timestamps, and optional resulting grant reference. The request operation is idempotent per requester/project/client/purpose while open, rate limited, and audited. The recipient list contains only administrators who can actually review that project. A decision never silently creates a portal grant; it opens the separately authorized grant preview/confirmation command. Requester and reviewer receive only their permitted status projection. Revocation, changed project reach, or disabled Build cancels outstanding request actions without disclosing other clients.
 
 The API returns `effectiveStanding`, `assignmentOrigin`, `scopeSummary`, `permissionVersion`, and `revision`. It never returns password hashes, raw magic-link tokens, provider secrets, or hidden record titles.
 

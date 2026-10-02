@@ -4,9 +4,11 @@ Status: Planned
 
 Each slice produces a user-visible outcome across UI, command/query interface, schema if needed, permission, cache, events, tests, browser proof, and operational evidence. Detailed product priority remains in [delivery roadmap](../delivery/09-delivery-roadmap-release-gates-and-positioning.md).
 
+Before a slice starts, map it to one or more packages in [the architecture work-package registry](./18-architecture-work-package-registry.md) and claim the primary package in [WORK-CLAIMS.md](./WORK-CLAIMS.md). Slices describe user outcomes; packages control architecture ownership. A slice may depend on several packages, but two active agents may not own the same primary seam.
+
 | Slice | User-visible outcome | Main files/seams | Data/interfaces | Verification and definition of done |
 |---|---|---|---|---|
-| 0. Contract baseline | Agents implement from one registry without drift | this pack, `CONTEXT.md`, route/nav/query/permission registries | no schema | Link/registry/source census passes; no missing master prompt or duplicate requirement ID. |
+| 0. Contract baseline | Agents implement from one registry without drift | this pack, `CONTEXT.md`, route/nav/query/permission registries, architecture ownership and work claims | no schema | Link/registry/source census passes; no missing master prompt, duplicate requirement ID, conflicting active claim, or unowned primary seam. |
 | 1. Invite acceptance | Invited internal user lands in the intended org/module safely | onboarding UI, invitation controller/module access | invitation idempotency and membership/module assignment | new/existing/wrong-email/expired/replay/concurrent acceptance in DB and browser. |
 | 2. Module access assignment | Org Member sees Build only after explicit assignment | access UI, Build member/project access seams | membership/access cache version | owner/admin/member negative matrix and immediate revocation. |
 | 3. Client grant activation | Client receives usable scoped portal access | client portal UI/services | grant revision/capabilities/token | atomic activate, expired/revoked/wrong-project, signed files, browser magic link. |

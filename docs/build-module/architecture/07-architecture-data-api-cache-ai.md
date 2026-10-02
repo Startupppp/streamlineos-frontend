@@ -3,15 +3,13 @@
 Status: planned target with current-source anchors and explicit verification gaps
 Scope: the Build module and its contracts with Platform, CRM, Timesheets, Accounting, Files, Home, Notifications, Integrations, and AI
 
+Architecture ownership, the 16 accepted deep-module decisions, their dependency order, and the current gate snapshot are canonical in [08-deep-module-reconciliation.md](./08-deep-module-reconciliation.md). This document remains the detailed data, HTTP contract, cache, AI, reliability, and folder-structure authority. Where examples here appear to permit a second command/query owner, document 08 controls the seam.
+
 ## 1. Purpose and evidence boundary
 
 This document is the implementation authority for the future Build architecture. It defines ownership, interfaces, data, APIs, read paths, caches, asynchronous work, AI controls, reliability, and folder structure. It is a plan. A class, route, schema, or test in the repository proves that an implementation path exists; it does not by itself prove production behavior.
 
-Truth labels used below:
-
-- **Confirmed design**: accepted product or architecture decision for the target system.
-- **Current source anchor**: relevant code or ADR found in the repository.
-- **Open verification**: behavior that must be proved against the target database, browser, deployment, roles, tenants, or operations before release.
+Truth labels used below are **Current verified**, **Current unverified**, **Planned**, **Conditional**, and **Deferred** as defined in the Build index. An accepted target is **Planned** until implemented and verified. A relevant code path or ADR is **Current unverified** evidence of structure. A database, browser, deployment, role, tenant, or operations check remains open until evidence from that environment is recorded.
 
 Current source anchors include:
 

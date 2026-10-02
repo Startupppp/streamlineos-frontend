@@ -71,12 +71,14 @@ These seven files were created during the specification pass and later proved to
 - Literal repository paths to deleted sources are mapped to retained paths.
 - Legacy /workspace/streamlineos-ci, /workspace/streamlineos-pm and /workspace/streamlineos-ux Markdown source references resolve to the imported retained local source when identifiable. Missing originals remain explicitly historical/unavailable rather than fabricated.
 - Canonical index links all specification folders. No application route manifest or code is changed.
-- The Build index and implementation index now link directly to retained authorities instead of the seven deleted summary files. The validation report records 49 canonical documents and 14 implementation documents after consolidation.
+- The Build index and implementation index link directly to retained authorities instead of the seven deleted summary files. The architecture reconciliation added five unique canonical documents: one 16-decision architecture authority, one agent-coordination contract, one 17-package/26-area registry, one cross-cutting behavior matrix, and one work-claim ledger. The validation report now records 54 canonical documents and 18 implementation documents.
 - Empty duplicate-only directories are not tracked by Git. A shell command to remove empty local folders was rejected by automatic approval review with the reason `blocked by policy`; the 39 file deletions succeeded through verified explicit file patches. Empty local directories may remain.
 
 ## Evidence decision
 
 Unique screenshots and adjacent reports remain, including authentication failure/blocked walks and repeated wait-state screenshots: their filename is insufficient evidence of redundancy. The user requested removal after understanding; no unique image is judged unnecessary merely because the target spec describes a fix. Research traceability preserves contradictory historical updates rather than flattening them into an asserted current bug.
+
+No research or evidence file was deleted during the architecture-to-Markdown reconciliation. The five added documents have distinct ownership and are linked rather than copied: architecture decisions, execution protocol, package registry, behavior matrix, and mutable work claims.
 
 ## Cleanup acceptance
 

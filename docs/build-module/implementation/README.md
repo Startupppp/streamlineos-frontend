@@ -42,7 +42,11 @@ Then use the source-aware implementation contracts:
 10. [Testing and browser verification](./14-testing-browser-verification-and-acceptance.md)
 11. [Migration, cleanup, and reuse](./15-migration-cleanup-and-reuse-plan.md)
 12. [Vertical implementation roadmap](./16-implementation-roadmap.md)
-13. [Requirement ledger](./REQUIREMENT-LEDGER.md)
+13. [Agent coordination and work ownership](./17-agent-coordination-and-work-ownership.md)
+14. [Architecture work-package registry](./18-architecture-work-package-registry.md)
+15. [Complete surface behavior matrix](./19-complete-surface-behavior-matrix.md)
+16. [Active and completed work claims](./WORK-CLAIMS.md)
+17. [Requirement ledger](./REQUIREMENT-LEDGER.md)
 
 ## Canonical registry
 
@@ -65,6 +69,10 @@ Then use the source-aware implementation contracts:
 | Events/outbox | `backend/src/common/outbox/*` | Transactional event write, idempotent consumer, observable retry. |
 | Components | `frontend/UI-KIT.md` and `experience/06-ui-component-and-filter-system.md` | Reuse the UI kit; feature wrappers own Build semantics only. |
 | Screens | `experience/screens/*.md` | Exact fields, filters, actions, states, mobile behavior, and acceptance live here. |
+| Architecture ownership | `architecture/08-deep-module-reconciliation.md` | One accepted owner per behavior and a mandatory dependency order. |
+| Work packages | `implementation/18-architecture-work-package-registry.md` | Agents claim one package and do not redesign another package's primary seam. |
+| Work claims | `implementation/WORK-CLAIMS.md` | Active ownership, branch/worktree, base revision, paths, dependencies, status, and handoff. |
+| Cross-cutting record behavior | `implementation/19-complete-surface-behavior-matrix.md` | Every record family must adopt, reject, or explicitly defer every universal behavior. |
 
 ## Conflict order
 

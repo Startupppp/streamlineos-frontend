@@ -158,6 +158,45 @@ Plain-language summary example: `Status is In progress or Blocked AND Due before
 
 Every filterable field descriptor supplies stable ID, localized label, type, operators, value-source endpoint, permission requirement, supported scopes/views, indexed flag, cost class, and null semantics. Custom fields join the catalog by stable field ID.
 
+### Ticket and cross-work field catalog
+
+This catalog is the target for Issues, Backlog, My Work, All Work, saved views, Command Center drill-down, reports, exports, and AI queries. `Completeness Next` starts after the invite → module assignment → client grant sequence. `Later` fields need query/index evidence and a clear user action before promotion. A field is omitted from the picker when the actor lacks permission or when its source module is unavailable; a saved view retains the field definition and shows a repair state rather than silently dropping it.
+
+| Stable field ID | Control / operators | Scope and source | Priority / acceptance |
+|---|---|---|---|
+| `ticket.status` | multi-select; is any/none, empty, closed/open group | project workflow/status table | Existing picker, Current unverified; counts and records share scope |
+| `ticket.priority` | multi-select; is any/none, empty | Ticket row | Existing picker, Current unverified; default view does not hide urgent work |
+| `ticket.type` | multi-select; is any/none | Ticket type catalog | Existing picker, Current unverified; type=Epic never means membership in an Epic |
+| `ticket.assignees` | member picker; includes me, any/none, unassigned | canonical Ticket assignee relation plus Module Access candidate projection | Existing picker, Current unverified; multi-assignee semantics use `contains any/all` only when explicitly selected |
+| `ticket.cycle` | cycle picker; any/none, empty, current cycle | Cycle membership | Existing picker, Current unverified; current-cycle resolves by project/team and is timezone safe |
+| `ticket.dueDate` | date range and relative presets; overdue, empty | Ticket commitment date | Existing absolute range, Current unverified; relative presets Completeness Next |
+| `ticket.labels` | label picker; contains any/all/none, empty | Ticket-label relation | Completeness Next; UX-026; no duplicate rows under multi-label joins |
+| `ticket.epic` | Epic picker; any/none, empty | Ticket-to-Epic association, not Ticket type | Completeness Next; UX-027; exact linked Epic membership |
+| `ticket.release` | Release picker; any/none, empty, released/unreleased | Ticket-release membership | Completeness Next; UX-025; only actual ship-set membership |
+| `ticket.assigneeMe` | one-click chip; includes current actor | same assignee query | Completeness Next; no separate permission or noncanonical query |
+| `ticket.project` | project picker; any/none | authorized project reachability | Completeness Next for All Work; candidate list omits unreachable projects |
+| `ticket.relationship` | dependency kind, blocking/blocked/related/duplicate, has any/none | typed Ticket relation graph | Completeness Next; validate direction and no self/foreign edge |
+| `ticket.parent` | parent/subtask picker; is/is under/no parent | Ticket hierarchy | Completeness Next; descendant query bounded and cycle-free |
+| `ticket.reporter` | person picker; is any/none/me | Ticket reporter identity | Later; distinct from assignee and creator |
+| `ticket.createdBy` | person picker; is any/none/me | immutable Ticket creator | Later; must not infer from reporter |
+| `ticket.assignedBy` | person picker; is any/none/me | auditable latest assignment event | Later; explicitly defines event source/time and historical ambiguity |
+| `ticket.watchers` | person picker; includes me, any/none, empty | subscription identity with current access recheck | Later; watcher subscription never grants record access |
+| `ticket.milestone` | milestone picker; any/none, empty | typed Ticket-milestone link | Later; milestone hierarchy is distinct from due date |
+| `ticket.goal`, `ticket.workstream`, `ticket.product` | scoped picker; any/none, empty | typed planning links | Later; value candidates use owner reachability |
+| `ticket.createdAt`, `ticket.updatedAt`, `ticket.completedAt` | before/after/between/relative/empty where nullable | indexed Ticket lifecycle fields | Later; UTC storage with actor timezone for date buckets |
+| `ticket.statusChangedAt` | before/after/between/relative | authorized status-event projection | Later; not a mutable copied timestamp without parity check |
+| `ticket.estimateSeconds`, `ticket.actualSeconds` | equals/greater/less/between/empty | estimate on Ticket; actuals from Timesheets projection | Later; source revision/freshness shown, no direct Build time-ledger scan |
+| `ticket.archived`, `ticket.closed` | boolean toggle | Ticket lifecycle and workflow status | Later; archived records require archive permission and explicit inclusion |
+| `ticket.titleText`, `ticket.descriptionText` | contains / text search with matched snippet | authorized full-text index | Later; bounded search and no unindexed broad scan |
+| `ticket.clientVisibility` | published/hidden/pending | portal publication projection | Conditional on visibility permission; client query remains grant scoped |
+| `custom.<definitionId>` | operator determined by text/number/date/enum/boolean type | governed custom-field definition and indexed typed value | Completeness Next for active, filterable definitions; sensitive fields require field policy; schema version stays stable |
+
+**Filter composition:** the first picker offers Status, Priority, Type, Assignee, Cycle, Due, Labels, Epic, Release, and Me; advanced search exposes the remaining allowed fields. Basic mode creates AND conditions with readable chips. Advanced mode supports nested AND/OR up to the shared depth cap. Null is never equal to empty string or unassigned. Query normalization gives the same result set in list, board, dashboard, report, export, and AI, subject to each actor's access.
+
+**Saved views and creation:** personal, project, team, and organization scopes require explicit share/manage permission; favorites and default views are preferences over the same view ID. A saved filter may power a report widget through the same normalized expression and metric identity. `Create from filtered view` may prefill a field only for a single unambiguous equality condition that the actor can edit; it never copies OR/NOT, hidden, relationship, date-relative, or permission-filtered predicates into a new record. Prefill is previewed and can be cleared.
+
+**Deferred query language:** historical `WAS/CHANGED`, Jira-style function helpers, arbitrary JQL, open-Sprint aliases, and cross-object script expressions are Deferred. Current Cycle and released/unreleased are ordinary typed chips, with no separate Sprint storage identity. The original findings and their explicit dispositions are in [the WOW crosswalk](../audit/original-wow-research-crosswalk.md).
+
 ### Query safety and performance
 
 - Cap nesting depth, condition count, `IN` values, text length, scope IDs, date range, and returned rows.

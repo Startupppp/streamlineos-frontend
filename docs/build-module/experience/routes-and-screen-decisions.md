@@ -91,6 +91,7 @@ This table is the target UI contract. The current application manifest remains u
 | /build/projects | Add | Membership-scoped Projects list; reserved static route before dynamic project ID |
 | /build/clients | Add | Build delivery index; CRM remains customer/contact/deal owner |
 | /build/[projectId]/intake/[requestId] | Add | Stable intake detail, including mapped legacy bug report |
+| /build/budget | Add compatibility destination | Organization budget overview resolves to governed Reports budget view; explicit route prevents the historical 404 and retains filtered scope |
 | Assigned navigation | Consolidate | /build/my-work?section=assigned; current sidebar item need not imply a separate page |
 | Drafts navigation | Consolidate | /build/my-work?section=drafts; private revisioned drafts |
 | Briefs | Persona alias | /build/[projectId]/issues?view=briefs; content work type |
@@ -108,7 +109,8 @@ This table is the target UI contract. The current application manifest remains u
 | Integration shortcut | Keep | /build/settings/integrations |
 | Access/settings shortcut | Keep | /build/settings/access; project settings use project context |
 | Files without selected project | Scoped view | /build/all-work?view=files; Files projection, permission checked |
-| Client portal surface | External audience | Grant-authenticated portal route resolved by portal module; never internal /build chrome |
+| /client-portal | External audience, Current unverified route | Grant-authenticated project list; [external portal screen](./screens/external-client-portal.md); never internal /build chrome |
+| /client-portal/[projectId] | External audience, Current unverified route | Grant-authenticated project overview and conditional client-safe tabs; [external portal screen](./screens/external-client-portal.md) |
 
 All Work uses a typed recordKind chosen by the registered view: ticket, intake, form, release, automation, file, report, or capacity. Each kind retains its own projection, filterable fields and command owner. Mixed universal results use only common name/source/type/time fields and never coerce all kinds into ticket schema.
 

@@ -11,7 +11,7 @@ Status: documentation verified; product behavior Planned or Current unverified a
 | Route decision rows | 75/75, each exactly once | Keep/consolidate/rename/redirect specified |
 | Detailed route sections | 75/75 plus three proposed destinations | Every existing route has a screen-specific contract |
 | Screen folder | 13 Markdown files | Index, shared contract, ten Build screen groups, activation, and cross-module owning-product catalog |
-| Original requirement coverage | 25 mappings | Prompt and prior-answer requirements map to specification and acceptance |
+| Original and architecture requirement coverage | 29 mappings | Prompt, prior-answer, architecture-review, and agent-coordination requirements map to specification and acceptance |
 | Customer-value reasons | 100 sequential IDs | Each includes class, customer need, status, source, priority and proof |
 | Research Markdown inventory | 155 scanned, 116 retained | 39 duplicates removed |
 | Duplicate hash checks before deletion | 39/39 SHA-256 pairs matched | Exactly 31 mirrored copies and eight duplicated summaries |
@@ -22,10 +22,13 @@ Status: documentation verified; product behavior Planned or Current unverified a
 | Markdown links | All relative file/image links checked | Final check requires zero missing targets |
 | Role/filter vocabulary | Reconciled | Org Viewer removed as structural role; one FilterEnvelope v1 |
 | Whitespace | git diff --check passed | Changed tracked documentation has no whitespace errors |
-| Source-aware implementation pack | 14 consolidated files | Product/role/navigation/route/flow wrappers removed; existing canonical authorities are linked directly |
+| Source-aware implementation pack | 18 consolidated files | Existing implementation contracts plus coordination, package registry, behavior matrix, and work-claim ledger; product/role/navigation/route/flow authorities remain linked rather than copied |
 | Current source census | 75 pages; 53 controllers; 354 HTTP verbs; 38 schema files/86 table declarations | Source anchors only; no runtime-complete claim |
-| Implementation requirement ledger | 33/33 unique `BLD-*` IDs | Each requirement maps role, route, UI, interface, schema, permission, cache, events, tests, evidence and status |
-| Canonical/research Markdown | 49 canonical; 116 retained research | Redundant generated summaries removed; implementation layer links existing authorities directly |
+| Implementation requirement ledger | 36/36 unique `BLD-*` IDs | Each requirement maps role, route, UI, interface, schema, permission, cache, events, tests, evidence and status |
+| Architecture reconciliation | 16/16 decisions; 26/26 product areas; six access layers | Approved HTML decisions now have durable Markdown owners, dependencies, migration constraints, and acceptance |
+| Cross-cutting behavior | 17 universal behaviors; 15 Ticket capabilities; Intake, activation, and portal flows | Comments, assignment, status, relations, files, effects, client projection, mobile, and lifecycle cannot be omitted silently |
+| Agent coordination | claim ledger plus 17 work packages implementing 16 architecture decisions | Project Provision and Ticket Command are separate claims; one active owner per primary seam; prerequisite, path, handoff, merge, and evidence rules prevent duplicate work |
+| Canonical/research Markdown | 54 canonical; 116 retained research | Redundant generated summaries remain removed; implementation layer links existing authorities directly |
 
 ## Source availability limitations
 
@@ -35,7 +38,7 @@ Only three representative Streamline screenshots were visually reviewed in the p
 
 ## Completion interpretation
 
-The missing documentation decisions are filled: activation variants, per-route screens, persona flows, pane/history/redirection, exact card fields, typed filters, interfaces/projections, dashboard behavior, ownership, CRM/Timesheets/Accounting owning screens, cleanup/evidence, a paste-ready Claude implementation contract, and release proof. Existing plan catalog and permission keys stay authoritative. No high-impact implementation choice is intentionally left as “ask product later.”
+The missing documentation decisions are filled: activation variants, per-route screens, persona flows, pane/history/redirection, exact card fields, typed filters, interfaces/projections, dashboard behavior, ownership, CRM/Timesheets/Accounting owning screens, cleanup/evidence, a paste-ready Claude implementation contract, all 16 approved architecture decisions, all 26 Build areas, cross-cutting record behavior, and agent work ownership. Existing plan catalog and permission keys stay authoritative. No high-impact implementation choice is intentionally left as “ask product later.”
 
 The source-aware implementation layer additionally defines schema ownership, backend/frontend file seams, wire and error envelopes, cache/rate-limit policy, event/job contracts, negative security tests, evidence levels, migration gates, and independently verifiable vertical slices. `CONTEXT.md` now points at the existing architecture contract instead of the absent `docs/specs/build` path.
 

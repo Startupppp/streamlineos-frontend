@@ -102,6 +102,22 @@ Entry points: persona sidebar or More, scoped parent record, command search, not
 
 **Acceptance:** demonstrate log time with authorized persisted state and audit; prove filters produce the declared matching records; verify the specified click/return/deep-link behavior; deny unrelated tenant/project and inappropriate role; retry without duplicate side effects; refresh budget/time/financial projections/report/dashboard after change. Include populated, empty, filtered-empty, failure, keyboard and mobile evidence.
 
+### Organization budget overview and compatibility destination
+
+Route: Planned `/build/budget`, resolved to `/build/all-work?view=budgets` after Build access and budget/report permission checks. The compatibility route must be installed before advertising the sidebar/search action. It addresses the historical organization Budget 404 recorded in the research pack; the project route `/build/[projectId]/budget` remains the detailed budget owner.
+
+Audience: organization/Build owners and administrators, plus delegated finance or project managers whose budget fields are permitted. A normal contributor may see a project cost-free delivery view but not inferred revenue, rates, or hidden project counts.
+
+**Layout and components:** organization currency selector, period selector, budget summary with source freshness, exception strip for overrun/forecast risk, project budget table, and drill-down. One row shows project key/name, client display if authorized, budget baseline and approved changes, actuals from Timesheets, committed amount, remaining amount, forecast, variance, currency, owner, next review date, and source timestamps. Do not add totals across currencies without an explicit conversion rate source and as-of time; default to separate currency groups.
+
+**Filters and operators:** project/client/owner/team/product/status IN, period between, over-budget boolean, forecast risk threshold, currency EQ. All predicates use FilterEnvelope v1 after authorization and share semantics with report export and drill-down. Clicking a row opens the project budget page in full-page context; clicking a metric opens the exact authorized filtered project list. Back restores period, currency, filters, sort, cursor, and scroll.
+
+**Actions:** save/share the governed budget report, export authorized rows, open project budget, request a budget change, and open Accounting for invoice/payment context. The page does not mutate the Accounting ledger or Timesheets entries. Saved views and export inherit the same field policy as the live page. Empty, denied, stale actuals, partial Accounting outage, multi-currency, and no authorized projects have distinct states.
+
+**Data interface and schema:** `OrganizationBudgetProjectionQuery` is a bounded authorized report over project budget baselines plus Timesheets/Accounting projections. Query input is `FilterEnvelope v1`, sort allowlist, cursor, and currency/period. Row output includes `projectRef`, `budgetRevision`, `timeSourceRevision`, `financeSourceRevision`, `generatedAt`, `allowedActions`, and permitted monetary fields as decimal-string wire values with currency. The exact HTTP operation and generated Zod response contract are established by the Reports/metrics package; `/build/budget` is a UI route, not an inferred backend endpoint. Cache is private to actor, tenant, permission version, filter, currency, and source revisions; budget approval, time approval, and finance reconciliation invalidate their owning projection.
+
+**Mobile and acceptance:** stacked project rows show name, currency, baseline, actual, variance, and freshness first; advanced columns expand. Verify populated projects, mixed currencies, revoked access, finance outage, matching CSV/export, stable cursor, budget change drill-down, browser return, and current database query plan. The historical 404 is closed only by a working authorized route, not by this specification.
+
 ## Testing Decisions
 
 Test the public command/query behavior and committed state using the shared test matrix. Each section's acceptance paragraph is a required scenario, not a route-render smoke check. Preserve historical pack findings until the same actor/action/lifecycle is verified on the current deployment.

@@ -10,12 +10,14 @@ Implement one approved vertical slice from `docs/build-module/implementation/16-
 
 1. Repository `CONTEXT.md`, applicable `CLAUDE.md`, `PAGES.md`, and `frontend/UI-KIT.md`.
 2. `docs/build-module/README.md` and `docs/build-module/implementation/README.md`.
-3. The selected slice’s product, screen, architecture, RBAC, error, testing, migration, and ledger sections.
-4. Current source files named by those documents and all call sites of the seam being changed.
+3. `docs/build-module/architecture/08-deep-module-reconciliation.md`, `implementation/17-agent-coordination-and-work-ownership.md`, `implementation/18-architecture-work-package-registry.md`, `implementation/19-complete-surface-behavior-matrix.md`, and `implementation/WORK-CLAIMS.md`.
+4. The selected slice’s product, screen, architecture, RBAC, error, testing, migration, and ledger sections.
+5. Current source files named by those documents and all call sites of the seam being changed.
 
 ## Working rules
 
 - Reinspect the current branch; documentation counts and paths are a snapshot.
+- Use a work package already reserved for this task in the shared/default-branch work-claim ledger before editing application code. A claim added only in this feature worktree is invalid. Do not proceed when another active claim owns the same primary seam or migration target.
 - Preserve unrelated changes. Do not recreate deleted routes or duplicate current sources of truth.
 - Use the repository vocabulary: Ticket, Cycle, Project, Build member, Portal grant, Automation, Webhook delivery, Change request, Intake.
 - Keep one deep module per behavior. Ticket transitions use `apply-ticket-change.ts`; project reachability uses `project-access.ts`; query keys use `frontend/lib/query-keys/build-work.ts`; route/nav behavior uses the Build registries.
@@ -27,7 +29,7 @@ Implement one approved vertical slice from `docs/build-module/implementation/16-
 
 ## Before editing
 
-Produce a short slice inventory: current routes, files, symbols, tables/migrations, endpoints/DTOs, permission keys, query keys, cache/events/jobs, tests, gaps, and authoritative sources. Map the work to `BLD-*` ledger IDs. If source contradicts the planned contract, stop that part, record the conflict, and propose the smallest decision needed; do not invent a third behavior.
+Produce a short slice inventory: current routes, files, symbols, tables/migrations, endpoints/DTOs, permission keys, query keys, cache/events/jobs, tests, gaps, authoritative sources, current work claims, and the package's primary/caller/generated/forbidden paths. Map the work to `BLD-*` ledger IDs. If source contradicts the planned contract, stop that part, record the conflict, and propose the smallest decision needed; do not invent a third behavior.
 
 ## Implementation output
 
