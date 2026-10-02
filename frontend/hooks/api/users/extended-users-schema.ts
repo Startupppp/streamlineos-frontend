@@ -188,6 +188,13 @@ export const bulkInviteContract = z.object({
 
 export const userSuccessContract = z.object({ success: z.literal(true) });
 
+export const invitationResendContract = z.object({
+  success: z.literal(true),
+  deliveryQueued: z.boolean(),
+  deliveryFailureReason: z.string().nullable(),
+});
+export type InvitationResendResponse = z.infer<typeof invitationResendContract>;
+
 export const invitationJoinLinkContract = z.object({
   joinUrl: z.string(),
   email: z.string(),

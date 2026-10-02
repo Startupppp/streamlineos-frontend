@@ -11,6 +11,7 @@ import type {
   InvitationsResponse,
   InviteUserPayload,
 } from "./types";
+import type { InvitationResendResponse } from "./extended-users-schema";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
@@ -33,6 +34,11 @@ const invitationsResponseContract = lazyContract(() =>
 const userSuccessContract = lazyContract(() =>
   import("@/hooks/api/users/extended-users-schema").then(
     (m) => m.userSuccessContract,
+  ),
+);
+const invitationResendContract = lazyContract(() =>
+  import("@/hooks/api/users/extended-users-schema").then(
+    (m) => m.invitationResendContract,
   ),
 );
 const invitationJoinLinkContract = lazyContract(() =>
@@ -151,16 +157,16 @@ export const useInvitations = (
 
 export const useResendInvite = () => {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<{ success: boolean }, Error, string>(
+  return useAuthorizedMutation<InvitationResendResponse, Error, string>(
     "settings:organization:manage",
     {
       mutationKey: ["resend", "invite"],
       mutationFn: (invitationId) =>
-        apiClient.post<{ success: boolean }>(
+        apiClient.post<InvitationResendResponse>(
           `/users/invitations/${invitationId}/resend`,
           {},
           undefined,
-          userSuccessContract,
+          invitationResendContract,
         ),
       onSuccess: () => {
         void queryClient.invalidateQueries({
