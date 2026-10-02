@@ -6,7 +6,9 @@ This file is the coordination ledger for active and completed implementation pac
 
 | Package | Requirement IDs | Agent/task | Branch/worktree | Base commit | Primary seam | Planned primary paths/migrations | Prerequisites | Status | Last update | Handoff |
 |---|---|---|---|---|---|---|---|---|---|---|
-| _none_ | — | — | — | — | — | — | — | — | — | — |
+| `ARCH-10-EVIDENCE-CLEANUP` | BLD-034, BLD-035 | execution-plan-gate agent | `codex/build-foundation-gates` shared checkout | `13238ca99` | current Build specification coverage gate | `scripts/check-build-execution-plan.mjs`; no schema migration | canonical `docs/build-module` specs committed | CLAIMED | 2026-10-02T17:50Z | pending |
+| `ARCH-16-CAPABILITY-SETTINGS` | BLD-023, BLD-035 | route-census-gate agent | `codex/build-foundation-gates` shared checkout | `13238ca99` | current Build route/cold-access census | `scripts/build-route-census.mjs`; canonical generated snapshot under `docs/build-module/audit/`; no schema migration | current route manifest and route-decision spec | CLAIMED | 2026-10-02T17:50Z | pending |
+| `ARCH-06-WIRE-CONTRACTS` | BLD-035 | wire-contract agent | `codex/build-foundation-gates` shared checkout | `13238ca99` | generated Build wire contract parity | `frontend/contracts/build-contracts.generated.ts` via generator; inspect `frontend/contracts/openapi.json`, `backend/openapi.json`; no schema migration | current backend operation inventory | CLAIMED | 2026-10-02T17:50Z | pending |
 
 ## Completed or superseded claims
 
