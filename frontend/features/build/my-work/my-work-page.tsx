@@ -7,7 +7,7 @@ import dynamic from "next/dynamic";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsNavigation, TabsNavigationLink } from "@/components/ui/tabs";
 import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PmPageShell, PmSection, PM_FILL_SECTION } from "@/components/pm-chrome";
@@ -113,37 +113,14 @@ function MyWorkSectionNavigation({
   }
 
   return (
-    <nav
-      aria-label="My Work sections"
-      className="flex min-w-0 items-center gap-1 border-b border-border pb-2"
-    >
-      <Link
-        href={ticketsHref}
-        aria-current={activeSection === "tickets" ? "page" : undefined}
-        className={cn(
-          "rounded-md px-3 py-1.5 text-sm font-medium",
-          activeSection === "tickets"
-            ? "bg-primary/10 text-primary"
-            : "text-muted-foreground hover:bg-muted hover:text-foreground",
-        )}
-        onClick={handleTicketsNavigate}
-      >
-        Tickets
-      </Link>
-      <Link
-        href={draftsHref}
-        aria-current={activeSection === "drafts" ? "page" : undefined}
-        className={cn(
-          "rounded-md px-3 py-1.5 text-sm font-medium",
-          activeSection === "drafts"
-            ? "bg-primary/10 text-primary"
-            : "text-muted-foreground hover:bg-muted hover:text-foreground",
-        )}
-        onClick={handleDraftsNavigate}
-      >
-        Drafts
-      </Link>
-    </nav>
+    <TabsNavigation aria-label="My Work sections">
+      <TabsNavigationLink active={activeSection === "tickets"}>
+        <Link href={ticketsHref} onClick={handleTicketsNavigate}>Tickets</Link>
+      </TabsNavigationLink>
+      <TabsNavigationLink active={activeSection === "drafts"}>
+        <Link href={draftsHref} onClick={handleDraftsNavigate}>Drafts</Link>
+      </TabsNavigationLink>
+    </TabsNavigation>
   );
 }
 
