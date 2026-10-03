@@ -135,6 +135,7 @@ export function ProjectSettingsAccessPage({
                   <ProjectMemberRolesSection
                     projectId={projectId}
                     search={listFilters.debouncedSearch}
+                    onClearSearch={listFilters.clearAll}
                   />
                 </PmPanel>
               </PmSection>

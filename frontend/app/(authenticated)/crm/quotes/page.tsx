@@ -274,18 +274,15 @@ export default function QuotesPage() {
             <EmptyState
               access={access}
               illustration={<EmptyDocumentsIllustration />}
-              title={hasActiveFilters ? "No quotes match this search" : "No quotes yet"}
+              title="No quotes yet"
+              filtersActive={hasActiveFilters}
+              filteredTitle="No quotes match this search"
+              onClearFilters={handleClearFilters}
               description={
                 hasActiveFilters
                   ? "Nothing here matches the search or status you picked."
                   : "A quote is raised from a deal, where its line items and pricing live."
               }
-              action={
-                hasActiveFilters
-                  ? { label: "Clear filters", onClick: handleClearFilters }
-                  : undefined
-              }
-              actionVariant={hasActiveFilters ? "outline" : undefined}
               className={CONTENT_FILL_PANEL}
             />
           ) : (

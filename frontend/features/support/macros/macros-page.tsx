@@ -67,6 +67,10 @@ export function MacrosPage() {
     }
   }
 
+  function handleClearSearch() {
+    setSearch("");
+  }
+
   function handleDelete() {
     if (!deleteTarget) return;
     deleteMacro.mutate(deleteTarget.id, {
@@ -109,13 +113,16 @@ export function MacrosPage() {
         {!isLoading && !isError && (!macros || macros.length === 0) ? (
           <EmptyState
             illustration={<EmptyMailIllustration />}
-            title={search.trim() ? "No matching responses" : "No canned responses yet"}
+            title="No canned responses yet"
+            filtersActive={search.trim().length > 0}
+            filteredTitle="No matching responses"
+            onClearFilters={handleClearSearch}
             description={
               search.trim()
                 ? "Try a different search term."
                 : "Create reusable reply templates to speed up support."
             }
-            action={search.trim() ? undefined : { label: "New Response", onClick: () => setCreateOpen(true) }}
+            action={{ label: "New Response", onClick: () => setCreateOpen(true) }}
             className="flex-1"
           />
         ) : null}

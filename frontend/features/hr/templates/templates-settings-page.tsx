@@ -133,6 +133,12 @@ export function TemplatesSettingsPage() {
 
   const pageState = usePageState({ permission: "hr:templates:view", isLoading: false, isError, error });
 
+  const handleClearFilters = useCallback(() => {
+    setSearch("");
+    setKind(ALL_SENTINEL);
+    setStatus(ALL_SENTINEL);
+  }, []);
+
   const handleOpenCreate = useCallback(() => {
     setEditingTemplate(undefined);
     setUpsertOpen(true);
@@ -264,20 +270,19 @@ export function TemplatesSettingsPage() {
             getRowKey={(t) => t.id}
             isLoading={isLoading}
             emptyState={
-              kind !== ALL_SENTINEL || status !== ALL_SENTINEL || debouncedSearch.trim() ? (
-                <EmptyState
-                  illustrationPreset="documents"
-                  title="No templates match these filters"
-                  description="Change the search or filters to see other templates."
-                />
-              ) : (
-                <EmptyState
-                  illustrationPreset="documents"
-                  title="No templates yet"
-                  description="Create your first template or seed default templates to get started."
-                  action={canManage ? { label: "Create template", onClick: handleOpenCreate } : undefined}
-                />
-              )
+              <EmptyState
+                illustrationPreset="documents"
+                title="No templates yet"
+                filtersActive={kind !== ALL_SENTINEL || status !== ALL_SENTINEL || debouncedSearch.trim().length > 0}
+                filteredTitle="No templates match these filters"
+                onClearFilters={handleClearFilters}
+                description={
+                  kind !== ALL_SENTINEL || status !== ALL_SENTINEL || debouncedSearch.trim()
+                    ? "Change the search or filters to see other templates."
+                    : "Create your first template or seed default templates to get started."
+                }
+                action={canManage ? { label: "Create template", onClick: handleOpenCreate } : undefined}
+              />
             }
           />
           {data && (page > 1 || data.pagination.hasMore) ? (

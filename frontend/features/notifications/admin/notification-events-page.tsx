@@ -151,6 +151,11 @@ export function NotificationEventsPage() {
     setModuleFilter(value);
   }, []);
 
+  const handleClearFilters = useCallback(() => {
+    setSearch("");
+    setModuleFilter("all");
+  }, []);
+
   const filters = (
     <div className={FILTER_TOOLBAR_ROW}>
       <SearchInput
@@ -200,6 +205,8 @@ export function NotificationEventsPage() {
         <EmptyState
           illustrationPreset="activity"
           title="No events found"
+          filtersActive={search.length > 0 || moduleFilter !== "all"}
+          onClearFilters={handleClearFilters}
           description={
             search || moduleFilter !== "all"
               ? "No events match your current filters. Try adjusting your search or module selection."

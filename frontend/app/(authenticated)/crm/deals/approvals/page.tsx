@@ -255,14 +255,15 @@ export default function DealApprovalsPage() {
         ) : rows.length === 0 ? (
           <EmptyState
             illustration={<EmptyApprovalIllustration />}
-            title={isFiltered ? "No approvals match this filter" : "Nothing waiting on you"}
+            title="Nothing waiting on you"
+            filtersActive={isFiltered}
+            filteredTitle="No approvals match this filter"
+            onClearFilters={handleClearFilter}
             description={
               isFiltered
                 ? `Showing ${statusFilterLabel.toLowerCase()} requests only. Clear the filter to see every one.`
                 : "Deals that need sign-off before they can move — a discount past your threshold, say — land here."
             }
-            action={isFiltered ? { label: "Clear filter", onClick: handleClearFilter } : undefined}
-            actionVariant={isFiltered ? "outline" : undefined}
             className={CONTENT_FILL_PANEL}
           />
         ) : (

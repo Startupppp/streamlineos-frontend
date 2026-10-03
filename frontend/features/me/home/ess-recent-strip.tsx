@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { format, parseISO } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useCanState } from "@/hooks/api/access";
 import { useHrAttendanceStatus } from "@/hooks/api/hr/attendance";
 import { useHrMyLeaveRequests } from "@/hooks/api/hr/leaves";
@@ -84,7 +85,17 @@ function LastPayslip() {
 
   const payslips = data ?? [];
   if (payslips.length === 0)
-    return <RecentItem label="Last payslip">No payslips yet. HR hasn&apos;t published a run.</RecentItem>;
+    return (
+      <div className="flex flex-col gap-0.5 py-2 sm:py-0">
+        <span className="text-micro uppercase tracking-wide text-muted-foreground">Last payslip</span>
+        <EmptyState
+          bare
+          illustrationSize="xs"
+          className="items-start text-left"
+          title="No payslips yet. HR hasn't published a run."
+        />
+      </div>
+    );
   const latest = payslips.reduce((newest, row) => (row.month > newest.month ? row : newest), payslips[0]);
   return (
     <RecentItem label="Last payslip" href="/me/pay">
