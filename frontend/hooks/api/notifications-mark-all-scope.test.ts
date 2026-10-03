@@ -53,7 +53,9 @@ it("sends a server scope and only patches matching notifications across both inb
   const { result } = renderHook(() => useMarkAllNotificationsRead("build"), { wrapper: wrapper(client) });
   await act(async () => { await result.current.mutateAsync(); });
   expect(apiClientMock().patch).toHaveBeenCalledWith(
-    "/notifications/source/build/read-all", undefined, undefined, expect.anything(),
+    "/notifications/source/build/read-all", undefined, expect.objectContaining({ expectedIdentity: {
+      orgId: "org-1", userId: "u-1", sessionId: "session-1",
+    } }), expect.anything(),
   );
   expect(client.getQueryData<Notification[]>(listKey)?.map((row) => row.isRead)).toEqual([true, false]);
   expect(client.getQueryData<InfiniteData<UnifiedInboxResponse>>(unifiedKey)?.pages[0].items
@@ -63,7 +65,7 @@ it("sends a server scope and only patches matching notifications across both inb
   client.clear();
 });
 
-it("restores both inboxes and counts when the scoped write fails", async () => {
+it("restores owned read fields in both inboxes and preserves counts when the scoped write fails", async () => {
   const client = setup();
   apiClientMock().patch.mockRejectedValueOnce(new Error("unavailable"));
   const { result } = renderHook(() => useMarkAllNotificationsRead("build"), { wrapper: wrapper(client) });
@@ -82,10 +84,13 @@ it("preserves the global mark-all route and cross-module behavior when no scope 
   const { result } = renderHook(() => useMarkAllNotificationsRead(), { wrapper: wrapper(client) });
   await act(async () => { await result.current.mutateAsync(); });
   expect(apiClientMock().patch).toHaveBeenCalledWith(
-    "/notifications/read-all", undefined, undefined, expect.anything(),
+    "/notifications/read-all", undefined, expect.objectContaining({ expectedIdentity: {
+      orgId: "org-1", userId: "u-1", sessionId: "session-1",
+    } }), expect.anything(),
   );
   expect(client.getQueryData<Notification[]>(listKey)?.every((row) => row.isRead)).toBe(true);
-  expect(client.getQueryData<UnreadCount>(keys.unreadCount())).toEqual({ count: 0 });
+  expect(client.getQueryData<UnreadCount>(keys.unreadCount())).toEqual({ count: 8 });
+  expect(client.getQueryState(keys.unreadCount())?.isInvalidated).toBe(true);
   client.clear();
 });
 
@@ -98,7 +103,9 @@ it("does not fall back to global mark-all when an older server rejects the scope
   });
   expect(apiClientMock().patch).toHaveBeenCalledTimes(1);
   expect(apiClientMock().patch).toHaveBeenCalledWith(
-    "/notifications/source/build/read-all", undefined, undefined, expect.anything(),
+    "/notifications/source/build/read-all", undefined, expect.objectContaining({ expectedIdentity: {
+      orgId: "org-1", userId: "u-1", sessionId: "session-1",
+    } }), expect.anything(),
   );
   expect(client.getQueryData<Notification[]>(listKey)?.map((row) => row.isRead)).toEqual([false, false]);
   expect(client.getQueryData<UnreadCount>(keys.unreadCount())).toEqual({ count: 8 });
@@ -130,9 +137,9 @@ it("preserves concurrent foreign-module reads and fresh fields when a pending Bu
   });
   await waitFor(() => expect(result.current.isError).toBe(true));
   expect(client.getQueryData<Notification[]>(listKey)?.map((row) => [row.isRead, row.title]))
-    .toEqual([[false, "Fresh title"], [true, "Fresh title"]]);
+    .toEqual([[true, "Fresh title"], [true, "Fresh title"]]);
   expect(client.getQueryData<InfiniteData<UnifiedInboxResponse>>(unifiedKey)?.pages[0].items.map((row) => [row.isRead, row.subject]))
-    .toEqual([[false, "Fresh subject"], [true, "Fresh subject"]]);
+    .toEqual([[true, "Fresh subject"], [true, "Fresh subject"]]);
   expect(client.getQueryData<UnreadCount>(keys.unreadCount())).toEqual({ count: 7 });
   expect(client.getQueryData<InfiniteData<Notification[]>>(infiniteKey)?.pages[0].map((row) => [row.id, row.isRead]))
     .toEqual([[4, true], [2, true]]);

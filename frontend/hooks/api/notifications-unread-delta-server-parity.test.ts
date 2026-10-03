@@ -1,15 +1,17 @@
-import { renderHook, act } from "@testing-library/react";
+import { renderHook, act, waitFor } from "@testing-library/react";
 import { QueryClient } from "@tanstack/react-query";
 import {
   useArchiveNotification,
   useBulkDelete,
   useDeleteNotification,
   useMarkNotificationRead,
+  useUnreadNotificationCount,
 } from "./notifications-inbox";
 import { queryKeys } from "@/lib/query-keys";
 import type { Notification, UnreadCount } from "@/types/notifications";
 import {
   makeNotif,
+  apiClientMock,
   withInjectedClient,
   wrapper,
 } from "./notifications-inbox-test-fixtures";
@@ -70,7 +72,7 @@ function badge(client: QueryClient): number | undefined {
   )?.count;
 }
 
-describe("optimistic unread delta matches queryUnreadCount's predicate — unread AND not archived AND not snoozed — because a row that predicate excluded was never in the badge", () => {
+describe("mutation counts remain server-owned across incomplete cached read, archive and snooze states", () => {
   let client: QueryClient;
 
   beforeEach(() => {
@@ -79,7 +81,7 @@ describe("optimistic unread delta matches queryUnreadCount's predicate — unrea
     withInjectedClient(client);
   });
 
-  it("still decrements for a plain unread row, so the zero-delta assertions below are not vacuous", async () => {
+  it("invalidates even a plain unread row rather than deriving its badge from a cached subset", async () => {
     seed(client, [makeNotif(1, false)], 5);
     const { result } = renderHook(() => useDeleteNotification(), {
       wrapper: wrapper(client),
@@ -87,7 +89,8 @@ describe("optimistic unread delta matches queryUnreadCount's predicate — unrea
     await act(async () => {
       await result.current.mutateAsync(1);
     });
-    expect(badge(client)).toBe(4);
+    expect(badge(client)).toBe(5);
+    expect(client.getQueryState(queryKeys.notifications.unreadCount())?.isInvalidated).toBe(true);
   });
 
   it("does not decrement when deleting an archived unread row the server already excluded", async () => {
@@ -127,7 +130,7 @@ describe("optimistic unread delta matches queryUnreadCount's predicate — unrea
     expect(badge(client)).toBe(5);
   });
 
-  it("still decrements for a row whose snooze has already elapsed, because the server counts it again", async () => {
+  it("does not derive a count even when a cached snooze has elapsed", async () => {
     seed(client, [{ ...makeNotif(1, false), snoozedUntil: PAST }], 5);
     const { result } = renderHook(() => useMarkNotificationRead(), {
       wrapper: wrapper(client),
@@ -135,7 +138,7 @@ describe("optimistic unread delta matches queryUnreadCount's predicate — unrea
     await act(async () => {
       await result.current.mutateAsync(1);
     });
-    expect(badge(client)).toBe(4);
+    expect(badge(client)).toBe(5);
   });
 
   it("does not drive the badge to zero when bulk-deleting archived unread rows", async () => {
@@ -156,5 +159,19 @@ describe("optimistic unread delta matches queryUnreadCount's predicate — unrea
       await result.current.mutateAsync([1, 2, 3]);
     });
     expect(badge(client)).toBe(2);
+  });
+
+  it("refreshes an observed badge from the server even when cached rows cannot explain the change", async () => {
+    seed(client, [makeNotif(1, false)], 8);
+    apiClientMock().get.mockResolvedValue({ count: 2 });
+    const { result } = renderHook(() => ({ read: useMarkNotificationRead(), count: useUnreadNotificationCount() }), {
+      wrapper: wrapper(client),
+    });
+    expect(result.current.count.data?.count).toBe(8);
+    expect(apiClientMock().get).not.toHaveBeenCalled();
+    await act(async () => { await result.current.read.mutateAsync(1); });
+    await waitFor(() => expect(result.current.count.data?.count).toBe(2));
+    expect(badge(client)).toBe(2);
+    expect(apiClientMock().get).toHaveBeenCalledTimes(1);
   });
 });

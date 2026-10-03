@@ -1,6 +1,6 @@
 "use client";
 
-import { useInfiniteQuery, useQuery, useMutation } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
@@ -14,23 +14,12 @@ import type {
 import {
   SHARED_UNREAD_PARAMS,
   toStringParams,
-  useNotificationInboxInvalidation,
 } from "./notifications-shared";
 import { NOTIFICATION_FALLBACK_INTERVAL_MS } from "@/lib/query-request-policies";
 import type { IdCursorPage } from "@/hooks/api/id-cursor-page-schema";
 import {
-  restoreScopedReadState,
-  snapshotAndPatchLists,
-  snapshotAndPatchUnified,
-} from "./notifications-inbox-cache";
-import {
-  type NotifMutationContext,
   type NotificationAck,
-  applyUnreadDelta,
-  beginInboxPatch,
-  countUnreadAmong,
-  isUnreadNow,
-  restoreInboxSnapshot,
+  useNotificationRowPatch,
 } from "./notifications-inbox-optimistic";
 import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
@@ -57,6 +46,7 @@ export {
   usePinNotification,
   useUnpinNotification,
   useSnoozeNotification,
+  useUnsnoozeNotification,
   useBulkArchive,
   useBulkDelete,
   useApproveNotification,
@@ -197,123 +187,36 @@ export const useUnreadNotificationCount = (
   });
 };
 
-export const useMarkNotificationRead = () => {
-  const { invalidateInbox, queryClient } = useNotificationInboxInvalidation();
-  return useMutation<NotificationAck, Error, number, NotifMutationContext>({
-    mutationKey: ["notifications", "mark-read"],
-    mutationFn: (notificationId) =>
-      apiClient.patch<NotificationAck>(
-        `/notifications/${notificationId}/read`,
-        undefined,
-        undefined,
-        notificationAckLazy,
-      ),
-    onMutate: async (notificationId) => {
-      const { listKey, unreadKey, previousCount } =
-        await beginInboxPatch(queryClient);
-      const cleared = isUnreadNow(queryClient, listKey, notificationId) ? 1 : 0;
-      const previousLists = [
-        ...snapshotAndPatchLists(queryClient, listKey, (n) =>
-          n.id === notificationId ? { ...n, isRead: true } : n,
-        ),
-        ...snapshotAndPatchUnified(
-          queryClient,
-          platformCoreQueryKeys.inbox.all,
-          (item) => (item.id === notificationId ? { ...item, isRead: true } : item),
-        ),
-      ];
-      applyUnreadDelta(queryClient, unreadKey, cleared);
-      return { previousLists, previousCount };
-    },
-    onError: (_err, _id, context) => restoreInboxSnapshot(queryClient, context),
-    onSettled: () => invalidateInbox(),
-  });
-};
+export const useMarkNotificationRead = () => useNotificationRowPatch<number>({
+  mutationKey: ["notifications", "mark-read"],
+  request: (id, config) => apiClient.patch<NotificationAck>(
+    "/notifications/" + id + "/read", undefined, config, notificationAckLazy,
+  ),
+  patch: (id) => ({ kind: "field", change: { field: "isRead", value: true }, matches: (row) => row.id === id }),
+});
 
-export const useMarkAllNotificationsRead = (sourceModule?: string) => {
-  const { invalidateInbox, queryClient } = useNotificationInboxInvalidation();
-  return useMutation<NotificationAck, Error, void, NotifMutationContext & { sourceModule?: string }>({
-    mutationKey: ["notifications", "mark-all-read"],
-    mutationFn: () =>
-      apiClient.patch<NotificationAck>(
-        sourceModule === undefined
-          ? "/notifications/read-all"
-          : `/notifications/source/${encodeURIComponent(sourceModule)}/read-all`,
-        undefined,
-        undefined,
-        notificationAckLazy,
-      ),
-    onMutate: async () => {
-      const { listKey, unreadKey, previousCount } =
-        await beginInboxPatch(queryClient);
-      const previousLists = [
-        ...snapshotAndPatchLists(queryClient, listKey, (n) =>
-          sourceModule === undefined || n.sourceModule === sourceModule
-            ? { ...n, isRead: true }
-            : n,
-        ),
-        ...snapshotAndPatchUnified(
-          queryClient,
-          platformCoreQueryKeys.inbox.all,
-          (item) => sourceModule === undefined || item.sourceModule === sourceModule
-            ? { ...item, isRead: true }
-            : item,
-        ),
-      ];
-      if (sourceModule === undefined) queryClient.setQueryData<UnreadCount>(unreadKey, { count: 0 });
-      return { previousLists, previousCount, sourceModule };
-    },
-    onError: (_err, _vars, context) => {
-      if (context?.sourceModule !== undefined) {
-        restoreScopedReadState(queryClient, context.previousLists, context.sourceModule);
-      } else {
-        restoreInboxSnapshot(queryClient, context);
-      }
-    },
-    onSettled: () => invalidateInbox(),
-  });
-};
+export const useMarkAllNotificationsRead = (sourceModule?: string) => useNotificationRowPatch<void>({
+  mutationKey: ["notifications", "mark-all-read"],
+  request: (_vars, config) => apiClient.patch<NotificationAck>(
+    sourceModule === undefined ? "/notifications/read-all"
+      : "/notifications/source/" + encodeURIComponent(sourceModule) + "/read-all",
+    undefined, config, notificationAckLazy,
+  ),
+  patch: () => ({
+    kind: "field", change: { field: "isRead", value: true },
+    matches: (row) => sourceModule === undefined || row.sourceModule === sourceModule,
+  }),
+});
 
-
-
-
-
-
-
-export const useBulkMarkRead = () => {
-  const { invalidateInbox, queryClient } = useNotificationInboxInvalidation();
-  return useMutation<NotificationAck, Error, number[], NotifMutationContext>({
-    mutationKey: ["notifications", "bulk-mark-read"],
-    mutationFn: (ids) =>
-      apiClient.post<NotificationAck>(
-        "/notifications/bulk/read",
-        { ids },
-        undefined,
-        notificationAckLazy,
-      ),
-    onMutate: async (ids) => {
-      const idSet = new Set(ids);
-      const { listKey, unreadKey, previousCount } =
-        await beginInboxPatch(queryClient);
-      const cleared = countUnreadAmong(queryClient, listKey, idSet);
-      const previousLists = [
-        ...snapshotAndPatchLists(queryClient, listKey, (n) =>
-          idSet.has(n.id) ? { ...n, isRead: true } : n,
-        ),
-        ...snapshotAndPatchUnified(
-          queryClient,
-          platformCoreQueryKeys.inbox.all,
-          (item) => (idSet.has(item.id) ? { ...item, isRead: true } : item),
-        ),
-      ];
-      applyUnreadDelta(queryClient, unreadKey, cleared);
-      return { previousLists, previousCount };
-    },
-    onError: (_err, _ids, context) =>
-      restoreInboxSnapshot(queryClient, context),
-    onSettled: () => invalidateInbox(),
-  });
-};
+export const useBulkMarkRead = () => useNotificationRowPatch<number[]>({
+  mutationKey: ["notifications", "bulk-mark-read"],
+  request: (ids, config) => apiClient.post<NotificationAck>(
+    "/notifications/bulk/read", { ids }, config, notificationAckLazy,
+  ),
+  patch: (ids) => ({
+    kind: "field", change: { field: "isRead", value: true }, matches: (row) => ids.includes(row.id),
+  }),
+});
 
 
 

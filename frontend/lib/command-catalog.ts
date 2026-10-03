@@ -50,6 +50,10 @@ export const NOTIFICATION_COMMANDS = {
     endpoint: "PATCH /notifications/:id/snooze",
     classification: { kind: "SELF" as const, reason: "user manages their own notification" },
   },
+  unsnooze: {
+    endpoint: "PATCH /notifications/:notificationId/unsnooze",
+    classification: { kind: "SELF", reason: "user manages their own notification" },
+  },
   bulkArchive: {
     endpoint: "POST /notifications/bulk/archive",
     classification: { kind: "SELF" as const, reason: "user manages their own notifications" },

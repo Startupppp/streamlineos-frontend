@@ -2,6 +2,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import type { InfiniteData, QueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { createElement } from "react";
+import { useSession } from "next-auth/react";
 import type { Notification } from "@/types/notifications";
 import type {
   NotificationInboxItem,
@@ -92,6 +93,13 @@ export function wrapper(client: QueryClient) {
   };
 }
 
+export function setNotificationSession(sessionId = "session-1", orgId = "org-1", userId = "u-1") {
+  jest.mocked(useSession).mockReturnValue({
+    data: { orgId, sessionId, user: { id: userId, role: "OrgMember" }, expires: "2099-01-01" },
+    status: "authenticated", update: jest.fn(),
+  });
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
@@ -137,8 +145,17 @@ export function withInjectedClient(client: QueryClient): void {
       'withInjectedClient: "./notifications-shared" is not mocked with a jest.fn() useNotificationInboxInvalidation',
     );
   hook.mockReturnValue({
-    invalidateInbox: jest.fn(),
+    invalidateInbox: jest.fn(() => {
+      const actual = jest.requireActual<typeof import("./notifications-shared")>("./notifications-shared");
+      actual.invalidateNotificationInbox(client);
+    }),
     orgId: "org-1",
     queryClient: client,
+    captureOwner: () => ({
+      queryClient: client,
+      identity: { orgId: "org-1", userId: "u-1", sessionId: "session-1" },
+      signal: new AbortController().signal,
+      isCurrent: () => true,
+    }),
   });
 }

@@ -16,6 +16,7 @@ export type NotificationSection =
   | "APPROVALS"
   | "BROADCASTS"
   | "ARCHIVED"
+  | "SNOOZED"
   | "SYSTEM"
   | "PINNED";
 export type NotificationChannel =

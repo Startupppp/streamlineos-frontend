@@ -91,7 +91,8 @@ describe("bulk mark-read patches InfiniteData page by page", () => {
     expect(after?.pages[1]?.[1]?.isRead).toBe(false);
 
     const count = client.getQueryData<UnreadCount>(queryKeys.notifications.unreadCount());
-    expect(count?.count).toBe(2);
+    expect(count?.count).toBe(4);
+    expect(client.getQueryState(queryKeys.notifications.unreadCount())?.isInvalidated).toBe(true);
   });
 });
 
@@ -120,7 +121,7 @@ describe("useBulkArchive — optimistic rollback", () => {
     expect(after?.[1]?.archivedAt).not.toBeNull();
   });
 
-  it("restores list and unread count on error", async () => {
+  it("restores only archive fields and preserves the server unread count on error", async () => {
     const flatKey = queryKeys.notifications.list({});
     client.setQueryData<Notification[]>(flatKey, [makeNotif(302, false), makeNotif(303, true)]);
     client.setQueryData<UnreadCount>(queryKeys.notifications.unreadCount(), { count: 1 });
@@ -167,7 +168,7 @@ describe("useBulkDelete — optimistic rollback", () => {
     expect(after?.[0]?.id).toBe(402);
   });
 
-  it("restores removed notifications and unread count on error", async () => {
+  it("invalidates removed notifications without restoring stale rows or counts on error", async () => {
     const flatKey = queryKeys.notifications.list({});
     client.setQueryData<Notification[]>(flatKey, [makeNotif(410, false), makeNotif(411, true)]);
     client.setQueryData<UnreadCount>(queryKeys.notifications.unreadCount(), { count: 1 });
@@ -182,9 +183,8 @@ describe("useBulkDelete — optimistic rollback", () => {
     });
 
     const restored = client.getQueryData<Notification[]>(flatKey);
-    expect(restored).toHaveLength(2);
-    expect(restored?.[0]?.id).toBe(410);
-    expect(restored?.[1]?.id).toBe(411);
+    expect(restored).toHaveLength(0);
+    expect(client.getQueryState(flatKey)?.isInvalidated).toBe(true);
     const restoredCount = client.getQueryData<UnreadCount>(queryKeys.notifications.unreadCount());
     expect(restoredCount?.count).toBe(1);
   });

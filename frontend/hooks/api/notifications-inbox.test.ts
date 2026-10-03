@@ -55,7 +55,7 @@ function makeClient() {
   });
 }
 
-describe("InfiniteData mark-read patch — no crash, correct unread counts", () => {
+describe("InfiniteData mark-read patches preserve server-owned unread counts", () => {
   let client: QueryClient;
 
   beforeEach(() => {
@@ -87,7 +87,7 @@ describe("InfiniteData mark-read patch — no crash, correct unread counts", () 
     expect(after?.pages[1]?.[1]?.isRead).toBe(false);
   });
 
-  it("updates unread count when patching InfiniteData pages", async () => {
+  it("invalidates unread count instead of deriving it from InfiniteData pages", async () => {
     const page1: Notification[] = [makeNotif(10, false)];
     const page2: Notification[] = [makeNotif(11, false)];
     const infiniteKey = queryKeys.notifications.list({ infinite: true });
@@ -104,7 +104,8 @@ describe("InfiniteData mark-read patch — no crash, correct unread counts", () 
     });
 
     const count = client.getQueryData<UnreadCount>(queryKeys.notifications.unreadCount());
-    expect(count?.count).toBe(1);
+    expect(count?.count).toBe(2);
+    expect(client.getQueryState(queryKeys.notifications.unreadCount())?.isInvalidated).toBe(true);
   });
 
   it("marks all read across both InfiniteData pages and flat list simultaneously", async () => {
@@ -138,7 +139,8 @@ describe("InfiniteData mark-read patch — no crash, correct unread counts", () 
     expect(allInfiniteRead).toBe(true);
 
     const count = client.getQueryData<UnreadCount>(queryKeys.notifications.unreadCount());
-    expect(count?.count).toBe(0);
+    expect(count?.count).toBe(4);
+    expect(client.getQueryState(queryKeys.notifications.unreadCount())?.isInvalidated).toBe(true);
   });
 });
 
@@ -175,7 +177,7 @@ describe("rollback on mutation error", () => {
     expect(restored?.pages[1]?.[0]?.isRead).toBe(false);
   });
 
-  it("restores unread count on error", async () => {
+  it("preserves the server unread count on error", async () => {
     const flatKey = queryKeys.notifications.list({});
     client.setQueryData<Notification[]>(flatKey, [makeNotif(40, false)]);
     client.setQueryData<UnreadCount>(queryKeys.notifications.unreadCount(), { count: 5 });

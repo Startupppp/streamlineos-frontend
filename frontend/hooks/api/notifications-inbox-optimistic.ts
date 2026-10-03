@@ -1,160 +1,86 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
-import type { QueryClient, QueryKey } from "@tanstack/react-query";
+import { useMutation, type MutateOptions } from "@tanstack/react-query";
+import type { RequestConfig } from "@/lib/api-client";
+import { ApiError } from "@/lib/api-envelope";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
-import type { Notification, UnreadCount } from "@/types/notifications";
-import { useNotificationInboxInvalidation } from "./notifications-shared";
 import {
-  type NotifListSnapshot,
-  findInLists,
-  isInfiniteData,
-  isNotificationList,
-  restoreListSnapshots,
-  snapshotAndPatchLists,
+  useNotificationInboxInvalidation, type NotificationMutationOwner,
+} from "./notifications-shared";
+import {
+  applyNotificationCacheChange, settleNotificationCacheChange,
+  type NotificationCacheChange, type NotificationFieldReceipt,
 } from "./notifications-inbox-cache";
 
-/**
- * The optimistic transaction every notification write runs, separated from the
- * hooks that declare which endpoint they call and what the row becomes.
- * `notifications-inbox-cache.ts` below this owns the per-cache-shape primitives
- * (flat list, InfiniteData pages, the unified inbox feed); this owns the
- * protocol over them — cancel, snapshot, unread accounting, rollback — which is
- * where the duplication was: the "how many of these ids are unread" scan was
- * written out three times and the rollback block eleven.
- */
-
 export type NotificationAck = { success: boolean };
-
 export type NotifMutationContext = {
-  previousLists: NotifListSnapshot[];
-  previousCount: UnreadCount | undefined;
+  owner: NotificationMutationOwner;
+  receipts: NotificationFieldReceipt[];
 };
-
-type InboxPatchScope = {
-  listKey: QueryKey;
-  unreadKey: QueryKey;
-  previousCount: UnreadCount | undefined;
-};
-
-export async function beginInboxPatch(
-  queryClient: QueryClient,
-): Promise<InboxPatchScope> {
-  const listKey = platformCoreQueryKeys.notifications.lists();
-  const unreadKey = platformCoreQueryKeys.notifications.unreadCount();
-  await queryClient.cancelQueries({ queryKey: listKey });
-  await queryClient.cancelQueries({ queryKey: unreadKey });
-  await queryClient.cancelQueries({ queryKey: platformCoreQueryKeys.inbox.all });
-  return {
-    listKey,
-    unreadKey,
-    previousCount: queryClient.getQueryData<UnreadCount>(unreadKey),
-  };
-}
-
-function isSnoozed(snoozedUntil: Notification["snoozedUntil"]): boolean {
-  if (snoozedUntil === null || snoozedUntil === undefined) return false;
-  const until = new Date(snoozedUntil).getTime();
-  return !Number.isNaN(until) && until > Date.now();
-}
-
-export function countsTowardUnreadBadge(row: Notification): boolean {
-  if (row.isRead) return false;
-  if (row.archivedAt !== null && row.archivedAt !== undefined) return false;
-  return !isSnoozed(row.snoozedUntil);
-}
-
-function collectUnread(
-  rows: Notification[],
-  ids: ReadonlySet<number>,
-  into: Set<number>,
-): void {
-  for (const row of rows)
-    if (ids.has(row.id) && countsTowardUnreadBadge(row)) into.add(row.id);
-}
-
-/**
- * Counts distinct ids, not occurrences: the same notification appears in the
- * flat list and in every InfiniteData page cached for a different filter, so
- * summing per cache would decrement the badge once per cached view.
- */
-export function countUnreadAmong(
-  queryClient: QueryClient,
-  listKey: QueryKey,
-  ids: ReadonlySet<number>,
-): number {
-  const unread = new Set<number>();
-  for (const [, data] of queryClient.getQueriesData<unknown>({ queryKey: listKey })) {
-    if (data === undefined) continue;
-    if (isInfiniteData<Notification[]>(data)) {
-      for (const page of data.pages) collectUnread(page, ids, unread);
-    } else if (isNotificationList(data)) {
-      collectUnread(data, ids, unread);
-    }
-  }
-  return unread.size;
-}
-
-export function isUnreadNow(
-  queryClient: QueryClient,
-  listKey: QueryKey,
-  id: number,
-): boolean {
-  const found = findInLists(queryClient, listKey, (row) => row.id === id);
-  return found !== undefined && countsTowardUnreadBadge(found);
-}
-
-export function applyUnreadDelta(
-  queryClient: QueryClient,
-  unreadKey: QueryKey,
-  cleared: number,
-): void {
-  if (cleared <= 0) return;
-  queryClient.setQueryData<UnreadCount>(unreadKey, (old) =>
-    old ? { count: Math.max(0, old.count - cleared) } : old,
-  );
-}
-
-export function restoreInboxSnapshot(
-  queryClient: QueryClient,
-  context: NotifMutationContext | undefined,
-): void {
-  if (!context) return;
-  restoreListSnapshots(queryClient, context.previousLists);
-  if (context.previousCount !== undefined)
-    queryClient.setQueryData(
-      platformCoreQueryKeys.notifications.unreadCount(),
-      context.previousCount,
-    );
-}
-
+type OwnedCommand<TVars> = { vars: TVars; owner: NotificationMutationOwner | null; spec: NotificationRowPatchSpec<TVars> };
 type NotificationRowPatchSpec<TVars> = {
   mutationKey: string[];
-  request: (vars: TVars) => Promise<NotificationAck>;
-  patch: (vars: TVars) => (row: Notification) => Notification;
+  request: (vars: TVars, config: RequestConfig) => Promise<NotificationAck>;
+  patch?: (vars: TVars) => NotificationCacheChange;
 };
-
-/**
- * Pin, unpin, unarchive and snooze set one field on one row and none of them
- * changes read state, so none of them touches the unread count or the unified
- * feed — the whole difference between them is the endpoint and the field.
- */
-export function useNotificationRowPatch<TVars>(
-  spec: NotificationRowPatchSpec<TVars>,
-) {
-  const { invalidateInbox, queryClient } = useNotificationInboxInvalidation();
-  return useMutation<NotificationAck, Error, TVars, NotifMutationContext>({
+function requireOwner(owner: NotificationMutationOwner | null): NotificationMutationOwner {
+  if (!owner?.isCurrent()) throw new ApiError(
+    "Your signed-in account changed. Retry from the current account.",
+    undefined, "REQUEST_IDENTITY_CHANGED",
+  );
+  return owner;
+}
+export function useNotificationRowPatch<TVars>(spec: NotificationRowPatchSpec<TVars>) {
+  const { captureOwner, invalidateInbox } = useNotificationInboxInvalidation();
+  const mutation = useMutation<NotificationAck, Error, OwnedCommand<TVars>, NotifMutationContext>({
     mutationKey: spec.mutationKey,
-    mutationFn: spec.request,
-    onMutate: async (vars) => {
-      const listKey = platformCoreQueryKeys.notifications.lists();
-      await queryClient.cancelQueries({ queryKey: listKey });
+    mutationFn: async (command) => {
+      const owner = requireOwner(command.owner);
+      const response = await command.spec.request(command.vars, {
+        signal: owner.signal, expectedIdentity: owner.identity,
+      });
+      requireOwner(owner);
+      return response;
+    },
+    onMutate: async (command) => {
+      const owner = requireOwner(command.owner);
+      if (command.spec.patch) await Promise.all([
+        owner.queryClient.cancelQueries({ queryKey: platformCoreQueryKeys.notifications.lists() }),
+        owner.queryClient.cancelQueries({ queryKey: platformCoreQueryKeys.notifications.unreadCount() }),
+        owner.queryClient.cancelQueries({ queryKey: platformCoreQueryKeys.inbox.all }),
+      ]);
+      requireOwner(owner);
       return {
-        previousLists: snapshotAndPatchLists(queryClient, listKey, spec.patch(vars)),
-        previousCount: undefined,
+        owner, receipts: command.spec.patch ? applyNotificationCacheChange(owner.queryClient, command.spec.patch(command.vars),
+          JSON.stringify([owner.identity.orgId, owner.identity.userId, owner.identity.sessionId])) : [],
       };
     },
-    onError: (_err, _vars, context) => restoreInboxSnapshot(queryClient, context),
-    onSettled: () => invalidateInbox(),
+    onSettled: (_data, error, _command, context) => {
+      if (!context) return;
+      settleNotificationCacheChange(context.owner.queryClient, context.receipts, error !== null, context.owner.isCurrent());
+      if (context.owner.isCurrent()) invalidateInbox();
+    },
   });
+  function guardOptions(options?: MutateOptions<NotificationAck, Error, TVars, NotifMutationContext>) {
+    if (!options) return undefined;
+    const guarded: MutateOptions<NotificationAck, Error, OwnedCommand<TVars>, NotifMutationContext> = {
+      onSuccess: (data, command, context, execution) => {
+        if (command.owner?.isCurrent()) options.onSuccess?.(data, command.vars, context, execution);
+      },
+      onError: (error, command, context, execution) => {
+        if (command.owner?.isCurrent()) options.onError?.(error, command.vars, context, execution);
+      },
+      onSettled: (data, error, command, context, execution) => {
+        if (command.owner?.isCurrent()) options.onSettled?.(data, error, command.vars, context, execution);
+      },
+    };
+    return guarded;
+  }
+  function mutate(vars: TVars, options?: MutateOptions<NotificationAck, Error, TVars, NotifMutationContext>) {
+    mutation.mutate({ vars, owner: captureOwner(), spec }, guardOptions(options));
+  }
+  function mutateAsync(vars: TVars, options?: MutateOptions<NotificationAck, Error, TVars, NotifMutationContext>) {
+    return mutation.mutateAsync({ vars, owner: captureOwner(), spec }, guardOptions(options));
+  }
+  return { ...mutation, variables: mutation.variables?.vars, mutate, mutateAsync };
 }

@@ -2,6 +2,7 @@ import { renderHook, act } from "@testing-library/react";
 import { QueryClient } from "@tanstack/react-query";
 import { useInfiniteNotifications, useNotifications } from "./notifications-inbox";
 import { apiClientMock, wrapper } from "./notifications-inbox-test-fixtures";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 
 jest.mock("next-auth/react", () => ({
   useSession: jest.fn().mockReturnValue({
@@ -13,7 +14,7 @@ jest.mock("@/lib/api-client", () => ({
   apiClient: {
     patch: jest.fn().mockResolvedValue({ success: true }),
     post: jest.fn().mockResolvedValue({ success: true }),
-    get: jest.fn().mockResolvedValue([]),
+    get: jest.fn().mockResolvedValue({ data: [], hasMore: false, nextCursor: null }),
     delete: jest.fn().mockResolvedValue({ success: true }),
   },
 }));
@@ -51,7 +52,7 @@ describe("abort-signal propagation", () => {
   it("useNotifications passes signal to apiClient.get", async () => {
     const client = makeClient();
     const apiClient = apiClientMock();
-    apiClient.get.mockResolvedValue([]);
+    apiClient.get.mockResolvedValue({ data: [], hasMore: false, nextCursor: null });
 
     renderHook(() => useNotifications(), { wrapper: wrapper(client) });
 
@@ -67,7 +68,7 @@ describe("abort-signal propagation", () => {
   it("useInfiniteNotifications passes signal to apiClient.get", async () => {
     const client = makeClient();
     const apiClient = apiClientMock();
-    apiClient.get.mockResolvedValue([]);
+    apiClient.get.mockResolvedValue({ data: [], hasMore: false, nextCursor: null });
 
     renderHook(() => useInfiniteNotifications(), {
       wrapper: wrapper(client),
@@ -91,7 +92,7 @@ describe("useInfiniteNotifications — category param wiring", () => {
   it("forwards category to apiClient.get when provided", async () => {
     const client = makeClient();
     const apiClient = apiClientMock();
-    apiClient.get.mockResolvedValue([]);
+    apiClient.get.mockResolvedValue({ data: [], hasMore: false, nextCursor: null });
 
     renderHook(() => useInfiniteNotifications({ category: "PROJECTS" }), {
       wrapper: wrapper(client),
@@ -109,7 +110,7 @@ describe("useInfiniteNotifications — category param wiring", () => {
   it("starts the request at the cursor supplied by a deep-linked URL", async () => {
     const client = makeClient();
     const apiClient = apiClientMock();
-    apiClient.get.mockResolvedValue([]);
+    apiClient.get.mockResolvedValue({ data: [], hasMore: false, nextCursor: null });
 
     renderHook(() => useInfiniteNotifications({ initialCursor: 42 }), {
       wrapper: wrapper(client),
@@ -127,7 +128,7 @@ describe("useInfiniteNotifications — category param wiring", () => {
   it("does not include category in the request when not provided", async () => {
     const client = makeClient();
     const apiClient = apiClientMock();
-    apiClient.get.mockResolvedValue([]);
+    apiClient.get.mockResolvedValue({ data: [], hasMore: false, nextCursor: null });
 
     renderHook(() => useInfiniteNotifications({ limit: 10 }), {
       wrapper: wrapper(client),
@@ -143,7 +144,6 @@ describe("useInfiniteNotifications — category param wiring", () => {
   });
 
   it("query key differs when category changes so two filters cannot share a cache entry", () => {
-    const { platformCoreQueryKeys } = require("@/lib/query-keys/platform-core");
     const keyProjects = platformCoreQueryKeys.notifications.list({
       category: "PROJECTS",
       sourceModule: "build",
@@ -158,7 +158,6 @@ describe("useInfiniteNotifications — category param wiring", () => {
   });
 
   it("query key includes category when set", async () => {
-    const { platformCoreQueryKeys } = await import("@/lib/query-keys/platform-core");
     const keyWithCategory = platformCoreQueryKeys.notifications.list({
       category: "PROJECTS",
       infinite: true,
@@ -177,7 +176,7 @@ describe("useInfiniteNotifications — category param wiring", () => {
   it("existing callers without category behave as before — no category key in params", async () => {
     const client = makeClient();
     const apiClient = apiClientMock();
-    apiClient.get.mockResolvedValue([]);
+    apiClient.get.mockResolvedValue({ data: [], hasMore: false, nextCursor: null });
 
     renderHook(() => useInfiniteNotifications(), {
       wrapper: wrapper(client),

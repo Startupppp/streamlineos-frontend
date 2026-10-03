@@ -10,7 +10,7 @@ describe("command catalog — classification coverage", () => {
     expect(entries.length).toBeGreaterThan(0);
     for (const [, entry] of entries)
       expect(entry.classification.kind).toBe("SELF");
-    expect(entries.length).toBe(14);
+    expect(entries.length).toBe(15);
   });
 
   it("chat commands include both PERMISSIONED and SELF entries", () => {
@@ -35,5 +35,10 @@ describe("command catalog — classification coverage", () => {
   it("inventories separate global and scoped mark-all endpoints", () => {
     expect(NOTIFICATION_COMMANDS.markAllRead.endpoint).toBe("PATCH /notifications/read-all");
     expect(NOTIFICATION_COMMANDS.markSourceRead.endpoint).toBe("PATCH /notifications/source/:sourceModule/read-all");
+  });
+
+  it("inventories explicit self-owned unsnooze without a past-date snooze alias", () => {
+    expect(NOTIFICATION_COMMANDS.unsnooze.endpoint).toBe("PATCH /notifications/:notificationId/unsnooze");
+    expect(NOTIFICATION_COMMANDS.unsnooze.classification.kind).toBe("SELF");
   });
 });
