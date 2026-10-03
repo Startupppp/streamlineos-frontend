@@ -7,7 +7,10 @@
     "backendProductionTypecheck": "passed",
     "changedNotificationAndFixtureTypecheck": "passed including final __tests__ paths",
     "sseFocused": "4 suites / 52 tests passed; actual Nest HTTP wire",
-    "sseProductionAndChangedSpecTypecheck": "passed after Feedbucket typed fixture repair"
+    "sseProductionAndChangedSpecTypecheck": "passed after Feedbucket typed fixture repair",
+    "digestRestrictionFocused": "9 suites / 74 tests; independent root and module_grants_resume review",
+    "dispatchFixtureFocused": "5 suites / 305 tests; corrupt persisted envelope corrected from generic500 to409",
+    "dispatchProductionAndChangedSpecTypecheck": "passed including frozen fixture23 and canonical digest24 before runner17416"
   },
   "observations": [
     {
@@ -428,6 +431,199 @@
           }
         ]
       }
+    },
+    {
+      "kind": "canonical-notification-dispatch-replay",
+      "observedAt": "2026-10-03T15:06:10.752Z",
+      "runnerPid": 17416,
+      "backendRevision": "693d332d0",
+      "fixtureRevision": "702bd1d3c",
+      "replayRevision": "0c90ca9f3",
+      "task": "BT-801e948e8a67",
+      "denials": [
+        {
+          "name": "unauthenticated",
+          "status": 401
+        },
+        {
+          "name": "missing capability",
+          "status": 403
+        },
+        {
+          "name": "wrong capability",
+          "status": 403
+        },
+        {
+          "name": "client authority rejected",
+          "status": 400
+        },
+        {
+          "name": "missing reserved ticket",
+          "status": 404
+        },
+        {
+          "name": "replay absent intent",
+          "status": 409
+        },
+        {
+          "name": "GET forbidden",
+          "status": 404
+        }
+      ],
+      "afterDenials": {
+        "intents": [
+          {
+            "count": 5
+          }
+        ],
+        "deliveries": [
+          {
+            "channel": "IN_APP",
+            "count": 1
+          },
+          {
+            "channel": "EMAIL",
+            "count": 1
+          }
+        ],
+        "digests": [
+          {
+            "count": 0
+          }
+        ],
+        "queue": [
+          {
+            "channel": "EMAIL",
+            "status": "DONE",
+            "count": 1
+          }
+        ]
+      },
+      "enqueue": {
+        "httpStatus": 200,
+        "response": {
+          "outboxId": 492,
+          "state": "PENDING",
+          "action": "enqueue",
+          "created": true
+        }
+      },
+      "readAfterCommit": {
+        "notificationId": 310,
+        "deliveryId": 555,
+        "sourceModule": "build",
+        "channel": "IN_APP",
+        "priority": "LOW",
+        "privateReplayMetadataExposed": false
+      },
+      "rolloverObservation": {
+        "createdMinuteBucket": 29850659,
+        "readMinuteBucket": 29850662
+      },
+      "replay": {
+        "httpStatus": 200,
+        "response": {
+          "outboxId": 492,
+          "state": "PROCESSED",
+          "action": "replay",
+          "created": false
+        }
+      },
+      "projection": {
+        "listHttpStatus": 200,
+        "listResponseContractPassed": true,
+        "onlyBuildRows": true,
+        "includesNotification310": true,
+        "unreadCountBeforeRead": 1,
+        "readAllStatus": 200,
+        "replayAfterReadStatus": 200,
+        "unreadCountAfterRead": 0
+      },
+      "final": {
+        "intents": [
+          {
+            "id": "492",
+            "state": "PROCESSED",
+            "event_key": "build.ticket.status_changed",
+            "entity_type": "ticket",
+            "entity_id": "359",
+            "replay_version": 1,
+            "priority": "LOW",
+            "channels": [
+              "IN_APP"
+            ],
+            "exact_recipient": true
+          }
+        ],
+        "notifications": [
+          {
+            "id": "310",
+            "source_module": "build",
+            "event_key": "build.ticket.status_changed",
+            "entity_type": "ticket",
+            "entity_id": "359",
+            "priority": "LOW",
+            "channel": "IN_APP",
+            "private_metadata_exposed": false,
+            "is_read": true
+          }
+        ],
+        "linkedDeliveries": [
+          {
+            "id": "555",
+            "notification_id": "310",
+            "channel": "IN_APP",
+            "status": "DELIVERED",
+            "priority": "LOW",
+            "exact_recipient": true
+          }
+        ],
+        "totals": {
+          "intents": [
+            {
+              "count": 6
+            }
+          ],
+          "deliveries": [
+            {
+              "channel": "IN_APP",
+              "count": 2
+            },
+            {
+              "channel": "EMAIL",
+              "count": 1
+            }
+          ],
+          "digests": [
+            {
+              "count": 0
+            }
+          ],
+          "queue": [
+            {
+              "channel": "EMAIL",
+              "status": "DONE",
+              "count": 1
+            }
+          ]
+        },
+        "globalWatermark": [
+          {
+            "last_read_notification_id": "307"
+          }
+        ]
+      },
+      "queryCorrections": [
+        "First read-only recipient projection compared JSONB against text[] and failed; corrected to jsonb_build_array before the positive write.",
+        "IN_APP delivery metadata does not copy the fixture marker; delivery identity was verified through the actual same-tenant notification composite FK instead."
+      ],
+      "limits": [
+        "Owner-only reserved local fixture; not complete production event/recipient or role/tenant coverage.",
+        "Manual replay uses the canonical persisted envelope and immediate dispatcher; no outbox claim, lease, clock or attempt state was rewritten. This is not crash/worker-lease proof.",
+        "Digest preferences were absent at runtime. Dispatch-time preference changes were covered by focused real-service tests, not a live preference race.",
+        "No browser mutation proof or remote deployment/worker isolation is inferred.",
+        "Owner-policy25 edits began only after this runner boot; its future behavior is excluded."
+      ]
     }
   ],
   "backendSourceCommit": "1aee0d53a",

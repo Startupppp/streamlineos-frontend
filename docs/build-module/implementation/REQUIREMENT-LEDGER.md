@@ -43,6 +43,14 @@ Statuses are `CONFIRMED`, `PROPOSED`, `NEEDS-DECISION`, `IMPLEMENTED`, `VERIFIED
 | BLD-035 | All 16 deep-module decisions have owner, dependency, migration, and acceptance | approved architecture review | engineering/product | all Build | architecture reconciliation | command/query/adapter interfaces | identity decisions | six-layer access | owner/freshness | outbox/effect runtime | package gates | applicable flows | CONFIRMED | runtime evidence remains per package |
 | BLD-036 | Every Build record family addresses the universal behavior matrix | approved architecture review | all roles | all Build records | owning screen specs | owning commands/queries | owning records/links | action/field/client policy | declared owner | declared effects | cross-cutting negatives | desktop/mobile/portal | CONFIRMED | per-record adoption is implementation work |
 
+## BT task stage evidence
+
+| Task | Requirement | D | I | T | R | B | L | Evidence and remaining scope |
+|---|---|---|---|---|---|---|---|---|
+| BT-801e948e8a67 | BLD-009; supporting BLD-025/027/035 | Proven | Partial, open | Partial, open | Partial, open | Partial, open | Open | [Accepted scope and exclusive coordinator claim](WORK-CLAIMS.md#bt-801e948e8a67--coordinator-verification-and-evidence), outer `7ac76c97d`; [source slices and gate limits](../audit/bugs-and-verification.md#notification-domain-and-replay-source-reconciliation--2026-10-03); [existing sanitized runtime observations](../audit/evidence/2026-10-03-build-inbox-runtime.json). Read/resolved/snoozed behavior, safe targets, version-bound approval actions and all required authorization/browser/operational proof must match the complete task before final closure. No partial source or fixture result upgrades a full I/T/R/B/L stage. |
+
+Current integration revisions for this task include backend `0c90ca9f3` (explicit replay identity/restrictions), `7dff538d9` (Feedbucket atomic notice/current visibility), `8c801eb4c` (canonical assignment intents), `85e62a08c` (Build availability in live context), `693d332d0` (digest restriction) and `702bd1d3c` (guarded fixture). Exact ownership, source paths and commands remain in [work claims](WORK-CLAIMS.md). The existing runtime artifact now records real denials, outbox492/notification310/delivery555, replay across a time-window rollover, retained read state and unchanged provider work on runner17416. This does not complete task-wide R. Owner-policy25 is separately claimed and does not yet enforce stored list/count reads; frontend claim26 covers two concrete parsing/selection defects. Full browser/approval/state acceptance, frontend/backend full-test TypeScript failures and full source-size gate failures remain open.
+
 ## Delivery checklist
 
 Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
