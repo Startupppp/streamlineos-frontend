@@ -1045,6 +1045,196 @@
         "reviewer": "scoped_activation_dispatch",
         "result": "clear for recorded bounded scope; source and evidence consistency review, no additional DB/browser calls"
       }
+    },
+    {
+      "kind": "stored-notification-cross-tenant-isolation",
+      "observedAt": "2026-10-03T16:39:51.091Z",
+      "classification": "Current verified",
+      "runtime": {
+        "backendCommit": "e0f3de0fb38b49f17fc0c23b6bd309aa4329db78",
+        "pid": 24992,
+        "baseUrl": "http://127.0.0.1:1001"
+      },
+      "scope": "Two synthetic organization owners; current Build and global notification reads plus no-op Build-scoped read-all",
+      "activation": {
+        "emailOtpRequestStatus": 200,
+        "emailOtpVerifyStatus": 200,
+        "magicVerifyStatus": 200,
+        "setupStatus": 201,
+        "setupContract": true,
+        "sessionExchangeStatus": 200,
+        "orgId": "a3ee7aa5-3005-4c3b-a4c5-db16151d0a29",
+        "membershipId": 140,
+        "notificationId": 312
+      },
+      "reads": [
+        {
+          "path": "/me/inbox/unified?module=build&limit=2",
+          "status": 200,
+          "contract": true,
+          "ids": [],
+          "degraded": false
+        },
+        {
+          "path": "/me/inbox/unified?limit=2",
+          "status": 200,
+          "contract": true,
+          "ids": [
+            312
+          ],
+          "degraded": false
+        },
+        {
+          "path": "/me/inbox/unified/count",
+          "status": 200,
+          "contract": true,
+          "counts": {
+            "notification": 1,
+            "mail": 0,
+            "approval": 0,
+            "total": 1,
+            "mailExact": true,
+            "approvalExact": true
+          }
+        },
+        {
+          "path": "/me/inbox?limit=2",
+          "status": 200,
+          "contract": true,
+          "ids": [
+            312
+          ]
+        },
+        {
+          "path": "/notifications/unread-count?sourceModule=build",
+          "status": 200,
+          "contract": true,
+          "counts": {
+            "count": 0
+          }
+        }
+      ],
+      "negativeChecks": [
+        {
+          "action": "Second tenant reads first tenant project54/ticket358",
+          "status": 404,
+          "method": "GET",
+          "path": "/build/54/tickets/358"
+        },
+        {
+          "action": "Client-supplied orgId query rejected",
+          "status": 400,
+          "method": "GET",
+          "path": "/notifications?orgId=114fe418-2d7d-4f86-bd85-6a0d1a0040e2"
+        }
+      ],
+      "scopedMutation": {
+        "path": "/notifications/source/build/read-all",
+        "status": 200,
+        "contract": true,
+        "refreshRows": [
+          {
+            "id": 312,
+            "isRead": false,
+            "sourceModule": "organization"
+          }
+        ],
+        "firstTenantReadIds": [
+          311,
+          310,
+          309,
+          308,
+          307,
+          306
+        ]
+      },
+      "database": {
+        "role": {
+          "app": true,
+          "scoped": true,
+          "readonly": true
+        },
+        "scope": {
+          "id": "a3ee7aa5-3005-4c3b-a4c5-db16151d0a29",
+          "name": "Build verification Inbox isolation 20261003",
+          "slug": "build-verification-inbox-isolation-20261003-a3ee7aa530054c3ba4c5db16151d0a29",
+          "onboarded": true,
+          "membership_id": 140,
+          "is_owner": true,
+          "status": "ACTIVE"
+        },
+        "secondTenant": {
+          "rows": [
+            {
+              "id": "312",
+              "org_id": "a3ee7aa5-3005-4c3b-a4c5-db16151d0a29",
+              "membership_id": 140,
+              "source_module": "organization",
+              "event_key": "organization.setup.completed",
+              "is_read": false,
+              "live": true
+            }
+          ],
+          "watermark": [],
+          "foreign": {
+            "visible": 0
+          }
+        },
+        "originalTenant": {
+          "rows": [
+            {
+              "id": "306",
+              "is_read": false,
+              "source_module": "organization"
+            },
+            {
+              "id": "307",
+              "is_read": true,
+              "source_module": "build"
+            },
+            {
+              "id": "308",
+              "is_read": true,
+              "source_module": "build"
+            },
+            {
+              "id": "309",
+              "is_read": true,
+              "source_module": "build"
+            },
+            {
+              "id": "310",
+              "is_read": true,
+              "source_module": "build"
+            },
+            {
+              "id": "311",
+              "is_read": true,
+              "source_module": "build"
+            }
+          ],
+          "watermarks": [
+            {
+              "last_read_notification_id": "307"
+            }
+          ]
+        }
+      },
+      "harnessCorrections": [
+        "Captured mail code isolated from visible HTML; no secrets printed.",
+        "Initial unified queries used flat /me/inbox path and received400; corrected to canonical /me/inbox/unified?module=build.",
+        "Initial read-only watermark query used non-existent last_read_id; transaction failed without writes, corrected to schema last_read_notification_id."
+      ],
+      "limitations": [
+        "No browser, mobile, deployment or worker recovery proof.",
+        "Second tenant has organization notification312 as positive read control and no Build records; no nonowner or own/team/project-revocation matrix.",
+        "Runtime predates AI28 and stream29; this observation does not verify them.",
+        "Synthetic account, organization, membership and notification retained as evidence; no live ticket comments or external mail."
+      ],
+      "independentReview": {
+        "reviewer": "scoped_activation_dispatch",
+        "result": "clear for bounded recorded scope; source/schema/evidence review, no additional browser or database calls"
+      }
     }
   ],
   "backendSourceCommit": "1aee0d53a",
