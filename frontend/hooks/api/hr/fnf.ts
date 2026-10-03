@@ -19,6 +19,7 @@ export interface FnfSettlement {
   resignationId: number | null;
   basicDues: string;
   leaveEncashment: string;
+  gratuity: string;
   bonusDue: string;
   deductions: string;
   loanRecovery: string;
@@ -41,6 +42,7 @@ export interface CreateFnfSettlementInput {
   userId: string;
   basicDues?: number;
   leaveEncashment?: number;
+  gratuity?: number;
   bonusDue?: number;
   deductions?: number;
   loanRecovery?: number;

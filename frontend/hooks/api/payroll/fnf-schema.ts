@@ -7,6 +7,7 @@ export const fnfRowContract = z.object({
   resignationId: z.number().nullable(),
   basicDues: z.string(),
   leaveEncashment: z.string(),
+  gratuity: z.string(),
   bonusDue: z.string(),
   deductions: z.string(),
   loanRecovery: z.string(),

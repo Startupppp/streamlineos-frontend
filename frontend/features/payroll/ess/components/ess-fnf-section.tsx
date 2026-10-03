@@ -117,6 +117,7 @@ export function EssFnfSection({ hideToolbar = false }: { hideToolbar?: boolean }
         </div>
         <FnfRow label="Pending Salary" value={settlement.basicDues} />
         <FnfRow label="Leave Encashment" value={settlement.leaveEncashment} />
+        <FnfRow label="Gratuity" value={settlement.gratuity} />
         <FnfRow label="Bonus Due" value={settlement.bonusDue} />
         <FnfRow label="Reimbursements" value={settlement.reimbursementsDue} />
 

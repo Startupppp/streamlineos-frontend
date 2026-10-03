@@ -45,7 +45,13 @@ jest.mock("@/components/shared/hr-sheet", () => ({
 }));
 
 jest.mock("@/components/ui/confirm-sheet", () => ({ ConfirmSheet: () => null }));
-jest.mock("./fnf-suggestion-panel", () => ({ FnfSuggestionPanel: () => null }));
+jest.mock("./fnf-suggestion-panel", () => ({
+  FnfSuggestionPanel: ({ onApply }: { onApply: (s: { gratuity: string; leaveEncashment: string }) => void }) => (
+    <button type="button" onClick={() => onApply({ gratuity: "90000.00", leaveEncashment: "12500.00" })}>
+      Fill suggested amounts
+    </button>
+  ),
+}));
 jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
 jest.mock("@/hooks/api/org-display", () => ({ useOrgDisplay: () => ({ currency: "INR", locale: "en-IN" }) }));
 jest.mock("@/hooks/api/use-page-state", () => ({ usePageState: () => ({ kind: "ready" }) }));
@@ -91,5 +97,21 @@ describe("the full and final draft drawer says what is missing inside the drawer
 
     fireEvent.click(screen.getByRole("button", { name: "Create settlement" }));
     expect(createMutate).toHaveBeenCalled();
+  });
+});
+
+describe("filling suggested amounts puts gratuity in its own field, counted in net payable", () => {
+  it("fills the Gratuity input and sends it as a number, leaving Notes empty", () => {
+    openCreateDrawer();
+    fireEvent.click(screen.getByRole("button", { name: "pick employee" }));
+    fireEvent.click(screen.getByRole("button", { name: "Fill suggested amounts" }));
+
+    expect(screen.getByLabelText("Gratuity")).toHaveValue(90000);
+
+    fireEvent.click(screen.getByRole("button", { name: "Create settlement" }));
+    expect(createMutate).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: "user_1", gratuity: 90000, leaveEncashment: 12500, notes: undefined }),
+      expect.anything(),
+    );
   });
 });

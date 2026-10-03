@@ -68,7 +68,6 @@ export function FnfSuggestionPanel({ userId, onApply }: FnfSuggestionPanelProps)
           {data.notes.map((note) => (
             <p key={note}>{note}</p>
           ))}
-          <p>Drafts have no gratuity field yet, so filling adds gratuity to Notes and leaves it out of net payable.</p>
         </div>
       ) : null}
     </div>

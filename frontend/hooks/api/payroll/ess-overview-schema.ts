@@ -113,6 +113,7 @@ export const ownFnfContract = z
     id: z.number(),
     basicDues: z.string(),
     leaveEncashment: z.string(),
+    gratuity: z.string(),
     bonusDue: z.string(),
     deductions: z.string(),
     loanRecovery: z.string(),

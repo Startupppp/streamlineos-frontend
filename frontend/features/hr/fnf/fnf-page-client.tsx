@@ -185,6 +185,7 @@ export function FnfPageClient() {
   const [userIdError, setUserIdError] = useState("");
   const [basicDues, setBasicDues] = useState("");
   const [leaveEncashment, setLeaveEncashment] = useState("");
+  const [gratuity, setGratuity] = useState("");
   const [bonusDue, setBonusDue] = useState("");
   const [deductions, setDeductions] = useState("");
   const [loanRecovery, setLoanRecovery] = useState("");
@@ -195,6 +196,7 @@ export function FnfPageClient() {
     setUserIdError("");
     setBasicDues("");
     setLeaveEncashment("");
+    setGratuity("");
     setBonusDue("");
     setDeductions("");
     setLoanRecovery("");
@@ -212,6 +214,7 @@ export function FnfPageClient() {
         userId,
         basicDues: basicDues ? Number(basicDues) : undefined,
         leaveEncashment: leaveEncashment ? Number(leaveEncashment) : undefined,
+        gratuity: gratuity ? Number(gratuity) : undefined,
         bonusDue: bonusDue ? Number(bonusDue) : undefined,
         deductions: deductions ? Number(deductions) : undefined,
         loanRecovery: loanRecovery ? Number(loanRecovery) : undefined,
@@ -226,7 +229,7 @@ export function FnfPageClient() {
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [userId, basicDues, leaveEncashment, bonusDue, deductions, loanRecovery, notes, create, resetForm]);
+  }, [userId, basicDues, leaveEncashment, gratuity, bonusDue, deductions, loanRecovery, notes, create, resetForm]);
 
   const handleComplete = useCallback(() => {
     if (!completeId) return;
@@ -257,16 +260,14 @@ export function FnfPageClient() {
 
   const handleBasicDuesChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setBasicDues(e.target.value), []);
   const handleLeaveEncashmentChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setLeaveEncashment(e.target.value), []);
+  const handleGratuityChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setGratuity(e.target.value), []);
   const handleBonusDueChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setBonusDue(e.target.value), []);
   const handleDeductionsChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setDeductions(e.target.value), []);
   const handleLoanRecoveryChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setLoanRecovery(e.target.value), []);
   const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value), []);
   const handleApplySuggestion = useCallback((suggestion: FnfSuggestion) => {
     setLeaveEncashment(suggestion.leaveEncashment);
-    if (suggestion.gratuityEligible && Number(suggestion.gratuity) > 0) {
-      const line = `Suggested gratuity ${suggestion.gratuity} (15/26 x basic ${suggestion.lastDrawnBasic ?? "0"} x ${suggestion.gratuityYears} years).`;
-      setNotes((prev) => (prev.includes(line) ? prev : [prev.trim(), line].filter(Boolean).join("\n")));
-    }
+    setGratuity(suggestion.gratuity);
   }, []);
 
   const loadingSkeleton = (
@@ -372,6 +373,18 @@ export function FnfPageClient() {
                 placeholder="0.00"
                 value={leaveEncashment}
                 onChange={handleLeaveEncashmentChange}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="fnf-gratuity" className="text-sm font-medium text-foreground">Gratuity</label>
+              <Input
+                id="fnf-gratuity"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+                value={gratuity}
+                onChange={handleGratuityChange}
               />
             </div>
             <div className="space-y-1.5">
