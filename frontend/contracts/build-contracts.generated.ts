@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const OPENAPI_HASH = "sha256:6b2ce3929acfde39df681f09ad31d734aae8a93217d3a43bf75d1632e0db423a" as const;
+export const OPENAPI_HASH = "sha256:259ec42f762da181109c0e8286f4d503b99ef8d858221824f768803a01d0eafc" as const;
 
 export const agentTokensListResponseSchema = z.array(z.object({
   id: z.number().int(),
@@ -423,6 +423,17 @@ export const commentDraftsDeleteAllResponseSchema = z.object({
   deleted: z.boolean(),
 });
 export type CommentDraftsDeleteAllResponse = z.infer<typeof commentDraftsDeleteAllResponseSchema>;
+
+export const commentDraftsReadByTicketResponseSchema = z.object({
+  id: z.number().int(),
+  orgId: z.string(),
+  membershipId: z.number().int().nullable(),
+  ticketId: z.number().int(),
+  body: z.string(),
+  createdAt: z.iso.datetime({ offset: true }),
+  updatedAt: z.iso.datetime({ offset: true }),
+}).nullable();
+export type CommentDraftsReadByTicketResponse = z.infer<typeof commentDraftsReadByTicketResponseSchema>;
 
 export const commentDraftsUpsertResponseSchema = z.object({
   id: z.number().int(),
@@ -6700,6 +6711,7 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "ProjectsRoadmapController_deleteChangelog", method: "DELETE", path: "/build/changelog/{entryId}" },
   { operationId: "CommentDraftsController_listMine", method: "GET", path: "/build/comment-drafts/mine", response: "commentDraftsListMineResponseSchema" },
   { operationId: "CommentDraftsController_deleteAll", method: "DELETE", path: "/build/comment-drafts/mine", response: "commentDraftsDeleteAllResponseSchema" },
+  { operationId: "CommentDraftsController_readByTicket", method: "GET", path: "/build/comment-drafts/tickets/{ticketId}", response: "commentDraftsReadByTicketResponseSchema" },
   { operationId: "CommentDraftsController_upsert", method: "PUT", path: "/build/comment-drafts/tickets/{ticketId}", response: "commentDraftsUpsertResponseSchema", body: "commentDraftsUpsertBodySchema" },
   { operationId: "CommentDraftsController_deleteByTicket", method: "DELETE", path: "/build/comment-drafts/tickets/{ticketId}", response: "commentDraftsDeleteByTicketResponseSchema" },
   { operationId: "CommentDraftsController_generateDraft", method: "POST", path: "/build/comment-drafts/tickets/{ticketId}/generate-draft", response: "commentDraftsGenerateDraftResponseSchema" },
