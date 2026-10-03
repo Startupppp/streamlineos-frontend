@@ -3,18 +3,12 @@ import { withCorrelation } from "@/lib/observability/with-correlation";
 import { reportError } from "@/lib/observability/error-reporter";
 
 const notificationSchema = z.object({
-  id: z.number(),
-  title: z.string(),
-  message: z.string(),
-  priority: z.string(),
-  category: z.string(),
-  link: z.string().nullable().optional(),
-  eventKey: z.string().nullable().optional(),
+  id: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
 });
 
 const frameSchema = z.object({
   type: z.string().optional(),
-  notification: notificationSchema.optional(),
+  notification: z.unknown().optional(),
 });
 
 export type IncomingNotification = z.infer<typeof notificationSchema>;
@@ -62,7 +56,8 @@ export async function consumeNotificationStream(
       const parsed = frameSchema.safeParse(rawJson);
       if (!parsed.success) continue;
       if (parsed.data.type === "notification") {
-        if (parsed.data.notification) onNotification(parsed.data.notification);
+        const hint = notificationSchema.safeParse(parsed.data.notification);
+        if (hint.success) onNotification(hint.data);
         continue;
       }
       if (parsed.data.type === "count_changed") onCountChanged?.();

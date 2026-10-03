@@ -82,6 +82,7 @@ export interface UnreadCount {
 }
 
 export interface NotificationListParams {
+  ids?: readonly number[];
   section?: NotificationSection;
   category?: NotificationCategory;
   priority?: NotificationPriority;

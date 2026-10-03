@@ -1,9 +1,11 @@
 import { renderHook, act, waitFor } from "@testing-library/react";
+import { installAbortSignalPolyfill } from "@/test-utils/abort-signal-polyfill";
+installAbortSignalPolyfill();
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { InfiniteData } from "@tanstack/react-query";
 import type { PropsWithChildren } from "react";
-import { useNotificationEvents } from "./use-notification-events";
+import { clearStreamToken, useNotificationEvents } from "./use-notification-events";
 import { queryKeys } from "@/lib/query-keys";
 import { authenticatedScope, scopedQueryKeyHashFn } from "@/lib/query-scope";
 import type { UnifiedInboxResponse } from "@/types/inbox";
@@ -19,10 +21,11 @@ jest.mock("./notification-event-stream", () => ({
   ) => mockConsumeStream(url, token, signal, onNotification),
 }));
 
-const useSessionMock = jest.fn();
+const mockUseSession = jest.fn();
 jest.mock("next-auth/react", () => ({
-  useSession: () => useSessionMock(),
+  useSession: () => mockUseSession(),
 }));
+jest.mock("@/lib/org-scoped-storage", () => ({ useOrgStorageScope: () => `authenticated:${mockUseSession().data?.orgId ?? ""}:${mockUseSession().data?.user?.id ?? ""}` }));
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn() }),
@@ -44,6 +47,7 @@ describe("useNotificationEvents org-switch stream teardown", () => {
   let savedFetch: typeof global.fetch;
 
   beforeEach(() => {
+    clearStreamToken();
     savedFetch = global.fetch;
 
     let tokenSeq = 0;
@@ -51,7 +55,11 @@ describe("useNotificationEvents org-switch stream teardown", () => {
       if (String(url).includes("/api/auth/session")) {
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve({ backendJwt: "jwt-test" }),
+          json: () => {
+            const data = mockUseSession().data;
+            const backendJwt = `header.${Buffer.from(JSON.stringify({ sub: data?.user?.id, orgId: data?.orgId, sessionId: data?.sessionId, exp: 9_999_999_999 })).toString("base64url")}.signature`;
+            return Promise.resolve({ backendJwt });
+          },
         });
       }
       tokenSeq += 1;
@@ -68,16 +76,17 @@ describe("useNotificationEvents org-switch stream teardown", () => {
         }),
     );
 
-    useSessionMock.mockReturnValue({
-      data: { orgId: "org-alpha", backendJwt: "jwt-test" },
+    mockUseSession.mockReturnValue({
+      data: { orgId: "org-alpha", user: { id: "user-1" }, sessionId: "session-1" },
       status: "authenticated",
     });
   });
 
   afterEach(() => {
+    clearStreamToken();
     global.fetch = savedFetch;
     mockConsumeStream.mockClear();
-    useSessionMock.mockClear();
+    mockUseSession.mockClear();
   });
 
   it("aborts the org-alpha stream when switching to org-beta and opens a new one", async () => {
@@ -93,8 +102,8 @@ describe("useNotificationEvents org-switch stream teardown", () => {
     expect(firstSignal.aborted).toBe(false);
 
     act(() => {
-      useSessionMock.mockReturnValue({
-        data: { orgId: "org-beta", backendJwt: "jwt-test" },
+      mockUseSession.mockReturnValue({
+        data: { orgId: "org-beta", user: { id: "user-1" }, sessionId: "session-1" },
         status: "authenticated",
       });
       rerender();
@@ -139,12 +148,27 @@ describe("useNotificationEvents org-switch stream teardown", () => {
       await waitFor(() => expect(added.length).toBeGreaterThan(0));
 
       unmount();
+      clearStreamToken();
 
       await waitFor(() => expect(removed.length).toBe(added.length));
     } finally {
       addSpy.mockRestore();
       removeSpy.mockRestore();
     }
+  });
+
+  it.each([
+    { user: { id: "user-2" }, sessionId: "session-1" },
+    { user: { id: "user-1" }, sessionId: "session-2" },
+  ])("aborts the old stream on a same-org identity change %j", async (next) => {
+    const { rerender } = renderHook(() => useNotificationEvents(), { wrapper: makeWrapper() });
+    await waitFor(() => expect(mockConsumeStream).toHaveBeenCalledTimes(1));
+    const signal: unknown = mockConsumeStream.mock.calls[0]?.[2];
+    if (!(signal instanceof AbortSignal)) throw new Error("Missing stream signal");
+    act(() => { mockUseSession.mockReturnValue({ data: { orgId: "org-alpha", ...next }, status: "authenticated" }); rerender(); });
+    expect(signal.aborted).toBe(true);
+    await waitFor(() => expect(mockConsumeStream).toHaveBeenCalledTimes(2));
+    expect(mockConsumeStream.mock.calls[1]?.[2]).not.toBe(signal);
   });
 });
 

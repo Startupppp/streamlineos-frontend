@@ -81,16 +81,33 @@ describe("notification stream frame dispatch", () => {
     expect(h.onNotification).not.toHaveBeenCalled();
   });
 
-  it("still routes a notification frame to onNotification and never to onCountChanged", async () => {
+  it("keeps incidental malformed payloads out of count_changed dispatch", async () => {
+    const h = handlers();
+    await drain([frame({ type: "count_changed", notification: { id: -1, title: "Private" } })], h);
+    expect(h.onCountChanged).toHaveBeenCalledTimes(1);
+    expect(h.onNotification).not.toHaveBeenCalled();
+  });
+
+  it("discards content from a legacy notification frame and emits only its locator", async () => {
     const h = handlers();
     await drain(
       [frame({ type: "notification", notification: NOTIFICATION_PAYLOAD })],
       h,
     );
-    expect(h.onNotification).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 7, title: "Deploy finished" }),
-    );
+    expect(h.onNotification).toHaveBeenCalledWith({ id: 7 });
     expect(h.onCountChanged).not.toHaveBeenCalled();
+  });
+
+  it("accepts a content-free notification hint whose ID exceeds int32", async () => {
+    const h = handlers();
+    await drain([frame({ type: "notification", notification: { id: 2_147_483_648 } })], h);
+    expect(h.onNotification).toHaveBeenCalledWith({ id: 2_147_483_648 });
+  });
+
+  it.each([0, -1, 1.5, Number.MAX_SAFE_INTEGER + 1, "7"])("refuses an invalid notification locator %j", async (id) => {
+    const h = handlers();
+    await drain([frame({ type: "notification", notification: { ...NOTIFICATION_PAYLOAD, id } })], h);
+    expect(h.onNotification).not.toHaveBeenCalled();
   });
 
   it("drops a notification frame whose payload is missing rather than treating it as a count change", async () => {

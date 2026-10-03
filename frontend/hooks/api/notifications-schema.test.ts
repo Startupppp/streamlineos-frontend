@@ -4,7 +4,18 @@ import {
   notificationListContract,
   notificationPreferenceContract,
   notificationTemplateContract,
+  notificationStreamTokenContract,
 } from "./notifications-schema";
+
+describe("notification stream token response contract", () => {
+  it("accepts the canonical token payload without requiring UUID format", () => {
+    expect(notificationStreamTokenContract.parse({ token: "one-use-stream-token" })).toEqual({ token: "one-use-stream-token" });
+  });
+
+  it.each([{ token: "" }, { token: 7 }, {}, { token: "valid", title: "unexpected" }])("refuses a malformed token payload %j", (body) => {
+    expect(notificationStreamTokenContract.safeParse(body).success).toBe(false);
+  });
+});
 
 function notificationRow(category: string) {
   return {
