@@ -63,9 +63,13 @@ The session coordinator separately queried the actual target catalog in an IAM-a
 
 This confirms the command's stated conflict targets exist on the actual target. It does not prove successful command writes, concurrency, rollback, persistence, or RLS semantics. Those checks remain open below.
 
-## Recovery limitation retained from the baseline
+## Entitlement failure recovery correction
 
-`resolveVisibleModuleKeys` retains the existing `EntitlementsService.listModules` failure handling: an infrastructure failure becomes an empty enabled-module list. Detail requests therefore return 404 instead of a recoverable infrastructure error; list requests return an empty result. This slice preserves that existing convention rather than changing entitlement failure semantics. Recovery behavior remains Current unverified and needs a separately reviewed error-contract change.
+Claim `BLD-CHECKLIST-ENTITLEMENT-ERROR-03` separately removes the baseline catch that converted any entitlement failure into an empty enabled-module list. Previously a failed detail lookup returned 404 and a failed list appeared empty. The original exception now reaches the canonical HTTP error filter. Successful projections and genuine disabled-module 404 behavior are unchanged.
+
+Two regression cases failed against the prior source: list resolved to an empty array, and detail threw a fabricated NotFoundException. After the correction, five focused suites passed with 65 tests, including exact ServiceUnavailableException propagation and absence of downstream checklist queries, HR probes, writes, transactions, and analytics. Focused ESLint and diff checks passed. An independent agent reviewed both paths and the existing HTTP filter before commit. This narrow change removes a catch and changes no response type; the preceding production/scoped typechecks remain separately recorded rather than being claimed as fresh checks of this revision.
+
+Current verified: focused source behavior and retained disabled-module behavior. Current unverified: real entitlement outage, HTTP recovery, browser retry/refresh, and deployed revision parity.
 
 ## Remaining evidence
 
