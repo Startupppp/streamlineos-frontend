@@ -34,6 +34,14 @@ Migration gate handoff `BLD-MIGRATION-LOCAL-TIMEOUT-12` under BLD-030/035: `modu
 
 ## Active claims
 
+### BT-801e948e8a67 — bounded Inbox parsing and selection repair 26
+
+- Owner: `scoped_activation_dispatch`; independent reviewer/coordinator: root. Exact existing files: `frontend/features/build/inbox/parse-inbox-ticket-link.ts`, `frontend/features/build/inbox/parse-inbox-ticket-link.test.ts`, `frontend/features/build/inbox/inbox-list.tsx`, `frontend/features/build/inbox/inbox-list-type-filter.test.tsx`. The coordinator hands back these prior claim11 paths exclusively. No new helper, schema, component, API or test file is needed; parser and list already own these behaviors.
+- Concrete regressions: decoding a malformed percent-encoded ticket segment throws during notification row/preview rendering; list selection clearing omits `projectId`, so changing the project filter leaves invisible prior-project IDs selected for destructive bulk actions. First reproduce both in the existing focused suites.
+- Reuse canonical ticket-key parsing where compatible; reject malformed/invalid bounded identifiers without throwing and retain supported canonical/legacy ticket links. Keep current components/styles and valid link behavior. Clear stale selection when project context changes, without resetting selection for ordinary same-context paging/background refresh. No source comments.
+- Excluded: shared global deep-link normalizer, preview components, query keys/hooks, permission catalogs, backend/digest/policies, URL selection redesign, snooze/resolve and approval lifecycle. These exclusions remain open acceptance, not implicit completion. No live comments or user notification writes.
+- Commands: the two exact Jest suites plus directly affected Inbox regression suites; exact four-path ESLint and diff check; freeze for root scoped/production frontend TypeScript and independent review. Browser evidence requires actual filtered selection and malformed-link behavior in an authorized environment; unit tests cannot substitute. Root alone records BT stages, runtime/browser evidence and commits after handoff.
+
 ### BT-801e948e8a67 — coordinator verification and evidence
 
 - Owner: coordinator `/root`. This continues the assigned BLD-INBOX-SCOPE-11 / BLD-009 work; it does not reclaim the application files owned by agents. Source task: [daily-work delivery checklist](../experience/screens/daily-work.md#delivery-checklist). Current index has 522 uniquely identified tasks; original source checklist totals remain 110 checked / 412 open.
