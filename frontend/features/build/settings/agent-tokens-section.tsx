@@ -5,7 +5,7 @@ import { Bot } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
-import { useCan } from "@/hooks/api/access";
+import { useCan, usePermissionGate } from "@/hooks/api/access";
 import {
   useAgentTokens,
   useRevokeAgentToken,
@@ -26,6 +26,7 @@ interface AgentTokensSectionProps {
 
 export function AgentTokensSection({ createRef }: AgentTokensSectionProps = {}) {
   const canManageTokens = useCan("settings:api-tokens:write");
+  const readGate = usePermissionGate("settings:api-tokens:read");
   const { data: tokens, isLoading, isError, refetch } = useAgentTokens();
   const revokeToken = useRevokeAgentToken();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -118,6 +119,7 @@ export function AgentTokensSection({ createRef }: AgentTokensSectionProps = {}) 
         <EmptyState
           compact
           illustrationSize="xs"
+          access={readGate}
           title="No tokens yet"
           description={
             canManageTokens
