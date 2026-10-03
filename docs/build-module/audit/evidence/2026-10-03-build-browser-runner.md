@@ -159,6 +159,12 @@ An independent agent then used a fresh IAM application-role connection for one `
 
 These checks use the actual application guards, command and database path. Browser creation, other actors/tenants, all calendar consumers and deployed behavior remain Current unverified. The independent read proves only the targeted persisted cycle truth. No ticket comment was posted.
 
+### Organization-member target adapter correction
+
+Backend `a310fae3e` corrects only the synthetic verification adapter. The actual organization controller uses `memberId` as a user ID; the adapter previously coerced it to a numeric organization-membership ID. Four legitimate synthetic UUID update/delete/suspend/reactivate cases failed, and a missing route parameter incorrectly passed the adapter in the new RED tests. The corrected adapter requires the exact route's scalar user ID, checks its reserved synthetic email, and retains numeric membership lookup for module-grant routes. Missing, mismatched, array, unknown and normal-user targets refuse. Existing actor/organization checks and the application's real guards remain in place.
+
+Independent review passed. Four focused suites passed 166 tests; scoped ESLint passed with zero warnings; the two-file test TypeScript check passed. An earlier broader TypeScript run caught a new test-table inference issue, which was corrected, and in-progress assignment-authority errors owned by the parallel workstream; it was not represented as passing. The existing process 15616 was left running on its prior source. No organization suspension/reactivation or browser proof is claimed from these source checks; its next reviewed restart and a genuine synthetic second member are still required.
+
 ## Delivery checklist
 
 ### Tracking scope reconciliation
