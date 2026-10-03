@@ -44,6 +44,7 @@ import { useRunEmployee, useAddAdjustment, useSetEmployeeHold, useReleaseEmploye
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
 import { cn } from "@/lib/utils";
+import { SourceWhyList } from "./source-why-list";
 import type { CalculationSnapshotLine, SalaryComponentType } from "@/types/payroll/runs";
 
 const adjustmentSchema = z.object({
@@ -101,6 +102,7 @@ const LineItemRow = memo(function LineItemRow({ line }: { line: CalculationSnaps
           {formatMoney(line.amount)}
         </span>
       </div>
+      <SourceWhyList sources={line.explain.sources} />
       {expanded && (
         <div className="px-8 py-2 bg-muted/10 border-t border-border text-micro text-muted-foreground space-y-0.5">
           <p className="font-medium text-foreground">Method: {line.calcMethod}</p>
@@ -255,6 +257,16 @@ export function BreakdownSheet({
                     </div>
                   );
                 })}
+
+                {parseFloat(snapshot.lopDays) > 0 && (
+                  <div className="py-1.5">
+                    <div className="flex items-center justify-between px-3 text-dense">
+                      <span className="text-muted-foreground">Loss of pay</span>
+                      <span className="font-mono tabular-nums">{snapshot.lopDays} days</span>
+                    </div>
+                    <SourceWhyList sources={snapshot.lopSources} />
+                  </div>
+                )}
 
                 <div className="px-3 py-3 space-y-1">
                   <div className="flex items-center justify-between text-dense">

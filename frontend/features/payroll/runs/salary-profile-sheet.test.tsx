@@ -26,6 +26,10 @@ jest.mock("@/hooks/api/payroll/policies", () => ({
   usePayrollPolicyCurrent: () => ({ data: { policy: { currency: "INR" }, taxRegimeApplicable: false, activeVersion: null } }),
 }));
 
+jest.mock("@/features/payroll/salary-structures/salary-breakup-preview", () => ({
+  SalaryBreakupPreview: ({ annualCtc }: { annualCtc: string }) => <p>Breakup for {annualCtc}</p>,
+}));
+
 const mockUsePayrollPeople = jest.fn();
 jest.mock("@/hooks/api/payroll/people", () => ({
   usePayrollPeople: (...args: unknown[]) => mockUsePayrollPeople(...args),
@@ -180,5 +184,16 @@ describe("SalaryProfileSheet person picker", () => {
     const list = screen.getByRole("list", { name: "Employees" });
     expect(within(list).getAllByRole("listitem")).toHaveLength(5);
     expect(screen.getByText("Showing first 5 — refine search")).toBeInTheDocument();
+  });
+
+  it("offers the monthly breakup only once a person and a CTC are entered, collapsed until asked", () => {
+    renderSheet();
+    fireEvent.change(screen.getByPlaceholderText("e.g. 1200000.00"), { target: { value: "1200000" } });
+    expect(screen.queryByRole("button", { name: "See monthly breakup" })).not.toBeInTheDocument();
+
+    fireEvent.click(rowButton("Asha Rao"));
+    expect(screen.queryByText("Breakup for 1200000")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "See monthly breakup" }));
+    expect(screen.getByText("Breakup for 1200000")).toBeInTheDocument();
   });
 });

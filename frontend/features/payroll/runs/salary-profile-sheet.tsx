@@ -38,6 +38,8 @@ import { usePayrollPolicyCurrent } from "@/hooks/api/payroll/policies";
 import type { ProfileDetail } from "@/hooks/api/payroll/employees-schema";
 import type { PayrollPerson } from "@/hooks/api/payroll/people-schema";
 import { PayrollPersonPicker, personKey } from "./payroll-person-picker";
+import { SalaryBreakupPreview } from "@/features/payroll/salary-structures/salary-breakup-preview";
+import { SALARY_PREVIEW_CTC } from "@/hooks/api/payroll/salary-preview";
 
 const profileSchema = z.object({
   effectiveFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Required: YYYY-MM-DD"),
@@ -95,6 +97,16 @@ export function SalaryProfileSheet({
       costCenter: "",
     },
   });
+
+  const [showBreakup, setShowBreakup] = useState(false);
+  const annualCtcValue = form.watch("annualCtc");
+  const taxRegimeValue = form.watch("taxRegime");
+  const workerTypeValue = form.watch("workerType");
+  const canPreviewBreakup = Boolean(resolvedUserId || resolvedWorkerId) && SALARY_PREVIEW_CTC.test(annualCtcValue);
+
+  function handleToggleBreakup() {
+    setShowBreakup((shown) => !shown);
+  }
 
   const [prevOpen, setPrevOpen] = useState(open);
     if (open !== prevOpen) {
@@ -222,6 +234,27 @@ export function SalaryProfileSheet({
                   </FormItem>
                 )}
               />
+              {canPreviewBreakup ? (
+                <div className="space-y-2">
+                  <Button
+                    type="button"
+                    variant="link"
+                    size="sm"
+                    className="h-auto p-0 text-xs"
+                    aria-expanded={showBreakup}
+                    onClick={handleToggleBreakup}
+                  >
+                    {showBreakup ? "Hide monthly breakup" : "See monthly breakup"}
+                  </Button>
+                  {showBreakup ? (
+                    <SalaryBreakupPreview
+                      annualCtc={annualCtcValue}
+                      regime={taxRegimeValue === "none" ? undefined : taxRegimeValue}
+                      workerType={workerTypeValue}
+                    />
+                  ) : null}
+                </div>
+              ) : null}
               <FormField
                 control={form.control}
                 name="workerType"
