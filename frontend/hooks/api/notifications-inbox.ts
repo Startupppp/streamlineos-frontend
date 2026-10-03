@@ -270,18 +270,16 @@ export const useUnreadNotificationCount = (
 export const useMarkNotificationRead = () => useNotificationRowPatch<number>({
   mutationKey: ["notifications", "mark-read"],
   request: (id, config) => apiClient.patch<NotificationAck>(
-    "/notifications/" + id + "/read", undefined, config, notificationAckLazy,
+    `/notifications/${id}/read`, undefined, config, notificationAckLazy,
   ),
   patch: (id) => ({ kind: "field", change: { field: "isRead", value: true }, matches: (row) => row.id === id }),
 });
 
 export const useMarkAllNotificationsRead = (sourceModule?: string) => useNotificationRowPatch<void>({
   mutationKey: ["notifications", "mark-all-read"],
-  request: (_vars, config) => apiClient.patch<NotificationAck>(
-    sourceModule === undefined ? "/notifications/read-all"
-      : "/notifications/source/" + encodeURIComponent(sourceModule) + "/read-all",
-    undefined, config, notificationAckLazy,
-  ),
+  request: (_vars, config) => sourceModule === undefined
+    ? apiClient.patch<NotificationAck>("/notifications/read-all", undefined, config, notificationAckLazy)
+    : apiClient.patch<NotificationAck>(`/notifications/source/${encodeURIComponent(sourceModule)}/read-all`, undefined, config, notificationAckLazy),
   patch: () => ({
     kind: "field", change: { field: "isRead", value: true },
     matches: (row) => sourceModule === undefined || row.sourceModule === sourceModule,
