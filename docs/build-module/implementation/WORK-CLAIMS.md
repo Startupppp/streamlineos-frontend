@@ -20,6 +20,92 @@ Source revisions: outerde5c50b2e and backendd2863e8d8; evidence21/contracts chec
 Next: observation22 has independent CLEAR review and proves the actual fresh Member invitation→automatic Build assignment clause. Continue the complete client/browser/operational acceptance through a new exact claim; no work may imply current41 expiry runtime from the older120545 checkout. Source39/40/41 are released. Use the reviewed isolated120545 runner for its already supported flows; never infer41 runtime proof from that older checkout. Preserve portal/matching-browser prerequisites and current authority/caching gaps; retain RED/GREEN and frozen proof for subsequent corrections. Keep existing invocation/authorization/contracts intact. Record runtime/browser gaps and regenerate TODO with the repository script. Resolve matching browser and scoped positive-recipient producer prerequisites through reviewed exact claims, then continue real runtime/browser proof. Keep the broad task open until complete authorization/persistence/browser/deployment evidence exists.
 
 
+### BT-27a037364398 — approval row revision and atomic commands 43
+
+Classification: Planned until the named source, test and integration evidence is recorded. This is a prerequisite for the complete revision-safe, immutable-artifact approval requirement; it does not close the full BT task or its I/T/R/B/L stages. Supporting BT-801e948e8a67 still requires its canonical exact-artifact approval action.
+
+D: coordinator reserved this package after checking current outer5a029663c/backendd2863e8d8, active claims and clean approval paths. Portal1730/1731, Email receipt and every historical claim not explicitly released remain excluded. B explicitly releases only the serialized new1732 append to the actual backend/migrations/meta/_journal.json; all earlier journal entries and SQL are preserved. Commit this reservation before any agent edits and refresh that revision before beginning. Four slots only: A backend, B frontend and its tests, C backend tests/independent review, coordinator integration/migration/contracts/evidence. No comments or live Ticket comments.
+
+A exclusive production files, all relative to repository root:
+
+- `backend/src/db/schema/build/approvals.ts`
+- `backend/src/modules/build/approvals/approvals.service.ts`
+- `backend/src/modules/build/approvals/approval-lookup.ts`
+- `backend/src/modules/build/approvals/approvals.controller.ts`
+- `backend/src/modules/build/approvals/approvals-read.service.ts`
+- `backend/src/modules/build/approvals/build-approvals-inbox.service.ts`
+- `backend/src/modules/build/approvals/build-approvals.module.ts`
+- `backend/src/modules/build/approvals/dto/approvals.schemas.ts`
+- `backend/src/modules/build/approvals/dto/approvals-response.schemas.ts`
+- new `backend/src/modules/build/approvals/core/approval-commands.service.ts`
+
+Existing ApprovalsService already owns creation; it cannot also own the expanded atomic lifecycle without exceeding the ratchet and coupling creation/chat to decision, delegation and deletion. The new primary command owner hides row locking, revision/state authorization and atomic audit for three real controller commands; controller injects it directly, and creation retains no lifecycle forwarding methods. Existing lookup owns explicit projection and locking rather than a second repository/helper. Existing DTOs own all request/response contracts and strict moved controller params. No permission, route, query-key or cache helper is duplicated.
+
+C exclusive backend test files:
+
+- new `backend/src/modules/build/approvals/__tests__/approval-lifecycle-concurrency.spec.ts`
+- new `backend/src/modules/build/approvals/__tests__/approval-lifecycle-concurrency.fixture.ts`
+- new `backend/src/modules/build/approvals/__tests__/approval-lifecycle-schema.spec.ts`
+- new `backend/src/modules/build/approvals/__tests__/approval-detail-access.spec.ts`
+- `backend/src/modules/build/approvals/approvals.service.spec.ts`
+- `backend/src/modules/build/approvals/approvals-by-id-project-access.spec.ts`
+- `backend/src/modules/build/approvals/approvals.controller.e2e-spec.ts`
+- `backend/src/modules/build/approvals/approvals-read-tenant-isolation.spec.ts`
+- `backend/src/modules/build/approvals/build-approval-requested-emit.spec.ts`
+
+The existing service test is471 lines and mostly fake-returning/SQL-structure checks. New bounded tests are justified for observable concurrent command/rollback and strict schema/read behaviors rather than growing it beyond500 or mirroring implementation. Capture a real opposing-decisions failure through the existing public lifecycle command before A changes it; then migrate the test directly to the new controller-owned command interface. First tracer bullet precedes implementation; add remaining behavior tests in small sequential handoffs. C alone edits these tests; A requests fixture changes through C.
+
+B exclusive frontend production and fixture files:
+
+- `frontend/hooks/api/build/approvals.ts`
+- `frontend/hooks/api/build/approvals-schema.ts`
+- `frontend/types/projects/approvals.ts`
+- `frontend/features/build/approvals/decide-dialog.tsx`
+- `frontend/features/build/approvals/approvals-schema.ts`
+- `frontend/features/build/approvals/approvals-inbox-columns.tsx`
+- `frontend/features/build/approvals/approvals-inbox-page.tsx`
+- `frontend/features/build/approvals/project-approvals-page.tsx`
+- `frontend/features/build/shared/build-list-fixtures.ts` — typed approval fixture adaptation only
+- `frontend/app/(public)/design-system/org-work/gallery.tsx` — typed approval fixture adaptation only
+
+B exclusive frontend tests:
+
+- `frontend/hooks/api/build/approvals-badge.test.ts`
+- `frontend/hooks/api/build/approvals-inbox-contract.test.ts`
+- `frontend/features/build/approvals/decide-dialog.pending-close.test.tsx`
+- `frontend/features/build/approvals/approvals-inbox-page.test.tsx`
+- `frontend/features/build/approvals/project-approvals-page.test.tsx`
+- `frontend/features/build/approvals/use-approvals-columns.test.tsx`
+- `frontend/features/build/approvals/approvals-access-gate.test.tsx` — necessary mock adaptation only
+- new `frontend/hooks/api/build/__tests__/approval-revision-mutations.spec.tsx`
+- new `frontend/features/build/approvals/__tests__/approval-decision-conflict.spec.tsx`
+
+Existing hook/schema/type/dialog/queue owners cover revision transport, detail read and cache behavior. New tests isolate missing public mutation and conflict preservation behaviors because existing large page tests cannot safely grow. Existing decision overlay is reused; full multi-section immutable-artifact Sheet, Inbox integration, URL selection/history and richer filters remain separate acceptance, not a second implementation. No feature-to-feature import, new API client/key module or generated hand edit. Project page starts500 lines and must shrink, not grow beyond its limit.
+
+Coordinator exclusive files:
+
+- new `backend/migrations/1732_approval_row_revision.sql`
+- new `backend/migrations/rollback/1732_approval_row_revision.down.sql`
+- `backend/migrations/meta/_journal.json` — new1732 append only
+- `backend/openapi.json` — official generator only
+- `frontend/contracts/openapi.json` — byte-for-byte vendor of the official artifact
+- `frontend/contracts/build-contracts.generated.ts` — official generator only
+- existing `docs/build-module/implementation/WORK-CLAIMS.md`, `REQUIREMENT-LEDGER.md`, `TODO-INDEX.md`
+- existing `docs/build-module/audit/bugs-and-verification.md`, `cleanup-manifest.md`
+- existing `docs/build-module/audit/evidence/2026-10-03-build-inbox-runtime.json` — only if new real runtime observations are obtained; never rewrite earlier evidence
+
+I/decision: add bigint approval-row revision, exposed as a positive safe JSON integer, independently of the requested artifact version. Migration uses database-enforced OLD revision plus1 for every update, including reassignment/FK/raw writers, and rejects exhaustion. All decide/update/delete requests require strict expectedRevision; DELETE uses a required strict body through the existing API client, not an alternate query contract. Lock exact tenant/project/live row in the canonical tenant transaction, reauthorize current assignment/state, fence the write, and await critical audit in the same ambient transaction. Management cannot enter approved/rejected/changes_requested; specify legal nonterminal administrative transitions, reject empty edits and stale writes. Existing requested event remains atomic with creation; do not emit an unregistered changed event, because the publisher retries unknown types. Registered lifecycle events/cache fanout remain an explicit next package. Assigned-only detail GET loads exact live row and validates its project exists in the same org, without granting project/artifact access or requiring writable project state; other readers require canonical project access. Routes/guards/permission keys remain authoritative.
+
+Frontend uses freshly displayed revision for decisions, selected row revision for management/delete, native abort/expected request identity for detail and canonical generated contracts. No fresh-on-submit revision substitution. Conflict preserves choice/reason; explicit review of refreshed state is required before resubmission. Invalidate all matching filtered detail/list/inbox/count prefixes through existing keys, without blind cached subtraction. Bulk cancellation uses the management command, exact loaded row revisions and settled outcomes; retain failures and show only actual successful counts. No success before acknowledgment.
+
+T/commands: first backend `pnpm -C backend exec jest --runInBand --runTestsByPath src/modules/build/approvals/__tests__/approval-lifecycle-concurrency.spec.ts`; then the exact claimed focused schemas/access/controller/creation suites. Frontend `pnpm -C frontend exec jest --runInBand --runTestsByPath` with the exact claimed hook/dialog/page suites. Both agents run exact-path ESLint and diff checks after focused tests. Root alone runs scoped changed-file/test TypeScript, backend `pnpm -C backend typecheck` and frontend `pnpm -C frontend type-check` sequentially, plus official OpenAPI/Build generation, vendor and freshness self-tests/real gates. Migration discipline/rollback/immutability checks do not replace PostgreSQL migration proof. No baseline widening. Full test TypeScript is run only after stable integration; retain existing failed/OOM evidence if not rerun or if failure repeats.
+
+R/acceptance: opposite decisions from one revision have exactly one winner; reassignment/cancel/delete beats a stale decision without loser mutation/audit; critical audit failure rolls back; legitimate approve/reject/request changes plus strict missing/malformed/authority inputs and role/project/tenant negatives. Creation uses supported atomic requested intent. Real runtime must use the frozen reviewed synthetic runner, reserved project/approver and refreshed legitimate sessions; guarded API statuses/contracts, read-after-write, application-role READ ONLY persistence, tenant/role denials and exact audit/event counts are required. Root must independently constrain approverId and reserved approval/project IDs because the runner's generic guard does not. No database application of1732, arbitrary SQL write or new verification tooling is authorized by source reservation; migration proof and runtime readiness are separate reviewed prerequisites.
+
+B/L: matching frontend1002 approval is still pending, frontend1000 uses deployed API/read-only,1732 is unapplied and immutable snapshots/current-version reads across eight artifact owners are missing. Keep browser/mobile/deployment/operations unverified until matching evidence exists. Legacy approvals are not declared artifact-safe. Complete task requires requester/due/filter/status projections, immutable artifact/version, all named decision sheets, cache/event delivery, role/tenant, browser/mobile and operational proof. No full stage or checkbox advances for this prerequisite.
+
+Handoff: C records genuine RED before A edits; B records its own public mutation/conflict RED before UI changes. A and B freeze exact source hashes/focused results; C independently reviews production changes and root reviews C tests/SQL/contracts. Root serializes generation, heavy gates, any reviewed runtime, exact commits and evidence. Preserve44 outer/47 backend baseline hashes and unrelated generator/%SystemDrive% paths. Regenerate TODO through the repository script and attach exact source revisions, files, results and remaining gaps before ownership release.
+
 ### BT-cdb5efcb8a3a / BT-b62ed948b0cd — invitation-to-Build runtime proof 42
 
 - D/ownership: source39/40/41 is committed and released; active historical portal/Email claims remain excluded. Coordinator owns only existing `docs/build-module/implementation/WORK-CLAIMS.md`, `TODO-INDEX.md`, `REQUIREMENT-LEDGER.md`, `docs/build-module/audit/bugs-and-verification.md` and `docs/build-module/audit/evidence/2026-10-03-build-inbox-runtime.json`. Existing evidence owners already cover runtime; no application file or new helper/schema/test/client/Markdown is justified. Commit this reservation before executing writes. A performs read-only schema/readiness review, C executes existing focused invitation tests, B independently reviews the final sanitized runtime evidence. Agents edit no files. Root alone starts the reviewed runner and performs API/database evidence and exact commits.
