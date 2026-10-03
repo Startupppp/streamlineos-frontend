@@ -65,6 +65,8 @@ This confirms the command's stated conflict targets exist on the actual target. 
 
 ## Entitlement failure recovery correction
 
+Source revision: backend `bcdeae45b`.
+
 Claim `BLD-CHECKLIST-ENTITLEMENT-ERROR-03` separately removes the baseline catch that converted any entitlement failure into an empty enabled-module list. Previously a failed detail lookup returned 404 and a failed list appeared empty. The original exception now reaches the canonical HTTP error filter. Successful projections and genuine disabled-module 404 behavior are unchanged.
 
 Two regression cases failed against the prior source: list resolved to an empty array, and detail threw a fabricated NotFoundException. After the correction, five focused suites passed with 65 tests, including exact ServiceUnavailableException propagation and absence of downstream checklist queries, HR probes, writes, transactions, and analytics. Focused ESLint and diff checks passed. An independent agent reviewed both paths and the existing HTTP filter before commit. This narrow change removes a catch and changes no response type; the preceding production/scoped typechecks remain separately recorded rather than being claimed as fresh checks of this revision.
@@ -72,6 +74,14 @@ Two regression cases failed against the prior source: list resolved to an empty 
 Current verified: focused source behavior and retained disabled-module behavior. Current unverified: real entitlement outage, HTTP recovery, browser retry/refresh, and deployed revision parity.
 
 ## Remaining evidence
+
+### Coordinator real read-only service check
+
+At backend `bcdeae45b`, the coordinator invoked the actual checklist list/detail services, actual EntitlementsService and PlanLimitsService, and actual MembershipStateService against the configured IAM application database. One explicit READ ONLY transaction set the real organization GUC and INTERNAL audience. Standing resolved to active `ORG_ADMIN`, `isOwner=false`; no owner flag was fabricated. A read-through cache adapter executed loaders without touching Redis. The analytics service remained real, so an attempted database analytics write would have failed read-only enforcement.
+
+Ten SQL statements covered role/standing, enabled modules, the list/detail, and before/after tenant counts. The Build list returned one persisted checklist; detail returned two items and 0 percent progress. Both responses passed the real backend `moduleChecklistSchema`. An explicitly empty accessible-module set returned zero checklists. Checklist, item, and analytics counts remained unchanged in the transaction.
+
+This verifies source execution of the existing persisted Build read path under PostgreSQL read-only enforcement. The inaccessible-set check supplies a set to the service; it does not prove a controller derives that set correctly. Initial and partial-record reads, HTTP authorization, negative roles, HR probe suppression, Redis invalidation, commands, browser, and deployment remain Current unverified. The first attempted check was stopped by an incorrect diagnostic comparison to `OrgAdmin`; the corrected check used authoritative `ORG_MEMBER_ROLES.ORG_ADMIN`. No database row changed in either attempt.
 
 - Real authorized GET requests for existing and absent checklists, with before/after row counts proving no durable changes.
 - Real read-only account and inaccessible-module checks, including absence of HR probes for inaccessible modules.
