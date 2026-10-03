@@ -140,6 +140,49 @@ describe("extractBuildProjectId", () => {
 });
 
 describe("normalizeBuildDeepLink", () => {
+  it.each([
+    "javascript:alert(1)",
+    "javascript:javascript:alert(1)",
+    "data:text/html,<script>alert(1)</script>",
+    "mailto:person@example.com",
+    "file:///build/1",
+    "ftp://example.com/build/1",
+    "https://",
+    "http://[invalid",
+    "https:/example.com/build/1",
+    "http:example.com/build/1",
+    "//example.com/build/1",
+    "  //example.com/build/1  ",
+    "https://example.com//other.example/build/1",
+    "/build/..//other.example/path",
+    "/build/1\\tickets/29",
+    "\\\\example.com\\build\\1",
+    "/build/1\n/tickets/29",
+    "/build/1\r/tickets/29",
+    "/build/1\t/tickets/29",
+    "/build/1\u0000/tickets/29",
+    "/build/1\u007f/tickets/29",
+    "/build/1\u0085/tickets/29",
+    "",
+    "   ",
+  ])("resolves unsafe or malformed targets to the universal Inbox: %s", (link) => {
+    expect(normalizeBuildDeepLink(link)).toBe("/inbox");
+  });
+
+  it.each([
+    ["https://old.example/projects/54/tickets/STRE-29?comment=8#activity", "/build/54/tickets/STRE-29?comment=8"],
+    ["http://old.example/build/54/issues?ticket=29#activity", "/build/54/issues?ticket=29"],
+    ["/crm/leads?view=active&search=some%20client#details", "/crm/leads?view=active&search=some%20client"],
+    ["/projects?view=active&return=%2Fbuild%2F54", "/build/projects?view=active&return=%2Fbuild%2F54"],
+    ["build/54/tickets/STRE-29?comment=8", "/build/54/tickets/STRE-29?comment=8"],
+    ["/", "/"],
+  ])("keeps valid app navigation and existing fragment handling for %s", (link, expected) => {
+    const normalized = normalizeBuildDeepLink(link);
+    expect(normalized).toBe(expected);
+    expect(new URL(normalized, "https://app.example").origin).toBe("https://app.example");
+    expect(normalizeBuildDeepLink(normalized)).toBe(normalized);
+  });
+
   it("rewrites /projects paths to /build for client-side navigation", () => {
     expect(normalizeBuildDeepLink("/projects?view=active")).toBe(
       "/build/projects?view=active",
