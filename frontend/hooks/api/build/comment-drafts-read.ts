@@ -44,7 +44,7 @@ export function useTicketCommentDraft(ticketId: number, editable: boolean) {
     queryFn: async ({ signal }) => {
       const valid = () => !signal.aborted && !isImpersonating() && active !== null && current.current.owner?.key === active.key && current.current.ticketId === ticketId;
       if (!active || !valid()) throw new ApiError("Your signed-in account changed.", undefined, "REQUEST_IDENTITY_CHANGED");
-      const path = `/build/comment-drafts/tickets/${ticketId}`;
+      const path = `/build/comment-drafts/by-ticket/${ticketId}`;
       const response = await apiClient.request(path, { method: "GET" }, { signal, expectedIdentity: active.identity });
       const draft = await parseApiResponse<TicketCommentDraft>(response, await commentDraftByTicketContract(), path);
       if (!valid()) throw new ApiError("Your signed-in account changed.", undefined, "REQUEST_IDENTITY_CHANGED");
