@@ -72,7 +72,7 @@ export function CompareStep({ runId, headcount, variance }: CompareStepProps) {
           </dl>
           {data.previousRun ? null : <StepNote>No earlier locked run exists, so there is nothing to compare against.</StepNote>}
           <div className="space-y-1">
-            <h3 className="text-dense font-semibold text-foreground">Top earners this run, with change vs last run</h3>
+            <h3 className="text-dense font-semibold text-foreground">Biggest changes vs last run</h3>
             {data.topMovers.length === 0 ? (
               <StepNote>No employees were calculated.</StepNote>
             ) : (
