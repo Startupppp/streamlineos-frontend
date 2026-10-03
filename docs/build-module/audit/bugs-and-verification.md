@@ -73,6 +73,12 @@ An independent fresh IAM read at 10:22:10 UTC used `streamline_app`, verified no
 
 These observations use real application guards and PostgreSQL; request concurrency is an observed schedule, not exhaustive controlled interleaving proof. Database failure injection, deployed effects/workers, cache/browser refresh and the full role/tenant matrix remain Current unverified. The generic duplicate transition still accepts a same-organization ticket ID without canonical target record authorization, and its existing numeric schema is not positive/integer constrained. That requires a separately claimed correction and tests for hidden/foreign/deleted targets and the allowed cross-project policy. This slice does not claim complete Intake, Feedbucket mapping, conversion-to-project or duplicate-link acceptance.
 
+### Duplicate target authorization
+
+Backend `0fdf32a3e` closes the source-level unchecked duplicate-target path: while the pending Intake row is locked, the command uses canonical `assertTicketReadAccess` for the same actor, organization, project and target. No target read, transition or Ticket visibility policy is duplicated. The positive int32 boundary additionally requires a target for duplicate commands; malformed processed requests can now fail validation before the processed-state conflict, an intentional invalid-input change.
+
+Focused Intake checks passed 121 tests across six suites, including the real canonical guard's tenant/project/deletion/scope predicates, accessible same-project positive, no mutation after denied targets and processed/CAS behavior. Production and changed-spec TypeScript and scoped lint passed; independent source review was clear. The regenerated OpenAPI contract is backend `8d5e583ee`. New target-link HTTP/DB, target visibility/deletion races and browser proof remain open. Earlier accept/decline runtime results above do not verify this new duplicate-target branch. See the [runner evidence](evidence/2026-10-03-build-browser-runner.md#reviewed-assignment-authority-and-intake-target-changes) for the full-test TypeScript heap failure and pending frontend numeric-bound reconciliation.
+
 ## Testing Decisions
 
 For every closure record: frontend/backend/worker revisions; environment and synthetic tenants; actor/principal and exact role/grant; initial state; action; persisted DB/API result; console/network; audit/outbox/job/cache evidence; unauthorized/cross-tenant negative; responsive path. Existing focused tests support closure but cannot substitute browser/persistence/deployment evidence.

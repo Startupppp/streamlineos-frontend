@@ -171,6 +171,16 @@ Backend `1834d98c1` permits the real `/me/api-tokens` create/revoke endpoints th
 
 Two positive adapter cases failed before the change; four suites then passed 180 tests, zero-warning scoped ESLint and the two-file test TypeScript check passed. Independent review was clear. This is adapter evidence only: no personal token had been created at this source checkpoint. Subsequent real probes must retain raw tokens only in process memory, use the original human session for revocation, and record cleanup separately from authorization results.
 
+### Reviewed assignment authority and Intake target changes
+
+Backend `89200722a` adds fresh assignment authority using the canonical active-membership reader, structural organization standing, ownership and live role assignments. Backend `da4bb615f` checks every selected role before group/flat membership writes, rejects generic Module Owner assignment, bounds each role's grant evaluation independently and restricts personal tokens by both action and grantable-key ceilings. Sixteen focused assignment suites passed 236 tests; the final module vocabulary fixture correction separately passed 25 tests. The authority/Intake owner ran eleven suites with 173 passing tests. These sets overlap and are not a unique-test total. Independent source reviews were clear, including the final fixture correction.
+
+Backend `0fdf32a3e` requires canonical Ticket visibility before a pending Intake request can become a duplicate. Its DTO rejects missing duplicate targets and nonpositive, noninteger or overflowing target IDs. Backend `8d5e583ee` publishes the positive int32 contract in OpenAPI. Production TypeScript and the scoped TypeScript configuration covering all 15 changed specification files passed after two fixture typing corrections; exact-path lint and whitespace checks passed. The full backend `typecheck:test` exhausted its configured 10 GB V8 heap and exited 134. That full gate remains failed/unverified; a scoped pass is not a replacement for it.
+
+Contract generation reported 4,105 operations, 4,090 applied Zod contracts and no undeclared or unconvertible schema. Vendor and generated freshness checks passed after 6 vendor and 47 generator self-tests. Independent review found an existing generator gap: numeric bounds are lost when converting OpenAPI to frontend Zod. The new repair is separately owned as `BLD-WIRE-NUMERIC-10`; the initial generated integer artifact must not be described as full int32 validation parity.
+
+The coordinator verified process 15616's exact runner command and sole loopback listener, stopped that process, and launched the reviewed runner. Its replacement is process 5280, listening only on `127.0.0.1:1001`, with synthetic writes, local mail capture and disabled providers/workers. The tool waiting for the hidden launcher timed out and reset its persistent kernel after the server had started. A separate process/listener/log inspection confirmed the replacement was live; it was not restarted a second time. The reset lost the in-memory synthetic login. No PAT or new Intake record was created in this attempt, and no authenticated runtime result is claimed. Fresh synthetic authentication and browser approval remain pending; application guards were not bypassed.
+
 ## Delivery checklist
 
 ### Tracking scope reconciliation
