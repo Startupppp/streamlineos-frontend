@@ -44,11 +44,11 @@ const authenticatedRoutes = [
 
 const publicRoutes = [
   path.join(sourceRoot, "(public)", "help", "[orgId]", "page.tsx"),
-  path.join(sourceRoot, "(public)", "help", "[orgId]", "[slug]", "page.tsx"),
-  path.join(sourceRoot, "(public)", "application-status", "[token]", "page.tsx"),
-  path.join(sourceRoot, "(public)", "offer", "[token]", "page.tsx"),
-  path.join(sourceRoot, "(public)", "refer", "link", "[token]", "page.tsx"),
-  path.join(sourceRoot, "(public)", "vendor-portal", "[token]", "page.tsx"),
+  path.join(sourceRoot, "(public)", "help", "[orgId]", "[articleSlug]", "page.tsx"),
+  path.join(sourceRoot, "(public)", "application-status", "[applicationToken]", "page.tsx"),
+  path.join(sourceRoot, "(public)", "offer", "[offerToken]", "page.tsx"),
+  path.join(sourceRoot, "(public)", "refer", "link", "[referralToken]", "page.tsx"),
+  path.join(sourceRoot, "(public)", "vendor-portal", "[vendorPortalToken]", "page.tsx"),
 ];
 
 const read = (file) => readFile(file, "utf8");
