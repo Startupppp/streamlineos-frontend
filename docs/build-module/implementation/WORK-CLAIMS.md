@@ -28,6 +28,15 @@ Migration gate handoff `BLD-MIGRATION-LOCAL-TIMEOUT-12` under BLD-030/035: `modu
 
 ## Active claims
 
+### BLD-INBOX-AFTER-COMMIT-14
+
+- Requirements: BLD-009, BLD-025, BLD-029, BLD-035. Owner: `scoped_activation_dispatch`; independent reviewer/coordinator: root. Previous notification source paths are frozen at backend `231a94829` and handed back only for this exact correction.
+- Exact owned paths: existing `backend/src/modules/notifications/notifications-lifecycle.service.ts`, new focused `backend/src/modules/notifications/notifications-lifecycle-after-commit.spec.ts`, and existing `notifications-mark-all-source-module.fixture.ts` only if a genuine fixture adaptation is needed. No controller, schema, OpenAPI, runner, frontend or shared tenant/cache infrastructure edits.
+- Evidence motivating the change: TenantContextInterceptor commits after the handler, but lifecycle commands currently invalidate Redis and publish count changes from inside the handler. A listener can refill the new cache generation from pre-commit data. Existing production CacheService and NotificationEventService do not defer those calls.
+- Existing-file assessment: the lifecycle owner already owns every affected count/cache call; consolidate its private publication helper there, using the established after-commit interface. No new production service or helper module.
+- Tests first: demonstrate effects do not run before commit and never run after rollback; after commit cache invalidation precedes recipient event; standalone calls retain behavior; malformed ambient context fails safely instead of publishing inside a transaction. Preserve exact tenant/recipient/source predicates and the global watermark command.
+- Commands: focused lifecycle/scoped/global suites; exact-path lint/diff; changed-spec and production TypeScript. Handoff: freeze exact diff/tests for independent review, then root commits/restarts. Required runtime proof remains read-after-write, persisted flags, counts and actual event/cache behavior; no broad requirement closure from focused tests.
+
 ### BLD-INBOX-NOTIFICATION-FIXTURE-13
 
 - Requirements: BLD-009, BLD-025, BLD-029, BLD-035. Owner: `module_grants_resume`; independent reviewer: `scoped_activation_dispatch`; coordinator alone runs the runner and database/browser observations.
