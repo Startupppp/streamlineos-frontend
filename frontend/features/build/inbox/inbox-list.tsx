@@ -96,7 +96,7 @@ export function InboxList({
   const rawNotifications = React.useMemo(() => data?.pages.flat() ?? [], [data]);
   const total = rawNotifications.length;
 
-  React.useEffect(() => { setPagesShown(1); setSelectedIds(new Set()); }, [section, q, type]);
+  React.useEffect(() => { setPagesShown(1); setSelectedIds(new Set()); }, [section, q, type, projectId]);
 
   const pageState = usePageState({
     permission: "build:view",

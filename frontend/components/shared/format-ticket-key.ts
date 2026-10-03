@@ -24,16 +24,17 @@ export interface ParsedTicketKey {
 }
 
 export function parseTicketKey(ticketKey: string): ParsedTicketKey | null {
-  const keyMatch = ticketKey.match(/^([A-Za-z][A-Za-z0-9]*)-(\d+)$/);
+  const keyMatch = ticketKey.match(/^([A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)*)-(\d+)$/);
+  const ticketNumber = Number(keyMatch?.[2] ?? ticketKey);
+  if (!Number.isSafeInteger(ticketNumber) || ticketNumber <= 0 || ticketNumber > 2147483647) return null;
   if (keyMatch) {
     return {
       projectKey: keyMatch[1],
-      ticketNumber: parseInt(keyMatch[2], 10),
+      ticketNumber,
     };
   }
-  const numOnly = parseInt(ticketKey, 10);
-  if (Number.isFinite(numOnly) && String(numOnly) === ticketKey) {
-    return { ticketNumber: numOnly };
+  if (String(ticketNumber) === ticketKey) {
+    return { ticketNumber };
   }
   return null;
 }
