@@ -1,6 +1,6 @@
 # Local synthetic browser runner — 2026-10-03
 
-Status: Current verified for the focused policy tests and source observations below. Current unverified for application startup, live authentication, browser actions, persistence, permission denial, tenant isolation, and deployment.
+Status: Current verified for the focused policy tests, reviewed startup, and narrow live HTTP authentication observations below. Current unverified for browser authentication, business persistence, permission matrices, tenant isolation, and deployment.
 
 Claim: `BLD-BROWSER-SYNTHETIC-01` in [WORK-CLAIMS](../../implementation/WORK-CLAIMS.md). This runner supplies a verification boundary; it does not complete a product criterion.
 
@@ -48,12 +48,12 @@ Normal authenticated GET debugging remains available except for these known init
 
 | Route | Actual source behavior | Runner decision |
 |---|---|---|
-| `GET /org/setup/session` | Calls `getOrCreateSession` for a resolved setup target. | Require synthetic actor and validate every possible membership target. A synthetic new owner with no organizations can receive the ephemeral session. |
-| `GET /onboarding/session` | Calls `getOrCreateSessionInNewTransaction`. | Require synthetic actor and organization. |
-| `GET /onboarding/module-checklists` and `/build` | May seed tenant checklists and synchronize item metadata. | Require synthetic actor and organization; allow list and Build detail only. |
-| `GET /onboarding/tours` | `ensureHrSetupTourDefinition` inserts a global definition if missing. | Refuse this route until global initialization has an explicitly safe seam. No global definition is inserted by this runner. |
+| `GET /org/setup/session` | Review baseline created sessions. Backend `65f3c084b` now reads a persisted session or returns initial ID 0 without durable timestamps. | Existing runner restriction still requires a synthetic actor and validates every possible membership target. |
+| `GET /onboarding/session` | Review baseline created sessions. Backend `65f3c084b` now uses the read-only session interface. | Existing runner restriction still requires a synthetic actor and organization. |
+| `GET /onboarding/module-checklists` and `/build` | Review baseline seeded and synchronized metadata. Backend `7ccb2852a` now projects initial/current metadata in memory; explicit commands materialize records. | Existing runner restriction still requires a synthetic actor and organization; list and Build detail only. |
+| `GET /onboarding/tours` | Review baseline inserted the global definition. Backend `65f3c084b` removed that insertion. | The runner still refuses this route until its boundary is separately reviewed and retested. |
 
-These restrictions are verification boundaries. They are not application fixes. The production code's GET initialization behavior remains a separate reconciliation item.
+These restrictions are verification boundaries. The later application fixes have independent source tests; a runner boundary relaxation and actual source-version HTTP/browser checks remain separate work.
 
 ## Checks run
 
@@ -102,5 +102,11 @@ The independently reviewed runner at backend `0c4b33141` was launched by the coo
 | Projects read without authentication | 401 | The real authentication stack refused unauthenticated access. |
 | OTP request for the reserved synthetic owner | 200 | The real request path accepted the signup/sign-in request. This path creates a user and OTP record; this was the first authorized synthetic database write in this runner. |
 | Reserved in-memory mailbox read | 200, one message | Mail went to the capture seam. No OTP, login token, proof, or JWT was copied to evidence. |
+| Incorrect six-digit OTP for the reserved owner | 401 | The real OTP verifier refused the wrong code. |
+| Correct captured OTP, followed by reuse of the same code | 200, then 401 | The real verification path consumed the code and refused replay. |
+| Verification of the returned magic token | 200 | The real authentication service returned the persisted synthetic identity/session. |
+| Frontend-equivalent signed session proof and internal session exchange | 200 | The actual exchange endpoint accepted a proof bound to the returned synthetic user/session. Credentials and proofs stayed in memory; this was an HTTP check, not a browser session. |
+| Authenticated initial setup session GET | 200, ID 0, `not_started`, no durable dates | A new synthetic account without an organization received the explicit initial setup projection. Existing-session and concurrent command behavior remain unverified. |
+| Authenticated initial setup status GET | 200, `ready=false`, provisioning `not-started` | The new account was not incorrectly reported ready before activation. |
 
-The namespace/origin denials are runner policy evidence, not product RBAC or cross-tenant proof. OTP consumption, browser session establishment, durable onboarding, invitations, record actions, and permission matrices remain open. Automatic approval review rejected starting the frontend with temporary local API/auth URLs; the coordinator requested clarification and did not repeat that rejected launch. Until the frontend is connected to this runner, existing browser observations against the deployed API do not prove the revised backend behavior.
+The namespace/origin denials are runner policy evidence, not product RBAC or cross-tenant proof. Browser session establishment, durable onboarding, invitations, record actions, and permission matrices remain open. Automatic approval review rejected starting the frontend with temporary local API/auth URLs; the coordinator requested clarification and did not repeat that rejected launch. Until the frontend is connected to this runner, existing browser observations against the deployed API do not prove the revised backend behavior.

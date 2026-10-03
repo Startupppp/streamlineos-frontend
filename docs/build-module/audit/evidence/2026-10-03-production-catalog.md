@@ -151,6 +151,14 @@ No product acceptance criterion or TODO was completed by this catalog inspection
 
 ## Source-only browser fixture readiness
 
+## Invitation prerequisite no-op execution
+
+The coordinator executed the exact final `0941a_invitations_org_id_unique_prerequisite.sql` twice, in separate READ ONLY application-role transactions with a 20-second outer statement timeout. Its SHA-256 was `9d67e947be815713741582cb590149d458f8fa3327a3942e0e7373bb90e2ab1c`. Both executions completed through the existing equivalent `uniq_invitations_org_id` branch. PostgreSQL read-only enforcement would have rejected index creation; neither execution needed DDL. No migration ledger row was inserted, so this is not a deployment or apply-once claim.
+
+This verifies compatibility of the catalog-recognition branch with the actual target. Empty-chain key creation, wrong-shaped canonical indexes, upgrade selection, rollback, locking, and receipt migration `1728` remain Current unverified. The receipt forward SQL remains immutable and may create its named equivalent invitation index even when the historical equivalent already exists.
+
+## Source-only browser fixture readiness (original inspection)
+
 Status: Current unverified until a dedicated verification server is exercised.
 
 The actual signup path is `POST /auth/email-otp` → `findOrCreateUser` → hashed six-digit code → `EmailService` send → `POST /auth/email-otp/verify` → atomic code consumption and email verification → five-minute magic token → frontend `signInWithMagicToken`. OTP values are stored as hashes, so selecting the OTP row cannot recover the code for browser entry. Raw codes and magic tokens must remain in the verification process, outside evidence logs.
