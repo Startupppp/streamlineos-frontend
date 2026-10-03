@@ -3,9 +3,10 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useId, useLayoutEffect, useRef, useState } from "react";
 import { apiClient } from "@/lib/api-client";
-import { isApiError, lazyContract, parseApiResponse } from "@/lib/api-envelope";
+import { ApiError, isApiError, lazyContract, parseApiResponse } from "@/lib/api-envelope";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import type {
   Notification,
@@ -27,74 +28,76 @@ import {
 import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 interface SelectedNotificationRead {
-  id: number;
-  section: "ALL" | "SNOOZED" | "ARCHIVED";
-  owner: NotificationMutationOwner;
   notification: Notification | null;
-  error: unknown;
   isMissing: boolean;
+  ownerStamp: string;
 }
+type SelectedNotificationSection = "ALL" | "SNOOZED" | "ARCHIVED";
+type SelectedReadOwner = { id: number | null; section: SelectedNotificationSection; owner: NotificationMutationOwner; ownerStamp: string };
+type SelectedReadFailure = { ownerStamp: string; error: unknown };
 
-export function useInboxSelectedNotification(id: number | null, section: SelectedNotificationRead["section"]) {
+export function useInboxSelectedNotification(id: number | null, section: SelectedNotificationSection) {
   const { captureOwner, queryClient } = useNotificationInboxInvalidation();
-  const [owner, setOwner] = useState<NotificationMutationOwner | null>(null);
+  const instanceId = useId();
+  const sequence = useRef(0);
+  const [lease, setLease] = useState<SelectedReadOwner | null>(null);
   useLayoutEffect(() => {
     const next = captureOwner();
-    if (next === owner) return;
+    if (next === lease?.owner && id === lease.id && section === lease.section) return;
     let live = true;
-    queueMicrotask(() => { if (live && (!next || next.isCurrent())) setOwner(next); });
+    const queryKey = platformCoreQueryKeys.notifications.selected(id, section);
+    const cancellations = [queryClient.cancelQueries({ queryKey, exact: true })];
+    if (lease && (lease.id !== id || lease.section !== section)) cancellations.push(queryClient.cancelQueries({
+      queryKey: platformCoreQueryKeys.notifications.selected(lease.id, lease.section), exact: true,
+    }));
+    void Promise.all(cancellations).then(() => {
+      if (!live) return;
+      setLease(next?.isCurrent() ? { id, section, owner: next, ownerStamp: instanceId + ":" + ++sequence.current } : null);
+    });
     return () => { live = false; };
-  }, [captureOwner, owner]);
-  const [revision, refresh] = useState(0);
-  const [state, setState] = useState<SelectedNotificationRead | null>(null);
-  function retry() { refresh((value) => value + 1); }
-  useEffect(() => {
-    if (id === null) return;
-    if (!owner) return;
-    const controller = new AbortController();
-    function abort() { controller.abort(); }
-    owner.signal.addEventListener("abort", abort);
-    const pending: SelectedNotificationRead = { id, section, owner, notification: null, error: null, isMissing: false };
-    void Promise.resolve().then(async () => {
-      if (!owner.isCurrent() || controller.signal.aborted) return;
-      setState((previous) => previous?.id === id && previous.section === section && previous.owner === owner
-        ? { ...pending, notification: previous.notification } : pending);
-      const path = "/notifications?" + new URLSearchParams(toStringParams({ section, sourceModule: "build", ids: String(id), limit: 1 }));
-      const response = await apiClient.request(path, { method: "GET" }, { signal: controller.signal, expectedIdentity: owner.identity });
-      return parseApiResponse<IdCursorPage<Notification>>(response, await notificationListLazy(), "/notifications");
-    }).then((page) => {
-      if (!page || !owner.isCurrent() || controller.signal.aborted) return;
-      const row = page.data.length === 1 ? page.data[0] : undefined;
-      const notification = row?.id === id && row.sourceModule === "build" && row.orgId === owner.identity.orgId
-        && (row.userId === null || row.userId === owner.identity.userId) ? row : null;
-      setState({ ...pending, notification, isMissing: notification === null });
-    }).catch((error: unknown) => {
-      if (!owner.isCurrent() || controller.signal.aborted) return;
-      const isMissing = isApiError(error) && (error.status === 403 || error.status === 404);
-      setState({ ...pending, error: isMissing ? null : error, isMissing });
-    });
-    return () => { owner.signal.removeEventListener("abort", abort); controller.abort(); };
-  }, [id, section, owner, revision]);
-  useEffect(() => {
-    if (id === null) return;
-    let live = true, scheduled = false;
-    function wake() {
-      if (scheduled) return;
-      scheduled = true;
-      queueMicrotask(() => { scheduled = false; if (live) refresh((value) => value + 1); });
-    }
-    const prefix = platformCoreQueryKeys.notifications.lists();
-    const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
-      if (event.type === "updated" && event.action.type === "invalidate"
-        && prefix.every((part, index) => event.query.queryKey[index] === part)) wake();
-    });
-    window.addEventListener("focus", wake); window.addEventListener("online", wake);
-    const timer = setInterval(wake, NOTIFICATION_FALLBACK_INTERVAL_MS);
-    return () => { live = false; unsubscribe(); window.removeEventListener("focus", wake); window.removeEventListener("online", wake); clearInterval(timer); };
-  }, [id, queryClient]);
-  const current = id !== null && state?.id === id && state.section === section && captureOwner() === state.owner && state.owner.isCurrent();
-  return { notification: current ? state.notification : null, error: current ? state.error : null,
-    isMissing: current && state.isMissing, isPending: id !== null && (!current || (!state.notification && !state.error && !state.isMissing)), retry };
+  }, [captureOwner, lease, id, section, queryClient, instanceId]);
+  const active = id !== null && lease?.id === id && lease.section === section && captureOwner() === lease.owner && lease.owner.isCurrent();
+  const query = useQuery<SelectedNotificationRead, SelectedReadFailure>({
+    queryKey: platformCoreQueryKeys.notifications.selected(id, section),
+    queryFn: async ({ signal }) => {
+      if (!lease || id === null) throw { ownerStamp: "", error: new ApiError("Your signed-in account changed.", undefined, "REQUEST_IDENTITY_CHANGED") };
+      const controller = new AbortController();
+      function abort() { controller.abort(); }
+      signal.addEventListener("abort", abort);
+      lease.owner.signal.addEventListener("abort", abort);
+      if (signal.aborted || lease.owner.signal.aborted) abort();
+      function requireCurrent() {
+        if (controller.signal.aborted || !lease?.owner.isCurrent()) throw new ApiError("Your signed-in account changed.", undefined, "REQUEST_IDENTITY_CHANGED");
+      }
+      try {
+        requireCurrent();
+        const path = "/notifications?" + new URLSearchParams(toStringParams({ section, sourceModule: "build", ids: String(id), limit: 1 }));
+        const response = await apiClient.request(path, { method: "GET" }, { signal: controller.signal, expectedIdentity: lease.owner.identity });
+        requireCurrent();
+        const page = await parseApiResponse<IdCursorPage<Notification>>(response, await notificationListLazy(), "/notifications");
+        requireCurrent();
+        const row = page.data.length === 1 ? page.data[0] : undefined;
+        const notification = row?.id === id && row.sourceModule === "build" && row.orgId === lease.owner.identity.orgId
+          && (row.userId === null || row.userId === lease.owner.identity.userId) ? row : null;
+        return { ownerStamp: lease.ownerStamp, notification, isMissing: notification === null };
+      } catch (error: unknown) {
+        requireCurrent();
+        if (isApiError(error) && (error.status === 403 || error.status === 404))
+          return { ownerStamp: lease.ownerStamp, notification: null, isMissing: true };
+        throw { ownerStamp: lease.ownerStamp, error };
+      } finally {
+        signal.removeEventListener("abort", abort);
+        lease.owner.signal.removeEventListener("abort", abort);
+      }
+    },
+    enabled: active, staleTime: 0, retry: false, refetchOnMount: "always", refetchOnWindowFocus: true,
+    refetchOnReconnect: true, refetchInterval: NOTIFICATION_FALLBACK_INTERVAL_MS, ...INLINE_READ_ERROR,
+  });
+  const receipt = active && query.data?.ownerStamp === lease.ownerStamp ? query.data : null;
+  const error = active && query.error?.ownerStamp === lease.ownerStamp ? query.error.error : null;
+  function retry() { if (active) void query.refetch(); }
+  return { notification: error ? null : receipt?.notification ?? null, error,
+    isMissing: !error && !!receipt?.isMissing, isPending: id !== null && (!active || (!receipt && !error)), retry };
 }
 
 const notificationListLazy = lazyContract(() =>

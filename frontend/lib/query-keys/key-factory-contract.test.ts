@@ -7,6 +7,7 @@ import ts from "typescript";
 import { partialMatchKey } from "@tanstack/react-query";
 import type { QueryKey } from "@tanstack/react-query";
 import { queryKeys } from "../query-keys";
+import { platformCoreQueryKeys } from "./platform-core";
 
 const FE_ROOT = join(__dirname, "..", "..");
 const KEY_DIR = __dirname;
@@ -91,6 +92,21 @@ const factories = parseFactories();
 describe("query key factories parse", () => {
   it("finds the registry's factories in lib/query-keys/*.ts", () => {
     expect(factories.size).toBeGreaterThan(200);
+  });
+});
+
+describe("selected notification query keys", () => {
+  it("keeps owner receipts distinct from normal lists under the existing invalidation prefix", () => {
+    const selected = platformCoreQueryKeys.notifications.selected(42, "ALL");
+    const ordinary = platformCoreQueryKeys.notifications.list({ ids: [42], section: "ALL", sourceModule: "build", limit: 1 });
+    expect(partialMatchKey(selected, platformCoreQueryKeys.notifications.lists())).toBe(true);
+    expect(selected).not.toEqual(ordinary);
+    expect(selected).not.toEqual(platformCoreQueryKeys.notifications.selected(43, "ALL"));
+    expect(selected).not.toEqual(platformCoreQueryKeys.notifications.selected(42, "ARCHIVED"));
+    expect(selected).not.toEqual(platformCoreQueryKeys.notifications.selected(42, "SNOOZED"));
+    expect(selected).not.toEqual(platformCoreQueryKeys.notifications.selected(null, "ALL"));
+    expect(JSON.stringify(selected)).not.toMatch(/orgId|userId|sessionId|ownerStamp/);
+    expect(selected).not.toContain(undefined);
   });
 });
 

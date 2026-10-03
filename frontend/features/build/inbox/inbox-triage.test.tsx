@@ -9,6 +9,7 @@ import type { Notification } from "@/types/notifications";
 import { Toaster } from "sonner";
 import { ApiError } from "@/lib/api-envelope";
 import { apiClient } from "@/lib/api-client";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { InboxPage } from "./inbox-page";
 
 jest.mock("next-auth/react", () => ({ useSession: jest.fn() }));
@@ -111,11 +112,15 @@ describe("Build Inbox triage workflow", () => {
     expect(replace).not.toHaveBeenCalled();
   });
   it("redacts a selected row when its fresh authorized ID read is empty", async () => {
-    const user = userEvent.setup(); setup();
+    const user = userEvent.setup(); const { client } = setup();
     await screen.findByRole("button", { name: /Notification 42/ }, { timeout: 5000 });
+    client.setQueryData(platformCoreQueryKeys.notifications.selected(42, "ALL"), {
+      notification: { ...row, title: "Stale selected private title" }, isMissing: false, ownerStamp: "stale-lease",
+    });
     permitted = false;
     await user.click(screen.getByRole("button", { name: /Notification 42/ }));
     await waitFor(() => expect(screen.queryByTestId("preview")).toBeNull());
+    expect(screen.queryByText("Stale selected private title")).toBeNull();
     expect(jest.mocked(apiClient.request).mock.calls.some((call) => new URL(call[0], "http://api.test").searchParams.get("ids") === "42")).toBe(true);
   });
 
