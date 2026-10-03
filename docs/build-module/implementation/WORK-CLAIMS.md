@@ -34,6 +34,13 @@ Migration gate handoff `BLD-MIGRATION-LOCAL-TIMEOUT-12` under BLD-030/035: `modu
 
 ## Active claims
 
+### BLD-BUILD-NOTIFICATION-MODULE-ACCESS-22
+
+- Requirements: BLD-004, BLD-009, BLD-024, BLD-027, BLD-035. Owner: `client_activation_design`; independent reviewer: coordinator. Exact existing paths: `backend/src/modules/build/core/notifications/build-notification-context.service.ts`, `build-notification-context.spec.ts`, `build-notification-context-tenant-isolation.spec.ts`.
+- Evidence: canonical recipient resolution checks membership and object scope, but never Build module availability. Owner scope shortcuts can therefore retain notification record context/materialization after Build is disabled. The global notification surface does not traverse a Build route module guard.
+- Existing owner assessment: the private recipient method already gates ticket, release and approval context, so add the canonical `AccessService.moduleAvailabilityFor` check there. No helper, module catalog, schema, permission, new source file, singleton-per-record loop or fixture-only substitute. Preserve request principal/PAT ceilings and existing membership behavior.
+- Test first: org-disabled, plan-locked and user-denied module states suppress ticket context and release/approval visibility before object reads, including Org Owner; enabled path works; inactive/foreign principal fails as before. Adapt only the two existing test fixtures. Exact-path lint/diff and focused notification/context tests, then freeze. Root owns integrated TypeScript, runner, DB/browser and commits. Existing membership-cache freshness, historical notification list/count filtering and queued provider revalidation remain open; this is a module-entry correction only.
+
 ### BLD-NOTIFICATION-EXPLICIT-REPLAY-21
 
 Claim extension: the same owner also owns existing `backend/src/modules/notifications/notification-dedupe-window.spec.ts`. Reference inventory found that `buildNotifOutboxDedupeKey` has no production consumer after the new canonical intent encoder; its only remaining six references are in this test, including a historical comment. Remove the superseded export and obsolete associated comment from the already-owned key module, and adapt this exact test to the new encoder while preserving window/uniqueness/stability controls. Do not retain a test-only compatibility wrapper. No file is deleted. Root records the prior file hash and replacement symbol in the cleanup manifest after review.
