@@ -44,6 +44,12 @@ Migration gate handoff `BLD-MIGRATION-LOCAL-TIMEOUT-12` under BLD-030/035: `modu
 
 ## Active claims
 
+### BT-801e948e8a67 — shared notification target safety 32
+
+- D/ownership: after frontend30 freezes, `module_grants_resume` owns only `frontend/lib/build/normalize-build-deep-link.ts` and its existing assertions in `frontend/features/build/inbox/parse-inbox-ticket-link.test.ts`. These are disjoint from backend31, frozen frontend30 and coordinator artifacts. No new helper/test file is justified: the shared normalizer serves Build Inbox, bell, global Inbox and toast callers, and the existing test already owns its compatibility behavior. Independent review is by `scoped_activation_dispatch` or coordinator after freeze.
+- I/acceptance: preserve legacy `/projects` normalization, canonical module paths, query strings and current HTTP(S) absolute-link to internal-path behavior. Every result must be a safe app-relative path on the current origin; reject opaque/non-HTTP schemes, malformed URLs, raw control characters/backslashes and any normalized protocol-relative output. Invalid targets resolve to existing universal `/inbox`; never return untrusted raw input or add a toast-only sanitizer. Keep current fragment behavior and the string return contract to avoid duplicate caller adaptations.
+- T: first prove meaningful unsafe-target failures (including nested opaque scheme and HTTP URL whose pathname begins `//`) and existing valid paths. Run the exact parser/normalizer test plus affected Build/global Inbox and stream focused suites; exact two-file lint/diff and root scoped/production TypeScript. No new code comments, route, permission, query key, schema or caller edits. R/B/L remain open until safe click/refresh/back/mobile behavior is verified in the matching browser; source tests alone do not close the task. Freeze hashes and report compatibility limits.
+
 ### BT-801e948e8a67 — canonical notification triage reads 31
 
 - D/ownership: `client_activation_design` exclusively owns the eight backend paths below after this claim is committed. Backend29 is frozen at `efcb68681` and releases these overlapping read/DTO paths; frontend30 and coordinator artifacts remain excluded. `scoped_activation_dispatch` independently reviews; root alone owns generated artifacts, runtime, browser and ledger. Personal Resolve means notification archive, not ticket closure or an approval decision.
