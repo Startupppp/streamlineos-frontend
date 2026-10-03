@@ -41,6 +41,12 @@ This file is the coordination ledger for active and completed implementation pac
 
 ## Completed or superseded claims
 
+### My Work navigation handoff
+
+| Package | Slice | Additional owner paths | Boundary |
+|---|---|---|---|
+| `ARCH-16-CAPABILITY-SETTINGS` | BLD-MY-WORK-DRAFTS-01 | After its read-only inventory, `migration_repair` owns `frontend/lib/build/nav/build-stable-destinations.ts`, `build-nav-model.test.ts`, the My Work page and focused tests/harness, the Inbox page and URL-state tests, `frontend/app/(authenticated)/build/inbox/page.tsx`, `frontend/next.config.ts` and its redirect tests, Build agent-pulse and focused tests, and `frontend/features/build/ticket-details/build-ticket-detail-url.ts` with its focused tests. Mobile navigation fixture/test updates are limited to this alias consolidation. | Rename Assigned to My Work; expose Drafts as a My Work section using the existing draft panel and no fabricated total badge. Preserve legacy Drafts/Inbox links through an explicit redirect and safe query preservation. Use canonical ticket URLs for mouse and keyboard opening, with an allowlisted My Work return context. Separate hook-bearing work content from the section switcher. Existing record authorization remains unchanged. Intercepted panes, draft pagination/newest-first ordering, and full browser acceptance remain separate open work. Independent review precedes commit. |
+
 | Package | Requirement IDs | Agent/task | Final revision | Outcome | Evidence/handoff | Compatibility or follow-up |
 |---|---|---|---|---|---|---|
 | _none_ | — | — | — | — | — | — |
