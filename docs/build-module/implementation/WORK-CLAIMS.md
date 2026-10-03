@@ -84,6 +84,10 @@ This file is the coordination ledger for active and completed implementation pac
 
 The coordinator extends `BLD-TICKET-DRAFT-RESUME-05 frontend` ownership to one adjacent private source file, `frontend/hooks/api/build/comment-drafts-read.ts`, after the shared hook exceeded its existing 300-line ratchet. This file owns the trusted draft identity and bounded by-ticket reader; the existing mutation hook reuses the same identity seam. Preserve a single authority for identity validation, abort/expected-identity fencing and contract parsing. No second transport, authority body fields, generated edits, code comments, or duplicated mutation lifecycle. Focused tests and independent review cover the extracted seam.
 
+### Draft read route-precedence repair
+
+The real canonical draft GET returned 400 with `projectId` validation although its URL contained a valid ticket ID. `BLD-TICKET-DRAFT-ROUTE-06` reserves `backend/src/modules/build/build.module.ts`, its existing `build-route-order.spec.ts`, and new adjacent `build-comment-draft-route-precedence.spec.ts` to `migration_repair`. Register the literal comment-drafts namespace before the overlapping generic project-ticket route, retaining ProjectsByIdModule last and all existing module exports, URLs and security guards. Add a meaningful DB-free HTTP routing regression using actual route/module metadata and a reversed-order negative; ordinary numeric project-ticket reads must still dispatch to their handler. No generic routing framework, URL migration, comments, schema, permission or API client changes. Root and independent source review precede commit; root repeats the real guarded AppModule request after restart. This repair does not close the full role/tenant/browser requirement.
+
 ## Completed source slices
 
 | Package | Requirement IDs | Agent/task | Final revision | Outcome | Evidence/handoff | Compatibility or follow-up |
