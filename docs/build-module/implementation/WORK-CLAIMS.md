@@ -8,6 +8,8 @@ Current user priority: compare implementation with the intended scope and keep c
 
 Root exclusively owns the Build Inbox filter, URL-state, list and adjacent tests; a new local category definition; `frontend/hooks/api/notifications-inbox.ts` and a new scoped mark-all test. The notification backend owner is `scoped_activation_dispatch`; exact paths are recorded in its handoff before edits. Root owns generated contracts, browser checks and documentation. Portal binding and Email receipt owners retain their separate claims below. No comments, permission changes, migration execution, or frontend API reconfiguration are part of this correction.
 
+Backend exclusive paths for `scoped_activation_dispatch`: `backend/src/modules/notifications/dto/notification.schemas.ts`, `notifications.controller.ts`, `notifications.service.ts`, `notifications-lifecycle.service.ts`, new `notifications-mark-all-source-module.spec.ts` and optional adjacent fixture. Scope is a strict optional `sourceModule` query. Scoped reads must not advance the shared recipient watermark, which would clear other modules. Use the existing tenant transaction and a set-based recipient/module update, then canonical namespace invalidation. Unscoped global watermark behavior remains compatible.
+
 Next: regressions must fail before source changes; enforce Build categories and scope the server mark-all query; preserve global behavior and cache rollback; independently review; run focused checks and browser verification. Record browser/deployed-backend limitations separately from local source evidence. Completion counters do not change from source changes alone. Before compaction, replace this checkpoint with current revisions, verified results and next steps.
 
 ## Active claims
