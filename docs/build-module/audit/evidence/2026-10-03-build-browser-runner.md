@@ -181,6 +181,32 @@ Contract generation reported 4,105 operations, 4,090 applied Zod contracts and n
 
 The coordinator verified process 15616's exact runner command and sole loopback listener, stopped that process, and launched the reviewed runner. Its replacement is process 5280, listening only on `127.0.0.1:1001`, with synthetic writes, local mail capture and disabled providers/workers. The tool waiting for the hidden launcher timed out and reset its persistent kernel after the server had started. A separate process/listener/log inspection confirmed the replacement was live; it was not restarted a second time. The reset lost the in-memory synthetic login. No PAT or new Intake record was created in this attempt, and no authenticated runtime result is claimed. Fresh synthetic authentication and browser approval remain pending; application guards were not bypassed.
 
+### Real assignment authority verification after fresh authentication
+
+The user explicitly authorized repeating synthetic authentication through the captured-mail API after the tool reset. The real OTP request, OTP verification, magic-link verification and issued-session exchange each returned 200 for the existing reserved Flow02 owner. No credential was logged or written into evidence. The replacement runner 5280 remained in place.
+
+The [sanitized assignment artifact](2026-10-03-module-assignment-runtime.json) records ten real API checks against backend `8d5e583ee` and the surrounding application-role reads. Two new synthetic custom Build groups were created: 2091 with no grants and 2092 with `build:tickets:view/all`. Four genuine personal tokens had 15-minute lifetimes and distinct Build-only scopes. Their successful group reads contained both exact Flow02 groups, establishing the selected organization for these requests rather than assuming the human session's organization also selected the PAT organization.
+
+| Actual token or command | Observed result |
+|---|---|
+| Ticket-view-only PAT lists module groups | 403. |
+| Access-view, access-manage, and access-manage plus ticket-view PATs list groups | All 200, containing both exact synthetic groups. |
+| Ticket-view-only or access-view-only PAT adds the owner to the empty group | Both 403; a subsequent READ ONLY query found zero assignments in both new groups. |
+| Access-manage-only PAT assigns the group containing a ticket-view grant | 403 because the token lacks that grant. |
+| Access-manage-only PAT assigns the empty group | 201. |
+| Access-manage plus ticket-view PAT assigns the matching granted group | 201. |
+| Human organization owner assigns Module Owner through generic group add | 403; ownership transfer remains the required path. |
+
+An independent agent verified all four token IDs were revoked and each group had exactly one live owner assignment, with the expected zero/one permission grants. The coordinator then removed only those assignments/groups through the application. All four DELETE-token responses were 204 and all four subsequent PAT reads were 401. Group-member and group deletion returned 200. A second independent READ ONLY application-role observation confirmed the four revoked tokens and absence of groups 2091/2092. Each observer checked exact synthetic organization/owner identity, INTERNAL audience, non-superuser/non-BYPASSRLS and repeatable-read/read-only mode.
+
+These observations prove this synthetic owner's PAT permission ceilings, generic ownership rejection and the named persistence/cleanup results. They do not prove nonowner/module-admin, mixed-module, tenant, data-scope, expiry-renewal, concurrent-change or browser matrices. PAT authentication may update last-used telemetry even on a denied command. Removing a group assignment does not undo the canonical writer's enabled Build override, so no complete restoration of all initial database state is claimed. No production record or live ticket comment was modified.
+
+### Generated numeric constraints and runtime compatibility
+
+Outer revision `f5a57e8ec` preserves published integer/number minimum, maximum and exclusive bounds in generated Zod. Independent review found and helped repair nullable-composition and nested reference edge cases. All 93 executed-Zod self-tests passed, as did the six vendor self-tests, exact script lint, generated freshness, vendor parity, generated-file TypeScript and whitespace checks. Regeneration covers 310 frontend operations and 388 schemas. Numeric bounds affect 297 schema declarations, including 229 responses and 68 request bodies; this is not an Intake-only frontend change. Layout changes in the generated artifact are checked semantically by the existing freshness gate.
+
+The saved real Intake create, update and list payloads all parse through the regenerated frontend schemas. The same generated request schema accepts ticket 359 and rejects zero, fractional and int32-overflow IDs: seven scoped checks passed. These observations establish this response subset only. Other changed response families still require their normal runtime compatibility checks. Backend `superRefine` rules absent from OpenAPI, including the conditional requirement to provide a duplicate target, remain server-enforced and are not claimed to be reconstructed by the generator.
+
 ## Delivery checklist
 
 ### Tracking scope reconciliation
