@@ -45,6 +45,10 @@ jest.mock("@/components/command-palette/hooks/use-global-search", () => ({
   useGlobalSearch: jest.fn(),
 }));
 
+jest.mock("@/components/layout/command-palette-hrms-commands", () => ({
+  useHrmsCommands: () => [],
+}));
+
 jest.mock("@/components/command-palette", () => ({
   useCommandPalette: () => ({
     paletteOpen: true,

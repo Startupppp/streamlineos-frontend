@@ -8,6 +8,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useT } from "@/lib/i18n/i18n";
 
 const PRIMARY_BUTTON_CLASS = "min-h-11 w-full gap-1.5 font-semibold";
 
@@ -40,6 +41,7 @@ export function TimerCardActions({
   onCheckOut,
   onBreakToggle,
 }: TimerCardActionsProps) {
+  const t = useT();
   return (
     <TooltipProvider>
       <div className="flex flex-col gap-2">
@@ -53,7 +55,7 @@ export function TimerCardActions({
                 className={PRIMARY_BUTTON_CLASS}
               >
                 <LogIn className="h-4 w-4 text-current" />
-                {isInCooldown ? `Wait ${cooldownLabel}` : "Clock in"}
+                {isInCooldown ? t("attendance.wait", { time: cooldownLabel }) : t("attendance.clockIn")}
               </LoadingButton>
             </TooltipTrigger>
             {isBlockedDay ? <TooltipContent>{blockedReason}</TooltipContent> : null}
@@ -69,13 +71,13 @@ export function TimerCardActions({
               isPending={isCheckingIn}
               className="min-h-11 w-full"
             >
-              Clock in anyway
+              {t("attendance.clockInAnyway")}
             </LoadingButton>
             <a
               href="/hr/shifts"
               className="text-center text-xs text-primary underline-offset-2 hover:underline"
             >
-              Assign a shift for today
+              {t("attendance.assignShift")}
             </a>
           </div>
         ) : null}
@@ -89,7 +91,7 @@ export function TimerCardActions({
               className={`${PRIMARY_BUTTON_CLASS} bg-status-danger-fill text-white hover:bg-status-danger-fill-hover`}
             >
               <LogOut className="h-4 w-4 text-current" />
-              Clock out
+              {t("attendance.clockOut")}
             </LoadingButton>
             <LoadingButton
               variant="outline"
@@ -99,7 +101,7 @@ export function TimerCardActions({
               className="min-h-11 w-full gap-1.5 border-status-warning-rule text-status-warning-ink hover:bg-status-warning-surface hover:text-status-warning-ink"
             >
               <Pause className="h-4 w-4 text-current" />
-              Take break
+              {t("attendance.takeBreak")}
             </LoadingButton>
           </>
         ) : null}
@@ -113,7 +115,7 @@ export function TimerCardActions({
               className={`${PRIMARY_BUTTON_CLASS} bg-status-warning-fill text-white hover:bg-status-warning-fill-hover`}
             >
               <Play className="h-4 w-4 text-current" />
-              Resume work
+              {t("attendance.resumeWork")}
             </LoadingButton>
             <LoadingButton
               variant="outline"
@@ -123,7 +125,7 @@ export function TimerCardActions({
               className="min-h-11 w-full gap-1.5"
             >
               <LogOut className="h-4 w-4 text-current" />
-              Clock out
+              {t("attendance.clockOut")}
             </LoadingButton>
           </>
         ) : null}

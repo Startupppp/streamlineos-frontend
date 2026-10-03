@@ -10,6 +10,7 @@ import { useHrAttendanceStatus, useHrCheckIn, useHrCheckOut } from "@/hooks/api/
 import { useHrLeaveContext } from "@/hooks/api/hr/leaves";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/i18n";
 
 const MAX_BALANCES = 3;
 
@@ -20,13 +21,14 @@ function punchTime(value: Date | string | null | undefined): string | null {
 }
 
 function LeaveBalances() {
+  const t = useT();
   const { data, isLoading, isError } = useHrLeaveContext();
   if (isLoading) return <Skeleton className="h-6 w-40" />;
-  if (isError) return <span className="text-dense text-muted-foreground">Leave balance unavailable.</span>;
+  if (isError) return <span className="text-dense text-muted-foreground">{t("home.leaveBalanceUnavailable")}</span>;
 
   const balances = (data?.balances ?? []).filter((row) => row.typeName);
   if (balances.length === 0)
-    return <span className="text-dense text-muted-foreground">No leave balance configured yet.</span>;
+    return <span className="text-dense text-muted-foreground">{t("home.noLeaveBalance")}</span>;
 
   const neutral = statusToneClasses("neutral");
   return (
@@ -49,6 +51,7 @@ function LeaveBalances() {
 }
 
 export function EssClockRow() {
+  const t = useT();
   const [punchFailed, setPunchFailed] = useState(false);
   const { data, isLoading, isError } = useHrAttendanceStatus();
 
@@ -76,40 +79,40 @@ export function EssClockRow() {
 
   return (
     <section
-      aria-label="Today"
+      aria-label={t("home.today")}
       className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4"
     >
       <div className="flex min-w-0 flex-col gap-2">
         <p className="text-dense text-muted-foreground">
-          Attendance:{" "}
+          {t("home.attendanceLabel")}{" "}
           {isLoading ? (
-            <span className="text-foreground">Checking…</span>
+            <span className="text-foreground">{t("home.checking")}</span>
           ) : isError || !data ? (
-            <span className="text-foreground">Not available</span>
+            <span className="text-foreground">{t("home.notAvailable")}</span>
           ) : clockedIn ? (
-            <span className="text-foreground">{since ? `Clocked in since ${since}` : "Clocked in"}</span>
+            <span className="text-foreground">{since ? t("home.clockedInSince", { time: since }) : t("home.clockedIn")}</span>
           ) : (
-            <span className="text-foreground">Not clocked in</span>
+            <span className="text-foreground">{t("home.notClockedIn")}</span>
           )}
         </p>
         <LeaveBalances />
         {data && !clockedIn ? (
-          <p className="text-micro text-muted-foreground">Your location is recorded when you clock in.</p>
+          <p className="text-micro text-muted-foreground">{t("attendance.locationDisclosure")}</p>
         ) : null}
         {punchFailed ? (
           <Link href="/me/attendance" className="text-dense font-medium text-primary">
-            Punch did not go through — request a regularisation
+            {t("home.punchFailed")}
           </Link>
         ) : null}
       </div>
 
       {isError || !data ? null : clockedIn ? (
         <Button className="min-h-11 shrink-0 sm:min-h-10" variant="outline" onClick={handleClockOut} disabled={pending}>
-          Clock out
+          {t("attendance.clockOut")}
         </Button>
       ) : (
         <Button className="min-h-11 shrink-0 sm:min-h-10" onClick={handleClockIn} disabled={pending || isLoading}>
-          Clock in
+          {t("attendance.clockIn")}
         </Button>
       )}
     </section>

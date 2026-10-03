@@ -14,6 +14,7 @@ import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { TrendingUp, Clock } from "lucide-react";
 
 import { useMotionVariants } from "@/lib/motion-variants";
+import { useT } from "@/lib/i18n/i18n";
 import type { WfhRequest } from "./leaves-shared";
 import { WfhRequestItem } from "./leaves-shared";
 
@@ -26,19 +27,20 @@ const WfhStatsStrip = memo(function WfhStatsStrip({
   pending: number;
   currentMonth: string;
 }) {
+  const t = useT();
   return (
     <StatCardGrid cols={2} aria-label="WFH statistics">
       <StatCard
-        label="Monthly WFH"
+        label={t("timeOff.monthlyWfh")}
         value={thisMonth}
         hint={currentMonth}
         icon={TrendingUp}
         tone="emerald"
       />
       <StatCard
-        label="Pending"
+        label={t("common.pending")}
         value={pending}
-        hint="Awaiting approval"
+        hint={t("common.awaitingApproval")}
         icon={Clock}
         tone="amber"
       />
@@ -57,6 +59,7 @@ export function WfhTabContent({
   statusFilter = "ALL",
   onRequestWfh,
 }: WfhTabContentProps) {
+  const t = useT();
   const { staggerContainer, fadeIn } = useMotionVariants();
   const { data: myWfhRequests, isLoading: wfhLoading, isError: wfhError, error: wfhErrorDetail, refetch: wfhRefetch } = useHrWfhRequests();
   // /me/time-off/wfh needs self:attendance: a caller without it must be told
@@ -142,13 +145,13 @@ export function WfhTabContent({
             illustrationPreset="calendar"
             title={
               statusFilter === "ALL"
-                ? "No WFH requests yet"
+                ? t("timeOff.noWfhTitle")
                 : `No ${statusFilter.toLowerCase()} requests`
             }
-            description="Submit a work-from-home request to see it here."
+            description={t("timeOff.noWfhDescription")}
             action={
               onRequestWfh
-                ? { label: "Request WFH", onClick: onRequestWfh }
+                ? { label: t("timeOff.requestWfh"), onClick: onRequestWfh }
                 : undefined
             }
             className={PAGE_BODY_EMPTY_CLASS}

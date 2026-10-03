@@ -20,12 +20,14 @@ import { DailyHistoryTable } from "@/features/hr/attendance/daily-history-table"
 import { AttendanceRegularizationDialog } from "@/features/hr/attendance/attendance-regularization-dialog";
 import { AttendanceEmailDialog } from "@/features/hr/attendance/attendance-email-dialog";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/i18n";
 
 const TAB_PANEL_CLASS = `${TABS_CONTENT_PAGE_BODY_CLASS} mt-0 h-full min-h-0 w-full flex-1`;
 const MY_ATTENDANCE_TABS = ["today", "history"] as const;
 const WFH_REQUEST_HREF = "/me/time-off?tab=wfh&wfh=1";
 
 export function MyAttendancePage() {
+  const t = useT();
   const router = useRouter();
   const { activeTab, onTabChange } = useUrlTab(MY_ATTENDANCE_TABS, "today");
   const [correctionOpen, setCorrectionOpen] = useState(false);
@@ -45,8 +47,8 @@ export function MyAttendancePage() {
         className="flex min-h-0 flex-1 flex-col gap-0"
       >
         <PageWrapper
-          title="Attendance"
-          subtitle="Track your work hours and manage check-ins. Days follow IST."
+          title={t("attendance.title")}
+          subtitle={t("attendance.subtitle")}
           noInternalScroll
           contentClassName="flex min-h-0 flex-1 flex-col"
           filtersClassName="justify-between"
@@ -54,10 +56,10 @@ export function MyAttendancePage() {
             <>
               <TabsList className="w-full shrink-0 md:w-auto">
                 <TabsTrigger value="today" className="gap-1.5 truncate">
-                  Today
+                  {t("attendance.tabToday")}
                 </TabsTrigger>
                 <TabsTrigger value="history" className="gap-1.5 truncate">
-                  History
+                  {t("attendance.tabHistory")}
                 </TabsTrigger>
               </TabsList>
 
@@ -69,9 +71,9 @@ export function MyAttendancePage() {
                   size="sm"
                   className="h-8 gap-1.5"
                 >
-                  <Link href="/calendar" aria-label="Open Calendar">
+                  <Link href="/calendar" aria-label={t("attendance.openCalendar")}>
                     <CalendarDays className="h-3.5 w-3.5" />
-                    <span className="hidden sm:inline">Open Calendar</span>
+                    <span className="hidden sm:inline">{t("attendance.openCalendar")}</span>
                   </Link>
                 </Button>
 
@@ -84,7 +86,7 @@ export function MyAttendancePage() {
                     onClick={handleOpenCorrection}
                   >
                     <FilePen className="h-3.5 w-3.5" />
-                    Request Correction
+                    {t("attendance.requestCorrection")}
                   </Button>
                 ) : null}
 
@@ -108,6 +110,9 @@ export function MyAttendancePage() {
                     onRequestWfh={handleRequestWfh}
                     onRequestRegularization={handleOpenCorrection}
                   />
+                  <p className="text-center text-micro text-muted-foreground">
+                    {t("attendance.locationDisclosure")}
+                  </p>
                 </div>
               </div>
             </TabsContent>

@@ -61,6 +61,7 @@ import { cn } from "@/lib/utils";
 import { useModuleEnabled } from "@/hooks/api/access";
 import type { EssSectionNavItem } from "@/features/payroll/ess/components/ess-section-nav";
 import { PayNotSetUpNotice } from "@/features/payroll/me/pay-not-set-up-notice";
+import { useT } from "@/lib/i18n/i18n";
 
 const TAB_PANEL_CLASS = cn(
   TABS_CONTENT_PAGE_BODY_CLASS,
@@ -77,6 +78,7 @@ function getYear(month: string): string {
 }
 
 export function MyPayrollPageContent() {
+  const t = useT();
   const payrollModuleEnabled = useModuleEnabled("payroll");
   const { data: fnf, isError: fnfFailed } = useEssFnf();
   const { data: payslips } = useEssPayslips();
@@ -125,27 +127,27 @@ export function MyPayrollPageContent() {
 
   const sections = useMemo<EssSectionNavItem[]>(() => {
     const items: EssSectionNavItem[] = [
-      { id: "payslips", label: "Payslips" },
-      { id: "total-rewards", label: "Total Rewards" },
-      { id: "disciplinary", label: "Notices" },
+      { id: "payslips", label: t("pay.tabPayslips") },
+      { id: "total-rewards", label: t("pay.tabTotalRewards") },
+      { id: "disciplinary", label: t("pay.tabNotices") },
     ];
     if (toggles?.essShowSalaryStructure)
-      items.push({ id: "salary", label: "Salary Structure" });
+      items.push({ id: "salary", label: t("pay.tabSalary") });
     if (toggles?.essAllowReimbursements)
-      items.push({ id: "reimbursements", label: "Reimbursements" });
+      items.push({ id: "reimbursements", label: t("pay.tabReimbursements") });
     if (toggles?.essAllowTaxDeclarations)
-      items.push({ id: "tax", label: "Tax Declaration" });
+      items.push({ id: "tax", label: t("pay.tabTax") });
     if (
       toggles?.essAllowLoanRequests ||
       parseFloat(overview?.activeLoanBalance ?? "0") > 0
     ) {
-      items.push({ id: "loans", label: "Loans" });
+      items.push({ id: "loans", label: t("pay.tabLoans") });
     }
     if (toggles?.essAllowBankUpdate)
-      items.push({ id: "bank", label: "Bank Details" });
-    if (fnf || fnfFailed) items.push({ id: "fnf", label: "Final settlement" });
+      items.push({ id: "bank", label: t("pay.tabBank") });
+    if (fnf || fnfFailed) items.push({ id: "fnf", label: t("pay.tabFnf") });
     return items;
-  }, [toggles, overview?.activeLoanBalance, fnf, fnfFailed]);
+  }, [t, toggles, overview?.activeLoanBalance, fnf, fnfFailed]);
 
   const showLoans =
     toggles?.essAllowLoanRequests ||
@@ -208,8 +210,8 @@ export function MyPayrollPageContent() {
       className="flex min-h-0 flex-1 flex-col gap-0"
     >
       <PageWrapper
-        title="Pay"
-        subtitle={`${formatMonth(currentYearMonth())} · Your payroll data only`}
+        title={t("pay.title")}
+        subtitle={t("pay.subtitle", { month: formatMonth(currentYearMonth()) })}
         noInternalScroll
         contentClassName="flex min-h-0 flex-1 flex-col max-md:pb-[calc(5.5rem+env(safe-area-inset-bottom))]"
         state={pageState}
@@ -222,7 +224,7 @@ export function MyPayrollPageContent() {
             ) : (
             <StatCardGrid cols={activeLoanBalance > 0 ? 4 : 3} stackOnMobile>
               <StatCard
-                label="Net Pay Last Month"
+                label={t("pay.netLastMonth")}
                 value={
                   overviewLoading
                     ? "—"
@@ -238,7 +240,7 @@ export function MyPayrollPageContent() {
                 }
               />
               <StatCard
-                label="YTD Earnings"
+                label={t("pay.ytdEarnings")}
                 value={
                   overviewLoading
                     ? "—"
@@ -247,11 +249,11 @@ export function MyPayrollPageContent() {
                 icon={TrendingUp}
                 tone="emerald"
                 isLoading={overviewLoading}
-                hint="Financial year to date"
+                hint={t("pay.fyToDate")}
               />
               {activeLoanBalance > 0 && (
                 <StatCard
-                  label="Active Loan Balance"
+                  label={t("pay.activeLoan")}
                   value={
                     overviewLoading
                       ? "—"
@@ -263,7 +265,7 @@ export function MyPayrollPageContent() {
                 />
               )}
               <StatCard
-                label="Pending Claims"
+                label={t("pay.pendingClaims")}
                 value={
                   overviewLoading
                     ? "—"
@@ -272,7 +274,7 @@ export function MyPayrollPageContent() {
                 icon={Receipt}
                 tone="default"
                 isLoading={overviewLoading}
-                hint="Awaiting approval"
+                hint={t("common.awaitingApproval")}
               />
             </StatCardGrid>
             )}
@@ -302,10 +304,10 @@ export function MyPayrollPageContent() {
                     <SelectTrigger
                       className={`${FILTER_SELECT_TRIGGER} w-28`}
                     >
-                      <SelectValue placeholder="All years" />
+                      <SelectValue placeholder={t("pay.allYears")} />
                     </SelectTrigger>
                     <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                      <SelectItem value="all">All years</SelectItem>
+                      <SelectItem value="all">{t("pay.allYears")}</SelectItem>
                       {years.map((y) => (
                         <SelectItem key={y} value={y}>
                           {y}

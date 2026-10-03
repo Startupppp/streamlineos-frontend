@@ -6,6 +6,7 @@ import { CalendarCheck, Clock3, BadgeCheck } from "lucide-react";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { formatDayCount } from "@/lib/format-utils";
 import type { LeaveBalance } from "./leaves-shared";
+import { useT } from "@/lib/i18n/i18n";
 
 /**
  * V-045. The no-policy copy keys on whether the org has *configured* a leave
@@ -49,23 +50,24 @@ export const LeavesSummaryStrip = React.memo(function LeavesSummaryStrip({
   pendingCount: number;
   approvedDays: number;
 }) {
+  const t = useT();
   return (
     <StatCardGrid cols={3}>
       <StatCard
-        label="Available Days"
+        label={t("timeOff.availableDays")}
         value={formatDayCount(totalAvailable)}
         hint={availableHint}
         icon={CalendarCheck}
         color="green"
       />
       <StatCard
-        label="Pending Requests"
+        label={t("timeOff.pendingRequests")}
         value={pendingCount}
         icon={Clock3}
         tone="amber"
       />
       <StatCard
-        label="Approved (YTD)"
+        label={t("timeOff.approvedYtd")}
         value={formatDayCount(approvedDays)}
         icon={BadgeCheck}
         color="blue"

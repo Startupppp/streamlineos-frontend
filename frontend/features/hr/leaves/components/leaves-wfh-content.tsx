@@ -34,6 +34,7 @@ import { LeavesNoPolicyEmptyState } from "./leaves-no-policy-empty-state";
 import { TeamAvailabilityOverlay } from "./team-availability-overlay";
 import { LeavesWfhToolbar, LeavesWfhActions } from "./leaves-wfh-toolbar";
 import { useLeavesWfhData } from "./use-leaves-wfh-data";
+import { useT } from "@/lib/i18n/i18n";
 
 const TAB_PANEL_CLASS = `${TABS_CONTENT_PAGE_BODY_CLASS} mt-0 h-full min-h-0 w-full flex-1`;
 const LEAVE_TABS = ["my-leaves", "wfh", "approvals"] as const;
@@ -43,6 +44,7 @@ interface LeavesWfhContentProps {
 }
 
 export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps) {
+  const t = useT();
   const { data: session } = useSession();
   const data = useLeavesWfhData(selfService);
   const myLeavesState = usePageState({
@@ -89,9 +91,9 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
     }
   }, [exportView]);
 
-  const title = selfService ? "Time Off" : "Leaves & Time Off";
+  const title = selfService ? t("timeOff.title") : "Leaves & Time Off";
   const subtitle = selfService
-    ? "Request leave and work from home."
+    ? t("timeOff.subtitle")
     : "Manage leave requests, work from home, and approvals.";
 
   if (data.isLoading) {
@@ -119,6 +121,7 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
         contentClassName="flex min-h-0 flex-1 flex-col"
       >
         <ErrorState
+          title={selfService ? t("timeOff.loadError") : undefined}
           description={getErrorMessage(data.errorValue)}
           error={data.errorValue}
           onRetry={data.onRetryPage}
