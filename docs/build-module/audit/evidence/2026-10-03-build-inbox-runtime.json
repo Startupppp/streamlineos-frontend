@@ -1235,6 +1235,191 @@
         "reviewer": "scoped_activation_dispatch",
         "result": "clear for bounded recorded scope; source/schema/evidence review, no additional browser or database calls"
       }
+    },
+    {
+      "kind": "id-only-stream-and-authorized-hydration",
+      "observedAt": "2026-10-03T16:57:32.816Z",
+      "classification": "Current verified",
+      "runtime": {
+        "backendCommit": "efcb686814d6816d6d2ad9b27b4d300ad474c3ca",
+        "pid": 8804,
+        "baseUrl": "http://127.0.0.1:1001"
+      },
+      "scope": "Two synthetic owner streams, current canonical hydration reads and one restricted personal token; no browser",
+      "stream": {
+        "ownerStatus": 200,
+        "otherTenantStatus": 200,
+        "notificationFrames": [
+          {
+            "type": "notification",
+            "notification": {
+              "id": 313
+            }
+          }
+        ],
+        "countFrames": [
+          {
+            "type": "count_changed"
+          }
+        ],
+        "ownerHeartbeat": true,
+        "otherTenantHeartbeat": true,
+        "otherTenantNotificationFrames": 0,
+        "consumedTokenStatus": 401,
+        "readError": null,
+        "closed": true
+      },
+      "dispatch": {
+        "method": "POST",
+        "path": "/__build-verification/notifications/dispatch-fixture",
+        "body": {
+          "projectId": 54,
+          "ticketId": 357,
+          "action": "enqueue"
+        },
+        "status": 200,
+        "response": {
+          "outboxId": 497,
+          "state": "PENDING",
+          "action": "enqueue",
+          "created": true
+        }
+      },
+      "hydration": [
+        {
+          "label": "owner-unread",
+          "path": "/notifications?section=UNREAD&ids=313&limit=1",
+          "status": 200,
+          "contract": true,
+          "ids": [
+            313
+          ]
+        },
+        {
+          "label": "cross-tenant-id",
+          "path": "/notifications?section=UNREAD&ids=313&limit=1",
+          "status": 200,
+          "contract": true,
+          "ids": []
+        },
+        {
+          "label": "duplicate-ids",
+          "path": "/notifications?ids=313,313",
+          "status": 400
+        },
+        {
+          "label": "unsafe-id",
+          "path": "/notifications?ids=9007199254740992",
+          "status": 400
+        },
+        {
+          "label": "bigint-compatible-miss",
+          "path": "/notifications?ids=2147483648",
+          "status": 200,
+          "contract": true,
+          "ids": []
+        },
+        {
+          "label": "auth-required",
+          "path": "/notifications?ids=313",
+          "status": 401
+        }
+      ],
+      "restricted": {
+        "tokenId": "45d32e0a-ddfa-447b-b4e8-d1e69c568c9f",
+        "scopes": [
+          "build:access:view"
+        ],
+        "creationStatus": 201,
+        "creationWireContract": true,
+        "path": "/notifications?section=UNREAD&ids=313&limit=1",
+        "status": 200,
+        "contract": true,
+        "ids": [],
+        "ticketPath": "/build/54/tickets/357",
+        "ticketStatus": 403,
+        "revokeStatus": 204,
+        "afterRevoke": 401
+      },
+      "databaseBefore": {
+        "notification": [
+          {
+            "id": "313",
+            "org_id": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+            "membership_id": 139,
+            "source_module": "build",
+            "event_key": "build.ticket.status_changed",
+            "entity_id": "357",
+            "is_read": false,
+            "live": true
+          }
+        ],
+        "outbox": [
+          {
+            "id": "497",
+            "state": "PROCESSED",
+            "entity_id": "357",
+            "org_id": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2"
+          }
+        ]
+      },
+      "readMutation": {
+        "path": "/notifications/source/build/read-all",
+        "status": 200,
+        "contract": true,
+        "refreshPath": "/notifications?section=UNREAD&ids=313&limit=1",
+        "refreshStatus": 200,
+        "refreshContract": true,
+        "refreshIds": []
+      },
+      "databaseAfter": {
+        "notification": [
+          {
+            "id": "306",
+            "is_read": false,
+            "source_module": "organization"
+          },
+          {
+            "id": "313",
+            "is_read": true,
+            "source_module": "build"
+          }
+        ],
+        "watermark": [
+          {
+            "last_read_notification_id": "307"
+          }
+        ],
+        "delivery": [
+          {
+            "id": "561",
+            "notification_id": "313",
+            "channel": "IN_APP",
+            "status": "DELIVERED"
+          }
+        ],
+        "token": [
+          {
+            "id": "45d32e0a-ddfa-447b-b4e8-d1e69c568c9f",
+            "revoked": true
+          }
+        ]
+      },
+      "harnessCorrections": [
+        "Initial TextDecoderStream was unavailable in the REPL sandbox; used native node:stream/web decoder without changing application source.",
+        "Ticket359 already had the exact deduped intent492; enqueue returned200 created:false, no new event. Read-only fixture inventory identified ticket357 for new intent497.",
+        "Immediate unread read before asynchronous after-commit dispatch returned empty; subsequent read and independent persisted state proved delivery."
+      ],
+      "limitations": [
+        "Not frontend30 browser/toast, mobile, deployment or full role/object-revocation proof.",
+        "Guarded dispatch creates LOW synthetic notices; live toast display requires a separate matching frontend and non-LOW domain action.",
+        "No worker crash recovery, query-cost measurement or operational fanout proof.",
+        "Synthetic intent497, notice313, delivery561 retained; temporary token revoked and both streams closed."
+      ],
+      "independentReview": {
+        "reviewer": "scoped_activation_dispatch",
+        "result": "clear for bounded source/schema/evidence consistency; no additional DB/browser calls, no broad task closure"
+      }
     }
   ],
   "backendSourceCommit": "1aee0d53a",
