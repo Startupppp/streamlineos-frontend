@@ -24,6 +24,16 @@ Migration gate handoff `BLD-MIGRATION-LOCAL-TIMEOUT-12` under BLD-030/035: `modu
 
 ## Active claims
 
+### BLD-INBOX-NOTIFICATION-FIXTURE-13
+
+- Requirements: BLD-009, BLD-025, BLD-029, BLD-035. Owner: `module_grants_resume`; independent reviewer: `scoped_activation_dispatch`; coordinator alone runs the runner and database/browser observations.
+- Exact owned paths: new `backend/test/helpers/build-browser-notification-fixture.ts`, new `backend/test/security/build-browser-notification-fixture.spec.ts`, existing `backend/test/helpers/run-build-browser-verification.ts`, `backend/test/helpers/build-browser-app.ts`, and `backend/test/security/build-browser-boundary.spec.ts`. The last two paths are handed off from the completed scoped notification guard slice; its previous owner has released them.
+- Existing-file assessment: production notification modules must not contain synthetic fixture policy; the existing activation helper owns setup-event dispatch. One test-only helper holds the private request/response schemas, fixed marker, command policy and runner controller; no separate pass-through service/schema wrapper is needed.
+- Excluded: production notification/portal/Email modules, migration files, frontend, generated contracts, provider and outbox execution. Dependencies: current canonical notification creation and ticket authorization, existing runner process capability and synthetic actor/organization guard.
+- Behavior: a strict fixed runner-only POST accepts reserved project/ticket identifiers, checks human owner standing, capability, tenant and object access, and creates at most one fixed LOW/IN_APP notification for that actor through the canonical service. Serialize retry lookup under the reserved ticket lock; never reset an existing read marker. No arbitrary recipient, source, title, message, external delivery or production event-fanout claim.
+- Tests: meaningful fixture negatives/positive/retry/concurrency, existing runner security suites, exact-file lint/diff, changed-file TypeScript and production TypeScript. Reviewer verifies no route is registered in the production module.
+- Required runtime evidence: real HTTP contract/status, persisted read marker, scoped read-all preserves a foreign-module notification, recipient/tenant denials, count/cache/event behavior. Browser proof remains separate. Handoff: frozen exact diff and tests, independent review, then coordinator restart; no agent may perform runtime writes or commit evidence itself.
+
 | Package | Requirement IDs | Agent/task | Branch/worktree | Base commit | Primary seam | Planned primary paths/migrations | Prerequisites | Status | Last update | Handoff |
 |---|---|---|---|---|---|---|---|---|---|---|
 | `ARCH-10-EVIDENCE-CLEANUP` | BLD-001, BLD-034, BLD-035 | execution-plan-gate agent | `codex/build-foundation-gates` shared checkout | `13238ca99` | current Build specification coverage and activation-test evidence | `scripts/check-build-execution-plan.mjs`; `backend/src/modules/organization/setup/__tests__/org-setup.service.spec.ts` test fixture only; no product code or schema migration | canonical `docs/build-module` specs committed | IN_PROGRESS | 2026-10-02T18:47Z | execution-plan gate passes; backend setup fixture repaired at `2d313b8f8`; runtime evidence remains open |
