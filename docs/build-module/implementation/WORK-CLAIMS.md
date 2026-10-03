@@ -14,6 +14,8 @@ Claim `BLD-INBOX-SCOPE-11` maps to BLD-010, BLD-025, BLD-029 and BLD-035. Root's
 
 Next: regressions must fail before source changes; enforce Build categories and scope the server mark-all query; preserve global behavior and cache rollback; independently review; run focused checks and browser verification. Record browser/deployed-backend limitations separately from local source evidence. Completion counters do not change from source changes alone. Before compaction, replace this checkpoint with current revisions, verified results and next steps.
 
+Root also owns the existing `frontend/lib/command-catalog.ts` and `frontend/hooks/api/notifications-command-catalog.test.ts` for the dedicated self-notification command entry; no new catalog is permitted. Independent reviewer: `client_activation_design`; backend reviewer: coordinator. These are caller inventory updates under BLD-INBOX-SCOPE-11.
+
 ## Active claims
 
 | Package | Requirement IDs | Agent/task | Branch/worktree | Base commit | Primary seam | Planned primary paths/migrations | Prerequisites | Status | Last update | Handoff |
