@@ -222,6 +222,54 @@ Frontend claim34 `6e200b0e3` uses field-owned optimistic operations and captured
 
 Runner claim35 `94d32b547` admits only the exact five personal PATCH actions after its existing synthetic actor/organization and target checks. Fresh two suites/192 tests, exact lint/diff, coordinator review and integrated scoped TypeScript pass. Its guard still refuses unrelated mutations; a guard403 is harness evidence, not product authorization. Existing formatting drift was shown syntax-equivalent to the prior source plus the precise allowance. New33/35 are committed but were not loaded for observation20; runtime, browser and mobile acceptance are separate. Publication remains nondurable after-commit work; complete membership/account/organization transition races, durable recovery, broader CAS/audit and operations remain open. Claim37 independently owns the actual UI and fresh selected-record read; no broad I/T/R/B/L stage or task checkbox is completed by this handoff.
 
+### Real personal triage persistence and recipient effects — 2026-10-04
+
+Current verified, bounded API/database/event evidence: [observation21](evidence/2026-10-03-build-inbox-runtime.json), reviewed runner6156 at backend `94d32b547` including lifecycle `1c673c5bd`. All four actual personal commands returned200 with canonical acknowledgement. READ ONLY inspection proves notification313's exact `created_at` remains `2026-10-03 16:53:20.348809+00`, including its submillisecond partition key. Resolve persists archive and moves it into Done; repeated Resolve preserves the archive timestamp. Keyed Restore accepts `{}` and an absent-body retry. Future Snooze persists its deadline and enters Later; archive while snoozed takes Done precedence; Restore before expiry returns Later; explicit bodyless Unsnooze clears the deadline and returns Active. Final Active/Later/Done reads match their canonical response contracts and persisted state.
+
+The same Snooze key with a different valid body returns422. After its deadline and subsequent Unsnooze, the completed keyed retry returns200 without restoring the expired deadline; the same deadline as a new keyed command returns400. Absent login returns401, a same-tenant nonrecipient and existing other-tenant target return404, an above-int32 safe missing ID returns404, and a forged authority body or new past Snooze returns400. No denial was500. The other tenant still reads its own recorded notification312 through the authorized canonical API. Final READ ONLY comparison confirms the other six observed Flow02 rows and watermark307 are unchanged; it does not assert unobserved columns or the other tenant's full database row are unchanged.
+
+Three authenticated streams admitted the owner, same-tenant Member and other-tenant owner. Six changed states produced six owner-only `count_changed` events containing only `type`; the other two streams received zero events during this bounded observation. Repeats, conflict and completed-key replay add no observed effects; all streams were closed. Target313 was already read: global1 and Build0 unread counts remain canonical and unchanged, so a numeric unread badge transition is not proven. Actual physical cache deletion, automatic expiry events, durable publication/audit, controlled concurrent revocation/rollback and the complete current-principal matrix remain Current unverified. Browser/mobile mutations and deployment/operations remain open. Independent artifact review verified prior20 observations unchanged and no credentials or unsupported full-stage claims.
+
+### Canonical optional request contracts and remaining UI review — 2026-10-04
+
+Current verified at source/test level: independent artifact review rejected candidate SHA `8c36bd46f0be015ac2e3827f0fcc320b5e10d547f73442b52ed8f555625d42fa` despite passing byte freshness. It falsely required optional retry keys and absent accepted bodies. Canonical source repair38 at backend `120545d96` carries actual handler/class idempotency optionality and synchronous Zod undefined acceptance. Required headers, strict schemas and required JSON/multipart inputs remain authoritative; bodyless metadata cannot suppress required validation. Unrepresentable/async absence probes produce an explicit unconvertible finding. Stale required/optional/inline header entries are reconciled once in the existing owner.
+
+Real DiscoveryModule/scanner RED8 and builder RED3 preceded the repair; final six suites/88 tests, exact five-path lint/diff, independent review and root scoped/production TypeScript pass. Root's scoped gate first found two unsupported Swagger extension property assertions; the author replaced only those assertions, passed30 owned tests and refroze. The reviewer reconstructed the previous hash from those exact two changes. Official generation from reviewed120545d96 now reports4107 operations,4107 exposure stamps,4092 Zod contracts and zero unconvertible findings. Canonical artifact SHA `1e8635e76e00a9c863db00de88fe655242b2e7a4b59054694b77ec29f3578153` is committed at backend `6d12d99ec` and frontend `8411d5aa0`. Backend and frontend freshness, byte vendor,6 vendor self-tests and93 Build-contract self-tests pass. Independent full semantic review accounts for35 recursive changes across26 routes plus the optional-header component:13 optional keys match actual decorators;10 duplicate mandatory headers are deduplicated while408 mandatory operations remain required; only strict default-empty bodies become optional. All12 multipart contracts and1549 other required bodies are preserved. Generated frontend TypeScript changes only the canonical hash. Prior and rejected artifacts remain preserved in ignored scratch.
+
+Exact independent artifact inventory versus preserved0da95 (source repair changes published metadata; unrelated runtime controllers are not changed):
+
+| Method | Path | Verified artifact change |
+| --- | --- | --- |
+| POST | `/build/{projectId}/updates` | Optional retry key; body unchanged |
+| POST | `/timesheets/entries` | Optional retry key; body unchanged |
+| POST | `/timesheets/entries/{entryId}/void` | Optional retry key; body unchanged |
+| POST | `/timesheets/entries/from-attendance` | Optional retry key; body unchanged |
+| POST | `/timesheets/exceptions/run-detection` | Optional retry key; body unchanged |
+| POST | `/timesheets/timer/{timerId}/convert` | Optional retry key; body unchanged |
+| POST | `/timesheets/timer/{timerId}/discard` | Optional retry key; body unchanged |
+| POST | `/timesheets/timer/{timerId}/stop` | Optional retry key; body unchanged |
+| POST | `/timesheets/timer/start` | Optional retry key; body unchanged |
+| POST | `/hr/attendance/break` | Deduplicate required retry header |
+| POST | `/hr/attendance/check-in` | Deduplicate required retry header |
+| POST | `/hr/attendance/check-out` | Deduplicate required retry header |
+| POST | `/me/attendance/break` | Deduplicate required retry header |
+| POST | `/me/attendance/check-in` | Deduplicate required retry header |
+| POST | `/me/attendance/check-out` | Deduplicate required retry header |
+| POST | `/hr/expenses/email-report` | Deduplicate required retry header |
+| POST | `/hr/expenses/export/jobs` | Deduplicate required retry header |
+| POST | `/hr/export/jobs` | Deduplicate required retry header |
+| POST | `/payroll/runs/export/jobs` | Deduplicate required retry header |
+| DELETE | `/hr/documents/{documentId}/kb-link` | Publish actual strict default-empty body as optional |
+| POST | `/inventory/packages/{packageId}/close` | Publish actual strict default-empty body as optional |
+| POST | `/inventory/shipments/{shipmentId}/ship` | Publish actual strict default-empty body as optional |
+| PATCH | `/notifications/{notificationId}/archive` | Optional key and strict empty body; archive command metadata |
+| PATCH | `/notifications/{notificationId}/unarchive` | Optional key and strict empty body; restore command metadata |
+| PATCH | `/notifications/{notificationId}/snooze` | Optional key; required snoozedUntil body preserved |
+| PATCH | `/notifications/{notificationId}/unsnooze` | Sole new authenticated universal operation; safe-int ID, optional key/strict empty body, canonical ACK/errors |
+
+
+UI37 initially passed212 focused tests but independent reviews found mobile loading/error hiding Back and inherited desktop Escape immediately reopening automatic selection. The three claimed navigation files were repaired through meaningful RED3, then22 suites/215 tests and exact lint/diff. Further standards review found new interactive static icons against FE-107 and accent-sensitive primary tab colors against the accepted neutral selected-tab behavior. Those bounded corrections are independently reviewed: neutral foreground/background tokens preserve selected tabs across accent themes; new interactive controls use installed canonical animated icons. A final Resolve-only repair passed14 focused tests, with the other19 claimed paths unchanged. Root scoped TypeScript then found two real integration errors: unsupported LoadingState compact and an options object passed to get where the API accepts an AbortSignal. Simply dropping expectedIdentity would weaken dispatch fencing; the author is adapting the existing request/response seam and real argument-shape coverage inside the same claim. Refreeze, independent delta review and scoped/production TypeScript remain pending. Matching browser/mobile and full approval detail acceptance remain open; source/test counts do not close the broad task.
+
 ## Testing Decisions
 
 For every closure record: frontend/backend/worker revisions; environment and synthetic tenants; actor/principal and exact role/grant; initial state; action; persisted DB/API result; console/network; audit/outbox/job/cache evidence; unauthorized/cross-tenant negative; responsive path. Existing focused tests support closure but cannot substitute browser/persistence/deployment evidence.

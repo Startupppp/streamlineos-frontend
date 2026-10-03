@@ -1824,6 +1824,470 @@
         "scope": "Sanitized artifact and claim accuracy; prior19 unchanged versus committed HEAD; canonical denial-code source compared. Reviewer did not repeat runtime or database actions.",
         "findings": "No credentials or false positive visibility, expiry, version-increment, cache/event fanout, browser or broad stage-closure claims."
       }
+    },
+    {
+      "name": "real-personal-triage-persistence-retry-and-recipient-event-boundary",
+      "classification": "Current verified",
+      "recordedAt": "2026-10-03T19:24:03.907Z",
+      "backendSourceCommit": "94d32b547",
+      "lifecycleCommit": "1c673c5bd",
+      "boundaryCommit": "94d32b547",
+      "runnerPid": 6156,
+      "baseUrl": "http://127.0.0.1:1001",
+      "reservedRecords": {
+        "organizationId": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+        "ownerMembershipId": 139,
+        "memberMembershipId": 141,
+        "otherOwnerMembershipId": 140,
+        "otherOrganizationId": "a3ee7aa5-3005-4c3b-a4c5-db16151d0a29",
+        "notificationId": 313,
+        "foreignSyntheticNotificationId": 312,
+        "recordedMissingNotificationId": 2147483648,
+        "linkedProjectId": 54,
+        "linkedTicketId": 357
+      },
+      "health": {
+        "health": 200,
+        "ready": 200
+      },
+      "authorization": [
+        {
+          "case": "absent-auth",
+          "status": 401,
+          "code": "UNAUTHORIZED"
+        },
+        {
+          "case": "same-tenant-wrong-recipient",
+          "status": 404,
+          "code": "NOT_FOUND"
+        },
+        {
+          "case": "existing-other-tenant-target",
+          "status": 404,
+          "code": "NOT_FOUND"
+        },
+        {
+          "case": "safe-integer-missing-target-above-int32",
+          "status": 404,
+          "code": "NOT_FOUND"
+        },
+        {
+          "case": "body-authority-field",
+          "status": 400,
+          "code": "VALIDATION_FAILED"
+        },
+        {
+          "case": "new-expired-snooze",
+          "status": 400,
+          "code": "VALIDATION_FAILED"
+        }
+      ],
+      "commands": [
+        {
+          "action": "archive without key/body",
+          "status": 200,
+          "ackContractValid": true
+        },
+        {
+          "action": "repeat archive without key/body",
+          "status": 200,
+          "originalArchiveTimestampPreserved": true
+        },
+        {
+          "action": "unarchive keyed with empty object",
+          "status": 200
+        },
+        {
+          "action": "same keyed unarchive with absent body",
+          "status": 200,
+          "interpretation": "Normalized completed-key replay, not direct keyless no-op proof"
+        },
+        {
+          "action": "future snooze keyed",
+          "status": 200,
+          "deadline": "2026-10-03T19:16:33.912Z"
+        },
+        {
+          "action": "same snooze key with different valid future body",
+          "status": 422,
+          "code": "UNPROCESSABLE_ENTITY"
+        },
+        {
+          "action": "archive while snoozed",
+          "status": 200
+        },
+        {
+          "action": "restore before snooze deadline",
+          "status": 200
+        },
+        {
+          "action": "explicit unsnooze without key/body",
+          "status": 200
+        },
+        {
+          "action": "repeat unsnooze with empty object",
+          "status": 200
+        },
+        {
+          "action": "completed keyed snooze replay after its deadline and subsequent unsnooze",
+          "status": 200,
+          "ackContractValid": true,
+          "finalStateUnchanged": true
+        },
+        {
+          "action": "same expired deadline as new keyed command",
+          "status": 400,
+          "code": "VALIDATION_FAILED"
+        }
+      ],
+      "sectionReads": {
+        "afterArchive": {
+          "status": 200,
+          "contractValid": true,
+          "doneIds": [
+            313
+          ],
+          "activeStatus": 200,
+          "activeIds": []
+        },
+        "afterSnooze": {
+          "status": 200,
+          "contractValid": true,
+          "laterIds": [
+            313
+          ]
+        },
+        "archivedWhileSnoozed": {
+          "status": 200,
+          "doneIds": [
+            313
+          ]
+        },
+        "restoredBeforeDeadline": {
+          "status": 200,
+          "laterIds": [
+            313
+          ]
+        },
+        "afterUnsnooze": [
+          {
+            "section": "ALL",
+            "status": 200,
+            "contractValid": true,
+            "ids": [
+              313
+            ]
+          },
+          {
+            "section": "SNOOZED",
+            "status": 200,
+            "contractValid": true,
+            "ids": []
+          },
+          {
+            "section": "ARCHIVED",
+            "status": 200,
+            "contractValid": true,
+            "ids": []
+          }
+        ],
+        "otherTenantPositiveControl": {
+          "status": 200,
+          "contractValid": true,
+          "ids": [
+            312
+          ]
+        }
+      },
+      "database": {
+        "readRole": "streamline_app",
+        "transaction": "READ ONLY",
+        "tenantGuard": "Flow02 original active owner139 and synthetic organization/account validated",
+        "initialObservedRows": [
+          {
+            "id": "306",
+            "membership_id": 139,
+            "source_module": "organization",
+            "created_at": "2026-10-03 06:26:22.483026+00",
+            "archived_at": null,
+            "snoozed_until": null,
+            "is_read": false,
+            "pinned": false,
+            "deleted_at": null
+          },
+          {
+            "id": "307",
+            "membership_id": 139,
+            "source_module": "build",
+            "created_at": "2026-10-03 13:14:36.124372+00",
+            "archived_at": null,
+            "snoozed_until": null,
+            "is_read": true,
+            "pinned": false,
+            "deleted_at": null
+          },
+          {
+            "id": "308",
+            "membership_id": 139,
+            "source_module": "build",
+            "created_at": "2026-10-03 13:28:13.580828+00",
+            "archived_at": null,
+            "snoozed_until": null,
+            "is_read": true,
+            "pinned": false,
+            "deleted_at": null
+          },
+          {
+            "id": "309",
+            "membership_id": 139,
+            "source_module": "build",
+            "created_at": "2026-10-03 13:43:51.078071+00",
+            "archived_at": null,
+            "snoozed_until": null,
+            "is_read": true,
+            "pinned": false,
+            "deleted_at": null
+          },
+          {
+            "id": "310",
+            "membership_id": 139,
+            "source_module": "build",
+            "created_at": "2026-10-03 14:59:30.517139+00",
+            "archived_at": null,
+            "snoozed_until": null,
+            "is_read": true,
+            "pinned": false,
+            "deleted_at": null
+          },
+          {
+            "id": "311",
+            "membership_id": 139,
+            "source_module": "build",
+            "created_at": "2026-10-03 16:05:05.469114+00",
+            "archived_at": null,
+            "snoozed_until": null,
+            "is_read": true,
+            "pinned": false,
+            "deleted_at": null
+          },
+          {
+            "id": "313",
+            "membership_id": 139,
+            "source_module": "build",
+            "created_at": "2026-10-03 16:53:20.348809+00",
+            "archived_at": null,
+            "snoozed_until": null,
+            "is_read": true,
+            "pinned": false,
+            "deleted_at": null
+          }
+        ],
+        "afterArchive": {
+          "id": "313",
+          "membership_id": 139,
+          "source_module": "build",
+          "created_at": "2026-10-03 16:53:20.348809+00",
+          "archived_at": "2026-10-03 19:13:08.981+00",
+          "snoozed_until": null,
+          "is_read": true,
+          "pinned": false,
+          "deleted_at": null
+        },
+        "afterRepeatArchive": {
+          "id": "313",
+          "membership_id": 139,
+          "source_module": "build",
+          "created_at": "2026-10-03 16:53:20.348809+00",
+          "archived_at": "2026-10-03 19:13:08.981+00",
+          "snoozed_until": null,
+          "is_read": true,
+          "pinned": false,
+          "deleted_at": null
+        },
+        "afterRestore": {
+          "id": "313",
+          "membership_id": 139,
+          "source_module": "build",
+          "created_at": "2026-10-03 16:53:20.348809+00",
+          "archived_at": null,
+          "snoozed_until": null,
+          "is_read": true,
+          "pinned": false,
+          "deleted_at": null
+        },
+        "afterSnooze": {
+          "id": "313",
+          "membership_id": 139,
+          "source_module": "build",
+          "created_at": "2026-10-03 16:53:20.348809+00",
+          "archived_at": null,
+          "snoozed_until": "2026-10-03 19:16:33.912+00",
+          "is_read": true,
+          "pinned": false,
+          "deleted_at": null
+        },
+        "archivedWhileSnoozed": {
+          "id": "313",
+          "membership_id": 139,
+          "source_module": "build",
+          "created_at": "2026-10-03 16:53:20.348809+00",
+          "archived_at": "2026-10-03 19:15:58.248+00",
+          "snoozed_until": "2026-10-03 19:16:33.912+00",
+          "is_read": true,
+          "pinned": false,
+          "deleted_at": null
+        },
+        "restoredWhileSnoozed": {
+          "id": "313",
+          "membership_id": 139,
+          "source_module": "build",
+          "created_at": "2026-10-03 16:53:20.348809+00",
+          "archived_at": null,
+          "snoozed_until": "2026-10-03 19:16:33.912+00",
+          "is_read": true,
+          "pinned": false,
+          "deleted_at": null
+        },
+        "afterUnsnooze": {
+          "id": "313",
+          "membership_id": 139,
+          "source_module": "build",
+          "created_at": "2026-10-03 16:53:20.348809+00",
+          "archived_at": null,
+          "snoozed_until": null,
+          "is_read": true,
+          "pinned": false,
+          "deleted_at": null
+        },
+        "afterRetry": {
+          "id": "313",
+          "membership_id": 139,
+          "source_module": "build",
+          "created_at": "2026-10-03 16:53:20.348809+00",
+          "archived_at": null,
+          "snoozed_until": null,
+          "is_read": true,
+          "pinned": false,
+          "deleted_at": null
+        },
+        "microsecondPartitionTimestampPreserved": "2026-10-03 16:53:20.348809+00",
+        "unrelatedObservedRowsUnchanged": true,
+        "globalWatermark": [
+          {
+            "membership_id": 139,
+            "last_read_notification_id": "307"
+          }
+        ],
+        "watermarkUnchanged": true,
+        "observedFieldsRestored": true
+      },
+      "counts": {
+        "initial": [
+          {
+            "scope": "global",
+            "status": 200,
+            "contractValid": true,
+            "count": 1
+          },
+          {
+            "scope": "build",
+            "status": 200,
+            "contractValid": true,
+            "count": 0
+          }
+        ],
+        "final": [
+          {
+            "scope": "global",
+            "status": 200,
+            "contractValid": true,
+            "count": 1
+          },
+          {
+            "scope": "build",
+            "status": 200,
+            "contractValid": true,
+            "count": 0
+          }
+        ],
+        "interpretation": "Target was already read, so both counts remain global1/build0; unread badge numeric decrease/increase is not proven"
+      },
+      "streams": {
+        "statuses": [
+          200,
+          200,
+          200
+        ],
+        "ownerCountEvents": 6,
+        "ownerFrameShapes": [
+          {
+            "event": "count_changed",
+            "type": "count_changed",
+            "keys": [
+              "type"
+            ]
+          },
+          {
+            "event": "count_changed",
+            "type": "count_changed",
+            "keys": [
+              "type"
+            ]
+          },
+          {
+            "event": "count_changed",
+            "type": "count_changed",
+            "keys": [
+              "type"
+            ]
+          },
+          {
+            "event": "count_changed",
+            "type": "count_changed",
+            "keys": [
+              "type"
+            ]
+          },
+          {
+            "event": "count_changed",
+            "type": "count_changed",
+            "keys": [
+              "type"
+            ]
+          },
+          {
+            "event": "count_changed",
+            "type": "count_changed",
+            "keys": [
+              "type"
+            ]
+          }
+        ],
+        "sameTenantMemberEventCount": 0,
+        "otherTenantOwnerEventCount": 0,
+        "errors": [],
+        "allStreamsClosed": true
+      },
+      "limitations": [
+        "This is bounded owner command/recipient/tenant proof, not the complete role/current-membership/account/organization revocation matrix",
+        "Only recorded fields and watermark were compared; updated_at and unobserved metadata are not claimed restored",
+        "Wrong-tenant positive notification312 control was an authorized API reread, not an independent second-tenant database full-field comparison",
+        "No unread target/count numeric transition, keyless Restore no-op or same-future-deadline keyless Snooze no-op runtime proof",
+        "SSE six effects match six changed states; no durable recovery, physical cache deletion, expiry event/timer, audit/CAS, adversarial concurrency or rollback injection was observed",
+        "Matching frontend browser/mobile, exact-version approvals, deployment and operations remain unverified",
+        "Canonical artifact candidate freshness passed but independent semantic review found optional header/body mismatch; uncommitted generation awaits claimed38 correction"
+      ],
+      "harnessCorrections": [
+        "A first READ ONLY query used the nonexistent notification_read_cursors name; it rolled back and was repeated using the inspected canonical notification_read_watermarks schema. No product write came from that failed read.",
+        "An initial GET used nonexistent /notifications/count and returned404. Canonical /notifications/unread-count responses supply the actual count evidence; the guessed-route404 is not an authorization test.",
+        "Initial runner relaunch attempts failed in local orchestration before spawning: a reused REPL variable and an overly strict source-root equality check were corrected. The documented NODE_PATH source+dependency roots and exact invocation then launched only6156."
+      ],
+      "independentReview": {
+        "status": "clear",
+        "reviewer": "scoped_activation_dispatch",
+        "scope": "Sanitized artifact accuracy and canonical source-path/status comparison; prior20 unchanged; no repeated runtime/database actions.",
+        "findings": "Recorded persistence, microsecond locator, recipient-only event shapes, retries and denials are bounded; no false unread numeric/cache/durable/browser/deployment or full-stage closure."
+      }
     }
   ],
   "backendSourceCommit": "1aee0d53a",
