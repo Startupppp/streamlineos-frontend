@@ -5,10 +5,13 @@ import { useUpsertCommentDraft } from "@/hooks/api/build/comment-drafts";
 import type { CommentDraft } from "@/hooks/api/build/comment-drafts";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { apiClient } from "@/lib/api-client";
+import { OrgStorageScopeProvider } from "@/lib/org-scoped-storage";
 
 jest.mock("@/lib/api-client", () => ({
   apiClient: { put: jest.fn() },
+  isImpersonating: () => false,
 }));
+jest.mock("next-auth/react", () => ({ useSession: () => ({ status: "authenticated", data: { user: { id: "user-a" }, orgId: "org-a", sessionId: "session-a" } }) }));
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
@@ -43,7 +46,7 @@ const DRAFT: CommentDraft = {
 
 function wrap(client: QueryClient) {
   return function Wrapper({ children }: { children: ReactNode }) {
-    return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+    return <OrgStorageScopeProvider scope="authenticated:org-a:user-a"><QueryClientProvider client={client}>{children}</QueryClientProvider></OrgStorageScopeProvider>;
   };
 }
 
@@ -54,6 +57,7 @@ function makeClient(): QueryClient {
 }
 
 beforeEach(() => {
+  localStorage.clear();
   put.mockReset();
   put.mockResolvedValue(DRAFT);
 });
