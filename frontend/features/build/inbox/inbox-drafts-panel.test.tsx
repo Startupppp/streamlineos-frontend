@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import type { CommentDraftListItem } from "@/hooks/api/build/comment-drafts";
 
 const useAccess = jest.fn();
 const useMyCommentDrafts = jest.fn();
@@ -39,10 +40,12 @@ jest.mock("@/components/shared/dirty-state-context", () => ({
 
 import { InboxDraftsPanel } from "./inbox-drafts-panel";
 
-function makeDraft(id: number) {
+function makeDraft(id: number): CommentDraftListItem {
   return {
     id,
+    ticketId: id * 10,
     body: `Draft body ${id}`,
+    createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     ticket: {
       id: id * 10,
@@ -120,6 +123,21 @@ describe("InboxDraftsPanel — FE-112 bound", () => {
     expect(rows.length).toBe(100);
   });
 
+  it("does not present the capped list size as the permanent deletion total", () => {
+    useMyCommentDrafts.mockReturnValue({
+      data: Array.from({ length: 150 }, (_, i) => makeDraft(i + 1)),
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    render(<InboxDraftsPanel />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Clear all drafts" }));
+    expect(screen.getByText("Permanently delete all your saved comment drafts. This cannot be undone.")).toBeInTheDocument();
+    expect(screen.queryByText(/delete all (100|150) saved comment drafts/i)).not.toBeInTheDocument();
+  });
+
   it("renders all drafts when fewer than 100 are returned", () => {
     const drafts = Array.from({ length: 5 }, (_, i) => makeDraft(i + 1));
     useMyCommentDrafts.mockReturnValue({
@@ -164,13 +182,52 @@ describe("InboxDraftsPanel — composition, not page duplication", () => {
     });
 
     render(<InboxDraftsPanel />);
-    await screen.getByRole("button", { name: /BLD-1 Ticket 1/i }).click();
+    fireEvent.click(screen.getByRole("link", { name: "Open draft for BLD-1 Ticket 1" }));
 
     expect(requestLeave).toHaveBeenCalledTimes(1);
     expect(push).not.toHaveBeenCalled();
     pendingNavigation?.();
     expect(push).toHaveBeenCalledWith(
       "/build/1/tickets/BLD-1?returnTo=%2Fbuild%2Fmy-work%3Fsection%3Ddrafts",
+    );
+  });
+
+  it("keeps a missing-project draft deletable without offering a broken ticket link", () => {
+    const draft = makeDraft(1);
+    draft.ticket.projectId = null;
+    const deleteMutate = jest.fn();
+    useDeleteCommentDraft.mockReturnValue({ mutate: deleteMutate });
+    useMyCommentDrafts.mockReturnValue({
+      data: [draft],
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
+    render(<InboxDraftsPanel />);
+    expect(screen.queryByRole("link", { name: /open draft/i })).not.toBeInTheDocument();
+    expect(screen.getByText("Ticket unavailable. You can still delete this draft.")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Delete draft for BLD-1" }));
+    expect(deleteMutate).toHaveBeenCalledWith(1, expect.objectContaining({ onError: expect.any(Function) }));
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("links a draft with no project key through the numeric ticket detail route", () => {
+    const draft = makeDraft(1);
+    draft.ticket.projectKey = null;
+    useMyCommentDrafts.mockReturnValue({
+      data: [draft],
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
+    render(<InboxDraftsPanel />);
+    expect(screen.getByRole("link", { name: "Open draft for #10 Ticket 1" })).toHaveAttribute(
+      "href",
+      "/build/1/tickets/1?returnTo=%2Fbuild%2Fmy-work%3Fsection%3Ddrafts",
     );
   });
 });

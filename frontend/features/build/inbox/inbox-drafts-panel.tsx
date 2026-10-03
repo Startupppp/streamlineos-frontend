@@ -9,7 +9,6 @@ import {
   useDeleteCommentDraft,
   useDeleteAllCommentDrafts,
 } from "@/hooks/api/build/comment-drafts";
-import type { CommentDraftListItem } from "@/hooks/api/build/comment-drafts";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -64,15 +63,9 @@ export function InboxDraftsPanel() {
     isEmpty: allDrafts.length === 0,
   });
 
-  const handleOpenDraft = useCallback(
-    (draft: CommentDraftListItem) => {
-      const { projectId, projectKey, ticketNumber } = draft.ticket;
-      if (!projectId) return;
-      requestLeave(() =>
-        router.push(getMyWorkTicketHref(projectId, projectKey, ticketNumber, returnHref)),
-      );
-    },
-    [requestLeave, returnHref, router],
+  const handleNavigateDraft = useCallback(
+    (href: string) => requestLeave(() => router.push(href)),
+    [requestLeave, router],
   );
 
   const handleDelete = useCallback(
@@ -141,14 +134,21 @@ export function InboxDraftsPanel() {
           }
         >
           <div>
-            {drafts.map((draft) => (
-              <CommentDraftRow
-                key={draft.id}
-                draft={draft}
-                onOpen={handleOpenDraft}
-                onDelete={handleDelete}
-              />
-            ))}
+            {drafts.map((draft) => {
+              const { projectId, projectKey, ticketNumber } = draft.ticket;
+              const href = projectId && projectId > 0
+                ? getMyWorkTicketHref(projectId, projectKey, ticketNumber, returnHref)
+                : null;
+              return (
+                <CommentDraftRow
+                  key={draft.id}
+                  draft={draft}
+                  href={href}
+                  onNavigate={handleNavigateDraft}
+                  onDelete={handleDelete}
+                />
+              );
+            })}
           </div>
         </PageState>
       </div>
@@ -157,7 +157,7 @@ export function InboxDraftsPanel() {
         open={confirmDeleteAll}
         onOpenChange={handleCloseDeleteAll}
         title="Clear all drafts?"
-        description={`Permanently delete all ${allDrafts.length} saved comment draft${allDrafts.length !== 1 ? "s" : ""}. This cannot be undone.`}
+        description="Permanently delete all your saved comment drafts. This cannot be undone."
         confirmLabel="Clear all"
         destructive
         isPending={deleteAll.isPending}
