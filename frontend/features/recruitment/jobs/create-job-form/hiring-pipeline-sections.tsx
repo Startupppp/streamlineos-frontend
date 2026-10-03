@@ -11,7 +11,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { INTERVIEW_ROUND_OPTIONS, NO_HIRING_FLOW, SCREENING_QUESTION_TYPES, type ScreeningQuestionValues } from "./schema";
-import { SectionTitle, Field, FieldError, ToggleRow, type SectionProps } from "./job-basics-sections";
+import { SectionTitle, ToggleRow, type SectionProps } from "./job-basics-sections";
+import { Field, FieldError } from "./job-form-field";
 import { cn } from "@/lib/utils";
 import { useHiringFlows } from "@/hooks/api/hr/recruitment";
 import React from "react";
@@ -51,7 +52,7 @@ export function Section7({ form }: SectionProps) {
     <div>
       <SectionTitle title="Hiring Workflow" subtitle="Define the hiring process for this role" icon={Users} />
       <div className="grid gap-4">
-        <Field label="Hiring Manager" required error={errors.hiringManager?.message}>
+        <Field label="Hiring Manager" error={errors.hiringManager?.message}>
           <Input placeholder="e.g. John Doe, HR Manager" {...register("hiringManager")} />
         </Field>
 
@@ -79,9 +80,8 @@ export function Section7({ form }: SectionProps) {
 
         <div className="space-y-1.5">
           <Label className="text-xs font-semibold text-foreground/80">
-            Interview Rounds<span className="text-status-danger-ink ml-0.5">*</span>
+            Interview Rounds
           </Label>
-          <p className="text-micro text-muted-foreground">Select at least one round</p>
           <div className="grid sm:grid-cols-2 gap-2 mt-1">
             {INTERVIEW_ROUND_OPTIONS.map(({ value, label }) => (
               <InterviewRoundOption
@@ -95,10 +95,6 @@ export function Section7({ form }: SectionProps) {
           </div>
           <FieldError message={errors.interviewRounds?.message} />
         </div>
-
-        <Field label="Question Bank Mapping" required error={errors.questionBankMapping?.message}>
-          <Input placeholder="e.g. React JS Questions, HR Screening Questions" {...register("questionBankMapping")} />
-        </Field>
       </div>
     </div>
   );
@@ -206,7 +202,7 @@ function ScreeningQuestionRow({ question: q, idx, onUpdate, onRemove }: Screenin
 }
 
 export function Section8({ form }: SectionProps) {
-  const { register, control, watch, setValue } = form;
+  const { control, watch, setValue } = form;
   const questions = watch("screeningQuestions") ?? [];
 
   function handleAddQuestion() {
@@ -254,10 +250,6 @@ export function Section8({ form }: SectionProps) {
             )}
           />
         </ToggleRow>
-
-        <Field label="Custom Fields">
-          <Input placeholder="e.g. Portfolio Link, LinkedIn URL, Notice Period" {...register("customFields")} />
-        </Field>
 
         <div className="space-y-1.5 mt-2">
           <div className="flex items-center justify-between">

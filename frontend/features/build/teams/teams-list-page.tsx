@@ -12,7 +12,7 @@ import {
   useDeleteProjectTeam,
 } from "@/hooks/api/build/teams";
 import { useCan } from "@/hooks/api/access";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";

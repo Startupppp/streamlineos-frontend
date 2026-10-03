@@ -5,7 +5,7 @@ import {
   PersonDrawer,
   type PersonSummary,
 } from "@/components/shared/person-drawer";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useCanState } from "@/hooks/api/access";
 import { useEmployeeEmployment } from "@/hooks/api/hr/employee-profile";
 import { formatShortDate } from "@/lib/date-utils";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -29,6 +29,7 @@ export function EmployeePersonDrawer({
   onOpenChange,
 }: EmployeePersonDrawerProps) {
   const canSeePay = useCan("payroll:salaries:view");
+  const employmentAccess = useCanState("hr:employees:view");
   const employment = useEmployeeEmployment(open && employee ? employee.id : "");
 
   const person = useMemo<PersonSummary | null>(
@@ -55,7 +56,8 @@ export function EmployeePersonDrawer({
   if (!employee || !person) return null;
 
   const record = employment.data ?? null;
-  const employmentSettled = !employment.isLoading && !employment.isFetching;
+  const employmentSettled =
+    employmentAccess === "granted" && !employment.isLoading && !employment.isFetching;
   const profileHref = `/hr/employees/${employee.id}`;
 
   return (
@@ -87,7 +89,11 @@ export function EmployeePersonDrawer({
             <DrawerFactRow label="Department" value={employee.department?.name ?? "—"} />
           </dl>
         ),
-        employment: employment.isLoading ? (
+        employment: employmentAccess === "denied" ? (
+          <DrawerNotMeasured>
+            Employment details are not included in your access.
+          </DrawerNotMeasured>
+        ) : employmentAccess === "loading" || employment.isLoading ? (
           <Skeleton className="h-28 w-full" />
         ) : record ? (
           <div className="flex flex-col gap-3">

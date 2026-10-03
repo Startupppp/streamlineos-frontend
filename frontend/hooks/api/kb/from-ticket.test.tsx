@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { renderHook, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import type { ZodType } from "zod";
+import { ZodError, type ZodType } from "zod";
 import { backendAvailable, backendPath } from "@/test-utils/backend-repo";
 
 const post = jest.fn<Promise<unknown>, [string, unknown, unknown, unknown]>();
@@ -113,14 +113,14 @@ describe("POST /kb/articles/from-ticket/:ticketId is bound to the article the ba
 
   it("rejects the {success: boolean} body the route never returns — the shape that made every 200 throw", async () => {
     const contract = await contractBoundByTheHook();
-    expect(() => contract.parse({ success: true })).toThrow();
+    expect(() => contract.parse({ success: true })).toThrow(ZodError);
   });
 
   it("types tags as plain strings, not {id,name,slug} objects", async () => {
     const contract = await contractBoundByTheHook();
     expect(() =>
       contract.parse({ ...ARTICLE, tags: [{ id: 1, name: "support", slug: "support" }] }),
-    ).toThrow();
+    ).toThrow(ZodError);
   });
 
   it("resolves the mutation with the created article, so a caller can open the draft it just made", async () => {

@@ -4,7 +4,7 @@ import { useEffect, useRef, useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useCommandPalette } from "./use-command-palette";
 import { extractBuildProjectId } from "@/lib/build/extract-build-project-id";
-import { tryHandleBuildListSearchShortcut } from "@/features/build/shared/build-list-search-target";
+import { tryHandleBuildListSearchShortcut } from "@/lib/build/build-list-search-target";
 
 function isInputTarget(e: KeyboardEvent): boolean {
   const target = e.target;

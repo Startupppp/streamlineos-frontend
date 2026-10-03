@@ -43,7 +43,7 @@ jest.mock("./mail-shell-skeletons", () => ({
 }));
 
 jest.mock("next/dynamic", () => {
-  const React: typeof import("react") = require("react");
+  const React: typeof import("react") = jest.requireActual("react");
   return function mockDynamic(
     loader: () => Promise<{ default: React.ComponentType<Record<string, unknown>> }>,
   ) {

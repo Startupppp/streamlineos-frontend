@@ -13,6 +13,8 @@ import {
   mockSonnerModule,
   mockWfhRow,
   mockEmployeeListModule,
+  mockExpenseRow,
+  mockExpensesModule,
   mockWorkflowsModule,
   resetMockQueueState,
 } from "./queue-test-fixtures";
@@ -27,6 +29,7 @@ jest.mock("@/hooks/api/hr/attendance-regularization-queue", () =>
 );
 jest.mock("@/hooks/api/hr/hr-workflows", () => mockWorkflowsModule());
 jest.mock("@/hooks/api/hr/employee-list", () => mockEmployeeListModule());
+jest.mock("@/hooks/api/hr/expenses", () => mockExpensesModule());
 jest.mock("@/hooks/api/payroll/payroll-cutoff", () => mockCutoffModule());
 jest.mock("@/components/ui/page-wrapper", () => mockPageWrapperModule());
 jest.mock("sonner", () => mockSonnerModule());
@@ -84,6 +87,40 @@ describe("HR Action Center — inline decide", () => {
       expect(mockQueueState.rejectLeave).toHaveBeenCalledWith({
         leaveId: 41,
         reason: "Coverage gap",
+      }),
+    );
+  });
+
+  it("approves an expense claim through the expense status endpoint", async () => {
+    mockQueueState.expenseRows = [mockExpenseRow];
+
+    render(<HrActionCenterPage />);
+    fireEvent.click(screen.getByRole("button", { name: "Approve" }));
+
+    await waitFor(() =>
+      expect(mockQueueState.updateExpenseStatus).toHaveBeenCalledWith({
+        expenseId: 12,
+        status: "APPROVED",
+      }),
+    );
+  });
+
+  it("rejects an expense claim with the reason", async () => {
+    mockQueueState.expenseRows = [mockExpenseRow];
+
+    render(<HrActionCenterPage />);
+    fireEvent.click(screen.getByRole("button", { name: "Reject" }));
+    const dialog = screen.getByRole("dialog");
+    fireEvent.change(within(dialog).getByLabelText("Reason"), {
+      target: { value: "No receipt" },
+    });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Reject" }));
+
+    await waitFor(() =>
+      expect(mockQueueState.updateExpenseStatus).toHaveBeenCalledWith({
+        expenseId: 12,
+        status: "REJECTED",
+        rejectionReason: "No receipt",
       }),
     );
   });

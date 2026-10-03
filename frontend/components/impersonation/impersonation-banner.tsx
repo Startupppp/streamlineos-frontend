@@ -62,14 +62,14 @@ export function ImpersonationBanner() {
     <div
       role="alert"
       aria-live="polite"
-      className="flex items-center justify-between gap-2 border-b border-amber-200 bg-amber-50 px-3 py-2 shrink-0 dark:border-amber-500/30 dark:bg-amber-500/10 sm:gap-3 sm:px-4"
+      className="flex items-center justify-between gap-2 border-b border-status-warning-rule bg-status-warning-surface px-3 py-2 shrink-0 sm:gap-3 sm:px-4"
     >
       <div className="flex min-w-0 items-center gap-2">
         <UserX
-          className="h-3.5 w-3.5 shrink-0 text-amber-700 dark:text-amber-400"
+          className="h-3.5 w-3.5 shrink-0 text-status-warning-ink"
           aria-hidden="true"
         />
-        <span className="min-w-0 truncate text-sm font-medium text-amber-800 dark:text-amber-300">
+        <span className="min-w-0 truncate text-sm font-medium text-status-warning-ink-strong">
           You are viewing as{" "}
           <span className="font-semibold">{displayName}</span>
         </span>
@@ -78,7 +78,7 @@ export function ImpersonationBanner() {
         type="button"
         variant="outline"
         size="sm"
-        className="h-7 shrink-0 border-amber-300 bg-amber-100 px-3 text-xs font-medium text-amber-800 hover:bg-amber-200 dark:border-amber-500/50 dark:bg-amber-500/20 dark:text-amber-300 dark:hover:bg-amber-500/30"
+        className="h-7 shrink-0 border-status-warning-rule bg-status-warning-surface px-3 text-xs font-medium text-status-warning-ink-strong hover:bg-status-warning-rule"
         disabled={stopMutation.isPending}
         onClick={handleExit}
       >

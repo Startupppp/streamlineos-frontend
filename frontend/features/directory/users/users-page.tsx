@@ -279,6 +279,14 @@ export function UsersPage() {
     [pushParams, resetCursorHistory],
   );
 
+  const isFiltered =
+    !!searchQuery || status !== "all" || role !== "all" || departmentId !== "all" || branchId !== "all";
+
+  const handleClearFilters = useCallback(() => {
+    setSearch("");
+    pushParams({ search: null, status: null, role: null, departmentId: null, branchId: null, page: null });
+  }, [pushParams]);
+
   const handleViewUser = useCallback((userId: string) => {
     setSelectedUserId(userId);
     setSheetOpen(true);
@@ -312,16 +320,14 @@ export function UsersPage() {
     <EmptyState
       illustrationPreset="team"
       title="No members found"
+      filtersActive={isFiltered}
+      onClearFilters={handleClearFilters}
       description={
-        searchQuery || status !== "all" || role !== "all"
+        isFiltered
           ? "Try adjusting your search or filters."
           : "Invite your first team member to get started."
       }
-      action={
-        !searchQuery && status === "all" && role === "all" && canCreate
-          ? { label: "Invite User", onClick: handleOpenInvite }
-          : undefined
-      }
+      action={canCreate ? { label: "Invite User", onClick: handleOpenInvite } : undefined}
     />
   );
 

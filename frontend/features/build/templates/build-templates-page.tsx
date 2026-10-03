@@ -24,7 +24,7 @@ import { CreateTemplateSheet } from "@/features/build/templates/create-template-
 import { ApplyTemplateDialog } from "@/features/build/templates/apply-template-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isApiError } from "@/lib/api-envelope";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import {
   useBuildListFilters,
   BUILD_FILTER_ALL,

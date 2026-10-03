@@ -7,6 +7,7 @@ export const fnfRowContract = z.object({
   resignationId: z.number().nullable(),
   basicDues: z.string(),
   leaveEncashment: z.string(),
+  gratuity: z.string(),
   bonusDue: z.string(),
   deductions: z.string(),
   loanRecovery: z.string(),
@@ -66,3 +67,22 @@ export const updateFnfResultContract = z.discriminatedUnion("ok", [
 export type FnfRow = z.infer<typeof fnfRowContract>;
 export type FnfGetOne = z.infer<typeof fnfGetOneContract>;
 export type FnfWithUser = z.infer<typeof fnfWithUserContract>;
+
+export const fnfSuggestionContract = z.object({
+  userId: z.string(),
+  joiningDate: z.string().nullable(),
+  lastWorkingDay: z.string(),
+  lastDrawnBasic: z.string().nullable(),
+  basicMonth: z.string().nullable(),
+  serviceYears: z.number(),
+  serviceMonths: z.number(),
+  gratuityYears: z.number(),
+  gratuityEligible: z.boolean(),
+  gratuityCapped: z.boolean(),
+  gratuity: z.string(),
+  encashableLeaveDays: z.string(),
+  leaveEncashment: z.string(),
+  notes: z.array(z.string()),
+});
+
+export type FnfSuggestion = z.infer<typeof fnfSuggestionContract>;

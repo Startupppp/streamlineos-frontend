@@ -183,7 +183,7 @@ export function HomeCustomisationBar({
             <Settings2 className="h-3.5 w-3.5" aria-hidden="true" />
             Customise
             {hiddenCount > 0 && (
-              <Badge variant="secondary" className="ml-0.5 h-4 min-w-4 px-1 text-[10px]">
+              <Badge variant="secondary" className="ml-0.5 h-4 min-w-4 px-1 text-micro">
                 {hiddenCount}
               </Badge>
             )}

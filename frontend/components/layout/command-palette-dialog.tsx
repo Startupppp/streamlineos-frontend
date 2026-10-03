@@ -22,7 +22,6 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-  CommandShortcut,
 } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
@@ -48,12 +47,12 @@ import {
 import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCommandRegistry } from "./command-palette-commands";
+import { CommandPaletteActionsGroup } from "./command-palette-actions-group";
 import { PalettePeopleGroup } from "@/components/command-palette/components/palette-people-group";
 import {
   COMMAND_ARROW_CLASS,
   COMMAND_GROUP_CLASS,
   COMMAND_ITEM_CLASS,
-  COMMAND_SHORTCUT_CLASS,
   ItemIcon,
 } from "@/components/command-palette/components/palette-item";
 import { isHrNavChromeKilled } from "./sidebar/hr-week-one-nav";
@@ -198,6 +197,11 @@ export function CommandPaletteDialogBody() {
     [setPaletteOpen],
   );
 
+  const handleClosePalette = useCallback(() => {
+    setPaletteOpen(false);
+    setQuery("");
+  }, [setPaletteOpen]);
+
   const handleCreateTicket = useCallback(() => {
     setPaletteOpen(false);
     setQuery("");
@@ -323,26 +327,10 @@ export function CommandPaletteDialogBody() {
 
         {actionsCommands.length > 0 && (
           <>
-            <CommandGroup heading="Actions" className={COMMAND_GROUP_CLASS}>
-              {actionsCommands.map((cmd) => (
-                <CommandItem
-                  key={cmd.id}
-                  value={`${cmd.label} ${cmd.keywords.join(" ")}`}
-                  onSelect={cmd.execute}
-                  className={COMMAND_ITEM_CLASS}
-                >
-                  <ItemIcon icon={cmd.icon} />
-                  <span className="flex-1 text-sm text-foreground">
-                    {cmd.label}
-                  </span>
-                  {cmd.shortcut && (
-                    <CommandShortcut className={COMMAND_SHORTCUT_CLASS}>
-                      {cmd.shortcut}
-                    </CommandShortcut>
-                  )}
-                </CommandItem>
-              ))}
-            </CommandGroup>
+            <CommandPaletteActionsGroup
+              commands={actionsCommands}
+              onConfirmed={handleClosePalette}
+            />
             <CommandSeparator className="my-1" />
           </>
         )}

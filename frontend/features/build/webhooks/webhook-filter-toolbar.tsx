@@ -1,6 +1,6 @@
 "use client";
 
-import type { ChangeEvent, RefObject } from "react";
+import type { RefObject } from "react";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
@@ -26,7 +26,7 @@ interface WebhookFilterToolbarProps {
   from: string | undefined;
   to: string | undefined;
   density: "compact" | "comfortable";
-  onSearchChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  onSearchChange: (value: string) => void;
   onStateChange: (value: string) => void;
   onEventChange: (value: string) => void;
   onFromChange: (value: string) => void;
@@ -49,19 +49,12 @@ export function WebhookFilterToolbar({
   onToChange,
   onDensityToggle,
 }: WebhookFilterToolbarProps) {
-  function handleSearchValueChange(value: string) {
-    onSearchChange({
-      target: { value },
-      currentTarget: { value },
-    } as ChangeEvent<HTMLInputElement>);
-  }
-
   return (
     <BuildListToolbar
       className="mb-3"
       search={{
         value: search,
-        onValueChange: handleSearchValueChange,
+        onValueChange: onSearchChange,
         placeholder: "Search by URL…",
         label: "Search webhooks",
         inputRef: searchInputRef,

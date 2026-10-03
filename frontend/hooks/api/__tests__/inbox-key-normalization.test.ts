@@ -1,3 +1,4 @@
+import { renderHook } from "@testing-library/react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 
 jest.mock("@tanstack/react-query", () => ({
@@ -36,7 +37,7 @@ function captureInboxOptions(params?: {
   const { useUnifiedInbox } = jest.requireActual<
     typeof import("@/hooks/api/inbox")
   >("@/hooks/api/inbox");
-  useUnifiedInbox(params as Parameters<typeof useUnifiedInbox>[0]);
+  renderHook(() => useUnifiedInbox(params as Parameters<typeof useUnifiedInbox>[0]));
   const call = mockInfiniteQuery.mock.calls[0]?.[0] as CapturedInfiniteOptions;
   if (!call) throw new Error("useUnifiedInbox did not open a query");
   return call;

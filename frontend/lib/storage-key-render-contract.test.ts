@@ -31,6 +31,8 @@ function filesUnder(
  * new bare `src` cannot be waved through by adding a line without a reason.
  */
 const NOT_A_STORAGE_KEY: Readonly<Record<string, string>> = {
+  "components/editor/plate/plate-elements.tsx":
+    "external link-preview image from GET /chat/link-preview, never a /storage/upload result",
   "components/layout/header/user-avatar-menu.tsx":
     "prop, resolved by the caller in this same file",
   "components/settings/mfa-settings.tsx": "data: URL generated for the TOTP QR",

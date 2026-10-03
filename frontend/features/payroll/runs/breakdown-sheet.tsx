@@ -40,9 +40,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useCan } from "@/hooks/api/access";
-import { useRunEmployee, useAddAdjustment, useSetEmployeeHold } from "@/hooks/api/payroll/run-employees";
+import { useRunEmployee, useAddAdjustment, useSetEmployeeHold, useReleaseEmployeeHold } from "@/hooks/api/payroll/run-employees";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
 import { cn } from "@/lib/utils";
+import { SourceWhyList } from "./source-why-list";
 import type { CalculationSnapshotLine, SalaryComponentType } from "@/types/payroll/runs";
 
 const adjustmentSchema = z.object({
@@ -100,6 +102,7 @@ const LineItemRow = memo(function LineItemRow({ line }: { line: CalculationSnaps
           {formatMoney(line.amount)}
         </span>
       </div>
+      <SourceWhyList sources={line.explain.sources} />
       {expanded && (
         <div className="px-8 py-2 bg-muted/10 border-t border-border text-micro text-muted-foreground space-y-0.5">
           <p className="font-medium text-foreground">Method: {line.calcMethod}</p>
@@ -136,6 +139,7 @@ export function BreakdownSheet({
   const addAdjustmentMutation = useAddAdjustment(runId, runEmployeeId ?? 0);
   const canManage = useCan("payroll:runs:manage");
   const holdMutation = useSetEmployeeHold(runId, runEmployeeId ?? 0);
+  const releaseMutation = useReleaseEmployeeHold(runId, runEmployeeId ?? 0);
   const [showHold, setShowHold] = useState(false);
   const [holdReason, setHoldReason] = useState("");
 
@@ -185,19 +189,18 @@ export function BreakdownSheet({
           toast.success("Salary put on hold");
           setShowHold(false);
         },
-        onError: () => toast.error("Failed to hold salary"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }
 
   function handleRelease() {
-    holdMutation.mutate(
-      { hold: false },
-      {
-        onSuccess: () => toast.success("Hold released"),
-        onError: () => toast.error("Failed to release hold"),
+    releaseMutation.mutate(undefined, {
+      onSuccess: (result) => {
+        toast.success(result.published > 0 ? "Hold released and payslip published" : "Hold released");
       },
-    );
+      onError: (err) => toast.error(getErrorMessage(err)),
+    });
   }
 
   const snapshot = data?.calculationSnapshot;
@@ -255,6 +258,16 @@ export function BreakdownSheet({
                   );
                 })}
 
+                {parseFloat(snapshot.lopDays) > 0 && (
+                  <div className="py-1.5">
+                    <div className="flex items-center justify-between px-3 text-dense">
+                      <span className="text-muted-foreground">Loss of pay</span>
+                      <span className="font-mono tabular-nums">{snapshot.lopDays} days</span>
+                    </div>
+                    <SourceWhyList sources={snapshot.lopSources} />
+                  </div>
+                )}
+
                 <div className="px-3 py-3 space-y-1">
                   <div className="flex items-center justify-between text-dense">
                     <span className="text-muted-foreground">Gross</span>
@@ -310,10 +323,10 @@ export function BreakdownSheet({
                     size="sm"
                     variant="outline"
                     onClick={handleRelease}
-                    isPending={holdMutation.isPending}
+                    isPending={releaseMutation.isPending}
                     loadingText="Releasing…"
                   >
-                    Release Hold
+                    Release
                   </LoadingButton>
                 ) : (
                   <Button size="sm" variant="outline" onClick={handleHoldOpen}>

@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { MemberPicker } from "@/components/members/member-picker";
 import { useAddProjectMember } from "@/hooks/api/build/project-members";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { isWriteConflict } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
@@ -47,6 +48,7 @@ export function AddProjectMemberDialog({
     resolver: zodResolver(addProjectMemberSchema),
     defaultValues: { userId: "", role: "MEMBER" },
   });
+  useRegisterDirtyState(open && form.formState.isDirty);
 
   function handleOpenChange(nextOpen: boolean) {
     if (!nextOpen) {

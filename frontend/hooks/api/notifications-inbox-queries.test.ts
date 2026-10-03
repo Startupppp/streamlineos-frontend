@@ -1,3 +1,4 @@
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { renderHook, act } from "@testing-library/react";
 import { QueryClient } from "@tanstack/react-query";
 import { useInfiniteNotifications, useNotifications } from "./notifications-inbox";
@@ -143,7 +144,6 @@ describe("useInfiniteNotifications — category param wiring", () => {
   });
 
   it("query key differs when category changes so two filters cannot share a cache entry", () => {
-    const { platformCoreQueryKeys } = require("@/lib/query-keys/platform-core");
     const keyProjects = platformCoreQueryKeys.notifications.list({
       category: "PROJECTS",
       sourceModule: "build",

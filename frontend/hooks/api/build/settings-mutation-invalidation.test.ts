@@ -130,7 +130,7 @@ describe("useCreateProjectCustomField — invalidation contract (BLD-X-BE-SETTIN
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (require("@/lib/api-client").apiClient.post as jest.Mock).mockResolvedValue({
+    (jest.requireMock("@/lib/api-client").apiClient.post as jest.Mock).mockResolvedValue({
       id: 5,
       orgId: "org-abc",
       projectId: 10,
@@ -205,7 +205,7 @@ describe("useCreateAgentToken — invalidation contract (BLD-X-BE-SETTINGS-AT-IN
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (require("@/lib/api-client").apiClient.post as jest.Mock).mockResolvedValue({
+    (jest.requireMock("@/lib/api-client").apiClient.post as jest.Mock).mockResolvedValue({
       token: "slk_abc123",
       id: 1,
       name: "CI Token",
@@ -278,7 +278,7 @@ describe("useCreateTransition — invalidation contract (BLD-X-BE-SETTINGS-WF-IN
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (require("@/lib/api-client").apiClient.post as jest.Mock).mockResolvedValue({
+    (jest.requireMock("@/lib/api-client").apiClient.post as jest.Mock).mockResolvedValue({
       id: 1,
       orgId: "org-abc",
       projectId: 10,
@@ -325,7 +325,7 @@ describe("useDeleteTransition — invalidation contract (BLD-X-BE-SETTINGS-WF-IN
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (require("@/lib/api-client").apiClient.delete as jest.Mock).mockResolvedValue(null);
+    (jest.requireMock("@/lib/api-client").apiClient.delete as jest.Mock).mockResolvedValue(null);
     client = makeClient();
     invalidateSpy = jest.spyOn(client, "invalidateQueries");
   });
@@ -358,7 +358,7 @@ describe("useCreateAutomation — invalidation contract (BLD-X-BE-SETTINGS-AUTO-
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (require("@/lib/api-client").apiClient.post as jest.Mock).mockResolvedValue({
+    (jest.requireMock("@/lib/api-client").apiClient.post as jest.Mock).mockResolvedValue({
       id: 1,
       orgId: "org-abc",
       projectId: 10,
@@ -412,7 +412,7 @@ describe("useDeleteAutomation — invalidation contract (BLD-X-BE-SETTINGS-AUTO-
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (require("@/lib/api-client").apiClient.delete as jest.Mock).mockResolvedValue(null);
+    (jest.requireMock("@/lib/api-client").apiClient.delete as jest.Mock).mockResolvedValue(null);
     client = makeClient();
     invalidateSpy = jest.spyOn(client, "invalidateQueries");
   });
@@ -445,7 +445,7 @@ describe("useCreateWebhook — invalidation contract (BLD-X-BE-SETTINGS-WH-INV-0
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (require("@/lib/api-client").apiClient.post as jest.Mock).mockResolvedValue({
+    (jest.requireMock("@/lib/api-client").apiClient.post as jest.Mock).mockResolvedValue({
       id: 1,
       orgId: "org-abc",
       projectId: 10,
@@ -486,7 +486,7 @@ describe("useDeleteWebhook — invalidation contract (BLD-X-BE-SETTINGS-WH-INV-0
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (require("@/lib/api-client").apiClient.delete as jest.Mock).mockResolvedValue(null);
+    (jest.requireMock("@/lib/api-client").apiClient.delete as jest.Mock).mockResolvedValue(null);
     client = makeClient();
     invalidateSpy = jest.spyOn(client, "invalidateQueries");
   });

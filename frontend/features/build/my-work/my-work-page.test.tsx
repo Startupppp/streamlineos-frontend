@@ -34,7 +34,7 @@ jest.mock("@/components/shared/dirty-state-context", () => ({
   useNavigationLeave: () => mockRequestLeave,
 }));
 
-jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
   useBuildListKeyboard: (...args: unknown[]) => mockUseBuildListKeyboard(...args),
 }));
 

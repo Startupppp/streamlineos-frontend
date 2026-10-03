@@ -146,6 +146,10 @@ export function MilestoneUpsertSheet({
     () => new Map(members.map((m) => [m.userId, m.membershipId])),
     [members],
   );
+  const handleOwnerChange = (
+    onChange: (membershipId: number | null) => void,
+    userId: string | null,
+  ) => onChange(userId != null ? (membershipIdByUserId.get(userId) ?? null) : null);
 
   const form = useForm<MilestoneFormValues>({
     resolver: zodResolver(milestoneFormSchema),
@@ -320,13 +324,7 @@ export function MilestoneUpsertSheet({
                             undefined)
                           : undefined
                       }
-                      onChange={(userId) =>
-                        field.onChange(
-                          userId != null
-                            ? (membershipIdByUserId.get(userId) ?? null)
-                            : null,
-                        )
-                      }
+                      onChange={(userId) => handleOwnerChange(field.onChange, userId)}
                       allowUnassigned
                       placeholder="Unassigned"
                     />

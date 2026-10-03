@@ -75,8 +75,8 @@ jest.mock("@/features/build/views/use-board-url-state", () => ({
 }));
 
 const actualBuildListKeyboard = jest.requireActual<
-  typeof import("@/features/build/shared/use-build-list-keyboard")
->("@/features/build/shared/use-build-list-keyboard");
+  typeof import("@/hooks/common/use-build-list-keyboard")
+>("@/hooks/common/use-build-list-keyboard");
 
 type BuildListKeyboardOptions = Parameters<
   typeof actualBuildListKeyboard.useBuildListKeyboard
@@ -85,7 +85,7 @@ type BuildListKeyboardOptions = Parameters<
 const mockUseBuildListKeyboard = jest.fn((options: BuildListKeyboardOptions) =>
   actualBuildListKeyboard.useBuildListKeyboard(options),
 );
-jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
   useBuildListKeyboard: (...args: [BuildListKeyboardOptions]) =>
     mockUseBuildListKeyboard(...args),
 }));

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
 import { StatusMapBadge, type StatusEntry } from "@/components/ui/status-map-badge";
 import type { BulkJobPage, BulkJobSummary } from "@/hooks/api/hr/reporting-line-bulk-jobs-schema";
 import type { CursorPaginationState } from "@/hooks/common/use-cursor-pagination";
@@ -52,6 +53,13 @@ export function BulkJobsHistory({ page, isLoading, pager }: BulkJobsHistoryProps
       columns={COLUMNS}
       getRowKey={jobKey}
       isLoading={isLoading}
+      emptyState={
+        <EmptyState
+          compact
+          title="No reporting change jobs yet"
+          description="Jobs you preview above are listed here, so you can return to commit or review them."
+        />
+      }
       minWidth="40rem"
       pagination={{
         mode: "cursor",

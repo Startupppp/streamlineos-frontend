@@ -23,12 +23,14 @@ export const publicationListContract = z.object({
 export const publishResponseContract = z.object({
   published: z.number(),
   total: z.number(),
+  heldCount: z.number(),
   runStatus: z.string().nullable(),
 });
 
 export const retryPublishResponseContract = z.object({
   published: z.number(),
   total: z.number(),
+  heldCount: z.number(),
   runStatus: z.string().nullable(),
   retried: z.number(),
 });

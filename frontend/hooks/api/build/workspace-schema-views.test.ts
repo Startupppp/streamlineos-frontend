@@ -1,3 +1,4 @@
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { viewRowContract, viewPageContract } from "./workspace-schema";
 
 const validViewRow = {
@@ -128,20 +129,17 @@ describe("viewPageContract (BLD-X-BE-SETTINGS-VIEWS-002)", () => {
 
 describe("views cache key contract (BLD-X-BE-SETTINGS-VIEWS-003)", () => {
   it("includes projectId in the key for project-scoped views", () => {
-    const { buildWorkQueryKeys } = require("@/lib/query-keys/build-work");
     const key = buildWorkQueryKeys.projects.views(42);
     expect(key).toContain(42);
   });
 
   it("includes the 'views' segment in the key", () => {
-    const { buildWorkQueryKeys } = require("@/lib/query-keys/build-work");
     const key = buildWorkQueryKeys.projects.views(42);
     expect(Array.isArray(key)).toBe(true);
     expect(key.some((segment: unknown) => segment === "views")).toBe(true);
   });
 
   it("two different projectIds produce different keys — cross-project cache collision is impossible", () => {
-    const { buildWorkQueryKeys } = require("@/lib/query-keys/build-work");
     const key1 = buildWorkQueryKeys.projects.views(1);
     const key2 = buildWorkQueryKeys.projects.views(2);
     expect(JSON.stringify(key1)).not.toBe(JSON.stringify(key2));

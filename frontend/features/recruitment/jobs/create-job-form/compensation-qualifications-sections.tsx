@@ -6,7 +6,9 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { ChipInput } from "./chip-input";
-import { SectionTitle, FieldGroup, Field, type SectionProps } from "./job-basics-sections";
+import { SectionTitle, FieldGroup, type SectionProps } from "./job-basics-sections";
+import { Field } from "./job-form-field";
+import { toOptionalNumber } from "./schema";
 import { Sparkles, Briefcase, Tag } from "lucide-react";
 
 export function Section3({ form }: SectionProps) {
@@ -16,16 +18,16 @@ export function Section3({ form }: SectionProps) {
       <SectionTitle title="Compensation Details" subtitle="Salary range and pay structure" icon={Sparkles} />
       <FieldGroup>
         <div className="grid sm:grid-cols-2 gap-4">
-          <Field label="Minimum Salary" required error={errors.salaryMin?.message}>
-            <Input inputMode="numeric" placeholder="e.g. 500000" {...register("salaryMin", { valueAsNumber: true })} />
+          <Field label="Minimum Salary" error={errors.salaryMin?.message}>
+            <Input inputMode="numeric" placeholder="e.g. 500000" {...register("salaryMin", { setValueAs: toOptionalNumber })} />
           </Field>
-          <Field label="Maximum Salary" required error={errors.salaryMax?.message}>
-            <Input inputMode="numeric" placeholder="e.g. 1200000" {...register("salaryMax", { valueAsNumber: true })} />
+          <Field label="Maximum Salary" error={errors.salaryMax?.message}>
+            <Input inputMode="numeric" placeholder="e.g. 1200000" {...register("salaryMax", { setValueAs: toOptionalNumber })} />
           </Field>
         </div>
 
         <div className="grid sm:grid-cols-2 gap-4">
-          <Field label="Currency" required error={errors.currency?.message}>
+          <Field label="Currency" error={errors.currency?.message}>
             <Controller
               name="currency"
               control={control}
@@ -44,7 +46,7 @@ export function Section3({ form }: SectionProps) {
               )}
             />
           </Field>
-          <Field label="Salary Type" required error={errors.salaryType?.message}>
+          <Field label="Salary Type" error={errors.salaryType?.message}>
             <Controller
               name="salaryType"
               control={control}
@@ -77,23 +79,20 @@ export function Section4({ form }: SectionProps) {
       <SectionTitle title="Experience & Education" subtitle="Qualifications and experience required" icon={Briefcase} />
       <FieldGroup>
         <div className="grid sm:grid-cols-2 gap-4">
-          <Field label="Min. Experience (years)" required error={errors.minExperience?.message}>
-            <Input type="number" min={0} placeholder="e.g. 0, 1, 3, 5" {...register("minExperience", { valueAsNumber: true })} />
+          <Field label="Min. Experience (years)" error={errors.minExperience?.message}>
+            <Input type="number" min={0} placeholder="e.g. 0, 1, 3, 5" {...register("minExperience", { setValueAs: toOptionalNumber })} />
           </Field>
           <Field label="Max. Experience (years)" error={errors.maxExperience?.message}>
             <Input
               type="number"
               min={0}
               placeholder="e.g. 2, 5, 10"
-              {...register("maxExperience", {
-                valueAsNumber: true,
-                setValueAs: (v) => (v === "" || isNaN(Number(v)) ? undefined : Number(v)),
-              })}
+              {...register("maxExperience", { setValueAs: toOptionalNumber })}
             />
           </Field>
         </div>
 
-        <Field label="Education Level" required error={errors.educationLevel?.message}>
+        <Field label="Education Level" error={errors.educationLevel?.message}>
           <Controller
             name="educationLevel"
             control={control}
@@ -125,7 +124,6 @@ export function Section5({ form }: SectionProps) {
       <FieldGroup>
         <Field
           label="Required Skills"
-          required
           hint="Type a skill and press Enter or comma to add"
           error={errors.requiredSkills?.message}
         >

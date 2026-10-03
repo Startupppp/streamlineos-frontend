@@ -108,6 +108,7 @@ export function ChannelsDiscoveryPage() {
     [router],
   );
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+  const handleClearSearch = useCallback(() => setSearch(""), []);
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background">
@@ -156,15 +157,16 @@ export function ChannelsDiscoveryPage() {
         ) : filtered.length === 0 && !hasMore ? (
           <EmptyState
             illustrationPreset={search ? "search" : "chat"}
-            title={search ? "No channels match your search" : "No public channels yet"}
+            title="No public channels yet"
+            filtersActive={search.length > 0}
+            filteredTitle="No channels match your search"
+            onClearFilters={handleClearSearch}
             description={
               search
                 ? "Try a different search term"
                 : "Create a public channel to get started"
             }
-            action={
-              search ? undefined : { label: "Create Channel", onClick: handleOpenCreate }
-            }
+            action={{ label: "Create Channel", onClick: handleOpenCreate }}
             className={CONTENT_FILL_PANEL}
           />
         ) : (

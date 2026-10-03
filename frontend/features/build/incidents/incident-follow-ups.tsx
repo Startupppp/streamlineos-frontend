@@ -249,6 +249,7 @@ export function IncidentFollowUps({
 }) {
   const listFilters = useBuildListFilters({ filters: STATUS_FILTER_DEFINITIONS, withSearch: false });
   const [selectedIds, setSelectedIds] = useState(new Set<string | number>());
+  const handleClearSelection = () => setSelectedIds(new Set());
 
   const filtered = useMemo(() => {
     const statusFilter = listFilters.value("followUpStatus");
@@ -288,7 +289,7 @@ export function IncidentFollowUps({
           projectId={projectId}
           incidentId={incidentId}
           selectedIds={selectedIds}
-          onClear={() => setSelectedIds(new Set())}
+          onClear={handleClearSelection}
         />
       ) : null}
 

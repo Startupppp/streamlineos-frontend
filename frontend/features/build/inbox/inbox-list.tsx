@@ -29,7 +29,7 @@ import {
   resolveInboxVisibleCount,
 } from "./inbox-render-window";
 import { useShellVariant } from "@/components/layout/shell-variant-context";
-import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
+import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
 
 const SECTION_FILTERS: { label: string; value: NotificationSection }[] = [
   { label: "Unread", value: "UNREAD" },

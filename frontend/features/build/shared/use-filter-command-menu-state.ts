@@ -106,9 +106,10 @@ export function useFilterCommandMenuState({
     return () => onToggle(String(only.id));
   }
 
+  const onlyStatus = statusItems.length === 1 ? statusItems[0] : undefined;
   const singleStatusAction =
-    simplifySingleOptionCategories && statusItems.length === 1 && statusItems[0]
-      ? () => onToggleStatus(statusItems[0]!.name)
+    simplifySingleOptionCategories && onlyStatus
+      ? () => onToggleStatus(onlyStatus.name)
       : undefined;
 
   const categories: CategoryDefinition[] = [

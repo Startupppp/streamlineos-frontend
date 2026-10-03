@@ -16,7 +16,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PlusIcon, GlobeIcon } from "@animateicons/react/lucide";
-import { StateIllustration } from "@/components/illustrations";
+import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useCan } from "@/hooks/api/access";
@@ -229,41 +229,17 @@ export function CompliancePageContent() {
             loading={<div className="space-y-2">{Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}</div>}
             onRetry={handleRetryRequirements}
             empty={
-            <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
-              <StateIllustration preset="security" className="h-28 w-28" />
-              <div className="max-w-sm space-y-1">
-                <p className="text-sm font-medium text-foreground">
-                  Nothing is being tracked yet
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {selectedPack.summary} Start from it, then edit or add your own.
-                </p>
-              </div>
-              <div className="mt-1 flex flex-wrap items-center justify-center gap-2">
-                {canManage ? (
-                  <>
-                    <LoadingButton
-                      size="sm"
-                      isPending={seedPack.isPending}
-                      onClick={handleOpenSeedDialog}
-                      className="gap-1.5"
-                    >
-                      <GlobeIcon size={14} />
-                      Set up {selectedPack.label} compliance
-                    </LoadingButton>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleOpenNewReq}
-                      className="gap-1.5"
-                    >
-                      <PlusIcon size={14} />
-                      Add requirement
-                    </Button>
-                  </>
-                ) : null}
-              </div>
-            </div>
+              <EmptyState
+                illustrationPreset="security"
+                title="Nothing is being tracked yet"
+                description={`${selectedPack.summary} Start from it, then edit or add your own.`}
+                action={
+                  canManage
+                    ? { label: `Set up ${selectedPack.label} compliance`, onClick: handleOpenSeedDialog }
+                    : undefined
+                }
+                secondaryAction={canManage ? { label: "Add requirement", onClick: handleOpenNewReq } : undefined}
+              />
             }
           >
             <div className="space-y-2">
@@ -306,19 +282,12 @@ export function CompliancePageContent() {
             loading={<div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}</div>}
             onRetry={handleRetryWorkAuth}
             empty={
-            <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
-              <StateIllustration preset="security" className="h-28 w-28" />
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-foreground">No work authorizations on record</p>
-                <p className="text-xs text-muted-foreground">Track visa, work permit, and right-to-work documentation for employees.</p>
-              </div>
-              {canManage ? (
-                <Button size="sm" onClick={handleOpenNewAuth} className="mt-1 gap-1.5">
-                  <PlusIcon size={14} />
-                  Add authorization
-                </Button>
-              ) : null}
-            </div>
+              <EmptyState
+                illustrationPreset="security"
+                title="No work authorizations on record"
+                description="Track visa, work permit, and right-to-work documentation for employees."
+                action={canManage ? { label: "Add authorization", onClick: handleOpenNewAuth } : undefined}
+              />
             }
           >
             <div className="space-y-2">

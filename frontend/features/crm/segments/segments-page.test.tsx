@@ -60,6 +60,10 @@ jest.mock("./segment-members-sheet", () => ({
   }) => (open ? <div data-testid="members-sheet">{segment?.name}</div> : null),
 }));
 
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
+}));
+
 const mockGranted = new Set<string>();
 jest.mock("@/hooks/api/access", () => {
   const { permissionGate } =

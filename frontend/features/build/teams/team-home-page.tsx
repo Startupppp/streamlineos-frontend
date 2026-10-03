@@ -15,7 +15,7 @@ import {
   useUpdateProjectTeamMemberRole,
 } from "@/hooks/api/build/teams";
 import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { useBuildListFilters, BUILD_FILTER_ALL } from "@/features/build/shared/use-build-list-filters";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { useCan } from "@/hooks/api/access";
@@ -44,7 +44,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { SearchInput } from "@/components/ui/search-input";
-import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
+import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
 import { TeamFormSheet } from "./team-form-sheet";
 import { TeamProjectsSection } from "./team-projects-section";
 import { MemberPicker } from "@/components/members/member-picker";

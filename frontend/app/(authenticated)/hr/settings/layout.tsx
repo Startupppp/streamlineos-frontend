@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
-import { useHrSettingsMode } from "@/features/hr/settings-hub/use-hr-settings-mode";
+import { useHrSettingsMode } from "@/hooks/common/use-hr-settings-mode";
 import { useAccess } from "@/hooks/api/access";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 

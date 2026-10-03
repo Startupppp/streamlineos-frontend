@@ -4,6 +4,7 @@ import { useEmployeeEmployment, useEmployeeTimeline } from "@/hooks/api/hr/emplo
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageState } from "@/components/shared/page-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -67,20 +68,24 @@ export function EmployeeTimelineTab({ userId }: Props) {
         </div>
       }
       empty={
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          {employment ? (
-            <>
-              <Clock className="w-8 text-muted-foreground mb-3" />
-              <p className="text-sm font-medium text-foreground">No timeline events yet</p>
-              <p className="text-xs text-muted-foreground mt-1">Changes and events will appear here as they occur.</p>
-            </>
-          ) : (
-            <>
-              <AlertCircle className="w-8 text-muted-foreground mb-3" />
-              <p className="text-sm text-muted-foreground">No employment record found for this employee.</p>
-            </>
-          )}
-        </div>
+        employment ? (
+          <EmptyState
+            illustration={<Clock className="w-8 text-muted-foreground" />}
+            illustrationSize="xs"
+            title="No timeline events yet"
+            description="Changes and events will appear here as they occur."
+            className="py-16"
+            compact
+          />
+        ) : (
+          <EmptyState
+            illustration={<AlertCircle className="w-8 text-muted-foreground" />}
+            illustrationSize="xs"
+            description="No employment record found for this employee."
+            className="py-16"
+            compact
+          />
+        )
       }
     >
       <TimelineEntries entries={entries} />

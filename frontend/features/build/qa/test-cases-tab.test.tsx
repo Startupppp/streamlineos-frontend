@@ -55,12 +55,10 @@ jest.mock("next/link", () => ({
 }));
 
 jest.mock("@/components/ui/data-table", () => ({
-  DataTable: ({ selection }: { selection?: { onChange: (s: Set<string | number>) => void } }) => (
-    <div
-      data-testid="data-table"
-      onClick={() => selection?.onChange(new Set([42]))}
-    />
-  ),
+  DataTable: ({ selection }: { selection?: { onChange: (s: Set<string | number>) => void } }) => {
+    const handleSelectRow = () => selection?.onChange(new Set([42]));
+    return <div data-testid="data-table" onClick={handleSelectRow} />;
+  },
   DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
 }));
 

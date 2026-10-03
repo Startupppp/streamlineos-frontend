@@ -12,6 +12,9 @@ import type {
 } from "./notification-event-stream";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
+import { installAbortSignalPolyfill } from "@/test-utils/abort-signal-polyfill";
+
+installAbortSignalPolyfill();
 
 jest.mock("./notification-event-stream", () => ({
   consumeNotificationStream: jest.fn(),
@@ -87,8 +90,13 @@ describe("a count_changed frame refreshes the inbox, because all eleven backend 
     fetchMock.mockImplementation((input: unknown) =>
       Promise.resolve(
         String(input).includes("/notifications/events/token")
-          ? { ok: true, json: async () => ({ token: "stream-token" }) }
-          : { ok: true, json: async () => ({ backendJwt: "jwt-1" }) },
+          ? {
+              ok: true,
+              status: 200,
+              headers: new Headers({ "content-type": "application/json" }),
+              json: async () => ({ token: "stream-token" }),
+            }
+          : { ok: true, status: 200, json: async () => ({ backendJwt: "jwt-1" }) },
       ),
     );
   });

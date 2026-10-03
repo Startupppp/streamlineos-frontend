@@ -67,7 +67,7 @@ function cachedPages(
   params: Omit<NotificationListParams, "cursor">,
 ): Notification[][] {
   const cached = client.getQueryData<InfiniteData<Notification[]>>(
-    queryKeys.notifications.list({ ...params, infinite: true }),
+    queryKeys.notifications.list({ ...params, initialCursor: null, infinite: true }),
   );
   return cached?.pages ?? [];
 }

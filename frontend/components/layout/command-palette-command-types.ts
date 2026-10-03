@@ -8,5 +8,6 @@ export interface CommandPaletteCommand {
   shortcut?: string;
   icon: ComponentType<{ className?: string }>;
   isAvailable: boolean;
+  confirm?: boolean;
   execute(): void | Promise<void>;
 }

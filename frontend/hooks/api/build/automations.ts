@@ -61,7 +61,7 @@ export function useAutomations(
   return useInfiniteQuery({
     queryKey: [...queryKeys.projects.automations(projectId), filters ?? {}],
     queryFn: ({ signal, pageParam }) => {
-      const params = pageParam
+      const params = pageParam !== undefined
         ? { ...baseParams, cursor: pageParam }
         : baseParams;
       return apiClient.get<{

@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  useMutation,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
@@ -114,7 +113,7 @@ export function useDeleteEmailTemplate(
   options?: UseMutationOptions<void, Error, number>,
 ) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:email-templates:manage", {
     mutationKey: ["hr", "email-templates", "delete"],
     mutationFn: (emailTemplateId: number) =>
       apiClient.delete<void>(`/hr/email-templates/${emailTemplateId}`, undefined, undefined, noContentC),

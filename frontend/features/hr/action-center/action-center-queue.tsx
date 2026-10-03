@@ -35,7 +35,7 @@ interface ActionCenterQueueViewProps {
 function facetCounts(
   items: readonly ActionCenterItem[],
 ): Record<ActionCenterFacet | "all", number> {
-  const counts = { all: items.length, leave: 0, wfh: 0, attendance: 0, other: 0 };
+  const counts = { all: items.length, leave: 0, wfh: 0, attendance: 0, expense: 0, other: 0 };
   for (const item of items) counts[item.facet] += 1;
   return counts;
 }

@@ -5,7 +5,7 @@ export const documentAcknowledgementContract = z.array(
     id: z.number().int(),
     documentId: z.number().int(),
     userId: z.string(),
-    status: z.enum(["PENDING", "ACKNOWLEDGED"]),
+    status: z.enum(["PENDING", "ACKNOWLEDGED", "DECLINED"]),
     acknowledgedAt: z.string().nullable(),
     createdAt: z.string(),
     document: z

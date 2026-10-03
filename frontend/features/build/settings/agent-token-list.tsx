@@ -2,7 +2,6 @@
 
 import { useCallback } from "react";
 import { formatDistanceToNow, format } from "date-fns";
-import { Bot } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -119,22 +118,6 @@ export function TokenListSkeleton() {
           <Skeleton className="h-7 w-14 shrink-0 rounded" />
         </div>
       ))}
-    </div>
-  );
-}
-
-export function TokensEmptyHint() {
-  return (
-    <div className="flex items-start gap-3 rounded-lg border border-dashed border-border/70 bg-muted/40 px-3 py-3">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted">
-        <Bot className="h-4 w-4 text-muted-foreground" aria-hidden />
-      </div>
-      <div className="min-w-0 pt-0.5">
-        <p className="text-sm font-medium text-foreground">No tokens yet</p>
-        <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-          Use New token above to connect an AI agent to your projects.
-        </p>
-      </div>
     </div>
   );
 }

@@ -42,19 +42,6 @@ export function deriveAclVersion(page: KbSpaceListPage | undefined): string {
   return page.pagination.hasMore ? `${ids.join(",")}~truncated` : ids.join(",");
 }
 
-function treeLevelKey(params: {
-  parentId?: number;
-  spaceId?: number;
-  projectId?: number;
-  cursor?: string;
-}) {
-  return [
-    ...knowledgeAndSurveysQueryKeys.kb.pagesTree(),
-    "level",
-    params,
-  ] as const;
-}
-
 const kbPageSearchResponseContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-pages-schema").then(
     (m) => m.kbPageSearchResponseContract,
@@ -144,7 +131,7 @@ export function useKbPageTreeInfinite(params: {
   const canView = useCan("kb:pages:view");
   return useInfiniteQuery({
     ...INLINE_READ_ERROR,
-    queryKey: [...treeLevelKey(params), "infinite"] as const,
+    queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTreeLevelInfinite(params),
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<KbPageTreeLevel>(
         "/kb/pages/tree",
@@ -171,10 +158,7 @@ export function useKbPageChildrenLevel(
   const canView = useCan("kb:pages:view");
   return useInfiniteQuery({
     ...INLINE_READ_ERROR,
-    queryKey: [
-      ...treeLevelKey({ parentId: nodeId, spaceId }),
-      "infinite",
-    ] as const,
+    queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTreeLevelInfinite({ parentId: nodeId, spaceId }),
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<KbPageTreeLevel>(
         "/kb/pages/tree",

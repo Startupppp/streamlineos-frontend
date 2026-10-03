@@ -53,7 +53,7 @@ it.each([false, true])("persists drag on an infinite board and restores its page
   const unsubscribe = observer.subscribe(() => {});
   jest.mocked(apiClient.patch).mockReset();
   if (fails) jest.mocked(apiClient.patch).mockRejectedValue(new Error("conflict"));
-  else jest.mocked(apiClient.patch).mockResolvedValue({ id: 1, rank: "a1", status: "DONE" });
+  else jest.mocked(apiClient.patch).mockResolvedValue({ id: 1, rank: "a1", status: "DONE", version: 2 });
   const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
   const { result } = renderHook(() => useKanbanDrag({
     projectId: 42, statuses: [], rowBy: "none", hideCompleted: false, canManage: true,
@@ -63,7 +63,7 @@ it.each([false, true])("persists drag on an infinite board and restores its page
   }), { wrapper });
   await act(async () => result.current.onDragEnd({ draggableId: "1", type: "DEFAULT", reason: "DROP", mode: "FLUID", source: { droppableId: "OPEN", index: 0 }, destination: { droppableId: "DONE", index: 0 }, combine: null }));
   await waitFor(() => expect(apiClient.patch).toHaveBeenCalledTimes(1));
-  for (const key of keys) await waitFor(() => expect(client.getQueryData(key)).toEqual(fails ? original : { ...original, pages: [{ ...original.pages[0], data: [{ ...ticket, rank: "a1", status: "DONE" }] }] }));
+  for (const key of keys) await waitFor(() => expect(client.getQueryData(key)).toEqual(fails ? original : { ...original, pages: [{ ...original.pages[0], data: [{ ...ticket, rank: "a1", status: "DONE", version: 2 }] }] }));
   expect(queryFn).not.toHaveBeenCalled();
   unsubscribe();
   client.clear();

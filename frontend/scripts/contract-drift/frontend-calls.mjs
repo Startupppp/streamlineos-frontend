@@ -303,30 +303,31 @@ function resolveIdentifierType(identifier, contextBefore) {
   let m;
   while ((m = re.exec(contextBefore)) !== null) found = m;
   if (!found) return null;
-  return { typeName: found[2], isPartial: found[1] !== undefined };
+  return { typeName: found[2], isPartial: found[1] !== undefined, index: found.index };
 }
 
 function resolveInlineObjectFields(identifier, contextBefore) {
   const re = new RegExp(`\\b${identifier}\\s*:\\s*(?:Partial<)?\\{([^{}]*)\\}`, "gu");
   let found = null;
   let m;
-  while ((m = re.exec(contextBefore)) !== null) found = m[1];
+  while ((m = re.exec(contextBefore)) !== null) found = m;
   if (found === null) return null;
 
   const fields = new Set();
-  for (const field of found.split(";")) {
+  for (const field of found[1].split(";")) {
     const match = /^\s*(\w+)\??\s*:/u.exec(field);
     if (match) fields.add(match[1]);
   }
-  return fields.size > 0 ? fields : null;
+  return fields.size > 0 ? { fields, index: found.index } : null;
 }
 
 function resolveConstObjectFields(identifier, contextBefore) {
   const re = new RegExp(`\\bconst\\s+${identifier}\\s*=\\s*(\\{[^;]*\\})`, "gu");
   let found = null;
   let m;
-  while ((m = re.exec(contextBefore)) !== null) found = m[1];
-  return found === null ? null : objectLiteralFields(found);
+  while ((m = re.exec(contextBefore)) !== null) found = m;
+  const fields = found === null ? null : objectLiteralFields(found[1]);
+  return fields ? { fields, index: found.index } : null;
 }
 
 /**
@@ -355,7 +356,8 @@ function resolveRequest(method, expr, contextBefore, interfaceMap) {
 
   if (!IDENT_RE.test(expr)) return unresolved;
   const resolved = resolveIdentifierType(expr, contextBefore);
-  if (resolved) {
+  const inline = resolveInlineObjectFields(expr, contextBefore) ?? resolveConstObjectFields(expr, contextBefore);
+  if (resolved && !(inline && inline.index > resolved.index)) {
     const fields = interfaceMap.get(resolved.typeName);
     return {
       requestFields: fields ? new Set(fields) : null,
@@ -365,9 +367,8 @@ function resolveRequest(method, expr, contextBefore, interfaceMap) {
     };
   }
 
-  const inlineFields = resolveInlineObjectFields(expr, contextBefore) ?? resolveConstObjectFields(expr, contextBefore);
-  if (inlineFields) {
-    return { requestFields: inlineFields, requestTypeName: null, isPartial: false, requestKind };
+  if (inline) {
+    return { requestFields: inline.fields, requestTypeName: null, isPartial: false, requestKind };
   }
 
   return unresolved;

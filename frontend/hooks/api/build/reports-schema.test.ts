@@ -26,18 +26,27 @@ const BASE_VELOCITY_SPRINT = {
   completedCount: 7,
 };
 
+const velocityPage = (data: unknown[]) => ({
+  data,
+  pagination: { limit: 20, hasMore: false, nextCursor: null },
+});
+
 describe("velocityContract — velocity data from /reports/velocity", () => {
-  it("accepts a single-cycle array", () => {
-    expect(() => velocityContract.parse([BASE_VELOCITY_SPRINT])).not.toThrow();
+  it("accepts a single-cycle page", () => {
+    expect(() => velocityContract.parse(velocityPage([BASE_VELOCITY_SPRINT]))).not.toThrow();
   });
 
-  it("accepts an empty array so a project with no cycles renders the empty state", () => {
-    expect(() => velocityContract.parse([])).not.toThrow();
+  it("accepts an empty page so a project with no cycles renders the empty state", () => {
+    expect(() => velocityContract.parse(velocityPage([]))).not.toThrow();
+  });
+
+  it("rejects a bare array, which carries no cursor for the next page", () => {
+    expect(velocityContract.safeParse([BASE_VELOCITY_SPRINT]).success).toBe(false);
   });
 
   it("rejects a cycle with a missing name so a row with an undefined name cannot reach the chart axis", () => {
     const { name: _name, ...withoutName } = BASE_VELOCITY_SPRINT;
-    expect(velocityContract.safeParse([withoutName]).success).toBe(false);
+    expect(velocityContract.safeParse(velocityPage([withoutName])).success).toBe(false);
   });
 
 });

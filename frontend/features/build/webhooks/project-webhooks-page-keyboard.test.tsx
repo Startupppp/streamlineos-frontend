@@ -114,7 +114,7 @@ describe("ProjectWebhooksPage — j/k focus, Enter and / (BLD-X-FE-SETTINGS-WH-0
     render(<ProjectWebhooksPage projectId="1" />);
     const lastArgs = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0];
     expect(lastArgs?.searchInputRef?.current).toBe(
-      screen.getByRole("textbox", { name: /search webhooks/i }),
+      screen.getByRole("searchbox", { name: /search webhooks/i }),
     );
   });
 

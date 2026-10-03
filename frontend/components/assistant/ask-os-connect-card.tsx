@@ -51,10 +51,10 @@ export function AskOsConnectCard({ toolkit, reason, summary }: AskOsConnectCardP
       )}
     >
       <div className="min-w-0 flex-1 space-y-0.5">
-        <p className={cn("text-[10px] font-semibold uppercase tracking-wider", tone.ink)}>
+        <p className={cn("text-micro font-semibold uppercase tracking-wider", tone.ink)}>
           {eyebrow}
         </p>
-        <p className={cn("text-[13px] leading-5", canManage ? "text-foreground" : "text-muted-foreground")}>
+        <p className={cn("text-label leading-5", canManage ? "text-foreground" : "text-muted-foreground")}>
           {canManage ? summary : `Ask an admin to connect your ${providerLabel} account.`}
         </p>
       </div>

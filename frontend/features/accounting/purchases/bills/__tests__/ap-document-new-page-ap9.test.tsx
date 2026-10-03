@@ -77,6 +77,7 @@ describe("ApDocumentNewPage AP-9 guard", () => {
       },
       isLoading: false,
     });
+    useAccountingBook.mockReturnValue({ data: { baseCurrency: "INR" }, isLoading: false, isError: false });
 
     render(<ApDocumentNewPage {...PAGE_PROPS} />);
 

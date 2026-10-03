@@ -7,6 +7,9 @@ import { useNotificationEvents } from "./use-notification-events";
 import { queryKeys } from "@/lib/query-keys";
 import { authenticatedScope, scopedQueryKeyHashFn } from "@/lib/query-scope";
 import type { UnifiedInboxResponse } from "@/types/inbox";
+import { installAbortSignalPolyfill } from "@/test-utils/abort-signal-polyfill";
+
+installAbortSignalPolyfill();
 
 const mockConsumeStream = jest.fn();
 

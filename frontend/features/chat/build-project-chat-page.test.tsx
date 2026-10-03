@@ -206,8 +206,8 @@ describe("BuildProjectChatPage — error state", () => {
 });
 
 describe("BuildProjectChatPage — permission-denied state", () => {
-  it("renders the access-restricted view when build:view is denied, not the empty state, so a missing permission is not confused with a missing channel", () => {
-    mockUsePageState.mockReturnValue({ kind: "denied", permission: "build:view" });
+  it("renders the access-restricted view when chat:channels:read is denied, not the empty state, so a missing permission is not confused with a missing channel", () => {
+    mockUsePageState.mockReturnValue({ kind: "denied", permission: "chat:channels:read" });
     render(<BuildProjectChatPage projectId="1" />);
     expect(screen.getByTestId("no-permission-state")).toBeInTheDocument();
     expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
@@ -220,14 +220,14 @@ describe("BuildProjectChatPage — permission-denied state", () => {
     expect(screen.queryByTestId("no-permission-state")).not.toBeInTheDocument();
   });
 
-  it("passes build:view permission to usePageState so the correct gate is evaluated", () => {
+  it("passes chat:channels:read, the key its channel read enforces, to usePageState", () => {
     mockUsePageState.mockReturnValue({ kind: "ready" });
     mockUseEntityChannel.mockReturnValue(
       baseChannelResult({ data: { id: "channel-1" } }),
     );
     render(<BuildProjectChatPage projectId="1" />);
     expect(mockUsePageState).toHaveBeenCalledWith(
-      expect.objectContaining({ permission: "build:view" }),
+      expect.objectContaining({ permission: "chat:channels:read" }),
     );
   });
 });

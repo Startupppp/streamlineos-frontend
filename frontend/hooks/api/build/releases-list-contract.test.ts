@@ -1,3 +1,4 @@
+import { ZodError } from "zod";
 import { readFileSync } from "node:fs";
 import { backendPath, backendReachable } from "@/lib/test-support/backend-path";
 import { projectReleaseListContract } from "./build-project-schema";
@@ -88,10 +89,10 @@ describe("releases list contract matches the projects-releases service projectio
   it("rejects a status outside the three enum values the backend emits", () => {
     expect(() =>
       projectReleaseListContract.parse({ ...CURSOR_PAGE, data: [{ ...RELEASE_ROW, status: "RELEASED" }] }),
-    ).toThrow();
+    ).toThrow(ZodError);
     expect(() =>
       projectReleaseListContract.parse({ ...CURSOR_PAGE, data: [{ ...RELEASE_ROW, status: "published" }] }),
-    ).toThrow();
+    ).toThrow(ZodError);
   });
 
   it("accepts every valid release status the backend can emit", () => {
@@ -122,7 +123,7 @@ describe("releases list contract matches the projects-releases service projectio
     const { rowVersion: _omitted, ...withoutToken } = RELEASE_ROW;
     expect(() =>
       projectReleaseListContract.parse({ ...CURSOR_PAGE, data: [withoutToken] }),
-    ).toThrow();
+    ).toThrow(ZodError);
   });
 
   it("confirms the backend update schema requires rowVersion and rejects unknown keys, so an untokened PATCH is a 400", () => {

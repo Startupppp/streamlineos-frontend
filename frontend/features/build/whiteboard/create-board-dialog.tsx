@@ -71,7 +71,7 @@ export function CreateBoardDialog({
                 <FormItem>
                   <FormLabel>Board name <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
-                    <Input {...field} autoFocus placeholder="e.g. Sprint brainstorm" />
+                    <Input {...field} autoFocus placeholder="e.g. Cycle brainstorm" />
                   </FormControl>
                   <FormMessage className="text-xs" />
                 </FormItem>

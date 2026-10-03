@@ -204,6 +204,7 @@ export const supportAndWorkflowsQueryKeys = {
   auth: {
     all: [...base, "auth"] as const,
     sessions: () => [...base, "auth", "sessions"] as const,
+    myPreferences: () => [...base, "auth", "myPreferences"] as const,
     loginHistory: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "auth", "loginHistory"] as const)

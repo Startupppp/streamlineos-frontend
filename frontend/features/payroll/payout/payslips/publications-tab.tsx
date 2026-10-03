@@ -65,7 +65,9 @@ function PublishDialog({
       { runId },
       {
         onSuccess: (data) => {
-          toast.success(`Published ${data.published}/${data.total} payslips`);
+          toast.success(
+            `Published ${data.published}/${data.total} payslips${data.heldCount > 0 ? `. ${data.heldCount} on hold.` : ""}`,
+          );
           onOpenChange(false);
         },
         onError: (err) => {
@@ -83,7 +85,7 @@ function PublishDialog({
           <DialogTitle>Publish Payslips</DialogTitle>
           <DialogDescription>
             Publish all{employeeCount != null ? ` ${employeeCount}` : ""} employees&apos; payslips
-            for {formatMonth(month)}?
+            for {formatMonth(month)}? Employees on hold are skipped.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

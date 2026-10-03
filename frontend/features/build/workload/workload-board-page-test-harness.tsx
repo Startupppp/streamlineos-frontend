@@ -69,7 +69,7 @@ export const mockUseBuildListKeyboard = jest.fn((..._args: unknown[]) => ({
   focusedIndex: null,
 }));
 
-jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
   useBuildListKeyboard: (...args: unknown[]) =>
     mockUseBuildListKeyboard(...args),
 }));
@@ -107,7 +107,7 @@ jest.mock("@/features/build/views/view-switcher", () => ({
   ViewSwitcher: () => null,
 }));
 
-jest.mock("@/features/build/shared/shortcut-help-dialog", () => ({
+jest.mock("@/components/shared/shortcut-help-dialog", () => ({
   ShortcutHelpDialog: ({ open }: { open: boolean }) =>
     open ? <div data-testid="shortcut-help-dialog" /> : null,
 }));

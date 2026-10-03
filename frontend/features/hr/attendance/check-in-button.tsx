@@ -9,6 +9,7 @@ import { useCanState } from "@/hooks/api/access";
 import { Briefcase, Coffee } from "lucide-react";
 import { formatDuration } from "./attendance-utils";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/i18n";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { hrmsSm, hrmsTransition } from "@/lib/hrms/motion";
 import { TimerDigit, TimerSeparator, SessionMetric } from "./attendance-timer-parts";
@@ -31,6 +32,7 @@ export const TimerCard = memo(function TimerCard({
   onRequestWfh,
   onRequestRegularization,
 }: TimerCardProps) {
+  const t = useT();
   const timer = useAttendanceTimer();
   const reduced = useReducedMotion();
   const selfAccess = useCanState("self:attendance");
@@ -41,7 +43,7 @@ export const TimerCard = memo(function TimerCard({
         <NoPermissionState
           compact
           permission="self:attendance"
-          description="Your role can't record your own attendance."
+          description={t("attendance.noPermission")}
         />
       </TimerCardShell>
     );
@@ -52,7 +54,7 @@ export const TimerCard = memo(function TimerCard({
       <TimerCardShell chrome={chrome}>
         <ErrorState
           compact
-          title="Attendance unavailable"
+          title={t("attendance.unavailable")}
           description={getErrorMessage(timer.statusError)}
           onRetry={timer.handleRetryStatus}
         />
@@ -159,14 +161,14 @@ export const TimerCard = memo(function TimerCard({
           aria-label="Today's work and break totals"
         >
           <SessionMetric
-            label="Work"
+            label={t("attendance.work")}
             value={formatDuration(timer.dailyStats.workHours)}
             icon={Briefcase}
             tone="work"
             emphasized={timer.isActive && !timer.isOnBreak}
           />
           <SessionMetric
-            label="Break"
+            label={t("attendance.break")}
             value={formatDuration(timer.dailyStats.breakHours)}
             icon={Coffee}
             tone="break"

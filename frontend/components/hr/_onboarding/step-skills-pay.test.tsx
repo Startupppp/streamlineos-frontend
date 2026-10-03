@@ -1,9 +1,3 @@
-/**
- * V-135. The Skills & Pay step labelled the salary `Monthly Salary (CTC) *`
- * while the schema had it `.optional()` and the wizard's step-3 gate did not
- * even list the field — the asterisk was a lie, and 25000 is only a
- * placeholder, so the two had to be made to agree.
- */
 import { useState } from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { useForm } from "react-hook-form";
@@ -79,24 +73,28 @@ describe("the Skills & Pay step's salary field", () => {
     expect(input).toHaveAttribute("placeholder", "25000");
   });
 
-  it("refuses to advance with the salary blank while the field is marked required", async () => {
+  it("advances with the salary blank, because pay is not a hire blocker", async () => {
     render(<Harness />);
 
-    // The gate the Next button runs must actually cover this field.
     expect(STEP_FIELDS[3]).toContain("monthlySalary");
-
-    fireEvent.click(screen.getByText("validate"));
-    await waitFor(() =>
-      expect(screen.getByTestId("validity")).toHaveTextContent("invalid"),
-    );
-    expect(screen.getByText("Monthly salary is required")).toBeInTheDocument();
-
-    fireEvent.change(salaryInput(), { target: { value: "50000" } });
+    expect(screen.queryByText("*")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByText("validate"));
     await waitFor(() =>
       expect(screen.getByTestId("validity")).toHaveTextContent("valid"),
     );
+    expect(screen.queryByText("Monthly salary is required")).not.toBeInTheDocument();
+  });
+
+  it("still checks the format of a salary that is filled in", async () => {
+    render(<Harness />);
+
+    fireEvent.change(salaryInput(), { target: { value: "99999999" } });
+    fireEvent.click(screen.getByText("validate"));
+    await waitFor(() =>
+      expect(screen.getByTestId("validity")).toHaveTextContent("invalid"),
+    );
+    expect(screen.getByText("Salary exceeds maximum allowed value")).toBeInTheDocument();
   });
 
   it("names the currency in the label so the rupee glyph need not be read out", () => {

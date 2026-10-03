@@ -118,17 +118,9 @@
   --ring: var(--primary, #0b1220);
 
   /* â”€â”€â”€ Accent (neutral hover wash â€” used by shadcn dropdown/menu/command item hover) â”€â”€â”€ */
-  --accent: color-mix(
-    in srgb,
-    var(--primary) 10%,
-    var(--muted)
-  ); /* selected and active surfaces follow the chosen palette */
+  --accent: color-mix(in srgb, var(--primary) 10%, var(--muted)); /* selected and active surfaces follow the chosen palette */
   --accent-foreground: #0f172a; /* slate-900 â€” readable on neutral wash */
-  --secondary: color-mix(
-    in srgb,
-    var(--foreground) 6%,
-    var(--muted)
-  ); /* neutral table and calendar headers */
+  --secondary: color-mix(in srgb, var(--foreground) 6%, var(--muted)); /* neutral table and calendar headers */
   --secondary-foreground: #0b1220;
 
   /* â”€â”€â”€ Status / Semantic â”€â”€â”€ */

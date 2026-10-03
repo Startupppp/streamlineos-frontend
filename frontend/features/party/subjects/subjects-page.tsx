@@ -114,6 +114,10 @@ export function SubjectsPage() {
     if (!open) setOpenSubjectId(null);
   }
 
+  function handleClearSearch() {
+    setSearch("");
+  }
+
   function handleOpenCreate() {
     setCreateOpen(true);
   }
@@ -215,21 +219,16 @@ export function SubjectsPage() {
         ) : rows.length === 0 ? (
           <EmptyState
             className={CONTENT_FILL_PANEL}
-            title={
-              isFiltered
-                ? `No matching ${selectedType.plural.toLowerCase()}`
-                : `No ${selectedType.plural.toLowerCase()} yet`
-            }
+            title={`No ${selectedType.plural.toLowerCase()} yet`}
+            filtersActive={isFiltered}
+            filteredTitle={`No matching ${selectedType.plural.toLowerCase()}`}
+            onClearFilters={handleClearSearch}
             description={
               isFiltered
                 ? "Try adjusting your search."
                 : `Records of this type will appear here once ${canManage ? "you add" : "someone adds"} them.`
             }
-            action={
-              isFiltered || !canManage
-                ? undefined
-                : { label: `New ${selectedType.singular}`, onClick: handleOpenCreate }
-            }
+            action={canManage ? { label: `New ${selectedType.singular}`, onClick: handleOpenCreate } : undefined}
           />
         ) : (
           <>

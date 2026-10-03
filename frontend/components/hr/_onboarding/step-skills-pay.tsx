@@ -103,7 +103,7 @@ export function StepSkillsPay({ form }: StepSkillsPayProps) {
           name="monthlySalary"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Monthly Salary (CTC, INR) <span className="text-status-danger-ink">*</span></FormLabel>
+              <FormLabel>Monthly Salary (CTC, INR)</FormLabel>
               {/* V-135: FormControl's id/aria-* land on its single Slot child,
                   so the Input has to be that child — wrapping it in the
                   positioning div left the field with no accessible name. */}

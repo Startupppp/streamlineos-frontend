@@ -62,7 +62,7 @@ jest.mock("@/components/pm-chrome", () => ({
   PmStaggerList: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   CONTENT_FILL_PANEL: "",
 }));
-jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
   useBuildListKeyboard: jest.fn(),
 }));
 jest.mock("@/features/build/shared/build-list-toolbar", () => ({
@@ -181,7 +181,7 @@ beforeEach(() => {
   (useUpdateTicket as jest.Mock).mockReturnValue(makeMutation());
   (useDeleteTicket as jest.Mock).mockReturnValue(makeMutation());
   (useCreateTicket as jest.Mock).mockReturnValue(makeMutation());
-  (require("@/features/build/shared/use-build-list-keyboard").useBuildListKeyboard as jest.Mock).mockReturnValue({});
+  (jest.requireMock("@/hooks/common/use-build-list-keyboard").useBuildListKeyboard as jest.Mock).mockReturnValue({});
   (useExportTickets as jest.Mock).mockReturnValue(makeMutation());
   (toast.success as jest.Mock).mockClear();
   (toast.error as jest.Mock).mockClear();

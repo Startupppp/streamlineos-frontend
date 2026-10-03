@@ -25,7 +25,7 @@ describe("ProjectWebhooksPage — URL-backed filters (BLD-X-FE-SETTINGS-WH-033)"
   it("renders the URL search input — so the operator can search webhooks by URL prefix", () => {
     st.accessState = "granted";
     render(<ProjectWebhooksPage projectId="1" />);
-    expect(screen.getByRole("textbox", { name: /search webhooks/i })).toBeInTheDocument();
+    expect(screen.getByRole("searchbox", { name: /search webhooks/i })).toBeInTheDocument();
   });
 
   it("renders all three filter controls on the same toolbar — all must be present before any filtering logic runs", () => {
@@ -33,7 +33,7 @@ describe("ProjectWebhooksPage — URL-backed filters (BLD-X-FE-SETTINGS-WH-033)"
     render(<ProjectWebhooksPage projectId="1" />);
     expect(screen.getByRole("combobox", { name: /filter by state/i })).toBeInTheDocument();
     expect(screen.getByRole("combobox", { name: /filter by event/i })).toBeInTheDocument();
-    expect(screen.getByRole("textbox", { name: /search webhooks/i })).toBeInTheDocument();
+    expect(screen.getByRole("searchbox", { name: /search webhooks/i })).toBeInTheDocument();
   });
 });
 

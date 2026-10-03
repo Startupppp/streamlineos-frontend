@@ -275,7 +275,7 @@ export function HoldsSection({ settings, projectId, canEdit }: HoldsSectionProps
             <div
               className={cn(
                 "mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full",
-                settings.legalHold ? "bg-amber-500" : "bg-green-500",
+                settings.legalHold ? "bg-status-warning-fill" : "bg-status-success-fill",
               )}
               aria-hidden
             />

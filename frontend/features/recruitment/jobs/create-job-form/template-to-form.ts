@@ -5,7 +5,7 @@ import { JOB_TYPES, type CreateJobFormValues } from "./schema";
 const KNOWN_JOB_TYPES = new Set<string>(JOB_TYPES);
 
 /** A stored `type` the form's enum does not know is dropped rather than injected — an unknown option would make the select unopenable. */
-function isKnownJobType(value: string): value is CreateJobFormValues["jobType"] {
+function isKnownJobType(value: string): value is NonNullable<CreateJobFormValues["jobType"]> {
   return KNOWN_JOB_TYPES.has(value);
 }
 

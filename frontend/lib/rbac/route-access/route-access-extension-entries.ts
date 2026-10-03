@@ -298,6 +298,14 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     backendRoute: { method: "get", path: "/feedbucket/widgets" },
   },
   {
+    prefix: "/build/[projectId]/chat",
+    product: "build",
+    permission: "chat:channels:read",
+    reason:
+      "A project's chat channel. Its first read is GET /chat/channels/entity/{entityType}/{entityId}, which requires chat:channels:read, and navigation already declares that key; without this entry the route inherits build:view and a member without chat access lands on a failed read.",
+    backendRoute: { method: "get", path: "/chat/channels/entity/{entityType}/{entityId}" },
+  },
+  {
     prefix: "/calendar/settings",
     product: "administration",
     permission: "calendar:admin:manage",

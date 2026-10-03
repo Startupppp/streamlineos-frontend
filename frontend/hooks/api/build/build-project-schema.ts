@@ -92,6 +92,12 @@ export const projectAutomationListContract =
   projectsAutomationsListResponseSchema;
 export const projectAutomationRowContract =
   projectsAutomationsCreateResponseSchema;
-export const buildMemberPageContract = buildMembersListResponseSchema;
+export const buildMemberPageContract = buildMembersListResponseSchema.extend({
+  data: z.array(
+    buildMembersListResponseSchema.shape.data.element.extend({
+      role: z.enum(["member", "admin"]),
+    }),
+  ),
+});
 export const buildMemberRowContract = buildMembersAddResponseSchema;
 export const successContract = projectsCustomFieldsUpsertTicketValuesResponseSchema;
