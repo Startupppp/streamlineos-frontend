@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatINR } from "@/lib/format-utils";
+import { formatMoney } from "@/features/payroll/shared/payroll-format";
 import { cn } from "@/lib/utils";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -137,7 +138,7 @@ function describeCalc(component: SalaryComponent): string {
   const percent = component.percent ? `${Number(component.percent)}%` : "";
   switch (component.calcMethod) {
     case "FIXED":
-      return component.amount ? `fixed ${formatINR(component.amount)}` : "fixed";
+      return component.amount ? `fixed ${formatMoney(component.amount)}` : "fixed";
     case "PERCENT_OF_BASIC":
       return `${percent} of Basic`;
     case "PERCENT_OF_GROSS":
