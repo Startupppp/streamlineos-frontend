@@ -88,6 +88,35 @@ The required writer census includes contact email updates/deletion, parent Party
 
 Use a public Party owner interface with explicit transaction and parent → contact → membership → invitation locking. Email identity changes, contact deletion, parent deletion and reparenting must revoke pending invitations and advance membership epochs in that transaction; normalization-only email edits should not revoke access. Restore/revert must never reactivate old portal rows. Guard liveness alone does not invalidate a token after a same-contact email change. Resolve the dependency through an independently injectable Portal recipient-access service with no Party dependency, rather than a private table reader or query-builder type shared across owners. Party owns bounded contact selection and calls that service with domain IDs. Bulk parent operations need bounded batches and measured lock/transaction limits; lock ordering across organization revocation also needs concurrency proof. These are required next implementation steps, not delivered behavior.
 
+## Invitation binding migration rehearsal — 2026-10-03
+
+Status: **Current verified** for this isolated PostgreSQL rehearsal; production application, portal runtime, browser, deployment and operations remain **Current unverified**. Backend `3346cc318` adds four guarded proof files under claim `BLD-PORTAL-MIGRATION-PROOF-17`. Root independently reviewed the complete CLI, source seals, baseline, case oracles, official-runner invocation and cleanup boundary. The 49 pure/guard tests and exact four-file ESLint pass. These JavaScript-only files do not change production TypeScript or API contracts.
+
+The nonconnecting plan and subsequent execution used only `scratch_build_migration_c829f0843db90a762501ec46`, created from template0. The existing proof owner checks IAM roles, physical database OID, process/run manifest and zero active sessions before cleanup. Historical portal declarations are explicitly recorded as fragments, never as complete historical migrations. Only complete migrations 1730 and 1731 receive their real journal identities through the official `run-pending-migrations.mjs --tag=...` entry point. This is not full-chain replay.
+
+Commands executed from `backend/`:
+
+```text
+node --test src/scripts/__tests__/portal-migration-proof.test.mjs src/scripts/__tests__/organization-setup-proof-target.test.mjs src/scripts/__tests__/organization-setup-migration-proof.test.mjs
+pnpm exec eslint src/scripts/portal-migration-proof.mjs src/scripts/lib/portal-migration-proof-baseline.mjs src/scripts/lib/portal-migration-proof-cases.mjs src/scripts/__tests__/portal-migration-proof.test.mjs --max-warnings 0
+node --env-file=.env src/scripts/portal-migration-proof.mjs --run-id=c829f0843db90a762501ec46
+node --env-file=.env src/scripts/portal-migration-proof.mjs --run-id=c829f0843db90a762501ec46 --execute --approve-database=scratch_build_migration_c829f0843db90a762501ec46
+```
+
+All **40 PostgreSQL checks passed, zero failed**, exit 0. The [machine-readable observation](evidence/2026-10-03-portal-binding-migration-proof.json) records the sealed hashes and independent cleanup observation.
+
+| Executed boundary | Observed result |
+|---|---|
+| Missing membership key, wrong target column/check, duplicate token or live grant before application | Exact controlled `P0001` reasons; failed transactions preserve baseline data, columns and ledger. |
+| Official forward application, official ledger skip and actual SQL rerun | Both whole migrations apply; ledger contains one exact identity each; reruns preserve data/catalog. Existing invitations retain NULL target bindings. The target FK uses the canonical membership key. |
+| Application role and public token | Separate tenant counts match; one token sees only its invitation; absent token sees none; missing tenant, token-only update and cross-tenant insert reject with `42501`. |
+| Binding constraints | Partial/negative/mismatched acceptance rejects with `23514`; foreign/missing membership or wrong contact rejects with `23503`. Valid binding, zero epoch and legacy NULL pair persist. |
+| Uniqueness and history | Duplicate token across tenants/statuses and duplicate ACTIVE/SUSPENDED grants reject with `23505`; terminal grant history coexists. Failed writes preserve previous data. |
+| Lock and controlled rollback | A real competing invitation-table lock produces `55P03`; catalog remains unchanged. Both down migrations deliberately refuse with their exact `P0001` review-required reason and preserve the catalog. |
+| Cleanup and independent read | Guarded cleanup reports dropped database. A fresh `streamline_app` READ ONLY transaction on PostgreSQL `180004` confirms scratch database absent and production binding-column count still zero. |
+
+The new binding-aware application source `fe5997894` remains blocked from portal runtime use until production prerequisites and schema are ready. A possible migration/acceptance lock-order inversion is a source-review hypothesis, not a reproduced race; controlled portal-writer quiescence and fresh preflight are required before real application. This rehearsal does not prove the activation producer, delivery, Party lifecycle, full-chain migration, production role matrix, browser journey or operations, and closes none of those broad checklist items.
+
 ## Delivery checklist
 
 - [x] Inventory the current invite, grant, accept, publication, and guest-read source paths above without claiming deployed behavior.
