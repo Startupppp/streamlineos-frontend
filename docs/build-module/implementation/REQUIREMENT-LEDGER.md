@@ -75,6 +75,9 @@ Observation20 adds [bounded explicit Build assignment and preserved object scope
 
 [Query-owned selected read39](../audit/bugs-and-verification.md#selected-read-query-ownership-gate--2026-10-04) is committed at frontend1e0ac5bab after meaningful RED/GREEN,39 owned tests, exact five-file lint/diff, matching-hash independent review and coordinator scoped/production TypeScript pass. Effect and signal real gates pass. One compatibility failure is reproduced with the exact pre39 factory mapped in; response-contract URL expressions and the unowned KB query-key gate remain failed. No new runtime/browser/database result or broad task closure is claimed; claim40 addresses only the exact existing notification route expressions.
 
+
+[Notification route-expression40](../audit/bugs-and-verification.md#selected-read-query-ownership-gate--2026-10-04) at frontendde5c50b2e closes only the two-file contract-gate defect with79 focused tests, exact lint/diff, independent coordinator review and scoped/production TypeScript. The unchanged contract gate now passes; no broad R/B/L or checkbox advances. Expired person regrant41 separately has eight genuine REDs and preserves proven duplicate400/no-write semantics.
+
 ## Delivery checklist
 
 AI consumer adoption is committed at backend `52cd31533`, with four suites/40 tests, exact seven-file lint/diff, independent review, scoped and production TypeScript. The [AI read evidence](../audit/bugs-and-verification.md#ai-notification-read-adoption--2026-10-03) documents canonical caller propagation, output budgets, changed read semantics and the absent live AI/database/provider proof. Backend29 and frontend30 are disjoint active stream/toast claims; no complete task stage advances.

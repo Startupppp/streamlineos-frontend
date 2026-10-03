@@ -323,6 +323,9 @@ Additional failed gates: response-contract self-tests13 pass but the real scan r
 
 Current unverified: no new real API, database, browser/mobile, deployment or operations result was produced by39. Matching local frontend approval remains pending and the reviewed runner is stopped. Numeric unread, positive Member/object visibility, full current authority/tenant/revocation, physical cache/durable events/expiry and exact-version approvals remain open. BT-801e948e8a67 retains D proven and I/T/R/B partial/open, L open; no task checkbox advances.
 
+
+Current verified route-expression correction40: frontendde5c50b2e preserves every notification URL/method/body/config/ACK and scoped/global branch, replacing only ten row URL concatenations with templates and one conditional path argument with two explicit contracted calls. Root independently reviewed both matching SHA256 values. Seven focused suites/79 tests, exact two-file lint/diff, scoped/production TypeScript and the unchanged contract scanner pass after meaningful real-gate RED. The final gate parses2531/3058 calls with527 unparsed (baseline533) and four pre-existing unresolved sites in three files; its13 self-tests pass. No allowlist/baseline/schema/key/API/helper/comment/newfile change. Query-scope KB, baseline provider compatibility, full spec and release-size failures remain recorded. No new API/database/browser/deployment proof, full BT stage or task checkbox is claimed.
+
 ## Testing Decisions
 
 For every closure record: frontend/backend/worker revisions; environment and synthetic tenants; actor/principal and exact role/grant; initial state; action; persisted DB/API result; console/network; audit/outbox/job/cache evidence; unauthorized/cross-tenant negative; responsive path. Existing focused tests support closure but cannot substitute browser/persistence/deployment evidence.
