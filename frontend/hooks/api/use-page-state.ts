@@ -28,7 +28,6 @@ export function usePageState(options: UsePageStateOptions): PageStateResolution 
     isLoading: accessLoading,
     isError: accessFailed,
     error: accessError,
-    isEnabled: accessEnabled,
   } = useAccess();
   const { data: entitlements } = useEntitlements(options.module !== undefined);
 
@@ -50,13 +49,6 @@ export function usePageState(options: UsePageStateOptions): PageStateResolution 
    */
   if (accessFailed && access === undefined)
     return pageStateFromError(accessError) ?? { kind: "error", error: accessError };
-
-  if (
-    accessEnabled === false &&
-    access === undefined &&
-    (options.permission !== undefined || options.module !== undefined)
-  )
-    return { kind: "denied", permission: options.permission ?? null };
 
   const permissionState =
     options.permission === undefined
