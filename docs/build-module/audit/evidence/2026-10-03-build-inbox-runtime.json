@@ -1,0 +1,290 @@
+{
+  "startedAt": "2026-10-03T13:09:54.006Z",
+  "fixtureCommit": "e238696bc",
+  "frontendCommit": "6ab361475",
+  "scopedRouteCommit": "231a94829",
+  "gates": {
+    "backendProductionTypecheck": "passed",
+    "changedNotificationAndFixtureTypecheck": "passed including final __tests__ paths"
+  },
+  "observations": [
+    {
+      "kind": "runner-start",
+      "status": "failed-before-listen",
+      "reason": "NODE_PATH missing; src alias resolution failed",
+      "pid": 23868
+    },
+    {
+      "kind": "fixture-negative-http",
+      "cases": [
+        {
+          "name": "missing authentication",
+          "status": 401,
+          "expected": 401,
+          "passed": true,
+          "code": "UNAUTHORIZED"
+        },
+        {
+          "name": "missing fixture capability",
+          "status": 403,
+          "expected": 403,
+          "passed": true,
+          "code": "BUILD_BROWSER_SYNTHETIC_ONLY"
+        },
+        {
+          "name": "wrong fixture capability",
+          "status": 403,
+          "expected": 403,
+          "passed": true,
+          "code": "BUILD_BROWSER_SYNTHETIC_ONLY"
+        },
+        {
+          "name": "client authority rejected",
+          "status": 400,
+          "expected": 400,
+          "passed": true,
+          "code": "VALIDATION_FAILED"
+        },
+        {
+          "name": "reserved ticket missing",
+          "status": 404,
+          "expected": 404,
+          "passed": true,
+          "code": "NOT_FOUND"
+        }
+      ]
+    },
+    {
+      "kind": "database-after-denials",
+      "notifications": [
+        {
+          "id": "306",
+          "source_module": "organization",
+          "membership_id": 139,
+          "is_read": false,
+          "reason": "You received \"Organization setup completed\" Delivered via IN_APP, EMAIL.",
+          "deleted": false
+        }
+      ],
+      "watermarks": []
+    },
+    {
+      "kind": "fixture-create",
+      "status": 200,
+      "result": {
+        "notificationId": 307,
+        "created": true
+      }
+    },
+    {
+      "kind": "fixture-retry",
+      "status": 200,
+      "result": {
+        "notificationId": 307,
+        "created": false
+      }
+    },
+    {
+      "kind": "database-after-fixture",
+      "notifications": [
+        {
+          "id": "306",
+          "source_module": "organization",
+          "membership_id": 139,
+          "is_read": false,
+          "reason": "You received \"Organization setup completed\" Delivered via IN_APP, EMAIL.",
+          "deleted": false
+        },
+        {
+          "id": "307",
+          "source_module": "build",
+          "membership_id": 139,
+          "is_read": false,
+          "reason": "BUILD_BROWSER_NOTIFICATION_FIXTURE",
+          "deleted": false
+        }
+      ],
+      "watermarks": []
+    },
+    {
+      "kind": "scoped-read-all",
+      "status": 200,
+      "contract": true,
+      "immediate": [
+        {
+          "status": 200,
+          "value": 1
+        },
+        {
+          "status": 200,
+          "value": 0
+        },
+        {
+          "status": 200,
+          "value": [
+            {
+              "id": 307,
+              "sourceModule": "build",
+              "isRead": true
+            },
+            {
+              "id": 306,
+              "sourceModule": "organization",
+              "isRead": false
+            }
+          ]
+        }
+      ],
+      "database": {
+        "notifications": [
+          {
+            "id": "306",
+            "source_module": "organization",
+            "membership_id": 139,
+            "is_read": false,
+            "reason": "You received \"Organization setup completed\" Delivered via IN_APP, EMAIL.",
+            "deleted": false
+          },
+          {
+            "id": "307",
+            "source_module": "build",
+            "membership_id": 139,
+            "is_read": true,
+            "reason": "BUILD_BROWSER_NOTIFICATION_FIXTURE",
+            "deleted": false
+          }
+        ],
+        "watermarks": []
+      },
+      "events": []
+    },
+    {
+      "kind": "scoped-retry-and-sse",
+      "httpStatus": 200,
+      "streamStatus": 200,
+      "events": [],
+      "streamFailure": "AbortError"
+    },
+    {
+      "kind": "fixture-retry-after-read",
+      "status": 200,
+      "result": {
+        "notificationId": 307,
+        "created": false
+      },
+      "database": {
+        "notifications": [
+          {
+            "id": "306",
+            "source_module": "organization",
+            "membership_id": 139,
+            "is_read": false,
+            "reason": "You received \"Organization setup completed\" Delivered via IN_APP, EMAIL.",
+            "deleted": false
+          },
+          {
+            "id": "307",
+            "source_module": "build",
+            "membership_id": 139,
+            "is_read": true,
+            "reason": "BUILD_BROWSER_NOTIFICATION_FIXTURE",
+            "deleted": false
+          }
+        ],
+        "watermarks": []
+      }
+    },
+    {
+      "kind": "global-read-all",
+      "status": 200,
+      "contract": true,
+      "immediate": [
+        {
+          "status": 200,
+          "contract": true,
+          "value": 0
+        },
+        {
+          "status": 200,
+          "contract": true,
+          "value": 0
+        },
+        {
+          "status": 200,
+          "contract": true,
+          "value": [
+            {
+              "id": 307,
+              "sourceModule": "build",
+              "isRead": true
+            },
+            {
+              "id": 306,
+              "sourceModule": "organization",
+              "isRead": true
+            }
+          ]
+        }
+      ],
+      "database": {
+        "notifications": [
+          {
+            "id": "306",
+            "source_module": "organization",
+            "membership_id": 139,
+            "is_read": false,
+            "reason": "You received \"Organization setup completed\" Delivered via IN_APP, EMAIL.",
+            "deleted": false
+          },
+          {
+            "id": "307",
+            "source_module": "build",
+            "membership_id": 139,
+            "is_read": true,
+            "reason": "BUILD_BROWSER_NOTIFICATION_FIXTURE",
+            "deleted": false
+          }
+        ],
+        "watermarks": [
+          {
+            "last_read_notification_id": "307"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "sse-frame-diagnosis",
+      "status": 200,
+      "triggerStatus": 200,
+      "frameType": "message",
+      "jsonType": "count_changed",
+      "nestedJsonType": "count_changed",
+      "namedEventAbsent": true,
+      "explanation": "Initial observer incorrectly required named SSE event lines; real count event arrived as default message with wrapped payload."
+    }
+  ],
+  "backendSourceCommit": "1aee0d53a",
+  "runtime": {
+    "runnerPid": 20860,
+    "baseUrl": "http://127.0.0.1:1001",
+    "syntheticTenant": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+    "membershipId": 139,
+    "projectId": 54,
+    "ticketId": 359,
+    "applicationRole": "streamline_app",
+    "databaseReads": "READ ONLY with tenant guard",
+    "priorUnattributedChangesExcluded": [
+      "src/modules/cron/cron-email-outbox.service.ts",
+      "src/modules/email/email-outbox-retry-auth.spec.ts",
+      "src/modules/email/email-outbox.service.ts"
+    ]
+  },
+  "limitations": [
+    "Browser mutations await separate local frontend approval",
+    "Full recipient/tenant runtime matrix remains open",
+    "Fixture creation is not production Build event fanout proof",
+    "SSE notification payload nesting is reproduced by source trace and wrapped real count frame; repair separately claimed",
+    "No deployment or operations verification",
+    "Full frontend test TypeScript has unchanged failures; full backend test TypeScript previously exhausted 10GB"
+  ]
+}

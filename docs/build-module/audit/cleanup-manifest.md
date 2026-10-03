@@ -84,6 +84,19 @@ No research or evidence file was deleted during the architecture-to-Markdown rec
 
 ## Cleanup acceptance
 
+### Notification focused-test placement — 2026-10-03
+
+Classification: active source relocated, not discarded. The new notification package follows the requested `__tests__/` layout. All test behavior and unique evidence remain; only relative imports change. Existing legacy suites stay in place. Each destination is under `backend/src/modules/notifications/__tests__/` with the same basename. Reviewer: coordinator, after the original author released ownership and `module_grants_resume` performed the bounded move. Backend commit: `1aee0d53a`.
+
+| Removed old location under `backend/src/modules/notifications/` | SHA-256 immediately before move | Replacement basename/section |
+|---|---|---|
+| `notifications-mark-all-source-module.spec.ts` | `3348ff532351947e315638ce88d11c59ad046b136a8f2475c62ce53c2e0a97ae` | `__tests__/notifications-mark-all-source-module.spec.ts`, all tests |
+| `notifications-mark-all-source-module.fixture.ts` | `2901b7425cfbcba04ff44313bf5e472f6ee23082945e32533f49f83bbb178ff3` | `__tests__/notifications-mark-all-source-module.fixture.ts`, complete fixture |
+| `notifications-lifecycle-after-commit.spec.ts` | `5be6ac39d306dc2fed0a60f712a7a4553cf308c01d870ecd6f1a9c0564ddf13e` | `__tests__/notifications-lifecycle-after-commit.spec.ts`, all tests |
+| `notifications-announcement-after-commit.spec.ts` | `37ded42a33988e850635360d031ef11106a74ac45f7d5a75d9b416e34252b508` | `__tests__/notifications-announcement-after-commit.spec.ts`, all tests |
+
+Reference census: three test imports of the fixture remain same-directory after the move. Production imports and route/API contracts do not reference these files. Historical WORK-CLAIMS paths remain as original reservations, with claim BLD-INBOX-TEST-PLACEMENT-15 and this mapping supplying current destinations. The ignored scoped TypeScript config's three spec paths were updated. Validation: reconstructed pre-move content hashes matched all four originals; eight focused notification suites/80 tests, four-path ESLint with zero warnings, `git diff --check`, and `node --max-old-space-size=10240 node_modules/typescript/bin/tsc --noEmit -p .scratch/tsconfig-inbox-email-portal.json` passed after relocation. Before relocation, the author also passed its eight-suite/89-test set; these are different selected sets, not an assertion of identical coverage. No research, screenshot or historical test report was removed.
+
 Verify all 39 retained counterparts exist, all 46 removed paths do not, source hashes or pre-deletion hashes are recorded, no inbound supported link points to a removed file, relative Markdown links resolve, and all 75 route contracts, 100 customer-value reasons, and requirement entries survive. See the validation report for actual check results.
 
 ## Delivery checklist
