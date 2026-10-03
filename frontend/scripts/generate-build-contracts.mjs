@@ -17,6 +17,7 @@ const FEATURE_API_CLIENTS = [
 const HTTP_METHODS = ["get", "post", "put", "patch", "delete"];
 const SUCCESS_CODES = ["200", "201", "202"];
 const IDENTIFIER_RE = /^[A-Za-z_$][A-Za-z0-9_$]*$/;
+const NUMERIC_BOUND_KEYS = ["minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum"];
 
 
 function normalise(text) {
@@ -284,6 +285,9 @@ function unionCode(branches, ctx, depth) {
 }
 
 function allOfCode(node, ctx, depth) {
+  if (node.allOf.some((part) => part.$ref && NUMERIC_BOUND_KEYS.some((key) => Object.hasOwn(part, key)))) {
+    throw new Error("numeric constraints beside a $ref require an explicit allOf schema");
+  }
   const parts = node.allOf.map((part) => (part.$ref ? resolveRef(part, ctx) : part));
   const ownKeys = Object.keys(node).filter((k) => k !== "allOf");
   if (ownKeys.length > 0) parts.push(Object.fromEntries(ownKeys.map((k) => [k, node[k]])));
@@ -299,10 +303,32 @@ function allOfCode(node, ctx, depth) {
   return parts.map((p) => zodFor(p, ctx, depth)).reduce((acc, code) => `z.intersection(${acc}, ${code})`);
 }
 
+function numericCode(node, type) {
+  let code = type === "integer" ? "z.number().int()" : "z.number()";
+  for (const [key, exclusiveKey, inclusiveMethod, exclusiveMethod] of [
+    ["minimum", "exclusiveMinimum", "gte", "gt"],
+    ["maximum", "exclusiveMaximum", "lte", "lt"],
+  ]) {
+    const hasBound = Object.hasOwn(node, key);
+    const hasExclusive = Object.hasOwn(node, exclusiveKey);
+    const value = node[key];
+    const exclusive = node[exclusiveKey];
+    if (hasBound && !Number.isFinite(value)) throw new Error(`invalid numeric schema constraint ${key}`);
+    if (hasExclusive && typeof exclusive !== "boolean" && !Number.isFinite(exclusive)) {
+      throw new Error(`invalid numeric schema constraint ${exclusiveKey}`);
+    }
+    if (hasExclusive && typeof exclusive === "boolean" && !hasBound) {
+      throw new Error(`numeric schema constraint ${exclusiveKey} requires ${key}`);
+    }
+    if (hasBound) code += `.${exclusive === true ? exclusiveMethod : inclusiveMethod}(${JSON.stringify(value)})`;
+    if (hasExclusive && typeof exclusive === "number") code += `.${exclusiveMethod}(${JSON.stringify(exclusive)})`;
+  }
+  return code;
+}
+
 function typedCode(node, type, ctx, depth) {
   if (type === "string") return stringCode(node);
-  if (type === "integer") return "z.number().int()";
-  if (type === "number") return "z.number()";
+  if (type === "integer" || type === "number") return numericCode(node, type);
   if (type === "boolean") return "z.boolean()";
   if (type === "null") return "z.null()";
   if (type === "array") {
@@ -321,7 +347,9 @@ export function zodFor(input, ctx, depth = 0) {
   if (input === false) return "z.never()";
   let node = input;
   if (node.definitions) ctx = { ...ctx, definitions: [...ctx.definitions, node.definitions] };
+  const hasNumericBounds = NUMERIC_BOUND_KEYS.some((key) => Object.hasOwn(node, key));
   if (node.$ref) {
+    if (hasNumericBounds) throw new Error("numeric constraints beside a $ref require an explicit allOf schema");
     if (ctx.expanding.has(node.$ref)) throw new Error(`recursive schema ${node.$ref} cannot be expressed without a named lazy type`);
     const target = resolveRef(node, ctx);
     return zodFor(target, { ...ctx, expanding: new Set([...ctx.expanding, node.$ref]) }, depth);
@@ -339,7 +367,18 @@ export function zodFor(input, ctx, depth = 0) {
   } else if (node.type) code = typedCode(node, node.type, ctx, depth);
   else if (node.properties || node.additionalProperties !== undefined) code = objectCode(node, ctx, depth);
   else if (node.items) code = typedCode(node, "array", ctx, depth);
-  else code = "z.unknown()";
+  else {
+    if (hasNumericBounds) throw new Error("numeric constraints require an explicit numeric type");
+    code = "z.unknown()";
+  }
+  if (hasNumericBounds && (node.anyOf || node.oneOf || node.allOf || node.const !== undefined || Array.isArray(node.enum))) {
+    const types = Array.isArray(node.type) ? node.type.filter((type) => type !== "null") : [node.type];
+    if (types.length !== 1 || !["integer", "number"].includes(types[0])) {
+      throw new Error("numeric constraints on a composite schema require an explicit numeric type");
+    }
+    const numeric = numericCode(node, types[0]) + ".nullable()";
+    code = `z.intersection(${code}, ${numeric})`;
+  }
   if (node.nullable === true && !code.endsWith(".nullable()") && code !== "z.null()") code += ".nullable()";
   return code;
 }

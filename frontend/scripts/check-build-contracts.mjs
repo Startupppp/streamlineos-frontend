@@ -118,7 +118,135 @@ function runSelfTest() {
   );
   assert("OpenAPI 3.0 nullable:true is honoured", zodFor({ type: "string", nullable: true }, ctx()) === "z.string().nullable()");
   assert("a const becomes a literal", zodFor({ type: "boolean", const: true }, ctx()) === "z.literal(true)");
-  assert("an integer becomes z.number().int()", zodFor({ type: "integer", minimum: -9, maximum: 9 }, ctx()) === "z.number().int()");
+  const boundedInteger = evaluate(zodFor({ type: "integer", minimum: -9, maximum: 9 }, ctx()));
+  assert(
+    "integer bounds accept both endpoints and reject outside values, fractions and numeric strings",
+    [-9, 0, 9].every((value) => boundedInteger.safeParse(value).success) &&
+      [-10, 10, 0.5, "1"].every((value) => !boundedInteger.safeParse(value).success),
+  );
+  for (const type of ["integer", "number"]) {
+    const exclusiveBoolean = evaluate(zodFor({ type, minimum: -1, maximum: 2, exclusiveMinimum: true, exclusiveMaximum: true }, ctx()));
+    assert(
+      `${type} honours OpenAPI 3.0 boolean exclusive bounds`,
+      exclusiveBoolean.safeParse(0).success && [-1, 2, -2, 3].every((value) => !exclusiveBoolean.safeParse(value).success),
+    );
+    const inclusiveBoolean = evaluate(zodFor({ type, minimum: -1, maximum: 2, exclusiveMinimum: false, exclusiveMaximum: false }, ctx()));
+    assert(
+      `${type} keeps endpoints with false boolean exclusivity`,
+      [-1, 2].every((value) => inclusiveBoolean.safeParse(value).success) &&
+        [-2, 3].every((value) => !inclusiveBoolean.safeParse(value).success),
+    );
+    const exclusiveNumeric = evaluate(zodFor({ type, exclusiveMinimum: -1, exclusiveMaximum: 2 }, ctx()));
+    assert(
+      `${type} honours OpenAPI 3.1 numeric exclusive bounds`,
+      exclusiveNumeric.safeParse(0).success && [-1, 2, -2, 3].every((value) => !exclusiveNumeric.safeParse(value).success),
+    );
+    for (const key of ["minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum"]) {
+      assert(
+        `${type} rejects malformed or nonfinite ${key} constraints`,
+        ["0", null, undefined, {}, [], NaN, Infinity, -Infinity].every((value) =>
+          throws(() => zodFor({ type, [key]: value }, ctx())),
+        ),
+      );
+      if (key === "minimum" || key === "maximum") {
+        assert(
+          `${type} refuses boolean ${key} values instead of coercing them`,
+          [true, false].every((value) => throws(() => zodFor({ type, [key]: value }, ctx()))),
+        );
+      }
+    }
+    for (const key of ["exclusiveMinimum", "exclusiveMaximum"]) {
+      assert(
+        `${type} refuses boolean ${key} without its companion bound`,
+        [true, false].every((value) => throws(() => zodFor({ type, [key]: value }, ctx()))),
+      );
+    }
+  }
+  const decimalRange = evaluate(zodFor({ type: "number", minimum: 0.25, maximum: 0.75 }, ctx()));
+  assert(
+    "number bounds preserve fractional endpoints without integer coercion",
+    [0.25, 0.5, 0.75].every((value) => decimalRange.safeParse(value).success) &&
+      [0.24, 0.76, "0.5", NaN, Infinity].every((value) => !decimalRange.safeParse(value).success),
+  );
+  const fractionalIntegerRange = evaluate(zodFor({ type: "integer", minimum: 1.2, maximum: 2.8 }, ctx()));
+  assert(
+    "integer constraints preserve fractional bounds and still reject fractions",
+    fractionalIntegerRange.safeParse(2).success && [1, 3, 2.5].every((value) => !fractionalIntegerRange.safeParse(value).success),
+  );
+  const intersectedBounds = evaluate(zodFor({ type: "number", minimum: 2, exclusiveMinimum: 1, maximum: 5, exclusiveMaximum: 4 }, ctx()));
+  assert(
+    "coexisting inclusive and numeric exclusive bounds are both enforced",
+    [2, 3.5].every((value) => intersectedBounds.safeParse(value).success) &&
+      [1.5, 4, 5].every((value) => !intersectedBounds.safeParse(value).success),
+  );
+  const positiveId = { type: "integer", exclusiveMinimum: 0, maximum: 2147483647 };
+  for (const nullableId of [{ ...positiveId, nullable: true }, { ...positiveId, type: ["integer", "null"] }, { anyOf: [positiveId, { type: "null" }] }]) {
+    const schema = evaluate(zodFor(nullableId, ctx()));
+    assert(
+      "bounded numeric nullability preserves null, endpoints and rejection of invalid IDs",
+      [null, 1, 2147483647].every((value) => schema.safeParse(value).success) &&
+        [undefined, 0, -1, 1.5, 2147483648, "1"].every((value) => !schema.safeParse(value).success),
+    );
+  }
+  for (const mode of ["body", "response"]) {
+    const schema = evaluate(zodFor({ type: "object", properties: { linkedWorkItemId: positiveId }, additionalProperties: false }, { ...ctx(), mode }));
+    assert(
+      `${mode} numeric fields retain optionality and positive int32 boundaries`,
+      [{}, { linkedWorkItemId: 1 }, { linkedWorkItemId: 2147483647 }].every((value) => schema.safeParse(value).success) &&
+        [null, 0, -1, 1.5, 2147483648].every((value) => !schema.safeParse({ linkedWorkItemId: value }).success),
+    );
+  }
+  const emptyNumericRange = evaluate(zodFor({ type: "number", minimum: 1, maximum: 0 }, ctx()));
+  const emptyExclusiveRange = evaluate(zodFor({ type: "number", minimum: 1, exclusiveMaximum: 1 }, ctx()));
+  assert(
+    "well-formed empty numeric ranges reject every tested value without loosening the constraints",
+    [-1, 0, 0.5, 1, 2].every((value) => !emptyNumericRange.safeParse(value).success && !emptyExclusiveRange.safeParse(value).success),
+  );
+  const numericEnum = evaluate(zodFor({ type: "integer", enum: [0, 1, 2, null], minimum: 1, maximum: 1 }, ctx()));
+  assert(
+    "numeric enum constraints preserve existing nullable members and enforce bounds",
+    numericEnum.safeParse(null).success && numericEnum.safeParse(1).success &&
+      [0, 2, 3].every((value) => !numericEnum.safeParse(value).success),
+  );
+  const boundedConst = evaluate(zodFor({ type: "number", const: 0, exclusiveMinimum: 0 }, ctx()));
+  assert("numeric const values still obey exclusive bounds", !boundedConst.safeParse(0).success);
+  const boundedUnion = evaluate(zodFor({ type: "number", anyOf: [{ const: -1 }, { const: 1 }], minimum: 0 }, ctx()));
+  assert("numeric composition retains its own bounds", boundedUnion.safeParse(1).success && !boundedUnion.safeParse(-1).success);
+  for (const nullableComposite of [
+    { type: ["number", "null"], const: null, minimum: 0 },
+    { type: ["number", "null"], enum: [null], minimum: 0 },
+    { type: ["number", "null"], allOf: [{ type: ["number", "null"] }], minimum: 0 },
+  ]) {
+    const schema = evaluate(zodFor(nullableComposite, ctx()));
+    assert("numeric composite bounds retain null-only and nested nullable branches", schema.safeParse(null).success && !schema.safeParse(-1).success);
+  }
+  for (const nonnullableComposite of [
+    { type: ["number", "null"], const: 1, minimum: 0 },
+    { type: ["number", "null"], anyOf: [{ const: 1 }], minimum: 0 },
+  ]) {
+    const schema = evaluate(zodFor(nonnullableComposite, ctx()));
+    assert("adding numeric bounds cannot add null to a composite that refuses it", schema.safeParse(1).success && !schema.safeParse(null).success);
+  }
+  assert(
+    "unsupported untyped composite numeric bounds fail loudly instead of being discarded",
+    throws(() => zodFor({ anyOf: [{ type: "number" }], minimum: 0 }, ctx())) &&
+      throws(() => zodFor({ $ref: "#/components/value", minimum: 0 }, ctx({ components: { value: { type: "number" } } }))),
+  );
+  assert("untyped numeric bounds fail loudly instead of becoming z.unknown", throws(() => zodFor({ minimum: 0 }, ctx())));
+  assert(
+    "malformed bounds on numeric enum schemas cannot bypass validation",
+    throws(() => zodFor({ type: "integer", enum: [1], maximum: "2" }, ctx())),
+  );
+  const numericReferenceRoot = { components: { schemas: { Numeric: { type: "number" } } } };
+  for (const schema of [
+    { allOf: [{ $ref: "#/components/schemas/Numeric", minimum: 0 }] },
+    { type: "number", allOf: [{ $ref: "#/components/schemas/Numeric", minimum: 0 }] },
+    { allOf: [{ $ref: "#/components/schemas/Numeric", maximum: "bad" }] },
+  ]) {
+    assert("allOf cannot discard unsupported or malformed bound siblings on references", throws(() => zodFor(schema, ctx(numericReferenceRoot))));
+  }
+  const separateReferenceBounds = evaluate(zodFor({ allOf: [{ $ref: "#/components/schemas/Numeric" }, { type: "number", minimum: 0 }] }, ctx(numericReferenceRoot)));
+  assert("explicit allOf constraint branches preserve reference bounds", separateReferenceBounds.safeParse(0).success && !separateReferenceBounds.safeParse(-1).success);
   assert(
     "a date-time string is declared as an ISO datetime",
     zodFor({ type: "string", format: "date-time" }, ctx()) === "z.iso.datetime({ offset: true })",
