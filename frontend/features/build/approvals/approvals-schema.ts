@@ -1,10 +1,8 @@
 import { z } from "zod";
 import { DB_ENUMS } from "@/contracts/db-enums.generated";
+import { decideApprovalInputSchema } from "@/hooks/api/build/approvals-schema";
 
-export const decideApprovalSchema = z.object({
-  decision: z.enum(["approved", "rejected", "changes_requested"]),
-  decisionComment: z.string(),
-});
+export const decideApprovalSchema = decideApprovalInputSchema.omit({ expectedRevision: true });
 
 export type DecideApprovalValues = z.infer<typeof decideApprovalSchema>;
 

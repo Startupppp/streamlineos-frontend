@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const OPENAPI_HASH = "sha256:1e8635e76e00a9c863db00de88fe655242b2e7a4b59054694b77ec29f3578153" as const;
+export const OPENAPI_HASH = "sha256:8ba8a4d13ca5be105d2381e4acb95db88c11442a735f14d097cec719082b4318" as const;
 
 export const agentTokensListResponseSchema = z.array(z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -295,6 +295,7 @@ export type ProjectsTicketsGetAllWorkResponse = z.infer<typeof projectsTicketsGe
 export const approvalsInboxGetInboxResponseSchema = z.object({
   data: z.array(z.object({
     id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    revision: z.number().int().gt(0).lte(9007199254740991),
     projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     projectName: z.string().nullable(),
     projectKey: z.string().nullable(),
@@ -2073,6 +2074,7 @@ export type ProjectsReportsGetAnalyticsResponse = z.infer<typeof projectsReports
 export const buildApprovalsListApprovalsResponseSchema = z.object({
   data: z.array(z.object({
     id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    revision: z.number().int().gt(0).lte(9007199254740991),
     orgId: z.string(),
     projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     entityType: z.enum(["task", "milestone", "budget", "release", "change_request", "document", "timesheet", "client_approval"]),
@@ -2101,6 +2103,7 @@ export type BuildApprovalsListApprovalsResponse = z.infer<typeof buildApprovalsL
 
 export const buildApprovalsCreateApprovalResponseSchema = z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  revision: z.number().int().gt(0).lte(9007199254740991),
   orgId: z.string(),
   projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   entityType: z.enum(["task", "milestone", "budget", "release", "change_request", "document", "timesheet", "client_approval"]),
@@ -2123,17 +2126,41 @@ export type BuildApprovalsCreateApprovalResponse = z.infer<typeof buildApprovals
 
 export const buildApprovalsCreateApprovalBodySchema = z.strictObject({
   entityType: z.enum(["task", "milestone", "budget", "release", "change_request", "document", "timesheet", "client_approval"]),
-  entityId: z.number().int().gt(0).lte(9007199254740991),
+  entityId: z.number().int().gt(0).lte(2147483647),
   title: z.string(),
   approverId: z.string(),
   reason: z.string().optional(),
   dueAt: z.unknown().optional(),
-  level: z.number().int().gte(1).lte(9007199254740991).optional(),
+  level: z.number().int().gte(1).lte(2147483647).optional(),
 });
 export type BuildApprovalsCreateApprovalBody = z.input<typeof buildApprovalsCreateApprovalBodySchema>;
 
+export const buildApprovalsGetApprovalResponseSchema = z.object({
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  revision: z.number().int().gt(0).lte(9007199254740991),
+  orgId: z.string(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  entityType: z.enum(["task", "milestone", "budget", "release", "change_request", "document", "timesheet", "client_approval"]),
+  entityId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  title: z.string(),
+  reason: z.string().nullable(),
+  requestedById: z.string().nullable(),
+  approverMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  status: z.enum(["requested", "pending", "approved", "rejected", "changes_requested", "escalated", "cancelled"]),
+  level: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  dueAt: z.iso.datetime({ offset: true }).nullable(),
+  decisionComment: z.string().nullable(),
+  decidedAt: z.iso.datetime({ offset: true }).nullable(),
+  createdBy: z.string().nullable(),
+  createdAt: z.iso.datetime({ offset: true }),
+  updatedAt: z.iso.datetime({ offset: true }),
+  deletedAt: z.iso.datetime({ offset: true }).nullable(),
+});
+export type BuildApprovalsGetApprovalResponse = z.infer<typeof buildApprovalsGetApprovalResponseSchema>;
+
 export const buildApprovalsUpdateApprovalResponseSchema = z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  revision: z.number().int().gt(0).lte(9007199254740991),
   orgId: z.string(),
   projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   entityType: z.enum(["task", "milestone", "budget", "release", "change_request", "document", "timesheet", "client_approval"]),
@@ -2155,14 +2182,21 @@ export const buildApprovalsUpdateApprovalResponseSchema = z.object({
 export type BuildApprovalsUpdateApprovalResponse = z.infer<typeof buildApprovalsUpdateApprovalResponseSchema>;
 
 export const buildApprovalsUpdateApprovalBodySchema = z.strictObject({
+  expectedRevision: z.number().int().gt(0).lte(9007199254740991),
   approverId: z.string().optional(),
   dueAt: z.unknown().nullable().optional(),
-  status: z.enum(["requested", "pending", "approved", "rejected", "changes_requested", "escalated", "cancelled"]).optional(),
+  status: z.enum(["pending", "escalated", "cancelled"]).optional(),
 });
 export type BuildApprovalsUpdateApprovalBody = z.input<typeof buildApprovalsUpdateApprovalBodySchema>;
 
+export const buildApprovalsSoftDeleteApprovalBodySchema = z.strictObject({
+  expectedRevision: z.number().int().gt(0).lte(9007199254740991),
+});
+export type BuildApprovalsSoftDeleteApprovalBody = z.input<typeof buildApprovalsSoftDeleteApprovalBodySchema>;
+
 export const buildApprovalsDecideApprovalResponseSchema = z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  revision: z.number().int().gt(0).lte(9007199254740991),
   orgId: z.string(),
   projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   entityType: z.enum(["task", "milestone", "budget", "release", "change_request", "document", "timesheet", "client_approval"]),
@@ -2184,6 +2218,7 @@ export const buildApprovalsDecideApprovalResponseSchema = z.object({
 export type BuildApprovalsDecideApprovalResponse = z.infer<typeof buildApprovalsDecideApprovalResponseSchema>;
 
 export const buildApprovalsDecideApprovalBodySchema = z.strictObject({
+  expectedRevision: z.number().int().gt(0).lte(9007199254740991),
   decision: z.enum(["approved", "rejected", "changes_requested"]),
   decisionComment: z.string().optional(),
 });
@@ -6791,8 +6826,9 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "ProjectsReportsController_getAnalytics", method: "GET", path: "/build/{projectId}/analytics", response: "projectsReportsGetAnalyticsResponseSchema" },
   { operationId: "BuildApprovalsController_listApprovals", method: "GET", path: "/build/{projectId}/approvals", response: "buildApprovalsListApprovalsResponseSchema" },
   { operationId: "BuildApprovalsController_createApproval", method: "POST", path: "/build/{projectId}/approvals", response: "buildApprovalsCreateApprovalResponseSchema", body: "buildApprovalsCreateApprovalBodySchema" },
+  { operationId: "BuildApprovalsController_getApproval", method: "GET", path: "/build/{projectId}/approvals/{approvalId}", response: "buildApprovalsGetApprovalResponseSchema" },
   { operationId: "BuildApprovalsController_updateApproval", method: "PATCH", path: "/build/{projectId}/approvals/{approvalId}", response: "buildApprovalsUpdateApprovalResponseSchema", body: "buildApprovalsUpdateApprovalBodySchema" },
-  { operationId: "BuildApprovalsController_softDeleteApproval", method: "DELETE", path: "/build/{projectId}/approvals/{approvalId}" },
+  { operationId: "BuildApprovalsController_softDeleteApproval", method: "DELETE", path: "/build/{projectId}/approvals/{approvalId}", body: "buildApprovalsSoftDeleteApprovalBodySchema" },
   { operationId: "BuildApprovalsController_decideApproval", method: "PATCH", path: "/build/{projectId}/approvals/{approvalId}/decide", response: "buildApprovalsDecideApprovalResponseSchema", body: "buildApprovalsDecideApprovalBodySchema" },
   { operationId: "ProjectsAutomationsController_list", method: "GET", path: "/build/{projectId}/automations", response: "projectsAutomationsListResponseSchema" },
   { operationId: "ProjectsAutomationsController_create", method: "POST", path: "/build/{projectId}/automations", response: "projectsAutomationsCreateResponseSchema", body: "projectsAutomationsCreateBodySchema" },

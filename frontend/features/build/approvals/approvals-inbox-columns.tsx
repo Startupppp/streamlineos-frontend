@@ -12,6 +12,7 @@ import type { NamedUser } from "@/lib/person-display";
 import { ApprovalStatusBadge, entityTypeLabel } from "./approval-status-badge";
 import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
 import type { ApprovalInboxItem, ApprovalStatus } from "@/types/projects";
+import { DECIDABLE } from "./approvals-constants";
 
 export const INBOX_TABLE_HEADERS = [
   "Project",
@@ -37,6 +38,7 @@ export interface DecideTarget {
   approvalId: number;
   projectId: number;
   title: string;
+  revision: number;
 }
 
 export function ProjectLinkCell({ row }: { row: ApprovalInboxItem }) {
@@ -165,7 +167,7 @@ export function buildApprovalsInboxColumns({
       header: "Actions",
       headerClassName: "sr-only",
       cell: (row) =>
-        canDecide ? (
+        canDecide && DECIDABLE.has(row.status) ? (
           <DecideButtonCell row={row} onDecide={onDecide} />
         ) : null,
       className: "w-20",

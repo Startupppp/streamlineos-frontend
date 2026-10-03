@@ -216,6 +216,7 @@ const GOV_APPROVAL_STATUSES = ["requested", "pending", "approved", "rejected", "
 
 export const GOVERNANCE_APPROVAL_ROWS: Approval[] = Array.from({ length: 8 }, (_, i) => ({
   id: i + 1,
+  revision: 1,
   orgId: "org_gallery",
   projectId: 1,
   entityType: GOV_APPROVAL_ENTITIES[i % GOV_APPROVAL_ENTITIES.length],

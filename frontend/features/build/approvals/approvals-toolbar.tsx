@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { DECIDABLE } from "./approvals-constants";
+import { EDITABLE } from "./approvals-constants";
 import type { ApprovalStatus } from "@/types/projects";
 
 interface RequestApprovalMenuButtonProps {
@@ -65,7 +65,7 @@ export function ApprovalActions({
 }: ApprovalActionsProps) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   if (!canDecideRow && !canManage) return null;
-  const decidable = DECIDABLE.has(status);
+  const editable = EDITABLE.has(status);
   const isEscalated = status === "escalated";
   return (
     <DropdownMenu>
@@ -82,11 +82,11 @@ export function ApprovalActions({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         {canDecideRow ? <DropdownMenuItem onClick={onDecide}>Decide</DropdownMenuItem> : null}
-        {canManage && decidable ? <DropdownMenuItem onClick={onDelegate}>Delegate</DropdownMenuItem> : null}
-        {canManage && decidable && !isEscalated ? (
+        {canManage && editable ? <DropdownMenuItem onClick={onDelegate}>Delegate</DropdownMenuItem> : null}
+        {canManage && editable && !isEscalated ? (
           <DropdownMenuItem onClick={onEscalate}>Escalate</DropdownMenuItem>
         ) : null}
-        {canManage && decidable ? <DropdownMenuItem onClick={onCancel}>Cancel</DropdownMenuItem> : null}
+        {canManage && editable ? <DropdownMenuItem onClick={onCancel}>Cancel</DropdownMenuItem> : null}
         {canManage ? (
           <DropdownMenuItem variant="destructive" onClick={onDelete}>
             Delete

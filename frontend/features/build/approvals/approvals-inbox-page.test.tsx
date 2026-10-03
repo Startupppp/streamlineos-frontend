@@ -1,5 +1,6 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { toast } from "sonner";
 import { ApprovalsInboxPage } from "./approvals-inbox-page";
 import { ApiError } from "@/lib/api-envelope";
 
@@ -11,7 +12,7 @@ jest.mock("next/navigation", () => ({
 
 jest.mock("@/hooks/api/build/approvals", () => ({
   useApprovalInbox: jest.fn(),
-  useDecideApproval: jest.fn(),
+  useUpdateApproval: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -76,8 +77,10 @@ jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
 }));
 
 jest.mock("@/components/ui/data-table", () => ({
-  DataTable: ({ data }: { data: unknown[] }) => (
-    <div data-testid="data-table" data-rows={data.length} />
+  DataTable: ({ data, selection }: { data: Array<{ id: number; projectId: number | null }>; selection?: { selected: Set<string | number>; onChange: (ids: Set<string | number>) => void } }) => (
+    <div data-testid="data-table" data-rows={data.length} data-selected={selection?.selected.size ?? 0}>
+      <button onClick={() => selection?.onChange(new Set(data.map((row) => `${row.projectId}-${row.id}`)))}>Select approvals</button>
+    </div>
   ),
   DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
 }));
@@ -118,7 +121,8 @@ jest.mock("@/components/ui/date-range-picker", () => ({
 
 jest.mock("./decide-dialog", () => ({ DecideDialog: () => null }));
 jest.mock("./approval-bulk-action-bar", () => ({
-  ApprovalBulkActionBar: () => null,
+  ApprovalBulkActionBar: ({ selectedCount, onCancelSelected }: { selectedCount: number; onCancelSelected: () => void }) =>
+    selectedCount ? <button onClick={onCancelSelected}>Cancel selected</button> : null,
 }));
 jest.mock("./approvals-inbox-columns", () => ({
   INBOX_TABLE_HEADERS: ["Title", "Type", "Status", "Due", "Actions"],
@@ -135,13 +139,13 @@ jest.mock("./approvals-constants", () => ({
   ],
 }));
 
-import { useApprovalInbox, useDecideApproval } from "@/hooks/api/build/approvals";
+import { useApprovalInbox, useUpdateApproval } from "@/hooks/api/build/approvals";
 import { useCan, useAccess } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 
 const mockUseApprovalInbox = useApprovalInbox as jest.Mock;
-const mockUseDecideApproval = useDecideApproval as jest.Mock;
+const mockUseUpdateApproval = useUpdateApproval as jest.Mock;
 const mockUseCan = useCan as jest.Mock;
 const mockUseAccess = useAccess as jest.Mock;
 const mockUseOrgMembers = useOrgMembers as jest.Mock;
@@ -192,6 +196,7 @@ function defaultFilters(overrides: Record<string, unknown> = {}) {
 
 const approvalRow = {
   id: 1,
+  revision: 1,
   projectId: 1,
   title: "Deploy v2.0",
   status: "pending",
@@ -202,10 +207,11 @@ const approvalRow = {
 };
 
 beforeEach(() => {
+  jest.clearAllMocks();
   mockUseCan.mockReturnValue(false);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseApprovalInbox.mockReturnValue(baseQueryResult({ data: approvalPages([]) }));
-  mockUseDecideApproval.mockReturnValue({ mutate: jest.fn(), isPending: false });
+  mockUseUpdateApproval.mockReturnValue({ mutate: jest.fn(), mutateAsync: jest.fn(), captureOwner: () => ({ isCurrent: () => true }), isPending: false });
   mockUseOrgMembers.mockReturnValue({ data: { data: [] } });
   mockUseBuildListFilters.mockReturnValue(defaultFilters());
 });
@@ -277,4 +283,47 @@ it("shows 'No approvals match your filters' when filters are active and no rows 
     "No approvals match your filters",
   );
   expect(screen.queryByText("No approvals waiting")).not.toBeInTheDocument();
+});
+
+it("cancels loaded revisions through the management hook, retaining failures and waiting for acknowledgement", async () => {
+  let release: (() => void) | undefined;
+  const mutation = jest.fn(({ approvalId }: { approvalId: number }) => approvalId === 1
+    ? new Promise((resolve) => { release = () => resolve(approvalRow); }) : Promise.reject(new ApiError("Revision changed", 409)));
+  mockUseCan.mockReturnValue(true);
+  mockUseApprovalInbox.mockReturnValue(baseQueryResult({ data: approvalPages([approvalRow, { ...approvalRow, id: 2, revision: 5 }]) }));
+  mockUseUpdateApproval.mockReturnValue({ mutateAsync: mutation, captureOwner: () => ({ isCurrent: () => true }) });
+  render(<ApprovalsInboxPage />);
+  fireEvent.click(screen.getByRole("button", { name: "Select approvals" }));
+  fireEvent.click(screen.getByRole("button", { name: "Cancel selected" }));
+  expect(toast.success).not.toHaveBeenCalled();
+  expect(mutation).toHaveBeenNthCalledWith(1, { projectId: 1, approvalId: 1, expectedRevision: 1, status: "cancelled" });
+  expect(mutation).toHaveBeenNthCalledWith(2, { projectId: 1, approvalId: 2, expectedRevision: 5, status: "cancelled" });
+  await act(async () => { release?.(); });
+  await waitFor(() => expect(screen.getByTestId("data-table")).toHaveAttribute("data-selected", "1"));
+  expect(toast.success).toHaveBeenCalledWith("1 approval cancelled");
+  expect(toast.error).toHaveBeenCalled();
+});
+
+it("does not clear selection or announce a settled bulk action after its owner changes", async () => {
+  let current = true;
+  let release: (() => void) | undefined;
+  const mutation = jest.fn(() => new Promise((resolve) => { release = () => resolve(approvalRow); }));
+  mockUseCan.mockReturnValue(true);
+  mockUseApprovalInbox.mockReturnValue(baseQueryResult({ data: approvalPages([approvalRow]) }));
+  mockUseUpdateApproval.mockReturnValue({ mutateAsync: mutation, captureOwner: () => ({ isCurrent: () => current }) });
+  render(<ApprovalsInboxPage />);
+  fireEvent.click(screen.getByRole("button", { name: "Select approvals" }));
+  fireEvent.click(screen.getByRole("button", { name: "Cancel selected" }));
+  current = false;
+  await act(async () => { release?.(); });
+  expect(toast.success).not.toHaveBeenCalled();
+  expect(screen.getByTestId("data-table")).toHaveAttribute("data-selected", "1");
+});
+
+it("does not offer management cancellation to an assigned decider without manage permission", () => {
+  mockUseCan.mockImplementation((key: string) => key !== "build:approvals:manage");
+  mockUseApprovalInbox.mockReturnValue(baseQueryResult({ data: approvalPages([approvalRow]) }));
+  render(<ApprovalsInboxPage />);
+  fireEvent.click(screen.getByRole("button", { name: "Select approvals" }));
+  expect(screen.queryByRole("button", { name: "Cancel selected" })).not.toBeInTheDocument();
 });
