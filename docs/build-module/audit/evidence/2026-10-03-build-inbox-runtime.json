@@ -2288,6 +2288,651 @@
         "scope": "Sanitized artifact accuracy and canonical source-path/status comparison; prior20 unchanged; no repeated runtime/database actions.",
         "findings": "Recorded persistence, microsecond locator, recipient-only event shapes, retries and denials are bounded; no false unread numeric/cache/durable/browser/deployment or full-stage closure."
       }
+    },
+    {
+      "name": "invitation-acceptance-automatically-activates-build-member-standing",
+      "classification": "Current verified",
+      "scope": "Bounded invitation-to-Build API/application-role persistence; no browser, client or deployment closure",
+      "recordedAt": "2026-10-03T21:50:15.572Z",
+      "claimRevision": "cd0cd105a",
+      "backendSourceCommit": "120545d96c01cd188e1e81d42dc4b6a06c27324f",
+      "sourceTestRevision": "d2863e8d8957bf3c83b951bf9cb5a3fac343f680",
+      "runnerPid": 15000,
+      "runnerStopped": true,
+      "baseUrl": "http://127.0.0.1:1001",
+      "reservedRecords": {
+        "organizationId": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+        "ownerMembershipId": 139,
+        "invitationId": "646fe869-ffc4-4831-b604-8039146372b7",
+        "userId": "5a72d0ee-c788-420a-b471-24cac4b33acf",
+        "membershipId": 142,
+        "buildMemberRoleId": 2068,
+        "privateProjectId": 54,
+        "otherOrganizationId": "a3ee7aa5-3005-4c3b-a4c5-db16151d0a29"
+      },
+      "health": 200,
+      "commands": [
+        {
+          "case": "required-idempotency-key",
+          "status": 400,
+          "code": "BAD_REQUEST"
+        },
+        {
+          "case": "create-build-member-invitation",
+          "status": 201,
+          "canonicalContract": true,
+          "resent": false
+        },
+        {
+          "case": "completed-invite-key-replay",
+          "status": 201,
+          "sameInvitation": true
+        },
+        {
+          "case": "invalid-organization-role-validation",
+          "status": 400,
+          "code": "VALIDATION_FAILED"
+        },
+        {
+          "case": "valid-changed-request-key-conflict",
+          "status": 422,
+          "code": "UNPROCESSABLE_ENTITY"
+        },
+        {
+          "case": "normal-owner-join-link",
+          "status": 200,
+          "canonicalContract": true
+        },
+        {
+          "case": "public-pending-invitation-validation",
+          "status": 200,
+          "canonicalContract": true,
+          "freshUser": true
+        },
+        {
+          "case": "canonical-local-otp-request",
+          "status": 200,
+          "canonicalContract": true
+        },
+        {
+          "case": "missing-email-otp",
+          "status": 400,
+          "code": "BAD_REQUEST"
+        },
+        {
+          "case": "wrong-email-otp",
+          "status": 401,
+          "code": "UNAUTHORIZED"
+        },
+        {
+          "case": "correct-otp-acceptance-after-denial",
+          "status": 200,
+          "canonicalContract": true
+        },
+        {
+          "case": "accepted-invitation-replay",
+          "status": 404,
+          "code": "NOT_FOUND"
+        },
+        {
+          "case": "org-bound-magic-link-consume",
+          "status": 200,
+          "canonicalContract": true,
+          "identityMatchesPersistedMember": true
+        },
+        {
+          "case": "consumed-magic-token-replay",
+          "status": 401,
+          "code": "AUTH_TOKEN_EXPIRED"
+        },
+        {
+          "case": "valid-session-proof-foreign-organization",
+          "status": 403,
+          "code": "FORBIDDEN",
+          "productAuthorization": true
+        },
+        {
+          "case": "fresh-proof-invited-organization-control",
+          "status": 200,
+          "canonicalContract": true
+        },
+        {
+          "case": "fresh-human-member-and-access",
+          "status": 200,
+          "canonicalContracts": true,
+          "role": "MEMBER",
+          "membershipId": 142,
+          "buildAvailable": true,
+          "buildViewScope": "all",
+          "canManageOrganizationMembership": false,
+          "version": 15
+        },
+        {
+          "case": "authorized-empty-build-page",
+          "status": 200,
+          "canonicalContract": true,
+          "rows": 0
+        },
+        {
+          "case": "private-project-without-grant",
+          "status": 403,
+          "code": "PROJECTS_FORBIDDEN_PROJECT"
+        },
+        {
+          "case": "missing-project",
+          "status": 404,
+          "code": "PROJECTS_NOT_FOUND"
+        },
+        {
+          "case": "owner-project-positive-control",
+          "status": 200
+        },
+        {
+          "case": "owner-exact-invitation-read-after-write",
+          "status": 200,
+          "rows": 1,
+          "sameInvitation": true
+        },
+        {
+          "case": "other-organization-invitation-query",
+          "status": 200,
+          "rows": 0
+        },
+        {
+          "case": "member-invitation-management-read-denial",
+          "status": 403,
+          "code": "FORBIDDEN"
+        },
+        {
+          "case": "member-invitation-mutation-denial",
+          "status": 403,
+          "code": "FORBIDDEN",
+          "productAuthorization": true
+        },
+        {
+          "case": "other-organization-owner-project54",
+          "status": 404,
+          "code": "PROJECTS_NOT_FOUND",
+          "sameRecordOwnerControl": 200
+        },
+        {
+          "case": "accepted-public-token-validation",
+          "status": 404,
+          "code": "NOT_FOUND"
+        },
+        {
+          "case": "repeat-read-after-write",
+          "status": 200,
+          "canonicalContracts": true,
+          "sameVersionAndMember": true
+        }
+      ],
+      "contracts": {
+        "pinnedZodPayloads": [
+          "users-response.schemas.ts:inviteUserResponseSchema (flat response)",
+          "users-response.schemas.ts:invitationJoinLinkResponseSchema",
+          "organization-core-response.schemas.ts:invitationValidateResponseSchema",
+          "organization-core-response.schemas.ts:requestInvitationOtpResponseSchema",
+          "organization-core-response.schemas.ts:acceptInvitationResponseSchema",
+          "auth-response.schemas.ts:authVerifyMagicLinkResponseSchema",
+          "auth-response.schemas.ts:authSessionExchangeResponseSchema",
+          "me-response.schemas.ts:meResponseSchema",
+          "me-response.schemas.ts:accessSnapshotSchema",
+          "build-core-response.schemas.ts:projectListPageSchema (empty page)"
+        ],
+        "secretHandling": "Codes, capability URLs/tokens, mail bodies, session proofs and bearer credentials remain only in persistent memory.",
+        "dateBoundary": "Auxiliary owner-project and nonempty invitation-list controls checked by status/envelope/identity, not raw backend z.date parsing; no canonical JSON-wire parser proof claimed for them."
+      },
+      "focusedTests": {
+        "command": "pnpm -C backend exec jest --runInBand --runTestsByPath src/modules/organization/core/__tests__/invitation-module-access.spec.ts src/modules/organization/core/invitation-acceptance-otp-gate.spec.ts src/modules/organization/core/invitation-accept-otp-covers-existing-user.spec.ts src/modules/organization/core/invitation-acceptance-org-scope.spec.ts src/modules/organization/core/invitation-acceptance-org-visibility.spec.ts src/modules/organization/core/invitation-acceptance-insert-ordering.spec.ts src/modules/organization/core/invitation-acceptance-recovery.spec.ts src/modules/organization/core/invitation-join-link.spec.ts src/modules/organization/core/invitation-resend-seat.spec.ts src/modules/organization/core/invitations-read-tenant-isolation.spec.ts src/modules/auth/auth-magic-link-org-scope.spec.ts src/modules/auth/auth-session-org-scope.spec.ts src/modules/auth/auth-session-exchange.spec.ts",
+        "suites": 13,
+        "tests": 152,
+        "exitCode": 0,
+        "qualification": "Tests at current main d2863e8d8; actual runner remains pinned120545."
+      },
+      "database": {
+        "reader": "streamline_app",
+        "superuser": false,
+        "bypassRls": false,
+        "transaction": "READ ONLY",
+        "scope": "Exact reserved tenant/invitation/user/member joins; global identity/capability tables not assumed tenant-RLS protected.",
+        "baseline": {
+          "existing_user": 0,
+          "existing_invite": 0,
+          "active_members": 2,
+          "permissions_version": 13
+        },
+        "pending": {
+          "invitation": [
+            {
+              "id": "646fe869-ffc4-4831-b604-8039146372b7",
+              "org_id": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+              "role": "MEMBER",
+              "status": "PENDING",
+              "inviter_membership_id": 139,
+              "accepted_membership_id": null,
+              "accepted": false
+            }
+          ],
+          "standing": [
+            {
+              "module_key": "build",
+              "standing": "MEMBER"
+            }
+          ],
+          "counts": {
+            "users": 0,
+            "memberships": 0,
+            "assignments": 0
+          }
+        },
+        "otpBeforeWrong": [
+          {
+            "id": 11,
+            "attempts": 0,
+            "used": false,
+            "live": true
+          }
+        ],
+        "wrongOtp": {
+          "otp": [
+            {
+              "id": 11,
+              "attempts": 1,
+              "used": false
+            }
+          ],
+          "sideEffects": {
+            "users": 0,
+            "memberships": 0,
+            "assignments": 0,
+            "accepted_events": 0,
+            "magic_tokens": 0,
+            "sessions": 0
+          }
+        },
+        "accepted": {
+          "anchor": [
+            {
+              "invitation_id": "646fe869-ffc4-4831-b604-8039146372b7",
+              "org_id": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+              "invitation_role": "MEMBER",
+              "invitation_status": "ACCEPTED",
+              "inviter_membership_id": 139,
+              "accepted_membership_id": 142,
+              "accepted_at": "2026-10-03 21:38:11.95",
+              "user_id": "5a72d0ee-c788-420a-b471-24cac4b33acf",
+              "is_active": true,
+              "user_live": true,
+              "email_verified": true,
+              "membership_id": 142,
+              "role": "MEMBER",
+              "status": "ACTIVE",
+              "is_owner": false
+            }
+          ],
+          "grants": [
+            {
+              "id": "cbc1386e-436c-4d99-8c9a-c35b22c0aa04",
+              "org_id": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+              "organization_membership_id": 142,
+              "role_id": 2048,
+              "assigned_by_membership_id": null,
+              "expires_at": null,
+              "slug": "MEMBER",
+              "module_key": null,
+              "rank": 40,
+              "is_system": true
+            },
+            {
+              "id": "2c969ba3-1418-4362-9bbd-3628e1a87b70",
+              "org_id": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+              "organization_membership_id": 142,
+              "role_id": 2068,
+              "assigned_by_membership_id": null,
+              "expires_at": null,
+              "slug": "BUILD_MODULE_MEMBER",
+              "module_key": "build",
+              "rank": 30,
+              "is_system": true
+            }
+          ],
+          "events": [
+            {
+              "id": "0e4bdcdc-ab8a-4d6c-be1d-928899fb0243",
+              "event": "CREATED",
+              "actor_membership_id": 139
+            },
+            {
+              "id": "d7e77210-40d3-4200-9c7d-21eadda11372",
+              "event": "RESENT",
+              "actor_membership_id": 139
+            },
+            {
+              "id": "07dcd67b-bc48-4e25-8907-dcfcdfeb505e",
+              "event": "ACCEPTED",
+              "actor_membership_id": 142
+            }
+          ],
+          "seats": [
+            {
+              "id": "133",
+              "event_type": "INVITE_SENT",
+              "quantity_delta": 1,
+              "billed_quantity_after": 3
+            },
+            {
+              "id": "134",
+              "event_type": "INVITE_ACCEPTED",
+              "quantity_delta": 0,
+              "billed_quantity_after": 3
+            }
+          ],
+          "magic": [
+            {
+              "id": "713a03bb-8891-41c9-9672-9df136e40bd1",
+              "user_id": "5a72d0ee-c788-420a-b471-24cac4b33acf",
+              "org_id": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+              "used": false,
+              "live": true
+            }
+          ],
+          "otp": [
+            {
+              "id": 11,
+              "attempts": 2,
+              "used": true
+            }
+          ],
+          "absence": {
+            "project_memberships": 0,
+            "module_ownerships": 0,
+            "sessions": 0,
+            "permissions_version": 15
+          }
+        },
+        "final": {
+          "counts": {
+            "live_verified_users": 1,
+            "active_members": 1,
+            "accepted_invitations": 1,
+            "assignment_count": 2,
+            "build_member_assignments": 1,
+            "accepted_events": 1,
+            "accepted_seats": 1,
+            "used_magic_tokens": 1,
+            "session_count": 1,
+            "live_returned_sessions": 1,
+            "project_memberships": 0,
+            "module_ownerships": 0,
+            "permissions_version": 15
+          },
+          "otp": [
+            {
+              "id": 11,
+              "attempts": 2,
+              "used": true
+            }
+          ],
+          "assignmentIds": [
+            {
+              "id": "cbc1386e-436c-4d99-8c9a-c35b22c0aa04",
+              "role_id": 2048
+            },
+            {
+              "id": "2c969ba3-1418-4362-9bbd-3628e1a87b70",
+              "role_id": 2068
+            }
+          ],
+          "audit": [
+            {
+              "id": 933,
+              "action": "user.invitation.module_access_granted",
+              "target_id": "142",
+              "target_type": "membership",
+              "invitation_id": "646fe869-ffc4-4831-b604-8039146372b7"
+            }
+          ]
+        },
+        "foreignRls": {
+          "foreign_invitation_rows": 0,
+          "foreign_module_intent_rows": 0,
+          "foreign_assignment_rows": 0
+        },
+        "catalog": {
+          "roleBoundaries": [
+            {
+              "relname": "invitation_email_otps",
+              "not_effective_table_owner": true,
+              "relrowsecurity": false,
+              "relforcerowsecurity": false,
+              "can_select": true,
+              "can_insert": true,
+              "can_update": true,
+              "can_delete": true
+            },
+            {
+              "relname": "invitation_module_access",
+              "not_effective_table_owner": true,
+              "relrowsecurity": true,
+              "relforcerowsecurity": false,
+              "can_select": true,
+              "can_insert": true,
+              "can_update": true,
+              "can_delete": true
+            },
+            {
+              "relname": "invitations",
+              "not_effective_table_owner": true,
+              "relrowsecurity": true,
+              "relforcerowsecurity": false,
+              "can_select": true,
+              "can_insert": true,
+              "can_update": true,
+              "can_delete": true
+            },
+            {
+              "relname": "role_assignments",
+              "not_effective_table_owner": true,
+              "relrowsecurity": true,
+              "relforcerowsecurity": false,
+              "can_select": true,
+              "can_insert": true,
+              "can_update": true,
+              "can_delete": true
+            }
+          ],
+          "indexes": [
+            {
+              "table_name": "invitation_module_access",
+              "index_name": "pk_invitation_module_access",
+              "indisvalid": true,
+              "indisready": true,
+              "indisunique": true,
+              "definition": "CREATE UNIQUE INDEX pk_invitation_module_access ON public.invitation_module_access USING btree (id)"
+            },
+            {
+              "table_name": "invitation_module_access",
+              "index_name": "uniq_ima_invitation_module",
+              "indisvalid": true,
+              "indisready": true,
+              "indisunique": true,
+              "definition": "CREATE UNIQUE INDEX uniq_ima_invitation_module ON public.invitation_module_access USING btree (invitation_id, module_key)"
+            },
+            {
+              "table_name": "invitations",
+              "index_name": "invitations_pkey",
+              "indisvalid": true,
+              "indisready": true,
+              "indisunique": true,
+              "definition": "CREATE UNIQUE INDEX invitations_pkey ON public.invitations USING btree (id)"
+            },
+            {
+              "table_name": "invitations",
+              "index_name": "invitations_token_hash_unique",
+              "indisvalid": true,
+              "indisready": true,
+              "indisunique": true,
+              "definition": "CREATE UNIQUE INDEX invitations_token_hash_unique ON public.invitations USING btree (token_hash)"
+            },
+            {
+              "table_name": "invitations",
+              "index_name": "uniq_invitations_org_email_pending",
+              "indisvalid": true,
+              "indisready": true,
+              "indisunique": true,
+              "definition": "CREATE UNIQUE INDEX uniq_invitations_org_email_pending ON public.invitations USING btree (org_id, email) WHERE (status = 'PENDING'::invitation_status)"
+            },
+            {
+              "table_name": "invitations",
+              "index_name": "uniq_invitations_org_id",
+              "indisvalid": true,
+              "indisready": true,
+              "indisunique": true,
+              "definition": "CREATE UNIQUE INDEX uniq_invitations_org_id ON public.invitations USING btree (org_id, id)"
+            },
+            {
+              "table_name": "role_assignments",
+              "index_name": "role_assignments_pkey",
+              "indisvalid": true,
+              "indisready": true,
+              "indisunique": true,
+              "definition": "CREATE UNIQUE INDEX role_assignments_pkey ON public.role_assignments USING btree (id)"
+            },
+            {
+              "table_name": "role_assignments",
+              "index_name": "uniq_role_assignments_org_membership_role",
+              "indisvalid": true,
+              "indisready": true,
+              "indisunique": true,
+              "definition": "CREATE UNIQUE INDEX uniq_role_assignments_org_membership_role ON public.role_assignments USING btree (org_id, organization_membership_id, role_id)"
+            }
+          ],
+          "constraints": [
+            {
+              "table_name": "invitation_email_otps",
+              "conname": "invitation_email_otps_invitation_id_fkey",
+              "convalidated": true,
+              "definition": "FOREIGN KEY (invitation_id) REFERENCES invitations(id) ON DELETE CASCADE"
+            },
+            {
+              "table_name": "invitation_module_access",
+              "conname": "chk_ima_standing",
+              "convalidated": true,
+              "definition": "CHECK ((standing = ANY (ARRAY['MEMBER'::text, 'ADMIN'::text])))"
+            },
+            {
+              "table_name": "invitation_module_access",
+              "conname": "fk_ima_invitation",
+              "convalidated": true,
+              "definition": "FOREIGN KEY (invitation_id) REFERENCES invitations(id) ON DELETE CASCADE"
+            },
+            {
+              "table_name": "invitation_module_access",
+              "conname": "fk_ima_org",
+              "convalidated": true,
+              "definition": "FOREIGN KEY (org_id) REFERENCES organizations(id) ON DELETE CASCADE"
+            },
+            {
+              "table_name": "role_assignments",
+              "conname": "fk_role_assignments_assigner_membership",
+              "convalidated": true,
+              "definition": "FOREIGN KEY (org_id, assigned_by_membership_id) REFERENCES organization_members(org_id, id) ON DELETE SET NULL (assigned_by_membership_id)"
+            },
+            {
+              "table_name": "role_assignments",
+              "conname": "fk_role_assignments_org_role",
+              "convalidated": true,
+              "definition": "FOREIGN KEY (org_id, role_id) REFERENCES roles(org_id, id) ON DELETE CASCADE"
+            },
+            {
+              "table_name": "role_assignments",
+              "conname": "ra_membership_fk",
+              "convalidated": true,
+              "definition": "FOREIGN KEY (org_id, organization_membership_id) REFERENCES organization_members(org_id, id) ON DELETE CASCADE"
+            },
+            {
+              "table_name": "role_assignments",
+              "conname": "ra_org_fk",
+              "convalidated": true,
+              "definition": "FOREIGN KEY (org_id) REFERENCES organizations(id) ON DELETE CASCADE"
+            }
+          ],
+          "helperPrivileges": [
+            {
+              "nspname": "app",
+              "proname": "current_org_id",
+              "can_execute": true
+            },
+            {
+              "nspname": "app",
+              "proname": "current_org_id_or_null",
+              "can_execute": true
+            },
+            {
+              "nspname": "app",
+              "proname": "current_public_token_or_null",
+              "can_execute": true
+            },
+            {
+              "nspname": "app",
+              "proname": "current_user_id_or_null",
+              "can_execute": true
+            }
+          ]
+        }
+      },
+      "freshAccess": {
+        "role": "MEMBER",
+        "membershipId": 142,
+        "humanSession": true,
+        "isOrgOwner": false,
+        "canManageOrganizationMembership": false,
+        "buildEnabled": true,
+        "buildViewScope": "all",
+        "permissionVersion": 15,
+        "projectRows": 0,
+        "repeatReadStatus": 200
+      },
+      "effects": {
+        "acceptedEventCount": 1,
+        "acceptedSeatEventCount": 1,
+        "seatQuantityDelta": 0,
+        "billedSeatCount": 3,
+        "moduleGrantAuditId": 933,
+        "permissionVersions": {
+          "before": 13,
+          "after": 15
+        },
+        "qualification": "Durable rows and fresh Access proven; physical cache invalidation, worker fanout and crash recovery unverified."
+      },
+      "limitations": [
+        "Matching browser/mobile unavailable: frontend1002 approval pending; frontend1000 uses deployed API.",
+        "Portal1730/1731 unapplied; no client grant activation proof.",
+        "Older pinned120545 cannot prove current41 expired renewal SQL.",
+        "Only fresh Member/single Build standing: OrgAdmin, multi-module, existing user, lost inviter/seed authority, simultaneous accept and module-disabled transitions remain open.",
+        "OTP consumed before membership transaction; rollback/retry recovery not established by this sequential flow.",
+        "OTP/magic/session tables are global capability tables without tenant RLS; actual OTP DELETE privilege exceeds the three explicitly granted by1611.",
+        "IMA has separate organization/invitation FKs; composite same-org integrity not enforced by those two FKs.",
+        "Current pending invitation unique predicate uses status=PENDING per0667; Drizzle declares accepted_at IS NULL. Drift recorded, not repaired.",
+        "Other owner project list empty; foreign-project404 is proven against primary project54 with other owner, not a new Member read of a positive foreign record.",
+        "Local captured mail does not prove provider or external-worker delivery.",
+        "No broad checkbox or full D/I/T/R/B/L stage closes."
+      ],
+      "harnessCorrections": [
+        "Removed assumed organization_members.deleted_at from the read-only baseline; canonical status used.",
+        "Invalid ADMIN enum probe returned validation400; valid changed recipient then returned key conflict422.",
+        "Join token extracted privately from canonical /invitation/:token path, not query.",
+        "Captured OTP extracted from visible text after stripping CSS; no code printed.",
+        "Other-tenant name assumption failed preflight; known owner ID/email and reserved name prefix verified before RLS read.",
+        "REPL block-local references were unavailable in later cells; retained private state used and baseline reflects the actual earlier output, not a post-write reread."
+      ],
+      "independentReview": {
+        "status": "CLEAR",
+        "owner": "module_grants_resume",
+        "reviewedSnapshotSha256": "6ad13f906287cb808d546a47c609afec504b9c18c38b3d257a83797842c1c03b",
+        "scope": "Sanitized evidence accuracy and pinned-source comparison; no independent repeat DB/API/browser run."
+      }
     }
   ],
   "backendSourceCommit": "1aee0d53a",
