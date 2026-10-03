@@ -10,7 +10,9 @@
     "sseProductionAndChangedSpecTypecheck": "passed after Feedbucket typed fixture repair",
     "digestRestrictionFocused": "9 suites / 74 tests; independent root and module_grants_resume review",
     "dispatchFixtureFocused": "5 suites / 305 tests; corrupt persisted envelope corrected from generic500 to409",
-    "dispatchProductionAndChangedSpecTypecheck": "passed including frozen fixture23 and canonical digest24 before runner17416"
+    "dispatchProductionAndChangedSpecTypecheck": "passed including frozen fixture23 and canonical digest24 before runner17416",
+    "storedReadPolicyAndConsumers": "policy 8db4f6dd6 + consumers e0f3de0fb; independent review; 10 suites/156 and 26 suites/249 selected tests; exact lint/diff, combined scoped and production TypeScript pass",
+    "contractFreshness": "backend OpenAPI 4106 operations/4091 contracts current; frontend vendor and 93 Build generator/6 vendor self-tests pass"
   },
   "observations": [
     {
@@ -624,6 +626,425 @@
         "No browser mutation proof or remote deployment/worker isolation is inferred.",
         "Owner-policy25 edits began only after this runner boot; its future behavior is excluded."
       ]
+    },
+    {
+      "kind": "stored-notification-read-authorization",
+      "observedAt": "2026-10-03T16:07:37.528Z",
+      "source": "e0f3de0fb38b49f17fc0c23b6bd309aa4329db78",
+      "policySource": "8db4f6dd6",
+      "runner": {
+        "pid": 24992,
+        "host": "127.0.0.1:1001",
+        "isolatedCommittedWorktree": true,
+        "health": 200,
+        "localProvidersAndWorkersDisabled": true
+      },
+      "scope": {
+        "organizationId": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+        "membershipId": 139,
+        "projectId": 54,
+        "ticketId": 358
+      },
+      "baseline": [
+        {
+          "path": "/notifications?sourceModule=build&limit=2",
+          "status": 200,
+          "contract": true,
+          "ids": [
+            310,
+            309
+          ],
+          "sources": [
+            "build"
+          ],
+          "hasMore": true,
+          "nextCursor": 309
+        },
+        {
+          "path": "/notifications?limit=20",
+          "status": 200,
+          "contract": true,
+          "ids": [
+            310,
+            309,
+            308,
+            307,
+            306
+          ],
+          "sources": [
+            "build",
+            "organization"
+          ],
+          "hasMore": false,
+          "nextCursor": null
+        },
+        {
+          "path": "/notifications/unread-count?sourceModule=build",
+          "status": 200,
+          "contract": true,
+          "count": 0
+        },
+        {
+          "path": "/notifications/unread-count",
+          "status": 200,
+          "contract": true,
+          "count": 0
+        },
+        {
+          "path": "/me/inbox?limit=20",
+          "status": 200,
+          "contract": true,
+          "ids": [
+            310,
+            309,
+            308,
+            307,
+            306
+          ],
+          "sources": [
+            "build",
+            "organization"
+          ],
+          "hasMore": false,
+          "nextCursor": null
+        },
+        {
+          "path": "/me/inbox/count",
+          "status": 200,
+          "contract": true,
+          "count": 0
+        }
+      ],
+      "restrictedBaseline": [
+        {
+          "path": "/notifications?sourceModule=build&limit=1",
+          "status": 200,
+          "contract": true,
+          "ids": [],
+          "sources": [],
+          "hasMore": false,
+          "nextCursor": null
+        },
+        {
+          "path": "/notifications?limit=1",
+          "status": 200,
+          "contract": true,
+          "ids": [
+            306
+          ],
+          "sources": [
+            "organization"
+          ],
+          "hasMore": false,
+          "nextCursor": null
+        },
+        {
+          "path": "/notifications/unread-count?sourceModule=build",
+          "status": 200,
+          "contract": true,
+          "count": 0
+        }
+      ],
+      "positivePat": {
+        "status": 200,
+        "ids": [
+          310,
+          309
+        ]
+      },
+      "cursor": {
+        "status": 200,
+        "ids": [
+          308,
+          307
+        ],
+        "nextCursor": null,
+        "hasMore": false
+      },
+      "freshIntent": {
+        "status": 200,
+        "outboxId": 495,
+        "state": "PENDING",
+        "action": "enqueue",
+        "created": true
+      },
+      "matrix": [
+        {
+          "actor": "owner",
+          "path": "/notifications?sourceModule=build&section=UNREAD&limit=1",
+          "status": 200,
+          "contract": true,
+          "ids": [
+            311
+          ],
+          "nextCursor": null,
+          "hasMore": false
+        },
+        {
+          "actor": "owner",
+          "path": "/notifications/unread-count?sourceModule=build",
+          "status": 200,
+          "contract": true,
+          "count": 1
+        },
+        {
+          "actor": "owner",
+          "path": "/me/inbox/unified?kinds=notification&module=build&unreadOnly=true&limit=1",
+          "status": 200,
+          "contract": true,
+          "ids": [
+            311
+          ],
+          "hasMore": false,
+          "degraded": false
+        },
+        {
+          "actor": "owner",
+          "path": "/me/inbox/unified/count",
+          "status": 200,
+          "contract": true,
+          "notification": 1,
+          "total": 1
+        },
+        {
+          "actor": "restricted-pat",
+          "path": "/notifications?sourceModule=build&section=UNREAD&limit=1",
+          "status": 200,
+          "contract": true,
+          "ids": [],
+          "nextCursor": null,
+          "hasMore": false
+        },
+        {
+          "actor": "restricted-pat",
+          "path": "/notifications/unread-count?sourceModule=build",
+          "status": 200,
+          "contract": true,
+          "count": 0
+        },
+        {
+          "actor": "restricted-pat",
+          "path": "/me/inbox/unified?kinds=notification&module=build&unreadOnly=true&limit=1",
+          "status": 200,
+          "contract": true,
+          "ids": [],
+          "hasMore": false,
+          "degraded": false
+        },
+        {
+          "actor": "restricted-pat",
+          "path": "/me/inbox/unified/count",
+          "status": 200,
+          "contract": true,
+          "notification": 0,
+          "total": 0
+        },
+        {
+          "actor": "permitted-pat",
+          "path": "/notifications?sourceModule=build&section=UNREAD&limit=1",
+          "status": 200,
+          "contract": true,
+          "ids": [
+            311
+          ],
+          "nextCursor": null,
+          "hasMore": false
+        },
+        {
+          "actor": "permitted-pat",
+          "path": "/notifications/unread-count?sourceModule=build",
+          "status": 200,
+          "contract": true,
+          "count": 1
+        },
+        {
+          "actor": "permitted-pat",
+          "path": "/me/inbox/unified?kinds=notification&module=build&unreadOnly=true&limit=1",
+          "status": 200,
+          "contract": true,
+          "ids": [
+            311
+          ],
+          "hasMore": false,
+          "degraded": false
+        },
+        {
+          "actor": "permitted-pat",
+          "path": "/me/inbox/unified/count",
+          "status": 200,
+          "contract": true,
+          "notification": 1,
+          "total": 1
+        }
+      ],
+      "denials": [
+        {
+          "name": "missing session",
+          "status": 401,
+          "code": "UNAUTHORIZED"
+        },
+        {
+          "name": "client organization query",
+          "status": 400,
+          "code": "VALIDATION_FAILED"
+        },
+        {
+          "name": "restricted ticket endpoint",
+          "status": 403,
+          "code": "FORBIDDEN"
+        }
+      ],
+      "persistedBeforeReadAll": {
+        "notifications": [
+          {
+            "id": "306",
+            "source_module": "organization",
+            "event_key": "organization.setup.completed",
+            "entity_type": "organization",
+            "entity_id": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+            "is_read": false
+          },
+          {
+            "id": "310",
+            "source_module": "build",
+            "event_key": "build.ticket.status_changed",
+            "entity_type": "ticket",
+            "entity_id": "359",
+            "is_read": true
+          },
+          {
+            "id": "311",
+            "source_module": "build",
+            "event_key": "build.ticket.status_changed",
+            "entity_type": "ticket",
+            "entity_id": "358",
+            "is_read": false
+          }
+        ],
+        "intent": [
+          {
+            "id": "495",
+            "state": "PROCESSED",
+            "event_key": "build.ticket.status_changed",
+            "entity_type": "ticket",
+            "entity_id": "358"
+          }
+        ],
+        "delivery": [
+          {
+            "id": "558",
+            "notification_id": "311",
+            "channel": "IN_APP",
+            "status": "DELIVERED"
+          }
+        ],
+        "watermark": [
+          {
+            "last_read_notification_id": "307"
+          }
+        ]
+      },
+      "cleanup": {
+        "readAllStatus": 200,
+        "readAllContract": true,
+        "count": 0,
+        "tokens": [
+          {
+            "id": "36640b30-6a11-404b-abfb-b1e51caec9fa",
+            "revokeStatus": 204,
+            "afterRevocationStatus": 401,
+            "code": "UNAUTHORIZED"
+          },
+          {
+            "id": "a266ec4a-e2cc-45b6-b0fa-b4a9cdf0106b",
+            "revokeStatus": 204,
+            "afterRevocationStatus": 401,
+            "code": "UNAUTHORIZED"
+          }
+        ],
+        "persisted": {
+          "notifications": [
+            {
+              "id": "306",
+              "is_read": false
+            },
+            {
+              "id": "307",
+              "is_read": true
+            },
+            {
+              "id": "308",
+              "is_read": true
+            },
+            {
+              "id": "309",
+              "is_read": true
+            },
+            {
+              "id": "310",
+              "is_read": true
+            },
+            {
+              "id": "311",
+              "is_read": true
+            }
+          ],
+          "watermark": [
+            {
+              "last_read_notification_id": "307"
+            }
+          ],
+          "tokens": [
+            {
+              "id": "36640b30-6a11-404b-abfb-b1e51caec9fa",
+              "revoked": true
+            },
+            {
+              "id": "a266ec4a-e2cc-45b6-b0fa-b4a9cdf0106b",
+              "revoked": true
+            }
+          ]
+        }
+      },
+      "harnessCorrections": [
+        "Initial notification contract parse incorrectly included the success envelope; corrected to canonical payload before assertions.",
+        "Token server schema uses Date values; wire verification uses its published ISO datetime fields.",
+        "Attempt with unrecognized build:projects:view was rejected 400; recreated using catalog build:view and build:tickets:view."
+      ],
+      "limitations": [
+        "Owner and two personal-token scope variants only; no nonowner, cross-tenant or assignment-revocation matrix.",
+        "No browser or deployment proof; frontend1000 uses deployed backend.",
+        "No actual owner-query cost, worker crash/lease recovery, cache freshness ceiling, SSE authorization or AI consumer proof.",
+        "Temporary tokens are revoked; durable synthetic notification311, intent495 and delivery558 remain as evidence."
+      ],
+      "principals": [
+        {
+          "label": "owner",
+          "kind": "human-session",
+          "membershipId": 139
+        },
+        {
+          "label": "restricted-pat",
+          "kind": "personal-token",
+          "membershipId": 139,
+          "scopes": [
+            "build:access:view"
+          ]
+        },
+        {
+          "label": "permitted-pat",
+          "kind": "personal-token",
+          "membershipId": 139,
+          "scopes": [
+            "build:view",
+            "build:tickets:view"
+          ]
+        }
+      ],
+      "independentReview": {
+        "reviewer": "scoped_activation_dispatch",
+        "result": "clear for recorded bounded scope; source and evidence consistency review, no additional DB/browser calls"
+      }
     }
   ],
   "backendSourceCommit": "1aee0d53a",

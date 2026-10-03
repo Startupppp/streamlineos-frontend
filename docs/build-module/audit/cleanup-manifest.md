@@ -103,6 +103,17 @@ Classification: superseded implementation; no file deleted. Retained path: `back
 
 Reference changes: the canonical dispatch writer now calls the intent encoder; the relay calls the decoder; the existing `notification-dedupe-window.spec.ts` retains its six behavioral controls through the new encoder. An existing historical test comment naming the prior helper remains historical explanation, not an import. Reviewer: coordinator, independently of `scoped_activation_dispatch`; integrated domain review also passed. Commands: `rg -n 'buildNotifOutboxDedupeKey' backend/src backend/test`; the six notification dispatch/replay focused suites (57 tests); exact six-path ESLint; `git diff --check`; changed-spec TypeScript through `.scratch/tsconfig-inbox-email-portal.json`; `pnpm -C backend typecheck`. All listed executable gates passed for the frozen source. Runtime, legacy-row replay and consumer-before-producer rollout are separate open proof; no historical row or evidence was deleted.
 
+### Canonical notification reader consolidation — 2026-10-03
+
+Classification: obsolete wrappers and superseded personalized cache implementation; no file deleted. At backend `e0f3de0fb`, the existing NotificationsReadService owns both flat list/count consumers, applying the domain SQL predicate before pagination or aggregation. The pure NotificationsService read forwards and its unused reader dependency were removed. Raw page/count caching and its private key builder were removed because object/permission changes were not part of that cache's validity. Canonical namespace invalidation remains for other notification consumers.
+
+| Retained path | SHA-256 before change at `693d332d0` | Removed symbols / replacement |
+|---|---|---|
+| `backend/src/modules/notifications/notifications.service.ts` | `4e7dc8f25b5e684238a42f4dbb1f98548f933056b7e2c5ad86007955ab637412` | Pure `list`/`unreadCount` forwards; both controllers now inject the exported canonical reader. |
+| `backend/src/modules/notifications/notifications-read.service.ts` | `31ede8f2396d2ccf11c454486a0412c3f20f3af92fc30c0df25be8fa0a867795` | `listCacheKey`, cache dependency and raw result caching; current owner predicate is composed directly into each list/count query. |
+
+Reference changes: NotificationsController, InboxController, NotificationsModule exports, UnifiedInboxService/source integration and the exact constructor/test fixtures in claim27. Reviewer: `scoped_activation_dispatch`, independently from author `module_grants_resume`; coordinator reviewed the canonical reader and controller diff. Validation: full production-caller `rg` census, 26 focused suites/249 tests, exact 33-path ESLint/diff, integrated policy/consumer scoped TypeScript and `pnpm -C backend typecheck` passed. Existing test filenames are retained as regression owners. Real role/tenant/database/query-cost/browser and operational proof remain separate gates; historical evidence is retained.
+
 Verify all 39 retained counterparts exist, all 46 removed paths do not, source hashes or pre-deletion hashes are recorded, no inbound supported link points to a removed file, relative Markdown links resolve, and all 75 route contracts, 100 customer-value reasons, and requirement entries survive. See the validation report for actual check results.
 
 ## Delivery checklist
