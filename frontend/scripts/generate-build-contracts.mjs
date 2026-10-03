@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import ts from "typescript";
 import { join, relative } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -393,6 +394,22 @@ export function generateContent(document, openapiHash, operations) {
   }
   segments.push("] as const;", "");
   return segments.join("\n");
+}
+
+const AST_LAYOUT_KEYS = new Set(["pos", "end", "transformFlags", "modifierFlagsCache", "parent", "emitNode", "original", "id", "flowNode", "symbol", "locals", "localSymbol", "nextContainer", "jsDoc", "multiLine", "singleQuote", "hasExtendedUnicodeEscape", "numericLiteralFlags"]);
+const PROPERTY_NAME_KINDS = new Set([ts.SyntaxKind.PropertyAssignment, ts.SyntaxKind.PropertySignature]);
+
+export function normaliseGeneratedContent(source) {
+  const parsed = ts.createSourceFile("generated.ts", source, ts.ScriptTarget.Latest, false, ts.ScriptKind.TS);
+  if (parsed.parseDiagnostics.length > 0) throw new Error("Generated contract source contains invalid TypeScript syntax.");
+  return JSON.stringify(parsed.statements, function (key, value) {
+    if (AST_LAYOUT_KEYS.has(key)) return undefined;
+    if (key === "flags") return this.kind === ts.SyntaxKind.VariableDeclarationList
+      ? value & (ts.NodeFlags.Let | ts.NodeFlags.Const | ts.NodeFlags.Using | ts.NodeFlags.AwaitUsing) : undefined;
+    if (key === "name" && PROPERTY_NAME_KINDS.has(this.kind) && value &&
+      (ts.isIdentifier(value) || ts.isStringLiteral(value))) return { propertyName: value.text ?? value.escapedText };
+    return value;
+  });
 }
 
 export function buildFromDisk() {

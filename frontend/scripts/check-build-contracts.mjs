@@ -5,6 +5,8 @@ import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import {
   buildFromDisk,
+  generateContent,
+  normaliseGeneratedContent,
   normaliseRequestPath,
   resolveHookOperations,
   responseDataSchema,
@@ -19,17 +21,13 @@ const GENERATED_PATH = join(FRONTEND_ROOT, "contracts", "build-contracts.generat
 
 const MIN_SCHEMAS = 300;
 
-function normalise(text) {
-  return text.replace(/\r\n/g, "\n");
-}
-
 export function extractOpenapiHash(source) {
-  const match = source.match(/OPENAPI_HASH = "sha256:([0-9a-f]{64})" as const/);
+  const match = source.match(/^\s*export\s+const\s+OPENAPI_HASH\s*=\s*"sha256:([0-9a-f]{64})"\s+as\s+const\b/m);
   return match ? match[1] : null;
 }
 
 export function countGeneratedSchemas(source) {
-  return [...source.matchAll(/^export const \w+(?:Response|Body)Schema = /gm)].length;
+  return [...source.matchAll(/^export\s+const\s+\w+(?:Response|Body)Schema\s*=/gm)].length;
 }
 
 export function checkWellFormed(source, minSchemas = MIN_SCHEMAS) {
@@ -68,6 +66,9 @@ function runSelfTest() {
     extractOpenapiHash(`export const OPENAPI_HASH = "sha256:${validHash}" as const;`) === validHash,
   );
   assert("returns null when no OPENAPI_HASH constant is present", extractOpenapiHash("no hash here") === null);
+  assert("accepts a formatted multiline exported hash", extractOpenapiHash(`export const OPENAPI_HASH =\r\n  "sha256:${validHash}" as const;`) === validHash);
+  assert("rejects a non-exported hash", extractOpenapiHash(`const OPENAPI_HASH = "sha256:${validHash}" as const;`) === null);
+  assert("rejects an oversized hash", extractOpenapiHash(`export const OPENAPI_HASH = "sha256:${validHash}a" as const;`) === null);
   assert(
     "rejects a hash shorter than 64 hex characters so a truncated write cannot pass",
     extractOpenapiHash(`export const OPENAPI_HASH = "sha256:abc" as const;`) === null,
@@ -77,6 +78,21 @@ function runSelfTest() {
     countGeneratedSchemas("export const aResponseSchema = x;\nexport const bBodySchema = y;\nexport const genXSchema = a;\nexport type AResponse = z.infer<typeof a>;\n") === 2,
   );
   assert("counts zero schemas in an empty file so a blank file cannot pass", countGeneratedSchemas("") === 0);
+  assert("counts multiline response and body declarations", countGeneratedSchemas("export const aResponseSchema =\n  x;\nexport const bBodySchema =\n  y;\n") === 2);
+  const compactSyntax = 'import { z } from "zod"; export const valueResponseSchema = z.object({"title": z.string(), "items": z.array(z.number())}); export type Value = { readonly title: string };';
+  const formattedSyntax = "import { z } from 'zod';\nexport const valueResponseSchema = z.object({\n  title: z.string(),\n  items: z.array(z.number()),\n});\nexport type Value = { readonly title: string; };\n";
+  assert("syntax comparison accepts layout, quotes and trailing commas", normaliseGeneratedContent(compactSyntax) === normaliseGeneratedContent(formattedSyntax));
+  assert("syntax comparison preserves schema changes", normaliseGeneratedContent(compactSyntax) !== normaliseGeneratedContent(compactSyntax.replace("z.string()", "z.string().nullable()")));
+  assert("syntax comparison preserves literal changes", normaliseGeneratedContent("export const value = z.literal('a');") !== normaliseGeneratedContent("export const value = z.literal('b');"));
+  assert("syntax comparison preserves declaration mutability", normaliseGeneratedContent("export const value = z.number();") !== normaliseGeneratedContent("export let value = z.number();"));
+  assert("syntax comparison preserves readonly types", normaliseGeneratedContent(compactSyntax) !== normaliseGeneratedContent(compactSyntax.replace("readonly title", "title")));
+  assert("syntax comparison preserves numeric versus string type keys", normaliseGeneratedContent('export type Value = { "1": string };') !== normaliseGeneratedContent("export type Value = { 1: string };"));
+  const numericDocument = { paths: { "/build/numeric": { get: { operationId: "Numeric_read", responses: { "200": { content: { "application/json": { schema: { type: "object", properties: { "1": { type: "string" } }, required: ["1"] } } } } } } } } };
+  const numericGenerated = generateContent(numericDocument, validHash, [{ method: "get", path: "/build/numeric", operationId: "Numeric_read" }]);
+  const numericChanged = numericGenerated.replace('"1":', "1:");
+  assert("syntax comparison detects numeric key drift in real generated schema inference", numericChanged !== numericGenerated && normaliseGeneratedContent(numericGenerated) !== normaliseGeneratedContent(numericChanged));
+  assert("syntax comparison preserves line-sensitive return behavior", normaliseGeneratedContent("export const value = () => { return 1; };") !== normaliseGeneratedContent("export const value = () => { return\n1; };"));
+  assert("syntax comparison rejects malformed TypeScript", throws(() => normaliseGeneratedContent("export const value = z.object({);")));
   assert("a file at the schema floor with a hash is well-formed", checkWellFormed(makeSource()).ok);
   assert(
     "a file below the schema floor is malformed so a truncated generate cannot pass",
@@ -276,7 +292,7 @@ if (currentHash !== wellFormed.hash) {
 console.log(`rule 2 OK — OPENAPI_HASH matches contracts/openapi.json (${currentHash.slice(0, 12)}...)`);
 
 const fresh = buildFromDisk();
-if (normalise(fresh.content) !== normalise(generatedSource)) {
+if (normaliseGeneratedContent(fresh.content) !== normaliseGeneratedContent(generatedSource)) {
   console.error("check:build-contracts FAILED — the generated file does not match a fresh generation.");
   console.error("  A Build hook now calls a different set of operations, or the file was edited by hand.");
   console.error("  Run: pnpm generate:build-contracts");
