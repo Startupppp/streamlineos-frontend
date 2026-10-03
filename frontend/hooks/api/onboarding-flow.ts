@@ -44,7 +44,7 @@ export function useOnboardingSessionQuery(enabled = true) {
 export type ChecklistItemStatus = "todo" | "in_progress" | "done" | "skipped" | "blocked";
 
 export type ModuleChecklistItem = {
-  id: number;
+  id: number | null;
   itemKey: string;
   title: string;
   description: string | null;
@@ -55,7 +55,7 @@ export type ModuleChecklistItem = {
 };
 
 export type ModuleChecklist = {
-  id: number;
+  id: number | null;
   moduleKey: string;
   status: "not_started" | "in_progress" | "completed";
   progress: number;

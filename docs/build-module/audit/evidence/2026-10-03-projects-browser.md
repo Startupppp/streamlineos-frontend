@@ -1,6 +1,6 @@
 # Projects browser verification — 2026-10-03
 
-Status: Current verified for the observations recorded below. Current unverified for complete Projects acceptance, project detail navigation success, mutations, restricted roles, mobile behavior, and deployment parity.
+Status: Current verified for the observations recorded below. Current unverified for complete Projects acceptance, project detail navigation success, mutations, restricted roles, complete responsive actions, and deployment parity.
 
 ## Environment and source
 
@@ -18,6 +18,13 @@ The local frontend at `http://localhost:1000` used the deployed API configured i
 3. After reloading the changed frontend, `/build/projects?view=grid` displayed both project cards while the optional project-detail request still failed. The collection remained usable.
 4. A middle click on the native project-card link opened `/build/6` in another tab and kept the original collection tab at its grid URL. A Control-click attempt in the in-app browser did not create a tab; this is not recorded as a passing modifier-click check.
 5. The new detail tab displayed **Something went wrong**. The deployed `/build/6` request returned HTTP 500 with code `INTERNAL_ERROR`; one recorded correlation ID is `20187789-b107-4864-aaed-da269fe3717a`. Project-detail success remains open.
+6. The rendered grid was inspected at viewport widths 375, 768, and 1280. `document.documentElement.scrollWidth` equaled the viewport width at each size. Mobile bottom navigation and tablet/desktop shell controls were visible. These checks establish bounded layout only; create, filter, keyboard, pane, and permission behavior at each size remains open. The viewport override was reset afterwards.
+
+![Projects mobile grid at 375 pixels](2026-10-03-browser/projects-mobile-375.jpg)
+
+![Projects tablet grid at 768 pixels](2026-10-03-browser/projects-tablet-768.jpg)
+
+![Projects desktop grid at 1280 pixels](2026-10-03-browser/projects-desktop-1280.jpg)
 
 ![Projects grid remains visible](2026-10-03-browser/projects-grid.jpg)
 
@@ -31,4 +38,8 @@ The current source's relational project read, including ordered statuses and pro
 
 ## Remaining acceptance
 
-The Projects requirement stays open. Browser checks still need successful full-page and pane navigation, ordinary and modifier clicks, return history, refresh persistence, manager/status/health filters, pagination, restricted access, 375/768/1280 layouts, and create/import behavior. Backend health/cursor source is being independently revised and needs application-role query-cost evidence. Synthetic signup and permission tests will use local captured mail and real application guards.
+The Projects requirement stays open. Browser checks still need successful full-page and pane navigation, ordinary and modifier clicks, return history, refresh persistence, manager/status/health filters, pagination, restricted access, responsive actions, and create/import behavior. Backend health/cursor source at `91eb81f46` passed independent review, 67 focused tests, production/scoped typechecks, lint, and the limited-data application-role measurements in [health/cursor evidence](2026-10-03-project-health-paging.md). Those source and read-only query checks do not prove browser or deployment acceptance. Synthetic signup and permission tests will use local captured mail and real application guards.
+
+## Frontend typecheck
+
+`pnpm -C frontend type-check` initially failed solely on two stale generated `.next/types` blog category/tag route stubs. The coordinator verified ownership and stopped its own Next dev process, checked both paths remained inside `frontend/.next`, removed exactly those generated files, and reran the same package command. Next route generation and the full frontend production TypeScript check then passed. No application blog file or environment file was changed. This compiler result is separate from browser acceptance.

@@ -90,3 +90,17 @@ Reserved mail is readable at `http://127.0.0.1:1001/__build-verification/mail?em
 Global workers are deliberately idle. Organization setup can enqueue its actual durable event, but invitation activation will stay pending until a separately reviewed dispatcher can prove that every selected event and recipient belongs to the reserved synthetic organization. Never substitute a global production sweep. Receipt deployment alignment is described in [production catalog evidence](2026-10-03-production-catalog.md).
 
 No server was launched and no database mutation was executed by the agent that prepared this evidence. No TODO, ledger completion, or release status was advanced from these source checks.
+
+## Coordinator live checks
+
+The independently reviewed runner at backend `0c4b33141` was launched by the coordinator with the documented process-only `NODE_PATH` setting. Its application-role preflight completed before it listened on `127.0.0.1:1001`; the observed listener belonged to the launched process. Global workers and external mail remained disabled. No environment file was edited.
+
+| HTTP check | Observed result | What it proves |
+|---|---|---|
+| OTP request for an address outside the reserved namespace | 403 | The additional synthetic-recipient boundary rejected the request. |
+| Reserved OTP request with a foreign Origin | 403 | The loopback origin boundary rejected the request. |
+| Projects read without authentication | 401 | The real authentication stack refused unauthenticated access. |
+| OTP request for the reserved synthetic owner | 200 | The real request path accepted the signup/sign-in request. This path creates a user and OTP record; this was the first authorized synthetic database write in this runner. |
+| Reserved in-memory mailbox read | 200, one message | Mail went to the capture seam. No OTP, login token, proof, or JWT was copied to evidence. |
+
+The namespace/origin denials are runner policy evidence, not product RBAC or cross-tenant proof. OTP consumption, browser session establishment, durable onboarding, invitations, record actions, and permission matrices remain open. Automatic approval review rejected starting the frontend with temporary local API/auth URLs; the coordinator requested clarification and did not repeat that rejected launch. Until the frontend is connected to this runner, existing browser observations against the deployed API do not prove the revised backend behavior.

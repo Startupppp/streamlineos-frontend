@@ -29,6 +29,7 @@ jest.mock("@/hooks/api/onboarding-flow-schema", () => ({
 
 import { useCompleteChecklistItem, type ModuleChecklist } from "@/hooks/api/onboarding-flow";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
+import { apiClient } from "@/lib/api-client";
 
 const ITEM_KEY = "setup-chat";
 const MODULE_KEY = "hr";
@@ -63,11 +64,19 @@ function makeWrapper(qc: QueryClient) {
 }
 
 describe("useCompleteChecklistItem — optimistic update prevents the self-toggle flicker", () => {
-  it("sets the item status to 'done' in the cache before the server responds so the button stays checked during the refetch", async () => {
+  it.each(["persisted", "initial"])("updates %s items using stable module and item keys", async (state) => {
+    jest.clearAllMocks();
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     qc.setQueryData(
       platformCoreQueryKeys.onboardingFlow.moduleChecklists(),
-      CHECKLIST,
+      CHECKLIST.map((checklist) => ({
+        ...checklist,
+        id: state === "initial" ? null : checklist.id,
+        items: checklist.items.map((item) => ({
+          ...item,
+          id: state === "initial" ? null : item.id,
+        })),
+      })),
     );
 
     const { result } = renderHook(() => useCompleteChecklistItem(), {
@@ -83,5 +92,11 @@ describe("useCompleteChecklistItem — optimistic update prevents the self-toggl
     );
     const item = updated?.[0]?.items.find((i) => i.itemKey === ITEM_KEY);
     expect(item?.status).toBe("done");
+    expect(apiClient.post).toHaveBeenCalledWith(
+      `/onboarding/module-checklists/${MODULE_KEY}/items/${ITEM_KEY}/complete`,
+      {},
+      undefined,
+      expect.any(Function),
+    );
   });
 });
