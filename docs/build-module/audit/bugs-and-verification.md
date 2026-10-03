@@ -51,6 +51,28 @@ Do not expand a historical severity into a new release blocker without attributi
 
 These findings are source-level and remain Current unverified as deployed behavior until the named runtime evidence is collected.
 
+## Intake processing reconciliation — 2026-10-03
+
+`BLD-INTAKE-TRANSITION-08` is a source and bounded runtime correction under `ARCH-04-REQUEST-CONVERGENCE`, supporting BLD-011 and BLD-035. The previous `IntakeService.updateIntake` read pending state before its transaction. Competing decisions could both create a Ticket or overwrite the processed state. Its focused regression first produced two successful accepts where only one should succeed.
+
+Backend `53a369619` moves the independent Intake owner from `execution/workspace.service.ts` to `execution/intake.service.ts`, with direct DI/import consumers and no forwarding facade. It locks the exact organization/project/request row in the tenant transaction, checks the locked state, and creates the canonical Ticket plus the pending-qualified request transition atomically. A missing result or failed write rolls back; processed requests retain the existing 409 contract. Publication runs after the owned transaction commits or through the ambient transaction's after-commit hooks; missing ambient hooks fail rather than publish early. List/create contracts, permissions and the canonical ticket creation interface remain unchanged. The unused controller schema import was removed without changing its response decorators.
+
+Five focused suites passed 98 tests, including concurrent decisions, current locked state, tenant/project misses, creator/request rollback and ambient commit/rollback behavior. Independent review passed. Production TypeScript and scoped test TypeScript passed; the latter includes every changed spec and both RBAC scenario/adaptor imports, not the entire repository test suite. Exact eleven-path ESLint passed with zero warnings. Module-registration self-tests passed 13 cases and the real gate found all 260 modules reachable. `workspace.service.ts` shrank from 589 to 440 lines and the new owner is 136 lines; the unchanged file-size rules now report 38 existing violations instead of 39. The repository-wide size and other previously reported release gates remain open.
+
+The coordinator restarted only the verified local synthetic runner at that revision. The normal synthetic owner session created Intake 2 and 3 through the real API in Flow02 project 54, then exercised competing commands. Before the races, a separate application-role read found both PENDING with null links and zero matching Tickets. The [saved request outcomes and persisted markers](evidence/2026-10-03-intake-transition.json) contain no authentication credentials.
+
+| Real API action | Observed result | Persisted result |
+|---|---|---|
+| Two concurrent accepts for Intake 2 | 409 and 200 | One accepted request linked to Ticket 359, number 3; exactly one matching live Ticket. |
+| Concurrent decline and accept for Intake 3 | Decline 200; accept 409 | Request declined with its submitted reason and no link; zero matching Tickets. |
+| Repeat Intake 2 acceptance | 409 | Existing link remains Ticket 359; no additional Ticket. |
+| Read accepted Intake collection | 200 with one matching row | Collection agrees with stored accepted state. |
+| Read creation activity | One `created` row for Ticket 359 | No live ticket comment was posted. |
+
+An independent fresh IAM read at 10:22:10 UTC used `streamline_app`, verified no superuser/BYPASSRLS, enforced read-only mode and selected REPEATABLE READ. It rechecked the exact synthetic organization, active owner and project before querying. All six stored-state checks passed: accepted and declined decisions, exact accepted link, one matching accepted Ticket, zero declined-title Tickets and one creation activity. This separately confirms the saved persistence markers; it does not establish browser behavior or every possible concurrent ordering.
+
+These observations use real application guards and PostgreSQL; request concurrency is an observed schedule, not exhaustive controlled interleaving proof. Database failure injection, deployed effects/workers, cache/browser refresh and the full role/tenant matrix remain Current unverified. The generic duplicate transition still accepts a same-organization ticket ID without canonical target record authorization, and its existing numeric schema is not positive/integer constrained. That requires a separately claimed correction and tests for hidden/foreign/deleted targets and the allowed cross-project policy. This slice does not claim complete Intake, Feedbucket mapping, conversion-to-project or duplicate-link acceptance.
+
 ## Testing Decisions
 
 For every closure record: frontend/backend/worker revisions; environment and synthetic tenants; actor/principal and exact role/grant; initial state; action; persisted DB/API result; console/network; audit/outbox/job/cache evidence; unauthorized/cross-tenant negative; responsive path. Existing focused tests support closure but cannot substitute browser/persistence/deployment evidence.
