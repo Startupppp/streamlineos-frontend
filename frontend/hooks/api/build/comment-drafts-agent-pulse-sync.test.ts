@@ -23,7 +23,7 @@ jest.mock("./comment-draft-offline-buffer", () => ({
 jest.mock("@/hooks/api/authorized-mutation", () => ({
   useAuthorizedMutation: jest.fn(
     (_permission: string, options: Record<string, unknown>) => {
-      const { useMutation } = require("@tanstack/react-query");
+      const { useMutation } = jest.requireActual("@tanstack/react-query");
       return useMutation(options);
     },
   ),

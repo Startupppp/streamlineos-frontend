@@ -30,7 +30,7 @@ jest.mock("./command-center-toolbar", () => ({
   CommandCenterToolbar: () => <div data-testid="command-center-toolbar" />,
 }));
 
-jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
   useBuildListKeyboard: jest.fn(() => ({ focusedIndex: null, setFocusedIndex: jest.fn() })),
 }));
 
@@ -38,7 +38,7 @@ jest.mock("@/components/shared/format-ticket-key", () => ({
   getTicketDetailHref: jest.fn(() => "/build/1/tickets/T-1"),
 }));
 
-jest.mock("@/features/build/shared/shortcut-help-dialog", () => ({
+jest.mock("@/components/shared/shortcut-help-dialog", () => ({
   ShortcutHelpDialog: ({ open }: { open: boolean }) =>
     open ? <div data-testid="shortcut-help-dialog" /> : null,
 }));
@@ -493,7 +493,7 @@ describe("CommandCenterPage — FE-41: error forwarding to usePageState", () => 
 describe("CommandCenterPage — Enter opens the focused personal-queue row", () => {
   function keyboardOptions() {
     const { useBuildListKeyboard } = jest.requireMock(
-      "@/features/build/shared/use-build-list-keyboard",
+      "@/hooks/common/use-build-list-keyboard",
     ) as { useBuildListKeyboard: jest.Mock };
     return useBuildListKeyboard.mock.calls.at(-1)?.[0] as {
       itemCount: number;

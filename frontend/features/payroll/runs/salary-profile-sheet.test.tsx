@@ -30,6 +30,12 @@ jest.mock("@/features/payroll/salary-structures/salary-breakup-preview", () => (
   SalaryBreakupPreview: ({ annualCtc }: { annualCtc: string }) => <p>Breakup for {annualCtc}</p>,
 }));
 
+const mockCanState = jest.fn();
+jest.mock("@/hooks/api/access", () => ({
+  ...jest.requireActual("@/hooks/api/access"),
+  useCanState: (key: string) => mockCanState(key),
+}));
+
 const mockUsePayrollPeople = jest.fn();
 jest.mock("@/hooks/api/payroll/people", () => ({
   usePayrollPeople: (...args: unknown[]) => mockUsePayrollPeople(...args),
@@ -95,6 +101,7 @@ async function fillAndSubmit() {
 beforeEach(() => {
   jest.clearAllMocks();
   mockUsePayrollPeople.mockReturnValue(result());
+  mockCanState.mockReturnValue("granted");
   mockUseCreateProfile.mockReturnValue({ mutate: createUser, isPending: false });
   mockUseCreateWorkerProfile.mockReturnValue({ mutate: createWorker, isPending: false });
 });
@@ -166,6 +173,15 @@ describe("SalaryProfileSheet person picker", () => {
 
     expect(screen.getByText(/No one in your directory yet/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open Directory" })).toHaveAttribute("href", "/directory");
+  });
+
+  it("says salary view access is missing rather than that the directory is empty", () => {
+    mockCanState.mockImplementation((key: string) => (key === "payroll:salaries:view" ? "denied" : "granted"));
+    mockUsePayrollPeople.mockReturnValue(result({ data: undefined }));
+    renderSheet();
+
+    expect(screen.queryByText(/No one in your directory yet/)).not.toBeInTheDocument();
+    expect(screen.getByText(/needs access to view salaries/)).toBeInTheDocument();
   });
 
   it("shows an inline error with Retry", () => {

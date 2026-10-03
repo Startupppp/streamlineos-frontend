@@ -14,6 +14,11 @@ export const knowledgeAndSurveysQueryKeys = {
     pagesTree: () => [...base, "kb", "pages", "tree"] as const,
     pagesTreeByProject: (projectId: number) =>
       [...base, "kb", "pages", "tree", "project", projectId] as const,
+    pagesTreeLevelInfinite: (params: {
+      parentId?: number;
+      spaceId?: number;
+      projectId?: number;
+    }) => [...base, "kb", "pages", "tree", "level", params, "infinite"] as const,
     pagesRecent: () => [...base, "kb", "pages", "recent"] as const,
     pagesFavorites: () => [...base, "kb", "pages", "favorites"] as const,
     pagesTrash: (params?: QueryKeyParams) =>

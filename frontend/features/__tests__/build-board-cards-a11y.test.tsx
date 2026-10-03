@@ -43,6 +43,7 @@ jest.mock("@/features/build/views/card-inline-extra-fields", () => ({
   InlineType: () => <span>Task</span>,
   InlineLabels: () => <span>label</span>,
   InlineCycle: () => <span>Cycle 1</span>,
+  InlineModule: () => <span>Module</span>,
 }));
 
 jest.mock("@/features/build/views/card-inline-date-fields", () => ({
@@ -147,7 +148,6 @@ describe("a kanban ticket card", () => {
       <ModuleNamesProvider modules={[{ id: 3, name: "Payments" }]}>
         <KanbanTicketCard
           ticket={{ ...ticket, moduleId: 3 }}
-          projectId={1}
           projectKey="ENG"
           onSelect={jest.fn()}
           isDragging={false}

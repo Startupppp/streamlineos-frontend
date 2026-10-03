@@ -21,7 +21,7 @@ import { PmPageShell, PmPanel, PmSection, CONTENT_FILL_PANEL } from "@/component
 import { ViewCard, type ViewItem } from "@/features/build/views/saved-views/view-card";
 import { CreateViewSheet } from "@/features/build/views/saved-views/create-view-sheet";
 import { RenameViewDialog } from "@/features/build/views/saved-views/rename-view-dialog";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 

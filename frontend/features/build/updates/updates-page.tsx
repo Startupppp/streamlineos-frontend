@@ -15,8 +15,8 @@ import {
   useBuildListFilters,
   BUILD_FILTER_ALL,
 } from "@/features/build/shared/use-build-list-filters";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
-import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
+import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";

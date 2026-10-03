@@ -13,7 +13,7 @@ import { PmPageShell, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 import { cn } from "@/lib/utils";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import {
   parseRetentionSection,
   type RetentionSection,

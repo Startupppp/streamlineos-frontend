@@ -5,13 +5,17 @@ import type { EmployeeListItem } from "@/types/hr";
 import { EmployeePersonDrawer } from "./employee-person-drawer";
 
 const can = jest.fn();
+const canState = jest.fn();
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
   usePathname: () => "/hr/employees",
   useSearchParams: () => new URLSearchParams(),
 }));
-jest.mock("@/hooks/api/access", () => ({ useCan: (key: string) => can(key) }));
+jest.mock("@/hooks/api/access", () => ({
+  useCan: (key: string) => can(key),
+  useCanState: (key: string) => canState(key),
+}));
 jest.mock("@/hooks/api/hr/employee-profile", () => ({
   useEmployeeEmployment: () => ({
     data: {
@@ -54,6 +58,7 @@ const PEER: EmployeeListItem = {
 
 beforeEach(() => {
   can.mockReset().mockReturnValue(false);
+  canState.mockReset().mockReturnValue("granted");
 });
 
 describe("HRMS-UX-003 — person drawer pay gating", () => {
@@ -97,5 +102,16 @@ describe("HRMS-UX-003 — person drawer pay gating", () => {
     expect(screen.getByText("Employee number")).toBeInTheDocument();
     expect(screen.getByText("FULL_TIME")).toBeInTheDocument();
 
+  });
+
+  it("says employment is outside the viewer's access rather than that the person was never hired", async () => {
+    canState.mockImplementation((key: string) => (key === "hr:employees:view" ? "denied" : "granted"));
+    const user = userEvent.setup();
+    render(<EmployeePersonDrawer employee={PEER} open onOpenChange={jest.fn()} />);
+
+    await user.click(screen.getByRole("tab", { name: "Employment" }));
+
+    expect(screen.getByText("Employment details are not included in your access.")).toBeInTheDocument();
+    expect(screen.queryByText(/No employment record/)).not.toBeInTheDocument();
   });
 });

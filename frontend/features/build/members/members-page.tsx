@@ -32,8 +32,8 @@ import { BuildHeaderActions } from "@/features/build/shared/build-header-actions
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
-import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
+import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
 import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { PmPageShell, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";

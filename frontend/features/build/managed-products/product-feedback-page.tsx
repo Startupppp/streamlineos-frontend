@@ -14,7 +14,7 @@ import { SubmissionBulkToolbar } from "@/components/shared/submission-bulk-toolb
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { UserCombobox } from "@/components/ui/user-combobox";

@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { useCanState } from "@/hooks/api/access";
 import { usePayrollPeople } from "@/hooks/api/payroll/people";
 import type { PayrollPerson } from "@/hooks/api/payroll/people-schema";
 import { cn } from "@/lib/utils";
@@ -100,6 +101,7 @@ interface PayrollPersonPickerProps {
 export function PayrollPersonPicker({ enabled, selectedKey, onPick, label }: PayrollPersonPickerProps) {
   const [search, setSearch] = useState("");
   const debounced = useDebouncedValue(search.trim(), 300);
+  const access = useCanState("payroll:salaries:view");
   const people = usePayrollPeople({ search: debounced }, { enabled });
   const rows = people.data?.data ?? [];
 
@@ -112,7 +114,13 @@ export function PayrollPersonPicker({ enabled, selectedKey, onPick, label }: Pay
   }
 
   let body: React.ReactNode;
-  if (people.isLoading) {
+  if (access === "denied") {
+    body = (
+      <p className="py-2 text-dense text-muted-foreground">
+        Choosing a person needs access to view salaries. Ask a payroll admin to grant it.
+      </p>
+    );
+  } else if (access === "loading" || people.isLoading) {
     body = (
       <div className="space-y-2 py-1" aria-label="Loading people">
         <Skeleton className="h-9 w-full rounded-md" />

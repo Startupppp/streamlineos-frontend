@@ -87,7 +87,7 @@ describe("Build route-access permission posture is pinned for every manifested p
     ["/build/[projectId]/backlog", "module:build + build:tickets:view"],
     ["/build/[projectId]/budget", "module:build + build:manage"],
     ["/build/[projectId]/change-requests", "module:build + build:changerequests:view"],
-    ["/build/[projectId]/chat", "module:build + build:view"],
+    ["/build/[projectId]/chat", "module:build + chat:channels:read"],
     ["/build/[projectId]/client-portal", "module:build + build:clientvisibility:manage"],
     ["/build/[projectId]/cycles", "module:build + build:cycles:view"],
     ["/build/[projectId]/cycles/[cycleId]", "module:build + build:cycles:view"],

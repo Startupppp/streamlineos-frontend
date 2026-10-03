@@ -107,7 +107,7 @@ function PanelVirtualRow({
               text={event.title}
               className="text-sm font-semibold text-foreground"
             />
-            <p className="mt-0.5 text-xs text-muted-foreground truncate">
+            <p className="mt-0.5 text-xs text-muted-foreground break-words">
               {event.allDay
                 ? "All day"
                 : formatEventTimeRange(event.start, event.end, event.timezone)}

@@ -1,3 +1,4 @@
+import { ZodError } from "zod";
 import {
   kbImportJobListPageContract,
   kbExportJobListPageContract,
@@ -47,8 +48,8 @@ describe("kb import/export job list contracts", () => {
   });
 
   it("rejects a bare array, the shape that broke the Import & Export page in production", () => {
-    expect(() => kbImportJobListPageContract.parse([importJob])).toThrow();
-    expect(() => kbExportJobListPageContract.parse([exportJob])).toThrow();
+    expect(() => kbImportJobListPageContract.parse([importJob])).toThrow(ZodError);
+    expect(() => kbExportJobListPageContract.parse([exportJob])).toThrow(ZodError);
   });
 
   it("carries nextCursor through so history pages server-side", () => {

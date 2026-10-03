@@ -11,18 +11,31 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { formatShortDate } from "@/lib/date-utils";
-import { statusToneClasses } from "@/lib/design-tokens";
+import { statusToneClasses, type StatusTone } from "@/lib/design-tokens";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useAcknowledgeDocument,
   useDocumentAcknowledgements,
   type DocumentAcknowledgement,
+  type DocumentAcknowledgementStatus,
 } from "@/hooks/api/hr/document-acknowledgements";
 
 interface DocumentAcknowledgementsPanelProps {
   ownUserId?: string | null;
   allowAcknowledge?: boolean;
 }
+
+const ACKNOWLEDGEMENT_STATUS_TONE: Record<DocumentAcknowledgementStatus, StatusTone> = {
+  PENDING: "warning",
+  ACKNOWLEDGED: "success",
+  DECLINED: "danger",
+};
+
+const ACKNOWLEDGEMENT_STATUS_LABEL: Record<DocumentAcknowledgementStatus, string> = {
+  PENDING: "Pending",
+  ACKNOWLEDGED: "Acked",
+  DECLINED: "Declined",
+};
 
 function acknowledgementName(row: DocumentAcknowledgement): string {
   return row.document?.name ?? `Document #${row.documentId}`;
@@ -115,9 +128,7 @@ export function DocumentAcknowledgementsPanel({
       ) : (
         <ul className="divide-y divide-border">
           {rows.map((row) => {
-            const tone = statusToneClasses(
-              row.status === "ACKNOWLEDGED" ? "success" : "warning",
-            );
+            const tone = statusToneClasses(ACKNOWLEDGEMENT_STATUS_TONE[row.status]);
             return (
               <li
                 key={row.id}
@@ -138,7 +149,7 @@ export function DocumentAcknowledgementsPanel({
                   variant="outline"
                   className={`h-5 px-2 py-0.5 text-micro ${tone.surface} ${tone.ink} ${tone.rule}`}
                 >
-                  {row.status === "ACKNOWLEDGED" ? "Acked" : "Pending"}
+                  {ACKNOWLEDGEMENT_STATUS_LABEL[row.status]}
                 </Badge>
                 {allowAcknowledge && row.status === "PENDING" ? (
                   <AcknowledgeButton row={row} onSelect={setTarget} />

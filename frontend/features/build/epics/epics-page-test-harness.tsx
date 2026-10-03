@@ -158,7 +158,7 @@ jest.mock("@/components/pm-chrome", () => ({
   CONTENT_FILL_PANEL: "",
 }));
 
-jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
   useBuildListKeyboard: jest.fn(() => ({ focusedIndex: null, setFocusedIndex: jest.fn() })),
 }));
 
@@ -177,7 +177,7 @@ jest.mock("framer-motion", () => ({
 
 import { useProject, useProjectBoardTickets, useUpdateTicket, useDeleteTicket, useCreateTicket, useBulkUpdateTickets, useCycles } from "@/hooks/api/build";
 import { useCan, useAccess } from "@/hooks/api/access";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import { useEpicPage } from "@/hooks/api/build/advanced";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
@@ -361,8 +361,8 @@ type MutationParts<T> = T extends UseMutationResult<infer Data, infer Error, inf
 export function makeMutationResult<
   TData = unknown,
   TError = Error,
-  TVariables = any,
-  TContext = any,
+  TVariables = unknown,
+  TContext = unknown,
 >(): UseMutationResult<
   TData,
   TError,

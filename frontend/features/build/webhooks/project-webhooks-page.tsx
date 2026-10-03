@@ -43,8 +43,8 @@ import {
   BUILD_CURSOR_STACK_PARAM,
   useBuildCursorPager,
 } from "@/features/build/shared/use-build-cursor-pager";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
-import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
+import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 
 function AddWebhookButton({ onClick }: { onClick: () => void }) {
@@ -151,8 +151,7 @@ export function ProjectWebhooksPage({
   );
 
   const handleQChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value;
+    (value: string) => {
       setQInput(value);
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(() => {

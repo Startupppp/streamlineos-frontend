@@ -64,7 +64,7 @@ it("rejects a relation whose relatedTicket is null, because the backend always j
         direction: "incoming",
       },
     ]),
-  ).toThrow();
+  ).toThrow(ZodError);
 });
 
 it("rejects an unknown relation type such as the raw row's absent relationType default", () => {

@@ -1,6 +1,7 @@
 "use client";
 
-import { SectionTitle, Field, type SectionProps } from "./job-basics-sections";
+import { SectionTitle, type SectionProps } from "./job-basics-sections";
+import { Field } from "./job-form-field";
 import { FileText } from "lucide-react";
 import { WordLimitedTextarea } from "./word-limited-textarea";
 import { JOB_DESCRIPTION_LIMITS } from "./job-description-limits";

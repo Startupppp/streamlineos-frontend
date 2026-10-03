@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { toast } from "sonner";
 import { ApiError } from "@/lib/api-envelope";
 import { TicketConflictDialog } from "./ticket-conflict-dialog";
@@ -67,7 +68,9 @@ function member(id: string, name: string) {
 
 function ConflictHarness() {
   const detail = useTicketDetail({ projectId: 5, ticketId: 7 });
-  harnessAutoSave = detail.autoSave;
+  useEffect(() => {
+    harnessAutoSave = detail.autoSave;
+  });
   return (
     <TicketConflictDialog
       open={Boolean(detail.conflict)}

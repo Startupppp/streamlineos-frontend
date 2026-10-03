@@ -193,7 +193,7 @@ function PresenceStatusChip({
       aria-pressed={isCurrent}
       aria-label={PRESENCE_LABELS[status]}
       className={cn(
-        "inline-flex h-7 items-center gap-1 rounded-md border px-2 text-[11px] font-medium transition-colors",
+        "inline-flex h-7 items-center gap-1 rounded-md border px-2 text-dense font-medium transition-colors",
         isCurrent
           ? "border-primary/30 bg-primary/10 text-foreground"
           : "border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground",

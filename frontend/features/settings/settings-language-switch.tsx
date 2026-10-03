@@ -14,7 +14,7 @@ import { useLanguage, useT } from "@/lib/i18n/i18n";
 import { LANGUAGES, LANGUAGE_LABELS, type Language } from "@/lib/i18n/languages";
 
 function isLanguage(value: string): value is Language {
-  return (LANGUAGES as readonly string[]).includes(value);
+  return LANGUAGES.some((candidate) => candidate === value);
 }
 
 export function SettingsLanguageSwitch() {

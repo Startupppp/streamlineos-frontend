@@ -1,3 +1,4 @@
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { buildCustomFieldContract, buildCustomFieldListContract } from "./build-project-schema";
 
 const validField = {
@@ -113,13 +114,11 @@ describe("buildCustomFieldListContract (BLD-X-BE-SETTINGS-CF-002)", () => {
 
 describe("custom-fields cache key contract (BLD-X-BE-SETTINGS-CF-003)", () => {
   it("includes projectId in the key — correct scope prevents cross-project data leaks", () => {
-    const { buildWorkQueryKeys } = require("@/lib/query-keys/build-work");
     const key = buildWorkQueryKeys.projects.customFields(10);
     expect(key).toContain(10);
   });
 
   it("two different projectIds produce different cache keys", () => {
-    const { buildWorkQueryKeys } = require("@/lib/query-keys/build-work");
     const key1 = buildWorkQueryKeys.projects.customFields(1);
     const key2 = buildWorkQueryKeys.projects.customFields(2);
     expect(JSON.stringify(key1)).not.toBe(JSON.stringify(key2));

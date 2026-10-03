@@ -1,7 +1,6 @@
 'use client';
 
-import { ElementApi, NodeApi } from 'platejs';
-import type { Value, TNode } from 'platejs';
+import type { Value, TNode, TElement } from 'platejs';
 
 type TiptapNode = { type?: string; content?: TiptapNode[]; text?: string };
 
@@ -21,15 +20,32 @@ function isTiptapDoc(value: unknown): value is TiptapNode & { content: TiptapNod
   return 'content' in value && Array.isArray(value.content);
 }
 
+function isElement(value: unknown): value is TElement {
+  if (typeof value !== 'object' || value === null) return false;
+  if ('apply' in value && typeof value.apply === 'function') return false;
+  return 'children' in value && Array.isArray(value.children);
+}
+
+function isElementList(value: unknown): value is Value {
+  return Array.isArray(value) && value.every(isElement);
+}
+
+function nodeString(node: unknown): string {
+  if (typeof node !== 'object' || node === null) return '';
+  if ('text' in node && typeof node.text === 'string') return node.text;
+  if ('children' in node && Array.isArray(node.children)) return node.children.map(nodeString).join('');
+  return '';
+}
+
 function nodeToText(node: TNode): string {
-  if (ElementApi.isElement(node) && MEDIA_NODE_TYPES.has(node.type)) {
+  if (isElement(node) && MEDIA_NODE_TYPES.has(node.type)) {
     return typeof node.name === 'string' ? node.name : '';
   }
-  return NodeApi.string(node);
+  return nodeString(node);
 }
 
 export function normalizePlateValue(value: unknown): Value {
-  if (ElementApi.isElementList(value) && value.length > 0) {
+  if (isElementList(value) && value.length > 0) {
     return value;
   }
   if (isTiptapDoc(value)) {

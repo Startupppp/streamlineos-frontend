@@ -79,6 +79,7 @@ jest.mock("./share-dialog", () => ({
 }));
 
 jest.mock("./scene-utils", () => ({
+  ...jest.requireActual("./scene-utils"),
   computeStoredVersion: () => 0,
 }));
 

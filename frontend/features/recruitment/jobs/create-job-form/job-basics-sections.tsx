@@ -2,7 +2,6 @@
 
 import { UseFormReturn, Controller } from "react-hook-form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -10,20 +9,17 @@ import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { toOptionalNumber, type CreateJobFormValues } from "./schema";
 import type { Department } from "@/types/hr";
 import { useBranchOptions } from "@/hooks/api";
+import { useCanState } from "@/hooks/api/access";
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { MapPin } from "lucide-react";
 import Link from "next/link";
 import { JobTemplatePicker } from "./job-template-picker";
+import { Field } from "./job-form-field";
 
 export interface SectionProps {
   form: UseFormReturn<CreateJobFormValues>;
   departments?: Department[];
-}
-
-export function FieldError({ message }: { message?: string }) {
-  if (!message) return null;
-  return <p className="text-dense text-status-danger-ink mt-1 font-medium">{message}</p>;
 }
 
 export function SectionTitle({
@@ -54,33 +50,6 @@ export function FieldGroup({ children, className }: { children: React.ReactNode;
   return <div className={cn("grid gap-4", className)}>{children}</div>;
 }
 
-export function Field({
-  label,
-  name,
-  required,
-  hint,
-  error,
-  children,
-}: {
-  label: string;
-  name?: keyof CreateJobFormValues;
-  required?: boolean;
-  hint?: string;
-  error?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-1.5" data-field={name}>
-      <Label className="text-xs font-semibold text-foreground/80">
-        {label}
-        {required && <span className="text-status-danger-ink ml-0.5">*</span>}
-      </Label>
-      {hint && <p className="text-micro text-muted-foreground">{hint}</p>}
-      {children}
-      {error && <FieldError message={error} />}
-    </div>
-  );
-}
 
 export function ToggleRow({
   label,
@@ -104,6 +73,7 @@ export function ToggleRow({
 
 export function Section1({ form, departments }: SectionProps) {
   const { register, control, formState: { errors } } = form;
+  const departmentAccess = useCanState("hr:employees:view");
   const departmentsLoaded = departments !== undefined;
   const hasDepartments = (departments?.length ?? 0) > 0;
   return (
@@ -114,7 +84,17 @@ export function Section1({ form, departments }: SectionProps) {
           <Input placeholder="e.g. Software Engineer, HR Manager" {...register("title")} />
         </Field>
         <Field label="Department" name="departmentId" required={hasDepartments} error={errors.departmentId?.message}>
-          {departmentsLoaded && !hasDepartments ? (
+          {departmentAccess === "denied" ? (
+            <div className="space-y-1">
+              <Select disabled>
+                <SelectTrigger><SelectValue placeholder="Departments not visible to you" /></SelectTrigger>
+                <SelectContent />
+              </Select>
+              <p className="text-micro text-muted-foreground">
+                Optional. Viewing departments needs access to employee records.
+              </p>
+            </div>
+          ) : departmentsLoaded && !hasDepartments ? (
             <div className="space-y-1">
               <Select disabled>
                 <SelectTrigger><SelectValue placeholder="No departments yet" /></SelectTrigger>

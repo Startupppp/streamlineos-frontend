@@ -4,7 +4,7 @@ import { ListChecks, SlidersHorizontal } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ViewToggle, type ViewOption } from "@/components/ui/view-toggle";
 import { HubGrid } from "@/features/hr/settings-hub/hub-grid";
-import { useHrSettingsMode } from "@/features/hr/settings-hub/use-hr-settings-mode";
+import { useHrSettingsMode } from "@/hooks/common/use-hr-settings-mode";
 
 type SettingsMode = "simple" | "advanced";
 

@@ -38,7 +38,7 @@ import { cn } from "@/lib/utils";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import { toBulkPriority } from "@/features/build/shared/bulk-priority";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BulkActionBar } from "@/features/build/shared/bulk-action-bar";
 import { useCan } from "@/hooks/api/access";

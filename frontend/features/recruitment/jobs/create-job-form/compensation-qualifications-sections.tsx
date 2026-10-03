@@ -6,7 +6,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { ChipInput } from "./chip-input";
-import { SectionTitle, FieldGroup, Field, type SectionProps } from "./job-basics-sections";
+import { SectionTitle, FieldGroup, type SectionProps } from "./job-basics-sections";
+import { Field } from "./job-form-field";
 import { toOptionalNumber } from "./schema";
 import { Sparkles, Briefcase, Tag } from "lucide-react";
 

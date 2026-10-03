@@ -40,7 +40,7 @@ jest.mock("@/hooks/api/build/workflow", () => ({
 }));
 
 const mockUseBuildListKeyboard = jest.fn();
-jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
   useBuildListKeyboard: (...args: unknown[]) => mockUseBuildListKeyboard(...args),
 }));
 

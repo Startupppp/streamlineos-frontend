@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 import { TEXT_ONE_LINE, TEXT_BODY } from "@/lib/text-overflow";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 
 const MEMBER_HEADERS = ["Name", "Role", "Added", "Actions"] as const;
 

@@ -1,3 +1,4 @@
+import { ZodError } from "zod";
 import { readFileSync } from "node:fs";
 import { backendPath, backendReachable } from "@/lib/test-support/backend-path";
 import { portfolioPageContract, programPageContract } from "./portfolios-schema";
@@ -91,18 +92,18 @@ describe("the portfolio and program list contracts describe the rows their endpo
     expect(() => portfolioPageContract.parse({
       data: [{ ...PORTFOLIO_ROW, status: "ACTIVE" }],
       pagination: LAST_PAGE,
-    })).toThrow();
+    })).toThrow(ZodError);
   });
 
   it("rejects a health value outside the portfolio health pgEnum on both lists", () => {
     expect(() => portfolioPageContract.parse({
       data: [{ ...PORTFOLIO_ROW, health: "green" }],
       pagination: LAST_PAGE,
-    })).toThrow();
+    })).toThrow(ZodError);
     expect(() => programPageContract.parse({
       data: [{ ...PROGRAM_ROW, health: "green" }],
       pagination: LAST_PAGE,
-    })).toThrow();
+    })).toThrow(ZodError);
   });
 
   it("describes the program list as a cursor page, matching the keyset the service now returns", () => {

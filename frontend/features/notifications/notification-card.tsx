@@ -207,7 +207,7 @@ function NotificationCardInner({
           <Badge
             variant="outline"
             className={cn(
-              "h-5 shrink-0 px-2 py-0.5 text-[10px] border-border/70",
+              "h-5 shrink-0 px-2 py-0.5 text-micro border-border/70",
               secondaryInk,
             )}
           >

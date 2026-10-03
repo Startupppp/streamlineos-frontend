@@ -11,7 +11,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { INTERVIEW_ROUND_OPTIONS, NO_HIRING_FLOW, SCREENING_QUESTION_TYPES, type ScreeningQuestionValues } from "./schema";
-import { SectionTitle, Field, FieldError, ToggleRow, type SectionProps } from "./job-basics-sections";
+import { SectionTitle, ToggleRow, type SectionProps } from "./job-basics-sections";
+import { Field, FieldError } from "./job-form-field";
 import { cn } from "@/lib/utils";
 import { useHiringFlows } from "@/hooks/api/hr/recruitment";
 import React from "react";

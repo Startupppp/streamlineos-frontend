@@ -53,7 +53,6 @@ export interface ProductPathException {
 /** Paths with no navigation entry to derive from. Longest prefix wins over these too. */
 export const PRODUCT_PATH_EXCEPTIONS: ProductPathException[] = [
   { prefix: "/knowledge", product: "documents", reason: "Knowledge index; nav lists /knowledge/chat and /knowledge/wiki." },
-  { prefix: "/support/kb", product: "documents", reason: "Knowledge base served under the support prefix." },
   { prefix: "/sales", product: "crm", reason: "CRM operational surface with no nav entry." },
   { prefix: "/customer-executive", product: "crm", reason: "CRM operational surface with no nav entry." },
   { prefix: "/billing/invoices", product: "finance", reason: "The org's own customer invoicing, not platform billing." },

@@ -25,7 +25,7 @@ jest.mock("@/features/build/settings/git-integration-settings", () => ({
   ProjectsGitIntegrationSettings: () => <div data-testid="git-integration-settings" />,
 }));
 
-jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
   useBuildListKeyboard: () => ({ focusedIndex: null, setFocusedIndex: jest.fn() }),
 }));
 

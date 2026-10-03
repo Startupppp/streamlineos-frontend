@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { format, parseISO } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCanState } from "@/hooks/api/access";
 import { useHrAttendanceStatus } from "@/hooks/api/hr/attendance";
 import { useHrMyLeaveRequests } from "@/hooks/api/hr/leaves";
 import { useEssPayslips } from "@/hooks/api/payroll/ess";
@@ -37,9 +38,13 @@ function RecentItem({
   );
 }
 
+const NOT_IN_ACCESS = "Not included in your access";
+
 function LastPunch() {
+  const access = useCanState("self:attendance");
   const { data, isLoading, isError } = useHrAttendanceStatus();
-  if (isLoading) return <Skeleton className="h-9 w-32" />;
+  if (access === "denied") return <RecentItem label="Last punch">{NOT_IN_ACCESS}</RecentItem>;
+  if (access === "loading" || isLoading) return <Skeleton className="h-9 w-32" />;
   if (isError) return <RecentItem label="Last punch">Attendance unavailable</RecentItem>;
 
   const log = data?.todayLog ?? data?.logs?.[0] ?? null;
@@ -55,8 +60,10 @@ function LastPunch() {
 }
 
 function LastLeaveDecision() {
+  const access = useCanState("self:leaves");
   const { data, isLoading, isError } = useHrMyLeaveRequests();
-  if (isLoading) return <Skeleton className="h-9 w-32" />;
+  if (access === "denied") return <RecentItem label="Last leave decision">{NOT_IN_ACCESS}</RecentItem>;
+  if (access === "loading" || isLoading) return <Skeleton className="h-9 w-32" />;
   if (isError) return <RecentItem label="Last leave decision">Leave history unavailable</RecentItem>;
 
   const decision = latestLeaveDecision(data?.requests ?? []);
@@ -69,8 +76,10 @@ function LastLeaveDecision() {
 }
 
 function LastPayslip() {
+  const access = useCanState("self:payslips");
   const { data, isLoading, isError } = useEssPayslips();
-  if (isLoading) return <Skeleton className="h-9 w-32" />;
+  if (access === "denied") return <RecentItem label="Last payslip">{NOT_IN_ACCESS}</RecentItem>;
+  if (access === "loading" || isLoading) return <Skeleton className="h-9 w-32" />;
   if (isError) return <RecentItem label="Last payslip">Payslips unavailable</RecentItem>;
 
   const payslips = data ?? [];

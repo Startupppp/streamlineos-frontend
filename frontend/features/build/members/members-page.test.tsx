@@ -1,6 +1,6 @@
 import { render, screen, act } from "@testing-library/react";
 import type { ReactNode } from "react";
-import type { UseBuildListKeyboardOptions } from "@/features/build/shared/use-build-list-keyboard";
+import type { UseBuildListKeyboardOptions } from "@/hooks/common/use-build-list-keyboard";
 
 const mockUseAccess = jest.fn();
 const mockUseCan = jest.fn();
@@ -73,11 +73,11 @@ jest.mock("@/lib/get-error-message", () => ({
   getErrorMessage: (e: unknown) => String(e),
 }));
 
-jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
   useBuildListKeyboard: (options: UseBuildListKeyboardOptions) => mockUseBuildListKeyboard(options),
 }));
 
-jest.mock("@/features/build/shared/shortcut-help-dialog", () => ({
+jest.mock("@/components/shared/shortcut-help-dialog", () => ({
   ShortcutHelpDialog: ({ open }: { open: boolean }) =>
     open ? <div data-testid="shortcut-help-dialog" /> : null,
 }));

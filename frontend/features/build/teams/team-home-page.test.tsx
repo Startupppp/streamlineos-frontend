@@ -33,15 +33,15 @@ jest.mock("@/features/build/shared/use-build-list-filters", () => ({
   BUILD_FILTER_ALL: "all",
 }));
 
-jest.mock("@/features/build/shared/shortcut-help-dialog", () => ({
+jest.mock("@/components/shared/shortcut-help-dialog", () => ({
   ShortcutHelpDialog: ({ open }: { open: boolean }) =>
     open ? <div data-testid="shortcut-help-dialog" /> : null,
 }));
 
 jest.mock("@/components/ui/search-input", () => ({
-  SearchInput: React.forwardRef<HTMLInputElement, object>((_props, _ref) => (
-    <div data-testid="member-search-input" />
-  )),
+  SearchInput: React.forwardRef<HTMLInputElement, object>(function SearchInput(_props, _ref) {
+    return <div data-testid="member-search-input" />;
+  }),
 }));
 
 const DEFAULT_FILTERS_STATE = {
@@ -114,7 +114,7 @@ jest.mock("@/features/build/shared/use-build-cursor-pager", () => ({
 }));
 
 const mockUseBuildListKeyboard = jest.fn();
-jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
   useBuildListKeyboard: (args: unknown) => mockUseBuildListKeyboard(args),
 }));
 

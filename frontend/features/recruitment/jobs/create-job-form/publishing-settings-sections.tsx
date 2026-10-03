@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { SectionTitle, Field, FieldError, ToggleRow, type SectionProps } from "./job-basics-sections";
+import { SectionTitle, ToggleRow, type SectionProps } from "./job-basics-sections";
+import { Field, FieldError } from "./job-form-field";
 import { cn } from "@/lib/utils";
 import { Eye, Zap } from "lucide-react";
 

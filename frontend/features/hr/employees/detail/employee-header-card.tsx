@@ -24,7 +24,7 @@ import {
 import type { EmployeeData } from "@/features/hr/employees/detail/edit-employee-form";
 import { ResendInviteButton } from "@/components/hr/resend-invite-button";
 import { CopyInviteLinkButton } from "@/components/hr/copy-invite-link-button";
-import { useRef } from "react";
+import { useRef, type ChangeEvent } from "react";
 import { toast } from "sonner";
 import { useCan } from "@/hooks/api/access";
 import { useUpdateProfile } from "@/hooks/api/hr";
@@ -95,6 +95,12 @@ export function EmployeeHeaderCard({
     }
   }
 
+  function handlePhotoInputChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    void onPhotoSelected(file);
+  }
+
   const lifecycleBadge = lifecycleStatus
     ? LIFECYCLE_BADGE[lifecycleStatus] ?? {
         label: lifecycleStatus,
@@ -141,11 +147,7 @@ export function EmployeeHeaderCard({
                     accept="image/*"
                     className="sr-only"
                     aria-label={`Upload photo for ${employeeName}`}
-                    onChange={(event) => {
-                      const file = event.target.files?.[0];
-                      event.target.value = "";
-                      void onPhotoSelected(file);
-                    }}
+                    onChange={handlePhotoInputChange}
                   />
                 </>
               ) : null}

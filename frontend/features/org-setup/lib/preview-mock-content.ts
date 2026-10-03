@@ -29,7 +29,7 @@ export const MODULE_ICON: Record<string, ModuleIcon> = {
 const MODULE_OUTCOMES: Record<string, readonly string[]> = {
   crm: ["Lead inbox + pipeline", "Deal stages ready", "Follow-ups tracked"],
   hr: ["Leave & attendance", "Team directory", "Onboarding checklist"],
-  build: ["Task boards", "Sprint tracking", "Delivery updates"],
+  build: ["Task boards", "Cycle tracking", "Delivery updates"],
   accounting: ["Invoices & payments", "Bank reconcile", "Tax-ready reports"],
   inventory: ["Stock levels", "Warehouses", "Purchase orders"],
   support: ["Ticket queue", "SLA timers", "Customer replies"],

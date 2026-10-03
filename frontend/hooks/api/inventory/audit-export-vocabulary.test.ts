@@ -1,3 +1,4 @@
+import { ZodError } from "zod";
 import { auditExportJobContract } from "./restored-surfaces-schema";
 
 const JOB_STATUSES = [
@@ -40,10 +41,10 @@ describe("auditExportJobContract — the status vocabulary the database can prod
   );
 
   it("rejects READY, which no row can hold and which the panel used to branch on", () => {
-    expect(() => auditExportJobContract.parse(job("READY"))).toThrow();
+    expect(() => auditExportJobContract.parse(job("READY"))).toThrow(ZodError);
   });
 
   it("rejects a value from no vocabulary at all, so the rejection above is about the set and not about READY alone", () => {
-    expect(() => auditExportJobContract.parse(job("SETTLING"))).toThrow();
+    expect(() => auditExportJobContract.parse(job("SETTLING"))).toThrow(ZodError);
   });
 });

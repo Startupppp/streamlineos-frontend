@@ -161,7 +161,7 @@ describe("ReportResultsPanel", () => {
         offset: 2,
       });
 
-      expect(screen.getByText("Showing 3-4 of 5")).toBeInTheDocument();
+      expect(screen.getByText("Showing 3–4 of 5")).toBeInTheDocument();
     });
 
     /**

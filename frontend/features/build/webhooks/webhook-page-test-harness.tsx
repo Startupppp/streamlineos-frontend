@@ -46,7 +46,7 @@ export const mockUseBuildListKeyboard = jest.fn(
     setFocusedIndex: jest.fn(),
   }),
 );
-jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
   useBuildListKeyboard: (options: BuildListKeyboardOptions) =>
     mockUseBuildListKeyboard(options),
 }));
@@ -55,7 +55,7 @@ jest.mock("@/hooks/common/use-online-status", () => ({
   useOnlineStatus: jest.fn(() => true),
 }));
 
-jest.mock("@/features/build/shared/shortcut-help-dialog", () => ({
+jest.mock("@/components/shared/shortcut-help-dialog", () => ({
   ShortcutHelpDialog: ({ open }: { open: boolean }) =>
     open ? <div data-testid="shortcut-help-dialog" /> : null,
 }));

@@ -5,6 +5,7 @@ import { missingForPublish } from "./schema";
 
 const createMutate = jest.fn();
 let departmentsData: Department[] | undefined = [];
+let departmentAccess: "loading" | "granted" | "denied" = "granted";
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn() }),
@@ -26,9 +27,14 @@ jest.mock("@/hooks/api", () => ({
   useBranchOptions: () => ({ data: { data: [] } }),
 }));
 
+jest.mock("@/hooks/api/access", () => ({
+  useCanState: () => departmentAccess,
+}));
+
 beforeEach(() => {
   createMutate.mockReset();
   departmentsData = [];
+  departmentAccess = "granted";
 });
 
 function typeTitle(value: string) {
@@ -89,6 +95,15 @@ describe("CreateJobForm", () => {
     for (const fake of ["IT", "HR", "Finance", "Sales", "Marketing", "Operations"]) {
       expect(screen.queryByRole("option", { name: fake })).not.toBeInTheDocument();
     }
+  });
+
+  it("says departments are outside the recruiter's access instead of loading forever", () => {
+    departmentsData = undefined;
+    departmentAccess = "denied";
+    render(<CreateJobForm />);
+    expect(screen.getByText("Departments not visible to you")).toBeInTheDocument();
+    expect(screen.queryByText("Loading departments…")).not.toBeInTheDocument();
+    expect(screen.queryByText("No departments yet")).not.toBeInTheDocument();
   });
 });
 

@@ -70,12 +70,12 @@ jest.mock("@animateicons/react/lucide", () => ({
 
 const defaultKeyboardResult: { focusedIndex: number | null; setFocusedIndex: jest.Mock } = { focusedIndex: null, setFocusedIndex: jest.fn() };
 const mockUseBuildListKeyboard = jest.fn(() => defaultKeyboardResult);
-jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
   useBuildListKeyboard: (...args: Parameters<typeof mockUseBuildListKeyboard>) =>
     mockUseBuildListKeyboard(...args),
 }));
 
-jest.mock("@/features/build/shared/shortcut-help-dialog", () => ({
+jest.mock("@/components/shared/shortcut-help-dialog", () => ({
   ShortcutHelpDialog: ({ open }: { open: boolean }) =>
     open ? <div data-testid="shortcut-help-dialog">Keyboard shortcuts</div> : null,
 }));

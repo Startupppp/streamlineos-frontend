@@ -184,6 +184,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Checkout backend for cross-repo specs
+        working-directory: ${{ github.workspace }}
+        env:
+          BRANCH: ${{ github.head_ref || github.ref_name }}
+        run: |
+          if git ls-remote --exit-code --heads https://github.com/Startupppp/streamlineos-backend.git "$BRANCH" >/dev/null; then
+            git clone --depth 1 --branch "$BRANCH" https://github.com/Startupppp/streamlineos-backend.git backend
+          else
+            git clone --depth 1 https://github.com/Startupppp/streamlineos-backend.git backend
+          fi
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
@@ -257,6 +268,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Checkout backend for cross-repo specs
+        working-directory: ${{ github.workspace }}
+        env:
+          BRANCH: ${{ github.head_ref || github.ref_name }}
+        run: |
+          if git ls-remote --exit-code --heads https://github.com/Startupppp/streamlineos-backend.git "$BRANCH" >/dev/null; then
+            git clone --depth 1 --branch "$BRANCH" https://github.com/Startupppp/streamlineos-backend.git backend
+          else
+            git clone --depth 1 https://github.com/Startupppp/streamlineos-backend.git backend
+          fi
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -757,7 +779,9 @@ jobs:
 
       - name: A hook gates on the permission its route declares
         if: ${{ !cancelled() }}
-        run: pnpm run check:permission-binding:self-test && pnpm run check:permission-binding
+        run: >-
+          node scripts/run-gate.mjs check:permission-binding:self-test check:permission-binding
+          --prerequisite "a checkout of Startupppp/streamlineos-backend beside this repository (set STREAMLINE_BACKEND_ROOT)"
 
       - name: Response contracts ratchet
         if: ${{ !cancelled() }}
@@ -792,6 +816,32 @@ jobs:
       # none. 28 assertions, each naming a specific verdict; bite-proved by neutering the
       # job-level rule and the conservative expression rule in a temp fixture, each exiting 1
       # and naming the assertion.
+      - name: Retired product vocabulary stays under its ceiling
+        if: ${{ !cancelled() }}
+        run: pnpm run check:retired-vocabulary:self-test && pnpm run check:retired-vocabulary
+
+      - name: Vendored DB enums agree with the backend artifact
+        if: ${{ !cancelled() }}
+        run: >-
+          node scripts/run-gate.mjs check:db-enums-vendor:self-test check:db-enums-vendor
+          --prerequisite "a checkout of Startupppp/streamlineos-backend carrying a generated src/db/enums.generated.ts (set STREAMLINE_BACKEND_ROOT)"
+
+      - name: Build contracts are generated from the vendored contract
+        if: ${{ !cancelled() }}
+        run: pnpm run check:build-contracts:self-test && pnpm run check:build-contracts
+
+      - name: React Query hooks stay out of lib/api
+        if: ${{ !cancelled() }}
+        run: pnpm run check:hook-locality:self-test && pnpm run check:hook-locality
+
+      - name: Build list pages use BuildListSurface
+        if: ${{ !cancelled() }}
+        run: pnpm run check:build-list-surface:self-test && pnpm run check:build-list-surface
+
+      - name: Paged Build lists search on the server
+        if: ${{ !cancelled() }}
+        run: pnpm run check:build-paged-client-search:self-test && pnpm run check:build-paged-client-search
+
       - name: Every check:* script is wired into a workflow and can fail
         if: ${{ !cancelled() }}
         run: pnpm run check:gate-wiring:self-test && pnpm run check:gate-wiring
