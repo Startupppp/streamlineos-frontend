@@ -1,4 +1,4 @@
-import { CheckSquare, Inbox, LayoutList, PenLine } from "lucide-react";
+import { CheckSquare, Inbox, LayoutList } from "lucide-react";
 import { BUILD_ROOT_PATH } from "../build-scope";
 import type { BuildNavDestination } from "./build-nav-destination";
 
@@ -14,19 +14,11 @@ export const BUILD_MY_WORK_DESTINATIONS: BuildNavDestination[] = [
   },
   {
     id: "my-work-assigned",
-    label: "Assigned",
+    label: "My Work",
     href: `${BUILD_ROOT_PATH}/my-work`,
     icon: CheckSquare,
     requiredPermission: "build:tickets:view",
     mobilePriority: 20,
-  },
-  {
-    id: "my-work-drafts",
-    label: "Drafts",
-    href: `${BUILD_ROOT_PATH}/inbox?view=drafts`,
-    icon: PenLine,
-    requiredPermission: "build:tickets:view",
-    mobilePriority: 50,
   },
 ];
 

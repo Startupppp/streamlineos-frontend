@@ -54,4 +54,19 @@ describe("BucketSection", () => {
     render(<BucketSection bucket="overdue" items={[makeItem(1)]} />);
     expect(screen.getByText("Overdue")).toBeInTheDocument();
   });
+
+  it("uses the canonical ticket URL and returns to the filtered My Work section", () => {
+    render(
+      <BucketSection
+        bucket="none"
+        items={[makeItem(81)]}
+        returnHref="/build/my-work?relation=created&q=review"
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: /Ticket 81/i })).toHaveAttribute(
+      "href",
+      "/build/1/tickets/AL-81?returnTo=%2Fbuild%2Fmy-work%3Frelation%3Dcreated%26q%3Dreview",
+    );
+  });
 });

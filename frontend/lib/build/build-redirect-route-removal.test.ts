@@ -46,7 +46,7 @@ const REMOVED_ROUTES: RemovedRoute[] = [
     route: "/build/drafts",
     appDir: "drafts",
     redirectSource: "/build/drafts",
-    redirectDestination: "/build/inbox?view=drafts",
+    redirectDestination: "/build/my-work?section=drafts",
   },
   {
     route: "/build/[projectId]/workflow",

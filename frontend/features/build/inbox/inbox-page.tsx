@@ -29,14 +29,6 @@ const InboxList = dynamic(
   () => import("./inbox-list").then((m) => ({ default: m.InboxList })),
   { loading: () => null },
 );
-const InboxDraftsPanel = dynamic(
-  () =>
-    import("./inbox-drafts-panel").then((m) => ({
-      default: m.InboxDraftsPanel,
-    })),
-  { ssr: false },
-);
-
 export function InboxPage() {
   const shellVariant = useShellVariant();
   const isDesktopShell = shellVariant === "desktop";
@@ -46,7 +38,6 @@ export function InboxPage() {
   const searchInputRef = React.useRef<HTMLInputElement | null>(null);
 
   const urlState = useInboxUrlState();
-  const isDraftsView = urlState.view === "drafts";
 
   function handleSelect(notification: Notification) {
     setSelectionDismissed(false);
@@ -93,9 +84,7 @@ export function InboxPage() {
 
   const hasSelection = selectedNotification != null;
 
-  const listPane = isDraftsView ? (
-    <InboxDraftsPanel />
-  ) : (
+  const listPane = (
     <InboxList
       selectedId={selectedNotification?.id ?? null}
       section={urlState.section}
@@ -120,7 +109,7 @@ export function InboxPage() {
   return (
     <PageWrapper
       title="Inbox"
-      subtitle="Mentions, assignments, approvals and drafts"
+      subtitle="Mentions, assignments and approvals"
       noInternalScroll
     >
       <PmPageShell>

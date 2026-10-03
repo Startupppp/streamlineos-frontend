@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { TrashIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import {
@@ -17,7 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
+import { buildMyWorkReturnHref, getMyWorkTicketHref } from "@/features/build/ticket-details/build-ticket-detail-url";
 import { CommentDraftRow } from "@/features/build/drafts/comment-draft-row";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 
@@ -45,6 +45,8 @@ function DraftsPanelSkeleton() {
 
 export function InboxDraftsPanel() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnHref = buildMyWorkReturnHref(searchParams);
   const requestLeave = useNavigationLeave();
   const { data, isLoading, isError, error, refetch } = useMyCommentDrafts();
   const deleteDraft = useDeleteCommentDraft();
@@ -67,10 +69,10 @@ export function InboxDraftsPanel() {
       const { projectId, projectKey, ticketNumber } = draft.ticket;
       if (!projectId) return;
       requestLeave(() =>
-        router.push(getTicketDetailHref(projectId, projectKey, ticketNumber)),
+        router.push(getMyWorkTicketHref(projectId, projectKey, ticketNumber, returnHref)),
       );
     },
-    [requestLeave, router],
+    [requestLeave, returnHref, router],
   );
 
   const handleDelete = useCallback(

@@ -6,6 +6,7 @@ const useDeleteCommentDraft = jest.fn();
 const useDeleteAllCommentDrafts = jest.fn();
 const push = jest.fn();
 const requestLeave = jest.fn((action: () => void) => action());
+let mockSearchParams = new URLSearchParams();
 
 const accessLoading = { data: undefined, isLoading: true };
 const accessGranted = {
@@ -30,6 +31,7 @@ jest.mock("@/hooks/api/build/comment-drafts", () => ({
 }));
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push }),
+  useSearchParams: () => mockSearchParams,
 }));
 jest.mock("@/components/shared/dirty-state-context", () => ({
   useNavigationLeave: () => requestLeave,
@@ -44,7 +46,7 @@ function makeDraft(id: number) {
     updatedAt: new Date().toISOString(),
     ticket: {
       id: id * 10,
-      projectId: "proj-1",
+      projectId: 1,
       projectKey: "BLD",
       projectName: "Build",
       ticketNumber: id,
@@ -59,6 +61,7 @@ function makeDraft(id: number) {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockSearchParams = new URLSearchParams("section=drafts");
   requestLeave.mockImplementation((action: () => void) => action());
   useAccess.mockReturnValue(accessGranted);
   useMyCommentDrafts.mockReturnValue({
@@ -166,6 +169,8 @@ describe("InboxDraftsPanel — composition, not page duplication", () => {
     expect(requestLeave).toHaveBeenCalledTimes(1);
     expect(push).not.toHaveBeenCalled();
     pendingNavigation?.();
-    expect(push).toHaveBeenCalledWith("/build/proj-1/tickets/BLD-1");
+    expect(push).toHaveBeenCalledWith(
+      "/build/1/tickets/BLD-1?returnTo=%2Fbuild%2Fmy-work%3Fsection%3Ddrafts",
+    );
   });
 });

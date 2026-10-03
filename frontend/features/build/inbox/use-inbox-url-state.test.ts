@@ -27,17 +27,6 @@ describe("useInboxUrlState — param round-trips", () => {
     expect(result.current.section).toBe("MENTIONS");
   });
 
-  it("reads view=drafts from the URL", () => {
-    mockSearchParams = new URLSearchParams("view=drafts");
-    const { result } = renderHook(() => useInboxUrlState());
-    expect(result.current.view).toBe("drafts");
-  });
-
-  it("defaults view to notifications when absent", () => {
-    const { result } = renderHook(() => useInboxUrlState());
-    expect(result.current.view).toBe("notifications");
-  });
-
   it("reads q from the URL", () => {
     mockSearchParams = new URLSearchParams("q=assignment");
     const { result } = renderHook(() => useInboxUrlState());
@@ -80,19 +69,8 @@ describe("useInboxUrlState — param round-trips", () => {
     expect(url).toContain("q=ticket");
   });
 
-  it("setParams with view clears cursor because a notifications cursor cannot address the drafts list", () => {
-    mockSearchParams = new URLSearchParams("view=notifications&cursor=77");
-    const { result } = renderHook(() => useInboxUrlState());
-    act(() => {
-      result.current.setParams({ view: "drafts" });
-    });
-    const url = replace.mock.calls[0][0];
-    expect(url).not.toContain("cursor=");
-    expect(url).toContain("view=drafts");
-  });
-
   it("setParams with only cursor keeps the cursor so pagination can advance", () => {
-    mockSearchParams = new URLSearchParams("view=drafts");
+    mockSearchParams = new URLSearchParams("section=ALL");
     const { result } = renderHook(() => useInboxUrlState());
     act(() => {
       result.current.setParams({ cursor: "88" });
@@ -101,14 +79,14 @@ describe("useInboxUrlState — param round-trips", () => {
     expect(url).toContain("cursor=88");
   });
 
-  it("clearFilters removes q, type, and cursor but keeps view", () => {
-    mockSearchParams = new URLSearchParams("view=drafts&q=foo&type=PROJECTS&cursor=5");
+  it("clearFilters removes q, type, and cursor but keeps section", () => {
+    mockSearchParams = new URLSearchParams("section=ALL&q=foo&type=PROJECTS&cursor=5");
     const { result } = renderHook(() => useInboxUrlState());
     act(() => {
       result.current.clearFilters();
     });
     const url = replace.mock.calls[0][0];
-    expect(url).toContain("view=drafts");
+    expect(url).toContain("section=ALL");
     expect(url).not.toContain("q=");
     expect(url).not.toContain("type=");
     expect(url).not.toContain("cursor=");
@@ -120,8 +98,8 @@ describe("useInboxUrlState — param round-trips", () => {
     expect(result.current.hasActiveFilters).toBe(true);
   });
 
-  it("hasActiveFilters is false when only view and section are set", () => {
-    mockSearchParams = new URLSearchParams("view=drafts&section=ALL");
+  it("hasActiveFilters is false when only section is set", () => {
+    mockSearchParams = new URLSearchParams("section=ALL");
     const { result } = renderHook(() => useInboxUrlState());
     expect(result.current.hasActiveFilters).toBe(false);
   });

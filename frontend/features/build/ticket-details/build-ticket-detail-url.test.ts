@@ -1,6 +1,8 @@
 import {
+  buildMyWorkReturnHref,
   buildTicketCollectionReturnHref,
   buildTicketDetailUrl,
+  getMyWorkTicketHref,
   resolveTicketBackHref,
 } from "./build-ticket-detail-url";
 
@@ -57,5 +59,38 @@ describe("ticket detail return navigation", () => {
 
   it("falls back to Issues for a direct ticket deep link", () => {
     expect(resolveTicketBackHref(12, null)).toBe("/build/12/issues");
+  });
+
+  it("preserves allowlisted My Work state in canonical ticket links", () => {
+    const source = new URLSearchParams(
+      "section=drafts&relation=created&q=review&projectId=12&sort=updated&dir=desc&cursor=c5&returnTo=//outside.example",
+    );
+    const returnHref = buildMyWorkReturnHref(source);
+
+    expect(returnHref).toBe(
+      "/build/my-work?q=review&cursor=c5&section=drafts&relation=created&sort=updated&dir=desc&projectId=12",
+    );
+    expect(getMyWorkTicketHref(12, "WEB", 81, returnHref)).toBe(
+      `/build/12/tickets/WEB-81?returnTo=${encodeURIComponent(returnHref)}`,
+    );
+    expect(getMyWorkTicketHref(12, null, 81, returnHref)).toBe(
+      `/build/12/tickets/81?returnTo=${encodeURIComponent(returnHref)}`,
+    );
+    expect(resolveTicketBackHref(12, returnHref)).toBe(returnHref);
+  });
+
+  it("rejects unsafe My Work returns and bounds long filter state", () => {
+    expect(resolveTicketBackHref(12, "/build/my-work?redirect=//outside.example")).toBe(
+      "/build/12/issues",
+    );
+    expect(resolveTicketBackHref(12, "//outside.example/build/my-work")).toBe(
+      "/build/12/issues",
+    );
+    expect(buildMyWorkReturnHref(new URLSearchParams({ q: "x".repeat(2100) }))).toBe(
+      "/build/my-work",
+    );
+    expect(getMyWorkTicketHref(12, "WEB", 81, "//outside.example")).toBe(
+      "/build/12/tickets/WEB-81?returnTo=%2Fbuild%2F12%2Fissues",
+    );
   });
 });

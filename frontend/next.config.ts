@@ -302,7 +302,7 @@ const nextConfig: NextConfig = {
     },
     {
       source: "/build/drafts",
-      destination: "/build/inbox?view=drafts",
+      destination: "/build/my-work?section=drafts",
       permanent: false,
     },
     {

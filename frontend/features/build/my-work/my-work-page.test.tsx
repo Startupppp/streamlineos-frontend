@@ -1,4 +1,8 @@
 import type { ReactNode } from "react";
+import type {
+  UseBuildListKeyboardOptions,
+  UseBuildListKeyboardReturn,
+} from "@/features/build/shared/use-build-list-keyboard";
 import {
   mockReplace,
   mockPush,
@@ -19,7 +23,12 @@ import {
 } from "./my-work-page-test-harness";
 
 const mockRequestLeave = jest.fn((action: () => void) => action());
-const mockUseBuildListKeyboard = jest.fn();
+const mockUseBuildListKeyboard = jest.fn(
+  (_options: UseBuildListKeyboardOptions): UseBuildListKeyboardReturn => ({
+    focusedIndex: null,
+    setFocusedIndex: jest.fn(),
+  }),
+);
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({
@@ -35,7 +44,7 @@ jest.mock("@/components/shared/dirty-state-context", () => ({
 }));
 
 jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
-  useBuildListKeyboard: (...args: unknown[]) => mockUseBuildListKeyboard(...args),
+  useBuildListKeyboard: (options: UseBuildListKeyboardOptions) => mockUseBuildListKeyboard(options),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -82,6 +91,10 @@ jest.mock("@/features/build/views/view-switcher", () => ({
 
 jest.mock("@/features/build/views/display-options-panel", () => ({
   DisplayOptionsPanel: () => null,
+}));
+
+jest.mock("@/features/build/inbox/inbox-drafts-panel", () => ({
+  InboxDraftsPanel: () => <div data-testid="drafts-panel" />,
 }));
 
 jest.mock("./grouping-sidebar", () => ({
@@ -170,21 +183,65 @@ describe("MyWorkPage — unsaved-work navigation", () => {
 
     render(<MyWorkPage />);
 
-    const options = mockUseBuildListKeyboard.mock.calls[0]?.[0] as {
-      onOpen: (index: number) => void;
-    };
+    const options = mockUseBuildListKeyboard.mock.calls[0]?.[0];
+    expect(options).toBeDefined();
     let pendingNavigation: (() => void) | undefined;
     mockRequestLeave.mockImplementation((action: () => void) => {
       pendingNavigation = action;
     });
 
-    options.onOpen(0);
+    options?.onOpen(0);
 
     expect(mockRequestLeave).toHaveBeenCalledTimes(1);
     expect(mockPush).not.toHaveBeenCalled();
 
     pendingNavigation?.();
-    expect(mockPush).toHaveBeenCalledWith("/build/42/ENG-1");
+    expect(mockPush).toHaveBeenCalledWith("/build/42/tickets/ENG-1?returnTo=%2Fbuild%2Fmy-work");
+  });
+});
+
+describe("MyWorkPage — sections", () => {
+  it("renders the existing drafts panel without starting ticket list requests", async () => {
+    mockSearchParamsContainer.current = new URLSearchParams("section=drafts");
+
+    render(<MyWorkPage />);
+
+    expect(await screen.findByTestId("drafts-panel")).toBeInTheDocument();
+    expect(screen.queryByTestId("content-ready")).toBeNull();
+    expect(mockUseAllWork).not.toHaveBeenCalled();
+    expect(screen.getByRole("link", { name: "Drafts" })).toHaveAttribute("aria-current", "page");
+  });
+
+  it("keeps ticket list state in the URL while switching sections through the leave guard", () => {
+    mockSearchParamsContainer.current = new URLSearchParams("status=TODO&cursor=c1");
+    render(<MyWorkPage />);
+
+    let pendingNavigation: (() => void) | undefined;
+    mockRequestLeave.mockImplementation((action: () => void) => {
+      pendingNavigation = action;
+    });
+    fireEvent.click(screen.getByRole("link", { name: "Drafts" }));
+
+    expect(mockPush).not.toHaveBeenCalled();
+    pendingNavigation?.();
+    expect(mockPush).toHaveBeenCalledWith(
+      "/build/my-work?status=TODO&cursor=c1&section=drafts",
+      { scroll: false },
+    );
+  });
+
+  it("keeps a filtered My Work return URL on keyboard ticket opening", () => {
+    mockSearchParamsContainer.current = new URLSearchParams("relation=created&q=release&unsafe=value");
+    mockUseAllWork.mockReturnValue(withData());
+    render(<MyWorkPage />);
+
+    const options = mockUseBuildListKeyboard.mock.calls[0]?.[0];
+    expect(options).toBeDefined();
+    options?.onOpen(0);
+
+    expect(mockPush).toHaveBeenCalledWith(
+      "/build/42/tickets/ENG-1?returnTo=%2Fbuild%2Fmy-work%3Fq%3Drelease%26relation%3Dcreated",
+    );
   });
 });
 

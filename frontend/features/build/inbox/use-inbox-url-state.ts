@@ -9,8 +9,6 @@ import type {
 import { NOTIFICATION_CATEGORY_VALUES } from "@/types/notifications";
 import { buildListSearchParams } from "../shared/use-build-list-url-state";
 
-export type InboxView = "notifications" | "drafts";
-
 const VALID_SECTIONS: readonly NotificationSection[] = [
   "UNREAD",
   "ALL",
@@ -33,10 +31,6 @@ function parseType(raw: string | null): NotificationCategory | null {
   return null;
 }
 
-function parseView(raw: string | null): InboxView {
-  return raw === "drafts" ? "drafts" : "notifications";
-}
-
 function parseProjectId(raw: string | null): number | null {
   if (raw === null) return null;
   const parsed = Number(raw);
@@ -50,7 +44,6 @@ function parseCursor(raw: string | null): number | null {
 }
 
 export interface InboxUrlState {
-  view: InboxView;
   section: NotificationSection;
   q: string | null;
   type: NotificationCategory | null;
@@ -68,7 +61,6 @@ export function useInboxUrlState(): InboxUrlState {
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
-  const view = parseView(searchParams.get("view"));
   const section = parseSection(searchParams.get("section"));
   const q = searchParams.get("q");
   const type = parseType(searchParams.get("type"));
@@ -110,7 +102,6 @@ export function useInboxUrlState(): InboxUrlState {
   );
 
   return {
-    view,
     section,
     q,
     type,

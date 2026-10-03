@@ -22,7 +22,7 @@ import {
   FLEX_TITLE_SLOT,
   TEXT_ONE_LINE,
 } from "@/lib/text-overflow";
-import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
+import { getMyWorkTicketHref } from "@/features/build/ticket-details/build-ticket-detail-url";
 
 export type DueBucket = "overdue" | "today" | "upcoming" | "none";
 
@@ -55,8 +55,10 @@ export const BUCKET_SYNC_LIMIT = 20;
 
 export const WorkItemRow = memo(function WorkItemRow({
   item,
+  returnHref = "/build/my-work",
 }: {
   item: WorkRowShape;
+  returnHref?: string;
   index?: number;
 }) {
   return (
@@ -64,7 +66,7 @@ export const WorkItemRow = memo(function WorkItemRow({
       <Link
         href={
           item.ticketNumber != null
-            ? getTicketDetailHref(item.projectId, item.projectKey, item.ticketNumber)
+            ? getMyWorkTicketHref(item.projectId, item.projectKey, item.ticketNumber, returnHref)
             : `/build/${item.projectId}`
         }
         className={cn(PM_ROW, "gap-2.5")}
@@ -107,9 +109,11 @@ export const WorkItemRow = memo(function WorkItemRow({
 export const BucketSection = memo(function BucketSection({
   bucket,
   items,
+  returnHref = "/build/my-work",
 }: {
   bucket: DueBucket;
   items: MyWorkItem[];
+  returnHref?: string;
 }) {
   const cfg = BUCKET_CONFIG[bucket];
   const [, startTransition] = useTransition();
@@ -138,7 +142,7 @@ export const BucketSection = memo(function BucketSection({
       </div>
       <div>
         {items.slice(0, visibleCount).map((item) => (
-          <WorkItemRow key={item.id} item={item} />
+          <WorkItemRow key={item.id} item={item} returnHref={returnHref} />
         ))}
       </div>
     </PmPanel>

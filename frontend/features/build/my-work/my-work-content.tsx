@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
@@ -10,7 +10,7 @@ import type { DataTableColumn } from "@/components/ui/data-table";
 import type { DataTableSortState } from "@/components/ui/data-table.types";
 import { BulkActionBar } from "@/features/build/shared/bulk-action-bar";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
-import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
+import { buildMyWorkReturnHref, getMyWorkTicketHref } from "@/features/build/ticket-details/build-ticket-detail-url";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import type { PageStateResolution } from "@/lib/page-state/resolve-page-state";
 import type { KanbanTicket, DisplayOptions } from "@/features/build/shared/types";
@@ -115,6 +115,8 @@ export const MyWorkContent = memo(function MyWorkContent({
   const router = useRouter();
   const requestLeave = useNavigationLeave();
   const isOnline = useOnlineStatus();
+  const searchParams = useSearchParams();
+  const returnHref = buildMyWorkReturnHref(searchParams);
 
   const handleTicketSelect = useCallback(
     (id: number) => {
@@ -122,11 +124,11 @@ export const MyWorkContent = memo(function MyWorkContent({
       if (!meta) return;
       requestLeave(() =>
         router.push(
-          getTicketDetailHref(meta.projectId, meta.projectKey, meta.ticketNumber),
+          getMyWorkTicketHref(meta.projectId, meta.projectKey, meta.ticketNumber, returnHref),
         ),
       );
     },
-    [ticketMeta, requestLeave, router],
+    [ticketMeta, requestLeave, returnHref, router],
   );
 
   const handleRowClick = useCallback(
@@ -236,7 +238,7 @@ export const MyWorkContent = memo(function MyWorkContent({
                     dueDate: t.dueDate,
                   })) ?? [];
                 if (items.length === 0) return null;
-                return <BucketSection key={bucket} bucket={bucket} items={items} />;
+                return <BucketSection key={bucket} bucket={bucket} items={items} returnHref={returnHref} />;
               })}
             </div>
           </ScrollArea>

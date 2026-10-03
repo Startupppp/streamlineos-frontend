@@ -87,13 +87,14 @@ const orgScope = ORGANIZATION_BUILD_SCOPE;
 const projectCatalog = buildScopeCatalog(projectScope);
 
 describe("resolveBuildNavModel — permission filtering", () => {
-  it("exposes all three myWork entries and project Issues + Backlog when the only held key is build:tickets:view", () => {
+  it("exposes Inbox and My Work without a standalone Drafts destination when the only held key is build:tickets:view", () => {
     const model = resolveBuildNavModel({
       scope: projectScope,
       access: accessWith(["build:tickets:view"]),
       pinnedIds: [],
     });
-    expect(model.myWork).toHaveLength(3);
+    expect(model.myWork.map((destination) => destination.label)).toEqual(["Inbox", "My Work"]);
+    expect(model.myWork.map((destination) => destination.href)).toEqual(["/build/inbox", "/build/my-work"]);
     const primaryIds = model.primary.map((d) => d.id);
     expect(primaryIds).toContain("project-issues");
     expect(primaryIds).toContain("project-backlog");
@@ -416,7 +417,7 @@ describe("toBuildNavGroups", () => {
     expect(hasViewParam).toBe(false);
   });
 
-  it("orders the Project work group by mobilePriority: Overview, Issues, Assigned-to-me, Backlog are first four", () => {
+  it("orders the Project work group by mobilePriority: Overview, Issues, My Work, Backlog are first four", () => {
     const projectGroup = groups.find((g) => g.label === "Project");
     expect(projectGroup).toBeDefined();
     if (!projectGroup) return;
@@ -425,6 +426,7 @@ describe("toBuildNavGroups", () => {
     expect(first4[1]).toBe("/build/42/issues");
     expect(first4[2]).toBe("/build/my-work");
     expect(first4[3]).toBe("/build/42/backlog");
+    expect(projectGroup.routes[2]?.label).toBe("My Work");
   });
 });
 

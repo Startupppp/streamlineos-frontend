@@ -37,10 +37,6 @@ jest.mock("./inbox-list", () => ({
   InboxList: jest.fn(),
 }));
 
-jest.mock("./inbox-drafts-panel", () => ({
-  InboxDraftsPanel: () => <div data-testid="inbox-drafts-panel" />,
-}));
-
 jest.mock("./inbox-preview-pane", () => ({
   InboxPreviewPane: () => <div data-testid="inbox-preview-pane" />,
 }));
@@ -156,16 +152,8 @@ describe("InboxPage", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
-  it("renders the drafts panel when view=drafts is in the URL", async () => {
-    mockSearchParams = new URLSearchParams("view=drafts");
-    render(<InboxPage />);
-    await waitFor(() => expect(screen.getByTestId("inbox-drafts-panel")).toBeInTheDocument());
-    expect(screen.queryByTestId("inbox-list")).not.toBeInTheDocument();
-  });
-
-  it("renders the inbox list when no view param is present", async () => {
+  it("renders only the notification list", async () => {
     render(<InboxPage />);
     await waitFor(() => expect(screen.getByTestId("inbox-list")).toBeInTheDocument());
-    expect(screen.queryByTestId("inbox-drafts-panel")).not.toBeInTheDocument();
   });
 });

@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { memo, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { KanbanBoard } from "@/features/build/views/kanban-board";
@@ -11,7 +11,7 @@ import { pmSnappy, viewSwap, viewSwapReduced } from "@/lib/motion-presets";
 import type { KanbanTicket, DisplayOptions } from "@/features/build/shared/types";
 import type { AllWorkTicketMeta } from "./map-all-work-ticket";
 import type { MyWorkView } from "./my-work-view";
-import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
+import { buildMyWorkReturnHref, getMyWorkTicketHref } from "@/features/build/ticket-details/build-ticket-detail-url";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 
 interface MyWorkViewBodyProps {
@@ -29,6 +29,8 @@ export const MyWorkViewBody = memo(function MyWorkViewBody({
 }: MyWorkViewBodyProps) {
   const router = useRouter();
   const requestLeave = useNavigationLeave();
+  const searchParams = useSearchParams();
+  const returnHref = buildMyWorkReturnHref(searchParams);
   const shouldReduceMotion = useReducedMotion();
   const swapVariants = shouldReduceMotion ? viewSwapReduced : viewSwap;
 
@@ -38,11 +40,11 @@ export const MyWorkViewBody = memo(function MyWorkViewBody({
       if (!meta) return;
       requestLeave(() =>
         router.push(
-          getTicketDetailHref(meta.projectId, meta.projectKey, meta.ticketNumber),
+          getMyWorkTicketHref(meta.projectId, meta.projectKey, meta.ticketNumber, returnHref),
         ),
       );
     },
-    [ticketMeta, requestLeave, router],
+    [ticketMeta, requestLeave, returnHref, router],
   );
 
   return (

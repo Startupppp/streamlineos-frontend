@@ -44,7 +44,9 @@ export function getTicketDetailHref(
   ticketNumber: number | string,
   commentId?: number | string | null,
 ): string {
-  const key = formatTicketKey(projectKey, ticketNumber);
+  const key = projectKey
+    ? formatTicketKey(projectKey, ticketNumber)
+    : String(ticketNumber);
   const base = `/build/${projectId}/tickets/${encodeURIComponent(key)}`;
   if (commentId != null && commentId !== "") return `${base}?comment=${commentId}`;
   return base;
