@@ -31,6 +31,12 @@ This file is the coordination ledger for active and completed implementation pac
 
 ## Completed or superseded claims
 
+### Additional activation read claim
+
+| Package | Slice | Additional owner paths | Boundary |
+|---|---|---|---|
+| `ARCH-14-ACTIVATION` | BLD-ONBOARDING-READS-02 module checklists | The `target_db_audit` agent owns `backend/src/modules/hr/onboarding/flow/module-checklist.service.ts`, new `module-checklist-seeds.ts` and `module-checklist-read.ts`, existing checklist service/seed-sync/tenant-isolation tests, and a focused read-projection test. Controller, permission keys, session/tour files, and response contract files remain separately owned. | List/detail GETs must perform no initialization, metadata synchronization, or progress writes. Filter enabled and accessible modules first; derive current metadata, HR status, and progress in memory. Preserve explicit skipped/blocked state. Materialize only through existing authorized commands and activation handling, with conflict-safe inserts and tenant-scoped writes. Missing rows must have an explicit initial projection with stable module/item keys and no fabricated durable timestamps. Coordinate the response-contract and frontend key adjustments with their owners before browser acceptance. Independent review precedes commit. |
+
 | Package | Requirement IDs | Agent/task | Final revision | Outcome | Evidence/handoff | Compatibility or follow-up |
 |---|---|---|---|---|---|---|
 | _none_ | — | — | — | — | — | — |
