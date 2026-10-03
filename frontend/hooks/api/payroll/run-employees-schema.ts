@@ -10,6 +10,8 @@ const payrollSourceRefContract = z.object({
 });
 
 const calcExplainStepContract = z.object({
+  formula: z.string().optional(),
+  inputs: z.record(z.string(), z.number()).optional(),
   steps: z.array(z.string()),
   note: z.string().optional(),
   sources: z.array(payrollSourceRefContract).optional(),
