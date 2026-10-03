@@ -335,7 +335,9 @@ export const buildWorkQueryKeys = {
         ? ([...base, "projects", projectId, "workload-capacity", start, end, teamId] as const)
         : ([...base, "projects", projectId, "workload-capacity", start, end] as const),
     commentDrafts: {
+      all: (): readonly (string | number)[] => [...base, "projects", "comment-drafts"],
       mine: () => [...base, "projects", "comment-drafts", "mine"] as const,
+      byTicket: (ticketId: number): readonly (string | number)[] => [...base, "projects", "comment-drafts", "ticket", ticketId],
     },
     commentPermalinkWithComment: (
       projectId: number,

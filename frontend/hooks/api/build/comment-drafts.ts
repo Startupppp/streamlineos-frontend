@@ -1,19 +1,18 @@
 ﻿"use client";
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { useSession } from "next-auth/react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient, isImpersonating } from "@/lib/api-client";
 import { ApiError, getApiErrorCode, lazyContract } from "@/lib/api-envelope";
-import { expectedRequestIdentitySchema, type ExpectedRequestIdentity } from "@/lib/api-request-identity";
-import { useOrgStorageScope } from "@/lib/org-scoped-storage";
-import { authenticatedScope } from "@/lib/query-scope";
+import type { ExpectedRequestIdentity } from "@/lib/api-request-identity";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { acknowledgeBufferedDraft, bufferDraft, commentDraftInputSchema, peekBuffer, replayBufferedDrafts, serializeDraftSave, type BufferedCommentDraft } from "./comment-draft-offline-buffer";
 import type { GeneratedCommentDraft } from "./comment-drafts-schema";
+import { useCommentDraftOwner } from "./comment-drafts-read";
+export { useTicketCommentDraft } from "./comment-drafts-read";
 
 export interface CommentDraftAssignee {
   id: string;
@@ -73,10 +72,6 @@ export function useMyCommentDrafts() {
   });
 }
 
-function subscribeImpersonation(change: () => void) {
-  window.addEventListener("impersonation-change", change);
-  return () => window.removeEventListener("impersonation-change", change);
-}
 interface DraftSave {
   ticketId: number;
   body: string;
@@ -89,13 +84,8 @@ interface DraftSave {
 export function useUpsertCommentDraft() {
   const qc = useQueryClient();
   const isOnline = useOnlineStatus();
-  const { data: session, status } = useSession();
-  const scope = useOrgStorageScope();
-  const impersonating = useSyncExternalStore(subscribeImpersonation, isImpersonating, () => false);
-  const identity = expectedRequestIdentitySchema.safeParse({ userId: session?.user?.id, orgId: session?.orgId, sessionId: session?.sessionId });
-  const owner = status === "authenticated" && identity.success && !impersonating && scope === authenticatedScope(identity.data.orgId, identity.data.userId)
-    ? { scope, identity: identity.data } : null;
-  const ownerKey = owner ? `${owner.scope}:${owner.identity.sessionId}` : null;
+  const owner = useCommentDraftOwner();
+  const ownerKey = owner?.key ?? null;
   const current = useRef(owner);
   current.current = owner;
   const controllers = useRef(new Set<AbortController>());
@@ -124,6 +114,7 @@ export function useUpsertCommentDraft() {
       if (save.buffered && buffered?.revision !== save.buffered.revision) return;
       if (save.buffered) acknowledgeBufferedDraft(save.scope, save.buffered);
       setRecovery(null);
+      void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.commentDrafts.byTicket(save.ticketId), exact: true });
       void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.agentPulseAll() });
       const listKey = buildWorkQueryKeys.projects.commentDrafts.mine();
       const current = qc.getQueryData<CommentDraftListItem[]>(listKey);
@@ -198,7 +189,7 @@ export function useDeleteCommentDraft() {
     mutationFn: (draftId: number) =>
       apiClient.delete<{ deleted: boolean }>(`/build/comment-drafts/${draftId}`, undefined, undefined, commentDraftDeletedContract),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.commentDrafts.mine() });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.commentDrafts.all() });
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.agentPulseAll() });
     },
   });
@@ -227,8 +218,9 @@ export function useDeleteCommentDraftByTicket() {
           qc.setQueryData(buildWorkQueryKeys.projects.commentDrafts.mine(), context.previous);
         }
       },
-      onSuccess: () => {
+      onSuccess: (_result, ticketId) => {
         qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.commentDrafts.mine() });
+        qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.commentDrafts.byTicket(ticketId), exact: true });
         qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.agentPulseAll() });
       },
     },
@@ -243,7 +235,7 @@ export function useDeleteAllCommentDrafts() {
     mutationFn: () =>
       apiClient.delete<{ deleted: boolean }>("/build/comment-drafts/mine", undefined, undefined, commentDraftDeletedContract),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.commentDrafts.mine() });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.commentDrafts.all() });
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.agentPulseAll() });
     },
   });
@@ -261,7 +253,7 @@ export function useGenerateCommentDraft() {
         generatedCommentDraftContract,
       ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.commentDrafts.mine() });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.commentDrafts.all() });
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.agentPulseAll() });
     },
   });
