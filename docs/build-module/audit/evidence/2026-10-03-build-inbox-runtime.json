@@ -1420,6 +1420,138 @@
         "reviewer": "scoped_activation_dispatch",
         "result": "clear for bounded source/schema/evidence consistency; no additional DB/browser calls, no broad task closure"
       }
+    },
+    {
+      "name": "triage-query-contract-read-smoke",
+      "classification": "Current verified",
+      "recordedAt": "2026-10-03T17:31:56.035Z",
+      "backendSourceCommit": "f2ec6c210",
+      "runnerPid": 25784,
+      "baseUrl": "http://127.0.0.1:1001",
+      "actions": [
+        {
+          "name": "owner-active",
+          "path": "/notifications?sourceModule=build&section=ALL&limit=20",
+          "status": 200,
+          "contractValid": true,
+          "ids": [
+            313,
+            311,
+            310,
+            309,
+            308,
+            307
+          ],
+          "hasMore": false
+        },
+        {
+          "name": "owner-later",
+          "path": "/notifications?sourceModule=build&section=SNOOZED&limit=20",
+          "status": 200,
+          "contractValid": true,
+          "ids": [],
+          "hasMore": false
+        },
+        {
+          "name": "owner-done",
+          "path": "/notifications?sourceModule=build&section=ARCHIVED&limit=20",
+          "status": 200,
+          "contractValid": true,
+          "ids": [],
+          "hasMore": false
+        },
+        {
+          "name": "foreign-later",
+          "path": "/notifications?sourceModule=build&section=SNOOZED&ids=313&limit=20",
+          "status": 200,
+          "contractValid": true,
+          "ids": [],
+          "hasMore": false
+        },
+        {
+          "name": "invalid-section",
+          "path": "/notifications?sourceModule=build&section=LATER&limit=20",
+          "status": 400,
+          "contractValid": false
+        },
+        {
+          "name": "no-auth",
+          "path": "/notifications?sourceModule=build&section=SNOOZED&limit=20",
+          "status": 401,
+          "contractValid": false
+        }
+      ],
+      "database": {
+        "transaction": "streamline_app READ ONLY; reserved Flow02 tenant/actor guard passed",
+        "rows": [
+          {
+            "id": 306,
+            "source_module": "organization",
+            "is_read": false,
+            "archived_at": null,
+            "snoozed_until": null
+          },
+          {
+            "id": 307,
+            "source_module": "build",
+            "is_read": true,
+            "archived_at": null,
+            "snoozed_until": null
+          },
+          {
+            "id": 308,
+            "source_module": "build",
+            "is_read": true,
+            "archived_at": null,
+            "snoozed_until": null
+          },
+          {
+            "id": 309,
+            "source_module": "build",
+            "is_read": true,
+            "archived_at": null,
+            "snoozed_until": null
+          },
+          {
+            "id": 310,
+            "source_module": "build",
+            "is_read": true,
+            "archived_at": null,
+            "snoozed_until": null
+          },
+          {
+            "id": 311,
+            "source_module": "build",
+            "is_read": true,
+            "archived_at": null,
+            "snoozed_until": null
+          },
+          {
+            "id": 313,
+            "source_module": "build",
+            "is_read": true,
+            "archived_at": null,
+            "snoozed_until": null
+          }
+        ]
+      },
+      "runnerHealth": {
+        "health": 200,
+        "ready": 200
+      },
+      "limitations": [
+        "No notification mutation was executed in this observation.",
+        "Later and Done are empty controls only; they do not prove persisted snooze/archive transitions or a positive foreign-tenant Later isolation case.",
+        "Current Build lifecycle boundary still refuses archive/snooze writes until separately reviewed.",
+        "Browser/mobile, complete role/object revocation, cache/event transitions, query budgets, deployment and operations remain open."
+      ],
+      "harnessCorrections": [
+        "First health probes preceded listening; later /health and /health/ready returned200. /health/live returned404 because it is not a declared route."
+      ],
+      "independentReview": {
+        "reviewer": "scoped_activation_dispatch",
+        "result": "clear for bounded source/schema/evidence consistency; no additional database/browser calls and no full task closure"
+      }
     }
   ],
   "backendSourceCommit": "1aee0d53a",
