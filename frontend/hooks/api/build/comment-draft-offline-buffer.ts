@@ -3,7 +3,7 @@ import { orgScopedStorageKey } from "@/lib/org-scoped-storage";
 import { newIdempotencyKey } from "@/lib/idempotency-key";
 import { ApiError } from "@/lib/api-envelope";
 
-const BUFFER_NAME = "slos:comment-draft-pending:v2";
+const BUFFER_NAME = "slos:comment-draft-pending:v3";
 const BUFFER_LIMIT = 100;
 const scopeSchema = z.string().max(300).regex(/^authenticated:[^:\s]+:[^:\s]+$/);
 const entrySchema = z.object({
@@ -15,6 +15,14 @@ const envelopeSchema = z.object({ version: z.literal(2), scope: scopeSchema, ent
   .refine((envelope) => new Set(envelope.entries.map((entry) => entry.ticketId)).size === envelope.entries.length);
 export type BufferedCommentDraft = z.infer<typeof entrySchema>;
 export const commentDraftInputSchema = entrySchema.omit({ revision: true }).strict();
+export const draftEditInputSchema = commentDraftInputSchema.extend({ body: z.string().max(10000) }).strict();
+export const draftIntentSchema = z.discriminatedUnion("kind", [
+  entrySchema.extend({ kind: z.literal("upsert") }).strict(),
+  entrySchema.omit({ body: true }).extend({ kind: z.literal("delete") }).strict(),
+]);
+const currentEnvelopeSchema = z.object({ version: z.literal(3), scope: scopeSchema, entries: z.array(draftIntentSchema).max(BUFFER_LIMIT) }).strict()
+  .refine((envelope) => new Set(envelope.entries.map((entry) => entry.ticketId)).size === envelope.entries.length);
+export type BufferedDraftIntent = z.infer<typeof draftIntentSchema>;
 const activeReplays = new Map<string, Promise<void>>();
 const activeSaves = new Map<string, Promise<void>>();
 
@@ -23,19 +31,25 @@ function readBuffer(scope: string) {
   const key = orgScopedStorageKey(BUFFER_NAME, scope);
   try {
     const raw = localStorage.getItem(key);
-    if (raw === null) return { key, entries: [] };
-    if (raw.length > 6100000) return null;
-    const result = envelopeSchema.safeParse(JSON.parse(raw));
-    return result.success && result.data.scope === scope ? { key, entries: result.data.entries } : null;
+    if (raw !== null) {
+      if (raw.length > 6100000) return null;
+      const result = currentEnvelopeSchema.safeParse(JSON.parse(raw));
+      return result.success && result.data.scope === scope ? { key, entries: result.data.entries } : null;
+    }
+    const prior = localStorage.getItem(orgScopedStorageKey("slos:comment-draft-pending:v2", scope));
+    if (prior === null) return { key, entries: [] };
+    if (prior.length > 6100000) return null;
+    const result = envelopeSchema.safeParse(JSON.parse(prior));
+    return result.success && result.data.scope === scope
+      ? { key, entries: result.data.entries.map((entry): BufferedDraftIntent => ({ ...entry, kind: "upsert" })) } : null;
   } catch {
     return null;
   }
 }
 
-function writeBuffer(key: string, scope: string, entries: BufferedCommentDraft[]): boolean {
+function writeBuffer(key: string, scope: string, entries: BufferedDraftIntent[]): boolean {
   try {
-    if (entries.length === 0) localStorage.removeItem(key);
-    else localStorage.setItem(key, JSON.stringify({ version: 2, scope, entries }));
+    localStorage.setItem(key, JSON.stringify({ version: 3, scope, entries }));
     return true;
   } catch {
     return false;
@@ -44,11 +58,20 @@ function writeBuffer(key: string, scope: string, entries: BufferedCommentDraft[]
 
 export function bufferDraft(scope: string, ticketId: number, body: string): BufferedCommentDraft | null {
   const input = commentDraftInputSchema.safeParse({ ticketId, body });
+  if (!input.success) return null;
+  const entry = stageDraftIntent(scope, ticketId, body);
+  return entry?.kind === "upsert" ? { ticketId: entry.ticketId, body: entry.body, revision: entry.revision } : null;
+}
+
+export function stageDraftIntent(scope: string, ticketId: number, body: string): BufferedDraftIntent | null {
+  const input = draftEditInputSchema.safeParse({ ticketId, body });
   const stored = readBuffer(scope);
   if (!input.success || stored === null) return null;
   const index = stored.entries.findIndex((entry) => entry.ticketId === ticketId);
   if (index === -1 && stored.entries.length >= BUFFER_LIMIT) return null;
-  const entry = { ...input.data, revision: newIdempotencyKey() };
+  const entry: BufferedDraftIntent = input.data.body.trim()
+    ? { ...input.data, revision: newIdempotencyKey(), kind: "upsert" }
+    : { ticketId, revision: newIdempotencyKey(), kind: "delete" };
   const entries = [...stored.entries];
   if (index === -1) entries.push(entry);
   else entries[index] = entry;
@@ -56,12 +79,20 @@ export function bufferDraft(scope: string, ticketId: number, body: string): Buff
 }
 
 export function peekBuffer(scope: string): BufferedCommentDraft[] {
+  return peekDraftIntents(scope).flatMap((entry) => entry.kind === "upsert" ? [{ ticketId: entry.ticketId, body: entry.body, revision: entry.revision }] : []);
+}
+
+export function peekDraftIntents(scope: string): BufferedDraftIntent[] {
   return readBuffer(scope)?.entries ?? [];
 }
 
 export function acknowledgeBufferedDraft(scope: string, expected: BufferedCommentDraft): boolean {
+  return acknowledgeDraftIntent(scope, { ...expected, kind: "upsert" });
+}
+
+export function acknowledgeDraftIntent(scope: string, expected: BufferedDraftIntent): boolean {
   const stored = readBuffer(scope);
-  if (!stored || !stored.entries.some((entry) => entry.ticketId === expected.ticketId && entry.revision === expected.revision && entry.body === expected.body)) return false;
+  if (!stored || !stored.entries.some((entry) => entry.ticketId === expected.ticketId && entry.revision === expected.revision && entry.kind === expected.kind && (entry.kind !== "upsert" || expected.kind !== "upsert" || entry.body === expected.body))) return false;
   return writeBuffer(stored.key, scope, stored.entries.filter((entry) => entry.ticketId !== expected.ticketId));
 }
 
@@ -89,6 +120,11 @@ function waitForReplay(pending: Promise<void>, signal: AbortSignal): Promise<boo
 }
 
 export async function replayBufferedDrafts(scope: string, save: (entry: BufferedCommentDraft) => Promise<boolean>, signal: AbortSignal): Promise<void> {
+  return replayDraftIntents(scope, (entry) => entry.kind === "upsert"
+    ? save({ ticketId: entry.ticketId, body: entry.body, revision: entry.revision }) : Promise.resolve(false), signal);
+}
+
+export async function replayDraftIntents(scope: string, save: (entry: BufferedDraftIntent) => Promise<boolean>, signal: AbortSignal): Promise<void> {
   if (!scopeSchema.safeParse(scope).success || signal.aborted) return;
   let active = activeReplays.get(scope);
   while (active) {
@@ -99,13 +135,13 @@ export async function replayBufferedDrafts(scope: string, save: (entry: Buffered
   const lease = new Promise<void>((resolve) => { release = resolve; });
   activeReplays.set(scope, lease);
   try {
-    const pending = peekBuffer(scope);
+    const pending = peekDraftIntents(scope);
     for (const entry of pending) {
       if (signal.aborted) break;
-      const current = peekBuffer(scope).find((item) => item.ticketId === entry.ticketId);
+      const current = peekDraftIntents(scope).find((item) => item.ticketId === entry.ticketId);
       if (!current || current.revision !== entry.revision) continue;
       if (!(await save(entry)) || signal.aborted) break;
-      acknowledgeBufferedDraft(scope, entry);
+      acknowledgeDraftIntent(scope, entry);
     }
   } finally {
     activeReplays.delete(scope);

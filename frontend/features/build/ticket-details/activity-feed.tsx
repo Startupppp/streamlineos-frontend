@@ -75,6 +75,7 @@ export function ActivityFeed({
   const {
     body: newComment, change: setNewComment, clear: clearNewComment,
     ready: composerReady, loading: draftLoading, loadError: draftLoadError, retry: retryDraft,
+    persistenceStatus: draftPersistenceStatus, persistenceError: draftPersistenceError, retryPersistence,
   } = useTicketCommentComposer(ticketId, canUpdate);
   const canCreate = useCan("build:tickets:create");
   const canAi = useCan("build:ai:use");
@@ -275,6 +276,7 @@ export function ActivityFeed({
   const handleApplyDraft = useCallback((text: string) => setNewComment(text), [setNewComment]);
   const draftAction = useDraftCommentAction(ticketId, handleApplyDraft);
   const handleRetryDraft = useCallback(() => { void retryDraft(); }, [retryDraft]);
+  const handleRetryPersistence = useCallback(() => { void retryPersistence(); }, [retryPersistence]);
 
   const { repliesMap, sortedTopLevel } = useMemo(() => {
     const topLevel = comments.filter((c) => !c.parentCommentId);
@@ -353,6 +355,12 @@ export function ActivityFeed({
           />
         </div> : null}
         {canUpdate && draftLoading ? <p role="status" className="text-xs text-muted-foreground">Loading saved draft…</p> : null}
+        {canUpdate && draftPersistenceStatus ? <p role="status" className="text-xs text-muted-foreground">{draftPersistenceStatus}</p> : null}
+        {canUpdate && draftPersistenceError ? <div role="alert" className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          <span>{getErrorMessage(draftPersistenceError)}</span>
+          <ErrorReference error={draftPersistenceError} />
+          <Button type="button" variant="outline" size="sm" onClick={handleRetryPersistence}>Retry saving draft</Button>
+        </div> : null}
         {canUpdate && draftLoadError ? <div role="alert" className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <span>{getErrorMessage(draftLoadError)}</span>
           <ErrorReference error={draftLoadError} />

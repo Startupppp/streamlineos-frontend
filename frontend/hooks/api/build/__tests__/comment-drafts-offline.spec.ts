@@ -1,4 +1,4 @@
-import { bufferDraft, peekBuffer, acknowledgeBufferedDraft, replayBufferedDrafts } from "../comment-draft-offline-buffer";
+import { bufferDraft, peekBuffer, acknowledgeBufferedDraft, replayBufferedDrafts, stageDraftIntent, peekDraftIntents } from "../comment-draft-offline-buffer";
 import { orgScopedStorageKey } from "@/lib/org-scoped-storage";
 
 const actorA = "authenticated:org-a:user-a";
@@ -115,8 +115,36 @@ it("bounds stored entries and preserves existing entries when the collection is 
 it("retains the stored entry when persistence throws during acknowledgement", () => {
   const saved = bufferDraft(actorA, 1, "retained");
   if (!saved) throw new Error("Missing buffered draft");
-  const remove = jest.spyOn(Storage.prototype, "removeItem").mockImplementationOnce(() => { throw new Error("unavailable"); });
+  const remove = jest.spyOn(Storage.prototype, "setItem").mockImplementationOnce(() => { throw new Error("unavailable"); });
   expect(acknowledgeBufferedDraft(actorA, saved)).toBe(false);
   remove.mockRestore();
   expect(peekBuffer(actorA)).toEqual([saved]);
+});
+
+it.each([
+  { version: 3, scope: actorB, entries: [] },
+  { version: 3, scope: actorA, entries: [], extra: true },
+  { version: 3, scope: actorA, entries: [{ kind: "delete", ticketId: 1, revision: "invalid" }] },
+  { version: 3, scope: actorA, entries: [{ kind: "delete", ticketId: 1, revision: "00000000-0000-4000-8000-000000000001", body: "must not exist" }] },
+  { version: 3, scope: actorA, entries: [{ kind: "upsert", ticketId: 1, revision: "00000000-0000-4000-8000-000000000001" }] },
+  { version: 3, scope: actorA, entries: [{ kind: "other", ticketId: 1, revision: "00000000-0000-4000-8000-000000000001" }] },
+])("refuses a malformed v3 intent without overwriting or falling back to v2", (envelope) => {
+  const currentKey = orgScopedStorageKey("slos:comment-draft-pending:v3", actorA);
+  const raw = JSON.stringify(envelope);
+  localStorage.setItem(currentKey, raw);
+  const older = JSON.stringify({ version: 2, scope: actorA, entries: [{ ticketId: 1, body: "older valid text", revision: "00000000-0000-4000-8000-000000000001" }] });
+  localStorage.setItem(storageKey(actorA), older);
+  expect(peekDraftIntents(actorA)).toEqual([]);
+  expect(stageDraftIntent(actorA, 1, "new text")).toBeNull();
+  expect(localStorage.getItem(currentKey)).toBe(raw);
+  expect(localStorage.getItem(storageKey(actorA))).toBe(older);
+});
+
+it("refuses duplicate tickets in the current envelope and keeps the original bytes", () => {
+  const currentKey = orgScopedStorageKey("slos:comment-draft-pending:v3", actorA);
+  const entry = { kind: "delete", ticketId: 1, revision: "00000000-0000-4000-8000-000000000001" };
+  const raw = JSON.stringify({ version: 3, scope: actorA, entries: [entry, entry] });
+  localStorage.setItem(currentKey, raw);
+  expect(stageDraftIntent(actorA, 1, "new")).toBeNull();
+  expect(localStorage.getItem(currentKey)).toBe(raw);
 });

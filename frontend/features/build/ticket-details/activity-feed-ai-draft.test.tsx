@@ -1,6 +1,7 @@
 import React from "react";
 import { render, screen, act } from "@testing-library/react";
 import { ActivityFeed } from "./activity-feed";
+import type { StagedCommentDraft } from "@/hooks/api/build/comment-draft-commands";
 
 jest.mock("next-auth/react", () => ({
   useSession: () => ({ data: { user: { id: "user-1", name: "Tester", image: null } } }),
@@ -39,10 +40,12 @@ jest.mock("@/components/ai/ai-actions-menu", () => ({
 }));
 
 const mockMutateAsync = jest.fn();
+const mockStage = jest.fn<StagedCommentDraft, [{ ticketId: number; body: string }]>();
+const mockFlush = jest.fn();
 jest.mock("@/hooks/api/build/comment-drafts", () => ({
-  useUpsertCommentDraft: () => ({ mutate: jest.fn() }),
+  useUpsertCommentDraft: () => ({ stageEdit: mockStage, flushStaged: mockFlush, isOnline: true, isPending: false, error: null, receipt: null }),
   useTicketCommentDraft: () => ({
-    owner: { scope: "authenticated:org-1:user-1", key: "authenticated:org-1:user-1:session-1" },
+    owner: { scope: "authenticated:org-1:user-1", key: "authenticated:org-1:user-1:session-1", identity: { userId: "user-1", orgId: "org-1", sessionId: "session-1" } },
     fresh: false, data: undefined, dataUpdatedAt: 0, isFetching: false, isError: false, error: null, refetch: jest.fn(),
   }),
   useDeleteCommentDraftByTicket: () => ({ mutate: jest.fn() }),
@@ -93,6 +96,13 @@ function renderFeed(canAi = false, canUpdate = false) {
 beforeEach(() => {
   capturedActions = [];
   mockMutateAsync.mockReset();
+  localStorage.clear();
+  mockFlush.mockReset().mockResolvedValue(null);
+  mockStage.mockReset().mockImplementation(({ ticketId, body }) => ({
+    scope: "authenticated:org-1:user-1", key: "authenticated:org-1:user-1:session-1",
+    identity: { userId: "user-1", orgId: "org-1", sessionId: "session-1" },
+    entry: { kind: "upsert", ticketId, body, revision: "00000000-0000-4000-8000-000000000001" },
+  }));
 });
 
 it("does not render the AI draft menu when build:ai:use is denied", () => {
@@ -127,6 +137,8 @@ it("successful generation puts text in the composer and does not post a comment"
 
   expect(screen.getByTestId("comment-textarea")).toHaveValue("AI-written comment text");
   expect(mockMutateAsync).toHaveBeenCalledTimes(1);
+  expect(mockStage).toHaveBeenCalledWith({ ticketId: 1, body: "AI-written comment text" });
+  expect(mockFlush).not.toHaveBeenCalled();
 });
 
 it("run() returns aiUsage from the generated draft so AiUsageChip can render the spend", async () => {

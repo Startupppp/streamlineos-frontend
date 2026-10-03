@@ -5,7 +5,7 @@ import type { ApiResponseLike } from "@/lib/api-envelope";
 import { OrgStorageScopeProvider } from "@/lib/org-scoped-storage";
 import { scopedQueryKeyHashFn } from "@/lib/query-scope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
-import { bufferDraft, peekBuffer } from "@/hooks/api/build/comment-draft-offline-buffer";
+import { bufferDraft, peekBuffer, peekDraftIntents } from "@/hooks/api/build/comment-draft-offline-buffer";
 import { useTicketCommentComposer } from "./use-ticket-comment-composer";
 
 let mockOnline = true;
@@ -15,6 +15,7 @@ let mockScope = "authenticated:org-a:user-a";
 let mockSession = { status: "authenticated", data: { user: { id: "user-a" }, orgId: "org-a", sessionId: "session-a" } };
 const mockRead = jest.fn<Promise<ApiResponseLike>, unknown[]>();
 const mockPut = jest.fn<Promise<unknown>, unknown[]>();
+const mockDelete = jest.fn<Promise<unknown>, unknown[]>();
 
 jest.mock("next-auth/react", () => ({ useSession: () => mockSession }));
 jest.mock("@/hooks/common/use-online-status", () => ({ useOnlineStatus: () => mockOnline }));
@@ -23,7 +24,7 @@ jest.mock("@/hooks/api/access", () => ({
   useAccess: () => ({ data: { isOrgOwner: mockAllowed, scopes: {} }, refetch: jest.fn() }),
 }));
 jest.mock("@/lib/api-client", () => ({
-  apiClient: { request: (...args: unknown[]) => mockRead(...args), put: (...args: unknown[]) => mockPut(...args) },
+  apiClient: { request: (...args: unknown[]) => mockRead(...args), put: (...args: unknown[]) => mockPut(...args), delete: (...args: unknown[]) => mockDelete(...args) },
   isImpersonating: () => mockImpersonating,
 }));
 
@@ -55,12 +56,13 @@ beforeEach(() => {
   mockSession = { status: "authenticated", data: { user: { id: "user-a" }, orgId: "org-a", sessionId: "session-a" } };
   mockRead.mockReset().mockResolvedValue(response(draft()));
   mockPut.mockReset().mockImplementation(async (_path, input) => ({ ...draft(), ...(typeof input === "object" ? input : {}) }));
+  mockDelete.mockReset().mockResolvedValue({ deleted: true });
 });
 
 it("loads the caller's exact ticket draft through a fenced private GET and hydrates without saving", async () => {
   const hook = renderHook(() => useTicketCommentComposer(7, true), setup());
   await waitFor(() => expect(hook.result.current.body).toBe("saved private draft"));
-  expect(mockRead.mock.calls[0]).toMatchObject(["/build/comment-drafts/tickets/7", { method: "GET" }, { expectedIdentity: { userId: "user-a", orgId: "org-a", sessionId: "session-a" }, signal: expect.any(AbortSignal) }]);
+  expect(mockRead.mock.calls[0]).toMatchObject(["/build/comment-drafts/by-ticket/7", { method: "GET" }, { expectedIdentity: { userId: "user-a", orgId: "org-a", sessionId: "session-a" }, signal: expect.any(AbortSignal) }]);
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 1250)); });
   expect(mockPut).not.toHaveBeenCalled();
 });
@@ -111,7 +113,8 @@ it.each(["ticket", "user", "organization", "session"])("hides old text synchrono
   mockRead.mockResolvedValue(response(null));
   await act(async () => { pending.complete(response(draft())); });
   expect(hook.result.current.body).toBe("");
-  expect(mockPut).not.toHaveBeenCalled();
+  if (transition === "session") expect(mockPut.mock.calls[0]?.[2]).toMatchObject({ expectedIdentity: { userId: "user-a", orgId: "org-a", sessionId: "session-b" } });
+  else expect(mockPut).not.toHaveBeenCalled();
 });
 
 it.each(["loading", "unauthenticated", "account-only", "denied", "impersonated", "scope-mismatch"])("refuses a private read for %s context", async (context) => {
@@ -216,4 +219,34 @@ it("ignores an old context's change handler after the ticket changes", async () 
   await waitFor(() => expect(hook.result.current.body).toBe("ticket eight"));
   act(() => oldChange("old AI completion"));
   expect(hook.result.current.body).toBe("ticket eight");
+});
+
+it.each(["upsert", "delete"])("prefers the same owner's pending %s after a fresh new-session read beats delayed replay", async (kind) => {
+  mockOnline = false;
+  const put = deferred<unknown>();
+  const remove = deferred<unknown>();
+  mockPut.mockReturnValue(put.promise);
+  mockDelete.mockReturnValue(remove.promise);
+  const hook = renderHook(() => useTicketCommentComposer(7, true), setup());
+  await waitFor(() => expect(hook.result.current.body).toBe("saved private draft"));
+  const localBody = kind === "upsert" ? "newer local revision" : "";
+  act(() => hook.result.current.change(localBody));
+  const original = peekDraftIntents(mockScope)[0];
+  mockSession.data.sessionId = "session-b";
+  mockOnline = true;
+  hook.rerender();
+  expect(hook.result.current.body).toBe("");
+  await waitFor(() => expect(mockRead).toHaveBeenCalledTimes(2));
+  await waitFor(() => expect(hook.result.current.loading).toBe(false));
+  expect(hook.result.current.body).toBe(localBody);
+  expect(peekDraftIntents(mockScope)[0]).toEqual(original);
+  expect(kind === "upsert" ? mockPut : mockDelete).toHaveBeenCalledTimes(1);
+  expect(kind === "upsert" ? mockDelete : mockPut).not.toHaveBeenCalled();
+  await act(async () => {
+    if (kind === "upsert") put.complete(draft(localBody));
+    else remove.complete({ deleted: true });
+  });
+  await waitFor(() => expect(peekDraftIntents(mockScope)).toEqual([]));
+  expect(hook.result.current.body).toBe(localBody);
+  expect(kind === "upsert" ? mockPut : mockDelete).toHaveBeenCalledTimes(1);
 });
