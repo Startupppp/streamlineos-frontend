@@ -1,14 +1,14 @@
 # Organization setup disposable migration proof
 
-Status: Planned database execution; source guards verified with pure tests.
+Status: Current verified focused PostgreSQL proof with five unresolved defects. Full migration-chain and application/browser verification remain Current unverified.
 
 Claim: `BLD-MIGRATION-SCRATCH-PROOF-02`, reserved at outer `d35c76017`. Source review snapshot: outer `82e0df5e091edd90d0ddf7ad8afac25c6990c698`, backend `ea389fa01408a062f7e527c1188c88b25422b000`. Root independently reviewed and approved the five source/test paths; backend source commit `47527950919d68770ebd6b7980d347711e11a166`.
 
 ## Current verified evidence
 
-- Read-only IAM administrative catalog checks confirmed LOGIN, CREATEDB, maintenance CONNECT, `template0`, and a distinct application role without superuser/RLS bypass. No scratch database was created.
+- Initial read-only IAM administrative catalog checks confirmed LOGIN, CREATEDB, maintenance CONNECT, `template0`, and a distinct application role without superuser/RLS bypass. These inventory calls created no database; the later authorized scratch execution is recorded below.
 - The receipt table and outbox organization/event key were absent at the observed production catalog snapshot. This observation does not establish migration application or deployment parity.
-- A read-only PostgreSQL SELECT over synthetic VALUES confirmed `REFUSED` and `DELIVERY_FAILED` with NULL reasons evaluate UNKNOWN under the historical CHECK. PostgreSQL CHECK accepts UNKNOWN. Actual isolated INSERT rejection remains unverified.
+- A read-only PostgreSQL SELECT over synthetic VALUES confirmed `REFUSED` and `DELIVERY_FAILED` with NULL reasons evaluate UNKNOWN under the historical CHECK. The later isolated application-role INSERTs confirmed both malformed shapes were accepted.
 - `node --test src/scripts/__tests__/organization-setup-migration-proof.test.mjs`: 16 tests passed. These exercise URL/role/identity/cleanup rejection, exact approval before connecting, preexisting-database refusal without mutation, initialized current-run cleanup, refusal with unrelated sessions and no DROP, source hash seals, exact fragment extraction, no whole-fragment ledgering, nonconnecting CLI plan, and bounded diagnostics.
 - Scoped ESLint for all five new files passed. No source comments or type assertions were added. These `.mjs` files are outside the production TypeScript graph; no new TypeScript gate was required or claimed.
 
@@ -32,7 +32,29 @@ Before creation, the runner checks maintenance identity, admin capability, restr
 
 Cleanup checks the durable manifest, closes owned clients, verifies the physical database/owner again, and requires zero database sessions. It uses no FORCE drop or session termination. An unexpected case failure attempts this same guarded cleanup and reports its exact controlled failure if refused. A startup failure before durable manifest initialization closes clients and requires manual inspection; it does not guess ownership and drop a database. A process crash can leave an isolated proof database, which needs separately reviewed recovery.
 
-No database create, grant, schema write, migration application, fixture write, or cleanup execution has occurred in this source-construction slice. Independent root review precedes execution.
+The initial source-construction slice made no database changes. After the exact source/evidence commits and independent root review, the authorized execution below created and removed only its unique scratch database.
+
+## Authorized scratch execution
+
+Reviewed backend commit: `47527950919d68770ebd6b7980d347711e11a166`. Initial evidence commit: outer `4531f53cf`. Run ID: `ecee168be7b2bdaa1913511b`; exact database: `scratch_build_migration_ecee168be7b2bdaa1913511b`.
+
+The dry plan completed with `execute:false`. The subsequent execution supplied the matching `--approve-database`, used template0 and synthetic-only fixtures, and completed 62 PostgreSQL checks: 57 passed and five failed. Exit code 1 truthfully preserved those failures. The proof scope stayed `invitation-fragment-0965-and-receipts-1728`; `wholeChainVerified` and `applicationRuntimeVerified` remained false.
+
+| Failed check | Expected | Observed |
+|---|---|---|
+| Equivalent invitation key during receipt upgrade | Reuse one equivalent key | `1728` created a duplicate equivalent invitation index |
+| REFUSED with NULL reason | SQLSTATE `23514` | INSERT returned `NO_ERROR` |
+| DELIVERY_FAILED with NULL reason | SQLSTATE `23514` | INSERT returned `NO_ERROR` |
+| Receipt invitation child index | Valid `(org_id,invitation_id)` index | No supporting index |
+| Receipt rollback after a preexisting outbox key | Preserve the previously owned key | Historical rollback removed the key |
+
+Positive and negative companion checks passed for all four valid receipt outcomes; wrong-org event/invitation/member links rejected `23503`; malformed emails/outcomes/reasons rejected `23514`; wrong-tenant write, absent tenant context, and application UPDATE/DELETE rejected `42501`. Real independent application connections deduplicated receipt replay to one persisted row.
+
+Cold prerequisite creation, sequential and real concurrent proof-executor apply-once, INCLUDE preservation, and alternate-key prerequisite reuse passed. Nine malformed canonical-key cases rejected `P0001` without ledger writes. The actual conflicting lock test produced `55P03`, left no index/ledger residue, then retried successfully. A nonunique canonical outbox key rejected `42830` atomically. The malformed existing receipt table was refused by postconditions without a success ledger row.
+
+Exact original receipt SQL replay rejected duplicate policy `42710`; guarded prerequisite rollback rejected `P0001` while retaining its key. Dependent-FK receipt rollback rejected `2BP01` and preserved the table/index transactionally. Invitation cascade removed only linked receipts; ordinary receipt rollback retained parent organizations/events and the shared invitation key. The twelve-statement `0965` fragment never gained a whole-migration ledger row.
+
+The runner reported `droppedCurrentRunDatabase:true`. A fresh independent IAM READ ONLY catalog query confirmed the exact proof database no longer existed. The same read confirmed production still had neither the receipt table nor the outbox organization/event index. No production schema, ledger, or business fixture was changed. The two-organization fixture establishes bounded correctness and lock behavior; it does not establish large-data performance or complete cold bootstrap.
 
 ## Baseline and proof scope
 
@@ -57,9 +79,9 @@ Full `0965` needs 44 relations and an inherited `gl_accounts` constraint; rollba
 
 ## Findings that must stay failed
 
-The runner collects failed checks and exits nonzero; successful cleanup does not turn them into passes. The historical NULL-reason checks, missing receipt invitation child index, duplicate equivalent invitation index after `1728`, and removal of a preexisting outbox key by receipt rollback are expected source-predicted failures pending actual execution.
+The runner collects failed checks and exits nonzero; successful cleanup does not turn them into passes. All five failures listed above were reproduced in real PostgreSQL and remain unresolved by this claim.
 
-Root approved future additive identities `ck_organization_setup_invitation_receipts_outcome_strict`, wrapping the historical four-branch predicate in `IS TRUE`, and `idx_organization_setup_invitation_receipts_org_invitation` on `(org_id,invitation_id)`. They are outside this claim. Historical `1728` remains immutable. Isolated INSERT/index RED precedes an independently claimed repair.
+Root approved future additive identities `ck_organization_setup_invitation_receipts_outcome_strict`, wrapping the historical four-branch predicate in `IS TRUE`, and `idx_organization_setup_invitation_receipts_org_invitation` on `(org_id,invitation_id)`. They are outside this claim. Historical `1728` remains immutable. Isolated INSERT/index RED is now recorded; repair requires its separate claim and review.
 
 ## Tracking
 
@@ -68,7 +90,8 @@ Root approved future additive identities `ck_organization_setup_invitation_recei
 - [x] Implement unique current-run target, durable identity guards, source seals, and truthful fragment boundaries.
 - [x] Pass 16 pure tests and scoped lint without database execution.
 - [x] Obtain independent source review and commit the exact claimed files.
-- [ ] Authorize and provision the exact named scratch database.
-- [ ] Execute PostgreSQL cases, record SQLSTATE/count evidence and actual cleanup outcome.
-- [ ] Reproduce NULL-reason and child-index RED; reserve additive repair separately.
+- [x] Authorize and provision the exact named scratch database.
+- [x] Execute PostgreSQL cases, record SQLSTATE/count evidence and actual cleanup outcome.
+- [x] Reproduce NULL-reason and child-index RED.
+- [ ] Reserve and verify additive repairs and upgrade/rollback ownership decisions separately.
 - [ ] Verify official migration runners, full chain, deployment, and browser activation separately.
