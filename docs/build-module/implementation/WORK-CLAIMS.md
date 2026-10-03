@@ -28,6 +28,14 @@ Migration gate handoff `BLD-MIGRATION-LOCAL-TIMEOUT-12` under BLD-030/035: `modu
 
 ## Active claims
 
+### BLD-PORTAL-MIGRATION-PROOF-17
+
+- Requirements: BLD-005, BLD-024, BLD-030, BLD-035. Owner: `scoped_activation_dispatch`; root coordinates independent review, database execution and evidence. Exact new paths: `backend/src/scripts/portal-migration-proof.mjs`, `backend/src/scripts/lib/portal-migration-proof-baseline.mjs`, `backend/src/scripts/lib/portal-migration-proof-cases.mjs`, and `backend/src/scripts/__tests__/portal-migration-proof.test.mjs`.
+- Existing-file assessment: the existing organization-setup proof target owns safe scratch provisioning, IAM role/OID/run-manifest fencing and zero-session cleanup, and will be reused unchanged. Its invitation-only cases/allowlist do not own portal schema transitions. Keep portal baseline construction and portal SQL behavioral cases in their two real domain seams; the entry point composes those with the existing target guard. No duplicate provisioning, SQL client or cleanup framework.
+- Excluded: migrations 1730/1731 and their journal/rollback files, existing migration-proof scripts/allowlists, auth/access services, runtime runner, production database and all application files. Pin the reviewed forward SQL hashes and journal identities; reject mismatches. Do not edit applied migrations.
+- Test first: unsafe target rejection, bounded unique scratch lifecycle, missing prerequisites, hash mismatch, official explicit-tag application, actual raw-SQL rerun versus ledger skip, binding/backfill/unique/RLS cases, failed-case rollback and bounded lock contention. Baseline fragments are expressly not full migration-chain proof. Never terminate unrelated sessions or reuse a preexisting probe database.
+- Handoff: focused script tests, exact lint/diff and read-only independent review before any database execution. Root alone may execute the guarded synthetic proof and record role, tenant, schema/data and cleanup observations. Real target application additionally needs fresh read-only preflight and controlled portal-writer quiescence; no application is authorized by this source claim. Full chain, producer/delivery/browser and deployment proof remain open.
+
 ### BLD-FEEDBUCKET-NOTICE-16
 
 - Requirements: BLD-009, BLD-014, BLD-025, BLD-035. Owner: `client_activation_design`; independent reviewer: `module_grants_resume` after its test-placement freeze. Root owns integration, runtime and evidence. The active notification service and runner claims are excluded.
