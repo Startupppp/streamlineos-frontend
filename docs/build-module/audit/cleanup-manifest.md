@@ -128,6 +128,18 @@ Reference changes: backend controller lifecycle injection and exact constructor 
 
 Validation: backend nine suites/140 tests and runner two suites/192 tests; frontend nine suites/76 tests; exact15/2/17-path ESLint/diff; root combined backend scoped TypeScript, frontend scoped TypeScript and both production TypeScript gates passed. Full backend test TypeScript failed at10GB heap exhaustion; full frontend spec TypeScript failed in six unrelated paths. No full-gate or release claim follows from this cleanup. Claim37's in-progress component relocation is recorded only after its separate freeze and review.
 
+## Shared notification action promotion — 2026-10-04
+
+Classification: superseded source location with all existing component/preset behavior migrated to the canonical shared owner. The former active file is relocated because Build and global notifications now share the same action presentation; no forwarding wrapper or duplicate component remains. This is the single source-path deletion authorized by claim37 at263ec7a57, and no research or evidence is deleted.
+
+| Deleted path | SHA-256 before deletion | Replacement and migrated content | Updated references | Reviewer | Validation |
+| --- | --- | --- | --- | --- | --- |
+| `frontend/features/notifications/notification-card-actions.tsx` | `38CDC70AE8F712626208F4FC13C04B614FBF2A772385D5590C718F0A5C7A133E` | [Shared action owner](../../../frontend/components/shared/notification-card-actions.tsx): retained global archive/pin/delete defaults and existing Snooze presets, plus optional Build triage | [NotificationCard](../../../frontend/features/notifications/notification-card.tsx), [detail drawer](../../../frontend/features/notifications/notification-detail-drawer.tsx), [Build Inbox](../../../frontend/features/build/inbox/inbox-page.tsx), [UI-KIT registry](../../../frontend/UI-KIT.md); each imports/registers the shared owner | client_activation_design preliminary promotion/provenance; scoped_activation_dispatch final20 matching-hash and precise standards/request delta review; coordinator gates | Existing focused suites including global compatibility; exact18 TS/TSX ESLint/diff; root scoped and production TypeScript pass. Full spec and matching browser gates remain separately reported. |
+
+Pre-deletion hash provenance: the physical Windows checkout is CRLF and matches the claim37 pre-move hash. The same preserved Git HEAD blob with LF hashes to `25ed3d4853c8795d48cf5a4cde5cc3185cffa89b77fea9c7e78fa99fecfe716b`; normalization to the repository checkout reproduces the physical hash exactly. This records byte formats rather than treating differing newline hashes as different findings.
+
+Reference validation: `rg -n 'notification-card-actions|NotificationCardActions|NotificationSnoozePresets' frontend --glob '*.{ts,tsx,md}'` finds only the new owner, its focused tests, the updated three importers and registry. The old source location is absent and no active import still targets it. The final source freeze accounts for all20 claimed paths, including19 present and the removed location. No generated contract, permission, query-key, API-client or schema owner is duplicated. Browser/mobile mutation, global drawer visual regression and deployed parity remain Current unverified; the deletion does not close the broad BT task.
+
 Verify all 39 retained counterparts exist, all 46 removed paths do not, source hashes or pre-deletion hashes are recorded, no inbound supported link points to a removed file, relative Markdown links resolve, and all 75 route contracts, 100 customer-value reasons, and requirement entries survive. See the validation report for actual check results.
 
 ## Delivery checklist

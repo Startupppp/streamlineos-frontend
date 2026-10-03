@@ -268,7 +268,51 @@ Exact independent artifact inventory versus preserved0da95 (source repair change
 | PATCH | `/notifications/{notificationId}/unsnooze` | Sole new authenticated universal operation; safe-int ID, optional key/strict empty body, canonical ACK/errors |
 
 
-UI37 initially passed212 focused tests but independent reviews found mobile loading/error hiding Back and inherited desktop Escape immediately reopening automatic selection. The three claimed navigation files were repaired through meaningful RED3, then22 suites/215 tests and exact lint/diff. Further standards review found new interactive static icons against FE-107 and accent-sensitive primary tab colors against the accepted neutral selected-tab behavior. Those bounded corrections are independently reviewed: neutral foreground/background tokens preserve selected tabs across accent themes; new interactive controls use installed canonical animated icons. A final Resolve-only repair passed14 focused tests, with the other19 claimed paths unchanged. Root scoped TypeScript then found two real integration errors: unsupported LoadingState compact and an options object passed to get where the API accepts an AbortSignal. Simply dropping expectedIdentity would weaken dispatch fencing; the author is adapting the existing request/response seam and real argument-shape coverage inside the same claim. Refreeze, independent delta review and scoped/production TypeScript remain pending. Matching browser/mobile and full approval detail acceptance remain open; source/test counts do not close the broad task.
+UI37 initially passed212 focused tests but independent reviews found mobile loading/error hiding Back and inherited desktop Escape immediately reopening automatic selection. The three claimed navigation files were repaired through meaningful RED3, then22 suites/215 tests and exact lint/diff. Further standards review found new interactive static icons against FE-107 and accent-sensitive primary tab colors against the accepted neutral selected-tab behavior. Those bounded corrections are independently reviewed: neutral foreground/background tokens preserve selected tabs across accent themes; new interactive controls use installed canonical animated icons. A final Resolve-only repair passed14 focused tests, with the other19 claimed paths unchanged. Root scoped TypeScript then found two real integration errors: unsupported LoadingState compact and an options object passed to get where the API accepts an AbortSignal. Simply dropping expectedIdentity would weaken dispatch fencing; the author is adapting the existing request/response seam and real argument-shape coverage inside the same claim. The final four-path repair now uses supported LoadingState list/rows3 and the existing request GET/native signal/expectedIdentity plus canonical parseApiResponse seam. Meaningful request-shape/cancellation/malformed-response RED3 preceded repair; author8 suites/82 tests and coordinator22 suites/216 tests pass. Exact18 TS/TSX lint/diff, all20 matching hashes, independent precise-delta review, scoped TypeScript and production TypeScript pass at frontend `71efa13b4`. Fresh full frontend spec TypeScript session18049 failed only in the same six unowned Calendar/Chat/Wiki/KB/Mail paths, with no claim37 diagnostic; the full gate is failed. Matching browser/mobile and full approval detail acceptance remain open; source/test counts do not close the broad task.
+
+### Build Inbox triage source handoff — 2026-10-04
+
+Current verified at source/test level: frontend `71efa13b4` commits exactly20 claim37 paths. The global NotificationCardActions is promoted into the shared layer with its global callbacks, Snooze presets and defaults retained; the [cleanup manifest](cleanup-manifest.md#shared-notification-action-promotion--2026-10-04) records the removed path, both byte-format hashes, migrated content, updated imports and independent review. New Build Active/Later/Done tabs use accent-independent neutral selected styling. Row actions are siblings of activation, and the selected preview has shared personal triage controls. Resolve archives the notice; these controls do not mutate linked tickets or decide approvals.
+
+Selected detail stores an ID and performs a new bounded Build-only read through the existing query owner, native cancellation, captured expectedIdentity and canonical response contract. Prior-owner or denied/missing content is redacted; 503 uses retry. Read ACK preserves a permitted preview, and triage dismisses only after a current-owner success. Mobile loading/error retains Back; explicit Escape does not reopen automatic selection. Focus/reconnect and the existing fallback policy remain authoritative; the nearest loaded Snooze expiry invalidates the list but does not prove unseen-record or durable expiry delivery.
+
+Focused current proof: coordinator22 suites/216 tests, author8 suites/82 tests for final request/parser repair, exact18 TS/TSX lint with zero warnings, tracked diff check, root scoped `tsc --noEmit -p .scratch/tsconfig-notification-triage-ui.json`, production `pnpm -C frontend type-check`, and independent20-path/precise-delta review all pass. All TS/TSX source/test paths respect the current300-line package limit; UI-KIT is an existing Markdown registry. Fresh `pnpm -C frontend type-check:specs` fails in six unowned paths (two Calendar tests, Chat message-input-format, Wiki kb-conversation-list, KB children error policy and Mail action cache); no claim37 error remains. Prior backend full test TypeScript OOM and full release size gates remain failed.
+
+Repeatable focused command from repository root (the exact22-suite stable run above):
+
+```powershell
+$buildInboxVerificationTests = @(
+  "features/build/inbox/inbox-page.test.tsx",
+  "features/build/inbox/inbox-list-type-filter.test.tsx",
+  "features/build/inbox/inbox-notification-item.test.tsx",
+  "features/build/inbox/use-inbox-url-state.test.ts",
+  "features/build/inbox/inbox-filter-bar.test.tsx",
+  "components/shared/notification-card-actions.test.tsx",
+  "features/build/inbox/inbox-triage.test.tsx",
+  "hooks/api/notifications-inbox-selection.test.ts",
+  "features/build/inbox/inbox-offline-and-chat-gap.test.tsx",
+  "features/build/inbox/inbox-list-denied.test.tsx",
+  "features/build/inbox/inbox-list-shortcut-help.test.tsx",
+  "features/build/inbox/inbox-keyboard-nav.test.ts",
+  "features/build/inbox/inbox-bulk-toolbar.test.tsx",
+  "features/notifications/notification-card-copy.test.ts",
+  "features/notifications/notification-bell.test.tsx",
+  "features/notifications/notification-bell-unified.test.tsx",
+  "features/notifications/unified-inbox/inbox-shell.test.tsx",
+  "features/notifications/unified-inbox/inbox-offline.test.tsx",
+  "hooks/api/notifications-inbox-unified-sync.test.ts",
+  "hooks/api/notifications-inbox-lifecycle.test.ts",
+  "hooks/api/notifications-mark-all-scope.test.ts",
+  "hooks/api/notifications-inbox-queries.test.ts"
+)
+pnpm -C frontend exec jest --runInBand --runTestsByPath @buildInboxVerificationTests
+```
+
+Current unverified: matching local desktop/mobile actions, physical cache deletion, unseen Snooze expiry, positive personal Member notification/unread transitions, full current authority/revocation races, immutable approval detail and deployment/operations. Read-only source inventory confirms both existing synthetic notification fixtures target only the acting owner and reject recipient overrides; ticket assignment requires project membership. Assigned approvals can support a no-project-reach notice only with the required approval permission, but their producer needs shared outbox dispatch disabled by this runner. Admin emit and cron dispatch are forbidden, while activation dispatch admits only the exact setup event. No unscoped dispatcher or arbitrary-recipient fixture is used as a shortcut. Existing Member/tenant denials and read target313 are bounded evidence, not a positive unread transition. These prerequisites need their own reviewed scope; no full BT stage or checkbox advances.
+
+### Selected-read Query ownership gate — 2026-10-04
+
+Current verified gate finding: after source37 commit71efa13b4 and bounded tests/type/review, coordinator rechecked FE-16. Official `pnpm -C frontend check:effect-fetches:self-test` passes25 self-tests; the real `check:effect-fetches` fails exactly `hooks/api/notifications-inbox.ts:51` for an API call in a fetch effect. This is a package-owned standards defect, not an unrelated baseline failure. Prior216 tests, scoped/production TypeScript and precise-delta reviews remain valid for the paths/scopes they tested, and they did not verify this gate. Claim39 reserves the existing query/factory source and three existing tests with disjoint ownership. It requires meaningful RED and Query-owned state/freshness/cancellation with actual identity/response contracts, compatible global/list data shapes and no duplicate helper/key/API owner. The standards gate, full task and browser/deployment acceptance remain open; no checkbox advances.
 
 ## Testing Decisions
 
