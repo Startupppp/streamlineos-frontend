@@ -58,6 +58,7 @@ interface MemberPickerBaseProps {
   moduleKey?: string;
   /** Module mode only: exclude users already assigned to the module. Defaults to true. */
   excludeAssigned?: boolean;
+  includeRevoked?: boolean;
   /** Gates candidate fetching, e.g. only while a parent dialog/sheet is open. Defaults to true. */
   enabled?: boolean;
   placeholder?: string;
@@ -118,6 +119,7 @@ export function MemberPicker(props: MemberPickerProps) {
     projectId,
     moduleKey,
     excludeAssigned = true,
+    includeRevoked = false,
     enabled = true,
     placeholder = "Select member…",
     disabled,
@@ -142,6 +144,7 @@ export function MemberPicker(props: MemberPickerProps) {
     projectId,
     moduleKey,
     excludeAssigned,
+    includeRevoked,
     directoryEnabled,
     search,
     selectedIds,
@@ -283,6 +286,7 @@ export function MemberPicker(props: MemberPickerProps) {
         <>
           <MemberAvatar member={selected} />
           <TruncatedText text={getUserDisplayName(selected)} />
+          {selected.moduleAccessRevoked ? <Badge variant="destructive">Revoked</Badge> : null}
         </>
       ) : (
         <>

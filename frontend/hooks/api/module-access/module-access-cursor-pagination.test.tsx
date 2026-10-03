@@ -114,6 +114,44 @@ describe("module access rosters paginate by cursor, never by offset", () => {
     const urls = urlsFor("/member-candidates");
     expect(urls).toHaveLength(1);
     expect(urls[0]).toContain("pageSize=50");
+    expect(urls[0]).not.toContain("includeRevoked");
     expect(urls[0]).not.toContain("page=1");
+  });
+
+  it("opts into revoked candidates only for an explicit access-management query", async () => {
+    const client = makeClient([`${MODULE}:access:manage`]);
+    const { useModuleMemberCandidates } = await import("./members");
+    const { result } = renderHook(
+      () => useModuleMemberCandidates(MODULE, 50, "", { includeRevoked: true }),
+      { wrapper: makeWrapper(client) },
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(urlsFor("/member-candidates")[0]).toContain("includeRevoked=true");
+  });
+
+  it("does not reuse revoked management candidates when returning to an ordinary picker", async () => {
+    const client = makeClient([`${MODULE}:access:manage`]);
+    const revokedPage = {
+      data: [{ userId: "u-revoked", displayName: "Revoked User", email: "revoked@example.com", avatarUrl: null, moduleAccessRevoked: true }],
+      hasMore: false,
+      nextCursor: null,
+    };
+    apiClient.get.mockImplementation((url: string) =>
+      url.includes("includeRevoked=true")
+        ? Promise.resolve(revokedPage)
+        : new Promise<unknown>(() => {}),
+    );
+    const { useModuleMemberCandidates } = await import("./members");
+    const { result, rerender } = renderHook(
+      ({ includeRevoked }) => useModuleMemberCandidates(MODULE, 50, "", { includeRevoked }),
+      { wrapper: makeWrapper(client), initialProps: { includeRevoked: true } },
+    );
+    await waitFor(() => expect(result.current.data).toEqual(revokedPage));
+
+    rerender({ includeRevoked: false });
+
+    expect(result.current.data).toBeUndefined();
+    expect(result.current.isPlaceholderData).toBe(false);
   });
 });

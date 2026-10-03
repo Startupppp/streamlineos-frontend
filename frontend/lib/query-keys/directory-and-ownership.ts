@@ -102,6 +102,7 @@ export const directoryAndOwnershipQueryKeys = {
         search: string;
         userId?: string;
         excludeAssigned: boolean;
+        includeRevoked: boolean;
       },
     ) =>
       [...base, "moduleAccess", moduleKey, "member-candidates", params] as const,

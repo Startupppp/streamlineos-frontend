@@ -128,6 +128,7 @@ export const moduleMemberCandidatePageContract: ResponseContract<
     displayName: z.string(),
     email: z.string(),
     avatarUrl: z.string().nullable(),
+    moduleAccessRevoked: z.boolean(),
   }),
 );
 

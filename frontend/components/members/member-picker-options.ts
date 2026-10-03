@@ -15,6 +15,7 @@ export interface MemberOption extends NamedUser {
   image: string | null;
   /** A second line under the name in the option list (e.g. designation · state). */
   description?: string | null;
+  moduleAccessRevoked?: boolean;
 }
 
 export function useMemberOptions(
@@ -22,6 +23,7 @@ export function useMemberOptions(
   projectId: number | undefined,
   moduleKey: string | undefined,
   excludeAssigned: boolean,
+  includeRevoked: boolean,
   enabled: boolean,
   search: string,
   selectedIds: string[],
@@ -62,7 +64,7 @@ export function useMemberOptions(
     moduleKey ?? "",
     50,
     debouncedSearch,
-    { enabled: useModuleDirectory, userId: selectedIds[0], excludeAssigned },
+    { enabled: useModuleDirectory, userId: selectedIds[0], excludeAssigned, includeRevoked },
   );
   const moduleOptions = useMemo(
     () =>
@@ -73,6 +75,8 @@ export function useMemberOptions(
         lastName: null,
         email: c.email,
         image: c.avatarUrl ?? null,
+        moduleAccessRevoked: c.moduleAccessRevoked,
+        description: c.moduleAccessRevoked ? "Access revoked — adding restores module access" : null,
       })),
     [moduleData?.data],
   );
