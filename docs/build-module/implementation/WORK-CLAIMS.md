@@ -65,6 +65,12 @@ This file is the coordination ledger for active and completed implementation pac
 
 ## Completed source slices
 
+### Planning date validation ownership
+
+| Package | Slice | Owner paths | Boundary |
+|---|---|---|---|
+| `ARCH-11-PLANNING-GRAPH` | BLD-CALENDAR-DATE-VALIDATION-01 | The coordinator owns `backend/src/common/validation/calendar-date.schema.ts`, its existing focused test, `backend/src/modules/build/execution/dto/iterations.schemas.ts`, and a new adjacent `iterations-calendar-validation.spec.ts`. | Real synthetic Cycle creation with `2026-02-30` returned 500 instead of a validation error. Validate actual Gregorian dates and PostgreSQL-compatible positive years before a query; reuse the shared date schema for Cycle, Epic, and Workstream date fields, preserving optional/empty/clear semantics and existing range validation. Validate Cycle from/to queries with the same contract. Existing shared consumers are Build Release and Checklist date fields. Instant grammar, permission/catalog/migration, frontend, generic pagination, and unrelated DTOs remain separately owned. Meaningful invalid/leap/boundary/clear/range tests and independent review precede exact-path commit; local HTTP retest requires a reviewed runner restart, and browser/deployment acceptance remains open. No new code comments. |
+
 | Package | Requirement IDs | Agent/task | Final revision | Outcome | Evidence/handoff | Compatibility or follow-up |
 |---|---|---|---|---|---|---|
 | `ARCH-06-WIRE-CONTRACTS` | BLD-035 | coordinator | backend `f0f79449a`; frontend `44b514492` | Current verified: generated source parity | 4,104 operations; 4,089 Zod responses; 309 frontend hook operations; 34 contract self-tests | Runtime HTTP, browser, and deployment parity remain Current unverified. |
