@@ -172,9 +172,7 @@ export function useAttendanceTimer() {
   }, [now, statusData?.todayLog, localExtraBreakMs, isOnBreak, breakStart]);
 
   const handleCheckIn = useCallback(() => {
-    checkInMutation.mutate({
-      location: undefined,
-    });
+    checkInMutation.mutate({});
   }, [checkInMutation]);
 
   const handleCheckOut = useCallback(() => {

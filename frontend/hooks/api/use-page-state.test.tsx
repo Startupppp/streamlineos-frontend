@@ -16,8 +16,12 @@ const { useEntitlements } = jest.requireMock("@/hooks/api/entitlements") as {
   useEntitlements: jest.Mock;
 };
 
-function mockAccess(snapshot: { data: unknown; isLoading?: boolean }): void {
-  useAccess.mockReturnValue({ data: snapshot.data, isLoading: snapshot.isLoading ?? false });
+function mockAccess(snapshot: { data: unknown; isLoading?: boolean; isEnabled?: boolean }): void {
+  useAccess.mockReturnValue({
+    data: snapshot.data,
+    isLoading: snapshot.isLoading ?? false,
+    isEnabled: snapshot.isEnabled,
+  });
 }
 
 function mockEntitlements(snapshot: { data: unknown; isError?: boolean }): void {
@@ -60,6 +64,20 @@ describe("usePageState", () => {
       usePageState({ permission: "hr:employees:view", isLoading: false, isError: false }),
     );
     expect(result.current).toEqual({ kind: "loading" });
+  });
+
+  it("a disabled access read with no session organization settles to denied, not loading", () => {
+    mockAccess({ data: undefined, isLoading: false, isEnabled: false });
+    const { result } = renderHook(() =>
+      usePageState({ permission: "hr:employees:view", module: "hr", isLoading: false, isError: false }),
+    );
+    expect(result.current).toEqual({ kind: "denied", permission: "hr:employees:view" });
+  });
+
+  it("a page with no permission or module is unaffected by a disabled access read", () => {
+    mockAccess({ data: undefined, isLoading: false, isEnabled: false });
+    const { result } = renderHook(() => usePageState({ isLoading: false, isError: false }));
+    expect(result.current).toEqual({ kind: "ready" });
   });
 
   it("a granted permission resolves to the underlying data state, not to denied", () => {

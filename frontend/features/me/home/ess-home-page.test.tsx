@@ -106,7 +106,7 @@ describe("EssHomePage — the employee's /me home (PAGE_DIRECTION §12)", () => 
     const button = screen.getByRole("button", { name: "Clock in" });
     expect(button.className).toContain("min-h-11");
     fireEvent.click(button);
-    expect(mockCheckIn).toHaveBeenCalledWith({ location: undefined });
+    expect(mockCheckIn).toHaveBeenCalledWith({});
   });
 
   it("offers a regularisation path when the punch fails instead of swallowing it", () => {

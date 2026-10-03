@@ -14,6 +14,7 @@ export function Section6({ form }: SectionProps) {
       <div className="grid gap-4">
         <Field
           label="Overview"
+          name="overview"
           required
           hint={`${JOB_DESCRIPTION_LIMITS.overview.minWords}–${JOB_DESCRIPTION_LIMITS.overview.maxWords} words`}
           error={errors.overview?.message}
@@ -28,6 +29,7 @@ export function Section6({ form }: SectionProps) {
 
         <Field
           label="Responsibilities"
+          name="responsibilities"
           required
           hint={`${JOB_DESCRIPTION_LIMITS.responsibilities.minWords}–${JOB_DESCRIPTION_LIMITS.responsibilities.maxWords} words`}
           error={errors.responsibilities?.message}
@@ -42,6 +44,7 @@ export function Section6({ form }: SectionProps) {
 
         <Field
           label="Requirements"
+          name="jobRequirements"
           required
           hint={`${JOB_DESCRIPTION_LIMITS.jobRequirements.minWords}–${JOB_DESCRIPTION_LIMITS.jobRequirements.maxWords} words`}
           error={errors.jobRequirements?.message}

@@ -64,7 +64,7 @@ export function EssClockRow() {
   const checkOut = useHrCheckOut({ onError: handlePunchError, onSuccess: handlePunchDone });
 
   const handleClockIn = useCallback(() => {
-    checkIn.mutate({ location: undefined });
+    checkIn.mutate({});
   }, [checkIn]);
   const handleClockOut = useCallback(() => {
     checkOut.mutate();
@@ -93,6 +93,9 @@ export function EssClockRow() {
           )}
         </p>
         <LeaveBalances />
+        {data && !clockedIn ? (
+          <p className="text-micro text-muted-foreground">Your location is recorded when you clock in.</p>
+        ) : null}
         {punchFailed ? (
           <Link href="/me/attendance" className="text-dense font-medium text-primary">
             Punch did not go through — request a regularisation

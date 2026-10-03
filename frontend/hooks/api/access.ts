@@ -101,11 +101,11 @@ export const useAccess = (
 };
 
 export function usePermissionGate(permission: PermissionKey): PermissionGate {
-  const { data, isError } = useAccess();
+  const { data, isError, isEnabled } = useAccess();
   return permissionGate(
     permission,
     grantsPermission(data, permission),
-    data !== undefined,
+    data !== undefined || isEnabled === false,
     isError,
   );
 }
@@ -127,9 +127,9 @@ export function useCan(permissionKey: PermissionKey): boolean {
  * Ticket 26 is the other half of the same conflation, one layer down.
  */
 export function useCanState(permissionKey: PermissionKey): AccessState {
-  const { data, isLoading } = useAccess();
+  const { data, isLoading, isEnabled } = useAccess();
   return accessState({
-    isLoading: isLoading || !data,
+    isLoading: isEnabled !== false && (isLoading || !data),
     granted: !!data && (data.isOrgOwner || permissionKey in data.scopes),
   });
 }

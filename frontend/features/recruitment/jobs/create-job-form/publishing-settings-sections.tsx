@@ -42,26 +42,9 @@ export function Section9({ form }: SectionProps) {
   const { control, formState: { errors } } = form;
   return (
     <div>
-      <SectionTitle title="Job Status & Visibility" subtitle="Control the posting's reach and status" icon={Eye} />
+      <SectionTitle title="Visibility" subtitle="Who can see this posting and until when" icon={Eye} />
       <div className="grid gap-4">
-        <Field label="Status" required error={errors.status?.message}>
-          <Controller
-            name="status"
-            control={control}
-            render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                  <SelectItem value="DRAFT">Draft</SelectItem>
-                  <SelectItem value="OPEN">Published</SelectItem>
-                  <SelectItem value="CLOSED">Closed</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
-          />
-        </Field>
-
-        <Field label="Visibility" required error={errors.visibility?.message}>
+        <Field label="Visibility" error={errors.visibility?.message}>
           <Controller
             name="visibility"
             control={control}
@@ -107,7 +90,7 @@ export function Section10({ form }: SectionProps) {
       <div className="grid gap-5">
         <div className="space-y-2">
           <Label className="text-xs font-semibold text-foreground/80">
-            Priority<span className="text-status-danger-ink ml-0.5">*</span>
+            Priority
           </Label>
           <Controller
             name="priority"

@@ -60,10 +60,9 @@ export function JobPostingPreview({ control, departments }: JobPostingPreviewPro
             lines={2}
             className="text-lg font-semibold text-foreground leading-snug"
           />
-          <TruncatedText
-            text={department?.name ?? "Department not set"}
-            className="text-sm text-muted-foreground mt-0.5"
-          />
+          {department && (
+            <TruncatedText text={department.name} className="text-sm text-muted-foreground mt-0.5" />
+          )}
         </div>
 
         <div className="flex flex-wrap gap-2">

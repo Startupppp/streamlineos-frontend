@@ -5,6 +5,9 @@ interface MockQueueState {
   wfhRows: unknown[];
   regularizationRows: unknown[];
   inboxRows: unknown[];
+  expenseRows: unknown[];
+  expenseError: boolean;
+  updateExpenseStatus: jest.Mock;
   directory: unknown[];
   cutoff: { title: string; date: string } | null;
   granted: Set<string>;
@@ -21,6 +24,9 @@ export const mockQueueState: MockQueueState = {
   wfhRows: [],
   regularizationRows: [],
   inboxRows: [],
+  expenseRows: [],
+  expenseError: false,
+  updateExpenseStatus: jest.fn(() => Promise.resolve({ success: true })),
   directory: [],
   cutoff: null,
   granted: new Set<string>(),
@@ -41,6 +47,7 @@ export const ALL_QUEUE_PERMISSIONS = [
   "hr:attendance:manage",
   "hr:workflows:approve",
   "hr:workflows:view",
+  "hr:expenses:approve",
 ];
 
 export function resetMockQueueState(): void {
@@ -49,6 +56,8 @@ export function resetMockQueueState(): void {
   mockQueueState.wfhRows = [];
   mockQueueState.regularizationRows = [];
   mockQueueState.inboxRows = [];
+  mockQueueState.expenseRows = [];
+  mockQueueState.expenseError = false;
   mockQueueState.cutoff = null;
   mockQueueState.inboxDenied = false;
   mockQueueState.granted = new Set(ALL_QUEUE_PERMISSIONS);
@@ -116,6 +125,40 @@ export const mockRegularizationRow = {
   status: "PENDING",
   createdAt: "2026-10-02T13:00:00.000Z",
 };
+
+export const mockExpenseRow = {
+  id: 12,
+  userId: "usr-ben",
+  category: "Travel",
+  amount: "1250.00",
+  currency: "INR",
+  description: "Client visit cab",
+  expenseDate: "2026-09-28",
+  status: "PENDING",
+  createdAt: "2026-09-29T09:00:00.000Z",
+  user: {
+    id: "usr-ben",
+    name: "Ben Rao",
+    firstName: "Ben",
+    lastName: "Rao",
+    email: "ben@example.test",
+    image: null,
+  },
+};
+
+export function mockExpensesModule() {
+  return {
+    useExpensePageData: () => ({
+      data: mockQueueState.expenseError
+        ? undefined
+        : { pendingExpenses: mockQueueState.expenseRows },
+      isLoading: false,
+      isError: mockQueueState.expenseError,
+      refetch: jest.fn(),
+    }),
+    useUpdateExpenseStatus: () => ({ mutateAsync: mockQueueState.updateExpenseStatus }),
+  };
+}
 
 export function mockLeavePage(rows: unknown[]) {
   return [{ data: rows, pageInfo: { limit: 50, hasMore: false, nextCursor: null } }];

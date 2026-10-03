@@ -60,6 +60,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useModuleEnabled } from "@/hooks/api/access";
 import type { EssSectionNavItem } from "@/features/payroll/ess/components/ess-section-nav";
+import { PayNotSetUpNotice } from "@/features/payroll/me/pay-not-set-up-notice";
 
 const TAB_PANEL_CLASS = cn(
   TABS_CONTENT_PAGE_BODY_CLASS,
@@ -108,6 +109,7 @@ export function MyPayrollPageContent() {
   const [fnfDownloading, setFnfDownloading] = useState(false);
 
   const toggles = overview?.toggles;
+  const payNotSetUp = overview?.payStatus === "not-set-up";
   const { data: taxData } = useEssTaxDeclaration({
     enabled: !!toggles?.essAllowTaxDeclarations,
   });
@@ -215,6 +217,9 @@ export function MyPayrollPageContent() {
         filtersClassName="flex-col items-stretch gap-3 overflow-visible pb-3 [&>*]:w-full"
         filters={
           <>
+            {payNotSetUp ? (
+              <PayNotSetUpNotice />
+            ) : (
             <StatCardGrid cols={activeLoanBalance > 0 ? 4 : 3} stackOnMobile>
               <StatCard
                 label="Net Pay Last Month"
@@ -270,6 +275,7 @@ export function MyPayrollPageContent() {
                 hint="Awaiting approval"
               />
             </StatCardGrid>
+            )}
 
             {/*
               The tab strip wraps onto as many rows as it needs, at every width,

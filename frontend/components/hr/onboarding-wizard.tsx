@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useRef, type KeyboardEvent } from "react";
+import { useState, useCallback, useRef, type KeyboardEvent } from "react";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useForm, type FieldPath, type DefaultValues } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -38,21 +38,15 @@ type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
 const STEPS = [
   { id: 1, label: "Personal" },
   { id: 2, label: "Job Details" },
-  { id: 3, label: "Skills & Pay" },
-  { id: 4, label: "Banking" },
-  { id: 5, label: "Review" },
+  { id: 3, label: "Pay setup (optional)" },
+  { id: 4, label: "Review" },
 ];
 
-// Exported so the Skills & Pay step's test can prove the gate actually covers
-// the fields that step marks required (V-135).
 export const STEP_FIELDS: Record<number, FieldPath<FormValues>[]> = {
   1: ["firstName", "lastName", "email"],
   2: ["designation", "departmentId", "locationId", "workerType", "reportingManagerUserId", "secondaryManagers", "topLevelRole", "topLevelRoleReason", "role", "joiningDate"],
-  3: ["taxId", "monthlySalary"],
-  4: [],
+  3: ["taxId", "monthlySalary", "bankDetails"],
 };
-
-const COMMON_DEPARTMENTS = ["HR", "Sales", "Customer Support", "Engineering", "Design", "Video Editing"];
 
 export function OnboardingWizard() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -63,15 +57,6 @@ export function OnboardingWizard() {
   const { data: departments } = useOnboardingTemplateDepartments();
   const { data: locations } = useOrgLocations({ status: "ACTIVE" });
   const onboardEmployee = useOnboardEmployee();
-
-  const allDepartmentOptions = useMemo(() => {
-    const dbNames = new Set(departments?.map((d) => d.name.toLowerCase()) ?? []);
-    const real = (departments ?? []).map((d) => ({ ...d, isCommon: false }));
-    const extras = COMMON_DEPARTMENTS
-      .filter((name) => !dbNames.has(name.toLowerCase()))
-      .map((name, i) => ({ id: `common-${i + 1}`, name, isCommon: true }));
-    return [...real, ...extras];
-  }, [departments]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(onboardEmployeeInputSchema),
@@ -227,9 +212,19 @@ export function OnboardingWizard() {
                 locations={locations?.data ?? []}
               />
             )}
-            {currentStep === 3 && <StepSkillsPay form={form} />}
-            {currentStep === 4 && <StepBanking form={form} />}
-            {currentStep === 5 && <StepReview form={form} allDepartmentOptions={allDepartmentOptions} locations={locations?.data ?? []} />}
+            {currentStep === 3 && (
+              <div className="space-y-6">
+                <p className="text-sm text-muted-foreground">
+                  Needed before this person&apos;s first payroll run. Not required to add them.
+                </p>
+                <StepSkillsPay form={form} />
+                <div className="pt-4 border-t border-border">
+                  <h3 className="text-base font-semibold mb-4">Bank details</h3>
+                  <StepBanking form={form} />
+                </div>
+              </div>
+            )}
+            {currentStep === 4 && <StepReview form={form} departments={departments ?? []} locations={locations?.data ?? []} />}
           </div>
 
           <div

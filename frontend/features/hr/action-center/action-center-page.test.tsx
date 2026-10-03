@@ -14,6 +14,8 @@ import {
   mockSonnerModule,
   mockWfhRow,
   mockEmployeeListModule,
+  mockExpenseRow,
+  mockExpensesModule,
   mockWorkflowsModule,
   resetMockQueueState,
 } from "./queue-test-fixtures";
@@ -28,6 +30,7 @@ jest.mock("@/hooks/api/hr/attendance-regularization-queue", () =>
 );
 jest.mock("@/hooks/api/hr/hr-workflows", () => mockWorkflowsModule());
 jest.mock("@/hooks/api/hr/employee-list", () => mockEmployeeListModule());
+jest.mock("@/hooks/api/hr/expenses", () => mockExpensesModule());
 jest.mock("@/hooks/api/payroll/payroll-cutoff", () => mockCutoffModule());
 jest.mock("@/components/ui/page-wrapper", () => mockPageWrapperModule());
 jest.mock("sonner", () => mockSonnerModule());
@@ -103,6 +106,37 @@ describe("HR Action Center — one mixed queue", () => {
     expect(screen.getByText("Expense Reimbursement")).toBeInTheDocument();
     expect(screen.queryByText(/4,?500/)).not.toBeInTheDocument();
     expect(screen.queryByText(/INR/)).not.toBeInTheDocument();
+  });
+});
+
+describe("HR Action Center — expense claims", () => {
+  it("lists a pending expense claim with its amount and an Expense filter", () => {
+    mockQueueState.expenseRows = [mockExpenseRow];
+
+    render(<HrActionCenterPage />);
+
+    expect(screen.getByText("Expense claim")).toBeInTheDocument();
+    expect(screen.getByText(/Travel/)).toBeInTheDocument();
+    expect(screen.getAllByText("Expense").length).toBeGreaterThan(0);
+  });
+
+  it("keeps the other kinds and flags only expenses when the expense read fails", () => {
+    mockQueueState.leavePages = mockLeavePage([mockLeaveRow]);
+    mockQueueState.expenseError = true;
+
+    render(<HrActionCenterPage />);
+
+    expect(screen.getByText("Casual Leave")).toBeInTheDocument();
+    expect(screen.getByText(/Expense claims could not be loaded/)).toBeInTheDocument();
+  });
+
+  it("names the expense permission when the role cannot approve claims", () => {
+    mockQueueState.granted.delete("hr:expenses:approve");
+    mockQueueState.leavePages = mockLeavePage([mockLeaveRow]);
+
+    render(<HrActionCenterPage />);
+
+    expect(screen.getByText(/hr:expenses:approve/)).toBeInTheDocument();
   });
 });
 

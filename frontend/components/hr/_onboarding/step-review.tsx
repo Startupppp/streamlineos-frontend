@@ -4,7 +4,7 @@ import { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 import { onboardEmployeeInputSchema } from "../../../lib/validation/hr";
 import { format } from "date-fns";
-import { Check, Lightbulb } from "lucide-react";
+import { Check } from "lucide-react";
 import { formatWorkerTypeLabel } from "@/lib/constants/hr-worker-types";
 
 type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
@@ -16,12 +16,12 @@ interface Department {
 
 interface StepReviewProps {
   form: UseFormReturn<FormValues>;
-  allDepartmentOptions: (Department & { isCommon?: boolean })[];
+  departments: Department[];
   /** BUG-HRMS-006: named here so the review shows the office, not its uuid (FE-85). */
   locations: Array<{ id: string; name: string }>;
 }
 
-export function StepReview({ form, allDepartmentOptions, locations }: StepReviewProps) {
+export function StepReview({ form, departments, locations }: StepReviewProps) {
   const { getValues } = form;
   const topLevelRole = getValues("topLevelRole") === true;
   const manager = getValues("reportingManagerUserId") ? getValues("reportingManagerRef") : null;
@@ -50,7 +50,7 @@ export function StepReview({ form, allDepartmentOptions, locations }: StepReview
           <div><span className="text-muted-foreground">Full Name:</span> <span className="font-medium">{getValues("firstName")} {getValues("lastName")}</span></div>
           <div><span className="text-muted-foreground">Email:</span> <span className="font-medium">{getValues("email")}</span></div>
           <div><span className="text-muted-foreground">Role:</span> <span className="font-medium">{getValues("designation")}</span></div>
-          <div><span className="text-muted-foreground">Department:</span> <span className="font-medium">{allDepartmentOptions?.find(d => d.id === getValues("departmentId"))?.name}</span></div>
+          <div><span className="text-muted-foreground">Department:</span> <span className="font-medium">{departments.find((d) => d.id === getValues("departmentId"))?.name ?? "Not set"}</span></div>
           <div><span className="text-muted-foreground">Reports to:</span> <span className="font-medium">{reportsTo}</span></div>
           {additional.length > 0 ? (
             <div><span className="text-muted-foreground">Additional managers:</span> <span className="font-medium">{additional.join(", ")}</span></div>
@@ -61,10 +61,11 @@ export function StepReview({ form, allDepartmentOptions, locations }: StepReview
         </div>
       </div>
 
-      <div className="bg-status-warning-surface border border-status-warning-rule p-4 rounded-lg flex gap-3 text-sm text-status-warning-ink">
-        <Lightbulb className="w-5 h-5 shrink-0 mt-0.5" />
-        <p>By clicking submit, the employee account will be created, and they will be added to the onboarding workflow automatically.</p>
-      </div>
+      <ul aria-label="What happens when you submit" className="rounded-lg border p-4 space-y-1 text-sm text-muted-foreground">
+        <li><span className="font-medium text-foreground">Added:</span> they appear in Directory and get an invite.</li>
+        <li><span className="font-medium text-foreground">Active employee:</span> from their joining date.</li>
+        <li><span className="font-medium text-foreground">Payroll:</span> they can be paid once a salary is assigned in Payroll → Employees.</li>
+      </ul>
     </div>
   );
 }

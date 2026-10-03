@@ -9,6 +9,7 @@ const essActionItemContract = z.object({
 
 export const essOverviewContract = z.object({
   toggles: z.record(z.string(), z.boolean()),
+  payStatus: z.enum(["not-set-up", "awaiting-first-payslip", "paid"]),
   capabilities: z.object({
     mode: z.literal("employee_self_service"),
     honestyNote: z.string(),

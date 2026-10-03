@@ -697,10 +697,6 @@
       "as": 1,
       "nonNull": 0
     },
-    "features/recruitment/jobs/create-job-form/index.tsx": {
-      "as": 3,
-      "nonNull": 0
-    },
     "features/recruitment/jobs/create-job-form/job-posting-preview.tsx": {
       "as": 1,
       "nonNull": 0
