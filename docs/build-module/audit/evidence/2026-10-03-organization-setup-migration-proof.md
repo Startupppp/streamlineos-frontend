@@ -93,7 +93,7 @@ Root approved future additive identities `ck_organization_setup_invitation_recei
 - [x] Authorize and provision the exact named scratch database.
 - [x] Execute PostgreSQL cases, record SQLSTATE/count evidence and actual cleanup outcome.
 - [x] Reproduce NULL-reason and child-index RED.
-- [ ] Reserve and verify additive repairs and upgrade/rollback ownership decisions separately.
+- [x] Reserve and verify additive repairs and upgrade/rollback ownership decisions separately in the 1729 phase below; historical failures remain recorded.
 - [ ] Verify official migration runners, full chain, deployment, and browser activation separately.
 
 ## Delivery checklist
@@ -132,7 +132,7 @@ Root and the independent migration reviewer approved backend commit `6ede5284fd0
 | Lock behavior and retry | 4 / 4 | Actual migration outbox lock permits an ordinary producer INSERT; conflicting receipt write lock returns `55P03`, leaves no ledger row, and succeeds after release. |
 | **Total** | **59 / 59** | No failed additive checks were suppressed or converted into passes. |
 
-All three upgrade observations report `receiptUsesRetained=true` and `receiptUsesCanonical=false`. The canonical-bound receipt FK drop/re-add branch was not exercised and remains **Current unverified**. The exact catalog expression required by the runtime readiness check passed in PostgreSQL; invoking the actual runtime readiness service remains a separate gate. The down proof covers a chain starting with `1729.down`; historical `1728.down` itself is unchanged and its unsafe direct shared-key drop remains part of the historical RED evidence.
+All three upgrade observations report `receiptUsesRetained=true` and `receiptUsesCanonical=false`. The canonical-bound receipt FK drop/re-add branch was not exercised by this 59-check run and was **Current unverified** at that point; the separate rebinding phase below records its later proof. The exact catalog expression required by the runtime readiness check passed in PostgreSQL; invoking the actual runtime readiness service remains a separate gate. The down proof covers a chain starting with `1729.down`; historical `1728.down` itself is unchanged and its unsafe direct shared-key drop remains part of the historical RED evidence.
 
 The runner reported `droppedCurrentRunDatabase=true`. A fresh independent IAM-admin transaction using `SET TRANSACTION READ ONLY` then reported `proof_database_exists=false`, `production_receipt_table_exists=false`, and `production_event_key_exists=false`. The scratch database is gone; production receipt/outbox-key catalog absence is unchanged. No production schema, migration ledger, business data, role definition, or global worker state was changed by this run. No full-chain, official-runner execution, application runtime, deployment, or browser success is inferred.
 
@@ -148,5 +148,47 @@ The runner reported `droppedCurrentRunDatabase=true`. A fresh independent IAM-ad
 - [x] Finish root and independent migration source review and commit exact owned paths.
 - [x] Authorize one fresh named scratch database and execute the additive phase.
 - [x] Record actual constraint deparse, catalog/FK OID preservation, observed branch coverage, concurrency, lock behavior, SQLSTATE failures, retry, and guarded cleanup.
-- [ ] Exercise the currently unobserved canonical-bound receipt FK rebinding branch using an independently reviewed synthetic fixture.
+- [x] Exercise the previously unobserved canonical-bound receipt FK rebinding branch using the independently reviewed synthetic fixture below.
 - [ ] Verify both official migration runners, full-chain replay, production application, runtime readiness, and browser activation separately.
+
+## Canonical receipt FK rebinding phase — reviewed source and isolated PostgreSQL proof
+
+Status: **Current verified** for the pure source gates and isolated PostgreSQL branch checks below. Claim extension `01d98c73f` reserves a separate `rebinding` phase. Historical 57/62 and additive 59/59 results above remain unchanged. Immutable migration 1729 and all journal identities remain unchanged. Official-runner execution, full-chain replay, production application, runtime readiness, and browser activation remain **Current unverified**.
+
+The fixture prepares the synthetic legacy invitation key, its validated `0965` invitation-events FK, the canonical duplicate from 1728, and a queued receipt. It rebuilds only `public.synthetic_legacy_invitation_key` using a fixed, argument-free `REINDEX INDEX CONCURRENTLY` command. A dedicated IAM admin connection checks the current physical database, owner, executing role, restricted application role, current process and durable manifest, exact index structure, canonical key compatibility, and the validated historical FK. Startup settings bound statement time to 30 seconds and lock wait to five seconds. The connection closes in `finally`; the runner exposes no arbitrary SQL/name, role mutation, or session termination through this command.
+
+PostgreSQL 18 documents that concurrent reindexing replaces the index and redirects its constraints, and requires execution outside a transaction block. The fixture therefore uses a dedicated autocommit connection. [PostgreSQL 18 REINDEX](https://www.postgresql.org/docs/18/sql-reindex.html)
+
+The inspected PostgreSQL `REL_18_STABLE` source selects a suitable referenced index in `transformFkeyCheckAttrs`, using the list returned by `RelationGetIndexList`, which is ordered by OID. This supports the fixture strategy as an **inference**, rather than a binding guarantee. Migration provenance still comes only from the validated historical FK's `conindid`. [Foreign-key selection source](https://raw.githubusercontent.com/postgres/postgres/REL_18_STABLE/src/backend/commands/tablecmds.c), [Index-list source](https://raw.githubusercontent.com/postgres/postgres/REL_18_STABLE/src/backend/utils/cache/relcache.c)
+
+After reindexing, the fixture verifies that the legacy key has a replacement OID while the canonical duplicate and historical FK identity are unchanged. It recreates only the exact synthetic receipt invitation FK and validates it. The actual pre-migration catalog must show that the receipt FK points to the canonical duplicate while the historical FK points to the replacement retained key. Otherwise `PROOF_CANONICAL_RECEIPT_BRANCH_NOT_PRODUCED` stops execution before any branch-coverage claim or 1729 application. A branch observation is emitted only after that assertion succeeds.
+
+The six PostgreSQL checks cover immutable 1729 application; preservation of the retained key and historical FK identities with a newly recreated receipt FK; original receipt data, one equivalent invitation key, one ledger row and strict/child-index readiness; same-org rejection `23503`; NULL-reason rejection `23514`; and replay returning skipped. The existing `historical`, `hardening`, and `both` phases retain their prior behavior; `both` does not silently add this branch fixture.
+
+The pure suite passes **35 tests**, including fourteen distinct identity/catalog negative cases that assert zero REINDEX execution, a fixed-command/autocommit/timeout test, and dedicated-connection cleanup after an injected `55P03`. The CLI dry-plan test includes the separate phase without connecting. Scoped ESLint and diff checks pass. These tests verify source guards and simulated driver behavior; they do not establish real PostgreSQL reindexing, branch creation, migration execution, IAM access, or physical cleanup.
+
+Root and the independent migration reviewer approved backend source commit `8565b247b2efc252fdadb29e2642302cea3fa64a`, containing exactly five reviewed source/test paths. A fresh nonconnecting plan selected run ID `1012455e542305da164d4d6d` and exact database `scratch_build_migration_1012455e542305da164d4d6d`, with `execute=false` and scope `invitation-fragment-0965-and-canonical-receipt-fk-rebinding-1729`. The plan verified unchanged prerequisite, 0965 parent, 1728 and 1729 hashes. Root then acknowledged and authorized only that exact plan. The guarded IAM executor created the database from template0 and executed synthetic-only fixtures.
+
+The live pre-migration observation reported `receiptUsesRetained=false` and `receiptUsesCanonical=true`; the intended branch was produced in PostgreSQL rather than inferred from OID ordering. Immutable 1729 then applied successfully. All **6 checks passed, 0 failed**, and the process exited **0**.
+
+| Executed rebinding check | Result |
+|---|---|
+| Canonical-bound receipt applies immutable 1729 | Applied. |
+| Retained key and historical FK identity; receipt FK recreation | Retained replacement-key OID and historical FK OID preserved; receipt FK OID changed and now references the retained key; canonical duplicate removed. |
+| Data, single equivalent key, ledger and readiness | Queued receipt preserved; one equivalent invitation key and one 1729 ledger row; strict outcome CHECK, child index and validated relationship postconditions pass. |
+| Same-org relationship denial | SQLSTATE `23503`. |
+| NULL-reason denial after rebind | SQLSTATE `23514`. |
+| Migration replay | Skipped with the existing single ledger identity. |
+
+The runner reported `droppedCurrentRunDatabase=true`. A separate fresh IAM-admin transaction with `SET TRANSACTION READ ONLY` confirmed `proof_database_exists=false`, `production_receipt_table_exists=false`, and `production_event_key_exists=false`. The final probe used the canonical outbox index name `public.uniq_outbox_events_org_event_id`, verified against immutable 1728; an earlier probe using an incorrect suffixed index name was discarded as readiness evidence. The exact scratch database is absent and production prerequisite absence is unchanged. No production schema, ledger, business fixture, role definition, or global worker state was changed.
+
+This six-check run adds canonical-bound receipt branch evidence to the prior independent 59/59 additive result; it does not replace that result or the historical 57/62 result and its five RED findings. The sealed 0965 execution remains only its twelve-statement invitation fragment. Real REINDEX lock-timeout behavior was not induced in this run; its injected failure/connection-close coverage remains pure test evidence. No official-runner, full-chain, production deployment, actual runtime readiness-service, or browser proof is inferred.
+
+- [x] Preserve historical and additive results, immutable SQL, and journal identities.
+- [x] Verify PostgreSQL 18 primary documentation and index-selection source.
+- [x] Add the fixed guarded command, dedicated connection, explicit branch assertion, six cases, and separate CLI phase.
+- [x] Pass pure negative guards, fixed-command/cleanup tests, scoped lint, and diff checks.
+- [x] Complete root and independent source review, then commit only the claimed source paths.
+- [x] Authorize one fresh exact scratch name and execute the rebinding phase.
+- [x] Record actual pre/post FK/key identities, six case results, guarded cleanup, and an independent cleanup catalog read.
+- [ ] Verify official migration runners, full-chain replay, production application, runtime readiness, and browser activation separately.
