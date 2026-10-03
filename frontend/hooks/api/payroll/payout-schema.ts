@@ -24,7 +24,7 @@ const batchRowContract = z.object({
   runId: z.number(),
   batchNumber: z.string(),
   status: z.enum(["DRAFT", "GENERATED", "SENT", "PARTIALLY_PAID", "PAID", "FAILED"]),
-  format: z.enum(["NEFT_CSV", "RTGS_CSV", "GENERIC_CSV", "ACH_CSV", "SEPA_CSV"]),
+  format: z.enum(["NEFT_CSV", "RTGS_CSV", "GENERIC_CSV", "ACH_CSV", "SEPA_CSV", "HDFC_BULK_CSV", "ICICI_BULK_CSV", "SBI_BULK_CSV", "AXIS_BULK_CSV"]),
   totalAmount: z.string(),
   itemCount: z.number(),
   generatedBy: z.string().nullable(),

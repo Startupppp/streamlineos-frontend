@@ -31,6 +31,8 @@ import {
   useCompleteFnfSettlement,
   type FnfSettlement,
 } from "@/hooks/api/hr/fnf";
+import type { FnfSuggestion } from "@/hooks/api/payroll/fnf-schema";
+import { FnfSuggestionPanel } from "./fnf-suggestion-panel";
 
 function isInReview(status: string | null): boolean {
   return status === "PENDING_APPROVAL" || status === "HR_REVIEW" || status === "FINANCE_REVIEW";
@@ -259,6 +261,13 @@ export function FnfPageClient() {
   const handleDeductionsChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setDeductions(e.target.value), []);
   const handleLoanRecoveryChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setLoanRecovery(e.target.value), []);
   const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value), []);
+  const handleApplySuggestion = useCallback((suggestion: FnfSuggestion) => {
+    setLeaveEncashment(suggestion.leaveEncashment);
+    if (suggestion.gratuityEligible && Number(suggestion.gratuity) > 0) {
+      const line = `Suggested gratuity ${suggestion.gratuity} (15/26 x basic ${suggestion.lastDrawnBasic ?? "0"} x ${suggestion.gratuityYears} years).`;
+      setNotes((prev) => (prev.includes(line) ? prev : [prev.trim(), line].filter(Boolean).join("\n")));
+    }
+  }, []);
 
   const loadingSkeleton = (
     <div className="flex flex-1 min-h-0 flex-col gap-3">
@@ -335,6 +344,8 @@ export function FnfPageClient() {
             </p>
           ) : null}
         </div>
+
+        <FnfSuggestionPanel userId={userId} onApply={handleApplySuggestion} />
 
         <div className="space-y-2">
           <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">

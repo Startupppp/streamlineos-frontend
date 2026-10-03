@@ -6,7 +6,7 @@ export const payrollFilingContract = z.object({
   entityId: z.number().nullable(),
   periodId: z.number().nullable(),
   fiscalYear: z.string().nullable(),
-  filingType: z.enum(["PF_ECR", "ESI", "PT", "TDS_24Q", "FORM16", "LWF"]),
+  filingType: z.enum(["PF_ECR", "PF_ECR_TXT", "ESI", "PT", "TDS_24Q", "FORM16", "LWF"]),
   ruleVersion: z.string().nullable(),
   status: z.enum(["DRAFT", "EXPORT_PREPARED", "SUBMITTED", "ACKNOWLEDGED", "RECONCILED", "FAILED"]),
   payload: z.record(z.string(), z.unknown()).nullable(),
@@ -37,7 +37,7 @@ const filingCapabilityContract = z.object({
   automaticRemittance: z.boolean(),
   providerDependent: z.boolean(),
   honestyLabel: z.string(),
-  supportedTypes: z.array(z.enum(["PF_ECR", "ESI", "PT", "TDS_24Q", "FORM16", "LWF"])),
+  supportedTypes: z.array(z.enum(["PF_ECR", "PF_ECR_TXT", "ESI", "PT", "TDS_24Q", "FORM16", "LWF"])),
   ruleBundleVersion: z.string(),
   artifactFormat: z.string(),
   form16Certificate: z.object({
@@ -54,7 +54,7 @@ export const filingCapabilitiesResponseContract = z.object({
   automaticRemittance: z.boolean(),
   providerDependent: z.boolean(),
   honestyLabel: z.string(),
-  supportedTypes: z.array(z.enum(["PF_ECR", "ESI", "PT", "TDS_24Q", "FORM16", "LWF"])),
+  supportedTypes: z.array(z.enum(["PF_ECR", "PF_ECR_TXT", "ESI", "PT", "TDS_24Q", "FORM16", "LWF"])),
   ruleBundleVersion: z.string(),
   artifactFormat: z.literal("csv"),
   form16Certificate: z.object({

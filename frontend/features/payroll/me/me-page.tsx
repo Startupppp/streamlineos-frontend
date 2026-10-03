@@ -54,6 +54,7 @@ import {
   EssLoansSection,
   EssBankSection,
   EssFnfSection,
+  EssForm16Section,
   EssTotalRewardsSection,
   EssDisciplinarySection,
 } from "@/features/payroll/ess";
@@ -130,6 +131,7 @@ export function MyPayrollPageContent() {
       { id: "payslips", label: t("pay.tabPayslips") },
       { id: "total-rewards", label: t("pay.tabTotalRewards") },
       { id: "disciplinary", label: t("pay.tabNotices") },
+      { id: "form16", label: "Form 16" },
     ];
     if (toggles?.essShowSalaryStructure)
       items.push({ id: "salary", label: t("pay.tabSalary") });
@@ -422,6 +424,9 @@ export function MyPayrollPageContent() {
           </TabsContent>
           <TabsContent value="disciplinary" className={TAB_PANEL_CLASS}>
             <EssDisciplinarySection />
+          </TabsContent>
+          <TabsContent value="form16" className={TAB_PANEL_CLASS}>
+            <EssForm16Section />
           </TabsContent>
           {toggles?.essShowSalaryStructure && (
             <TabsContent value="salary" className={TAB_PANEL_CLASS}>

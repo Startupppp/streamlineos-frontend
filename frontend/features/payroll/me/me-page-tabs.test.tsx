@@ -81,12 +81,14 @@ jest.mock("@/features/payroll/ess", () => ({
   EssFnfSection: section("Final settlement"),
   EssTotalRewardsSection: section("Total Rewards"),
   EssDisciplinarySection: section("Notices"),
+  EssForm16Section: section("Form 16"),
 }));
 
 const EXPECTED_TABS = [
   "Payslips",
   "Total Rewards",
   "Notices",
+  "Form 16",
   "Salary Structure",
   "Reimbursements",
   "Tax Declaration",

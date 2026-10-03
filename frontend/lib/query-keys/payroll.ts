@@ -78,6 +78,8 @@ export const payrollQueryKeys = {
       [...base, "payroll", "fnf", settlementId] as const,
     fnfStatement: (settlementId: number) =>
       [...base, "payroll", "fnf", settlementId, "statement"] as const,
+    fnfSuggestion: (userId: string, lastWorkingDay: string) =>
+      [...base, "payroll", "fnf", "suggestion", userId, lastWorkingDay] as const,
     commandCenterAll: [...base, "payroll", "command-center"] as const,
     commandCenter: (month: string) =>
       [...base, "payroll", "command-center", month] as const,
@@ -131,6 +133,8 @@ export const payrollQueryKeys = {
       [...base, "payroll", "filings", "capabilities"] as const,
     filingExportJob: (jobId: number) =>
       [...base, "payroll", "filings", "export-jobs", jobId] as const,
+    form16All: [...base, "payroll", "form16"] as const,
+    form16: (financialYear: string) => [...base, "payroll", "form16", financialYear] as const,
     loansAdmin: () => [...base, "payroll", "loans-admin"] as const,
     bonuses: () => [...base, "payroll", "bonuses"] as const,
     incentivesAll: [...base, "payroll", "incentives"] as const,
@@ -150,6 +154,7 @@ export const payrollQueryKeys = {
       [...base, "payroll", "ess", "tax-declaration"] as const,
     essBank: () => [...base, "payroll", "ess", "bank"] as const,
     essFnf: () => [...base, "payroll", "ess", "fnf"] as const,
+    essForm16: () => [...base, "payroll", "ess", "form16"] as const,
     essTotalRewards: () =>
       [...base, "payroll", "ess", "total-rewards"] as const,
     managerInbox: () => [...base, "payroll", "manager", "inbox"] as const,

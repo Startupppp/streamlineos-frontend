@@ -45,6 +45,7 @@ jest.mock("@/components/shared/hr-sheet", () => ({
 }));
 
 jest.mock("@/components/ui/confirm-sheet", () => ({ ConfirmSheet: () => null }));
+jest.mock("./fnf-suggestion-panel", () => ({ FnfSuggestionPanel: () => null }));
 jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
 jest.mock("@/hooks/api/org-display", () => ({ useOrgDisplay: () => ({ currency: "INR", locale: "en-IN" }) }));
 jest.mock("@/hooks/api/use-page-state", () => ({ usePageState: () => ({ kind: "ready" }) }));
