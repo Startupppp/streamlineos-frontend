@@ -1,0 +1,427 @@
+{
+  "at": "2026-10-03T10:02:47.871Z",
+  "backendRevision": "152fe7ffb",
+  "authRevision": "859f12e79",
+  "runnerRevision": "d8a1bc43e",
+  "queryFailure": {
+    "status": 500,
+    "correlationId": "097a95dd-ded9-4268-82b6-3965221203dc"
+  },
+  "fixtureScope": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+  "fixtureMethod": "Real internal invite-client contact/membership API; direct exact-synthetic invitation rows because application invitation producer is absent; no delivery proof",
+  "outcomes": {
+    "revokeA": 200,
+    "acceptAfterRevokeA": 401,
+    "resurrectA": 409,
+    "acceptB": 200,
+    "suspendB": 200,
+    "staleAfterSuspendB": 401,
+    "oldPendingB": 401,
+    "resumeB": 200,
+    "staleAfterResumeB": 401,
+    "replayB": 401,
+    "doubleAcceptC": [
+      200,
+      401
+    ],
+    "acceptRevokeD": [
+      200,
+      200
+    ],
+    "staleAfterRevokeD": 401
+  },
+  "markers": {
+    "memberships": [
+      {
+        "portal_membership_id": "1684df56-0a7e-4cfc-91df-3d392c2996b9",
+        "party_contact_id": "4699023d-313b-497a-aecb-59d984166a61",
+        "audience": "CLIENT_PORTAL",
+        "status": "ACTIVE",
+        "session_epoch": 1,
+        "deleted_at": null,
+        "user_membership_id": null
+      },
+      {
+        "portal_membership_id": "56621817-43b0-4f1b-89ff-719d8546fb52",
+        "party_contact_id": "aeb33e1f-fa37-4992-a1ee-a83b71e58858",
+        "audience": "CLIENT_PORTAL",
+        "status": "REVOKED",
+        "session_epoch": 2,
+        "deleted_at": null,
+        "user_membership_id": null
+      },
+      {
+        "portal_membership_id": "6f346f44-d8d8-49db-a46e-85e697a34b9c",
+        "party_contact_id": "14f99e51-3137-4104-beea-2ed36a1b480f",
+        "audience": "CLIENT_PORTAL",
+        "status": "ACTIVE",
+        "session_epoch": 2,
+        "deleted_at": null,
+        "user_membership_id": null
+      },
+      {
+        "portal_membership_id": "b13abbe3-4d32-4bab-ae98-61809e589709",
+        "party_contact_id": "22c22295-227d-426e-9bc9-e10a3dd9d4df",
+        "audience": "CLIENT_PORTAL",
+        "status": "REVOKED",
+        "session_epoch": 1,
+        "deleted_at": null,
+        "user_membership_id": null
+      }
+    ],
+    "invitations": [
+      {
+        "portal_invitation_id": "4dbc0626-46ce-4c35-ae05-06bb8d11cc03",
+        "party_contact_id": "14f99e51-3137-4104-beea-2ed36a1b480f",
+        "audience": "CLIENT_PORTAL",
+        "status": "ACCEPTED",
+        "accepted_portal_membership_id": "6f346f44-d8d8-49db-a46e-85e697a34b9c",
+        "revoked_at": null,
+        "expires_at": "2026-10-03 10:52:39.349537"
+      },
+      {
+        "portal_invitation_id": "531e5ae8-46ce-466f-9c25-241b5586ec94",
+        "party_contact_id": "22c22295-227d-426e-9bc9-e10a3dd9d4df",
+        "audience": "CLIENT_PORTAL",
+        "status": "REVOKED",
+        "accepted_portal_membership_id": null,
+        "revoked_at": "2026-10-03 09:52:07.227",
+        "expires_at": "2026-10-03 10:52:03.349296"
+      },
+      {
+        "portal_invitation_id": "8f76e393-f88c-46c9-9032-f75facf22e49",
+        "party_contact_id": "4699023d-313b-497a-aecb-59d984166a61",
+        "audience": "CLIENT_PORTAL",
+        "status": "ACCEPTED",
+        "accepted_portal_membership_id": "1684df56-0a7e-4cfc-91df-3d392c2996b9",
+        "revoked_at": null,
+        "expires_at": "2026-10-03 10:59:06.101761"
+      },
+      {
+        "portal_invitation_id": "b54d742f-1191-4cec-ade2-feed5e0eb3e7",
+        "party_contact_id": "14f99e51-3137-4104-beea-2ed36a1b480f",
+        "audience": "CLIENT_PORTAL",
+        "status": "REVOKED",
+        "accepted_portal_membership_id": null,
+        "revoked_at": "2026-10-03 09:53:12.391",
+        "expires_at": "2026-10-03 10:53:08.901427"
+      },
+      {
+        "portal_invitation_id": "bbf5521e-b934-4a86-940b-8b97d5d57357",
+        "party_contact_id": "aeb33e1f-fa37-4992-a1ee-a83b71e58858",
+        "audience": "CLIENT_PORTAL",
+        "status": "ACCEPTED",
+        "accepted_portal_membership_id": "56621817-43b0-4f1b-89ff-719d8546fb52",
+        "revoked_at": null,
+        "expires_at": "2026-10-03 11:01:26.861329"
+      }
+    ]
+  },
+  "queryFix": {
+    "revision": "9becedfaf",
+    "validSessionListStatus": 200,
+    "validSessionList": [],
+    "staleEpochStatus": 401,
+    "runnerPid": 16172,
+    "verifiedAt": "2026-10-03T10:08:49.185Z"
+  },
+  "completedAt": "2026-10-03T10:08:49.185Z",
+  "expiredInvitation": {
+    "revision": "9becedfaf",
+    "invitationId": "e78bc647-b799-4dbb-b991-f80fd8f456fd",
+    "acceptStatus": 401,
+    "correlationId": "45835339-0df0-40ff-a3b3-90aa589c2100",
+    "validExistingSessionStatus": 200
+  },
+  "finalMarkers": {
+    "memberships": [
+      {
+        "portal_membership_id": "1684df56-0a7e-4cfc-91df-3d392c2996b9",
+        "party_contact_id": "4699023d-313b-497a-aecb-59d984166a61",
+        "audience": "CLIENT_PORTAL",
+        "status": "ACTIVE",
+        "session_epoch": 1,
+        "deleted_at": null,
+        "user_membership_id": null
+      },
+      {
+        "portal_membership_id": "56621817-43b0-4f1b-89ff-719d8546fb52",
+        "party_contact_id": "aeb33e1f-fa37-4992-a1ee-a83b71e58858",
+        "audience": "CLIENT_PORTAL",
+        "status": "REVOKED",
+        "session_epoch": 2,
+        "deleted_at": null,
+        "user_membership_id": null
+      },
+      {
+        "portal_membership_id": "6f346f44-d8d8-49db-a46e-85e697a34b9c",
+        "party_contact_id": "14f99e51-3137-4104-beea-2ed36a1b480f",
+        "audience": "CLIENT_PORTAL",
+        "status": "ACTIVE",
+        "session_epoch": 2,
+        "deleted_at": null,
+        "user_membership_id": null
+      },
+      {
+        "portal_membership_id": "b13abbe3-4d32-4bab-ae98-61809e589709",
+        "party_contact_id": "22c22295-227d-426e-9bc9-e10a3dd9d4df",
+        "audience": "CLIENT_PORTAL",
+        "status": "REVOKED",
+        "session_epoch": 1,
+        "deleted_at": null,
+        "user_membership_id": null
+      }
+    ],
+    "invitations": [
+      {
+        "portal_invitation_id": "4dbc0626-46ce-4c35-ae05-06bb8d11cc03",
+        "party_contact_id": "14f99e51-3137-4104-beea-2ed36a1b480f",
+        "audience": "CLIENT_PORTAL",
+        "status": "ACCEPTED",
+        "accepted_portal_membership_id": "6f346f44-d8d8-49db-a46e-85e697a34b9c",
+        "revoked_at": null,
+        "expires_at": "2026-10-03 10:52:39.349537"
+      },
+      {
+        "portal_invitation_id": "531e5ae8-46ce-466f-9c25-241b5586ec94",
+        "party_contact_id": "22c22295-227d-426e-9bc9-e10a3dd9d4df",
+        "audience": "CLIENT_PORTAL",
+        "status": "REVOKED",
+        "accepted_portal_membership_id": null,
+        "revoked_at": "2026-10-03 09:52:07.227",
+        "expires_at": "2026-10-03 10:52:03.349296"
+      },
+      {
+        "portal_invitation_id": "8f76e393-f88c-46c9-9032-f75facf22e49",
+        "party_contact_id": "4699023d-313b-497a-aecb-59d984166a61",
+        "audience": "CLIENT_PORTAL",
+        "status": "ACCEPTED",
+        "accepted_portal_membership_id": "1684df56-0a7e-4cfc-91df-3d392c2996b9",
+        "revoked_at": null,
+        "expires_at": "2026-10-03 10:59:06.101761"
+      },
+      {
+        "portal_invitation_id": "b54d742f-1191-4cec-ade2-feed5e0eb3e7",
+        "party_contact_id": "14f99e51-3137-4104-beea-2ed36a1b480f",
+        "audience": "CLIENT_PORTAL",
+        "status": "REVOKED",
+        "accepted_portal_membership_id": null,
+        "revoked_at": "2026-10-03 09:53:12.391",
+        "expires_at": "2026-10-03 10:53:08.901427"
+      },
+      {
+        "portal_invitation_id": "bbf5521e-b934-4a86-940b-8b97d5d57357",
+        "party_contact_id": "aeb33e1f-fa37-4992-a1ee-a83b71e58858",
+        "audience": "CLIENT_PORTAL",
+        "status": "ACCEPTED",
+        "accepted_portal_membership_id": "56621817-43b0-4f1b-89ff-719d8546fb52",
+        "revoked_at": null,
+        "expires_at": "2026-10-03 11:01:26.861329"
+      },
+      {
+        "portal_invitation_id": "e78bc647-b799-4dbb-b991-f80fd8f456fd",
+        "party_contact_id": "4699023d-313b-497a-aecb-59d984166a61",
+        "audience": "CLIENT_PORTAL",
+        "status": "PENDING",
+        "accepted_portal_membership_id": null,
+        "revoked_at": null,
+        "expires_at": "2026-10-03 10:08:27.43715"
+      }
+    ]
+  },
+  "independentRead": {
+    "identity": {
+      "role_name": "streamline_app",
+      "is_superuser": false,
+      "bypasses_rls": false,
+      "transaction_read_only": "on",
+      "transaction_isolation": "repeatable read",
+      "observed_at": "2026-10-03 10:07:27.533023+00"
+    },
+    "scope": {
+      "organization_id": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+      "synthetic_name": true,
+      "synthetic_slug": true,
+      "owner": true,
+      "owner_status": "ACTIVE",
+      "owner_active": true,
+      "owner_live": true,
+      "synthetic_owner": true
+    },
+    "counts": {
+      "memberships": 4,
+      "invitations": 5,
+      "grants": 0
+    },
+    "memberships": [
+      {
+        "portal_membership_id": "1684df56-0a7e-4cfc-91df-3d392c2996b9",
+        "party_contact_id": "4699023d-313b-497a-aecb-59d984166a61",
+        "audience": "CLIENT_PORTAL",
+        "status": "ACTIVE",
+        "session_epoch": 1,
+        "deleted_at": null,
+        "user_membership_id": null
+      },
+      {
+        "portal_membership_id": "56621817-43b0-4f1b-89ff-719d8546fb52",
+        "party_contact_id": "aeb33e1f-fa37-4992-a1ee-a83b71e58858",
+        "audience": "CLIENT_PORTAL",
+        "status": "REVOKED",
+        "session_epoch": 2,
+        "deleted_at": null,
+        "user_membership_id": null
+      },
+      {
+        "portal_membership_id": "6f346f44-d8d8-49db-a46e-85e697a34b9c",
+        "party_contact_id": "14f99e51-3137-4104-beea-2ed36a1b480f",
+        "audience": "CLIENT_PORTAL",
+        "status": "ACTIVE",
+        "session_epoch": 2,
+        "deleted_at": null,
+        "user_membership_id": null
+      },
+      {
+        "portal_membership_id": "b13abbe3-4d32-4bab-ae98-61809e589709",
+        "party_contact_id": "22c22295-227d-426e-9bc9-e10a3dd9d4df",
+        "audience": "CLIENT_PORTAL",
+        "status": "REVOKED",
+        "session_epoch": 1,
+        "deleted_at": null,
+        "user_membership_id": null
+      }
+    ],
+    "invitations": [
+      {
+        "portal_invitation_id": "4dbc0626-46ce-4c35-ae05-06bb8d11cc03",
+        "party_contact_id": "14f99e51-3137-4104-beea-2ed36a1b480f",
+        "audience": "CLIENT_PORTAL",
+        "status": "ACCEPTED",
+        "accepted_portal_membership_id": "6f346f44-d8d8-49db-a46e-85e697a34b9c",
+        "revoked_at": null,
+        "expires_at": "2026-10-03 10:52:39.349537"
+      },
+      {
+        "portal_invitation_id": "531e5ae8-46ce-466f-9c25-241b5586ec94",
+        "party_contact_id": "22c22295-227d-426e-9bc9-e10a3dd9d4df",
+        "audience": "CLIENT_PORTAL",
+        "status": "REVOKED",
+        "accepted_portal_membership_id": null,
+        "revoked_at": "2026-10-03 09:52:07.227",
+        "expires_at": "2026-10-03 10:52:03.349296"
+      },
+      {
+        "portal_invitation_id": "8f76e393-f88c-46c9-9032-f75facf22e49",
+        "party_contact_id": "4699023d-313b-497a-aecb-59d984166a61",
+        "audience": "CLIENT_PORTAL",
+        "status": "ACCEPTED",
+        "accepted_portal_membership_id": "1684df56-0a7e-4cfc-91df-3d392c2996b9",
+        "revoked_at": null,
+        "expires_at": "2026-10-03 10:59:06.101761"
+      },
+      {
+        "portal_invitation_id": "b54d742f-1191-4cec-ade2-feed5e0eb3e7",
+        "party_contact_id": "14f99e51-3137-4104-beea-2ed36a1b480f",
+        "audience": "CLIENT_PORTAL",
+        "status": "REVOKED",
+        "accepted_portal_membership_id": null,
+        "revoked_at": "2026-10-03 09:53:12.391",
+        "expires_at": "2026-10-03 10:53:08.901427"
+      },
+      {
+        "portal_invitation_id": "bbf5521e-b934-4a86-940b-8b97d5d57357",
+        "party_contact_id": "aeb33e1f-fa37-4992-a1ee-a83b71e58858",
+        "audience": "CLIENT_PORTAL",
+        "status": "ACCEPTED",
+        "accepted_portal_membership_id": "56621817-43b0-4f1b-89ff-719d8546fb52",
+        "revoked_at": null,
+        "expires_at": "2026-10-03 11:01:26.861329"
+      }
+    ],
+    "contactChecks": [
+      {
+        "portal_membership_id": "1684df56-0a7e-4cfc-91df-3d392c2996b9",
+        "same_org_contact_present": true,
+        "contact_live": true,
+        "synthetic_contact": true,
+        "identity_history_count": 1
+      },
+      {
+        "portal_membership_id": "56621817-43b0-4f1b-89ff-719d8546fb52",
+        "same_org_contact_present": true,
+        "contact_live": true,
+        "synthetic_contact": true,
+        "identity_history_count": 1
+      },
+      {
+        "portal_membership_id": "6f346f44-d8d8-49db-a46e-85e697a34b9c",
+        "same_org_contact_present": true,
+        "contact_live": true,
+        "synthetic_contact": true,
+        "identity_history_count": 1
+      },
+      {
+        "portal_membership_id": "b13abbe3-4d32-4bab-ae98-61809e589709",
+        "same_org_contact_present": true,
+        "contact_live": true,
+        "synthetic_contact": true,
+        "identity_history_count": 1
+      }
+    ],
+    "receiptChecks": [
+      {
+        "portal_invitation_id": "4dbc0626-46ce-4c35-ae05-06bb8d11cc03",
+        "receipt_null": false,
+        "same_org_receipt_present": true,
+        "same_contact_receipt": true,
+        "same_audience_receipt": true,
+        "contact_live": true,
+        "recipient_matches_contact": true,
+        "synthetic_recipient": true
+      },
+      {
+        "portal_invitation_id": "531e5ae8-46ce-466f-9c25-241b5586ec94",
+        "receipt_null": true,
+        "same_org_receipt_present": false,
+        "same_contact_receipt": null,
+        "same_audience_receipt": null,
+        "contact_live": true,
+        "recipient_matches_contact": true,
+        "synthetic_recipient": true
+      },
+      {
+        "portal_invitation_id": "8f76e393-f88c-46c9-9032-f75facf22e49",
+        "receipt_null": false,
+        "same_org_receipt_present": true,
+        "same_contact_receipt": true,
+        "same_audience_receipt": true,
+        "contact_live": true,
+        "recipient_matches_contact": true,
+        "synthetic_recipient": true
+      },
+      {
+        "portal_invitation_id": "b54d742f-1191-4cec-ade2-feed5e0eb3e7",
+        "receipt_null": true,
+        "same_org_receipt_present": false,
+        "same_contact_receipt": null,
+        "same_audience_receipt": null,
+        "contact_live": true,
+        "recipient_matches_contact": true,
+        "synthetic_recipient": true
+      },
+      {
+        "portal_invitation_id": "bbf5521e-b934-4a86-940b-8b97d5d57357",
+        "receipt_null": false,
+        "same_org_receipt_present": true,
+        "same_contact_receipt": true,
+        "same_audience_receipt": true,
+        "contact_live": true,
+        "recipient_matches_contact": true,
+        "synthetic_recipient": true
+      }
+    ],
+    "artifactComparedAt": "2026-10-03T10:02:47.871Z",
+    "membershipMismatches": [],
+    "invitationMismatches": []
+  }
+}
