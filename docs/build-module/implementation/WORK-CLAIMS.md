@@ -28,6 +28,14 @@ Migration gate handoff `BLD-MIGRATION-LOCAL-TIMEOUT-12` under BLD-030/035: `modu
 
 ## Active claims
 
+### BLD-FEEDBUCKET-NOTICE-16
+
+- Requirements: BLD-009, BLD-014, BLD-025, BLD-035. Owner: `client_activation_design`; independent reviewer: `module_grants_resume` after its test-placement freeze. Root owns integration, runtime and evidence. The active notification service and runner claims are excluded.
+- Exact production paths: `backend/src/modules/notifications/notification-events-build.catalog.ts`, `backend/src/modules/feedbucket/lib/feedbucket-submit.ts`, and `backend/src/modules/feedbucket/feedbucket-public.controller.ts`. Exact tests: new `backend/src/modules/feedbucket/__tests__/feedbucket-build-notification.spec.ts`, existing `backend/src/modules/feedbucket/tests/feedbucket-auto-link-deferred.spec.ts` and `feedbucket-public-ai-assist.spec.ts` only for necessary constructor adaptation. Verify these existing test paths before editing; if different, stop and hand back the exact correction. No additional fixture file without a new claim.
+- Existing-file assessment: submission already owns the durable feedback transaction and its creator recipient; the canonical dispatch service already owns notification intent persistence, policy and delivery. Replace the direct best-effort notification call with its atomic intent interface; no new production helper/service.
+- Register `build.feedback.received` as Build/PROJECTS with the existing IN_APP/PUSH opportunity, no new email channel. Persist one stable submission-specific intent inside the submission transaction; use the actual submission entity, existing creator recipient and safe project/widget/submission metadata. No public actor impersonation. Preserve automatic ticket creation after commit and fail the submission if required intent persistence fails.
+- Tests first: Build classification, exact transaction/dedupe identity, missing creator, intent failure/rollback, and no premature announcement or automatic-ticket callback. Commands: focused new/affected Feedbucket and catalog suites, exact-path lint/diff; root serializes changed-spec/production TypeScript. Freeze for independent review before commit/runtime. No historical notification rewrite or broad source filter; ambiguous legacy notices remain globally readable and explicitly unverified for Build classification. Required runtime proof includes real synthetic feedback acceptance/retry, intent persistence, current recipient/object authorization, Build/global reads, worker/event behavior and browser capture. No broad checkbox closes on source tests.
+
 ### BLD-INBOX-TEST-PLACEMENT-15
 
 - Requirements: BLD-009, BLD-025, BLD-035. Owner: `module_grants_resume` after the frozen notification-test handoff from `scoped_activation_dispatch`; independent reviewer: root. No production behavior changes.
