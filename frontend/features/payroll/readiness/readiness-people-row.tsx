@@ -78,7 +78,7 @@ export function ReadinessPeopleRow({ people }: ReadinessPeopleRowProps) {
           ) : null}
         </div>
         {verdict.action ? (
-          <Button size="sm" className="h-7 shrink-0 text-xs" asChild>
+          <Button size="sm" variant="outline" className="h-7 shrink-0 text-xs" asChild>
             <Link href={verdict.action.href}>{verdict.action.label}</Link>
           </Button>
         ) : null}

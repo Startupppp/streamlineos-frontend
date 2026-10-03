@@ -110,7 +110,7 @@ export function useHrmsCommands(
       },
       {
         id: "hrms-payroll-readiness",
-        label: "Open Payroll readiness",
+        label: "Close payroll",
         group: "actions",
         keywords: ["payroll", "readiness", "cutoff", "run"],
         icon: Wallet,
