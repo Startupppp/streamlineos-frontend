@@ -16,6 +16,10 @@ Next: regressions must fail before source changes; enforce Build categories and 
 
 Root also owns the existing `frontend/lib/command-catalog.ts` and `frontend/hooks/api/notifications-command-catalog.test.ts` for the dedicated self-notification command entry; no new catalog is permitted. Independent reviewer: `client_activation_design`; backend reviewer: coordinator. These are caller inventory updates under BLD-INBOX-SCOPE-11.
 
+Runner handoff under BLD-INBOX-SCOPE-11: `scoped_activation_dispatch` exclusively owns `backend/test/helpers/build-browser-app.ts` and `backend/test/security/build-browser-boundary.spec.ts` to admit only exact `PATCH /notifications/read-all` and `PATCH /notifications/source/build/read-all` after the existing synthetic actor and synthetic organization guards. No production code, other module scope, provider, seed route, credentials, or database writes belong to this handoff. First prove denial/positive guard tests, run both boundary and runner suites and exact lint, then freeze for root review before restart. Root alone owns runner lifecycle, synthetic API flows and read-only database observations.
+
+Migration gate handoff `BLD-MIGRATION-LOCAL-TIMEOUT-12` under BLD-030/035: `module_grants_resume` exclusively owns `backend/src/scripts/check-migration-discipline.mjs` and its existing self-test file if separate (discover and record exact path before editing). Accept both `SET lock_timeout` and transaction-local `SET LOCAL lock_timeout`; continue rejecting absence. No migration, baseline, timeout-value, historical hash or schema changes. Meaningful self-tests must distinguish both forms and missing statements; root independently reviews and runs the real gate. Portal source remains frozen for independent review by `client_activation_design`.
+
 ## Active claims
 
 | Package | Requirement IDs | Agent/task | Branch/worktree | Base commit | Primary seam | Planned primary paths/migrations | Prerequisites | Status | Last update | Handoff |
