@@ -5,8 +5,8 @@ import { z } from "zod";
  * checklists, guided tours). Timestamps are ISO strings over JSON. NOT `.strict()`.
  */
 
-export const onboardingFlowSessionContract = z.object({
-  id: z.number(),
+const persistedOnboardingFlowSessionContract = z.object({
+  id: z.number().int().positive(),
   orgId: z.string(),
   userId: z.string(),
   membershipId: z.number().nullable(),
@@ -23,6 +23,22 @@ export const onboardingFlowSessionContract = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
 });
+
+const initialOnboardingFlowSessionContract = persistedOnboardingFlowSessionContract
+  .omit({ lastSeenAt: true, createdAt: true, updatedAt: true })
+  .extend({
+    id: z.literal(0),
+    status: z.literal("not_started"),
+    currentStep: z.null(),
+    source: z.null(),
+    startedAt: z.null(),
+    completedAt: z.null(),
+  });
+
+export const onboardingFlowSessionContract = z.union([
+  persistedOnboardingFlowSessionContract,
+  initialOnboardingFlowSessionContract,
+]);
 
 const checklistItemContract = z.object({
   id: z.number(),
