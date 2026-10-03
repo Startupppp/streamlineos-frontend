@@ -66,7 +66,7 @@ The prerequisite checks expected columns, nullability, creation-time default, pr
 
 The historical `1728` outcome check can evaluate to SQL UNKNOWN for refused or delivery-failed rows with a null reason. UNKNOWN passes a PostgreSQL CHECK. Readiness therefore additionally requires `ck_organization_setup_invitation_receipts_outcome_strict`, the complete original four-branch predicate wrapped with `IS TRUE`. The additive migration/schema work is Planned and separately owned; the historical migration is unchanged. An environment containing only the historical check cannot pass the new prerequisite.
 
-The earlier [production catalog evidence](./2026-10-03-production-catalog.md) recorded the receipt table and referenced event composite key as absent. That observation was not refreshed by this source slice and must not be treated as a new database check.
+The earlier [production catalog evidence](./2026-10-03-production-catalog.md) recorded the receipt table and referenced event composite key as absent. After the source commit, the coordinator executed the actual `BuildBrowserActivationStore.receiptPrerequisites` catalog query through IAM as `streamline_app`, with PostgreSQL `default_transaction_read_only=on`. The query executed successfully and returned `false`, consistent with the absent prerequisite. No schema, ledger, or business record changed. This verifies the false-result SQL path; positive readiness and strict-check deparse parity remain Current unverified.
 
 ## Invitation and capture truth
 
@@ -78,14 +78,48 @@ Commands serialize per organization so different setup events cannot concurrentl
 
 The response exposes event ID, actual outbox/inbox state, publisher counters, aggregate receipt counts, aggregate capture counts, and explicit error code. It excludes recipients, raw tokens, message bodies, and provider credentials. Existing reserved mailbox capture remains separate. Capture does not prove delivery through a real email provider.
 
-## Current unverified: required remaining evidence
+## Coordinator runtime evidence and remaining acceptance
 
-- Execute the exact catalog prerequisite SQL through the real application role on the current target and retain its explicit false/ready result.
+### Coordinator real HTTP and persistence checks
+
+The coordinator used the reviewed loopback runner with reserved synthetic owner `owner-20261003-flow02@build-verification.invalid`. The configured IAM application database was used. Commands targeted the new synthetic organization; no existing-organization writes were intentionally issued, and there was no global write census. The test email transport captured the OTP message. Raw codes, magic-link credentials, JWTs, session proofs, environment values, and the activation capability stayed in process memory and are excluded from this report.
+
+| Action | Current verified observation | Remaining scope |
+|---|---|---|
+| Request OTP, submit wrong code, submit captured code, replay code | Request 200; wrong code 401; correct code 200; consumed-code replay 401 | Provider delivery and browser signup remain unverified. An initial test extractor incorrectly matched a CSS six-digit value; extraction was corrected to the template's code element before the successful request. |
+| Verify returned magic link and perform canonical web-session proof exchange | Both returned 200; the real issued session was used, with no direct backend-token minting | Additional principal, MFA, expiry, and revoked-session matrices remain open. |
+| Read setup session twice before organization creation | Both 200, virtual ID 0, `not_started`, null start; status had no organization and `ready=false` | No claim of an exhaustive account-level write census. A bounded application-role read confirmed zero active memberships. |
+| Submit Build-only owner setup with no invitations | 201, success, a new organization, and an auto-login credential | This is one new-owner journey. Multi-module, invited/member/client, recovery, and quota journeys remain open. |
+| Consume auto-login credential and exchange the real new-organization session | Both 200; same user and exact new organization | Browser cookie/session synchronization remains open. |
+| Repeat setup status/session, checklist list/Build detail, and employee onboarding GET group | Every GET 200; sorted row digests/counts for actor sessions, organization checklists/items/analytics, and setup stamp unchanged before/after | GET purity is proven for these tracked rows, not every database/cache operation. Inaccessible module/actor and HR-probe matrices remain open. |
+| Read exact stored setup producer | Exactly one owner/org/Build/no-invitee producer; `DELIVERED`, zero retries, no stored error; canonical inbox `COMPLETED`, no stored error | It was already delivered before explicit runner dispatch. These rows do not identify the dispatcher host or deployed source revision. |
+| Dispatch with wrong capability or a random nonexistent event | Both 403 `BUILD_BROWSER_SYNTHETIC_ONLY` | Foreign existing events, inactive owners, other principal kinds, and simultaneous HTTP commands remain open. |
+| Dispatch exact already-delivered producer | 200, completed, `DELIVERED`/`COMPLETED`, zero publisher claims and all zero invitation/mail counts | This verifies protected readback/no-op replay. It does not prove a first claim or local consumer execution. Tracked onboarding rows remained unchanged. |
+| Read Build project collection | 200; zero projects in this new synthetic organization | This proves authorized empty collection access only. Project creation/detail/filters and browser remain open. |
+| Replay the same owner setup after fresh canonical session exchange | 201, same organization, no new auto-login credential; tracked sessions/checklists/items/analytics/setup stamp and exact setup outbox/inbox/login credential counts and digests unchanged | The replay still performs directory activation and cache invalidation; no global zero-write claim. The first replay attempt used an expired backend token and returned 401; fresh real session exchange succeeded. |
+
+The replay snapshot contained one actor setup session, one Build checklist, two checklist items, two onboarding analytics rows, one setup producer, one canonical setup inbox row, and one organization-bound login credential. The checklist list additionally returned virtual `kb` and `chat` checklists with null IDs for the platform's universal surfaces; that is not evidence of paid product activation. Build's checklist remained `not_started` with durable IDs, while the organization setup session was completed. Employee onboarding remains a separate journey.
+
+#### Delivery provenance
+
+Independent source review traced `completeSetup` to an atomic producer insert followed by directory/cache publication and an outbox wake signal. The reviewed runner overrides the sole registered outbox worker and sets shared dispatch/in-process worker flags to `false`. Its enabled dedicated publisher is called only by the explicit scoped command, whose claim excludes `DELIVERED`. Checklists and the completed setup session are materialized by the setup consumer, not the ordinary owner request.
+
+The producer was already delivered before the coordinator invoked the scoped command, so this observation must not be attributed to that later command. A separate dispatcher sharing the production database is a plausible explanation. The schema stores no worker host identity; database timestamps and completed state alone cannot prove which process/revision executed it. Deterministic local-consumer acceptance needs an isolated target or separately supported worker exclusion, plus process-attributed logs. No deployed worker was disabled or altered for this test.
+
+### Current unverified: remaining checks
+
+- Verify the positive catalog prerequisite result after independently reviewed schema application; the current-target false result is recorded above.
 - Prove strict-check deparse parity, valid receipt shapes, null-reason rejection, foreign-organization rejection, RLS, privileges, and supporting index behavior in the isolated migration proof environment.
 - Independently review additive migration/deployment before the target becomes receipt-ready.
-- Start the reviewed runner with the process-local capability and verify the registered route through real HTTP authentication, MFA/admission behavior, synthetic owner checks, foreign event rejection, and missing-schema refusal before claim.
+- Verify untested real HTTP MFA/admission states, inactive/non-owner/principal denials, foreign existing events, missing-schema refusal before an invite-bearing claim, concurrent commands, and first-claim provenance. Runner startup and the specific authenticated HTTP actions above are already recorded.
 - Verify a synthetic onboarding producer event through canonical delivery, durable exact-event receipts, capture, invitation acceptance, explicit module assignment, authorized landing, and persistence after refresh.
 - Collect actual browser console/network and role/tenant evidence, with deployed/source revision parity stated.
 - Extend reviewed activation dispatch to multiple enabled modules before using this runner to certify that journey.
 
-No server was started, no migration was applied, and no target verification mutation was executed by this source slice. No compound acceptance criterion or Build TODO was marked complete.
+The implementation agent did not start a server, apply a migration, or execute a target mutation. After independent review and commit, the coordinator started the local reviewed runner with a secret process-only capability delivered through stdin. Its loopback health returned HTTP 200. Health does not verify protected-command authentication, activation, or invitation acceptance. No compound acceptance criterion or Build TODO was marked complete.
+
+## Delivery checklist
+
+- [x] Record the named evidence, its source or runtime scope, and the remaining verification limits in this report.
+
+Unfinished implementation and release acceptance remain tracked in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). This checked item records evidence capture only.

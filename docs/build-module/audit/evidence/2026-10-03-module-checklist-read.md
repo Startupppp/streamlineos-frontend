@@ -88,3 +88,9 @@ This verifies source execution of the existing persisted Build read path under P
 - Browser render/reload for wholly initial and partially initialized checklists, stable keys, errors, and mobile layout.
 - Real command/activation persistence, concurrent first commands, transaction rollback, and reload after complete/skip/dismiss/restart.
 - Deployment and operational verification. Full backend test TypeScript validation remains unrun after the session's previous memory failure; a focused dependency graph is used for this slice.
+
+## Delivery checklist
+
+- [x] Record the named evidence, its source or runtime scope, and the remaining verification limits in this report.
+
+Unfinished implementation and release acceptance remain tracked in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). This checked item records evidence capture only.

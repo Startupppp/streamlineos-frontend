@@ -121,3 +121,9 @@ order by "build"."projects"."id" desc limit $7
 ```
 
 `$1/$2` bind the tenant; `$3/$4` bind Completed/Archived; `$5` binds the shared request clock; `$6` binds 70; `$7` binds the requested page size plus one. The derived `percentage` column is unique in these joined relations, so Drizzle's unqualified alias resolves to the lateral projection.
+
+## Delivery checklist
+
+- [x] Record the named evidence, its source or runtime scope, and the remaining verification limits in this report.
+
+Unfinished implementation and release acceptance remain tracked in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). This checked item records evidence capture only.

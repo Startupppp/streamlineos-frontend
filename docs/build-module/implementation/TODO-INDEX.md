@@ -1,6 +1,6 @@
 # Build documentation TODO index
 
-The Delivery checklist and any inline acceptance checkboxes inside each current specification are the source of truth for its implementation status. Open counts include every unchecked box in that document. A checked research row below means only that the historical source is linked in the research traceability map; it does not verify any product behavior. Check a specification item only after recording the current revision and required evidence in the requirement ledger and work claims. The 60 current specifications plus this index make 61 canonical Markdown files.
+The Delivery checklist and any inline acceptance checkboxes inside each current specification are the source of truth for its implementation status. Open counts include every unchecked box in that document. A checked research row below means only that the historical source is linked in the research traceability map; it does not verify any product behavior. Check a specification item only after recording the current revision and required evidence in the requirement ledger and work claims. The 70 current specifications plus this index make 71 canonical Markdown files.
 
 ## Delivery checklist
 
@@ -8,9 +8,9 @@ The Delivery checklist and any inline acceptance checkboxes inside each current 
 - [ ] Every accepted research finding has an adopted or deferred destination in the research traceability map.
 - [ ] Release gates, tenant/role browser paths, persistence, and operations evidence are complete.
 
-Current specification items: 50 checked; 392 open. Historical research traceability: 116 mapped of 116 files.
+Current specification items: 94 checked; 411 open. Historical research traceability: 116 mapped of 116 files.
 
-## Current specifications (60)
+## Current specifications (70)
 
 - [ ] [architecture/07-architecture-data-api-cache-ai.md](../architecture/07-architecture-data-api-cache-ai.md) — 0 checked, 12 open
 - [ ] [architecture/08-deep-module-reconciliation.md](../architecture/08-deep-module-reconciliation.md) — 0 checked, 12 open
@@ -19,6 +19,16 @@ Current specification items: 50 checked; 392 open. Historical research traceabil
 - [ ] [audit/cleanup-manifest.md](../audit/cleanup-manifest.md) — 2 checked, 2 open
 - [ ] [audit/client-portal-activation-gap.md](../audit/client-portal-activation-gap.md) — 3 checked, 5 open
 - [ ] [audit/comprehensive-recheck-2026-10-02.md](../audit/comprehensive-recheck-2026-10-02.md) — 1 checked, 3 open
+- [x] [audit/evidence/2026-10-03-build-browser-runner.md](../audit/evidence/2026-10-03-build-browser-runner.md) — 1 checked, 0 open
+- [x] [audit/evidence/2026-10-03-module-checklist-read.md](../audit/evidence/2026-10-03-module-checklist-read.md) — 1 checked, 0 open
+- [ ] [audit/evidence/2026-10-03-my-work-drafts.md](../audit/evidence/2026-10-03-my-work-drafts.md) — 1 checked, 6 open
+- [ ] [audit/evidence/2026-10-03-organization-setup-migration-proof.md](../audit/evidence/2026-10-03-organization-setup-migration-proof.md) — 9 checked, 2 open
+- [ ] [audit/evidence/2026-10-03-outbox-exact-event.md](../audit/evidence/2026-10-03-outbox-exact-event.md) — 12 checked, 6 open
+- [x] [audit/evidence/2026-10-03-production-catalog.md](../audit/evidence/2026-10-03-production-catalog.md) — 1 checked, 0 open
+- [ ] [audit/evidence/2026-10-03-project-access-projection.md](../audit/evidence/2026-10-03-project-access-projection.md) — 9 checked, 3 open
+- [ ] [audit/evidence/2026-10-03-project-health-paging.md](../audit/evidence/2026-10-03-project-health-paging.md) — 8 checked, 2 open
+- [x] [audit/evidence/2026-10-03-projects-browser.md](../audit/evidence/2026-10-03-projects-browser.md) — 1 checked, 0 open
+- [x] [audit/evidence/2026-10-03-scoped-activation-dispatch.md](../audit/evidence/2026-10-03-scoped-activation-dispatch.md) — 1 checked, 0 open
 - [ ] [audit/migration-chain-gap.md](../audit/migration-chain-gap.md) — 1 checked, 3 open
 - [ ] [audit/onboarding-current-state-gap.md](../audit/onboarding-current-state-gap.md) — 5 checked, 9 open
 - [ ] [audit/original-wow-research-crosswalk.md](../audit/original-wow-research-crosswalk.md) — 1 checked, 2 open

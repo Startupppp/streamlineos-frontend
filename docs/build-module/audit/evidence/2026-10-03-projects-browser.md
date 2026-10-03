@@ -43,3 +43,9 @@ The Projects requirement stays open. Browser checks still need successful full-p
 ## Frontend typecheck
 
 `pnpm -C frontend type-check` initially failed solely on two stale generated `.next/types` blog category/tag route stubs. The coordinator verified ownership and stopped its own Next dev process, checked both paths remained inside `frontend/.next`, removed exactly those generated files, and reran the same package command. Next route generation and the full frontend production TypeScript check then passed. No application blog file or environment file was changed. This compiler result is separate from browser acceptance.
+
+## Delivery checklist
+
+- [x] Record the named evidence, its source or runtime scope, and the remaining verification limits in this report.
+
+Unfinished implementation and release acceptance remain tracked in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). This checked item records evidence capture only.

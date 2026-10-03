@@ -110,3 +110,13 @@ The independently reviewed runner at backend `0c4b33141` was launched by the coo
 | Authenticated initial setup status GET | 200, `ready=false`, provisioning `not-started` | The new account was not incorrectly reported ready before activation. |
 
 The namespace/origin denials are runner policy evidence, not product RBAC or cross-tenant proof. Browser session establishment, durable onboarding, invitations, record actions, and permission matrices remain open. Automatic approval review rejected starting the frontend with temporary local API/auth URLs; the coordinator requested clarification and did not repeat that rejected launch. Until the frontend is connected to this runner, existing browser observations against the deployed API do not prove the revised backend behavior.
+
+## Delivery checklist
+
+### Tracking scope reconciliation
+
+The original implementation index contained 50 checked and 392 open items. Ten subsequently added evidence reports had not yet been indexed because they lacked the required Delivery heading. Adding that documentary heading and regenerating the index includes their existing 44 checked evidence-capture items and 19 open follow-up items: 94 checked and 411 open across 70 current documents. This reconciles tracking scope; it does not close any of the original 392 implementation items. Evidence-capture checks do not certify product acceptance, and overlapping release obligations remain tied to the canonical requirement IDs.
+
+- [x] Record the named evidence, its source or runtime scope, and the remaining verification limits in this report.
+
+Unfinished implementation and release acceptance remain tracked in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). This checked item records evidence capture only.

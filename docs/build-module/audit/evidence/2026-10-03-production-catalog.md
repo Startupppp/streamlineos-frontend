@@ -172,3 +172,9 @@ An alternative provider integration check could send to a trusted loopback HTTPS
 The current backend has no `PROCESS_ROLE` contract. Setting `PROCESS_ROLE=http` does not isolate it from workers. Eleven worker switches are listed in [the seeded process environment](../../../../backend/test/helpers/seeded-process-environment.ts), but the normal `AppModule` still runs `PayrollCalendarReminderScheduler.safeRun()` immediately at module initialization and executes `PermissionCatalogSyncService.sync()` before its optional grant-reconcile guard. [The e2e app](../../../../backend/test/helpers/e2e-app.ts) already uses provider overrides for these initialization seams. A browser runner pointed at production must use explicit background/bootstrap isolation and scoped synthetic records; normal `main.ts` startup with only an invented process-role variable does not provide that isolation.
 
 No verification server, external email, signup, account creation, token issuance, or database mutation was performed during this source inspection.
+
+## Delivery checklist
+
+- [x] Record the named evidence, its source or runtime scope, and the remaining verification limits in this report.
+
+Unfinished implementation and release acceptance remain tracked in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). This checked item records evidence capture only.

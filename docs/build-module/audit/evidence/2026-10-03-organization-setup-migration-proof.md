@@ -95,3 +95,9 @@ Root approved future additive identities `ck_organization_setup_invitation_recei
 - [x] Reproduce NULL-reason and child-index RED.
 - [ ] Reserve and verify additive repairs and upgrade/rollback ownership decisions separately.
 - [ ] Verify official migration runners, full chain, deployment, and browser activation separately.
+
+## Delivery checklist
+
+- [x] Record the named evidence, its source or runtime scope, and the remaining verification limits in this report.
+
+Unfinished implementation and release acceptance remain tracked in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). This checked item records evidence capture only.

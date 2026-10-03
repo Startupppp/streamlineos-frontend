@@ -49,3 +49,9 @@ An intermediate attempt to replay compiled SQL without its parameter bindings re
 - [ ] Full role and tenant browser acceptance beyond this administrator read.
 
 This evidence verifies current source against the selected target read. It does not establish deployed or browser completion.
+
+## Delivery checklist
+
+- [x] Record the named evidence, its source or runtime scope, and the remaining verification limits in this report.
+
+Unfinished implementation and release acceptance remain tracked in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). This checked item records evidence capture only.
