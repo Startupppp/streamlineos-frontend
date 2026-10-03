@@ -165,6 +165,12 @@ Backend `a310fae3e` corrects only the synthetic verification adapter. The actual
 
 Independent review passed. Four focused suites passed 166 tests; scoped ESLint passed with zero warnings; the two-file test TypeScript check passed. An earlier broader TypeScript run caught a new test-table inference issue, which was corrected, and in-progress assignment-authority errors owned by the parallel workstream; it was not represented as passing. The existing process 15616 was left running on its prior source. No organization suspension/reactivation or browser proof is claimed from these source checks; its next reviewed restart and a genuine synthetic second member are still required.
 
+### Bounded personal-token verification adapter
+
+Backend `1834d98c1` permits the real `/me/api-tokens` create/revoke endpoints through the synthetic runner after reserved actor and organization checks. Creation requires a reserved verification name, 1–100 unique Build-only scopes, and an explicit ISO expiry in the next hour. Revocation requires the exact scalar route ID; the real controller and service still enforce permission and token ownership. Background workers and external providers remain disabled. No JWT signing, credential import, browser session transfer or frontend URL change was added.
+
+Two positive adapter cases failed before the change; four suites then passed 180 tests, zero-warning scoped ESLint and the two-file test TypeScript check passed. Independent review was clear. This is adapter evidence only: no personal token had been created at this source checkpoint. Subsequent real probes must retain raw tokens only in process memory, use the original human session for revocation, and record cleanup separately from authorization results.
+
 ## Delivery checklist
 
 ### Tracking scope reconciliation
