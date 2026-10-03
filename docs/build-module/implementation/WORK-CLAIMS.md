@@ -37,6 +37,8 @@ Migration gate handoff `BLD-MIGRATION-LOCAL-TIMEOUT-12` under BLD-030/035: `modu
 - Tests first: demonstrate effects do not run before commit and never run after rollback; after commit cache invalidation precedes recipient event; standalone calls retain behavior; malformed ambient context fails safely instead of publishing inside a transaction. Preserve exact tenant/recipient/source predicates and the global watermark command.
 - Commands: focused lifecycle/scoped/global suites; exact-path lint/diff; changed-spec and production TypeScript. Handoff: freeze exact diff/tests for independent review, then root commits/restarts. Required runtime proof remains read-after-write, persisted flags, counts and actual event/cache behavior; no broad requirement closure from focused tests.
 
+Root's complete caller trace found the same ordering defect in `NotificationsService.notifyChanged` and `announce`, including direct canonical creation used by the fixture. The same owner additionally claims existing `backend/src/modules/notifications/notifications.service.ts` and new `backend/src/modules/notifications/notifications-announcement-after-commit.spec.ts`. Cover both count and new-notification publication with rollback/commit/standalone tests, reuse current tenant hooks, and retain LOW priority's no-device-delivery behavior. Keep public `invalidateCache` compatibility for existing callers; do not move provider delivery or create an unclaimed abstraction. These paths have no other active writer.
+
 ### BLD-INBOX-NOTIFICATION-FIXTURE-13
 
 - Requirements: BLD-009, BLD-025, BLD-029, BLD-035. Owner: `module_grants_resume`; independent reviewer: `scoped_activation_dispatch`; coordinator alone runs the runner and database/browser observations.
