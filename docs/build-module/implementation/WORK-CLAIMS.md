@@ -43,6 +43,14 @@ This file is the coordination ledger for active and completed implementation pac
 
 ### My Work navigation handoff
 
+### Scoped activation verification handoff
+
+| Package | Slice | Additional owner paths | Boundary |
+|---|---|---|---|
+| `ARCH-14-ACTIVATION` | BLD-BROWSER-SCOPED-ACTIVATION-02 | After its read-only design, `scoped_activation_dispatch` owns existing `backend/test/helpers/run-build-browser-verification.ts`, `build-browser-app.ts`, `build-browser-store.ts`, new `build-browser-activation.ts`, `build-browser-activation-controller.ts`, `build-browser-activation-schema.ts`, and new `backend/test/security/build-browser-activation.spec.ts`; existing runner/boundary tests may change only for this integration. | A runner-only authenticated, loopback-bound command derives the organization/actor from real authentication and requires a process-local capability plus current active synthetic Org Owner. Validate exact stored setup event, payload, reviewed enabled modules, reserved recipients, and canonical consumer registration before calling a separate configured publisher's `flushEvent`. Preserve disabled shared/global dispatch and workers. Check receipt schema readiness before claiming invite-bearing work; missing schema must be an explicit refusal. Read exact inbox/receipt results after publication; counters alone never prove invitations activated. Optional bounded reserved-recipient email handoff uses the existing canonical service under fresh tenant context. No production route, migration application, seeded-harness change, direct consumer invocation, or global sweep. Independent review precedes launch and target actions. |
+
+### My Work navigation ownership
+
 | Package | Slice | Additional owner paths | Boundary |
 |---|---|---|---|
 | `ARCH-16-CAPABILITY-SETTINGS` | BLD-MY-WORK-DRAFTS-01 | After its read-only inventory, `migration_repair` owns `frontend/lib/build/nav/build-stable-destinations.ts`, `build-nav-model.test.ts`, the My Work page and focused tests/harness, the Inbox page and URL-state tests, `frontend/app/(authenticated)/build/inbox/page.tsx`, `frontend/next.config.ts` and its redirect tests, Build agent-pulse and focused tests, and `frontend/features/build/ticket-details/build-ticket-detail-url.ts` with its focused tests. Mobile navigation fixture/test updates are limited to this alias consolidation. | Rename Assigned to My Work; expose Drafts as a My Work section using the existing draft panel and no fabricated total badge. Preserve legacy Drafts/Inbox links through an explicit redirect and safe query preservation. Use canonical ticket URLs for mouse and keyboard opening, with an allowlisted My Work return context. Separate hook-bearing work content from the section switcher. Existing record authorization remains unchanged. Intercepted panes, draft pagination/newest-first ordering, and full browser acceptance remain separate open work. Independent review precedes commit. |
