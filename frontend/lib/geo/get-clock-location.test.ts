@@ -14,7 +14,7 @@ afterEach(() => {
 
 describe("getClockLocation", () => {
   it("resolves the coordinates when the browser grants a position", async () => {
-    const getCurrentPosition = jest.fn((success: PositionCallback) =>
+    const getCurrentPosition = jest.fn((success: PositionCallback, _failure?: PositionErrorCallback | null, _options?: PositionOptions) =>
       success({ coords: { latitude: 17.4, longitude: 78.5 } } as GeolocationPosition),
     );
     installGeolocation(getCurrentPosition);

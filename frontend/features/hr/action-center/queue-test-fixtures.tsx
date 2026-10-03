@@ -136,14 +136,7 @@ export const mockExpenseRow = {
   expenseDate: "2026-09-28",
   status: "PENDING",
   createdAt: "2026-09-29T09:00:00.000Z",
-  user: {
-    id: "usr-ben",
-    name: "Ben Rao",
-    firstName: "Ben",
-    lastName: "Rao",
-    email: "ben@example.test",
-    image: null,
-  },
+  user: { id: "usr-ben", name: "Ben Rao", firstName: "Ben", lastName: "Rao", email: "ben@example.test", image: null },
 };
 
 export function mockExpensesModule() {

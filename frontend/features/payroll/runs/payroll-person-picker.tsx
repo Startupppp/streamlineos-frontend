@@ -62,7 +62,7 @@ function PersonRow({ person, selected, onPick }: PersonRowProps) {
           <span className="block truncate text-sm text-foreground">{person.displayName}</span>
           {secondary ? <span className="block truncate text-micro text-muted-foreground">{secondary}</span> : null}
         </span>
-        {eligible ? null : (
+        {person.eligibility === "eligible" ? null : (
           <Badge variant="secondary">{INELIGIBLE_BADGE[person.eligibility]}</Badge>
         )}
       </button>
