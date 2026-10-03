@@ -40,7 +40,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useCan } from "@/hooks/api/access";
-import { useRunEmployee, useAddAdjustment, useSetEmployeeHold } from "@/hooks/api/payroll/run-employees";
+import { useRunEmployee, useAddAdjustment, useSetEmployeeHold, useReleaseEmployeeHold } from "@/hooks/api/payroll/run-employees";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
 import { cn } from "@/lib/utils";
 import type { CalculationSnapshotLine, SalaryComponentType } from "@/types/payroll/runs";
@@ -136,6 +137,7 @@ export function BreakdownSheet({
   const addAdjustmentMutation = useAddAdjustment(runId, runEmployeeId ?? 0);
   const canManage = useCan("payroll:runs:manage");
   const holdMutation = useSetEmployeeHold(runId, runEmployeeId ?? 0);
+  const releaseMutation = useReleaseEmployeeHold(runId, runEmployeeId ?? 0);
   const [showHold, setShowHold] = useState(false);
   const [holdReason, setHoldReason] = useState("");
 
@@ -185,19 +187,18 @@ export function BreakdownSheet({
           toast.success("Salary put on hold");
           setShowHold(false);
         },
-        onError: () => toast.error("Failed to hold salary"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }
 
   function handleRelease() {
-    holdMutation.mutate(
-      { hold: false },
-      {
-        onSuccess: () => toast.success("Hold released"),
-        onError: () => toast.error("Failed to release hold"),
+    releaseMutation.mutate(undefined, {
+      onSuccess: (result) => {
+        toast.success(result.published > 0 ? "Hold released and payslip published" : "Hold released");
       },
-    );
+      onError: (err) => toast.error(getErrorMessage(err)),
+    });
   }
 
   const snapshot = data?.calculationSnapshot;
@@ -310,10 +311,10 @@ export function BreakdownSheet({
                     size="sm"
                     variant="outline"
                     onClick={handleRelease}
-                    isPending={holdMutation.isPending}
+                    isPending={releaseMutation.isPending}
                     loadingText="Releasing…"
                   >
-                    Release Hold
+                    Release
                   </LoadingButton>
                 ) : (
                   <Button size="sm" variant="outline" onClick={handleHoldOpen}>

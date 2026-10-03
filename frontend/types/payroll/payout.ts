@@ -141,5 +141,6 @@ export type PayslipPublication = {
 export type PublishResult = {
   published: number;
   total: number;
+  heldCount: number;
   runStatus: string;
 };
