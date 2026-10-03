@@ -3,8 +3,9 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { apiClient } from "@/lib/api-client";
-import { lazyContract } from "@/lib/api-envelope";
+import { isApiError, lazyContract, parseApiResponse } from "@/lib/api-envelope";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import type {
   Notification,
@@ -14,6 +15,8 @@ import type {
 import {
   SHARED_UNREAD_PARAMS,
   toStringParams,
+  useNotificationInboxInvalidation,
+  type NotificationMutationOwner,
 } from "./notifications-shared";
 import { NOTIFICATION_FALLBACK_INTERVAL_MS } from "@/lib/query-request-policies";
 import type { IdCursorPage } from "@/hooks/api/id-cursor-page-schema";
@@ -22,6 +25,77 @@ import {
   useNotificationRowPatch,
 } from "./notifications-inbox-optimistic";
 import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+
+interface SelectedNotificationRead {
+  id: number;
+  section: "ALL" | "SNOOZED" | "ARCHIVED";
+  owner: NotificationMutationOwner;
+  notification: Notification | null;
+  error: unknown;
+  isMissing: boolean;
+}
+
+export function useInboxSelectedNotification(id: number | null, section: SelectedNotificationRead["section"]) {
+  const { captureOwner, queryClient } = useNotificationInboxInvalidation();
+  const [owner, setOwner] = useState<NotificationMutationOwner | null>(null);
+  useLayoutEffect(() => {
+    const next = captureOwner();
+    if (next === owner) return;
+    let live = true;
+    queueMicrotask(() => { if (live && (!next || next.isCurrent())) setOwner(next); });
+    return () => { live = false; };
+  }, [captureOwner, owner]);
+  const [revision, refresh] = useState(0);
+  const [state, setState] = useState<SelectedNotificationRead | null>(null);
+  function retry() { refresh((value) => value + 1); }
+  useEffect(() => {
+    if (id === null) return;
+    if (!owner) return;
+    const controller = new AbortController();
+    function abort() { controller.abort(); }
+    owner.signal.addEventListener("abort", abort);
+    const pending: SelectedNotificationRead = { id, section, owner, notification: null, error: null, isMissing: false };
+    void Promise.resolve().then(async () => {
+      if (!owner.isCurrent() || controller.signal.aborted) return;
+      setState((previous) => previous?.id === id && previous.section === section && previous.owner === owner
+        ? { ...pending, notification: previous.notification } : pending);
+      const path = "/notifications?" + new URLSearchParams(toStringParams({ section, sourceModule: "build", ids: String(id), limit: 1 }));
+      const response = await apiClient.request(path, { method: "GET" }, { signal: controller.signal, expectedIdentity: owner.identity });
+      return parseApiResponse<IdCursorPage<Notification>>(response, await notificationListLazy(), "/notifications");
+    }).then((page) => {
+      if (!page || !owner.isCurrent() || controller.signal.aborted) return;
+      const row = page.data.length === 1 ? page.data[0] : undefined;
+      const notification = row?.id === id && row.sourceModule === "build" && row.orgId === owner.identity.orgId
+        && (row.userId === null || row.userId === owner.identity.userId) ? row : null;
+      setState({ ...pending, notification, isMissing: notification === null });
+    }).catch((error: unknown) => {
+      if (!owner.isCurrent() || controller.signal.aborted) return;
+      const isMissing = isApiError(error) && (error.status === 403 || error.status === 404);
+      setState({ ...pending, error: isMissing ? null : error, isMissing });
+    });
+    return () => { owner.signal.removeEventListener("abort", abort); controller.abort(); };
+  }, [id, section, owner, revision]);
+  useEffect(() => {
+    if (id === null) return;
+    let live = true, scheduled = false;
+    function wake() {
+      if (scheduled) return;
+      scheduled = true;
+      queueMicrotask(() => { scheduled = false; if (live) refresh((value) => value + 1); });
+    }
+    const prefix = platformCoreQueryKeys.notifications.lists();
+    const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
+      if (event.type === "updated" && event.action.type === "invalidate"
+        && prefix.every((part, index) => event.query.queryKey[index] === part)) wake();
+    });
+    window.addEventListener("focus", wake); window.addEventListener("online", wake);
+    const timer = setInterval(wake, NOTIFICATION_FALLBACK_INTERVAL_MS);
+    return () => { live = false; unsubscribe(); window.removeEventListener("focus", wake); window.removeEventListener("online", wake); clearInterval(timer); };
+  }, [id, queryClient]);
+  const current = id !== null && state?.id === id && state.section === section && captureOwner() === state.owner && state.owner.isCurrent();
+  return { notification: current ? state.notification : null, error: current ? state.error : null,
+    isMissing: current && state.isMissing, isPending: id !== null && (!current || (!state.notification && !state.error && !state.isMissing)), retry };
+}
 
 const notificationListLazy = lazyContract(() =>
   import("@/hooks/api/notifications-schema").then(
@@ -136,6 +210,9 @@ export const useInfiniteNotifications = (
       lastPage.length < limit ? undefined : lowestNotificationId(lastPage),
     staleTime: 30_000,
     enabled: !!orgId && (options?.enabled ?? true),
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    refetchInterval: NOTIFICATION_FALLBACK_INTERVAL_MS,
   });
 };
 
@@ -217,7 +294,3 @@ export const useBulkMarkRead = () => useNotificationRowPatch<number[]>({
     kind: "field", change: { field: "isRead", value: true }, matches: (row) => ids.includes(row.id),
   }),
 });
-
-
-
-

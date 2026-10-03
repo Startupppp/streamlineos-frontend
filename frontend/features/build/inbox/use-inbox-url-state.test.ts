@@ -16,6 +16,13 @@ beforeEach(() => {
 });
 
 describe("useInboxUrlState — param round-trips", () => {
+  it.each(["SNOOZED", "ARCHIVED"])("preserves %s and unrelated facets while dropping the cursor", (section) => {
+    mockSearchParams = new URLSearchParams(`section=${section}&q=bug&type=PROJECTS&projectId=54&cursor=42&panel=preview`);
+    const { result } = renderHook(() => useInboxUrlState());
+    expect(result.current.section).toBe(section);
+    act(() => { result.current.setParams({ section: "ALL" }); });
+    expect(replace.mock.calls[0][0]).toBe("/build/inbox?section=ALL&q=bug&type=PROJECTS&projectId=54&panel=preview");
+  });
   it("defaults to section=UNREAD when no params are present", () => {
     const { result } = renderHook(() => useInboxUrlState());
     expect(result.current.section).toBe("UNREAD");

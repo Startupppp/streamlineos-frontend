@@ -11,6 +11,7 @@ Reference for `frontend/CLAUDE.md`. Rules live there and cite this file by ancho
 | Need | Component · Path |
 |---|---|
 | Page shell | `PageWrapper`, `PageSection` — `components/ui/page-wrapper.tsx` |
+| Notification actions | `NotificationCardActions`, `SNOOZE_PRESETS` — `components/shared/notification-card-actions.tsx` (global archive/pin/delete defaults; optional Build triage with independent read acknowledgement, confirmed Resolve/Restore/Snooze/Unsnooze and responsive actions) |
 | Page chrome constants | `PAGE_CHROME_X`, `PAGE_CHROME_BOTTOM`, `CONTENT_PANEL_SOLID`, `CONTENT_FILL_PANEL`, `FILTER_TOOLBAR_ROW`, `FILTER_SELECT_TRIGGER`, `PAGE_BODY_SKELETON_CLASS`, `PAGE_BODY_EMPTY_CLASS`, `STICKY_FOOTER_ABOVE_MOBILE_NAV` (a wizard/form footer that stays visible above the mobile module nav) — `components/ui/content-fill-panel.tsx` |
 | Responsive icon+label toolbar triggers | `MobileOnlyLabelTooltip`, `ResponsiveIconLabelText`, `RESPONSIVE_ICON_LABEL_TRIGGER_CLASS` — `components/ui/responsive-icon-label.tsx` (Filters / Display: icon-only below `md` with tooltip + `aria-label`; labeled from `md` up) |
 | Field sizing constants | `FIELD_CONTROL_CLASS`, `FIELD_CONTROL_HOVER_CLASS`, `FIELD_SELECT_CONTENT_CLASS`, `FIELD_DATE_POPOVER_CONTENT_CLASS`, `INLINE_POPOVER_MIN_CLASS` — `components/ui/field-control.ts` (all fields use the same primary-tinted hover: a `primary/50` border and `primary/5` surface; focus remains the stronger ring state) |

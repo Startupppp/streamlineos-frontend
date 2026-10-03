@@ -6,13 +6,12 @@ import type {
   NotificationSection,
   NotificationCategory,
 } from "@/types/notifications";
-import { isBuildInboxCategory } from "./inbox-categories";
+import { isBuildInboxCategory, BUILD_INBOX_ACTIVE_SECTIONS, BUILD_INBOX_TRIAGE_TABS } from "./inbox-categories";
 import { buildListSearchParams } from "../shared/use-build-list-url-state";
 
 const VALID_SECTIONS: readonly NotificationSection[] = [
-  "UNREAD",
-  "ALL",
-  "MENTIONS",
+  ...BUILD_INBOX_ACTIVE_SECTIONS.map((option) => option.value),
+  ...BUILD_INBOX_TRIAGE_TABS.map((option) => option.value),
 ];
 
 const FILTER_PARAMS = ["q", "type", "projectId"] as const;

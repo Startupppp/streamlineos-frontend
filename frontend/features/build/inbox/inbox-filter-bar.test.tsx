@@ -196,6 +196,19 @@ describe("InboxFilterBar — onQChange stability", () => {
 });
 
 describe("InboxFilterBar — type category select", () => {
+  it("offers Active attention filters without adding them to Later", async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const onSectionChange = jest.fn();
+    const props = { q: null, type: null, hasActiveFilters: false, onQChange: noop,
+      onTypeChange: noop, onClearFilters: noop, onSectionChange, searchInputRef: React.createRef<HTMLInputElement>() };
+    const { rerender } = render(<InboxFilterBar {...props} section="UNREAD" />);
+    expect(screen.getByRole("combobox", { name: "Filter active notifications" })).toBeInTheDocument();
+    await user.click(screen.getByRole("option", { name: "Mentions" }));
+    expect(onSectionChange).toHaveBeenCalledWith("MENTIONS");
+    rerender(<InboxFilterBar {...props} section="SNOOZED" />);
+    expect(screen.queryByRole("combobox", { name: "Filter active notifications" })).toBeNull();
+    expect(screen.getByRole("combobox", { name: "Filter by category" })).toBeInTheDocument();
+  });
   it("offers only categories emitted by Build rather than the global module list", () => {
     render(
       <InboxFilterBar q={null} type={null} hasActiveFilters={false}

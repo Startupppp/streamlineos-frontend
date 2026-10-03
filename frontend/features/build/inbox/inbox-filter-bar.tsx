@@ -5,8 +5,8 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
-import type { NotificationCategory } from "@/types/notifications";
-import { BUILD_INBOX_CATEGORIES, isBuildInboxCategory } from "./inbox-categories";
+import type { NotificationCategory, NotificationSection } from "@/types/notifications";
+import { BUILD_INBOX_ACTIVE_SECTIONS, BUILD_INBOX_CATEGORIES, getBuildInboxTriageSection, isBuildInboxCategory } from "./inbox-categories";
 
 const ALL_TYPES_SENTINEL = "__all__" as const;
 const TYPE_OPTIONS = [
@@ -15,6 +15,8 @@ const TYPE_OPTIONS = [
 ] as const;
 
 interface InboxFilterBarProps {
+  section?: NotificationSection;
+  onSectionChange?: (section: NotificationSection) => void;
   q: string | null;
   type: NotificationCategory | null;
   projectId?: number | null;
@@ -27,6 +29,8 @@ interface InboxFilterBarProps {
 }
 
 export function InboxFilterBar({
+  section = "UNREAD",
+  onSectionChange,
   q,
   type,
   projectId = null,
@@ -72,6 +76,10 @@ export function InboxFilterBar({
       onTypeChange(value);
     }
   }
+  function handleActiveSectionChange(value: string) {
+    const option = BUILD_INBOX_ACTIVE_SECTIONS.find((entry) => entry.value === value);
+    if (option) onSectionChange?.(option.value);
+  }
 
   return (
     <BuildListToolbar
@@ -84,6 +92,10 @@ export function InboxFilterBar({
         inputRef: searchInputRef,
       }}
       filters={[
+        ...(getBuildInboxTriageSection(section) === "ALL" && onSectionChange ? [{
+          id: "attention", label: "Attention", active: section !== "ALL",
+          control: <BuildFilterSelect label="Filter active notifications" value={section} onValueChange={handleActiveSectionChange} options={BUILD_INBOX_ACTIVE_SECTIONS} />,
+        }] : []),
         {
           id: "type",
           label: "Category",

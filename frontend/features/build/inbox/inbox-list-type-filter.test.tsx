@@ -69,6 +69,14 @@ beforeEach(() => {
 });
 
 describe("InboxList — type prop wires category to the query and resets pagination", () => {
+  it.each(["SNOOZED", "ARCHIVED"] satisfies Array<"SNOOZED" | "ARCHIVED">)("exposes three triage tabs for %s while keeping Build scope", (section) => {
+    mockPages([1], false);
+    render(<InboxList selectedId={null} onSelect={noop} section={section} q={null} searchInputRef={searchRef} />);
+    expect(screen.getByRole("tab", { name: "Active" })).toBeVisible();
+    expect(screen.getByRole("tab", { name: "Later" })).toBeVisible();
+    expect(screen.getByRole("tab", { name: "Done" })).toBeVisible();
+    expect(useInfiniteNotifications).toHaveBeenCalledWith(expect.objectContaining({ section, sourceModule: "build" }));
+  });
   it("shows a customer-facing error when the scoped mark-all route is unavailable", async () => {
     const user = userEvent.setup();
     const mutate = jest.fn((variables: void, options?: { onError?: (error: unknown) => void }) => {
