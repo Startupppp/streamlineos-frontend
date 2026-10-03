@@ -188,26 +188,34 @@ describe("useInboxUrlState — type param validation", () => {
     expect(result.current.type).toBeNull();
   });
 
-  it("a different valid category also round-trips", () => {
-    mockSearchParams = new URLSearchParams("type=BILLING");
+  it("Build workflow approvals also round-trip", () => {
+    mockSearchParams = new URLSearchParams("type=WORKFLOW");
     const { result } = renderHook(() => useInboxUrlState());
-    expect(result.current.type).toBe("BILLING");
+    expect(result.current.type).toBe("WORKFLOW");
   });
 
-  it("type=SECURITY is a valid category and round-trips", () => {
-    mockSearchParams = new URLSearchParams("type=SECURITY");
+  it.each(["SECURITY", "BILLING", "HRMS", "CRM", "AI"])("ignores the unrelated global category %s in an old shared link", (category) => {
+    mockSearchParams = new URLSearchParams(`type=${category}`);
     const { result } = renderHook(() => useInboxUrlState());
-    expect(result.current.type).toBe("SECURITY");
+    expect(result.current.type).toBeNull();
+    expect(result.current.hasActiveFilters).toBe(false);
   });
 
   it("setParams with a category value writes it to the URL", () => {
     mockSearchParams = new URLSearchParams();
     const { result } = renderHook(() => useInboxUrlState());
     act(() => {
-      result.current.setParams({ type: "HRMS" });
+      result.current.setParams({ type: "WORKFLOW" });
     });
     const url = replace.mock.calls[0][0];
-    expect(url).toContain("type=HRMS");
+    expect(url).toContain("type=WORKFLOW");
+  });
+
+  it("removes unsupported category parameters when writing the next URL", () => {
+    mockSearchParams = new URLSearchParams("type=CRM&section=ALL&cursor=5");
+    const { result } = renderHook(() => useInboxUrlState());
+    act(() => { result.current.setParams({ q: "release" }); });
+    expect(replace).toHaveBeenCalledWith("/build/inbox?section=ALL&q=release", { scroll: false });
   });
 
   it("setParams with null for type removes the param (All types selection)", () => {
@@ -232,7 +240,7 @@ describe("useInboxUrlState — type param validation", () => {
   });
 
   it("hasActiveFilters is true when a valid type is set", () => {
-    mockSearchParams = new URLSearchParams("type=AI");
+    mockSearchParams = new URLSearchParams("type=WORKFLOW");
     const { result } = renderHook(() => useInboxUrlState());
     expect(result.current.hasActiveFilters).toBe(true);
   });

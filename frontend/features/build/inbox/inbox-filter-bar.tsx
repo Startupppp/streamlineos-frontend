@@ -6,16 +6,12 @@ import { Button } from "@/components/ui/button";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import type { NotificationCategory } from "@/types/notifications";
-import { NOTIFICATION_CATEGORY_VALUES } from "@/types/notifications";
-import { isNotificationCategory } from "./use-inbox-url-state";
+import { BUILD_INBOX_CATEGORIES, isBuildInboxCategory } from "./inbox-categories";
 
 const ALL_TYPES_SENTINEL = "__all__" as const;
 const TYPE_OPTIONS = [
   { value: ALL_TYPES_SENTINEL, label: "All types" },
-  ...NOTIFICATION_CATEGORY_VALUES.map((category) => ({
-    value: category,
-    label: category,
-  })),
+  ...BUILD_INBOX_CATEGORIES,
 ] as const;
 
 interface InboxFilterBarProps {
@@ -72,7 +68,7 @@ export function InboxFilterBar({
       onTypeChange(null);
       return;
     }
-    if (isNotificationCategory(value)) {
+    if (isBuildInboxCategory(value)) {
       onTypeChange(value);
     }
   }

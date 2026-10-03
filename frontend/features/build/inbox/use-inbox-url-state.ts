@@ -6,7 +6,7 @@ import type {
   NotificationSection,
   NotificationCategory,
 } from "@/types/notifications";
-import { NOTIFICATION_CATEGORY_VALUES } from "@/types/notifications";
+import { isBuildInboxCategory } from "./inbox-categories";
 import { buildListSearchParams } from "../shared/use-build-list-url-state";
 
 const VALID_SECTIONS: readonly NotificationSection[] = [
@@ -22,12 +22,8 @@ function parseSection(raw: string | null): NotificationSection {
   return match ?? "UNREAD";
 }
 
-export function isNotificationCategory(v: string): v is NotificationCategory {
-  return NOTIFICATION_CATEGORY_VALUES.some((category) => category === v);
-}
-
 function parseType(raw: string | null): NotificationCategory | null {
-  if (raw !== null && isNotificationCategory(raw)) return raw;
+  if (raw !== null && isBuildInboxCategory(raw)) return raw;
   return null;
 }
 
@@ -84,6 +80,8 @@ export function useInboxUrlState(): InboxUrlState {
       const next = buildListSearchParams(searchParams, updates, {
         resetCursor: Object.keys(updates).some((key) => key !== "cursor"),
       });
+      const nextType = next.get("type");
+      if (nextType !== null && !isBuildInboxCategory(nextType)) next.delete("type");
       replaceWith(next);
     },
     [replaceWith, searchParams],

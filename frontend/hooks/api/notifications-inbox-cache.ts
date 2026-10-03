@@ -46,6 +46,45 @@ export function restoreListSnapshots(
   }
 }
 
+export function restoreScopedReadState(
+  queryClient: QueryClient,
+  snapshots: NotifListSnapshot[],
+  sourceModule: string,
+): void {
+  for (const [key, previous] of snapshots) {
+    const unreadIds = new Set<number>();
+    function collect(rows: (Notification | UnifiedInboxItem)[]) {
+      for (const row of rows) {
+        if ("kind" in row && row.kind !== "notification") continue;
+        if (row.sourceModule === sourceModule && !row.isRead) unreadIds.add(row.id);
+      }
+    }
+    if (isInfiniteData<Notification[] | UnifiedInboxResponse>(previous)) {
+      for (const page of previous.pages) collect(Array.isArray(page) ? page : page.items);
+    } else if (isNotificationList(previous)) {
+      collect(previous);
+    }
+    if (unreadIds.size === 0) continue;
+    function restore<T extends Notification | UnifiedInboxItem>(row: T): T {
+      if ("kind" in row && row.kind !== "notification") return row;
+      return row.sourceModule === sourceModule && unreadIds.has(row.id)
+        ? { ...row, isRead: false }
+        : row;
+    }
+    queryClient.setQueryData<unknown>(key, (current: unknown) => {
+      if (isInfiniteData<Notification[] | UnifiedInboxResponse>(current)) {
+        return {
+          ...current,
+          pages: current.pages.map((page) => Array.isArray(page)
+            ? page.map(restore)
+            : { ...page, items: page.items.map(restore) }),
+        };
+      }
+      return isNotificationList(current) ? current.map(restore) : current;
+    });
+  }
+}
+
 export function snapshotAndRemoveFromLists(
   queryClient: QueryClient,
   listKey: QueryKey,

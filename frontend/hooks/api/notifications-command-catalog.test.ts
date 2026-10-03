@@ -10,7 +10,7 @@ describe("command catalog — classification coverage", () => {
     expect(entries.length).toBeGreaterThan(0);
     for (const [, entry] of entries)
       expect(entry.classification.kind).toBe("SELF");
-    expect(entries.length).toBe(13);
+    expect(entries.length).toBe(14);
   });
 
   it("chat commands include both PERMISSIONED and SELF entries", () => {
@@ -30,5 +30,10 @@ describe("command catalog — classification coverage", () => {
     for (const domain of Object.values(ALL_COMMANDS))
       for (const entry of Object.values(domain))
         expect(typeof entry.endpoint).toBe("string");
+  });
+
+  it("inventories separate global and scoped mark-all endpoints", () => {
+    expect(NOTIFICATION_COMMANDS.markAllRead.endpoint).toBe("PATCH /notifications/read-all");
+    expect(NOTIFICATION_COMMANDS.markSourceRead.endpoint).toBe("PATCH /notifications/source/:sourceModule/read-all");
   });
 });

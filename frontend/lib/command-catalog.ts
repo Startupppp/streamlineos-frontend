@@ -18,6 +18,10 @@ export const NOTIFICATION_COMMANDS = {
     endpoint: "PATCH /notifications/read-all",
     classification: { kind: "SELF" as const, reason: "user manages their own notifications" },
   },
+  markSourceRead: {
+    endpoint: "PATCH /notifications/source/:sourceModule/read-all",
+    classification: { kind: "SELF" as const, reason: "user manages their own notifications from one module" },
+  },
   bulkMarkRead: {
     endpoint: "POST /notifications/bulk/read",
     classification: { kind: "SELF" as const, reason: "user manages their own notifications" },

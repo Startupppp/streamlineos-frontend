@@ -19,6 +19,7 @@ import {
 import { NOTIFICATION_FALLBACK_INTERVAL_MS } from "@/lib/query-request-policies";
 import type { IdCursorPage } from "@/hooks/api/id-cursor-page-schema";
 import {
+  restoreScopedReadState,
   snapshotAndPatchLists,
   snapshotAndPatchUnified,
 } from "./notifications-inbox-cache";
@@ -229,13 +230,15 @@ export const useMarkNotificationRead = () => {
   });
 };
 
-export const useMarkAllNotificationsRead = () => {
+export const useMarkAllNotificationsRead = (sourceModule?: string) => {
   const { invalidateInbox, queryClient } = useNotificationInboxInvalidation();
-  return useMutation<NotificationAck, Error, void, NotifMutationContext>({
+  return useMutation<NotificationAck, Error, void, NotifMutationContext & { sourceModule?: string }>({
     mutationKey: ["notifications", "mark-all-read"],
     mutationFn: () =>
       apiClient.patch<NotificationAck>(
-        "/notifications/read-all",
+        sourceModule === undefined
+          ? "/notifications/read-all"
+          : `/notifications/source/${encodeURIComponent(sourceModule)}/read-all`,
         undefined,
         undefined,
         notificationAckLazy,
@@ -244,24 +247,29 @@ export const useMarkAllNotificationsRead = () => {
       const { listKey, unreadKey, previousCount } =
         await beginInboxPatch(queryClient);
       const previousLists = [
-        ...snapshotAndPatchLists(queryClient, listKey, (n) => ({
-          ...n,
-          isRead: true,
-        })),
+        ...snapshotAndPatchLists(queryClient, listKey, (n) =>
+          sourceModule === undefined || n.sourceModule === sourceModule
+            ? { ...n, isRead: true }
+            : n,
+        ),
         ...snapshotAndPatchUnified(
           queryClient,
           platformCoreQueryKeys.inbox.all,
-          (item) => ({
-            ...item,
-            isRead: true,
-          }),
+          (item) => sourceModule === undefined || item.sourceModule === sourceModule
+            ? { ...item, isRead: true }
+            : item,
         ),
       ];
-      queryClient.setQueryData<UnreadCount>(unreadKey, { count: 0 });
-      return { previousLists, previousCount };
+      if (sourceModule === undefined) queryClient.setQueryData<UnreadCount>(unreadKey, { count: 0 });
+      return { previousLists, previousCount, sourceModule };
     },
-    onError: (_err, _vars, context) =>
-      restoreInboxSnapshot(queryClient, context),
+    onError: (_err, _vars, context) => {
+      if (context?.sourceModule !== undefined) {
+        restoreScopedReadState(queryClient, context.previousLists, context.sourceModule);
+      } else {
+        restoreInboxSnapshot(queryClient, context);
+      }
+    },
     onSettled: () => invalidateInbox(),
   });
 };

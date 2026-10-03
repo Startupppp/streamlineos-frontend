@@ -17,18 +17,18 @@ jest.mock("@/components/ui/select", () => {
     );
   }
   function SelectTrigger({ children, "aria-label": ariaLabel }: { children: React.ReactNode; "aria-label"?: string; className?: string }) {
-    return <button type="button" role="combobox" aria-label={ariaLabel}>{children}</button>;
+    return <button type="button" role="combobox" aria-label={ariaLabel} aria-expanded="true" aria-controls="mock-select-options">{children}</button>;
   }
   function SelectValue({ placeholder }: { placeholder?: string }) {
     return <span>{placeholder}</span>;
   }
   function SelectContent({ children }: { children: React.ReactNode }) {
-    return <div>{children}</div>;
+    return <div id="mock-select-options">{children}</div>;
   }
   function SelectItem({ value, children }: { value: string; children: React.ReactNode }) {
     const { onValueChange } = mockReact.useContext(SelectCtx);
     return (
-      <div role="option" onClick={() => onValueChange?.(value)}>
+      <div role="option" aria-selected="false" onClick={() => onValueChange?.(value)}>
         {children}
       </div>
     );
@@ -196,6 +196,16 @@ describe("InboxFilterBar — onQChange stability", () => {
 });
 
 describe("InboxFilterBar — type category select", () => {
+  it("offers only categories emitted by Build rather than the global module list", () => {
+    render(
+      <InboxFilterBar q={null} type={null} hasActiveFilters={false}
+        onQChange={noop} onTypeChange={noop} onClearFilters={noop}
+        searchInputRef={React.createRef<HTMLInputElement>()} />,
+    );
+    expect(screen.getAllByRole("option").map((option) => option.textContent))
+      .toEqual(["All types", "Projects & tickets", "Approvals"]);
+  });
+
   it("renders a combobox with accessible label", () => {
     const ref = React.createRef<HTMLInputElement>();
     render(
@@ -227,7 +237,7 @@ describe("InboxFilterBar — type category select", () => {
         searchInputRef={ref}
       />,
     );
-    await user.click(screen.getByRole("option", { name: "PROJECTS" }));
+    await user.click(screen.getByRole("option", { name: "Projects & tickets" }));
     expect(onTypeChange).toHaveBeenCalledWith("PROJECTS");
   });
 

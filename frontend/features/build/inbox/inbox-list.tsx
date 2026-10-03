@@ -1,6 +1,8 @@
 "use client";
 
 import * as React from "react";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { EmptyInboxIllustration } from "@/components/illustrations";
@@ -89,7 +91,7 @@ export function InboxList({
   const [pagesShown, setPagesShown] = React.useState(1);
   const [selectedIds, setSelectedIds] = React.useState<Set<number>>(new Set());
   const { mutate: markRead } = useMarkNotificationRead();
-  const { mutate: markAllRead, isPending: isMarkingAll } = useMarkAllNotificationsRead();
+  const { mutate: markAllRead, isPending: isMarkingAll } = useMarkAllNotificationsRead("build");
 
   const rawNotifications = React.useMemo(() => data?.pages.flat() ?? [], [data]);
   const total = rawNotifications.length;
@@ -117,7 +119,7 @@ export function InboxList({
     const next = SECTION_FILTERS.find((filter) => filter.value === value)?.value;
     if (next !== undefined) { onSectionChange?.(next); onFilterChange?.(); }
   }
-  function handleMarkAll() { markAllRead(); }
+  function handleMarkAll() { markAllRead(undefined, { onError: (err) => toast.error(getErrorMessage(err)) }); }
   function handleRetry() { void refetch(); }
   function handleLoadMore() { setPagesShown((p) => p + 1); if (heldCount === 0) fetchNextPage(); }
   function handleToggleSelect(id: number) {
@@ -139,9 +141,11 @@ export function InboxList({
   const onSelectRef = React.useRef(onSelect);
   const onClearSelectionRef = React.useRef(onClearSelection);
   const firstNotificationRef = React.useRef(firstNotification);
-  onSelectRef.current = onSelect;
-  onClearSelectionRef.current = onClearSelection;
-  firstNotificationRef.current = firstNotification;
+  React.useLayoutEffect(() => {
+    onSelectRef.current = onSelect;
+    onClearSelectionRef.current = onClearSelection;
+    firstNotificationRef.current = firstNotification;
+  });
 
   React.useEffect(() => {
     if (isPending || isError) return;
