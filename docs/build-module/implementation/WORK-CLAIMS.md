@@ -28,6 +28,14 @@ Migration gate handoff `BLD-MIGRATION-LOCAL-TIMEOUT-12` under BLD-030/035: `modu
 
 ## Active claims
 
+### BLD-NOTIFICATION-STREAM-WIRE-18
+
+- Requirements: BLD-009, BLD-025, BLD-035. Owner: `module_grants_resume`; independent reviewer: root. Exact paths: existing `backend/src/common/interceptors/response-transform.interceptor.ts` and new `backend/src/modules/notifications/__tests__/notification-stream-wire.spec.ts`. Excluded: all notification services/controllers, frontend parser, catalogs, runner and generated schemas.
+- Current runtime evidence: the genuine synthetic stream returns a default `message` frame whose JSON is the original MessageEvent (`data` string plus `type`). Count events remain recognizable, but the frontend parser expects `notification` at top level and drops the nested payload. Root's initial named-event-only observer was incomplete; the subsequent raw-frame probe establishes this actual shape.
+- Existing-file assessment: the shared response transformer owns JSON envelopes and wrongly transforms Nest SSE messages. Bypass JSON mapping only for handlers bearing the installed Nest `SSE_METADATA`; no custom envelope, helper, decorator or new production file. Preserve all ordinary JSON behavior.
+- Test first: a bounded real Nest/Express wire probe using the actual NotificationsController and NotificationEventService must fail before the fix, then prove top-level notification/count payloads, heartbeat framing and wrong/replayed token denial. Separate JSON routes prove plain and already-enveloped responses unchanged. The test-only authentication stub is explicit; this probe does not establish actual runtime authentication or tenancy.
+- Commands: focused wire/notification suites, exact-path lint/diff, then root's serial changed-spec/production TypeScript. Freeze before review/commit. Root restarts only the reviewed runner for authenticated real SSE and applicable browser proof. Full notification durability, role/tenant/deployment acceptance remains open.
+
 ### BLD-PORTAL-MIGRATION-PROOF-17
 
 - Requirements: BLD-005, BLD-024, BLD-030, BLD-035. Owner: `scoped_activation_dispatch`; root coordinates independent review, database execution and evidence. Exact new paths: `backend/src/scripts/portal-migration-proof.mjs`, `backend/src/scripts/lib/portal-migration-proof-baseline.mjs`, `backend/src/scripts/lib/portal-migration-proof-cases.mjs`, and `backend/src/scripts/__tests__/portal-migration-proof.test.mjs`.
