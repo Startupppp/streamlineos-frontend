@@ -59,6 +59,20 @@ Screenshots: [clear-all confirmation](2026-10-03-browser/drafts-clear-all-confir
 
 The broader BLD-008 and BLD-023 checkboxes remain open because they include pane, full role/mobile/browser acceptance, and navigation requirements beyond these source slices.
 
+## Reviewed offline identity and ordering repair
+
+Frontend `4c38a2875494080d88cadf59b6907b52d0f29d8a` contains the independently reviewed offline draft repair. The owner-bound v2 buffer validates trusted organization/user/session scope, positive int32 ticket IDs, bounded bodies and revision identifiers. It preserves corrupt scoped bytes and legacy ownerless storage without consuming or migrating them. Replay peeks without removal and acknowledges only the exact current revision after a fenced successful PUT. Same-process per-ticket requests enter the queue before asynchronous permission checks; superseded revisions cannot overwrite newer queued revisions. Abort, denied access and failed requests retain the pending draft.
+
+Transport fencing rechecks the expected real user/organization/session before both the initial request and authentication retry, including abort and impersonation state. A terminal fenced request cannot sign out or redirect a different account after a context change. No authority fields or raw credentials are transmitted in the draft body or logged. The source slice passed 14 suites/122 tests, production and scoped spec TypeScript, scoped ESLint, whitespace checks, and root plus independent review. These are source and focused-test results; real browser offline recovery, cross-tab ordering, post/delete coordination, editor resume, and deployed-backend parity remain Current unverified.
+
+## Shared default route-tab styling
+
+Frontend `de5e6052e` removes the page-local gray section-link styling. `TabsNavigation` and `TabsNavigationLink` in the existing UI module share the original `TabsList`/`TabsTrigger` class strings and horizontal overflow affordance. Native links retain browser and modifier semantics, named click handlers, the dirty-navigation guard, URL state, and `aria-current="page"`; they do not pretend to control a Radix tab panel. The UI kit inventory names the route-navigation exports. Existing components' default styles are preserved; no code comments were added.
+
+Independent review passed, the existing My Work and offline suites passed 24 tests, production TypeScript exited 0, scoped ESLint passed, and the staged diff check passed. Actual browser checks measured the active Tickets link and existing Assigned tab with identical backgrounds `rgb(28, 25, 23)` and text `rgb(250, 250, 249)`. Tickets and Drafts clicks retained `q=QA-070`; Browser Back restored the ticket list and search. At 375 px, both section links shared the row equally, had the same active styling, and document width equaled the viewport width. Native new-tab acceptance remains open: the attempted middle-click did not yield a confirmed new tab. The browser also recorded an `AccessUnavailableError` from the deployed permission read; this is not an error-free browser or local-backend parity claim. The temporary responsive tab was closed and viewport override reset.
+
+Screenshots: [default tabs on desktop](2026-10-03-browser/my-work-default-tabs-desktop.jpg), measured 1072 px, and [default tabs at 375 px](2026-10-03-browser/my-work-default-tabs-mobile-375.jpg). No browser comment submission, deletion, or ticket mutation was performed. Physical-device behavior, dirty-editor navigation and full role/tenant acceptance remain open.
+
 ## Delivery checklist
 
 - [x] Record the named evidence, its source or runtime scope, and the remaining verification limits in this report.

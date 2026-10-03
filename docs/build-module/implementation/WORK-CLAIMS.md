@@ -80,11 +80,11 @@ This file is the coordination ledger for active and completed implementation pac
 | `ARCH-09-FRONTEND-WORKFLOWS` | BLD-TICKET-DRAFT-RESUME-05 frontend | `scoped_activation_dispatch` owns `frontend/hooks/api/build/comment-drafts.ts`, `comment-drafts-schema.ts`, `frontend/lib/query-keys/build-work.ts`, new private `frontend/features/build/ticket-details/use-ticket-comment-composer.ts` and focused test, existing `activity-feed.tsx`, its `activity-feed-ai-draft.test.tsx`, and new adjacent `activity-feed-draft-resume.test.tsx`. | Hydrate only an untouched empty composer for the same ticket, trusted org, user and session. Fresh fenced successful reads; owner-bound pending local draft takes precedence. Never overwrite typing/clearing/AI Apply, trigger autosave on hydration, or interpret error as no draft. Reuse existing editor/buttons/default styles and named callbacks. Preserve permission gates and mutation cache prefixes. Post/delete coordination, full dirty navigation, cross-tab ordering, paging and split panes remain separate follow-ups. No posted comments or browser changes. |
 | `ARCH-06-WIRE-CONTRACTS` | BLD-TICKET-DRAFT-RESUME-05 generated contract | The coordinator serializes `backend/openapi.json`, `frontend/contracts/openapi.json`, and `frontend/contracts/build-contracts.generated.ts` only after the reviewed backend seam is ready. | Frontend agent must not hand-edit generated files. Root owns real API/database/browser proof and final exact-path commits. Heavy TypeScript runs are sequential, and full compound TODOs stay open until their browser evidence passes. |
 
-## Completed source slices
-
 ### Draft resume size-boundary extension
 
 The coordinator extends `BLD-TICKET-DRAFT-RESUME-05 frontend` ownership to one adjacent private source file, `frontend/hooks/api/build/comment-drafts-read.ts`, after the shared hook exceeded its existing 300-line ratchet. This file owns the trusted draft identity and bounded by-ticket reader; the existing mutation hook reuses the same identity seam. Preserve a single authority for identity validation, abort/expected-identity fencing and contract parsing. No second transport, authority body fields, generated edits, code comments, or duplicated mutation lifecycle. Focused tests and independent review cover the extracted seam.
+
+## Completed source slices
 
 | Package | Requirement IDs | Agent/task | Final revision | Outcome | Evidence/handoff | Compatibility or follow-up |
 |---|---|---|---|---|---|---|

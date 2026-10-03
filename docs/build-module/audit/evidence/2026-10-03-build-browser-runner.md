@@ -111,6 +111,54 @@ The independently reviewed runner at backend `0c4b33141` was launched by the coo
 
 The namespace/origin denials are runner policy evidence, not product RBAC or cross-tenant proof. Browser session establishment, durable onboarding, invitations, record actions, and permission matrices remain open. Automatic approval review rejected starting the frontend with temporary local API/auth URLs; the coordinator requested clarification and did not repeat that rejected launch. Until the frontend is connected to this runner, existing browser observations against the deployed API do not prove the revised backend behavior.
 
+## Coordinator synthetic project and ticket HTTP checks
+
+Status: Current verified for these local HTTP observations against the reviewed real AppModule runner. The reserved Flow02 owner created records only in its new synthetic organization. This is not browser, complete permission-matrix, deployment, or performance acceptance.
+
+| Action | Observed result | Limit |
+|---|---|---|
+| Create a project with a fresh idempotency key | 201, persisted project returned | One authorized owner and one default workflow. |
+| Repeat the same project command with the same key | 201, same project ID | Sequential replay; concurrent project commands remain open. |
+| Reuse that key with a different project payload | 422 `UNPROCESSABLE_ENTITY` | This is the actual global idempotency interceptor behavior; do not document this tested case as 409. |
+| Submit an invalid blank project name with a fresh key | 400 `VALIDATION_FAILED` | Narrow input-validation negative. |
+| Read the new project, project collection, and workflow states | All 200; collection contains the same project; TODO/IN_PROGRESS/IN_REVIEW/DONE returned | The local project-read ambiguity fix succeeded on this real endpoint. The browser still uses the separately deployed API. |
+| Read an existing project belonging to another organization | 404 `PROJECTS_NOT_FOUND` | One read-only cross-organization negative; no foreign record was mutated. |
+| Create an assigned ticket and replay its idempotency key | Both 201, same ticket ID; detail 200 with version 1, TODO, and one assignee | Assignment changes, relation commands, attachments, comments, and other principal matrices remain open. |
+| Submit an unknown ticket status | 400 `PROJECTS_INVALID_TICKET_STATUS` | Status validation through the actual command. |
+| Change status using version 1, then read detail | 200; fresh detail 200, IN_PROGRESS, version 2 | Persists through another HTTP request; browser refresh and event/cache evidence remain open. |
+| Update priority using stale version 1 | 409 `PROJECTS_TICKET_CONFLICT` | Optimistic concurrency refused the stale command. |
+| Save the owner's ticket draft and read `/build/comment-drafts/mine` | PUT 200; collection 200 with one matching ticket/body | Draft resume, paging/filtering, other actors, offline replay, and browser persistence remain open. |
+
+One initial draft request used the wrong guessed project-scoped path and returned 404; source inspection identified the canonical `/build/comment-drafts/tickets/:ticketId` route before the successful request. Several initial ticket/draft checks encountered an expired backend token and returned 401. They were retried only after a fresh exchange bound to the real issued user/session/organization; those initial responses are not counted as validation or persistence proof. No raw session, proof, token, or draft identity was logged.
+
+A separate IAM application-role transaction then asserted `current_user=streamline_app` and `transaction_read_only=on`, set the exact synthetic tenant/audience context, and queried only the new organization/project/ticket and current actor. It returned one matching project, one ticket with IN_PROGRESS/version 2/MEDIUM, one actor assignment, and one actor-owned draft with the expected text. This independently confirms tracked record persistence and that the rejected stale priority update did not change the ticket. It does not establish a complete write census, event delivery, browser cache behavior, or another actor's visibility.
+
+### Advanced navigation browser observation
+
+The existing authenticated browser, still connected to the deployed API, opened More Build tools. Searching `approv` left only Approvals at its canonical `/build/approvals` destination. Escape dismissed the dialog and returned focus to the More Build tools button. The screenshot measures 1280 × 720: [search result](2026-10-03-browser/build-more-tools-search-desktop.jpg). No pin or record mutation was issued. Other roles, denied destinations, pin persistence, mobile navigation, and the complete navigation criterion remain open.
+
+## Impossible-date regression and reviewed API retest
+
+The reserved Flow02 owner originally submitted a cycle with `startDate=2026-02-30` and `endDate=2026-03-03`. The real API returned 500 `INTERNAL_ERROR`, with PostgreSQL SQLSTATE `22008` and correlation `670ec25e-e7e7-4b0e-a042-934bcf2a0455`. This was a genuine validation defect rather than an authorization denial.
+
+Backend `9c749d7a3` reuses the shared Gregorian calendar validator for Cycle, Epic, Workstream and Sprint dates, preserving optional/clear/range behavior and existing instant grammar. Shared Release/Checklist write-date consumers inherit the corrected validator. Backend `80f3ac51c` separately applies the same validator to Release `from`/`to` filters while preserving their existing empty-string rejection. Root and independent agents reviewed each slice. Calendar suites passed 89 tests across five suites; Release focused schema tests passed 21. Production and scoped test TypeScript and scoped ESLint passed for the calendar slice; Release scoped TypeScript passed and production TypeScript completed without diagnostics.
+
+The old local runner was absent when restart was attempted. An initial launch failed to resolve `src/db/drizzle.constants` before application startup because `NODE_PATH` targeted node_modules. The corrected hidden launch used the repository root for source resolution, unchanged `.env`, the existing synthetic boundary and disabled providers/workers; it became ready at loopback port 1001 with process 18440. A tool interruption discarded the coordinator's in-memory session variables. The coordinator therefore repeated the normal captured-mail OTP and magic-link flow for the same synthetic owner and exchanged that real newly issued session through the canonical session-exchange endpoint. No backend JWT was directly minted and no credential was logged.
+
+| Retest through the real local API | Observed result |
+|---|---|
+| Cycle collection before invalid request | 200, zero rows. |
+| Repeat impossible-date cycle creation with a fresh idempotency key | 400 `VALIDATION_FAILED`; collection afterward still zero rows. |
+| Cycle `from=2026-02-30` filter | 400 `VALIDATION_FAILED`. |
+| Release `from=2026-02-30` filter | 400 `VALIDATION_FAILED`. |
+| Create valid leap-date cycle, `2028-02-29` to `2028-03-03`, capacity 10 | 201, cycle 58 in synthetic project 54. |
+| Replay identical valid request with the same key | 201, same cycle 58. |
+| Re-read cycle collection | 200, exactly one matching cycle with the stored dates, capacity 10 and version 1. |
+
+An independent agent then used a fresh IAM application-role connection for one `READ ONLY` transaction. It asserted `streamline_app` and read-only mode, set the exact tenant and INTERNAL audience, and verified the supplied organization name/slug plus its ACTIVE owner membership, actor and reserved email before reading Build records. Exact synthetic project 54 matched once. Scalar results were `live_cycle_count=1`, `matching_valid_cycle_count=1` and `invalid_cycle_count=0`; the matching cycle had ID 58, the expected name/dates/capacity/actor and no deletion. The process exited 0 and closed the connection, with no writes or credentials in output.
+
+These checks use the actual application guards, command and database path. Browser creation, other actors/tenants, all calendar consumers and deployed behavior remain Current unverified. The independent read proves only the targeted persisted cycle truth. No ticket comment was posted.
+
 ## Delivery checklist
 
 ### Tracking scope reconciliation

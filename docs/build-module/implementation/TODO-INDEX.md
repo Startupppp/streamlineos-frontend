@@ -8,7 +8,7 @@ The Delivery checklist and any inline acceptance checkboxes inside each current 
 - [ ] Every accepted research finding has an adopted or deferred destination in the research traceability map.
 - [ ] Release gates, tenant/role browser paths, persistence, and operations evidence are complete.
 
-Current specification items: 94 checked; 411 open. Historical research traceability: 116 mapped of 116 files.
+Current specification items: 110 checked; 412 open. Historical research traceability: 116 mapped of 116 files.
 
 ## Current specifications (70)
 
@@ -22,7 +22,7 @@ Current specification items: 94 checked; 411 open. Historical research traceabil
 - [x] [audit/evidence/2026-10-03-build-browser-runner.md](../audit/evidence/2026-10-03-build-browser-runner.md) — 1 checked, 0 open
 - [x] [audit/evidence/2026-10-03-module-checklist-read.md](../audit/evidence/2026-10-03-module-checklist-read.md) — 1 checked, 0 open
 - [ ] [audit/evidence/2026-10-03-my-work-drafts.md](../audit/evidence/2026-10-03-my-work-drafts.md) — 1 checked, 6 open
-- [ ] [audit/evidence/2026-10-03-organization-setup-migration-proof.md](../audit/evidence/2026-10-03-organization-setup-migration-proof.md) — 9 checked, 2 open
+- [ ] [audit/evidence/2026-10-03-organization-setup-migration-proof.md](../audit/evidence/2026-10-03-organization-setup-migration-proof.md) — 25 checked, 3 open
 - [ ] [audit/evidence/2026-10-03-outbox-exact-event.md](../audit/evidence/2026-10-03-outbox-exact-event.md) — 12 checked, 6 open
 - [x] [audit/evidence/2026-10-03-production-catalog.md](../audit/evidence/2026-10-03-production-catalog.md) — 1 checked, 0 open
 - [ ] [audit/evidence/2026-10-03-project-access-projection.md](../audit/evidence/2026-10-03-project-access-projection.md) — 9 checked, 3 open
