@@ -94,6 +94,7 @@ function ledger(overrides: Partial<PayrollReadiness> = {}): PayrollReadiness {
         period: { periodId: 99, userId: "usr-asha", userName: "Asha", userEmail: null, periodStart: "2026-09-07", periodEnd: "2026-09-13", status: "DRAFT", exportId: 41, exportedEntryCount: 5, exportedHours: "40.00", changedAt: "2026-09-18T10:00:00.000Z" },
       },
     ],
+    people: { payable: 4, withSalary: 4, payableWithoutSalary: 0, needsPayeeLink: 0, payableWithoutSalarySample: [] },
     ...overrides,
   };
 }
@@ -298,5 +299,51 @@ describe("PayrollReadinessPage — honest readiness board", () => {
 
     expect(screen.getAllByText("Waived").length).toBeGreaterThan(1);
     expect(screen.getAllByText("Paid by cheque this month").length).toBeGreaterThan(0);
+  });
+});
+
+describe("PayrollReadinessPage — People & salaries row", () => {
+  function renderWith(people: PayrollReadiness["people"]) {
+    mockUsePayrollReadiness.mockReturnValue(idle(ledger({ people })));
+    mockUsePayrollRunBlockers.mockReturnValue(idle(undefined));
+    mockUseRunEmployees.mockReturnValue(idle(undefined));
+    mockUsePageState.mockReturnValue({ kind: "ready" });
+    render(<PayrollReadinessPage />);
+    return screen.getByRole("region", { name: "People and salaries" });
+  }
+
+  function sample(name: string) {
+    return { organizationPersonId: `op-${name}`, displayName: name, payee: { kind: "user" as const, userId: `u-${name}` } };
+  }
+
+  it("names the people who can be paid but have no salary and links to assign them", () => {
+    const row = renderWith({
+      payable: 9,
+      withSalary: 2,
+      payableWithoutSalary: 7,
+      needsPayeeLink: 0,
+      payableWithoutSalarySample: ["Asha", "Ravi", "Meera", "Kiran", "Dev", "Nina"].map(sample),
+    });
+
+    expect(row).toHaveTextContent("7 people can be paid but have no salary: Asha, Ravi, Meera, Kiran, Dev and 2 more");
+    expect(row).not.toHaveTextContent("Nina");
+    expect(screen.getByRole("link", { name: "Assign salaries" })).toHaveAttribute("href", "/payroll/employees");
+  });
+
+  it("says no one can be paid yet and points at Directory once", () => {
+    const row = renderWith({ payable: 0, withSalary: 0, payableWithoutSalary: 0, needsPayeeLink: 3, payableWithoutSalarySample: [] });
+
+    expect(row).toHaveTextContent("No one can be paid yet");
+    expect(row).toHaveTextContent("3 people in Directory aren't payable yet.");
+    expect(screen.getAllByRole("link", { name: "Open Directory" })).toHaveLength(1);
+  });
+
+  it("adds the not-payable count as secondary info beside a green verdict", () => {
+    const row = renderWith({ payable: 4, withSalary: 4, payableWithoutSalary: 0, needsPayeeLink: 1, payableWithoutSalarySample: [] });
+
+    expect(row).toHaveTextContent("4 people ready, all with salaries");
+    expect(row).toHaveTextContent("1 person in Directory isn't payable yet.");
+    expect(screen.getByRole("link", { name: "Open Directory" })).toHaveAttribute("href", "/directory");
+    expect(screen.queryByRole("link", { name: "Assign salaries" })).not.toBeInTheDocument();
   });
 });

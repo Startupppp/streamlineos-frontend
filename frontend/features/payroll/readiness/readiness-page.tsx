@@ -27,6 +27,7 @@ import { ReadinessBlockersTable } from "./readiness-blockers-table";
 import type { ReadinessCategoryKey } from "./readiness-categories";
 import { ReadinessExports } from "./readiness-exports";
 import { ReadinessHeader } from "./readiness-header";
+import { ReadinessPeopleRow } from "./readiness-people-row";
 import { ReadinessStageList } from "./readiness-stage-list";
 import { summariseCycle } from "./readiness-summary";
 import { ReadinessTiles, ReadinessTilesSkeleton } from "./readiness-tiles";
@@ -149,6 +150,7 @@ export function PayrollReadinessPage() {
               canStartRun={canStartRun}
               runId={runId}
             />
+            <ReadinessPeopleRow people={readiness.data.people} />
             {readiness.data.cutoff === null ? (
               <EmptyState
                 compact
