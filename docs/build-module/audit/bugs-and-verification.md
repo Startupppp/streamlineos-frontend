@@ -81,6 +81,23 @@ Focused Intake checks passed 121 tests across six suites, including the real can
 
 The [duplicate-target runtime artifact](evidence/2026-10-03-intake-duplicate-runtime.json) now records eight actual endpoint checks against backend `8d5e583ee`. Synthetic request 4 was created in project 54. Missing ID, zero, fraction and overflow returned 400; a positive but absent ticket ID returned 404. A READ ONLY query confirmed request 4 stayed pending with no link. Linking accessible ticket 359 returned 200, repeat processing returned 409, and a fresh list returned the same duplicate/link. A separate agent's application-role READ ONLY transaction confirmed the exact request, live same-project ticket, zero tickets with the new Intake title and absence of the missing target within this tenant. No new Ticket was created by the duplicate command. The regenerated frontend schemas at outer `f5a57e8ec` parsed the real create/update/list payloads and rejected the three invalid numeric identifiers. Foreign/hidden/deleted targets, controlled interleavings, broader roles, browser and deployment remain open; the original requirement is not closed by this one-owner proof.
 
+## Build Inbox module boundary — 2026-10-03
+
+The user's reported category mismatch reproduced in the browser: Build displayed CRM, HRMS, Billing and other module categories. The underlying list already constrained `sourceModule=build`; the mark-all control incorrectly invoked global read-all. Thus the collection scope and mutation scope disagreed.
+
+Outer `6ab361475` and backend `231a94829` correct this boundary. The shared category definition drives the Build menu and URL parser. Build binds a mandatory source route; global Inbox/bell retain the original command. The server updates exact tenant/recipient/source live unread rows without advancing the global recipient watermark. Client rollback changes only affected read flags, preserving concurrent foreign-module reads, current metadata, new/removed rows and aggregate counts. A 404 from an older backend shows the existing error toast and cannot fall back to global read-all. These are source-implemented findings, not full requirement closure.
+
+| Evidence dimension | Result and limit |
+|---|---|
+| Focused source checks | Frontend 22 suites/205 tests; backend notification 5 suites/37 tests. Initial category/scope, delayed rollback race and visible failure regressions failed before their repairs. Independent final review clear. |
+| Static gates | Exact frontend 12-path lint, backend notification lint, changed-spec TypeScript and both production TypeScript gates pass. Full frontend test TypeScript fails in unchanged Calendar/Chat/Wiki/Mail tests; full backend test TypeScript previously exhausted its 10 GB heap. Neither full test gate is claimed passed. |
+| Contracts | Official backend OpenAPI generation; vendored and freshly generated frontend contracts at `9e9b178f7` match hash `ba9ab6ad26c439e53aeaa41935976a24fe06dd7f5767bb72a2456821e18e29d1`. Generated Build TypeScript syntax is unchanged apart from that hash; generator formatting explains the large textual diff. |
+| Browser, Current verified | Build menu has All types, Projects & tickets and Approvals; selecting each category updates the corresponding `type` URL and selected label. Global Inbox still has All modules. No user notification was mutated. |
+| Database baseline, Current verified | Independent `streamline_app` READ ONLY transaction revalidated reserved Flow02 tenant/owner. Notification 306 belongs to synthetic membership 139, source organization, unread, not deleted; no recipient watermark exists. This is pre-write evidence only. |
+| Current unverified | Mixed-module real scoped/global writes, persisted after-state, full recipient/tenant denials, event/cache behavior, mobile mutation, and deployment/operations. The browser frontend remains connected to the deployed backend; local runner results must be labeled separately. |
+
+The separate runner guard revision `33b2dd463` permits only reviewed global/Build scoped read-all PATCH paths after the existing reserved actor/organization checks. Fixture claim `BLD-INBOX-NOTIFICATION-FIXTURE-13` supplies bounded local test data through canonical notification creation; it does not prove real Build event fanout or modify production notification delivery.
+
 ## Testing Decisions
 
 For every closure record: frontend/backend/worker revisions; environment and synthetic tenants; actor/principal and exact role/grant; initial state; action; persisted DB/API result; console/network; audit/outbox/job/cache evidence; unauthorized/cross-tenant negative; responsive path. Existing focused tests support closure but cannot substitute browser/persistence/deployment evidence.
