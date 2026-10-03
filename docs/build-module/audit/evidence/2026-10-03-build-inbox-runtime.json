@@ -1700,6 +1700,130 @@
         "reviewer": "scoped_activation_dispatch",
         "scope": "Sanitized invite, OTP, accepted Member persistence and unassigned Build denial; no full task-stage closure"
       }
+    },
+    {
+      "name": "synthetic-build-member-assignment-and-preserved-object-scope",
+      "classification": "Current verified",
+      "recordedAt": "2026-10-03T18:51:40.193Z",
+      "backendSourceCommit": "f2ec6c210",
+      "runnerPid": 25784,
+      "baseUrl": "http://127.0.0.1:1001",
+      "reservedRecords": {
+        "organizationId": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+        "ownerMembershipId": 139,
+        "memberMembershipId": 141,
+        "memberAccountId": "c462911b-9e11-4f22-a182-b908e993b182",
+        "organizationRoleId": 2048,
+        "buildMemberGroupId": 2068,
+        "refusedBuildAdminGroupId": 2051,
+        "projectId": 54,
+        "ticketId": 358
+      },
+      "actions": {
+        "ownerGroupList": {
+          "status": 200,
+          "contractValid": true
+        },
+        "ownerAssignMember": {
+          "status": 201,
+          "contractValid": true,
+          "bodyAuthority": "userId and canonical groupIds; tenant and acting authority are server-derived"
+        },
+        "freshMemberPermissions": {
+          "status": 200,
+          "contractValid": true,
+          "buildView": true,
+          "accessManage": false,
+          "isOrgOwner": false,
+          "isOrgAdmin": false,
+          "isModuleOwner": false,
+          "isModuleAdmin": false
+        },
+        "memberProjectsCollection": {
+          "status": 200,
+          "contractValid": true,
+          "visibleProjectIds": [],
+          "interpretation": "Authorized empty collection; does not prove positive project-object visibility"
+        },
+        "privateProject": {
+          "status": 403,
+          "code": "PROJECTS_FORBIDDEN_PROJECT"
+        },
+        "privateTicket": {
+          "status": 403,
+          "code": "PROJECTS_FORBIDDEN_TICKET"
+        },
+        "selfEscalation": {
+          "status": 403,
+          "code": "FORBIDDEN"
+        },
+        "otherTenantProject": {
+          "status": 404,
+          "code": "PROJECTS_NOT_FOUND"
+        }
+      },
+      "database": {
+        "readRole": "streamline_app",
+        "transaction": "READ ONLY",
+        "tenantGuard": "Flow02 organization, original owner membership139 and synthetic active account checked",
+        "member": {
+          "id": 141,
+          "status": "ACTIVE",
+          "role": "MEMBER",
+          "is_owner": false
+        },
+        "organizationRoles": [
+          {
+            "id": 2048,
+            "name": "Member",
+            "module_key": null
+          }
+        ],
+        "moduleRoles": [
+          {
+            "id": 2068,
+            "name": "Build Module Member",
+            "module_key": "build"
+          }
+        ],
+        "moduleOverrides": [
+          {
+            "module_key": "build",
+            "enabled": true
+          }
+        ],
+        "observedPermissionsVersion": 13,
+        "auditRecords": [
+          {
+            "id": 930,
+            "action": "module_access.member_added",
+            "user_id": "c22bd52b-ecd5-49cb-be9a-38bb09aebe6b",
+            "target_id": "c462911b-9e11-4f22-a182-b908e993b182",
+            "group_ids": [
+              2068
+            ],
+            "created_at": "2026-10-03 18:28:47.028651"
+          }
+        ],
+        "afterDeniedEscalation": "Exactly one Build role2068; no Build Admin2051; Org Member remains nonowner"
+      },
+      "limitations": [
+        "This verifies explicit module entry plus preserved object denials, not complete role/tenant matrix",
+        "Empty project collection and empty notification pages are not positive object/notification visibility proof",
+        "No project assignment was granted and no client grant activated",
+        "No concurrent authority-transition, expiry, browser/mobile, deployment or operations proof",
+        "Observed permissions version has no captured pre-assignment comparison; version increment and complete cache/event fanout are not asserted"
+      ],
+      "harnessCorrections": [
+        "Held credentials returned401 after the initial write. Normal session exchange returned200; permission and denial assertions use subsequent renewed credentials. The cause of the earlier401 was not independently proven.",
+        "The first final-standing assertion incorrectly counted the existing structural organization Member role2048 as a Build role. The persisted rows were inspected and the assertion corrected to module_key=build; no additional product write was made."
+      ],
+      "independentReview": {
+        "status": "clear",
+        "reviewer": "scoped_activation_dispatch",
+        "scope": "Sanitized artifact and claim accuracy; prior19 unchanged versus committed HEAD; canonical denial-code source compared. Reviewer did not repeat runtime or database actions.",
+        "findings": "No credentials or false positive visibility, expiry, version-increment, cache/event fanout, browser or broad stage-closure claims."
+      }
     }
   ],
   "backendSourceCommit": "1aee0d53a",
