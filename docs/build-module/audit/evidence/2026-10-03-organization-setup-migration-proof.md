@@ -101,3 +101,52 @@ Root approved future additive identities `ck_organization_setup_invitation_recei
 - [x] Record the named evidence, its source or runtime scope, and the remaining verification limits in this report.
 
 Unfinished implementation and release acceptance remain tracked in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). This checked item records evidence capture only.
+
+## Additive 1729 phase — reviewed source and isolated PostgreSQL proof
+
+Status: **Current verified** for the source gates and isolated PostgreSQL checks below. The historical 57/62 result and its five failed checks above remain unchanged. Production application, full-chain replay, runtime readiness, and browser acceptance remain **Current unverified**.
+
+Claim `BLD-RECEIPT-HARDENING-03` at coordinator revision `24688ef8c` adds migration `1729_organization_setup_invitation_receipts_hardening`, journal idx `1178`, and when `1803093665725`. Before the addition, the verified maxima were idx `1177` and when `1803093664725`. No historical journal identity or SQL file changes. No seal refresh.
+
+The migration retains the historical outcome CHECK and adds `ck_organization_setup_invitation_receipts_outcome_strict`, wrapping all four branches in `IS TRUE`. `NOT VALID` followed by `VALIDATE` refuses invalid existing receipt truth with SQLSTATE `23514`; the migration does not repair or delete such rows. The child index `idx_organization_setup_invitation_receipts_org_invitation` is a nonunique, valid, ready, live, nonpartial btree with the exact two ordered key columns `(org_id, invitation_id)`; INCLUDE columns are compatible. Same-name malformed objects refuse with `P0001`.
+
+Invitation reconciliation identifies the retained key through the validated historical `0965` foreign key's `conindid`, rather than index OID ordering or guessed creation time. Compatible duplicates must have matching key opclasses, collations, ordering options, and null semantics. The retained index OID survives a constraint or index rename. Only the exact validated receipt foreign key may be rebound; unknown dependents, ambiguous keys, and incompatible shapes refuse atomically. The referenced outbox key is structurally validated; a separate equivalent outbox key explicitly refuses for operator review. The down migration blocks unsafe chained schema rollback and retains shared keys. Application rollback retains this additive schema.
+
+`SET LOCAL` bounds lock wait to five seconds and statement execution to five minutes within the migration transaction. The outbox table uses `SHARE UPDATE EXCLUSIVE`, allowing ordinary producer writes while serializing supporting-index DDL. Invitations, invitation events, and receipts use `SHARE ROW EXCLUSIVE` during validation and reconciliation. Real deployment volume and duration have not been measured. Source inspection verifies that both supported migration runners wrap this nonconcurrent migration and its ledger write in one transaction; actual execution through those runners remains a separate gate.
+
+The receipt schema initially failed two meaningful tests because the strict check and child index were absent. Both tests now pass. Focused schema and immutable-prerequisite suites pass **5 tests**, the proof runner's pure guard suite passes **19 tests**, production TypeScript and the exact two schema test dependency graphs pass, and scoped lint, JavaScript syntax, and diff checks pass. Migration immutability self-tests pass **19 tests**; the canonical check passes with its existing 18 comment-only historical differences unchanged. The temporary scoped TypeScript configuration initially lacked backend type roots; adding explicit installed backend type roots resolved that test-harness configuration error.
+
+The proof CLI supports independent `historical`, `hardening`, and `both` phases. Historical failures keep the combined exit nonzero. The additive cases executed strict NULL-reason rejection, valid outcomes, actual deparse equality, same-org relationships, RLS and append-only grants, two independent first-application connections requiring one applied result and one skipped result, exactly one ledger row, receipt replay, malformed catalog objects, dependency ambiguity, unchanged legacy invalid rows and atomic failure, lock refusal and retry, producer-compatible outbox locking, and a rollback barrier.
+
+Root and the independent migration reviewer approved backend commit `6ede5284fd08c3a89fa9cddf269481658fef3476`, containing exactly the ten owned source/test/migration paths. A nonconnecting plan selected current-run database `scratch_build_migration_bc3e79db612b04d1a337901c`. Root then authorized that exact database and the `hardening` phase. The reviewed IAM-aware executor created it from template0, ran only synthetic fixtures, and exited **0**, reporting **59 checks, 0 failures**. This run executed the sealed twelve-statement `0965` invitation fragment only; it did not journal or verify the whole migration or full chain.
+
+| Executed additive group | Passed / checks | Evidence |
+|---|---|---|
+| Cold concurrent first application, outcome contracts, same-org/RLS/grants, replay, direct SQL replay, and rollback barrier | 14 / 14 | One applied result, one skipped result, one ledger row; exact strict CHECK deparse and validated child/FK shape; NULL reasons `23514`; same-org FK `23503`; RLS and UPDATE `42501`; down `P0001` preserves schema. |
+| Invalid existing REFUSED and DELIVERY_FAILED rows | 4 / 4 | Forward validation returns `23514`; original NULL-reason receipt remains unchanged; no strict CHECK, child index, or new ledger residue. |
+| Legacy constraint, constraint INCLUDE, standalone key upgrades, and canonical-only INCLUDE | 4 / 4 | Retain the OID selected by the historical FK, one equivalent invitation key, validated relationships, and receipt data. |
+| Six malformed child-index variants and valid existing INCLUDE index | 13 / 13 | Unique, reversed, partial, expression, wrong-table, and relation-name collision objects refuse with `P0001`; no ledger success; compatible INCLUDE index keeps its OID. |
+| Strict CHECK catalog compatibility | 3 / 3 | Wrong named predicate refuses `P0001`; exact existing NOT VALID predicate becomes validated. |
+| Outbox key catalog refusal | 4 / 4 | Malformed named key refuses even with a valid alternate; separately named duplicate explicitly refuses; no ledger entry. |
+| Invitation ambiguity, malformed canonical key, unknown dependency/constraint owner, and fingerprint mismatch | 13 / 13 | Real view dependency is present in `pg_depend`; all unsafe reconciliations refuse `P0001` and leave no new ledger entry. |
+| Lock behavior and retry | 4 / 4 | Actual migration outbox lock permits an ordinary producer INSERT; conflicting receipt write lock returns `55P03`, leaves no ledger row, and succeeds after release. |
+| **Total** | **59 / 59** | No failed additive checks were suppressed or converted into passes. |
+
+All three upgrade observations report `receiptUsesRetained=true` and `receiptUsesCanonical=false`. The canonical-bound receipt FK drop/re-add branch was not exercised and remains **Current unverified**. The exact catalog expression required by the runtime readiness check passed in PostgreSQL; invoking the actual runtime readiness service remains a separate gate. The down proof covers a chain starting with `1729.down`; historical `1728.down` itself is unchanged and its unsafe direct shared-key drop remains part of the historical RED evidence.
+
+The runner reported `droppedCurrentRunDatabase=true`. A fresh independent IAM-admin transaction using `SET TRANSACTION READ ONLY` then reported `proof_database_exists=false`, `production_receipt_table_exists=false`, and `production_event_key_exists=false`. The scratch database is gone; production receipt/outbox-key catalog absence is unchanged. No production schema, migration ledger, business data, role definition, or global worker state was changed by this run. No full-chain, official-runner execution, application runtime, deployment, or browser success is inferred.
+
+| Immutable additive source | SHA-256 |
+|---|---|
+| `1729_organization_setup_invitation_receipts_hardening.sql` | `8d6a7bf4efc3519ee244a35f322cea5448d2fa479b830529fb9dddc52f2f642b` |
+| `rollback/1729_organization_setup_invitation_receipts_hardening.down.sql` | `151d394c72d907019b33adb101e6ec7e726401ebd4b40b08fef32d7db9365226` |
+
+- [x] Preserve the historical five RED results and all historical source hashes.
+- [x] Add the strict receipt schema CHECK and invitation child index after focused RED tests.
+- [x] Add the new journal identity after confirming current maxima.
+- [x] Pass focused source, pure guard, TypeScript, lint, and immutability gates.
+- [x] Finish root and independent migration source review and commit exact owned paths.
+- [x] Authorize one fresh named scratch database and execute the additive phase.
+- [x] Record actual constraint deparse, catalog/FK OID preservation, observed branch coverage, concurrency, lock behavior, SQLSTATE failures, retry, and guarded cleanup.
+- [ ] Exercise the currently unobserved canonical-bound receipt FK rebinding branch using an independently reviewed synthetic fixture.
+- [ ] Verify both official migration runners, full-chain replay, production application, runtime readiness, and browser activation separately.
