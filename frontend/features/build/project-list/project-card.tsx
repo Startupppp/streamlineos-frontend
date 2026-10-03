@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import React, { useState, useCallback } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Archive, Trash2, RotateCcw, Pencil } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
@@ -68,18 +69,38 @@ export const ProjectCard = React.memo(function ProjectCard({
   const initials = project.key.slice(0, 2).toUpperCase();
   const showActions = canEdit || canDelete;
 
-  const handleCardClick = useCallback(() => {
-    requestLeave(() => router.push(`/build/${project.id}`));
-  }, [requestLeave, router, project.id]);
-
-  const handleCardKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        handleCardClick();
-      }
+  const handleCardClick = useCallback(
+    (e: React.MouseEvent) => {
+      if (
+        e.defaultPrevented ||
+        e.button !== 0 ||
+        e.metaKey ||
+        e.ctrlKey ||
+        e.shiftKey ||
+        e.altKey
+      )
+        return;
+      requestLeave(() => router.push(`/build/${project.id}`));
     },
-    [handleCardClick],
+    [requestLeave, router, project.id],
+  );
+
+  const handleProjectLinkClick = useCallback(
+    (e: React.MouseEvent<HTMLAnchorElement>) => {
+      e.stopPropagation();
+      if (
+        e.defaultPrevented ||
+        e.button !== 0 ||
+        e.metaKey ||
+        e.ctrlKey ||
+        e.shiftKey ||
+        e.altKey
+      )
+        return;
+      e.preventDefault();
+      requestLeave(() => router.push(`/build/${project.id}`));
+    },
+    [requestLeave, router, project.id],
   );
 
   const handleStopPropagation = useCallback(
@@ -109,14 +130,10 @@ export const ProjectCard = React.memo(function ProjectCard({
           "group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-xl border border-border/60 border-l-[3px] bg-card p-3 shadow-sm",
           "transition-[border-color,box-shadow] duration-200 ease-out motion-reduce:transition-none",
           "hover:border-primary/25 hover:shadow-md",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
           stripe,
         )}
         role="listitem"
         onClick={handleCardClick}
-        tabIndex={0}
-        onKeyDown={handleCardKeyDown}
-        aria-label={`${project.name} — ${displayLabel}. Press Enter to open.`}
       >
         {showActions ? (
           <div className="absolute right-2 top-2 z-10">
@@ -195,9 +212,14 @@ export const ProjectCard = React.memo(function ProjectCard({
                 showActions && "pr-7",
               )}
             >
-              <span className="font-mono text-micro font-normal tracking-wide text-muted-foreground">
+              <Link
+                href={`/build/${project.id}`}
+                onClick={handleProjectLinkClick}
+                aria-label={`Open ${project.name}`}
+                className="font-mono text-micro font-normal tracking-wide text-muted-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
                 {project.key}
-              </span>
+              </Link>
               {canEdit ? (
                 <InlineProjectStatus
                   projectId={project.id}

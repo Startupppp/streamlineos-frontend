@@ -13,7 +13,7 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 import { Plus } from "lucide-react";
 import { useInfiniteProjects } from "@/hooks/api/build/projects";
-import { useCan } from "@/hooks/api/access";
+import { useAccess, useCan } from "@/hooks/api/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { RequireModule } from "@/components/auth/require-module";
 import { ProjectCard } from "@/features/build/project-list/project-card";
@@ -84,6 +84,7 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
   const shouldReduceMotion = useReducedMotion();
   const { prefs, setPrefs, toggle } = useDisplayPrefs();
   const canCreate = useCan("build:create");
+  const { data: access } = useAccess();
   const resumeAction = useResumeLastProject();
 
   const createFromUrl = searchParams.get("create") === "1";
@@ -233,6 +234,7 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
       limit: viewMode === "grid" ? 12 : 25,
       search: debouncedSearch || undefined,
       status: activeFilters.status,
+      ...(filterManagerId ? { managerId: filterManagerId } : {}),
       ...(filterHealth ? { health: filterHealth } : {}),
       ...(managedProductId !== undefined
         ? { managedProductId }
@@ -280,12 +282,24 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
     Boolean(filterClientId);
   const filtersActive = hasFiltersOrSearch || activeGroup !== null;
 
+  const canSeeAllProjects =
+    access?.isOrgOwner === true || access?.scopes["build:manage"] === "all";
   const pageTitle =
-    managedProductId === undefined ? "All Projects" : "Linked Projects";
+    managedProductId !== undefined
+      ? "Linked Projects"
+      : !access
+        ? "Projects"
+        : canSeeAllProjects
+          ? "All Projects"
+          : "My Projects";
   const pageSubtitle =
-    managedProductId === undefined
-      ? "Browse and manage every project in your organization"
-      : "Projects linked to this managed product";
+    managedProductId !== undefined
+      ? "Projects linked to this managed product"
+      : !access
+        ? "Browse projects you can access"
+        : canSeeAllProjects
+          ? "Browse and manage every project in your organization"
+          : "Projects you belong to, manage, or reach through your teams";
 
   const handleKeyboardOpenProject = useCallback(
     (index: number) => {
