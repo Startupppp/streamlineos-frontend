@@ -28,6 +28,13 @@ Migration gate handoff `BLD-MIGRATION-LOCAL-TIMEOUT-12` under BLD-030/035: `modu
 
 ## Active claims
 
+### BLD-INBOX-TEST-PLACEMENT-15
+
+- Requirements: BLD-009, BLD-025, BLD-035. Owner: `module_grants_resume` after the frozen notification-test handoff from `scoped_activation_dispatch`; independent reviewer: root. No production behavior changes.
+- Exact old and replacement paths: `backend/src/modules/notifications/notifications-mark-all-source-module.spec.ts`, `notifications-mark-all-source-module.fixture.ts`, `notifications-lifecycle-after-commit.spec.ts`, and `notifications-announcement-after-commit.spec.ts` move with the same basenames into `backend/src/modules/notifications/__tests__/`. All four are active test source; all unique content remains in the replacement files. This applies the user's explicit focused-test folder rule to this new package, without moving legacy suites.
+- Before moves: record SHA-256 and search all references; verify resolved source/destination paths remain inside the notification module. Adjust relative imports only. Root owns the cleanup manifest and historical claim path mapping; do not erase historical evidence or rewrite generated files.
+- Excluded: production services, runner/fixture helper paths, frontend, schemas, migration files, other tests. Dependencies: final frozen source and test ownership release. Focused validation: the eight notification suites, exact-file ESLint, `git diff --check`, and changed-spec TypeScript with relocated paths. No new runtime behavior needs separate proof from this relocation; the parent package's browser/database/authorization proof remains required. Handoff: return hashes, reference census, import-only diff and focused results, then freeze for root review and exact commits.
+
 ### BLD-INBOX-AFTER-COMMIT-14
 
 - Requirements: BLD-009, BLD-025, BLD-029, BLD-035. Owner: `scoped_activation_dispatch`; independent reviewer/coordinator: root. Previous notification source paths are frozen at backend `231a94829` and handed back only for this exact correction.
