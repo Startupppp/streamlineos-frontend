@@ -1552,6 +1552,154 @@
         "reviewer": "scoped_activation_dispatch",
         "result": "clear for bounded source/schema/evidence consistency; no additional database/browser calls and no full task closure"
       }
+    },
+    {
+      "name": "synthetic-member-invite-and-unassigned-module-denial",
+      "classification": "Current verified",
+      "recordedAt": "2026-10-03T18:11:53.711Z",
+      "backendSourceCommit": "f2ec6c210",
+      "runnerPid": 25784,
+      "baseUrl": "http://127.0.0.1:1001",
+      "reservedRecords": {
+        "organizationId": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+        "invitationId": "8ec14496-c3c8-4e7b-9289-a0aaca97b75d",
+        "membershipId": 141,
+        "userId": "c462911b-9e11-4f22-a182-b908e993b182",
+        "priorOrganizationId": "a3ee7aa5-3005-4c3b-a4c5-db16151d0a29",
+        "priorMembershipId": 140,
+        "projectId": 54
+      },
+      "actions": {
+        "createInvitation": {
+          "status": 201,
+          "contractValid": true,
+          "role": "MEMBER",
+          "moduleAccessOmitted": true,
+          "resent": false
+        },
+        "validateInvitation": {
+          "status": 200,
+          "contractValid": true,
+          "existingAccount": true
+        },
+        "requestInvitationOtp": {
+          "status": 200,
+          "contractValid": true,
+          "transport": "local captured mail only"
+        },
+        "acceptWithoutOtp": {
+          "status": 400,
+          "code": "BAD_REQUEST"
+        },
+        "acceptWithOtp": {
+          "status": 200,
+          "contractValid": true
+        },
+        "verifyIssuedMagicLink": {
+          "status": 200,
+          "contractValid": true,
+          "expectedOrganization": true,
+          "expectedUser": true
+        },
+        "reuseIssuedMagicLink": {
+          "status": 401,
+          "code": "AUTH_TOKEN_EXPIRED"
+        },
+        "sessionExchange": {
+          "status": 200
+        },
+        "unassignedBuildProject": {
+          "status": 403,
+          "code": "FORBIDDEN"
+        },
+        "buildNoticeRead": {
+          "status": 200,
+          "contractValid": true,
+          "ids": []
+        },
+        "globalNoticeRead": {
+          "status": 200,
+          "contractValid": true,
+          "ids": []
+        },
+        "createInvitationKeyedReplay": {
+          "status": 201,
+          "contractValid": true,
+          "sameInvitation": true
+        },
+        "acceptConsumedInvitation": {
+          "status": 404,
+          "code": "NOT_FOUND"
+        }
+      },
+      "database": {
+        "mode": "READ ONLY application role; reserved organization and account preflight; no superuser or BYPASSRLS",
+        "invitationBeforeAcceptance": [
+          {
+            "id": "8ec14496-c3c8-4e7b-9289-a0aaca97b75d",
+            "org_id": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+            "status": "PENDING",
+            "role": "MEMBER",
+            "accepted_membership_id": null,
+            "module_assignments": 0
+          }
+        ],
+        "otpBeforeAcceptance": [
+          {
+            "id": 10,
+            "invitation_id": "8ec14496-c3c8-4e7b-9289-a0aaca97b75d",
+            "attempts": 0,
+            "used_at": null,
+            "future_deadline": true
+          }
+        ],
+        "acceptedMembership": [
+          {
+            "id": "8ec14496-c3c8-4e7b-9289-a0aaca97b75d",
+            "status": "ACCEPTED",
+            "accepted_membership_id": 141,
+            "user_id": "c462911b-9e11-4f22-a182-b908e993b182",
+            "membership_status": "ACTIVE",
+            "role": "MEMBER",
+            "invited_module_assignments": 0,
+            "consumed_codes": 1
+          }
+        ],
+        "storedAuthority": [
+          {
+            "module_overrides": 0,
+            "build_role_assignments": 0
+          }
+        ],
+        "magicLinkConsumption": [
+          {
+            "issued_for_join": 1,
+            "consumed_for_join": 1
+          }
+        ],
+        "membershipAfterReplay": [
+          {
+            "membership_count": 1,
+            "membership_id": 141
+          }
+        ]
+      },
+      "limitations": [
+        "No module assignment was performed; positive entry after assignment remains open.",
+        "No browser or mobile invitation flow was exercised.",
+        "No claim33 lifecycle mutation was executed; this runner predates that source.",
+        "Empty notification lists do not prove positive recipient visibility.",
+        "Full role/tenant transitions, client grants, deployment and operational acceptance remain open."
+      ],
+      "harnessCorrections": [
+        "The emailed frontend join link carries its capability in /invitation/:token; the canonical validation API separately accepts query.token.",
+        "Notification cursor page has nested data, hasMore and nextCursor; canonical contracts were parsed before recording IDs."
+      ],
+      "independentReview": {
+        "status": "clear for bounded recorded evidence",
+        "reviewer": "scoped_activation_dispatch",
+        "scope": "Sanitized invite, OTP, accepted Member persistence and unassigned Build denial; no full task-stage closure"
+      }
     }
   ],
   "backendSourceCommit": "1aee0d53a",
