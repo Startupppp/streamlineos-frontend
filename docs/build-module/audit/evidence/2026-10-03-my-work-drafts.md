@@ -73,6 +73,24 @@ Independent review passed, the existing My Work and offline suites passed 24 tes
 
 Screenshots: [default tabs on desktop](2026-10-03-browser/my-work-default-tabs-desktop.jpg), measured 1072 px, and [default tabs at 375 px](2026-10-03-browser/my-work-default-tabs-mobile-375.jpg). No browser comment submission, deletion, or ticket mutation was performed. Physical-device behavior, dirty-editor navigation and full role/tenant acceptance remain open.
 
+## Caller-owned composer draft resume
+
+Backend `0919002bc` adds a bounded caller-owned ticket draft read. It first resolves the same-tenant, nondeleted ticket and canonical project/record authorization, then projects only the existing seven draft fields with exact organization, acting membership and ticket predicates. A missing draft returns null after authorization; an organization administrator cannot use this command to inspect another member's draft. The existing unique owner/ticket index supports the lookup. Strict positive int32 params and an empty strict query reject client authority fields. Eight focused service tests, production and scoped test TypeScript, lint and independent review passed. The controller integration harness refused the production RDS database, so its runtime cases were not executed or counted as passing.
+
+Frontend `bdcca185c9ae54d52f290cf146266e7d179fcab5` restores a composer only from a fresh successful read for the trusted organization/user/session and current ticket. An owner-bound pending local draft takes precedence. Typing, clearing or applying an AI suggestion prevents late hydration from overwriting the editor. Hydration causes no PUT; context changes reset the composer synchronously, and old callbacks/timers are fenced. Existing default editor, error, reference and retry components are reused. Eight focused suites/114 tests, production and changed-spec TypeScript, exact-path lint, root and independent review passed. Generated wire contracts were refreshed from the real backend at backend `30914f7e8` and frontend `b1ac3f4b2`; this is contract generation evidence, not deployment proof.
+
+### Real application routing disproved the first route fix
+
+The original GET `/build/comment-drafts/tickets/357` returned 400 with `projectId` validation on the synthetic Flow02 owner session. Backend `1ed52dcc9` moves the draft module before Projects within Build; its two metadata-derived Nest/Express probe suites passed eight tests, production/scoped TypeScript and lint, with independent review. After restarting only the identified synthetic backend runner to that reviewed source, the real guarded GET still returned 400: correlation `e34cdd4b-e6a3-4889-9ead-5cd3c6e462f0`, `projectId` expected number/received NaN. AppModule imports Leads and AI, which register Projects earlier. Therefore the local-order probe did not fix or verify full AppModule routing.
+
+The same running application returned 200 for the normal project ticket GET `/build/54/tickets/357`. An invalid-ID DELETE `/build/comment-drafts/tickets/0` returned 400 with `projectId` and `ticketId` errors, safely demonstrating the analogous DELETE collision without mutating a record. Original read negatives were swallowed too; they cannot be counted as draft-handler validation proof. The registration-independent GET/DELETE `by-ticket` repair is tracked separately in the [work claims](../../implementation/WORK-CLAIMS.md). No browser comment was submitted.
+
+### Verification boundaries
+
+The existing frontend still calls the deployed API. Automatic approval review rejected the process-only local frontend API configuration; the pending explicit approval has not been supplied. A normal synthetic magic-link sign-in was prepared through local mail capture, but the temporary browser's mailbox navigation returned `net::ERR_BLOCKED_BY_CLIENT`. That attempt was stopped and its temporary tab closed; it did not authenticate a synthetic browser, transfer a session or prove local frontend/backend behavior. Existing deployed-browser observations remain separate from new local source and API evidence.
+
+Immediate staging before debounce, clearing/deletion intent, dirty navigation, post-success context, row/Clear All coordination, uncertain server writes and cross-tab ordering are follow-up boundaries. Passing hydration tests does not close those guarantees. The owner reserves live ticket comments, so mocked tests must not be described as actual comment-submission proof. Full BLD-008 and role/mobile/browser acceptance remain open.
+
 ## Delivery checklist
 
 - [x] Record the named evidence, its source or runtime scope, and the remaining verification limits in this report.
