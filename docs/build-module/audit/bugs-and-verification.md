@@ -152,6 +152,12 @@ The guarded enqueue command durably created intent495, notification311 and IN_AP
 
 Current unverified: nonowner and cross-tenant matrices, object/assignment revocation races, real owner query budgets, cache-freshness ceiling, stream/AI consumer authorization, matching browser/mobile flow, deployment and operations. Local workers/providers were disabled; remote worker behavior and crash/lease recovery were not exercised. Synthetic evidence records remain; no customer data, live ticket comment or historical evidence was deleted. No broad BT stage closes from this bounded runtime matrix.
 
+### AI notification read adoption — 2026-10-03
+
+Current verified source/gate result at backend `52cd31533`: `getMyInbox`, `getMyNotificationCount` and `summarizeMyDay` now use the exported canonical NotificationsReadService with the unchanged actual caller. Missing principal or caller/actor organization/user mismatch rejects before notification reads or any daily-digest branch. AiModule imports the existing NotificationsModule without a duplicate reader/registry provider. Inbox output retains its eleven fields and nullability, with 30 rows, title240/message1200 character caps and an over-2048-character link omitted as null. Canonical ID ordering, effective-read watermark, retention and snooze rules replace the former independent raw queries.
+
+The new actual-tool/reader/registry regression and existing DI test failed17/passed4 before the three production changes; final four suites/40 tests passed. Exact seven-file lint/diff, independent review, scoped TypeScript and production TypeScript pass. An initial scoped-TypeScript invocation omitted `src/@types/express.d.ts` and reported one `rbacScope` augmentation error; including the repository declarations produced zero diagnostics. Fixtures simulate database filtering; they are not PostgreSQL or AI-provider proof. Runtime24992 still loads `e0f3de0fb`, before this AI commit. Actual AI execution, provider token usage, physical query costs, complete role/tenant/browser and deployment remain Current unverified. No provider was invoked.
+
 ## Testing Decisions
 
 For every closure record: frontend/backend/worker revisions; environment and synthetic tenants; actor/principal and exact role/grant; initial state; action; persisted DB/API result; console/network; audit/outbox/job/cache evidence; unauthorized/cross-tenant negative; responsive path. Existing focused tests support closure but cannot substitute browser/persistence/deployment evidence.
