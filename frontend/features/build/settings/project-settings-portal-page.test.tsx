@@ -1,5 +1,13 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { ApiError } from "@/lib/api-envelope";
+import { apiClient } from "@/lib/api-client";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { ProjectSettingsPortalPage } from "./project-settings-portal-page";
+
+jest.mock("sonner", () => ({ toast: { error: jest.fn(), success: jest.fn() } }));
+jest.mock("@/lib/api-client", () => ({ apiClient: { patch: jest.fn() } }));
 
 type TicketRow = { id: number; ticketNumber: number; title: string; type: string; clientVisible: boolean };
 type MilestoneRow = { id: number; name: string; clientVisible: boolean };
@@ -26,11 +34,13 @@ let mockVisibilityQuery: {
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => mockCanManage,
+  useAccess: () => ({ data: { permissions: ["build:clientvisibility:manage"] }, refetch: jest.fn() }),
 }));
 
+const mockUseUpdateTicketVisibility = jest.fn();
 jest.mock("@/hooks/api/build/client-portal", () => ({
   useClientVisibility: () => ({ ...mockVisibilityQuery, refetch: jest.fn() }),
-  useUpdateTicketVisibility: () => ({ mutate: jest.fn(), isPending: false }),
+  useUpdateTicketVisibility: (...args: [number]) => mockUseUpdateTicketVisibility(...args),
   useUpdateMilestoneVisibility: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
@@ -112,28 +122,63 @@ jest.mock("@/components/ui/switch", () => ({
     checked,
     "aria-label": ariaLabel,
     disabled,
+    onCheckedChange,
   }: {
     checked: boolean;
     "aria-label": string;
     disabled?: boolean;
-  }) => (
+    onCheckedChange: (checked: boolean) => void;
+  }) => {
+    function handleChange() { onCheckedChange(!checked); }
+    return (
     <button
       role="switch"
       aria-checked={checked}
       aria-label={ariaLabel}
       disabled={disabled}
+      onClick={handleChange}
     />
-  ),
+    );
+  },
 }));
 
 describe("ProjectSettingsPortalPage", () => {
   beforeEach(() => {
+    jest.clearAllMocks();
+    mockUseUpdateTicketVisibility.mockReturnValue({ mutate: jest.fn(), isPending: false });
     mockCanManage = true;
     mockVisibilityQuery = {
       data: { tickets: makeTicketPage([]), milestones: makeMilestonePage([]) },
       isLoading: false,
       isError: false,
     };
+  });
+
+  it("reports a rejected Ticket toggle once through the real mutation hook", async () => {
+    const ticket = { id: 7, ticketNumber: 7, title: "T7", type: "bug", clientVisible: false, version: 3 };
+    mockVisibilityQuery.data = { tickets: makeTicketPage([ticket]), milestones: makeMilestonePage([]) };
+    mockUseUpdateTicketVisibility.mockImplementation(
+      jest.requireActual<typeof import("@/hooks/api/build/client-portal")>("@/hooks/api/build/client-portal").useUpdateTicketVisibility,
+    );
+    jest.mocked(apiClient.patch).mockRejectedValueOnce(new ApiError("Conflict", 409));
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+    const ticketKey = buildWorkQueryKeys.projects.ticket(10, 7);
+    qc.setQueryData(ticketKey, ticket);
+    const invalidateSpy = jest.spyOn(qc, "invalidateQueries");
+    render(<QueryClientProvider client={qc}><ProjectSettingsPortalPage projectId={10} /></QueryClientProvider>);
+    const toggle = screen.getByRole("switch", { name: "Show ticket #7 from client portal" });
+    fireEvent.click(toggle);
+    await waitFor(() => expect(apiClient.patch).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(toggle).toBeEnabled());
+    expect(apiClient.patch).toHaveBeenCalledWith(
+      "/build/10/client-visibility/tickets/7", { clientVisible: true, version: 3 }, undefined, expect.anything(),
+    );
+    expect(toggle).toHaveAttribute("aria-checked", "false");
+    expect(qc.getQueryData(ticketKey)).toEqual(ticket);
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ticketKey });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: buildWorkQueryKeys.projects.clientPortal.visibility(10) });
+    expect(toast.error).toHaveBeenCalledWith("This action conflicts with existing data.");
+    expect(toast.error).toHaveBeenCalledTimes(1);
   });
 
   it("shows denied state when user lacks permission", () => {

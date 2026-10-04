@@ -1,7 +1,9 @@
 ﻿"use client";
 
-import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
@@ -186,8 +188,12 @@ export function useUpdateTicketVisibility(projectId: number) {
         undefined,
         toggleVisibilityContract,
       ),
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.clientPortal.visibility(projectId) });
+    onError: (error) => toast.error(getErrorMessage(error)),
+    onSettled: (_data, _error, { ticketId }) => {
+      return Promise.all([
+        qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.clientPortal.visibility(projectId) }),
+        qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.ticket(projectId, ticketId) }),
+      ]);
     },
   });
 }

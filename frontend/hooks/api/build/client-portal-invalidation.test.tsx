@@ -1,9 +1,13 @@
 "use client";
 
-import { renderHook, act } from "@testing-library/react";
+import { renderHook, act, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import { toast } from "sonner";
+import { ApiError } from "@/lib/api-envelope";
+
+jest.mock("sonner", () => ({ toast: { error: jest.fn() } }));
 
 jest.mock("@/lib/api-client", () => ({
   apiClient: {
@@ -13,13 +17,14 @@ jest.mock("@/lib/api-client", () => ({
 }));
 
 jest.mock("@/lib/api-envelope", () => ({
+  ...jest.requireActual<typeof import("@/lib/api-envelope")>("@/lib/api-envelope"),
   lazyContract: jest.fn((fn: () => unknown) => fn),
 }));
 
 jest.mock("@/hooks/api/authorized-mutation", () => ({
   useAuthorizedMutation: jest.fn(
     (_permission: string, options: Record<string, unknown>) => {
-      const { useMutation } = require("@tanstack/react-query");
+      const { useMutation } = jest.requireActual<typeof import("@tanstack/react-query")>("@tanstack/react-query");
       return useMutation(options);
     },
   ),
@@ -136,8 +141,54 @@ describe("SPEC 1 — client-portal visibility keys (Requirement C5)", () => {
 });
 
 describe("SPEC 1 — ticket visibility invalidation on settled (Requirement C5)", () => {
-  it("useUpdateTicketVisibility invalidates visibility(projectId) on settled so the cache refreshes after patch", async () => {
-    (apiClient.patch as jest.Mock).mockResolvedValue({ success: true });
+  it.each([
+    [new ApiError("Conflict", 409), "This action conflicts with existing data."],
+    [new ApiError("Forbidden", 403), "You don't have permission for this action."],
+    [new TypeError("Failed to fetch"), "Network error. Check your connection and try again."],
+  ])("reports a failed visibility command while retaining cache until both refreshes finish (%s)", async (error, message) => {
+    jest.mocked(toast.error).mockClear();
+    jest.mocked(apiClient.patch).mockRejectedValueOnce(error);
+    const qc = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    const ticketKey = buildWorkQueryKeys.projects.ticket(42, 7);
+    const visibilityKey = buildWorkQueryKeys.projects.clientPortal.visibility(42);
+    const oldTicket = { id: 7, clientVisible: false, version: 3 };
+    const oldVisibility = { tickets: [oldTicket] };
+    qc.setQueryData(ticketKey, oldTicket);
+    qc.setQueryData(visibilityKey, oldVisibility);
+    let finishTicket = () => {};
+    let finishVisibility = () => {};
+    const ticketRefresh = new Promise<void>((resolve) => { finishTicket = resolve; });
+    const visibilityRefresh = new Promise<void>((resolve) => { finishVisibility = resolve; });
+    const invalidateSpy = jest.spyOn(qc, "invalidateQueries")
+      .mockReturnValueOnce(visibilityRefresh).mockReturnValueOnce(ticketRefresh);
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={qc}>{children}</QueryClientProvider>
+    );
+    const { useUpdateTicketVisibility } = await import("./client-portal");
+    const { result } = renderHook(() => useUpdateTicketVisibility(42), { wrapper });
+    await act(async () => {
+      result.current.mutate({ ticketId: 7, clientVisible: true, version: 3 });
+    });
+    await waitFor(() => expect(invalidateSpy).toHaveBeenCalledTimes(2));
+    expect(qc.getQueryData(ticketKey)).toEqual(oldTicket);
+    expect(qc.getQueryData(visibilityKey)).toEqual(oldVisibility);
+    expect(result.current.isPending).toBe(true);
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ticketKey });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: visibilityKey });
+    await act(async () => { finishTicket(); });
+    expect(result.current.isPending).toBe(true);
+    await act(async () => { finishVisibility(); });
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(toast.error).toHaveBeenCalledTimes(1);
+    expect(toast.error).toHaveBeenCalledWith(message);
+  });
+
+  it.each([false, true])("reconciles visibility and the affected Ticket after a settled patch (failed=%s)", async (failed) => {
+    const patchMock = apiClient.patch as jest.Mock;
+    if (failed) patchMock.mockRejectedValueOnce(new Error("Visibility conflict"));
+    else patchMock.mockResolvedValueOnce({ id: 7, clientVisible: true });
     const qc = new QueryClient({
       defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
     });
@@ -160,6 +211,12 @@ describe("SPEC 1 — ticket visibility invalidation on settled (Requirement C5)"
         queryKey: buildWorkQueryKeys.projects.clientPortal.visibility(42),
       }),
     );
+    expect(invalidateSpy).toHaveBeenCalledWith({
+      queryKey: buildWorkQueryKeys.projects.ticket(42, 7),
+    });
+    expect(invalidateSpy).not.toHaveBeenCalledWith({
+      queryKey: buildWorkQueryKeys.projects.ticket(42, 8),
+    });
   });
 
   it("useUpdateTicketVisibility sends the row's own version in the body, so the server can compare and swap", async () => {
