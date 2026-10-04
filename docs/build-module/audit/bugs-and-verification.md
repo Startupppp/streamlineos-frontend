@@ -1,5 +1,1038 @@
 # Bugs and verification ledger
 
+## Task artifact PostgreSQL proof — 2026-10-04
+
+Classification: Current verified for the exact frozen source gates and bounded scratch observations below. Current unverified for complete application, browser and release acceptance. The corrected third run passed89/89 checks, exit0, at backendc570327aebaad87030b58b4cafa0ab49ca3e186f. Root independently confirmed scratch database/sessions0 and unchanged application columns/approvals0 with streamline_app READ ONLY. Both failed earlier runs remain in the following historical checkpoint.
+
+The external parent5e33d3ebb mixed six claimed paths with50 unrelated files; this coordinator preserved that commit and committed only the three residual proof corrections. No application migration or service/browser mutation occurred. Direct SQL fixture capture is not artifact-owner or service proof. Physical blocker observations, exact tenant receipts and all controlled SQLSTATE results are recorded below; observed23001 for RESTRICT and NOT ENFORCED CHECK recreation were confirmed after the earlier oracle failures. The coordinator preflight UUID/text query failure and its read-only retry are retained in this receipt without an invented SQLSTATE.
+
+Canonical requirement coverage remains partial: BT-27a037364398 and BT-801e948e8a67 stay open. Current522-task statuses remain110 checked/412 open. Canonical payload SHA-256: `bcb743b8c238988b7ee53605d0d17389362484dec4d7e1e3a056542e21756758` (UTF-8 JSON between the fences, excluding fence newlines).
+
+```json
+{
+  "classification": "Current verified",
+  "requirements": [
+    "BT-27a037364398",
+    "BT-801e948e8a67"
+  ],
+  "backendRevision": "c570327aebaad87030b58b4cafa0ab49ca3e186f",
+  "backendParent": "5e33d3ebb2b911941a8ed89e47e53b120dedbf7d",
+  "parentBoundary": {
+    "externallyCreatedMixedCommit": true,
+    "totalFiles": 56,
+    "claim48Files": 6,
+    "unrelatedExcludedFiles": 50,
+    "coordinatorOnlyCommittedThreeResidualCorrections": true
+  },
+  "run": {
+    "scope": "task-artifact",
+    "runId": "f8e47ebe465a33f58c6ef1f1",
+    "database": "scratch_build_migration_f8e47ebe465a33f58c6ef1f1",
+    "startedAt": "2026-10-04T03:04:55.055Z",
+    "finishedAt": "2026-10-04T03:09:00.595Z",
+    "exitCode": 0,
+    "errorCode": null,
+    "checks": 89,
+    "passed": 89,
+    "failed": 0
+  },
+  "sourceFiles": [
+    {
+      "path": "backend/src/scripts/approval-revision-migration-proof.mjs",
+      "sha256": "c22503ca655233156589995c84cf71fcbce9b9bb3d69e5d629df00596c2d247e",
+      "lines": 77
+    },
+    {
+      "path": "backend/src/scripts/lib/approval-revision-proof-baseline.mjs",
+      "sha256": "0db4e8e0c233c3755f8700f1df8a0f1d7ca78ac321bfd59d9d6724fef97d5543",
+      "lines": 259
+    },
+    {
+      "path": "backend/src/scripts/lib/approval-revision-proof-cases.mjs",
+      "sha256": "f39279b84deb6914c236be1d7f305f305d860beed1e8c0ab67f8f024d106ead7",
+      "lines": 286
+    },
+    {
+      "path": "backend/src/scripts/lib/approval-artifact-proof-catalog.mjs",
+      "sha256": "8d66bbb4503c65bd6e1a6c9ae19520313fcb9a042d0b2a940b3d921ca63fb8bd",
+      "lines": 247
+    },
+    {
+      "path": "backend/src/scripts/lib/approval-artifact-proof-cases.mjs",
+      "sha256": "cda78f9df9f3eb453fe91c061bffd4341e479c7413a5e6f65826edbf3ebadf2c",
+      "lines": 249
+    },
+    {
+      "path": "backend/src/scripts/__tests__/approval-artifact-migration-proof.test.mjs",
+      "sha256": "33864d866596a5cb84d13c8ce18dcce4c963249df42d49eec3e6611dc832cd34",
+      "lines": 299
+    }
+  ],
+  "preflightFailure": {
+    "capturedAt": "2026-10-04T03:04:34.877Z",
+    "message": "operator does not exist: text = uuid",
+    "sqlstate": null,
+    "readOnly": true,
+    "applicationWrites": false,
+    "source": "coordinator preflight query used an unnecessary UUID cast against text org_id; transaction rolled back and connection closed"
+  },
+  "preflight": {
+    "observedAt": "2026-10-04T03:04:36.360Z",
+    "role": "streamline_app",
+    "read_only": "on",
+    "server_version_num": "180004",
+    "scratch_database_count": 0,
+    "new_column_count": 0,
+    "reserved_approval_count": 0,
+    "applicationWrites": false
+  },
+  "observations": [
+    {
+      "stage": "plan",
+      "database": "scratch_build_migration_f8e47ebe465a33f58c6ef1f1",
+      "execute": true,
+      "proofScope": "focused-ticket-and-approval-fragments-and-whole-1732-1733-1734",
+      "wholeChainVerified": false,
+      "applicationRuntimeVerified": false,
+      "deployedRlsVerified": false,
+      "sourceHashes": {
+        "0000_light_vance_astro": "850dc745890a24e85d6b4a79e2c47b35e96219e8b906178ff2a1984a5e09eccd",
+        "0374_tenant_guc_helper": "bf571f0a242a09b337f6d2180ab2a812e62211fda39cf48d899dfcb3eae0ac25",
+        "0426_build_identity_pks": "e3eab6751fa38e790dac2e874b778b6552de85c1534096effcf15b2a21e8b917",
+        "0432_build_schema": "83cd4bed901ae2cbe844fdd849ab0c0c9b12be309e06bf10b9f33ec7989f7439",
+        "0648_build_actor_membership_expand": "f16995bafc4db9daa8c7e3f0ff3492cf6327f944825cc4e601230a8a5564d7da",
+        "0668_fix_membership_fk_on_delete": "1e525a18ef3f6d580ea1b29c6ea32991a9a47eb07746b030a93ffca705e95fc2",
+        "0770_set_null_fk_column_lists": "6f0d4cd80034c047b8d6f44292eac6c4b0b8796452e6efcda98d37c4b472da2d",
+        "0917_build_actor_drop": "482c1e02a4a9c8b214b62187354320d593d22260e4c1f2cc42a52d856a6037d6",
+        "0945_ar02_build_composite_fks": "8257bf2b642166abaf28f947b1ad463abe2f6e4a8bf06fd36a37f5118c70ccaa",
+        "0948_ar02_drop_build_single_fks": "64f504824eb85a211af95feda0aeec4a2f5ea131a2b0a39842488ac809eb2b9b",
+        "1732_approval_row_revision": "a4b1eb51194c7a0e81fcb6f6e238c48c5161dbeb848c2b6b3d05de9562707ef1",
+        "rollback/1732_approval_row_revision.down": "976df5d24de43708e8856344d01a4c3f1f7a7d5569cab9033a397677c6ac5bd1",
+        "0322_recon_phase_c_candidate_keys": "bd6fbfe53f3d7926ef28bf417afc77bdb20ff3cde99dc2487e13797095589268",
+        "0416_tickets_soft_delete_and_version": "b639c215e1b58ad5f442b589108e188e72ed7c9c4d617050354bd223f5ec8709",
+        "1373_tickets_version_trigger": "681c0a0cc32b72ece0d4e42439a30816e217f5a875fd602559ab3447963cc85a",
+        "1733_approval_task_artifact": "4a00fa99d3aeaba44b111308063b5fcfd013f6c1dbd753c328e2abe171951e14",
+        "1734_approval_task_pending_index": "34a1ab0934186c5c4c0a67e67d17fa79ba3f632bd3c0ad703e3eee42d007a10d",
+        "rollback/1733_approval_task_artifact.down": "dcb64da39743705b828d268157dd24e9cffe85f07937459149033b0fd917c7d2",
+        "rollback/1734_approval_task_pending_index.down": "b34fa003d474f1bf176b33ef0abda9c3e423052a7f74c55d070039a9b7d021f2"
+      }
+    },
+    {
+      "stage": "phase",
+      "phase": "refusal-baseline",
+      "fixtureCapture": "direct-sql",
+      "artifactOwnerCaptureVerified": false,
+      "wholeChainVerified": false,
+      "sequenceAtomic": false
+    },
+    {
+      "stage": "case",
+      "caseId": "refusal-baseline-official-1732_approval_row_revision",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "refusal-baseline-replay-1732_approval_row_revision",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "refusal-baseline-official-1733_approval_task_artifact",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "refusal-baseline-legacy-five-null-preserved",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "refusal-baseline-replay-1733_approval_task_artifact",
+      "passed": true
+    },
+    {
+      "stage": "physical-migration-blocker",
+      "officialChild": false,
+      "blockerObserved": true,
+      "holderExpired": false
+    },
+    {
+      "stage": "case",
+      "caseId": "raw-held-lock-timeout",
+      "passed": true,
+      "expectedSqlstate": "57014",
+      "actualSqlstate": "57014"
+    },
+    {
+      "stage": "case",
+      "caseId": "raw-held-lock-preserves-prior",
+      "passed": true
+    },
+    {
+      "stage": "physical-migration-blocker",
+      "officialChild": true,
+      "blockerObserved": true,
+      "holderExpired": false
+    },
+    {
+      "stage": "case",
+      "caseId": "official-held-lock-atomic-refusal",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "official-held-lock-preserves-prior",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "raw-duplicate-refusal",
+      "passed": true,
+      "expectedSqlstate": "23505",
+      "actualSqlstate": "23505"
+    },
+    {
+      "stage": "case",
+      "caseId": "official-duplicate-atomic-refusal",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "duplicate-preserves-prior",
+      "passed": true
+    },
+    {
+      "stage": "refusal-phase-receipt",
+      "kind": "duplicate",
+      "data": {
+        "digest": "12f4b86666455f984fbd7b95bdd6ef83",
+        "rows": 4
+      },
+      "catalog": "198fa51d111e46f068d2e7eddf19f772",
+      "ledgers": [
+        1,
+        1,
+        0
+      ]
+    },
+    {
+      "stage": "measured-heap",
+      "bytes": 2523136,
+      "refusalThresholdBytes": 1048576
+    },
+    {
+      "stage": "case",
+      "caseId": "measured-heap-above-limit",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "raw-heap-refusal",
+      "passed": true,
+      "expectedSqlstate": "P0001",
+      "actualSqlstate": "P0001",
+      "expectedReason": "APPROVAL_ARTIFACT_INDEX_REQUIRES_ONLINE_PREPARATION",
+      "actualReason": "APPROVAL_ARTIFACT_INDEX_REQUIRES_ONLINE_PREPARATION"
+    },
+    {
+      "stage": "case",
+      "caseId": "official-heap-atomic-refusal",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "heap-preserves-prior",
+      "passed": true
+    },
+    {
+      "stage": "refusal-phase-receipt",
+      "kind": "heap",
+      "data": {
+        "digest": "6abce8e1f661071f0e9ae446ed9eb80b",
+        "rows": 4002
+      },
+      "catalog": "198fa51d111e46f068d2e7eddf19f772",
+      "ledgers": [
+        1,
+        1,
+        0
+      ]
+    },
+    {
+      "stage": "owned-baseline-reset",
+      "reason": "delete-does-not-shrink-measured-heap",
+      "applicationDdl": false
+    },
+    {
+      "stage": "phase",
+      "phase": "small-success-baseline",
+      "fixtureCapture": "direct-sql",
+      "artifactOwnerCaptureVerified": false,
+      "wholeChainVerified": false,
+      "sequenceAtomic": false
+    },
+    {
+      "stage": "case",
+      "caseId": "small-success-baseline-official-1732_approval_row_revision",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "small-success-baseline-replay-1732_approval_row_revision",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "small-success-baseline-official-1733_approval_task_artifact",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "small-success-baseline-legacy-five-null-preserved",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "small-success-baseline-replay-1733_approval_task_artifact",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "official-whole-1734",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "official-1734-replay-singleton",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "catalog-refuses-weak-check",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "catalog-refuses-timestamp-precision",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "catalog-refuses-digest-collation",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "catalog-refuses-function-volatility",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "catalog-refuses-function-source",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "catalog-refuses-not-enforced",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "catalog-refuses-index-columns",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "catalog-refuses-index-null-semantics",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "binding-refuses-partial",
+      "passed": true,
+      "expectedSqlstate": "23514",
+      "actualSqlstate": "23514"
+    },
+    {
+      "stage": "case",
+      "caseId": "binding-refuses-array",
+      "passed": true,
+      "expectedSqlstate": "23514",
+      "actualSqlstate": "23514"
+    },
+    {
+      "stage": "case",
+      "caseId": "binding-refuses-json-null",
+      "passed": true,
+      "expectedSqlstate": "23514",
+      "actualSqlstate": "23514"
+    },
+    {
+      "stage": "case",
+      "caseId": "binding-refuses-missing-shape",
+      "passed": true,
+      "expectedSqlstate": "23514",
+      "actualSqlstate": "23514"
+    },
+    {
+      "stage": "case",
+      "caseId": "binding-refuses-identity",
+      "passed": true,
+      "expectedSqlstate": "23514",
+      "actualSqlstate": "23514"
+    },
+    {
+      "stage": "case",
+      "caseId": "binding-refuses-version-zero",
+      "passed": true,
+      "expectedSqlstate": "23514",
+      "actualSqlstate": "23514"
+    },
+    {
+      "stage": "case",
+      "caseId": "binding-refuses-snapshot-project",
+      "passed": true,
+      "expectedSqlstate": "23514",
+      "actualSqlstate": "23514"
+    },
+    {
+      "stage": "case",
+      "caseId": "binding-refuses-snapshot-version",
+      "passed": true,
+      "expectedSqlstate": "23514",
+      "actualSqlstate": "23514"
+    },
+    {
+      "stage": "case",
+      "caseId": "binding-refuses-snapshot-id",
+      "passed": true,
+      "expectedSqlstate": "23514",
+      "actualSqlstate": "23514"
+    },
+    {
+      "stage": "case",
+      "caseId": "binding-refuses-non-task",
+      "passed": true,
+      "expectedSqlstate": "23514",
+      "actualSqlstate": "23514"
+    },
+    {
+      "stage": "case",
+      "caseId": "binding-refuses-version-negative",
+      "passed": true,
+      "expectedSqlstate": "23514",
+      "actualSqlstate": "23514"
+    },
+    {
+      "stage": "case",
+      "caseId": "binding-refuses-version-overflow",
+      "passed": true,
+      "expectedSqlstate": "22003",
+      "actualSqlstate": "22003"
+    },
+    {
+      "stage": "case",
+      "caseId": "binding-refuses-digest",
+      "passed": true,
+      "expectedSqlstate": "23514",
+      "actualSqlstate": "23514"
+    },
+    {
+      "stage": "case",
+      "caseId": "binding-refuses-size",
+      "passed": true,
+      "expectedSqlstate": "23514",
+      "actualSqlstate": "23514"
+    },
+    {
+      "stage": "case",
+      "caseId": "binding-refuses-unicode-byte-size",
+      "passed": true,
+      "expectedSqlstate": "23514",
+      "actualSqlstate": "23514"
+    },
+    {
+      "stage": "case",
+      "caseId": "binding-refuses-foreign-ticket",
+      "passed": true,
+      "expectedSqlstate": "23503",
+      "actualSqlstate": "23503"
+    },
+    {
+      "stage": "case",
+      "caseId": "binding-refuses-missing-ticket",
+      "passed": true,
+      "expectedSqlstate": "23503",
+      "actualSqlstate": "23503"
+    },
+    {
+      "stage": "case",
+      "caseId": "canonical-jsonb-byte-boundary",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "minimal-format-forgery-is-sql-allowed",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "same-org-wrong-project-is-sql-allowed",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "immutable-org_id",
+      "passed": true,
+      "expectedSqlstate": "23514",
+      "actualSqlstate": "23514",
+      "expectedReason": "APPROVAL_ARTIFACT_BINDING_IMMUTABLE",
+      "actualReason": "APPROVAL_ARTIFACT_BINDING_IMMUTABLE"
+    },
+    {
+      "stage": "case",
+      "caseId": "immutable-project_id",
+      "passed": true,
+      "expectedSqlstate": "23514",
+      "actualSqlstate": "23514",
+      "expectedReason": "APPROVAL_ARTIFACT_BINDING_IMMUTABLE",
+      "actualReason": "APPROVAL_ARTIFACT_BINDING_IMMUTABLE"
+    },
+    {
+      "stage": "case",
+      "caseId": "immutable-entity_type",
+      "passed": true,
+      "expectedSqlstate": "23514",
+      "actualSqlstate": "23514",
+      "expectedReason": "APPROVAL_ARTIFACT_BINDING_IMMUTABLE",
+      "actualReason": "APPROVAL_ARTIFACT_BINDING_IMMUTABLE"
+    },
+    {
+      "stage": "case",
+      "caseId": "immutable-entity_id",
+      "passed": true,
+      "expectedSqlstate": "23514",
+      "actualSqlstate": "23514",
+      "expectedReason": "APPROVAL_ARTIFACT_BINDING_IMMUTABLE",
+      "actualReason": "APPROVAL_ARTIFACT_BINDING_IMMUTABLE"
+    },
+    {
+      "stage": "case",
+      "caseId": "immutable-artifact_ticket_id",
+      "passed": true,
+      "expectedSqlstate": "23514",
+      "actualSqlstate": "23514",
+      "expectedReason": "APPROVAL_ARTIFACT_BINDING_IMMUTABLE",
+      "actualReason": "APPROVAL_ARTIFACT_BINDING_IMMUTABLE"
+    },
+    {
+      "stage": "case",
+      "caseId": "immutable-artifact_version",
+      "passed": true,
+      "expectedSqlstate": "23514",
+      "actualSqlstate": "23514",
+      "expectedReason": "APPROVAL_ARTIFACT_BINDING_IMMUTABLE",
+      "actualReason": "APPROVAL_ARTIFACT_BINDING_IMMUTABLE"
+    },
+    {
+      "stage": "case",
+      "caseId": "immutable-artifact_snapshot",
+      "passed": true,
+      "expectedSqlstate": "23514",
+      "actualSqlstate": "23514",
+      "expectedReason": "APPROVAL_ARTIFACT_BINDING_IMMUTABLE",
+      "actualReason": "APPROVAL_ARTIFACT_BINDING_IMMUTABLE"
+    },
+    {
+      "stage": "case",
+      "caseId": "immutable-artifact_digest",
+      "passed": true,
+      "expectedSqlstate": "23514",
+      "actualSqlstate": "23514",
+      "expectedReason": "APPROVAL_ARTIFACT_BINDING_IMMUTABLE",
+      "actualReason": "APPROVAL_ARTIFACT_BINDING_IMMUTABLE"
+    },
+    {
+      "stage": "case",
+      "caseId": "immutable-artifact_captured_at",
+      "passed": true,
+      "expectedSqlstate": "23514",
+      "actualSqlstate": "23514",
+      "expectedReason": "APPROVAL_ARTIFACT_BINDING_IMMUTABLE",
+      "actualReason": "APPROVAL_ARTIFACT_BINDING_IMMUTABLE"
+    },
+    {
+      "stage": "case",
+      "caseId": "legacy-null-to-bound-refused",
+      "passed": true,
+      "expectedSqlstate": "23514",
+      "actualSqlstate": "23514",
+      "expectedReason": "APPROVAL_ARTIFACT_BINDING_IMMUTABLE",
+      "actualReason": "APPROVAL_ARTIFACT_BINDING_IMMUTABLE"
+    },
+    {
+      "stage": "case",
+      "caseId": "status-assignee-mutable-binding-preserved",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "pending-unique-requested",
+      "passed": true,
+      "expectedSqlstate": "23505",
+      "actualSqlstate": "23505"
+    },
+    {
+      "stage": "case",
+      "caseId": "pending-unique-pending",
+      "passed": true,
+      "expectedSqlstate": "23505",
+      "actualSqlstate": "23505"
+    },
+    {
+      "stage": "case",
+      "caseId": "pending-unique-escalated",
+      "passed": true,
+      "expectedSqlstate": "23505",
+      "actualSqlstate": "23505"
+    },
+    {
+      "stage": "case",
+      "caseId": "pending-unique-changes_requested",
+      "passed": true,
+      "expectedSqlstate": "23505",
+      "actualSqlstate": "23505"
+    },
+    {
+      "stage": "case",
+      "caseId": "unique-control-0-{\"version\":4}",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "unique-control-1-{\"approver\":2}",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "unique-control-2-{\"status\":\"approved\"}",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "unique-control-3-{\"status\":\"rejected\"}",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "unique-control-4-{\"status\":\"cancelled\"}",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "unique-control-5-{\"deleted\":\"2026-10-04T00:00:00Z\"}",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "unique-control-6-{\"approver\":null}",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "unique-control-7-{\"approver\":null}",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "bound-ticket-hard-delete-refused",
+      "passed": true,
+      "expectedSqlstate": "23001",
+      "actualSqlstate": "23001"
+    },
+    {
+      "stage": "physical-insert-blocker",
+      "blockerObserved": true,
+      "holderExpired": false
+    },
+    {
+      "stage": "case",
+      "caseId": "physical-same-tuple-insert-one-winner",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "transactional-audit-failure",
+      "passed": true,
+      "expectedSqlstate": "23502",
+      "actualSqlstate": "23502"
+    },
+    {
+      "stage": "case",
+      "caseId": "audit-and-binding-rolled-back",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "rollback-rollback/1733_approval_task_artifact.down",
+      "passed": true,
+      "expectedSqlstate": "P0001",
+      "actualSqlstate": "P0001",
+      "expectedReason": "APPROVAL_ARTIFACT_ROLLBACK_REQUIRES_REVIEW",
+      "actualReason": "APPROVAL_ARTIFACT_ROLLBACK_REQUIRES_REVIEW"
+    },
+    {
+      "stage": "case",
+      "caseId": "rollback-rollback/1734_approval_task_pending_index.down",
+      "passed": true,
+      "expectedSqlstate": "P0001",
+      "actualSqlstate": "P0001",
+      "expectedReason": "APPROVAL_ARTIFACT_INDEX_ROLLBACK_REQUIRES_REVIEW",
+      "actualReason": "APPROVAL_ARTIFACT_INDEX_ROLLBACK_REQUIRES_REVIEW"
+    },
+    {
+      "stage": "case",
+      "caseId": "rollback-catalog-data-ledgers-unchanged",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "foreign-tenant-write-zero",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "foreign-tenant-insert-denied",
+      "passed": true,
+      "expectedSqlstate": "42501",
+      "actualSqlstate": "42501"
+    },
+    {
+      "stage": "case",
+      "caseId": "missing-tenant-denied",
+      "passed": true,
+      "expectedSqlstate": "42501",
+      "actualSqlstate": "42501"
+    },
+    {
+      "stage": "case",
+      "caseId": "app-binding-trigger-disable-denied",
+      "passed": true,
+      "expectedSqlstate": "42501",
+      "actualSqlstate": "42501"
+    },
+    {
+      "stage": "case",
+      "caseId": "exact-admin-row-identities",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "app-a-read-only-markers",
+      "passed": true
+    },
+    {
+      "stage": "read-only-tenant-receipt",
+      "tenant": "a",
+      "verified": true,
+      "role": "streamline_app",
+      "mode": "on",
+      "markers": [
+        {
+          "id": 1,
+          "org_id": "synthetic-approval-proof-org-a",
+          "revision": "1",
+          "artifact_ticket_id": null,
+          "artifact_version": null,
+          "artifact_digest": null,
+          "snapshot_digest": null,
+          "captured": null,
+          "unbound": true
+        },
+        {
+          "id": 3,
+          "org_id": "synthetic-approval-proof-org-a",
+          "revision": "2",
+          "artifact_ticket_id": 1,
+          "artifact_version": 1,
+          "artifact_digest": "08e1cdbe2374bc5e943117aae5ebd6595e838c4d4dae3e8f57a477a7432addf5",
+          "snapshot_digest": "055692316b365c9c8660f8eecbc25bcc",
+          "captured": "2026-10-04 00:00:00.123",
+          "unbound": false
+        },
+        {
+          "id": 20,
+          "org_id": "synthetic-approval-proof-org-a",
+          "revision": "1",
+          "artifact_ticket_id": 1,
+          "artifact_version": 2,
+          "artifact_digest": "85ab1468fec5ebbcabb352f6ca6b27a3355301deca5c893477e58c554917c2ba",
+          "snapshot_digest": "5f03be12d4ef93b0a4b4af9bce4c080f",
+          "captured": "2026-10-04 00:00:00.123",
+          "unbound": false
+        },
+        {
+          "id": 21,
+          "org_id": "synthetic-approval-proof-org-a",
+          "revision": "1",
+          "artifact_ticket_id": 1,
+          "artifact_version": 3,
+          "artifact_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "snapshot_digest": "84bc5505f96de5382703acf9d6718df6",
+          "captured": "2026-10-04 00:00:00.123",
+          "unbound": false
+        },
+        {
+          "id": 22,
+          "org_id": "synthetic-approval-proof-org-a",
+          "revision": "1",
+          "artifact_ticket_id": 4,
+          "artifact_version": 1,
+          "artifact_digest": "73b6941f38480f5579e061d39673a1f3e15b1176b2d78bedfb74c9c2348de201",
+          "snapshot_digest": "c6b934ce2cdd23f04da0c4025b97ff86",
+          "captured": "2026-10-04 00:00:00.123",
+          "unbound": false
+        },
+        {
+          "id": 23,
+          "org_id": "synthetic-approval-proof-org-a",
+          "revision": "1",
+          "artifact_ticket_id": 1,
+          "artifact_version": 1,
+          "artifact_digest": "08e1cdbe2374bc5e943117aae5ebd6595e838c4d4dae3e8f57a477a7432addf5",
+          "snapshot_digest": "055692316b365c9c8660f8eecbc25bcc",
+          "captured": "2026-10-04 00:00:00.123",
+          "unbound": false
+        },
+        {
+          "id": 28,
+          "org_id": "synthetic-approval-proof-org-a",
+          "revision": "1",
+          "artifact_ticket_id": 1,
+          "artifact_version": 4,
+          "artifact_digest": "d372978532e721a664f7324f20d486dc03aa6a1800c9d424ae407c2170dec10b",
+          "snapshot_digest": "7785eb84e3f956bf4533b3a82ff11506",
+          "captured": "2026-10-04 00:00:00.123",
+          "unbound": false
+        },
+        {
+          "id": 29,
+          "org_id": "synthetic-approval-proof-org-a",
+          "revision": "1",
+          "artifact_ticket_id": 1,
+          "artifact_version": 1,
+          "artifact_digest": "08e1cdbe2374bc5e943117aae5ebd6595e838c4d4dae3e8f57a477a7432addf5",
+          "snapshot_digest": "055692316b365c9c8660f8eecbc25bcc",
+          "captured": "2026-10-04 00:00:00.123",
+          "unbound": false
+        },
+        {
+          "id": 30,
+          "org_id": "synthetic-approval-proof-org-a",
+          "revision": "1",
+          "artifact_ticket_id": 1,
+          "artifact_version": 1,
+          "artifact_digest": "08e1cdbe2374bc5e943117aae5ebd6595e838c4d4dae3e8f57a477a7432addf5",
+          "snapshot_digest": "055692316b365c9c8660f8eecbc25bcc",
+          "captured": "2026-10-04 00:00:00.123",
+          "unbound": false
+        },
+        {
+          "id": 31,
+          "org_id": "synthetic-approval-proof-org-a",
+          "revision": "1",
+          "artifact_ticket_id": 1,
+          "artifact_version": 1,
+          "artifact_digest": "08e1cdbe2374bc5e943117aae5ebd6595e838c4d4dae3e8f57a477a7432addf5",
+          "snapshot_digest": "055692316b365c9c8660f8eecbc25bcc",
+          "captured": "2026-10-04 00:00:00.123",
+          "unbound": false
+        },
+        {
+          "id": 32,
+          "org_id": "synthetic-approval-proof-org-a",
+          "revision": "1",
+          "artifact_ticket_id": 1,
+          "artifact_version": 1,
+          "artifact_digest": "08e1cdbe2374bc5e943117aae5ebd6595e838c4d4dae3e8f57a477a7432addf5",
+          "snapshot_digest": "055692316b365c9c8660f8eecbc25bcc",
+          "captured": "2026-10-04 00:00:00.123",
+          "unbound": false
+        },
+        {
+          "id": 33,
+          "org_id": "synthetic-approval-proof-org-a",
+          "revision": "1",
+          "artifact_ticket_id": 1,
+          "artifact_version": 1,
+          "artifact_digest": "08e1cdbe2374bc5e943117aae5ebd6595e838c4d4dae3e8f57a477a7432addf5",
+          "snapshot_digest": "055692316b365c9c8660f8eecbc25bcc",
+          "captured": "2026-10-04 00:00:00.123",
+          "unbound": false
+        },
+        {
+          "id": 34,
+          "org_id": "synthetic-approval-proof-org-a",
+          "revision": "1",
+          "artifact_ticket_id": 1,
+          "artifact_version": 1,
+          "artifact_digest": "08e1cdbe2374bc5e943117aae5ebd6595e838c4d4dae3e8f57a477a7432addf5",
+          "snapshot_digest": "055692316b365c9c8660f8eecbc25bcc",
+          "captured": "2026-10-04 00:00:00.123",
+          "unbound": false
+        },
+        {
+          "id": 35,
+          "org_id": "synthetic-approval-proof-org-a",
+          "revision": "1",
+          "artifact_ticket_id": 1,
+          "artifact_version": 1,
+          "artifact_digest": "08e1cdbe2374bc5e943117aae5ebd6595e838c4d4dae3e8f57a477a7432addf5",
+          "snapshot_digest": "055692316b365c9c8660f8eecbc25bcc",
+          "captured": "2026-10-04 00:00:00.123",
+          "unbound": false
+        },
+        {
+          "id": 36,
+          "org_id": "synthetic-approval-proof-org-a",
+          "revision": "1",
+          "artifact_ticket_id": 3,
+          "artifact_version": 1,
+          "artifact_digest": "d3cd16d2e3c968bef5a2f31d1a234f86be48df5e8874db6105f47e842a6b9201",
+          "snapshot_digest": "4e43e028c8ecbd4328ca79114444ccff",
+          "captured": "2026-10-04 00:00:00.123",
+          "unbound": false
+        }
+      ]
+    },
+    {
+      "stage": "case",
+      "caseId": "app-b-read-only-markers",
+      "passed": true
+    },
+    {
+      "stage": "read-only-tenant-receipt",
+      "tenant": "b",
+      "verified": true,
+      "role": "streamline_app",
+      "mode": "on",
+      "markers": [
+        {
+          "id": 2,
+          "org_id": "synthetic-approval-proof-org-b",
+          "revision": "1",
+          "artifact_ticket_id": null,
+          "artifact_version": null,
+          "artifact_digest": null,
+          "snapshot_digest": null,
+          "captured": null,
+          "unbound": true
+        }
+      ]
+    },
+    {
+      "stage": "admin-select-receipt",
+      "data": {
+        "digest": "55ee7a51cc0fee2c25c93f74b8aac575",
+        "rows": 16
+      },
+      "catalog": "34b205dfac735b9973cd10a3152cbad5",
+      "ledgers": [
+        1,
+        1,
+        1
+      ],
+      "sqlOnly": true,
+      "deployedRlsVerified": false,
+      "applicationRuntimeVerified": false,
+      "wholeChainVerified": false
+    },
+    {
+      "stage": "case",
+      "caseId": "final-exact-catalog",
+      "passed": true
+    },
+    {
+      "stage": "results",
+      "checks": 89,
+      "failed": 0,
+      "wholeChainVerified": false,
+      "applicationRuntimeVerified": false
+    },
+    {
+      "stage": "cleanup",
+      "droppedCurrentRunDatabase": true
+    }
+  ],
+  "independentCleanup": {
+    "observedAt": "2026-10-04T03:11:03.769Z",
+    "role": "streamline_app",
+    "read_only": "on",
+    "server_version_num": "180004",
+    "scratch_database_count": 0,
+    "scratch_session_count": 0,
+    "new_column_count": 0,
+    "reserved_approval_count": 0,
+    "applicationWrites": false
+  },
+  "focusedTests": {
+    "command": "node --test src/scripts/__tests__/approval-revision-migration-proof.test.mjs src/scripts/__tests__/approval-artifact-migration-proof.test.mjs src/scripts/__tests__/organization-setup-migration-proof.test.mjs src/scripts/__tests__/portal-migration-proof.test.mjs",
+    "exitCode": 0,
+    "tests": 99,
+    "passed": 99,
+    "failed": 0,
+    "skipped": 0
+  },
+  "gates": {
+    "exactSixPathLint": 0,
+    "exactThreePathDiff": 0,
+    "syntax": "six exact files previously passed at the same frozen hashes",
+    "productionTypecheck": {
+      "command": "pnpm -C backend typecheck",
+      "exitCode": 0,
+      "observedAt": "2026-10-04T02:02:38.420Z",
+      "wallSeconds": 9.3764294,
+      "typescriptSourceUnchanged": true,
+      "scope": "production TypeScript; operational MJS requires separate focused/syntax/lint checks"
+    },
+    "independentReviews": "B final source/corrected catalog/commit boundary; C tests and inverse operational corrections CLEAR"
+  },
+  "scopeLimits": {
+    "wholeChainVerified": false,
+    "applicationRuntimeVerified": false,
+    "deployedRlsVerified": false,
+    "artifactOwnerCaptureVerified": false,
+    "serviceRbacTenantCacheEventVerified": false,
+    "browserMobileVerified": false,
+    "deploymentOperationsVerified": false,
+    "applicationMigrationsApplied": false,
+    "broadRequirementClosed": false
+  },
+  "remaining": [
+    "Approver liveness and requester/permission races",
+    "All seven non-task artifact owners",
+    "Real service, authorization, PAT, tenant, cache and event proof",
+    "Application migration readiness and target application",
+    "Matching synthetic browser and mobile proof",
+    "Deployment and operations"
+  ],
+  "tracker": {
+    "total": 522,
+    "checked": 110,
+    "open": 412,
+    "checkboxOrStageChanges": 0
+  },
+  "cleanup": {
+    "createdSourceFiles": [
+      "backend/src/scripts/lib/approval-artifact-proof-catalog.mjs",
+      "backend/src/scripts/lib/approval-artifact-proof-cases.mjs",
+      "backend/src/scripts/__tests__/approval-artifact-migration-proof.test.mjs"
+    ],
+    "deletedFiles": []
+  }
+}
+```
+
 ## Task artifact scratch proof checkpoint — 2026-10-04
 
 Classification: Current verified for the exact source checks and bounded scratch observations below; Current unverified for application, browser and release acceptance. Claim48 supports BT-27a037364398 and BT-801e948e8a67 without closing either. The third corrected plan is ready, but has not executed. Source47 remains unchanged and application1732/1733/1734 remains unapplied.

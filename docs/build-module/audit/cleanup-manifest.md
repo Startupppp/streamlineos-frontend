@@ -1,5 +1,17 @@
 # Cleanup manifest
 
+## Retained task-artifact proof boundaries — 2026-10-04
+
+Classification: Current verified for exact source inventory, focused checks and the bounded scratch proof. No file was deleted. All historical research, screenshots, failed runs and existing evidence remain retained. Source48 final corrections are committed at backend `c570327aebaad87030b58b4cafa0ab49ca3e186f`; parent `5e33d3ebb` externally includes50 unrelated paths which this coordinator preserved and did not claim to review.
+
+| Retained new path | SHA-256 at final freeze | Reason and canonical destination | Inbound references | Review and validation |
+|---|---|---|---|---|
+| `backend/src/scripts/lib/approval-artifact-proof-catalog.mjs` | `8d66bbb4503c65bd6e1a6c9ae19520313fcb9a042d0b2a940b3d921ca63fb8bd` | Private exact catalog/reference boundary under300 lines; existing revision catalog cannot own artifact/index details within its limit. [Proof receipt](./bugs-and-verification.md#task-artifact-postgresql-proof--2026-10-04). | Existing revision baseline/cases and new artifact cases; same public CLI and guarded client. | A implementation; B/C independent source/oracle review; root99 focused tests, six-path lint/syntax/diff,89 scratch checks and independent READ ONLY cleanup. |
+| `backend/src/scripts/lib/approval-artifact-proof-cases.mjs` | `cda78f9df9f3eb453fe91c061bffd4341e479c7413a5e6f65826edbf3ebadf2c` | Private artifact binding/index/rollback cases under300 lines; reuse closed pinned applier and official child, no duplicate executor/client. [Claim48](../implementation/WORK-CLAIMS.md#bt-27a037364398--guarded-task-artifact-postgresql-proof-48). | Existing revision cases invoke explicit artifact scope; artifact catalog owns exact oracle. | Same final source/runtime review and proof receipt. |
+| `backend/src/scripts/__tests__/approval-artifact-migration-proof.test.mjs` | `33864d866596a5cb84d13c8ce18dcce4c963249df42d49eec3e6611dc832cd34` | Focused opt-in contract/safety tests under300 lines; existing299-line revision test stays unchanged. | Official focused command includes revision, artifact, organization-setup and portal proof tests. | C implementation; root independent test review/99 passed; B/C final corrections reviewed. |
+
+The other three modified existing proof owners remain canonical. Application1732/1733/1734, whole-chain replay, service/authorization/cache/events, browser/mobile and deployment/operations are unverified. No contracts, routes, permission keys, database schemas, compatibility helpers or research summaries were duplicated. The complete six-file hashes and sanitized failed/successful runtime observations are in the linked evidence; no secrets or temporary credentials are stored here.
+
 Status: Planned product; documentation consolidation executed on 2026-10-02
 
 The recheck added three canonical documents: the [external client-portal screen contract](../experience/screens/external-client-portal.md), the [original WOW research crosswalk](./original-wow-research-crosswalk.md), and the [comprehensive recheck ledger](./comprehensive-recheck-2026-10-02.md). They do not replace or delete any source research. The 2026-10-02 recheck counted 57 canonical Markdown files and 116 retained research files. As of 2026-10-03, the [TODO index](../implementation/TODO-INDEX.md), two source-gap audits, and the [migration chain gap](./migration-chain-gap.md) bring the inventory to 61 canonical Markdown files and 116 retained research files, 177 total. The generated TODO index is the live count authority.
