@@ -12,7 +12,7 @@ import {
   BUILD_FILTER_ALL,
   type BuildListFiltersState,
 } from "@/features/build/shared/use-build-list-filters";
-import { LEVEL_OPTIONS, STATUS_OPTIONS } from "./constants";
+import { LEVEL_OPTIONS, METRIC_OPTIONS, STATUS_OPTIONS } from "./constants";
 
 export const GOAL_LEVEL_FILTER_OPTIONS = [
   { value: BUILD_FILTER_ALL, label: "All levels" },
@@ -31,6 +31,7 @@ export const GOAL_FILTER_DEFINITIONS = [
   { param: "health" },
   { param: "due" },
   { param: "scope" },
+  { param: "metricType" },
 ] as const;
 
 export const GOAL_SCOPE_VALUES = ["own", "all"] as const;
@@ -52,6 +53,11 @@ export const GOAL_HEALTH_FILTER_OPTIONS: readonly BuildFilterOption[] = [
   { value: "on_track", label: "On track" },
   { value: "at_risk", label: "At risk" },
   { value: "off_track", label: "Off track" },
+];
+
+export const GOAL_METRIC_FILTER_OPTIONS: readonly BuildFilterOption[] = [
+  { value: BUILD_FILTER_ALL, label: "All types" },
+  ...METRIC_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
 ];
 
 export interface GoalOutcomeParams {
@@ -96,6 +102,8 @@ export function GoalsListToolbar({
     listFilters.setValue("scope", value);
   const handleHealthChange = (value: string) =>
     listFilters.setValue("health", value);
+  const handleMetricTypeChange = (value: string) =>
+    listFilters.setValue("metricType", value);
   const handleDueChange = (value: string) =>
     listFilters.setValue("due", value || BUILD_FILTER_ALL);
 
@@ -184,6 +192,19 @@ export function GoalsListToolbar({
           onChange={handleDueChange}
           placeholder={GOAL_DUE_FILTER_LABEL}
           className={BUILD_FILTER_TRIGGER_CLASS}
+        />
+      ),
+    },
+    {
+      id: "metric",
+      label: "Metric",
+      active: listFilters.isActive("metricType"),
+      control: (
+        <BuildFilterSelect
+          label="Metric"
+          value={listFilters.value("metricType")}
+          onValueChange={handleMetricTypeChange}
+          options={GOAL_METRIC_FILTER_OPTIONS}
         />
       ),
     },

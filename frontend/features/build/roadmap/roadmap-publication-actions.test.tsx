@@ -45,6 +45,30 @@ beforeEach(() => {
   publishMutation.mutate.mockClear();
 });
 
+describe("RoadmapPublicationActions — publish-preview gate", () => {
+  it("does not fire the publish mutation on the first click — shows a confirmation dialog instead", async () => {
+    setup({ token: null, path: null }, { canManage: true });
+    await userEvent.click(screen.getByRole("button", { name: /publish board/i }));
+    expect(publishMutation.mutate).not.toHaveBeenCalled();
+  });
+
+  it("fires the publish mutation only after the user confirms in the dialog", async () => {
+    setup({ token: null, path: null }, { canManage: true });
+    await userEvent.click(screen.getByRole("button", { name: /publish board/i }));
+    const confirmButton = screen.getByRole("button", { name: /^publish$/i });
+    await userEvent.click(confirmButton);
+    expect(publishMutation.mutate).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not fire the mutation when the user cancels the confirmation dialog", async () => {
+    setup({ token: null, path: null }, { canManage: true });
+    await userEvent.click(screen.getByRole("button", { name: /publish board/i }));
+    const cancelButton = screen.getByRole("button", { name: /cancel/i });
+    await userEvent.click(cancelButton);
+    expect(publishMutation.mutate).not.toHaveBeenCalled();
+  });
+});
+
 describe("RoadmapPublicationActions — unpublished board", () => {
   it("offers to publish the board when the operator may manage the roadmap", () => {
     setup({ token: null, path: null }, { canManage: true });

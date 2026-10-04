@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
+import Link from "next/link";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Button } from "@/components/ui/button";
@@ -94,12 +95,16 @@ export function buildProgramColumns({
       header: "Name",
       className: TABLE_TITLE_CELL,
       cell: (row) => (
-        <span
-          className={cn("font-medium text-foreground", TEXT_ONE_LINE)}
+        <Link
+          href={`/build/programs/${row.id}`}
+          className={cn(
+            "font-medium text-foreground hover:text-primary",
+            TEXT_ONE_LINE,
+          )}
           title={row.name}
         >
           {row.name}
-        </span>
+        </Link>
       ),
     },
     {

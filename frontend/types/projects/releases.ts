@@ -38,4 +38,5 @@ export interface UpdateReleaseInput {
   description?: string | null;
   status?: "draft" | "released" | "archived";
   releaseDate?: string | null;
+  previewConfirmed?: boolean;
 }

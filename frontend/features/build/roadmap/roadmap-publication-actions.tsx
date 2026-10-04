@@ -6,6 +6,7 @@ import { ExternalLink, Globe, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useCan } from "@/hooks/api/access";
 import {
   usePublishRoadmap,
@@ -37,7 +38,7 @@ export function RoadmapPublicationActions() {
       });
   }, [path]);
 
-  const handlePublish = useCallback(() => {
+  const handlePublishConfirmed = useCallback(() => {
     publish.mutate(undefined, {
       onSuccess: () => toast.success("Public roadmap published"),
       onError: (error) => toast.error(getErrorMessage(error)),
@@ -78,17 +79,25 @@ export function RoadmapPublicationActions() {
   if (!canManage) return null;
 
   return (
-    <LoadingButton
-      type="button"
-      variant="outline"
-      size="sm"
-      className="min-w-0 flex-1 gap-1.5 sm:flex-none"
+    <ConfirmDialog
+      title="Publish the public roadmap?"
+      description="This will make your roadmap publicly visible. Anyone with the link will be able to view it without signing in."
+      confirmLabel="Publish"
+      onConfirm={handlePublishConfirmed}
       isPending={publish.isPending}
-      loadingText="Publishing…"
-      onClick={handlePublish}
-    >
-      <Globe className="h-3.5 w-3.5" aria-hidden="true" />
-      Publish board
-    </LoadingButton>
+      trigger={
+        <LoadingButton
+          type="button"
+          variant="outline"
+          size="sm"
+          className="min-w-0 flex-1 gap-1.5 sm:flex-none"
+          isPending={publish.isPending}
+          loadingText="Publishing…"
+        >
+          <Globe className="h-3.5 w-3.5" aria-hidden="true" />
+          Publish board
+        </LoadingButton>
+      }
+    />
   );
 }

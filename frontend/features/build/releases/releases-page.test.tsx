@@ -1,3 +1,4 @@
+import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import {
   ACCESS_DENIED,
@@ -111,6 +112,23 @@ describe("right click on a release row opens the row's authorized actions", () =
     fireEvent.click(screen.getByTestId("row-contextmenu-1"));
     fireEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
     expect(screen.getByTestId("confirm-delete")).toHaveTextContent("v1.0.0");
+  });
+});
+
+describe("readiness column renders the readiness status badge from release data", () => {
+  it("shows the Ready badge when readiness is ready", () => {
+    const handlers = { canManage: true, onEdit: jest.fn(), onDelete: jest.fn() };
+    const cell = releaseColumnCell("readiness", handlers);
+    const row = { ...releaseRow, readiness: "ready" } as unknown as typeof releaseRow;
+    const { container } = render(cell(row as Parameters<typeof cell>[0]) as React.ReactElement);
+    expect(container.textContent).toContain("Ready");
+  });
+
+  it("shows a dash when readiness is absent from the row", () => {
+    const handlers = { canManage: true, onEdit: jest.fn(), onDelete: jest.fn() };
+    const cell = releaseColumnCell("readiness", handlers);
+    const { container } = render(cell(releaseRow as Parameters<typeof cell>[0]) as React.ReactElement);
+    expect(container.textContent).toContain("—");
   });
 });
 

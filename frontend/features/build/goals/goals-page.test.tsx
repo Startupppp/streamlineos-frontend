@@ -24,7 +24,7 @@ jest.mock("@/hooks/common/use-debounce", () => ({
 }));
 
 jest.mock("@/hooks/common/use-query-param-open", () => {
-  const { useState } = require("react");
+  const { useState } = jest.requireActual<typeof import("react")>("react");
   return {
     useQueryParamOpen: () => {
       const [open, setOpen] = useState(false);
@@ -44,14 +44,17 @@ jest.mock("@/components/ui/page-wrapper", () => ({
     children,
     title,
     actions,
+    filters,
   }: {
     children: React.ReactNode;
     title?: string;
     actions?: React.ReactNode;
+    filters?: React.ReactNode;
   }) => (
     <div>
       {title ? <h1>{title}</h1> : null}
       {actions}
+      {filters}
       {children}
     </div>
   ),
@@ -191,14 +194,30 @@ jest.mock("@/components/ui/truncated-text", () => ({
   TruncatedText: ({ text }: { text: string }) => <span>{text}</span>,
 }));
 
+jest.mock("@/features/build/goals/goals-list-toolbar", () => ({
+  GoalsListToolbar: jest.fn(() => null),
+  GOAL_FILTER_DEFINITIONS: [
+    { param: "level", options: [] },
+    { param: "status", options: [] },
+    { param: "ownerId" },
+    { param: "health" },
+    { param: "due" },
+    { param: "scope" },
+    { param: "metricType" },
+  ],
+  resolveGoalOutcomeParams: jest.fn(() => ({})),
+}));
+
 import { useGoals, useGoalsPage, useGoalStats } from "@/hooks/api/goals";
 import { useCan, useAccess } from "@/hooks/api/access";
+import { GoalsListToolbar } from "@/features/build/goals/goals-list-toolbar";
 
 const mockUseGoals = useGoals as jest.Mock;
 const mockUseGoalsPage = useGoalsPage as jest.Mock;
 const mockUseGoalStats = useGoalStats as jest.Mock;
 const mockUseCan = useCan as jest.Mock;
 const mockUseAccess = useAccess as jest.Mock;
+const mockGoalsListToolbar = jest.mocked(GoalsListToolbar);
 
 const ACCESS_LOADING = { data: undefined, isLoading: true };
 const ACCESS_GRANTED = {
@@ -225,6 +244,7 @@ function disabledQueryResult() {
 }
 
 beforeEach(() => {
+  mockGoalsListToolbar.mockClear();
   mockUseCan.mockReturnValue(true);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseGoals.mockReturnValue({ data: [], isLoading: false, isError: false, error: undefined, refetch: jest.fn() });
@@ -270,6 +290,43 @@ it("shows the New Goal control when build:goals:manage is granted", () => {
   render(<GoalsPage />);
 
   expect(screen.getAllByText("New Goal")[0]).toBeInTheDocument();
+});
+
+it("owner filter option renders when owner data is available", () => {
+  mockUseGoalsPage.mockReturnValue({
+    data: {
+      items: [
+        {
+          id: 1,
+          title: "Test Goal",
+          status: "not_started",
+          level: "company",
+          progress: 0,
+          keyResultCount: 1,
+          owner: { id: "user-9", name: "Alice Test", email: "alice@test.com", image: null },
+          dueDate: null,
+        },
+      ],
+      page: 1,
+      pageSize: 24,
+      total: 1,
+      totalPages: 1,
+    },
+    isLoading: false,
+    isError: false,
+    error: undefined,
+    refetch: jest.fn(),
+  });
+  render(<GoalsPage />);
+  const calls = mockGoalsListToolbar.mock.calls;
+  expect(calls.length).toBeGreaterThan(0);
+  expect(calls[0]?.[0]).toEqual(
+    expect.objectContaining({
+      ownerOptions: expect.arrayContaining([
+        expect.objectContaining({ value: "user-9", label: "Alice Test" }),
+      ]),
+    }),
+  );
 });
 
 describe("GoalsPage — keyboard shortcuts (BSN-FE-K4)", () => {

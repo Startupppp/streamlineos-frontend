@@ -111,21 +111,34 @@ const KeyResultRow = memo(function KeyResultRow({ kr, index, onUpdate, onRemove 
           value={kr.unit}
           onChange={handleUnitChange}
         />
-        <Input
-          type="number"
-          placeholder="Start"
-          className="text-xs"
-          value={kr.startValue}
-          onChange={handleStartValueChange}
-        />
-        <Input
-          type="number"
-          placeholder="Target"
-          className="text-xs"
-          value={kr.targetValue}
-          onChange={handleTargetValueChange}
-        />
+        <div className="space-y-1">
+          <span className="text-xs text-muted-foreground">Baseline</span>
+          <Input
+            type="number"
+            placeholder="0"
+            className="text-xs"
+            value={kr.startValue}
+            onChange={handleStartValueChange}
+          />
+        </div>
+        <div className="space-y-1">
+          <span className="text-xs text-muted-foreground">Target</span>
+          <Input
+            type="number"
+            placeholder="100"
+            className="text-xs"
+            value={kr.targetValue}
+            onChange={handleTargetValueChange}
+          />
+        </div>
       </div>
+      {kr.metricType !== "boolean" ? (
+        <div className="flex items-center gap-1 rounded-sm border border-border/50 bg-muted/40 px-2 py-0.5 text-xs text-muted-foreground">
+          <span className="tabular-nums text-foreground">{kr.startValue || "0"}</span>
+          <span>/</span>
+          <span className="tabular-nums text-foreground">{kr.targetValue || "100"}{kr.unit ? ` ${kr.unit}` : ""}</span>
+        </div>
+      ) : null}
     </div>
   );
 });

@@ -399,12 +399,13 @@ interface IntakePage {
 
 export function useIntakeRequests(
   projectId: number,
-  params?: { status?: string; cursor?: string; limit?: number },
+  params?: { status?: string; source?: "manual" | "web_form" | "email"; cursor?: string; limit?: number },
   options?: Omit<UseQueryOptions<IntakePage>, "queryKey" | "queryFn" | "enabled">
 ) {
   const canView = useCan("build:view");
   const query: Record<string, string> = {};
   if (params?.status) query["status"] = params.status;
+  if (params?.source) query["source"] = params.source;
   if (params?.cursor) query["cursor"] = params.cursor;
   if (params?.limit) query["limit"] = String(params.limit);
   const queryParams = Object.keys(query).length ? query : undefined;

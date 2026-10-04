@@ -54,6 +54,7 @@ import {
 import { toast } from "sonner";
 import { getApiErrorCode, isApiError } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TicketConflictDialog } from "@/features/build/ticket-details/ticket-conflict-dialog";
 import type { TicketConflictFieldDiff } from "@/features/build/ticket-details/ticket-conflict-diff";
 
@@ -100,6 +101,38 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
   const isPending = create.isPending || update.isPending;
   const [conflictFields, setConflictFields] = useState<TicketConflictFieldDiff[] | null>(null);
   const handleConflictDismiss = useCallback(() => setConflictFields(null), []);
+  const [pendingPublishValues, setPendingPublishValues] = useState<ReleaseFormValues | null>(null);
+  const handlePublishCancelled = useCallback(() => setPendingPublishValues(null), []);
+  const handlePublishConfirmed = useCallback(() => {
+    if (!release || !pendingPublishValues) return;
+    const values = pendingPublishValues;
+    setPendingPublishValues(null);
+    update.mutate(
+      {
+        releaseId: release.id,
+        rowVersion: release.rowVersion,
+        name: values.name,
+        version: values.version,
+        description: values.description || null,
+        status: values.status,
+        releaseDate: values.releaseDate || null,
+        previewConfirmed: true,
+      },
+      {
+        onSuccess: () => { toast.success("Release updated"); onClose(); },
+        onError: (err) => {
+          if (isApiError(err) && getApiErrorCode(err) === "PROJECTS_TICKET_CONFLICT") {
+            void queryClient.invalidateQueries({ queryKey: releaseBaseKey(projectId) });
+            const diffs = buildReleaseConflictDiffs(values, release);
+            if (diffs.length > 0) { setConflictFields(diffs); return; }
+            toast.warning("This release was modified by another user. Your changes were not saved — reopen it to see the latest version.");
+            return;
+          }
+          toast.error(getErrorMessage(err));
+        },
+      },
+    );
+  }, [release, pendingPublishValues, update, onClose, queryClient, projectId]);
 
   const form = useForm<ReleaseFormValues>({
     resolver: zodResolver(releaseFormSchema),
@@ -109,6 +142,8 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
       description: release?.description ?? null,
       status: release?.status ?? "draft",
       releaseDate: release?.releaseDate ?? null,
+      readiness: null,
+      riskLevel: null,
     },
   });
   useRegisterDirtyState(form.formState.isDirty);
@@ -120,6 +155,10 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
   const onSubmit = useCallback(
     (values: ReleaseFormValues) => {
       if (isEdit) {
+        if (values.status === "released" && release.status !== "released") {
+          setPendingPublishValues(values);
+          return;
+        }
         update.mutate(
           {
             releaseId: release.id,
@@ -253,6 +292,57 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
                 />
               </div>
 
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="readiness"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Readiness</FormLabel>
+                      <Select
+                        value={field.value ?? ""}
+                        onValueChange={(v) => field.onChange(v || null)}
+                      >
+                        <FormControl>
+                          <SelectTrigger><SelectValue placeholder="Not set" /></SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="not_started">Not started</SelectItem>
+                          <SelectItem value="in_progress">In progress</SelectItem>
+                          <SelectItem value="ready">Ready</SelectItem>
+                          <SelectItem value="blocked">Blocked</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage className="text-xs" />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="riskLevel"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Risk Level</FormLabel>
+                      <Select
+                        value={field.value ?? ""}
+                        onValueChange={(v) => field.onChange(v || null)}
+                      >
+                        <FormControl>
+                          <SelectTrigger><SelectValue placeholder="Not set" /></SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="low">Low</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="high">High</SelectItem>
+                          <SelectItem value="critical">Critical</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage className="text-xs" />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
               <FormField
                 control={form.control}
                 name="description"
@@ -300,6 +390,15 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
       fields={conflictFields ?? []}
       onKeepMine={handleConflictDismiss}
       onDiscard={handleConflictDismiss}
+    />
+    <ConfirmDialog
+      title={`Publish "${pendingPublishValues?.name ?? "this release"}"?`}
+      description="This will mark the release as published and record the publication timestamp. You can revert to draft afterwards if needed."
+      confirmLabel="Publish"
+      onConfirm={handlePublishConfirmed}
+      isPending={update.isPending}
+      open={pendingPublishValues !== null}
+      onOpenChange={(open) => { if (!open) handlePublishCancelled(); }}
     />
     </>
   );

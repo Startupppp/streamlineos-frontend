@@ -27,6 +27,8 @@ export const releaseFormSchema = z.object({
     ),
   status: z.enum(["draft", "released", "archived"]),
   releaseDate: z.string().nullable().optional(),
+  readiness: z.enum(["not_started", "in_progress", "ready", "blocked"]).nullable().optional(),
+  riskLevel: z.enum(["low", "medium", "high", "critical"]).nullable().optional(),
 });
 
 export type ReleaseFormValues = z.infer<typeof releaseFormSchema>;

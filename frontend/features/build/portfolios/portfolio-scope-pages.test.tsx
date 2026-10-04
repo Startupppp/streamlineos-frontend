@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { PortfoliosPage } from "./portfolios-page";
 import { PortfolioDetailPage } from "./portfolio-detail-page";
+import { buildPortfolioColumns, PORTFOLIO_TABLE_HEADERS } from "./portfolio-table-columns";
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: jest.fn(), push: jest.fn() }),
@@ -160,7 +161,7 @@ jest.mock("@/components/ui/loading-button", () => ({
 }));
 
 jest.mock("@/hooks/common/use-query-param-open", () => {
-  const { useState } = require("react");
+  const { useState } = jest.requireActual<typeof import("react")>("react");
   return {
     useQueryParamOpen: () => {
       const [open, setOpen] = useState(false);
@@ -477,5 +478,21 @@ describe("PortfolioDetailPage — denied state (BSN-FE-D4)", () => {
     expect(screen.queryByTestId("select-item-1")).not.toBeInTheDocument();
     expect(screen.queryByTestId("select-item-2")).not.toBeInTheDocument();
     expect(screen.getByTestId("select-item-3")).toBeInTheDocument();
+  });
+});
+
+describe("portfolio-table-columns — Health column (BSN-FE-HC1)", () => {
+  it("PORTFOLIO_TABLE_HEADERS includes Health so the health rollup column is always defined", () => {
+    expect(PORTFOLIO_TABLE_HEADERS).toContain("Health");
+  });
+
+  it("buildPortfolioColumns returns a column with header Health so health rollup renders in the table", () => {
+    const columns = buildPortfolioColumns({
+      canManage: false,
+      ownerOf: () => null,
+      onEdit: () => {},
+      onDelete: () => {},
+    });
+    expect(columns.map((c) => c.header)).toContain("Health");
   });
 });
