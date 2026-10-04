@@ -21,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { MemberPicker } from "@/components/members/member-picker";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useAddProjectMember } from "@/hooks/api/build/project-members";
 import { isWriteConflict } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -47,8 +48,10 @@ export function AddProjectMemberDialog({
     resolver: zodResolver(addProjectMemberSchema),
     defaultValues: { userId: "", role: "MEMBER" },
   });
+  useRegisterDirtyState(open && form.formState.isDirty);
 
   function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen && addMember.isPending) return;
     if (!nextOpen) {
       form.reset();
     }
@@ -61,7 +64,8 @@ export function AddProjectMemberDialog({
 
   function handleAddSuccess() {
     toast.success("Added to project.");
-    handleOpenChange(false);
+    form.reset();
+    onOpenChange(false);
   }
 
   function handleAddError(e: unknown) {
@@ -73,6 +77,7 @@ export function AddProjectMemberDialog({
   }
 
   function handleSubmit(values: AddProjectMemberFormValues) {
+    if (addMember.isPending) return;
     addMember.mutate(
       { projectId, userId: values.userId, role: values.role },
       { onSuccess: handleAddSuccess, onError: handleAddError },
@@ -87,6 +92,7 @@ export function AddProjectMemberDialog({
     fieldState: ControllerFieldState;
   }) {
     function handleMemberChange(id: string | null) {
+      if (addMember.isPending) return;
       field.onChange(id ?? "");
     }
     return (
@@ -96,6 +102,7 @@ export function AddProjectMemberDialog({
           moduleKey="build"
           excludeAssigned={false}
           enabled={open}
+          disabled={addMember.isPending}
           value={field.value || undefined}
           onChange={handleMemberChange}
           placeholder="Select a member…"
@@ -114,8 +121,16 @@ export function AddProjectMemberDialog({
   }: {
     field: ControllerRenderProps<AddProjectMemberFormValues, "role">;
   }) {
+    function handleRoleChange(value: string) {
+      if (addMember.isPending) return;
+      field.onChange(value);
+    }
     return (
-      <Select value={field.value} onValueChange={field.onChange}>
+      <Select
+        value={field.value}
+        onValueChange={handleRoleChange}
+        disabled={addMember.isPending}
+      >
         <SelectTrigger id="add-project-member-role" className="h-9">
           <SelectValue />
         </SelectTrigger>
