@@ -33,6 +33,7 @@ const SESSION_ONLY_BY_DESIGN: readonly SessionOnlySurface[] = [
   { path: "/knowledge/wiki/private", subtree: true, reason: "A member's own private Knowledge Base pages." },
   { path: "/knowledge/wiki/doc", subtree: true, reason: "Knowledge Base page reading is platform core; per-record ACLs gate the content." },
   { path: "/knowledge/wiki/spaces", childrenOnly: true, reason: "An individual Knowledge Base space is a reading surface; the space list itself stays gated on kb:spaces:view." },
+  { path: "/post-invite", reason: "The invitation landing router. It only reads the session and access result to redirect the new member to the surface they were granted." },
   { path: "/hr/announcements", reason: "Company-wide announcement reading that happens to sit under the HR prefix." },
 ];
 
