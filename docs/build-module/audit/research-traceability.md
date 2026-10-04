@@ -553,6 +553,8 @@ Unavailable historical QA/release originals and the absent D-build.webp remain e
 
 CI browser reports distinguish observed UI, blocked flows and public-document claims. Adoption is a product decision, not proof of broad superiority. Jira versions/filter observations do not prove a filled release/program surface. Asana/monday blocked walks remain blocked; do not infer parity from unavailable UI. Preserve their sources and verify before market claims. Official documentation links remain attached to source files and the delivery roadmap.
 
+**Asana and monday.com walk status (2026-10-04):** These walks are EXPLICITLY UNVERIFIED. The walk sessions were blocked or incomplete; no UI observation from these sessions may be cited as current evidence of competitor feature presence or absence. Any claim derived from these walks must be labeled "Unverified, source blocked — not for sales use" until a fresh named-primary-source observation is recorded with URL, access date, and observed state. (BT-e3b252072454)
+
 ## Delivery checklist
 
 Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.

@@ -71,6 +71,22 @@ The server binds `orgId` and actor from authenticated context. A client-supplied
 
 Every command log/trace includes request/correlation ID, operation, tenant hash/ID under approved logging policy, actor type, project/record IDs, outcome code, duration, query count/budget, cache result, idempotency outcome, and outbox event IDs. Never log bodies, tokens, signed URLs, webhook secrets, OTPs, or unrestricted form/comment text.
 
+## Data retention schedule (Build)
+
+(BT-d10af38c2f4e, added 2026-10-04 — Planned; requires implementation confirmation)
+
+| Data class | Retention rule | Deletion trigger | Notes |
+|---|---|---|---|
+| Ticket free-text (title, description, comments) | Kept until project is hard-deleted + 30 days | Org deletion cascades; project hard-delete cascades | Soft-delete hides but retains; free-text never logged |
+| AI context / session | Session lifetime only; not persisted to DB | Session expiry or explicit clear | Token/prompt content must never appear in application logs |
+| File metadata (attachment records) | Until the attachment is deleted by an authorized actor | File owner delete or org deletion | Byte storage lifecycle is owned by Files module |
+| Audit log rows | Immutable; no automated deletion | Legal hold; org deletion may anonymize actor references | Stores identifiers and field names only, not field values |
+| Webhook secrets | Never stored as plaintext; stored as hash only | Secret rotation replaces hash | Secret must never appear in application or observability logs |
+| Signed URLs | Never persisted to DB; generated on demand | Expiry encoded in URL | URL must never appear in application logs |
+| Build permissions / membership grants | Kept for revocation audit; anonymized on org deletion | Org deletion | Membership grants carry audit timestamps |
+
+Per-tenant deletion: deleting an organization row must cascade-delete or anonymize all Build data (tickets, projects, grants, audit rows, files metadata, webhooks). The cascade path is through the `org_id` foreign keys on every Build table. Verify the cascade is tested in the org-deletion spec before marking this row Current verified.
+
 ## Delivery checklist
 
 Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.

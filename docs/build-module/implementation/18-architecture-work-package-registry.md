@@ -9,6 +9,23 @@ Claim one package in [WORK-CLAIMS.md](./WORK-CLAIMS.md). Reinspect the listed so
 
 `Parallel after` means the packages may run at the same time only after the named prerequisite interfaces are merged and their primary paths do not overlap.
 
+### Mandatory dependency order
+
+Work must proceed in this eight-step sequence. A step cannot start until the preceding step's interfaces are merged and gate-passing in WORK-CLAIMS.
+
+1. **Authority** — module access, standing, entitlement (`ARCH-01-MODULE-ACCESS`)
+2. **Contracts** — versioned wire contracts and generated client (`ARCH-06-WIRE-CONTRACTS`)
+3. **Commands** — project provision, ticket command, activation, portal (`ARCH-03A`, `ARCH-03B`, `ARCH-14`, `ARCH-17`)
+4. **Capture** — forms, feedbucket, triage, intake convergence (`ARCH-04-REQUEST-CONVERGENCE`)
+5. **Effects** — outbox runtime, automation, webhook, notification, import (`ARCH-15-EFFECT-RUNTIME`)
+6. **Relationships** — planning graph, collaboration, Timesheets seam (`ARCH-11`, `ARCH-12`, `ARCH-02`)
+7. **Projections** — collection queries, metrics, analytics (`ARCH-07-COLLECTION-QUERIES`, `ARCH-13-METRICS-PROJECTIONS`)
+8. **Experience** — frontend workflows, capability settings, evidence cleanup (`ARCH-09`, `ARCH-16`, `ARCH-10`)
+
+Packages within the same step may run in parallel when their primary source paths are disjoint. The WORK-CLAIMS submitter must cite which step is complete before starting the next. Parallel packages at the same step must document their non-overlapping file boundaries in WORK-CLAIMS before editing.
+
+(BT-69a12d33aab2, added 2026-10-04)
+
 ### Current high-risk source anchors
 
 These paths were present at snapshot `a5b8347fb`. They are starting points, not a complete caller census and not proof of runtime behavior.

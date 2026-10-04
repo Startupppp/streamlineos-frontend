@@ -24,18 +24,27 @@ The command writes the domain change and outbox event in one tenant transaction 
 
 ## Canonical events
 
-| Event | Producer | Consumers/effects | Ordering/deduplication |
-|---|---|---|---|
-| `build.ticket.created.v1` | ticket create command | activity, automation, notification, search/report projection, webhook | Aggregate revision order; event+consumer key |
-| `build.ticket.changed.v1` | `applyTicketChange` | same plus assignment/status/due-specific consumers | Per Ticket revision; ignore older projection update |
-| `build.ticket.archived/restored.v1` | archive/restore command | projections, search, notification where configured | Revision ordered |
-| `build.approval.requested/decided.v1` | approval command | Inbox/notification, client projection, webhook | Request revision; decision command idempotency |
-| `build.release.published.v1` | release publish command | changelog/client notification/integration/webhook | Release revision; publish idempotency key |
-| `build.blocker.created.v1` | Ticket transition/create | attention/notification | Ticket revision |
-| `build.client-grant.activated/revoked/expired.v1` | grant lifecycle | portal/access cache, email, audit | Grant revision; revocation has priority over stale activation |
-| `build.import.started/completed.v1` | import coordinator | operation center, notification, reconciliation | Job ID; row source identity |
-| `build.project.archived/restored.v1` | project lifecycle | navigation/access/projection cleanup | Project revision |
-| `build.projection.refresh-requested.v1` | cross-module link/event adapter | time/finance/customer projection worker | source module + source ID + source revision |
+Registered outbox event types as of branch `codex/build-foundation-gates` (2026-10-04). Each row shows the type string as it appears in source.
+
+| Event type (source name) | Version policy | Producer | Consumer(s) / effects | Deduplication |
+|---|---|---|---|---|
+| `build.approval.requested` | schemaVersion field in payload; bump on breaking change | `approvals.service.ts` | `build-approval-requested-consumer.service.ts` → Inbox/notification | event+consumer idempotency key |
+| `build.blocker.created` | schemaVersion field in payload | `projects-ticket-relations.service.ts` | `build-blocker-created-consumer.service.ts` → attention/notification | Ticket revision |
+| `build.ticket.status_changed` | schemaVersion field in payload | `apply-ticket-change.ts`, `build-ticket-batch-workflow.ts` | `build-ticket-status-changed-consumer.service.ts` → assignee notification | event+consumer idempotency key |
+| `build.release.published` | schemaVersion field in payload | `projects-releases.service.ts` | `build-release-published-consumer.service.ts` → assignee notification, changelog | release revision + idempotency key |
+
+Notification-only event keys (no outbox consumer, used via direct notification service):
+
+| Event key | Producer | Effect |
+|---|---|---|
+| `build.ticket.due_soon` | `build-due-sweep.service.ts` | notification to assignee |
+| `build.ticket.overdue` | `build-due-sweep.service.ts` | notification to assignee |
+| `build.ticket.assigned` | `build-ticket-creation.service.ts`, `projects-tickets-transfer.service.ts` | notification to new assignee |
+| `build.project.member_added` | `projects-provision.service.ts` | notification to new member |
+
+Version bump policy: increment `schemaVersion` in the payload schema whenever a field is removed, renamed, or its type narrows. Adding optional fields does not require a bump. All four registered events carry a `schemaVersion` field; validate it in consumers before processing. New events must be registered in `outbox-consumer.registry.ts` before any producer emits them.
+
+The doc previously used `.v1` name suffixes (e.g. `build.ticket.changed.v1`); source uses underscore names without version suffix. The `.v1` names are not emitted by any current producer and are not registered consumers — treat them as planning artifacts only. Use the source names above as the canonical identifiers. (BT-5de59e93a52b, reconciled 2026-10-04)
 
 Names already emitted in source remain compatibility inputs; version/migrate them through an adapter rather than silently changing consumer meaning.
 
