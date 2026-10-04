@@ -346,6 +346,8 @@ export const releaseRow = {
   status: "draft" as const,
   releaseDate: null,
   publishedAt: null,
+  readiness: null,
+  riskLevel: null,
   ticketCount: 0,
   description: null,
   createdBy: null,
