@@ -64,6 +64,7 @@ export function ProjectCreateWizard({
   };
 
   function handleOpenChange(value: boolean) {
+    if (!value && isProvisioning) return;
     if (!value) reset();
     onOpenChange(value);
   }
@@ -73,7 +74,8 @@ export function ProjectCreateWizard({
   }
 
   function handleSuccess() {
-    handleOpenChange(false);
+    reset();
+    onOpenChange(false);
   }
 
   const { provision, isProvisioning } = useProjectProvisioning(
@@ -214,6 +216,7 @@ export function ProjectCreateWizard({
                 type="button"
                 variant="outline"
                 className="flex-1"
+                disabled={isProvisioning}
                 onClick={goBack}
               >
                 ← Back
