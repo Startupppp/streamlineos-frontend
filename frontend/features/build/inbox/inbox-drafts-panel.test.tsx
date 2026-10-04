@@ -63,6 +63,8 @@ function makeDraft(id: number): CommentDraftListItem {
   return {
     id,
     ticketId: id * 10,
+    orgId: "test-org",
+    membershipId: null,
     body: `Draft body ${id}`,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),

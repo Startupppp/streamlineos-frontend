@@ -29,7 +29,7 @@ function owner(userId = "user-a", orgId = "org-a", sessionId = "session-a") {
   return { status: "authenticated", data: { user: { id: userId }, orgId, sessionId } };
 }
 function draft(body = "private A"): CommentDraft {
-  return { id: 1, ticketId: 7, body, createdAt: "2026-10-03T00:00:00.000Z", updatedAt: "2026-10-03T00:00:00.000Z" };
+  return { id: 1, ticketId: 7, orgId: "test-org", membershipId: null, body, createdAt: "2026-10-03T00:00:00.000Z", updatedAt: "2026-10-03T00:00:00.000Z" };
 }
 function setup() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });

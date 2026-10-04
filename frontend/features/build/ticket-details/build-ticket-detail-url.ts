@@ -131,6 +131,25 @@ export function resolveTicketBackHref(
   return `${candidate.pathname}${candidate.search}`;
 }
 
+export function buildEpicDetailUrl(
+  projectId: number,
+  epicId: number,
+  returnHref?: string | null,
+): string {
+  const base = `/build/${projectId}/epics/${epicId}`;
+  if (!returnHref) return base;
+  const params = new URLSearchParams({ returnTo: returnHref });
+  return `${base}?${params}`;
+}
+
+export function buildPersonDetailUrl(employeeId: string): string {
+  return `/hr/employees/${employeeId}`;
+}
+
+export function buildClientDetailUrl(clientId: number): string {
+  return `/crm/clients/${clientId}`;
+}
+
 export function buildTicketDetailUrl(
   projectId: number,
   projectKey: string | null | undefined,

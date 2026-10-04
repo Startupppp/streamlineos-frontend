@@ -53,7 +53,7 @@ jest.mock("@/components/ui/animated-icon-button", () => ({
 }));
 
 function savedDraft(body = "saved draft", ticketId = 7): CommentDraft {
-  return { id: 1, ticketId, body, createdAt: "2026-10-03T00:00:00.000Z", updatedAt: "2026-10-03T00:00:00.000Z" };
+  return { id: 1, ticketId, orgId: "test-org", membershipId: null, body, createdAt: "2026-10-03T00:00:00.000Z", updatedAt: "2026-10-03T00:00:00.000Z" };
 }
 
 beforeEach(() => {

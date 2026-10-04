@@ -2,6 +2,9 @@ import {
   buildMyWorkReturnHref,
   buildTicketCollectionReturnHref,
   buildTicketDetailUrl,
+  buildEpicDetailUrl,
+  buildPersonDetailUrl,
+  buildClientDetailUrl,
   getMyWorkTicketHref,
   resolveTicketBackHref,
 } from "./build-ticket-detail-url";
@@ -92,5 +95,29 @@ describe("ticket detail return navigation", () => {
     expect(getMyWorkTicketHref(12, "WEB", 81, "//outside.example")).toBe(
       "/build/12/tickets/WEB-81?returnTo=%2Fbuild%2F12%2Fissues",
     );
+  });
+});
+
+describe("canonical record URLs — non-ticket record types use their own canonical paths", () => {
+  it("buildEpicDetailUrl returns the canonical epic path with projectId and epicId", () => {
+    expect(buildEpicDetailUrl(12, 55)).toBe("/build/12/epics/55");
+  });
+
+  it("buildEpicDetailUrl appends returnTo when provided so the user can navigate back", () => {
+    expect(buildEpicDetailUrl(12, 55, "/build/12/issues")).toBe(
+      "/build/12/epics/55?returnTo=%2Fbuild%2F12%2Fissues",
+    );
+  });
+
+  it("buildEpicDetailUrl omits returnTo when not provided, keeping the URL clean", () => {
+    expect(buildEpicDetailUrl(12, 55, null)).toBe("/build/12/epics/55");
+  });
+
+  it("buildPersonDetailUrl returns the canonical HR employee path", () => {
+    expect(buildPersonDetailUrl("emp-abc-123")).toBe("/hr/employees/emp-abc-123");
+  });
+
+  it("buildClientDetailUrl returns the canonical CRM client path", () => {
+    expect(buildClientDetailUrl(99)).toBe("/crm/clients/99");
   });
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useProject } from "@/hooks/api/build/projects";
 import { useCycles } from "@/hooks/api/build/advanced";
@@ -230,7 +230,15 @@ export function TriagePage({ projectId }: TriagePageProps) {
   );
   const handleClearTriageKeyboard = useCallback(() => setSelectedIds(new Set()), []);
   const handleToggleSelect = useCallback((id: number) => {
-    setSelectedIds((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
   }, []);
   const handleBulkUpdate = useCallback(
     (update: Partial<Pick<BulkUpdateTicketsInput, "status" | "priority" | "assigneeId" | "cycleId">>) =>
@@ -248,6 +256,34 @@ export function TriagePage({ projectId }: TriagePageProps) {
     enabled: isReady,
     searchInputRef,
   });
+
+  useEffect(() => {
+    if (!isReady || !canUpdate) return;
+    let shortcutPending = false;
+    function handleTriageKeyDown(e: KeyboardEvent) {
+      if (e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+      if (e.target instanceof HTMLElement) {
+        const tag = e.target.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" ||
+          e.target.isContentEditable || e.target.closest('[contenteditable="true"], [contenteditable=""], [contenteditable="plaintext-only"]')) return;
+      }
+      if (shortcutPending || updateTicket.isPending || pendingAccept.size > 0 || pendingDecline.size > 0) return;
+      if (triageFocusedIndex === null || triageFocusedIndex === undefined) return;
+      const focused = tickets[triageFocusedIndex];
+      if (!focused) return;
+      if (e.key === "a") {
+        e.preventDefault();
+        shortcutPending = true;
+        handleAccept(focused.id);
+      } else if (e.key === "d") {
+        e.preventDefault();
+        shortcutPending = true;
+        handleDecline(focused.id);
+      }
+    }
+    document.addEventListener("keydown", handleTriageKeyDown);
+    return () => document.removeEventListener("keydown", handleTriageKeyDown);
+  }, [isReady, canUpdate, triageFocusedIndex, tickets, handleAccept, handleDecline, updateTicket.isPending, pendingAccept, pendingDecline]);
 
   return (
     <PageWrapper

@@ -1,4 +1,5 @@
 import { act, fireEvent, render, renderHook, screen } from "@testing-library/react";
+import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { toast } from "sonner";
@@ -96,11 +97,13 @@ function member(id: string, name: string) {
   };
 }
 
-let harnessAutoSave: ((field: Record<string, unknown>) => void) | null = null;
+const harnessCapture: { autoSave: ((field: Record<string, unknown>) => void) | null } = { autoSave: null };
 
 function ConflictHarness() {
   const detail = useTicketDetail({ projectId: 5, ticketId: 7 });
-  harnessAutoSave = detail.autoSave;
+  useEffect(() => {
+    harnessCapture.autoSave = detail.autoSave;
+  });
   return (
     <TicketConflictDialog
       open={Boolean(detail.conflict)}
@@ -131,7 +134,7 @@ async function renderConflict(
     </QueryClientProvider>,
   );
   await act(async () => {
-    harnessAutoSave?.(patch);
+    harnessCapture.autoSave?.(patch);
     await Promise.resolve();
   });
   await act(async () => {
@@ -527,5 +530,82 @@ describe("useTicketDetail offline drafts — an edit made offline is kept, not d
     });
     expect(mockMutateAsync).toHaveBeenCalledTimes(1);
     expect(result.current.offlineDraftFields).toEqual([]);
+  });
+});
+
+describe("useTicketDetail error handling — ambiguous and validation error cases", () => {
+  it("shows an ambiguous-outcome warning for a network TypeError instead of a generic error toast so the user knows the save may have gone through", async () => {
+    const networkError = new TypeError("Failed to fetch");
+    mockMutateAsync.mockImplementation((variables: Record<string, unknown>) => {
+      mockUpdateOptions.onError?.(networkError, variables);
+      return Promise.reject(networkError);
+    });
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    const { result } = renderHook(() => useTicketDetail({ projectId: 5, ticketId: 7 }), {
+      wrapper: wrapper(client),
+    });
+    await act(async () => {
+      result.current.autoSave({ status: "IN_PROGRESS" });
+      await Promise.resolve();
+    });
+
+    const warn = (toast as unknown as { warning: jest.Mock }).warning;
+    const err = (toast as unknown as { error: jest.Mock }).error;
+    expect(warn).toHaveBeenCalledWith(
+      "This save may have succeeded. Check the ticket before retrying.",
+    );
+    expect(err).not.toHaveBeenCalled();
+  });
+
+  it("shows a validation error toast for a 422 response and does not show the ambiguous warning", async () => {
+    const validationError = new ApiError("Validation failed", 422, "VALIDATION_FAILED");
+    mockMutateAsync.mockImplementation((variables: Record<string, unknown>) => {
+      mockUpdateOptions.onError?.(validationError, variables);
+      return Promise.reject(validationError);
+    });
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    const { result } = renderHook(() => useTicketDetail({ projectId: 5, ticketId: 7 }), {
+      wrapper: wrapper(client),
+    });
+    await act(async () => {
+      result.current.autoSave({ status: "IN_PROGRESS" });
+      await Promise.resolve();
+    });
+
+    const err = (toast as unknown as { error: jest.Mock }).error;
+    const warn = (toast as unknown as { warning: jest.Mock }).warning;
+    expect(err).toHaveBeenCalled();
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it("sends expectedUpdatedAt and version on every save so the server can detect stale edits", async () => {
+    mockMutateAsync.mockResolvedValue({
+      updated: true,
+      updatedAt: "2026-09-15T10:05:00.000Z",
+      version: 5,
+    });
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    const { result } = renderHook(() => useTicketDetail({ projectId: 5, ticketId: 7 }), {
+      wrapper: wrapper(client),
+    });
+    await act(async () => {
+      result.current.autoSave({ title: "My title" });
+      await Promise.resolve();
+    });
+
+    expect(mockMutateAsync).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ticketId: 7,
+        expectedUpdatedAt: "2026-09-15T10:00:00.000Z",
+        version: 4,
+        title: "My title",
+      }),
+    );
   });
 });
