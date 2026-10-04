@@ -1,3 +1,4 @@
+import type { AnimatedNavIconComponent } from "@/components/layout/sidebar/sidebar-animated-nav";
 import {
   KbClipboardIcon,
   KbCopyIcon,
@@ -13,7 +14,6 @@ import {
   KbStarIcon,
   KbTrash2Icon,
   KbUnlockIcon,
-  type KbIconComponent,
 } from "@/features/wiki/lib/kb-icons";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 
@@ -69,9 +69,9 @@ interface KbPageActionDefinition {
   permission: KbPagePermissionKey | null;
   destructive: boolean;
   label: string;
-  icon: KbIconComponent;
+  icon: AnimatedNavIconComponent;
   toggledLabel?: string;
-  toggledIcon?: KbIconComponent;
+  toggledIcon?: AnimatedNavIconComponent;
   isToggled?: (subject: KbPageActionSubject) => boolean;
   isPermitted: (capabilities: KbPageActionCapabilities) => boolean;
 }
@@ -82,7 +82,7 @@ export interface ResolvedKbPageAction {
   permission: KbPagePermissionKey | null;
   destructive: boolean;
   label: string;
-  icon: KbIconComponent;
+  icon: AnimatedNavIconComponent;
   isToggled: boolean;
 }
 

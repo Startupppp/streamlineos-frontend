@@ -1,7 +1,6 @@
 import type {
   ReportingCompiledColumn,
   ReportingFieldType,
-  ReportingFilterNode,
 } from "./reporting";
 
 /**
@@ -19,14 +18,11 @@ import type {
  * source, and the two shapes an evaluation comes back in.
  */
 
-export type SegmentFilterNode = ReportingFilterNode;
-export type SegmentFieldType = ReportingFieldType;
-
 /** One field a criterion may name, from `GET /crm/segments/sources`. */
 export interface SegmentSourceField {
   readonly name: string;
   readonly label: string;
-  readonly type: SegmentFieldType;
+  readonly type: ReportingFieldType;
 }
 
 /**

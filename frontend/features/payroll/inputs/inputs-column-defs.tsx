@@ -5,9 +5,9 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { type DataTableColumn } from "@/components/ui/data-table";
 import { SourceRefsPopover } from "./source-refs-popover";
 import {
-  type PayrollInputSnapshot,
+  type PayrollSnapshotItem,
   type PayrollAdjustmentListItem,
-} from "@/hooks/api/payroll/payroll-inputs";
+} from "@/hooks/api/payroll/payroll-inputs-schema";
 import { getUserDisplayName } from "@/lib/person-display";
 import { formatCurrencyFull } from "@/lib/format-utils";
 
@@ -27,7 +27,7 @@ function payloadCount(payload: unknown, key: string): number {
   return Array.isArray(value) ? value.length : 0;
 }
 
-export function resolveDisplayName(row: PayrollInputSnapshot | PayrollAdjustmentListItem): string {
+export function resolveDisplayName(row: PayrollSnapshotItem | PayrollAdjustmentListItem): string {
   return getUserDisplayName({
     name: row.userName,
     firstName: row.userFirstName,
@@ -36,7 +36,7 @@ export function resolveDisplayName(row: PayrollInputSnapshot | PayrollAdjustment
   });
 }
 
-export const attendanceColumns: DataTableColumn<PayrollInputSnapshot>[] = [
+export const attendanceColumns: DataTableColumn<PayrollSnapshotItem>[] = [
   {
     key: "employee",
     header: "Employee",
@@ -85,7 +85,7 @@ export const attendanceColumns: DataTableColumn<PayrollInputSnapshot>[] = [
   },
 ];
 
-export const leaveColumns: DataTableColumn<PayrollInputSnapshot>[] = [
+export const leaveColumns: DataTableColumn<PayrollSnapshotItem>[] = [
   {
     key: "employee",
     header: "Employee",
@@ -127,7 +127,7 @@ export const leaveColumns: DataTableColumn<PayrollInputSnapshot>[] = [
   },
 ];
 
-export const overtimeColumns: DataTableColumn<PayrollInputSnapshot>[] = [
+export const overtimeColumns: DataTableColumn<PayrollSnapshotItem>[] = [
   {
     key: "employee",
     header: "Employee",
@@ -157,7 +157,7 @@ export const overtimeColumns: DataTableColumn<PayrollInputSnapshot>[] = [
   },
 ];
 
-export const reimbursementColumns: DataTableColumn<PayrollInputSnapshot>[] = [
+export const reimbursementColumns: DataTableColumn<PayrollSnapshotItem>[] = [
   {
     key: "employee",
     header: "Employee",

@@ -34,7 +34,7 @@ jest.mock("@/hooks/api/hr", () => ({
 }));
 jest.mock("@/features/hr/expenses/components/create-expense-dialog", () => ({ CreateExpenseDialog: () => null }));
 jest.mock("@/features/hr/expenses/components/import-expense-sheet", () => ({ ImportExpenseSheet: () => null }));
-jest.mock("@/components/expenses/expense-export-dialog", () => ({ ExpenseExportDialog: () => null }));
+jest.mock("@/components/expenses/expense-export/expense-export-dialog", () => ({ ExpenseExportDialog: () => null }));
 jest.mock("@/features/hr/expenses/expense-stats", () => ({ AdminExpenseStats: () => null }));
 jest.mock("@/features/hr/expenses/expense-filters", () => ({
   AdminExpenseFilters: () => null,

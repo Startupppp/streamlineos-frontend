@@ -60,8 +60,6 @@ type KbIconProps = {
   size?: number;
 };
 
-export type KbIconComponent = AnimatedNavIconComponent;
-
 const TAILWIND_UNIT_PX = 4;
 const TAILWIND_SIZE_TOKEN_RE = /^(?:h|w|size)-(\d+(?:\.\d+)?)$/;
 const TAILWIND_ARBITRARY_PX_RE = /^(?:h|w|size)-\[(\d+(?:\.\d+)?)px\]$/;
@@ -95,7 +93,7 @@ type AnimateIconSource = React.ForwardRefExoticComponent<
   KbIconProps & React.RefAttributes<IconHandle>
 >;
 
-function createAnimatedIcon(Icon: AnimateIconSource): KbIconComponent {
+function createAnimatedIcon(Icon: AnimateIconSource): AnimatedNavIconComponent {
   return forwardRef<IconHandle, KbIconProps>(function KbAnimatedIcon(
     { className, size },
     ref,
@@ -110,7 +108,7 @@ function createAnimatedIcon(Icon: AnimateIconSource): KbIconComponent {
   });
 }
 
-function createLucideIcon(Icon: LucideIcon): KbIconComponent {
+function createLucideIcon(Icon: LucideIcon): AnimatedNavIconComponent {
   return forwardRef<IconHandle, KbIconProps>(function KbLucideIcon(
     { className, size },
     _,

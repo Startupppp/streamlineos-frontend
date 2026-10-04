@@ -24,7 +24,7 @@ import {
   useUpdateEmailTemplate,
   type EmailTemplate,
   type UpdateEmailTemplateInput,
-} from "@/hooks/api/crm-settings";
+} from "@/hooks/api/crm/settings/email-templates";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   EMAIL_TEMPLATE_LAYOUT,

@@ -13,7 +13,7 @@ import type {
   OrgLocation,
   OrgCostCenter,
   OrgHierarchyOverview,
-  OrgTreeNode,
+  OrgTreeRoot,
   OrgUnitDependencyPreview,
   OrgUnitKind,
 } from "@/types/org-hierarchy";
@@ -76,12 +76,6 @@ export interface HierarchyParentRecord {
   deletedAt: string | null;
 }
 
-const HIERARCHY_PARENT_ENDPOINTS: Record<HierarchyParentKind, string> = {
-  BUSINESS_UNIT: "/org-hierarchy/business-units",
-  BRANCH: "/org-hierarchy/branches",
-  DEPARTMENT: "/org-hierarchy/departments",
-};
-
 const HIERARCHY_PARENT_PAGE_SIZE = 25;
 
 export function useHierarchyParentOptions(
@@ -136,7 +130,7 @@ export function useOrgTree() {
   return useQuery({
     queryKey: platformHierarchyQueryKeys.hierarchy.tree(),
     queryFn: ({ signal }) =>
-      apiClient.get<OrgTreeNode[]>("/org-hierarchy/tree", undefined, signal, hierarchyTreeContract),
+      apiClient.get<OrgTreeRoot[]>("/org-hierarchy/tree", undefined, signal, hierarchyTreeContract),
     staleTime: 30_000,
     enabled: canView,
   });

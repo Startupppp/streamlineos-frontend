@@ -19,7 +19,7 @@ import {
   type PostReturnInput,
   type ReturnFilters,
   type VendorReturnReason,
-  type VendorReturnStatus,
+  type ReturnStatus,
 } from "./returns-common";
 const vendorReturnPageResponse = lazyContract(() =>
   import("./restored-surfaces-schema").then((m) => m.vendorReturnPageContract),
@@ -47,7 +47,7 @@ export interface VendorReturnSummary {
   vendor: { id: number; name: string } | null;
   poId: number | null;
   grnId: number | null;
-  status: VendorReturnStatus;
+  status: ReturnStatus;
   createdAt: string;
   approvedAt: string | null;
   postedAt: string | null;

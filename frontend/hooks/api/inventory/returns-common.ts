@@ -3,10 +3,7 @@ import type { UseQueryOptions } from "@tanstack/react-query";
 export const CUSTOMER_RETURNS_PERMISSION = "inventory:customer-returns:manage";
 export const VENDOR_RETURNS_PERMISSION = "inventory:vendor-returns:manage";
 
-/** DRAFT -> APPROVED -> POSTED, cancellable from either of the first two. */
 export type ReturnStatus = "DRAFT" | "APPROVED" | "POSTED" | "CANCELLED";
-export type VendorReturnStatus = ReturnStatus;
-export type CustomerReturnStatus = ReturnStatus;
 
 export type CustomerReturnDisposition =
   | "RESTOCK"

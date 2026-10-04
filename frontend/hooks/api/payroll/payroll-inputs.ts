@@ -1,5 +1,5 @@
 "use client";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -10,7 +10,6 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   PayrollSnapshotItem,
   PayrollAdjustmentListItem as SchemaAdjustmentListItem,
-  PayrollAdjustment as SchemaAdjustmentMutation,
   PayrollPeriod as SchemaPeriod,
 } from "@/hooks/api/payroll/payroll-inputs-schema";
 
@@ -55,10 +54,6 @@ export type HrPayrollInputSection =
 export type HrPayrollAdjustmentType = "arrears" | "recovery" | "correction";
 export type HrPayrollAdjustmentStatus = "pending" | "approved" | "applied";
 
-export type PayrollInputPeriod = SchemaPeriod;
-export type PayrollInputSnapshot = PayrollSnapshotItem;
-export type PayrollAdjustment = SchemaAdjustmentMutation;
-export type PayrollAdjustmentListItem = SchemaAdjustmentListItem;
 
 interface Pagination {
   limit: number;
@@ -113,7 +108,7 @@ export function useCreatePayrollInputPeriod() {
   return useAuthorizedMutation("hr:payroll:generate", {
     mutationKey: ["hr-payroll-inputs", "periods", "create"],
     mutationFn: (data: { periodKey: string; cutoffDate?: string }) =>
-      apiClient.post<PayrollInputPeriod>(
+      apiClient.post<SchemaPeriod>(
         "/hr/payroll-inputs/periods",
         data,
         undefined,
@@ -134,7 +129,7 @@ export function useBuildPayrollInputPeriod() {
   return useAuthorizedMutation("hr:payroll:generate", {
     mutationKey: ["hr-payroll-inputs", "periods", "build"],
     mutationFn: (periodId: number) =>
-      apiClient.post<PayrollInputPeriod>(
+      apiClient.post<SchemaPeriod>(
         `/hr/payroll-inputs/periods/${periodId}/build`,
         undefined,
         undefined,
@@ -158,7 +153,7 @@ export function useLockPayrollInputPeriod() {
   return useAuthorizedMutation("hr:payroll:lock", {
     mutationKey: ["hr-payroll-inputs", "periods", "lock"],
     mutationFn: (periodId: number) =>
-      apiClient.post<PayrollInputPeriod>(
+      apiClient.post<SchemaPeriod>(
         `/hr/payroll-inputs/periods/${periodId}/lock`,
         undefined,
         undefined,
@@ -182,7 +177,7 @@ export function useUnlockPayrollInputPeriod() {
   return useAuthorizedMutation("hr:payroll:reopen", {
     mutationKey: ["hr-payroll-inputs", "periods", "unlock"],
     mutationFn: (periodId: number) =>
-      apiClient.post<PayrollInputPeriod>(
+      apiClient.post<SchemaPeriod>(
         `/hr/payroll-inputs/periods/${periodId}/unlock`,
         undefined,
         undefined,

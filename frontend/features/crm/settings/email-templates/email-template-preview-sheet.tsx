@@ -11,7 +11,7 @@ import {
 import {
   EMAIL_TEMPLATE_VARIABLES,
 } from "@/lib/renderer/crm/settings/email-template-layout";
-import type { EmailTemplate } from "@/hooks/api/crm-settings";
+import type { EmailTemplate } from "@/hooks/api/crm/settings/email-templates";
 
 /**
  * A template with its variables filled in.

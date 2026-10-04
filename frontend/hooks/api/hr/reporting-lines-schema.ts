@@ -202,7 +202,6 @@ export type RelationshipEntry = z.infer<typeof relationshipEntryContract>;
 export type ReportingLineSource = z.infer<typeof reportingLineSourceContract>;
 export type ManagerResolution = z.infer<typeof managerResolutionContract>;
 export type PrimaryReportingLineEntry = z.infer<typeof primaryEntryContract>;
-export type ReportingLineEntry = PrimaryReportingLineEntry;
 export type ReportingLineView = z.infer<typeof reportingLineViewContract>;
 export type SetReportingLineResponse = z.infer<typeof setReportingLineResponseContract>;
 export type ManagerCandidates = z.infer<typeof managerCandidatesContract>;

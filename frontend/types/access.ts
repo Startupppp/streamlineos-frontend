@@ -41,4 +41,3 @@ export interface AssignRoleMemberInput {
   principalId: string;
 }
 
-export type UnassignRoleMemberInput = AssignRoleMemberInput;
