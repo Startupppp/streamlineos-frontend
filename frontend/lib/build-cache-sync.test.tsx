@@ -13,7 +13,13 @@ import { subscribeBuildCacheSync } from "./build-cache-sync";
 import { platformCoreQueryKeys } from "./query-keys/platform-core";
 
 let mockOrgId = "org-a";
-jest.mock("@/lib/api-client", () => ({ apiClient: { get: jest.fn(async () => []) } }));
+jest.mock("@/lib/api-client", () => ({
+  apiClient: {
+    get: jest.fn(async (url: string) =>
+      url.endsWith("/automations") ? { data: [], pagination: { limit: 50, hasMore: false, nextCursor: null } } : [],
+    ),
+  },
+}));
 jest.mock("next-auth/react", () => ({
   useSession: () => ({ status: "authenticated", data: { orgId: mockOrgId, user: { id: "member-a" } } }),
 }));
