@@ -52,6 +52,8 @@ const CUSTOM_STATE = {
   order: 1,
   type: "unstarted",
   wipLimit: null,
+  createdAt: "2026-09-15T10:00:00.000Z",
+  updatedAt: "2026-09-15T10:00:00.000Z",
 };
 
 const AUTOMATION_PAGINATION = { limit: 50, hasMore: false, nextCursor: null };
@@ -114,6 +116,14 @@ describe("custom state type accepts every value the state_group column can hold"
 
   it("accepts a null type, which the nullable column allows", () => {
     expect(projectCustomStateListContract.parse([{ ...CUSTOM_STATE, type: null }])[0].type).toBeNull();
+  });
+
+  it.each(["createdAt", "updatedAt"])("rejects a missing %s projection", (field) => {
+    const incomplete = Object.fromEntries(Object.entries(CUSTOM_STATE).filter(([key]) => key !== field));
+    const parsed = projectCustomStateListContract.safeParse([incomplete]);
+    expect(parsed.success).toBe(false);
+    if (parsed.success) throw new Error("Missing timestamp was accepted");
+    expect(parsed.error.issues.map((issue) => issue.path)).toEqual([[0, field]]);
   });
 
   it("rejects an absent type, because the backend always projects the column and an optional contract would decode a dropped projection as an untyped state", () => {
