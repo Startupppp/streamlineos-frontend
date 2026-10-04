@@ -6,11 +6,7 @@ import { useListFilterParams, type ListFilterSpec } from "@/components/list-view
 const VALID_PRIORITIES = new Set(["LOW", "MEDIUM", "HIGH", "URGENT"]);
 const VALID_TICKET_TYPES = new Set(["TASK", "BUG", "STORY", "EPIC", "SUBTASK"]);
 
-/**
- * Build's declaration, and the first caller of the shared list-filter hook. The
- * categories below used to be a closed union inside the hook itself, which
- * is why no other module could reach any of this.
- */
+
 export const TICKET_FILTER_SPEC: ListFilterSpec = {
   categories: [
     { key: "status", label: "Status", arity: "multi", params: ["status"] },

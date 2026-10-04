@@ -1,4 +1,5 @@
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { join, relative, resolve, sep } from "node:path";
 
 const root = resolve("docs/build-module");
@@ -38,9 +39,64 @@ function researchTraceability(files) {
   }));
 }
 
+const stages = ["D", "I", "T", "R", "B", "L"];
+
+function recordedStages() {
+  const current = readFileSync(indexPath, "utf8");
+  const records = new Map();
+  for (const line of current.split(/\r?\n/)) {
+    if (!/^\| BT-[a-f0-9]{12} \|/.test(line)) continue;
+    const cells = line.slice(2, -2).split(" | ");
+    if (cells.length !== 11) throw new Error(`Malformed task row: ${line}`);
+    const [id, , , ...rest] = cells;
+    if (records.has(id)) throw new Error(`Duplicate task ID: ${id}`);
+    const values = rest.slice(0, stages.length);
+    const evidence = rest[stages.length];
+    if (values.some((value) => !["?", "x", "-"].includes(value)))
+      throw new Error(`Invalid stage state for ${id}`);
+    if (values.includes("x") && !/\[[^\]]+\]\([^)]+\)/.test(evidence))
+      throw new Error(`Task ${id} needs a proof link for every completed stage`);
+    if (values.includes("-") && !evidence.includes("N/A:"))
+      throw new Error(`Task ${id} needs an N/A rationale`);
+    records.set(id, { values, evidence });
+  }
+  return records;
+}
+
+function taskRows(paths) {
+  const seenIds = new Set();
+  const rows = [];
+  for (const path of paths) {
+    const label = normalized(relative(root, path));
+    const link = normalized(relative(join(root, "implementation"), path));
+    const occurrences = new Map();
+    const lines = readFileSync(path, "utf8").split(/\r?\n/);
+    for (const [index, line] of lines.entries()) {
+      const match = /^- \[([ xX])\] (.*)$/.exec(line);
+      if (!match) continue;
+      const task = match[2].trim().replace(/\s+/g, " ");
+      const occurrence = (occurrences.get(task) ?? 0) + 1;
+      occurrences.set(task, occurrence);
+      const id = `BT-${createHash("sha256").update(`${label}\n${task}\n${occurrence}`).digest("hex").slice(0, 12)}`;
+      if (seenIds.has(id)) throw new Error(`Task ID collision: ${id}`);
+      seenIds.add(id);
+      const summary = task.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").replace(/\|/g, "/");
+      rows.push({ id, link, line: index + 1, checked: match[1].toLowerCase() === "x", summary });
+    }
+  }
+  return rows;
+}
+
 function indexText(files) {
   const canonical = files.filter((path) => !isResearch(path) && path !== indexPath);
   const research = researchTraceability(files);
+  const tasks = taskRows(canonical);
+  const recorded = recordedStages();
+  const currentIds = new Set(tasks.map(({ id }) => id));
+  for (const [id, record] of recorded) {
+    if (!currentIds.has(id) && (record.values.some((value) => value !== "?") || record.evidence !== "—"))
+      throw new Error(`Recorded task ${id} no longer matches a source checkbox; reconcile its evidence before regenerating`);
+  }
   const counts = canonical.map((path) => {
     const source = readFileSync(path, "utf8");
     return {
@@ -51,6 +107,8 @@ function indexText(files) {
   });
   const totalOpen = counts.reduce((sum, item) => sum + item.open, 0);
   const totalChecked = counts.reduce((sum, item) => sum + item.checked, 0);
+  if (tasks.length !== totalOpen + totalChecked)
+    throw new Error("The task register does not cover every specification checkbox");
   const lines = [
     "# Build documentation TODO index",
     "",
@@ -71,6 +129,26 @@ function indexText(files) {
     const relativePath = normalized(relative(join(root, "implementation"), path));
     const label = normalized(relative(root, path));
     lines.push(`- [${open === 0 ? "x" : " "}] [${label}](${relativePath}) — ${checked} checked, ${open} open`);
+  }
+  const staged = tasks.reduce((sum, { id }) => sum + (recorded.get(id)?.values.filter((value) => value === "x").length ?? 0), 0);
+  lines.push(
+    "",
+    `## Item-level task register (${tasks.length})`,
+    "",
+    "Every row below maps to exactly one checkbox in a current specification. Its BT ID is stable while that checkbox text and file stay unchanged. The source checkbox is the final completion authority; these stages show partial progress without increasing the 522-item denominator. Historical checked items are not retroactively assigned stage evidence.",
+    "",
+    "Stages: D = decision and exclusive work claim; I = implementation and contracts; T = focused positive and negative checks; R = applicable database, authorization, cache, and event proof; B = applicable browser and mobile proof; L = applicable deployment and operations proof. `?` means unassessed/open, `x` means proven, and `-` means inapplicable with a reason. A stage marked `x` needs a proof link; `-` needs an `N/A:` rationale in Evidence. Stage evidence can advance while the source checkbox remains open. Complete that checkbox only when its own acceptance text and all applicable stages are satisfied.",
+    "",
+    "Before claiming a composite checkbox, list every clause as a numbered acceptance step under its BT ID in WORK-CLAIMS.md and map it to one existing primary package. A shared implementation can satisfy several BT IDs, but keep one file owner and cite the same proof instead of repeating work. Record exact file paths, dependencies, and evidence there; this register does not assign agents or files. Never mark a whole stage complete for partial clause coverage.",
+    "",
+    `Proven stages on open and checked items: ${staged}. Current specification items remain ${totalChecked} checked and ${totalOpen} open.`,
+    "",
+    "| ID | Source | State | D | I | T | R | B | L | Evidence | Task |",
+    "|---|---|---|---|---|---|---|---|---|---|---|",
+  );
+  for (const task of tasks) {
+    const record = recorded.get(task.id) ?? { values: stages.map(() => "?"), evidence: "—" };
+    lines.push(`| ${task.id} | [source](${task.link}#L${task.line}) | ${task.checked ? "[x]" : "[ ]"} | ${record.values.join(" | ")} | ${record.evidence} | ${task.summary} |`);
   }
   lines.push("", `## Historical research and evidence (${research.length})`, "");
   for (const { path, mapped } of research) {

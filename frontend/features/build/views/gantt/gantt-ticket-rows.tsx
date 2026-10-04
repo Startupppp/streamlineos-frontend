@@ -29,12 +29,6 @@ function ticketLabel(ticket: GanttRowTicket): string {
   return ticket.sequenceId ?? `#${ticket.ticketNumber ?? ticket.id}`;
 }
 
-/**
- * Only the rows inside the scrolled band are mounted. The band is a slice of
- * the same array in the same order, and each row still carries its position in
- * the whole timeline, so a screen reader reports "row 214 of 500" rather than
- * the window's own numbering.
- */
 export function GanttTicketRows({
   tickets,
   band,

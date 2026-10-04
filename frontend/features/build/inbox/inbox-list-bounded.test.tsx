@@ -1,11 +1,4 @@
-/**
- * The Build inbox read `/notifications` once with `limit: 100`, so it mounted
- * 100 rows at a time AND made notification 101 unreachable — there was no
- * cursor and no pager. The Mentions tab filtered that same fixed page
- * client-side, so a mention older than the newest 100 notifications could not be
- * reached at all. These assert the cursor read, the render bound, and that
- * nothing sits behind the bound unreachably.
- */
+
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";

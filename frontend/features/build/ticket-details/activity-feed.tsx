@@ -295,8 +295,6 @@ export function ActivityFeed({
     return { repliesMap: built, sortedTopLevel };
   }, [comments]);
 
-  // Comments ride the ticket payload with no cursor. Page them newest-first,
-  // but never hide the thread a deep link points at.
   const [visibleCount, setVisibleCount] = useState(COMMENT_RENDER_PAGE_SIZE);
   const handleShowOlderComments = useCallback(
     () => setVisibleCount((count) => count + COMMENT_RENDER_PAGE_SIZE),

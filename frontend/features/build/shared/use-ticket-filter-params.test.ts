@@ -10,11 +10,7 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => mockSearchParams,
 }));
 
-/**
- * Pins the behaviour the list-view seam has to preserve when this hook is
- * generalised off ticket vocabulary. Every assertion is about what reaches the
- * URL, never about which internal callback produced it.
- */
+
 
 function lastParams(): URLSearchParams {
   const call = mockReplace.mock.calls.at(-1);

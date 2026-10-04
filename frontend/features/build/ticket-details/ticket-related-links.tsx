@@ -9,15 +9,14 @@ interface TicketRelatedLinksProps {
   ticketId: number;
 }
 
-type Target = { kind: "internal"; href: string } | { kind: "external"; href: string } | null;
+type Target =
+  | { kind: "internal"; href: string }
+  | { kind: "external"; href: string }
+  | null;
 
-/**
- * Same-origin links (the chat message a ticket was converted from) route in-app;
- * anything else opens in a new tab, and only over http(s) — a stored
- * `javascript:` URL renders as text, never as an href.
- */
 export function resolveLinkTarget(url: string, origin: string): Target {
-  if (url.startsWith("/") && !url.startsWith("//")) return { kind: "internal", href: url };
+  if (url.startsWith("/") && !url.startsWith("//"))
+    return { kind: "internal", href: url };
   let parsed: URL;
   try {
     parsed = new URL(url);
@@ -25,13 +24,19 @@ export function resolveLinkTarget(url: string, origin: string): Target {
     return null;
   }
   if (parsed.origin === origin)
-    return { kind: "internal", href: `${parsed.pathname}${parsed.search}${parsed.hash}` };
+    return {
+      kind: "internal",
+      href: `${parsed.pathname}${parsed.search}${parsed.hash}`,
+    };
   if (parsed.protocol === "http:" || parsed.protocol === "https:")
     return { kind: "external", href: parsed.href };
   return null;
 }
 
-export function TicketRelatedLinks({ projectId, ticketId }: TicketRelatedLinksProps) {
+export function TicketRelatedLinks({
+  projectId,
+  ticketId,
+}: TicketRelatedLinksProps) {
   const { data: links } = useTicketRelatedLinks(projectId, ticketId);
   if (!links || links.length === 0) return null;
   const origin = typeof window === "undefined" ? "" : window.location.origin;
@@ -45,7 +50,8 @@ export function TicketRelatedLinks({ projectId, ticketId }: TicketRelatedLinksPr
         {links.map((link) => {
           const label = link.title || link.url;
           const target = resolveLinkTarget(link.url, origin);
-          const className = "flex items-center gap-1.5 text-dense text-foreground hover:text-accent truncate";
+          const className =
+            "flex items-center gap-1.5 text-dense text-foreground hover:text-accent truncate";
           return (
             <li key={link.id} className="min-w-0">
               {target?.kind === "internal" ? (
@@ -54,12 +60,23 @@ export function TicketRelatedLinks({ projectId, ticketId }: TicketRelatedLinksPr
                   <span className="truncate">{label}</span>
                 </Link>
               ) : target?.kind === "external" ? (
-                <a href={target.href} target="_blank" rel="noopener noreferrer" className={className} title={link.url}>
+                <a
+                  href={target.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={className}
+                  title={link.url}
+                >
                   <ExternalLink className="h-3 w-3 shrink-0 text-muted-foreground" />
                   <span className="truncate">{label}</span>
                 </a>
               ) : (
-                <span className="text-dense text-muted-foreground truncate block" title={link.url}>{label}</span>
+                <span
+                  className="text-dense text-muted-foreground truncate block"
+                  title={link.url}
+                >
+                  {label}
+                </span>
               )}
             </li>
           );

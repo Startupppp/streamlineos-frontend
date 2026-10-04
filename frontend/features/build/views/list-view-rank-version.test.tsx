@@ -1,10 +1,4 @@
-/**
- * The backend's rankTicketSchema compare-and-swaps on `version` when the field is
- * supplied, but list-view.tsx never sent it — the protection was inert. This asserts
- * the rank mutation carries the real version off the dragged ticket's row, not a
- * hardcoded or coalesced stand-in, since a defaulted token would still satisfy a
- * looser "field is present" assertion while silently overwriting a concurrent edit.
- */
+
 import { render } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";

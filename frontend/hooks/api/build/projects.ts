@@ -81,14 +81,7 @@ export function useProjects(
   });
 }
 
-/**
- * The keyset walk over `GET /build`.
- *
- * The endpoint orders by descending id and takes `afterId`, and answers
- * `{ data, hasMore, nextCursor }` — no total and no page count, so a numbered
- * pager cannot be built over it and must not be faked. `limit` is fixed by the
- * caller and the cursor is the only thing that moves between pages.
- */
+
 export function useInfiniteProjects(
   filters: ProjectFilters,
   options?: Omit<

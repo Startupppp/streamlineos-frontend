@@ -251,9 +251,9 @@ beforeEach(() => {
   mockUseCriticalPath.mockReturnValue({ data: undefined, isLoading: false, isError: false, error: null, refetch: jest.fn() });
 });
 
-// --------------------------------------------------------------------------
-// VelocitySection — usePageState + PageState integration
-// --------------------------------------------------------------------------
+
+
+
 
 describe("VelocitySection — page states", () => {
   it("passes build:view permission and error to usePageState so 402 errors are classified correctly", () => {
@@ -300,9 +300,9 @@ describe("VelocitySection — page states", () => {
   });
 });
 
-// --------------------------------------------------------------------------
-// BurnupSection — usePageState covers the two-query combination
-// --------------------------------------------------------------------------
+
+
+
 
 describe("BurnupSection — page states", () => {
   it("passes build:view permission to usePageState so the denial reason is shown", () => {
@@ -346,9 +346,9 @@ describe("BurnupSection — page states", () => {
   });
 });
 
-// --------------------------------------------------------------------------
-// CycleTimeSection — uses Skeleton (not LoadingState) for loading
-// --------------------------------------------------------------------------
+
+
+
 
 describe("CycleTimeSection — page states", () => {
   it("passes build:view permission and error to usePageState so 402 errors are classified correctly", () => {
@@ -395,9 +395,9 @@ describe("CycleTimeSection — page states", () => {
   });
 });
 
-// --------------------------------------------------------------------------
-// LeadTimeSection — uses Skeleton (not LoadingState) for loading
-// --------------------------------------------------------------------------
+
+
+
 
 describe("LeadTimeSection — page states", () => {
   it("passes build:view permission and error to usePageState so 402 errors are classified correctly", () => {
@@ -444,11 +444,11 @@ describe("LeadTimeSection — page states", () => {
   });
 });
 
-// --------------------------------------------------------------------------
-// CfdSection — usePageState + PageState integration; capture mutation is an
-// action affordance and is not gated by PageState (it lives in the ChartCard
-// header, not the data panel)
-// --------------------------------------------------------------------------
+
+
+
+
+
 
 describe("CfdSection — page states", () => {
   it("passes build:view permission and error to usePageState so 402 errors are classified correctly", () => {
@@ -499,9 +499,9 @@ describe("CfdSection — page states", () => {
   });
 });
 
-// --------------------------------------------------------------------------
-// CriticalPathSection — usePageState + PageState integration
-// --------------------------------------------------------------------------
+
+
+
 
 const CRITICAL_PATH_DATA = {
   criticalPath: [

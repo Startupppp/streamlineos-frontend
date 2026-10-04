@@ -1,20 +1,4 @@
-/**
- * @jest-environment node
- *
- * C5 — contract tests for the public roadmap board, vote and feedback surfaces.
- *
- * The public roadmap API returns a flat object (not a cursor page), because the
- * whole board is one logical unit: the three roadmap columns, a feedback list and
- * a changelog. Feedback and changelog are unbounded arrays capped on the server
- * by BE-24 (100 rows). The contract must reject any field the wire shape no
- * longer carries, so a renamed or dropped column surfaces as a ContractViolation
- * rather than `undefined`.
- *
- * Cache-key assertions prove the public board key is scoped to the org handle
- * and is distinct from every authenticated roadmap key — authenticated and public
- * caches must never be shared (FE-20 allows orgId in the key only for a public
- * tenant the viewer does not belong to).
- */
+/** @jest-environment node */
 import { parseApiResponse, isContractViolation } from "@/lib/api-envelope";
 import {
   publicRoadmapBoardContract,

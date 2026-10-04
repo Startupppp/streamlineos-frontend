@@ -6,17 +6,7 @@ export interface GanttRowBand {
   lastRow: number;
 }
 
-/**
- * The timeline draws one SVG `<g>` per dated ticket, each holding a hit target,
- * a rule, a label and a bar. A board autoloads up to 500 tickets, so the chart
- * mounted up to 2,000 SVG nodes to show the ~15 rows a viewport can hold.
- *
- * Rows are positioned absolutely by `computeBarGeometry`, so only the ones
- * inside the scrolled band need to exist: the SVG keeps its full height, the
- * scrollbar keeps its length, and every row still lands on the same pixel it
- * would have. `lastRow` is exclusive. The overscan on both sides means a row is
- * already mounted before it is scrolled into view.
- */
+
 export function resolveGanttRowBand(
   rowCount: number,
   scrollTop: number,

@@ -96,12 +96,7 @@ export function getWorkspaceUsersFromCache(queryClient: QueryClient): WorkspaceU
 
 export type ProjectPatch = Omit<UpdateProjectInput, "projectId">;
 
-/**
- * `/build` is keyset, so the list page reads it through `useInfiniteQuery` and
- * its cache is `InfiniteData`, not a single envelope. An optimistic patch that
- * only knows the flat shape leaves that page showing stale rows until a
- * refetch, so both shapes are patched and both are snapshotted.
- */
+
 export type ProjectListCache = ProjectListResponse | InfiniteData<ProjectListResponse>;
 
 export interface UpdateProjectContext {

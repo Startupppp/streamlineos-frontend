@@ -17,11 +17,7 @@ interface RoadmapPriorityScoreProps {
   className?: string;
 }
 
-/**
- * The weighted figure is shown only when the backend says every tier input was
- * present. When it is not, the plain RICE score stands and the reason travels
- * with it, so a weighted number is never implied by its absence.
- */
+
 function LinkedRevenueBadge({ tierWeighting }: { tierWeighting: RoadmapTierWeighting }) {
   const display = useOrgDisplay();
   const { linkedRevenue, revenueKnownAccountCount, linkedAccountCount } = tierWeighting;

@@ -2,11 +2,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { CreateTokenDialog } from "./agent-token-create-dialog";
 import type { CreateAgentTokenResponse } from "@/hooks/api/build/agent-tokens";
 
-/**
- * Deliberately fake, worthless token — not a real credential, never sent to any
- * service. The slos_ prefix is the production prefix so tests exercise the real
- * validation path.
- */
+
 const FAKE_TOKEN = "slos_" + "0".repeat(48);
 
 const FAKE_CREATE_RESPONSE: CreateAgentTokenResponse = {

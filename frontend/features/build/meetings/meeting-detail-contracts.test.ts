@@ -1,21 +1,4 @@
-/**
- * @jest-environment node
- *
- * Contract tests for the meeting-detail wire seam.
- *
- * `meetingDetailContract` is the Zod schema the `useMeeting` hook validates
- * the GET /build/:projectId/meetings/:meetingId response against via
- * `meetingDetailContract` (lazyContract). A cast (`res.json() as MeetingDetail`)
- * would silently accept a drifted response — embedded arrays becoming undefined,
- * renamed fields surfacing as undefined — so we verify the schema rejects drift
- * rather than swallowing it.
- *
- * Cache-key tests prove that `buildWorkQueryKeys.projects.meetings.detail`
- * produces keys that are:
- *   - scoped to the meetingId (two different meetingIds → two different keys)
- *   - scoped to the projectId (two different projectIds → two different keys)
- *   - stable enough to invalidate exactly the affected record
- */
+/** @jest-environment node */
 
 import { meetingDetailContract } from "@/hooks/api/build/meetings-schema";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";

@@ -31,14 +31,6 @@ export function usePublicWhiteboard(token: string) {
   });
 }
 
-/**
- * The save writes the scene the caller already holds, and the read that seeded
- * the canvas sits at a 30s staleTime under the same key. Without this the cache
- * keeps the pre-save scene: a remount inside the window re-seeds Excalidraw from
- * it, and a refetch after the window races the 3s debounce. The server confirms
- * the write and returns its own `updatedAt`, so this is a settled self-write —
- * no onMutate, no rollback.
- */
 export function useUpdatePublicWhiteboard(token: string) {
   const queryClient = useQueryClient();
   return useMutation({

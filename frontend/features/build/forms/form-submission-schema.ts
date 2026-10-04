@@ -10,15 +10,7 @@ export const formFieldContract = z.object({
 
 export type FormField = z.infer<typeof formFieldContract>;
 
-/**
- * The public form read, validated rather than asserted. The cast this replaces
- * (`res.json() as Promise<PublicFormDefinition>`) skipped the `{ success, data }`
- * envelope that the backend's global ResponseTransformInterceptor adds to every
- * handler return, so `form.fields` was always undefined: the header stayed on
- * "Loading form…" and `form.fields.length` threw. Reading through
- * `parseApiResponse` unwraps the envelope; the contract is what makes the next
- * shape change an error instead of a blank page.
- */
+
 export const publicFormDefinitionContract = z.object({
   id: z.number(),
   name: z.string(),

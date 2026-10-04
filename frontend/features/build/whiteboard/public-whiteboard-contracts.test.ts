@@ -1,21 +1,4 @@
-/**
- * @jest-environment node
- *
- * C5 — contract tests for the public whiteboard share-link surface.
- *
- * The GET /public/whiteboard-links/:token endpoint returns a board snapshot
- * plus the capability the link carries ("view" | "edit"). The PATCH returns
- * a settled write confirmation with the server's updatedAt timestamp.
- *
- * Both contracts are declared in workspace-schema.ts and consumed in
- * whiteboards-public.ts via lazyContract. These tests verify:
- *   1. The wire shape parses cleanly through the declared contract.
- *   2. Renamed or dropped fields throw CONTRACT_VIOLATION, not undefined.
- *   3. The access enum is restricted to "view" | "edit".
- *   4. The cache key is scoped to the share token and is distinct from
- *      authenticated whiteboard keys — public and private caches must not
- *      share a key space.
- */
+/** @jest-environment node */
 import { parseApiResponse, isContractViolation } from "@/lib/api-envelope";
 import { publicWhiteboardContract, publicWhiteboardUpdateContract } from "@/hooks/api/build/workspace-schema";
 import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
