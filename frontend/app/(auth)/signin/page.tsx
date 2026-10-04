@@ -35,14 +35,14 @@ export default function SignInPage() {
     }
     const oauthMessages: Record<string, string> = {
       AccessDenied:
-        "No account found with that identity. Please contact your administrator.",
+        "Sign-in could not be completed. Please contact your administrator.",
       OAuthSignin: "Could not start Google sign-in. Please try again.",
       OAuthCallback:
         "Google sign-in failed. Please try again or use your email.",
       OAuthCreateAccount:
         "Account setup failed. Please use your email instead.",
       OAuthAccountNotLinked:
-        "This email is already registered. Sign in with your email, then link Google in settings.",
+        "Google sign-in could not be completed. Sign in with your email instead — you can connect Google in your account settings.",
       Configuration:
         "Authentication is misconfigured. Please contact support.",
     };
