@@ -4,7 +4,7 @@ This file is the coordination ledger for active and completed implementation pac
 
 ## Coordinator checkpoint — 2026-10-04 Inbox correction
 
-Current continuation: backend43 `43074abf8`, frontend43 `4773c5685`, proof44 `a5ae00f77`, correction45 `15eee78d9` and navigation46 backend `f5a8532ce`/frontend `177e48cf3` are committed and released. Corrected45 has86 safety tests,33 real scratch PostgreSQL cases and independently reviewed exact sanitized receipts; application1732 stays unapplied. Navigation46 has75 backend/158 frontend tests, exact lint/diff, both scoped/production TypeScript and independent eight-hash review. A/B/C hold no edit claims. Coordinator owns only serial integration/runtime and the five existing canonical evidence/tracker documents; C performs read-only final evidence review. No ownership overlaps; Portal/Email claims remain excluded. BT-27a037364398 stays open.
+Current continuation: backend43 `43074abf8`, frontend43 `4773c5685`, proof44 `a5ae00f77`, correction45 `15eee78d9` and navigation46 backend `f5a8532ce`/frontend `177e48cf3` are committed and released. Corrected45 has86 safety tests,33 real scratch PostgreSQL cases and independently reviewed exact sanitized receipts; application1732 stays unapplied. Navigation46 has75 backend/158 frontend tests, exact lint/diff, both scoped/production TypeScript and independent eight-hash review. Claim47 reserves disjoint A backend, B frontend/tests, C backend tests/review and coordinator migrations/contracts/integration plus five canonical documents. Source edits wait for the committed reservation and meaningful REDs. No ownership overlaps; Portal/Email claims remain excluded. BT-27a037364398 stays open.
 
 43 verification: genuine backend and frontend behavioral REDs preceded the correction. Final coordinator backend run passes 15 suites/207 tests, including the restored 12-case public mutation tenant/project/deleted-record matrix. Exact 22-path lint, scoped and production TypeScript pass. C independently reviewed production, migration, generated contracts and the three notification fixture adaptations; root reviewed test preservation. Official OpenAPI freshness and exact vendor/fresh Build contracts pass: SHA `8ba8a4d13ca5be105d2381e4acb95db88c11442a735f14d097cec719082b4318`, 4107 operations, 4092 Zod contracts, 311 mapped Build operations/390 schemas, 410 required-key operations, 1550 required bodies and 12 multipart contracts. Controller E2E is refused by the disposable-database guard before tests; no bypass. Migration discipline/rollback full gates still fail existing entries. Migration 1732 is unapplied; READ ONLY catalog proves its revision column absent and zero approvals in reserved project 54. No application approval write has occurred. Focused proof44/45 SQL is verified separately below; application service/RBAC, browser/mobile and deployment remain unverified; no broad stage or checkbox advances.
 
@@ -733,3 +733,83 @@ Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work cl
 - [ ] Close ARCH-01 only after inherited grants and revocation are covered end to end.
 - [ ] Close ARCH-14 only after invitation acceptance, authorized landing, and selected grants pass browser and persistence checks.
 - [ ] Mark any package RELEASE_VERIFIED only after the evidence contract in document 14 is satisfied.
+
+
+### BT-27a037364398 — Ticket scalar artifact binding 47
+
+Classification: Planned implementation; Current verified for exact read-only preflight at outer6319a63f4/backendf5a8532ce. Supports BT-801e948e8a67 without closing either broad task. Source43/44/45/46 claims are released. Avoid all Portal/Email and every unrelated44 outer/47 backend dirty path. Four slots: A backend source, B frontend/tests, C backend tests/review, coordinator serial migrations/contracts/runtime/evidence. No comments or live Ticket comments. Commit this reservation before any source or RED test edit.
+
+D: New task approval requests bind the selected expectedArtifactVersion to a server-captured immutable Ticket scalar snapshot. Snapshot v1 fields: schemaVersion, id, projectId, ticketNumber, version, title, description, type, status, priority, points, originalEstimate, startDate, dueDate. No comments, users, attachments or growing relations are part of this bounded artifact. Refuse capture exceeding131072 UTF-8 JSON bytes; never truncate. Approval row revision and artifact version remain distinct. Preserve all seven other entity types as existing unbound behavior; they remain Current unverified for exact-artifact acceptance. Legacy unbound tasks may be read/cancelled/deleted, but decision returns409 after normal authority checks and needs a new bound request.
+
+A exclusively owns these existing production paths:
+
+- `backend/src/db/schema/build/approvals.ts`
+- `backend/src/modules/build/core/tickets/projects-tickets-detail.service.ts`
+- `backend/src/modules/build/core/dto/ticket.schemas.ts`
+- `backend/src/modules/build/core/projects.module.ts`
+- `backend/src/modules/build/approvals/build-approvals.module.ts`
+- `backend/src/modules/build/approvals/approvals.service.ts`
+- `backend/src/modules/build/approvals/approval-lookup.ts`
+- `backend/src/modules/build/approvals/approvals-read.service.ts`
+- `backend/src/modules/build/approvals/core/approval-commands.service.ts`
+- `backend/src/modules/build/approvals/approvals.controller.ts`
+- `backend/src/modules/build/approvals/dto/approvals.schemas.ts`
+- `backend/src/modules/build/approvals/dto/approvals-response.schemas.ts`
+
+Existing Ticket detail service owns current canonical Ticket authorization, bounded scalar projection, matched tenant transaction and optional row lock; export that owner from ProjectsModule and import its module without a cycle. Existing approval owners capture/read/compare/return the binding. Keep APPROVAL_COLUMNS and lists, mutation responses, counts and requested events metadata-only. GET detail alone adds artifact state: current/stale contains requested/current versions, capturedAt, digest and snapshot; unbound/restricted/unavailable contains state only. Assigned approval metadata never grants snapshot access. Recognize only canonical HTTP403/404 as restricted/unavailable; propagate other failures. No new production helper, repository, resolver, query key, API or schema file. Keep Ticket DTO270 below300 and every source below500.
+
+C exclusively owns these focused test paths:
+
+- `backend/src/modules/build/approvals/__tests__/approval-task-artifact.spec.ts`
+- `backend/src/modules/build/core/tickets/projects-tickets-detail-revocation.spec.ts`
+- `backend/src/modules/build/approvals/__tests__/approval-lifecycle-concurrency.fixture.ts`
+- `backend/src/modules/build/approvals/__tests__/approval-lifecycle-concurrency.spec.ts`
+- `backend/src/modules/build/approvals/__tests__/approval-lifecycle-schema.spec.ts`
+- `backend/src/modules/build/approvals/__tests__/approval-detail-access.spec.ts`
+- `backend/src/modules/build/approvals/approvals.service.spec.ts`
+- `backend/src/modules/build/approvals/approvals-by-id-project-access.spec.ts`
+- `backend/src/modules/build/approvals/approvals.controller.e2e-spec.ts`
+- `backend/src/modules/build/approvals/approvals-read-tenant-isolation.spec.ts`
+- `backend/src/modules/build/approvals/build-approval-requested-emit.spec.ts`
+- `backend/src/modules/build/approvals/approvals-approver-filter.spec.ts`
+- `backend/src/modules/build/approvals/build-inbox-count.spec.ts`
+
+Only approval-task-artifact.spec.ts is new: it covers the create-to-captured-artifact-to-authorized-detail-to-decision boundary, distinct from three-command row-CAS tests. Existing Ticket revocation suite is87 lines and owns the public service/standing fixture, so it owns the new scalar method coverage. Existing shared approval fixture must honor explicit projections and represent separate artifact state; global transaction serialization is not PostgreSQL lock evidence. Last three read/filter/count tests may receive constructor DI adaptation only. Preserve all existing public negatives and rollback assertions.
+
+B exclusively owns these frontend source/test paths:
+
+- `frontend/types/projects/approvals.ts`
+- `frontend/hooks/api/build/approvals.ts`
+- `frontend/hooks/api/build/approvals-schema.ts`
+- `frontend/features/build/approvals/request-approval-sheet.tsx`
+- `frontend/features/build/approvals/decide-dialog.tsx`
+- `frontend/features/build/approvals/project-approvals-page.tsx`
+- `frontend/features/build/approvals/request-approval-sheet.test.tsx`
+- `frontend/features/build/approvals/decide-dialog.pending-close.test.tsx`
+- `frontend/features/build/approvals/__tests__/approval-decision-conflict.spec.tsx`
+- `frontend/hooks/api/build/__tests__/approval-revision-mutations.spec.tsx`
+- `frontend/features/build/approvals/__tests__/approval-ticket-artifact-request.spec.tsx`
+
+Only approval-ticket-artifact-request.spec.tsx is new: existing request test498 lines mocks the form and cannot own real selection/version/error behavior within500. Reuse metadata Approval; infer GET-only ApprovalDetail from the official generated contract. Request captures the explicit selection version and preserves it over background refresh; all seven non-task bodies stay unchanged. Use existing components/styles and SanitizedHtml. Latest authorized detail state/binding must fence both frozen content and submission; a metadata-only200 restricted/unavailable response hides old content. Command metadata cannot hydrate a GET detail requiring artifact. Pending, current-owner and409 reason preservation remain required. Existing request456/project page490 must stay below500. Full Sheet/mobile acceptance remains separately open.
+
+Coordinator exclusively owns:
+
+- `backend/migrations/1733_approval_task_artifact.sql`
+- `backend/migrations/rollback/1733_approval_task_artifact.down.sql`
+- `backend/migrations/1734_approval_task_pending_index.sql`
+- `backend/migrations/rollback/1734_approval_task_pending_index.down.sql`
+- `backend/migrations/meta/_journal.json`
+- `backend/openapi.json`
+- `frontend/contracts/openapi.json`
+- `frontend/contracts/build-contracts.generated.ts`
+- existing five canonical documentation paths: WORK-CLAIMS.md, REQUIREMENT-LEDGER.md, TODO-INDEX.md, audit/bugs-and-verification.md and audit/cleanup-manifest.md
+
+New1733 nullable binding/identity/check/FK/immutable-trigger purpose and1734 separate concurrent pending-index purpose cannot belong in historical immutable1732. Journal append only, preserving all earlier entries. FK binds explicit artifactTicketId to canonical tenant Ticket; bound identity/version/snapshot/digest/capture are immutable, including legacy NULL-to-binding UPDATE. Concurrent version-qualified pending uniqueness includes requested/pending/escalated/changes_requested and excludes deleted rows. Root alone authors SQL and officially generates OpenAPI/vendor/Build contracts after A source and focused RED/GREEN stabilize. Never hand-edit generated files. This source claim does not authorize applying application1732/1733/1734 or invent a new runner; guarded scratch proof and application readiness need independent frozen-source review.
+
+I/acceptance: capture under Ticket lock before approval insert; decide uses tenant-qualified preliminary approval locator, normal authority, Ticket lock, approval lock, then locked identity/binding/revision/current-assignee/status/authority rechecks and exact Ticket version comparison. Do not lock project first; Ticket reporting triggers acquire project rows after Ticket writes. No service lookup may switch to a foreign tenant transaction. Add strict task version validation, reject client snapshots/authority, and preserve expectedRevision as the decision fence. Never trust approver assignment as Ticket authority.
+
+T: C first captures a real current public-command RED with valid decision body for an assigned actor lacking current Ticket read; B captures fresh200 content-revocation and missing selected-version REDs before implementation. Then focused positive/negative target/version/legacy/snapshot/size/rollback/duplicate/lock-order/source-loss tests, seven-type controls, exact lint/diff, changed-path and production TypeScript, official generators and freshness/vendor gates. Commands: pnpm -C backend exec jest --runInBand --runTestsByPath <owned spec paths>; pnpm -C frontend exec jest --runInBand --runTestsByPath <owned spec paths>; pnpm -C backend exec eslint <owned TS paths>; pnpm -C frontend exec eslint <owned TS/TSX paths>; root scoped tsc configs; pnpm -C backend typecheck; pnpm -C frontend type-check; pnpm -C backend openapi:generate/openapi:check; pnpm -C frontend generate:build-contracts/check:build-contracts/check:contract-vendor. Stable full test typechecks remain explicit gates with prior OOM/unrelated failures retained; no widened baseline.
+
+R: before closure require real reviewed local synthetic API statuses/contracts, refresh/read-after-write, application-role READ ONLY persistence, actual role/PAT/scope/tenant denial, physical edit/decision locking, immutable raw-update and exact audit/event/cache proof. Fixture authorization is source evidence only. B: matching browser and375/768/1280, keyboard/history/refocus plus no stale-content reveal; local frontend1002 approval remains pending and deployed1000 is read-only. L: migrations applied at exact revision, rollback/recovery, monitoring and deployed release/operations proof remain open.
+
+Handoff: A waits for C behavioral RED then edits only12 source paths. C owns all backend tests and requests missing production contracts through A. B may edit only11 frontend paths after its own RED; final type/contract gates wait for official root generation. Root serially integrates, verifies all frozen hashes and unrelated baselines, obtains independent source/migration/UI review, commits exact files and records truthful stage gaps. No broad checkbox or stage advances from this bounded package.
