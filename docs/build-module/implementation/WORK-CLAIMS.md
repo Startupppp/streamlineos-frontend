@@ -1,5 +1,15 @@
 # Build work claims
 
+## BT-c145e5ed8633 / BT-7c62c17f5d40 / BT-5d477d32451a — synthetic Ticket link lifecycle proof 67
+
+Classification: Planned bounded runtime verification, reserved at 2026-10-04T06:26Z. Coordinator exclusively owns runtime67, its private in-memory session/captured-mail data, and the existing five canonical coordination/evidence documents. No application, test, schema, generated or migration file is claimed for editing. Avoid active64 invitation source/test and65 Intake source/test ownership, all unrelated files and historical evidence. Current reviewed backend66 is committed `2eaa96b492964e0adbaaecec8c6b054fdf234da1` at1001; frontend/browser remains1000 only.
+
+D/I: use only ordinary synthetic API62 credentials and its exact reserved Project/Ticket, after read-only exact identity/name/key guards. Current schemas/controllers and committed58 Ticket-link lifecycle owner are authoritative. Exercise existing related-link POST/GET/PATCH/DELETE, project status ARCHIVED and ACTIVE through the canonical project PATCH, and same-record locked-write denials. Restore only the reserved project's prior ACTIVE state through its authorized API. No live Ticket comments, external service calls, file uploads, production disposable records or new runner/boundary relaxation.
+
+T/R: validate canonical request/response contracts and HTTP201/200/204/409/404 as applicable; refresh/read-after-write; use a READ ONLY application-role transaction to verify exact link, author membership, archived denial without change and final restoration. Use own active positive control alongside denials. Existing focused58 suites and independent source review remain distinct from real PostgreSQL observations. Record failed HTTP/contract/guard results before proceeding. Link command idempotency, physical races, event/cache parity, full roles/tenants and quota concurrency remain open unless separately proven.
+
+B/L: private browser OTP handoff is unresolved; API proof is not browser/mobile proof. Deployment/operations and complete link/attachment/UI scope remain Current unverified. No full BT stage or checkbox closes. Handoff: coordinator records exact runtime revision, timestamps, sanitized statuses/contracts and persistence; source changes require a separate exact file claim and author handoff.
+
 ## Reviewed source handoff60/61 and normal API62 — 2026-10-04
 
 Source60 outer `683e3e7572f8864561041e41a52cf049d39a5d4c` and source61 backend `2eaa96b492964e0adbaaecec8c6b054fdf234da1` are committed with exact frozen hashes, meaningful REDs, focused repeats, strict lint/diff, scoped/production TypeScript and independent reviews in [source60/61 and normal synthetic API62 proof](../audit/bugs-and-verification.md#forms-feedbucket-and-normal-activation-evidence--2026-10-04). A/B/C release only these nine exact source/test files; root retains reviewed runtime1000/1001, compiler-managed configuration, integration and the five canonical docs. Claim63 builder/test and claim64 invitation owner/test remain separately exclusive. No task, source ownership or unrelated file is silently reassigned.
