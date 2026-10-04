@@ -10,7 +10,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { AlertCircle, ListPlus, ShieldAlert } from "lucide-react";
+import { AlertCircle, ListPlus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -378,7 +378,6 @@ export function BlockersPanel() {
       <PmPanel className={COMMAND_CENTER_LIST_PANEL}>
         <PanelHeader
           title="Blockers"
-          icon={<ShieldAlert className="h-3.5 w-3.5 text-status-danger-ink" />}
         />
         <div className={COMMAND_CENTER_PANEL_BODY_SCROLL}>
           {isLoading ? (
