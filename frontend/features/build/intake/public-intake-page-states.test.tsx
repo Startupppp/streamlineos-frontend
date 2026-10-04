@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import "@testing-library/jest-dom";
 
 jest.mock("@/hooks/api/build/public-form", () => ({
@@ -133,5 +133,163 @@ describe("PublicIntakePage — submission error state", () => {
       { isError: true, error: new Error("Failed to submit. Please try again.") },
     );
     expect(screen.getByRole("alert")).toBeInTheDocument();
+  });
+});
+
+describe("PublicIntakePage — dynamic form field validation (claim 70)", () => {
+  const emailForm = {
+    id: 2,
+    name: "Email form",
+    description: null,
+    type: "intake",
+    publicToken: "tok-email-abc",
+    fields: [
+      { key: "contact", label: "Contact email", type: "email", required: true },
+    ],
+  };
+
+  const numberForm = {
+    id: 3,
+    name: "Number form",
+    description: null,
+    type: "intake",
+    publicToken: "tok-number-abc",
+    fields: [
+      { key: "score", label: "Score", type: "number", required: true },
+    ],
+  };
+
+  it("blocks mutation when a required text field is submitted blank", async () => {
+    const mutateSpy = jest.fn();
+    setup({ isSuccess: true, data: configuredForm }, { mutate: mutateSpy });
+    await act(async () => {
+      fireEvent.submit(document.querySelector("form")!);
+    });
+    expect(mutateSpy).not.toHaveBeenCalled();
+    expect(screen.getAllByRole("alert").length).toBeGreaterThan(0);
+  });
+
+  it("blocks mutation when a required text field contains only whitespace", async () => {
+    const mutateSpy = jest.fn();
+    setup({ isSuccess: true, data: configuredForm }, { mutate: mutateSpy });
+    fireEvent.change(document.getElementById("field-summary")!, { target: { value: "   " } });
+    await act(async () => {
+      fireEvent.submit(document.querySelector("form")!);
+    });
+    expect(mutateSpy).not.toHaveBeenCalled();
+  });
+
+  it("blocks mutation when an email field has invalid format", async () => {
+    const mutateSpy = jest.fn();
+    setup({ isSuccess: true, data: emailForm }, { mutate: mutateSpy });
+    fireEvent.change(document.getElementById("field-contact")!, { target: { value: "not-an-email" } });
+    await act(async () => {
+      fireEvent.submit(document.querySelector("form")!);
+    });
+    expect(mutateSpy).not.toHaveBeenCalled();
+  });
+
+  it("blocks mutation when a number field receives non-numeric input", async () => {
+    const mutateSpy = jest.fn();
+    setup({ isSuccess: true, data: numberForm }, { mutate: mutateSpy });
+    fireEvent.change(document.getElementById("field-score")!, { target: { value: "abc" } });
+    await act(async () => {
+      fireEvent.submit(document.querySelector("form")!);
+    });
+    expect(mutateSpy).not.toHaveBeenCalled();
+  });
+
+  it("submits normalized required values and optional blanks through the actual fields", async () => {
+    const mutateSpy = jest.fn();
+    const data = { ...configuredForm, fields: [
+      ...configuredForm.fields,
+      { key: "contact", label: "Contact email", type: "email", required: true },
+      { key: "score", label: "Score", type: "number", required: true },
+      { key: "optionalContact", label: "Optional email", type: "email", required: false },
+      { key: "optionalScore", label: "Optional score", type: "number", required: false },
+    ] };
+    setup({ isSuccess: true, data }, { mutate: mutateSpy });
+    fireEvent.change(screen.getByRole("textbox", { name: /Summary/ }), { target: { value: "  My request  " } });
+    fireEvent.change(screen.getByRole("textbox", { name: /Contact email/ }), { target: { value: "  jane@example.test  " } });
+    fireEvent.change(screen.getByRole("textbox", { name: /^Score/ }), { target: { value: "  -12.50  " } });
+    fireEvent.change(screen.getByRole("textbox", { name: /Optional email/ }), { target: { value: "   " } });
+    fireEvent.change(screen.getByRole("textbox", { name: /Optional score/ }), { target: { value: "   " } });
+    await act(async () => {
+      fireEvent.submit(document.querySelector("form")!);
+    });
+    expect(mutateSpy).toHaveBeenCalledTimes(1);
+    expect(mutateSpy).toHaveBeenCalledWith({
+      summary: "My request", details: "", contact: "jane@example.test", score: "-12.50",
+      optionalContact: "", optionalScore: "",
+    });
+  });
+
+  const urlForm = {
+    id: 4,
+    name: "URL form",
+    description: null,
+    type: "intake",
+    publicToken: "tok-url-abc",
+    fields: [
+      { key: "website", label: "Website", type: "url", required: true },
+    ],
+  };
+
+  it("shows inline required-field error when form fields are loaded (Fix 1 resolver timing)", async () => {
+    const mutateSpy = jest.fn();
+    setup({ isSuccess: true, data: configuredForm }, { mutate: mutateSpy });
+    await act(async () => {
+      fireEvent.submit(document.querySelector("form")!);
+    });
+    expect(mutateSpy).not.toHaveBeenCalled();
+    expect(screen.getByText("Summary is required")).toBeInTheDocument();
+  });
+
+  it("blocks mutation when a required url field receives a non-http value (Fix 2 url schema)", async () => {
+    const mutateSpy = jest.fn();
+    setup({ isSuccess: true, data: urlForm }, { mutate: mutateSpy });
+    fireEvent.change(document.getElementById("field-website")!, { target: { value: "not-a-url" } });
+    await act(async () => {
+      fireEvent.submit(document.querySelector("form")!);
+    });
+    expect(mutateSpy).not.toHaveBeenCalled();
+  });
+
+  it("preserves entered answers after a failed submit and succeeds on retry", async () => {
+    const mutateSpy = jest.fn();
+    const view = setup({ isSuccess: true, data: configuredForm }, { mutate: mutateSpy });
+    const summary = "  Keep this request  ";
+    const details = "First line\nSecond line";
+    const variables = { summary: "Keep this request", details };
+    fireEvent.change(screen.getByRole("textbox", { name: /Summary/ }), { target: { value: summary } });
+    fireEvent.change(screen.getByRole("textbox", { name: /Details/ }), { target: { value: details } });
+    await act(async () => {
+      fireEvent.submit(document.querySelector("form")!);
+    });
+    expect(mutateSpy).toHaveBeenCalledTimes(1);
+    expect(mutateSpy).toHaveBeenNthCalledWith(1, variables);
+    mockUseSubmitPublicForm.mockReturnValue({
+      ...mockUseSubmitPublicForm("tok-form-abc123"), status: "error", isError: true,
+      isIdle: false, isPending: false, isSuccess: false, data: undefined,
+      variables, error: new Error("Server error. Please retry."),
+    });
+    view.rerender(<PublicIntakePage />);
+    expect(screen.getByRole("alert")).toHaveTextContent("Server error. Please retry.");
+    expect(screen.getByRole("textbox", { name: /Summary/ })).toHaveValue(summary);
+    expect(screen.getByRole("textbox", { name: /Details/ })).toHaveValue(details);
+    expect(screen.getByRole("button", { name: /^Submit$/ })).toBeEnabled();
+    await act(async () => {
+      fireEvent.submit(document.querySelector("form")!);
+    });
+    expect(mutateSpy).toHaveBeenCalledTimes(2);
+    expect(mutateSpy).toHaveBeenNthCalledWith(2, variables);
+    mockUseSubmitPublicForm.mockReturnValue({
+      ...mockUseSubmitPublicForm("tok-form-abc123"), status: "success", isError: false,
+      isIdle: false, isPending: false, isSuccess: true, error: null,
+      variables, data: { id: 17, message: "Submission received" },
+    });
+    view.rerender(<PublicIntakePage />);
+    expect(screen.getByText("Submission received")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Submit$/ })).not.toBeInTheDocument();
   });
 });
