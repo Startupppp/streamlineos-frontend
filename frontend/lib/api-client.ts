@@ -348,16 +348,18 @@ export async function authedFetch(
   assertRequestIdentity(sentToken, options?.expectedIdentity, combinedSignal, isImpersonating());
   let res = await fetchOrThrowTransportError(url, requestInit, headers, combinedSignal, path);
 
+  let finalToken = sentToken;
   if (!isPublic && res.status === 401) {
     const token = await refreshAfterUnauthorized(sentToken, tokenOptions);
     assertRequestIdentity(token, options?.expectedIdentity, combinedSignal, isImpersonating());
     if (token) {
+      finalToken = token;
       headers.set("Authorization", `Bearer ${token}`);
       res = await fetchOrThrowTransportError(url, requestInit, headers, combinedSignal, path);
     }
   }
   if (options?.expectedIdentity !== undefined)
-    assertRequestIdentity(sentToken, options.expectedIdentity, combinedSignal, isImpersonating());
+    assertRequestIdentity(finalToken, options.expectedIdentity, combinedSignal, isImpersonating());
   if (!isPublic && options?.expectedIdentity === undefined && res.status === 401 && typeof window !== "undefined" && !autoSignOutSuppressed) endSession();
   if (!isPublic && options?.expectedIdentity === undefined) await redirectForOrganizationAccessError(res);
   return res;

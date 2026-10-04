@@ -206,7 +206,7 @@ export function ApprovalsInboxPage() {
     );
     if (selectedItems.length === 0) return;
     setIsBulkPending(true);
-    Promise.allSettled(
+    void Promise.allSettled(
       selectedItems.map((item) =>
         updateApproval.mutateAsync({ projectId: item.projectId ?? 0, approvalId: item.id,
           expectedRevision: item.revision, status: "cancelled" }),

@@ -109,7 +109,7 @@ export function DecideDialog({
       form.reset();
       onOpenChange(false);
     } catch (error: unknown) {
-      if (committed.current === context) setReview({ ...review, blocked: isApiError(error) && error.status === 409, error });
+      if (committed.current === context) setReview((prev) => ({ ...prev, blocked: isApiError(error) && error.status === 409, error }));
     }
   }
   async function handleReviewLatest() {
@@ -121,7 +121,7 @@ export function DecideDialog({
       if (result.error || !result.data) throw result.error ?? new Error("Approval is unavailable.");
       setReview({ context, approval: result.data, blocked: false, error: null });
     } catch (error: unknown) {
-      if (committed.current === context) setReview({ ...review, blocked: true, error });
+      if (committed.current === context) setReview((prev) => ({ ...prev, blocked: true, error }));
     } finally { if (committed.current === context) setLatestRead({ context, pending: false }); }
   }
 
@@ -161,9 +161,9 @@ export function DecideDialog({
             : latestArtifact?.state === "unavailable" ? "The requested ticket is unavailable."
               : latestArtifact?.state === "unbound" ? "This request has no captured ticket version. Create a new bound request."
                 : "The requested artifact changed. Review latest before deciding."}</p>}
-        {Boolean(detail.error || review.error) && <div role="alert" className="text-sm text-destructive">
-          {getErrorMessage(detail.error || review.error)}
-          <ErrorReference error={detail.error || review.error} />
+        {(detail.error != null || review.error != null) && <div role="alert" className="text-sm text-destructive">
+          {getErrorMessage(detail.error ?? review.error)}
+          <ErrorReference error={detail.error ?? review.error} />
         </div>}
         {(review.blocked || Boolean(detail.error) || (task && !artifactReady)) && <LoadingButton type="button" variant="outline" size="sm" isPending={reviewing} onClick={handleReviewLatest}>Review latest</LoadingButton>}
         <Form {...form}>

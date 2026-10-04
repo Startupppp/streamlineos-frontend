@@ -36,7 +36,7 @@ export function useMyCommentDrafts() {
         commentDraftListContract,
       ),
     initialPageParam: null,
-    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? null,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canView,
     staleTime: 60_000,
   });
@@ -50,7 +50,7 @@ export function useDeleteCommentDraft() {
     mutationFn: (draftId: number) =>
       apiClient.delete<{ deleted: boolean }>(`/build/comment-drafts/${draftId}`, undefined, undefined, commentDraftDeletedContract),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.commentDrafts.all() });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.commentDrafts.mine() });
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.agentPulseAll() });
     },
   });
@@ -64,7 +64,7 @@ export function useDeleteAllCommentDrafts() {
     mutationFn: () =>
       apiClient.delete<{ deleted: boolean }>("/build/comment-drafts/mine", undefined, undefined, commentDraftDeletedContract),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.commentDrafts.all() });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.commentDrafts.mine() });
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.agentPulseAll() });
     },
   });
