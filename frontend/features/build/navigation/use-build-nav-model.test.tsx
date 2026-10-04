@@ -4,6 +4,14 @@ import { useAccess, useModuleEnabled } from "@/hooks/api/access";
 import { useProject } from "@/hooks/api/build/projects";
 import type { AccessResponse } from "@/hooks/api/access-schema";
 import type { ProjectWithDetails } from "@/types/projects";
+import { buildOrganizationCatalog } from "@/lib/build/nav/build-organization-catalog";
+import {
+  BUILD_NAV_MAX_PINS,
+} from "@/lib/build/nav/build-nav-destination";
+import {
+  BUILD_PERSONA_TEMPLATES,
+  getPersonaDefaultPinIds,
+} from "@/lib/build/nav/build-persona-defaults";
 
 jest.mock("next/navigation", () => ({
   usePathname: () => "/build/42",
@@ -78,6 +86,37 @@ function findClientPortalDestination(
   );
 }
 
+describe("persona defaults", () => {
+  it("getPersonaDefaultPinIds for pm returns only destination IDs that exist in the org catalog", () => {
+    const orgCatalog = buildOrganizationCatalog();
+    const validIds = new Set([
+      ...orgCatalog.primary.map((d) => d.id),
+      ...orgCatalog.moreTools.map((d) => d.id),
+    ]);
+    const pmPins = getPersonaDefaultPinIds("pm");
+    for (const pinId of pmPins) {
+      expect(validIds.has(pinId)).toBe(true);
+    }
+  });
+
+  it("no persona default set exceeds BUILD_NAV_MAX_PINS pins", () => {
+    for (const template of BUILD_PERSONA_TEMPLATES) {
+      expect(template.defaultPinIds.length).toBeLessThanOrEqual(
+        BUILD_NAV_MAX_PINS,
+      );
+    }
+  });
+
+  it("BUILD_PERSONA_TEMPLATES has exactly 5 personas", () => {
+    expect(BUILD_PERSONA_TEMPLATES).toHaveLength(5);
+  });
+
+  it("each persona template has a unique id", () => {
+    const ids = BUILD_PERSONA_TEMPLATES.map((t) => t.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+});
+
 describe("useBuildNavModel — client-portal capability gate", () => {
   beforeEach(() => {
     mockUseAccess.mockReset();
@@ -139,3 +178,4 @@ describe("useBuildNavModel — access query failure", () => {
     expect(refetch).toHaveBeenCalledTimes(1);
   });
 });
+

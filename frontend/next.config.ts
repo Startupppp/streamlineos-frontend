@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { BUILD_COMPAT_REDIRECTS } from "./lib/build/build-compat-redirects";
 
 function isLocalOrLoopbackAppUrl(): boolean {
   for (const raw of [process.env.NEXTAUTH_URL]) {
@@ -300,11 +301,7 @@ const nextConfig: NextConfig = {
       destination: "/build/settings/client-access",
       permanent: false,
     },
-    {
-      source: "/build/drafts",
-      destination: "/build/my-work?section=drafts",
-      permanent: false,
-    },
+    ...BUILD_COMPAT_REDIRECTS,
     {
       source: "/build/:projectId(\\d+)/my-tickets",
       destination: "/build/my-work?projectId=:projectId",
@@ -403,6 +400,16 @@ const nextConfig: NextConfig = {
     {
       source: "/ask",
       destination: "/knowledge/chat",
+      permanent: false,
+    },
+    {
+      source: "/build/assigned",
+      destination: "/build/my-work",
+      permanent: false,
+    },
+    {
+      source: "/build/freelancer",
+      destination: "/build/my-work",
       permanent: false,
     },
   ],

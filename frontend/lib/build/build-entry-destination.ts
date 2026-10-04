@@ -10,8 +10,18 @@ const LEGACY_PROJECT_QUERY_KEYS = [
   "clientId",
 ] as const;
 
+const ALLOWED_SAVED_DESTINATION_PREFIX = "/build/";
+
+export function isAllowedLandingDestination(destination: string): boolean {
+  return (
+    destination.startsWith(ALLOWED_SAVED_DESTINATION_PREFIX) &&
+    destination.length <= 200
+  );
+}
+
 export function resolveBuildEntryDestination(
   searchParams: Record<string, string | string[] | undefined>,
+  savedDestination?: string | null,
 ): string {
   const projectQuery = new URLSearchParams();
   for (const key of LEGACY_PROJECT_QUERY_KEYS) {
@@ -20,7 +30,15 @@ export function resolveBuildEntryDestination(
     if (firstValue !== undefined) projectQuery.set(key, firstValue);
   }
   const query = projectQuery.toString();
-  return query.length > 0
-    ? `/build/projects?${query}`
-    : "/build/command-center";
+  if (query.length > 0) {
+    return `/build/projects?${query}`;
+  }
+  if (
+    savedDestination !== undefined &&
+    savedDestination !== null &&
+    isAllowedLandingDestination(savedDestination)
+  ) {
+    return savedDestination;
+  }
+  return "/build/command-center";
 }

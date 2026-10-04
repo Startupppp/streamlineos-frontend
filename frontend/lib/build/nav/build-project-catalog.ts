@@ -250,7 +250,7 @@ export function buildProjectCatalog(basePath: string): BuildScopeCatalog {
       },
       {
         id: "project-modules",
-        label: "Modules",
+        label: "Workstreams",
         href: `${basePath}/modules`,
         icon: PackageOpen,
         requiredPermission: "build:view",

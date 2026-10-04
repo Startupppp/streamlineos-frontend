@@ -420,5 +420,8 @@ export const buildWorkQueryKeys = {
     leadTime: (projectId: number) =>
       [...base, "projectReports", "leadTime", projectId] as const,
   },
+  landingPreference: {
+    mine: () => [...base, "landing-preference", "mine"] as const,
+  },
 
 } as const;
