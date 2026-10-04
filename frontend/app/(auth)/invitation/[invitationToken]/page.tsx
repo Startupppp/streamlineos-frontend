@@ -30,7 +30,7 @@ import { motion } from "framer-motion";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { ArrowRight } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { isApiError } from "@/lib/api-envelope";
+import { isApiError, getApiErrorCode } from "@/lib/api-envelope";
 import {
   InvitationCard,
   InvitationHero,
@@ -46,10 +46,28 @@ import {
   canonicalEmail,
 } from "./invitation-accept-schema";
 
+import {
+  InvitationAlreadyMemberState,
+  InvitationSuspendedState,
+  InvitationAtCapacityState,
+} from "@/features/auth/components/invitation-acceptance-error";
+
 const INVITATION_SIGN_IN_UNCONFIRMED_MESSAGE =
   "We could not confirm the sign-in for the invited account. Please sign in with that email to finish joining.";
 const INVITATION_SIGN_IN_FAILED_MESSAGE =
   "That sign-in link is no longer valid. Please sign in with the invited email address.";
+
+type AcceptanceBlocker = "already-member" | "suspended" | "at-capacity";
+
+function classifyAcceptanceError(error: unknown): AcceptanceBlocker | null {
+  if (!isApiError(error)) return null;
+  const code = getApiErrorCode(error);
+  if (code === "ALREADY_MEMBER" || code === "MEMBERSHIP_ARCHIVED" || error.status === 409)
+    return "already-member";
+  if (code === "ACCOUNT_SUSPENDED") return "suspended";
+  if (code === "ORG_AT_CAPACITY") return "at-capacity";
+  return null;
+}
 
 export default function InvitationPage() {
   const { staggerContainer, fadeUp } = useMotionVariants();
@@ -76,7 +94,10 @@ export default function InvitationPage() {
   const [declineOpen, setDeclineOpen] = useState(false);
   const [isCompletingAcceptance, setIsCompletingAcceptance] = useState(false);
   const [otpStep, setOtpStep] = useState(false);
-  const [pendingNameValues, setPendingNameValues] = useState<InvitationAcceptFormValues | null>(null);
+  const [pendingNameValues, setPendingNameValues] =
+    useState<InvitationAcceptFormValues | null>(null);
+  const [acceptanceBlocker, setAcceptanceBlocker] =
+    useState<AcceptanceBlocker | null>(null);
   const acceptingRef = useRef(false);
 
   const {
@@ -186,7 +207,12 @@ export default function InvitationPage() {
           },
           onError: (error) => {
             acceptingRef.current = false;
-            toast.error(getErrorMessage(error));
+            const blocker = classifyAcceptanceError(error);
+            if (blocker) {
+              setAcceptanceBlocker(blocker);
+            } else {
+              toast.error(getErrorMessage(error));
+            }
           },
         },
       );
@@ -227,17 +253,19 @@ export default function InvitationPage() {
             setIsCompletingAcceptance(true);
             toast.success("Account created! Signing you in...");
             if (data?.autoLoginToken) {
-              await autoLoginWithToken(
-                data.autoLoginToken,
-                "/post-invite",
-              );
+              await autoLoginWithToken(data.autoLoginToken, "/post-invite");
             } else {
               router.push("/signin");
             }
           },
           onError: (error) => {
             acceptingRef.current = false;
-            toast.error(getErrorMessage(error));
+            const blocker = classifyAcceptanceError(error);
+            if (blocker) {
+              setAcceptanceBlocker(blocker);
+            } else {
+              toast.error(getErrorMessage(error));
+            }
           },
         },
       );
@@ -277,20 +305,6 @@ export default function InvitationPage() {
     );
   }, [invitationToken, requestInvitationOtp, otpForm]);
 
-  /**
-   * BUG-HRMS-010. An existing account still has to verify the mailbox.
-   *
-   * `POST /organization/invitations/accept` requires `emailOtp` on every path,
-   * because it is a public route: it cannot see that the caller is signed in, so
-   * a signed-in invitee is indistinguishable from anyone else holding the link,
-   * and the link on its own is a bearer token. This button used to accept in one
-   * click with no code, which the API could only ever refuse with a 400 — so an
-   * invitee who already had a StreamlineOS account could never join, whatever
-   * the state of the OTP route.
-   *
-   * It now takes the same code step as a new account, and the OTP form carries
-   * the existing-account branch through `onSuccess`.
-   */
   const handleExistingUserAccept = useCallback(() => {
     if (acceptingRef.current) return;
     if (!invitationToken) return;
@@ -328,6 +342,18 @@ export default function InvitationPage() {
         </div>
       </InvitationCard>
     );
+  }
+
+  if (acceptanceBlocker === "already-member") {
+    return <InvitationAlreadyMemberState onGoToSignIn={goToSignIn} />;
+  }
+
+  if (acceptanceBlocker === "suspended") {
+    return <InvitationSuspendedState onGoToSignIn={goToSignIn} />;
+  }
+
+  if (acceptanceBlocker === "at-capacity") {
+    return <InvitationAtCapacityState onGoToSignIn={goToSignIn} />;
   }
 
   if (invitationError || !invitation) {
@@ -496,7 +522,8 @@ export default function InvitationPage() {
                       className="h-10 w-full text-muted-foreground hover:text-foreground"
                       onClick={handleResendOtp}
                       disabled={
-                        acceptInvitation.isPending || requestInvitationOtp.isPending
+                        acceptInvitation.isPending ||
+                        requestInvitationOtp.isPending
                       }
                     >
                       Resend code
@@ -603,7 +630,8 @@ export default function InvitationPage() {
                     className="h-10 w-full text-muted-foreground hover:text-foreground"
                     onClick={openDecline}
                     disabled={
-                      requestInvitationOtp.isPending || declineInvitation.isPending
+                      requestInvitationOtp.isPending ||
+                      declineInvitation.isPending
                     }
                   >
                     Decline invitation
