@@ -1,5 +1,15 @@
 # Cleanup manifest
 
+## Forms, Intake and invitation owner retention — 2026-10-04
+
+Classification: active source and historical evidence, retained. [Canonical receipt](./bugs-and-verification.md#forms-intake-invitation-and-ticket-link-evidence--2026-10-04) records14 exact existing/new source paths, working/committed hashes, revisions, review, focused/lint/typecheck commands and failed/unverified dimensions (payload SHA `e3608934ee2e0454bd1f828612578e7edbe30e5bb71851366e4947262d881e52`). No file is deleted and no inbound evidence/research/screenshot reference is removed. No duplicate API/schema/query-key/helper/client/Markdown file is added. Unrelated working invitation formatting and temporary compiler includes remain untouched.
+
+| Retained new path | Working SHA-256 | Existing-owner limit and real boundary | Review and validation |
+|---|---|---|---|
+| `frontend/features/build/intake/components/intake-decision-dialog.tsx` | `12c541928d08fd1f252e5e30d349d565823e23ec90e48ce10d2b836ae2c90d01` | Existing Intake page was656 lines. Private218-line owner holds decision drafts/controllers/validation/pending acknowledgment and trusted-scope reset; page313 retains canonical collection/navigation. Reuses existing EntityFormDialog and TicketCombobox; no duplicate route/form/API/helper. | B implementation, C29 actual-page cases/root42 focused checks, five-path strict lint/scoped/production TypeScript, intake_review65_final independent bounded CLEAR; actual mutation/browser/mobile remain open. |
+
+
+
 ## Existing Forms and feedback owners retained — 2026-10-04
 
 Classification: active source and historical evidence, retained.60/61 change nine existing source/test files only. Their exact SHA-256 hashes, source revisions, reviewers, focused/TypeScript/lint validation and remaining gaps are recorded once in [canonical receipt](./bugs-and-verification.md#forms-feedbucket-and-normal-activation-evidence--2026-10-04), payload SHA `f2c58dd9e3156c960195195c09e4dfb41fe1626dfa7978bf79eda9af4610f34c`. Existing renderer, conversion/source reader, post-submit seam and canonical Ticket adapter own the behavior. No helper, service, schema, API, component, query key, permission, Markdown or test file is created/deleted; no inbound reference is removed. Unique research, screenshots, failed gates, unresolved findings and unrelated files remain preserved. No deletion manifest entry is inferred from a source edit.

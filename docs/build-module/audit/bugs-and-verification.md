@@ -1,5 +1,277 @@
 # Bugs and verification ledger
 
+## Forms, Intake, invitation and Ticket link evidence — 2026-10-04
+
+Classification: Current verified for these exact source/gate/review observations and bounded normal synthetic API/READ ONLY results. Current unverified for complete tasks, browser/mobile, deployed authorization and release. All522 task checkboxes and D/I/T/R/B/L stage values remain unchanged (110 checked,412 open). Prior receipts retain their original runtime revisions; runtime66 below serves2eaa, while newly committed68 has not been served yet.
+
+Source63 distinguishes untouched null description from an edited clear; two meaningful REDs and the final real Textarea/Save tests cover both. Source65 gives the existing Intake page a private decision owner, strict positive duplicate target, matching acknowledgment and trusted-owner reset. The new component owns drafts/commands/lifecycle rather than wrapping a pass-through; actual dynamic EntityFormDialog/TicketCombobox loading remains covered. Workstream is the UI label. Root specializes only the existing hook mutation types; it changes no API, permission, key, decoder or invalidation.
+
+Source68 corrects independent64 review failure: canonical mail resolves on suppression/queued retries, which was insufficient delivery acknowledgment. Only invitation OTP opts into inline_ack_required. Its outbox row starts terminal FAILED, becomes SENT after provider ACK, and is excluded from PENDING retry workers. Typed post-ACK persistence failure preserves the acknowledged code and returns controlled503. Ordinary auth/mail policy stays unchanged. Controlled provider/DB doubles are not actual provider, physical concurrency or delivery proof.
+
+Exact committed invitation staging is694 lines versus696 HEAD baseline. Unrelated working formatting remains725 lines and fails that working-size limit. The method exactly matches the reviewed working source; the suffix exactly matches baseline. Structured TypeScript equivalence and independent high-effort staged review confirm no functional omission. Unknown-author formatting is retained, never staged or waived. Other working/blob hash differences below are newline normalization. No source comment, live Ticket comment, schema/API/permission/generated change or deletion is included.
+
+Actual runtime67 creates201, reads200, archives200, denies related-link create/update/delete409 PROJECT_LOCKED, preserves storage, restores ACTIVE200, edits200, deletes204 and reads200 without the deleted link. READ ONLY streamline_app transactions verify exact author/membership, unchanged denied writes, updated label and final zero links/zero Ticket comments. Known foreign related-link GET404 has an own200 control. The schema response wire uses title while storage uses label. PATCH validates through the official generated POST response schema because backend GET/POST/PATCH share the same canonical relatedLinkSchema; no dedicated generated PATCH export exists.
+
+Retained method failures: guessed p.project_key (actual key), wrong tenant GUC app.current_org_id (actual app.organization_id), failed-cell undefined binding, guessed build.ticket_comments (actual build_events.ticket_comments), stale primitive JWT captured by an earlier helper (401 is not lifecycle proof), and initial unchanged:false from comparing wire.label instead of wire.title. Corrected explicit bearer input, fresh session, exact schema/GUC and READ ONLY proofs follow; failed read-only probes wrote nothing. Initial printer-based staging comparisons failed on formatting before structured equivalence; no index write preceded the verified result.
+
+Failed gates remain explicit: full backend test TypeScript exhausted10 GiB; fresh full frontend specs has24 diagnostics: calendar/event-create-form-drawer-nesting.test.tsx2, calendar/event-form-fields-end-time-height.test.tsx1, chat/__tests__/message-input-format.test.tsx14, wiki/kb-conversation-list.test.tsx1, hooks/api/kb/kb-page-children-level-error-policy.test.ts1, hooks/api/mail-action-cache.test.ts5. They are unowned paths. Expected fixture account-index/email ECONNRESET/no-provider/suppression logs are retained, not actual delivery/projection proof. No stage closes from focused or production TypeScript alone.
+
+API62 supplement observes one COMPLETED201 command fence each for project/ticket creation and one self watcher, but zero exact-ticket notification intents. Creator-recipient exclusion is source inference, not delivery proof. A normal NextAuth session and fresh Ticket read succeed after runtime66 restart. No secrets, tokens, OTPs, cookies, magic links, environment values or raw mail are recorded. Private browser login handoff remains unresolved; API persistence is not browser evidence.
+
+Payload SHA-256: `e3608934ee2e0454bd1f828612578e7edbe30e5bb71851366e4947262d881e52` (UTF-8 JSON between fences, excluding fence newlines). Ownership and exact commands: [work claims](../implementation/WORK-CLAIMS.md).
+
+```json
+{
+  "timestamp": "2026-10-04T07:03:57.472Z",
+  "classification": "Current verified only for bounded source, tests, review and API/READ ONLY observations; complete tasks Current unverified",
+  "tasks": {
+    "total": 522,
+    "checked": 110,
+    "open": 412,
+    "stagesAdvanced": 0
+  },
+  "source": {
+    "source63": {
+      "revision": "8093ead86fb269f2d39b2ce09a96c79df9abcceb",
+      "focused": "3 suites / 43 passed; owned 11",
+      "meaningfulReds": 2,
+      "lintDiffScopedProduction": "passed",
+      "review": "bounded CLEAR"
+    },
+    "source65": {
+      "revision": "5e6b3389b",
+      "focused": "3 suites / 42 passed; actual page 29 cases",
+      "retainedFailures": [
+        "Initial 2 TS2322 unknown update-hook result/error",
+        "Async dynamic-render assertions 2 failed / 40 passed before correction",
+        "Full frontend specs 24 diagnostics in six unowned paths"
+      ],
+      "lintDiffScopedProduction": "passed",
+      "review": "intake_review65_final bounded CLEAR"
+    },
+    "source68": {
+      "revision": "721ab4788948f58d68988baaeb0c523c5f0e276d",
+      "focused": "19 suites / 215 passed; owned three suites 47",
+      "meaningfulRed": "5 failed / 14 passed through canonical EmailService/outbox",
+      "lintDiffScopedProduction": "passed",
+      "review": "invitation_security_review68 bounded CLEAR for working and exact staged source",
+      "staging": {
+        "timestamp": "2026-10-04T06:52:32.585Z",
+        "structuredAstEquivalent": true,
+        "normalization": "Ordered TypeScript child kinds/literals/type-only/declaration/optional-chain flags; one identical throw if-block normalization; excludes positions/trivia/formatting",
+        "canonicalLines": 694,
+        "workingLines": 725,
+        "canonicalSha": "c11a6c91d3cf97b317c7472ca94fc225d5060d0ba6547c28b9b529abbdea60db",
+        "astProjectionSha": "0f487117a4a3d432814dbf0ee75f99cf3859d5381671902ff1b2ea1a7353edf4",
+        "diskUntouched": true
+      }
+    }
+  },
+  "files": [
+    {
+      "owner": "source63",
+      "path": "frontend/features/build/forms/components/form-builder-tab.tsx",
+      "workingSha256": "ffe250e1ee394b568c35ef24bec339210ac9b1d2f70204d14206b9ccba305cf1",
+      "committedBlobSha256": "ffe250e1ee394b568c35ef24bec339210ac9b1d2f70204d14206b9ccba305cf1",
+      "workingLines": 252,
+      "committedLines": 252
+    },
+    {
+      "owner": "source63",
+      "path": "frontend/features/build/forms/form-detail-page.test.tsx",
+      "workingSha256": "7415998563439e3461c20e298a42167687d8beb6465a67d97ee2685f4fea62da",
+      "committedBlobSha256": "7415998563439e3461c20e298a42167687d8beb6465a67d97ee2685f4fea62da",
+      "workingLines": 299,
+      "committedLines": 299
+    },
+    {
+      "owner": "source65",
+      "path": "frontend/features/build/intake/intake-page.tsx",
+      "workingSha256": "e27e573faf5226e77c3714acaf8eb5df0bad418c1d2b4129850ba2db6e6eb22a",
+      "committedBlobSha256": "e802b47d9c6862f92865d41550b8883fc24c571bc2dce4c4c1eda673179344a8",
+      "workingLines": 313,
+      "committedLines": 313
+    },
+    {
+      "owner": "source65",
+      "path": "frontend/features/build/intake/intake-schema.ts",
+      "workingSha256": "a09b9a5c542f6e257dc57600068306bc241b2df8ac0470fbc7509a0b55d8cd2b",
+      "committedBlobSha256": "a09b9a5c542f6e257dc57600068306bc241b2df8ac0470fbc7509a0b55d8cd2b",
+      "workingLines": 35,
+      "committedLines": 35
+    },
+    {
+      "owner": "source65",
+      "path": "frontend/features/build/intake/components/intake-decision-dialog.tsx",
+      "workingSha256": "12c541928d08fd1f252e5e30d349d565823e23ec90e48ce10d2b836ae2c90d01",
+      "committedBlobSha256": "12c541928d08fd1f252e5e30d349d565823e23ec90e48ce10d2b836ae2c90d01",
+      "workingLines": 218,
+      "committedLines": 218
+    },
+    {
+      "owner": "source65",
+      "path": "frontend/features/build/intake/intake-page.test.tsx",
+      "workingSha256": "a1de17f42fc93d920dc38bce5e4f357f462b18ef03bf516f03bd01490898bd3f",
+      "committedBlobSha256": "68f12627151b8d5d70b8be97c8888fe2b58dd53343d3262db43ffe60b6ed68bc",
+      "workingLines": 293,
+      "committedLines": 293
+    },
+    {
+      "owner": "source65",
+      "path": "frontend/hooks/api/build/advanced.ts",
+      "workingSha256": "add2a51c3e3ac8ffa1287cc2d4b91e59f1429571d540c10c4a5d50abbe36bb5c",
+      "committedBlobSha256": "ca1f51baa05cdef2478a1a06df4f8a4ebd8cf81e51fa14577905330d980f9ded",
+      "workingLines": 484,
+      "committedLines": 484
+    },
+    {
+      "owner": "source68",
+      "path": "backend/src/modules/email/email-outbox.service.spec.ts",
+      "workingSha256": "43650a52bb5fc8f951234ca806f6814437ecbd397a80ff1755cdc30d83f99e7f",
+      "committedBlobSha256": "a22f22ac79fa049270e426d40e51bc145f63535cf3cc1c495f41fc1e979ba064",
+      "workingLines": 398,
+      "committedLines": 398
+    },
+    {
+      "owner": "source68",
+      "path": "backend/src/modules/email/email-outbox.service.ts",
+      "workingSha256": "e2ba96035ce94743d1e592447eaa826edafdef6e5cbbe6ad1d086cc058e13c4f",
+      "committedBlobSha256": "5dc0b1e559a0781968ae7367fa59f2516e2817ad11e163a668727d7299f0d80e",
+      "workingLines": 476,
+      "committedLines": 476
+    },
+    {
+      "owner": "source68",
+      "path": "backend/src/modules/email/email-provider-selection.ts",
+      "workingSha256": "4a7dbdb2bee681f70b6a30c25f1b9af404a34d5922851e933a7e9d291aacbb06",
+      "committedBlobSha256": "7ab4a31dfbb69be4fe3311592dbd22834284c6093cff7a5622f3edfe6f30fe3c",
+      "workingLines": 61,
+      "committedLines": 61
+    },
+    {
+      "owner": "source68",
+      "path": "backend/src/modules/email/email-senders-auth-scope.spec.ts",
+      "workingSha256": "cd2f64930ac683bd651501c29fd6d11a2571ebc5270e560c48e2c2422fa05158",
+      "committedBlobSha256": "cd2f64930ac683bd651501c29fd6d11a2571ebc5270e560c48e2c2422fa05158",
+      "workingLines": 102,
+      "committedLines": 102
+    },
+    {
+      "owner": "source68",
+      "path": "backend/src/modules/email/email-senders.base.ts",
+      "workingSha256": "83a705e51f46bd01a2367f99719d8357275ca0007111916cac79d0ad4336b909",
+      "committedBlobSha256": "f28b55008f7243e2b6d36faf57f002220b63b3089ece4063f5fed4a3ab30a4a6",
+      "workingLines": 456,
+      "committedLines": 456
+    },
+    {
+      "owner": "source68",
+      "path": "backend/src/modules/organization/core/invitation-acceptance-otp-gate.spec.ts",
+      "workingSha256": "81d576fdaeaa1e6312c06adce66dd4cabeaab6d7a9005e0afa7c9e798eb93be5",
+      "committedBlobSha256": "81d576fdaeaa1e6312c06adce66dd4cabeaab6d7a9005e0afa7c9e798eb93be5",
+      "workingLines": 485,
+      "committedLines": 485
+    },
+    {
+      "owner": "source68",
+      "path": "backend/src/modules/organization/core/invitation-acceptance.service.ts",
+      "workingSha256": "f1e661ba8cdfb06cfd7ccd75dc2ef8bd45e82d3f8d1c4a3a68c740fe5b4eeea1",
+      "committedBlobSha256": "c11a6c91d3cf97b317c7472ca94fc225d5060d0ba6547c28b9b529abbdea60db",
+      "workingLines": 725,
+      "committedLines": 694
+    }
+  ],
+  "api62Supplement": {
+    "timestamp": "2026-10-04T06:00:42.986Z",
+    "readOnlyApplicationRole": true,
+    "completedProjectFenceCount": 1,
+    "completedTicketFenceCount": 1,
+    "responseStatus": 201,
+    "watcherCount": 1,
+    "notificationIntentCount": 0,
+    "workerDeliveryProof": false
+  },
+  "runtime66": {
+    "timestamp": "2026-10-04T06:20:52.290Z",
+    "revision": "2eaa96b492964e0adbaaecec8c6b054fdf234da1",
+    "sessionStatus": 200,
+    "ownGetStatus": 200,
+    "contractPassed": true,
+    "status": "IN_PROGRESS",
+    "version": 2,
+    "browserProof": false
+  },
+  "runtime67": {
+    "created": {
+      "timestamp": "2026-10-04T06:27:37.176Z",
+      "postStatus": 201,
+      "postContract": true,
+      "getStatus": 200,
+      "getContract": true,
+      "exactNewLinkReturned": true
+    },
+    "denials": {
+      "timestamp": "2026-10-04T06:42:03.060Z",
+      "archiveStatus": 200,
+      "archiveContract": true,
+      "createStatus": 409,
+      "createCode": "PROJECT_LOCKED",
+      "updateStatus": 409,
+      "updateCode": "PROJECT_LOCKED",
+      "deleteStatus": 409,
+      "deleteCode": "PROJECT_LOCKED",
+      "readWhileLockedStatus": 200,
+      "readContract": true,
+      "linkUnchanged": false
+    },
+    "wireMethodCorrection": {
+      "initialUnchangedFlag": false,
+      "reason": "Related-link wire field is title, storage field is label",
+      "correctedUnchanged": true
+    },
+    "updatedPersistence": {
+      "timestamp": "2026-10-04T06:47:02.258Z",
+      "readOnly": true,
+      "applicationRole": "streamline_app",
+      "exactUpdatedLinkCount": 1,
+      "updatedLabelPersisted": true,
+      "projectRestoredActive": true
+    },
+    "delete": {
+      "timestamp": "2026-10-04T06:47:10.204Z",
+      "patchContractViaSameCanonicalRelatedLinkSchema": true,
+      "deleteStatus": 204,
+      "noResponseBody": true,
+      "getAfterDeleteStatus": 200,
+      "getContract": true,
+      "deletedLinkAbsent": true
+    },
+    "finalReadOnlyPersistence": {
+      "timestamp": "2026-10-04T06:50:22.095Z",
+      "applicationRole": "streamline_app",
+      "readOnly": true,
+      "projectRestoredActive": true,
+      "remainingRelatedLinkCount": 0,
+      "ticketCommentsCount": 0
+    },
+    "knownForeignReadStatus": 404,
+    "ownReadStatus": 200,
+    "browserProof": false
+  },
+  "remaining": {
+    "browser": "Private OTP handoff unresolved; no browser/mobile mutation proof",
+    "backendFullTestTypeScript": "Previously exhausted 10 GiB; no passing full gate",
+    "frontendFullSpecs": "24 diagnostics in six unowned paths",
+    "deployedMigrations": "1730/1731/1732/1733/1734 unapplied",
+    "invitation": "Pending-code shadowing, late timeout ACK, delivered eligibility/revocation/concurrency and real delivery/acceptance remain open",
+    "ticket": "Complete idempotency/race/cache/event/role matrix and UI/release scope open",
+    "intake": "Actual mutation, persistence, transport identity, full triage and mobile/release scope open"
+  }
+}
+```
+
+
+
 ## Forms, Feedbucket and normal activation evidence — 2026-10-04
 
 Classification: Current verified only for the exact source, focused gates and normal synthetic API/read-only outcomes below; Current unverified for complete requirements and release. Source60 uses the existing canonical public-field renderer; source61 serializes source conversion and queues publication after the enclosing commit. Both are independently reviewed and committed. The live backend still serves55, so the API62 observations do not prove newly committed58/61 behavior.
