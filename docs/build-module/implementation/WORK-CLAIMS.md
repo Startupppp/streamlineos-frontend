@@ -1,5 +1,13 @@
 # Build work claims
 
+## Compact continuation — 2026-10-04
+
+Canonical tracker remains522 tasks:110 checked/412 open. Historical checked items are not full release evidence. Claim48 remains active: A five proof files, C one test, B read-only independent review, root serialized runtime and five canonical documents. All six final frozen working hashes, source47 and excluded44 outer/47 backend working-byte baselines match. Third planf8e47ebe465a33f58c6ef1f1 passed; execution has not started and no proof process is running. Preserve both failed runs and the checkpoint payload linked below.
+
+Fresh observation2026-10-04T02:59:50.659Z: external backend commit5e33d3ebb2b911941a8ed89e47e53b120dedbf7d, parented55a897d8668f5adfd99136e3e3b05891285254, includes56 files:6 Claim48 and50 unrelated paths. This coordinator did not create or review the50 unrelated changes. Their previously excluded working bytes remain unchanged; preserve this commit and do not reset or restage them. The CLI, revision baseline and revision cases match their final committed hashes. Final corrected artifact catalog, artifact cases and artifact test remain modified after that commit and stay owned by A/C; do not call the external commit the final48 source revision.
+
+B independently confirms the mixed commit scope and three residual corrections; no source edits or database execution were made during this compact handoff. Next safe action: recheck exclusions immediately before executing the reviewed third scratch proof at the six frozen working hashes. If it passes, independently verify READ ONLY cleanup and application invariants, append sanitized evidence in the existing canonical audit document, integrate only the three residual claimed corrections and record the exact source revision. Never advance a broad BT stage from this prerequisite. Application1732/1733/1734, approver liveness, service/RBAC/tenant/cache/events, browser/mobile and deployment/operations remain open. Preserve no-comment and existing-component rules. Exact conversation context percentage is unavailable; use committed checkpoints at work-package boundaries.
+
 This file is the coordination ledger for active and completed implementation packages. Application work begins only after a claim row is committed to the shared coordination/default branch and every dispatched agent has refreshed that revision. A private-worktree row is not a reservation. Documentation-only planning does not require a claim.
 
 ## Coordinator checkpoint — 2026-10-04 Inbox correction
