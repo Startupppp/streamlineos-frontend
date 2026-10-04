@@ -1,6 +1,7 @@
 import type { DbEnumMember } from "@/contracts/db-enums.generated";
 import type {
   BuildApprovalsGetApprovalResponse,
+  BuildApprovalsCreateApprovalResponse,
   ApprovalsInboxGetInboxResponse,
   BuildApprovalsCreateApprovalBody,
   BuildApprovalsDecideApprovalBody,
@@ -10,7 +11,8 @@ import type {
 
 export type ApprovalEntityType = DbEnumMember<"approval_entity_type">;
 export type ApprovalStatus = DbEnumMember<"approval_status">;
-export type Approval = BuildApprovalsGetApprovalResponse;
+export type Approval = BuildApprovalsCreateApprovalResponse;
+export type ApprovalDetail = BuildApprovalsGetApprovalResponse;
 export type ApprovalInboxItem = ApprovalsInboxGetInboxResponse["data"][number];
 export type CreateApprovalInput = BuildApprovalsCreateApprovalBody;
 export type DecideApprovalInput = BuildApprovalsDecideApprovalBody;

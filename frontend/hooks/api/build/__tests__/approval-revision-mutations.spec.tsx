@@ -6,7 +6,9 @@ import { authenticatedScope } from "@/lib/query-scope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { apiClient } from "@/lib/api-client";
 import { ApiError } from "@/lib/api-envelope";
-import { useApproval, useDeleteApproval, useUpdateApproval, useDecideApproval } from "../approvals";
+import { ZodError } from "zod";
+import { createApprovalInputSchema } from "../approvals-schema";
+import { useApproval, useCreateApproval, useDeleteApproval, useUpdateApproval, useDecideApproval } from "../approvals";
 
 let session = { orgId: "org-1", sessionId: "session-1", user: { id: "user-1" } };
 let allowed = true;
@@ -14,7 +16,7 @@ let impersonating = false;
 let accessReady = true;
 const accessRefetch = jest.fn();
 jest.mock("@/lib/api-client", () => ({
-  apiClient: { delete: jest.fn(), patch: jest.fn(), get: jest.fn(), request: jest.fn() },
+  apiClient: { delete: jest.fn(), patch: jest.fn(), post: jest.fn(), get: jest.fn(), request: jest.fn() },
   isImpersonating: () => impersonating,
 }));
 jest.mock("next-auth/react", () => ({ useSession: () => ({ status: "authenticated", data: session }) }));
@@ -29,6 +31,7 @@ const row = {
   status: "pending", level: 1, dueAt: null, decisionComment: null, decidedAt: null,
   createdBy: null, deletedAt: null, createdAt: "2026-10-01T00:00:00Z", updatedAt: "2026-10-01T00:00:00Z",
 };
+const detailRow = { ...row, artifact: { state: "unbound" } };
 function wire(data: unknown): Response {
   const body = { success: true, data };
   return { ok: true, status: 200, statusText: "OK", headers: new Headers({ "content-type": "application/json" }), body: null, bodyUsed: false,
@@ -46,7 +49,8 @@ beforeEach(() => {
   allowed = true; accessReady = true; impersonating = false;
   jest.mocked(apiClient.delete).mockResolvedValue(undefined);
   jest.mocked(apiClient.patch).mockResolvedValue(row);
-  jest.mocked(apiClient.request).mockImplementation(async () => wire(row));
+  jest.mocked(apiClient.post).mockResolvedValue(row);
+  jest.mocked(apiClient.request).mockImplementation(async () => wire(detailRow));
 });
 
 it("deletes the reviewed revision and reconciles filtered queues without subtracting a cached count", async () => {
@@ -116,7 +120,7 @@ it("keeps the invoked project bound while an authority read waits across rerende
 
 it("requires a fresh detail receipt and sends the native signal with the exact trusted identity", async () => {
   let release: (() => void) | undefined;
-  jest.mocked(apiClient.request).mockImplementation(() => new Promise((resolve) => { release = () => resolve(wire(row)); }));
+  jest.mocked(apiClient.request).mockImplementation(() => new Promise((resolve) => { release = () => resolve(wire(detailRow)); }));
   const { client, wrapper } = setup();
   client.setQueryData(buildWorkQueryKeys.projects.approvals.detail(42, 7), { approval: { ...row, title: "Old cached title" }, ownerStamp: "old-lease" });
   const { result } = renderHook(() => useApproval(42, 7), { wrapper });
@@ -134,7 +138,7 @@ it("aborts the old detail read and never presents its late record after reauthen
   let release: (() => void) | undefined;
   jest.mocked(apiClient.request).mockImplementationOnce((_path, _request, config) => {
     oldSignal = config?.signal;
-    return new Promise((resolve) => { release = () => resolve(wire({ ...row, title: "Old session title" })); });
+    return new Promise((resolve) => { release = () => resolve(wire({ ...detailRow, title: "Old session title" })); });
   });
   const { wrapper } = setup();
   const { result, rerender } = renderHook(() => useApproval(42, 7), { wrapper });
@@ -148,9 +152,11 @@ it("aborts the old detail read and never presents its late record after reauthen
 });
 
 it.each([
-  { data: { ...row, orgId: "org-other" }, message: "requested record" },
-  { data: { ...row, id: 8 }, message: "requested record" },
-  { data: { ...row, revision: 0 }, message: "does not understand" },
+  { data: { ...detailRow, orgId: "org-other" }, message: "requested record" },
+  { data: { ...detailRow, id: 8 }, message: "requested record" },
+  { data: { ...detailRow, revision: 0 }, message: "does not understand" },
+  { data: row, message: "does not understand" },
+  { data: { ...row, artifact: { state: "current", snapshot: { title: "Malformed content" } } }, message: "does not understand" },
 ])("refuses an unauthorized or malformed detail response $message", async ({ data, message }) => {
   jest.mocked(apiClient.request).mockImplementation(async () => wire(data));
   const { wrapper } = setup();
@@ -194,4 +200,42 @@ it("routes an inbox management command to its loaded project without leaking rou
   const { result } = renderHook(() => useUpdateApproval(), { wrapper });
   await act(async () => { await result.current.mutateAsync({ projectId: 42, approvalId: 7, expectedRevision: 3, status: "cancelled" }); });
   expect(apiClient.patch).toHaveBeenCalledWith("/build/42/approvals/7", { expectedRevision: 3, status: "cancelled" }, expect.anything(), expect.anything());
+});
+
+it("refuses a missing task version at the canonical request contract", () => {
+  expect(() => createApprovalInputSchema.parse({ entityType: "task", entityId: 8, title: "Task approval", approverId: "user-2" })).toThrow(ZodError);
+});
+
+it.each([0, -1, 2.5, 2_147_483_648])("refuses malformed task version%s before dispatch", async (expectedArtifactVersion) => {
+  const { wrapper } = setup();
+  const { result } = renderHook(() => useCreateApproval(42), { wrapper });
+  await act(async () => { await expect(result.current.mutateAsync({ entityType: "task", entityId: 8, title: "Task approval", approverId: "user-2", expectedArtifactVersion })).rejects.toBeInstanceOf(ZodError); });
+  expect(apiClient.post).not.toHaveBeenCalled();
+});
+
+it("refuses forged snapshot fields instead of sending client content as an artifact", async () => {
+  const { wrapper } = setup();
+  const { result } = renderHook(() => useCreateApproval(42), { wrapper });
+  const input = { ...createApprovalInputSchema.parse({ entityType: "task", entityId: 8, title: "Task approval", approverId: "user-2", expectedArtifactVersion: 2 }), snapshot: { title: "Forged content" } };
+  await act(async () => { await expect(result.current.mutateAsync(input)).rejects.toBeInstanceOf(ZodError); });
+  expect(apiClient.post).not.toHaveBeenCalled();
+});
+
+it("reconciles detail with a fresh read instead of replacing its artifact with mutation metadata", async () => {
+  const { client, wrapper } = setup();
+  const key = buildWorkQueryKeys.projects.approvals.detail(42, 7);
+  const receipt = { approval: detailRow, ownerStamp: "prior-authorized-lease" };
+  client.setQueryData(key, receipt);
+  const { result } = renderHook(() => useDecideApproval(42), { wrapper });
+  await act(async () => { await result.current.mutateAsync({ approvalId: 7, expectedRevision: 3, decision: "approved" }); });
+  expect(client.getQueryData(key)).toEqual(receipt);
+  expect(client.getQueryState(key)?.isInvalidated).toBe(true);
+});
+
+it("strips incidental snapshot fields from a metadata-only restricted response", async () => {
+  jest.mocked(apiClient.request).mockImplementation(async () => wire({ ...row, artifact: { state: "restricted", snapshot: { title: "Must not reveal" }, currentArtifactVersion: 2, digest: "private" } }));
+  const { wrapper } = setup();
+  const { result } = renderHook(() => useApproval(42, 7), { wrapper });
+  await waitFor(() => expect(result.current.data?.artifact).toEqual({ state: "restricted" }));
+  expect(result.current.error).toBeNull();
 });

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const OPENAPI_HASH = "sha256:8ba8a4d13ca5be105d2381e4acb95db88c11442a735f14d097cec719082b4318" as const;
+export const OPENAPI_HASH = "sha256:54cfc6e2bc1a7ba5a8f30b055aeffa7ba814038500637da40bab0bbe6fc60a82" as const;
 
 export const agentTokensListResponseSchema = z.array(z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -2124,15 +2124,24 @@ export const buildApprovalsCreateApprovalResponseSchema = z.object({
 });
 export type BuildApprovalsCreateApprovalResponse = z.infer<typeof buildApprovalsCreateApprovalResponseSchema>;
 
-export const buildApprovalsCreateApprovalBodySchema = z.strictObject({
-  entityType: z.enum(["task", "milestone", "budget", "release", "change_request", "document", "timesheet", "client_approval"]),
+export const buildApprovalsCreateApprovalBodySchema = z.union([z.strictObject({
   entityId: z.number().int().gt(0).lte(2147483647),
   title: z.string(),
   approverId: z.string(),
   reason: z.string().optional(),
   dueAt: z.unknown().optional(),
   level: z.number().int().gte(1).lte(2147483647).optional(),
-});
+  entityType: z.literal("task"),
+  expectedArtifactVersion: z.number().int().gt(0).lte(2147483647),
+}), z.strictObject({
+  entityId: z.number().int().gt(0).lte(2147483647),
+  title: z.string(),
+  approverId: z.string(),
+  reason: z.string().optional(),
+  dueAt: z.unknown().optional(),
+  level: z.number().int().gte(1).lte(2147483647).optional(),
+  entityType: z.enum(["milestone", "budget", "release", "change_request", "document", "timesheet", "client_approval"]),
+})]);
 export type BuildApprovalsCreateApprovalBody = z.input<typeof buildApprovalsCreateApprovalBodySchema>;
 
 export const buildApprovalsGetApprovalResponseSchema = z.object({
@@ -2155,6 +2164,31 @@ export const buildApprovalsGetApprovalResponseSchema = z.object({
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
+  artifact: z.union([z.object({
+    state: z.enum(["unbound", "restricted", "unavailable"]),
+  }), z.object({
+    state: z.enum(["current", "stale"]),
+    requestedArtifactVersion: z.number().int().gt(0).lte(2147483647),
+    currentArtifactVersion: z.number().int().gt(0).lte(2147483647),
+    capturedAt: z.iso.datetime({ offset: true }),
+    digest: z.string(),
+    snapshot: z.object({
+      schemaVersion: z.literal(1),
+      id: z.number().int().gt(0).lte(2147483647),
+      projectId: z.number().int().gt(0).lte(2147483647),
+      ticketNumber: z.number().int().gt(0).lte(9007199254740991),
+      version: z.number().int().gt(0).lte(2147483647),
+      title: z.string(),
+      description: z.string().nullable(),
+      type: z.enum(["EPIC", "STORY", "TASK", "BUG"]),
+      status: z.string(),
+      priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
+      points: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+      originalEstimate: z.string().nullable(),
+      startDate: z.iso.date().nullable(),
+      dueDate: z.iso.date().nullable(),
+    }),
+  })]),
 });
 export type BuildApprovalsGetApprovalResponse = z.infer<typeof buildApprovalsGetApprovalResponseSchema>;
 

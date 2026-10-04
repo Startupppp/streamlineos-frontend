@@ -19,7 +19,8 @@ export const approvalInboxItemContract = approvalsInboxGetInboxResponseSchema.sh
 
 export const approvalInboxPageContract = approvalsInboxGetInboxResponseSchema;
 
-export const approvalRowContract = buildApprovalsGetApprovalResponseSchema;
+export const approvalRowContract = buildApprovalsCreateApprovalResponseSchema;
+export const approvalDetailContract = buildApprovalsGetApprovalResponseSchema;
 export const approvalCreateContract = buildApprovalsCreateApprovalResponseSchema;
 export const approvalUpdateContract = buildApprovalsUpdateApprovalResponseSchema;
 export const approvalDecideContract = buildApprovalsDecideApprovalResponseSchema;

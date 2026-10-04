@@ -203,14 +203,12 @@ export function ProjectApprovalsPage({
   }, []);
 
   const handleCreate = useCallback(
-    (input: CreateApprovalInput) => {
-      createApproval.mutate(input, {
-        onSuccess: () => {
-          toast.success("Approval requested");
-          setRequestOpen(false);
-        },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      });
+    async (input: CreateApprovalInput) => {
+      const owner = createApproval.captureOwner();
+      await createApproval.mutateAsync(input);
+      if (!owner?.isCurrent()) return;
+      toast.success("Approval requested");
+      setRequestOpen(false);
     },
     [createApproval],
   );

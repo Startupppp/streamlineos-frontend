@@ -10,7 +10,7 @@ import { expectedRequestIdentitySchema, type ExpectedRequestIdentity } from "@/l
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { useCan } from "@/hooks/api/access";
-import type { Approval, CreateApprovalInput, DecideApprovalInput, UpdateApprovalInput, DeleteApprovalInput } from "@/types/projects";
+import type { Approval, ApprovalDetail, CreateApprovalInput, DecideApprovalInput, UpdateApprovalInput, DeleteApprovalInput } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
@@ -19,14 +19,14 @@ import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 const approvalInboxPageContract = lazyContract(() => import("./approvals-schema").then((m) => m.approvalInboxPageContract));
 const approvalPageContract = lazyContract(() => import("./approvals-schema").then((m) => m.approvalPageContract));
-const approvalRowContract = lazyContract(() => import("./approvals-schema").then((m) => m.approvalRowContract));
+const approvalDetailContract = lazyContract(() => import("./approvals-schema").then((m) => m.approvalDetailContract));
 const approvalCreateContract = lazyContract(() => import("./approvals-schema").then((m) => m.approvalCreateContract));
 const approvalUpdateContract = lazyContract(() => import("./approvals-schema").then((m) => m.approvalUpdateContract));
 const approvalDecideContract = lazyContract(() => import("./approvals-schema").then((m) => m.approvalDecideContract));
 const noContentContract = lazyContract(() => import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract));
 const notificationCountContract = lazyContract(() => import("@/hooks/api/notifications-schema").then((m) => m.notificationCountContract));
 type ApprovalOwner = { identity: ExpectedRequestIdentity; signal: AbortSignal; isCurrent: () => boolean };
-type ApprovalReceipt = { approval: Approval; ownerStamp: string };
+type ApprovalReceipt = { approval: ApprovalDetail; ownerStamp: string };
 type ApprovalReadFailure = { error: unknown; ownerStamp: string };
 type ApprovalTarget = { approvalId: number; projectId?: number };
 interface ApprovalFilters { status?: string; entityType?: string; actorId?: string }
@@ -141,7 +141,7 @@ export function useApproval(projectId: number, approvalId: number, enabled = tru
           signal: controller.signal, expectedIdentity: lease.owner.identity,
         });
         requireOwner(lease.owner);
-        const approval = await parseApiResponse<Approval>(response, await approvalRowContract(), "/build/approvals/detail");
+        const approval = await parseApiResponse<ApprovalDetail>(response, await approvalDetailContract(), "/build/approvals/detail");
         requireOwner(lease.owner);
         if (controller.signal.aborted) throw new ApiError("Request was cancelled.", undefined, "ABORTED");
         if (approval.id !== approvalId || approval.projectId !== projectId || approval.orgId !== lease.owner.identity.orgId)

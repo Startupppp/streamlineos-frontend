@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { RequestApprovalSheet } from "./request-approval-sheet";
 import { DB_ENUMS } from "@/contracts/db-enums.generated";
 import {
@@ -48,7 +48,7 @@ jest.mock("@/hooks/api/build/projects", () => ({
   useProject: () => ({ data: { key: "PROJ", id: 42, orgId: "org-1", name: "Test Project", description: null, managedProductId: null, startDate: null, endDate: null, status: "ACTIVE", settings: null } }),
 }));
 
-let mockTicketsData: { data: { id: number; ticketNumber: number; title: string; status: string }[]; hasMore: boolean; nextCursor: null } = { data: [], hasMore: false, nextCursor: null };
+let mockTicketsData: { data: { id: number; ticketNumber: number; title: string; status: string; version: number }[]; hasMore: boolean; nextCursor: null } = { data: [], hasMore: false, nextCursor: null };
 
 jest.mock("@/hooks/api/build/tickets", () => ({
   useTickets: () => ({ data: mockTicketsData, isFetching: false }),
@@ -162,7 +162,7 @@ jest.mock("@/components/ui/loading-button", () => ({
 }));
 
 jest.mock("@/components/ui/combobox", () => ({
-  Combobox: () => <div data-testid="entity-combobox" />,
+  Combobox: ({ options, onChange }: { options: { value: string; label: string }[]; onChange: (value: string) => void }) => <select data-testid="entity-combobox" onChange={(event) => onChange(event.target.value)}><option value="">Select</option>{options.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select>,
 }));
 
 let capturedUserComboboxProjectId: number | undefined;
@@ -176,15 +176,11 @@ jest.mock("@/components/ui/user-combobox", () => ({
 const PROJECT_ID = 42;
 
 function renderSheet(onSubmit: (input: CreateApprovalInput) => void = jest.fn()) {
-  return render(
-    <RequestApprovalSheet
-      open
-      onOpenChange={jest.fn()}
-      onSubmit={onSubmit}
-      isPending={false}
-      projectId={PROJECT_ID}
-    />,
-  );
+  if (currentFormValues.entityType === "task" && !mockTicketsData.data.some((ticket) => String(ticket.id) === currentFormValues.entityId))
+    mockTicketsData = { data: [{ id: Number(currentFormValues.entityId), ticketNumber: 7, title: "Seed", status: "OPEN", version: 3 }], hasMore: false, nextCursor: null };
+  const view = render(<RequestApprovalSheet open onOpenChange={jest.fn()} onSubmit={onSubmit} isPending={false} projectId={PROJECT_ID} />);
+  if (currentFormValues.entityType === "task") fireEvent.change(screen.getByTestId("entity-combobox"), { target: { value: currentFormValues.entityId } });
+  return view;
 }
 
 describe("entityTypeLabel — label lookup and humanized fallback", () => {
@@ -276,7 +272,7 @@ describe("RequestApprovalSheet — form submit for each entity type", () => {
 
   it.each(SUBMIT_CASES)(
     "submits correct CreateApprovalInput for $entityType entity type",
-    ({ entityType, entityId, title, expectedEntityId }) => {
+    async ({ entityType, entityId, title, expectedEntityId }) => {
       currentFormValues = {
         entityType,
         entityId,
@@ -292,18 +288,15 @@ describe("RequestApprovalSheet — form submit for each entity type", () => {
 
       fireEvent.click(screen.getByRole("button", { name: /submit request/i }));
 
-      expect(onSubmit).toHaveBeenCalledTimes(1);
-      expect(onSubmit).toHaveBeenCalledWith<[CreateApprovalInput]>({
-        entityType,
-        entityId: expectedEntityId,
-        title,
-        approverId: "user-xyz",
-        level: 2,
-      });
+      await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+      const common = { entityId: expectedEntityId, title, approverId: "user-xyz", level: 2 };
+      const expected: CreateApprovalInput = entityType === "task"
+        ? { ...common, entityType, expectedArtifactVersion: 3 } : { ...common, entityType };
+      expect(onSubmit).toHaveBeenCalledWith<[CreateApprovalInput]>(expected);
     },
   );
 
-  it("includes reason and dueAt in the output when provided", () => {
+  it("includes reason and dueAt in the output when provided", async () => {
     currentFormValues = {
       entityType: "task",
       entityId: "1",
@@ -319,7 +312,7 @@ describe("RequestApprovalSheet — form submit for each entity type", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /submit request/i }));
 
-    expect(onSubmit).toHaveBeenCalledWith<[CreateApprovalInput]>({
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith<[CreateApprovalInput]>({
       entityType: "task",
       entityId: 1,
       title: "Approve task: Fix bug",
@@ -327,10 +320,11 @@ describe("RequestApprovalSheet — form submit for each entity type", () => {
       reason: "Urgent fix needed",
       dueAt: "2026-10-01",
       level: 3,
-    });
+      expectedArtifactVersion: 3,
+    }));
   });
 
-  it("omits reason and dueAt from the output when blank", () => {
+  it("omits reason and dueAt from the output when blank", async () => {
     currentFormValues = {
       entityType: "task",
       entityId: "1",
@@ -346,6 +340,7 @@ describe("RequestApprovalSheet — form submit for each entity type", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /submit request/i }));
 
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     const result = onSubmit.mock.calls[0][0] as CreateApprovalInput;
     expect(result).not.toHaveProperty("reason");
     expect(result).not.toHaveProperty("dueAt");
@@ -459,7 +454,7 @@ describe("BUG-041 — dirtyFields.title guard prevents auto-fill from overwritin
     mockSetValueRef = jest.fn();
     mockDirtyFields = {};
     mockTicketsData = {
-      data: [{ id: 1, ticketNumber: 7, title: "Fix login bug", status: "open" }],
+      data: [{ id: 1, ticketNumber: 7, title: "Fix login bug", status: "open", version: 3 }],
       hasMore: false,
       nextCursor: null,
     };
