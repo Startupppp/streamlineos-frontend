@@ -4,6 +4,33 @@ export interface PortalCapabilities {
   canViewAttachments: boolean;
   canViewComments: boolean;
   canSubmitChangeRequests: boolean;
+  canViewApprovals: boolean;
+  canViewInvoices: boolean;
+}
+
+export interface PortalDeliverable {
+  id: number;
+  name: string;
+  version: string;
+  releaseDate: string | null;
+  status: string;
+}
+
+export interface PortalApproval {
+  id: number;
+  title: string;
+  status: string;
+  dueAt: string | null;
+}
+
+export interface PortalInvoice {
+  id: string;
+  documentNumber: string | null;
+  issueDate: string;
+  dueDate: string | null;
+  grossMinor: number;
+  currency: string;
+  status: string;
 }
 
 export interface PortalProject {
@@ -58,6 +85,9 @@ export interface PortalProjectOverview {
   tasks: PortalTask[];
   attachments: PortalAttachment[];
   comments: PortalComment[];
+  deliverables: PortalDeliverable[];
+  approvals: PortalApproval[];
+  invoices: PortalInvoice[];
 }
 
 export interface AcceptInvitationResponse {

@@ -21,11 +21,16 @@ const VALID_OVERVIEW = {
     canViewAttachments: false,
     canViewComments: false,
     canSubmitChangeRequests: true,
+    canViewApprovals: false,
+    canViewInvoices: false,
   },
   milestones: [],
   tasks: [],
   attachments: [],
   comments: [],
+  deliverables: [],
+  approvals: [],
+  invoices: [],
 };
 
 describe("SPEC 7 — portal project list schema (Requirement C5, BE-24/BE-25 keyset cursor)", () => {
@@ -110,6 +115,8 @@ describe("SPEC 8 — portal project overview schema (Requirement C5)", () => {
         canViewAttachments: false,
         canViewComments: false,
         canSubmitChangeRequests: false,
+        canViewApprovals: false,
+        canViewInvoices: false,
       },
     };
     const result = backendPortalProjectOverviewSchema.safeParse(noCapOverview);

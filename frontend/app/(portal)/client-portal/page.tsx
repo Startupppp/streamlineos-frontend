@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { ErrorState } from "@/components/shared/error-state";
 import { PortalHeader } from "@/features/portal/components/portal-header";
 import { PortalProjectCard } from "@/features/portal/components/portal-project-card";
@@ -39,22 +40,9 @@ export default function PortalProjectsPage() {
   const { data, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useExternalPortalProjects();
 
-  const sentinelRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = sentinelRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting && hasNextPage && !isFetchingNextPage) {
-          void fetchNextPage();
-        }
-      },
-      { threshold: 0.1 },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+  const handleLoadMore = useCallback(() => {
+    void fetchNextPage();
+  }, [fetchNextPage]);
 
   const handleRetry = useCallback(() => {
     void refetch();
@@ -96,12 +84,14 @@ export default function PortalProjectsPage() {
                 <PortalProjectCard key={project.id} project={project} />
               ))}
             </div>
-            <div ref={sentinelRef} className="h-4" aria-hidden="true" />
-            {isFetchingNextPage && (
-              <div className="mt-4">
-                <ProjectsListSkeleton />
-              </div>
-            )}
+            <InfiniteScrollSentinel
+              hasNextPage={hasNextPage}
+              isFetchingNextPage={isFetchingNextPage}
+              onLoadMore={handleLoadMore}
+              label="Load more projects"
+              pending={<ProjectsListSkeleton />}
+              className="mt-4"
+            />
           </>
         )}
       </main>

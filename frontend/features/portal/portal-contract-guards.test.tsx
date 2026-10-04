@@ -46,6 +46,8 @@ const allGranted: PortalCapabilities = {
   canViewAttachments: true,
   canViewComments: true,
   canSubmitChangeRequests: true,
+  canViewApprovals: true,
+  canViewInvoices: true,
 };
 
 const overviewWithAllGranted: PortalProjectOverview = {
@@ -55,6 +57,9 @@ const overviewWithAllGranted: PortalProjectOverview = {
   tasks: [],
   attachments: [],
   comments: [],
+  deliverables: [],
+  approvals: [],
+  invoices: [],
 };
 
 const overviewWithoutCapabilities: PortalProjectOverview = {
@@ -63,6 +68,9 @@ const overviewWithoutCapabilities: PortalProjectOverview = {
   tasks: [],
   attachments: [],
   comments: [],
+  deliverables: [],
+  approvals: [],
+  invoices: [],
 };
 
 describe("PortalProjectCard — optional capabilities field", () => {
@@ -86,6 +94,8 @@ describe("PortalProjectCard — optional capabilities field", () => {
         canViewAttachments: false,
         canViewComments: false,
         canSubmitChangeRequests: false,
+        canViewApprovals: false,
+        canViewInvoices: false,
       },
     };
     withQueryClient(<PortalProjectCard project={projectWithCaps} />);
@@ -158,6 +168,8 @@ describe("PortalProjectDetail — case 3: partial grant (view true, submit false
         canViewAttachments: false,
         canViewComments: false,
         canSubmitChangeRequests: false,
+        canViewApprovals: false,
+        canViewInvoices: false,
       },
     };
     withQueryClient(<PortalProjectDetail data={milestonesOnlyOverview} />);

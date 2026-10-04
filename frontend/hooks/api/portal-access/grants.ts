@@ -72,6 +72,8 @@ export interface ActivateClientInput {
   canViewAttachments?: boolean;
   canViewComments?: boolean;
   canSubmitChangeRequests?: boolean;
+  canViewApprovals?: boolean;
+  canViewInvoices?: boolean;
 }
 
 export function useActivateClient() {

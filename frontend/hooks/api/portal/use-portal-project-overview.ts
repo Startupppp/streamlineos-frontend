@@ -20,6 +20,8 @@ export const backendPortalProjectOverviewSchema = z.object({
       canViewAttachments: z.boolean(),
       canViewComments: z.boolean(),
       canSubmitChangeRequests: z.boolean(),
+      canViewApprovals: z.boolean(),
+      canViewInvoices: z.boolean(),
     })
     .optional(),
   milestones: z.array(
@@ -52,6 +54,34 @@ export const backendPortalProjectOverviewSchema = z.object({
       body: z.string(),
       authorName: z.string().nullable(),
       createdAt: z.string(),
+    }),
+  ),
+  deliverables: z.array(
+    z.object({
+      id: z.number().int(),
+      name: z.string(),
+      version: z.string(),
+      releaseDate: z.string().nullable(),
+      status: z.string(),
+    }),
+  ),
+  approvals: z.array(
+    z.object({
+      id: z.number().int(),
+      title: z.string(),
+      status: z.string(),
+      dueAt: z.string().nullable(),
+    }),
+  ),
+  invoices: z.array(
+    z.object({
+      id: z.string(),
+      documentNumber: z.string().nullable(),
+      issueDate: z.string(),
+      dueDate: z.string().nullable(),
+      grossMinor: z.number().int(),
+      currency: z.string(),
+      status: z.string(),
     }),
   ),
 });

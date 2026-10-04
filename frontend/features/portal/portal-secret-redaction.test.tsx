@@ -160,10 +160,13 @@ describe("SPEC C6 — portal session JWT (grant token) is never rendered in the 
     (getPortalToken as jest.Mock).mockReturnValue(GRANT_TOKEN);
     (usePortalGuard as jest.Mock).mockReturnValue({ isReady: true });
     (useExternalPortalProjects as jest.Mock).mockReturnValue({
-      data: [STUB_PROJECT],
+      data: { pages: [{ data: [STUB_PROJECT], hasMore: false, nextCursor: null }] },
       isLoading: false,
       isError: false,
       refetch: jest.fn(),
+      fetchNextPage: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
     });
 
     const { default: PortalProjectsPage } = await import(
@@ -181,10 +184,13 @@ describe("SPEC C6 — internal grant identifier is never exposed in the external
     (getPortalToken as jest.Mock).mockReturnValue("valid-portal-jwt");
     (usePortalGuard as jest.Mock).mockReturnValue({ isReady: true });
     (useExternalPortalProjects as jest.Mock).mockReturnValue({
-      data: [{ ...STUB_PROJECT, _internalGrantId: GRANT_ID }],
+      data: { pages: [{ data: [{ ...STUB_PROJECT, _internalGrantId: GRANT_ID }], hasMore: false, nextCursor: null }] },
       isLoading: false,
       isError: false,
       refetch: jest.fn(),
+      fetchNextPage: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
     });
 
     const { default: PortalProjectsPage } = await import(
@@ -200,10 +206,13 @@ describe("SPEC C6 — internal grant identifier is never exposed in the external
     (getPortalToken as jest.Mock).mockReturnValue("valid-portal-jwt");
     (usePortalGuard as jest.Mock).mockReturnValue({ isReady: true });
     (useExternalPortalProjects as jest.Mock).mockReturnValue({
-      data: [STUB_PROJECT],
+      data: { pages: [{ data: [STUB_PROJECT], hasMore: false, nextCursor: null }] },
       isLoading: false,
       isError: false,
       refetch: jest.fn(),
+      fetchNextPage: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
     });
 
     const { default: PortalProjectsPage } = await import(
