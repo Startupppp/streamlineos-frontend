@@ -21,15 +21,15 @@ export function PublicFormView({ formToken }: PublicFormViewProps) {
 
   const schema = useMemo(() => buildDynamicSchema(fields), [fields]);
 
-  const defaultValues = useMemo<Record<string, string>>(() => {
-    const vals: Record<string, string> = {};
+  const defaultValues = useMemo<Record<string, unknown>>(() => {
+    const vals: Record<string, unknown> = {};
     for (const f of fields) {
       vals[f.key] = "";
     }
     return vals;
   }, [fields]);
 
-  const { control, handleSubmit, formState: { errors } } = useForm<Record<string, string>>({
+  const { control, handleSubmit, formState: { errors } } = useForm<Record<string, unknown>>({
     resolver: zodResolver(schema),
     defaultValues,
   });
@@ -39,9 +39,9 @@ export function PublicFormView({ formToken }: PublicFormViewProps) {
   const form = formQuery.data;
 
   const handleFormSubmit = useCallback(
-    (values: Record<string, string>) => {
+    (values: Record<string, unknown>) => {
       if (!form) return;
-      const payload: Record<string, string> = {};
+      const payload: Record<string, unknown> = {};
       for (const field of form.fields) {
         const val = values[field.key];
         if (val !== undefined) payload[field.key] = val;
@@ -118,7 +118,7 @@ export function PublicFormView({ formToken }: PublicFormViewProps) {
                     render={({ field: controllerField }) => (
                       <FieldInput
                         field={field}
-                        value={controllerField.value ?? ""}
+                        value={typeof controllerField.value === "string" ? controllerField.value : ""}
                         onChange={controllerField.onChange}
                         errorMessage={errorMessage}
                       />

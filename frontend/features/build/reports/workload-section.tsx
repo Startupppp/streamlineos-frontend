@@ -37,10 +37,10 @@ export function WorkloadSection({ projectId }: WorkloadSectionProps) {
   const rows = useMemo(() => {
     const members = membersPage?.data ?? [];
     return members.map((m) => {
-      const capacity = capacityMap.get(m.userId);
+      const capacity = capacityMap.get(m.id);
       return {
-        userId: m.userId,
-        name: getUserDisplayName(m.user),
+        id: m.id,
+        name: getUserDisplayName(m),
         estimateHours: capacity?.estimateHours ?? null,
         capacityHours: capacity?.capacityHours ?? null,
         isOverAllocated: capacity?.isOverAllocated ?? false,
@@ -56,7 +56,7 @@ export function WorkloadSection({ projectId }: WorkloadSectionProps) {
     <div className="flex flex-col gap-2">
       {rows.map((row) => (
         <div
-          key={row.userId}
+          key={row.id}
           className="flex items-center justify-between rounded-md border p-3"
         >
           <span className="text-sm font-medium">{row.name}</span>

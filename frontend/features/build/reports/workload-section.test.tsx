@@ -41,10 +41,16 @@ function makeCapacity(overrides: Partial<MemberCapacityData> = {}): MemberCapaci
   };
 }
 
-function memberRow(userId: string, name: string) {
+function memberRow(id: string, name: string) {
   return {
-    userId,
-    user: { id: userId, name, email: `${userId}@example.com`, firstName: null, lastName: null, image: null },
+    id,
+    name,
+    firstName: null as string | null,
+    lastName: null as string | null,
+    image: null as string | null,
+    email: `${id}@example.com`,
+    role: "MEMBER",
+    joinedAt: new Date().toISOString(),
   };
 }
 

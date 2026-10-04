@@ -41,7 +41,7 @@ export function ProjectBoardCalendar({ tickets }: ProjectBoardCalendarProps) {
   if (sortedDates.length === 0) {
     return (
       <EmptyState
-        icon={Calendar}
+        illustration={<Calendar />}
         title="No due dates set"
         description="Tickets with due dates will appear here."
       />

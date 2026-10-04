@@ -17,7 +17,7 @@ export function FieldInput({
 }: {
   field: FormField;
   value: string;
-  onChange: (v: string) => void;
+  onChange: (v: unknown) => void;
   errorMessage?: string;
 }) {
   const handleSelectChange = useCallback(

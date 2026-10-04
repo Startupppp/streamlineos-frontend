@@ -251,7 +251,7 @@ function DynamicIntakeFormInner({ fields, token }: DynamicIntakeFormInnerProps) 
               field.type === "checkbox" ? false : field.type === "multiselect" ? [] : ""
             }
             render={({ field: controllerField }) => {
-              function handleFieldChange(v: string) {
+              function handleFieldChange(v: unknown) {
                 controllerField.onChange(v);
               }
               return (
