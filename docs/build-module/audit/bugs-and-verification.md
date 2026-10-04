@@ -1,5 +1,427 @@
 # Bugs and verification ledger
 
+## Forms, Feedbucket and normal activation evidence — 2026-10-04
+
+Classification: Current verified only for the exact source, focused gates and normal synthetic API/read-only outcomes below; Current unverified for complete requirements and release. Source60 uses the existing canonical public-field renderer; source61 serializes source conversion and queues publication after the enclosing commit. Both are independently reviewed and committed. The live backend still serves55, so the API62 observations do not prove newly committed58/61 behavior.
+
+No broad checkbox or D/I/T/R/B/L stage advances:522 uniquely identified tasks,110 checked,412 open. The ordinary OTP → NextAuth credentials → organization setup → Project → Ticket path uses separate reserved synthetic API identity and server-issued authority; it does not complete the separate browser login awaiting private user code entry. No token, OTP, cookie, magic link, raw mail, secret or environment value is recorded. No live Ticket comment was posted.
+
+Payload SHA-256: `f2c58dd9e3156c960195195c09e4dfb41fe1626dfa7978bf79eda9af4610f34c` (UTF-8 JSON between fences, excluding fence newlines). Exact commands/ownership remain in [work claims](../implementation/WORK-CLAIMS.md).
+
+```json
+{
+  "source": {
+    "classification": "Current verified for bounded source and focused gates; Current unverified for full requirements",
+    "at": "2026-10-04T05:52:18.927Z",
+    "packages": [
+      {
+        "number": 60,
+        "repository": "outer",
+        "revision": "683e3e7572f8864561041e41a52cf049d39a5d4c",
+        "tasks": [
+          "BT-1334e7840230",
+          "BT-6510aa3284df"
+        ],
+        "files": [
+          {
+            "path": "frontend/features/build/forms/field-input.tsx",
+            "sha256": "906214efb0309ed1c8255d6374a274065800639a625795f0d56a56e490f639c9",
+            "committedBlobSha256": "906214efb0309ed1c8255d6374a274065800639a625795f0d56a56e490f639c9"
+          },
+          {
+            "path": "frontend/features/build/forms/public-form-page-states.test.tsx",
+            "sha256": "5e2c580b7a6acb2fe7efa09ca83b13a55e7bb8ab5181fe5c38a17a4fccd5fd64",
+            "committedBlobSha256": "5e2c580b7a6acb2fe7efa09ca83b13a55e7bb8ab5181fe5c38a17a4fccd5fd64"
+          }
+        ],
+        "meaningfulRed": "Actual PublicFormPage/View/RHF/Radix canonical dropdown and long_text RED2 before renderer edit",
+        "focused": "C and root: two suites,42 tests passed",
+        "lint": "Exact two-path strict ESLint and diff checks passed",
+        "changedTypeScript": "Initial TS2345 in incoherent idle/error mock retained; coherent flags/data/variables correction; final 8 GiB scoped pass",
+        "productionTypeScript": "Frontend production pass, session89864 exit0",
+        "review": "Backend agent independent CLEAR; root hash/source review",
+        "gaps": [
+          "Actual published Form/answers/database/public authority/version proof",
+          "Browser keyboard/mobile",
+          "Deployment and operations"
+        ],
+        "retainedFailure": "First post-edit Radix jsdom pointer support failed; test support corrected without source bypass"
+      },
+      {
+        "number": 61,
+        "repository": "backend",
+        "revision": "2eaa96b492964e0adbaaecec8c6b054fdf234da1",
+        "tasks": [
+          "BT-6aad874e5b9c",
+          "BT-abd16670ef91"
+        ],
+        "files": [
+          {
+            "path": "backend/src/modules/feedbucket/feedbucket-submissions.service.ts",
+            "sha256": "d6bd84d1fbcf525a94ae2298be8c51b561f1b33f69b941b67139fcc5e3d55c34",
+            "committedBlobSha256": "33a1c16866389bdabd20e9da4f3ba3af7417d23ddb5196ae80aa0ec692e69855"
+          },
+          {
+            "path": "backend/src/modules/feedbucket/lib/feedbucket-submit.ts",
+            "sha256": "a94f4907e97e8cb7fd6f27a0435e953fd728de593cd8e28255fe63237dc49605",
+            "committedBlobSha256": "a94f4907e97e8cb7fd6f27a0435e953fd728de593cd8e28255fe63237dc49605"
+          },
+          {
+            "path": "backend/src/modules/build/core/tickets/projects-tickets-create.service.ts",
+            "sha256": "17ce44a086f84867655cf0098989ee77473592063d56fad14af00fde7060543d",
+            "committedBlobSha256": "74db481ddfb50f8921031f87b536f11eff4e9daa1adff5a159c55c2b3003ccf8"
+          },
+          {
+            "path": "backend/src/modules/feedbucket/feedbucket-convert-project-access.spec.ts",
+            "sha256": "272d8570df44964b7b8620a811ec7602428a1bdd82540404be3be85502bb51ba",
+            "committedBlobSha256": "04580ffe5ba2109ec2119553c4abeee3b12ff6eabf6ca539b3975ba293301cc5"
+          },
+          {
+            "path": "backend/src/modules/feedbucket/tests/feedbucket-auto-link-deferred.spec.ts",
+            "sha256": "4eb9ec2b6ded8bae8e23928bfd78ff6016ffb26c568ed5e1256a36eb59c6cb8f",
+            "committedBlobSha256": "8b9fcf53a38a182c57df47d63aa245c98ee44586690d2c7061ce09e8d66ae6cd"
+          },
+          {
+            "path": "backend/src/modules/build/core/tickets/projects-tickets-create.savepoint.spec.ts",
+            "sha256": "1c1e63dfcff50d8708d6121d5320c320dd6246a60dfa1ba5a563e93c2e15e679",
+            "committedBlobSha256": "037acefcd4c421dc944c6de87bb4fd46728a859cf0551658c40fa23789be6fd5"
+          },
+          {
+            "path": "backend/src/modules/feedbucket/__tests__/feedbucket-build-notification.spec.ts",
+            "sha256": "c48e73811a22e00538855823dc081ca7c84655b99db67cbc17dd943d03f8b2df",
+            "committedBlobSha256": "c48e73811a22e00538855823dc081ca7c84655b99db67cbc17dd943d03f8b2df"
+          }
+        ],
+        "meaningfulRed": "Three seam REDs: repeated basic conversion, repeated committed auto-hook and publication before outer commit",
+        "focused": "C and root: four suites,48 tests passed",
+        "lint": "Exact seven-path strict ESLint and diff checks passed",
+        "changedTypeScript": "10 GiB scoped pass, session77893 exit0",
+        "productionTypeScript": "Backend production pass, fresh root execution exit0 at 05:50Z",
+        "review": "Frontend agent independent Standards/Spec CLEAR on all seven hashes; root source/hash review",
+        "compatibility": "Initial4 suites passed/2failed,41 tests passed/21failed; affected notice fixture corrected. Final5suites passed/1failed,42tests passed/20failed",
+        "retainedFailure": "Twenty unchanged AI fixture failures reach missing AccessService.scopeFor before mocked Ticket adapter. No pre61 execution baseline; static attribution only. Excluded AI source/test remain unchanged.",
+        "gaps": [
+          "Actual PostgreSQL source lock/concurrent mapping/rollback",
+          "Real HTTP response/RLS/cache/event proof",
+          "Runner refuses Feedbucket writes and reserved org Feedbucket disabled",
+          "Header replay, hard-delete durable mapping and complete authority races",
+          "Browser/mobile/deployment/operations"
+        ]
+      }
+    ],
+    "newFiles": [],
+    "deletedFiles": [],
+    "tracker": {
+      "total": 522,
+      "checked": 110,
+      "open": 412,
+      "checkboxChanges": 0,
+      "stageChanges": 0
+    },
+    "runtimeBackendRevision": "5dcafa517ca634e658345c08c4085899900279a3",
+    "hashBasis": "sha256 is the reviewed frozen working-tree byte hash; committedBlobSha256 is the exact Git blob hash. CRLF/LF normalization may differ without source-content change."
+  },
+  "runtime": {
+    "classification": "Current verified for named normal API and read-only outcomes; Current unverified for full journeys",
+    "runtime": {
+      "frontendPort": 1000,
+      "backendPort": 1001,
+      "backendRevision": "5dcafa517ca634e658345c08c4085899900279a3",
+      "source60And61Served": false,
+      "providersAndBackgroundWorkers": false,
+      "capturedMailOnly": true
+    },
+    "before": {
+      "at": "2026-10-04T05:16:18.659Z",
+      "exactReservedUserCount": 0,
+      "readOnly": true,
+      "scope": "Older Flow02 application-role guard plus GLOBAL exact new-email identity lookup; not tenant-only signup proof"
+    },
+    "authentication": {
+      "at": "2026-10-04T05:20:02.523Z",
+      "otpStatus": 200,
+      "credentialStatus": 200,
+      "sessionStatus": 200,
+      "reservedIdentityMatches": true,
+      "userIdShape": true,
+      "registeredSessionShape": true,
+      "backendBearerShape": true,
+      "orgPresent": false,
+      "organizationAccess": "none",
+      "enabledModules": [],
+      "browserProof": false
+    },
+    "activation": {
+      "first": {
+        "at": "2026-10-04T05:21:11.350Z",
+        "status": 201,
+        "success": true,
+        "orgIdShape": true,
+        "autoLoginTokenShape": true,
+        "errorCode": null,
+        "selectedModules": [
+          "build"
+        ],
+        "browserProof": false,
+        "responseShape": "top-level declared success/orgId/autoLoginToken; initial evidence extractor incorrectly assumed data envelope"
+      },
+      "requestSchema": "Authoritative organization setup schema",
+      "responseSchema": "Backend orgSetupCompleteResponseSchema parses actual top-level JSON",
+      "renewal": {
+        "sessionStatus": 200,
+        "sameUserAndOrg": true,
+        "organizationAccess": "active",
+        "serverOwner": true,
+        "enabledModules": [
+          "build",
+          "kb",
+          "chat"
+        ]
+      },
+      "replay": {
+        "status": 201,
+        "sameOrganization": true,
+        "autoLoginTokenOmitted": true,
+        "responseContract": true
+      },
+      "statusRead": {
+        "status": 200,
+        "ready": true,
+        "provisioningStatus": "completed",
+        "wireContract": "frontend/hooks/api/org-setup-schema.ts"
+      },
+      "persisted": {
+        "at": "2026-10-04T05:27:05.884Z",
+        "applicationRoleReadOnly": true,
+        "currentOrgIdentityGuard": true,
+        "setupCompleted": true,
+        "organizationStatus": "ACTIVE",
+        "ownerMembership": [
+          {
+            "role": "OWNER",
+            "is_owner": true,
+            "status": "ACTIVE"
+          }
+        ],
+        "userVerified": true,
+        "userActive": true,
+        "otp": {
+          "total": 1,
+          "used": 1
+        },
+        "modules": [
+          {
+            "module_key": "accounting",
+            "enabled": false
+          },
+          {
+            "module_key": "billing",
+            "enabled": false
+          },
+          {
+            "module_key": "blog",
+            "enabled": true
+          },
+          {
+            "module_key": "build",
+            "enabled": true
+          },
+          {
+            "module_key": "calendar",
+            "enabled": true
+          },
+          {
+            "module_key": "chat",
+            "enabled": true
+          },
+          {
+            "module_key": "crm",
+            "enabled": false
+          },
+          {
+            "module_key": "directory",
+            "enabled": true
+          },
+          {
+            "module_key": "feedbucket",
+            "enabled": false
+          },
+          {
+            "module_key": "home",
+            "enabled": true
+          },
+          {
+            "module_key": "hr",
+            "enabled": false
+          },
+          {
+            "module_key": "inventory",
+            "enabled": false
+          },
+          {
+            "module_key": "kb",
+            "enabled": true
+          },
+          {
+            "module_key": "mail",
+            "enabled": true
+          },
+          {
+            "module_key": "notifications",
+            "enabled": true
+          },
+          {
+            "module_key": "payroll",
+            "enabled": false
+          },
+          {
+            "module_key": "settings",
+            "enabled": false
+          },
+          {
+            "module_key": "sign",
+            "enabled": false
+          },
+          {
+            "module_key": "support",
+            "enabled": false
+          },
+          {
+            "module_key": "surveys",
+            "enabled": false
+          }
+        ],
+        "outbox": [
+          {
+            "event_type": "organization.setup.completed",
+            "delivery_state": "DELIVERED",
+            "count": 1
+          }
+        ],
+        "secretColumnsSelected": false,
+        "browserProof": false,
+        "retainedFailures": [
+          "first identity query before explicit tenant context returned zero rows and refused; readonly rollback/connection closed",
+          "next proof completed reads but evidence assignment used absent REPL binding; readonly connection closed; no write"
+        ]
+      }
+    },
+    "project": {
+      "firstAt": "2026-10-04T05:29:46.946Z",
+      "firstStatus": 201,
+      "replayStatus": 201,
+      "sameReturnedRecord": true,
+      "readStatus": 200,
+      "requestSchema": "createProjectSchema",
+      "wireSchemas": [
+        "projectsCreateProjectResponseSchema",
+        "projectsByIdGetProjectResponseSchema"
+      ]
+    },
+    "ticket": {
+      "firstAt": "2026-10-04T05:30:51.243Z",
+      "firstStatus": 201,
+      "replayStatus": 201,
+      "sameReturnedRecord": true,
+      "readStatus": 200,
+      "requestSchema": "createTicketSchema",
+      "wireSchemas": [
+        "projectsTicketsCreateTicketResponseSchema",
+        "projectsTicketsGetTicketResponseSchema"
+      ],
+      "statusMutation": {
+        "at": "2026-10-04T05:32:30.412Z",
+        "status": 200,
+        "version": 2,
+        "wireSchema": "projectsTicketsUpdateTicketResponseSchema"
+      },
+      "staleMutation": {
+        "status": 409,
+        "errorCode": "PROJECTS_TICKET_CONFLICT",
+        "not500": true
+      },
+      "tenantRead": {
+        "knownExistingOtherReservedTicket": true,
+        "freshOwnControl": 200,
+        "foreignTicket": 404,
+        "not500": true,
+        "firstExpiredOrInvalidAuthenticationResult": 401,
+        "first401IsNotTenantProof": true
+      }
+    },
+    "postWrites": {
+      "at": "2026-10-04T05:51:04.540Z",
+      "appRoleReadOnly": true,
+      "currentOrgIdentityGuard": true,
+      "project": [
+        {
+          "status": "ACTIVE",
+          "same_key_count": 1
+        }
+      ],
+      "ticket": [
+        {
+          "status": "IN_PROGRESS",
+          "priority": "HIGH",
+          "version": 2,
+          "same_title_count": 1
+        }
+      ],
+      "assignments": [
+        {
+          "count": 1
+        }
+      ],
+      "activity": [
+        {
+          "action": "created",
+          "from_value": null,
+          "to_value": null,
+          "count": 1
+        },
+        {
+          "action": "status_changed",
+          "from_value": "TODO",
+          "to_value": "IN_PROGRESS",
+          "count": 1
+        }
+      ],
+      "comments": [
+        {
+          "count": 0
+        }
+      ],
+      "setupEvents": [
+        {
+          "event_type": "organization.setup.completed",
+          "delivery_state": "DELIVERED",
+          "count": 1
+        }
+      ],
+      "secretColumnsSelected": false,
+      "browserProof": false
+    },
+    "retainedVerificationMethodFailures": [
+      "Initial setup extractor wrongly expected data envelope; actual top-level authoritative contract passed",
+      "Initial setup-status parser used backend Date schema on wire strings; existing frontend wire schema passed",
+      "First read-only new-org identity lookup omitted explicit tenant context, returned0 and refused; no write",
+      "Second read-only evidence assignment referred to an absent REPL binding; transaction closed, no write",
+      "First foreign-ticket attempt401; normal NextAuth session refresh followed by own200/foreign404 is the only tenant denial proof"
+    ],
+    "limits": [
+      "Browser53 synthetic account is distinct and awaiting human OTP entry; API62 credentials are not injected into browser",
+      "No full browser/mobile/role/module/object/PAT matrix",
+      "No cache notification fanout/physical concurrency/deployment/operations proof",
+      "No comment write",
+      "Modules query limited20 is bounded observation, not whole catalog",
+      "Old51–59 initial frontend API misconfiguration and unknown server-side effect remain retained"
+    ]
+  }
+}
+```
+
+Every named failed gate/method and bounded proof remains retained. Physical Feedbucket locking, public Form persistence, complete permission/tenant/mobile/browser coverage and release/operations are open. No source or evidence file is created or deleted.
+
 ## Synthetic runtime and ticket interaction source — 2026-10-04
 
 Classification: Current verified for the exact source/gate and bounded HTTP/read-only observations below; Current unverified for complete customer/release behavior. Eight disjoint packages reuse existing owners and have meaningful behavioral REDs, root focused repeats, exact lint/diff, changed-file/production TypeScript and frozen independent reviews.52 strict source lint remains failed with three existing warnings; the passing default lint is not a strict pass.54 repairs timestamp test fixtures without relaxing production contracts;57 repairs the existing member dirty/pending boundary. No source/helper/schema/API/component/test/Markdown was added or deleted by51–59.

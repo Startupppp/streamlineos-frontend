@@ -1,5 +1,9 @@
 # Cleanup manifest
 
+## Existing Forms and feedback owners retained — 2026-10-04
+
+Classification: active source and historical evidence, retained.60/61 change nine existing source/test files only. Their exact SHA-256 hashes, source revisions, reviewers, focused/TypeScript/lint validation and remaining gaps are recorded once in [canonical receipt](./bugs-and-verification.md#forms-feedbucket-and-normal-activation-evidence--2026-10-04), payload SHA `f2c58dd9e3156c960195195c09e4dfb41fe1626dfa7978bf79eda9af4610f34c`. Existing renderer, conversion/source reader, post-submit seam and canonical Ticket adapter own the behavior. No helper, service, schema, API, component, query key, permission, Markdown or test file is created/deleted; no inbound reference is removed. Unique research, screenshots, failed gates, unresolved findings and unrelated files remain preserved. No deletion manifest entry is inferred from a source edit.
+
 ## Existing interaction and runtime owner retention — 2026-10-04
 
 Classification: active source/generated artifact/historical evidence, retained.51–59 change only existing exact source/test owners; no file is created or deleted. The [canonical receipt](./bugs-and-verification.md#synthetic-runtime-and-ticket-interaction-source--2026-10-04) records every frozen path/hash, source commit, independent review and validation result once (payload SHA256 `6a5c8164d92e0f39a82a1f97c4104ee4457652757b201dfd809e08bb8f2b5247`). No unique research/screenshot/test evidence or unresolved finding is superseded merely by this checkpoint. No inbound route/import/reference is removed. Existing boundary, Ticket creator/access/relations/links, forms, navigation primitives, query keys and contracts remain single owners.
