@@ -18,6 +18,9 @@ import {
   SparklesIcon,
   ZapIcon,
 } from "@animateicons/react/lucide";
+import { z } from "zod";
+import { isValidPhoneNumber } from "react-phone-number-input";
+import { IMPLAUSIBLE_PHONE_MESSAGE, isImplausiblePhone } from "@/lib/implausible-phone";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PhoneInput } from "@/components/ui/phone-input";
@@ -30,7 +33,6 @@ import {
 } from "@/components/ui/select";
 import type { ZodIssue } from "zod";
 import {
-  basicsStepSchema,
   COMPANY_NAME_MAX_LENGTH,
   FULL_NAME_MAX_LENGTH,
   INDUSTRY_MAX_LENGTH,
@@ -41,6 +43,31 @@ import {
   INDUSTRY_TEMPLATE_HINTS,
   TEAM_SIZES,
 } from "../lib/constants";
+
+const basicsStepSchema = z.object({
+  fullName: z
+    .string()
+    .trim()
+    .min(1, "Enter your full name.")
+    .max(FULL_NAME_MAX_LENGTH, `Your name must be ${FULL_NAME_MAX_LENGTH} characters or fewer.`),
+  goals: z.array(z.string()).min(1, "Select at least one goal."),
+  industry: z
+    .string()
+    .trim()
+    .min(1, "Select or enter your industry.")
+    .max(INDUSTRY_MAX_LENGTH, `Industry must be ${INDUSTRY_MAX_LENGTH} characters or fewer.`),
+  companyName: z
+    .string()
+    .trim()
+    .min(1, "Enter your company name.")
+    .max(COMPANY_NAME_MAX_LENGTH, `Company name must be ${COMPANY_NAME_MAX_LENGTH} characters or fewer.`),
+  teamSize: z.string().min(1, "Select your team size."),
+  phone: z
+    .string()
+    .min(1, "Enter your mobile number.")
+    .refine((val) => isValidPhoneNumber(val), "Enter a valid mobile number.")
+    .refine((val) => !isImplausiblePhone(val), IMPLAUSIBLE_PHONE_MESSAGE),
+});
 import type { WizardData } from "../lib/wizard-data-schema";
 import { GoalChip } from "./goal-chip";
 import { NavButtons } from "./nav-buttons";

@@ -33,7 +33,7 @@ export type OrgSetupPayload = {
   invitees?: OrgSetupInvitee[];
 };
 
-export type OrgSetupResponse = { success: boolean; orgId: string; autoLoginToken?: string };
+export type OrgSetupResponse = { success: boolean; orgId: string; autoLoginToken?: string; destination: string };
 
 export type OrgSetupSession = {
   id: number;
@@ -87,6 +87,73 @@ export function useSkipOrgSetupMutation() {
     mutationKey: ["org", "setup", "skip"],
     mutationFn: (payload: { reason?: string } = {}) =>
       apiClient.post<OrgSetupResponse>("/org/setup/skip", payload, undefined, orgSetupSkipContract),
+    retry: false,
+  });
+}
+
+const orgSetupDraftSaveContract = lazyContract(() =>
+  import("@/hooks/api/org-setup-schema").then((m) => m.orgSetupDraftSaveContract),
+);
+const orgSetupDraftContract = lazyContract(() =>
+  import("@/hooks/api/org-setup-schema").then((m) => m.orgSetupDraftContract),
+);
+const orgSetupPreviewContract = lazyContract(() =>
+  import("@/hooks/api/org-setup-schema").then((m) => m.orgSetupPreviewContract),
+);
+const orgSetupActivateContract = lazyContract(() =>
+  import("@/hooks/api/org-setup-schema").then((m) => m.orgSetupActivateContract),
+);
+
+export type OrgSetupDraftSavePayload = {
+  revision: number;
+  stepData: Record<string, unknown>;
+  expiresAt: string;
+};
+
+export type OrgSetupPreviewPayload = {
+  modules: string[];
+  targetOrgId?: string;
+};
+
+export type OrgSetupActivatePayload = {
+  idempotencyKey: string;
+  modules: string[];
+};
+
+export function useOrgSetupDraftSaveMutation() {
+  return useMutation({
+    mutationKey: ["org", "setup", "draft", "save"],
+    mutationFn: (payload: OrgSetupDraftSavePayload) =>
+      apiClient.put("/org/setup/draft", payload, undefined, orgSetupDraftSaveContract),
+    retry: false,
+  });
+}
+
+export function useOrgSetupDraftQuery(enabled = true) {
+  return useQuery({
+    queryKey: platformCoreQueryKeys.orgSetup.draft(),
+    queryFn: ({ signal }) =>
+      apiClient.get("/org/setup/draft", undefined, signal, orgSetupDraftContract),
+    staleTime: 60_000,
+    retry: false,
+    enabled,
+  });
+}
+
+export function useOrgSetupPreviewMutation() {
+  return useMutation({
+    mutationKey: ["org", "setup", "preview"],
+    mutationFn: (payload: OrgSetupPreviewPayload) =>
+      apiClient.post("/org/setup/selection/preview", payload, undefined, orgSetupPreviewContract),
+    retry: false,
+  });
+}
+
+export function useOrgSetupActivateMutation() {
+  return useMutation({
+    mutationKey: ["org", "setup", "activate"],
+    mutationFn: (payload: OrgSetupActivatePayload) =>
+      apiClient.post("/org/setup/activate", payload, { timeoutMs: 5 * 60_000 }, orgSetupActivateContract),
     retry: false,
   });
 }

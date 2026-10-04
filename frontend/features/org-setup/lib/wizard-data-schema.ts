@@ -26,9 +26,11 @@ export const wizardDataSchema = z.object({
   goals: z.array(z.string()).catch([]),
   industry: z.string().catch(""),
   companyName: z.string().catch(""),
+  displayName: z.string().catch(""),
   fullName: z.string().catch(""),
   teamSize: z.string().catch(""),
   country: optionalString,
+  region: optionalString,
   timezone: optionalString,
   phone: z.string().catch(""),
   currency: optionalString,
@@ -38,6 +40,7 @@ export const wizardDataSchema = z.object({
   installedApps: z.array(z.string()).catch([]),
   modules: z.array(z.enum(ORG_MODULE_KEYS)).catch([]),
   invitees: z.array(inviteeSchema).catch([]),
+  moduleAnswers: z.record(z.record(z.unknown())).catch({}),
 });
 
 export type Invitee = z.infer<typeof inviteeSchema>;

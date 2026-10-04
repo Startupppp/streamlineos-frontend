@@ -73,6 +73,7 @@ export function GenerationProgressStage({
         onBackToProducts={onBackToProducts}
         onOpenOrganization={onOpenOrganization}
         onGoToInvitations={onGoToInvitations}
+        onContinueAnyway={onContinueAnyway}
         isNavigating={isNavigating}
       />
     );

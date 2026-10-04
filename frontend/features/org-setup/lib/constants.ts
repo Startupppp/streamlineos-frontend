@@ -2,10 +2,10 @@ import type { OrgModuleKey, WizardData } from "./wizard-data-schema";
 
 export const DRAFT_KEY = "org-setup-draft";
 
-export type StepId = "welcome" | "basics" | "invite";
+export type StepId = "welcome" | "basics" | "workspace" | "products" | "invite";
 
 export function getStepSequence(): StepId[] {
-  return ["welcome", "basics", "invite"];
+  return ["welcome", "workspace", "products", "invite"];
 }
 
 export function resolveStepIndex(
@@ -130,18 +130,24 @@ export const GENERATION_STEPS: readonly string[] = [
 export const STEP_TITLES: Record<StepId, string> = {
   welcome: "Welcome",
   basics: "Basics",
-  invite: "Launch",
+  workspace: "Workspace",
+  products: "Products",
+  invite: "People",
 };
 
 export const STEP_SUBTITLES: Record<StepId, string> = {
   welcome: "Let's get your organization ready to run your business.",
   basics: "Goals unlock modules. Add industry and company, then launch.",
-  invite: "Bring your team in, then build your organization.",
+  workspace: "Name your workspace and set your preferences.",
+  products: "Choose the products you want to start with.",
+  invite: "Invite your team — or skip and do it later.",
 };
 
 export const ESTIMATED_MINUTES_REMAINING: Record<StepId, number> = {
   welcome: 2,
   basics: 2,
+  workspace: 2,
+  products: 1,
   invite: 1,
 };
 
@@ -160,10 +166,12 @@ export const DEFAULT_DATA: WizardData = {
   goals: [],
   industry: "",
   companyName: "",
+  displayName: "",
   fullName: "",
   teamSize: "",
   phone: "",
   installedApps: DEFAULT_APPS,
   modules: DEFAULT_APPS,
   invitees: [],
+  moduleAnswers: {},
 };

@@ -39,12 +39,14 @@ type StepInviteLaunchProps = {
   data: WizardData;
   onBack: () => void;
   onChangeInvitees: (invitees: Invitee[]) => void;
+  onSkip?: () => void;
 };
 
 export function StepInviteLaunch({
   data,
   onChangeInvitees,
   onBack,
+  onSkip,
 }: StepInviteLaunchProps) {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<string>(DEFAULT_INVITE_ROLE);
@@ -262,6 +264,23 @@ export function StepInviteLaunch({
       {(accessError || currentAccessError) && (
         <p role="alert" className="text-xs text-destructive">
           {accessError ?? currentAccessError}
+        </p>
+      )}
+
+      {onSkip && (
+        <button
+          type="button"
+          className="text-xs text-muted-foreground underline-offset-2 hover:underline"
+          onClick={onSkip}
+          disabled={isPending}
+        >
+          Skip for now
+        </button>
+      )}
+
+      {data.invitees.length > 0 && (
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Your team
         </p>
       )}
 

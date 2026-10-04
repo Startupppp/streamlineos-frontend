@@ -5,6 +5,7 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { WizardSplitShell } from "@/components/wizard-shell";
 import { STEP_SUBTITLES } from "../lib/constants";
 import type { StepId } from "../lib/constants";
+import type { SyncStatus } from "../lib/draft";
 import { toPreviewSnapshot } from "../lib/preview-snapshot";
 import type { WizardData } from "../lib/wizard-data-schema";
 import { StepRail } from "./step-rail";
@@ -17,9 +18,17 @@ type OrgSetupShellProps = {
   title: string;
   direction: number;
   saveState: "idle" | "saved";
+  syncStatus?: SyncStatus;
   data: WizardData;
   onStepSelect?: (index: number) => void;
   children: ReactNode;
+};
+
+const SYNC_STATUS_LABEL: Record<SyncStatus, string> = {
+  synced: "Saved",
+  saving: "Saving…",
+  unsynced: "Unsaved",
+  error: "Save failed",
 };
 
 export function OrgSetupShell({
@@ -28,6 +37,7 @@ export function OrgSetupShell({
   title,
   direction,
   saveState,
+  syncStatus,
   data,
   onStepSelect,
   children,
@@ -60,18 +70,32 @@ export function OrgSetupShell({
 
           {!isWelcome ? (
             <div className="mb-2 hidden min-w-0 space-y-0.5 md:block">
-              <AnimatePresence mode="wait">
-                <motion.h1
-                  key={title}
-                  initial={{ opacity: 0, y: reduceMotion ? 0 : -6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: reduceMotion ? 0 : 6 }}
-                  transition={{ duration: 0.15 }}
-                  className="font-display text-xl font-extrabold tracking-[-0.02em] text-foreground text-balance sm:text-2xl"
-                >
-                  {title}
-                </motion.h1>
-              </AnimatePresence>
+              <div className="flex min-w-0 items-baseline gap-3">
+                <AnimatePresence mode="wait">
+                  <motion.h1
+                    key={title}
+                    initial={{ opacity: 0, y: reduceMotion ? 0 : -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: reduceMotion ? 0 : 6 }}
+                    transition={{ duration: 0.15 }}
+                    className="font-display text-xl font-extrabold tracking-[-0.02em] text-foreground text-balance sm:text-2xl"
+                  >
+                    {title}
+                  </motion.h1>
+                </AnimatePresence>
+                {syncStatus && syncStatus !== "synced" && (
+                  <span
+                    aria-live="polite"
+                    className={
+                      syncStatus === "error"
+                        ? "text-xs text-destructive"
+                        : "text-xs text-muted-foreground"
+                    }
+                  >
+                    {SYNC_STATUS_LABEL[syncStatus]}
+                  </span>
+                )}
+              </div>
               <p className="text-label text-muted-foreground">
                 {STEP_SUBTITLES[currentStepId]}
               </p>

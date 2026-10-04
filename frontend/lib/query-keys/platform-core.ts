@@ -82,6 +82,7 @@ export const platformCoreQueryKeys = {
     all: [...base, "org-setup"] as const,
     session: () => [...base, "org-setup", "session"] as const,
     status: () => [...base, "org-setup", "status"] as const,
+    draft: () => [...base, "org-setup", "draft"] as const,
   },
 
   onboardingFlow: {

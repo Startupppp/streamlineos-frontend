@@ -5,6 +5,7 @@ import { SESSION_CLAIMS_UNCONFIRMED_MESSAGE } from "@/hooks/common/use-confirmed
 import type { SetupProvisioning } from "../hooks/use-setup-provisioning";
 
 const mockMutateAsync = jest.fn();
+const mockActivateMutateAsync = jest.fn();
 const mockSignIn = jest.fn();
 const mockRefreshSessionClaims = jest.fn();
 const mockClearAll = jest.fn();
@@ -27,6 +28,7 @@ let mockProvisioning: SetupProvisioning = {
 };
 
 let capturedProgressProps: Record<string, unknown> = {};
+let capturedWelcomeProps: Record<string, unknown> = {};
 
 jest.mock("./generation-progress-stage", () => ({
   GenerationProgressStage: jest.fn((props: Record<string, unknown>) => {
@@ -36,7 +38,10 @@ jest.mock("./generation-progress-stage", () => ({
 }));
 
 jest.mock("./welcome-celebration", () => ({
-  WelcomeCelebration: jest.fn(() => null),
+  WelcomeCelebration: jest.fn((props: Record<string, unknown>) => {
+    capturedWelcomeProps = props;
+    return null;
+  }),
 }));
 
 jest.mock("../hooks/use-setup-provisioning", () => ({
@@ -46,6 +51,10 @@ jest.mock("../hooks/use-setup-provisioning", () => ({
 jest.mock("@/hooks/api/org-setup", () => ({
   useCompleteOrgSetupMutation: jest.fn(() => ({
     mutateAsync: mockMutateAsync,
+    isPending: false,
+  })),
+  useOrgSetupActivateMutation: jest.fn(() => ({
+    mutateAsync: mockActivateMutateAsync,
     isPending: false,
   })),
 }));
@@ -116,6 +125,7 @@ const SETUP_RESPONSE = {
   success: true as const,
   orgId: "org-new",
   autoLoginToken: "magic-token-abc",
+  destination: "/dashboard",
 };
 
 const SIGN_IN_SUCCESS = { status: "signed-in" as const };
@@ -129,6 +139,7 @@ const FAKE_SESSION = {
 
 function resetMocks() {
   mockMutateAsync.mockReset();
+  mockActivateMutateAsync.mockReset();
   mockSignIn.mockReset();
   mockRefreshSessionClaims.mockReset();
   mockClearAll.mockReset();
@@ -139,6 +150,7 @@ function resetMocks() {
   mockLocationReplace.mockReset();
   mockIsApiError.mockReset().mockReturnValue(false);
   capturedProgressProps = {};
+  capturedWelcomeProps = {};
   mockProvisioning = {
     isReady: false,
     background: "unknown",
@@ -409,6 +421,37 @@ describe("StepGeneration — second mount markers", () => {
   });
 });
 
+describe("StepGeneration — isValidRedirectPath guard", () => {
+  it("navigates to /dashboard on openOrganization", async () => {
+    const issue = null;
+    mockProvisioning = {
+      isReady: false,
+      background: "pending",
+      orgId: "org-new",
+      issue,
+      isRechecking: false,
+      hasTimedOut: false,
+      recipientOutcomes: null,
+      recheck: jest.fn(),
+    };
+    mockMutateAsync.mockResolvedValue({ ...SETUP_RESPONSE, autoLoginToken: null });
+    mockRefreshSessionClaims.mockResolvedValue(FAKE_SESSION);
+
+    render(<StepGeneration data={TEST_DATA} />);
+
+    await waitFor(() => {
+      expect(capturedProgressProps.onOpenOrganization).toBeDefined();
+    });
+
+    const onOpenOrganization = capturedProgressProps.onOpenOrganization as () => void;
+    onOpenOrganization();
+
+    await waitFor(() => {
+      expect(mockLocationReplace).toHaveBeenCalledWith("/dashboard");
+    });
+  });
+});
+
 describe("StepGeneration — StrictMode double-invoke", () => {
   it("calls mutateAsync exactly once even under StrictMode", async () => {
     mockProvisioning = { ...mockProvisioning, isReady: false, background: "pending" };
@@ -425,5 +468,37 @@ describe("StepGeneration — StrictMode double-invoke", () => {
     });
 
     expect(mockMutateAsync).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("StepGeneration — server destination replaces hardcoded /dashboard", () => {
+  it("uses the server-provided destination for goToWorkspace instead of /dashboard", async () => {
+    mockProvisioning = { ...mockProvisioning, isReady: true, background: "pending" };
+    mockMutateAsync.mockResolvedValue({
+      ...SETUP_RESPONSE,
+      destination: "/build/projects/my-proj",
+    });
+    mockSignIn.mockResolvedValue(SIGN_IN_SUCCESS);
+    mockRefreshSessionClaims.mockResolvedValue(FAKE_SESSION);
+
+    render(<StepGeneration data={TEST_DATA} />);
+
+    await waitFor(() => {
+      expect(capturedProgressProps.showWelcome).toBe(true);
+    });
+
+    const onContinue = capturedWelcomeProps.onContinue as () => void;
+    onContinue();
+
+    expect(mockLocationReplace).toHaveBeenCalledWith("/build/projects/my-proj");
+  });
+
+  it("falls back to /dashboard when server destination is not available at marker redirect time", () => {
+    mockHasCompletionMarker.mockReturnValue(true);
+
+    render(<StepGeneration data={TEST_DATA} />);
+
+    expect(mockLocationReplace).toHaveBeenCalledWith("/dashboard");
+    expect(mockMutateAsync).not.toHaveBeenCalled();
   });
 });

@@ -124,11 +124,47 @@ export const orgSetupStatusContract = z.object({
 export type OrgSetupStatus = z.infer<typeof orgSetupStatusContract>;
 
 export const orgSetupCompleteContract = z.union([
-  z.object({ success: z.literal(true), orgId: z.string(), autoLoginToken: z.string() }),
-  z.object({ success: z.literal(true), orgId: z.string() }),
+  z.object({ success: z.literal(true), orgId: z.string(), autoLoginToken: z.string(), destination: z.string() }),
+  z.object({ success: z.literal(true), orgId: z.string(), destination: z.string() }),
 ]);
 
 export const orgSetupSkipContract = z.union([
   z.object({ success: z.literal(true), orgId: z.string(), autoLoginToken: z.string() }),
   z.object({ success: z.literal(true), orgId: z.string() }),
 ]);
+
+export const orgSetupDraftSaveContract = z.object({ success: z.literal(true) });
+
+export const orgSetupDraftContract = z
+  .object({
+    revision: z.number().int(),
+    stepData: z.record(z.unknown()),
+    expiresAt: z.string(),
+  })
+  .nullable();
+
+export type OrgSetupDraft = NonNullable<z.infer<typeof orgSetupDraftContract>>;
+
+export const orgSetupPreviewContract = z.object({
+  modules: z.array(
+    z.object({
+      moduleKey: z.string(),
+      eligible: z.boolean(),
+      reason: z.string().optional(),
+    }),
+  ),
+  quotaSnapshot: z.object({
+    seats: z.number().int(),
+    usedSeats: z.number().int(),
+  }),
+  expiresAt: z.string(),
+});
+
+export type OrgSetupPreview = z.infer<typeof orgSetupPreviewContract>;
+
+export const orgSetupActivateContract = z.object({
+  runId: z.string(),
+  status: z.string(),
+  blockedAtStage: z.string().nullable(),
+  destination: z.string().optional(),
+});

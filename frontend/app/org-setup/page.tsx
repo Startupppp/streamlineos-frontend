@@ -44,6 +44,8 @@ import {
 import { OrgSetupShell } from "@/features/org-setup/components/org-setup-shell";
 import { StepWelcome } from "@/features/org-setup/components/step-welcome";
 import { StepBasics } from "@/features/org-setup/components/step-basics";
+import { StepWorkspace } from "@/features/org-setup/components/step-workspace";
+import { StepProducts } from "@/features/org-setup/components/step-products";
 import { StepInviteLaunch } from "@/features/org-setup/components/step-invite-launch";
 import { ArchivedOrgsRestore } from "@/components/organization/archived-orgs-restore";
 
@@ -279,11 +281,28 @@ export default function OrgSetupPage() {
           onNext={goNext}
         />
       )}
+      {currentStepId === "workspace" && (
+        <StepWorkspace
+          data={data}
+          patch={patch}
+          onBack={goBack}
+          onNext={goNext}
+        />
+      )}
+      {currentStepId === "products" && (
+        <StepProducts
+          data={data}
+          patch={patch}
+          onBack={goBack}
+          onNext={goNext}
+        />
+      )}
       {currentStepId === "invite" && (
         <StepInviteLaunch
           data={data}
           onBack={goBack}
           onChangeInvitees={(invitees) => patch({ invitees })}
+          onSkip={goNext}
         />
       )}
     </OrgSetupShell>
