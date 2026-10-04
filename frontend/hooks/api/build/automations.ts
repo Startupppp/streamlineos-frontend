@@ -67,7 +67,7 @@ export function useAutomations(
   return useInfiniteQuery({
     queryKey: [...queryKeys.projects.automations(projectId), filters ?? {}],
     queryFn: ({ signal, pageParam }) => {
-      const params = pageParam
+      const params = pageParam !== undefined
         ? { ...baseParams, cursor: pageParam }
         : baseParams;
       return apiClient.get<{
@@ -156,7 +156,7 @@ export function useAutomationRuns(projectId: number, automationId?: number) {
   return useInfiniteQuery({
     queryKey: [...queryKeys.projects.automations(projectId), "runs", automationId ?? null],
     queryFn: ({ signal, pageParam }) => {
-      const params = pageParam ? { ...baseParams, cursor: pageParam } : baseParams;
+      const params = pageParam !== undefined ? { ...baseParams, cursor: pageParam } : baseParams;
       return apiClient.get<{ items: AutomationRunRow[]; pagination: { limit: number; hasMore: boolean; nextCursor: string | null } }>(
         `/build/${projectId}/automations/runs`,
         params,

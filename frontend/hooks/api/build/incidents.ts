@@ -89,7 +89,7 @@ export function useIncidents(projectId?: number, filters?: IncidentFilters) {
         pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
       }>(
         `/build/${projectId}/incidents`,
-        pageParam ? { ...params, cursor: pageParam } : params,
+        pageParam !== undefined ? { ...params, cursor: pageParam } : params,
         signal,
         incidentListContract,
       ),

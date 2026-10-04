@@ -129,7 +129,7 @@ export function useClientVisibilityTicketsInfinite(projectId: number) {
     queryFn: ({ signal, pageParam }) =>
       apiClient.get<ClientVisibilitySummary>(
         `/build/${projectId}/client-visibility`,
-        pageParam ? { ticketCursor: pageParam } : undefined,
+        pageParam !== undefined ? { ticketCursor: pageParam } : undefined,
         signal,
         visibilitySummaryContract,
       ),
@@ -158,7 +158,7 @@ export function useClientVisibilityMilestonesInfinite(projectId: number) {
     queryFn: ({ signal, pageParam }) =>
       apiClient.get<ClientVisibilitySummary>(
         `/build/${projectId}/client-visibility`,
-        pageParam ? { milestoneCursor: pageParam } : undefined,
+        pageParam !== undefined ? { milestoneCursor: pageParam } : undefined,
         signal,
         visibilitySummaryContract,
       ),
