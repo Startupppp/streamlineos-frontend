@@ -59,6 +59,7 @@ export interface ProjectUpdatesFilters {
   from?: string;
   to?: string;
   status?: "draft" | "published";
+  audience?: "internal" | "client";
 }
 
 export function useProjectUpdates(
@@ -72,6 +73,7 @@ export function useProjectUpdates(
   if (filters?.from) activeFilters.from = filters.from;
   if (filters?.to) activeFilters.to = filters.to;
   if (filters?.status) activeFilters.status = filters.status;
+  if (filters?.audience) activeFilters.audience = filters.audience;
 
   const query = useInfiniteQuery({
     queryKey: buildWorkQueryKeys.projects.updates.list(
@@ -87,6 +89,7 @@ export function useProjectUpdates(
           ...(activeFilters.from ? { from: activeFilters.from } : {}),
           ...(activeFilters.to ? { to: activeFilters.to } : {}),
           ...(activeFilters.status ? { status: activeFilters.status } : {}),
+          ...(activeFilters.audience ? { audience: activeFilters.audience } : {}),
         },
         signal,
         updatePageContract,
