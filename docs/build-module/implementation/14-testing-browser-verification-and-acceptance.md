@@ -54,6 +54,18 @@ Run migration on an empty database and a production-shaped restored/sanitized sn
 
 The current repository snapshot contains hundreds of Build-focused tests, but this document run did not execute the full suites, browser, target database, migrations, load, deployment, or production checks. All implementation requirements remain open until their ledger evidence is supplied.
 
+## Phase 6 release gate
+
+(BT-bad452db6d58, ruling 2026-10-04 — DEFERRED until criteria met)
+
+Phase 6 is unlocked only when all of the following conditions are satisfied simultaneously:
+
+1. At least 3 confirmed enterprise SSO/SCIM adoption requests are on record.
+2. Phase 1–3 acceptance gates A through I all pass (0 open failures in the gate log).
+3. All Phase 1–3 migrations are applied to production with no pending schema drift.
+
+Until these three conditions are met, Phase 6 scope items carry DEFERRED status and are not pulled into active work. The coordinator records the unlock event in the requirement ledger when evidence for all three conditions is attached.
+
 ## Delivery checklist
 
 Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.

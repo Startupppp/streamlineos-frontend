@@ -87,11 +87,39 @@ Every command log/trace includes request/correlation ID, operation, tenant hash/
 
 Per-tenant deletion: deleting an organization row must cascade-delete or anonymize all Build data (tickets, projects, grants, audit rows, files metadata, webhooks). The cascade path is through the `org_id` foreign keys on every Build table. Verify the cascade is tested in the org-deletion spec before marking this row Current verified.
 
+## Machine code registry (Build)
+
+(BT-d524e518fbbf, reconciled 2026-10-04)
+
+**Envelope note:** `BE-19` specifies `{ success: true, data }` added by `ResponseTransformInterceptor`; `BE-20` specifies `{ code, message, details?, correlationId? }` for errors. Collections nest inside `data`. No Build controller returns `success: false` — errors always use the error envelope. Deprecated endpoints use `410` with `code: "DEPRECATED"` and replacement URL in `details`.
+
+| Code | HTTP | Source | Meaning |
+|---|---|---|---|
+| `PROJECTS_TICKET_CONFLICT` | 409 | `ProjectsTicketConflictException` / `common/http/api-exceptions.ts:135` | Ticket CAS version mismatch; caller must refresh |
+| `PROJECTS_INVALID_TICKET_STATUS` | 400 | `ProjectsInvalidTicketStatusException` / `api-exceptions.ts:148` | Transition not permitted by project workflow |
+| `PROJECTS_FORBIDDEN_TICKET` | 403 | `ProjectsForbiddenTicketException` / `api-exceptions.ts:59` | Caller lacks ticket-level reach |
+| `PROJECTS_FORBIDDEN_PROJECT` | 403 | `ProjectsForbiddenProjectException` / `api-exceptions.ts:71` | Caller is not a project member |
+| `PROJECTS_NOT_FOUND` | 404 | `ProjectsNotFoundException` / `api-exceptions.ts:84` | Project cross-tenant miss or not found |
+| `PROJECTS_TICKET_NOT_FOUND` | 404 | `ProjectsTicketNotFoundException` / `api-exceptions.ts:93` | Ticket cross-tenant miss or not found |
+| `PROJECTS_COMMENT_NOT_FOUND` | 404 | `ProjectsCommentNotFoundException` / `api-exceptions.ts:102` | Comment not found |
+| `PROJECT_LOCKED` | 409 | `project-access.ts:73` | Project is locked; write operations denied |
+| `FORM_RATE_LIMITED` | 429 | `submissions.controller.ts:121` | Public form submission rate limit exceeded |
+| `MODULE_NOT_ENABLED` | 402 | `ModuleDisabledException` / `api-exceptions.ts:42` | Build not in plan or user-denied; `details.reason`: `not-in-plan` / `org-disabled` / `user-denied` |
+| `INSUFFICIENT_CREDITS` | 402 | `InsufficientAiCreditsException` / `api-exceptions.ts:11` | AI credit balance exhausted |
+| `CONFLICT` | 409 | `all-exceptions.filter.ts:120` | Generic NestJS `ConflictException`; prefer a domain-specific code |
+| `VALIDATION_FAILED` | 400/422 | `all-exceptions.filter.ts:126` | Zod or NestJS validation error |
+| `SERVICE_UNAVAILABLE` | 503 | `admission.guard.ts:62` / `all-exceptions.filter.ts:334` | Dependency unavailable; `Retry-After` present when safe to retry |
+| `ORG_MEMBERSHIP_INACTIVE` | 401 | `jwt-auth.guard.ts:261` | Authenticated but org membership is inactive |
+| `MFA_REQUIRED` | 401 | `mfa.guard.ts:61` | Request requires MFA step-up |
+| `INTERNAL_ERROR` | 500 | `all-exceptions.filter.ts:364` | Unhandled server error; no stack trace or internal message exposed |
+
+No compatibility adapters are needed at this time; all codes above are current. When a code is retired or renamed, a `410` endpoint at the old path with `code: "DEPRECATED"` and `details.replacement` is the correct compatibility path.
+
 ## Delivery checklist
 
 Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
 
-- [ ] Reconcile the proposed success/error envelopes and machine codes with current controllers, shared serializers, generated OpenAPI, and repository conventions; record compatibility adapters before changing callers.
+- [x] Reconcile the proposed success/error envelopes and machine codes with current controllers, shared serializers, generated OpenAPI, and repository conventions; record compatibility adapters before changing callers.
 - [ ] Assign one command or query owner to every Build API family and eliminate duplicate write paths only after route and caller parity is demonstrated.
 - [ ] Define Zod/DTO validation, tenant and actor context, permission key, idempotency key, revision precondition, bounded pagination, and response fields for each changed endpoint.
 - [ ] Exercise negative and happy paths for access denial, stale revision, duplicate retry, rate limit, partial job, and dependency failure; compare browser network and generated client behavior.

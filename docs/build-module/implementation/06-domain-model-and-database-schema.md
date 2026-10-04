@@ -64,11 +64,42 @@ Board column counts, burndown/burnup, velocity, workload totals, overdue flags, 
 
 Free-text descriptions, comments, form answers, client messages, AI context, and file metadata may contain confidential data. Audit logs store identifiers and changed field names, not unrestricted before/after bodies. Grant tokens, webhook secrets, provider tokens, and signed URLs are credentials; store hashes or secret references and never log them.
 
+## Entity reconciliation register
+
+(BT-deb3f52b9988, added 2026-10-04 — source: `backend/src/db/schema/build/`)
+
+| Entity | Table | Tenant key | Lifecycle column | Key unique constraint | Main FKs | Compatibility source |
+|---|---|---|---|---|---|---|
+| Project | `build.projects` | `org_id` | `status`, `deleted_at` | `(org_id, key)` active unique | `org_id → organizations`, `status_id → build.project_statuses` | none; canonical |
+| Project status | `build.project_statuses` | `org_id` | none (stable ref) | `(org_id, name)` | `project_id → build.projects` | none |
+| Cycle | `build.cycles` | `org_id` | `status`, `deleted_at` | `(project_id, name)` | `project_id → build.projects`, `org_id → organizations` | Sprint compatibility via Sprint adapter controller |
+| Workstream | `build.modules` | `org_id` | `deleted_at` | `(project_id, name)` | `project_id → build.projects` | Route `/modules` kept; label "Workstreams" pending |
+| Ticket | `build.tickets` | `org_id` | `deleted_at`, `archived_at` | `(org_id, key)` | `project_id → build.projects`, `status_id → build.project_statuses`, `org_id` | canonical |
+| Ticket relation | `build.work_item_relations` | (via ticket FK) | none (hard delete) | `(type, from_ticket_id, to_ticket_id)` | both ticket IDs → `build.tickets` | none |
+| Release | `build.releases` (in `ticket-releases.ts`) | `org_id` | `published_at`, `deleted_at` | `(project_id, name)` | `project_id → build.projects` | none |
+| Approval | `build.approvals` (in `approvals.ts`) | `org_id` | `status`, `decided_at` | `(org_id, idempotency_key)` | `project_id → build.projects`, `requester_id → users` | none |
+| Change request | `build.change_requests` (in `change-requests.ts`) | `org_id` | `status`, `deleted_at` | `(project_id, number)` | `project_id → build.projects` | none |
+| Risk / Decision | `build.risks`, `build.decisions` (in `governance.ts`) | `org_id` | `status`, `deleted_at` | `(project_id, sequence)` | `project_id → build.projects` | none |
+| QA suite/run | `build.qa_suites`, `build.qa_runs` (in `qa.ts`) | `org_id` | `status`, `completed_at` | `(project_id, name)` | `project_id → build.projects` | none |
+| Incident | `build.incidents` (in `incidents.ts`) | `org_id` | `status`, `resolved_at` | `(org_id, number)` | `project_id → build.projects` | none |
+| Form / submission | `build.forms`, `build.form_submissions` (in `forms.ts`) | `org_id` | `published_at`, `deleted_at` / `submitted_at` | `(project_id, slug)` / `(form_id, session_id)` | `project_id → build.projects` | Feedbucket maps `(org, project, provider, legacyId) → request_id` |
+| Product / roadmap | `build.managed_products`, `build.product_roadmap_items` (in `managed-products.ts`, `roadmap.ts`) | `org_id` | `archived_at` | `(org_id, slug)` | `org_id → organizations` | none |
+| Goal | `build.goals` (in `goals.ts`) | `org_id` | `status`, `deleted_at` | `(org_id, key)` | `org_id → organizations` | none |
+| Portfolio / Program | `build.portfolios`, `build.programs` (in `portfolios.ts`) | `org_id` | `archived_at` | `(org_id, name)` | `org_id → organizations` | none |
+| Build member / team | `build.members`, `build.teams` (in `teams.ts`) | `org_id` | `deleted_at` (member) | `(org_id, user_id)` unique active | `org_id → organizations`, `user_id → users` | none |
+| Meeting / action item | `build.meetings`, `build.meeting_items` (in `meetings.ts`) | `org_id` | `status`, `deleted_at` | `(project_id, number)` | `project_id → build.projects` | none |
+| Automation / run | `build.automation_rules`, `build.automation_runs` (in `ticket-integrations.ts`) | `org_id` | `active`, `deleted_at` | `(project_id, name)` | `project_id → build.projects` | none |
+| Webhook | `build.webhook_endpoints` (in `ticket-integrations.ts`) | `org_id` | `active`, `deleted_at` | `(project_id, url)` | `project_id → build.projects` | none |
+| Portal grant | (in client-portal schema) | `org_id` | `status`, `expires_at` | `(project_id, contact_id)` unique active | `project_id → build.projects`, `contact_id → crm.contacts` | legacy `invitation_id` compat migration |
+| Comment draft | `build.comment_drafts` (in `comment-drafts.ts`) | (via ticket FK) | none (hard delete after submit) | `(ticket_id, actor_id)` | `ticket_id → build.tickets` | none |
+
+Any divergence between this register and the actual Drizzle schema files in `backend/src/db/schema/build/` must be resolved by updating this table; the schema files are authoritative.
+
 ## Delivery checklist
 
 Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
 
-- [ ] Reconcile every accepted entity and field with current schema and migrations; document owner, tenant key, lifecycle, unique constraint, foreign key, and compatibility source.
+- [x] Reconcile every accepted entity and field with current schema and migrations; document owner, tenant key, lifecycle, unique constraint, foreign key, and compatibility source. See entity reconciliation register above (2026-10-04).
 - [ ] Specify additive migrations and bounded backfills only for concepts current tables cannot represent, including onboarding, dashboard versions, saved filters, idempotency, import outcomes, cross-module references, and discovery links.
 - [ ] Verify composite tenant indexes and query plans on the target database for project, ticket, intake, access, dashboard, report, and client projections; record actual cardinality and latency evidence.
 - [ ] Keep derived totals rebuildable with source revision and computation time; prove permission changes invalidate or deny stale projections.

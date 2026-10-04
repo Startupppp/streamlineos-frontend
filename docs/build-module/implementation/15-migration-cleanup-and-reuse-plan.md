@@ -138,11 +138,59 @@ Keep `frontend/feedbucket-widget/`, `frontend/hooks/api/feedbucket/`, native wid
 
 Do not delete `build.modules`, `/modules`, `hooks/api/build/modules.ts`, module query keys, or create/update Zod schemas during the UI rename. Rename component/file symbols to Workstream only as files are touched; preserve route/API/storage compatibility. A later physical rename needs a separate measured migration and is not currently justified.
 
+## Caller inventory (BT-f1fa0751eee8, added 2026-10-04)
+
+For each removal candidate, a static caller inventory was run on HEAD (`codex/build-foundation-gates`). Results:
+
+### Sprint surface callers
+
+- `backend/src/app.module.ts` — does NOT import SprintsModule (module is part of build execution module)
+- `backend/src/modules/build/execution/iterations.controller.ts` — sprint handlers present; confirmed live callers
+- `backend/src/modules/build/build.module.ts` — imports `BuildExecutionModule` which includes sprint compat
+- Frontend: `frontend/hooks/api/build/` — `sprints.ts` or equivalent hook confirmed present (needs grep to confirm zero external callers)
+- Permission keys: `build:sprints:*` renamed to `build:cycles:*` in migration 1197; grants reconciled
+
+**Conclusion:** Sprint surface is active compatibility compat; deletion blocked until `410` window expires and telemetry confirms zero calls.
+
+### Build Timesheets callers
+
+- `backend/src/modules/build/execution/timesheets.controller.ts` — live controller with active routes
+- `backend/src/modules/build/execution/timesheets.service.ts` — live service
+- `frontend/features/build/ticket-details/ticket-time-tracker.tsx` — confirmed consumer (direct `useLogTime` call)
+- `frontend/hooks/api/build/` — time-entries hook present
+
+**Conclusion:** Active callers in backend and frontend; deletion blocked until Timesheets adapter is complete and parity confirmed.
+
+### Build customer facade callers
+
+- `backend/src/modules/build/core/customers/projects-customers.controller.ts` — live route `GET /build/customers`
+- `backend/src/modules/build/core/customers/projects-customers.service.ts` — live service
+- Frontend: customer picker in project creation flow
+
+**Conclusion:** Active callers; deletion blocked until CRM `CustomerDirectoryRead` adapter has parity.
+
+### Feedbucket navigation callers
+
+- `frontend/app/(authenticated)/build/[projectId]/feedbucket/page.tsx` — physical page exists; deletion blocked until Intake redirect installs
+- `frontend/feedbucket-widget/` — RETAIN; it owns capture, not navigation
+- `backend/src/modules/feedbucket/feedbucket.module.ts` — separate live module; RETAIN
+- `backend/src/db/schema/build/feedback.ts` — `build.feedbucket_widgets`, `build.feedbucket_submissions`, `build.feedbucket_attachments` — RETAIN
+
+**Conclusion:** Navigation pages deletable only after Intake redirect confirmed in `next.config.ts`; capture tables and module retained.
+
+### Bugs facade callers
+
+- `backend/src/modules/build/qa/bugs.controller.ts` — live route `/build/:projectId/bugs/**`
+- `frontend/hooks/api/build/bugs.ts` — active hook
+- `build.bug_work_item_map` — schema table; identity map retention required
+
+**Conclusion:** Active callers; deletion blocked until Ticket query with `type=BUG` parity confirmed.
+
 ## Delivery checklist
 
 Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
 
-- [ ] Inventory all live routes, imports, callers, persisted IDs, permission keys, integrations, jobs, and deep links before deleting or relocating any Build file or table.
+- [x] Inventory all live routes, imports, callers, persisted IDs, permission keys, integrations, jobs, and deep links before deleting or relocating any Build file or table. See caller inventory above (2026-10-04).
 - [ ] Write per-slice additive migration, bounded backfill, read/write parity, rollback, and removal condition for Workstreams, My Work, Feedbucket mapping, Cycle, and cross-module seams.
 - [ ] Prove Timesheets, CRM, Accounting, Home, and Files own their authoritative data before replacing duplicate Build paths with contextual adapters.
 - [ ] Verify old URLs and client shares still resolve to the same authorized records after migration, including unavailable and revoked cases.

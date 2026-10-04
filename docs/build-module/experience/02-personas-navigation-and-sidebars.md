@@ -327,3 +327,30 @@ Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGE
 - [ ] Persist per-user pinned, reordered, and collapsed navigation with a versioned actor/org scope; reject unavailable targets and restore a safe default on revocation.
 - [ ] Implement click, modifier-click, refresh, Back/Forward, split-pane, and mobile drawer behavior without losing origin query, scroll anchor, or focus.
 - [ ] Verify freelancer, product manager, project manager, engineer, content, executive, and external-client navigation with real role/module/project grants across two tenants; record denied deep-link and mobile evidence.
+
+## Persona journey to requirement register
+
+(BT-0bcfcffe79e2, added 2026-10-04)
+
+Maps each primary persona to their critical Build journeys and the BLD requirement that covers each journey.
+
+| Persona | Primary journey | BLD requirement |
+|---|---|---|
+| Freelancer / Sole trader | Personal task focus: open My Work, pick up highest-priority ticket, log time | BLD-008 (My Work), BLD-010 (Ticket detail), BLD-017 (Timesheets) |
+| Freelancer / Sole trader | Client handoff: submit deliverables through portal, get client approval | BLD-005 (Portal grant), BLD-020 (Portal access) |
+| Agency PM / Coordinator | Project overview: review project health, assign intake, track cycle progress | BLD-007 (Projects), BLD-009 (Inbox), BLD-014 (Command Center) |
+| Agency PM / Coordinator | Client intake: review submitted requests, triage into backlog | BLD-015 (Triage), BLD-021 (Intake/public form) |
+| Product manager | Discovery: capture evidence, create opportunity, score and prioritize | BLD-016 (Product chain) |
+| Product manager | Roadmap planning: create roadmap items, link to goals, publish to stakeholders | BLD-019 (Roadmap) |
+| Product manager | Outcome tracking: review release outcomes, close or reopen against goals | BLD-018 (Reports) |
+| Project manager / Delivery lead | Cross-project view: All Work filtered by owner, cycle, or status | BLD-011 (All Work), BLD-012 (Cross-project filter) |
+| Project manager / Delivery lead | Weekly planning: Command Center health overview, blocked items, capacity | BLD-014 (Command Center) |
+| Software engineer | Daily work: inbox for assigned items, open ticket, work with sub-tasks and PR links | BLD-009 (Inbox), BLD-010 (Ticket detail) |
+| Software engineer | Code review: check linked PR status, mark ticket ready for QA | BLD-010 (Ticket detail) |
+| Content creator / Writer | Brief management: open assigned brief-type ticket, update status, attach asset | BLD-010 (Ticket detail), BLD-022 (Files) |
+| Content creator / Writer | Review flow: submit for review, respond to comments, mark approved | BLD-010 (Ticket detail) |
+| Executive / Stakeholder | Overview: Command Center summary, report drill-down | BLD-014 (Command Center), BLD-018 (Reports) |
+| External client | Portal access: receive invite, view shared project status and milestones | BLD-005 (Portal grant), BLD-020 (Portal access) |
+| External client | Feedback: submit intake request, track status of submitted items | BLD-021 (Intake/public form) |
+
+Each journey row must have shipped feature evidence and a persona-journey test before any differentiation claim referencing that journey is promoted from "Planned" to "Current verified."
