@@ -77,3 +77,18 @@ const grantRowContract = z.object({
 export const grantContract = grantRowContract;
 
 export type GrantItem = z.infer<typeof grantRowContract>;
+
+export const activationResultContract = z.object({
+  portalMembershipId: z.string(),
+  projectClientGrantId: z.string(),
+  maskedRecipient: z.string(),
+  deliveryOutcome: z.enum(["QUEUED", "SUPPRESSED"]),
+});
+
+export type ActivationResult = z.infer<typeof activationResultContract>;
+
+export const resendInvitationContract = z.object({
+  maskedRecipient: z.string(),
+});
+
+export type ResendInvitationResult = z.infer<typeof resendInvitationContract>;

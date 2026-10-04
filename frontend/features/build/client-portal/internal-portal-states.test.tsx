@@ -322,3 +322,67 @@ describe("SPEC 10 — PortalDashboardPage states (Requirement C3)", () => {
     expect(screen.queryByText("Alpha Project")).toBeNull();
   });
 });
+
+describe("SPEC 11 — Portal expired-grant and revoked states (BT-54b19db5799b)", () => {
+  const expiredGrantError = Object.assign(new Error("Project not found"), {
+    status: 404,
+    code: "PORTAL_GRANT_EXPIRED",
+  } as unknown as ApiError);
+
+  const revokedGrantError = Object.assign(new Error("Project not found"), {
+    status: 404,
+    code: "PORTAL_GRANT_REVOKED",
+  } as unknown as ApiError);
+
+  it("expired-grant: a 404 from the project overview causes the error path not the ready path so the project name is not visible", () => {
+    mockUsePortalProjectOverview.mockReturnValue(
+      baseQuery({ isError: true, error: expiredGrantError }),
+    );
+    mockUsePortalChangeRequests.mockReturnValue(baseQuery({ data: [] }));
+    const { PortalDashboardPage } = require("./portal-dashboard-page");
+    render(<PortalDashboardPage projectId={42} />);
+    expect(screen.queryByText("Alpha Project")).toBeNull();
+  });
+
+  it("positive control — ready state renders the project name confirming the expired case is error-specific", () => {
+    mockUsePortalProjectOverview.mockReturnValue(
+      baseQuery({
+        data: {
+          project: { id: 42, name: "Alpha Project", status: "active", startDate: null, targetEndDate: null },
+          capabilities: { canViewMilestones: false, canViewTasks: false, canViewAttachments: false, canViewComments: false, canSubmitChangeRequests: false },
+          milestones: [], tasks: [], attachments: [], comments: [],
+        },
+      }),
+    );
+    mockUsePortalChangeRequests.mockReturnValue(baseQuery({ data: [] }));
+    const { PortalDashboardPage } = require("./portal-dashboard-page");
+    render(<PortalDashboardPage projectId={42} />);
+    expect(screen.getByText("Alpha Project")).toBeInTheDocument();
+  });
+
+  it("revoked-grant: a 404 from the project overview does not render the project count so the list size is not leaked", () => {
+    mockUsePortalProjects.mockReturnValue(
+      baseQuery({ isError: true, error: revokedGrantError }),
+    );
+    const { PortalListPage } = require("./portal-list-page");
+    render(<PortalListPage />);
+    expect(screen.queryByText(/\d+ project/i)).toBeNull();
+  });
+
+  it("partial-source: capabilities with all view flags false renders no tab content sections (fail closed)", () => {
+    mockUsePortalProjectOverview.mockReturnValue(
+      baseQuery({
+        data: {
+          project: { id: 42, name: "Silent Project", status: "active", startDate: null, targetEndDate: null },
+          capabilities: { canViewMilestones: false, canViewTasks: false, canViewAttachments: false, canViewComments: false, canSubmitChangeRequests: false },
+          milestones: [], tasks: [], attachments: [], comments: [],
+        },
+      }),
+    );
+    mockUsePortalChangeRequests.mockReturnValue(baseQuery({ data: [] }));
+    const { PortalDashboardPage } = require("./portal-dashboard-page");
+    render(<PortalDashboardPage projectId={42} />);
+    expect(screen.queryByText("No milestones")).toBeNull();
+    expect(screen.queryByText("No tasks")).toBeNull();
+  });
+});

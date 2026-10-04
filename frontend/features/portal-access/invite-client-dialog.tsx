@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -16,147 +16,271 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AppDialog } from "@/components/shared/app-dialog";
-import { useInviteClient } from "@/hooks/api/portal-access/grants";
-import type { PortalMembershipRow } from "@/hooks/api/portal-access/portal-access-schema";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useActivateClient } from "@/hooks/api/portal-access/grants";
+import { useProjects } from "@/hooks/api/build/projects";
+import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
+import type { ActivationResult } from "@/hooks/api/portal-access/portal-access-schema";
 import {
-  inviteClientFormSchema,
-  type InviteClientFormValues,
+  activateClientFormSchema,
+  type ActivateClientFormInput,
+  type ActivateClientFormValues,
 } from "./invite-client-schema";
 
-const EMPTY_DEFAULTS: InviteClientFormValues = {
-  firstName: "",
-  lastName: "",
-  email: "",
-};
+const CAPABILITY_FIELDS = [
+  { name: "canViewMilestones", label: "View milestones" },
+  { name: "canViewTasks", label: "View tasks" },
+  { name: "canViewAttachments", label: "View files" },
+  { name: "canViewComments", label: "View comments" },
+  { name: "canSubmitChangeRequests", label: "Submit change requests" },
+] as const;
+
+function makeDefaults(defaultProjectId?: number): ActivateClientFormInput {
+  return {
+    firstName: "",
+    lastName: "",
+    email: "",
+    projectId: defaultProjectId ?? 0,
+    canViewMilestones: false,
+    canViewTasks: false,
+    canViewAttachments: false,
+    canViewComments: false,
+    canSubmitChangeRequests: false,
+  };
+}
+
+function DeliveryOutcomePanel({
+  result,
+  onClose,
+}: {
+  result: ActivationResult;
+  onClose: () => void;
+}) {
+  const isQueued = result.deliveryOutcome === "QUEUED";
+  return (
+    <div className="space-y-3">
+      <p className="text-sm text-foreground">
+        Portal access activated for{" "}
+        <span className="font-medium">{result.maskedRecipient}</span>.
+      </p>
+      <p className="text-sm text-muted-foreground">
+        {isQueued
+          ? "Invitation email queued for delivery."
+          : "No email provider is connected — the client was not notified. Resend the invitation once a provider is configured."}
+      </p>
+      <div className="flex justify-end pt-2">
+        <Button size="sm" variant="outline" onClick={onClose} type="button">
+          Done
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onInvited: (membership: PortalMembershipRow) => void;
+  onInvited: (result: ActivationResult) => void;
+  defaultProjectId?: number;
 }
 
-export function InviteClientDialog({ open, onOpenChange, onInvited }: Props) {
-  const invite = useInviteClient();
+export function InviteClientDialog({ open, onOpenChange, onInvited, defaultProjectId }: Props) {
+  const canManage = useCan("build:clientvisibility:manage");
+  const activate = useActivateClient();
+  const [activationResult, setActivationResult] = useState<ActivationResult | null>(null);
 
-  const form = useForm<InviteClientFormValues>({
-    resolver: zodResolver(inviteClientFormSchema),
-    defaultValues: EMPTY_DEFAULTS,
+  const { data: projectsPage } = useProjects(
+    { limit: 100 },
+    { enabled: open && !defaultProjectId && canManage },
+  );
+
+  const form = useForm<ActivateClientFormInput, unknown, ActivateClientFormValues>({
+    resolver: zodResolver(activateClientFormSchema),
+    defaultValues: makeDefaults(defaultProjectId),
   });
 
   useEffect(() => {
     if (open) {
-      form.reset(EMPTY_DEFAULTS);
+      form.reset(makeDefaults(defaultProjectId));
+      setActivationResult(null);
     }
-  }, [open, form]);
+  }, [open, defaultProjectId, form]);
 
-  function handleSubmit(values: InviteClientFormValues) {
-    invite.mutate(
+  function handleSubmit(values: ActivateClientFormValues) {
+    activate.mutate(
       {
         firstName: values.firstName,
         lastName: values.lastName || undefined,
-        email: values.email || undefined,
+        email: values.email,
+        projectId: values.projectId,
+        canViewMilestones: values.canViewMilestones,
+        canViewTasks: values.canViewTasks,
+        canViewAttachments: values.canViewAttachments,
+        canViewComments: values.canViewComments,
+        canSubmitChangeRequests: values.canSubmitChangeRequests,
       },
       {
-        onSuccess: (membership) => {
-          toast.success("Client invited and portal access activated");
-          onInvited(membership);
-          onOpenChange(false);
+        onSuccess: (result) => {
+          setActivationResult(result);
+          onInvited(result);
+          if (result.deliveryOutcome === "QUEUED") {
+            toast.success("Invitation sent");
+          }
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }
 
-  function handleCancel() {
+  function handleClose() {
     onOpenChange(false);
   }
 
-  const footer = (
+  const showForm = !activationResult;
+
+  const footer = showForm ? (
     <>
       <Button
         type="button"
         variant="outline"
         size="sm"
-        onClick={handleCancel}
-        disabled={invite.isPending}
+        onClick={handleClose}
+        disabled={activate.isPending}
       >
         Cancel
       </Button>
       <LoadingButton
         type="submit"
-        form="invite-client-form"
+        form="activate-client-form"
         size="sm"
-        isPending={invite.isPending}
-        loadingText="Inviting…"
+        isPending={activate.isPending}
+        loadingText="Activating…"
+        disabled={!canManage}
       >
         Invite Client
       </LoadingButton>
     </>
-  );
+  ) : undefined;
+
+  const projects = projectsPage?.data ?? [];
 
   return (
     <AppDialog
       open={open}
       onOpenChange={onOpenChange}
       title="Invite Client"
-      description="Create a client contact and activate their portal access immediately."
+      description="Activate portal access and send the client their invitation link."
       footer={footer}
     >
-      <Form {...form}>
-        <form
-          id="invite-client-form"
-          onSubmit={form.handleSubmit(handleSubmit)}
-          className="space-y-4"
-          noValidate
-        >
-          <FormField
-            control={form.control}
-            name="firstName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>First name</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="Jane" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+      {!showForm && activationResult ? (
+        <DeliveryOutcomePanel result={activationResult} onClose={handleClose} />
+      ) : (
+        <Form {...form}>
+          <form
+            id="activate-client-form"
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-4"
+            noValidate
+          >
+            <div className="grid grid-cols-2 gap-3">
+              <FormField
+                control={form.control}
+                name="firstName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>First name</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Jane" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="lastName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Last name{" "}
+                      <span className="font-normal text-muted-foreground">(optional)</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Smith" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input {...field} type="email" placeholder="jane@example.com" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {!defaultProjectId && (
+              <FormField
+                control={form.control}
+                name="projectId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Project</FormLabel>
+                    <Select
+                      onValueChange={(v) => field.onChange(Number(v))}
+                      value={field.value ? String(field.value) : ""}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a project" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {projects.map((p) => (
+                          <SelectItem key={p.id} value={String(p.id)}>
+                            {p.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             )}
-          />
-          <FormField
-            control={form.control}
-            name="lastName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Last name{" "}
-                  <span className="text-muted-foreground font-normal">(optional)</span>
-                </FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="Smith" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Email{" "}
-                  <span className="text-muted-foreground font-normal">(optional)</span>
-                </FormLabel>
-                <FormControl>
-                  <Input {...field} type="email" placeholder="jane@example.com" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </form>
-      </Form>
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Capabilities</p>
+              {CAPABILITY_FIELDS.map(({ name, label }) => (
+                <FormField
+                  key={name}
+                  control={form.control}
+                  name={name}
+                  render={({ field }) => (
+                    <FormItem className="flex items-center gap-2 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={!!field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormLabel className="font-normal">{label}</FormLabel>
+                    </FormItem>
+                  )}
+                />
+              ))}
+            </div>
+          </form>
+        </Form>
+      )}
     </AppDialog>
   );
 }

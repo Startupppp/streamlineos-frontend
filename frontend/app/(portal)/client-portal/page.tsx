@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -36,11 +36,31 @@ function ProjectsListSkeleton() {
 
 export default function PortalProjectsPage() {
   const { isReady } = usePortalGuard();
-  const { data, isLoading, isError, refetch } = useExternalPortalProjects();
+  const { data, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useExternalPortalProjects();
+
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && hasNextPage && !isFetchingNextPage) {
+          void fetchNextPage();
+        }
+      },
+      { threshold: 0.1 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  const projects = data?.pages.flatMap((p) => p.data) ?? [];
 
   return (
     <div className="flex flex-col min-h-dvh bg-background">
@@ -62,7 +82,7 @@ export default function PortalProjectsPage() {
             onRetry={handleRetry}
             className="min-h-[320px]"
           />
-        ) : !data || data.length === 0 ? (
+        ) : projects.length === 0 ? (
           <EmptyState
             illustrationPreset="projects"
             title="No projects yet"
@@ -70,11 +90,19 @@ export default function PortalProjectsPage() {
             className="min-h-[320px]"
           />
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {data.map((project) => (
-              <PortalProjectCard key={project.id} project={project} />
-            ))}
-          </div>
+          <>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {projects.map((project) => (
+                <PortalProjectCard key={project.id} project={project} />
+              ))}
+            </div>
+            <div ref={sentinelRef} className="h-4" aria-hidden="true" />
+            {isFetchingNextPage && (
+              <div className="mt-4">
+                <ProjectsListSkeleton />
+              </div>
+            )}
+          </>
         )}
       </main>
     </div>

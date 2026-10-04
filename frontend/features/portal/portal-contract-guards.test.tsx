@@ -168,6 +168,30 @@ describe("PortalProjectDetail — case 3: partial grant (view true, submit false
   });
 });
 
+describe("PortalProjectDetail — no internal field leaks into the portal surface", () => {
+  it("portal list response does not render orgId in the DOM so the internal UUID is not visible to clients", () => {
+    withQueryClient(<PortalProjectCard project={baseProject} />);
+    expect(document.body.textContent).not.toContain("org-");
+    expect(document.body.textContent).not.toContain("11111111");
+  });
+
+  it("portal detail response does not render any internal Build navigation count so portal consumers cannot enumerate internal work volume", () => {
+    withQueryClient(<PortalProjectDetail data={overviewWithAllGranted} />);
+    const text = document.body.textContent ?? "";
+    expect(text).not.toMatch(/\d+ total task/i);
+    expect(text).not.toMatch(/internalCount/);
+    expect(text).not.toMatch(/navigationCount/);
+  });
+
+  it("portal detail does not contain any /build/ href so portal routing stays within the portal surface", () => {
+    withQueryClient(<PortalProjectDetail data={overviewWithAllGranted} />);
+    const anchors = document.querySelectorAll("a[href]");
+    for (const a of anchors) {
+      expect(a.getAttribute("href")).not.toMatch(/^\/build\//);
+    }
+  });
+});
+
 describe("ChangeRequestDialog — projectId is from server-validated route data, not client input", () => {
   it("useSubmitChangeRequest is invoked with project.id from the backend-validated overview", () => {
     const overviewWithId99: PortalProjectOverview = {

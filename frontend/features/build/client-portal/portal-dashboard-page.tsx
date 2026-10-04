@@ -176,6 +176,7 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
         ) : (
           <>
             <PmPageShell>
+              {overview.capabilities?.canViewMilestones && (
               <PmSection index={0}>
                 <SectionTitle icon={Diamond} title="Milestones & Deliverables" />
                 {overview.milestones.length === 0 ? (
@@ -212,7 +213,9 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
                   </PmPanel>
                 )}
               </PmSection>
+              )}
 
+              {overview.capabilities?.canViewTasks && (
               <PmSection index={1}>
                 <SectionTitle icon={CheckSquare} title="Tasks" />
                 {overview.tasks.length === 0 ? (
@@ -249,7 +252,9 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
                   </PmPanel>
                 )}
               </PmSection>
+              )}
 
+              {overview.capabilities?.canViewAttachments && (
               <PmSection index={2}>
                 <SectionTitle icon={Paperclip} title="Files" />
                 {overview.attachments.length === 0 ? (
@@ -274,7 +279,9 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
                   </PmPanel>
                 )}
               </PmSection>
+              )}
 
+              {overview.capabilities?.canSubmitChangeRequests && (
               <PmSection index={3}>
                 <SectionTitle
                   icon={FileText}
@@ -323,6 +330,7 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
                   </PmPanel>
                 )}
               </PmSection>
+              )}
             </PmPageShell>
 
             <PortalCrSheet projectId={projectId} open={crSheetOpen} onOpenChange={setCrSheetOpen} />

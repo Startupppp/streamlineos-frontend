@@ -707,6 +707,24 @@ describe("ClientPortalManagementPage — tab navigation writes the section param
   });
 });
 
+describe("ClientPortalManagementPage — client actor isolation: portal client cannot reach internal management (BT-716b46bf3292)", () => {
+  it("hides the publication banner when pageState is denied so a portal-only actor cannot see the portal settings panel", () => {
+    mockUsePageState.mockReturnValue({ kind: "denied" });
+    const { ClientPortalManagementPage } = require("./client-portal-management-page");
+    render(<ClientPortalManagementPage projectId={1} />);
+    expect(screen.queryByText("Portal not published")).toBeNull();
+    expect(screen.queryByText("Portal published")).toBeNull();
+  });
+
+  it("NEGATIVE — renders the publication banner when pageState is ready confirming the denied case is permission-specific and not a render bug", () => {
+    mockUsePageState.mockReturnValue({ kind: "ready" });
+    mockUsePortalSettings.mockReturnValue(baseQuery({ data: UNPUBLISHED_SETTINGS }));
+    const { ClientPortalManagementPage } = require("./client-portal-management-page");
+    render(<ClientPortalManagementPage projectId={1} />);
+    expect(screen.getByText("Portal not published")).toBeInTheDocument();
+  });
+});
+
 describe("ClientPortalManagementPage — preview section 404 vs generic error (FE-78, FE-122)", () => {
   it("shows 'No portal published yet' when the preview returns a 404 (no active grant)", () => {
     const err = { status: 404 };
