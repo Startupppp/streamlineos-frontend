@@ -9,6 +9,7 @@ import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Gauge } from "lucide-react";
 import { useVelocityReport } from "@/hooks/api/build/reports";
+import type { FilterEnvelopeV1 } from "@/lib/filter-envelope/filter-envelope-v1";
 import { ChartCard } from "./chart-card";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
@@ -18,7 +19,7 @@ const VelocityChart = dynamic(
   { ssr: false, loading: () => <Skeleton className="h-72 w-full rounded-lg" /> },
 );
 
-export function VelocitySection({ projectId }: { projectId: number }) {
+export function VelocitySection({ projectId, filterEnvelope }: { projectId: number; filterEnvelope?: FilterEnvelopeV1 }) {
   const {
     data,
     isLoading,
@@ -28,7 +29,7 @@ export function VelocitySection({ projectId }: { projectId: number }) {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useVelocityReport(projectId);
+  } = useVelocityReport(projectId, filterEnvelope);
 
   const handleRetry = useCallback(() => refetch(), [refetch]);
   const handleLoadMore = useCallback(() => fetchNextPage(), [fetchNextPage]);

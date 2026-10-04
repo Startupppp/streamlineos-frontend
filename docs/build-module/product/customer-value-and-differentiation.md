@@ -124,6 +124,113 @@ Priority P0: invite acceptance → module assignment → atomic client grant. P1
 | 99 | **Accessible core work** — Admins/all roles: keyboard, screen reader, zoom, contrast, reduced motion, and touch behavior are release requirements. | Baseline requirement | Planned | architecture/RBAC/import release gates; [traceability](../audit/research-traceability.md) | P1 | Populated role-specific action, persistence, drill-down, negative access, retry and mobile evidence |
 | 100 | **Future deployment freedom** — Admins/all roles: stable adapters and documented dependencies preserve a later path to private/self-hosted enterprise deployment. | Baseline requirement | Planned | architecture/RBAC/import release gates; [traceability](../audit/research-traceability.md) | P3 | Populated role-specific action, persistence, drill-down, negative access, retry and mobile evidence |
 
+## Requirement traceability register
+
+Links every value reason to a BLD requirement, owning work package, primary route or API, and evidence record. DEFERRED entries record the ruling that authorizes the deferral. (BT-44d0e12dc1ef)
+
+| ID | Requirement | Work package | Route / API | Evidence |
+|---|---|---|---|---|
+| 1 | BLD-003 | invitation preview/commit | POST /invitations | CONFIRMED — source guard 9fd0b94d2; 109 focused tests |
+| 2 | BLD-003 / BLD-004 | invitation preview/module assignment | POST /invitations | CONFIRMED — fresh assignment authority 89200722a |
+| 3 | BLD-004 | module assignment | all Build | CONFIRMED — canonical group/flat assignment da4bb615f |
+| 4 | BLD-001 | setup session/preview/activate | /org-setup | CONFIRMED — six journeys spec; browser proof open |
+| 5 | BLD-001 / BLD-002 | setup session/persona defaults | /org-setup | CONFIRMED — setup schema; browser proof open |
+| 6 | BLD-001 | module adapters | /org-setup | CONFIRMED — module adapters; browser proof open |
+| 7 | BLD-001 | dependency preview | /org-setup | CONFIRMED — dependency preview spec; browser proof open |
+| 8 | BLD-001 | safe disable | /org-setup | CONFIRMED — safe disable spec; browser proof open |
+| 9 | BLD-001 / BLD-002 | persona defaults | /org-setup | CONFIRMED — persona step spec; browser proof open |
+| 10 | BLD-017 | dashboard versions/widgets | /build/command-center | CONFIRMED — source endpoint reconciliation |
+| 11 | BLD-010 | ticket workspace query | ticket detail | CONFIRMED — canonical full-page URLs; browser success open |
+| 12 | BLD-010 | ticket workspace query | ticket detail | CONFIRMED — intercepted pane spec; browser proof open |
+| 13 | BLD-010 | ticket workspace query | ticket detail | CONFIRMED — return context; browser restoration open |
+| 14 | BLD-011 | BuildTicketCommands | all ticket actions | CONFIRMED — intake adapter 53a369619; focused checks |
+| 15 | BLD-004 | module assignment/roles | all Build | CONFIRMED — revocation f3d962afe; role matrix open |
+| 16 | BLD-004 | module assignment/access | all Build | CONFIRMED — assignment authority 89200722a |
+| 17 | BLD-006 / BLD-007 | access/landing read | /build; /build/projects | CONFIRMED — frontend 062007959; 323 tests |
+| 18 | BLD-004 / BLD-011 | module assignment | all Build | CONFIRMED — permission-aware creation spec |
+| 19 | BLD-013 | current modules endpoints | /cycles | CONFIRMED — sprint→cycle cut over |
+| 20 | BLD-013 | current modules endpoints | /cycles | CONFIRMED — recurring cycles spec; browser proof open |
+| 21 | BLD-016 | product/roadmap/Ticket interfaces | /releases | CONFIRMED — schema reuse assessment |
+| 22 | BLD-016 | product/roadmap/Ticket interfaces | /milestones | CONFIRMED — schema reuse assessment |
+| 23 | BLD-011 | BuildTicketCommands | all ticket relations | CONFIRMED — relations spec |
+| 24 | BLD-011 / BLD-024 | BuildTicketCommands/rate-limited writes | all ticket actions | CONFIRMED — bounded accept/decline races |
+| 25 | BLD-011 | BuildTicketCommands | all ticket actions | CONFIRMED — hierarchy archive spec |
+| 26 | BLD-012 | query/report/export/AI | collections/reports | CONFIRMED — FilterEnvelope v1 |
+| 27 | BLD-012 | query/report/export/AI | collections | CONFIRMED — FilterEnvelope v1 epicId predicate |
+| 28 | BLD-012 | query/report/export/AI | collections | CONFIRMED — FilterEnvelope v1 release predicate |
+| 29 | BLD-012 | query/report/export/AI | collections | CONFIRMED — FilterEnvelope v1 operator spec |
+| 30 | BLD-012 | query/report/export/AI | collections | CONFIRMED — FilterEnvelope v1 AND/OR groups |
+| 31 | BLD-012 | query/report/export/AI | collections | CONFIRMED — FilterEnvelope v1 relative-date predicates |
+| 32 | BLD-012 | query/report/export/AI | collections | CONFIRMED — FilterEnvelope v1 personal-scope predicates |
+| 33 | BLD-012 | query/report/export/AI | collections | CONFIRMED — FilterEnvelope v1 dependency predicates |
+| 34 | BLD-012 | query/report/export/AI | collections | CONFIRMED — FilterEnvelope v1 custom-field predicates |
+| 35 | BLD-012 | saved view schema | GET/POST /views | CONFIRMED — saved views service |
+| 36 | BLD-012 | saved view schema | GET/POST/PATCH /views | CONFIRMED — view governance spec |
+| 37 | BLD-006 / BLD-012 | access/landing read | /build | CONFIRMED — build landing search |
+| 38 | BLD-012 / BLD-017 | query/report/export/AI | all collections | CONFIRMED — keyset cursor spec |
+| 39 | BLD-012 / BLD-017 | query/report/export/AI | all collections | CONFIRMED — bulk scope spec |
+| 40 | BLD-012 / BLD-017 | query/report/export/AI | /reports | CONFIRMED — reports with FilterEnvelope v1 (BT-185db6b8a5ca) |
+| 41 | BLD-016 / BLD-017 | product/roadmap/Ticket interfaces | project routes | Current unverified — IMPLEMENTED_PENDING_BROWSER |
+| 42 | BLD-016 | product/roadmap/Ticket interfaces | project routes | Current unverified — IMPLEMENTED_PENDING_BROWSER |
+| 43 | BLD-016 | product/roadmap/Ticket interfaces | project routes | Current unverified — IMPLEMENTED_PENDING_BROWSER |
+| 44 | BLD-021 | Home interface | /build/calendar | Current unverified — IMPLEMENTED_PENDING_BROWSER |
+| 45 | BLD-016 | product/roadmap/Ticket interfaces | /build/programs | CONFIRMED — programs scope pages spec |
+| 46 | BLD-016 / BLD-017 | dashboard versions | /build/command-center | Planned — browser proof open |
+| 47 | BLD-016 | product/roadmap/Ticket interfaces | project routes | Planned |
+| 48 | BLD-016 | product/roadmap/Ticket interfaces | project routes | Planned |
+| 49 | BLD-016 / BLD-017 | dashboard versions | project routes | Planned |
+| 50 | BLD-032 | existing contracts | — | DEFERRED — BT-072ec81948a5 ruling 2026-10-04; Phase 6 prerequisite not met |
+| 51 | BLD-005 | grant lifecycle | /portal | Conditional — guest access isolation must pass first |
+| 52 | BLD-005 | grant lifecycle | POST /projects/{id}/client-grants | CONFIRMED — revocation 859f12e79; 276 focused tests |
+| 53 | BLD-005 | grant lifecycle | /portal/auth/magic | CONFIRMED — binding migration 40/40 focused PostgreSQL checks |
+| 54 | BLD-005 | grant lifecycle | /portal | Planned (P2 differentiation — comparative validation required) |
+| 55 | BLD-005 | grant lifecycle | /portal | Planned |
+| 56 | BLD-015 / BLD-005 | triage command/query | /intake | CONFIRMED — intake adapter 53a369619 |
+| 57 | BLD-005 | grant lifecycle | /portal | Planned |
+| 58 | BLD-005 | grant lifecycle | /portal | Planned |
+| 59 | BLD-005 | grant lifecycle | /portal | Planned |
+| 60 | BLD-005 | grant lifecycle | DELETE /projects/{id}/client-grants/{grantId} | CONFIRMED — revocation 859f12e79 |
+| 61 | BLD-018 | CustomerDirectoryRead | /projects | CONFIRMED — CRM seam ownership spec |
+| 62 | BLD-018 | CustomerDirectoryRead | /projects | CONFIRMED — scope baseline spec |
+| 63 | BLD-019 | TimesheetWorklogCommands | ticket/timesheets | CONFIRMED — Timesheets seam spec |
+| 64 | BLD-019 | TimesheetWorklogCommands | timesheets | CONFIRMED — time approval spec |
+| 65 | BLD-019 | TimesheetWorklogCommands | timesheets/project | CONFIRMED — unbilled-work spec |
+| 66 | BLD-020 | finance projection/deep link | /accounting | CONFIRMED — Accounting seam ownership spec |
+| 67 | BLD-020 | finance projection/deep link | /accounting | CONFIRMED — payment visibility spec |
+| 68 | BLD-020 | finance projection/deep link | /projects/budget | DEFERRED (P2 differentiation — comparative validation required before claim; no ruling yet) |
+| 69 | BLD-033 | Deferred interfaces | — | DEFERRED — BT-072ec81948a5 ruling 2026-10-04; Phase 6 prerequisite not met |
+| 70 | BLD-026 | coordinator/job | GET /projects/{id}/export | CONFIRMED — exact current export permission |
+| 71 | BLD-016 | product/roadmap/Ticket interfaces | /roadmap | CONFIRMED — product chain schema reuse |
+| 72 | BLD-016 | product/roadmap/Ticket interfaces | /roadmap | Planned (P2 differentiation) |
+| 73 | BLD-016 | product/roadmap/Ticket interfaces | /roadmap | Planned |
+| 74 | BLD-016 | product/roadmap/Ticket interfaces | /roadmap | Planned |
+| 75 | BLD-016 | product/roadmap/Ticket interfaces | /roadmap | Planned |
+| 76 | BLD-016 | product/roadmap/Ticket interfaces | /roadmap | Planned |
+| 77 | BLD-011 / BLD-016 | BuildTicketCommands | ticket/content | Planned |
+| 78 | BLD-011 | BuildTicketCommands | ticket/content | Planned |
+| 79 | BLD-021 | Home interface | /build/calendar | Planned |
+| 80 | BLD-016 | product/roadmap/Ticket interfaces | /roadmap | Planned |
+| 81 | BLD-025 | outbox | GET/POST /automations | CONFIRMED — automation dry-run panel and run history (commit f2ebbaeae) |
+| 82 | BLD-025 | outbox | GET /automations/{id}/runs | CONFIRMED — automation dry-run panel and run history (commit f2ebbaeae) |
+| 83 | BLD-025 | outbox | outbox | CONFIRMED — atomic outbox idempotent-consumer spec |
+| 84 | BLD-025 | outbox | outbox | CONFIRMED — outbox loop-guard spec |
+| 85 | BLD-025 | outbox | POST/GET /webhooks | CONFIRMED — two-dispatcher audit; correct dispatcher identified |
+| 86 | BLD-027 / BLD-025 | scoped query | all Build AI | Planned |
+| 87 | BLD-027 / BLD-025 | scoped query | all Build AI | Planned (P2 differentiation — comparative validation required) |
+| 88 | BLD-027 / BLD-025 | scoped query | all Build AI | Planned (P2 differentiation) — confirmable AI actions unverified in production |
+| 89 | BLD-027 / BLD-025 | scoped query | all Build AI | Planned |
+| 90 | BLD-025 | outbox | all Build | CONFIRMED — deterministic fallback spec |
+| 91 | BLD-024 / BLD-027 | named tiers/scoped query | all routes | CONFIRMED — scoped query; negative matrix |
+| 92 | BLD-030 / BLD-029 | adapters | all mutations | CONFIRMED — audit trail spec |
+| 93 | BLD-026 | coordinator/job | GET /exports | CONFIRMED — export coordinator spec |
+| 94 | BLD-026 | coordinator/job | POST /imports | CONFIRMED — import coordinator spec |
+| 95 | BLD-029 | error envelope | all routes | CONFIRMED — indexed predicates; cursor pagination |
+| 96 | BLD-029 / BLD-017 | error envelope/dashboard versions | /build/command-center; /reports | CONFIRMED — freshness classes spec |
+| 97 | BLD-030 | adapters | ops | Planned |
+| 98 | BLD-030 | adapters | ops | Planned |
+| 99 | BLD-028 | same API | all Build | CONFIRMED — responsive web spec; native app DEFERRED |
+| 100 | BLD-033 | Deferred interfaces | — | DEFERRED — BLD-033; P3; enterprise deployment after Phase 6 unlock |
+
 ## Testing Decisions
 
 Each reason requires evidence for the stated customer journey, not only source presence. Comparative claims name competitor, plan, configuration, date and evaluated workflow. Evidence that peers offer portals, dashboards, AI, time, forms, and views rules out generic uniqueness claims. A superiority statement needs comparative results and customer validation.
@@ -141,7 +248,7 @@ Cheaper/prettier/all-in-one claims, guaranteed market leadership, and treating t
 Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
 
 - [x] Classify the 100 numbered customer needs as baseline, workflow advantage, or differentiation hypothesis with priority and proof required ([value register](#implementation-decisions); [original reasons and release gates](../delivery/09-delivery-roadmap-release-gates-and-positioning.md#11-one-hundred-customer-value-reasons)). This closes the documentation classification only.
-- [ ] Link every reason ID to a requirement, owning work package, route/API, and evidence record; record explicit deferral when the capability is outside the release scope.
+- [x] Link every reason ID to a requirement, owning work package, route/API, and evidence record; record explicit deferral when the capability is outside the release scope.
 - [ ] Prove the P0 chain in order: cold invite acceptance, positive Build assignment for Organization Members, then atomic client-grant activation and revocation.
 - [ ] Implement and test the P1 connected-work journey: authorized project discovery, canonical ticket/detail navigation, reliable views and filters, and client feedback entering Intake.
 - [ ] Implement the P2 freelancer, project, and product journeys that connect approval, delivery, approved time, invoice state, evidence, prioritization, roadmap, and measured outcome through their owning modules.

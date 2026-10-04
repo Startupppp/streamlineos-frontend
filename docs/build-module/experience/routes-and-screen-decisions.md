@@ -118,62 +118,64 @@ All Work uses a typed recordKind chosen by the registered view: ticket, intake, 
 
 ## Physical source index
 
-(BT-dd7808db9324, added 2026-10-04 — physical file evidence only; controller names and BLD IDs listed for confirmed-implementation routes)
+(BT-dd7808db9324, added 2026-10-04 — physical file evidence only; BT-2d807ea7bbef, 2026-10-04 — operation name column added from openapi.json operationIds)
 
 All project-level routes follow the pattern `frontend/app/(authenticated)/build/[projectId]/<segment>/page.tsx`. All settings sub-routes follow `frontend/app/(authenticated)/build/[projectId]/settings/<segment>/page.tsx`. Every route listed as Keep has a confirmed physical `page.tsx` under `frontend/app/(authenticated)/build/`.
 
-| Route | Physical page.tsx | BLD requirement | Notes |
-|---|---|---|---|
-| `/build` | `frontend/app/(authenticated)/build/page.tsx` | BLD-006 | redirect to command-center |
-| `/build/command-center` | `frontend/app/(authenticated)/build/command-center/page.tsx` | BLD-017 | |
-| `/build/my-work` | `frontend/app/(authenticated)/build/my-work/page.tsx` | BLD-008 | |
-| `/build/inbox` | `frontend/app/(authenticated)/build/inbox/page.tsx` | BLD-009 | |
-| `/build/all-work` | `frontend/app/(authenticated)/build/all-work/page.tsx` | BLD-012 | |
-| `/build/approvals` | `frontend/app/(authenticated)/build/approvals/page.tsx` | BLD-027 | |
-| `/build/projects` | `frontend/app/(authenticated)/build/projects/page.tsx` | BLD-007 | |
-| `/build/teams` | `frontend/app/(authenticated)/build/teams/page.tsx` | BLD-023 | |
-| `/build/teams/[teamId]` | `frontend/app/(authenticated)/build/teams/[teamId]/page.tsx` | BLD-023 | |
-| `/build/templates` | `frontend/app/(authenticated)/build/templates/page.tsx` | BLD-026 | |
-| `/build/goals` | `frontend/app/(authenticated)/build/goals/page.tsx` | BLD-016 | |
-| `/build/goals/[goalId]` | `frontend/app/(authenticated)/build/goals/[goalId]/page.tsx` | BLD-016 | |
-| `/build/roadmap` | `frontend/app/(authenticated)/build/roadmap/page.tsx` | BLD-016 | |
-| `/build/portfolios` | `frontend/app/(authenticated)/build/portfolios/page.tsx` | BLD-016 | |
-| `/build/portfolios/[portfolioId]` | `frontend/app/(authenticated)/build/portfolios/[portfolioId]/page.tsx` | BLD-016 | |
-| `/build/programs` | `frontend/app/(authenticated)/build/programs/page.tsx` | BLD-016 | |
-| `/build/programs/[programId]` | `frontend/app/(authenticated)/build/programs/[programId]/page.tsx` | BLD-016 | |
-| `/build/managed-products` | `frontend/app/(authenticated)/build/managed-products/page.tsx` | BLD-016 | |
-| `/build/managed-products/[id]` | `frontend/app/(authenticated)/build/managed-products/[managedProductId]/page.tsx` | BLD-016 | |
-| `/build/managed-products/[id]/feedback` | `frontend/app/(authenticated)/build/managed-products/[managedProductId]/feedback/page.tsx` | BLD-016 | |
-| `/build/managed-products/[id]/insights` | `frontend/app/(authenticated)/build/managed-products/[managedProductId]/insights/page.tsx` | BLD-016 | |
-| `/build/managed-products/[id]/goals` | `frontend/app/(authenticated)/build/managed-products/[managedProductId]/goals/page.tsx` | BLD-016 | |
-| `/build/managed-products/[id]/projects` | `frontend/app/(authenticated)/build/managed-products/[managedProductId]/projects/page.tsx` | BLD-016 | |
-| `/build/managed-products/[id]/roadmap` | `frontend/app/(authenticated)/build/managed-products/[managedProductId]/roadmap/page.tsx` | BLD-016 | |
-| `/build/reports` | `frontend/app/(authenticated)/build/reports/page.tsx` | BLD-016 | |
-| `/build/settings/access` | `frontend/app/(authenticated)/build/settings/access/page.tsx` | BLD-027 | |
-| `/build/settings/client-access` | `frontend/app/(authenticated)/build/settings/client-access/page.tsx` | BLD-005 | |
-| `/build/settings/integrations` | `frontend/app/(authenticated)/build/settings/integrations/page.tsx` | BLD-025 | |
-| `/build/[projectId]/approvals` | `frontend/app/(authenticated)/build/[projectId]/approvals/page.tsx` | BLD-027 | |
-| `/build/[projectId]/backlog` | `frontend/app/(authenticated)/build/[projectId]/backlog/page.tsx` | BLD-011 | |
-| `/build/[projectId]/budget` | `frontend/app/(authenticated)/build/[projectId]/budget/page.tsx` | BLD-020 | |
-| `/build/[projectId]/change-requests` | `frontend/app/(authenticated)/build/[projectId]/change-requests/page.tsx` | BLD-027 | |
-| `/build/[projectId]/chat` | `frontend/app/(authenticated)/build/[projectId]/chat/page.tsx` | BLD-023 | |
-| `/build/[projectId]/client-portal` | `frontend/app/(authenticated)/build/[projectId]/client-portal/page.tsx` | BLD-005 | |
-| `/build/[projectId]/cycles` | `frontend/app/(authenticated)/build/[projectId]/cycles/page.tsx` | BLD-034 | |
-| `/build/[projectId]/cycles/[cycleId]` | `frontend/app/(authenticated)/build/[projectId]/cycles/[cycleId]/page.tsx` | BLD-034 | |
-| `/build/[projectId]/decisions` | `frontend/app/(authenticated)/build/[projectId]/decisions/page.tsx` | BLD-027 | |
-| `/build/[projectId]/epics` | `frontend/app/(authenticated)/build/[projectId]/epics/page.tsx` | BLD-011 | |
-| `/build/[projectId]/issues` | confirmed physical page.tsx exists | BLD-011 | |
-| `/build/[projectId]/intake` | confirmed physical page.tsx exists | BLD-015 | |
-| `/build/[projectId]/modules` | confirmed physical page.tsx exists | BLD-013 | label = Workstreams (BT-e29595c47907) |
-| `/build/[projectId]/triage` | `frontend/app/(authenticated)/build/[projectId]/triage/page.tsx` | BLD-015 | |
-| `/build/[projectId]/tickets/[ticketKey]` | `frontend/app/(authenticated)/build/[projectId]/tickets/[ticketKey]/page.tsx` | BLD-010 | |
-| `/build/[projectId]/settings` | `frontend/app/(authenticated)/build/[projectId]/settings/page.tsx` | BLD-034 | |
-| `/build/[projectId]/workload` | `frontend/app/(authenticated)/build/[projectId]/workload/page.tsx` | BLD-019 | |
-| `/build/[projectId]/wiki` | `frontend/app/(authenticated)/build/[projectId]/wiki/page.tsx` | BLD-023 | |
-| `/build/[projectId]/wiki/[pageId]` | `frontend/app/(authenticated)/build/[projectId]/wiki/[pageId]/page.tsx` | BLD-023 | |
-| `/build/[projectId]/wiki/[pageId]/history` | `frontend/app/(authenticated)/build/[projectId]/wiki/[pageId]/history/page.tsx` | BLD-023 | |
+Operation names are derived from `frontend/contracts/openapi.json` operationIds. A route may call multiple operations; the primary read operation on load is listed. Routes with no openapi-visible backend operation (redirect, client-only, or no-auth) are marked `—`.
 
-Owning API controller names are pending BACKEND lane input. The route→controller mapping must be reconciled against `backend/src/modules/build/` controller files before marking this row complete in REQUIREMENT-LEDGER.md. Add each controller name to this table when confirmed.
+| Route | Physical page.tsx | BLD requirement | Primary API operation | Notes |
+|---|---|---|---|---|
+| `/build` | `frontend/app/(authenticated)/build/page.tsx` | BLD-006 | — | redirect to command-center |
+| `/build/command-center` | `frontend/app/(authenticated)/build/command-center/page.tsx` | BLD-017 | `ProjectsController_listProjects` | cross-project aggregation; no single primary |
+| `/build/my-work` | `frontend/app/(authenticated)/build/my-work/page.tsx` | BLD-008 | `ProjectsTicketsController_listTickets` | scoped to actor |
+| `/build/inbox` | `frontend/app/(authenticated)/build/inbox/page.tsx` | BLD-009 | — | notification inbox; no openapi-exposed build operation |
+| `/build/all-work` | `frontend/app/(authenticated)/build/all-work/page.tsx` | BLD-012 | `AgentController_getAllWork` | |
+| `/build/approvals` | `frontend/app/(authenticated)/build/approvals/page.tsx` | BLD-027 | `BuildApprovalsController_listApprovals` | |
+| `/build/projects` | `frontend/app/(authenticated)/build/projects/page.tsx` | BLD-007 | `ProjectsController_listProjects` | |
+| `/build/teams` | `frontend/app/(authenticated)/build/teams/page.tsx` | BLD-023 | `TeamsController_listTeams` | |
+| `/build/teams/[teamId]` | `frontend/app/(authenticated)/build/teams/[teamId]/page.tsx` | BLD-023 | `TeamsController_getTeam` | |
+| `/build/templates` | `frontend/app/(authenticated)/build/templates/page.tsx` | BLD-026 | `BuildTemplatesController_list` | |
+| `/build/goals` | `frontend/app/(authenticated)/build/goals/page.tsx` | BLD-016 | `ProjectsRoadmapController_listRoadmap` | goals surface |
+| `/build/goals/[goalId]` | `frontend/app/(authenticated)/build/goals/[goalId]/page.tsx` | BLD-016 | `ProjectsRoadmapController_listRoadmap` | single goal |
+| `/build/roadmap` | `frontend/app/(authenticated)/build/roadmap/page.tsx` | BLD-016 | `ProjectsRoadmapController_listRoadmap` | |
+| `/build/portfolios` | `frontend/app/(authenticated)/build/portfolios/page.tsx` | BLD-016 | `ProjectsController_listProjects` | portfolio view |
+| `/build/portfolios/[portfolioId]` | `frontend/app/(authenticated)/build/portfolios/[portfolioId]/page.tsx` | BLD-016 | `ProjectsController_listProjects` | |
+| `/build/programs` | `frontend/app/(authenticated)/build/programs/page.tsx` | BLD-016 | `ProgramsController_listPrograms` | |
+| `/build/programs/[programId]` | `frontend/app/(authenticated)/build/programs/[programId]/page.tsx` | BLD-016 | `ProgramsController_getProgram` | |
+| `/build/managed-products` | `frontend/app/(authenticated)/build/managed-products/page.tsx` | BLD-016 | `ManagedProductsController_listManagedProducts` | |
+| `/build/managed-products/[id]` | `frontend/app/(authenticated)/build/managed-products/[managedProductId]/page.tsx` | BLD-016 | `ManagedProductsController_getManagedProduct` | |
+| `/build/managed-products/[id]/feedback` | `frontend/app/(authenticated)/build/managed-products/[managedProductId]/feedback/page.tsx` | BLD-016 | `ProjectsRoadmapController_listFeedback` | |
+| `/build/managed-products/[id]/insights` | `frontend/app/(authenticated)/build/managed-products/[managedProductId]/insights/page.tsx` | BLD-016 | `ManagedProductsController_getProductInsights` | |
+| `/build/managed-products/[id]/goals` | `frontend/app/(authenticated)/build/managed-products/[managedProductId]/goals/page.tsx` | BLD-016 | `ProjectsRoadmapController_listRoadmap` | goals tab |
+| `/build/managed-products/[id]/projects` | `frontend/app/(authenticated)/build/managed-products/[managedProductId]/projects/page.tsx` | BLD-016 | `ProjectsController_listProjects` | |
+| `/build/managed-products/[id]/roadmap` | `frontend/app/(authenticated)/build/managed-products/[managedProductId]/roadmap/page.tsx` | BLD-016 | `ProjectsRoadmapController_listRoadmap` | |
+| `/build/reports` | `frontend/app/(authenticated)/build/reports/page.tsx` | BLD-016 | `ProjectsReportsController_getAnalytics` | |
+| `/build/settings/access` | `frontend/app/(authenticated)/build/settings/access/page.tsx` | BLD-027 | `BuildStandingController_getMemberStanding` | |
+| `/build/settings/client-access` | `frontend/app/(authenticated)/build/settings/client-access/page.tsx` | BLD-005 | `ClientVisibilityController_toggleTicketVisibility` | |
+| `/build/settings/integrations` | `frontend/app/(authenticated)/build/settings/integrations/page.tsx` | BLD-025 | — | no openapi-exposed build operation |
+| `/build/[projectId]/approvals` | `frontend/app/(authenticated)/build/[projectId]/approvals/page.tsx` | BLD-027 | `BuildApprovalsController_listApprovals` | |
+| `/build/[projectId]/backlog` | `frontend/app/(authenticated)/build/[projectId]/backlog/page.tsx` | BLD-011 | `ProjectsTicketsController_listTickets` | |
+| `/build/[projectId]/budget` | `frontend/app/(authenticated)/build/[projectId]/budget/page.tsx` | BLD-020 | `ProjectsBudgetController_getBudget` | |
+| `/build/[projectId]/change-requests` | `frontend/app/(authenticated)/build/[projectId]/change-requests/page.tsx` | BLD-027 | — | no openapi-exposed read operation |
+| `/build/[projectId]/chat` | `frontend/app/(authenticated)/build/[projectId]/chat/page.tsx` | BLD-023 | — | Inbox-channel route; no Build-specific openapi operation |
+| `/build/[projectId]/client-portal` | `frontend/app/(authenticated)/build/[projectId]/client-portal/page.tsx` | BLD-005 | `ClientVisibilityController_toggleTicketVisibility` | |
+| `/build/[projectId]/cycles` | `frontend/app/(authenticated)/build/[projectId]/cycles/page.tsx` | BLD-034 | `CyclesController_listCycles` | |
+| `/build/[projectId]/cycles/[cycleId]` | `frontend/app/(authenticated)/build/[projectId]/cycles/[cycleId]/page.tsx` | BLD-034 | `CyclesController_listCycles` | |
+| `/build/[projectId]/decisions` | `frontend/app/(authenticated)/build/[projectId]/decisions/page.tsx` | BLD-027 | — | no openapi-exposed read operation |
+| `/build/[projectId]/epics` | `frontend/app/(authenticated)/build/[projectId]/epics/page.tsx` | BLD-011 | `EpicsController_listEpics` | |
+| `/build/[projectId]/issues` | confirmed physical page.tsx exists | BLD-011 | `ProjectsTicketsController_listTickets` | bug-type tickets |
+| `/build/[projectId]/intake` | confirmed physical page.tsx exists | BLD-015 | `IntakeController_listIntake` | |
+| `/build/[projectId]/modules` | confirmed physical page.tsx exists | BLD-013 | `ModulesController_listModules` | label = Workstreams (BT-e29595c47907) |
+| `/build/[projectId]/triage` | `frontend/app/(authenticated)/build/[projectId]/triage/page.tsx` | BLD-015 | `SubmissionsController_listSubmissions` | |
+| `/build/[projectId]/tickets/[ticketKey]` | `frontend/app/(authenticated)/build/[projectId]/tickets/[ticketKey]/page.tsx` | BLD-010 | `ProjectsTicketsController_getTicket` | |
+| `/build/[projectId]/settings` | `frontend/app/(authenticated)/build/[projectId]/settings/page.tsx` | BLD-034 | `ProjectsSettingsIterationsController_getSettings` | |
+| `/build/[projectId]/workload` | `frontend/app/(authenticated)/build/[projectId]/workload/page.tsx` | BLD-019 | `BuildMembersController_list` | |
+| `/build/[projectId]/wiki` | `frontend/app/(authenticated)/build/[projectId]/wiki/page.tsx` | BLD-023 | — | KB-module operation; outside Build openapi scope |
+| `/build/[projectId]/wiki/[pageId]` | `frontend/app/(authenticated)/build/[projectId]/wiki/[pageId]/page.tsx` | BLD-023 | — | KB-module operation |
+| `/build/[projectId]/wiki/[pageId]/history` | `frontend/app/(authenticated)/build/[projectId]/wiki/[pageId]/history/page.tsx` | BLD-023 | — | KB-module operation |
+
+Operation names confirmed against `frontend/contracts/openapi.json` operationId field. Routes marked `—` either redirect, have no openapi-exposed Build operation, or delegate to a sibling module (KB, Chat, Inbox).
 
 ## Redirect compatibility
 

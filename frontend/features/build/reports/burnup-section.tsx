@@ -15,6 +15,7 @@ import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TrendingUp } from "lucide-react";
 import { useVelocityReport, useBurnupReport } from "@/hooks/api/build/reports";
+import type { FilterEnvelopeV1 } from "@/lib/filter-envelope/filter-envelope-v1";
 import { format } from "date-fns";
 import { ChartCard } from "./chart-card";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -25,8 +26,8 @@ const BurnupChart = dynamic(
   { ssr: false, loading: () => <Skeleton className="h-72 w-full rounded-lg" /> },
 );
 
-export function BurnupSection({ projectId }: { projectId: number }) {
-  const velocity = useVelocityReport(projectId);
+export function BurnupSection({ projectId, filterEnvelope }: { projectId: number; filterEnvelope?: FilterEnvelopeV1 }) {
+  const velocity = useVelocityReport(projectId, filterEnvelope);
   const [cycleId, setCycleId] = useState<number | undefined>(undefined);
 
   const cycles = velocity.data?.pages.flatMap((p) => p.data) ?? [];
@@ -37,6 +38,7 @@ export function BurnupSection({ projectId }: { projectId: number }) {
   const { data, isLoading, isError, error, refetch } = useBurnupReport(
     projectId,
     selectedCycleId,
+    filterEnvelope,
   );
 
   const handleRetry = useCallback(

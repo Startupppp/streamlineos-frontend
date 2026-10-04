@@ -8,6 +8,7 @@ import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import type { ProjectsReportsVelocityResponse } from "@/contracts/build-contracts.generated";
+import { type FilterEnvelopeV1, encodeFilterEnvelope } from "@/lib/filter-envelope/filter-envelope-v1";
 
 const velocityContract = lazyContract(() =>
   import("@/hooks/api/build/reports-schema").then((m) => m.velocityContract),
@@ -78,14 +79,19 @@ interface CriticalPathReport {
   hasCycle: boolean;
 }
 
-export function useVelocityReport(projectId: number) {
+export function useVelocityReport(projectId: number, filterEnvelope?: FilterEnvelopeV1) {
   const canView = useCan("build:view");
+  const encodedFilter = filterEnvelope !== undefined ? encodeFilterEnvelope(filterEnvelope) : undefined;
   return useInfiniteQuery({
-    queryKey: buildWorkQueryKeys.projectReports.velocity(projectId),
+    queryKey: buildWorkQueryKeys.projectReports.velocityFiltered(projectId, encodedFilter),
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<ProjectsReportsVelocityResponse>(
         `/build/${projectId}/reports/velocity`,
-        { limit: 100, ...(pageParam !== undefined ? { cursor: pageParam } : {}) },
+        {
+          limit: 100,
+          ...(pageParam !== undefined ? { cursor: pageParam } : {}),
+          ...(encodedFilter !== undefined ? { filter: encodedFilter } : {}),
+        },
         signal,
         velocityContract,
       ),
@@ -96,14 +102,18 @@ export function useVelocityReport(projectId: number) {
   });
 }
 
-export function useBurnupReport(projectId: number, cycleId?: number) {
+export function useBurnupReport(projectId: number, cycleId?: number, filterEnvelope?: FilterEnvelopeV1) {
   const canView = useCan("build:view");
+  const encodedFilter = filterEnvelope !== undefined ? encodeFilterEnvelope(filterEnvelope) : undefined;
   return useQuery({
-    queryKey: buildWorkQueryKeys.projectReports.burnup(projectId, cycleId),
+    queryKey: buildWorkQueryKeys.projectReports.burnupFiltered(projectId, cycleId, encodedFilter),
     queryFn: ({ signal }) =>
       apiClient.get<BurnupPoint[]>(
         `/build/${projectId}/reports/burnup`,
-        cycleId ? { cycleId } : undefined,
+        {
+          ...(cycleId !== undefined ? { cycleId } : {}),
+          ...(encodedFilter !== undefined ? { filter: encodedFilter } : {}),
+        },
         signal,
         burnupDataContract,
       ),

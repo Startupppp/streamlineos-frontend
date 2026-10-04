@@ -419,6 +419,19 @@ export const buildWorkQueryKeys = {
       [...base, "projectReports", "cycleTime", projectId] as const,
     leadTime: (projectId: number) =>
       [...base, "projectReports", "leadTime", projectId] as const,
+    velocityFiltered: (projectId: number, encodedFilter?: string) =>
+      encodedFilter === undefined
+        ? ([...base, "projectReports", "velocity", projectId] as const)
+        : ([...base, "projectReports", "velocity", projectId, encodedFilter] as const),
+    burnupFiltered: (projectId: number, cycleId?: number, encodedFilter?: string) =>
+      encodedFilter === undefined
+        ? (cycleId === undefined
+            ? ([...base, "projectReports", "burnup", projectId] as const)
+            : ([...base, "projectReports", "burnup", projectId, cycleId] as const))
+        : ([...base, "projectReports", "burnup", projectId, { cycleId, filter: encodedFilter }] as const),
+  },
+  commandCenter: {
+    layout: () => [...base, "command-center", "layout"] as const,
   },
   landingPreference: {
     mine: () => [...base, "landing-preference", "mine"] as const,
