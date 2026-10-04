@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { UseQueryOptions } from "@tanstack/react-query";
+import type { UseMutationOptions, UseQueryOptions } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -438,7 +438,7 @@ export function useCreateIntakeRequest(options?: Parameters<typeof useMutation>[
   });
 }
 
-export function useUpdateIntakeRequest(options?: Parameters<typeof useMutation>[0]) {
+export function useUpdateIntakeRequest(options?: UseMutationOptions<IntakeRequest, Error, UpdateIntakeRequestInput & { projectId: number }>) {
   const queryClient = useQueryClient();
   return useAuthorizedMutation("build:workspace:manage", {
     ...options,
@@ -450,7 +450,7 @@ export function useUpdateIntakeRequest(options?: Parameters<typeof useMutation>[
         undefined,
         intakeItemContract,
       ),
-    onSuccess: (_: unknown, variables: UpdateIntakeRequestInput & { projectId: number }) => {
+    onSuccess: (_: IntakeRequest, variables: UpdateIntakeRequestInput & { projectId: number }) => {
       queryClient.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.intake(variables.projectId),
       });
