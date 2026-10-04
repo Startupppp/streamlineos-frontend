@@ -62,4 +62,12 @@ export const BUILD_PROJECT_VIEW_EXTENSIONS: readonly RouteAccessExtension[] = [
     reason: "Project Chat uses the channel read key declared by its navigation and backend.",
     backendRoute: { method: "get", path: "/chat/channels/entity/{entityType}/{entityId}" },
   },
+  {
+    prefix: "/build/[projectId]/bugs/[submissionId]",
+    exact: true,
+    product: "build",
+    permission: "build:view",
+    reason: "Legacy bug-submission deep-link resolves a feedbucket submission to its intake item and redirects. Requires the same project read access as the intake index.",
+    backendRoute: { method: "get", path: "/build/{projectId}/intake/by-feedbucket/{submissionId}" },
+  },
 ];

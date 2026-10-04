@@ -12,6 +12,7 @@ function walk(dir, files = []) {
   if (!existsSync(dir)) return files;
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const full = join(dir, entry.name);
+    if (entry.isDirectory() && entry.name.startsWith("@")) continue;
     if (entry.isDirectory()) walk(full, files);
     else if (/^page\.(tsx?|jsx?)$/.test(entry.name)) files.push(full);
   }

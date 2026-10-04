@@ -1,8 +1,8 @@
 {
   "version": 3,
   "source": "frontend/app",
-  "count": 85,
-  "buildPageCount": 76,
+  "count": 87,
+  "buildPageCount": 78,
   "relatedRouteCount": 9,
   "routes": [
     {
@@ -32,6 +32,10 @@
     {
       "path": "/build/{projectId}/budget",
       "file": "frontend/app/(authenticated)/build/[projectId]/budget/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/bugs/{submissionId}",
+      "file": "frontend/app/(authenticated)/build/[projectId]/bugs/[submissionId]/page.tsx"
     },
     {
       "path": "/build/{projectId}/change-requests",
@@ -286,6 +290,10 @@
       "file": "frontend/app/(authenticated)/build/programs/page.tsx"
     },
     {
+      "path": "/build/programs/{programId}",
+      "file": "frontend/app/(authenticated)/build/programs/[programId]/page.tsx"
+    },
+    {
       "path": "/build/projects",
       "file": "frontend/app/(authenticated)/build/projects/page.tsx"
     },
@@ -353,7 +361,7 @@
     "decisionsSource": "docs/build-module/experience/routes-and-screen-decisions.md",
     "codePresent": true,
     "decisionsPresent": true,
-    "declaredCount": 76,
+    "declaredCount": 78,
     "code": [
       {
         "route": "/build",
@@ -370,6 +378,10 @@
       {
         "route": "/build/[projectId]/backlog",
         "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/bugs/[submissionId]",
+        "decision": "CONSOLIDATE"
       },
       {
         "route": "/build/[projectId]/budget",
@@ -628,6 +640,10 @@
         "decision": "KEEP"
       },
       {
+        "route": "/build/programs/[programId]",
+        "decision": "KEEP"
+      },
+      {
         "route": "/build/projects",
         "decision": "KEEP"
       },
@@ -680,6 +696,11 @@
         "route": "/build/[projectId]/backlog",
         "decision": "Keep",
         "destination": "`/build/[projectId]/backlog`"
+      },
+      {
+        "route": "/build/[projectId]/bugs/[submissionId]",
+        "decision": "Consolidate",
+        "destination": "`/build/[projectId]/intake?item={intakeId}`"
       },
       {
         "route": "/build/[projectId]/budget",
@@ -1000,6 +1021,11 @@
         "route": "/build/programs",
         "decision": "Keep",
         "destination": "`/build/programs`"
+      },
+      {
+        "route": "/build/programs/[programId]",
+        "decision": "Keep",
+        "destination": "`/build/programs/[programId]`"
       },
       {
         "route": "/build/projects",

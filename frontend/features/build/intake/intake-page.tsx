@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import {
   useIntakeRequests,
   useCreateIntakeRequest,
@@ -49,8 +49,15 @@ const INTAKE_FILTER_DEFINITIONS = [
   { param: "tab", all: "pending", options: INTAKE_TAB_OPTIONS },
 ] as const;
 
-export function IntakePage({ projectId }: { projectId: number }) {
+export function IntakePage({
+  projectId,
+  highlightId,
+}: {
+  projectId: number;
+  highlightId?: number;
+}) {
   const [createOpen, setCreateOpen] = useState(false);
+  const highlightRef = useRef<HTMLDivElement>(null);
   const listFilters = useBuildListFilters({
     filters: INTAKE_FILTER_DEFINITIONS,
     withSearch: false,
@@ -113,6 +120,40 @@ export function IntakePage({ projectId }: { projectId: number }) {
     setCreateOpen(false);
   }
   const allItems = intakeData?.data ?? [];
+
+  const highlightedItem =
+    highlightId !== undefined
+      ? (allItems.find((i) => i.id === highlightId) ?? null)
+      : null;
+  const highlightFound =
+    highlightId !== undefined &&
+    allItems.length > 0 &&
+    highlightedItem !== null;
+  const highlightNotFound =
+    highlightId !== undefined &&
+    allItems.length > 0 &&
+    highlightedItem === null;
+
+  useEffect(() => {
+    if (
+      highlightFound &&
+      highlightedItem !== null &&
+      activeTab !== "all" &&
+      highlightedItem.status !== activeTab
+    ) {
+      listFilters.setValue("tab", "all");
+    }
+  }, [highlightFound, highlightedItem, activeTab, listFilters]);
+
+  useEffect(() => {
+    if (highlightRef.current) {
+      highlightRef.current.scrollIntoView({
+        block: "center",
+        behavior: "smooth",
+      });
+    }
+  }, [highlightFound]);
+
   const filteredItems = allItems.filter(
     (item) => activeTab === "all" || item.status === activeTab,
   );
@@ -281,30 +322,57 @@ export function IntakePage({ projectId }: { projectId: number }) {
                     }
                     action={
                       activeTab === "pending"
-                        ? { label: "Create First Item", onClick: handleOpenCreate }
+                        ? {
+                            label: "Create First Item",
+                            onClick: handleOpenCreate,
+                          }
                         : undefined
                     }
                     className={CONTENT_FILL_PANEL}
                   />
                 ) : (
                   <PmSection index={1}>
+                    {highlightNotFound ? (
+                      <p
+                        className="mb-3 rounded-lg border border-warning/40 bg-warning/10 px-4 py-2.5 text-sm text-warning-foreground"
+                        role="status"
+                        data-testid="intake-item-not-found"
+                      >
+                        The linked item is not in this view. It may have been
+                        deleted or moved to a different status.
+                      </p>
+                    ) : null}
                     <PmStaggerList className="space-y-2.5">
-                      {filteredItems.map((item) => (
-                        <IntakeItemCard
-                          key={item.id}
-                          item={item}
-                          canManage={canManage}
-                          onAccept={onAccept}
-                          onDecline={onDecline}
-                          onDuplicate={onDuplicate}
-                        />
-                      ))}
+                      {filteredItems.map((item) => {
+                        const isHighlighted = item.id === highlightId;
+                        return (
+                          <div
+                            key={item.id}
+                            ref={isHighlighted ? highlightRef : undefined}
+                            className={
+                              isHighlighted
+                                ? "ring-2 ring-primary ring-offset-2 rounded-xl"
+                                : undefined
+                            }
+                            data-highlighted={
+                              isHighlighted ? "true" : undefined
+                            }
+                          >
+                            <IntakeItemCard
+                              item={item}
+                              canManage={canManage}
+                              onAccept={onAccept}
+                              onDecline={onDecline}
+                              onDuplicate={onDuplicate}
+                            />
+                          </div>
+                        );
+                      })}
                     </PmStaggerList>
                   </PmSection>
                 )}
               </TabsContent>
             </Tabs>
-
           </PmPageShell>
         </PageWrapper>
       )}

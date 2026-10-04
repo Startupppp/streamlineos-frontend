@@ -37,6 +37,21 @@ The [comprehensive recheck](./comprehensive-recheck-2026-10-02.md) records the s
 
 The later start-readiness sample found three **failing normal gates** despite passing self-tests: the execution-plan gate still requires removed `docs/specs/build` files, the route-census snapshot is missing at its old path, and the generated Build contracts have a stale OpenAPI hash. The backend Build core surface gate passed. These failures are recorded in the comprehensive recheck and must be resolved before a feature package is marked integration-ready; they do not invalidate the Markdown link/route coverage checks above.
 
+## Gate refresh — 2026-10-04 (BT-491467be038f)
+
+Re-run of the three start-readiness static gates on the R6_INTAKE implementation revision (`codex/build-foundation-gates`). Self-tests were not re-run; they were passing on 2026-10-02 and the gate scripts were not replaced.
+
+| Gate | Command | Result |
+|---|---|---|
+| Build execution plan | `node scripts/check-build-execution-plan.mjs` | **PASS** — 78 Build pages each map to one route decision and screen section; 29 coverage requirements, 36 implementation requirements, 16 architecture decisions, 18 work packages verified; active package claims and local links across 71 canonical Markdown files |
+| Route census | `node scripts/build-route-census.mjs --check` | **PASS** — 87 route patterns (78 Build pages, 9 related routes); canonical sources and snapshot are current; 78 Build pages pass their own canonical pattern to `enforceRouteAccess` (0 weak cold-load gates) |
+| Build contracts | `node scripts/check-build-contracts.mjs` (frontend) | **PASS** — 401 generated schemas and OPENAPI_HASH present; hash matches `contracts/openapi.json`; generated file equals a fresh generation over 320 hook-called operations |
+
+Changes required to achieve passing state (all on this branch):
+- `check:build-execution-plan` — migrated from removed `docs/specs/build` paths to `docs/build-module`; gate script corrected to skip parallel-slot (`@name`) dirs entirely (not recurse with unchanged segments); two routes registered in spec doc and screen contracts: `/build/[projectId]/bugs/[submissionId]`, `/build/programs/[programId]`; parallel intercept route `@panel/(.)tickets/[ticketKey]` removed — it is never a URL of its own.
+- `check:route-census` — snapshot regenerated for 78 Build pages; `build-route-manifest.ts` updated with `bugs/[submissionId]`; walk() corrected to skip `@name` dirs entirely; cold-load exemption for `/(.)` patterns reverted (skipping `@name` dirs already prevents those files from reaching the audit).
+- `check:build-contracts` — `build-contracts.generated.ts` regenerated via `generate:build-contracts` script; no manual edits made to the generated file.
+
 ## Source availability limitations
 
 Historical sources mention QA ledgers/reports and deleted release documents that were not included in the supplied packs: original QA surface/role matrices, member/client pass reports, BUG-001 detail, BUILD-OS-BUGS, RELEASE-GATE and TESTING-SUMMARY. Their historical references are retained as unavailable original evidence, not converted into fabricated local proof. The referenced D-build.webp is absent; D-dashboard.webp and actual project screenshots remain available. Brace-group competitor path notation is shorthand, not a real file; actual competitor feature files are retained individually.

@@ -2,9 +2,9 @@
 
 Status: Planned
 
-This table is the target UI contract. The original 75 page files were checked on 2026-10-02; the dedicated Projects route brings the current Build page count to 76. The `/build` redirect and Projects destination remain Current unverified until browser and role evidence is recorded. A screen hidden from the sidebar remains reachable by authorized deep link. No underlying data is deleted as part of screen consolidation.
+This table is the target UI contract. The original 75 page files were checked on 2026-10-02; the dedicated Projects route brings the count to 76; two routes added 2026-10-04 bring the current Build page count to 78. The `/build` redirect and Projects destination remain Current unverified until browser and role evidence is recorded. A screen hidden from the sidebar remains reachable by authorized deep link. No underlying data is deleted as part of screen consolidation.
 
-## Existing routes — 76 decisions
+## Existing routes — 78 decisions
 
 | Existing route | Decision | Target/destination | Screen contract | Opening |
 |---|---|---|---|---|
@@ -12,6 +12,7 @@ This table is the target UI contract. The original 75 page files were checked on
 | `/build/[projectId]` | Keep | `/build/[projectId]` | [Project overview](./screens/projects.md) | ticket pane; milestone pane; cycle detail full page; client context opens owning module |
 | `/build/[projectId]/approvals` | Keep | `/build/[projectId]/approvals` | [Project approvals](./screens/client-delivery.md) | decision sheet; file preview; ticket pane |
 | `/build/[projectId]/backlog` | Keep | `/build/[projectId]/backlog` | [Backlog](./screens/planning.md) | ticket pane; target cycle/release planning sheet |
+| `/build/[projectId]/bugs/[submissionId]` | Consolidate | `/build/[projectId]/intake?item={intakeId}` | [Legacy bug-submission detail](./screens/client-delivery.md) | server redirect; validates submission and resolves intake item id |
 | `/build/[projectId]/budget` | Keep | `/build/[projectId]/budget` | [Time and Budget](./screens/reporting.md) | time sheet; Accounting page; change-request pane |
 | `/build/[projectId]/change-requests` | Keep | `/build/[projectId]/change-requests` | [Change requests](./screens/client-delivery.md) | change pane; approval sheet; Accounting contextual page |
 | `/build/[projectId]/chat` | Keep | `/build/[projectId]/chat` | [Project chat](./screens/collaboration.md) | thread pane; ticket pane; important decision full record |
@@ -76,6 +77,7 @@ This table is the target UI contract. The original 75 page files were checked on
 | `/build/portfolios` | Keep | `/build/portfolios` | [Portfolios](./screens/planning.md) | portfolio full page; risk pane |
 | `/build/portfolios/[portfolioId]` | Keep | `/build/portfolios/[portfolioId]` | [Portfolio detail](./screens/planning.md) | project full page; risk/decision pane; scenario preview |
 | `/build/programs` | Keep | `/build/programs` | [Programs](./screens/planning.md) | program pane/full-page promotion; project full page |
+| `/build/programs/[programId]` | Keep | `/build/programs/[programId]` | [Program detail](./screens/planning.md) | list selection may intercept into a pane; direct link/refresh opens full page |
 | `/build/projects` | Keep; dedicated Projects destination | `/build/projects` | [Projects](./screens/projects.md) | project full page; project creation sheet; authorized list and filters |
 | `/build/roadmap` | Keep | `/build/roadmap` | [Organization roadmap](./screens/planning.md) | initiative pane; ticket pane; external projection preview |
 | `/build/settings/access` | Keep | `/build/settings/access` | [Build access](./screens/settings.md) | short edit sheet; complex workflow/rule builder full page; privileged impact confirmation |
@@ -89,7 +91,6 @@ This table is the target UI contract. The original 75 page files were checked on
 
 | Destination | Decision | Owner / behavior |
 |---|---|---|
-| /build/programs/[programId] | Add | Stable Program detail page; list selection may intercept into a pane, direct link/refresh opens full page |
 | /build/reports | Add compatibility destination | Resolve to `/build/all-work?view=reports` until a dedicated organization report owner is justified; preserve authorized query and saved-view ID |
 | /build/clients | Add | Build delivery index; CRM remains customer/contact/deal owner |
 | /build/[projectId]/intake/[requestId] | Add | Stable intake detail, including mapped legacy bug report |
@@ -156,6 +157,7 @@ Operation names are derived from `frontend/contracts/openapi.json` operationIds.
 | `/build/settings/integrations` | `frontend/app/(authenticated)/build/settings/integrations/page.tsx` | BLD-025 | — | no openapi-exposed build operation |
 | `/build/[projectId]/approvals` | `frontend/app/(authenticated)/build/[projectId]/approvals/page.tsx` | BLD-027 | `BuildApprovalsController_listApprovals` | |
 | `/build/[projectId]/backlog` | `frontend/app/(authenticated)/build/[projectId]/backlog/page.tsx` | BLD-011 | `ProjectsTicketsController_listTickets` | |
+| `/build/[projectId]/bugs/[submissionId]` | `frontend/app/(authenticated)/build/[projectId]/bugs/[submissionId]/page.tsx` | BLD-015 | — | server redirect to intake; validates submission id |
 | `/build/[projectId]/budget` | `frontend/app/(authenticated)/build/[projectId]/budget/page.tsx` | BLD-020 | `ProjectsBudgetController_getBudget` | |
 | `/build/[projectId]/change-requests` | `frontend/app/(authenticated)/build/[projectId]/change-requests/page.tsx` | BLD-027 | — | no openapi-exposed read operation |
 | `/build/[projectId]/chat` | `frontend/app/(authenticated)/build/[projectId]/chat/page.tsx` | BLD-023 | — | Inbox-channel route; no Build-specific openapi operation |

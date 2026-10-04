@@ -222,6 +222,32 @@ Entry points: persona sidebar or More, scoped parent record, command search, not
 
 **Acceptance:** demonstrate resolve mapping with authorized persisted state and audit; prove filters produce the declared matching records; verify the specified click/return/deep-link behavior; deny unrelated tenant/project and inappropriate role; retry without duplicate side effects; refresh legacy mapping/grant versions after change. Include populated, empty, filtered-empty, failure, keyboard and mobile evidence.
 
+### Legacy bug-submission detail
+
+Route: `/build/[projectId]/bugs/[submissionId]`
+Audience: existing bookmark or notification users holding legacy bug-submission URLs.
+Entry points: external bookmark, notification link, or copied legacy URL containing a numeric submission ID.
+
+**Layout and components:** server-only redirect page; no rendered UI. Validates projectId and submissionId as positive integers, resolves the associated intake item id, and issues a 302 redirect to `/build/[projectId]/intake?item={intakeId}`. Calls `notFound()` for invalid params.
+
+**Exact projection/card/row fields:** no UI projection; server resolves `intakeId` from submission record. If submission has no linked intake item, redirects to `/build/[projectId]/intake` without `?item`.
+
+**Filters and operators:** none. Route params are validated as positive integers only.
+
+**Primary and secondary flows:** resolve submission to intake item; redirect to intake list with deep link; redirect to intake list without deep link if item is unmapped; return 404 for invalid or non-integer params.
+
+**Opening and return:** 302 to `/build/[projectId]/intake?item={intakeId}` or `/build/[projectId]/intake`; 404 for invalid params. Intake page highlights the linked item using `?item=` deep link.
+
+**Data/API/schema:** server reads `submissionId` from route, looks up the intake record, and constructs the redirect target. No mutation. No openapi-exposed Build operation.
+
+**Access and cache:** `enforceRouteAccess` runs before lookup; denied users never reach the resolver. No client-side cache; server-only redirect.
+
+**States and recovery:** 404 for non-integer or non-positive params; redirect to intake for valid params. Missing submission resolves to intake root without item highlight.
+
+**Mobile:** server redirect; no client rendering.
+
+**Acceptance:** verify redirect includes `?item=` when intake item is found; verify redirect to intake root when item is unmapped; verify `notFound()` for non-integer projectId; verify `notFound()` for submissionId = 0; verify `notFound()` for negative submissionId; verify route access is checked before lookup.
+
 ### Portal administration and preview
 
 Route: `/build/[projectId]/client-portal`

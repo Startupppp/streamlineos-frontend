@@ -291,3 +291,30 @@ it.each(["project", "organization", "actor", "session", "permission"])("discards
   expect(mockToast.success).not.toHaveBeenCalled();
   expect(mockToast.error).not.toHaveBeenCalled();
 });
+
+it("highlights the card whose id matches highlightId", () => {
+  mockFilters.mockReturnValue({ value: () => "all", setValue: jest.fn() });
+  mockRequests.mockReturnValue(query({ data: { data: [{ id: 77, title: "Linked item", status: "pending" }] } }));
+  render(<IntakePage projectId={1} highlightId={77} />);
+  const highlighted = document.querySelector("[data-highlighted='true']");
+  expect(highlighted).toBeInTheDocument();
+  expect(highlighted).toHaveClass("ring-2");
+  expect(screen.getByText("Linked item")).toBeInTheDocument();
+  expect(screen.queryByTestId("intake-item-not-found")).not.toBeInTheDocument();
+});
+
+it("shows the not-in-this-view banner when highlightId does not match any loaded item", () => {
+  mockFilters.mockReturnValue({ value: () => "all", setValue: jest.fn() });
+  mockRequests.mockReturnValue(query({ data: { data: [{ id: 1, title: "Other item", status: "pending" }] } }));
+  render(<IntakePage projectId={1} highlightId={99} />);
+  expect(screen.getByTestId("intake-item-not-found")).toBeInTheDocument();
+  expect(document.querySelector("[data-highlighted='true']")).not.toBeInTheDocument();
+});
+
+it("switches the active tab to 'all' when the highlighted item is on a different tab", () => {
+  const mockSetValue = jest.fn();
+  mockFilters.mockReturnValue({ value: () => "pending", setValue: mockSetValue });
+  mockRequests.mockReturnValue(query({ data: { data: [{ id: 77, title: "Accepted item", status: "accepted" }] } }));
+  render(<IntakePage projectId={1} highlightId={77} />);
+  expect(mockSetValue).toHaveBeenCalledWith("tab", "all");
+});

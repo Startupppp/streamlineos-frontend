@@ -83,8 +83,8 @@ const pageRoutes = (directory, segments = []) => {
   const routes = [];
   for (const entry of readdirSync(directory, { withFileTypes: true })) {
     if (entry.isDirectory()) {
-      const next = entry.name.startsWith("(") || entry.name.startsWith("@")
-        ? segments : [...segments, entry.name];
+      if (entry.name.startsWith("@")) continue;
+      const next = /^\([^)]*\)$/.test(entry.name) ? segments : [...segments, entry.name];
       routes.push(...pageRoutes(join(directory, entry.name), next));
     } else if (entry.isFile() && /^page\.[jt]sx?$/.test(entry.name)) {
       routes.push(`/build${segments.length ? `/${segments.join("/")}` : ""}`);
