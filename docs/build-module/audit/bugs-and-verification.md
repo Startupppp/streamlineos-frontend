@@ -1,5 +1,281 @@
 # Bugs and verification ledger
 
+## Exact approval notification navigation — 2026-10-04
+
+Selected requirements: BT-27a037364398 and BT-801e948e8a67. [Disjoint navigation46 reservation](../implementation/WORK-CLAIMS.md#bt-27a037364398--bt-801e948e8a67--exact-approval-navigation-prerequisite-46), outer `21fdbc51e`, assigns six existing frontend files to B and two backend files to coordinator; C independently reviews both. Backend source is committed at `f5a8532ce`, frontend at `177e48cf3`. All ownership is released after these exact commits. No API, schema, permission key, query key, component, route page, migration or helper is duplicated.
+
+- Genuine backendRED:16 of19 projection/link cases fail before the correction, including actual task/release approval projection pointing at Ticket900 or a queue instead of approval9. Final four suites75 tests pass; canonical strict project/approval int32 params are reused. The producer now passes actual row.id while retaining related Ticket identity as context. Its authorized reader, cursor and response fields stay owned by their existing services.
+- Genuine frontendREDs: one outside-loaded-queue record-selection failure, three Unified navigation failures and one fabricated direct-entry queue-revision failure. Coordinator final14 suites158 tests pass. Direct `/build/approvals?projectId=<id>&approvalId=<id>` selects existing fresh authorized detail independently of loaded queue/filter/error state. Single positive int32 URL values are required; incomplete, duplicate, malformed or overflowing selection issues no detail request. Global Build approval cards use exact record identity; other module safe-target behavior remains covered.
+- Queue opening uses push with scroll false; close removes approvalId through replace with scroll false and retains all other query parameters/cursor/page. Back/Forward and refresh reconstruct URL selection at the source-test boundary. Existing Dialog owns pending-close/Escape; list keyboard is disabled during review. Radix focus return chooses the connected Decide origin or existing search. Direct entry uses the fresh displayed revision without inventing an earlier queue revision. Existing409 input preservation, explicit Review latest and current-owner fences are retained. This package uses the existing dialog; the complete immutable-artifact decision Sheet remains separate.
+- Exact eight-path lint/diff, backend and frontend changed-file TypeScript, and both production TypeScript commands pass. A first backend command invocation accidentally forwarded literal `--` and refused withTS5023 before compilation; corrected canonical `pnpm run typecheck` passes. Frontend `pnpm run type-check` uses official Next route type generation and passes. Full repository test TypeScript is not rerun for this bounded change: the earlier backend10GB exhaustion/frontend23 unowned diagnostics remain failed gates. Focused tests emit an act warning at the unchanged approval hook; console silence is not claimed.
+- Existing generated contracts remain authoritative and unchanged; no response contract is changed here. No owned file exceeds500 lines or newly crosses300. C independently verifies all eight frozen hashes and preserved meaningful negatives. Coordinator verifies all44 outer/47 backend unrelated working-byte hashes are unchanged, including the user-modified tracker generator.
+
+| Verification stage for bounded46 | Classification | Exact evidence or remaining gap |
+|---|---|---|
+| Source implemented | Current verified | Backend `f5a8532ce`; frontend `177e48cf3`; eight exact retained files |
+| Focused tests passed | Current verified |75 backend/158 frontend tests after genuine REDs |
+| Production typecheck passed | Current verified | Backend `pnpm run typecheck`; frontend `pnpm run type-check`; both scoped gates also pass |
+| Database verified | Current unverified | Earlier33 scratch SQL cases prove the revision prerequisite, not this application read/navigation flow; application1732 is absent |
+| Role/tenant verified | Current unverified | Source/model controls retained; current matching HTTP/application-role/object matrix still required |
+| Browser verified | Current unverified | Matching frontend1002 remains pending following earlier automatic approval rejection of frontend API changes; no route rendering substitutes for actions/refresh/history |
+| Deployment verified | Current unverified | Application1732/source parity and deployed policies not verified |
+| Operations verified | Current unverified | Durable cache/events, revocation, jobs and recovery not verified |
+
+Remaining scope: immutable artifact snapshot/version/current-version decision fence; all eight artifact owners; complete queue filters/requester/due/version projections, decision Sheet, inline Build Inbox approval action, full mobile/modifier-click/keyboard/browser history and return behavior, matching HTTP authorization/persistence and cache/event/deployment/operational proof. projectId provides selected-record context here; it does not add a server project filter to the organization queue. No full BT checkbox or D/I/T/R/B/L stage is advanced.
+
+## Approval revision PostgreSQL replay — 2026-10-04
+
+Selected requirement: BT-27a037364398; supporting BT-801e948e8a67. [Proof44 and correction45 ownership](../implementation/WORK-CLAIMS.md#bt-27a037364398--focused-postgresql-revision-replay-44) is disjoint from application implementation. Backend proof tool `a5ae00f77` adds four bounded repeatable verification files, reuses the unchanged IAM target guard/SQL client and official pending-migration runner, and pins original source fragments plus whole1732. Coordinator reran86 approval/organization/portal safety tests and exact four-path ESLint/diff; C and coordinator independently verified all four hashes before execution. Model tests cannot prove PostgreSQL behavior.
+
+Current verified chronology:
+
+1. Nonconnecting plan accepted only the derived current-run database. Execution began at `2026-10-03T23:35:32.486Z` against `scratch_build_migration_e34bee016e71af9de8f82340`. Four actual checks passed: focused prerequisites, revision absent before upgrade, real lock-timeout SQLSTATE55P03 and no migration ledger after that timeout. Whole1732 ran through the official fixed-tag runner, but the post-application catalog oracle refused with `PROOF_APPROVAL_CATALOG_INVALID`; exit1. The guard independently closed owned clients, verified current-run database identity/zero sessions and dropped only that database: cleanupVerified true, manualInspectionRequired false. This is a failed real gate, not a passed migration proof.
+2. A second guarded diagnostic used `scratch_build_migration_499642ded8e36f923ddc7c1e` and preserved the same refusal. Its READ ONLY catalog observation showed bigint revision, NOT NULL, default1, validated one-column inclusive safe-integer CHECK, BEFORE/ROW/UPDATE trigger19, enabledO, no predicate/arguments, invoker function and exact pinned function body. Stored and pinned bodies are200 characters; direct source equality is true, while the previous SQL-btrim versus JavaScript-trim comparison is false. The diagnostic transaction observed read_only on. Cleanup again verified true. No migration SQL or guard is changed to accommodate this result.
+3. [Correction45](../implementation/WORK-CLAIMS.md#bt-27a037364398--exact-postgresql-catalog-oracle-correction-45), committed backend `15eee78d9`, changes only the existing baseline oracle and its focused test: raw pinned dollar-body comparison. A recorded genuine RED1 then GREEN86; root reran86 and exact lint/diff, and C independently reviewed both hashes. Baseline SHA `703f7e210f449d5d90892d0ee66216d6061c2cddab119814eb11a8554a78d046` (204 lines); test `5480a98cb05945a038b302a67f157da84625d0be1ce972ec1f68be07528d76bc` (299 lines). Driver/cases/shared guards/SQL/source pins remain unchanged. No normalization, weakened CHECK or skipped assertion.
+4. Corrected real execution on `scratch_build_migration_dd524fa92564bb29dc5e9c49` began `2026-10-03T23:50:12.773Z`, finished `2026-10-03T23:51:49.151Z`, exit0. All33 case oracles passed. Final privileged SELECT receipt:9 rows,1 exact migration ledger row, data digest `269ceb0a352fdcdfe0bc3828efd75863`, catalog digest `c23637780a536ea027c7a4c263ca4eb6`. Separate app-tenant-a/b cases explicitly set READ ONLY and require role `streamline_app`, mode on, exact tenant and exact unique ID-to-revision/cardinality maps. Guard verified zero remaining sessions/current-run OID-owner identity before dropping only this database. SQL CAS only; fixture RLS, not deployed policy or service authorization. Canonical sanitized observation-object SHA `d1c7b33059aaa5d8407c827eae97b3fd407527277556d89f090aac4b6db08627`.
+
+### Sanitized PostgreSQL execution receipt
+
+```json
+{
+  "sourceRevision": "15eee78d9",
+  "runDatabase": "scratch_build_migration_dd524fa92564bb29dc5e9c49",
+  "startedAt": "2026-10-03T23:50:12.773Z",
+  "finishedAt": "2026-10-03T23:51:49.151Z",
+  "cases": [
+    {
+      "stage": "case",
+      "caseId": "focused-prerequisites",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "revision-absent-before-upgrade",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "migration-lock-timeout",
+      "passed": true,
+      "expectedSqlstate": "55P03",
+      "actualSqlstate": "55P03"
+    },
+    {
+      "stage": "case",
+      "caseId": "failed-lock-no-ledger",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "official-whole-1732",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "constant-default-upgrade",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "validated-revision-catalog",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "official-ledger-replay",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "raw-rerun-refused",
+      "passed": true,
+      "expectedSqlstate": "42701",
+      "actualSqlstate": "42701"
+    },
+    {
+      "stage": "case",
+      "caseId": "down-refused",
+      "passed": true,
+      "expectedSqlstate": "P0001",
+      "actualSqlstate": "P0001",
+      "expectedReason": "APPROVAL_REVISION_ROLLBACK_REQUIRES_REVIEW",
+      "actualReason": "APPROVAL_REVISION_ROLLBACK_REQUIRES_REVIEW"
+    },
+    {
+      "stage": "case",
+      "caseId": "refused-ddl-unchanged",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "new-row-default-one",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "direct-writer-overrides-input-revision",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "reassignment-advances-revision",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "column-restricted-fk-delete-advances-revision",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "range-0",
+      "passed": true,
+      "expectedSqlstate": "23514",
+      "actualSqlstate": "23514"
+    },
+    {
+      "stage": "case",
+      "caseId": "range--1",
+      "passed": true,
+      "expectedSqlstate": "23514",
+      "actualSqlstate": "23514"
+    },
+    {
+      "stage": "case",
+      "caseId": "range-9007199254740992",
+      "passed": true,
+      "expectedSqlstate": "23514",
+      "actualSqlstate": "23514"
+    },
+    {
+      "stage": "case",
+      "caseId": "range-null",
+      "passed": true,
+      "expectedSqlstate": "23502",
+      "actualSqlstate": "23502"
+    },
+    {
+      "stage": "case",
+      "caseId": "exhaustion-refused",
+      "passed": true,
+      "expectedSqlstate": "23514",
+      "actualSqlstate": "23514",
+      "expectedReason": "APPROVAL_REVISION_EXHAUSTED",
+      "actualReason": "APPROVAL_REVISION_EXHAUSTED"
+    },
+    {
+      "stage": "case",
+      "caseId": "exhaustion-unchanged",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "opposing-same-revision-one-winner",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "delayed-reassign-stale-decision-refused",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "delayed-cancel-stale-decision-refused",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "delayed-delete-stale-decision-refused",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "transactional-audit-failure",
+      "passed": true,
+      "expectedSqlstate": "23502",
+      "actualSqlstate": "23502"
+    },
+    {
+      "stage": "case",
+      "caseId": "row-revision-and-audit-rolled-back",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "app-tenant-a-read-only",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "app-tenant-b-read-only",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "foreign-tenant-write-zero",
+      "passed": true
+    },
+    {
+      "stage": "case",
+      "caseId": "foreign-tenant-insert-denied",
+      "passed": true,
+      "expectedSqlstate": "42501",
+      "actualSqlstate": "42501"
+    },
+    {
+      "stage": "case",
+      "caseId": "missing-tenant-denied",
+      "passed": true,
+      "expectedSqlstate": "42501",
+      "actualSqlstate": "42501"
+    },
+    {
+      "stage": "case",
+      "caseId": "app-trigger-disable-denied",
+      "passed": true,
+      "expectedSqlstate": "42501",
+      "actualSqlstate": "42501"
+    }
+  ],
+  "adminReceipt": {
+    "stage": "admin-select-receipt",
+    "rows": 9,
+    "digest": "269ceb0a352fdcdfe0bc3828efd75863",
+    "catalogDigest": "c23637780a536ea027c7a4c263ca4eb6",
+    "ledgerRows": 1,
+    "sqlCasOnly": true,
+    "deployedRlsVerified": false
+  },
+  "cleanup": {
+    "stage": "cleanup",
+    "droppedCurrentRunDatabase": true
+  },
+  "wholeChainVerified": false,
+  "applicationRuntimeVerified": false,
+  "deployedRlsVerified": false
+}
+```
+
+Repeatable commands: `node --test src/scripts/__tests__/approval-revision-migration-proof.test.mjs src/scripts/__tests__/organization-setup-migration-proof.test.mjs src/scripts/__tests__/portal-migration-proof.test.mjs`; exact proof-path ESLint and diff checks. Runtime invoked `node src/scripts/approval-revision-migration-proof.mjs --run-id=dd524fa92564bb29dc5e9c49 --approve-database=scratch_build_migration_dd524fa92564bb29dc5e9c49 --execute` with backend.env supplied only in the child environment. Each repeat must use a fresh run ID and approve only that derived database; no credential, IAM token or connection URL is stored in evidence.
+
+Current unverified: full historical migration chain; real application service/controller/RBAC, cache/event delivery, browser/mobile, deployment and operations. The33 passing SQL cases are bounded PostgreSQL evidence, not HTTP authorization or immutable-artifact approval proof. RLS and parent tables in this proof are declared fixtures rather than deployed policy evidence. Independent application-role READ ONLY receipts at `2026-10-03T23:44:23.615Z` and after the successful run at `2026-10-04T00:02:10.026Z` observed role streamline_app, mode on, revision absent and0 approvals in reserved project54. The second receipt additionally restricted the catalog check to the exact three owned scratch names and observed0 remaining databases. Application1732 remains unapplied; no application approval writes, live Ticket comments or secret-bearing evidence were created. Both failed runs and their cleanup remain part of the chronology. The full BT task and its D/I/T/R/B/L stages remain open.
+
+## Approval row revision source correction — 2026-10-04
+
+Selected requirement: BT-27a037364398; supporting BT-801e948e8a67. [Exact disjoint ownership and full acceptance](../implementation/WORK-CLAIMS.md#bt-27a037364398--approval-row-revision-and-atomic-commands-43) was reserved at outer `61fa949c5`, starting backend `d2863e8d8`; backend source is committed at `43074abf8`. Classification: Current verified for bounded source/focused gates and catalog observations; Current unverified for runtime, browser and deployment. No full task stage or checkbox closes.
+
+- Backend genuine RED: concurrent public approve/reject commands both fulfilled at expectedRevision1; expected exactly one. Final fake-adapter row still had revision1. One focused test failed before production changes; this is source-level behavior, not database race proof.
+- Frontend genuine RED: public delete-hook command with `{approvalId:7, expectedRevision:3}` interpolated the object into the URL and sent no body. One focused test failed before production changes; runtime and browser behavior remain unverified.
+- Existing baseline flaws: unconditional lifecycle writes; terminal decisions accepted by general management update; best-effort mutation audits; assigned approver can decide without project membership but cannot read the current detail GET. Approval request creation does not bind an immutable artifact. The correction must preserve canonical permission keys, route exposure, explicit module access and object-level policy.
+- Application migration readiness: READ ONLY with the reserved tenant context sees integer id/project_id, text org_id, no revision column, and0 approvals in reserved project54. No application DDL or approval mutation was executed.1732 adds a separate bigint row revision exposed as a positive safe JSON integer; a database trigger advances every update. This is not an artifact version. [Corrected proof45](#approval-revision-postgresql-replay--2026-10-04) subsequently verifies focused scratch PostgreSQL trigger/CAS/rollback and33 case oracles. Actual application migration, service/API authorization/persistence and deployed policies remain Current unverified.
+- Static migration evidence: discipline self-tests36, rollback self-tests9 and immutability self-tests19 pass. Real discipline still fails15 existing entries; real rollback still fails13 existing entries. Neither result names1732; no baseline is widened. Real immutability passes, and every earlier journal entry compares unchanged after the single1732 append. Static absence of a new finding is not a passed full gate or migration replay.
+- Final backend evidence: coordinator 15 suites/207 tests pass, including opposing decisions, critical-audit rollback, assigned detail access, permission/terminal/revision refusals and 12 public mutation foreign-tenant/wrong-project/missing/deleted-record negatives. Exact 22-path lint/diff and scoped/production TypeScript pass. Independent source/SQL/journal/generated-contract review is clear. Three existing Inbox factories only add required `revision: 1`. Controller E2E was refused by the disposable-database guard before zero tests; mocks cannot substitute for that gate.
+- Official artifact: both OpenAPI files have SHA `8ba8a4d13ca5be105d2381e4acb95db88c11442a735f14d097cec719082b4318`. Freshness passes at 4107 operations/4092 Zod contracts/4107 exposure stamps; Build freshness passes at 311 operations/390 schemas and byte vendor passes. The resolved inventory retains 410 mandatory-key operations, 1550 required bodies and 12 multipart contracts. Eight changed operations are approval-owned. No generator or generated artifact was edited by hand.
+- Frontend source at `4773c5685`: coordinator nine suites/83 tests, exact lint/diff, scoped and production TypeScript pass; independent 22-file/final-delta review is clear. Displayed fresh revision survives background reads;409 retains choice/reason and blocks resubmit until explicit Review latest. Decisions accept pending/escalated/changes_requested, reject requested; requested management remains available. Project decisions require actual assigned membership or management, bulk controls require management, and successful bulk rows alone clear after current-owner acknowledgements. Hook inputs/types derive from official contracts; no new unused-underscore escapes or comments. Two initial unknown-ReactNode diagnostics were fixed and rechecked.
+- Broad gate limits at this package: full backend test TypeScript again exhausts10GB (child134, pnpm1). Full frontend spec TypeScript fails with23 diagnostics in six unowned Calendar/Chat/Wiki/KB/Mail test paths, with no43 diagnostic. Preserve failures and unrelated hashes; scoped/production success does not imply a full test gate passed. This is not browser or persistence proof.
+- Existing FK clarification: READ ONLY deployed catalog shows validated `fk_project_approvals_approver_actor` uses `ON DELETE SET NULL (approver_membership_id)`. The older unrestricted composite definition in historical0668 is an intermediate baseline, not a reproduced current defect;0770 supplies the later correction. [Focused proof44/45](#approval-revision-postgresql-replay--2026-10-04) preserves this distinction and verifies its column-restricted FK action advances revision. Full historical migration-chain and application runtime evidence remain Current unverified.
+- Full remaining scope: all eight owners must supply bounded authorized immutable artifact snapshots/current-version checks; existing approvals remain unbound. Registered lifecycle events, cache/event delivery, canonical decision Sheet and Inbox integration, filters, requester/due/status/version projections, URL/history/mobile behavior, role/tenant, real persistence, browser, deployment and operations require separate matching evidence. Do not enqueue an unregistered changed event into a publisher that retries unknown types.
+
 Status: Current unverified historical findings; Planned remediation
 
 ## Problem Statement
