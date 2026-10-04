@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import type { Invitation } from "@/hooks/api/users";
 import { USER_INVITE_ROLES, formatRoleLabel } from "@/lib/constants/user-invite-roles";
+import { describeModuleAccess } from "./invite-module-access";
 
 export type InvitationStatus = "pending" | "accepted" | "expired" | "revoked" | "declined";
 export type InvitationStatusFilter = "all" | InvitationStatus;
@@ -266,24 +267,28 @@ export function getInvitationColumns({
     const invitationStatus = getInvitationStatus(invitation);
     const editable =
       (invitationStatus === "pending" || invitationStatus === "expired") && canInvite;
-    if (!editable)
-      return (
-        <Badge variant="outline" className="h-4 px-1.5 py-0 text-micro">
-          {formatRoleLabel(invitation.role)}
-        </Badge>
-      );
+    const access = describeModuleAccess(invitation.moduleAccess);
     return (
-      <InvitationRoleSelect
-        invitationId={invitation.id}
-        email={invitation.email}
-        role={invitation.role}
-        disabled={isInvitationRoleChangePending(
-          isChangingRole,
-          changingInvitationId,
-          invitation.id,
+      <div className="flex flex-wrap items-center gap-1.5">
+        {editable ? (
+          <InvitationRoleSelect
+            invitationId={invitation.id}
+            email={invitation.email}
+            role={invitation.role}
+            disabled={isInvitationRoleChangePending(
+              isChangingRole,
+              changingInvitationId,
+              invitation.id,
+            )}
+            onChange={onRoleChange}
+          />
+        ) : (
+          <Badge variant="outline" className="h-4 px-1.5 py-0 text-micro">
+            {formatRoleLabel(invitation.role)}
+          </Badge>
         )}
-        onChange={onRoleChange}
-      />
+        {access ? <span className="text-micro text-muted-foreground">+ {access}</span> : null}
+      </div>
     );
   }
 

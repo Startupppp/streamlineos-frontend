@@ -69,7 +69,7 @@ function PersonRow({ person, selected, onPick }: PersonRowProps) {
       </button>
       {person.eligibility === "needs-payee-link" ? (
         <p className="px-2 text-micro leading-snug text-muted-foreground">
-          Add them as a worker and mark as payee in Directory, or invite them.
+          In Directory, open their Worker tab and mark them as payee, or invite them.
           {person.organizationPersonId ? (
             <>
               {" "}

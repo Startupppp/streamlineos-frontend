@@ -40,6 +40,22 @@ export const INVITE_ACCESS_PRESETS: readonly { id: string; label: string; access
   { id: "viewer", label: "Viewer", access: [] },
 ];
 
+function accessKey(access: readonly { moduleKey: string; standing: string }[]): string {
+  return access.map((item) => `${item.moduleKey}:${item.standing}`).sort().join("|");
+}
+
+export function describeModuleAccess(access: readonly { moduleKey: string; standing: string }[]): string | null {
+  if (access.length === 0) return null;
+  const preset = INVITE_ACCESS_PRESETS.find((candidate) => accessKey(candidate.access) === accessKey(access));
+  if (preset) return preset.label;
+  return access
+    .map((item) => {
+      const name = MANIFEST.modules.find((mod) => mod.id === item.moduleKey)?.displayName ?? item.moduleKey;
+      return `${name} ${item.standing === "ADMIN" ? "Admin" : "Member"}`;
+    })
+    .join(", ");
+}
+
 function isModuleStanding(value: string): value is "MEMBER" | "ADMIN" {
   return value === "MEMBER" || value === "ADMIN";
 }

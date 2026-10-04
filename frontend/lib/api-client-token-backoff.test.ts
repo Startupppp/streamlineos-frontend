@@ -4,7 +4,7 @@ installAbortSignalPolyfill();
 
 process.env.NEXT_PUBLIC_API_URL ??= "http://api.test";
 
-import { clearBackendTokenCache, getBackendToken } from "@/lib/api-client";
+import { clearBackendTokenCache, getBackendToken, seedBackendToken } from "@/lib/api-client";
 
 const sessionCalls: string[] = [];
 
@@ -64,5 +64,38 @@ describe("a session that yields no backend token must not be re-asked on every r
 
     expect(first).toBe(backendJwt);
     expect(sessionCalls).toHaveLength(1);
+  });
+});
+
+describe("a token rendered into the server session seeds the client cache", () => {
+  function tokenExpiringIn(seconds: number): string {
+    const exp = Math.floor(Date.now() / 1000) + seconds;
+    return `header.${Buffer.from(JSON.stringify({ exp })).toString("base64url")}.signature`;
+  }
+
+  it("serves the first request without a session round trip", async () => {
+    const seeded = tokenExpiringIn(600);
+    seedBackendToken(seeded);
+
+    expect(await getBackendToken()).toBe(seeded);
+    expect(sessionCalls).toHaveLength(0);
+  });
+
+  it("ignores a token about to expire and fetches a fresh one", async () => {
+    seedBackendToken(tokenExpiringIn(5));
+    const fresh = tokenExpiringIn(600);
+    sessionBody = { backendJwt: fresh };
+
+    expect(await getBackendToken()).toBe(fresh);
+    expect(sessionCalls).toHaveLength(1);
+  });
+
+  it("never replaces a token the client already holds", async () => {
+    const held = tokenExpiringIn(600);
+    sessionBody = { backendJwt: held };
+    await getBackendToken();
+    seedBackendToken(tokenExpiringIn(900));
+
+    expect(await getBackendToken()).toBe(held);
   });
 });

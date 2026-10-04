@@ -3,6 +3,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
+import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { workersListParams } from "@/lib/query-keys/directory-workers-list";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import type { GatedQueryResult } from "@/hooks/api/gated-query";
@@ -18,6 +19,7 @@ import type {
   CreateWorkerInput,
   TerminateEngagementInput,
   UpdateEngagementInput,
+  UpdateWorkerInput,
   Worker,
   WorkerEngagement,
   WorkersPage,
@@ -62,6 +64,26 @@ export function useCreateWorker() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.directory.workersAll });
       qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.directory.peopleAll });
+      invalidatePayrollPeople(qc);
+    },
+  });
+}
+
+function invalidatePayrollPeople(qc: ReturnType<typeof useQueryClient>) {
+  qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.peopleAll });
+  qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.readinessAll });
+}
+
+export function useUpdateWorker() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("directory:workers:manage", {
+    mutationKey: ["directory", "workers", "update"],
+    mutationFn: ({ workerId, ...input }: UpdateWorkerInput) =>
+      apiClient.patch<Worker>(`/directory/workers/${workerId}`, input, undefined, workerContract),
+    onSuccess: (_updated, variables) => {
+      qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.directory.workersAll });
+      qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.directory.worker(variables.workerId) });
+      invalidatePayrollPeople(qc);
     },
   });
 }
