@@ -31,6 +31,10 @@ const snapshotResultContract = lazyContract(() =>
   import("@/hooks/api/build/reports-schema").then((m) => m.snapshotResultContract),
 );
 
+const timeBudgetContract = lazyContract(() =>
+  import("@/hooks/api/build/reports-schema").then((m) => m.timeBudgetContract),
+);
+
 export type VelocitySprint = ProjectsReportsVelocityResponse["data"][number];
 
 interface BurnupPoint {
@@ -159,5 +163,20 @@ export function useCaptureSnapshot(projectId: number) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projectReports.cfd(projectId) });
     },
+  });
+}
+
+export function useProjectTimeBudget(
+  projectId: number,
+  from: string,
+  to: string,
+) {
+  const canView = useCan("build:view");
+  return useQuery({
+    queryKey: buildWorkQueryKeys.projects.analytics(projectId, { from, to, _key: "time-budget" }),
+    queryFn: ({ signal }) =>
+      apiClient.get(`/build/${projectId}/analytics/time-budget`, { from, to }, signal, timeBudgetContract),
+    enabled: canView && !!projectId && !!from && !!to,
+    staleTime: 60_000,
   });
 }

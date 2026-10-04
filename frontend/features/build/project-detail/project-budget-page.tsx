@@ -31,6 +31,7 @@ import { useOrgDisplay } from "@/hooks/api/org-display";
 import { formatMoneyCompact } from "@/lib/format-utils";
 import { useMemberCostColumns, type MemberBreakdownRow } from "./use-member-cost-columns";
 import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
+import { ProjectTimeBudgetSection } from "./project-time-budget-section";
 
 interface ProjectBudgetPageProps {
   projectId: string;
@@ -270,6 +271,8 @@ export function ProjectBudgetPage({ projectId: projectIdStr }: ProjectBudgetPage
             />
         ) : null}
         </PageState>
+
+        <ProjectTimeBudgetSection projectId={projectId} />
       </PmPageShell>
     </PageWrapper>
   );

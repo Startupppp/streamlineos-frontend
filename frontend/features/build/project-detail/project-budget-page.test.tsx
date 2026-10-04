@@ -21,6 +21,10 @@ jest.mock("@/hooks/api/access", () => ({
   useAccess: () => useAccess(),
 }));
 
+jest.mock("./project-time-budget-section", () => ({
+  ProjectTimeBudgetSection: () => null,
+}));
+
 jest.mock("@/hooks/api/entitlements", () => ({
   useEntitlements: () => ({ data: undefined }),
 }));
