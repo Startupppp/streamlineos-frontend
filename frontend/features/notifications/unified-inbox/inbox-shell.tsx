@@ -179,16 +179,16 @@ export function InboxShell() {
 
   const handleApprovalClick = useCallback(
     (item: BuildApprovalInboxItem) => {
-      if (item.deepLink !== null) {
-        router.push(normalizeBuildDeepLink(item.deepLink));
-        return;
-      }
       if (item.sourceModule === "build") {
         if (item.projectId !== null) {
-          router.push(`/build/approvals?${toSearchParams({ projectId: String(item.projectId) }).toString()}`);
+          router.push(`/build/approvals?${toSearchParams({ projectId: String(item.projectId), approvalId: String(item.id) }).toString()}`);
         } else {
           router.push("/build/approvals");
         }
+        return;
+      }
+      if (item.deepLink !== null) {
+        router.push(normalizeBuildDeepLink(item.deepLink));
         return;
       }
       router.push("/inbox?view=approvals");

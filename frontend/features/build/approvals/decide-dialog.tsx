@@ -45,7 +45,8 @@ interface DecideDialogProps {
   onOpenChange: (open: boolean) => void;
   projectId: number;
   approvalId: number;
-  revision: number;
+  revision?: number;
+  onCloseAutoFocus?: () => void;
 }
 
 export function DecideDialog({
@@ -54,6 +55,7 @@ export function DecideDialog({
   projectId,
   approvalId,
   revision,
+  onCloseAutoFocus,
 }: DecideDialogProps) {
   const canDecide = useCan("build:approvals:decide");
   const detail = useApproval(projectId, approvalId, open);
@@ -116,7 +118,7 @@ export function DecideDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="gap-3 p-4 sm:max-w-md">
+      <DialogContent className="gap-3 p-4 sm:max-w-md" onCloseAutoFocus={onCloseAutoFocus ? (event) => { event.preventDefault(); onCloseAutoFocus(); } : undefined}>
         <DialogHeader>
           <DialogTitle>Make Decision</DialogTitle>
           <DialogDescription className="text-label">
@@ -124,7 +126,7 @@ export function DecideDialog({
           </DialogDescription>
         </DialogHeader>
         {detail.isPending && !visible && <LoadingState variant="list" rows={2} />}
-        {visible && <p className="text-xs text-muted-foreground">Revision {visible.revision}{visible.revision !== revision ? " · Updated since the queue was loaded" : ""} · {visible.status}</p>}
+        {visible && <p className="text-xs text-muted-foreground">Revision {visible.revision}{revision !== undefined && visible.revision !== revision ? " · Updated since the queue was loaded" : ""} · {visible.status}</p>}
         {Boolean(detail.error || review.error) && <div role="alert" className="text-sm text-destructive">
           {getErrorMessage(detail.error || review.error)}
           <ErrorReference error={detail.error || review.error} />

@@ -3,16 +3,23 @@ import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { toast } from "sonner";
 import { ApprovalsInboxPage } from "./approvals-inbox-page";
 import { ApiError } from "@/lib/api-envelope";
+import type { ApprovalInboxItem } from "@/types/projects";
+import type { DataTableColumn } from "@/components/ui/data-table";
 
+let mockSearchParams = new URLSearchParams();
+const mockReplace = jest.fn();
+const mockPush = jest.fn();
 jest.mock("next/navigation", () => ({
-  useSearchParams: () => new URLSearchParams(),
-  useRouter: () => ({ replace: jest.fn() }),
+  useSearchParams: () => mockSearchParams,
+  useRouter: () => ({ replace: mockReplace, push: mockPush }),
   usePathname: () => "/build/approvals",
 }));
 
 jest.mock("@/hooks/api/build/approvals", () => ({
   useApprovalInbox: jest.fn(),
   useUpdateApproval: jest.fn(),
+  useApproval: jest.fn(),
+  useDecideApproval: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -77,9 +84,10 @@ jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
 }));
 
 jest.mock("@/components/ui/data-table", () => ({
-  DataTable: ({ data, selection }: { data: Array<{ id: number; projectId: number | null }>; selection?: { selected: Set<string | number>; onChange: (ids: Set<string | number>) => void } }) => (
+  DataTable: ({ data, selection, columns }: { data: ApprovalInboxItem[]; columns: DataTableColumn<ApprovalInboxItem>[]; selection?: { selected: Set<string | number>; onChange: (ids: Set<string | number>) => void } }) => (
     <div data-testid="data-table" data-rows={data.length} data-selected={selection?.selected.size ?? 0}>
       <button onClick={() => selection?.onChange(new Set(data.map((row) => `${row.projectId}-${row.id}`)))}>Select approvals</button>
+      {data.map((row) => <div key={row.id}>{columns.find((column) => column.key === "actions")?.cell?.(row)}</div>)}
     </div>
   ),
   DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
@@ -119,17 +127,12 @@ jest.mock("@/components/ui/date-range-picker", () => ({
   DateRangePicker: () => null,
 }));
 
-jest.mock("./decide-dialog", () => ({ DecideDialog: () => null }));
 jest.mock("./approval-bulk-action-bar", () => ({
   ApprovalBulkActionBar: ({ selectedCount, onCancelSelected }: { selectedCount: number; onCancelSelected: () => void }) =>
     selectedCount ? <button onClick={onCancelSelected}>Cancel selected</button> : null,
 }));
-jest.mock("./approvals-inbox-columns", () => ({
-  INBOX_TABLE_HEADERS: ["Title", "Type", "Status", "Due", "Actions"],
-  buildApprovalsInboxColumns: jest.fn(() => []),
-  ApprovalsInboxMobileCard: () => null,
-}));
 jest.mock("./approvals-constants", () => ({
+  ...jest.requireActual("./approvals-constants"),
   STATUS_OPTIONS: [
     { value: "all", label: "All statuses" },
     { value: "pending", label: "Pending" },
@@ -150,6 +153,10 @@ const mockUseCan = useCan as jest.Mock;
 const mockUseAccess = useAccess as jest.Mock;
 const mockUseOrgMembers = useOrgMembers as jest.Mock;
 const mockUseBuildListFilters = useBuildListFilters as jest.Mock;
+const { useApproval: mockUseApproval, useDecideApproval: mockUseDecideApproval } = jest.requireMock<{
+  useApproval: jest.Mock<unknown, [number, number, boolean]>;
+  useDecideApproval: jest.Mock;
+}>("@/hooks/api/build/approvals");
 
 const ACCESS_GRANTED = {
   data: { isOrgOwner: false, scopes: { "build:approvals:view": "all" }, modules: {} },
@@ -208,12 +215,78 @@ const approvalRow = {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockSearchParams = new URLSearchParams();
   mockUseCan.mockReturnValue(false);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseApprovalInbox.mockReturnValue(baseQueryResult({ data: approvalPages([]) }));
   mockUseUpdateApproval.mockReturnValue({ mutate: jest.fn(), mutateAsync: jest.fn(), captureOwner: () => ({ isCurrent: () => true }), isPending: false });
   mockUseOrgMembers.mockReturnValue({ data: { data: [] } });
   mockUseBuildListFilters.mockReturnValue(defaultFilters());
+  mockUseApproval.mockReturnValue({ data: undefined, isPending: false, error: null, ownerStamp: null, refetch: jest.fn() });
+  mockUseDecideApproval.mockReturnValue({ mutateAsync: jest.fn(), isPending: false });
+});
+
+it.each([[42, 7], [2_147_483_647, 2_147_483_647]])("opens fresh project %s approval %s outside the loaded queue", (projectId, approvalId) => {
+  mockSearchParams = new URLSearchParams(`status=pending&cursor=retained&projectId=${projectId}&approvalId=${approvalId}`);
+  mockUseCan.mockReturnValue(true);
+  render(<ApprovalsInboxPage />);
+  expect(screen.getByRole("dialog")).toBeInTheDocument();
+  expect(mockUseApproval).toHaveBeenCalledWith(projectId, approvalId, true);
+  expect(screen.getByTestId("empty-state")).toHaveTextContent("No approvals waiting");
+});
+
+it.each(["projectId=42", "approvalId=7", "projectId=0&approvalId=7", "projectId=42&approvalId=-1",
+  "projectId=42&approvalId=2147483648", "projectId=2147483648&approvalId=7", "projectId=42&approvalId=7.5",
+  "projectId=42&approvalId=1e3", "projectId=42&approvalId=07", "projectId=42&approvalId=%207",
+  "projectId=42&approvalId=7&approvalId=8", "projectId=42&projectId=43&approvalId=7"])(
+  "does not activate a detail read for malformed or incomplete selection %s", (query) => {
+    mockSearchParams = new URLSearchParams(query);
+    mockUseCan.mockReturnValue(true);
+    render(<ApprovalsInboxPage />);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(mockUseApproval.mock.calls.filter((call) => call[2])).toHaveLength(0);
+  },
+);
+
+it("reconstructs selection from refreshed and backward/forward route values", () => {
+  mockSearchParams = new URLSearchParams("projectId=42&approvalId=7&cursor=retained");
+  mockUseCan.mockReturnValue(true);
+  const view = render(<ApprovalsInboxPage />);
+  expect(screen.getByRole("dialog")).toBeInTheDocument();
+  mockSearchParams = new URLSearchParams("projectId=42&cursor=retained");
+  view.rerender(<ApprovalsInboxPage />);
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  mockSearchParams = new URLSearchParams("projectId=42&approvalId=8&cursor=retained");
+  view.rerender(<ApprovalsInboxPage />);
+  expect(mockUseApproval).toHaveBeenLastCalledWith(42, 8, true);
+  expect(screen.getByRole("dialog")).toBeInTheDocument();
+});
+
+it.each(["Cancel", "Escape"])("%s closes a pending direct read without changing queue facets or scroll", async (action) => {
+  mockSearchParams = new URLSearchParams("q=release&status=escalated&cursor=retained&page=3&projectId=42&approvalId=7");
+  mockUseCan.mockReturnValue(true);
+  mockUseApproval.mockReturnValue({ data: undefined, isPending: true, error: null, ownerStamp: "owner-1", refetch: jest.fn() });
+  render(<ApprovalsInboxPage />);
+  if (action === "Cancel") fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+  else fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
+  await waitFor(() => expect(mockReplace).toHaveBeenCalledWith("/build/approvals?q=release&status=escalated&cursor=retained&page=3&projectId=42", { scroll: false }));
+});
+
+it("pushes queue selection and returns focus to its actual Decide button after closing", async () => {
+  mockSearchParams = new URLSearchParams("q=release&cursor=retained");
+  mockUseCan.mockReturnValue(true);
+  mockUseApprovalInbox.mockReturnValue(baseQueryResult({ data: approvalPages([approvalRow]) }));
+  const view = render(<ApprovalsInboxPage />);
+  const origin = screen.getByRole("button", { name: "Decide" });
+  origin.focus();
+  fireEvent.click(origin);
+  expect(mockPush).toHaveBeenCalledWith("/build/approvals?q=release&cursor=retained&projectId=1&approvalId=1", { scroll: false });
+  mockSearchParams = new URLSearchParams("q=release&cursor=retained&projectId=1&approvalId=1");
+  view.rerender(<ApprovalsInboxPage />);
+  fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+  mockSearchParams = new URLSearchParams("q=release&cursor=retained&projectId=1");
+  view.rerender(<ApprovalsInboxPage />);
+  await waitFor(() => expect(origin).toHaveFocus());
 });
 
 it("shows loading skeleton while access is loading and not error state", () => {

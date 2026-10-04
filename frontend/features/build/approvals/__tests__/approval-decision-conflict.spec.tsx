@@ -7,20 +7,66 @@ const detail = { id: 7, orgId: "org-1", projectId: 42, title: "Reviewed approval
 let currentDetail: typeof detail | undefined = detail;
 let canDecide = true;
 let stamp: string | null = "owner-1";
+let readError: unknown = null;
 const mutateAsync = jest.fn();
 jest.mock("@/hooks/api/build/approvals", () => ({
-  useApproval: () => ({ data: currentDetail, isPending: !currentDetail, error: null, ownerStamp: stamp, refetch }),
+  useApproval: () => ({ data: currentDetail, isPending: !currentDetail && !readError, error: readError, ownerStamp: stamp, refetch }),
   useDecideApproval: () => ({ mutateAsync, isPending: false }),
 }));
 jest.mock("@/hooks/api/access", () => ({ useCan: () => canDecide }));
 jest.mock("sonner", () => ({ toast: { success: jest.fn() } }));
 
-beforeEach(() => { currentDetail = detail; stamp = "owner-1"; canDecide = true; refetch.mockReset(); mutateAsync.mockReset(); });
+beforeEach(() => { currentDetail = detail; stamp = "owner-1"; canDecide = true; readError = null; refetch.mockReset(); mutateAsync.mockReset(); });
 
 function mount() {
   return render(<DecideDialog open projectId={42} approvalId={7} revision={3} onOpenChange={jest.fn()} />);
 }
 function submit() { fireEvent.click(screen.getByRole("button", { name: "Submit" })); }
+
+it("reviews a direct entry's fresh revision without inventing an earlier queue revision", async () => {
+  render(<DecideDialog open projectId={42} approvalId={7} onOpenChange={jest.fn()} />);
+  expect(screen.getByText("Revision 3 · pending")).toBeInTheDocument();
+  expect(screen.queryByText(/Updated since the queue was loaded/)).not.toBeInTheDocument();
+  submit();
+  await waitFor(() => expect(mutateAsync).toHaveBeenCalledWith(expect.objectContaining({ expectedRevision: 3 })));
+});
+
+it("waits for fresh direct-entry content before enabling a decision", async () => {
+  currentDetail = undefined;
+  const view = render(<DecideDialog open projectId={42} approvalId={7} onOpenChange={jest.fn()} />);
+  expect(screen.queryByText("Reviewed approval")).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Submit" })).toBeDisabled();
+  submit();
+  expect(mutateAsync).not.toHaveBeenCalled();
+  currentDetail = { ...detail, revision: 4 };
+  view.rerender(<DecideDialog open projectId={42} approvalId={7} onOpenChange={jest.fn()} />);
+  submit();
+  await waitFor(() => expect(mutateAsync).toHaveBeenCalledWith(expect.objectContaining({ expectedRevision: 4 })));
+});
+
+it.each([403, 404, 503])("hides prior direct-entry content and refuses dispatch on detail %s", async (status) => {
+  readError = new ApiError("Approval unavailable", status);
+  render(<DecideDialog open projectId={42} approvalId={7} onOpenChange={jest.fn()} />);
+  expect(screen.queryByText("Reviewed approval")).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Submit" })).toBeDisabled();
+  expect(screen.getByRole("alert")).toHaveTextContent("Approval unavailable");
+  submit();
+  expect(mutateAsync).not.toHaveBeenCalled();
+});
+
+it("keeps a direct-entry conflict's reason until a fresh explicit review succeeds", async () => {
+  mutateAsync.mockRejectedValueOnce(new ApiError("Revision changed", 409));
+  render(<DecideDialog open projectId={42} approvalId={7} onOpenChange={jest.fn()} />);
+  fireEvent.change(screen.getByLabelText("Comment (optional)"), { target: { value: "Retain direct review" } });
+  submit();
+  await screen.findByRole("button", { name: "Review latest" });
+  refetch.mockResolvedValue({ data: { ...detail, revision: 4 }, error: null });
+  fireEvent.click(screen.getByRole("button", { name: "Review latest" }));
+  await screen.findByText("Revision 4 · pending");
+  expect(screen.getByLabelText("Comment (optional)")).toHaveValue("Retain direct review");
+  submit();
+  await waitFor(() => expect(mutateAsync).toHaveBeenLastCalledWith({ approvalId: 7, decision: "approved", expectedRevision: 4, decisionComment: "Retain direct review" }));
+});
 
 it("submits the displayed detail revision with the entered reason", async () => {
   mount();

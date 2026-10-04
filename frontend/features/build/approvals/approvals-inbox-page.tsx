@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Clock, ListChecks } from "lucide-react";
 import { toast } from "sonner";
 import { useApprovalInbox, useUpdateApproval } from "@/hooks/api/build/approvals";
@@ -43,6 +44,9 @@ const FILTER_DEFINITIONS = [
 ] as const;
 
 export function ApprovalsInboxPage() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const canDecide = useCan("build:approvals:decide");
   const canManage = useCan("build:approvals:manage");
   const searchInputRef = useRef<HTMLInputElement | null>(null);
@@ -83,7 +87,16 @@ export function ApprovalsInboxPage() {
   const { data: membersRes } = useOrgMembers(1, 100);
   const members = useMemo(() => membersRes?.data ?? [], [membersRes]);
 
-  const [decideTarget, setDecideTarget] = useState<DecideTarget | null>(null);
+  const [queueTarget, setQueueTarget] = useState<DecideTarget | null>(null);
+  const [returnFocus, setReturnFocus] = useState<HTMLElement | null>(null);
+  const selectionIds = ["projectId", "approvalId"].map((key) => {
+    const raw = searchParams.get(key);
+    if (!raw || searchParams.getAll(key).length !== 1 || !/^[1-9]\d{0,9}$/.test(raw)) return null;
+    const id = Number(raw);
+    return id <= 2_147_483_647 ? id : null;
+  });
+  const [projectId, approvalId] = selectionIds;
+  const decideTarget = projectId && approvalId ? { projectId, approvalId } : null;
   const updateApproval = useUpdateApproval();
   const [selection, setSelection] = useState<Set<string | number>>(new Set());
   const [isBulkPending, setIsBulkPending] = useState(false);
@@ -130,21 +143,36 @@ export function ApprovalsInboxPage() {
   );
 
   const handleDecideClick = useCallback((item: ApprovalInboxItem) => {
-    setDecideTarget({
+    if (item.projectId === null) return;
+    setReturnFocus(document.activeElement instanceof HTMLElement ? document.activeElement : null);
+    setQueueTarget({
       approvalId: item.id,
-      projectId: item.projectId ?? 0,
+      projectId: item.projectId,
       title: item.title,
       revision: item.revision,
     });
-  }, []);
+    const next = new URLSearchParams(searchParams.toString());
+    next.set("projectId", String(item.projectId));
+    next.set("approvalId", String(item.id));
+    router.push(`${pathname}?${next}`, { scroll: false });
+  }, [pathname, router, searchParams]);
 
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
 
   const handleDecideDialogChange = useCallback((open: boolean) => {
-    if (!open) setDecideTarget(null);
-  }, []);
+    if (open) return;
+    setQueueTarget(null);
+    const next = new URLSearchParams(searchParams.toString());
+    next.delete("approvalId");
+    const query = next.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  }, [pathname, router, searchParams]);
+  const handleReturnFocus = useCallback(() => {
+    const target = returnFocus?.isConnected ? returnFocus : searchInputRef.current;
+    target?.focus({ preventScroll: true });
+  }, [returnFocus]);
 
   const handleStatusChange = useCallback(
     (value: string) => listFilters.setValue("status", value),
@@ -225,15 +253,15 @@ export function ApprovalsInboxPage() {
   );
 
   const handleKeyboardClear = useCallback(() => {
-    setDecideTarget(null);
-  }, []);
+    handleDecideDialogChange(false);
+  }, [handleDecideDialogChange]);
 
   useBuildListKeyboard({
     itemCount: filteredItems.length,
     onOpen: handleKeyboardOpen,
     onClearSelection: handleKeyboardClear,
     searchInputRef,
-    enabled: !isLoading,
+    enabled: !isLoading && !decideTarget,
   });
 
   return (
@@ -378,7 +406,8 @@ export function ApprovalsInboxPage() {
         onOpenChange={handleDecideDialogChange}
         projectId={decideTarget?.projectId ?? 0}
         approvalId={decideTarget?.approvalId ?? 0}
-        revision={decideTarget?.revision ?? 0}
+        revision={queueTarget?.projectId === decideTarget?.projectId && queueTarget?.approvalId === decideTarget?.approvalId ? queueTarget?.revision : undefined}
+        onCloseAutoFocus={handleReturnFocus}
       />
     </PageWrapper>
   );
