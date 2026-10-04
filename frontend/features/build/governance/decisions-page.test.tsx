@@ -273,3 +273,16 @@ it("shows the New Decision button when build:decisions:manage is granted", () =>
   render(<DecisionsPage projectId={1} />);
   expect(screen.getAllByRole("button", { name: /new decision/i }).length).toBeGreaterThan(0);
 });
+
+it("passes the URL-backed status filter to the decisions query so back-navigation restores the active filter without the component resetting it", () => {
+  mockUseBuildListFilters.mockReturnValue(
+    defaultFilters({
+      value: jest.fn((param: string) => (param === "status" ? "proposed" : "all")),
+    }),
+  );
+  render(<DecisionsPage projectId={1} />);
+  expect(mockUseProjectDecisions).toHaveBeenCalledWith(
+    1,
+    expect.objectContaining({ status: "proposed" }),
+  );
+});

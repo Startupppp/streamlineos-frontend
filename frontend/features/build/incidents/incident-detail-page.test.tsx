@@ -274,3 +274,24 @@ describe("getSlaState", () => {
     expect(getSlaState(incident, new Date("2026-06-01T00:00:00.000Z")).responseBreached).toBe(false);
   });
 });
+
+describe("IncidentDetailPage communications field (BT-0a862ab1ed4d)", () => {
+  it("renders the customerComms value when it is set", () => {
+    mockUseIncident.mockReturnValue(
+      baseQuery({ data: baseIncidentDetail({ customerComms: "Sent status email to all customers" }) }),
+    );
+    render(<IncidentDetailPage projectId={1} incidentId={1} />);
+    expect(screen.getByText("Sent status email to all customers")).toBeInTheDocument();
+  });
+
+  it("renders 'Not set' placeholder when customerComms is null", () => {
+    mockUseIncident.mockReturnValue(
+      baseQuery({ data: baseIncidentDetail({ customerComms: null }) }),
+    );
+    render(<IncidentDetailPage projectId={1} incidentId={1} />);
+    const customerCommsSection = screen.getByText(/customer comms/i, { selector: "p" });
+    const container = customerCommsSection.closest("div.space-y-1");
+    expect(container).not.toBeNull();
+    expect(container!.querySelector("span.italic")).toBeInTheDocument();
+  });
+});
