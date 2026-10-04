@@ -25,7 +25,7 @@ import { ReadinessRail } from "@/features/payroll/shared/readiness-rail";
 import { usePayrollRun } from "@/hooks/api/payroll/runs";
 import { ErrorState } from "@/components/shared";
 
-const LOCKED_STATUSES = new Set(["LOCKED", "PAID", "PAYSLIPS_PUBLISHED", "CLOSED"]);
+const LOCKED_STATUSES = new Set(["APPROVED", "LOCKED", "PAID", "PAYSLIPS_PUBLISHED", "CLOSED"]);
 
 interface RunDetailContentProps {
   runId: number;

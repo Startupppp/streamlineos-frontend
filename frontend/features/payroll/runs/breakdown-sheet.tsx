@@ -41,6 +41,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useCan } from "@/hooks/api/access";
 import { useRunEmployee, useAddAdjustment, useSetEmployeeHold, useReleaseEmployeeHold } from "@/hooks/api/payroll/run-employees";
+import { usePayrollRun } from "@/hooks/api/payroll/runs";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
 import { cn } from "@/lib/utils";
@@ -54,6 +55,8 @@ const adjustmentSchema = z.object({
   note: z.string().min(1).max(500),
 });
 type AdjustmentForm = z.infer<typeof adjustmentSchema>;
+
+const HOLD_RELEASE_BLOCKED_STATUSES = new Set(["APPROVED", "LOCKED", "CLOSED"]);
 
 const CATEGORY_ORDER: SalaryComponentType[] = [
   "EARNING",
@@ -140,6 +143,8 @@ export function BreakdownSheet({
   const canManage = useCan("payroll:runs:manage");
   const holdMutation = useSetEmployeeHold(runId, runEmployeeId ?? 0);
   const releaseMutation = useReleaseEmployeeHold(runId, runEmployeeId ?? 0);
+  const runStatus = usePayrollRun(runId).data?.run.status;
+  const canRelease = runStatus !== undefined && !HOLD_RELEASE_BLOCKED_STATUSES.has(runStatus);
   const [showHold, setShowHold] = useState(false);
   const [holdReason, setHoldReason] = useState("");
 
@@ -319,15 +324,17 @@ export function BreakdownSheet({
               )}
               {canManage &&
                 (data?.holdReason ? (
-                  <LoadingButton
-                    size="sm"
-                    variant="outline"
-                    onClick={handleRelease}
-                    isPending={releaseMutation.isPending}
-                    loadingText="Releasing…"
-                  >
-                    Release
-                  </LoadingButton>
+                  canRelease && (
+                    <LoadingButton
+                      size="sm"
+                      variant="outline"
+                      onClick={handleRelease}
+                      isPending={releaseMutation.isPending}
+                      loadingText="Releasing…"
+                    >
+                      Release
+                    </LoadingButton>
+                  )
                 ) : (
                   <Button size="sm" variant="outline" onClick={handleHoldOpen}>
                     Hold Salary
