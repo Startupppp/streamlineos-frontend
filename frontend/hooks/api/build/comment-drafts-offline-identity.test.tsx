@@ -1,7 +1,8 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { useUpsertCommentDraft, type CommentDraft } from "./comment-drafts";
+import { useUpsertCommentDraft } from "./comment-draft-commands";
+import type { CommentDraft } from "./comment-draft-command-cache";
 import { bufferDraft, peekBuffer } from "./comment-draft-offline-buffer";
 import { OrgStorageScopeProvider } from "@/lib/org-scoped-storage";
 import { apiClient } from "@/lib/api-client";

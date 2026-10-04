@@ -42,13 +42,17 @@ jest.mock("@/components/ai/ai-actions-menu", () => ({
 const mockMutateAsync = jest.fn();
 const mockStage = jest.fn<StagedCommentDraft, [{ ticketId: number; body: string }]>();
 const mockFlush = jest.fn();
-jest.mock("@/hooks/api/build/comment-drafts", () => ({
+jest.mock("@/hooks/api/build/comment-draft-commands", () => ({
   useUpsertCommentDraft: () => ({ stageEdit: mockStage, flushStaged: mockFlush, isOnline: true, isPending: false, error: null, receipt: null }),
+  useDeleteCommentDraftByTicket: () => ({ mutate: jest.fn() }),
+}));
+jest.mock("@/hooks/api/build/comment-drafts-read", () => ({
   useTicketCommentDraft: () => ({
     owner: { scope: "authenticated:org-1:user-1", key: "authenticated:org-1:user-1:session-1", identity: { userId: "user-1", orgId: "org-1", sessionId: "session-1" } },
     fresh: false, data: undefined, dataUpdatedAt: 0, isFetching: false, isError: false, error: null, refetch: jest.fn(),
   }),
-  useDeleteCommentDraftByTicket: () => ({ mutate: jest.fn() }),
+}));
+jest.mock("@/hooks/api/build/comment-drafts", () => ({
   useGenerateCommentDraft: () => ({ mutateAsync: mockMutateAsync, isPending: false }),
 }));
 

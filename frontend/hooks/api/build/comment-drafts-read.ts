@@ -11,10 +11,10 @@ import { authenticatedScope } from "@/lib/query-scope";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
-import type { TicketCommentDraft } from "./comment-drafts-schema";
+import type { CommentDraftsReadByTicketResponse } from "@/contracts/build-contracts.generated";
 
 const commentDraftByTicketContract = lazyContract(() =>
-  import("@/hooks/api/build/comment-drafts-schema").then((m) => m.commentDraftByTicketContract),
+  import("@/contracts/build-contracts.generated").then((m) => m.commentDraftsReadByTicketResponseSchema),
 );
 
 function subscribeImpersonation(change: () => void) {
@@ -46,7 +46,7 @@ export function useTicketCommentDraft(ticketId: number, editable: boolean) {
       if (!active || !valid()) throw new ApiError("Your signed-in account changed.", undefined, "REQUEST_IDENTITY_CHANGED");
       const path = `/build/comment-drafts/by-ticket/${ticketId}`;
       const response = await apiClient.request(path, { method: "GET" }, { signal, expectedIdentity: active.identity });
-      const draft = await parseApiResponse<TicketCommentDraft>(response, await commentDraftByTicketContract(), path);
+      const draft = await parseApiResponse<CommentDraftsReadByTicketResponse>(response, await commentDraftByTicketContract(), path);
       if (!valid()) throw new ApiError("Your signed-in account changed.", undefined, "REQUEST_IDENTITY_CHANGED");
       if (draft && (draft.ticketId !== ticketId || draft.orgId !== active.identity.orgId)) throw new ApiError("The loaded draft did not match this ticket.", undefined, "INVALID_RESPONSE");
       return { draft, ownerKey: active.key };

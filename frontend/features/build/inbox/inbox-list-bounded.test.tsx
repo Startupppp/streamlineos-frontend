@@ -9,7 +9,7 @@ import type { Notification, NotificationSection } from "@/types/notifications";
 const useInfiniteNotifications = jest.fn();
 const fetchNextPage = jest.fn();
 
-jest.mock("@/hooks/api/notifications", () => ({
+jest.mock("@/hooks/api/notifications-inbox", () => ({
   useInfiniteNotifications: (params: unknown) => useInfiniteNotifications(params),
   useMarkNotificationRead: () => ({ mutate: jest.fn() }),
   useMarkAllNotificationsRead: () => ({ mutate: jest.fn(), isPending: false }),

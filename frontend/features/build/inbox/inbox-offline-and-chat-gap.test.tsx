@@ -7,7 +7,7 @@ import { searchRef, noop } from "./inbox-list-test-harness";
 const useInfiniteNotifications = jest.fn();
 const mockUseOnlineStatus = jest.fn();
 
-jest.mock("@/hooks/api/notifications", () => ({
+jest.mock("@/hooks/api/notifications-inbox", () => ({
   useInfiniteNotifications: (params: unknown) => useInfiniteNotifications(params),
   useMarkNotificationRead: () => ({ mutate: jest.fn() }),
   useMarkAllNotificationsRead: () => ({ mutate: jest.fn(), isPending: false }),

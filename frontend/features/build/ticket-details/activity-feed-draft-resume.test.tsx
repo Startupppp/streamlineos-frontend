@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import type { CommentDraft } from "@/hooks/api/build/comment-drafts";
+import type { CommentDraft } from "@/hooks/api/build/comment-draft-command-cache";
 import type { StagedCommentDraft } from "@/hooks/api/build/comment-draft-commands";
 import { ApiError } from "@/lib/api-envelope";
 import { ActivityFeed } from "./activity-feed";
@@ -22,14 +22,18 @@ jest.mock("@tanstack/react-query", () => ({
   useQueryClient: () => ({ invalidateQueries: jest.fn() }),
 }));
 jest.mock("@/hooks/api/access", () => ({ useCan: (permission: string) => permission === "build:tickets:update" && mockEditable }));
-jest.mock("@/hooks/api/build/comment-drafts", () => ({
+jest.mock("@/hooks/api/build/comment-drafts-read", () => ({
   useTicketCommentDraft: () => ({
     owner: { scope: "authenticated:org-a:user-a", key: mockOwnerKey, identity: { userId: "user-a", orgId: "org-a", sessionId: "session-a" } },
     fresh: mockFresh, data: { draft: mockDraft }, dataUpdatedAt: 0,
     isFetching: !mockFresh, isError: mockError !== null, error: mockError, refetch: mockRetry,
   }),
+}));
+jest.mock("@/hooks/api/build/comment-draft-commands", () => ({
   useUpsertCommentDraft: () => ({ stageEdit: mockStage, flushStaged: mockSave, isOnline: true, isPending: false, receipt: mockReceipt, error: null }),
   useDeleteCommentDraftByTicket: () => ({ mutate: mockDeleteDraft }),
+}));
+jest.mock("@/hooks/api/build/comment-drafts", () => ({
   useGenerateCommentDraft: () => ({ mutateAsync: jest.fn() }),
 }));
 jest.mock("@/hooks/api/build/ticket-sub-resources", () => ({ useAddComment: () => ({ mutate: mockPost, isPending: false }) }));

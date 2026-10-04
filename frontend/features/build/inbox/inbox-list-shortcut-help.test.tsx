@@ -13,7 +13,7 @@ jest.mock("@/hooks/api/use-page-state", () => ({
   usePageState: () => ({ kind: "ready" }),
 }));
 
-jest.mock("@/hooks/api/notifications", () => ({
+jest.mock("@/hooks/api/notifications-inbox", () => ({
   useInfiniteNotifications: () => ({
     data: { pages: [[]], pageParams: [] },
     isPending: false,

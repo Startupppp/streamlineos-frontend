@@ -9,11 +9,10 @@ import {
 } from "@/hooks/api/build/ticket-import-export";
 import { canCommit } from "./import-preview-model";
 import type {
-  ImportFormat,
-  ImportMode,
-  TicketImportPreview,
-  TicketImportReport,
-} from "./import-export-contract";
+  TicketImportExportPreviewImportResponse,
+  TicketImportExportCommitImportResponse,
+} from "@/contracts/build-contracts.generated";
+import type { ImportFormat, ImportMode } from "./import-export-contract";
 
 export const IMPORT_MAX_CONTENT_BYTES = 2_000_000;
 
@@ -22,8 +21,8 @@ export interface TicketImportFlow {
   format: ImportFormat;
   content: string;
   mode: ImportMode;
-  preview: TicketImportPreview | null;
-  report: TicketImportReport | null;
+  preview: TicketImportExportPreviewImportResponse | null;
+  report: TicketImportExportCommitImportResponse | null;
   isPreviewing: boolean;
   isCommitting: boolean;
   canRunPreview: boolean;
@@ -47,8 +46,8 @@ export function useTicketImportFlow(projectId: number): TicketImportFlow {
   const [format, setFormat] = useState<ImportFormat>("csv");
   const [content, setRawContent] = useState("");
   const [mode, setMode] = useState<ImportMode>("atomic");
-  const [preview, setPreview] = useState<TicketImportPreview | null>(null);
-  const [report, setReport] = useState<TicketImportReport | null>(null);
+  const [preview, setPreview] = useState<TicketImportExportPreviewImportResponse | null>(null);
+  const [report, setReport] = useState<TicketImportExportCommitImportResponse | null>(null);
   const abort = useRef<AbortController | null>(null);
 
   const previewMutation = usePreviewTicketImport(projectId);

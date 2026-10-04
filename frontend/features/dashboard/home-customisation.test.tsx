@@ -96,7 +96,7 @@ jest.mock("@/hooks/api/hr", () => ({
   useExpensePageData: () => ({ data: { expenses: [], stats: null, total: 0, isAdmin: false }, isLoading: false }),
 }));
 
-jest.mock("@/hooks/api/notifications", () => ({
+jest.mock("@/hooks/api/notifications-inbox", () => ({
   useUnreadNotifications: () => ({ data: [], isLoading: false }),
   useMarkNotificationRead: () => ({ mutate: jest.fn(), isPending: false }),
 }));

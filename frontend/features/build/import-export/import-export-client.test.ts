@@ -1,9 +1,9 @@
 import { IDEMPOTENCY_HEADER } from "@/lib/idempotency-key";
 import {
-  importPreviewSchema,
-  importReportSchema,
-  ticketExportSchema,
-} from "./import-export-contract";
+  ticketImportExportPreviewImportResponseSchema,
+  ticketImportExportCommitImportResponseSchema,
+  ticketImportExportExportTicketsResponseSchema,
+} from "@/contracts/build-contracts.generated";
 import {
   commitTicketImport,
   exportTickets,
@@ -53,8 +53,10 @@ describe("previewTicketImport", () => {
       "/build/42/import-export/tickets/preview",
       { format: "csv", content: "title\nA" },
       undefined,
-      importPreviewSchema,
+      expect.any(Function),
     );
+    const [, , , contract] = mocked().post.mock.calls[0] as [unknown, unknown, unknown, () => Promise<unknown>];
+    expect(await contract()).toBe(ticketImportExportPreviewImportResponseSchema);
   });
 
   it("forwards an abort signal", async () => {
@@ -86,7 +88,7 @@ describe("commitTicketImport", () => {
       string,
       Record<string, unknown>,
       { headers: Record<string, string> },
-      unknown,
+      () => Promise<unknown>,
     ];
     expect(url).toBe("/build/42/import-export/tickets");
     expect(body).toEqual({
@@ -96,7 +98,7 @@ describe("commitTicketImport", () => {
       mode: "atomic",
     });
     expect(config.headers[IDEMPOTENCY_HEADER]).toBe("key-1");
-    expect(contract).toBe(importReportSchema);
+    expect(await contract()).toBe(ticketImportExportCommitImportResponseSchema);
   });
 
   it("does not let the transport mint a per-attempt key, so a retry replays", async () => {
@@ -141,8 +143,10 @@ describe("exportTickets", () => {
       "/build/42/import-export/tickets/export",
       { format: "csv" },
       undefined,
-      ticketExportSchema,
+      expect.any(Function),
     );
+    const [, , , contract] = mocked().get.mock.calls[0] as [unknown, unknown, unknown, () => Promise<unknown>];
+    expect(await contract()).toBe(ticketImportExportExportTicketsResponseSchema);
   });
 
   it("omits the limit entirely rather than sending undefined", async () => {

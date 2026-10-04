@@ -9,7 +9,7 @@ jest.mock("@/hooks/api/use-page-state", () => ({
   usePageState: (...args: unknown[]) => mockUsePageState(...args),
 }));
 
-jest.mock("@/hooks/api/notifications", () => ({
+jest.mock("@/hooks/api/notifications-inbox", () => ({
   useInfiniteNotifications: () => ({
     data: { pages: [] as unknown[], pageParams: [] },
     isPending: false,

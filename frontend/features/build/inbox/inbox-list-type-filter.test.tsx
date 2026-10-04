@@ -10,7 +10,7 @@ const fetchNextPage = jest.fn();
 const useMarkAllNotificationsRead = jest.fn();
 const bulkArchive = jest.fn();
 
-jest.mock("@/hooks/api/notifications", () => ({
+jest.mock("@/hooks/api/notifications-inbox", () => ({
   useInfiniteNotifications: (params: unknown) => useInfiniteNotifications(params),
   useMarkNotificationRead: () => ({ mutate: jest.fn() }),
   useMarkAllNotificationsRead: (sourceModule?: string) => useMarkAllNotificationsRead(sourceModule),

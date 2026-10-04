@@ -34,7 +34,7 @@ jest.mock("sonner", () => ({ toast: { error: jest.fn(), success: jest.fn() } }))
 jest.mock("next/navigation", () => ({ useRouter: () => ({ push: jest.fn() }) }));
 jest.mock("framer-motion", () => ({ useReducedMotion: () => false }));
 
-jest.mock("@/hooks/api/notifications", () => ({
+jest.mock("@/hooks/api/notifications-inbox", () => ({
   useMarkNotificationRead: () => ({ mutate: mutations.markRead }),
   useMarkAllNotificationsRead: () => ({ mutate: mutations.markAllRead }),
   useArchiveNotification: () => ({ mutate: mutations.archive }),

@@ -15,7 +15,8 @@ function flatItems(data: DraftPages | undefined): unknown[] {
   return data?.pages.flatMap((p) => p.data) ?? [];
 }
 import type { ApiResponseLike } from "@/lib/api-envelope";
-import { useUpsertCommentDraft, useDeleteCommentDraftByTicket, type CommentDraft } from "../comment-drafts";
+import { useUpsertCommentDraft, useDeleteCommentDraftByTicket } from "../comment-draft-commands";
+import type { CommentDraft } from "../comment-draft-command-cache";
 import { acknowledgeDraftIntent, peekDraftIntents, stageDraftIntent } from "../comment-draft-offline-buffer";
 import { OrgStorageScopeProvider } from "@/lib/org-scoped-storage";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";

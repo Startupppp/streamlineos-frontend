@@ -9,7 +9,7 @@ jest.mock("@/hooks/api/goals", () => ({
   useUpdateGoal: jest.fn(),
 }));
 
-jest.mock("@/hooks/api/chat", () => ({
+jest.mock("@/hooks/api/chat-core-read", () => ({
   useChatOrgUsers: jest.fn(() => ({ data: [] })),
 }));
 

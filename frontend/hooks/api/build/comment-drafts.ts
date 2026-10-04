@@ -7,21 +7,16 @@ import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-import type { GeneratedCommentDraft } from "./comment-drafts-schema";
-export { useUpsertCommentDraft, useDeleteCommentDraftByTicket } from "./comment-draft-commands";
-export { useTicketCommentDraft } from "./comment-drafts-read";
-
-export type { CommentDraftAssignee, CommentDraftTicket, CommentDraft, CommentDraftListItem } from "./comment-draft-command-cache";
-import type { CommentDraftsListMineResponse } from "@/contracts/build-contracts.generated";
+import type { CommentDraftsGenerateDraftResponse, CommentDraftsListMineResponse } from "@/contracts/build-contracts.generated";
 
 const commentDraftListContract = lazyContract(() =>
-  import("@/hooks/api/build/comment-drafts-schema").then((m) => m.commentDraftListContract),
+  import("@/contracts/build-contracts.generated").then((m) => m.commentDraftsListMineResponseSchema),
 );
 const commentDraftDeletedContract = lazyContract(() =>
-  import("@/hooks/api/build/comment-drafts-schema").then((m) => m.commentDraftDeletedContract),
+  import("@/contracts/build-contracts.generated").then((m) => m.commentDraftsDeleteOneResponseSchema),
 );
 const generatedCommentDraftContract = lazyContract(() =>
-  import("@/hooks/api/build/comment-drafts-schema").then((m) => m.generatedCommentDraftSchema),
+  import("@/contracts/build-contracts.generated").then((m) => m.commentDraftsGenerateDraftResponseSchema),
 );
 
 export function useMyCommentDrafts() {
@@ -75,7 +70,7 @@ export function useGenerateCommentDraft() {
   return useAuthorizedMutation("build:ai:use", {
     mutationKey: ["projects", "comment-drafts", "generate"],
     mutationFn: ({ ticketId, signal }: { ticketId: number; signal?: AbortSignal }) =>
-      apiClient.post<GeneratedCommentDraft>(
+      apiClient.post<CommentDraftsGenerateDraftResponse>(
         `/build/comment-drafts/tickets/${ticketId}/generate-draft`,
         undefined,
         signal ? { signal } : undefined,

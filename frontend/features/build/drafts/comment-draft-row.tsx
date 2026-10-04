@@ -9,7 +9,7 @@ import { cn, resolveImageUrl } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import type { CommentDraftListItem } from "@/hooks/api/build/comment-drafts";
+import type { CommentDraftListItem } from "@/hooks/api/build/comment-draft-command-cache";
 import { formatTicketKey } from "@/components/shared/format-ticket-key";
 import {
   getUserDisplayName,

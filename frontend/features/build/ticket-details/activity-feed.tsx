@@ -15,7 +15,7 @@ import {
   useUpdateComment,
   useDeleteComment,
 } from "@/hooks/api/build/comment-mutations";
-import { useDeleteCommentDraftByTicket } from "@/hooks/api/build/comment-drafts";
+import { useDeleteCommentDraftByTicket } from "@/hooks/api/build/comment-draft-commands";
 import { AiActionsMenu } from "@/components/ai/ai-actions-menu";
 import { useDraftCommentAction } from "./use-draft-comment-action";
 import { useTicketCommentComposer } from "./use-ticket-comment-composer";

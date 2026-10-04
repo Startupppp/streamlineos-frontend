@@ -7,10 +7,8 @@ import {
   useRef,
   useState,
 } from "react";
-import {
-  useTicketCommentDraft,
-  useUpsertCommentDraft,
-} from "@/hooks/api/build/comment-drafts";
+import { useTicketCommentDraft } from "@/hooks/api/build/comment-drafts-read";
+import { useUpsertCommentDraft } from "@/hooks/api/build/comment-draft-commands";
 import type { StagedCommentDraft } from "@/hooks/api/build/comment-draft-commands";
 import { peekDraftIntents } from "@/hooks/api/build/comment-draft-offline-buffer";
 import { getApiErrorCode } from "@/lib/api-envelope";

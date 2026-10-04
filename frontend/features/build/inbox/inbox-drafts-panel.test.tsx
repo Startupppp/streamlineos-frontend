@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import type { CommentDraftListItem } from "@/hooks/api/build/comment-drafts";
+import type { CommentDraftListItem } from "@/hooks/api/build/comment-draft-command-cache";
 
 const useAccess = jest.fn();
 const useMyCommentDrafts = jest.fn();

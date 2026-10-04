@@ -48,7 +48,7 @@ describe("comment draft mutations keep the sidebar agent-pulse signal in step wi
     const qc = makeClient();
     const spy = jest.spyOn(qc, "invalidateQueries");
 
-    const { useUpsertCommentDraft } = await import("./comment-drafts");
+    const { useUpsertCommentDraft } = await import("./comment-draft-commands");
     const { result } = renderHook(() => useUpsertCommentDraft(), { wrapper: wrapper(qc) });
 
     await act(async () => {

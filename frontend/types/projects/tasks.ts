@@ -128,8 +128,6 @@ export interface Ticket {
   customer?: { id: number; name: string } | null;
 }
 
-export type Epic = Ticket;
-
 export interface TimeEntry {
   id: number;
   orgId: string;
