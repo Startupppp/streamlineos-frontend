@@ -15,22 +15,24 @@ type Target =
   | null;
 
 export function resolveLinkTarget(url: string, origin: string): Target {
-  if (url.startsWith("/") && !url.startsWith("//"))
-    return { kind: "internal", href: url };
+  if (/[\p{Cc}\\]/u.test(url) || url.startsWith("//")) return null;
+  const relative = url.startsWith("/");
   let parsed: URL;
   try {
-    parsed = new URL(url);
+    parsed = new URL(url, relative ? origin || "http://local.invalid" : undefined);
   } catch {
     return null;
   }
-  if (parsed.origin === origin)
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
+  if (relative || parsed.origin === origin) {
+    if (!parsed.pathname.startsWith("/") || parsed.pathname.startsWith("//"))
+      return null;
     return {
       kind: "internal",
       href: `${parsed.pathname}${parsed.search}${parsed.hash}`,
     };
-  if (parsed.protocol === "http:" || parsed.protocol === "https:")
-    return { kind: "external", href: parsed.href };
-  return null;
+  }
+  return { kind: "external", href: parsed.href };
 }
 
 export function TicketRelatedLinks({
