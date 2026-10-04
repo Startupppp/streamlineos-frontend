@@ -82,5 +82,24 @@ Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGE
 
 - [x] Record the 2026-10-02 static census of 75 Build pages, 29 requirement mappings, 120 original WOW IDs, and research cleanup in [Checks performed](#checks-performed) and the [cleanup manifest](./cleanup-manifest.md); this does not verify application behavior.
 - [ ] Rerun route, requirement, local-link, retained-evidence hash, and whitespace checks at the implementation revision; attach the exact commands, counts, and commit.
-- [ ] Reconcile the dated failing gate sample in the [comprehensive recheck](./comprehensive-recheck-2026-10-02.md#final-start-readiness-gate-sample) with current normal-gate output without rewriting the historical result.
+- [x] Reconcile the dated failing gate sample in the [comprehensive recheck](./comprehensive-recheck-2026-10-02.md#final-start-readiness-gate-sample) with current normal-gate output without rewriting the historical result. See [Gate reconciliation 2026-10-04](#gate-reconciliation-2026-10-04) below.
 - [ ] Attach browser, role/tenant, target database, worker/cache, and deployment evidence before any product requirement is promoted to Current verified.
+
+## Gate reconciliation 2026-10-04
+
+Branch: `codex/build-foundation-gates`, commit `b01cbf927dd5f745`. CI unavailable (GitHub Actions billing lapsed). All gates run locally using `bash /d/agent-work/bt-queue/bin/heavy.sh jest pnpm <cmd>` from `/d/projects/personal/Streamlineos`. Historical 2026-10-02 failures are retained in [comprehensive-recheck-2026-10-02.md](./comprehensive-recheck-2026-10-02.md#final-start-readiness-gate-sample) and not modified here.
+
+| Gate | 2026-10-02 result | 2026-10-04 result | Notes |
+|---|---|---|---|
+| `check:build-execution-plan:self-test` | Passed (5/5) | Passed (9/9) | Self-test expanded from 5 to 9 cases. |
+| `check:build-execution-plan` | Failed (required removed `docs/specs/build` paths) | Passed (78 Build pages, 29 coverage reqs, 36 implementation reqs, 16 arch decisions, 18 work packages, 71 canonical Markdown files) | Fixed by migrating gate to canonical `docs/build-module` paths. |
+| `check:route-census:self-test` | Passed | Passed (10 cases) | Unchanged. |
+| `check:route-census` | Failed (expected snapshot absent; 84 patterns) | Passed (87 patterns, 78 Build pages, 0 weak cold-load gates) | Snapshot migrated to canonical location; page count grew from 75 to 78. |
+| `pnpm -C frontend check:build-contracts:self-test` | Passed (34/34) | Passed (93/93) | Self-test expanded; all cases pass. |
+| `pnpm -C frontend check:build-contracts` | Failed (stale OPENAPI_HASH) | Passed (405 generated schemas, hash matches `e5552f845f91…`, 323 hook-called operations) | Regenerated under ARCH-06. One note: no backend operation for hook request `get /build/all-work/ids`. |
+| `pnpm -C backend check:build-core-surface:self-test` | Passed | Passed (426 sibling files, 9836 repo files, 1400 specifiers) | Unchanged. |
+| `pnpm -C backend check:build-core-surface` | Passed (378 sibling files, 1186 specifiers, 0 violations) | **FAILED** (22 deep core imports in 426 scanned sibling files) | **New regression** introduced after `a5b8347fb`. The approvals module now imports directly from `build/core/` (services, controllers, params schemas). Exact violating files listed in run output above. This is a pre-existing defect in the current implementation branch, not a regression to the 2026-10-02 baseline. |
+
+### Summary
+
+The three gates that failed at `a5b8347fb` (build-execution-plan, route-census, frontend build-contracts) all pass on commit `b01cbf927dd5f745`. One gate that passed at `a5b8347fb` (backend build-core-surface) now fails with 22 deep-core boundary violations from the approvals module — this is a new regression requiring a code fix outside this lane's territory.

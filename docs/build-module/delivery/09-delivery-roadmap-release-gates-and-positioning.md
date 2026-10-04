@@ -578,7 +578,7 @@ Every candidate release ends with this record:
 
 Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
 
-- [ ] Freeze Phase 0 route, permission, schema, API, filter, cache, and owner contracts against current source; assign one work-package owner and acceptance evidence to each open requirement.
+- [x] Freeze Phase 0 route, permission, schema, API, filter, cache, and owner contracts against current source; assign one work-package owner and acceptance evidence to each open requirement. See [Phase 0 contract freeze](../implementation/REQUIREMENT-LEDGER.md#phase-0-contract-freeze--2026-10-04) in REQUIREMENT-LEDGER.md (commit `b01cbf927dd5f745`).
 - [ ] Complete Phase 1 cold/new and existing-account invitation acceptance, explicit Build assignment, resumable three-step activation, and first project/ticket with negative retry and tenant cases.
 - [ ] Complete Phase 2 canonical ticket, split-pane/history, scoped board/list/table/backlog/timeline, relations, cycles, custom fields, shared filters, saved views, bulk scope, and equivalent export.
 - [ ] Complete Phase 3 atomic client grants and portal publication, Intake feedback, approvals/change control, Timesheets actions, and Accounting projections with Razorpay/direct-payment ownership.
@@ -589,4 +589,53 @@ Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGE
 - [ ] Instrument activation, engagement, client delivery, product outcome, and trust metrics with event definitions and denominators; do not substitute page views or source presence for completed customer work.
 - [ ] Implement ClickUp, Trello, Jira, Asana, Linear, and CSV import through inventory, preflight, mapping, dry run, idempotent commit, reconciliation, and safe cutover; make full authorized export available through downgrade.
 - [ ] Recheck all 100 value reasons against the classified [customer-value register](../product/customer-value-and-differentiation.md#implementation-decisions); publish only dated, plan-specific, customer-validated comparative claims.
-- [ ] Record every release candidate in the Section 12 template with exact revisions, tenant/fixture identity, gate evidence, failures, cohort, stop conditions, accountable decision, and expiry; default to NO-GO when critical proof is missing.
+- [x] Record every release candidate in the Section 12 template with exact revisions, tenant/fixture identity, gate evidence, failures, cohort, stop conditions, accountable decision, and expiry; default to NO-GO when critical proof is missing. See [RC-001 2026-10-04](#rc-001-2026-10-04) below.
+
+## 13. Phase 1 sellable scope definition
+
+**Date:** 2026-10-04. **Status:** definition draft; no journey is Current verified.
+
+The Phase 1 sellable scope is the minimum set of journeys that must pass Gates A–I before Streamline Build is offered to paying customers as a controlled pilot. Items outside this set are Planned or Deferred and must not appear in sales materials as available capabilities.
+
+### Included journeys
+
+| Journey | Roles | Key routes | Requirements | Current status |
+|---|---|---|---|---|
+| Secure signup and organization creation | new user | `/org-setup` | BLD-001 | CONFIRMED; source `9fd0b94d2`; browser and DB proof open |
+| Module selection with Build | org owner | `/org-setup` (Products step) | BLD-001, BLD-002 | CONFIRMED; browser and DB proof open |
+| Batch internal invite with Member default | org owner | onboarding People step | BLD-003 | IMPLEMENTED; source `8cb3277f6`; browser, worker, and ops proof open |
+| Cold invite acceptance for a new account | invited user | invite acceptance page | BLD-003 | IMPLEMENTED; source `a48b731cb`; browser and DB proof open |
+| Automatic Build role on invite acceptance | invited user | Build module grant | BLD-004 | CONFIRMED; source `89200722a`; browser, cache, and DB proof open |
+| First project creation | org owner/admin | `/build/projects` (create sheet) | BLD-007 | PROPOSED; browser proof open |
+| First ticket creation from project | Build member | ticket create | BLD-010, BLD-011 | CONFIRMED; source `53a369619`; browser proof open |
+| `/build` landing to Command Center | all internal | `/build` → `/build/command-center` | BLD-006, BLD-017 | CONFIRMED; source `062007959`; browser proof open |
+| My Work (assigned and drafts) | contributor | `/build/my-work` | BLD-008 | CONFIRMED; source `94bc876ea`; browser proof open |
+| Inbox with actionable attention | all internal | `/build/inbox` | BLD-009 | CONFIRMED; source `71efa13b4`; browser proof open |
+
+### Negative paths required before controlled pilot
+
+- Expired, used, revoked, malformed, and wrong-recipient invite links.
+- Duplicate org or invite submission.
+- Module dependency conflict.
+- Invitee who already has an account.
+- User with Build module access but no project membership.
+- User with project membership but no Build module access.
+- Account B cannot read Account A data (cross-tenant isolation).
+
+### Not included in Phase 1 sellable scope
+
+Client grants and portal, Intake triage, Timesheets/Accounting projections, custom fields, saved views, bulk operations, advanced dashboards, automation, AI actions, and all Phase 3–6 features are Planned or Deferred. They must not be represented as current or available capabilities in any customer-facing material until each journey passes Gates A–I and is recorded in an RC record.
+
+## RC-001 2026-10-04
+
+First release-candidate record for Phase 1 sellable scope. Populated using the Section 12 template.
+
+| Field | Content |
+|---|---|
+| Scope | Phase 1 sellable scope as defined in Section 13: signup, org creation, module selection, batch invite, cold invite acceptance, automatic Build role, first project, first ticket, `/build` landing, My Work, Inbox. Roles: org owner, org admin, org member, invited new user. External client (portal) journeys excluded. |
+| Environment | Frontend branch `codex/build-foundation-gates`, commit `b01cbf927dd5f745`. Backend: Railway deployment; revision is the most recent push to `main` — exact deployed SHA was not captured at the time of this record. Database: production Aurora (RDS); no isolated staging fixture. Worker: Railway background process. No staging environment with independent fixture identity exists for this record. |
+| Passed gates | `check:build-execution-plan` (PASS, 2026-10-04, 78 pages, 36 requirements, 16 arch decisions). `check:route-census` (PASS, 2026-10-04, 87 patterns, 78 Build pages, 0 weak cold-load gates). `pnpm -C frontend check:build-contracts` (PASS, 2026-10-04, 405 schemas, hash `e5552f845f91…`, 323 hook-called operations). `pnpm -C backend check:build-core-surface:self-test` (PASS, 2026-10-04). See [validation-report gate reconciliation 2026-10-04](../audit/validation-report.md#gate-reconciliation-2026-10-04) for full output. |
+| Failed gates | `pnpm -C backend check:build-core-surface` FAILED (22 deep-core boundary violations; approvals module imports directly from `build/core/` services and params schemas). Owner: code lane. Effect: approvals boundary is violated; release consequence is that approval commands, read services, and related specs bypass the intended module seam. No production exploit demonstrated, but the boundary must be restored before an RBAC proof is credible. |
+| Blocked/untested | Gate A (product/contract completeness): source-level only; no browser state inventory confirmed. Gate B (browser workflow): all Phase 1 journeys are pending browser — no real-browser authenticated walkthrough of signup, invite, Build role assignment, first project/ticket, My Work, or Inbox has been recorded on this commit. Gate C (RBAC/tenant isolation): no browser-level negative matrix; API-level negatives exist for some paths. Gate D (data lifecycle): no DB row-level verification of invite acceptance, Build role persistence, or ticket mutation on this commit. Gate E (performance): no load or query-plan evidence. Gate F (security): threat model incomplete; magic-link exchange unverified. Gate G (ops/reliability): no worker restart, cache clear, or queue-replay evidence. Gate H (accessibility/responsive): no axe audit or keyboard traversal. Gate I (commercial/support): billing enforcement, plan limits, and support tooling not wired. No staging fixture with independent tenant identity has been created for this record. Deployed backend revision identity was not captured. |
+| Rollout | Not applicable — NO-GO. No rollout planned until browser, RBAC, tenant-isolation, data-lifecycle, and deployment-identity evidence are attached. When a controlled pilot is authorized, it should be limited to one pre-qualified organization whose owner has signed a pilot agreement, monitored via Railway logs and Postgres audit rows, and stopped immediately if any cross-tenant read is observed or any invite produces an unintended grant. |
+| Decision | **NO-GO** for general availability and controlled pilot. Missing browser proof for every Phase 1 journey; no deployment-identity evidence; backend build-core-surface boundary violated. This record establishes the first dated baseline. A subsequent RC record replaces it when Gates B, C, D, and the build-core-surface fix are evidenced. Accountable: DOCS lane (record only; product decision requires named accountable approver). Expiry: 2026-11-04 — if no follow-up RC is filed by this date, the decision reverts to NO-GO with no expiry extension. |

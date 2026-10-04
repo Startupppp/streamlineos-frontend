@@ -1,6 +1,22 @@
 # Build requirement ledger
 
+Browser follow-up86: [current evidence](../audit/bugs-and-verification.md#browser-navigation-follow-up86--2026-10-04) verifies QA-070 search and Back preservation only. Missing row pane and production project HTTP500 remain open with independent source and correlated Railway evidence; existing source owners require handoff. No broad requirement or D/I/T/R/B/L stage is advanced.
+
+Resume84 bounded evidence: [browser/source/runtime receipt](../audit/bugs-and-verification.md#browser-resume84-and-review85--2026-10-04) records restored template contract generation, actual authenticated My Work rendering and an interrupted search/navigation observation. QA-070 persisted IN_REVIEW/version4 was read through a READ ONLY streamline_app transaction with non-superuser/non-BYPASSRLS guard; this does not prove API object authorization. Reserved Form5 public production GET200 now parses the current official generated public-form contract with three fields; no production source deployment or public mutation is claimed. Claim85 fixes failed-visibility feedback but independent review exposed duplicate caller notifications and scoped TypeScript still fails on an untouched capabilities projection. Full task/stage checkboxes remain open pending integration correction, browser, complete role/tenant, cache/event and release proof.
+
 Snapshot: 2026-10-03
+
+## Bounded implementation checkpoint — 2026-10-04
+
+Runtime80 [reserved form evidence and contract defect](../audit/bugs-and-verification.md#reserved-form-runtime80-and-contract-defect81--2026-10-04) adds real authenticated400/201/200, application-role READ ONLY persistence and controlled401/404. Public write is blocked by synthetic boundary403; public GET contract fails and correction81 is in progress. No BT-6510aa3284df or BT-1334e7840230 checkbox/stage advances. Existing reserved proof records require canonical cleanup after retest.
+
+Current verified bounded additions: [ownership writer76 source/test cleanup](../audit/bugs-and-verification.md#competing-ownership-writer76--2026-10-04) and [synthetic checklist lifecycle77](../audit/bugs-and-verification.md#synthetic-checklist-lifecycle77--2026-10-04). Official vendor/freshness now pass at SHA prefix447607fe7c54b842. Full BT-06d4c0b58e4c, BT-7c62c17f5d40 and BT-c145e5ed8633 remain open; no broad stage or checkbox advanced. Browser, complete physical authorization, event/cache and release gaps are retained.
+
+Current verified: BT-b5d0043ab54d / BT-d15bf7a72149 have source recovery73 for existing dashboard-layout and landing-preference hooks, two meaningful pre-correction REDs,20/20 focused tests, exact strict lint and frozen hashes. Independent low-effort review found no actionable bounded defect. Current official vendor equality and freshness checks pass at OpenAPI SHA prefixd2c4a7e8943a3dad with398 generated schemas and317 hook-consumed operations. [Canonical receipt](../audit/bugs-and-verification.md#current-review-corrections-and-browser-entry--2026-10-04) preserves failures and scope limits.
+
+Current unverified: production TypeScript remains failed with17 source diagnostics; physical dashboard/landing authorization, persistence, cancellation, concurrent save/conflict handling, browser/mobile, deployment and operations remain open. No full BT checkbox or D/I/T/R/B/L stage is advanced. BLD-017 below remains CONFIRMED rather than VERIFIED; these hook tests cannot establish the complete customizable Command Center requirement. BT-60b05e932423 Program72 corrective31-case repeat and Program74 precise linked-project pagination are still pending their separate gates.
+
+Follow-up Current verified: Program72 corrective repeat passes31/31 and exact five-path strict lint; final independent low-effort source review found no actionable bounded defect. The [same receipt](../audit/bugs-and-verification.md#current-review-corrections-and-browser-entry--2026-10-04) records retained infrastructure failures and separate missing runtime/mobile/authorization evidence. Program74 precise pagination remains pending its final repeat and database proof; full BT-60b05e932423 remains open.
 
 Statuses are `CONFIRMED`, `PROPOSED`, `NEEDS-DECISION`, `IMPLEMENTED`, `VERIFIED`, `BLOCKED`, `REJECTED`, and `DEFERRED`. `CONFIRMED` means accepted specification; `IMPLEMENTED` requires current source plus focused proof; `VERIFIED` requires the evidence named by the requirement. This documentation run does not upgrade product behavior to `VERIFIED`.
 
@@ -112,3 +128,138 @@ Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work cl
 - [ ] Reconcile each accepted requirement with current code and all relevant screen/API/schema packages after every implementation slice.
 - [ ] Link exact tests, browser actions, network/console results, database and cache checks, operations results, and deployed revision before changing a row to VERIFIED.
 - [ ] Reopen any row when a permission, migration, route alias, worker, or client visibility change invalidates its prior evidence.
+
+## Phase 0 contract freeze — 2026-10-04
+
+Freeze commit: `b01cbf927dd5f745` (branch `codex/build-foundation-gates`). Route census confirmed 87 patterns / 78 Build pages at this commit (check:route-census PASS). OpenAPI hash `e5552f845f91…` (405 schemas, check:build-contracts PASS). Contract freeze records the current source state; it does not certify runtime behavior. All rows are source-level only; browser, DB, and deployment evidence remain open unless explicitly noted.
+
+Frozen contracts are recorded here and must not be changed without a new dated entry. Any implementation that diverges from a frozen contract must create a new entry and note the divergence.
+
+### Frozen route contracts
+
+| BLD | Requirement | Frontend route | Backend controller | Route status at b01cbf927 |
+|---|---|---|---|---|
+| BLD-001 | Three-step onboarding | `/org-setup` | `OrganizationSetupController` | Confirmed in route census; page.tsx present |
+| BLD-002 | Build-only default ≤5 controls | `/org-setup` Products step | same | Spec-level; UI component confirmed in source |
+| BLD-003 | Batch invite | onboarding People step | `InvitationsController` | `frontend/app/(authenticated)/onboarding/…`; backend `8cb3277f6` |
+| BLD-004 | Explicit Build assignment | all Build routes (nav check) | `ModuleAccessController` | ARCH-01; source `89200722a`; `backend/src/modules/access/` |
+| BLD-005 | Client grant atomic | `/build/[projectId]/portal/…` | `PortalGrantsController` | `backend/859f12e79`; migration 1730/1731 unapplied to prod |
+| BLD-006 | `/build` authorized landing | `/build` | redirect only | `062007959`; redirect to `/build/command-center` |
+| BLD-007 | Projects destination | `/build/projects` | `ProjectsController` | `062007959`; gated route present |
+| BLD-008 | My Work | `/build/my-work` | (query seam) | `94bc876ea`; route present in census |
+| BLD-009 | Inbox | `/build/inbox` | `NotificationsController` (Build scoped) | `71efa13b4`; route present in census |
+| BLD-010 | Canonical ticket URL | `/build/[projectId]/tickets/[ticketId]` | `ProjectsTicketsController` | route present; split-pane behavior open |
+| BLD-011 | Ticket command seam | all ticket-write routes | `BuildTicketCommands` | `53a369619`; intake adapter confirmed |
+| BLD-012 | FilterEnvelope v1 | all collections/reports | query layer | ARCH-06; `frontend/lib/build/filter-envelope.ts`; saved view schema open |
+| BLD-013 | Workstreams Modules route | `/build/[projectId]/modules` | `ProjectsModulesController` | label "Modules" in nav; rename to "Workstreams" open (BT-e29595c47907) |
+| BLD-014 | Feedbucket → Intake | `/build/[projectId]/intake` | `IntakeController` | Feedbucket mapping migration open |
+| BLD-015 | Triage mode | `/build/[projectId]/triage` | `IntakeController` (triage) | route present in census |
+| BLD-016 | Product chain | product routes | `ProductController` | routes present; link-to-outcome open |
+| BLD-017 | Command Center | `/build/command-center` | `DashboardController` | route present; versioned widget query open |
+| BLD-018–022 | Cross-module ownership | contextual handoff routes | source-module controllers | ownership frozen: CRM/Timesheets/Accounting own their data; Build uses refs only |
+| BLD-023 | Nav max 8 + More | all Build | nav model | `build-nav-model.ts`; catalog count confirmed by check:build-execution-plan |
+| BLD-024 | Public inputs scoped + rate-limited | `/intake/…`, `/portal/…` | intake/portal controllers | token/grant scoping confirmed in source; abuse/replay tests open |
+| BLD-025 | Atomic outbox | n/a | outbox infrastructure | `backend/52cd31533`; consumer registry present |
+| BLD-026 | Import/export durable | `/build/[projectId]/settings/…` | import/export coordinator | job coordinator present; browser proof open |
+| BLD-027 | Search/export/AI scope | all collections | scoped query layer | negative-equivalence tests partially confirmed |
+| BLD-028 | Mobile web | all routes | same APIs | responsive layout open for all routes |
+| BLD-029 | Actionable errors | all routes | error envelope | `TicketVersionConflictException` code confirmed; catalog coverage open |
+| BLD-030 | Migrations additive | n/a | `backend/migrations/` | 0941a prerequisite committed; full cold-chain proof open |
+| BLD-031 | 100 value reasons evidence | n/a | n/a | customer-value-and-differentiation.md 100 rows present |
+| BLD-034 | One claim per seam | n/a | WORK-CLAIMS.md | ARCH-01/06/10/14/16 disjoint seams confirmed |
+| BLD-035 | 16 deep-module decisions owned | n/a | 18-architecture-work-package-registry.md | 16/16 decisions with owners confirmed at `a5b8347fb` |
+| BLD-036 | Universal behavior matrix | all records | 19-complete-surface-behavior-matrix.md | matrix defined; per-record adoption open |
+
+### Frozen permission contracts
+
+Permission keys are authoritative from `backend/src/common/permissions/build-permissions.ts` and `frontend/lib/rbac/permissions/build.ts` at commit `b01cbf927dd5f745`. Keys must not be renamed or removed without a new migration entry and a cache/session bust. Owner: ARCH-01 (module access), ARCH-14 (client/portal), respective feature owners for record-level keys.
+
+Key classes frozen:
+- `build:view` — required for any authenticated Build route access
+- `build:project:create` — project creation
+- `build:project:manage` — project settings/archive/delete
+- `build:ticket:create` — ticket creation within a project
+- `build:ticket:manage` — ticket update/archive/delete
+- `build:member:manage` — Build member assignment/revocation
+- `build:portal:grant` — client grant creation/revocation
+- `build:intake:manage` — intake/triage management
+- Record-level client-visibility keys: owner of record controls publication flag
+
+### Frozen schema contracts
+
+Schema owners at commit `b01cbf927dd5f745`:
+
+| Schema area | Tables / key columns | Migration range | Owner |
+|---|---|---|---|
+| Organization setup | `organization_setup_sessions`, `invitations.org_id` (prerequisite in 0941a) | 0941a, 1728, 1729 | ARCH-10 (onboarding) |
+| Build module membership | `build_module_access`, `build_member_assignments` | 1730–1731 (unapplied to prod) | ARCH-01 |
+| Client grants and portal | `build_client_grants`, `build_portal_sessions` | 1730–1731 | ARCH-14 |
+| Ticket and command seam | `build_tickets`, `build_ticket_versions` | existing (pre-branch) | ARCH-06 |
+| Approvals | `build_approvals`, `build_approval_artifacts`, `build_approval_revisions` | 1732–1734 (unapplied) | approval package |
+| Outbox/inbox | `outbox_events`, `inbox_events` | existing | event infra |
+| FilterEnvelope saved views | `build_saved_views` | planned | ARCH-06 |
+| Cycles, releases, milestones | `build_cycles`, `build_releases`, `build_milestones` | existing | planning package |
+| Intake forms and submissions | `build_intake_forms`, `build_intake_submissions` | existing | intake package |
+
+### Frozen API contracts
+
+OpenAPI source: `backend/openapi.json`, hash `e5552f845f91…` (405 schemas, 323 hook-called operations) at commit `b01cbf927dd5f745`. Frontend consumer: `frontend/build-contracts.generated.ts`. The generated file is the frozen consumer-side API contract; it must not be hand-edited. Any schema change requires `pnpm openapi:gen` under ARCH-06 and a new OPENAPI_HASH commit.
+
+Note: `get /build/all-work/ids` has a frontend hook but no backend operation — this is an open gap, not a frozen contract.
+
+### Frozen filter contracts
+
+FilterEnvelope v1 is the one filter contract for all Build collections. Definition: `frontend/lib/build/filter-envelope.ts`. Field registry: assignee, status, priority, label, epic, cycle, release, milestone, due date, custom fields. Consumers must use the shared FilterBuilder component and not invent parallel filter state. Saved view schema is planned and not yet frozen.
+
+### Frozen cache contracts
+
+Cache key owner: `backend/src/common/cache/cache-keys.ts`. Invalidation matrix: `backend/src/common/cache/cache-invalidation-matrix.ts`. Frozen decisions at commit `b01cbf927dd5f745`:
+- `tickets:list` — deliberately uncached (cross-user DataScope leak risk; see cache-invalidation-matrix.ts:198)
+- `projects:list` — deliberately uncached (same reason)
+- `executiveDashboard` — TTL-only
+- `projects:customStates` — exists; no invalidation entry (gap, tracked in BT-b63314463862)
+
+All other Build cache decisions remain open. No Build cache key may include client-supplied org ID or user-supplied scope without explicit authorization proof.
+
+### Work-package owner assignments
+
+Each open BLD requirement must be assigned to exactly one work-package claim before implementation begins. Current assignments from WORK-CLAIMS.md at `b01cbf927dd5f745`:
+
+| BLD | Requirement summary | Work package | WORK-CLAIMS claim | Acceptance evidence type |
+|---|---|---|---|---|
+| BLD-001 | Three-step onboarding | ARCH-10 (onboarding) | ARCH-10-ONBOARDING-SETUP in WORK-CLAIMS | Six journeys pass: new user signup, module selection, invite, cold acceptance, first project, first ticket; all DB rows persisted; deployed revision recorded |
+| BLD-002 | Build-only ≤5 controls | ARCH-10 | same | Component renders ≤5 visible controls in isolation and browser at 375/1280px |
+| BLD-003 | Batch invite | ARCH-10 / invite agent | BT-cdb5efcb8a3a in WORK-CLAIMS | Batch invite creates ACTIVE membership; resend delivers mail; idempotent replay returns 400; browser journey recorded |
+| BLD-004 | Explicit Build assignment | ARCH-01 | ARCH-01-MODULE-ACCESS in WORK-CLAIMS | Assignment creates `build_member_assignments` row; revocation busts cache; browser negative (no-assignment 403) recorded |
+| BLD-005 | Client grant atomic | ARCH-14 | BT-5bc3f03633e4 (pending claim) | Grant creates `build_client_grants` row; magic link exchange creates scoped session; revocation invalidates session within documented window; browser journey recorded |
+| BLD-006 | `/build` landing | ARCH-16 | ARCH-16-ROUTE-CENSUS in WORK-CLAIMS | `/build` redirects to Command Center for authenticated user; access-needed shown for unauthenticated; browser check recorded |
+| BLD-007 | Projects destination | ARCH-16 / project agent | pending claim | Projects page lists only authorized projects; create sheet opens; browser journey recorded |
+| BLD-008 | My Work | my-work agent | BT-5d477d32451a via BT-801e948e8a67 | Assigned tickets appear; draft tiles appear; paging works; browser journey at 375/1280px |
+| BLD-009 | Inbox | ARCH-18 / inbox agent | BT-801e948e8a67 in WORK-CLAIMS | Unread count accurate; mark-read persists; split-pane opens record; SSE delivers notification without reload; browser journey recorded |
+| BLD-010 | Canonical ticket URL | ticket agent | BT-7c62c17f5d40 / BT-c145e5ed8633 | Direct URL opens correct ticket; split-pane retains context; back navigation restores filter; browser journey at three viewports recorded |
+| BLD-011 | Ticket command seam | ARCH-06 | BT-6aad874e5b9c / BT-abd16670ef91 | Create, update, archive, restore all go through `BuildTicketCommands`; no parallel write path; negative (cross-tenant 404) passes |
+| BLD-012 | FilterEnvelope v1 | ARCH-06 | ARCH-06-WIRE-CONTRACTS in WORK-CLAIMS | All list/report consumers use FilterEnvelope; saved view round-trips; export reproduces same predicate; parser property/equivalence tests pass |
+| BLD-013 | Workstreams route | navigation agent | BT-e29595c47907 | Nav label reads "Workstreams"; `/build/[projectId]/modules` still works; deep links preserved |
+| BLD-014 | Feedbucket → Intake | intake agent | BT-6aad874e5b9c | Feedbucket widget submission creates intake submission; mapping migration applied; ID preserved; old/new link redirect works |
+| BLD-015 | Triage mode | intake agent | BT-6510aa3284df | Triage processes intake queue; accept/decline creates/dismisses; keyboard navigation works; browser journey recorded |
+| BLD-016 | Product chain | product agent | BT-44d0e12dc1ef (pending code claim) | Feedback links to customer request; priority score visible; roadmap linked to outcome; at least one full chain browser journey recorded |
+| BLD-017 | Command Center | dashboard agent | BT-b5d0043ab54d / BT-d15bf7a72149 | Dashboard renders authenticated; layout persists across sessions; widget data freshness shown; browser journey at 375/1280px |
+| BLD-018 | CRM ownership | cross-module agent | BT-5c4273042f7a (audit) | No Build controller duplicates CRM tag in OpenAPI; cross-module handoff URL opens CRM with correct context |
+| BLD-019 | Timesheets ownership | cross-module agent | pending claim | No Build controller duplicates Timesheets tag; ticket timer handoff opens Timesheets; time entry owned by Timesheets |
+| BLD-020 | Accounting ownership | cross-module agent | pending claim | No Build controller duplicates Accounting tag; invoice-reference handoff opens Accounting; payment status read-only in Build |
+| BLD-021 | Home/Calendar | cross-module agent | pending claim | Build Calendar shows work dates only; calendar event handoff opens Home Calendar |
+| BLD-022 | Files ownership | files agent | pending claim | Build never serves file bytes directly; signed URL obtained from Files module; malware scan delegated to Files |
+| BLD-023 | Nav max 8 + More | navigation agent | ARCH-16 / BT-23nav | Nav has ≤8 primary items; More shows remaining destinations; search within More works; build-nav-catalog-route-files.test passes |
+| BLD-024 | Public inputs scoped | intake/portal agent | BT-6aad874e5b9c / BT-5bc3f03633e4 | Public intake returns 429 after rate-limit threshold; malformed token returns 401; replay of same token returns 400; no auth bypass |
+| BLD-025 | Atomic outbox | event infra agent | BT-b62ed948b0cd / BT-cdb5efcb8a3a | Transaction and outbox emission are atomic; consumer is idempotent; DLQ route confirmed in code |
+| BLD-026 | Import/export durable | import agent | pending claim | Import batch is idempotent; reconciliation report shows committed/skipped/failed; export reproduces authorized predicate; large export is async |
+| BLD-027 | Search/export/AI scope | security agent | pending claim | Negative equivalence: same predicate in list, export, and AI context returns same authorized record set; cross-tenant negative passes for all three |
+| BLD-028 | Mobile web | responsive agent | pending claim | All Phase 1 routes pass at 375/768/1280px; no horizontal overflow; touch targets ≥44px; keyboard navigation works |
+| BLD-029 | Actionable errors | contract agent | BT-d524e518fbbf | All Build controllers return envelope with machine code; 409 conflict is recoverable; no stack trace in client response |
+| BLD-030 | Migrations additive | migration agent | ARCH-10 / ARCH-14 / ARCH-01 | Full cold migration chain passes on disposable database; upgrade path from production-shaped snapshot passes; each migration has rollback |
+| BLD-031 | 100 value reasons | docs agent | BT-44d0e12dc1ef | 100 reason IDs each have dated evidence class; no unsupported comparative claim in sales copy |
+| BLD-034 | One claim per seam | docs/coordinator | all ARCH claims | No two active WORK-CLAIMS rows list the same file; coordinator confirms before each implementation slice |
+| BLD-035 | 16 decisions owned | docs agent | BT-69a12d33aab2 | Each of 16 architecture decisions has an owner, dependency list, migration constraint, and acceptance criteria in 18-architecture-work-package-registry.md |
+| BLD-036 | Universal behavior matrix | docs agent | BT-6e2089ec46d5 | Each Build record family has ADOPTED/REJECTED/DEFERRED for all 17 universal behaviors in 19-complete-surface-behavior-matrix.md |
+
+BLD-032 (native mobile) and BLD-033 (self-host/marketplace) remain DEFERRED as recorded in the BLD table above. No work-package claim is needed until Phase 6 unlock criteria are met (see delivery doc Section 13 and BT-bad452db6d58).
