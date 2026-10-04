@@ -88,16 +88,6 @@ const BUILD_ROUTE_MANIFEST: readonly BuildRouteManifestEntry[] = [
   },
   { route: "/build/[projectId]/workload", decision: "KEEP", target: null },
   { route: "/build/all-work", decision: "KEEP", target: null },
-  {
-    route: "/build/budget",
-    decision: "CONSOLIDATE",
-    target: "/build/all-work?view=budgets",
-  },
-  {
-    route: "/build/reports",
-    decision: "CONSOLIDATE",
-    target: "/build/all-work?view=reports",
-  },
   { route: "/build/approvals", decision: "KEEP", target: null },
   { route: "/build/command-center", decision: "KEEP", target: null },
   { route: "/build/goals", decision: "KEEP", target: null },

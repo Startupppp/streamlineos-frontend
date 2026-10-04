@@ -85,7 +85,6 @@ const MATRIX: readonly MatrixRow[] = [
 
   // ── /announcements and /hr/announcements ────────────────────────────────────
   // root read allowed — only the root itself is universal; exact-by-default so any new sub-route fails closed
-  { path: "/announcements", universalMatch: true, decisionKind: "universal", label: "announcements root" },
   { path: "/hr/announcements", universalMatch: true, decisionKind: "universal", label: "announcements under HR prefix — universal reading" },
 
   // ── /settings ───────────────────────────────────────────────────────────────

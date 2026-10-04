@@ -402,18 +402,4 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
       "Project file list. First read is GET /build/{projectId}/files, which requires build:files:view. Without this entry the route inherits the project gate (build:tickets:view), so a caller holding tickets but not files would reach the list and the nav key would disagree with the route key.",
     backendRoute: { method: "get", path: "/build/{projectId}/files" },
   },
-  {
-    prefix: "/build/budget",
-    exact: true,
-    product: "build",
-    permission: "build:tickets:view",
-    reason: "Org-level budget compatibility route that forwards to all work; it shares the destination permission build:tickets:view.",
-  },
-  {
-    prefix: "/build/reports",
-    exact: true,
-    product: "build",
-    permission: "build:tickets:view",
-    reason: "Org-level reports compatibility route that forwards to all work; it shares the destination permission build:tickets:view.",
-  },
 ];

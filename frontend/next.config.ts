@@ -398,6 +398,31 @@ const nextConfig: NextConfig = {
       permanent: false,
     },
     {
+      source: "/announcements",
+      destination: "/hr/announcements",
+      permanent: false,
+    },
+    {
+      source: "/chat/settings",
+      destination: "/chat",
+      permanent: false,
+    },
+    {
+      source: "/docs",
+      destination: "/knowledge/wiki",
+      permanent: false,
+    },
+    {
+      source: "/kb",
+      destination: "/knowledge/wiki",
+      permanent: false,
+    },
+    {
+      source: "/knowledge",
+      destination: "/knowledge/chat",
+      permanent: false,
+    },
+    {
       source: "/ask",
       destination: "/knowledge/chat",
       permanent: false,

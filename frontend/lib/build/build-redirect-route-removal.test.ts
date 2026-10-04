@@ -209,6 +209,14 @@ const OTHER_BUILD_COMPATIBILITY_REDIRECTS: BuildRedirect[] = [
     source: "/build/freelancer",
     destination: "/build/my-work",
   },
+  {
+    source: "/build/budget",
+    destination: "/build/all-work?view=budgets",
+  },
+  {
+    source: "/build/reports",
+    destination: "/build/all-work?view=reports",
+  },
 ];
 
 function nextConfigRedirects(): {
@@ -264,7 +272,7 @@ describe("removed Build redirect routes keep their deep link in next.config.ts",
     ].sort((a, b) => a.source.localeCompare(b.source));
 
     expect(actual).toEqual(expected);
-    expect(actual).toHaveLength(32);
+    expect(actual).toHaveLength(34);
   });
 
   it("keeps every declarative Build compatibility redirect temporary", () => {
@@ -272,7 +280,7 @@ describe("removed Build redirect routes keep their deep link in next.config.ts",
       source.startsWith("/build"),
     );
 
-    expect(buildRedirects).toHaveLength(32);
+    expect(buildRedirects).toHaveLength(34);
     expect(buildRedirects.every(({ permanent }) => !permanent)).toBe(true);
   });
 

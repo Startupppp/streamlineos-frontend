@@ -42,19 +42,14 @@ export const UNIVERSAL_ROUTES: readonly UniversalRoute[] = [
     universalDescendants: [
       { path: "/chat/channels", subtree: true },
       { path: "/chat/invite", subtree: true },
-      { path: "/chat/settings" },
     ],
     reason:
-      "Platform core communication surface. Administrative descendants (org-settings, invite-link management) require explicit permission. /chat/settings is the one exception: its page is a redirect stub to /chat that exists only to keep old bookmarks working, so failing closed there shows a denial wall instead of the redirect and defeats the page's whole purpose.",
+      "Platform core communication surface. Administrative descendants (org-settings, invite-link management) require explicit permission.",
   },
   {
     path: "/calendar",
     reason:
       "One unified calendar serves everyone; module event sources are toggles inside it, not separate surfaces.",
-  },
-  {
-    path: "/announcements",
-    reason: "Company announcements are readable by every active member.",
   },
   {
     path: "/hr/announcements",
@@ -65,14 +60,6 @@ export const UNIVERSAL_ROUTES: readonly UniversalRoute[] = [
     path: "/directory",
     reason:
       "People directory root is platform core. Individual profiles and workforce administration resolve through the navigation registry, keeping fail-closed for any new administrative descendants.",
-  },
-  {
-    path: "/kb",
-    reason: "Knowledge Base reading is platform core.",
-  },
-  {
-    path: "/docs",
-    reason: "Knowledge Base reading is platform core.",
   },
   {
     path: "/knowledge",
