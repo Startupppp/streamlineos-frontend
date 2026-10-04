@@ -402,16 +402,6 @@ const nextConfig: NextConfig = {
       destination: "/knowledge/chat",
       permanent: false,
     },
-    {
-      source: "/build/assigned",
-      destination: "/build/my-work",
-      permanent: false,
-    },
-    {
-      source: "/build/freelancer",
-      destination: "/build/my-work",
-      permanent: false,
-    },
   ],
   images: {
     formats: ["image/webp"],

@@ -8,6 +8,7 @@ const APP_BUILD_DIR = join(APP_AUTH_DIR, "build");
 function collectPageFilePaths(dir: string): string[] {
   const results: string[] = [];
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (entry.isDirectory() && entry.name.startsWith("@")) continue;
     const full = join(dir, entry.name);
     if (entry.isDirectory()) {
       results.push(...collectPageFilePaths(full));
@@ -30,8 +31,8 @@ const diskRoutes = new Set(
 );
 
 describe("BLD-001 — build route manifest covers all 76 authenticated build pages bidirectionally", () => {
-  it("manifest has 76 entries so the coverage check cannot pass vacuously with an empty or truncated list", () => {
-    expect(BUILD_ROUTE_MANIFEST).toHaveLength(76);
+  it("manifest has 79 entries so the coverage check cannot pass vacuously with an empty or truncated list", () => {
+    expect(BUILD_ROUTE_MANIFEST).toHaveLength(79);
   });
 
   it("no longer tracks the twenty-six routes whose next.config.ts redirect now serves the URL, because a manifest entry without a page is a phantom disposition", () => {
@@ -102,6 +103,24 @@ describe("BLD-001 — build route manifest covers all 76 authenticated build pag
 
   it("disk route count matches manifest count so neither direction can silently absorb extra entries", () => {
     expect(diskRoutes.size).toBe(BUILD_ROUTE_MANIFEST.length);
+  });
+
+  it("BT-375a85cfc39c — /build/budget consolidates to /build/all-work?view=budgets", () => {
+    const entry = BUILD_ROUTE_MANIFEST.find((e) => e.route === "/build/budget");
+    expect(entry).toEqual({
+      route: "/build/budget",
+      decision: "CONSOLIDATE",
+      target: "/build/all-work?view=budgets",
+    });
+  });
+
+  it("BT-375a85cfc39c — /build/reports consolidates to /build/all-work?view=reports", () => {
+    const entry = BUILD_ROUTE_MANIFEST.find((e) => e.route === "/build/reports");
+    expect(entry).toEqual({
+      route: "/build/reports",
+      decision: "CONSOLIDATE",
+      target: "/build/all-work?view=reports",
+    });
   });
 
   it("every manifest route has a page.tsx on disk so no phantom disposition can exist in the manifest", () => {

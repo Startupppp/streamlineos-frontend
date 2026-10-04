@@ -201,6 +201,14 @@ const OTHER_BUILD_COMPATIBILITY_REDIRECTS: BuildRedirect[] = [
     source: "/build/:projectId(\\\\d+)/roadmap",
     destination: "/build/:projectId/milestones",
   },
+  {
+    source: "/build/assigned",
+    destination: "/build/my-work",
+  },
+  {
+    source: "/build/freelancer",
+    destination: "/build/my-work",
+  },
 ];
 
 function nextConfigRedirects(): {
@@ -208,7 +216,9 @@ function nextConfigRedirects(): {
   destination: string;
   permanent: boolean;
 }[] {
-  const source = readFileSync(resolve(ROOT, "next.config.ts"), "utf8");
+  const source = ["next.config.ts", "lib/build/build-compat-redirects.ts"]
+    .map((file) => readFileSync(resolve(ROOT, file), "utf8"))
+    .join("\n");
   return [
     ...source.matchAll(
       /source:\s*"([^"]+)",\s*(?:has:\s*\[[\s\S]*?\],\s*)?destination:\s*"([^"]+)",\s*permanent:\s*(true|false)/g,
@@ -254,7 +264,7 @@ describe("removed Build redirect routes keep their deep link in next.config.ts",
     ].sort((a, b) => a.source.localeCompare(b.source));
 
     expect(actual).toEqual(expected);
-    expect(actual).toHaveLength(30);
+    expect(actual).toHaveLength(32);
   });
 
   it("keeps every declarative Build compatibility redirect temporary", () => {
@@ -262,7 +272,7 @@ describe("removed Build redirect routes keep their deep link in next.config.ts",
       source.startsWith("/build"),
     );
 
-    expect(buildRedirects).toHaveLength(30);
+    expect(buildRedirects).toHaveLength(32);
     expect(buildRedirects.every(({ permanent }) => !permanent)).toBe(true);
   });
 

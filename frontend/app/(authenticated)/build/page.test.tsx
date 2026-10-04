@@ -42,4 +42,12 @@ describe("Build entry route", () => {
     );
     expect(mockRedirect).not.toHaveBeenCalled();
   });
+
+  it("BT-b0a694952421 — access-needed: enforceRouteAccess is called with /build so the layout handles the module-not-enabled state", async () => {
+    mockEnforceRouteAccess.mockResolvedValue(undefined);
+    await expect(BuildRoute({ searchParams: Promise.resolve({}) })).rejects.toThrow(
+      "NEXT_REDIRECT:",
+    );
+    expect(mockEnforceRouteAccess).toHaveBeenCalledWith("/build");
+  });
 });
