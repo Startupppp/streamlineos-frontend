@@ -1,5 +1,191 @@
 # Bugs and verification ledger
 
+## Ticket scalar approval artifact source — 2026-10-04
+
+Selected requirement: BT-27a037364398; supporting BT-801e948e8a67. [Exclusive claim47](../implementation/WORK-CLAIMS.md#bt-27a037364398--ticket-scalar-artifact-binding-47) was committed at210bb1e88; migration runner correction at7e727dd61. Source is committed at backend `ed55a897d` (28 changed paths) and frontend `a4bc33699` (12 changed paths). Classification: Current verified for the exact source, focused gates, independent reviews and read-only observation below; Current unverified for full application/RBAC/persistence/browser/release behavior. No broad task or D/I/T/R/B/L stage advances.
+
+### Adopted behavior and review corrections
+
+- New task requests strictly require expectedArtifactVersion. The server captures14 bounded Ticket scalar fields under the canonical Ticket lock, refuses more than131072 UTF-8 bytes of PostgreSQL JSONB text without truncation, and hashes that same canonical text. Approval row revision stays separate from Ticket artifact version. Seven other entity families keep their existing unbound behavior; their immutable-artifact acceptance remains open.
+- GET detail alone exposes current/stale snapshot receipts after current canonical Ticket authorization; restricted/unavailable/unbound contains state only. Lists, mutation responses, counts and requested events remain metadata-only. Legacy unbound tasks can be read/cancelled/deleted, but cannot be decided. Private stored-binding validation checks schema/identity/version/hash; no client snapshot or authority is accepted.
+- Decision locks Ticket then approval, rechecks current approval authority/revision/immutable binding and current Ticket access after both waits, and compares the current Ticket version before CAS/critical audit. Creation checks the request key before work and rechecks request authority/project write policy after its Ticket-lock wait. Approver ACTIVE resolution after that wait is separately open; no recipient membership lock was added.
+- UI captures an explicit selected version and retains it across background refresh;409 retains input and requires explicit reselection/review. Latest authorized state/digest/version fences captured content and submission, including fresh200 restricted/unavailable responses. Mutation metadata cannot hydrate GET detail. Reuse existing components, neutral selected styling and SanitizedHtml; captured descriptions use a bounded semantic HTML allowlist removing SVG/CSS/media resource constructs while retaining safe formatting/explicit links.
+- Meaningful initial REDs: assigned task decision without canonical Ticket read1; fresh200 content/selected-version UI11; later approval-lock scope revocation1; creation project archive/request-key loss2; actual shared sanitizer SVG/CSS regression1. Each was reproduced before its domain correction. These are model/jsdom evidence, not physical PostgreSQL or browser proof.
+
+### Gates, contracts and failed checks
+
+Final backend C gates:11 suites/192 tests, exact12 source and13 test lint, diff checks. Coordinator final frontend run:11 suites/203 tests; exact11 lint/diff pass. Both final scoped TypeScript configurations (backend32/frontend29 includes,8GB) and both production TypeScript gates pass. Initial owned literal/generated-union typing errors were repaired; the default4GB scoped backend attempt exhausted heap before the8GB pass. C independently reviews production/SQL/generated/UI; A independently reviews the final UI, including the sanitizer and named-handler fixes; coordinator reviews backend test preservation/integration and verifies all44 frozen file hashes and44 outer/47 backend unrelated dirty-file hashes. No authored source comment or live Ticket comment was added.
+
+Official generators alone produced OpenAPI SHA `54cfc6e2bc1a7ba5a8f30b055aeffa7ba814038500637da40bab0bbe6fc60a82`:4107 operations/exposure stamps,4092 Zod contracts,0 unconvertible findings. Only POST `/build/{projectId}/approvals` requestBody and GET `/build/{projectId}/approvals/{approvalId}` response change. Task version is required in its strict branch; other7 branches forbid it. Mandatory headers/keys/bodies remain authoritative. OpenAPI self-test and source freshness,6 vendor self-tests plus byte parity,93 Build self-tests plus fresh390-schema/311-operation generation checks pass. No generated file was edited by hand.
+
+Full gate failures remain explicit: fresh backend test TypeScript10GB exhausts heap (child134/pnpm1); fresh frontend full specs fail24 diagnostics in six unowned Calendar/Chat/Wiki/KB/Mail paths. The initial controller-E2E invocation used the unit config and found no tests; the corrected official test:e2e command is refused by the disposable-database guard before0 tests. No guard or baseline is widened. Existing React act warning at approvals.ts123 and Edge Runtime type-generation warning remain; no clean-console or browser claim. Migration discipline36/rollback9 self-tests pass; real discipline initially includes1734 CONCURRENTLY, then reports15 existing findings after correction; real rollback reports13 existing findings, with no1733/1734 finding. Unchanged guarded revision/organization/portal proof tests pass86; that rerun executes no PostgreSQL artifact proof.
+
+Exact commands: `pnpm -C backend exec jest --runInBand --runTestsByPath` with the eleven claimed specs excluding the fixture/controller E2E; `pnpm -C frontend exec jest --runInBand --runTestsByPath` with the eleven approval/form/hook suites. Exact claimed ESLint paths; `node --max-old-space-size=8192 ./node_modules/typescript/bin/tsc --noEmit -p .scratch/tsconfig-approval-43.json` in each package; `pnpm -C backend typecheck` and `pnpm -C backend typecheck:test`; `pnpm -C frontend type-check` and `pnpm -C frontend type-check:specs`; `pnpm -C backend openapi:generate` and `pnpm -C backend openapi:check`; `pnpm -C frontend generate:build-contracts`, `pnpm -C frontend check:build-contracts` and `pnpm -C frontend check:contract-vendor`, with the named self-tests. Official controller command: `pnpm -C backend test:e2e --runInBand --runTestsByPath src/modules/build/approvals/approvals.controller.e2e-spec.ts`.
+
+### SQL and runtime boundary
+
+Draft1733 adds five nullable binding fields, all-or-none/identity/version/size/digest-format checks, tenant Ticket FK and immutable identity/binding trigger. SQL does not prove actual content hash provenance, all14 scalar validation, current Ticket project/read authority or approver liveness; canonical API owners enforce their own source boundaries. Draft1734 creates two regular indexes transactionally under5s SHARE lock/statement limits and refuses a measured heap above1048576 bytes with APPROVAL_ARTIFACT_INDEX_REQUIRES_ONLINE_PREPARATION. Conditional large-target online preparation is a separately reviewed operator package. Both down scripts refuse destructive rollback with exact controlled reasons; rollback/recovery remains open. Earlier concurrent construction is explicitly superseded because the standard migrator wraps transactions.
+
+Application-role READ ONLY observation below proves revision and all five artifact columns absent and0 approvals in reserved project54. No application approval write/DDL, artifact scratch execution, browser/mobile or deployed operation occurs in47. Application1732/1733/1734 and Portal1730/1731 remain unapplied. Matching local frontend1002 authorization remains pending; deployed-API frontend1000 is read-only and the prior runner cannot prove47. Earlier proof45 SQL cases remain separate. Planned follow-up: reviewed opt-in guarded1733/1734 scratch proof, actual service/role/PAT/tenant/recipient-liveness/physical lock/cache/event proof, queue/sheet/filter/history/mobile acceptance, seven other artifact owners and deployment/operations.
+
+### Sanitized source and gate receipt
+
+The following JSON is retained once in this existing audit file. SHA-256 of its exact JSON payload: `d58f53d8f52a2e4d3774ea3c6d97b2c03dba8fb2a53406be33a921ecec3907f2`. Source hashes describe working bytes at final freeze, not physical runtime proof.
+
+```json
+{
+  "package": 47,
+  "task": "BT-27a037364398",
+  "supports": "BT-801e948e8a67",
+  "classification": "Current verified for bounded source and named gates; Current unverified for complete runtime and release",
+  "backendRevision": "ed55a897d8668f5adfd99136e3e3b05891285254",
+  "frontendRevision": "a4bc33699345f912c449d2406115f8a09b309e6b",
+  "sourceHashes": {
+    "backend/src/db/schema/build/approvals.ts": "a7210594e4c9c2984a7e487b502165140575de139f867e00ac001d1a483bca98",
+    "backend/src/modules/build/core/tickets/projects-tickets-detail.service.ts": "8dfdeee6383f0ee6caaad2002b9cc5744a45b3d40808017cd135ce15f6b88545",
+    "backend/src/modules/build/core/dto/ticket.schemas.ts": "0e6f8b88c2a35ca2f15b779fcc16ca8e1ff20978454e3ba264e6fbeb5f2b7087",
+    "backend/src/modules/build/core/projects.module.ts": "26dc0a50dd2d96a8b54291e13aed4941bf14b851e56c41a91139f736088bcfab",
+    "backend/src/modules/build/approvals/build-approvals.module.ts": "7d401b1f4e9c29053e268ace4e6d17844f73f46f8d3770c73d1ddb188b2cc033",
+    "backend/src/modules/build/approvals/approvals.service.ts": "6590a7248b4ecc2accf6eef3ba4e63cb9c0c1eb13bfa98d2bd6a483686143bd3",
+    "backend/src/modules/build/approvals/approval-lookup.ts": "d879b83cab13f76c3e0f12319bf1a305a3f06b538175155706b5d79353fb217f",
+    "backend/src/modules/build/approvals/approvals-read.service.ts": "6242c4a1a5cecb79a40c418b78ecb2ee215ae62c2621f4bfd8e9db1ce2bcdc88",
+    "backend/src/modules/build/approvals/core/approval-commands.service.ts": "71aaefb0accffdabe29c411bc646b50bd4c9762c28c317d992874434c2e07c33",
+    "backend/src/modules/build/approvals/approvals.controller.ts": "bbb582eb75f3292d8eaa5e0ccd9e926445f007725c52cf0fa97d88986828589b",
+    "backend/src/modules/build/approvals/dto/approvals.schemas.ts": "e329f53efbf9a3898d152886a109191700f21402998b1838e8dda90749b03bec",
+    "backend/src/modules/build/approvals/dto/approvals-response.schemas.ts": "4fdb6e9b01f3b873ecf0bbcbfef1f228062280956598195796446d10644c1b4e",
+    "backend/src/modules/build/approvals/__tests__/approval-task-artifact.spec.ts": "233d1dd3e6cd8b70fbe9807d4bb194b87462b814af65e81158a2a9b5f64586c7",
+    "backend/src/modules/build/core/tickets/projects-tickets-detail-revocation.spec.ts": "32a2b333d1b57fff87090f69d09737d4f9a63d1f14cdc35157e25b781bf3ce08",
+    "backend/src/modules/build/approvals/__tests__/approval-lifecycle-concurrency.fixture.ts": "ad3e34627beddac5b30b868577be4c5faab7bc70fe40492e2ecb3a1c00eb603e",
+    "backend/src/modules/build/approvals/__tests__/approval-lifecycle-concurrency.spec.ts": "d22e305777eb67ef401e7678bed32ff6edc2e04fd860bdaf2cc5658b713ac591",
+    "backend/src/modules/build/approvals/__tests__/approval-lifecycle-schema.spec.ts": "65cd4f825a459afae8ca8a6e4262c24cca0299cb9ac17a7af6deb35265ba4a8b",
+    "backend/src/modules/build/approvals/__tests__/approval-detail-access.spec.ts": "a8f0307cd2f717fed25304ee56d4f610f1875068b1e8c008b8a55cbc2b75808a",
+    "backend/src/modules/build/approvals/approvals.service.spec.ts": "9559c62f158f5e5e00d2dba8cf3a1ca898ac7650dec0deb6e1b5f37f37b7458f",
+    "backend/src/modules/build/approvals/approvals-by-id-project-access.spec.ts": "cae5067b10950a4583d20daaa9eb78a5514847768c90bfbc086e6fc6b9425745",
+    "backend/src/modules/build/approvals/approvals.controller.e2e-spec.ts": "9c12a31d89a9847664a3a4a992d6e36855b471cc95b821f7b30c9bcff14af63d",
+    "backend/src/modules/build/approvals/approvals-read-tenant-isolation.spec.ts": "396bb55e0d6462af44b9e8e6186bf1e2d6263c91900e3edee1b92add3ff98e76",
+    "backend/src/modules/build/approvals/build-approval-requested-emit.spec.ts": "a9d70c1d4a8ed1007a062d6e9e977b07e5b171fa83b0d016469a488aa4d0af3e",
+    "backend/src/modules/build/approvals/approvals-approver-filter.spec.ts": "aa01480dc836018662f7bd09681d23ce4638a0a1954f82267df05ba7fa1c8dba",
+    "backend/src/modules/build/approvals/build-inbox-count.spec.ts": "dc5f678c32ebd6b1d61012c43d2b2878002b2fd8c4cf136eaa2bc246aba9b238",
+    "backend/migrations/1733_approval_task_artifact.sql": "4a00fa99d3aeaba44b111308063b5fcfd013f6c1dbd753c328e2abe171951e14",
+    "backend/migrations/rollback/1733_approval_task_artifact.down.sql": "dcb64da39743705b828d268157dd24e9cffe85f07937459149033b0fd917c7d2",
+    "backend/migrations/1734_approval_task_pending_index.sql": "34a1ab0934186c5c4c0a67e67d17fa79ba3f632bd3c0ad703e3eee42d007a10d",
+    "backend/migrations/rollback/1734_approval_task_pending_index.down.sql": "b34fa003d474f1bf176b33ef0abda9c3e423052a7f74c55d070039a9b7d021f2",
+    "backend/migrations/meta/_journal.json": "3a96eb0934a3475c42c6d50270df5fd61949e2b93dd43fedcdeebdcdbb0bea05",
+    "backend/openapi.json": "54cfc6e2bc1a7ba5a8f30b055aeffa7ba814038500637da40bab0bbe6fc60a82",
+    "frontend/types/projects/approvals.ts": "ca9b428a71c57e80dfb60602a005e15e55f1a05d331f2eb700db0a54f3bf15e0",
+    "frontend/hooks/api/build/approvals.ts": "d3f90f34c4f37a5818027a4b0df449df4e3cab28d9690c90c2ea98fb46231570",
+    "frontend/hooks/api/build/approvals-schema.ts": "c9f317788f83652d00031b20d2fa0a14ecb8c76990fe02aa0f7e6b3f80f5a9db",
+    "frontend/features/build/approvals/request-approval-sheet.tsx": "0c644f053aada7fc50f2bd02d36b7a63424d52c66937658a055fced845b479a3",
+    "frontend/features/build/approvals/decide-dialog.tsx": "f63ab58c8bf96543d5f6e323c2e264e61973612649ba652a3265060f6b48a1e5",
+    "frontend/features/build/approvals/project-approvals-page.tsx": "31e70e811804093036119fab63a5849776e49f478173473bded80efca4b49030",
+    "frontend/features/build/approvals/request-approval-sheet.test.tsx": "83276d3131eb2682859380ef8a3d1adc7321b515858d4d6ef70cbc4352b04943",
+    "frontend/features/build/approvals/decide-dialog.pending-close.test.tsx": "cf81073e36b206e61378ba31629775ba10f3cffd611e6568a27d2be221e57013",
+    "frontend/features/build/approvals/__tests__/approval-decision-conflict.spec.tsx": "711ffb19ef04d243205d476f3a5e541d3577ba99d05631a571e213f9104dc27b",
+    "frontend/hooks/api/build/__tests__/approval-revision-mutations.spec.tsx": "0482e0e4a07e7e4d62bb09ee0e047a12ac14a6f57b7cc4458100bbee7df5b77d",
+    "frontend/features/build/approvals/__tests__/approval-ticket-artifact-request.spec.tsx": "bb59a2a8e33f8350cb007c4f7e99e8df193a2f71a8b6959d5db846f3f0461a74",
+    "frontend/contracts/openapi.json": "54cfc6e2bc1a7ba5a8f30b055aeffa7ba814038500637da40bab0bbe6fc60a82",
+    "frontend/contracts/build-contracts.generated.ts": "0b986f732c34fedad9b9ca214bca2628651c0d081ec44dc580a36df6dec5a8fc"
+  },
+  "focused": {
+    "backend": {
+      "suites": 11,
+      "tests": 192
+    },
+    "frontend": {
+      "suites": 11,
+      "tests": 203
+    }
+  },
+  "passedGates": [
+    "exact backend12 source and13 test lint",
+    "exact frontend11 lint",
+    "scoped backend32 paths8GB",
+    "scoped frontend29 paths8GB",
+    "backend production TypeScript",
+    "frontend production TypeScript",
+    "official OpenAPI source freshness4107operations4092Zod",
+    "byte vendor6 selftests",
+    "Build freshness390schemas311operations93 selftests",
+    "migration discipline36 selftests",
+    "rollback9 selftests",
+    "unchanged guarded proof86 safety tests",
+    "independent frozen backend/frontend/SQL/generated/test reviews",
+    "exact-file staged diff checks",
+    "zero added authored source comments"
+  ],
+  "failedGates": [
+    {
+      "gate": "initial scoped backend TypeScript",
+      "reason": "owned test literal widening; repaired before final8GB pass"
+    },
+    {
+      "gate": "default4GB scoped backend TypeScript",
+      "reason": "heap exhaustion; final8GB scoped check passed"
+    },
+    {
+      "gate": "initial scoped frontend TypeScript",
+      "reason": "owned generated-union expected-body typing; repaired before final pass"
+    },
+    {
+      "gate": "full backend test TypeScript10GB",
+      "reason": "heap exhaustion; child134/pnpm1"
+    },
+    {
+      "gate": "full frontend test TypeScript",
+      "reason": "24 diagnostics across six unowned Calendar/Chat/Wiki/KB/Mail paths; tsc2/pnpm1"
+    },
+    {
+      "gate": "migration discipline",
+      "reason": "15 existing findings; no1733/1734 finding after compatibility correction"
+    },
+    {
+      "gate": "migration rollback",
+      "reason": "13 existing findings; no1733/1734 finding"
+    },
+    {
+      "gate": "unit Jest invocation of controller E2E",
+      "reason": "wrong config excludes E2E; no tests found; no proof"
+    },
+    {
+      "gate": "official controller E2E",
+      "reason": "disposable-database guard refused before0 tests; no bypass"
+    }
+  ],
+  "warnings": [
+    "unchanged React act warning at frontend/hooks/api/build/approvals.ts123",
+    "frontend route type generation emits existing Edge Runtime deprecation warning"
+  ],
+  "readOnlyApplicationReceipt": {
+    "role": "streamline_app",
+    "read_only": "on",
+    "new_column_count": 0,
+    "reserved_approval_count": 0,
+    "observedAt": "2026-10-04T01:22:00.906Z"
+  },
+  "applicationWrites": false,
+  "applicationMigrationsApplied": false,
+  "browserVerified": false,
+  "mobileVerified": false,
+  "fullStagesAdvanced": false,
+  "tracker": {
+    "total": 522,
+    "checked": 110,
+    "open": 412
+  },
+  "remaining": [
+    "actual1733/1734 scratch proof",
+    "application1732/1733/1734 readiness/application",
+    "real service/role/PAT/tenant/currentgrant/recipient-liveness/physical locking/cache/outbox proofs",
+    "matching frontend1002 authorization remains pending",
+    "full approval sheet/filter/history/mobile acceptance",
+    "seven other immutable artifact owners",
+    "large-target online index operator preparation",
+    "deployment and operations"
+  ]
+}
+```
+
+
 ## Exact approval notification navigation — 2026-10-04
 
 Selected requirements: BT-27a037364398 and BT-801e948e8a67. [Disjoint navigation46 reservation](../implementation/WORK-CLAIMS.md#bt-27a037364398--bt-801e948e8a67--exact-approval-navigation-prerequisite-46), outer `21fdbc51e`, assigns six existing frontend files to B and two backend files to coordinator; C independently reviews both. Backend source is committed at `f5a8532ce`, frontend at `177e48cf3`. All ownership is released after these exact commits. No API, schema, permission key, query key, component, route page, migration or helper is duplicated.

@@ -169,6 +169,23 @@ Navigation46 retains all eight existing files and reuses existing approval route
 
 Deleted files in44/45/46: none. Historical failed proof runs, screenshots, test evidence, unique research and unresolved findings are retained. The reviewed tool dropped only its three independently verified current-run scratch databases; READ ONLY application-role observation confirmed zero of those databases remain, no application revision column and0 reserved approvals. This is bounded scratch proof, not deployed application/RBAC/browser evidence.
 
+## Task approval artifact retention — 2026-10-04
+
+Classification: active source and generated artifact, retained. Source47 backend `ed55a897d`/frontend `a4bc33699` retains all existing owners and adds only four required migration/down files plus two focused domain/UI tests. No source file, Markdown, research finding, screenshot or test evidence is deleted. Historical immutable1732 cannot own additive1733 binding or1734 index changes. Existing299-line proof tests remain unchanged; existing Ticket revocation suite owns scalar-reader tests. The old498-line mocked-form test cannot cover the actual form/version/error boundary within500; its current493 lines preserve all eight body controls, and the new115-line test uses the real form. New268-line backend artifact suite covers capture/read/decide, distinct from row-CAS concurrency.
+
+| Retained new path | Final working-byte SHA-256 | Purpose and verification |
+|---|---|---|
+| `backend/src/modules/build/approvals/__tests__/approval-task-artifact.spec.ts` | `233d1dd3e6cd8b70fbe9807d4bb194b87462b814af65e81158a2a9b5f64586c7` | Capture/authorization/version/lock-wait/legacy/rollback boundary; C11-suite192 and exact lint; model-only |
+| `backend/migrations/1733_approval_task_artifact.sql` | `4a00fa99d3aeaba44b111308063b5fcfd013f6c1dbd753c328e2abe171951e14` | Additive binding / controlled destructive-rollback refusal; independent SQL review, source gates only; unapplied |
+| `backend/migrations/rollback/1733_approval_task_artifact.down.sql` | `dcb64da39743705b828d268157dd24e9cffe85f07937459149033b0fd917c7d2` | Additive binding / controlled destructive-rollback refusal; independent SQL review, source gates only; unapplied |
+| `backend/migrations/1734_approval_task_pending_index.sql` | `34a1ab0934186c5c4c0a67e67d17fa79ba3f632bd3c0ad703e3eee42d007a10d` | Transactional bounded pending index / controlled rollback refusal; large-target online preparation Conditional; unapplied |
+| `backend/migrations/rollback/1734_approval_task_pending_index.down.sql` | `b34fa003d474f1bf176b33ef0abda9c3e423052a7f74c55d070039a9b7d021f2` | Transactional bounded pending index / controlled rollback refusal; large-target online preparation Conditional; unapplied |
+| `frontend/features/build/approvals/__tests__/approval-ticket-artifact-request.spec.tsx` | `bb59a2a8e33f8350cb007c4f7e99e8df193a2f71a8b6959d5db846f3f0461a74` | Actual selection-version/refresh/409 form boundary; root11-suite203 and exact lint; jsdom-only |
+
+The existing Ticket detail service, approval owners, DTOs, generated types, query keys, primitive controls and SanitizedHtml remain single owners. Source hashes for all44 claimed paths are stored once in the [canonical sanitized receipt](./bugs-and-verification.md#sanitized-source-and-gate-receipt), payload SHA `d58f53d8f52a2e4d3774ea3c6d97b2c03dba8fb2a53406be33a921ecec3907f2`. Official generators alone update backend/openapi.json, its exact frontend byte vendor and build-contracts.generated.ts; vendor/freshness checks and independent operation-delta review pass. Reference changes are existing module DI exports/imports, GET-only ApprovalDetail and strict selected-version request inference; no new route/API/client/helper or duplicate schema file.
+
+Reviewers: scoped_activation_dispatch for independent production/SQL/generated/UI contracts; client_activation_design for final UI/handler/sanitizer/test deltas; coordinator for backend test preservation/integration,44 freeze hashes, exact staging/gates and unrelated44/47 dirty-byte preservation. Validation: focused192/203, exact owned lint/diff, scoped/production TypeScript and official contract checks pass; full test TypeScript/migration gates, actual artifact PostgreSQL/browser/release proof stay separately open. Before any future deletion, perform the existing complete hash/reference/unique-content workflow; this retention entry authorizes no deletion.
+
 ## Delivery checklist
 
 Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
