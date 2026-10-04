@@ -1,5 +1,6 @@
 import { act, render, screen } from "@testing-library/react";
-import { BucketSection, BUCKET_SYNC_LIMIT } from "./my-work-rows";
+import userEvent from "@testing-library/user-event";
+import { BucketSection, BUCKET_SYNC_LIMIT, WorkItemRow } from "./my-work-rows";
 import type { MyWorkItem } from "@/types/projects/my-work";
 
 function makeItem(id: number): MyWorkItem {
@@ -24,6 +25,15 @@ jest.mock("next/link", () => {
   LinkMock.displayName = "Link";
   return LinkMock;
 });
+
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ push: jest.fn() }),
+}));
+
+jest.mock("@/features/build/ticket-details/build-ticket-detail-url", () => ({
+  getMyWorkTicketHref: (_pid: number, key: string, num: number, ret: string) =>
+    `/build/${_pid}/tickets/${key}-${num}?returnTo=${encodeURIComponent(ret)}`,
+}));
 
 describe("BucketSection", () => {
   it("renders all items when count is at or below the sync limit", () => {
@@ -68,5 +78,49 @@ describe("BucketSection", () => {
       "href",
       "/build/1/tickets/AL-81?returnTo=%2Fbuild%2Fmy-work%3Frelation%3Dcreated%26q%3Dreview",
     );
+  });
+});
+
+function makeNullProjectItem() {
+  return {
+    id: 99,
+    projectId: null as null,
+    projectKey: "X",
+    projectName: "Deleted Project",
+    ticketNumber: 99,
+    title: "Orphaned ticket",
+    status: "DRAFT",
+    priority: "LOW" as const,
+    type: "TASK",
+    dueDate: null,
+  };
+}
+
+describe("WorkItemRow — null-project draft", () => {
+  it("shows an unavailable label when the project has been deleted", () => {
+    render(<WorkItemRow item={makeNullProjectItem()} returnHref="/build/my-work" />);
+    expect(screen.getByText(/unavailable/i)).toBeInTheDocument();
+  });
+
+  it("shows a delete button on null-project draft rows", () => {
+    render(<WorkItemRow item={makeNullProjectItem()} returnHref="/build/my-work" />);
+    expect(screen.getByRole("button", { name: /delete/i })).toBeInTheDocument();
+  });
+
+  it("clicking delete calls the onDelete handler when provided", async () => {
+    const onDelete = jest.fn();
+    render(<WorkItemRow item={makeNullProjectItem()} onDelete={onDelete} returnHref="/build/my-work" />);
+    await userEvent.click(screen.getByRole("button", { name: /delete/i }));
+    expect(onDelete).toHaveBeenCalledTimes(1);
+  });
+
+  it("clicking delete does not throw when no onDelete handler is provided (non-owner path)", async () => {
+    render(<WorkItemRow item={makeNullProjectItem()} returnHref="/build/my-work" />);
+    await expect(userEvent.click(screen.getByRole("button", { name: /delete/i }))).resolves.not.toThrow();
+  });
+
+  it("null-project row does not render a navigation link", () => {
+    render(<WorkItemRow item={makeNullProjectItem()} returnHref="/build/my-work" />);
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
   });
 });

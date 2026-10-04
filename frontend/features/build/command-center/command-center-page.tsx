@@ -56,6 +56,7 @@ import { ApprovalsPanel } from "./command-center-approvals-panel";
 import { AgentRunsPanel } from "./command-center-agent-runs-panel";
 import { RisksPanel } from "./command-center-risks-panel";
 import { ReleasesPanel } from "./command-center-releases-panel";
+import { BlockersPanel } from "./command-center-rows";
 
 const COMMAND_CENTER_HEALTH_VALUES = [
   "on_track",
@@ -122,6 +123,8 @@ export function CommandCenterPage() {
   const canCreateIssue = useCan("build:tickets:create");
   const canCreateProject = useCan("build:create");
   const canViewTickets = useCan("build:tickets:view");
+  const canViewApprovals = useCan("build:approvals:view");
+  const canViewRisks = useCan("build:risks:view");
   const shouldReduceMotion = useReducedMotion();
   const isOnline = useOnlineStatus();
   const searchParams = useSearchParams();
@@ -431,10 +434,11 @@ export function CommandCenterPage() {
                 onCreateForProject={handleCreateForProject}
                 onRetry={() => void refetchProjects()}
               />
-              <ApprovalsPanel />
-              <AgentRunsPanel />
-              <RisksPanel />
+              {canViewApprovals && <ApprovalsPanel />}
+              {canViewTickets && <AgentRunsPanel />}
+              {canViewRisks && <RisksPanel />}
               <ReleasesPanel />
+              {canViewTickets && <BlockersPanel />}
             </div>
 
             <motion.p

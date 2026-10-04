@@ -96,6 +96,14 @@ jest.mock("./command-center-releases-panel", () => ({
   ReleasesPanel: () => <div data-testid="releases-panel" />,
 }));
 
+jest.mock("./command-center-rows", () => ({
+  BlockersPanel: () => <div data-testid="blockers-panel" />,
+  MyWorkRow: () => null,
+  CommandCenterRow: () => null,
+  ProjectCard: () => null,
+  projectHealthClasses: () => "",
+}));
+
 jest.mock("@/components/pm-chrome", () => ({
   PmPageShell: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   PmSection: ({ children }: { children: ReactNode }) => <div>{children}</div>,
@@ -550,5 +558,46 @@ describe("CommandCenterPage — Enter opens the focused personal-queue row", () 
       keyboardOptions().onOpen(9);
     });
     expect(mockRouterPush).not.toHaveBeenCalled();
+  });
+});
+
+describe("CommandCenterPage — persona-based panel gating", () => {
+  it("hides ApprovalsPanel when the actor lacks build:approvals:view — paired with the granted test below", () => {
+    mockUseCan.mockImplementation((key: string) => key !== "build:approvals:view");
+    render(<CommandCenterPage />);
+    expect(screen.queryByTestId("approvals-panel")).not.toBeInTheDocument();
+    expect(screen.getByTestId("agent-runs-panel")).toBeInTheDocument();
+  });
+
+  it("shows ApprovalsPanel when the actor has build:approvals:view — paired with the denied test above", () => {
+    mockUseCan.mockReturnValue(true);
+    render(<CommandCenterPage />);
+    expect(screen.getByTestId("approvals-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("agent-runs-panel")).toBeInTheDocument();
+  });
+
+  it("hides RisksPanel when the actor lacks build:risks:view — paired with the granted test below", () => {
+    mockUseCan.mockImplementation((key: string) => key !== "build:risks:view");
+    render(<CommandCenterPage />);
+    expect(screen.queryByTestId("risks-panel")).not.toBeInTheDocument();
+  });
+
+  it("shows RisksPanel when the actor has build:risks:view — paired with the denied test above", () => {
+    mockUseCan.mockReturnValue(true);
+    render(<CommandCenterPage />);
+    expect(screen.getByTestId("risks-panel")).toBeInTheDocument();
+  });
+
+  it("shows BlockersPanel when the actor has build:tickets:view — paired with the hidden test below", () => {
+    mockUseCan.mockReturnValue(true);
+    render(<CommandCenterPage />);
+    expect(screen.getByTestId("blockers-panel")).toBeInTheDocument();
+  });
+
+  it("hides BlockersPanel and AgentRunsPanel when the actor lacks build:tickets:view — paired with the shown test above", () => {
+    mockUseCan.mockImplementation((key: string) => key !== "build:tickets:view");
+    render(<CommandCenterPage />);
+    expect(screen.queryByTestId("blockers-panel")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("agent-runs-panel")).not.toBeInTheDocument();
   });
 });

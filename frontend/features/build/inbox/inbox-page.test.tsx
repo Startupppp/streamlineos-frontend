@@ -197,3 +197,123 @@ describe("InboxPage", () => {
     await waitFor(() => expect(screen.getByTestId("inbox-list")).toBeInTheDocument());
   });
 });
+
+describe("InboxPage — notification source filtering and approval click", () => {
+  it("does not select a notification from a non-Build sourceModule — selection stays null", async () => {
+    const user = userEvent.setup();
+    const nonBuildNotification: Notification = {
+      ...makeNotification(55),
+      sourceModule: "hr",
+    };
+    (InboxList as jest.Mock).mockImplementation(
+      ({
+        onSelect,
+        selectedId,
+      }: {
+        onSelect: (n: Notification) => void;
+        selectedId: number | null;
+        onClearSelection?: () => void;
+        searchInputRef: React.RefObject<HTMLInputElement | null>;
+      }) => (
+        <div
+          data-testid="inbox-list"
+          data-selected-id={String(selectedId ?? "null")}
+        >
+          <button
+            data-testid="select-non-build"
+            onClick={() => onSelect(nonBuildNotification)}
+          />
+        </div>
+      ),
+    );
+    render(<InboxPage />);
+    await waitFor(() =>
+      expect(screen.getByTestId("select-non-build")).toBeInTheDocument(),
+    );
+    await user.click(screen.getByTestId("select-non-build"));
+    await waitFor(() =>
+      expect(screen.getByTestId("inbox-list")).toHaveAttribute(
+        "data-selected-id",
+        "null",
+      ),
+    );
+  });
+
+  it("does not select a notification whose orgId does not match the session owner", async () => {
+    const user = userEvent.setup();
+    const wrongOrgNotification: Notification = {
+      ...makeNotification(66),
+      orgId: "org-other",
+    };
+    (InboxList as jest.Mock).mockImplementation(
+      ({
+        onSelect,
+        selectedId,
+      }: {
+        onSelect: (n: Notification) => void;
+        selectedId: number | null;
+        onClearSelection?: () => void;
+        searchInputRef: React.RefObject<HTMLInputElement | null>;
+      }) => (
+        <div
+          data-testid="inbox-list"
+          data-selected-id={String(selectedId ?? "null")}
+        >
+          <button
+            data-testid="select-wrong-org"
+            onClick={() => onSelect(wrongOrgNotification)}
+          />
+        </div>
+      ),
+    );
+    render(<InboxPage />);
+    await waitFor(() =>
+      expect(screen.getByTestId("select-wrong-org")).toBeInTheDocument(),
+    );
+    await user.click(screen.getByTestId("select-wrong-org"));
+    await waitFor(() =>
+      expect(screen.getByTestId("inbox-list")).toHaveAttribute(
+        "data-selected-id",
+        "null",
+      ),
+    );
+  });
+
+  it("approval notification click (sourceModule=build, category=APPROVALS) selects the notification", async () => {
+    const user = userEvent.setup();
+    const approvalNotification: Notification = {
+      ...makeNotification(77),
+      sourceModule: "build",
+      category: "APPROVALS",
+    };
+    (InboxList as jest.Mock).mockImplementation(
+      ({
+        onSelect,
+        selectedId,
+      }: {
+        onSelect: (n: Notification) => void;
+        selectedId: number | null;
+        onClearSelection?: () => void;
+        searchInputRef: React.RefObject<HTMLInputElement | null>;
+      }) => (
+        <div data-testid="inbox-list" data-selected-id={String(selectedId ?? "null")}>
+          <button
+            data-testid="select-approval"
+            onClick={() => onSelect(approvalNotification)}
+          />
+        </div>
+      ),
+    );
+    render(<InboxPage />);
+    await waitFor(() =>
+      expect(screen.getByTestId("select-approval")).toBeInTheDocument(),
+    );
+    await user.click(screen.getByTestId("select-approval"));
+    await waitFor(() =>
+      expect(screen.getByTestId("inbox-list")).toHaveAttribute(
+        "data-selected-id",
+        "77",
+      ),
+    );
+  });
+});
