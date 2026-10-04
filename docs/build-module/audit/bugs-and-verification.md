@@ -1,5 +1,344 @@
 # Bugs and verification ledger
 
+## Synthetic runtime and ticket interaction source — 2026-10-04
+
+Classification: Current verified for the exact source/gate and bounded HTTP/read-only observations below; Current unverified for complete customer/release behavior. Eight disjoint packages reuse existing owners and have meaningful behavioral REDs, root focused repeats, exact lint/diff, changed-file/production TypeScript and frozen independent reviews.52 strict source lint remains failed with three existing warnings; the passing default lint is not a strict pass.54 repairs timestamp test fixtures without relaxing production contracts;57 repairs the existing member dirty/pending boundary. No source/helper/schema/API/component/test/Markdown was added or deleted by51–59.
+
+All522 IDs remain present:110 checked/412 open; no checkbox or D/I/T/R/B/L status is advanced. The complete412-ID queue remains root-owned when not exactly claimed. Source58 is committed, but the local backend still serves55; no58 runtime proof is implied. Final frozen hashes, source revisions, suite counts and exact limits appear once in this receipt. Commands remain in each exact [work claim](../implementation/WORK-CLAIMS.md). Payload SHA-256: `6a5c8164d92e0f39a82a1f97c4104ee4457652757b201dfd809e08bb8f2b5247` (UTF-8 JSON between fences, excluding fence newlines).
+
+The second1000 sign-in reached the local captured-mail transport and verification-code screen. The READ ONLY application-role query observes one active reserved global user, unverified email and one valid unused OTP; it does not prove the user was absent before, OTP consumption, authentication, new organization, onboarding or module/record authorization. Its older Flow02 tenant guard and bounded GLOBAL user read are separate scopes. The first misconfigured sign-in reached no local capture; its server-side effect remains unverified. Secret mail, OTP/token/session/activation values and database configuration are never recorded. The tools have separate memory and no supported private OTP bridge; browser code entry is pending user input.
+
+The stale generated route declaration initially failed118 parse diagnostics. Installed Next typegen alone repaired it to zero; source was not excluded and generated declarations were not hand-edited. Temporary custom-output tsconfig includes remain authorized and differ from HEAD. No pre-window .env hashes exist, so no-write action audit is not byte invariance. Historical runtime failures, full test-TypeScript failures, unapplied application migrations, unverified physical races/cache/events/mobile and deployment/operations remain open.
+
+```json
+{
+  "classification": "Current verified",
+  "observedAt": "2026-10-04T05:14:58.223Z",
+  "tracker": {
+    "total": 522,
+    "checked": 110,
+    "open": 412,
+    "stageAdvances": 0,
+    "sortedOpenIdSha256": "3ad4f5da9e48eee69e82369f027c5b654874563a603c9eaad80ddaf7acb9e160"
+  },
+  "sourcePackages": [
+    {
+      "package": 51,
+      "revision": "35eac0d45783ad96f53b9898a69b7766da340fbc",
+      "files": [
+        {
+          "path": "backend/test/helpers/build-browser-app.ts",
+          "sha256": "4d858fb00bcf67d5722bf5187851caae64d53a8bc94fa36723c8a7e4d6e72feb"
+        },
+        {
+          "path": "backend/test/helpers/run-build-browser-verification.ts",
+          "sha256": "9fb449139b2ed5082dc220afe6cc74db1cfcec08a3616c057b6ae639ab17898d"
+        },
+        {
+          "path": "backend/test/security/build-browser-boundary.spec.ts",
+          "sha256": "74870e4c48006dd644c6b16871e7a882efc620f4a3aa4d297f120c57d0856c1a"
+        },
+        {
+          "path": "backend/test/security/build-browser-runner.spec.ts",
+          "sha256": "e519cb1dfbf040c0b8442b5dbbd9bf2d2c18e6cf5332b93b9eb510db928ebdbd"
+        }
+      ],
+      "red": "4 meaningful boundary/CORS failures",
+      "focused": {
+        "passed": 223,
+        "suites": 2
+      },
+      "review": "B and root CLEAR",
+      "lint": "exact four paths strict PASS",
+      "changedFileTypeScript": "PASS 10GiB",
+      "productionTypeScript": "PASS 10GiB",
+      "scope": "closed loopback browser origins; authority and provider/worker/application-role controls preserved"
+    },
+    {
+      "package": 52,
+      "revision": "8207d7c020dc2273a1964fdb6295a44954dea1de",
+      "files": [
+        {
+          "path": "frontend/features/build/tickets/create-ticket-dialog.tsx",
+          "sha256": "b0b67db4514b3f6cb1f242fb695293af90421f5e75919872c1de600611370727"
+        },
+        {
+          "path": "frontend/features/build/tickets/create-ticket-dialog-dirty-state.test.tsx",
+          "sha256": "c5c3f76ea55dc67c1315398d31daea0f1b8cca0af42d0e52b7fa4974f7a769b9"
+        }
+      ],
+      "red": "2 actual pending Dialog/project-switch failures",
+      "focused": {
+        "passed": 15,
+        "suites": 1
+      },
+      "review": "A and root CLEAR",
+      "lint": "source0errors/3 retained effect warnings; strict max-warnings0 FAIL; test strict PASS",
+      "changedFileTypeScript": "PASS 8GiB",
+      "productionTypeScript": "PASS 8GiB",
+      "scope": "pending Ticket create/upload draft retention; partial-upload/unmount/retry identity remains open"
+    },
+    {
+      "package": 54,
+      "revision": "53c437d0e2d0723eb39e2fd67cf9f86b001bd03c",
+      "files": [
+        {
+          "path": "frontend/hooks/api/build/__tests__/build-project-contract-drift.test.ts",
+          "sha256": "f2302a7fe6bf59196a30429eaa96bace6896e8c3c9b97a44e11996817252f44a"
+        }
+      ],
+      "red": "6 timestamp-fixture failures/7passes",
+      "focused": {
+        "passed": 73,
+        "suites": 6
+      },
+      "review": "B and root CLEAR",
+      "lint": "exact one path strict PASS",
+      "changedFileTypeScript": "PASS 8GiB",
+      "productionTypeScript": "PASS 8GiB",
+      "scope": "fixture follows required current createdAt/updatedAt; two omission negatives retained; no production contract relaxation"
+    },
+    {
+      "package": 55,
+      "revision": "5dcafa517ca634e658345c08c4085899900279a3",
+      "files": [
+        {
+          "path": "backend/src/modules/build/core/tickets/projects-ticket-relations.service.ts",
+          "sha256": "eb63112886756b97b4443ea64f2b0af37d7fa721d7081765fc3fbcdbb3b0ed77"
+        },
+        {
+          "path": "backend/src/modules/build/core/tickets/projects-ticket-relations-soft-delete.spec.ts",
+          "sha256": "31d726e963f67ec30ebe89f2b974a359f76c2e636c622a3683c1b2f348524124"
+        },
+        {
+          "path": "backend/src/modules/build/core/tickets/projects-ticket-links-tenant-isolation.spec.ts",
+          "sha256": "09477d80c4dc7de40bbef7e59071d56825d54536533fa59a9edf6e9f83a45480"
+        }
+      ],
+      "red": "2 hidden opposite-endpoint LIST/ADD authority failures",
+      "focused": {
+        "passed": 29,
+        "suites": 3
+      },
+      "review": "B and root CLEAR",
+      "lint": "exact three paths strict PASS",
+      "changedFileTypeScript": "PASS 10GiB",
+      "productionTypeScript": "PASS 10GiB",
+      "scope": "canonical related Ticket read visibility in outer SQL before limit100; target ADD read gate; modeled SQL not physical PostgreSQL"
+    },
+    {
+      "package": 56,
+      "revision": "aec8aa43a84246c46693a38ad1c1c2967810017f",
+      "files": [
+        {
+          "path": "frontend/features/build/ticket-details/ticket-related-links.tsx",
+          "sha256": "04905cf9db833b82451dd03a2ff49044c61e055be5d02e46c0cae8e1b7c8547b"
+        },
+        {
+          "path": "frontend/features/build/ticket-details/ticket-related-links.test.tsx",
+          "sha256": "d130426331c49557e9fbd2300913e4846cecbbb2e4b8a148b9836511efcc6e4f"
+        }
+      ],
+      "red": "2 actual unsafe rendered href failures; expanded8RED",
+      "focused": {
+        "passed": 96,
+        "suites": 2
+      },
+      "review": "A and root CLEAR",
+      "lint": "exact two paths strict PASS",
+      "changedFileTypeScript": "PASS 8GiB",
+      "productionTypeScript": "PASS 8GiB",
+      "scope": "single-slash same-origin internal links, unsafe control/backslash/protocol-relative refusal; external HTTP(S) noopener preserved"
+    },
+    {
+      "package": 57,
+      "revision": "e28b9f225e611451bb6f3bfd97d473fad16ebcd8",
+      "files": [
+        {
+          "path": "frontend/features/build/settings/add-project-member-dialog.tsx",
+          "sha256": "d88226593cafb8ac444f1ee0bb9c8b4c6ff5ca2743a2120714bf3c81d2da6bc1"
+        },
+        {
+          "path": "frontend/features/build/settings/add-project-member-dialog.test.tsx",
+          "sha256": "e3318ca403601b3ae85ea701d48013eec7472a9ceeacfa0ba8caa769cef2d35f"
+        }
+      ],
+      "red": "2 actual dirty-navigation/pending member-dialog failures",
+      "focused": {
+        "passed": 36,
+        "suites": 2
+      },
+      "review": "A and root CLEAR",
+      "lint": "exact two paths strict PASS",
+      "changedFileTypeScript": "first FAIL118 stale generated-route parse errors; official next typegen repair then PASS8GiB",
+      "productionTypeScript": "PASS 8GiB after official route repair",
+      "scope": "actual RHF dirty registration; pending dismissal/edit fence, failure retry and acknowledged success; existing project VIEWER is not structural role"
+    },
+    {
+      "package": 58,
+      "revision": "c450537b0aa17aa0afbfe5976ffab2e9bb7f1b0d",
+      "files": [
+        {
+          "path": "backend/src/modules/build/core/tickets/projects-ticket-links.service.ts",
+          "sha256": "b2e7116628b6c026b4a06bd270c7dc1362657f3596742c976d7a3c4adb5022de"
+        },
+        {
+          "path": "backend/src/modules/build/core/tickets/projects-ticket-links-project-access.spec.ts",
+          "sha256": "8039f18ccb49d0f9472d3d826d0e9a47f5a74a49d303b8e9e1739f2ce454fa91"
+        },
+        {
+          "path": "backend/src/modules/build/core/tickets/projects-ticket-subresources-project-access.spec.ts",
+          "sha256": "a62b3e7562092156ab72cbe814a36002de97a7ffcedf556cfd1b4f7320e41a01"
+        }
+      ],
+      "red": "8 actual canonical locked-project command failures (4writes x ARCHIVED/COMPLETED)",
+      "focused": {
+        "passed": 131,
+        "suites": 4
+      },
+      "review": "B and root CLEAR",
+      "lint": "exact three paths strict PASS",
+      "changedFileTypeScript": "PASS 10GiB",
+      "productionTypeScript": "PASS 10GiB",
+      "scope": "existing assertTicketWriteAccess for attachment and related-link add/update/delete; readable locked-project history and child binding preserved"
+    },
+    {
+      "package": 59,
+      "revision": "f47f13bb220edf42c5f06918b188688ef03c410e",
+      "files": [
+        {
+          "path": "frontend/features/build/navigation/build-scope-browser.tsx",
+          "sha256": "bd2b048429a1d483b1a7c88a6e89237bbacf141d179f1f4c5bc52b432094ff7a"
+        },
+        {
+          "path": "frontend/features/build/navigation/build-scope-browser.test.tsx",
+          "sha256": "81514223348dd7bf705faaf68c332815a60f194d951af4c458a3946fd60f5efc"
+        }
+      ],
+      "red": "1 actual child-to-parent keyboard-focus failure/40oldskipped in RED selection",
+      "focused": {
+        "passed": 76,
+        "suites": 3
+      },
+      "review": "A and root CLEAR",
+      "lint": "exact two paths strict PASS",
+      "changedFileTypeScript": "PASS 8GiB",
+      "productionTypeScript": "PASS 8GiB",
+      "scope": "current rendered hierarchy parent focus on Left; collapse/root/flat lists/Right/Enter unchanged"
+    }
+  ],
+  "runtime": {
+    "frontendPort": 1000,
+    "backendPort": 1001,
+    "backendServedRevision": "5dcafa517ca634e658345c08c4085899900279a3",
+    "backendPid": 25504,
+    "frontendPid": 10420,
+    "backendReady": true,
+    "frontendReady": true,
+    "environment": "process-only overrides; .env read without write; no retained pre-window hash baseline",
+    "primaryAndRegionalPreflight": "application role streamline_app; nonsuperuser/nonBYPASSRLS; read-only preflight retained",
+    "frontendCompiledApi": "local emitted script confirmed127.0.0.1:1001 before second sign-in request",
+    "observations": [
+      {
+        "at": "2026-10-04T04:37:01Z",
+        "method": "OPTIONS",
+        "path": "/auth/email-otp/request",
+        "origin": "http://127.0.0.1:1000",
+        "status": 204,
+        "allowOrigin": "http://127.0.0.1:1000",
+        "scope": "CORS only; this is not the business OTP route"
+      },
+      {
+        "at": "2026-10-04T04:37:01Z",
+        "method": "OPTIONS",
+        "path": "/auth/email-otp/request",
+        "origin": "https://evil.invalid",
+        "status": 403,
+        "allowOrigin": false
+      },
+      {
+        "at": "2026-10-04T04:37:01Z",
+        "method": "GET",
+        "path": "/me/inbox/unified",
+        "authenticated": false,
+        "status": 401,
+        "code": "UNAUTHORIZED"
+      }
+    ],
+    "mail": {
+      "status": 200,
+      "noStore": true,
+      "locallyCapturedMessages": 1,
+      "secretDataRecorded": false
+    },
+    "persistence": {
+      "at": "2026-10-04T04:56:23.330Z",
+      "applicationRoleReadOnly": true,
+      "syntheticOrganizationGuardVerified": true,
+      "syntheticUserCount": 1,
+      "userActive": true,
+      "emailVerified": false,
+      "otpCounts": {
+        "total": 1,
+        "unused": 1,
+        "valid_unused": 1
+      },
+      "secretColumnsSelected": false,
+      "scope": "READ ONLY guarded older Flow02 organization plus bounded GLOBAL exact reserved user/OTP read; not new-organization/RLS proof"
+    },
+    "browser": {
+      "url": "http://127.0.0.1:1000/signin",
+      "state": "verification-code screen after local captured-mail request",
+      "signedIn": false,
+      "otpConsumed": false,
+      "screenshotsSaved": false,
+      "secureCrossToolSecretTransfer": "unsupported; user private browser code entry requested"
+    },
+    "failedAttempts": [
+      "First backend preload failed missing tsconfig-paths/register; retry uses installed ts-node/NODE_PATH without install",
+      "Isolated frontend1002 font resolution failed and fallback manifest ENOENT followed; stopped exact owned process;1002 not used again",
+      "First original1000 frontend launch lost API overrides; its sign-in did not reach local capture; server-side effect unverified. Stopped before retry, rebuilt unique env, asserted private presence and verified local compiled URL"
+    ],
+    "generatedRouteRepair": {
+      "beforeSha256": "edac6b3be106ad13a0ca5cc45ce14bcdd2de1045dee64f8226b2db90b33ff907",
+      "parseDiagnostics": 118,
+      "command": "NEXT_DIST_DIR=.next/dev pnpm exec next typegen",
+      "afterSha256": "ed3a1a13c826369276cd9f16ece0d12c53281f3733654cf10f43d09f1d916cfa",
+      "afterParseDiagnostics": 0,
+      "handEdited": false,
+      "cause": "Current unverified"
+    },
+    "temporaryTrackedConfiguration": "frontend/tsconfig.json retains two compiler-added window12h output includes; not identical to HEAD; not staged"
+  },
+  "retainedFailures": [
+    "52 strict source lint3 warnings",
+    "Previous full backend test TypeScript10GiB OOM134/pnpm1",
+    "Previous full frontend specs24 diagnostics in six unowned paths",
+    "55 unexpected formatting drift restored only owned wrapping after AST leaf/kind equivalence; cause unverified",
+    "Application1730/1731 and1732/1733/1734 unapplied"
+  ],
+  "contractEvidence": {
+    "at": "2026-10-04T03:51Z",
+    "dtoChanges": false,
+    "backend": "OpenAPI self-test/check PASS4107operations/4092Zod/4107exposure",
+    "frontend": "vendor self-test6PASS/byte parity; Build self-test93PASS/390schemas/311operations freshness"
+  },
+  "limitations": [
+    "Focused tests are source/model/DOM evidence, not PostgreSQL RBAC, locks or persistence",
+    "No complete new signup/onboarding/module/project/Ticket/client browser proof",
+    "58 is committed but current backend runner still55",
+    "No new deployment/operations evidence",
+    "No whole BT checkbox or D/I/T/R/B/L stage changed"
+  ],
+  "cleanup": {
+    "createdSourceFiles": [],
+    "deletedFiles": [],
+    "retained": "all historical evidence/research/screenshots and three unknown untracked Windows cache DBs"
+  }
+}
+```
+
+
 ## Approver liveness and project draft recovery — 2026-10-04
 
 Classification: Current verified for the bounded source and gate results below; Current unverified for complete application/release behavior. Backend49 commits exactly five existing files at 3f0d96786bffe6e0c463ce4da755be8601539947; frontend50 commits exactly two existing files at 1ff45c1c0c49136da0aa7ab30ece4a511c6b6e04. No file was created or deleted. Reproducible behavioral failures precede both corrections, and independent reviewers inspected the frozen production and test changes.

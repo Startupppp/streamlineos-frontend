@@ -1,5 +1,12 @@
 # Cleanup manifest
 
+## Existing interaction and runtime owner retention — 2026-10-04
+
+Classification: active source/generated artifact/historical evidence, retained.51–59 change only existing exact source/test owners; no file is created or deleted. The [canonical receipt](./bugs-and-verification.md#synthetic-runtime-and-ticket-interaction-source--2026-10-04) records every frozen path/hash, source commit, independent review and validation result once (payload SHA256 `6a5c8164d92e0f39a82a1f97c4104ee4457652757b201dfd809e08bb8f2b5247`). No unique research/screenshot/test evidence or unresolved finding is superseded merely by this checkpoint. No inbound route/import/reference is removed. Existing boundary, Ticket creator/access/relations/links, forms, navigation primitives, query keys and contracts remain single owners.
+
+Original compiler-managed tsconfig retains two window12h includes under root runtime ownership; next-env has no Git diff. The earlier stale generated routes are repaired only by official Next typegen. Isolated font/preload failures and failed full gates remain preserved. Three untracked Windows cache DBs remain unknown and untouched; no broad classification/deletion is inferred. .env files have no write actions but no retained pre-window hashes, so byte invariance is unverified. Cleanup validation is exact source diff/hashes, focused tests/lint/scoped/production typechecks and canonical documentation checks; it is not application or deployment proof. Reviewers: A/B independent frozen changes; C scoped preservation audit; root exact integration. Deleted/new source/Markdown/evidence files: none.
+
+
 ## Existing owners retained for source49/50 — 2026-10-04
 
 Classification: Current verified for the exact seven-file inventory and reviewed source commits. No new or deleted file, schema, helper, API, component, query key, contract, permission or Markdown. Backend49 3f0d96786bffe6e0c463ce4da755be8601539947 and frontend50 1ff45c1c0c49136da0aa7ab30ece4a511c6b6e04 retain their existing canonical owners. Exact paths/hashes, independent reviewers, tests/typechecks, reference changes and remaining runtime limits are in [source49/50 exact changes, tests, typechecks and retained failed gates](../audit/bugs-and-verification.md#approver-liveness-and-project-draft-recovery--2026-10-04). Existing research, screenshots, test evidence and unrelated source bytes are preserved; no inbound reference was removed.
