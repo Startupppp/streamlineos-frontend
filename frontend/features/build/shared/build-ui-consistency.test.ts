@@ -126,4 +126,5 @@ describe("Build UI consistency contracts", () => {
     expect(selectSource).toContain("FIELD_CONTROL_HOVER_CLASS");
     expect(textareaSource).toContain("FIELD_CONTROL_HOVER_CLASS");
   });
+
 });

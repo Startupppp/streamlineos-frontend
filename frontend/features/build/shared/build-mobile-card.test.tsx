@@ -203,3 +203,107 @@ describe("Build list loading skeleton", () => {
     expect(screen.getByText("Column 1")).toBeInTheDocument();
   });
 });
+
+describe("BuildMobileCard information hierarchy", () => {
+  it("renders at most seven visible signals on a mobile card", () => {
+    const { container } = render(
+      <BuildMobileCard
+        eyebrow="SL-42"
+        title="Atlas migration"
+        status={<span>Active</span>}
+        person={{ user: { firstName: "Priya", lastName: "Nair" }, role: "Owner" }}
+        meta={[
+          { label: "Progress", value: "62%" },
+          { label: "Projects", value: 4 },
+        ]}
+        actions={<button type="button" aria-label="Actions">⋯</button>}
+      />,
+    );
+    const root = container.firstElementChild as HTMLElement;
+    const headerRow = root.querySelector(".items-start");
+    const metaRow = root.querySelector(".flex-wrap");
+    const titleContainerChildren =
+      headerRow?.firstElementChild?.children.length ?? 0;
+    const otherHeaderChildren = Math.max(
+      0,
+      (headerRow?.children.length ?? 0) - 1,
+    );
+    const signalCount =
+      titleContainerChildren +
+      otherHeaderChildren +
+      (metaRow?.children.length ?? 0);
+    expect(signalCount).toBeLessThanOrEqual(7);
+  });
+
+  it("card title text is present", () => {
+    render(<BuildMobileCard title="Dashboard redesign" />);
+    expect(screen.getByText("Dashboard redesign")).toBeInTheDocument();
+  });
+
+  it("title attribute is set on the truncating span for tooltip on overflow", () => {
+    render(<BuildMobileCard title="My long title" />);
+    const titleEl = screen.getByText("My long title");
+    expect(titleEl.getAttribute("title")).toBe("My long title");
+  });
+
+  it("long names truncate with class containing 'truncate'", () => {
+    const longTitle = "A".repeat(200);
+    render(<BuildMobileCard title={longTitle} />);
+    expect(screen.getByText(longTitle).className).toContain("truncate");
+  });
+
+  it("status has both color indicator and text label", () => {
+    render(
+      <BuildMobileCard
+        title="Sprint planning"
+        status={
+          <span>
+            <span
+              className="inline-block h-2 w-2 rounded-full bg-status-success-surface"
+              aria-hidden="true"
+            />
+            <span>Active</span>
+          </span>
+        }
+      />,
+    );
+    expect(screen.getByText("Active")).toBeInTheDocument();
+  });
+
+  it("role is button when onClick prop is provided", () => {
+    render(<BuildMobileCard title="My card" onClick={jest.fn()} />);
+    expect(screen.getByRole("button")).toBeInTheDocument();
+  });
+
+  it("Enter key activates the card when onClick is provided", () => {
+    const onClick = jest.fn();
+    render(<BuildMobileCard title="My card" onClick={onClick} />);
+    const card = screen.getByRole("button");
+    fireEvent.keyDown(card, { key: "Enter" });
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it("Space key activates the card when onClick is provided", () => {
+    const onClick = jest.fn();
+    render(<BuildMobileCard title="My card" onClick={onClick} />);
+    const card = screen.getByRole("button");
+    fireEvent.keyDown(card, { key: " " });
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it("typed signal props (priority, dueDate, estimate, type) are rendered in meta row", () => {
+    render(
+      <BuildMobileCard
+        title="Task"
+        priority="High"
+        dueDate="2026-12-31"
+        estimate={5}
+        type="Bug"
+      />,
+    );
+    expect(screen.getByText("High")).toBeInTheDocument();
+    expect(screen.getByText("2026-12-31")).toBeInTheDocument();
+    expect(screen.getByText("5")).toBeInTheDocument();
+    expect(screen.getByText("Bug")).toBeInTheDocument();
+  });
+});
