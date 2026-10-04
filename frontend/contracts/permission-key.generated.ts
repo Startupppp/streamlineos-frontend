@@ -124,12 +124,15 @@ export type PermissionKey =
   | "build:changerequests:create"
   | "build:changerequests:manage"
   | "build:changerequests:view"
+  | "build:client-access:request"
   | "build:clientvisibility:manage"
   | "build:create"
   | "build:customers:manage"
   | "build:customers:view"
   | "build:cycles:manage"
   | "build:cycles:view"
+  | "build:dashboard:manage"
+  | "build:dashboard:view"
   | "build:decisions:manage"
   | "build:decisions:view"
   | "build:delete"
@@ -904,12 +907,15 @@ export const PERMISSION_METADATA: Readonly<Record<PermissionKey, PermissionMetad
   "build:changerequests:create": { resource: "build:changerequests", action: "create", description: "Submit new change requests" },
   "build:changerequests:manage": { resource: "build:changerequests", action: "manage", description: "Estimate, approve, reject, and progress change requests" },
   "build:changerequests:view": { resource: "build:changerequests", action: "view", description: "View change requests" },
+  "build:client-access:request": { resource: "build:client-access", action: "request", description: "Submit a client-access approval request for a project" },
   "build:clientvisibility:manage": { resource: "build:clientvisibility", action: "manage", description: "Toggle client-visibility of project items" },
   "build:create": { resource: "projects", action: "create", description: "Create projects" },
   "build:customers:manage": { resource: "build:customers", action: "manage", description: "Manage CRM organization links on projects", scopable: false },
   "build:customers:view": { resource: "build:customers", action: "view", description: "View CRM organizations for project customer linking", scopable: false },
   "build:cycles:manage": { resource: "build:cycles", action: "manage", description: "Manage cycles" },
   "build:cycles:view": { resource: "build:cycles", action: "view", description: "View cycles" },
+  "build:dashboard:manage": { resource: "build:dashboard", action: "manage", description: "Save and reset own dashboard layout in the command center" },
+  "build:dashboard:view": { resource: "build:dashboard", action: "view", description: "View own dashboard layout in the command center" },
   "build:decisions:manage": { resource: "build:decisions", action: "manage", description: "Create, update, and delete project decisions" },
   "build:decisions:view": { resource: "build:decisions", action: "view", description: "View project decisions" },
   "build:delete": { resource: "projects", action: "delete", description: "Delete projects" },

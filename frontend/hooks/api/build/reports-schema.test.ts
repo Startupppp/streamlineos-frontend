@@ -26,18 +26,20 @@ const BASE_VELOCITY_SPRINT = {
   completedCount: 7,
 };
 
+const VELOCITY_PAGE = { limit: 100, hasMore: false, nextCursor: null };
+
 describe("velocityContract — velocity data from /reports/velocity", () => {
   it("accepts a single-cycle array", () => {
-    expect(() => velocityContract.parse([BASE_VELOCITY_SPRINT])).not.toThrow();
+    expect(() => velocityContract.parse({ data: [BASE_VELOCITY_SPRINT], pagination: VELOCITY_PAGE })).not.toThrow();
   });
 
   it("accepts an empty array so a project with no cycles renders the empty state", () => {
-    expect(() => velocityContract.parse([])).not.toThrow();
+    expect(() => velocityContract.parse({ data: [], pagination: VELOCITY_PAGE })).not.toThrow();
   });
 
   it("rejects a cycle with a missing name so a row with an undefined name cannot reach the chart axis", () => {
     const { name: _name, ...withoutName } = BASE_VELOCITY_SPRINT;
-    expect(velocityContract.safeParse([withoutName]).success).toBe(false);
+    expect(velocityContract.safeParse({ data: [withoutName], pagination: VELOCITY_PAGE }).success).toBe(false);
   });
 
 });

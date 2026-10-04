@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const OPENAPI_HASH = "sha256:54cfc6e2bc1a7ba5a8f30b055aeffa7ba814038500637da40bab0bbe6fc60a82" as const;
+export const OPENAPI_HASH = "sha256:e5552f845f914645be9eb0d5f8aeab0fe7ec8fef808a9ea9dea4fe7a2604d795" as const;
 
 export const agentTokensListResponseSchema = z.array(z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -391,6 +391,59 @@ export const projectsRoadmapUpdateChangelogBodySchema = z.strictObject({
 });
 export type ProjectsRoadmapUpdateChangelogBody = z.input<typeof projectsRoadmapUpdateChangelogBodySchema>;
 
+export const dashboardLayoutGetLayoutResponseSchema = z.object({
+  layoutVersion: z.number().int().gte(0).lte(9007199254740991),
+  config: z.object({
+    widgets: z.array(z.object({
+      type: z.enum(["my-issues", "projects", "approvals", "agent-runs", "risks", "releases", "blockers"]),
+      position: z.object({
+        col: z.number().int().gte(0).lte(9007199254740991),
+        row: z.number().int().gte(0).lte(9007199254740991),
+        w: z.number().int().gte(1).lte(12),
+        h: z.number().int().gte(1).lte(8),
+      }),
+      config: z.record(z.string(), z.unknown()).optional(),
+    })),
+  }),
+  updatedAt: z.string(),
+});
+export type DashboardLayoutGetLayoutResponse = z.infer<typeof dashboardLayoutGetLayoutResponseSchema>;
+
+export const dashboardLayoutSaveLayoutResponseSchema = z.object({
+  layoutVersion: z.number().int().gte(0).lte(9007199254740991),
+  config: z.object({
+    widgets: z.array(z.object({
+      type: z.enum(["my-issues", "projects", "approvals", "agent-runs", "risks", "releases", "blockers"]),
+      position: z.object({
+        col: z.number().int().gte(0).lte(9007199254740991),
+        row: z.number().int().gte(0).lte(9007199254740991),
+        w: z.number().int().gte(1).lte(12),
+        h: z.number().int().gte(1).lte(8),
+      }),
+      config: z.record(z.string(), z.unknown()).optional(),
+    })),
+  }),
+  updatedAt: z.string(),
+});
+export type DashboardLayoutSaveLayoutResponse = z.infer<typeof dashboardLayoutSaveLayoutResponseSchema>;
+
+export const dashboardLayoutSaveLayoutBodySchema = z.strictObject({
+  layoutVersion: z.number().int().gte(0).lte(9007199254740991),
+  config: z.strictObject({
+    widgets: z.array(z.strictObject({
+      type: z.enum(["my-issues", "projects", "approvals", "agent-runs", "risks", "releases", "blockers"]),
+      position: z.strictObject({
+        col: z.number().int().gte(0).lte(9007199254740991),
+        row: z.number().int().gte(0).lte(9007199254740991),
+        w: z.number().int().gte(1).lte(12),
+        h: z.number().int().gte(1).lte(8),
+      }),
+      config: z.record(z.string(), z.unknown()).optional(),
+    })),
+  }),
+});
+export type DashboardLayoutSaveLayoutBody = z.input<typeof dashboardLayoutSaveLayoutBodySchema>;
+
 export const commentDraftsReadByTicketResponseSchema = z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
@@ -407,33 +460,40 @@ export const commentDraftsDeleteByTicketResponseSchema = z.object({
 });
 export type CommentDraftsDeleteByTicketResponse = z.infer<typeof commentDraftsDeleteByTicketResponseSchema>;
 
-export const commentDraftsListMineResponseSchema = z.array(z.object({
-  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
-  orgId: z.string(),
-  membershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
-  ticketId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
-  body: z.string(),
-  createdAt: z.iso.datetime({ offset: true }),
-  updatedAt: z.iso.datetime({ offset: true }),
-  ticket: z.object({
+export const commentDraftsListMineResponseSchema = z.object({
+  data: z.array(z.object({
     id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
-    type: z.enum(["EPIC", "STORY", "TASK", "BUG"]),
-    title: z.string(),
-    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
-    status: z.string(),
-    ticketNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
-    projectKey: z.string().nullable(),
-    priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).nullable(),
-    projectName: z.string().nullable(),
-    assignee: z.object({
-      id: z.string(),
-      name: z.string().nullable(),
-      image: z.string().nullable(),
-      lastName: z.string().nullable(),
-      firstName: z.string().nullable(),
-    }).nullable(),
+    orgId: z.string(),
+    membershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    ticketId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    body: z.string(),
+    createdAt: z.iso.datetime({ offset: true }),
+    updatedAt: z.iso.datetime({ offset: true }),
+    ticket: z.object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      type: z.enum(["EPIC", "STORY", "TASK", "BUG"]),
+      title: z.string(),
+      projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+      status: z.string(),
+      ticketNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      projectKey: z.string().nullable(),
+      priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).nullable(),
+      projectName: z.string().nullable(),
+      assignee: z.object({
+        id: z.string(),
+        name: z.string().nullable(),
+        image: z.string().nullable(),
+        lastName: z.string().nullable(),
+        firstName: z.string().nullable(),
+      }).nullable(),
+    }),
+  })),
+  pagination: z.object({
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
   }),
-}));
+});
 export type CommentDraftsListMineResponse = z.infer<typeof commentDraftsListMineResponseSchema>;
 
 export const commentDraftsDeleteAllResponseSchema = z.object({
@@ -620,6 +680,21 @@ export const projectsUpdateLabelBodySchema = z.strictObject({
   color: z.string().optional(),
 });
 export type ProjectsUpdateLabelBody = z.input<typeof projectsUpdateLabelBodySchema>;
+
+export const landingPreferenceGetPreferenceResponseSchema = z.object({
+  destination: z.string().nullable(),
+});
+export type LandingPreferenceGetPreferenceResponse = z.infer<typeof landingPreferenceGetPreferenceResponseSchema>;
+
+export const landingPreferenceSetPreferenceResponseSchema = z.object({
+  destination: z.string().nullable(),
+});
+export type LandingPreferenceSetPreferenceResponse = z.infer<typeof landingPreferenceSetPreferenceResponseSchema>;
+
+export const landingPreferenceSetPreferenceBodySchema = z.strictObject({
+  destination: z.string(),
+});
+export type LandingPreferenceSetPreferenceBody = z.input<typeof landingPreferenceSetPreferenceBodySchema>;
 
 export const managedProductsListManagedProductsResponseSchema = z.object({
   data: z.array(z.object({
@@ -812,13 +887,28 @@ export const managedProductsGetProductInsightsResponseSchema = z.object({
     declined: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   }),
   linkedFeedbackVoteCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  ageDays: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  confidenceScore: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  overrideReason: z.string().nullable(),
+  overriddenBy: z.object({
+    id: z.string(),
+    firstName: z.string().nullable(),
+    lastName: z.string().nullable(),
+  }).nullable(),
+  overriddenAt: z.string().nullable(),
 });
 export type ManagedProductsGetProductInsightsResponse = z.infer<typeof managedProductsGetProductInsightsResponseSchema>;
+
+export const managedProductsSetScoreOverrideBodySchema = z.strictObject({
+  confidenceScore: z.number().int().gte(0).lte(100),
+  overrideReason: z.string(),
+});
+export type ManagedProductsSetScoreOverrideBody = z.input<typeof managedProductsSetScoreOverrideBodySchema>;
 
 export const buildMembersListResponseSchema = z.object({
   data: z.array(z.object({
     id: z.string(),
-    role: z.string(),
+    role: z.enum(["member", "admin"]),
     addedAt: z.iso.datetime({ offset: true }),
     name: z.string().nullable(),
     firstName: z.string().nullable(),
@@ -849,6 +939,13 @@ export const buildMembersAddBodySchema = z.strictObject({
   role: z.enum(["member", "admin"]).optional(),
 });
 export type BuildMembersAddBody = z.input<typeof buildMembersAddBodySchema>;
+
+export const buildStandingGetMemberStandingResponseSchema = z.object({
+  orgStanding: z.string(),
+  buildStanding: z.boolean(),
+  projectCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+});
+export type BuildStandingGetMemberStandingResponse = z.infer<typeof buildStandingGetMemberStandingResponseSchema>;
 
 export const projectResourcesListOrgCustomStatesResponseSchema = z.array(z.object({
   name: z.string(),
@@ -1120,6 +1217,36 @@ export const programsCreateProgramBodySchema = z.strictObject({
 });
 export type ProgramsCreateProgramBody = z.input<typeof programsCreateProgramBodySchema>;
 
+export const programsGetProgramResponseSchema = z.object({
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  orgId: z.string(),
+  portfolioId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  name: z.string(),
+  description: z.string().nullable(),
+  ownerId: z.string().nullable(),
+  status: z.enum(["active", "on_hold", "completed", "archived"]),
+  health: z.enum(["on_track", "at_risk", "off_track"]).nullable(),
+  createdBy: z.string().nullable(),
+  createdAt: z.iso.datetime({ offset: true }),
+  updatedAt: z.iso.datetime({ offset: true }),
+  deletedAt: z.iso.datetime({ offset: true }).nullable(),
+  projects: z.object({
+    data: z.array(z.object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      name: z.string(),
+      key: z.string(),
+      status: z.enum(["ACTIVE", "COMPLETED", "ARCHIVED"]),
+      addedAt: z.iso.datetime({ offset: true }),
+    })),
+    pagination: z.object({
+      limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      hasMore: z.boolean(),
+      nextCursor: z.string().nullable(),
+    }),
+  }),
+});
+export type ProgramsGetProgramResponse = z.infer<typeof programsGetProgramResponseSchema>;
+
 export const programsUpdateProgramResponseSchema = z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
@@ -1158,6 +1285,8 @@ export const projectsReleasesListOrgReleasesResponseSchema = z.object({
     status: z.enum(["draft", "released", "archived"]),
     releaseDate: z.string().nullable(),
     publishedAt: z.iso.datetime({ offset: true }).nullable(),
+    readiness: z.enum(["not_started", "in_progress", "ready", "blocked"]).nullable(),
+    riskLevel: z.enum(["low", "medium", "high", "critical"]).nullable(),
     createdBy: z.string().nullable(),
     createdByUser: z.object({
       name: z.string().nullable(),
@@ -2071,6 +2200,25 @@ export const projectsReportsGetAnalyticsResponseSchema = z.object({
 });
 export type ProjectsReportsGetAnalyticsResponse = z.infer<typeof projectsReportsGetAnalyticsResponseSchema>;
 
+export const projectsReportsGetTimeBudgetResponseSchema = z.object({
+  loggedHours: z.number().gte(0),
+  billableHours: z.number().gte(0),
+  nonBillableHours: z.number().gte(0),
+  costEntries: z.array(z.object({
+    currency: z.string().nullable(),
+    costMinor: z.number().int().gte(0).lte(9007199254740991),
+    rateSources: z.array(z.string()),
+  })),
+  includedStatus: z.array(z.string()),
+  glExpenseDebitMinor: z.number().gte(0),
+  glFunctionalCurrency: z.string().nullable(),
+  estimateBudgetMinor: z.number().gte(0).nullable(),
+  budgetCurrency: z.string().nullable(),
+  varianceMinor: z.number().nullable(),
+  reconciliationStatus: z.enum(["unstarted", "gl_pending", "matched", "unmatched", "currency_mismatch"]),
+});
+export type ProjectsReportsGetTimeBudgetResponse = z.infer<typeof projectsReportsGetTimeBudgetResponseSchema>;
+
 export const buildApprovalsListApprovalsResponseSchema = z.object({
   data: z.array(z.object({
     id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -2331,6 +2479,66 @@ export const projectsAutomationsCreateBodySchema = z.strictObject({
   isActive: z.boolean().optional(),
 });
 export type ProjectsAutomationsCreateBody = z.input<typeof projectsAutomationsCreateBodySchema>;
+
+export const projectsAutomationsDryRunResponseSchema = z.object({
+  items: z.array(z.object({
+    ruleId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    matched: z.boolean(),
+    actions: z.array(z.object({
+      type: z.string(),
+      value: z.string(),
+    })),
+  })),
+});
+export type ProjectsAutomationsDryRunResponse = z.infer<typeof projectsAutomationsDryRunResponseSchema>;
+
+export const projectsAutomationsDryRunBodySchema = z.strictObject({
+  triggerEvent: z.enum(["ticket.created", "ticket.updated", "ticket.status_changed", "ticket.assigned"]),
+  ticket: z.strictObject({
+    ticketId: z.number().int().gt(0).lte(9007199254740991).optional(),
+    status: z.string().optional(),
+    priority: z.string().optional(),
+    assigneeId: z.string().nullable().optional(),
+    title: z.string().optional(),
+    type: z.string().optional(),
+  }),
+});
+export type ProjectsAutomationsDryRunBody = z.input<typeof projectsAutomationsDryRunBodySchema>;
+
+export const projectsAutomationsListRunsResponseSchema = z.object({
+  items: z.array(z.object({
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    orgId: z.string(),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    automationId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    ticketId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    triggerEvent: z.string(),
+    matched: z.boolean(),
+    outcome: z.enum(["matched_success", "matched_partial_failure", "matched_failed", "not_matched", "blocked_loop_guard", "blocked_rate_limit", "error"]),
+    errorMessage: z.string().nullable(),
+    createdAt: z.iso.datetime({ offset: true }),
+    actions: z.array(z.object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      actionIndex: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      actionType: z.string(),
+      outcome: z.enum(["success", "failure"]),
+      errorMessage: z.string().nullable(),
+      createdAt: z.iso.datetime({ offset: true }),
+    })),
+  })),
+  pagination: z.object({
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+export type ProjectsAutomationsListRunsResponse = z.infer<typeof projectsAutomationsListRunsResponseSchema>;
+
+export const projectsAutomationsReplayRunResponseSchema = z.object({
+  replayedCount: z.number().int().gte(0).lte(9007199254740991),
+  outcome: z.enum(["matched_success", "matched_partial_failure", "matched_failed", "not_matched", "blocked_loop_guard", "blocked_rate_limit", "error"]),
+});
+export type ProjectsAutomationsReplayRunResponse = z.infer<typeof projectsAutomationsReplayRunResponseSchema>;
 
 export const projectsAutomationsUpdateResponseSchema = z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -2952,6 +3160,7 @@ export const cyclesUpdateCycleBodySchema = z.strictObject({
   status: z.enum(["draft", "active", "completed"]).optional(),
   startDate: z.union([z.literal(""), z.string()]).optional(),
   endDate: z.union([z.literal(""), z.string()]).optional(),
+  carryForwardCycleId: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
 });
 export type CyclesUpdateCycleBody = z.input<typeof cyclesUpdateCycleBodySchema>;
 
@@ -3391,6 +3600,7 @@ export const ticketImportExportCommitImportResponseSchema = z.object({
   format: z.enum(["csv", "json"]),
   mode: z.enum(["atomic", "partial"]),
   idempotencyKey: z.string().nullable(),
+  jobId: z.string().nullable().optional(),
   replayed: z.boolean(),
   confirmationToken: z.string(),
   summary: z.object({
@@ -3766,7 +3976,7 @@ export const intakeListIntakeResponseSchema = z.object({
     orgId: z.string(),
     title: z.string(),
     description: z.unknown(),
-    source: z.enum(["manual", "web_form", "email"]),
+    source: z.enum(["manual", "web_form", "email", "feedbucket", "portal_client"]),
     status: z.enum(["pending", "accepted", "declined", "duplicate"]),
     submitterEmail: z.string().nullable(),
     submitterName: z.string().nullable(),
@@ -3791,7 +4001,7 @@ export const intakeCreateIntakeResponseSchema = z.object({
   orgId: z.string(),
   title: z.string(),
   description: z.unknown(),
-  source: z.enum(["manual", "web_form", "email"]),
+  source: z.enum(["manual", "web_form", "email", "feedbucket", "portal_client"]),
   status: z.enum(["pending", "accepted", "declined", "duplicate"]),
   submitterEmail: z.string().nullable(),
   submitterName: z.string().nullable(),
@@ -3821,7 +4031,7 @@ export const intakeUpdateIntakeResponseSchema = z.object({
   orgId: z.string(),
   title: z.string(),
   description: z.unknown(),
-  source: z.enum(["manual", "web_form", "email"]),
+  source: z.enum(["manual", "web_form", "email", "feedbucket", "portal_client"]),
   status: z.enum(["pending", "accepted", "declined", "duplicate"]),
   submitterEmail: z.string().nullable(),
   submitterName: z.string().nullable(),
@@ -4391,6 +4601,8 @@ export const projectsReleasesListReleasesResponseSchema = z.object({
     status: z.enum(["draft", "released", "archived"]),
     releaseDate: z.string().nullable(),
     publishedAt: z.iso.datetime({ offset: true }).nullable(),
+    readiness: z.enum(["not_started", "in_progress", "ready", "blocked"]).nullable(),
+    riskLevel: z.enum(["low", "medium", "high", "critical"]).nullable(),
     createdBy: z.string().nullable(),
     createdByUser: z.object({
       name: z.string().nullable(),
@@ -4421,6 +4633,8 @@ export const projectsReleasesCreateReleaseResponseSchema = z.object({
   status: z.enum(["draft", "released", "archived"]),
   releaseDate: z.string().nullable(),
   publishedAt: z.iso.datetime({ offset: true }).nullable(),
+  readiness: z.enum(["not_started", "in_progress", "ready", "blocked"]).nullable(),
+  riskLevel: z.enum(["low", "medium", "high", "critical"]).nullable(),
   createdBy: z.string().nullable(),
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
@@ -4435,6 +4649,8 @@ export const projectsReleasesCreateReleaseBodySchema = z.strictObject({
   description: z.string().nullable().optional(),
   status: z.enum(["draft", "released", "archived"]).optional(),
   releaseDate: z.union([z.literal(""), z.string()]).nullable().optional(),
+  readiness: z.enum(["not_started", "in_progress", "ready", "blocked"]).nullable().optional(),
+  riskLevel: z.enum(["low", "medium", "high", "critical"]).nullable().optional(),
 });
 export type ProjectsReleasesCreateReleaseBody = z.input<typeof projectsReleasesCreateReleaseBodySchema>;
 
@@ -4449,6 +4665,8 @@ export const projectsReleasesUpdateReleaseResponseSchema = z.object({
   status: z.enum(["draft", "released", "archived"]),
   releaseDate: z.string().nullable(),
   publishedAt: z.iso.datetime({ offset: true }).nullable(),
+  readiness: z.enum(["not_started", "in_progress", "ready", "blocked"]).nullable(),
+  riskLevel: z.enum(["low", "medium", "high", "critical"]).nullable(),
   createdBy: z.string().nullable(),
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
@@ -4464,6 +4682,9 @@ export const projectsReleasesUpdateReleaseBodySchema = z.strictObject({
   description: z.string().nullable().optional(),
   status: z.enum(["draft", "released", "archived"]).optional(),
   releaseDate: z.union([z.literal(""), z.string()]).nullable().optional(),
+  readiness: z.enum(["not_started", "in_progress", "ready", "blocked"]).nullable().optional(),
+  riskLevel: z.enum(["low", "medium", "high", "critical"]).nullable().optional(),
+  previewConfirmed: z.boolean().optional(),
 });
 export type ProjectsReleasesUpdateReleaseBody = z.input<typeof projectsReleasesUpdateReleaseBodySchema>;
 
@@ -4965,6 +5186,7 @@ export const testRunsUpdateRunBodySchema = z.strictObject({
   testerId: z.string().optional(),
   cycleId: z.number().int().gt(0).lte(9007199254740991).optional(),
   releaseId: z.number().int().gt(0).lte(9007199254740991).optional(),
+  version: z.number().int().gt(0).lte(9007199254740991).optional(),
 });
 export type TestRunsUpdateRunBody = z.input<typeof testRunsUpdateRunBodySchema>;
 
@@ -6598,6 +6820,12 @@ export const workloadCapacityCapacityResponseSchema = z.object({
 });
 export type WorkloadCapacityCapacityResponse = z.infer<typeof workloadCapacityCapacityResponseSchema>;
 
+export const feedbucketRouteToIntakeResponseSchema = z.object({
+  intakeId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  created: z.boolean(),
+});
+export type FeedbucketRouteToIntakeResponse = z.infer<typeof feedbucketRouteToIntakeResponseSchema>;
+
 export const notificationsUnreadCountResponseSchema = z.object({
   count: z.number().int().gte(0).lte(9007199254740991),
 });
@@ -6605,16 +6833,17 @@ export type NotificationsUnreadCountResponse = z.infer<typeof notificationsUnrea
 
 export const publicGetPublicFormResponseSchema = z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
-  title: z.string(),
+  name: z.string(),
+  type: z.string(),
   description: z.string().nullable(),
   fields: z.array(z.object({
-    id: z.string(),
+    key: z.string(),
     type: z.string(),
     label: z.string(),
-    required: z.boolean().optional(),
+    required: z.boolean(),
     options: z.array(z.string()).optional(),
   })),
-  branding: z.record(z.string(), z.unknown()).nullable(),
+  publicToken: z.string().nullable(),
 });
 export type PublicGetPublicFormResponse = z.infer<typeof publicGetPublicFormResponseSchema>;
 
@@ -6632,16 +6861,17 @@ export type PublicSubmitPublicFormBody = z.input<typeof publicSubmitPublicFormBo
 
 export const publicGetProjectIntakeFormResponseSchema = z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
-  title: z.string(),
+  name: z.string(),
+  type: z.string(),
   description: z.string().nullable(),
   fields: z.array(z.object({
-    id: z.string(),
+    key: z.string(),
     type: z.string(),
     label: z.string(),
-    required: z.boolean().optional(),
+    required: z.boolean(),
     options: z.array(z.string()).optional(),
   })),
-  branding: z.record(z.string(), z.unknown()).nullable(),
+  publicToken: z.string().nullable(),
 });
 export type PublicGetProjectIntakeFormResponse = z.infer<typeof publicGetProjectIntakeFormResponseSchema>;
 
@@ -6778,6 +7008,8 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "ProjectsRoadmapController_createChangelog", method: "POST", path: "/build/changelog", response: "projectsRoadmapCreateChangelogResponseSchema", body: "projectsRoadmapCreateChangelogBodySchema" },
   { operationId: "ProjectsRoadmapController_updateChangelog", method: "PATCH", path: "/build/changelog/{entryId}", response: "projectsRoadmapUpdateChangelogResponseSchema", body: "projectsRoadmapUpdateChangelogBodySchema" },
   { operationId: "ProjectsRoadmapController_deleteChangelog", method: "DELETE", path: "/build/changelog/{entryId}" },
+  { operationId: "DashboardLayoutController_getLayout", method: "GET", path: "/build/command-center/layout", response: "dashboardLayoutGetLayoutResponseSchema" },
+  { operationId: "DashboardLayoutController_saveLayout", method: "PUT", path: "/build/command-center/layout", response: "dashboardLayoutSaveLayoutResponseSchema", body: "dashboardLayoutSaveLayoutBodySchema" },
   { operationId: "CommentDraftsController_readByTicket", method: "GET", path: "/build/comment-drafts/by-ticket/{ticketId}", response: "commentDraftsReadByTicketResponseSchema" },
   { operationId: "CommentDraftsController_deleteByTicket", method: "DELETE", path: "/build/comment-drafts/by-ticket/{ticketId}", response: "commentDraftsDeleteByTicketResponseSchema" },
   { operationId: "CommentDraftsController_listMine", method: "GET", path: "/build/comment-drafts/mine", response: "commentDraftsListMineResponseSchema" },
@@ -6793,6 +7025,8 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "ProjectsController_createLabel", method: "POST", path: "/build/labels", response: "projectsCreateLabelResponseSchema", body: "projectsCreateLabelBodySchema" },
   { operationId: "ProjectsController_updateLabel", method: "PATCH", path: "/build/labels/{labelId}", response: "projectsUpdateLabelResponseSchema", body: "projectsUpdateLabelBodySchema" },
   { operationId: "ProjectsController_deleteLabel", method: "DELETE", path: "/build/labels/{labelId}" },
+  { operationId: "LandingPreferenceController_getPreference", method: "GET", path: "/build/landing-preference", response: "landingPreferenceGetPreferenceResponseSchema" },
+  { operationId: "LandingPreferenceController_setPreference", method: "PUT", path: "/build/landing-preference", response: "landingPreferenceSetPreferenceResponseSchema", body: "landingPreferenceSetPreferenceBodySchema" },
   { operationId: "ManagedProductsController_listManagedProducts", method: "GET", path: "/build/managed-products", response: "managedProductsListManagedProductsResponseSchema" },
   { operationId: "ManagedProductsController_createManagedProduct", method: "POST", path: "/build/managed-products", response: "managedProductsCreateManagedProductResponseSchema", body: "managedProductsCreateManagedProductBodySchema" },
   { operationId: "ManagedProductsController_bulkUpdateManagedProducts", method: "POST", path: "/build/managed-products/bulk", response: "managedProductsBulkUpdateManagedProductsResponseSchema", body: "managedProductsBulkUpdateManagedProductsBodySchema" },
@@ -6800,9 +7034,11 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "ManagedProductsController_updateManagedProduct", method: "PATCH", path: "/build/managed-products/{managedProductId}", response: "managedProductsUpdateManagedProductResponseSchema", body: "managedProductsUpdateManagedProductBodySchema" },
   { operationId: "ManagedProductsController_deleteManagedProduct", method: "DELETE", path: "/build/managed-products/{managedProductId}" },
   { operationId: "ManagedProductsController_getProductInsights", method: "GET", path: "/build/managed-products/{managedProductId}/insights", response: "managedProductsGetProductInsightsResponseSchema" },
+  { operationId: "ManagedProductsController_setScoreOverride", method: "PATCH", path: "/build/managed-products/{managedProductId}/insights/score-override", body: "managedProductsSetScoreOverrideBodySchema" },
   { operationId: "BuildMembersController_list", method: "GET", path: "/build/members", response: "buildMembersListResponseSchema" },
   { operationId: "BuildMembersController_add", method: "POST", path: "/build/members", response: "buildMembersAddResponseSchema", body: "buildMembersAddBodySchema" },
   { operationId: "BuildMembersController_remove", method: "DELETE", path: "/build/members/{userId}" },
+  { operationId: "BuildStandingController_getMemberStanding", method: "GET", path: "/build/members/{userId}/standing", response: "buildStandingGetMemberStandingResponseSchema" },
   { operationId: "ProjectResourcesController_listOrgCustomStates", method: "GET", path: "/build/org-custom-states", response: "projectResourcesListOrgCustomStatesResponseSchema" },
   { operationId: "ClientPortalController_listPortalProjects", method: "GET", path: "/build/portal/projects", response: "clientPortalListPortalProjectsResponseSchema" },
   { operationId: "ClientPortalController_listPortalChangeRequests", method: "GET", path: "/build/portal/projects/{projectId}/change-requests", response: "clientPortalListPortalChangeRequestsResponseSchema" },
@@ -6817,6 +7053,7 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "PortfoliosController_unlinkProject", method: "DELETE", path: "/build/portfolios/{portfolioId}/projects/{projectId}" },
   { operationId: "ProgramsController_listPrograms", method: "GET", path: "/build/programs", response: "programsListProgramsResponseSchema" },
   { operationId: "ProgramsController_createProgram", method: "POST", path: "/build/programs", response: "programsCreateProgramResponseSchema", body: "programsCreateProgramBodySchema" },
+  { operationId: "ProgramsController_getProgram", method: "GET", path: "/build/programs/{programId}", response: "programsGetProgramResponseSchema" },
   { operationId: "ProgramsController_updateProgram", method: "PATCH", path: "/build/programs/{programId}", response: "programsUpdateProgramResponseSchema", body: "programsUpdateProgramBodySchema" },
   { operationId: "ProgramsController_deleteProgram", method: "DELETE", path: "/build/programs/{programId}" },
   { operationId: "ProjectsReleasesController_listOrgReleases", method: "GET", path: "/build/releases", response: "projectsReleasesListOrgReleasesResponseSchema" },
@@ -6858,6 +7095,7 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "ProjectsByIdController_deleteProject", method: "DELETE", path: "/build/{projectId}" },
   { operationId: "ProjectsActivityFeedController_getProjectActivity", method: "GET", path: "/build/{projectId}/activity", response: "projectsActivityFeedGetProjectActivityResponseSchema" },
   { operationId: "ProjectsReportsController_getAnalytics", method: "GET", path: "/build/{projectId}/analytics", response: "projectsReportsGetAnalyticsResponseSchema" },
+  { operationId: "ProjectsReportsController_getTimeBudget", method: "GET", path: "/build/{projectId}/analytics/time-budget", response: "projectsReportsGetTimeBudgetResponseSchema" },
   { operationId: "BuildApprovalsController_listApprovals", method: "GET", path: "/build/{projectId}/approvals", response: "buildApprovalsListApprovalsResponseSchema" },
   { operationId: "BuildApprovalsController_createApproval", method: "POST", path: "/build/{projectId}/approvals", response: "buildApprovalsCreateApprovalResponseSchema", body: "buildApprovalsCreateApprovalBodySchema" },
   { operationId: "BuildApprovalsController_getApproval", method: "GET", path: "/build/{projectId}/approvals/{approvalId}", response: "buildApprovalsGetApprovalResponseSchema" },
@@ -6866,6 +7104,9 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "BuildApprovalsController_decideApproval", method: "PATCH", path: "/build/{projectId}/approvals/{approvalId}/decide", response: "buildApprovalsDecideApprovalResponseSchema", body: "buildApprovalsDecideApprovalBodySchema" },
   { operationId: "ProjectsAutomationsController_list", method: "GET", path: "/build/{projectId}/automations", response: "projectsAutomationsListResponseSchema" },
   { operationId: "ProjectsAutomationsController_create", method: "POST", path: "/build/{projectId}/automations", response: "projectsAutomationsCreateResponseSchema", body: "projectsAutomationsCreateBodySchema" },
+  { operationId: "ProjectsAutomationsController_dryRun", method: "POST", path: "/build/{projectId}/automations/dry-run", response: "projectsAutomationsDryRunResponseSchema", body: "projectsAutomationsDryRunBodySchema" },
+  { operationId: "ProjectsAutomationsController_listRuns", method: "GET", path: "/build/{projectId}/automations/runs", response: "projectsAutomationsListRunsResponseSchema" },
+  { operationId: "ProjectsAutomationsController_replayRun", method: "POST", path: "/build/{projectId}/automations/runs/{runId}/replay", response: "projectsAutomationsReplayRunResponseSchema" },
   { operationId: "ProjectsAutomationsController_update", method: "PATCH", path: "/build/{projectId}/automations/{automationId}", response: "projectsAutomationsUpdateResponseSchema", body: "projectsAutomationsUpdateBodySchema" },
   { operationId: "ProjectsAutomationsController_delete", method: "DELETE", path: "/build/{projectId}/automations/{automationId}" },
   { operationId: "ProjectsBudgetController_getBudget", method: "GET", path: "/build/{projectId}/budget", response: "projectsBudgetGetBudgetResponseSchema" },
@@ -7057,6 +7298,7 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "WorkflowController_updateTransition", method: "PATCH", path: "/build/{projectId}/workflow/transitions/{transitionId}", response: "workflowUpdateTransitionResponseSchema", body: "workflowUpdateTransitionBodySchema" },
   { operationId: "WorkflowController_deleteTransition", method: "DELETE", path: "/build/{projectId}/workflow/transitions/{transitionId}" },
   { operationId: "WorkloadCapacityController_capacity", method: "GET", path: "/build/{projectId}/workload/capacity", response: "workloadCapacityCapacityResponseSchema" },
+  { operationId: "FeedbucketController_routeToIntake", method: "POST", path: "/feedbucket/submissions/{submissionId}/route-to-intake", response: "feedbucketRouteToIntakeResponseSchema" },
   { operationId: "NotificationsController_unreadCount", method: "GET", path: "/notifications/unread-count", response: "notificationsUnreadCountResponseSchema" },
   { operationId: "PublicController_getPublicForm", method: "GET", path: "/public/forms/{token}", response: "publicGetPublicFormResponseSchema" },
   { operationId: "PublicController_submitPublicForm", method: "POST", path: "/public/forms/{token}/submit", response: "publicSubmitPublicFormResponseSchema", body: "publicSubmitPublicFormBodySchema" },

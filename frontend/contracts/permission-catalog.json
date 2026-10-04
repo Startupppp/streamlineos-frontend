@@ -125,12 +125,15 @@
     "build:changerequests:create",
     "build:changerequests:manage",
     "build:changerequests:view",
+    "build:client-access:request",
     "build:clientvisibility:manage",
     "build:create",
     "build:customers:manage",
     "build:customers:view",
     "build:cycles:manage",
     "build:cycles:view",
+    "build:dashboard:manage",
+    "build:dashboard:view",
     "build:decisions:manage",
     "build:decisions:view",
     "build:delete",
@@ -1411,6 +1414,11 @@
       "action": "view",
       "description": "View change requests"
     },
+    "build:client-access:request": {
+      "resource": "build:client-access",
+      "action": "request",
+      "description": "Submit a client-access approval request for a project"
+    },
     "build:clientvisibility:manage": {
       "resource": "build:clientvisibility",
       "action": "manage",
@@ -1442,6 +1450,16 @@
       "resource": "build:cycles",
       "action": "view",
       "description": "View cycles"
+    },
+    "build:dashboard:manage": {
+      "resource": "build:dashboard",
+      "action": "manage",
+      "description": "Save and reset own dashboard layout in the command center"
+    },
+    "build:dashboard:view": {
+      "resource": "build:dashboard",
+      "action": "view",
+      "description": "View own dashboard layout in the command center"
     },
     "build:decisions:manage": {
       "resource": "build:decisions",
@@ -4807,12 +4825,15 @@
     "build:changerequests:create",
     "build:changerequests:manage",
     "build:changerequests:view",
+    "build:client-access:request",
     "build:clientvisibility:manage",
     "build:create",
     "build:customers:manage",
     "build:customers:view",
     "build:cycles:manage",
     "build:cycles:view",
+    "build:dashboard:manage",
+    "build:dashboard:view",
     "build:decisions:manage",
     "build:decisions:view",
     "build:delete",

@@ -27,7 +27,7 @@ export const ticketDetailContract = projectsTicketsGetTicketResponseSchema.exten
     .unwrap()
     .default([])
     .transform((items) =>
-      items.map((c) => ({ ...c, user: c.user ?? undefined })),
+      items.map((c) => ({ ...c, reactions: c.reactions ?? [], user: c.user ?? undefined })),
     ),
   assignee: projectsTicketsGetTicketResponseSchema.shape.assignee.transform(
     (a) => a?.user ?? null,

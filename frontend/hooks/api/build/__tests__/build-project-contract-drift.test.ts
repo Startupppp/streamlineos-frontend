@@ -36,6 +36,8 @@ const RELEASE = {
   status: "draft",
   releaseDate: null,
   publishedAt: null,
+  readiness: null,
+  riskLevel: null,
   createdBy: null,
   deletedAt: null,
   ticketCount: 0,

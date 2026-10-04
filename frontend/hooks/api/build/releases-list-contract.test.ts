@@ -37,6 +37,8 @@ const RELEASE_ROW = {
   status: "draft",
   releaseDate: null,
   publishedAt: null,
+  readiness: null,
+  riskLevel: null,
   createdBy: "user-7",
   createdByUser: {
     name: "Ada Lovelace",
