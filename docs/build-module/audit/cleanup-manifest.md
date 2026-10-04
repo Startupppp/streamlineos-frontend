@@ -1,5 +1,9 @@
 # Cleanup manifest
 
+## Existing owners retained for source49/50 — 2026-10-04
+
+Classification: Current verified for the exact seven-file inventory and reviewed source commits. No new or deleted file, schema, helper, API, component, query key, contract, permission or Markdown. Backend49 3f0d96786bffe6e0c463ce4da755be8601539947 and frontend50 1ff45c1c0c49136da0aa7ab30ece4a511c6b6e04 retain their existing canonical owners. Exact paths/hashes, independent reviewers, tests/typechecks, reference changes and remaining runtime limits are in [source49/50 exact changes, tests, typechecks and retained failed gates](../audit/bugs-and-verification.md#approver-liveness-and-project-draft-recovery--2026-10-04). Existing research, screenshots, test evidence and unrelated source bytes are preserved; no inbound reference was removed.
+
 ## Retained task-artifact proof boundaries — 2026-10-04
 
 Classification: Current verified for exact source inventory, focused checks and the bounded scratch proof. No file was deleted. All historical research, screenshots, failed runs and existing evidence remain retained. Source48 final corrections are committed at backend `c570327aebaad87030b58b4cafa0ab49ca3e186f`; parent `5e33d3ebb` externally includes50 unrelated paths which this coordinator preserved and did not claim to review.

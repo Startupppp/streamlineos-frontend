@@ -1,5 +1,237 @@
 # Bugs and verification ledger
 
+## Approver liveness and project draft recovery — 2026-10-04
+
+Classification: Current verified for the bounded source and gate results below; Current unverified for complete application/release behavior. Backend49 commits exactly five existing files at 3f0d96786bffe6e0c463ce4da755be8601539947; frontend50 commits exactly two existing files at 1ff45c1c0c49136da0aa7ab30ece4a511c6b6e04. No file was created or deleted. Reproducible behavioral failures precede both corrections, and independent reviewers inspected the frozen production and test changes.
+
+Root repeats six backend suites/175 tests and the actual frontend Sheet/provisioning suite/13 tests successfully. Both changed-file and production TypeScript gates, exact-path lint/diff, OpenAPI freshness and generated/vendor checks pass. The wider frontend run remains failed:65 pass/six unchanged CUSTOM_STATE timestamp-fixture failures. No historical baseline execution is invented. Previous full test TypeScript OOM/diagnostics remain unpassed; the scoped checks do not replace them.
+
+Member SHARE precedes Ticket UPDATE; the test records exact modes and observes the independent member-queue wait before writer release. Those modeled queues do not prove PostgreSQL blocking, continuous account/org/requester authority or cascade safety. The project guard preserves pending review/input and its dedicated success acknowledgement path; scope/unmount recovery and real browser persistence remain open. None of BT-27a037364398, BT-801e948e8a67, BT-2e4073320ccb or BT-3e9ebfaad21e closes. All522 checkbox/stage statuses remain unchanged (110 checked/412 open). Canonical payload SHA-256: `92047146b0a1531f14ae4ab5da10f401053d32dafb17d3f418c930ce8d93af8d` (UTF-8 JSON between the fences, excluding fence newlines).
+
+```json
+{
+  "classification": "Current verified",
+  "observationAt": "2026-10-04T03:52:19.240Z",
+  "claim49": {
+    "requirements": [
+      "BT-27a037364398",
+      "BT-801e948e8a67"
+    ],
+    "revision": "3f0d96786bffe6e0c463ce4da755be8601539947",
+    "files": [
+      {
+        "path": "backend/src/modules/build/approvals/approvals.service.ts",
+        "sha256": "256c0ae2b45215459971904ed7b8dd0002f4532923b8bb734dfe6f05f9287f16"
+      },
+      {
+        "path": "backend/src/common/organization/organization-actor.ts",
+        "sha256": "d1fc8402cc0a064c5e399327e990f7981e8ce6d982717634ffd1575ca2577f58"
+      },
+      {
+        "path": "backend/src/modules/build/approvals/approvals.service.spec.ts",
+        "sha256": "8ce9b9233ac5cd7ab7cc95f9a4daf6ac7a1889c9da34252418f2b67f3e495c71"
+      },
+      {
+        "path": "backend/src/modules/build/approvals/__tests__/approval-lifecycle-concurrency.fixture.ts",
+        "sha256": "c3c9e23a97d106d93bee1a950f64f16ff4e14bd3289cd3b26a26807ca7018097"
+      },
+      {
+        "path": "backend/src/modules/build/approvals/__tests__/approval-task-artifact.spec.ts",
+        "sha256": "373e8e1bc5bff30af295fcda1c4618331a03d0dc500d9c0eed41e714db6718f4"
+      }
+    ],
+    "behavioralReds": [
+      {
+        "observer": "C",
+        "cases": 2,
+        "scope": "inactive canonical user/org public creation succeeds before correction"
+      },
+      {
+        "observer": "C",
+        "failed": 14,
+        "skipped": 34,
+        "scope": "non-task requester revocation/project archive during member wait"
+      }
+    ],
+    "coordinatorFocused": {
+      "suites": 6,
+      "passed": 175,
+      "failed": 0,
+      "exitCode": 0
+    },
+    "exactLint": {
+      "exitCode": 0,
+      "files": 5
+    },
+    "diff": {
+      "exitCode": 0
+    },
+    "changedPathTypeScript": {
+      "exitCode": 0,
+      "heapMiB": 8192,
+      "config": "tsconfig.test.json",
+      "rootFileCount": 5,
+      "incremental": false
+    },
+    "productionTypeScript": {
+      "command": "pnpm -C backend typecheck",
+      "exitCode": 0,
+      "heapMiB": 10240
+    },
+    "independentReview": {
+      "production": "C and B CLEAR",
+      "test": "B and root CLEAR",
+      "frozen": true
+    },
+    "modelQueue": {
+      "memberQueueIndependentOfGlobalTransactionTail": true,
+      "writerFirstWaitSignal": true,
+      "exactModes": [
+        "Member SHARE",
+        "Ticket UPDATE"
+      ],
+      "physicalPostgreSQL": false
+    },
+    "open": [
+      "physical member/status/delete concurrency",
+      "user/org/requester/grant continuity",
+      "reassignment and decision liveness",
+      "real application API and persistence",
+      "complete RBAC and tenant boundary",
+      "cache/events",
+      "browser and mobile",
+      "deployment and operations"
+    ]
+  },
+  "claim50": {
+    "requirements": [
+      "BT-2e4073320ccb",
+      "BT-3e9ebfaad21e"
+    ],
+    "revision": "1ff45c1c0c49136da0aa7ab30ece4a511c6b6e04",
+    "files": [
+      {
+        "path": "frontend/features/build/project-create/project-create-wizard.tsx",
+        "sha256": "f5bda7640efe152267c1583466fd41ec2c6c2a1906008c6d7658d163c9731670"
+      },
+      {
+        "path": "frontend/features/build/project-create/project-create-dirty-guard.test.tsx",
+        "sha256": "eae63b3b3ad3a6ba12f94bae9e724259ee09d8d7bd465637bbfd3d2d902f88dc"
+      }
+    ],
+    "behavioralRed": {
+      "observer": "C",
+      "failed": 1,
+      "passed": 5,
+      "exitCode": 1,
+      "scope": "actual Sheet and provisioning hook pending close resets draft"
+    },
+    "coordinatorFocused": {
+      "suites": 1,
+      "passed": 13,
+      "failed": 0,
+      "exitCode": 0
+    },
+    "widerFocused": {
+      "suites": 6,
+      "passed": 65,
+      "failed": 6,
+      "exitCode": 1,
+      "failingFile": "frontend/hooks/api/build/__tests__/build-project-contract-drift.test.ts",
+      "reason": "unchanged CUSTOM_STATE fixture omits required createdAt and updatedAt",
+      "baselineExecuted": false,
+      "decoderAndFixtureModified": false
+    },
+    "exactLint": {
+      "exitCode": 0,
+      "files": 2
+    },
+    "diff": {
+      "exitCode": 0
+    },
+    "changedPathTypeScript": {
+      "exitCode": 0,
+      "heapMiB": 8192,
+      "config": "tsconfig.specs.json",
+      "rootFileCount": 2,
+      "incremental": false
+    },
+    "productionTypeScript": {
+      "command": "pnpm -C frontend type-check",
+      "exitCode": 0,
+      "includesOfficialRouteTypeGeneration": true,
+      "heapMiB": 8192,
+      "warning": "existing Edge Runtime deprecation"
+    },
+    "independentReview": {
+      "productionAndTests": "A and root CLEAR",
+      "frozen": true
+    },
+    "open": [
+      "scope/unmount/owner-change recovery",
+      "real create/failure/retry and duplicate submission",
+      "persistence after refresh",
+      "Project to Ticket first-use action",
+      "permission and tenant proof",
+      "browser and mobile",
+      "deployment and operations"
+    ]
+  },
+  "contracts": {
+    "dtoAndResponseChanged": false,
+    "newPermissions": false,
+    "vendor": {
+      "selfTests": 6,
+      "exitCode": 0,
+      "byteMatch": true
+    },
+    "generatedBuild": {
+      "selfTests": 93,
+      "exitCode": 0,
+      "schemaCount": 390,
+      "operationCount": 311,
+      "fresh": true
+    },
+    "openapiSelfTest": {
+      "exitCode": 0,
+      "semantics": "line endings, component and operation changes plus additions/removals"
+    },
+    "openapiFreshness": {
+      "exitCode": 0,
+      "operations": 4107,
+      "responseContracts": 4092,
+      "exposureStamped": 4107
+    }
+  },
+  "cleanup": {
+    "newFiles": [],
+    "deletedFiles": [],
+    "newSourceComments": false,
+    "liveTicketComments": false
+  },
+  "tracker": {
+    "total": 522,
+    "checked": 110,
+    "open": 412,
+    "stagesAdvanced": false
+  },
+  "historicalFailedGates": {
+    "fullBackendTestTypeScript": "previous 10GiB OOM remains unpassed; no fresh successful full run",
+    "fullFrontendSpecTypeScript": "previous24diagnostics/six unowned files remain unpassed"
+  },
+  "boundaries": {
+    "realApi": false,
+    "database": false,
+    "browser": false,
+    "mobile": false,
+    "deployment": false,
+    "operations": false
+  }
+}
+```
+
+
+
 ## Task artifact PostgreSQL proof — 2026-10-04
 
 Classification: Current verified for the exact frozen source gates and bounded scratch observations below. Current unverified for complete application, browser and release acceptance. The corrected third run passed89/89 checks, exit0, at backendc570327aebaad87030b58b4cafa0ab49ca3e186f. Root independently confirmed scratch database/sessions0 and unchanged application columns/approvals0 with streamline_app READ ONLY. Both failed earlier runs remain in the following historical checkpoint.
