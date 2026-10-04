@@ -1,5 +1,9 @@
 # Build work claims
 
+#### Claim65 canonical hook typing handoff — 2026-10-04T06:42Z
+
+Root changed-path TypeScript reports two TS2322 errors in the decision owner126: the existing useUpdateIntakeRequest hook exposes unknown result/error because its optional mutation options and onSuccess are untyped. Coordinator now exclusively owns only existing `frontend/hooks/api/build/advanced.ts` for specialization of that hook's existing options/result types, using existing IntakeRequest/input and TanStack types. Search finds one production caller and no supplied options. Preserve permission, typed API decoder, keys, canonical invalidations and runtime behavior; no new helper/hook/schema or other advanced operation edit. The four65 source/test authors remain frozen and their ownership stays separate. No comments, source-size growth, assertions or blanket casts. Re-run focused Intake tests, exact path lint/diff, changed-path and production TypeScript; independent routine review must include this fifth exact path. Initial TS2322 remains recorded and broad65 stages remain open.
+
 ## BT-cd038c23dbcc — canonical invitation email acknowledgment correction 68
 
 Classification: Planned bounded correction after high-effort independent64 review at 2026-10-04T06:35Z. Review is not CLEAR: the real EmailService/EmailOutboxService resolves on suppression and transient queued retry, so64's rejected email double does not prove real outage recovery. Root retains that failure and the prior changed-path/production TypeScript passes as separate observations. Current service working hash759538c1b4477700350189d6cac2971d8f0a2e6578f851a04632d4e53f4aa499 has722 lines, versus the previously reported690 freeze and696 committed baseline; author attribution is unproved. Preserve unrelated formatting, do not waive file limits or claim the current freeze matches the older one.
