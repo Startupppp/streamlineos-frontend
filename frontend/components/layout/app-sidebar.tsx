@@ -26,7 +26,7 @@ import { ProductSwitcherMenu } from "./header/product-switcher-menu";
 import { WorkspaceSwitcher } from "./header/org-switcher";
 
 import { useAccess, useCan } from "@/hooks/api/access";
-import { useHrSettingsMode } from "@/features/hr/settings-hub/use-hr-settings-mode";
+import { useHrSettingsMode } from "@/hooks/common/use-hr-settings-mode";
 import { applyHrWeekOneNav } from "./sidebar/hr-week-one-nav";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
 import { useEntitlements } from "@/hooks/api/entitlements";

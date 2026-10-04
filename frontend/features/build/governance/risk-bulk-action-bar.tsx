@@ -45,13 +45,17 @@ export function RiskBulkActionBar({
   const canManage = useCan("build:risks:manage");
   if (!canManage) return null;
 
+  const handleBulkStatusChange = (value: string) => {
+    if (isRiskStatus(value)) onBulkStatus(value);
+  };
+
   return (
     <div
       className="flex items-center gap-2 rounded-md border bg-muted/50 px-3 py-2 text-sm"
       data-testid="risk-bulk-action-bar"
     >
       <Badge variant="secondary">{selectedCount} selected</Badge>
-      <Select onValueChange={(v) => { if (isRiskStatus(v)) onBulkStatus(v); }}>
+      <Select onValueChange={handleBulkStatusChange}>
         <SelectTrigger className="h-8 w-36">
           <SelectValue placeholder="Set Status" />
         </SelectTrigger>

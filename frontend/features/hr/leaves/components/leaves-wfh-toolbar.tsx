@@ -12,6 +12,7 @@ import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { DownloadIcon, HouseIcon, PlusIcon } from "@animateicons/react/lucide";
 import { LeavesSummaryStrip } from "./leaves-summary-strip";
+import { useT } from "@/lib/i18n/i18n";
 
 export interface LeavesWfhToolbarProps {
   isAdmin: boolean;
@@ -44,6 +45,7 @@ export function LeavesWfhToolbar({
   exportNoun,
   onExport,
 }: LeavesWfhToolbarProps) {
+  const t = useT();
   return (
     <>
       <LeavesSummaryStrip
@@ -56,13 +58,13 @@ export function LeavesWfhToolbar({
       <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide">
         <TabsList className="w-full shrink-0 md:w-auto">
           <TabsTrigger value="my-leaves" className="gap-1.5 truncate">
-            My leaves
+            {t("timeOff.tabMyLeaves")}
             {myLeaveCount > 0 ? (
               <span className="text-xs tabular-nums opacity-70">{myLeaveCount}</span>
             ) : null}
           </TabsTrigger>
           <TabsTrigger value="wfh" className="gap-1.5 truncate">
-            Work from home
+            {t("timeOff.tabWfh")}
           </TabsTrigger>
           {isAdmin ? (
             <TabsTrigger value="approvals" className="gap-1.5 truncate">
@@ -124,6 +126,7 @@ export function LeavesWfhActions({
   onRequestLeave: () => void;
   onRequestWfh: () => void;
 }) {
+  const t = useT();
   return (
     <>
       {canRequestWfh ? (
@@ -136,7 +139,7 @@ export function LeavesWfhActions({
           onClick={onRequestWfh}
           className="min-h-11 gap-1.5 md:min-h-0"
         >
-          Request WFH
+          {t("timeOff.requestWfh")}
         </AnimatedIconButton>
       ) : null}
       {canRequestLeave ? (
@@ -148,7 +151,7 @@ export function LeavesWfhActions({
           onClick={onRequestLeave}
           className="min-h-11 gap-1.5 md:min-h-0"
         >
-          Request leave
+          {t("timeOff.requestLeave")}
         </AnimatedIconButton>
       ) : null}
     </>

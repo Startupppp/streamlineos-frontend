@@ -50,7 +50,7 @@ jest.mock("./inbox-bulk-toolbar", () => ({
   InboxBulkToolbar: () => null,
 }));
 
-jest.mock("@/features/build/shared/shortcut-help-dialog", () => ({
+jest.mock("@/components/shared/shortcut-help-dialog", () => ({
   ShortcutHelpDialog: ({ open }: { open: boolean }) =>
     open ? <div role="dialog" aria-label="Keyboard shortcuts" /> : null,
 }));

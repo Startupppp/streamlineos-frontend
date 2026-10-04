@@ -30,9 +30,9 @@ export function GalleryIndex() {
           beside it.
         </p>
       </header>
-      <ul role="list" className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+      <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {GALLERIES.map((gallery) => (
-          <li key={gallery.slug} role="listitem">
+          <li key={gallery.slug}>
             <Link
               href={`/design-system/${gallery.slug}`}
               className="flex flex-col gap-0.5 rounded-xl border border-border bg-card p-3 transition-colors hover:border-muted-foreground/40"

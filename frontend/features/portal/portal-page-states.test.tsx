@@ -315,7 +315,7 @@ describe("SPEC 6 — AcceptInvitationPage states (Requirement C3)", () => {
   });
 
   it("no-token/first-run state: renders 'No active session' when no token param and reason=no_token", async () => {
-    const navMock = require("next/navigation");
+    const navMock = jest.requireMock("next/navigation");
     navMock.useSearchParams = () => ({
       get: (key: string) => {
         if (key === "token") return null;
@@ -339,7 +339,7 @@ describe("SPEC 6 — AcceptInvitationPage states (Requirement C3)", () => {
   });
 
   it("session-expired state: renders 'Session expired' when no token and reason=expired", async () => {
-    const navMock = require("next/navigation");
+    const navMock = jest.requireMock("next/navigation");
     navMock.useSearchParams = () => ({
       get: (key: string) => {
         if (key === "token") return null;

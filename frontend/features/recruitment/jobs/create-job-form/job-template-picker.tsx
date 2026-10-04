@@ -16,7 +16,7 @@ import {
   type JobTemplateDraft,
 } from "@/hooks/api/hr/recruitment";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Field } from "./job-basics-sections";
+import { Field } from "./job-form-field";
 import { NO_JOB_TEMPLATE, type CreateJobFormValues } from "./schema";
 import { templateDraftToFormValues } from "./template-to-form";
 

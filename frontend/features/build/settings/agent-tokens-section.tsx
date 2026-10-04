@@ -5,7 +5,7 @@ import { Bot } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
-import { useCan } from "@/hooks/api/access";
+import { useCan, usePermissionGate } from "@/hooks/api/access";
 import {
   useAgentTokens,
   useRevokeAgentToken,
@@ -15,7 +15,8 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { PM_PANEL } from "@/components/pm-chrome";
-import { TokenRow, TokenListSkeleton, TokensEmptyHint } from "./agent-token-list";
+import { EmptyState } from "@/components/ui/empty-state";
+import { TokenRow, TokenListSkeleton } from "./agent-token-list";
 import { CreateTokenDialog } from "./agent-token-create-dialog";
 import { SetupHelp } from "./agent-token-setup-help";
 
@@ -25,6 +26,7 @@ interface AgentTokensSectionProps {
 
 export function AgentTokensSection({ createRef }: AgentTokensSectionProps = {}) {
   const canManageTokens = useCan("settings:api-tokens:write");
+  const readGate = usePermissionGate("settings:api-tokens:read");
   const { data: tokens, isLoading, isError, refetch } = useAgentTokens();
   const revokeToken = useRevokeAgentToken();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -114,7 +116,17 @@ export function AgentTokensSection({ createRef }: AgentTokensSectionProps = {}) 
           ))}
         </div>
       ) : (
-        <TokensEmptyHint />
+        <EmptyState
+          compact
+          illustrationSize="xs"
+          access={readGate}
+          title="No tokens yet"
+          description={
+            canManageTokens
+              ? "Use New token above to connect an AI agent to your projects."
+              : "Ask a member who can manage API tokens to issue one for your agent."
+          }
+        />
       )}
 
       <SetupHelp />

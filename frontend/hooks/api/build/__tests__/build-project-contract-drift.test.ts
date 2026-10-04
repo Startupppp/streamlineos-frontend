@@ -1,3 +1,4 @@
+import { ZodError } from "zod";
 import {
   projectAutomationListContract,
   projectReleaseRowContract,
@@ -52,6 +53,8 @@ const CUSTOM_STATE = {
   order: 1,
   type: "unstarted",
   wipLimit: null,
+  createdAt: "2026-09-01T10:00:00.000Z",
+  updatedAt: "2026-09-01T10:00:00.000Z",
 };
 
 const AUTOMATION_PAGINATION = { limit: 50, hasMore: false, nextCursor: null };
@@ -80,7 +83,7 @@ describe("automation list rows carry what the card renders", () => {
   });
 
   it("rejects a bare array, because the endpoint returns a cursor envelope and a contract that accepted both would decode a truncated first page as the whole list", () => {
-    expect(() => projectAutomationListContract.parse([AUTOMATION])).toThrow();
+    expect(() => projectAutomationListContract.parse([AUTOMATION])).toThrow(ZodError);
   });
 
   it("carries the cursor forward, because a page whose nextCursor is stripped ends infinite scroll after one page", () => {
@@ -119,6 +122,6 @@ describe("custom state type accepts every value the state_group column can hold"
   it("rejects an absent type, because the backend always projects the column and an optional contract would decode a dropped projection as an untyped state", () => {
     const { type: _type, ...withoutType } = CUSTOM_STATE;
 
-    expect(() => projectCustomStateListContract.parse([withoutType])).toThrow();
+    expect(() => projectCustomStateListContract.parse([withoutType])).toThrow(ZodError);
   });
 });

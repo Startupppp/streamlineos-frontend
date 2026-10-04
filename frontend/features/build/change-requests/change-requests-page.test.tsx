@@ -29,7 +29,7 @@ jest.mock("@/hooks/api/organization", () => ({
 
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 
-jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
   useBuildListKeyboard: jest.fn(() => ({ focusedIndex: null, setFocusedIndex: jest.fn() })),
 }));
 
@@ -94,13 +94,16 @@ jest.mock("@/components/ui/data-table", () => ({
   }: {
     pagination?: { hasMore?: boolean };
     selection?: { onChange: (s: Set<string | number>) => void };
-  }) => (
-    <div
-      data-testid="data-table"
-      data-has-more={String(Boolean(pagination?.hasMore))}
-      onClick={() => selection?.onChange(new Set(["7"]))}
-    />
-  ),
+  }) => {
+    const handleSelectRow = () => selection?.onChange(new Set(["7"]));
+    return (
+      <div
+        data-testid="data-table"
+        data-has-more={String(Boolean(pagination?.hasMore))}
+        onClick={handleSelectRow}
+      />
+    );
+  },
   DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
 }));
 
@@ -201,7 +204,7 @@ jest.mock("lucide-react", () => ({
 import { useChangeRequests, useDeleteChangeRequest, useUpdateChangeRequest } from "@/hooks/api/build/change-requests";
 import { useCan, useAccess } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 
 const mockUseBuildListKeyboard = useBuildListKeyboard as jest.Mock;
 

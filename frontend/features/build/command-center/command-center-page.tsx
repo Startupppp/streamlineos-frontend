@@ -25,7 +25,7 @@ import {
 } from "@/hooks/api/build/all-work";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { useCommandPalette } from "@/components/command-palette/hooks/use-command-palette";
-import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
+import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
 import { QuickCreateMenu, PinnedNav } from "./command-center-actions";
 import {
   PmPageShell,
@@ -36,7 +36,7 @@ import {
 import { pmSnappy } from "@/lib/motion-presets";
 import { cn } from "@/lib/utils";
 import { useKeyboardShortcuts } from "./use-keyboard-shortcuts";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { CommandCenterToolbar } from "./command-center-toolbar";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 import {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
@@ -136,7 +136,7 @@ export function useCancelImportJob() {
 }
 
 export function useDryRunImport() {
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:import", {
     mutationKey: ["kb", "pages", "import", "dry-run"],
     mutationFn: (input: ImportKbPagesInput) =>
       apiClient.post<ImportDryRunResult>("/kb/pages/import/dry-run", input, undefined, kbImportDryRunContractLazy),

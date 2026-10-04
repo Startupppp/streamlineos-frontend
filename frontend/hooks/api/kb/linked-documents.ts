@@ -1,11 +1,12 @@
 "use client";
 
-import { keepPreviousData, useMutation } from "@tanstack/react-query";
+import { keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { readErrorExceptNotFoundReachesBoundary } from "@/lib/query-error-policy";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const listLazy = lazyContract(() => import("@/hooks/api/kb/linked-documents-schema").then((m) => m.linkedDocumentListContract));
 const detailLazy = lazyContract(() => import("@/hooks/api/kb/linked-documents-schema").then((m) => m.linkedDocumentDetailContract));
@@ -84,7 +85,7 @@ export function useLinkedDocument(linkedDocumentId: number, options?: { enabled?
 }
 
 export function useOpenLinkedDocument() {
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:view", {
     mutationKey: ["kb", "linkedDocuments", "open"],
     gcTime: 0,
     mutationFn: (linkedDocumentId: number) =>

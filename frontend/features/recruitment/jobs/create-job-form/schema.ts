@@ -45,6 +45,27 @@ const STATUSES = ["DRAFT", "OPEN", "CLOSED"] as const;
 const VISIBILITIES = ["PUBLIC", "INTERNAL"] as const;
 const PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
 
+function optionalText(schema: z.ZodString) {
+  return z.union([z.literal(""), schema]).optional();
+}
+
+function wordChecked(check: (v: string) => string | true) {
+  return z
+    .string()
+    .superRefine((v, ctx) => {
+      if (!v.trim()) return;
+      const result = check(v);
+      if (result !== true) ctx.addIssue({ code: "custom", message: result });
+    })
+    .optional();
+}
+
+export function toOptionalNumber(v: unknown): number | undefined {
+  if (v === "" || v === null || v === undefined) return undefined;
+  const n = Number(v);
+  return Number.isNaN(n) ? undefined : n;
+}
+
 export const createJobFormSchema = z
   .object({
     title: z
@@ -59,122 +80,135 @@ export const createJobFormSchema = z
       )
       .refine((v) => !/(.)\1{3,}/.test(v), "Job Title cannot have 4 or more consecutive identical characters")
       .refine((v) => !/\s{2,}/.test(v), "Job Title cannot have multiple consecutive spaces"),
-    departmentId: z.string().min(1, "Department is required"),
-    role: z
-      .string()
-      .min(2, "Role is required")
-      .max(100, "Role must be at most 100 characters"),
-    jobType: z.enum(JOB_TYPES, { error: "Job Type is required" }),
-    workMode: z.enum(WORK_MODES, { error: "Work Mode is required" }),
+    departmentId: z.string().optional(),
+    jobType: z.enum(JOB_TYPES).optional(),
+    workMode: z.enum(WORK_MODES).optional(),
     openings: z
       .number({ error: "Enter a valid number" })
       .int("Must be a whole number")
       .min(1, "At least 1 opening required")
-      .max(999, "Too many openings"),
+      .max(999, "Too many openings")
+      .optional(),
 
-    country: z.string().min(1, "Country is required"),
-    stateCity: z.string().min(2, "State/City is required").max(100, "Too long"),
-    officeLocation: z.string().min(2, "Office Location is required").max(200, "Too long"),
+    country: z.string().optional(),
+    stateCity: optionalText(z.string().min(2, "State/City must be at least 2 characters").max(100, "Too long")),
+    officeLocation: optionalText(z.string().max(200, "Too long")),
 
-    salaryMin: z
-      .number({ error: "Enter a valid amount" })
-      .min(1, "Must be greater than 0")
-      .max(999_999_999, "Too large"),
-    salaryMax: z
-      .number({ error: "Enter a valid amount" })
-      .min(1, "Must be greater than 0")
-      .max(999_999_999, "Too large"),
-    currency: z.string().min(1, "Currency is required"),
-    salaryType: z.enum(SALARY_TYPES, { error: "Salary Type is required" }),
+    salaryMin: z.number().min(1, "Must be greater than 0").max(999_999_999, "Too large").optional(),
+    salaryMax: z.number().min(1, "Must be greater than 0").max(999_999_999, "Too large").optional(),
+    currency: z.string().optional(),
+    salaryType: z.enum(SALARY_TYPES).optional(),
     bonus: z.string().max(200).optional(),
 
-    minExperience: z
-      .number({ error: "Enter years of experience" })
-      .int()
-      .min(0, "Cannot be negative")
-      .max(50, "Too large"),
-    maxExperience: z
-      .number({ error: "Enter years of experience" })
-      .int()
-      .min(0)
-      .max(50)
-      .optional(),
-    educationLevel: z.string().min(1, "Education Level is required"),
+    minExperience: z.number().int().min(0, "Cannot be negative").max(50, "Too large").optional(),
+    maxExperience: z.number().int().min(0).max(50).optional(),
+    educationLevel: z.string().optional(),
 
-    requiredSkills: z.array(z.string().min(1)).min(1, "At least one required skill"),
+    requiredSkills: z.array(z.string().min(1)).optional(),
     preferredSkills: z.array(z.string().min(1)).optional(),
     tags: z.array(z.string().min(1)).optional(),
 
-    overview: z
-      .string()
-      .min(1, "Overview is required")
-      .superRefine((v, ctx) => {
-        const result = overviewWordCheck(v);
-        if (result !== true) ctx.addIssue({ code: "custom", message: result });
-      }),
-    responsibilities: z
-      .string()
-      .min(1, "Responsibilities are required")
-      .superRefine((v, ctx) => {
-        const result = responsibilitiesWordCheck(v);
-        if (result !== true) ctx.addIssue({ code: "custom", message: result });
-      }),
-    jobRequirements: z
-      .string()
-      .min(1, "Requirements are required")
-      .superRefine((v, ctx) => {
-        const result = jobRequirementsWordCheck(v);
-        if (result !== true) ctx.addIssue({ code: "custom", message: result });
-      }),
-    benefits: z.string().superRefine((v, ctx) => {
-      const result = benefitsWordCheck(v);
-      if (result !== true) ctx.addIssue({ code: "custom", message: result });
-    }).optional(),
+    overview: wordChecked(overviewWordCheck),
+    responsibilities: wordChecked(responsibilitiesWordCheck),
+    jobRequirements: wordChecked(jobRequirementsWordCheck),
+    benefits: wordChecked(benefitsWordCheck),
 
-    hiringManager: z.string().min(2, "Hiring Manager is required").max(100),
+    hiringManager: optionalText(z.string().max(100, "Too long")),
     hiringFlowId: z.string().optional(),
-    /**
-     * A string, not a number, because the sentinel above shares the field. It
-     * records which template seeded the form so the picker can show its name;
-     * nothing is submitted from it.
-     */
     jobTemplateId: z.string().optional(),
-    interviewRounds: z.array(z.string()).min(1, "Select at least one interview round"),
-    questionBankMapping: z.string().min(1, "Question Bank Mapping is required"),
+    interviewRounds: z.array(z.string()).optional(),
 
     resumeRequired: z.boolean(),
     coverLetterRequired: z.boolean(),
-    customFields: z.string().max(500).optional(),
     screeningQuestions: z.array(screeningQuestionSchema).max(20).optional(),
 
-    status: z.enum(STATUSES, { error: "Status is required" }),
-    visibility: z.enum(VISIBILITIES, { error: "Visibility is required" }),
+    status: z.enum(STATUSES).optional(),
+    visibility: z.enum(VISIBILITIES).optional(),
     applicationDeadline: z.string().optional(),
 
-    priority: z.enum(PRIORITIES, { error: "Priority is required" }),
+    priority: z.enum(PRIORITIES).optional(),
     referralEnabled: z.boolean(),
     approvalRequired: z.boolean(),
   })
-  .refine((d) => d.salaryMin <= d.salaryMax, {
+  .refine((d) => d.salaryMin === undefined || d.salaryMax === undefined || d.salaryMin <= d.salaryMax, {
     message: "Min salary must be ≤ max salary",
     path: ["salaryMin"],
   })
   .refine(
-    (d) => d.maxExperience === undefined || d.maxExperience >= d.minExperience,
+    (d) => d.maxExperience === undefined || d.maxExperience >= (d.minExperience ?? 0),
     { message: "Max experience must be ≥ min experience", path: ["maxExperience"] }
   );
 
 export type CreateJobFormValues = z.infer<typeof createJobFormSchema>;
 
-export const SECTION_KEYS: Array<keyof CreateJobFormValues>[] = [
-  ["title", "departmentId", "role", "jobType", "workMode", "openings"],
-  ["country", "stateCity", "officeLocation"],
-  ["salaryMin", "salaryMax", "currency", "salaryType"],
-  ["minExperience", "educationLevel"],
-  ["requiredSkills"],
-  ["overview", "responsibilities", "jobRequirements"],
-  ["hiringManager", "hiringFlowId", "interviewRounds", "questionBankMapping"],
-  ["resumeRequired", "coverLetterRequired"],
-  ["status", "visibility"],
-  ["priority", "referralEnabled", "approvalRequired"],
+export type JobFormBlock = "essentials" | "details" | "hiring";
+
+export interface PublishRequirement {
+  key: keyof CreateJobFormValues;
+  label: string;
+}
+
+const ESSENTIAL_KEYS: ReadonlyArray<string> = [
+  "title",
+  "departmentId",
+  "jobType",
+  "workMode",
+  "openings",
+  "jobTemplateId",
 ];
+
+const DETAIL_KEYS: ReadonlyArray<string> = [
+  "country",
+  "stateCity",
+  "officeLocation",
+  "salaryMin",
+  "salaryMax",
+  "currency",
+  "salaryType",
+  "bonus",
+  "minExperience",
+  "maxExperience",
+  "educationLevel",
+  "requiredSkills",
+  "preferredSkills",
+  "tags",
+  "overview",
+  "responsibilities",
+  "jobRequirements",
+  "benefits",
+];
+
+export function blockOf(key: string): JobFormBlock {
+  if (ESSENTIAL_KEYS.includes(key)) return "essentials";
+  if (DETAIL_KEYS.includes(key)) return "details";
+  return "hiring";
+}
+
+const PUBLISH_REQUIRED: PublishRequirement[] = [
+  { key: "title", label: "Job title" },
+  { key: "departmentId", label: "Department" },
+  { key: "jobType", label: "Employment type" },
+  { key: "workMode", label: "Work mode" },
+  { key: "openings", label: "Openings" },
+  { key: "country", label: "Country" },
+  { key: "stateCity", label: "State / city" },
+  { key: "overview", label: "Overview" },
+  { key: "responsibilities", label: "Responsibilities" },
+  { key: "jobRequirements", label: "Requirements" },
+];
+
+function isBlank(v: unknown): boolean {
+  if (Array.isArray(v)) return v.length === 0;
+  if (typeof v === "string") return v.trim() === "";
+  if (typeof v === "number") return Number.isNaN(v);
+  return v === undefined || v === null;
+}
+
+export function missingForPublish(
+  values: Partial<CreateJobFormValues>,
+  { requireDepartment }: { requireDepartment: boolean },
+): PublishRequirement[] {
+  return PUBLISH_REQUIRED.filter(
+    (r) => (r.key !== "departmentId" || requireDepartment) && isBlank(values[r.key]),
+  );
+}

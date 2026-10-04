@@ -40,10 +40,13 @@ const TOGGLES = {
   essAllowBankUpdate: true,
 };
 
+let mockPayStatus = "paid";
+
 jest.mock("@/hooks/api/payroll/ess", () => ({
   useEssOverview: () => ({
     data: {
       toggles: TOGGLES,
+      payStatus: mockPayStatus,
       latestPayslip: { month: "2026-09", net: "51000" },
       ytd: { gross: "400000" },
       activeLoanBalance: "1200",
@@ -78,12 +81,14 @@ jest.mock("@/features/payroll/ess", () => ({
   EssFnfSection: section("Final settlement"),
   EssTotalRewardsSection: section("Total Rewards"),
   EssDisciplinarySection: section("Notices"),
+  EssForm16Section: section("Form 16"),
 }));
 
 const EXPECTED_TABS = [
   "Payslips",
   "Total Rewards",
   "Notices",
+  "Form 16",
   "Salary Structure",
   "Reimbursements",
   "Tax Declaration",
@@ -130,5 +135,26 @@ describe("MyPayrollPageContent tabs — HRMS-UX-018 (PAY-002/003 class)", () => 
       expect(tab.className).toContain("whitespace-nowrap");
       expect(tab.className).toContain("flex-none");
     }
+  });
+});
+
+describe("MyPayrollPageContent pay status — P1-003", () => {
+  afterEach(() => {
+    mockPayStatus = "paid";
+  });
+
+  it("explains why pay is empty instead of showing zero totals when no salary is assigned", () => {
+    mockPayStatus = "not-set-up";
+    render(<MyPayrollPageContent />);
+
+    expect(screen.getByTestId("pay-not-set-up")).toHaveTextContent("Pay isn't set up for you yet");
+    expect(screen.queryByText("YTD Earnings")).not.toBeInTheDocument();
+  });
+
+  it("shows the pay totals once the employee is in payroll", () => {
+    render(<MyPayrollPageContent />);
+
+    expect(screen.queryByTestId("pay-not-set-up")).not.toBeInTheDocument();
+    expect(screen.getByText("YTD Earnings")).toBeInTheDocument();
   });
 });

@@ -3,6 +3,7 @@ jest.mock("@/lib/api-client", () => ({
 }));
 
 jest.mock("@/lib/api-envelope", () => ({
+  ...jest.requireActual("@/lib/api-envelope"),
   lazyContract: jest.fn((fn: () => unknown) => fn),
 }));
 
@@ -17,7 +18,7 @@ jest.mock("@/hooks/api/access", () => ({
 jest.mock("@/hooks/api/authorized-mutation", () => ({
   useAuthorizedMutation: jest.fn(
     (_permission: string, options: Record<string, unknown>) => {
-      const { useMutation } = require("@tanstack/react-query");
+      const { useMutation } = jest.requireActual("@tanstack/react-query");
       return useMutation(options);
     },
   ),

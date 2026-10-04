@@ -18,7 +18,7 @@ import {
 import { TEXT_BODY, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import {
   TRANSITION_TABLE_HEADERS,
   TransitionsTable,

@@ -11,6 +11,7 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useSession } from "next-auth/react";
 import { apiClient, isApiError } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
+import { getClockLocation } from "@/lib/geo/get-clock-location";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
@@ -150,8 +151,13 @@ export function useHrCheckIn(
   const statusKey = humanResourcesQueryKeys.hr.attendanceStatus();
   return useMutation({
     mutationKey: ["hr", "attendance", "check-in"],
-    mutationFn: (data: CheckInInput) =>
-      apiClient.post<{ success: boolean }>("/me/attendance/check-in", data, undefined, checkInOutC),
+    mutationFn: async (data: CheckInInput) =>
+      apiClient.post<{ success: boolean }>(
+        "/me/attendance/check-in",
+        { ...data, location: data.location ?? (await getClockLocation()) },
+        undefined,
+        checkInOutC,
+      ),
     onMutate: async () => {
       await qc.cancelQueries({ queryKey: statusKey, exact: true });
       const previous = qc.getQueryData<AttendanceStatusResult>(statusKey);

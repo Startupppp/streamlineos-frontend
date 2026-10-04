@@ -84,7 +84,7 @@ export function AskOsPanelHeader({
             <p className="text-sm font-semibold leading-none tracking-tight text-foreground">
               Ask OS
             </p>
-            <p className="mt-0.5 text-[11px] text-muted-foreground">
+            <p className="mt-0.5 text-dense text-muted-foreground">
               Your organization assistant
             </p>
           </div>

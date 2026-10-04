@@ -1,8 +1,8 @@
 import type { PersonSummary } from "@/components/shared/person-drawer";
 
-export type ActionCenterSource = "leave" | "wfh" | "attendance" | "workflow";
+export type ActionCenterSource = "leave" | "wfh" | "attendance" | "expense" | "workflow";
 
-export type ActionCenterFacet = "leave" | "wfh" | "attendance" | "other";
+export type ActionCenterFacet = "leave" | "wfh" | "attendance" | "expense" | "other";
 
 export const ACTION_CENTER_FACETS: readonly {
   value: ActionCenterFacet | "all";
@@ -12,6 +12,7 @@ export const ACTION_CENTER_FACETS: readonly {
   { value: "leave", label: "Leave" },
   { value: "wfh", label: "WFH" },
   { value: "attendance", label: "Attendance" },
+  { value: "expense", label: "Expense" },
   { value: "other", label: "Other" },
 ];
 

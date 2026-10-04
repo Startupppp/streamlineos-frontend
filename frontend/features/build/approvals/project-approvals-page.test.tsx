@@ -47,7 +47,7 @@ jest.mock("framer-motion", () => ({
   AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
   useBuildListKeyboard: jest.fn(),
 }));
 
@@ -92,24 +92,23 @@ jest.mock("@/components/ui/data-table", () => ({
     data: typeof approvalRow[];
     selection?: { onChange?: (ids: Set<string>) => void };
     mobileCard?: (row: typeof approvalRow) => React.ReactNode;
-  }) => (
-    <div data-testid="data-table" data-rows={data.length}>
-      <button
-        type="button"
-        data-testid="select-row-1"
-        onClick={() => {
-          selection?.onChange?.(new Set(["1"]));
-          mockDataTableOnChange(new Set(["1"]));
-        }}
-      />
-      <button
-        type="button"
-        data-testid="open-delegate"
-        onClick={() => data[0] && mockSetDelegateTarget?.(data[0])}
-      />
-      {data[0] && mobileCard ? mobileCard(data[0]) : null}
-    </div>
-  ),
+  }) => {
+    const handleSelectFirstRow = () => {
+      selection?.onChange?.(new Set(["1"]));
+      mockDataTableOnChange(new Set(["1"]));
+    };
+    return (
+      <div data-testid="data-table" data-rows={data.length}>
+        <button type="button" data-testid="select-row-1" onClick={handleSelectFirstRow} />
+        <button
+          type="button"
+          data-testid="open-delegate"
+          onClick={() => data[0] && mockSetDelegateTarget?.(data[0])}
+        />
+        {data[0] && mobileCard ? mobileCard(data[0]) : null}
+      </div>
+    );
+  },
   DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
 }));
 

@@ -27,10 +27,10 @@ import {
   BUILD_FILTER_ALL,
   useBuildListFilters,
 } from "@/features/build/shared/use-build-list-filters";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
-import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
+import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";

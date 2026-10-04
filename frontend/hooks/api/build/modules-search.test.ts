@@ -21,7 +21,7 @@ function wrapper({ children }: { children: React.ReactNode }) {
   return createElement(QueryClientProvider, { client: qc }, children);
 }
 
-const { apiClient } = require("@/lib/api-client");
+const { apiClient } = jest.requireMock("@/lib/api-client");
 
 describe("useModulePages — search param forwarding (B10)", () => {
   beforeEach(() => jest.clearAllMocks());

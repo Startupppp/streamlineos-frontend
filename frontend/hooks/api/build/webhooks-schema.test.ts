@@ -1,3 +1,5 @@
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import { ZodError } from "zod";
 import {
   projectWebhookListContract,
   projectWebhookRowContract,
@@ -33,7 +35,7 @@ describe("projectWebhookListContract (BLD-X-BE-SETTINGS-WH-001)", () => {
   it("rejects a webhook missing url — the core field that identifies the endpoint", () => {
     const itemWithoutUrl = { ...BASE_WEBHOOK_ITEM };
     delete (itemWithoutUrl as Record<string, unknown>)["url"];
-    expect(() => projectWebhookListContract.parse(makePage([itemWithoutUrl]))).toThrow();
+    expect(() => projectWebhookListContract.parse(makePage([itemWithoutUrl]))).toThrow(ZodError);
   });
 
   it("accepts an empty events array — a webhook with no subscriptions is valid", () => {
@@ -68,7 +70,7 @@ describe("projectWebhookListContract (BLD-X-BE-SETTINGS-WH-001)", () => {
 
   it("rejects lastDeliveryStatus outside the allowed enum values — z.string() would silently accept 'timeout'", () => {
     const raw = makePage([{ ...BASE_WEBHOOK_ITEM, lastDeliveryAt: "2026-09-01T00:00:00.000Z", lastDeliveryStatus: "timeout", failureRate: null }]);
-    expect(() => projectWebhookListContract.parse(raw)).toThrow();
+    expect(() => projectWebhookListContract.parse(raw)).toThrow(ZodError);
   });
 });
 
@@ -102,7 +104,7 @@ describe("webhookDeliveryListContract (BLD-X-BE-SETTINGS-WH-002)", () => {
         deliveredAt: "2024-06-01T12:05:00.000Z",
       },
     ];
-    expect(() => webhookDeliveryListContract.parse(raw)).toThrow();
+    expect(() => webhookDeliveryListContract.parse(raw)).toThrow(ZodError);
   });
 
   it("accepts null responseCode for failed deliveries where no HTTP response was received", () => {
@@ -160,7 +162,7 @@ describe("projectWebhookRowContract (BLD-X-BE-SETTINGS-WH-003)", () => {
       lastDeliveryStatus: null,
       failureRate: null,
     };
-    expect(() => projectWebhookRowContract.parse(raw)).toThrow();
+    expect(() => projectWebhookRowContract.parse(raw)).toThrow(ZodError);
   });
 
   it("rejects a webhook row missing version, because a stale settings-panel toggle cannot send a concurrency token it was never given", () => {
@@ -179,39 +181,34 @@ describe("projectWebhookRowContract (BLD-X-BE-SETTINGS-WH-003)", () => {
       lastDeliveryStatus: null,
       failureRate: null,
     };
-    expect(() => projectWebhookRowContract.parse(raw)).toThrow();
+    expect(() => projectWebhookRowContract.parse(raw)).toThrow(ZodError);
   });
 });
 
 describe("webhooks cache key contract (BLD-X-BE-SETTINGS-WH-004)", () => {
   it("includes projectId in the webhook cache key — correct scope prevents cross-project data leaks", () => {
-    const { buildWorkQueryKeys } = require("@/lib/query-keys/build-work");
     const key = buildWorkQueryKeys.projects.webhooks(10);
     expect(key).toContain(10);
   });
 
   it("includes 'webhooks' segment in the cache key", () => {
-    const { buildWorkQueryKeys } = require("@/lib/query-keys/build-work");
     const key = buildWorkQueryKeys.projects.webhooks(10);
     expect(key.some((s: unknown) => s === "webhooks")).toBe(true);
   });
 
   it("webhook delivery key includes both projectId and webhookId — correct scope prevents cross-webhook delivery data leaks", () => {
-    const { buildWorkQueryKeys } = require("@/lib/query-keys/build-work");
     const key = buildWorkQueryKeys.projects.webhookDeliveries(10, 55);
     expect(key).toContain(10);
     expect(key).toContain(55);
   });
 
   it("two different projectIds produce different webhook cache keys — cross-project cache collision is impossible", () => {
-    const { buildWorkQueryKeys } = require("@/lib/query-keys/build-work");
     const key1 = buildWorkQueryKeys.projects.webhooks(1);
     const key2 = buildWorkQueryKeys.projects.webhooks(2);
     expect(JSON.stringify(key1)).not.toBe(JSON.stringify(key2));
   });
 
   it("webhook keys with and without filters are different — filtered and unfiltered queries cache independently", () => {
-    const { buildWorkQueryKeys } = require("@/lib/query-keys/build-work");
     const unfilteredKey = buildWorkQueryKeys.projects.webhooks(10);
     const filteredKey = buildWorkQueryKeys.projects.webhooks(10, { state: "active" });
     expect(JSON.stringify(unfilteredKey)).not.toBe(JSON.stringify(filteredKey));

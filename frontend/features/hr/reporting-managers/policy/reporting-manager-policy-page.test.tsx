@@ -27,7 +27,16 @@ jest.mock("@/hooks/api/hr/reporting-manager-policy", () => ({
   useUpdateReportingManagerPolicy: () => ({ mutate, isPending: false }),
 }));
 jest.mock("@/hooks/api/use-page-state", () => ({ usePageState: () => ({ kind: "ready" }) }));
-jest.mock("@/hooks/api/access", () => ({ useCan: (key: string) => can(key) }));
+jest.mock("@/hooks/api/access", () => ({
+  useCan: (key: string) => can(key),
+  usePermissionGate: (permission: string) => ({
+    permission,
+    allowed: can(permission),
+    denied: !can(permission),
+    pending: false,
+    unavailable: false,
+  }),
+}));
 jest.mock("@/components/hr/reporting-lines/policy-missing-banner", () => ({ PolicyMissingBanner: () => null }));
 jest.mock("@/components/hr/reporting-lines/manager-candidate-picker", () => ({
   ManagerCandidatePicker: ({ selected, id }: { selected: { name: string } | null; id?: string }) => (

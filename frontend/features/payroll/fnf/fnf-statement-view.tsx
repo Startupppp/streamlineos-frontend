@@ -15,6 +15,7 @@ function derivedComponents(settlement: FnfGetOne): LocalFnfComponent[] {
   const all: LocalFnfComponent[] = [
     { label: "Pending Salary", amount: settlement.basicDues, type: "credit" },
     { label: "Leave Encashment", amount: settlement.leaveEncashment, type: "credit" },
+    { label: "Gratuity", amount: settlement.gratuity, type: "credit" },
     { label: "Bonus Due", amount: settlement.bonusDue, type: "credit" },
     { label: "Reimbursements", amount: settlement.reimbursementsDue, type: "credit" },
     { label: "Loan Recovery", amount: settlement.loanRecovery, type: "deduction" },

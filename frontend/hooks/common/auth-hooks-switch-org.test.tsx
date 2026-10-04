@@ -27,6 +27,7 @@ jest.mock("@/lib/onboarding-gate", () => ({
 }));
 
 jest.mock("@/lib/api-envelope", () => ({
+  ...jest.requireActual("@/lib/api-envelope"),
   lazyContract: jest.fn((loader: () => unknown) => loader),
 }));
 

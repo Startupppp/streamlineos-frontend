@@ -3,7 +3,6 @@
 import { useCallback } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ReadinessBadge } from "@/components/shared/readiness-badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { hrmsListStagger, hrmsRowEnter, hrmsRowEnterReduced, hrmsTransition, hrmsVariants } from "@/lib/hrms/motion";
 import { cn } from "@/lib/utils";
 import {
@@ -102,15 +101,5 @@ export function ReadinessTiles({ counts, runBlockersAvailable, activeCategory, o
         ))}
       </div>
     </section>
-  );
-}
-
-export function ReadinessTilesSkeleton() {
-  return (
-    <div className={TILE_GRID_CLASS} aria-hidden>
-      {READINESS_CATEGORIES.map((category) => (
-        <Skeleton key={category.key} className="min-h-[72px] rounded-lg" />
-      ))}
-    </div>
   );
 }

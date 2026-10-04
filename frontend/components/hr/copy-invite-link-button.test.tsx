@@ -77,12 +77,9 @@ describe("CopyInviteLinkButton", () => {
     renderButton();
     await userEvent.click(screen.getByRole("button", { name: /copy invite link/i }));
 
-    await waitFor(() =>
-      expect(toast.info).toHaveBeenCalledWith(
-        expect.stringContaining("QA Employee Test"),
-        expect.objectContaining({ description: LINK.inviteUrl }),
-      ),
-    );
+    const field = await screen.findByRole("textbox", { name: /invite link for qa employee test/i });
+    expect(field).toHaveValue(LINK.inviteUrl);
+    expect(toast.info).toHaveBeenCalledWith(expect.stringContaining("Clipboard was blocked"));
     expect(toast.success).not.toHaveBeenCalled();
   });
 

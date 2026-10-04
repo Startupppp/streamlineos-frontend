@@ -10,7 +10,7 @@ jest.mock("@/hooks/api/access", () => ({
   useAccess: () => ({ data: { isOrgOwner: true, scopes: {}, modules: {} } }),
 }));
 
-jest.mock("@/features/hr/settings-hub/use-hr-settings-mode", () => ({
+jest.mock("@/hooks/common/use-hr-settings-mode", () => ({
   useHrSettingsMode: () => [false, jest.fn()],
 }));
 

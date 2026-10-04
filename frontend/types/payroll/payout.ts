@@ -24,7 +24,11 @@ export type BatchFormat =
   | "RTGS_CSV"
   | "GENERIC_CSV"
   | "ACH_CSV"
-  | "SEPA_CSV";
+  | "SEPA_CSV"
+  | "HDFC_BULK_CSV"
+  | "ICICI_BULK_CSV"
+  | "SBI_BULK_CSV"
+  | "AXIS_BULK_CSV";
 
 export type PayoutBatch = {
   id: number;
@@ -141,5 +145,6 @@ export type PayslipPublication = {
 export type PublishResult = {
   published: number;
   total: number;
+  heldCount: number;
   runStatus: string;
 };

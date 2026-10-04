@@ -33,7 +33,7 @@ const payrollFilingC = lazyContract(() =>
   ),
 );
 
-export type FilingType = "PF_ECR" | "ESI" | "PT" | "TDS_24Q" | "FORM16" | "LWF";
+export type FilingType = "PF_ECR" | "PF_ECR_TXT" | "ESI" | "PT" | "TDS_24Q" | "FORM16" | "LWF";
 
 export type FilingStatus =
   | "DRAFT"
@@ -189,7 +189,7 @@ export function useAttachAcknowledgement() {
   });
 }
 
-export async function downloadFilingExport(filingId: number): Promise<void> {
+export async function downloadFilingExport(filingId: number, filingType: FilingType): Promise<void> {
   const blob = await apiClient.download(`/payroll/filings/${filingId}/export`);
-  downloadBlob(blob, `filing_${filingId}.csv`);
+  downloadBlob(blob, `filing_${filingId}.${filingType === "PF_ECR_TXT" ? "txt" : "csv"}`);
 }

@@ -1,5 +1,6 @@
 import { IST_TIME_ZONE } from "@/lib/hrms/payroll-cutoff";
 import { getUserDisplayName } from "@/lib/person-display";
+import { formatAmountInCurrency } from "@/lib/format-utils";
 import type { PersonSummary } from "@/components/shared/person-drawer";
 import { HR_WORKFLOW_OBJECT_TYPE_LABELS } from "@/types/hr/workflows";
 import {
@@ -158,6 +159,56 @@ export function normaliseRegularizationItem(
     policyNote: row.reason ?? null,
     deadlineAffected: false,
     detailHref: "/hr/attendance",
+  };
+}
+
+export interface ExpenseQueueRow {
+  id: number;
+  userId: string;
+  category: string;
+  amount: string;
+  currency: string;
+  description?: string | null;
+  expenseDate: string;
+  createdAt?: string | null;
+  user?: {
+    id: string;
+    name?: string | null;
+    firstName?: string | null;
+    lastName?: string | null;
+    email?: string | null;
+    image?: string | null;
+  } | null;
+}
+
+export function normaliseExpenseItem(row: ExpenseQueueRow): ActionCenterItem {
+  const day = istDayKey(row.expenseDate);
+  return {
+    id: `expense:${row.id}`,
+    source: "expense",
+    sourceId: row.id,
+    facet: "expense",
+    type: "Expense claim",
+    requester: row.user
+      ? {
+          userId: row.user.id,
+          name: row.user.name ?? null,
+          firstName: row.user.firstName ?? null,
+          lastName: row.user.lastName ?? null,
+          email: row.user.email ?? null,
+          image: row.user.image ?? null,
+        }
+      : null,
+    requesterLabel: row.user ? getUserDisplayName(row.user) : "Employee",
+    dateRange: day ? formatDateRange(day, day) : "Date not recorded",
+    startDay: null,
+    submittedAt: isoOrNull(row.createdAt),
+    policyNote: joinNotes([
+      `${formatAmountInCurrency(row.amount, row.currency)} · ${row.category}`,
+      row.description ?? null,
+    ]),
+    deadlineAffected: false,
+    detailHref: "/hr/expenses",
   };
 }
 

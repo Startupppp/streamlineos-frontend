@@ -62,6 +62,10 @@ const IN_SERVICE_HOOKS = new Map([
     "organization.controller.ts:150 is @AuthorizedInService — any authenticated user may create an organisation; plan limits are enforced in OrgProfileService.createOrganization.",
   ],
   [
+    "useDecideInternalApproval",
+    "internal-mobility.controller.ts approvals/:applicationId is @AuthorizedInService — InternalMobilityService.decide updates only rows whose manager is the caller's own membership.",
+  ],
+  [
     "useRestoreOrg",
     "organization.controller.ts:372 is @AuthorizedInService — OrgLifecycleService.restoreOrg requires an ACTIVE isOwner membership of the target org and returns 404 on a miss.",
   ],
@@ -83,6 +87,17 @@ const STRICTER_KEYS = new Map([
   // journal.controller.ts getJournal). The route decorator is the read key.
   ["useExportPayrollReport", "payroll:reports:view"],
   ["useExportJournal", "payroll:reports:view"],
+]);
+
+const REAL_USER_HOOKS = new Map([
+  [
+    "useStopImpersonation",
+    {
+      key: "settings:impersonate:manage",
+      reason:
+        "sends DELETE /impersonation/stop/{id} with asRealUser:true, so the backend checks the impersonator's own grant; the client access snapshot during impersonation is the target's, so useAuthorizedMutation would refuse the real user's exit.",
+    },
+  ],
 ]);
 
 /**
@@ -153,8 +168,20 @@ const OFF_CLIENT_HOOKS = new Map([
     "branches on selfUpload: POST /hr/onboarding-docs/me (x-permission: self:onboarding-docs) for the employee's own upload, or POST /hr/onboarding-docs (x-permission: hr:onboarding:manage) for HR admin upload; both apiClient calls live in the module-local uploadOnboardingDocRequest helper so each branch is separately authorised by the backend.",
   ],
   [
-    "useBulkImport",
-    "PERMISSIONED — endpoint is entity.endpoint, a per-entity URL resolved at runtime from BulkEntity; the scanner cannot follow a property reference. All CRM bulk-import endpoints are permissioned and the entity type system guarantees valid permissioned paths.",
+    "useSubmitIntakeByToken",
+    "PUBLIC — submitIntakeByToken helper posts through postIntake to /public/intake/t/{intakeToken}; the contract marks that route x-exposure: public with no session required.",
+  ],
+  [
+    "useGenerateBrief",
+    "PERMISSIONED ai:executive-brief:generate — mutationFn uses streamAiText({ path: '/ai/executive-brief/stream-generate' }) SSE transport; the contract gates POST /ai/executive-brief/stream-generate on ai:executive-brief:generate, the key the hook declares.",
+  ],
+  [
+    "useDownloadExpenseExportJob",
+    "PERMISSIONED hr:expenses:read — the request lives in the shared downloadExport helper (GET /hr/expenses/export/jobs/{jobId}/download, x-permission hr:expenses:read); the hook declares the same key.",
+  ],
+  [
+    "useDownloadHrEmployeeExportJob",
+    "PERMISSIONED hr:export:manage — the request lives in the shared downloadExport helper (GET /hr/export/jobs/{exportJobId}/download, x-permission hr:export:manage); the hook declares the same key.",
   ],
 ]);
 
@@ -164,6 +191,10 @@ const OFF_CLIENT_HOOKS = new Map([
  * a spread, so each entry documents the actual path and why the key is correct.
  */
 const OFF_CONTRACT_READS = new Map([
+  [
+    "useExecutiveBrief",
+    "ai:executive-brief:view — spreads briefQueryOptions; path GET /ai/executive-brief (x-permission: ai:executive-brief:view); queryFn lives in the module-level queryOptions, not the hook body",
+  ],
   [
     "useCrmMetadata",
     "crm:leads:view — spreads crmMetadataQueryOptions(); path GET /crm/metadata (x-permission: crm:leads:view); queryFn lives in the factory, not the hook body",
@@ -309,7 +340,7 @@ function splitCallArgs(src, open) {
 
 function moduleConstants(src) {
   const consts = new Map();
-  for (const m of src.matchAll(/^const\s+([A-Z_][A-Z0-9_]*)\s*=\s*"(\/[^"]*)"\s*;/gm))
+  for (const m of src.matchAll(/^const\s+([A-Z_][A-Z0-9_]*)\s*=\s*"([^"]*)"\s*;/gm))
     consts.set(m[1], m[2]);
   return consts;
 }
@@ -336,7 +367,7 @@ function normalizePath(arg, consts) {
 }
 
 /** The permission key declared by either authorized wrapper, past any type arguments. */
-function readAuthorizedKey(body) {
+function readAuthorizedKey(body, consts) {
   const m = /\buseAuthorized(?:Idempotent)?Mutation/.exec(body);
   if (!m) return null;
   let i = m.index + m[0].length;
@@ -357,7 +388,7 @@ function readAuthorizedKey(body) {
   if (!args || !args.length) return null;
   const first = args[0].trim();
   const q = /^["'`]([^"'`]+)["'`]$/.exec(first);
-  return q ? q[1] : null;
+  return q ? q[1] : (consts?.get(first) ?? null);
 }
 
 function extractMutationBlocks(src, filePath) {
@@ -388,7 +419,7 @@ function extractMutationBlocks(src, filePath) {
   return results;
 }
 
-function readGatedKey(body) {
+function readGatedKey(body, consts) {
   const m = /\buseGatedQuery/.exec(body);
   if (!m) return null;
   let i = m.index + m[0].length;
@@ -406,7 +437,7 @@ function readGatedKey(body) {
   if (!args || !args.length) return null;
   const first = args[0].trim();
   const q = /^["'`]([^"'`]+)["'`]$/.exec(first);
-  return q ? q[1] : null;
+  return q ? q[1] : (consts?.get(first) ?? null);
 }
 
 function extractQueryBlocks(src, filePath) {
@@ -434,7 +465,7 @@ function extractQueryBlocks(src, filePath) {
 
 function classifyQueryBlock(block, index, consts) {
   const { name, body } = block;
-  const declaredKey = readGatedKey(body);
+  const declaredKey = readGatedKey(body, consts);
   if (!declaredKey)
     return { kind: "UNCLASSIFIED", reason: "could not extract permission key from useGatedQuery first argument" };
 
@@ -443,14 +474,14 @@ function classifyQueryBlock(block, index, consts) {
   const exposures = new Set();
   const permissions = new Set();
   let sawCall = false;
-  const CALL_RE = /apiClient\.get\s*(?:<[\s\S]*?>)?\s*\(/g;
+  const CALL_RE = /apiClient\.(get|post)\s*(?:<[\s\S]*?>)?\s*\(/g;
   let cm;
   while ((cm = CALL_RE.exec(body)) !== null) {
     sawCall = true;
     const args = splitCallArgs(body, cm.index + cm[0].length - 1);
     const literal = args && args.length ? normalizePath(args[0], consts) : null;
     if (!literal) { exposures.add("UNRESOLVED"); continue; }
-    const op = resolveOperation(index, "GET", literal);
+    const op = resolveOperation(index, METHOD_OF[cm[1]], literal);
     if (!op) { exposures.add("UNRESOLVED"); continue; }
     exposures.add(op["x-exposure"] ?? "UNKNOWN");
     if (op["x-permission"]) permissions.add(op["x-permission"]);
@@ -461,7 +492,7 @@ function classifyQueryBlock(block, index, consts) {
       kind: "UNCLASSIFIED",
       reason: sawCall
         ? "endpoint could not be resolved against contracts/openapi.json"
-        : "no apiClient.get call found in the hook body — if this spreads queryOptions(), add it to OFF_CONTRACT_READS",
+        : "no apiClient.get or apiClient.post call found in the hook body — if this spreads queryOptions(), add it to OFF_CONTRACT_READS",
     };
   }
 
@@ -485,7 +516,7 @@ function classifyQueryBlock(block, index, consts) {
 
 function classifyBlock(block, index, consts) {
   const { name, body } = block;
-  const declaredKey = readAuthorizedKey(body);
+  const declaredKey = readAuthorizedKey(body, consts);
 
   const exposures = new Set();
   const permissions = new Set();
@@ -493,10 +524,12 @@ function classifyBlock(block, index, consts) {
   const CALL_RE = /apiClient\.(\w+)\s*(?:<[\s\S]*?>)?\s*\(/g;
   let cm;
   while ((cm = CALL_RE.exec(body)) !== null) {
-    const method = METHOD_OF[cm[1]];
+    let method = METHOD_OF[cm[1]];
     if (!method) continue;
     sawCall = true;
     const args = splitCallArgs(body, cm.index + cm[0].length - 1);
+    const methodOverride = cm[1] === "download" && args?.[2] ? /\bmethod\s*:\s*["'](\w+)["']/.exec(args[2]) : null;
+    if (methodOverride) method = methodOverride[1].toUpperCase();
     const literal = args && args.length ? normalizePath(args[0], consts) : null;
     if (!literal) { exposures.add("UNRESOLVED"); continue; }
     const op = resolveOperation(index, method, literal);
@@ -522,6 +555,8 @@ function classifyBlock(block, index, consts) {
         reason: `resolves to ${permissions.size} different permissions (${[...permissions].join(", ")}); split the hook or gate it explicitly`,
       };
     const contractKey = [...permissions][0];
+    if (!declaredKey && REAL_USER_HOOKS.get(name)?.key === contractKey)
+      return { kind: "REAL-USER", key: contractKey, reason: REAL_USER_HOOKS.get(name).reason };
     if (!declaredKey)
       return { kind: "UNCLASSIFIED", reason: `permissioned endpoint requires useAuthorizedMutation("${contractKey}")` };
     if (declaredKey === contractKey) return { kind: "PERMISSIONED", key: declaredKey };
@@ -731,6 +766,30 @@ export const useOther = () => {
       expect: "PERMISSIONED",
     },
     {
+      label: "(i6) a POST download resolves against the POST operation, not GET",
+      src: `export function useInvReportExport() {
+        return useAuthorizedMutation("inventory:export", { mutationFn: (spec) => apiClient.download("/inventory/ai/reports/export", undefined, { method: "POST", body: { spec } }) });
+      }`,
+      name: "useInvReportExport",
+      expect: "PERMISSIONED",
+    },
+    {
+      label: "(i7) an asRealUser exit named in REAL_USER_HOOKS is classified, not gated on the impersonated snapshot",
+      src: `export function useStopImpersonation() {
+        return useMutation({ mutationFn: (id) => apiClient.delete(\`/impersonation/stop/\${id}\`, undefined, { asRealUser: true }) });
+      }`,
+      name: "useStopImpersonation",
+      expect: "REAL-USER",
+    },
+    {
+      label: "(i8) the same raw mutation under any other name stays UNCLASSIFIED",
+      src: `export function useStopSomething() {
+        return useMutation({ mutationFn: (id) => apiClient.delete(\`/impersonation/stop/\${id}\`, undefined, { asRealUser: true }) });
+      }`,
+      name: "useStopSomething",
+      expect: "UNCLASSIFIED",
+    },
+    {
       label: "(i) an `export const` hook is seen, not only `export function`",
       src: `export const useCreateTaxCode = () => {
         return useMutation({ mutationFn: (d) => apiClient.post("/crm/issues", d) });
@@ -870,6 +929,37 @@ export const useOther = () => {
       expect: "GATED",
     },
     {
+      label: "(r-h) a POST read resolves against the POST operation",
+      src: `export function useSegmentPreview(input) {
+        return useGatedQuery("crm:segments:view", {
+          queryFn: ({ signal }) => apiClient.post("/crm/segments/preview", input, { signal }),
+        });
+      }`,
+      name: "useSegmentPreview",
+      expect: "GATED",
+    },
+    {
+      label: "(r-i) a POST read on the wrong key is still WRONG-KEY",
+      src: `export function useSegmentPreview(input) {
+        return useGatedQuery("crm:segments:manage", {
+          queryFn: ({ signal }) => apiClient.post("/crm/segments/preview", input, { signal }),
+        });
+      }`,
+      name: "useSegmentPreview",
+      expect: "WRONG-KEY",
+    },
+    {
+      label: "(r-j) a permission key from a module constant is read",
+      src: `const CONTACTS_PERMISSION = "crm:contacts:view";
+      export function useContacts() {
+        return useGatedQuery(CONTACTS_PERMISSION, {
+          queryFn: ({ signal }) => apiClient.get("/contacts", undefined, signal),
+        });
+      }`,
+      name: "useContacts",
+      expect: "GATED",
+    },
+    {
       label: "(r-e) an OFF_CONTRACT_READS entry is classified OFF-CONTRACT, not UNCLASSIFIED",
       src: `export function useCrmMetadata() {
         return useGatedQuery("crm:leads:view", {
@@ -916,6 +1006,7 @@ function runMainScan() {
   const seenStricter = new Set();
   const seenInService = new Set();
   const seenOffClient = new Set();
+  const seenRealUser = new Set();
 
   for (const block of blocks) {
     const result = classifyBlock(block, index, block.consts);
@@ -923,6 +1014,7 @@ function runMainScan() {
     if (result.stricterThan) seenStricter.add(block.name);
     if (result.kind === "IN-SERVICE") seenInService.add(block.name);
     if (result.kind === "OFF-CLIENT") seenOffClient.add(block.name);
+    if (result.kind === "REAL-USER") seenRealUser.add(block.name);
     if (result.kind === "UNCLASSIFIED" || result.kind === "WRONG-KEY")
       problems.push(`  [${result.kind}] ${block.file}:${block.line} ${block.name} — ${result.reason}`);
   }
@@ -937,6 +1029,7 @@ function runMainScan() {
     ...[...STRICTER_KEYS.keys()].filter((k) => !seenStricter.has(k)).map((k) => `STRICTER_KEYS: ${k}`),
     ...[...IN_SERVICE_HOOKS.keys()].filter((k) => !seenInService.has(k)).map((k) => `IN_SERVICE_HOOKS: ${k}`),
     ...[...OFF_CLIENT_HOOKS.keys()].filter((k) => !seenOffClient.has(k)).map((k) => `OFF_CLIENT_HOOKS: ${k}`),
+    ...[...REAL_USER_HOOKS.keys()].filter((k) => !seenRealUser.has(k)).map((k) => `REAL_USER_HOOKS: ${k}`),
   ];
 
   if (problems.length > BASELINE.unclassified) {

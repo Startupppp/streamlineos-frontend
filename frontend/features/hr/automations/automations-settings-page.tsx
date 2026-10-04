@@ -93,6 +93,11 @@ export function AutomationsSettingsPage() {
   }
 
   function handleOpenCreate() { setCreateOpen(true); }
+  function handleClearFilters() {
+    setSearch("");
+    setTriggerFilter("all");
+    setStatusFilter("all");
+  }
   function handleCloseCreate() { setCreateOpen(false); }
   function handleCloseEdit() { setEditTarget(null); }
   function handleCloseRuns() { setRunsTarget(null); }
@@ -154,22 +159,20 @@ export function AutomationsSettingsPage() {
         {isLoading ? (
           <LoadingState variant="list" rows={12} />
         ) : !rules || rules.length === 0 ? (
-          debouncedSearch.trim() || triggerFilter !== "all" || statusFilter !== "all" ? (
-            <EmptyState
-              illustrationPreset="automations"
-              title="No rules match these filters"
-              description="Change the search or filters to see other rules."
-              className="flex-1"
-            />
-          ) : (
-            <EmptyState
-              illustrationPreset="automations"
-              title="No HR automation rules yet"
-              description="Create a rule to automatically trigger actions on HR events like onboarding, leave, or resignation."
-              action={canManage ? { label: "Create automation", onClick: handleOpenCreate } : undefined}
-              className="flex-1"
-            />
-          )
+          <EmptyState
+            illustrationPreset="automations"
+            title="No HR automation rules yet"
+            filtersActive={debouncedSearch.trim().length > 0 || triggerFilter !== "all" || statusFilter !== "all"}
+            filteredTitle="No rules match these filters"
+            onClearFilters={handleClearFilters}
+            description={
+              debouncedSearch.trim() || triggerFilter !== "all" || statusFilter !== "all"
+                ? "Change the search or filters to see other rules."
+                : "Create a rule to automatically trigger actions on HR events like onboarding, leave, or resignation."
+            }
+            action={canManage ? { label: "Create automation", onClick: handleOpenCreate } : undefined}
+            className="flex-1"
+          />
         ) : (
           <div className="space-y-3">
             {rules.map((rule) => (

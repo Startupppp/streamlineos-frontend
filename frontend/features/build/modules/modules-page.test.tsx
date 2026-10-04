@@ -153,14 +153,14 @@ jest.mock("@/lib/date-constraints", () => ({
   planningEndPickerProps: jest.fn(() => ({ fromDate: undefined, fromYear: 2020, toYear: 2030 })),
 }));
 
-jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
   useBuildListKeyboard: jest.fn(() => ({ focusedIndex: null, setFocusedIndex: jest.fn() })),
 }));
 
 import { useModulePages } from "@/hooks/api/build/advanced";
 import { useDeleteModule } from "@/hooks/api/build/modules";
 import { useCan, useAccess } from "@/hooks/api/access";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 
 const mockUseModulePages = useModulePages as jest.Mock;
 const mockUseDeleteModule = useDeleteModule as jest.Mock;

@@ -18,6 +18,9 @@ const fnfGetOneC = lazyContract(() =>
 const fnfStatementC = lazyContract(() =>
   import("@/hooks/api/payroll/fnf-schema").then((m) => m.fnfStatementContract),
 );
+const fnfSuggestionC = lazyContract(() =>
+  import("@/hooks/api/payroll/fnf-schema").then((m) => m.fnfSuggestionContract),
+);
 const updateFnfResultC = lazyContract(() =>
   import("@/hooks/api/payroll/fnf-schema").then((m) => m.updateFnfResultContract),
 );
@@ -78,5 +81,16 @@ export function useApproveFnf() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.fnfAll });
     },
+  });
+}
+
+export function useFnfSuggestion(userId: string, lastWorkingDay: string) {
+  const canManage = useCan("hr:exit:manage");
+  return useQuery({
+    queryKey: payrollQueryKeys.payroll.fnfSuggestion(userId, lastWorkingDay),
+    queryFn: ({ signal }) =>
+      apiClient.get("/hr/fnf/suggestion", { userId, lastWorkingDay }, signal, fnfSuggestionC),
+    staleTime: 60_000,
+    enabled: canManage && userId !== "" && /^\d{4}-\d{2}-\d{2}$/.test(lastWorkingDay),
   });
 }

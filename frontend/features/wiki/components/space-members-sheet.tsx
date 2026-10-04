@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/select";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { resolveImageUrl } from "@/lib/utils";
 import {
   useKbSpaceMembers,
   useAddKbSpaceMember,
@@ -87,7 +88,7 @@ function MemberRow({ member, canManage, spaceId }: MemberRowProps) {
   return (
     <div className="flex items-center gap-3 py-2.5">
       <Avatar className="h-8 w-8 shrink-0">
-        {member.userImage && <AvatarImage src={member.userImage} alt={name} />}
+        {member.userImage && <AvatarImage src={resolveImageUrl(member.userImage)} alt={name} />}
         <AvatarFallback className="text-xs">{initials}</AvatarFallback>
       </Avatar>
       <div className="flex-1 min-w-0">

@@ -1,3 +1,5 @@
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import { ZodError } from "zod";
 import {
   projectAutomationListContract,
   projectAutomationRowContract,
@@ -46,17 +48,17 @@ describe("projectAutomationListContract — cursor page envelope (BLD-X-BE-SETTI
 
   it("rejects a bare array — the endpoint now returns an envelope and a bare array is the old broken contract", () => {
     const raw = [VALID_LIST_ITEM];
-    expect(() => projectAutomationListContract.parse(raw)).toThrow();
+    expect(() => projectAutomationListContract.parse(raw)).toThrow(ZodError);
   });
 
   it("rejects an envelope missing the pagination field — incomplete envelope renders as an empty list", () => {
     const raw = { data: [VALID_LIST_ITEM] };
-    expect(() => projectAutomationListContract.parse(raw)).toThrow();
+    expect(() => projectAutomationListContract.parse(raw)).toThrow(ZodError);
   });
 
   it("rejects an envelope missing the data field", () => {
     const raw = { pagination: VALID_PAGINATION };
-    expect(() => projectAutomationListContract.parse(raw)).toThrow();
+    expect(() => projectAutomationListContract.parse(raw)).toThrow(ZodError);
   });
 
   it("accepts null for createdBy, createdByUser, lastRunAt, lastFailureAt — all lifecycle moments start as absent", () => {
@@ -72,7 +74,7 @@ describe("projectAutomationListContract — cursor page envelope (BLD-X-BE-SETTI
       data: [{ ...VALID_LIST_ITEM, actions: [{ type: "unknown_type", value: "x" }] }],
       pagination: VALID_PAGINATION,
     };
-    expect(() => projectAutomationListContract.parse(raw)).toThrow();
+    expect(() => projectAutomationListContract.parse(raw)).toThrow(ZodError);
   });
 
   it("accepts an automation with an unknown triggerEvent because the backend declares triggerEvent as an open string", () => {
@@ -134,25 +136,22 @@ describe("projectAutomationRowContract (BLD-X-BE-SETTINGS-AUTO-002)", () => {
       createdBy: null,
       createdAt: "2024-01-01T00:00:00.000Z",
     };
-    expect(() => projectAutomationRowContract.parse(raw)).toThrow();
+    expect(() => projectAutomationRowContract.parse(raw)).toThrow(ZodError);
   });
 });
 
 describe("automations cache key contract (BLD-X-BE-SETTINGS-AUTO-003)", () => {
   it("includes projectId in the automation cache key — correct scope prevents cross-project data leaks", () => {
-    const { buildWorkQueryKeys } = require("@/lib/query-keys/build-work");
     const key = buildWorkQueryKeys.projects.automations(10);
     expect(key).toContain(10);
   });
 
   it("includes 'automations' segment in the cache key", () => {
-    const { buildWorkQueryKeys } = require("@/lib/query-keys/build-work");
     const key = buildWorkQueryKeys.projects.automations(10);
     expect(key.some((s: unknown) => s === "automations")).toBe(true);
   });
 
   it("two different projectIds produce different automation cache keys — cross-project cache collision is impossible", () => {
-    const { buildWorkQueryKeys } = require("@/lib/query-keys/build-work");
     const key1 = buildWorkQueryKeys.projects.automations(1);
     const key2 = buildWorkQueryKeys.projects.automations(2);
     expect(JSON.stringify(key1)).not.toBe(JSON.stringify(key2));

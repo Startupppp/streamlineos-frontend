@@ -1,3 +1,4 @@
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import {
   workflowTransitionContract,
   workflowTransitionListContract,
@@ -178,19 +179,16 @@ describe("projectStatusContract (BLD-X-BE-SETTINGS-WORKFLOW-003)", () => {
 
 describe("workflow cache key contract (BLD-X-BE-SETTINGS-WF-004)", () => {
   it("workflow transitions key includes projectId", () => {
-    const { buildWorkQueryKeys } = require("@/lib/query-keys/build-work");
     const key = buildWorkQueryKeys.projects.workflow.transitions(10);
     expect(key).toContain(10);
   });
 
   it("workflow transitions key contains 'transitions' segment", () => {
-    const { buildWorkQueryKeys } = require("@/lib/query-keys/build-work");
     const key = buildWorkQueryKeys.projects.workflow.transitions(10);
     expect(key.some((s: unknown) => s === "transitions")).toBe(true);
   });
 
   it("two different projectIds produce different workflow cache keys", () => {
-    const { buildWorkQueryKeys } = require("@/lib/query-keys/build-work");
     const key1 = buildWorkQueryKeys.projects.workflow.transitions(1);
     const key2 = buildWorkQueryKeys.projects.workflow.transitions(2);
     expect(JSON.stringify(key1)).not.toBe(JSON.stringify(key2));

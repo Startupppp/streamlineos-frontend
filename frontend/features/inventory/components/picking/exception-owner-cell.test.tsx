@@ -32,6 +32,10 @@ jest.mock("@/hooks/api/access", () => ({
   }),
 }));
 
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
+}));
+
 jest.mock("@/hooks/api/inventory/pick-exceptions", () => ({
   ...jest.requireActual("@/hooks/api/inventory/pick-exceptions"),
   useAssignPickException: () => ({ mutate: mockAssignMutate, isPending: false }),

@@ -66,7 +66,7 @@ export function ClockInWidget() {
     if (isCheckedIn || isOnBreak) {
       checkOutMutation.mutate();
     } else if (!isInCooldown) {
-      checkInMutation.mutate({ location: undefined });
+      checkInMutation.mutate({});
     }
   }, [isCheckedIn, isOnBreak, isInCooldown, checkOutMutation, checkInMutation]);
 
@@ -119,6 +119,11 @@ export function ClockInWidget() {
             </div>
           )}
         </div>
+        {!isCheckedIn && !isOnBreak && (
+          <div className="mt-1 text-xs text-muted-foreground">
+            Your location is recorded when you clock in.
+          </div>
+        )}
       </div>
 
       <Button

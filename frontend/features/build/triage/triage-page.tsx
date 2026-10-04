@@ -32,7 +32,7 @@ import type { Ticket } from "@/types/projects";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BUILD_FILTER_ALL, useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { toBulkPriority } from "@/features/build/shared/bulk-priority";
 

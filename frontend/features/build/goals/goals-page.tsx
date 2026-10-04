@@ -47,7 +47,7 @@ import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import {
   GoalCard,
   GOAL_LEVEL_ORDER,

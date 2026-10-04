@@ -39,8 +39,8 @@ const mockArticle: PublicKbArticle = {
   tags: ["onboarding", "setup"],
   seoTitle: "Getting Started | StreamlineOS Help",
   seoDescription: "Learn how to get started.",
-  publishedAt: "2024-03-01T00:00:00.000Z",
-  updatedAt: "2024-06-15T00:00:00.000Z",
+  publishedAt: "2024-03-01T06:00:00.000Z",
+  updatedAt: "2024-06-15T06:00:00.000Z",
 };
 
 const mockOrg: PublicOrgInfo = {
@@ -118,7 +118,7 @@ describe("PublicArticleContent", () => {
       );
       const timeEl = container.querySelector("time");
       expect(timeEl).not.toBeNull();
-      expect(timeEl?.getAttribute("dateTime")).toBe("2024-06-15T00:00:00.000Z");
+      expect(timeEl?.getAttribute("dateTime")).toBe("2024-06-15T06:00:00.000Z");
     });
 
     it("falls back to publishedAt with Published label when updatedAt is absent", () => {

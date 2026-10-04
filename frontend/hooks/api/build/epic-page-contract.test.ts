@@ -1,3 +1,4 @@
+import { ZodError } from "zod";
 import { epicPageContract } from "@/hooks/api/build/execution-schema";
 
 const row = {
@@ -37,6 +38,6 @@ describe("epicPageContract — the page envelope and the flattened owner", () =>
   });
 
   it("rejects a bare array, so a route that regressed to the old shape fails loudly instead of rendering empty", () => {
-    expect(() => epicPageContract.parse([row])).toThrow();
+    expect(() => epicPageContract.parse([row])).toThrow(ZodError);
   });
 });

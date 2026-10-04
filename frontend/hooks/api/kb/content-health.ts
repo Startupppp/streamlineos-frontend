@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { useCan } from "@/hooks/api/access";
@@ -10,6 +10,7 @@ import type {
   ContentHealthSignalType,
   DismissHealthItemParams,
 } from "@/hooks/api/kb/content-health-schema";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const contentHealthSignalsContract = lazyContract(() =>
   import("@/hooks/api/kb/content-health-schema").then(
@@ -72,7 +73,7 @@ export function useContentHealthCounts() {
 
 export function useDismissHealthItem() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:manage", {
     mutationKey: ["knowledge", "kb", "contentHealth", "dismiss"],
     mutationFn: (params: DismissHealthItemParams) =>
       apiClient.post(
@@ -107,7 +108,7 @@ const assignHealthItemContract = lazyContract(() =>
 
 export function useAssignHealthItem() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:manage", {
     mutationKey: ["knowledge", "kb", "contentHealth", "assign"],
     mutationFn: (params: AssignHealthItemParams) =>
       apiClient.post(
@@ -139,7 +140,7 @@ const bulkRepairContract = lazyContract(() =>
 
 export function useBulkRepairHealthItems() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:manage", {
     mutationKey: ["knowledge", "kb", "contentHealth", "bulkRepair"],
     mutationFn: (params: BulkRepairParams) =>
       apiClient.post(

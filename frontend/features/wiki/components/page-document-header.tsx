@@ -217,7 +217,7 @@ export default function PageDocumentHeader({
           <DialogHeader>
             <DialogTitle>Save as template</DialogTitle>
             <DialogDescription className="text-xs">
-              Reuse this page's structure when creating new pages.
+              Reuse this page&apos;s structure when creating new pages.
             </DialogDescription>
           </DialogHeader>
           <Input

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { claimBuildListSearchTarget } from "@/features/build/shared/build-list-search-target";
+import { claimBuildListSearchTarget } from "@/lib/build/build-list-search-target";
 
 function isInputTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;

@@ -2,5 +2,5 @@
   "allowed": {
     "features/wiki/lib/starter-templates.ts:340": "generic agile vocabulary inside a user-facing retro template description, not a claim about a StreamlineOS surface; file is owned by the Knowledge Base workstream"
   },
-  "maxAcknowledged": 11
+  "maxAcknowledged": 10
 }

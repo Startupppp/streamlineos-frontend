@@ -6,12 +6,14 @@ import { useHrLeaveApprovals } from "@/hooks/api/hr";
 import { useHrPendingWfhRequests } from "@/hooks/api/hr/hr-settings";
 import { useHrRegularizationQueue } from "@/hooks/api/hr/attendance-regularization-queue";
 import { useHrEmployeeOptions } from "@/hooks/api/hr/employee-list";
+import { useExpensePageData } from "@/hooks/api/hr/expenses";
 import { useWorkflowInbox } from "@/hooks/api/hr/hr-workflows";
 import { usePayrollCutoff } from "@/hooks/api/payroll/payroll-cutoff";
 import type { PayrollCutoff } from "@/lib/hrms/payroll-cutoff";
 import type { PersonSummary } from "@/components/shared/person-drawer";
 import {
   markDeadlineAffected,
+  normaliseExpenseItem,
   normaliseLeaveItem,
   normaliseRegularizationItem,
   normaliseWfhItem,
@@ -46,6 +48,7 @@ export function useActionCenterQueue(): ActionCenterQueue {
   const leaveGate = usePermissionGate("hr:leaves:view");
   const wfhGate = usePermissionGate("hr:attendance:manage");
   const attendanceGate = usePermissionGate("hr:attendance:view");
+  const expenseGate = usePermissionGate("hr:expenses:approve");
 
   const leaves = useHrLeaveApprovals({ status: "PENDING", limit: 50 });
   const wfh = useHrPendingWfhRequests();
@@ -53,6 +56,7 @@ export function useActionCenterQueue(): ActionCenterQueue {
     status: "PENDING",
     limit: 50,
   });
+  const expenses = useExpensePageData({ pageSize: 1 }, { enabled: expenseGate.allowed });
   const inbox = useWorkflowInbox();
   const { cutoff, isLoading: cutoffLoading } = usePayrollCutoff();
   const directoryLookup = useHrEmployeeOptions({ limit: 100 });
@@ -86,10 +90,11 @@ export function useActionCenterQueue(): ActionCenterQueue {
       ...leaveRows.map(normaliseLeaveItem),
       ...(wfh.data ?? []).map(normaliseWfhItem),
       ...(regularizations.data?.data ?? []).map((row) => normaliseRegularizationItem(row, directory)),
+      ...(expenses.data?.pendingExpenses ?? []).map(normaliseExpenseItem),
       ...(inbox.data?.data ?? []).map(normaliseWorkflowItem),
     ];
     return sortQueueItems(markDeadlineAffected(merged, cutoff?.date ?? null));
-  }, [leaveRows, wfh.data, regularizations.data, inbox.data, cutoff, directory]);
+  }, [leaveRows, wfh.data, regularizations.data, expenses.data, inbox.data, cutoff, directory]);
 
   const sources = useMemo<QueueSourceState[]>(
     () => [
@@ -121,6 +126,15 @@ export function useActionCenterQueue(): ActionCenterQueue {
         retry: () => void regularizations.refetch(),
       },
       {
+        key: "expense",
+        label: "Expense claims",
+        permission: "hr:expenses:approve",
+        isLoading: expenses.isLoading || expenseGate.pending,
+        isError: expenses.isError,
+        denied: expenseGate.denied,
+        retry: () => void expenses.refetch(),
+      },
+      {
         key: "workflow",
         label: "Other requests",
         permission: "hr:workflows:approve",
@@ -130,7 +144,7 @@ export function useActionCenterQueue(): ActionCenterQueue {
         retry: () => void inbox.refetch(),
       },
     ],
-    [leaves, wfh, regularizations, inbox, leaveGate, wfhGate, attendanceGate],
+    [leaves, wfh, regularizations, expenses, inbox, leaveGate, wfhGate, attendanceGate, expenseGate],
   );
 
   const isLoading = sources.some((source) => source.isLoading);

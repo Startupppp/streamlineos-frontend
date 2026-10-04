@@ -51,6 +51,7 @@ import {
   analyticsSpaceIdFrom,
 } from "@/features/wiki/lib/analytics-range";
 import { pageHref } from "@/lib/knowledge-routes";
+import { propagationShield } from "@/lib/keyboard-activation";
 import {
   KbBarChart2Icon,
   KbSearchIcon,
@@ -292,7 +293,7 @@ const GapTableRow = memo(function GapTableRow({
       {assignOpen && (
         <form
           onSubmit={handleAssignSubmit}
-          onClick={(e) => e.stopPropagation()}
+          {...propagationShield}
           className="flex items-center gap-2 px-3 py-2 bg-muted/20 border-t border-border/40"
         >
           <UserCombobox
@@ -326,7 +327,7 @@ const GapTableRow = memo(function GapTableRow({
       {dismissOpen && (
         <form
           onSubmit={handleDismissSubmit}
-          onClick={(e) => e.stopPropagation()}
+          {...propagationShield}
           className="flex items-center gap-2 px-3 py-2 bg-muted/20 border-t border-border/40"
         >
           <Input

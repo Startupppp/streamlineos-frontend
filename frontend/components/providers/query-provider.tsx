@@ -95,8 +95,8 @@ export function resolveQueryProviderScope({
   orgId: string | undefined;
   userId: string | undefined;
 }): string {
-  if (status === "loading") return initialScope ?? LOADING_SCOPE;
   if (orgId && userId) return authenticatedScope(orgId, userId);
+  if (status === "loading") return initialScope ?? LOADING_SCOPE;
   return UNAUTHENTICATED_SCOPE;
 }
 

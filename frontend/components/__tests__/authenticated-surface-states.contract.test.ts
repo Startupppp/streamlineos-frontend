@@ -19,7 +19,7 @@ const BASELINE = {
   missingEmpty: 8,
   missingError: 0,
   missingPermissionDenied: 0,
-  filterEmptyConflation: 55,
+  filterEmptyConflation: 52,
 } as const;
 
 /**
@@ -36,9 +36,10 @@ const BASELINE = {
  * given a real empty state rather than an entry here.
  */
 const EMPTY_STATE_NOT_APPLICABLE = [
-  "/build/managed-products/[managedProductId]/insights",
+  "/build/[projectId]/settings/iterations",
   "/crm/import",
   "/inventory/products/new",
+  "/recruitment/integrations",
   "/recruitment/sla",
   "/settings/notifications/policy",
   "/settings/organization/structure",

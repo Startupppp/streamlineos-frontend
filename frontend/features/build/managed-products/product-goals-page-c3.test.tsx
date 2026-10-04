@@ -119,7 +119,7 @@ jest.mock("@/features/build/goals/goal-form-sheet", () => ({
     open ? <div data-testid="goal-form-sheet" /> : null,
 }));
 
-jest.mock("@/features/build/shared/shortcut-help-dialog", () => ({
+jest.mock("@/components/shared/shortcut-help-dialog", () => ({
   ShortcutHelpDialog: ({ open }: { open: boolean }) =>
     open ? <div data-testid="shortcut-help-dialog" /> : null,
 }));

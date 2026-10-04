@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { CyclesPage } from "./cycles-page";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { ApiError } from "@/lib/api-envelope";
 
 const mockReplace = jest.fn();
@@ -167,7 +167,7 @@ jest.mock("@/features/build/shared/build-list-toolbar", () => ({
   ),
 }));
 
-jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
   useBuildListKeyboard: jest.fn(),
 }));
 

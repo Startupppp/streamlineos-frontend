@@ -76,7 +76,7 @@ function GroupedInboxVirtualRow({
         <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
           {row.label}
         </span>
-        <span className="text-xs text-muted-foreground/70">({row.count})</span>
+        <span className="text-xs text-muted-foreground">({row.count})</span>
         <div className="flex-1 h-px bg-border/50" />
       </div>
     );

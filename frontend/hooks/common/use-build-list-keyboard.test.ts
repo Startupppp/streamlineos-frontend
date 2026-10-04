@@ -3,7 +3,7 @@ import { useBuildListKeyboard } from "./use-build-list-keyboard";
 import {
   claimBuildListSearchTarget,
   tryHandleBuildListSearchShortcut,
-} from "./build-list-search-target";
+} from "@/lib/build/build-list-search-target";
 
 const mockOpen = jest.fn();
 const mockClear = jest.fn();
@@ -234,9 +234,11 @@ describe("useBuildListKeyboard — ? opens shortcut help overlay when the callba
 
   it("? is a no-op when onShortcutHelp is not provided so omitting it does not throw", () => {
     setup();
-    act(() => {
-      fireEvent.keyDown(document.body, { key: "?" });
-    });
+    expect(() =>
+      act(() => {
+        fireEvent.keyDown(document.body, { key: "?" });
+      }),
+    ).not.toThrow();
   });
 
   it("? does not fire while typing in a text input so the user can type question marks freely", () => {

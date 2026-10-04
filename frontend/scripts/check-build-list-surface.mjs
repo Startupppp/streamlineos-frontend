@@ -10,7 +10,7 @@ const ALLOWLIST_PATH = fileURLToPath(new URL("check-build-list-surface-allowlist
 
 const MIN_BUILD_FILES = 100;
 
-const HAS_DATA_TABLE = /<DataTable(?!Skeleton)/;
+const HAS_DATA_TABLE = /<DataTable\b/;
 const HAS_PAGE_STATE = /usePageState\s*\(|<PageState\b/;
 
 function* walkBuildTsx(dir) {
@@ -123,6 +123,21 @@ function runSelfTest() {
     );
 
     writeFileSync(
+      join(buildDir, "column-type-only.tsx"),
+      [
+        '"use client";',
+        'import { useMemo } from "react";',
+        'import type { DataTableColumn } from "@/components/ui/data-table";',
+        'import { usePageState } from "@/hooks/api/use-page-state";',
+        'export function ColumnTypeOnly() {',
+        '  const ps = usePageState({ permission: "build:view", isLoading: false, isError: false, error: undefined });',
+        '  const columns = useMemo<DataTableColumn<{ id: number }>[]>(() => [], []);',
+        '  return null;',
+        '}',
+      ].join("\n"),
+    );
+
+    writeFileSync(
       join(buildDir, "table-only.tsx"),
       [
         '"use client";',
@@ -152,6 +167,7 @@ function runSelfTest() {
     assert("BuildListSurface pages are accepted", !flag("surface-page.tsx"));
     assert("DataTableSkeleton + usePageState is not a violation", !flag("skeleton-only.tsx"));
     assert("DataTable without page state is not a violation", !flag("table-only.tsx"));
+    assert("a DataTableColumn type argument is not a rendered DataTable", !flag("column-type-only.tsx"));
     assert("test files (.test.tsx) are excluded from the scan", !flag("members-page.test.tsx"));
     assert("exactly two violations are reported in the fixture", violations.length === 2);
     assert("the fixture is actually scanned (non-zero file count)", scannedFiles > 0);

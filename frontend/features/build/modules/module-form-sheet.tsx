@@ -58,7 +58,7 @@ export type ModuleFormSheetProps =
 export function ModuleFormSheet(props: ModuleFormSheetProps) {
   const { projectId, open, onOpenChange } = props;
   const isEdit = props.mode === "edit";
-  const module = isEdit ? props.module : undefined;
+  const editingModule = isEdit ? props.module : undefined;
 
   const createForm = useForm<CreateModuleForm>({
     resolver: zodResolver(createModuleSchema),
@@ -79,19 +79,19 @@ export function ModuleFormSheet(props: ModuleFormSheetProps) {
 
   useEffect(() => {
     if (!open) return;
-    if (isEdit && module) {
+    if (isEdit && editingModule) {
       editForm.reset({
-        name: module.name,
-        description: module.description ?? "",
-        status: module.status,
-        startDate: module.startDate ?? "",
-        endDate: module.endDate ?? "",
-        leadId: module.leadId ?? undefined,
+        name: editingModule.name,
+        description: editingModule.description ?? "",
+        status: editingModule.status,
+        startDate: editingModule.startDate ?? "",
+        endDate: editingModule.endDate ?? "",
+        leadId: editingModule.leadId ?? undefined,
       });
     } else {
       createForm.reset(FORM_DEFAULTS);
     }
-  }, [open, isEdit, module, createForm, editForm]);
+  }, [open, isEdit, editingModule, createForm, editForm]);
 
   const descValue = isEdit
     ? (editForm.watch("description") ?? "")
@@ -168,12 +168,12 @@ export function ModuleFormSheet(props: ModuleFormSheetProps) {
 
   const handleEditSubmit = useCallback(
     (data: EditModuleForm) => {
-      if (!module) return;
+      if (!editingModule) return;
       updateMutation.mutate(
         {
           projectId,
-          moduleId: module.id,
-          version: module.version,
+          moduleId: editingModule.id,
+          version: editingModule.version,
           name: data.name,
           description: data.description,
           status: data.status,
@@ -198,7 +198,7 @@ export function ModuleFormSheet(props: ModuleFormSheetProps) {
         },
       );
     },
-    [updateMutation, module, projectId, onOpenChange],
+    [updateMutation, editingModule, projectId, onOpenChange],
   );
 
   const isPending = isEdit

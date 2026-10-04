@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
@@ -19,6 +19,7 @@ import type {
   KbCitationReuseRow,
   KbReviewSla,
 } from "@/types/kb";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const kbAnalyticsOverviewContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-analytics-schema").then((m) => m.kbAnalyticsOverviewContract),
@@ -235,7 +236,7 @@ const kbAnalyticsGapActionContract = lazyContract(() =>
 
 export function useAssignGap() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:analytics:view", {
     mutationKey: ["knowledge", "kb", "gaps", "assign"],
     mutationFn: (body: { query: string; assigneeUserId: string }) =>
       apiClient.post("/kb/analytics/gaps/assign", body, undefined, kbAnalyticsGapActionContract),
@@ -249,7 +250,7 @@ export function useAssignGap() {
 
 export function useDismissGap() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:analytics:view", {
     mutationKey: ["knowledge", "kb", "gaps", "dismiss"],
     mutationFn: (body: { query: string; reason: string }) =>
       apiClient.post("/kb/analytics/gaps/dismiss", body, undefined, kbAnalyticsGapActionContract),
@@ -263,7 +264,7 @@ export function useDismissGap() {
 
 export function useCreateGapFix() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:analytics:view", {
     mutationKey: ["knowledge", "kb", "gaps", "create-fix"],
     mutationFn: (body: { query: string; spaceId?: number }) =>
       apiClient.post("/kb/analytics/gaps/create-fix", body, undefined, kbAnalyticsGapActionContract),

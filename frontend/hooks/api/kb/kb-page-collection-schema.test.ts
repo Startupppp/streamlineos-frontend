@@ -1,3 +1,4 @@
+import { ZodError } from "zod";
 import {
   kbPageCollectionItemSchema,
   kbPageCollectionResponseSchema,
@@ -59,7 +60,7 @@ describe("kbPageCollectionItemSchema — the owner identity the Owner column ren
   it("rejects a numeric ownerUserId rather than coercing it, because a coerced id would render as a visible identifier in the Owner column", () => {
     expect(() =>
       kbPageCollectionItemSchema.parse(wireItem({ ownerUserId: 42 })),
-    ).toThrow();
+    ).toThrow(ZodError);
   });
 });
 

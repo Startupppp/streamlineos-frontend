@@ -23,8 +23,8 @@ import {
   BUILD_FILTER_ALL,
   useBuildListFilters,
 } from "@/features/build/shared/use-build-list-filters";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
-import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
+import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
 import {
   PmPageShell,
   PmPanel,

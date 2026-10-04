@@ -85,7 +85,7 @@ jest.mock("@/features/build/shared/build-list-toolbar", () => ({
 
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 
-jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
   useBuildListKeyboard: jest.fn(),
 }));
 
@@ -142,19 +142,22 @@ jest.mock("@/features/build/views/list-view", () => ({
   }: {
     tickets?: Array<{ id: number; title: string }>;
     selection?: { onChange: (ids: Set<string | number>) => void };
-  }) => (
-    <div data-testid="list-view">
-      {tickets?.map((t) => (
-        <button
-          key={t.id}
-          type="button"
-          role="checkbox"
-          aria-label={`Select ticket ${t.id}`}
-          onClick={() => selection?.onChange(new Set([t.id]))}
-        />
-      ))}
-    </div>
-  ),
+  }) => {
+    const selectTicket = (id: number) => selection?.onChange(new Set([id]));
+    return (
+      <div data-testid="list-view">
+        {tickets?.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            role="checkbox"
+            aria-label={`Select ticket ${t.id}`}
+            onClick={() => selectTicket(t.id)}
+          />
+        ))}
+      </div>
+    );
+  },
 }));
 
 jest.mock("@/features/build/views/view-switcher", () => ({
@@ -178,7 +181,7 @@ import { useTicketColumnCounts } from "@/hooks/api/build/ticket-queries";
 import { useCan, useAccess } from "@/hooks/api/access";
 import { notFound } from "next/navigation";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { parseViewType } from "@/features/build/views/view-switcher";
 
 const mockUseProject = useProject as jest.Mock;

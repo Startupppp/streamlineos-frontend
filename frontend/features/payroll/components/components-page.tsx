@@ -25,6 +25,7 @@ import { usePayrollComponents, useDeletePayrollComponent } from "@/hooks/api/pay
 import type { SalaryComponent, ComponentType } from "@/types/payroll/setup";
 import { buildComponentColumns } from "./component-columns";
 import { ComponentFormSheet } from "./component-form-sheet";
+import { BreakupPreviewSheet } from "./breakup-preview-sheet";
 import { useCan } from "@/hooks/api/access";
 
 const COMPONENT_PAGE_SIZE = 20;
@@ -172,11 +173,14 @@ export function ComponentsPageContent() {
         filters={filters}
         filtersClassName={FILTER_ROW_STACKS_ON_MOBILE}
         actions={
-          canManage ? (
-            <AnimatedIconButton icon={PlusIcon} iconSize={16} iconClassName="mr-1.5" size="sm" onClick={handleAddNew}>
-              Add Component
-            </AnimatedIconButton>
-          ) : undefined
+          <>
+            <BreakupPreviewSheet />
+            {canManage ? (
+              <AnimatedIconButton icon={PlusIcon} iconSize={16} iconClassName="mr-1.5" size="sm" onClick={handleAddNew}>
+                Add Component
+              </AnimatedIconButton>
+            ) : null}
+          </>
         }
       >
         {isError ? (

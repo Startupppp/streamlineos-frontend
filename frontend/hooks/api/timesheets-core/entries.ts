@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -104,8 +104,9 @@ export function useCopyTimesheetEntries() {
       let created = 0;
       let failed = 0;
       for (const row of rows) {
+        const body: CreateEntryInput = row;
         try {
-          await apiClient.post<TimesheetEntry>("/timesheets/entries", row, undefined, entryC);
+          await apiClient.post<TimesheetEntry>("/timesheets/entries", body, undefined, entryC);
           created += 1;
         } catch {
           failed += 1;
@@ -119,7 +120,7 @@ export function useCopyTimesheetEntries() {
 
 export function useDraftEntriesFromAttendance() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("timesheets:entries:create", {
     mutationKey: ["timesheets", "entries", "from-attendance"],
     mutationFn: (range: { start: string; end: string }) =>
       apiClient.post<AttendanceDraftResult>("/timesheets/entries/from-attendance", range),

@@ -24,7 +24,7 @@ jest.mock("@/hooks/common/use-debounce", () => ({
 }));
 
 jest.mock("@/hooks/common/use-query-param-open", () => {
-  const { useState } = require("react");
+  const { useState } = jest.requireActual("react");
   return {
     useQueryParamOpen: () => {
       const [open, setOpen] = useState(false);

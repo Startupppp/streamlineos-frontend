@@ -274,8 +274,8 @@ describe("WebhookCard — failure rate on card face (BLD-X-FE-SETTINGS-WH-026)",
 describe("WebhookCard — secret age uses secretSetAt not createdAt (BLD-X-FE-SETTINGS-WH-027)", () => {
   const ROTATED_WEBHOOK: ProjectWebhook = {
     ...BASE_WEBHOOK,
-    createdAt: "2025-01-01T00:00:00.000Z",
-    secretSetAt: "2026-09-01T00:00:00.000Z",
+    createdAt: "2025-01-01T06:00:00.000Z",
+    secretSetAt: "2026-09-01T06:00:00.000Z",
   };
 
   it("shows the rotation date when hasSecret is true and secretSetAt differs from createdAt — so a rotated secret shows its rotation month", () => {

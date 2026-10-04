@@ -38,7 +38,7 @@ export function BuildProjectChatPage({ projectId }: ProjectChatPageProps) {
   const createEntityChannel = useCreateEntityChannel();
 
   const pageState = usePageState({
-    permission: "build:view",
+    permission: "chat:channels:read",
     isLoading,
     isError,
     error,

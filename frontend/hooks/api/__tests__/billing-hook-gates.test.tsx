@@ -24,6 +24,7 @@ jest.mock("@/lib/api-client", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn().mockReturnValue(false),
+  signalAccessInvalidation: jest.fn(),
   useModuleEnabled: jest.fn().mockReturnValue(true),
   useAccess: jest.fn().mockReturnValue({
     data: { permissions: [] },

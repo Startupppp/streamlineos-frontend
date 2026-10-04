@@ -28,7 +28,7 @@ import {
   BUILD_FILTER_ALL,
   useBuildListFilters,
 } from "@/features/build/shared/use-build-list-filters";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { ENTITY_OPTIONS, STATUS_OPTIONS } from "./approvals-constants";
 import type { ApprovalInboxItem, DecideApprovalInput } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -342,7 +342,7 @@ export function ApprovalsInboxPage() {
         <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
           {!isOnline && (
             <p className="text-sm text-muted-foreground px-4 py-2 bg-muted/50 rounded-md mb-2">
-              You're offline — results may not be up to date
+              You&apos;re offline — results may not be up to date
             </p>
           )}
           <ApprovalBulkActionBar

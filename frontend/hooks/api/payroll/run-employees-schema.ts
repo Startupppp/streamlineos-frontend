@@ -1,9 +1,20 @@
 import { z } from "zod";
 import { cursorPageWithTotalContract } from "@/hooks/api/cursor-page-schema";
 
+const payrollSourceRefContract = z.object({
+  table: z.string(),
+  id: z.union([z.number(), z.string()]).nullable(),
+  label: z.string(),
+  date: z.string().nullable().optional(),
+  endDate: z.string().nullable().optional(),
+});
+
 const calcExplainStepContract = z.object({
+  formula: z.string().optional(),
+  inputs: z.record(z.string(), z.number()).optional(),
   steps: z.array(z.string()),
   note: z.string().optional(),
+  sources: z.array(payrollSourceRefContract).optional(),
 });
 
 const calculationSnapshotLineContract = z.object({
@@ -25,6 +36,7 @@ export const calculationSnapshotContract = z.object({
   paidDays: z.string(),
   lopDays: z.string(),
   overtimeHours: z.string(),
+  lopSources: z.array(payrollSourceRefContract).optional(),
   lines: z.array(calculationSnapshotLineContract),
   totals: z.object({
     gross: z.string(),

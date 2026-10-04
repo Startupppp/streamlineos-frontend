@@ -44,8 +44,8 @@ import { useCan } from "@/hooks/api/access";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { WifiOff } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import {
   BUILD_FILTER_ALL,
   useBuildListFilters,

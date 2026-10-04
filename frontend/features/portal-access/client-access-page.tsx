@@ -8,7 +8,7 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { useProjectClientGrants, useRevokeGrant, useBulkRevokeGrant } from "@/hooks/api/portal-access/grants";
 import { useCan } from "@/hooks/api/access";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { PM_TOOLBAR } from "@/components/pm-chrome";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable } from "@/components/ui/data-table";
