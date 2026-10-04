@@ -171,6 +171,36 @@ describe("InboxList — changing the section prop resets the window", () => {
   });
 });
 
+describe("InboxList — changing the cursor prop resets the window", () => {
+  it("goes back to the first page of rows when the cursor changes via prop", async () => {
+    const user = userEvent.setup();
+    mockPages([100, 100, 100], false);
+    const { rerender } = render(
+      <InboxList
+        selectedId={null}
+        onSelect={noop}
+        section="UNREAD"
+        q={null}
+        cursor={null}
+        searchInputRef={searchRef}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: /load older notifications/i }));
+    expect(screen.getAllByRole("listitem")).toHaveLength(INBOX_RENDER_PAGE_SIZE * 2);
+    rerender(
+      <InboxList
+        selectedId={null}
+        onSelect={noop}
+        section="UNREAD"
+        q={null}
+        cursor={100}
+        searchInputRef={searchRef}
+      />,
+    );
+    expect(screen.getAllByRole("listitem")).toHaveLength(INBOX_RENDER_PAGE_SIZE);
+  });
+});
+
 describe("InboxList — disabled query shows skeleton, not empty state", () => {
   it("shows a loading skeleton and not the empty message when the query is pending but not yet fetching", () => {
     useInfiniteNotifications.mockReturnValue({

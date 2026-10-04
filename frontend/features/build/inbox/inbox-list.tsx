@@ -15,7 +15,7 @@ import {
   useInfiniteNotifications,
   useMarkNotificationRead,
   useMarkAllNotificationsRead,
-} from "@/hooks/api/notifications";
+} from "@/hooks/api/notifications-inbox";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import type { Notification, NotificationSection, NotificationCategory } from "@/types/notifications";
 import { InboxNotificationItem } from "./inbox-notification-item";
@@ -93,7 +93,7 @@ export function InboxList({
   const rawNotifications = React.useMemo(() => data?.pages.flat() ?? [], [data]);
   const total = rawNotifications.length;
 
-  React.useEffect(() => { setPagesShown(1); setSelectedIds(new Set()); }, [section, q, type, projectId]);
+  React.useEffect(() => { setPagesShown(1); setSelectedIds(new Set()); }, [section, q, type, projectId, cursor]);
 
   const pageState = usePageState({
     permission: "build:view",
