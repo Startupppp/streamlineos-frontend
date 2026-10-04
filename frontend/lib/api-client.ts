@@ -195,6 +195,13 @@ function resetTokenState(): void {
   tokenGeneration += 1;
 }
 
+export function seedBackendToken(token: string): void {
+  if (sessionEnded || cachedToken !== null) return;
+  const expiresAt = readTokenExpiry(token);
+  if (expiresAt === null || expiresAt - TOKEN_REFRESH_SKEW_MS <= Date.now()) return;
+  cachedToken = { value: token, expiresAt };
+}
+
 export function clearBackendTokenCache(): void {
   resetTokenState();
   sessionEnded = false;

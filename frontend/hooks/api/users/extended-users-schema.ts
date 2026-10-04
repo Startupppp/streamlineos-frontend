@@ -162,6 +162,7 @@ const invitationItemContract = z.object({
   status: z.enum(["PENDING", "ACCEPTED", "DECLINED", "EXPIRED", "REVOKED"]),
   revokedAt: z.string().nullable(),
   declinedAt: z.string().nullable(),
+  moduleAccess: z.array(z.object({ moduleKey: z.string(), standing: z.enum(["MEMBER", "ADMIN"]) })).default([]),
   deliveryFailed: z.boolean(),
 });
 

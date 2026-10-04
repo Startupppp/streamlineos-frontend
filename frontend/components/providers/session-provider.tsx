@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Session } from "next-auth";
 import {
   SessionProvider as NextAuthSessionProvider,
   useSession,
 } from "next-auth/react";
 import { usePathname } from "next/navigation";
-import { clearBackendTokenCache } from "@/lib/api-client";
+import { clearBackendTokenCache, seedBackendToken } from "@/lib/api-client";
 import { getMembershipLifecycleDestination } from "@/lib/membership-lifecycle-route";
 
 function MembershipLifecycleSync() {
@@ -51,6 +51,9 @@ export function SessionProvider({
   children: React.ReactNode;
   session?: Session | null;
 }) {
+  useState(() => {
+    if (typeof window !== "undefined" && session?.backendJwt) seedBackendToken(session.backendJwt);
+  });
   return (
     <NextAuthSessionProvider
       session={session}

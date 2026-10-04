@@ -116,6 +116,7 @@ function invitation(id: string, email: string): Invitation {
     status: "PENDING",
     revokedAt: null,
     declinedAt: null,
+    moduleAccess: [],
     deliveryFailed: false,
   };
 }

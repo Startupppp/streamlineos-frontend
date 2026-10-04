@@ -16,6 +16,7 @@ jest.mock("next/navigation", () => ({
 
 jest.mock("@/hooks/api/use-page-state", () => ({ usePageState: () => ({ kind: "ready" }) }));
 jest.mock("@/hooks/api/access", () => ({ useCan: () => false, useCanState: () => "denied" }));
+jest.mock("@/hooks/api/hr/employee-list", () => ({ useHrEmployeeCounts: () => ({ data: undefined, isLoading: false }) }));
 jest.mock("@/features/hr/employees/employees-directory-stats", () => ({
   EmployeesDirectoryStats: ({ loadedCount }: { loadedCount: number }) => (
     <div data-testid="stats">showing {loadedCount}</div>

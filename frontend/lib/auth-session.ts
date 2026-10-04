@@ -190,7 +190,10 @@ export async function fetchSessionData(
         cache: "no-store",
         signal: controller.signal,
       });
-      if (!res.ok) continue;
+      if (!res.ok) {
+        if (res.status < 500) return null;
+        continue;
+      }
       const body: unknown = await res.json();
       const parsed = sessionDataSchema.safeParse(unwrapBackend(body));
       if (parsed.success) return parsed.data;

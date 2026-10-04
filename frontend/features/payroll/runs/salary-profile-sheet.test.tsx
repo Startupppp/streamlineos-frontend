@@ -118,7 +118,7 @@ describe("SalaryProfileSheet person picker", () => {
     expect(rowButton("Kiran Unlinked")).toHaveTextContent("Not payable yet");
     expect(rowButton("Dev Gone")).toBeDisabled();
     expect(rowButton("Dev Gone")).toHaveTextContent("Exited");
-    expect(screen.getByText(/Add them as a worker and mark as payee in Directory, or invite them/)).toBeInTheDocument();
+    expect(screen.getByText(/In Directory, open their Worker tab and mark them as payee, or invite them/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open in Directory" })).toHaveAttribute("href", "/directory/op-4");
     expect(screen.getByRole("link", { name: "Open existing profile" })).toHaveAttribute("href", "/payroll/employees/u-meera");
     expect(rowButton("Asha Rao")).toHaveTextContent("asha@example.com · E-001");
