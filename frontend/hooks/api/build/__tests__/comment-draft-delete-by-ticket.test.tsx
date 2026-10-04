@@ -1,5 +1,6 @@
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { InfiniteData } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { useDeleteCommentDraftByTicket } from "@/hooks/api/build/comment-drafts";
 import type { CommentDraftListItem } from "@/hooks/api/build/comment-drafts";
@@ -7,6 +8,19 @@ import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { apiClient } from "@/lib/api-client";
 import { OrgStorageScopeProvider } from "@/lib/org-scoped-storage";
 import { peekDraftIntents } from "../comment-draft-offline-buffer";
+import type { CommentDraftsListMineResponse } from "@/contracts/build-contracts.generated";
+
+type DraftPages = InfiniteData<CommentDraftsListMineResponse>;
+
+function pageCache(items: CommentDraftListItem[]): DraftPages {
+  return {
+    pages: [{ data: items, pagination: { limit: 100, hasMore: false, nextCursor: null } }],
+    pageParams: [null],
+  };
+}
+function flatItems(data: DraftPages | undefined): CommentDraftListItem[] {
+  return data?.pages.flatMap((p) => p.data as CommentDraftListItem[]) ?? [];
+}
 
 jest.mock("@/lib/api-client", () => ({
   apiClient: { delete: jest.fn() },
@@ -27,6 +41,8 @@ const del = jest.mocked(apiClient.delete);
 
 const DRAFT_TICKET_1: CommentDraftListItem = {
   id: 1,
+  orgId: "org-a",
+  membershipId: null,
   ticketId: 100,
   body: "draft for ticket 100",
   createdAt: "2026-09-15T10:00:00.000Z",
@@ -47,6 +63,8 @@ const DRAFT_TICKET_1: CommentDraftListItem = {
 
 const DRAFT_TICKET_2: CommentDraftListItem = {
   id: 2,
+  orgId: "org-a",
+  membershipId: null,
   ticketId: 200,
   body: "draft for ticket 200",
   createdAt: "2026-09-15T10:00:00.000Z",
@@ -76,7 +94,7 @@ describe("BUG-050 — useDeleteCommentDraftByTicket patches cache immediately so
 
   beforeEach(() => {
     client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
-    client.setQueryData(buildWorkQueryKeys.projects.commentDrafts.mine(), [DRAFT_TICKET_1, DRAFT_TICKET_2]);
+    client.setQueryData(buildWorkQueryKeys.projects.commentDrafts.mine(), pageCache([DRAFT_TICKET_1, DRAFT_TICKET_2]));
     del.mockReset();
     localStorage.clear();
   });
@@ -89,9 +107,9 @@ describe("BUG-050 — useDeleteCommentDraftByTicket patches cache immediately so
 
     await act(async () => { result.current.mutate(100); });
 
-    const cached = client.getQueryData<CommentDraftListItem[]>(buildWorkQueryKeys.projects.commentDrafts.mine());
-    expect(cached?.some((d) => d.ticketId === 100)).toBe(false);
-    expect(cached?.some((d) => d.ticketId === 200)).toBe(true);
+    const cached = flatItems(client.getQueryData<DraftPages>(buildWorkQueryKeys.projects.commentDrafts.mine()));
+    expect(cached.some((d) => d.ticketId === 100)).toBe(false);
+    expect(cached.some((d) => d.ticketId === 200)).toBe(true);
 
     resolve({ deleted: true });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
@@ -105,8 +123,8 @@ describe("BUG-050 — useDeleteCommentDraftByTicket patches cache immediately so
     await act(async () => { await result.current.mutateAsync(100).catch(() => {}); });
 
     await waitFor(() => expect(result.current.isError).toBe(true));
-    const cached = client.getQueryData<CommentDraftListItem[]>(buildWorkQueryKeys.projects.commentDrafts.mine());
-    expect(cached?.some((d) => d.ticketId === 100)).toBe(true);
+    const cached = flatItems(client.getQueryData<DraftPages>(buildWorkQueryKeys.projects.commentDrafts.mine()));
+    expect(cached.some((d) => d.ticketId === 100)).toBe(true);
     expect(peekDraftIntents("authenticated:org-a:user-a")).toEqual([expect.objectContaining({ kind: "delete", ticketId: 100 })]);
   });
 
@@ -117,9 +135,9 @@ describe("BUG-050 — useDeleteCommentDraftByTicket patches cache immediately so
 
     await act(async () => { result.current.mutate(100); });
 
-    const cached = client.getQueryData<CommentDraftListItem[]>(buildWorkQueryKeys.projects.commentDrafts.mine());
-    expect(cached?.find((d) => d.ticketId === 200)).toBeDefined();
-    expect(cached?.find((d) => d.ticketId === 100)).toBeUndefined();
+    const cached = flatItems(client.getQueryData<DraftPages>(buildWorkQueryKeys.projects.commentDrafts.mine()));
+    expect(cached.find((d) => d.ticketId === 200)).toBeDefined();
+    expect(cached.find((d) => d.ticketId === 100)).toBeUndefined();
     expect(del.mock.calls[0]?.[0]).toBe("/build/comment-drafts/by-ticket/100");
     expect(del.mock.calls[0]?.[1]).toBeUndefined();
     const config = del.mock.calls[0]?.[2];
@@ -134,9 +152,9 @@ describe("BUG-050 — useDeleteCommentDraftByTicket patches cache immediately so
     const hook = renderHook(() => useDeleteCommentDraftByTicket(), { wrapper: wrap(client) });
     act(() => hook.result.current.mutate(100));
     await waitFor(() => expect(del).toHaveBeenCalledTimes(1));
-    client.setQueryData(buildWorkQueryKeys.projects.commentDrafts.mine(), [{ ...DRAFT_TICKET_2, body: "newer unrelated text" }]);
+    client.setQueryData(buildWorkQueryKeys.projects.commentDrafts.mine(), pageCache([{ ...DRAFT_TICKET_2, body: "newer unrelated text" }]));
     await act(async () => { complete({ deleted: false }); });
     await waitFor(() => expect(hook.result.current.isError).toBe(true));
-    expect(client.getQueryData(buildWorkQueryKeys.projects.commentDrafts.mine())).toEqual([DRAFT_TICKET_1, { ...DRAFT_TICKET_2, body: "newer unrelated text" }]);
+    expect(flatItems(client.getQueryData<DraftPages>(buildWorkQueryKeys.projects.commentDrafts.mine()))).toEqual([DRAFT_TICKET_1, { ...DRAFT_TICKET_2, body: "newer unrelated text" }]);
   });
 });

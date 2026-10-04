@@ -12,7 +12,7 @@ export const commentDraftContract = commentDraftsUpsertResponseSchema;
 export const commentDraftByTicketContract = commentDraftsReadByTicketResponseSchema;
 export type TicketCommentDraft = CommentDraftsReadByTicketResponse;
 
-export const commentDraftListItemContract = commentDraftsListMineResponseSchema.element;
+export const commentDraftListItemContract = commentDraftsListMineResponseSchema.shape.data.element;
 
 export const commentDraftListContract = commentDraftsListMineResponseSchema;
 

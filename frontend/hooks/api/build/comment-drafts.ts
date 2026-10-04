@@ -1,6 +1,7 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import type { InfiniteData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
@@ -10,8 +11,8 @@ import type { GeneratedCommentDraft } from "./comment-drafts-schema";
 export { useUpsertCommentDraft, useDeleteCommentDraftByTicket } from "./comment-draft-commands";
 export { useTicketCommentDraft } from "./comment-drafts-read";
 
-import type { CommentDraftListItem } from "./comment-draft-command-cache";
 export type { CommentDraftAssignee, CommentDraftTicket, CommentDraft, CommentDraftListItem } from "./comment-draft-command-cache";
+import type { CommentDraftsListMineResponse } from "@/contracts/build-contracts.generated";
 
 const commentDraftListContract = lazyContract(() =>
   import("@/hooks/api/build/comment-drafts-schema").then((m) => m.commentDraftListContract),
@@ -25,9 +26,17 @@ const generatedCommentDraftContract = lazyContract(() =>
 
 export function useMyCommentDrafts() {
   const canView = useCan("build:tickets:view");
-  return useQuery<CommentDraftListItem[]>({
+  return useInfiniteQuery<CommentDraftsListMineResponse, Error, InfiniteData<CommentDraftsListMineResponse>, ReturnType<typeof buildWorkQueryKeys.projects.commentDrafts.mine>, string | null>({
     queryKey: buildWorkQueryKeys.projects.commentDrafts.mine(),
-    queryFn: ({ signal }) => apiClient.get<CommentDraftListItem[]>("/build/comment-drafts/mine", undefined, signal, commentDraftListContract),
+    queryFn: ({ pageParam, signal }) =>
+      apiClient.get<CommentDraftsListMineResponse>(
+        "/build/comment-drafts/mine",
+        pageParam !== null ? { cursor: pageParam } : undefined,
+        signal,
+        commentDraftListContract,
+      ),
+    initialPageParam: null,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? null,
     enabled: canView,
     staleTime: 60_000,
   });

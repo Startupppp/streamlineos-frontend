@@ -1,6 +1,19 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { InfiniteData } from "@tanstack/react-query";
 import { Suspense, type ReactNode } from "react";
+import type { CommentDraftsListMineResponse } from "@/contracts/build-contracts.generated";
+
+type DraftPages = InfiniteData<CommentDraftsListMineResponse>;
+function pageCache<T>(items: T[]): DraftPages {
+  return {
+    pages: [{ data: items as CommentDraftsListMineResponse["data"], pagination: { limit: 100, hasMore: false, nextCursor: null } }],
+    pageParams: [null],
+  };
+}
+function flatItems(data: DraftPages | undefined): unknown[] {
+  return data?.pages.flatMap((p) => p.data) ?? [];
+}
 import type { ApiResponseLike } from "@/lib/api-envelope";
 import { useUpsertCommentDraft, useDeleteCommentDraftByTicket, type CommentDraft } from "../comment-drafts";
 import { acknowledgeDraftIntent, peekDraftIntents, stageDraftIntent } from "../comment-draft-offline-buffer";
@@ -35,7 +48,7 @@ jest.mock("@/lib/api-client", () => ({
 const actor = "authenticated:org-a:user-a";
 const key = (version: number) => `${actor}::slos:comment-draft-pending:v${version}`;
 function draft(body = "server body"): CommentDraft {
-  return { id: 1, ticketId: 7, body, createdAt: "2026-10-03T00:00:00.000Z", updatedAt: "2026-10-03T00:00:00.000Z" };
+  return { id: 1, orgId: "org-a", membershipId: null, ticketId: 7, body, createdAt: "2026-10-03T00:00:00.000Z", updatedAt: "2026-10-03T00:00:00.000Z" };
 }
 function deferred<T>() {
   let complete: (value: T) => void = () => { throw new Error("Uninitialized deferred"); };
@@ -231,14 +244,14 @@ it("does not roll back another revision's cached draft after an old deletion fai
   mockDelete.mockReturnValue(pending.promise);
   const options = setup();
   const listKey = buildWorkQueryKeys.projects.commentDrafts.mine();
-  options.client.setQueryData(listKey, [{ ...draft("old"), ticket: { id: 7 } }]);
+  options.client.setQueryData(listKey, pageCache([{ ...draft("old"), ticket: { id: 7 } }]));
   const remove = renderHook(() => useDeleteCommentDraftByTicket(), options);
   act(() => remove.result.current.mutate(7));
   await waitFor(() => expect(mockDelete).toHaveBeenCalledTimes(1));
   stageDraftIntent(actor, 7, "newer");
-  options.client.setQueryData(listKey, [{ ...draft("newer"), ticket: { id: 7 } }]);
+  options.client.setQueryData(listKey, pageCache([{ ...draft("newer"), ticket: { id: 7 } }]));
   await act(async () => { pending.complete({ deleted: false }); });
-  expect(options.client.getQueryData(listKey)).toEqual([expect.objectContaining({ body: "newer" })]);
+  expect(flatItems(options.client.getQueryData<DraftPages>(listKey))).toEqual([expect.objectContaining({ body: "newer" })]);
   expect(peekDraftIntents(actor)[0]).toMatchObject({ kind: "upsert", body: "newer" });
 });
 

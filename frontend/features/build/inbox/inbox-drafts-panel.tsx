@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { TrashIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
@@ -19,8 +19,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { buildMyWorkReturnHref, getMyWorkTicketHref } from "@/features/build/ticket-details/build-ticket-detail-url";
 import { CommentDraftRow } from "@/features/build/drafts/comment-draft-row";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
-
-const DRAFTS_RENDER_LIMIT = 100;
 
 function DraftsPanelSkeleton() {
   return (
@@ -47,13 +45,25 @@ export function InboxDraftsPanel() {
   const searchParams = useSearchParams();
   const returnHref = buildMyWorkReturnHref(searchParams);
   const requestLeave = useNavigationLeave();
-  const { data, isLoading, isError, error, refetch } = useMyCommentDrafts();
+  const { data, isLoading, isError, error, refetch, fetchNextPage, hasNextPage } = useMyCommentDrafts();
   const deleteDraft = useDeleteCommentDraft();
   const deleteAll = useDeleteAllCommentDrafts();
   const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
-  const allDrafts = useMemo(() => data ?? [], [data]);
-  const drafts = useMemo(() => allDrafts.slice(0, DRAFTS_RENDER_LIMIT), [allDrafts]);
+  const allDrafts = useMemo(() => data?.pages.flatMap((p) => p.data) ?? [], [data]);
+
+  useEffect(() => {
+    const node = sentinelRef.current;
+    if (!node || !hasNextPage) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        void fetchNextPage();
+      }
+    });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasNextPage, fetchNextPage]);
 
   const pageState = usePageState({
     permission: "build:tickets:view",
@@ -134,7 +144,7 @@ export function InboxDraftsPanel() {
           }
         >
           <div>
-            {drafts.map((draft) => {
+            {allDrafts.map((draft) => {
               const { projectId, projectKey, ticketNumber } = draft.ticket;
               const href = projectId && projectId > 0
                 ? getMyWorkTicketHref(projectId, projectKey, ticketNumber, returnHref)
@@ -149,6 +159,7 @@ export function InboxDraftsPanel() {
                 />
               );
             })}
+            <div ref={sentinelRef} aria-hidden="true" />
           </div>
         </PageState>
       </div>

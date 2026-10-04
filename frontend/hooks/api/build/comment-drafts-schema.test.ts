@@ -17,7 +17,7 @@ it("accepts the PUT /build/comment-drafts/tickets/:ticketId response, which the 
   expect(result.orgId).toBe("org-abc");
 });
 
-it("still accepts the GET /build/comment-drafts/mine shape, which joins tickets and always sends a nested ticket", () => {
+it("accepts the paginated envelope from GET /build/comment-drafts/mine with data array and pagination cursor", () => {
   const ticket = {
     id: 42,
     type: "TASK",
@@ -36,22 +36,47 @@ it("still accepts the GET /build/comment-drafts/mine shape, which joins tickets 
       lastName: null,
     },
   };
-  const raw = [
-    {
-      id: 5,
-      orgId: "org-abc",
-      membershipId: null,
-      ticketId: 42,
-      body: "Draft body",
-      createdAt: "2026-09-16T00:00:00.000Z",
-      updatedAt: "2026-09-16T00:00:00.000Z",
-      ticket,
+  const raw = {
+    data: [
+      {
+        id: 5,
+        orgId: "org-abc",
+        membershipId: null,
+        ticketId: 42,
+        body: "Draft body",
+        createdAt: "2026-09-16T00:00:00.000Z",
+        updatedAt: "2026-09-16T00:00:00.000Z",
+        ticket,
+      },
+    ],
+    pagination: {
+      limit: 100,
+      hasMore: false,
+      nextCursor: null,
     },
-  ];
+  };
 
   const result = commentDraftListContract.parse(raw);
 
-  expect(result[0]?.ticket).toEqual(ticket);
+  expect(result.data[0]?.ticket).toEqual(ticket);
+  expect(result.pagination.hasMore).toBe(false);
+  expect(result.pagination.nextCursor).toBeNull();
+});
+
+it("accepts a paginated envelope with a nextCursor when more pages exist", () => {
+  const raw = {
+    data: [],
+    pagination: {
+      limit: 100,
+      hasMore: true,
+      nextCursor: "cursor-abc",
+    },
+  };
+
+  const result = commentDraftListContract.parse(raw);
+
+  expect(result.pagination.hasMore).toBe(true);
+  expect(result.pagination.nextCursor).toBe("cursor-abc");
 });
 
 it("rejects a draft whose ticketId is not a number, since the drafts page keys the list on it", () => {
