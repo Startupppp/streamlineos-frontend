@@ -35,7 +35,7 @@ export function FieldInput({
     [onChange],
   );
 
-  if (field.type === "select" && field.options && field.options.length > 0) {
+  if ((field.type === "select" || field.type === "dropdown") && field.options && field.options.length > 0) {
     return (
       <div className="space-y-1.5">
         <Label htmlFor={`field-${field.key}`} className="text-xs">
@@ -63,7 +63,7 @@ export function FieldInput({
     );
   }
 
-  if (field.type === "textarea") {
+  if (field.type === "textarea" || field.type === "long_text") {
     return (
       <div className="space-y-1.5">
         <Label htmlFor={`field-${field.key}`} className="text-xs">

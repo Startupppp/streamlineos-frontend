@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
 
 jest.mock("@/hooks/api/build/public-form", () => ({
@@ -135,5 +136,65 @@ describe("PublicFormPage — server-error / rate-limited state (mutation.isError
       { isError: true, error: new Error("Failed to submit. Please try again.") },
     );
     expect(screen.getByRole("alert")).toBeInTheDocument();
+  });
+});
+
+describe("PublicFormPage canonical builder fields", () => {
+  const scrollIntoView = HTMLElement.prototype.scrollIntoView;
+  beforeAll(() => { HTMLElement.prototype.scrollIntoView = jest.fn(); });
+  afterAll(() => { HTMLElement.prototype.scrollIntoView = scrollIntoView; });
+
+  it.each(["dropdown", "select"])("renders %s options in order and submits the selected string", async type => {
+    const mutate = jest.fn();
+    setup({ isSuccess: true, data: { ...formData, fields: [
+      { key: "severity", label: "Severity", type, required: true, options: ["Normal", "Urgent"] },
+    ] } }, { mutate });
+    fireEvent.keyDown(screen.getByRole("combobox", { name: /Severity/ }), { key: "ArrowDown" });
+    expect(await screen.findAllByRole("option")).toHaveLength(2);
+    expect(screen.getAllByRole("option").map(option => option.textContent)).toEqual(["Normal", "Urgent"]);
+    fireEvent.click(screen.getByRole("option", { name: "Urgent" }));
+    await userEvent.click(screen.getByRole("button", { name: /submit/i }));
+    await waitFor(() => expect(mutate).toHaveBeenCalledWith({ severity: "Urgent" }));
+  });
+
+  it.each(["long_text", "textarea"])("renders %s as multiline input and preserves line breaks", async type => {
+    const mutate = jest.fn();
+    setup({ isSuccess: true, data: { ...formData, fields: [
+      { key: "notes", label: "Notes", type, required: true },
+    ] } }, { mutate });
+    const input = screen.getByRole("textbox", { name: /Notes/ });
+    expect(input).toBeInstanceOf(HTMLTextAreaElement);
+    await userEvent.type(input, "First line{Enter}Second line");
+    await userEvent.click(screen.getByRole("button", { name: /submit/i }));
+    await waitFor(() => expect(mutate).toHaveBeenCalledWith({ notes: "First line\nSecond line" }));
+  });
+
+  it("keeps required errors and typed multiline content through a server error and retry", async () => {
+    const mutate = jest.fn();
+    const data = { ...formData, fields: [
+      { key: "severity", label: "Severity", type: "dropdown", required: true, options: ["Urgent"] },
+      { key: "notes", label: "Notes", type: "long_text", required: true },
+    ] };
+    const view = setup({ isSuccess: true, data }, { mutate });
+    await userEvent.click(screen.getByRole("button", { name: /submit/i }));
+    await waitFor(() => expect(screen.getByText("Severity is required")).toBeInTheDocument());
+    expect(screen.getByText("Notes is required")).toBeInTheDocument();
+    expect(mutate).not.toHaveBeenCalled();
+    fireEvent.keyDown(screen.getByRole("combobox", { name: /Severity/ }), { key: "ArrowDown" });
+    fireEvent.click(await screen.findByRole("option", { name: "Urgent" }));
+    await userEvent.type(screen.getByRole("textbox", { name: /Notes/ }), "Kept{Enter}draft");
+    await userEvent.click(screen.getByRole("button", { name: /submit/i }));
+    await waitFor(() => expect(mutate).toHaveBeenCalledWith({ severity: "Urgent", notes: "Kept\ndraft" }));
+    mockUseSubmitPublicForm.mockReturnValue({
+      ...mockUseSubmitPublicForm("tok-abc123"), status: "error", isError: true,
+      isIdle: false, isPending: false, isSuccess: false, data: undefined,
+      variables: { severity: "Urgent", notes: "Kept\ndraft" }, error: new Error("Try again"),
+    });
+    view.rerender(<PublicFormPage />);
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: /Severity/ })).toHaveTextContent("Urgent");
+    expect(screen.getByRole("textbox", { name: /Notes/ })).toHaveValue("Kept\ndraft");
+    await userEvent.click(screen.getByRole("button", { name: /submit/i }));
+    await waitFor(() => expect(mutate).toHaveBeenCalledTimes(2));
   });
 });
