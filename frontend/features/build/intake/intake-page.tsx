@@ -28,7 +28,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, ExternalLink } from "lucide-react";
+import { Plus, ExternalLink, ListChecks } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
@@ -37,6 +37,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { IntakeDecisionDialog } from "@/features/build/intake/components/intake-decision-dialog";
 import { IntakeItemCard } from "@/features/build/intake/intake-item-card";
+import { IntakeTriageMode } from "@/features/build/intake/intake-triage-mode";
 import { PmPageShell, PmSection, PmStaggerList } from "@/components/pm-chrome";
 import { LoadingButton } from "@/components/ui/loading-button";
 import {
@@ -45,8 +46,10 @@ import {
 } from "@/features/build/intake/intake-schema";
 
 const INTAKE_TAB_OPTIONS = ["pending", "accepted", "declined", "all"] as const;
+const INTAKE_MODE_OPTIONS = ["triage"] as const;
 const INTAKE_FILTER_DEFINITIONS = [
   { param: "tab", all: "pending", options: INTAKE_TAB_OPTIONS },
+  { param: "mode", all: "list", options: INTAKE_MODE_OPTIONS },
 ] as const;
 
 export function IntakePage({
@@ -63,6 +66,7 @@ export function IntakePage({
     withSearch: false,
   });
   const activeTab = listFilters.value("tab");
+  const triageMode = listFilters.value("mode") === "triage";
 
   const {
     data: intakeData,
@@ -119,6 +123,12 @@ export function IntakePage({
   function handleCloseCreate(): void {
     setCreateOpen(false);
   }
+  function handleEnterTriage(): void {
+    listFilters.setValue("mode", "triage");
+  }
+  function handleExitTriage(): void {
+    listFilters.setValue("mode", "list");
+  }
   const allItems = intakeData?.data ?? [];
 
   const highlightedItem =
@@ -157,7 +167,8 @@ export function IntakePage({
   const filteredItems = allItems.filter(
     (item) => activeTab === "all" || item.status === activeTab,
   );
-  const pendingCount = allItems.filter((i) => i.status === "pending").length;
+  const pendingItems = allItems.filter((i) => i.status === "pending");
+  const pendingCount = pendingItems.length;
 
   if (
     pageState.kind !== "ready" &&
@@ -205,10 +216,15 @@ export function IntakePage({
           subtitle="Collect and triage incoming requests from your team or clients"
           actions={
             <div className="flex items-center gap-2">
+              {canManage && !triageMode ? (
+                <Button variant="outline" size="sm" onClick={handleEnterTriage}>
+                  <ListChecks className="h-4 w-4 mr-1" /> Triage
+                </Button>
+              ) : null}
               <Button variant="outline" size="sm" onClick={handleCopyFormUrl}>
                 <ExternalLink className="h-4 w-4 mr-1" /> Copy Form URL
               </Button>
-              {canManage ? (
+              {canManage && !triageMode ? (
                 <Sheet open={createOpen} onOpenChange={setCreateOpen}>
                   <SheetTrigger asChild>
                     <Button size="sm">
@@ -283,6 +299,16 @@ export function IntakePage({
           }
         >
           <PmPageShell>
+            {triageMode && canManage ? (
+              <IntakeTriageMode
+                items={pendingItems}
+                onAccept={onAccept}
+                onDecline={onDecline}
+                onDuplicate={onDuplicate}
+                onExit={handleExitTriage}
+              />
+            ) : null}
+            {(!triageMode || !canManage) ? (
             <Tabs
               value={activeTab}
               onValueChange={(value) => listFilters.setValue("tab", value)}
@@ -373,6 +399,7 @@ export function IntakePage({
                 )}
               </TabsContent>
             </Tabs>
+            ) : null}
           </PmPageShell>
         </PageWrapper>
       )}
