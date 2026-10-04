@@ -1,5 +1,61 @@
 # Build work claims
 
+## Twelve-hour customer-path window — 2026-10-04
+
+User-directed window starts2026-10-04T03:07:20Z and ends2026-10-04T15:07:20Z (20:37:20 IST). Stop implementation at that deadline and report exact completed/open IDs, changes, evidence and blockers. Four available slots: root coordination/integration/runtime/ledger; A backend/database/contracts; B frontend; C tests/verification. All source edits use apply_patch. Existing six-role permissions, styles, contract generators, no-comments rule and synthetic-only test data remain authoritative. A historical checkbox is not full customer-flow verification.
+
+Critical order is signup, three-step onboarding, module assignment, project provisioning, ticket creation/detail, ticket status/assignment/linking, intake, client portal and permission denial. Ticket comment behavior stays in the product scope; no live Ticket comment is submitted. The existing specification and architecture package registries own all522 tasks. Unassigned groups remain open; the following grouping is scheduling, not another completion tracker.
+
+| Group | Canonical specification ownership | Lane and prerequisite |
+|---|---|---|
+| Signup/onboarding | onboarding and activation screens | B existing UI after A contracts; C synthetic OTP/invitation/resume |
+| Build navigation/redirects | routes-and-screen-decisions and daily-work | B manifest/nav consumers; C history/deep-link/mobile |
+| Projects/provisioning | projects screens and provisioning packages | A command/transaction; B existing project consumers |
+| Tickets/details | daily-work and work-surfaces-and-ticket-detail | A record commands/contracts; B page/pane |
+| Comments/mentions/status/assignment/links/files/activity | ticket detail and collaboration specifications | Owner APIs first; B shared surfaces; C permission/persistence proof |
+| Intake/forms/Feedbucket | client-delivery and intake specifications | A scoped conversion/idempotency; B existing forms; C submission/refresh |
+| Org/module RBAC/tenant | governance/rbac and architecture registry | A canonical access; C role/tenant negatives |
+| Client portal | external-client-portal and client-delivery | A grant/session boundary before B portal; C synthetic grant/revoke |
+| Screens/responsiveness | existing experience/screens | B exact claimed existing components; C browser/mobile |
+| APIs/validation | existing architecture/API contracts | A strict existing DTO/response owners; generated consumers only |
+| Schema/index/migration/cache/event/audit | existing database/architecture packages | A exact owners; root reviewed target execution; C independent proof |
+| Tests/browser/evidence | existing tests and canonical audit evidence | C disjoint test paths; root serialized secrets/runtime/docs |
+
+## BT-2e4073320ccb / BT-3e9ebfaad21e — project creation pending recovery 50
+
+Classification: Planned; bounded first-use/failure-recovery prerequisite. B owns only existing `frontend/features/build/project-create/project-create-wizard.tsx` (238 lines). C owns only existing `frontend/features/build/project-create/project-create-dirty-guard.test.tsx` (127 lines). Root owns coordination/integration and the same five canonical evidence documents. These files are clean/unclaimed; A backend49 and all48 MJS files are excluded. Refresh this committed reservation before edits; use apply_patch and no source comments. No new component, hook, API, schema, route, style or Markdown is justified.
+
+D/I: the current wizard resets on every Sheet dismissal and leaves Review Back enabled while provisioning. Reuse the existing Sheet/Button/LoadingButton and actual useProjectProvisioning. Pending Close/Escape/outside dismissal and Back must retain the draft and review step; a failed canonical create must preserve input and allow retry. Successful acknowledgement must close/reset exactly once through its own completion path; idle cancellation remains usable. Preserve workflow fields, scope, dirty-state registration, component styles, navigation and canonical project contracts. Scope-change/unmount recovery and full first-use guided project/Ticket flow remain separate open acceptance.
+
+T: C first captures behavioral REDs in the existing test using the real Sheet and provisioning hook with deferred canonical mutation dependency. Do not substitute a copied provisioning implementation or assume route rendering proves create success. Preserve five existing dirty-guard tests. B waits for C's RED handoff before implementation. Run exact owned tests plus existing provisioning/project creation compatibility suites, exact-path lint/diff, changed-file then production TypeScript. C supplies commands from the current package configuration; root runs integration gates after both owners freeze hashes.
+
+R/B/L: current backend project contract precedes this unchanged consumer. Actual synthetic API create/failure/retry/duplicate handling, persistence after refresh, Project→Ticket entry, permissions and mobile Sheet/history remain required. Browser mutations use only the reviewed local synthetic runner/captured mail and synthetic records. Matching local frontend still needs a reviewed Origin/launch path; source and DOM tests cannot close either BT task. B independently reviews backend49; A independently reviews frontend50; root reviews C tests and serializes browser/database evidence. Release exact files only after precise source commit/evidence.
+
+## BT-27a037364398 — creation approver membership liveness 49
+
+Classification: Planned. This bounded source prerequisite also supports BT-801e948e8a67; neither broad task closes from it. Source47 claims are released. Claim48 six MJS files remain frozen during its evidence integration; all are excluded from49. A/C must refresh this committed reservation before edits. Root alone owns the five existing canonical documentation files, integration and commits. B frontend claim is separate and is not authorized to edit any backend/test path.
+
+A owns exactly these two existing production files:
+
+- `backend/src/common/organization/organization-actor.ts`
+- `backend/src/modules/build/approvals/approvals.service.ts`
+
+C owns exactly these three existing test files:
+
+- `backend/src/modules/build/approvals/approvals.service.spec.ts`
+- `backend/src/modules/build/approvals/__tests__/approval-lifecycle-concurrency.fixture.ts`
+- `backend/src/modules/build/approvals/__tests__/approval-task-artifact.spec.ts`
+
+Excluded: organization-actor.spec.ts and membership-state.service.ts/spec.ts compatibility owners, lifecycle/event test suites, all migrations/generated artifacts/frontend/runner/Portal/Email paths, and unrelated44 outer/47 backend bytes. No new file is justified: the canonical actor owns member identity and row-lock selection; the existing creation service owns fresh eligibility checks; the small existing service spec owns the new matrix and the shared fixture owns its member queue. File-size limits apply without mechanical splits.
+
+D/I acceptance: add an optional user-only membership SHARE lock to the existing actor resolver/assertion. Reject unsupported ref/mode, missing/foreign tenant context and nonmatching tx before SQL; preserve unlocked three-argument consumers. Use the exact org/user predicate and validate ACTIVE after lock acquisition. Creation acquires Member SHARE before Ticket UPDATE, retains that actor/membership ID through duplicate detection, insert, outbox, critical audit and commit, and uses the existing uncached readMembershipState(this.db, targetUserId, orgId) under its matched ambient transaction before capture and after task Ticket wait. Require active and exact captured membership identity; never duplicate canonical user/org lifecycle predicates or use cached resolve. Preserve all eight existing creation types, requester/PAT/project/Ticket checks, row-version conflict, response shapes, idempotency and effects. Do not introduce User/Org/Project locks without a separately proven lifecycle order.
+
+T acceptance: C captures meaningful public creation REDs before A behavior edits. Test ACTIVE positive; INVITED/SUSPENDED/LEFT, missing/foreign member; inactive/deleted user and inactive/deleted organization including owner flags; exact identity; missing/foreign ambient lock rejection; Member-before-Ticket order; writer-first denied403/404; creation-first member writer waits using an owned member queue independent of the fixture global transaction tail; duplicate409 and critical-audit rollback release with no surviving insert/outbox/audit/chat. Preserve every source47 permission/PAT/project/version/tenant negative. A waits for C's reproducible RED handoff. Modeled queues are not physical PostgreSQL locking proof.
+
+Commands (backend cwd): focused RED `pnpm exec jest --runInBand --runTestsByPath src/modules/build/approvals/approvals.service.spec.ts -t 'approver liveness'`; focused/compatibility `pnpm exec jest --runInBand --runTestsByPath src/common/organization/organization-actor.spec.ts src/common/auth/membership-state.service.spec.ts src/modules/build/approvals/approvals.service.spec.ts src/modules/build/approvals/__tests__/approval-task-artifact.spec.ts src/modules/build/approvals/__tests__/approval-lifecycle-concurrency.spec.ts src/modules/build/approvals/build-approval-requested-emit.spec.ts`; exact five-path ESLint/diff; scoped changed-file TypeScript then production typecheck, full test TypeScript only after stable and with its10GB limit. Run only affected contract freshness/validation; no response/DTO change is planned.
+
+R/B/L and handoff: independent frozen-source/test review; real app-role two-connection status/delete versus creation with observed blocker PID, bounded deadline and no40P01; API persistence/denials and exact effect rollback; matching synthetic browser/mobile; deployment/operations. User/org/requester/grant races and reassignment/decision liveness remain explicit open requirements. Current target application migrations remain unapplied, so source/model tests cannot prove runtime. Freeze exact hashes before root integration; only root releases paths after exact commit and evidence. No broad task or stage advance from partial proof.
+
 ## Compact continuation — 2026-10-04
 
 Canonical tracker remains522 tasks:110 checked/412 open. Historical checked items are not full release evidence. Claim48 remains active: A five proof files, C one test, B read-only independent review, root serialized runtime and five canonical documents. All six final frozen working hashes, source47 and excluded44 outer/47 backend working-byte baselines match. Third planf8e47ebe465a33f58c6ef1f1 passed; execution has not started and no proof process is running. Preserve both failed runs and the checkpoint payload linked below.
