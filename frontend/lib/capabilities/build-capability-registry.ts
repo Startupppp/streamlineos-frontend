@@ -13,7 +13,7 @@ export interface BuildCapabilityEntry {
 function toPermissionKeys(
   perm: string | readonly string[],
 ): readonly string[] {
-  return Array.isArray(perm) ? perm : [perm];
+  return typeof perm === "string" ? [perm] : perm;
 }
 
 function destToEntry(dest: BuildNavDestination): BuildCapabilityEntry {

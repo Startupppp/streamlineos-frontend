@@ -22,7 +22,7 @@ import {
   useUpdateNotificationPreferences,
   useSuppressions,
   useRemoveSuppression,
-} from "@/hooks/api/notifications";
+} from "@/hooks/api/notifications-preferences";
 import {
   NOTIFICATION_CATEGORIES,
   NOTIFICATION_CATEGORY_CONFIG,

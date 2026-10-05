@@ -6,6 +6,16 @@ export interface PortalCapabilities {
   canSubmitChangeRequests: boolean;
   canViewApprovals: boolean;
   canViewInvoices: boolean;
+  canViewRequests: boolean;
+}
+
+export interface PortalRequest {
+  id: number;
+  title: string;
+  status: string;
+  decisionComment: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface PortalDeliverable {
@@ -88,6 +98,7 @@ export interface PortalProjectOverview {
   deliverables: PortalDeliverable[];
   approvals: PortalApproval[];
   invoices: PortalInvoice[];
+  requests: PortalRequest[];
 }
 
 export interface AcceptInvitationResponse {

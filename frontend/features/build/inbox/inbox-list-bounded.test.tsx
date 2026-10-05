@@ -14,6 +14,9 @@ jest.mock("@/hooks/api/notifications-inbox", () => ({
   useMarkNotificationRead: () => ({ mutate: jest.fn() }),
   useMarkAllNotificationsRead: () => ({ mutate: jest.fn(), isPending: false }),
   useBulkMarkRead: () => ({ mutateAsync: jest.fn() }),
+}));
+
+jest.mock("@/hooks/api/notifications-inbox-actions", () => ({
   useBulkArchive: () => ({ mutateAsync: jest.fn() }),
   useBulkDelete: () => ({ mutateAsync: jest.fn() }),
 }));

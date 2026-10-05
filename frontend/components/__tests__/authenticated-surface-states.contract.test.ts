@@ -16,10 +16,10 @@ import {
 const BASELINE = {
   minimumSurfaces: 540,
   missingLoading: 0,
-  missingEmpty: 8,
+  missingEmpty: 9,
   missingError: 0,
   missingPermissionDenied: 0,
-  filterEmptyConflation: 52,
+  filterEmptyConflation: 55,
 } as const;
 
 /**
@@ -36,6 +36,7 @@ const BASELINE = {
  * given a real empty state rather than an entry here.
  */
 const EMPTY_STATE_NOT_APPLICABLE = [
+  "/build/[projectId]/@panel/(.)tickets/[ticketKey]",
   "/build/[projectId]/settings/iterations",
   "/crm/import",
   "/inventory/products/new",

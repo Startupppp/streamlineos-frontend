@@ -2,7 +2,7 @@
 
 import type { ComponentType } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { List, Table2, LayoutGrid } from "lucide-react";
+import { List, Table2, LayoutGrid, CalendarDays, GanttChartSquare } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export type AllWorkView = "list" | "table" | "board";
+export type AllWorkView = "list" | "table" | "board" | "calendar" | "timeline";
 
 export const VIEW_OPTIONS: {
   value: AllWorkView;
@@ -21,10 +21,12 @@ export const VIEW_OPTIONS: {
   { value: "list", icon: List, label: "List" },
   { value: "table", icon: Table2, label: "Table" },
   { value: "board", icon: LayoutGrid, label: "Board" },
+  { value: "calendar", icon: CalendarDays, label: "Calendar" },
+  { value: "timeline", icon: GanttChartSquare, label: "Timeline" },
 ];
 
 export function parseView(raw: string | null): AllWorkView {
-  if (raw === "table" || raw === "board") return raw;
+  if (raw === "table" || raw === "board" || raw === "calendar" || raw === "timeline") return raw;
   return "list";
 }
 
@@ -60,7 +62,13 @@ interface AllWorkViewSwitcherProps {
 
 export function AllWorkViewSwitcher({ activeView, onViewChange }: AllWorkViewSwitcherProps) {
   function handleChange(value: string) {
-    if (value === "list" || value === "table" || value === "board") {
+    if (
+      value === "list" ||
+      value === "table" ||
+      value === "board" ||
+      value === "calendar" ||
+      value === "timeline"
+    ) {
       onViewChange(value);
     }
   }

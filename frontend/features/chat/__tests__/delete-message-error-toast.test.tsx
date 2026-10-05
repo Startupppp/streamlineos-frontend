@@ -5,6 +5,9 @@ jest.mock("@/lib/api-client", () => ({
 jest.mock("@/lib/api-envelope", () => ({
   ...jest.requireActual("@/lib/api-envelope"),
   lazyContract: jest.fn((fn: () => unknown) => fn),
+  isApiError: jest.fn(() => false),
+  getRetryAfterSeconds: jest.fn(() => null),
+  applyContract: jest.fn((_c: unknown, v: unknown) => v),
 }));
 
 jest.mock("@/hooks/api/access", () => ({

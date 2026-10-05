@@ -14,4 +14,4 @@ export const activateClientFormSchema = z.object({
 
 export type ActivateClientFormValues = z.infer<typeof activateClientFormSchema>;
 
-export type ActivateClientFormInput = ActivateClientFormValues;
+export type ActivateClientFormInput = z.input<typeof activateClientFormSchema>;

@@ -9,6 +9,7 @@ const mockUsePageState = jest.fn();
 jest.mock("@/hooks/api/access", () => ({
   useCan: (_permission: string) => mockAccessState === "granted",
   useCanState: (_permission: string): AccessState => mockAccessState,
+  usePermissionGate: (_permission: string) => ({ allowed: mockAccessState === "granted", state: mockAccessState }),
 }));
 
 jest.mock("@/hooks/api/use-page-state", () => ({
@@ -23,6 +24,14 @@ jest.mock("@/hooks/api/use-page-state", () => ({
 
 jest.mock("@/features/build/settings/git-integration-settings", () => ({
   ProjectsGitIntegrationSettings: () => <div data-testid="git-integration-settings" />,
+}));
+
+jest.mock("@/features/build/settings/slack-integration-settings", () => ({
+  SlackIntegrationSettings: () => <div data-testid="slack-integration-settings" />,
+}));
+
+jest.mock("@/features/build/settings/email-inbound-settings", () => ({
+  EmailInboundSettings: () => <div data-testid="email-inbound-settings" />,
 }));
 
 jest.mock("@/hooks/common/use-build-list-keyboard", () => ({

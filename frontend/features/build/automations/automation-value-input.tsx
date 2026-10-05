@@ -184,6 +184,15 @@ export function AutomationValueInput({
             className={cn("text-sm min-h-[60px] resize-none", className)}
           />
         );
+      case "request_approval":
+        return (
+          <Textarea
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder="Note for the approver (optional)…"
+            className={cn("text-sm min-h-[60px] resize-none", className)}
+          />
+        );
       default:
         return null;
     }

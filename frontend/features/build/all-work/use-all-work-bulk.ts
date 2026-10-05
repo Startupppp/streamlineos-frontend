@@ -40,12 +40,22 @@ interface ProjectOutcome {
   failures: unknown[];
 }
 
+export interface AllWorkIdsSnapshot {
+  entries: { projectId: number; ids: number[] }[];
+  total: number;
+  capped: boolean;
+  cap: number;
+}
+
 interface UseAllWorkBulkReturn {
   tableSelection: Set<string | number>;
   setTableSelection: React.Dispatch<React.SetStateAction<Set<string | number>>>;
   selectedTicketIds: number[];
   selectedTickets: AllWorkTicket[];
   isPendingBulk: boolean;
+  isExpandedSelection: boolean;
+  expandedTotal: number;
+  expandToAllMatching: (snapshot: AllWorkIdsSnapshot) => void;
   handleBulkStatus: (value: string) => void;
   handleBulkPriority: (value: string) => void;
   handleBulkAssignee: (value: string) => void;
@@ -56,6 +66,8 @@ interface UseAllWorkBulkReturn {
 export function useAllWorkBulk(tickets: AllWorkTicket[]): UseAllWorkBulkReturn {
   const queryClient = useQueryClient();
   const [tableSelection, setTableSelection] = useState<Set<string | number>>(new Set());
+  const [isExpandedSelection, setIsExpandedSelection] = useState(false);
+  const [expandedTotal, setExpandedTotal] = useState(0);
 
   const selectedTicketIds = useMemo(
     () => [...tableSelection].map((id) => Number(id)),
@@ -161,7 +173,11 @@ export function useAllWorkBulk(tickets: AllWorkTicket[]): UseAllWorkBulkReturn {
         toast.error(`Failed on ${errorMessages.length} project${errorMessages.length === 1 ? "" : "s"}: ${errorMessages.join("; ")}`);
       }
 
-      if (totalUpdated > 0) setTableSelection(new Set());
+      if (totalUpdated > 0) {
+        setTableSelection(new Set());
+        setIsExpandedSelection(false);
+        setExpandedTotal(0);
+      }
     },
     onError: (err) => {
       toast.error(getErrorMessage(err));
@@ -201,6 +217,15 @@ export function useAllWorkBulk(tickets: AllWorkTicket[]): UseAllWorkBulkReturn {
 
   const handleClearSelection = useCallback(() => {
     setTableSelection(new Set());
+    setIsExpandedSelection(false);
+    setExpandedTotal(0);
+  }, []);
+
+  const expandToAllMatching = useCallback((snapshot: AllWorkIdsSnapshot) => {
+    const all = snapshot.entries.flatMap((e) => e.ids);
+    setTableSelection(new Set(all));
+    setIsExpandedSelection(true);
+    setExpandedTotal(snapshot.total);
   }, []);
 
   return {
@@ -209,6 +234,9 @@ export function useAllWorkBulk(tickets: AllWorkTicket[]): UseAllWorkBulkReturn {
     selectedTicketIds,
     selectedTickets,
     isPendingBulk: crossProjectBulkMutation.isPending,
+    isExpandedSelection,
+    expandedTotal,
+    expandToAllMatching,
     handleBulkStatus,
     handleBulkPriority,
     handleBulkAssignee,

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
@@ -36,9 +37,17 @@ function ProjectsListSkeleton() {
 }
 
 export default function PortalProjectsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { isReady } = usePortalGuard();
+
+  const waitingParam = searchParams.get("waiting");
+  const waiting = waitingParam === "true" ? true : undefined;
+
+  const filters = waiting ? { waiting } : undefined;
+
   const { data, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useExternalPortalProjects();
+    useExternalPortalProjects(filters);
 
   const handleLoadMore = useCallback(() => {
     void fetchNextPage();
@@ -47,6 +56,19 @@ export default function PortalProjectsPage() {
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  const handleWaitingChange = useCallback(
+    (value: boolean | undefined) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (value === true) {
+        params.set("waiting", "true");
+      } else {
+        params.delete("waiting");
+      }
+      router.replace(`?${params.toString()}`, { scroll: false });
+    },
+    [router, searchParams],
+  );
 
   const projects = data?.pages.flatMap((p) => p.data) ?? [];
 
@@ -61,6 +83,21 @@ export default function PortalProjectsPage() {
           </p>
         </div>
 
+        <div className="mb-4 flex items-center gap-2">
+          <button
+            type="button"
+            aria-pressed={waiting === true}
+            onClick={() => handleWaitingChange(waiting === true ? undefined : true)}
+            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+              waiting === true
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-border bg-card text-muted-foreground hover:text-foreground hover:border-primary/30"
+            }`}
+          >
+            Awaiting my approval
+          </button>
+        </div>
+
         {!isReady || isLoading ? (
           <ProjectsListSkeleton />
         ) : isError ? (
@@ -73,8 +110,12 @@ export default function PortalProjectsPage() {
         ) : projects.length === 0 ? (
           <EmptyState
             illustrationPreset="projects"
-            title="No projects yet"
-            description="Projects your team shares with you will appear here. Contact your project team if you were expecting access."
+            title={waiting === true ? "No projects awaiting approval" : "No projects yet"}
+            description={
+              waiting === true
+                ? "No projects have approvals waiting for you right now."
+                : "Projects your team shares with you will appear here. Contact your project team if you were expecting access."
+            }
             className="min-h-[320px]"
           />
         ) : (

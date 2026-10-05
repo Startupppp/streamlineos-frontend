@@ -6,7 +6,7 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import React from "react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useRemoveChannelMember } from "@/hooks/api";
+import { useRemoveChannelMember } from "@/hooks/api/chat-core-mutations-b";
 import type { ChannelMember } from "@/types/chat";
 import { ChannelMemberRow } from "./channel-member-row";
 import {

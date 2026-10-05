@@ -44,6 +44,22 @@ export const accountingAndSupportQueryKeys = {
       [...base, "gitIntegration", "ticketLinks", ticketId] as const,
   },
 
+  slackIntegration: {
+    all: [...base, "slackIntegration"] as const,
+    connections: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "slackIntegration", "connections"] as const)
+        : ([...base, "slackIntegration", "connections", params] as const),
+  },
+
+  emailInboundIntegration: {
+    all: [...base, "emailInboundIntegration"] as const,
+    connections: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "emailInboundIntegration", "connections"] as const)
+        : ([...base, "emailInboundIntegration", "connections", params] as const),
+  },
+
   ticketActivity: {
     all: [...base, "ticketActivity"] as const,
     list: (ticketId: number) =>

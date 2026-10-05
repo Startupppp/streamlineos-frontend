@@ -273,15 +273,14 @@ export function StepGeneration({ data, onBackToProducts, idempotencyKey }: StepG
       if (isApiError(err) && err.code === "TIMEOUT") {
         setIsPollingAfterTimeout(true);
       } else {
+        const isPlanLock =
+          isApiError(err) &&
+          (
+            (err.status === 402 && err.code === "MODULE_NOT_ENABLED" && isRecord(err.details) && err.details.reason === "not-in-plan") ||
+            (err.status === 409 && err.code === "MODULE_ELIGIBILITY_CHANGED")
+          );
         handleSetupError({
-          kind:
-            isApiError(err) &&
-            err.status === 402 &&
-            err.code === "MODULE_NOT_ENABLED" &&
-            isRecord(err.details) &&
-            err.details.reason === "not-in-plan"
-              ? "module-not-in-plan"
-              : "setup-failed",
+          kind: isPlanLock ? "module-not-in-plan" : "setup-failed",
           message: getErrorMessage(err),
         });
       }

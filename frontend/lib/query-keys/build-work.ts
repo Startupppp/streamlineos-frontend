@@ -300,6 +300,8 @@ export const buildWorkQueryKeys = {
         : ([...base, "projects", "all-work", filters] as const),
     allWorkInfinite: (filters: QueryKeyParams) =>
       [...base, "projects", "all-work", filters, "infinite"] as const,
+    allWorkIds: (filters: QueryKeyParams) =>
+      [...base, "projects", "all-work", "ids", filters] as const,
     customStates: (projectId: number) =>
       [...base, "projects", projectId, "custom-states"] as const,
     orgCustomStates: () =>
@@ -424,11 +426,11 @@ export const buildWorkQueryKeys = {
         ? ([...base, "projectReports", "velocity", projectId] as const)
         : ([...base, "projectReports", "velocity", projectId, encodedFilter] as const),
     burnupFiltered: (projectId: number, cycleId?: number, encodedFilter?: string) =>
-      encodedFilter === undefined
-        ? (cycleId === undefined
-            ? ([...base, "projectReports", "burnup", projectId] as const)
-            : ([...base, "projectReports", "burnup", projectId, cycleId] as const))
-        : ([...base, "projectReports", "burnup", projectId, { cycleId, filter: encodedFilter }] as const),
+      cycleId === undefined
+        ? ([...base, "projectReports", "burnup", projectId] as const)
+        : encodedFilter === undefined
+          ? ([...base, "projectReports", "burnup", projectId, cycleId] as const)
+          : ([...base, "projectReports", "burnup", projectId, cycleId, { filter: encodedFilter }] as const),
   },
   commandCenter: {
     layout: () => [...base, "command-center", "layout"] as const,

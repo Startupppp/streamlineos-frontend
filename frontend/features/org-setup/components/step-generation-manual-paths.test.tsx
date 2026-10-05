@@ -48,6 +48,10 @@ jest.mock("@/hooks/api/org-setup", () => ({
     mutateAsync: mockMutateAsync,
     isPending: false,
   })),
+  useOrgSetupActivateMutation: jest.fn(() => ({
+    mutateAsync: jest.fn(),
+    isPending: false,
+  })),
 }));
 
 jest.mock("@/hooks/common/auth-hooks", () => ({
@@ -123,6 +127,7 @@ const SETUP_RESPONSE = {
   success: true as const,
   orgId: "org-new",
   autoLoginToken: "magic-token-abc",
+  destination: "/dashboard",
 };
 
 const FAKE_SESSION = {

@@ -220,6 +220,48 @@ describe("StepGeneration — product plan rejection", () => {
       });
     });
   });
+
+  it("MODULE_ELIGIBILITY_CHANGED (409) maps to module-not-in-plan — same Back to Products path as plan lock (BT-12293bf84d3a)", async () => {
+    const onBackToProducts = jest.fn();
+    mockIsApiError.mockReturnValue(true);
+    mockMutateAsync.mockRejectedValue(
+      Object.assign(new Error("One or more selected modules are not available on your current plan."), {
+        status: 409,
+        code: "MODULE_ELIGIBILITY_CHANGED",
+        details: { newReview: { moduleEligibility: [{ moduleKey: "payroll", eligible: false }] } },
+      }),
+    );
+
+    render(<StepGeneration data={TEST_DATA} onBackToProducts={onBackToProducts} />);
+
+    await waitFor(() => {
+      expect(capturedProgressProps.setupError).toEqual({
+        kind: "module-not-in-plan",
+        message: "One or more selected modules are not available on your current plan.",
+      });
+    });
+    expect(capturedProgressProps.onBackToProducts).toBe(onBackToProducts);
+    expect(mockClearAll).not.toHaveBeenCalled();
+    expect(mockLocationReplace).not.toHaveBeenCalled();
+  });
+
+  it("MODULE_ELIGIBILITY_CHANGED without onBackToProducts still maps to module-not-in-plan kind", async () => {
+    mockIsApiError.mockReturnValue(true);
+    mockMutateAsync.mockRejectedValue(
+      Object.assign(new Error("Plan change detected."), {
+        status: 409,
+        code: "MODULE_ELIGIBILITY_CHANGED",
+      }),
+    );
+
+    render(<StepGeneration data={TEST_DATA} />);
+
+    await waitFor(() => {
+      expect(capturedProgressProps.setupError).toMatchObject({
+        kind: "module-not-in-plan",
+      });
+    });
+  });
 });
 
 describe("StepGeneration — signInWithMagicToken returns false", () => {

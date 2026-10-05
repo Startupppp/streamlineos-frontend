@@ -12,7 +12,7 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { SendIcon } from "@animateicons/react/lucide";
 import {
   useUpdateNotificationEventPolicy
-} from "@/hooks/api/notifications";
+} from "@/hooks/api/notifications-admin";
 import type {
   NotificationEventDefinition,
 } from "@/types/notifications";

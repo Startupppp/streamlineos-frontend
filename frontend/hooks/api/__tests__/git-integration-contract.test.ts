@@ -15,6 +15,8 @@ const ROW = {
   isActive: true,
   maskedSecret: "whsec_••••1234",
   webhookUrl: "https://api.example.com/integrations/git/webhook?connectionId=4",
+  lastEventAt: null,
+  lastErrorAt: null,
   createdAt: "2026-09-15T10:00:00.000Z",
   updatedAt: "2026-09-15T10:00:00.000Z",
 };

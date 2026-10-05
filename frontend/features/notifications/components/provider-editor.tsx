@@ -37,7 +37,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useCreateNotificationProvider,
   useUpdateNotificationProvider,
-} from "@/hooks/api/notifications";
+} from "@/hooks/api/notifications-admin";
 import { providerSchema, type ProviderFormValues } from "@/features/notifications/provider-schema";
 import type {
   NotificationProvider,

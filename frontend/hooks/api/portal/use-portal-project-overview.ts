@@ -22,6 +22,7 @@ export const backendPortalProjectOverviewSchema = z.object({
       canSubmitChangeRequests: z.boolean(),
       canViewApprovals: z.boolean(),
       canViewInvoices: z.boolean(),
+      canViewRequests: z.boolean(),
     })
     .optional(),
   milestones: z.array(
@@ -84,6 +85,17 @@ export const backendPortalProjectOverviewSchema = z.object({
       status: z.string(),
     }),
   ),
+  requests: z
+    .array(
+      z.object({
+        id: z.number().int(),
+        title: z.string(),
+        status: z.string(),
+        decisionComment: z.string().nullable(),
+        createdAt: z.string(),
+        updatedAt: z.string(),
+      }),
+    ),
 });
 
 export function portalProjectOverviewQueryOptions(projectId: number) {

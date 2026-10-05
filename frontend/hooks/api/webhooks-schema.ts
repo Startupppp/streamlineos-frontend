@@ -50,6 +50,7 @@ const webhookLogSchema = z.object({
   responseBody: z.string().nullable(),
   attempt: z.number().int(),
   success: z.boolean(),
+  deadLetter: z.boolean(),
   createdAt: wireDate(),
 });
 
@@ -63,3 +64,12 @@ export const webhookListLogsContract = z.object({
 });
 
 export const webhookRetryContract = z.object({ success: z.boolean() });
+
+export const webhookImpactContract = z.object({
+  endpointId: z.number().int(),
+  subscribedEvents: z.array(z.string()),
+  totalDeliveries: z.number().int(),
+  successfulDeliveries: z.number().int(),
+  lastSuccessAt: z.string().nullable(),
+  lastDeadLetterAt: z.string().nullable(),
+});

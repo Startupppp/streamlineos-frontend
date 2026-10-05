@@ -10,9 +10,12 @@ import { ChannelMembersSection } from "./channel-members-section";
 import { PANEL_RENDER_PAGE_SIZE } from "./panel-render-window";
 import type { ChannelMember } from "@/types/chat";
 
-jest.mock("@/hooks/api", () => ({
-  useActiveHuddle: () => ({ data: undefined }),
+jest.mock("@/hooks/api/chat-core-mutations-b", () => ({
   useRemoveChannelMember: () => ({ mutateAsync: jest.fn() }),
+}));
+
+jest.mock("@/hooks/api/chat-huddles", () => ({
+  useActiveHuddle: () => ({ data: undefined }),
 }));
 
 jest.mock("./channel-member-row", () => ({

@@ -19,7 +19,7 @@ import {
   NOTIFICATION_PRIORITIES,
 } from "@/lib/notification-types";
 import { formatRelativeTime } from "./format-relative-time";
-import { useCreateSuppression } from "@/hooks/api/notifications";
+import { useCreateSuppression } from "@/hooks/api/notifications-preferences";
 import type { Notification } from "@/types/notifications";
 import { SNOOZE_PRESETS, type SnoozePreset } from "@/components/shared/notification-card-actions";
 

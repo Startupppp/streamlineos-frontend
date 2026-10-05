@@ -65,7 +65,7 @@ import {
   useUpdateNotificationTemplate,
   useDeleteNotificationTemplate,
   usePreviewTemplate,
-} from "@/hooks/api/notifications";
+} from "@/hooks/api/notifications-templates";
 import { useCan } from "@/hooks/api/access";
 import {
   NOTIFICATION_CATEGORIES,

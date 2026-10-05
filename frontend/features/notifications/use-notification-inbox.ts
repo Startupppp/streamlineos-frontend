@@ -6,18 +6,20 @@ import { useReducedMotion } from "framer-motion";
 import {
   useMarkNotificationRead,
   useMarkAllNotificationsRead,
+  useBulkMarkRead,
+} from "@/hooks/api/notifications-inbox";
+import {
   useArchiveNotification,
   usePinNotification,
   useUnpinNotification,
   useDeleteNotification,
-  useBulkMarkRead,
   useBulkArchive,
   useBulkDelete,
   useApproveNotification,
   useRejectNotification,
   useSnoozeNotification,
   useUnarchiveNotification,
-} from "@/hooks/api/notifications";
+} from "@/hooks/api/notifications-inbox-actions";
 import { useRunWhenOnline } from "@/hooks/common/use-run-when-online";
 import { normalizeBuildDeepLink } from "@/lib/build/normalize-build-deep-link";
 import type { NotificationSection } from "@/lib/notification-types";

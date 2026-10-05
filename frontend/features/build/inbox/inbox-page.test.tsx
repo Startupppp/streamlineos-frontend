@@ -52,10 +52,15 @@ jest.mock("@/hooks/api/notifications-inbox", () => ({
     isPending: id !== null && mockReadState === "pending", isMissing: false,
     error: id !== null && mockReadState === "error" ? new ApiError("Unavailable", 503) : null, retry: jest.fn() }),
   useMarkNotificationRead: () => ({ mutateAsync: jest.fn() }),
+}));
+
+jest.mock("@/hooks/api/notifications-inbox-actions", () => ({
   useArchiveNotification: () => ({ mutateAsync: jest.fn() }),
   useUnarchiveNotification: () => ({ mutateAsync: jest.fn() }),
   useSnoozeNotification: () => ({ mutateAsync: jest.fn() }),
   useUnsnoozeNotification: () => ({ mutateAsync: jest.fn() }),
+  useBulkArchive: () => ({ mutateAsync: jest.fn() }),
+  useBulkDelete: () => ({ mutateAsync: jest.fn() }),
 }));
 jest.mock("@/hooks/api/use-page-state", () => ({ usePageState: ({ isLoading, isError, error }: { isLoading: boolean; isError: boolean; error: unknown }) =>
   isLoading ? { kind: "loading" } : isError ? { kind: "error", error } : { kind: "ready" } }));

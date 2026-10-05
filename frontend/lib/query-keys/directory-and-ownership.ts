@@ -124,7 +124,10 @@ export const directoryAndOwnershipQueryKeys = {
 
   portal: {
     all: [...base, "portal"] as const,
-    projects: () => [...base, "portal", "projects"] as const,
+    projects: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "portal", "projects"] as const)
+        : ([...base, "portal", "projects", params] as const),
     projectOverview: (projectId: number) =>
       [...base, "portal", "projects", projectId, "overview"] as const,
   },

@@ -50,7 +50,7 @@ import {
   useNotificationEventCatalog,
   useUpdateNotificationEventPolicy,
   useEmitNotificationEvent,
-} from "@/hooks/api/notifications";
+} from "@/hooks/api/notifications-admin";
 import { useCan } from "@/hooks/api/access";
 import { policySchema, type PolicyFormValues } from "@/features/notifications/policy-schema";
 import type {

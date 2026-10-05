@@ -47,6 +47,7 @@ export const ACTION_TYPES = [
   { value: "set_priority", label: "Set Priority" },
   { value: "add_label", label: "Add Label" },
   { value: "add_comment", label: "Add Comment" },
+  { value: "request_approval", label: "Request Approval" },
 ] as const;
 
 export interface AutomationsFilters {

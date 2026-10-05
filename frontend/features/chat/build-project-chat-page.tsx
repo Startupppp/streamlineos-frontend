@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { useCreateEntityChannel, useEntityChannel } from "@/hooks/api/chat";
+import { useCreateEntityChannel, useEntityChannel } from "@/hooks/api/chat-personal-b";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";

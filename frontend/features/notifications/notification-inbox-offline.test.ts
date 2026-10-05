@@ -37,12 +37,15 @@ jest.mock("framer-motion", () => ({ useReducedMotion: () => false }));
 jest.mock("@/hooks/api/notifications-inbox", () => ({
   useMarkNotificationRead: () => ({ mutate: mutations.markRead }),
   useMarkAllNotificationsRead: () => ({ mutate: mutations.markAllRead }),
+  useBulkMarkRead: () => ({ mutate: mutations.bulkMarkRead }),
+}));
+
+jest.mock("@/hooks/api/notifications-inbox-actions", () => ({
   useArchiveNotification: () => ({ mutate: mutations.archive }),
   useUnarchiveNotification: () => ({ mutate: mutations.unarchive }),
   usePinNotification: () => ({ mutate: mutations.pin }),
   useUnpinNotification: () => ({ mutate: mutations.unpin }),
   useDeleteNotification: () => ({ mutate: mutations.del }),
-  useBulkMarkRead: () => ({ mutate: mutations.bulkMarkRead }),
   useBulkArchive: () => ({ mutate: mutations.bulkArchive }),
   useBulkDelete: () => ({ mutate: mutations.bulkDelete }),
   useApproveNotification: () => ({ mutate: mutations.approve }),

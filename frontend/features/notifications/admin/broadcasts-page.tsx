@@ -52,7 +52,7 @@ import {
   usePublishBroadcast,
   useCancelBroadcast,
   useDeleteBroadcast,
-} from "@/hooks/api/notifications";
+} from "@/hooks/api/notifications-broadcasts";
 import { useCan } from "@/hooks/api/access";
 import {
   NOTIFICATION_CATEGORIES,

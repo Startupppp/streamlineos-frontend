@@ -312,3 +312,68 @@ describe("useAllWorkBulk — selection state", () => {
     expect(result.current.tableSelection.size).toBe(2);
   });
 });
+
+import type { AllWorkIdsSnapshot } from "./use-all-work-bulk";
+
+describe("useAllWorkBulk — expanded selection (select all matching rows)", () => {
+  const snapshot: AllWorkIdsSnapshot = {
+    entries: [
+      { projectId: 1, ids: [1, 2, 3] },
+      { projectId: 2, ids: [4, 5] },
+    ],
+    total: 5,
+    capped: false,
+    cap: 500,
+  };
+
+  it("starts with isExpandedSelection false and expandedTotal 0", () => {
+    const { result } = renderHook(() => useAllWorkBulk(allTickets));
+    expect(result.current.isExpandedSelection).toBe(false);
+    expect(result.current.expandedTotal).toBe(0);
+  });
+
+  it("expandToAllMatching sets tableSelection to all ids from the snapshot", () => {
+    const { result } = renderHook(() => useAllWorkBulk(allTickets));
+
+    act(() => { result.current.expandToAllMatching(snapshot); });
+
+    expect(result.current.tableSelection).toEqual(new Set([1, 2, 3, 4, 5]));
+  });
+
+  it("expandToAllMatching marks isExpandedSelection true and sets expandedTotal to snapshot.total", () => {
+    const { result } = renderHook(() => useAllWorkBulk(allTickets));
+
+    act(() => { result.current.expandToAllMatching(snapshot); });
+
+    expect(result.current.isExpandedSelection).toBe(true);
+    expect(result.current.expandedTotal).toBe(5);
+  });
+
+  it("handleClearSelection resets isExpandedSelection and expandedTotal", () => {
+    const { result } = renderHook(() => useAllWorkBulk(allTickets));
+
+    act(() => { result.current.expandToAllMatching(snapshot); });
+    act(() => { result.current.handleClearSelection(); });
+
+    expect(result.current.isExpandedSelection).toBe(false);
+    expect(result.current.expandedTotal).toBe(0);
+    expect(result.current.tableSelection.size).toBe(0);
+  });
+
+  it("a successful bulk action clears expanded state so the banner does not reappear", async () => {
+    getPost().mockResolvedValue({ updated: 5, ticketIds: [1, 2, 3, 4, 5] });
+    const expandedTickets = [
+      makeTicket(1, 1), makeTicket(2, 1), makeTicket(3, 1),
+      makeTicket(4, 2), makeTicket(5, 2),
+    ];
+    const { result } = renderHook(() => useAllWorkBulk(expandedTickets));
+
+    act(() => { result.current.expandToAllMatching(snapshot); });
+    expect(result.current.isExpandedSelection).toBe(true);
+
+    await act(async () => { await result.current.handleBulkStatus("DONE"); });
+
+    expect(result.current.isExpandedSelection).toBe(false);
+    expect(result.current.expandedTotal).toBe(0);
+  });
+});

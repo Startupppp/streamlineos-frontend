@@ -50,6 +50,7 @@ const STUB_PROJECT: PortalProject = {
     canSubmitChangeRequests: true,
     canViewApprovals: false,
     canViewInvoices: false,
+    canViewRequests: false,
   },
 };
 
@@ -91,6 +92,7 @@ const STUB_OVERVIEW: PortalProjectOverview = {
   deliverables: [],
   approvals: [],
   invoices: [],
+  requests: [],
 };
 
 const STUB_ACCESS: {

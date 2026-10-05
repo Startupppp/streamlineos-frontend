@@ -22,7 +22,7 @@ import {
   useUpdateGoal,
   type GoalDetail,
 } from "@/hooks/api/goals";
-import { useChatOrgUsers } from "@/hooks/api/chat";
+import { useChatOrgUsers } from "@/hooks/api/chat-core-read";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isApiError } from "@/lib/api-envelope";
 import type { TicketConflictFieldDiff } from "@/features/build/ticket-details/ticket-conflict-diff";

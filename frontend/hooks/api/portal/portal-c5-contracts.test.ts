@@ -23,8 +23,10 @@ const VALID_OVERVIEW = {
     canSubmitChangeRequests: true,
     canViewApprovals: false,
     canViewInvoices: false,
+    canViewRequests: false,
   },
   milestones: [],
+  requests: [],
   tasks: [],
   attachments: [],
   comments: [],
@@ -117,6 +119,7 @@ describe("SPEC 8 — portal project overview schema (Requirement C5)", () => {
         canSubmitChangeRequests: false,
         canViewApprovals: false,
         canViewInvoices: false,
+        canViewRequests: false,
       },
     };
     const result = backendPortalProjectOverviewSchema.safeParse(noCapOverview);

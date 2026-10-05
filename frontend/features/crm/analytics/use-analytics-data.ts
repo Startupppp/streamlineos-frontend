@@ -9,7 +9,7 @@ import {
 } from "@/hooks/api/leads";
 import { useDeals } from "@/hooks/api/crm";
 import { useTaskAnalytics } from "@/hooks/api/tasks";
-import { useSlaReport } from "@/hooks/api/crm-settings";
+import { useSlaReport } from "@/hooks/api/crm/settings/sla";
 import {
   useSalesDashboardKPIs,
   useRevenueVsGoal,
