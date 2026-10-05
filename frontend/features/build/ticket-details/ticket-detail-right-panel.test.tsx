@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { TicketDetailRightPanel } from "./ticket-detail-right-panel";
 
-const mockUseCan = jest.fn(() => true);
+const mockUseCan = jest.fn<boolean, [string]>(() => true);
 const mockUpdateVisibilityMutate = jest.fn();
 
 jest.mock("@/hooks/api/build/client-portal", () => ({
@@ -22,7 +22,7 @@ jest.mock("@/components/ui/switch", () => ({
 }));
 jest.mock("framer-motion", () => ({ useReducedMotion: () => false }));
 jest.mock("@/hooks/common/use-mobile", () => ({ useIsMobile: () => true }));
-jest.mock("@/hooks/api/access", () => ({ useCan: (...args: unknown[]) => mockUseCan(...args) }));
+jest.mock("@/hooks/api/access", () => ({ useCan: (key: string) => mockUseCan(key) }));
 jest.mock("@/components/ui/drawer", () => ({
   Drawer: ({ open, children }: { open: boolean; children: ReactNode }) =>
     open ? <div role="dialog">{children}</div> : null,

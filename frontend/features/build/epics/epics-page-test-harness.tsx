@@ -182,7 +182,8 @@ import { useBuildListFilters } from "@/features/build/shared/use-build-list-filt
 import { useEpicPage } from "@/hooks/api/build/advanced";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import type { AccessResponse } from "@/hooks/api/access-schema";
-import type { Cycle, Epic, ProjectWithDetails, Ticket } from "@/types/projects";
+import type { Cycle, ProjectWithDetails, Ticket } from "@/types/projects";
+
 import type { EpicPage, EpicItem } from "@/hooks/api/build/execution-schema";
 
 export const mockUseProject = jest.mocked(useProject);
@@ -435,7 +436,7 @@ export const EPIC_ROW = {
 const EPIC_TYPES = ["EPIC", "STORY", "TASK", "BUG"] as const;
 const EPIC_PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
 
-function toEpicItem(t: Epic): EpicItem {
+function toEpicItem(t: Ticket): EpicItem {
   return {
     id: t.id,
     orgId: t.orgId,
@@ -447,14 +448,14 @@ function toEpicItem(t: Epic): EpicItem {
     health: t.health ?? null,
     projectId: t.projectId,
     ticketNumber: t.ticketNumber,
-    cycleId: t.cycleId,
-    epicId: t.epicId,
+    cycleId: t.cycleId ?? null,
+    epicId: t.epicId ?? null,
     assigneeMembershipId: null,
-    points: t.points,
-    storyPoints: t.storyPoints,
-    startDate: t.startDate,
-    dueDate: t.dueDate,
-    estimate: t.estimate,
+    points: t.points ?? null,
+    storyPoints: t.storyPoints ?? null,
+    startDate: t.startDate ?? null,
+    dueDate: t.dueDate ?? null,
+    estimate: t.estimate ?? null,
     completionPercentage: 0,
     rank: t.rank ?? "",
     timeSpent: t.timeSpent ?? "",
@@ -477,7 +478,7 @@ function toEpicItem(t: Epic): EpicItem {
 }
 
 export function epicPageResult(
-  rows: Epic[],
+  rows: Ticket[],
   overrides: {
     hasMore?: boolean;
     nextCursor?: string | null;

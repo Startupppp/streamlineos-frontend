@@ -1,3 +1,4 @@
+import type { ComponentProps } from "react";
 import { render, screen } from "@testing-library/react";
 import { IncidentTimeline } from "./incident-timeline";
 
@@ -19,20 +20,16 @@ jest.mock("@/lib/get-error-message", () => ({
   getErrorMessage: (e: unknown) => String(e),
 }));
 
-type Update = {
-  id: number;
-  message: string;
-  newStatus?: string | null;
-  createdAt: string;
-  createdByName?: string | null;
-  createdByEmail?: string | null;
-};
+type Update = ComponentProps<typeof IncidentTimeline>["updates"][number];
 
 function makeUpdate(overrides: Partial<Update> = {}): Update {
   return {
     id: 1,
+    orgId: "org-1",
+    incidentId: 1,
     message: "Initial response deployed",
     newStatus: null,
+    createdBy: null,
     createdAt: "2026-01-01T10:00:00.000Z",
     createdByName: "Alice",
     createdByEmail: null,

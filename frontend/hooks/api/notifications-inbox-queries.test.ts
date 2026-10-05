@@ -3,7 +3,6 @@ import { renderHook, act } from "@testing-library/react";
 import { QueryClient } from "@tanstack/react-query";
 import { useInfiniteNotifications, useNotifications } from "./notifications-inbox";
 import { apiClientMock, wrapper } from "./notifications-inbox-test-fixtures";
-import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 
 jest.mock("next-auth/react", () => ({
   useSession: jest.fn().mockReturnValue({

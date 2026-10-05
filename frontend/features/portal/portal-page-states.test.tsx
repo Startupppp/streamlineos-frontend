@@ -400,6 +400,7 @@ describe("SPEC 8 — PortalProjectPage sub-component states (Requirement C3)", (
         canSubmitChangeRequests: false,
         canViewApprovals: false,
         canViewInvoices: false,
+        canViewRequests: false,
       },
       milestones: [],
       tasks: [],
@@ -408,6 +409,7 @@ describe("SPEC 8 — PortalProjectPage sub-component states (Requirement C3)", (
       deliverables: [],
       approvals: [],
       invoices: [],
+      requests: [],
     };
     render(<PortalProjectDetail data={OVERVIEW} />);
     expect(screen.getByText("Beta Project")).toBeInTheDocument();
@@ -431,6 +433,7 @@ describe("SPEC 8 — PortalProjectPage sub-component states (Requirement C3)", (
       deliverables: [],
       approvals: [],
       invoices: [],
+      requests: [],
     };
     render(<PortalProjectDetail data={EMPTY_OVERVIEW} />);
     expect(screen.getByText("Empty Project")).toBeInTheDocument();

@@ -414,7 +414,7 @@ describe("program-table-columns — canonical URL stability (BSN-FE-URL1)", () =
     });
     const nameColumn = columns.find((c) => c.header === "Name");
     expect(nameColumn).toBeDefined();
-    const row = { id: 42, orgId: "org-1", name: "Program Alpha", status: "active" as const, health: null, portfolioId: null, ownerId: null, createdBy: null, createdAt: "", updatedAt: "" };
+    const row = { id: 42, orgId: "org-1", name: "Program Alpha", description: null, status: "active" as const, health: null, portfolioId: null, ownerId: null, createdBy: null, createdAt: "", updatedAt: "" };
     const cell = nameColumn!.cell(row);
     render(<>{cell}</>);
     const link = screen.getByRole("link", { name: "Program Alpha" });

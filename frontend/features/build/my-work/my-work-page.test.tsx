@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import type {
   UseBuildListKeyboardOptions,
   UseBuildListKeyboardReturn,
-} from "@/features/build/shared/use-build-list-keyboard";
+} from "@/hooks/common/use-build-list-keyboard";
 import {
   mockReplace,
   mockPush,

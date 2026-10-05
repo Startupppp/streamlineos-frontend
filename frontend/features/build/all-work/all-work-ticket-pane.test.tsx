@@ -78,7 +78,7 @@ function makeGroup(): TicketGroup {
 describe("AllWorkListSection — pane navigation structure", () => {
   beforeEach(() => {
     mockPush.mockClear();
-    (ListView as jest.Mock).mockClear();
+    jest.mocked(ListView).mockClear();
   });
 
   it("renders without crashing", () => {
@@ -102,7 +102,7 @@ describe("AllWorkListSection — pane navigation structure", () => {
     render(
       <AllWorkListSection groups={[makeGroup()]} />,
     );
-    const call = (ListView as jest.Mock).mock.calls[0];
+    const call = jest.mocked(ListView).mock.calls[0];
     const props = call?.[0];
     if (props?.onTicketClick) {
       props.onTicketClick(10);

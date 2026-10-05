@@ -115,12 +115,14 @@ const TEST_DATA = {
   goals: [],
   industry: "IT Services",
   companyName: "Test Corp",
+  displayName: "Test Corp",
   fullName: "QA Owner",
   teamSize: "1-10",
   phone: "",
   installedApps: [],
   modules: [],
   invitees: [],
+  moduleAnswers: {},
 };
 
 const SETUP_RESPONSE = {

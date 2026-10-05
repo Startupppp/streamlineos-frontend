@@ -39,7 +39,7 @@ beforeEach(() => {
 describe("ProjectLayout", () => {
   it.each(["0", "-1"])("404s for a non-positive project id (%s)", async (projectId) => {
     await expect(
-      ProjectLayout({ children: null, params: Promise.resolve({ projectId }) }),
+      ProjectLayout({ children: null, panel: null, params: Promise.resolve({ projectId }) }),
     ).rejects.toThrow("NEXT_NOT_FOUND");
     expect(notFound).toHaveBeenCalledTimes(1);
     expect(prefetchBuildProject).not.toHaveBeenCalled();
@@ -50,7 +50,7 @@ describe("ProjectLayout", () => {
     prefetchBuildProject.mockRejectedValue({ status: 404, code: "PROJECTS_NOT_FOUND" });
 
     await expect(
-      ProjectLayout({ children: null, params: Promise.resolve({ projectId: "6" }) }),
+      ProjectLayout({ children: null, panel: null, params: Promise.resolve({ projectId: "6" }) }),
     ).rejects.toThrow("NEXT_NOT_FOUND");
     expect(notFound).toHaveBeenCalledTimes(1);
   });
@@ -65,6 +65,7 @@ describe("ProjectLayout", () => {
 
     const result = await ProjectLayout({
       children: null,
+      panel: null,
       params: Promise.resolve({ projectId: "6" }),
     });
 
@@ -82,6 +83,7 @@ describe("ProjectLayout", () => {
 
     const result = await ProjectLayout({
       children: null,
+      panel: null,
       params: Promise.resolve({ projectId: "6" }),
     });
 

@@ -4,6 +4,8 @@ import { CommentDraftRow } from "./comment-draft-row";
 
 const draft: CommentDraftListItem = {
   id: 3,
+  orgId: "org-1",
+  membershipId: null,
   ticketId: 10,
   body: "Unsent comment",
   createdAt: "2026-10-01T10:00:00.000Z",

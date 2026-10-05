@@ -30,7 +30,6 @@ jest.mock("@/hooks/api/access", () => ({
     data: { permissions: [] },
     refetch: jest.fn(),
   }),
-  signalAccessInvalidation: jest.fn(),
 }));
 
 const { useCan } = jest.requireMock("@/hooks/api/access") as {

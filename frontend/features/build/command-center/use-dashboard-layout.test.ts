@@ -8,6 +8,7 @@ jest.mock("@/hooks/api/build/dashboard-layout", () => ({
 }));
 
 import { useDashboardLayout, useSaveDashboardLayout } from "@/hooks/api/build/dashboard-layout";
+import type { DashboardLayoutGetLayoutResponse } from "@/contracts/build-contracts.generated";
 
 const mockUseDashboardLayout = useDashboardLayout as jest.Mock;
 const mockUseSaveDashboardLayout = useSaveDashboardLayout as jest.Mock;
@@ -16,7 +17,7 @@ const mockMutate = jest.fn();
 const mockRefetch = jest.fn();
 
 function setupHooks(
-  serverLayout = { layoutVersion: 0, config: { widgets: [] }, updatedAt: "2026-01-01T00:00:00.000Z" },
+  serverLayout: DashboardLayoutGetLayoutResponse = { layoutVersion: 0, config: { widgets: [] }, updatedAt: "2026-01-01T00:00:00.000Z" },
 ) {
   mockUseDashboardLayout.mockReturnValue({ data: serverLayout, refetch: mockRefetch });
   mockUseSaveDashboardLayout.mockReturnValue({ mutate: mockMutate, isPending: false });

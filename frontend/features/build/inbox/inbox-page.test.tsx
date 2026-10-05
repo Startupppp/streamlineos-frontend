@@ -289,7 +289,7 @@ describe("InboxPage — notification source filtering and approval click", () =>
     const approvalNotification: Notification = {
       ...makeNotification(77),
       sourceModule: "build",
-      category: "APPROVALS",
+      category: "PROJECTS",
     };
     (InboxList as jest.Mock).mockImplementation(
       ({
