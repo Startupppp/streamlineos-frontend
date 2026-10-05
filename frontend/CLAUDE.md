@@ -104,6 +104,8 @@ Feature `index.ts` barrels sanctioned by FE-65 are the only exception. **The exe
 **FE-70.** Accept and merge `className` with `cn()`; `forwardRef` whenever wrapping a focusable or measurable element, and always for DataTable-cell sub-components.
 **FE-71.** Spread `{...field}` for react-hook-form controls; never fork a field's state into local `useState`.
 **FE-72.** Keep the import graph acyclic. (gate: check:cycles, check:feature-cycles)
+**FE-128.** A type re-exported through a hook module (`export type { X } from "@/types/projects"`) is an FE-126 pass-through. Point the importers at the source and delete the re-export. It is never "uncertain: retain". *Why:* on 2026-10-05 an agent left five of these in place because fixing them needed import-line edits in other files, and that is exactly the work FE-126 requires.
+**FE-129.** When you consolidate label, option or status constants, compare the visible text first. If the casing or wording differs, you are changing what the user sees: choose one deliberately, update the tests that assert it, and report it as a behaviour change. *Why:* reusing a shared status list changed a roadmap filter from "In progress" to "In Progress" and broke a keyboard test.
 
 ## 5. Forms, Errors & Toasts
 
@@ -172,6 +174,9 @@ Feature `index.ts` barrels sanctioned by FE-65 are the only exception. **The exe
 **FE-122.** Pair a control-gate negative test with a positive one. *Why:* the negative passes when the control simply cannot render.
 **FE-123.** jsdom cannot see layout overflow, real focus order or paint — inspect those in a browser.
 **FE-124.** There is no Prettier and no coverage threshold in this repo. Do not assume formatting or coverage is enforced.
+**FE-130.** Shared test helpers (`*-test-fixtures.ts`, `*-test-harness.tsx`) are not test files for FE-127. Import hooks from their domain module, never `@/hooks/api/build`. *Why:* a fixture file extracted during a test split imported the barrel and failed `aggregate-import-boundary.test.ts`.
+**FE-131.** Splitting a test file must keep its case count exactly. Before deleting the original, count `it(`/`test(` in it and in the new files, then run the boundary and spec typecheck gates. *Why:* only a count proves the split dropped no case, and moved fixtures are where boundary violations appear.
+**FE-132.** Never run a formatter over a whole file you are editing, and call a size overrun "pre-existing" only after measuring the file at the baseline commit (`git show <base>:<path> | wc -l`). Fix a file your change pushed past 500 lines; never register it in `scripts/file-size-exceptions.md`. *Why:* a whole-file Prettier pass pushed `hooks/api/build/roadmap.ts` from 478 to 630 lines, and an agent then registered it as pre-existing debt.
 
 ---
 
