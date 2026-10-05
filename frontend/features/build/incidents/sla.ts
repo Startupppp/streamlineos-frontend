@@ -1,4 +1,4 @@
-import type { Incident } from "@/hooks/api/build/incidents-schema";
+import type { IncidentsCreateIncidentResponse } from "@/contracts/build-contracts.generated";
 
 export interface SlaState {
   responseBreached: boolean;
@@ -13,7 +13,7 @@ function isLate(dueAtIso: string, atIso: string | Date): boolean {
   return due < at;
 }
 
-export function getSlaState(incident: Incident, now?: Date): SlaState {
+export function getSlaState(incident: IncidentsCreateIncidentResponse, now?: Date): SlaState {
   const t = now ?? new Date();
 
   const responseBreached =

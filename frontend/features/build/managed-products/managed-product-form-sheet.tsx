@@ -9,6 +9,7 @@ import {
   type CreateManagedProductFormValues,
   editManagedProductSchema,
   type EditManagedProductFormValues,
+  PRODUCT_TYPE_OPTIONS,
 } from "@/features/build/managed-products/managed-product-schema";
 import {
   Form,
@@ -121,6 +122,7 @@ export function ManagedProductFormSheet({
     onSubmitCreate({
       name: v.name,
       key: v.key,
+      ...(v.productType ? { productType: v.productType } : {}),
       ...(v.description ? { description: v.description } : {}),
       ...(v.ownerId ? { ownerId: v.ownerId } : {}),
     });
@@ -300,6 +302,30 @@ export function ManagedProductFormSheet({
           className="space-y-4"
           noValidate
         >
+          <FormField
+            control={createForm.control}
+            name="productType"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Product type (optional)</FormLabel>
+                <Select value={field.value ?? ""} onValueChange={(v) => field.onChange(v || undefined)}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a template type…" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {PRODUCT_TYPE_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <FormField
             control={createForm.control}
             name="name"

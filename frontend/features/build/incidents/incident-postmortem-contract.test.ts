@@ -1,9 +1,9 @@
 import {
-  incidentRowContract,
-  incidentDetailContract,
-  incidentFollowUpActionRowContract,
-  incidentDecisionRowContract,
-} from "@/hooks/api/build/incidents-schema";
+  incidentsCreateIncidentResponseSchema,
+  incidentsGetIncidentResponseSchema,
+  incidentsAddFollowUpActionResponseSchema,
+  incidentsAddDecisionResponseSchema,
+} from "@/contracts/build-contracts.generated";
 import { unresolvedFollowUpCount } from "./incident-follow-ups";
 
 const ROW = {
@@ -58,18 +58,18 @@ const FOLLOW_UP = {
 
 describe("incident row contract carries the release correlation", () => {
   it("keeps releaseId instead of stripping it as an unknown key", () => {
-    const parsed = incidentRowContract.parse(ROW);
+    const parsed = incidentsCreateIncidentResponseSchema.parse(ROW);
     expect(parsed.releaseId).toBe(44);
   });
 
   it("keeps createdBy instead of stripping it as an unknown key", () => {
-    expect(incidentRowContract.parse(ROW).createdBy).toBe("user_1");
+    expect(incidentsCreateIncidentResponseSchema.parse(ROW).createdBy).toBe("user_1");
   });
 });
 
 describe("incident detail contract carries the postmortem collections", () => {
   it("keeps the decisions array instead of stripping it as an unknown key", () => {
-    const parsed = incidentDetailContract.parse({
+    const parsed = incidentsGetIncidentResponseSchema.parse({
       ...ROW,
       updates: [],
       decisions: [DECISION],
@@ -86,7 +86,7 @@ describe("incident detail contract carries the postmortem collections", () => {
   });
 
   it("keeps the followUpActions array instead of stripping it as an unknown key", () => {
-    const parsed = incidentDetailContract.parse({
+    const parsed = incidentsGetIncidentResponseSchema.parse({
       ...ROW,
       updates: [],
       decisions: [],
@@ -102,7 +102,7 @@ describe("incident detail contract carries the postmortem collections", () => {
   });
 
   it("rejects a detail payload missing the postmortem collections", () => {
-    expect(incidentDetailContract.safeParse({ ...ROW, updates: [] }).success).toBe(false);
+    expect(incidentsGetIncidentResponseSchema.safeParse({ ...ROW, updates: [] }).success).toBe(false);
   });
 });
 
@@ -116,27 +116,27 @@ describe("incident enum fields are pinned to the Postgres enum values", () => {
       "postmortem",
       "closed",
     ]) {
-      expect(incidentRowContract.safeParse({ ...ROW, status }).success).toBe(true);
+      expect(incidentsCreateIncidentResponseSchema.safeParse({ ...ROW, status }).success).toBe(true);
     }
   });
 
   it("accepts every incident_severity value the database can produce", () => {
     for (const severity of ["critical", "high", "medium", "low"]) {
-      expect(incidentRowContract.safeParse({ ...ROW, severity }).success).toBe(true);
+      expect(incidentsCreateIncidentResponseSchema.safeParse({ ...ROW, severity }).success).toBe(true);
     }
   });
 
   it("rejects a status outside the incident_status enum", () => {
-    expect(incidentRowContract.safeParse({ ...ROW, status: "triaged" }).success).toBe(false);
+    expect(incidentsCreateIncidentResponseSchema.safeParse({ ...ROW, status: "triaged" }).success).toBe(false);
   });
 
   it("rejects a severity outside the incident_severity enum", () => {
-    expect(incidentRowContract.safeParse({ ...ROW, severity: "sev1" }).success).toBe(false);
+    expect(incidentsCreateIncidentResponseSchema.safeParse({ ...ROW, severity: "sev1" }).success).toBe(false);
   });
 
   it("accepts every incident_follow_up_status value the database can produce", () => {
     for (const status of ["open", "in_progress", "done", "cancelled"]) {
-      expect(incidentFollowUpActionRowContract.safeParse({ ...FOLLOW_UP, status }).success).toBe(
+      expect(incidentsAddFollowUpActionResponseSchema.safeParse({ ...FOLLOW_UP, status }).success).toBe(
         true,
       );
     }
@@ -144,12 +144,12 @@ describe("incident enum fields are pinned to the Postgres enum values", () => {
 
   it("rejects a follow-up status outside the incident_follow_up_status enum", () => {
     expect(
-      incidentFollowUpActionRowContract.safeParse({ ...FOLLOW_UP, status: "blocked" }).success,
+      incidentsAddFollowUpActionResponseSchema.safeParse({ ...FOLLOW_UP, status: "blocked" }).success,
     ).toBe(false);
   });
 
   it("parses a decision row with a null rationale", () => {
-    expect(incidentDecisionRowContract.parse({ ...DECISION, rationale: null }).rationale).toBeNull();
+    expect(incidentsAddDecisionResponseSchema.parse({ ...DECISION, rationale: null }).rationale).toBeNull();
   });
 });
 

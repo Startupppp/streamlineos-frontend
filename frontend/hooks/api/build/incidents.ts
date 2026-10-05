@@ -8,49 +8,49 @@ import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import type {
-  Incident,
-  IncidentDetail,
-  IncidentUpdate,
-  IncidentDecision,
-  IncidentFollowUpAction,
-  CreateIncidentInput,
-  UpdateIncidentInput,
-  AddIncidentUpdateInput,
-  AddIncidentDecisionInput,
-  CreateIncidentFollowUpActionInput,
-  UpdateIncidentFollowUpActionInput,
-} from "@/hooks/api/build/incidents-schema";
+  IncidentsCreateIncidentResponse,
+  IncidentsGetIncidentResponse,
+  IncidentsAddUpdateResponse,
+  IncidentsAddDecisionResponse,
+  IncidentsAddFollowUpActionResponse,
+  IncidentsCreateIncidentBody,
+  IncidentsUpdateIncidentBody,
+  IncidentsAddUpdateBody,
+  IncidentsAddDecisionBody,
+  IncidentsAddFollowUpActionBody,
+  IncidentsUpdateFollowUpActionBody,
+} from "@/contracts/build-contracts.generated";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const incidentListContract = lazyContract(() =>
-  import("@/hooks/api/build/incidents-schema").then(
-    (m) => m.incidentResponseContract,
+  import("@/contracts/build-contracts.generated").then(
+    (m) => m.incidentsListIncidentsResponseSchema,
   ),
 );
 const incidentRowContract = lazyContract(() =>
-  import("@/hooks/api/build/incidents-schema").then(
-    (m) => m.incidentRowContract,
+  import("@/contracts/build-contracts.generated").then(
+    (m) => m.incidentsCreateIncidentResponseSchema,
   ),
 );
 const incidentDetailContract = lazyContract(() =>
-  import("@/hooks/api/build/incidents-schema").then(
-    (m) => m.incidentDetailContract,
+  import("@/contracts/build-contracts.generated").then(
+    (m) => m.incidentsGetIncidentResponseSchema,
   ),
 );
 const incidentUpdateRowContract = lazyContract(() =>
-  import("@/hooks/api/build/incidents-schema").then(
-    (m) => m.incidentUpdateRowContract,
+  import("@/contracts/build-contracts.generated").then(
+    (m) => m.incidentsAddUpdateResponseSchema,
   ),
 );
 const incidentDecisionRowContract = lazyContract(() =>
-  import("@/hooks/api/build/incidents-schema").then(
-    (m) => m.incidentDecisionRowContract,
+  import("@/contracts/build-contracts.generated").then(
+    (m) => m.incidentsAddDecisionResponseSchema,
   ),
 );
 const incidentFollowUpActionRowContract = lazyContract(() =>
-  import("@/hooks/api/build/incidents-schema").then(
-    (m) => m.incidentFollowUpActionRowContract,
+  import("@/contracts/build-contracts.generated").then(
+    (m) => m.incidentsAddFollowUpActionResponseSchema,
   ),
 );
 const noContentContract = lazyContract(() =>
@@ -85,7 +85,7 @@ export function useIncidents(projectId?: number, filters?: IncidentFilters) {
     ),
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<{
-        data: Incident[];
+        data: IncidentsCreateIncidentResponse[];
         pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
       }>(
         `/build/${projectId}/incidents`,
@@ -116,7 +116,7 @@ export function useIncident(projectId?: number, incidentId?: number) {
         params.decisionsCursor = String(pageParam.decisionsCursor);
       if (pageParam.followUpActionsCursor !== undefined)
         params.followUpActionsCursor = String(pageParam.followUpActionsCursor);
-      return apiClient.get<IncidentDetail>(
+      return apiClient.get<IncidentsGetIncidentResponse>(
         `/build/${projectId}/incidents/${incidentId}`,
         params,
         signal,
@@ -164,7 +164,7 @@ export function useIncident(projectId?: number, incidentId?: number) {
       decisions: unique(pages.flatMap((page) => page.decisions)),
       followUpActions: unique(pages.flatMap((page) => page.followUpActions)),
       childrenPagination: last.childrenPagination,
-    } satisfies IncidentDetail;
+    } satisfies IncidentsGetIncidentResponse;
   }, [query.data]);
   return { ...query, data };
 }
@@ -176,8 +176,8 @@ export function useCreateIncident() {
     mutationFn: ({
       projectId,
       ...data
-    }: CreateIncidentInput & { projectId: number }) =>
-      apiClient.post<Incident>(
+    }: IncidentsCreateIncidentBody & { projectId: number }) =>
+      apiClient.post<IncidentsCreateIncidentResponse>(
         `/build/${projectId}/incidents`,
         data,
         undefined,
@@ -199,8 +199,8 @@ export function useUpdateIncident() {
       projectId,
       incidentId,
       ...data
-    }: UpdateIncidentInput & { projectId: number; incidentId: number }) =>
-      apiClient.patch<Incident>(
+    }: IncidentsUpdateIncidentBody & { projectId: number; incidentId: number }) =>
+      apiClient.patch<IncidentsCreateIncidentResponse>(
         `/build/${projectId}/incidents/${incidentId}`,
         data,
         undefined,
@@ -253,8 +253,8 @@ export function useAddIncidentUpdate() {
       projectId,
       incidentId,
       ...data
-    }: AddIncidentUpdateInput & { projectId: number; incidentId: number }) =>
-      apiClient.post<IncidentUpdate>(
+    }: IncidentsAddUpdateBody & { projectId: number; incidentId: number }) =>
+      apiClient.post<IncidentsAddUpdateResponse>(
         `/build/${projectId}/incidents/${incidentId}/updates`,
         data,
         undefined,
@@ -282,8 +282,8 @@ export function useAddIncidentDecision() {
       projectId,
       incidentId,
       ...data
-    }: AddIncidentDecisionInput & { projectId: number; incidentId: number }) =>
-      apiClient.post<IncidentDecision>(
+    }: IncidentsAddDecisionBody & { projectId: number; incidentId: number }) =>
+      apiClient.post<IncidentsAddDecisionResponse>(
         `/build/${projectId}/incidents/${incidentId}/decisions`,
         data,
         undefined,
@@ -308,11 +308,11 @@ export function useAddIncidentFollowUpAction() {
       projectId,
       incidentId,
       ...data
-    }: CreateIncidentFollowUpActionInput & {
+    }: IncidentsAddFollowUpActionBody & {
       projectId: number;
       incidentId: number;
     }) =>
-      apiClient.post<IncidentFollowUpAction>(
+      apiClient.post<IncidentsAddFollowUpActionResponse>(
         `/build/${projectId}/incidents/${incidentId}/follow-ups`,
         data,
         undefined,
@@ -338,12 +338,12 @@ export function useUpdateIncidentFollowUpAction() {
       incidentId,
       followUpActionId,
       ...data
-    }: UpdateIncidentFollowUpActionInput & {
+    }: IncidentsUpdateFollowUpActionBody & {
       projectId: number;
       incidentId: number;
       followUpActionId: number;
     }) =>
-      apiClient.patch<IncidentFollowUpAction>(
+      apiClient.patch<IncidentsAddFollowUpActionResponse>(
         `/build/${projectId}/incidents/${incidentId}/follow-ups/${followUpActionId}`,
         data,
         undefined,

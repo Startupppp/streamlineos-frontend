@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { ApiError } from "@/lib/api-envelope";
-import type { Incident, IncidentDetail } from "@/hooks/api/build/incidents-schema";
+import type { IncidentsCreateIncidentResponse, IncidentsGetIncidentResponse } from "@/contracts/build-contracts.generated";
 import { getSlaState } from "./sla";
 
 const mockUseIncident = jest.fn();
@@ -108,7 +108,7 @@ function baseQuery(overrides = {}) {
   };
 }
 
-function baseIncident(overrides: Partial<Incident> = {}): Incident {
+function baseIncident(overrides: Partial<IncidentsCreateIncidentResponse> = {}): IncidentsCreateIncidentResponse {
   return {
     id: 1,
     orgId: "org_1",
@@ -144,7 +144,7 @@ function releasePage(items: Array<{ id: number; name: string; version: string }>
   };
 }
 
-function baseIncidentDetail(overrides: Partial<IncidentDetail> = {}): IncidentDetail {
+function baseIncidentDetail(overrides: Partial<IncidentsGetIncidentResponse> = {}): IncidentsGetIncidentResponse {
   return {
     ...baseIncident(),
     updates: [],

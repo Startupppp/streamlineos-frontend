@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import type { Incident } from "@/hooks/api/build/incidents-schema";
+import type { IncidentsCreateIncidentResponse } from "@/contracts/build-contracts.generated";
 import { getSlaState } from "./sla";
 
 function TimerRow({
@@ -56,7 +56,7 @@ function TimerRow({
 }
 
 interface IncidentSlaPanelProps {
-  incident: Incident;
+  incident: IncidentsCreateIncidentResponse;
 }
 
 export function IncidentSlaPanel({ incident }: IncidentSlaPanelProps) {

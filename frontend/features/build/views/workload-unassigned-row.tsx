@@ -5,7 +5,8 @@ import { ChevronDown, ChevronRight, Users, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import type { KanbanTicket } from "../shared/types";
-import { stopEvent, InlineAssignee } from "./card-inline-fields";
+import { stopEvent } from "./card-field-wrapper";
+import { InlineAssignee } from "./card-field-assignee";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 import { TruncatedText } from "@/components/ui/truncated-text";
 

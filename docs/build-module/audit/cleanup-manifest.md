@@ -1,5 +1,17 @@
 # Cleanup manifest
 
+## Competing Build ownership writer76 — source cleanup verified
+
+Final76 update supersedes the reserved status in the original inventory row below: exact writer deletion, controller/provider reference removal and high-effort final source review are verified. Focused HTTP9/9 plus metadata/canonical41/41, exact lint/diff and scoped TypeScript pass. Official backend OpenAPI generation, vendor copy and frontend generation completed; vendor equality and freshness checks pass at SHA prefix447607fe7c54b842. Generated endpoint/operation reference search has no matches. Historical evidence and both repurposed tests remain retained. Physical canonical ownership, concurrency and complete production gates remain open.
+
+Before deletion, exact-reference searches found the service only in its Build controller, ProjectsModule and two owned tests; no frontend transfer consumer or canonical specification reference exists. Classification: superseded implementation, not historical evidence. Existing canonical ModuleStandingMutationsService owns immediate Org Owner transfers; existing module ownership initiation/acceptance owns pending transfers. No provider duplication or compatibility forwarding is justified. The standing GET remains because existing useMemberStanding consumes it.
+
+| Candidate path | SHA-256 before deletion | Reason and replacement | Reference changes | Reviewer | Validation |
+|---|---|---|---|---|---|
+| `backend/src/modules/build/core/members/build-ownership-transfer.service.ts` | `d7a6f2df29fc23af897c4891a63e8bfc5877021037384c1f1f418228b46dcf80` | Superseded roster-only writer contradicts moduleOwnerships truth; canonical immediate operation is `/module-access/build/standing/transfer-owner`, pending operation is `/module-access/build/ownership/transfer`. Unique authorization/self-transfer/concurrency/idempotency/audit findings migrate to the canonical current review receipt. Deletion verified; all unique findings remain in the canonical receipt. | Remove owned standing-controller handler/import, ProjectsModule provider/import and obsolete test provider/import; official OpenAPI regeneration completed. Existing two test files retained and repurposed for route convergence. | ownership_security_review76, high-effort source and generated-reference review CLEAR | Focused Build and canonical standing/ownership tests, exact lint/diff, TypeScript, official contract generation/vendor/freshness and reference search pass. Equality is newline-normalized; physical ownership/browser/release remain open. |
+
+The old four-case transfer test is retained as a file and migrated from assertions against the superseded implementation to route convergence. Empty/absent target, access revision and injected conflict observations did not prove ownership authority or physical concurrency; preserve that limitation in [current receipt](./bugs-and-verification.md#current-review-corrections-and-browser-entry--2026-10-04). Unique screenshots, browser reports, research and unresolved canonical concurrency findings are retained.
+
 ## Forms, Intake and invitation owner retention — 2026-10-04
 
 Classification: active source and historical evidence, retained. [Canonical receipt](./bugs-and-verification.md#forms-intake-invitation-and-ticket-link-evidence--2026-10-04) records14 exact existing/new source paths, working/committed hashes, revisions, review, focused/lint/typecheck commands and failed/unverified dimensions (payload SHA `e3608934ee2e0454bd1f828612578e7edbe30e5bb71851366e4947262d881e52`). No file is deleted and no inbound evidence/research/screenshot reference is removed. No duplicate API/schema/query-key/helper/client/Markdown file is added. Unrelated working invitation formatting and temporary compiler includes remain untouched.
@@ -222,6 +234,41 @@ Classification: active source and generated artifact, retained. Source47 backend
 The existing Ticket detail service, approval owners, DTOs, generated types, query keys, primitive controls and SanitizedHtml remain single owners. Source hashes for all44 claimed paths are stored once in the [canonical sanitized receipt](./bugs-and-verification.md#sanitized-source-and-gate-receipt), payload SHA `d58f53d8f52a2e4d3774ea3c6d97b2c03dba8fb2a53406be33a921ecec3907f2`. Official generators alone update backend/openapi.json, its exact frontend byte vendor and build-contracts.generated.ts; vendor/freshness checks and independent operation-delta review pass. Reference changes are existing module DI exports/imports, GET-only ApprovalDetail and strict selected-version request inference; no new route/API/client/helper or duplicate schema file.
 
 Reviewers: scoped_activation_dispatch for independent production/SQL/generated/UI contracts; client_activation_design for final UI/handler/sanitizer/test deltas; coordinator for backend test preservation/integration,44 freeze hashes, exact staging/gates and unrelated44/47 dirty-byte preservation. Validation: focused192/203, exact owned lint/diff, scoped/production TypeScript and official contract checks pass; full test TypeScript/migration gates, actual artifact PostgreSQL/browser/release proof stay separately open. Before any future deletion, perform the existing complete hash/reference/unique-content workflow; this retention entry authorizes no deletion.
+
+## Duplicate work-template module removal — 2026-10-04
+
+Classification: uncommitted duplicate feature with no requirement owner. The module served `/build/work-templates` from a table that has no Drizzle schema, and its presets parallel the existing [project templates controller](../../../backend/src/modules/build/core/project-crud/). No Build TODO ID names it, no frontend caller exists, and `check:build-sql-table-literals` failed on its raw SQL. Migration 1783 was never journalled, and `build.work_template_configs` does not exist on production (read-only probe, 2026-10-04).
+
+| Removed path | Prior state | Replacement | Reference census |
+| --- | --- | --- | --- |
+| `backend/src/modules/build/core/templates/` (controller, module, service, spec, dto) | Untracked; never committed | Existing `/build/templates` owner | `rg "work-templates|work_template_configs|BuildWorkTemplates|BuildTemplatesService"` found only the module itself, an uncommitted `build.module.ts` import (removed), and the generated `openapi.json` / `api-contract-registry.json` (regenerated) |
+| `backend/migrations/1783_build_work_template_configs.sql` and `rollback/1783_*.down.sql` | Untracked, unjournalled, unapplied | None | Same census |
+
+## Sprint and Timesheets path-removal proof — BT-171ac41a1f7d (2026-10-04)
+
+Code-path analysis to determine whether legacy sprint paths and build timesheets facade can be removed.
+
+### Sprint paths
+
+| Path | Status | Reason still live |
+|---|---|---|
+| `backend/src/modules/build/execution/sprints.service.ts` | NOT removable | File is a `GoneException` tombstone. Callers in `build-execution.module.ts` (provider) and `iterations.controller.ts` (inject) still reference `SprintsService`. Removing it breaks the DI graph. The compatibility window is open until `iterations.controller.ts` removes the inject. |
+
+Probe: `rg "SprintsService" backend/src/modules/build/` returns `build-execution.module.ts` and `iterations.controller.ts`.
+
+### Build timesheets facade
+
+| Path | Status | Reason still live |
+|---|---|---|
+| Build timesheets (backend) | NOT removable | The `TimesheetWorklogCommands` + `ProjectTimeProjection` adapter pair is not yet implemented. The `build:timesheets:view`, `build:timesheets:create`, `build:timesheets:manage` keys are live in the permission catalog. `ticket-time-tracker.tsx` and `ticket-detail-right-panel.tsx` in the frontend consume them. Removing timesheets now silently breaks ticket time tracking. |
+
+Probe: `rg "build:timesheets" frontend/hooks` returns `ticket-time-tracker.tsx` and the permission catalog. No decommission BT exists.
+
+### Feedbucket bugs legacy path
+
+| Path | Status | Reason |
+|---|---|---|
+| `/build/[projectId]/bugs/[submissionId]` | IMPLEMENTED — redirect page routes through intake | BT-72aa84e6afc5: server-side redirect page added; resolves `feedbucket_submission_id` → `intake_items.id` via `GET /build/:projectId/intake/by-feedbucket/:submissionId` and redirects to `/build/${projectId}/intake/${intakeId}` or the intake index. Route is registered in `build-project-view-extension-entries.ts`. |
 
 ## Delivery checklist
 

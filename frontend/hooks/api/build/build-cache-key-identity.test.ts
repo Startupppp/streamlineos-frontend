@@ -44,8 +44,7 @@ jest.mock("@/lib/api-envelope", () => ({
 }));
 
 jest.mock("@/hooks/api/build/managed-products-schema", () => ({
-  managedProductPageContract: null,
-  managedProductRowContract: null,
+  managedProductInsightsContract: null,
 }));
 
 jest.mock("@/hooks/api/cursor-page-schema", () => ({

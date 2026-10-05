@@ -105,6 +105,15 @@ export const RoadmapItemCard = memo(function RoadmapItemCard({
             {item.description}
           </p>
         ) : null}
+        {item.outcome ? (
+          <p
+            className={cn(TEXT_TWO_LINES, "text-xs text-muted-foreground")}
+            data-testid="roadmap-item-outcome"
+            title={item.outcome}
+          >
+            {item.outcome}
+          </p>
+        ) : null}
         {item.owner ? (
           <p className={cn(TEXT_ONE_LINE, "text-xs text-muted-foreground")}>
             {getUserDisplayName(item.owner)}

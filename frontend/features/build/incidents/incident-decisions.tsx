@@ -21,7 +21,7 @@ import {
   incidentDecisionSchema,
   type IncidentDecisionValues,
 } from "@/features/build/incidents/incident-schema";
-import type { IncidentDecision } from "@/hooks/api/build/incidents-schema";
+import type { IncidentsAddDecisionResponse } from "@/contracts/build-contracts.generated";
 import type { ProjectMemberRecord } from "@/types/projects";
 import { formatDateTime } from "@/lib/date-utils";
 
@@ -29,7 +29,7 @@ const DecisionEntry = memo(function DecisionEntry({
   decision,
   members,
 }: {
-  decision: IncidentDecision;
+  decision: IncidentsAddDecisionResponse;
   members: ProjectMemberRecord[];
 }) {
   const member = members.find((item) => item.id === decision.decidedBy);
@@ -135,7 +135,7 @@ export function IncidentDecisions({
 }: {
   projectId: number;
   incidentId: number;
-  decisions: IncidentDecision[];
+  decisions: IncidentsAddDecisionResponse[];
   canManage: boolean;
   members: ProjectMemberRecord[];
 }) {

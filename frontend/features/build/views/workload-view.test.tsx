@@ -4,10 +4,8 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
 }));
 
-jest.mock("./card-inline-fields", () => ({
-  stopEvent: () => undefined,
-  InlineAssignee: () => null,
-}));
+jest.mock("./card-field-wrapper", () => ({ stopEvent: () => undefined }));
+jest.mock("./card-field-assignee", () => ({ InlineAssignee: () => null }));
 
 jest.mock("./ticket-quick-actions", () => ({
   TicketQuickActions: () => null,

@@ -23,10 +23,10 @@ import {
 import { PmSection, PmPanel } from "@/components/pm-chrome";
 import { cn } from "@/lib/utils";
 import { TEXT_ONE_LINE, TEXT_BODY } from "@/lib/text-overflow";
+import type { ProjectsRetentionSettingsGetSettingsResponse } from "@/contracts/build-contracts.generated";
 import {
   RETENTION_DAYS_OPTIONS,
   type RetentionDaysOptionValue,
-  type ProjectRetentionSettings,
 } from "@/features/build/settings/project-settings-retention-schema";
 
 export function retentionDaysLabel(days: number | null): string {
@@ -97,7 +97,7 @@ function RetentionFieldRow({
 }
 
 interface PolicySectionProps {
-  settings: ProjectRetentionSettings;
+  settings: ProjectsRetentionSettingsGetSettingsResponse;
   projectId: number;
   canEdit: boolean;
 }
@@ -211,7 +211,7 @@ export function PolicySection({ settings, projectId, canEdit }: PolicySectionPro
 }
 
 interface HoldsSectionProps {
-  settings: ProjectRetentionSettings;
+  settings: ProjectsRetentionSettingsGetSettingsResponse;
   projectId: number;
   canEdit: boolean;
 }

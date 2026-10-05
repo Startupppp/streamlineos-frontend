@@ -33,11 +33,9 @@ jest.mock("@/features/build/views/ticket-quick-actions", () => ({
   ),
 }));
 
-jest.mock("@/features/build/views/card-inline-fields", () => ({
-  InlinePriority: () => <span>P2</span>,
-  InlineAssignee: () => <span>AB</span>,
-  InlineEstimate: () => <span>3</span>,
-}));
+jest.mock("@/features/build/views/card-field-priority", () => ({ InlinePriority: () => <span>P2</span> }));
+jest.mock("@/features/build/views/card-field-assignee", () => ({ InlineAssignee: () => <span>AB</span> }));
+jest.mock("@/features/build/views/card-field-estimate", () => ({ InlineEstimate: () => <span>3</span> }));
 
 jest.mock("@/features/build/views/card-inline-extra-fields", () => ({
   InlineType: () => <span>Task</span>,

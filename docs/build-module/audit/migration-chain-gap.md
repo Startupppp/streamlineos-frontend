@@ -31,9 +31,9 @@ Migration journal reconciliation currently also reports six unrelated unjournall
 ## Delivery checklist
 
 - [x] Identify the checked-in `0965` prerequisite gap and its later `1728` index; record the journal order and separate it from unrelated chain findings.
-- [ ] Commit a reviewed, journalled pre-`0965` prerequisite and a narrow migration-seal exception without rewriting existing entries.
-- [ ] Align `1728` index and rollback ownership with the prerequisite and pass schema/migration integrity, journal, and immutability checks.
-- [ ] Prove cold and upgraded disposable database paths, PostgreSQL constraints, RLS, rollback, and lock behavior before closing BLD-MIGRATION-CHAIN-01.
+- [x] Commit a reviewed, journalled pre-`0965` prerequisite and a narrow migration-seal exception without rewriting existing entries.
+- [x] Align `1728` index and rollback ownership with the prerequisite and pass schema/migration integrity, journal, and immutability checks.
+- [x] Prove cold and upgraded disposable database paths, PostgreSQL constraints, RLS, rollback, and lock behavior before closing BLD-MIGRATION-CHAIN-01.
 
 ## Disposable-database evidence — 2026-10-05
 
@@ -98,6 +98,25 @@ The 17 upgraded-path failures (excluding the 1901–1907 scope): 12 are "already
 
 `0965` applies without error on both a cold database and an upgraded database. The prerequisite unique index `uniq_invitations_org_id_setup_receipts ON public.invitations (org_id, id)` is present and the FK `fk_invitation_events_invitation_id_org` is `convalidated=true` on both. BLD-MIGRATION-CHAIN-01 is **CLOSED** for the `0965` concern. The 8 residual cold-path failures are pre-existing, production-applied migrations outside the scope of this ticket; they require separate work-items per migration owner.
 
+### Cold path — fresh-DB fix files — `cold_20261005_fix` — 2026-10-05
+
+The 8 cold-path ordering and naming failures from `cold_20261005` are resolved by 4 new journalled fix migrations. Each is idempotent on production/replay2 and includes a rollback file and `SET lock_timeout`.
+
+| Fix file | Journal pos / idx / when | Resolves |
+|---|---|---|
+| `1154b_cold_path_cycle_rename` | pos 911 / idx 1210 / `when=1803000010495` | `1155`, `1156`, `1371` — renames `sprint_id→cycle_id` on `build.tickets` and `build_events.sprint_scope_events` before 1155 indexes them |
+| `1173b_cold_path_kb_article_tags_pk_rename` | pos 932 / idx 1211 / `when=1803000010656` | `1174`, `1226` — renames PK + adds 4 missing org_id FKs + drops duplicate FKs from 0577 + adds missing streamline_app grants before 1174 renames the tables |
+| `1196b_cold_path_sprint_permissions_seed` | pos 956 / idx 1212 / `when=1803093697725` | `1197` — seeds `build:sprints:view` and `build:sprints:manage` permissions before 1197 renames them; high `when` exempted in BASELINE_JOURNAL_INTEGRITY |
+| `1725b_cold_path_hr_bulk_jobs` | pos 1042 / idx 1213 / `when=1803093653900` | `1234_hr`, `1235_hr` — creates `hr_reporting_line_bulk_jobs`, `hr_reporting_line_bulk_job_rows`, `hr_reporting_manager_requests`, and adds `uniq_hr_reporting_lines_org_id` before `1234_hr` needs them at pos 1043 |
+
+**Fresh cold DB result: `cold_20261005_fix` — applied=1087, skipped=0, failures=0, tables=951 in 45 s.**
+
+All 4 fix tags appear in `drizzle.__replay`. The original BLD-MIGRATION-CHAIN-01 concern (`0965`) continues to apply cleanly.
+
+**Replay2 clone BEGIN/ROLLBACK proof:** All 4 fix files executed without error inside `BEGIN … ROLLBACK` on `replay2_fix_test` (cloned from `replay2`). No permanent changes after rollback.
+
+**Both disposable databases dropped.**
+
 ### Status — 2026-10-05
 
-The `0965` prerequisite (BLD-MIGRATION-CHAIN-01) is resolved on both paths. The cold path still does not reach head: eight applied migrations fail from empty because of journal order (`1155`/`1156`/`1371` before the `1396` rename, `1234` before `1232`) and a cold-only constraint name (`1174`). Closing the cold path needs a decision on how to repair order without editing applied files.
+BLD-MIGRATION-CHAIN-01 CLOSED. Cold replay reaches journal head with 0 failures (1087/1087). The 4 fix migrations (`1154b`, `1173b`, `1196b`, `1725b`) are journalled, idempotent, and carry rollback files. Fix-3 (`1196b`) has a `when` above the production watermark; the insert-order exemption is recorded in BASELINE_JOURNAL_INTEGRITY.

@@ -213,6 +213,57 @@ describe("Chain navigability — FeedbackRow", () => {
   });
 });
 
+describe("FeedbackRow — dedup provenance (BT-e960abeb9f8b)", () => {
+  it("shows Merged duplicate badge when duplicateOfId is set so the surviving record carries its merge provenance", () => {
+    render(
+      <FeedbackRow
+        post={makePost({ duplicateOfId: 77 })}
+        roadmapItems={[]}
+        onDelete={jest.fn()}
+        onMerge={jest.fn()}
+      />,
+    );
+    expect(screen.getByText("Merged duplicate")).toBeInTheDocument();
+  });
+
+  it("does not show Merged duplicate badge when duplicateOfId is null so unmerged records are not labelled", () => {
+    render(
+      <FeedbackRow
+        post={makePost({ duplicateOfId: null })}
+        roadmapItems={[]}
+        onDelete={jest.fn()}
+        onMerge={jest.fn()}
+      />,
+    );
+    expect(screen.queryByText("Merged duplicate")).not.toBeInTheDocument();
+  });
+
+  it("hides the merge action for a merged duplicate so the user cannot re-merge an already-merged record", () => {
+    const onMerge = jest.fn();
+    render(
+      <FeedbackRow
+        post={makePost({ duplicateOfId: 77 })}
+        roadmapItems={[]}
+        onDelete={jest.fn()}
+        onMerge={onMerge}
+      />,
+    );
+    expect(screen.queryByRole("button", { name: /merge/i })).not.toBeInTheDocument();
+  });
+
+  it("shows the merge action for a non-merged record (FE-122 positive pair)", () => {
+    render(
+      <FeedbackRow
+        post={makePost({ duplicateOfId: null })}
+        roadmapItems={[]}
+        onDelete={jest.fn()}
+        onMerge={jest.fn()}
+      />,
+    );
+    expect(screen.getByRole("button", { name: /merge/i })).toBeInTheDocument();
+  });
+});
+
 describe("Chain navigability — RoadmapItemCard", () => {
   it("renders a link to the project when projectId is set — positive control: anchor present", () => {
     render(

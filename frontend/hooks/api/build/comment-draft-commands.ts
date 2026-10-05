@@ -41,10 +41,10 @@ interface Recovery {
 }
 
 const commentDraftContract = lazyContract(() =>
-  import("./comment-drafts-schema").then((m) => m.commentDraftContract),
+  import("@/contracts/build-contracts.generated").then((m) => m.commentDraftsUpsertResponseSchema),
 );
 const commentDraftDeletedContract = lazyContract(() =>
-  import("./comment-drafts-schema").then((m) => m.commentDraftDeletedContract),
+  import("@/contracts/build-contracts.generated").then((m) => m.commentDraftsDeleteOneResponseSchema),
 );
 
 function identityChanged() {

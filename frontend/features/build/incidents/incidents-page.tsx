@@ -13,7 +13,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { IncidentSheet } from "./incident-sheet";
 import { getSlaState } from "./sla";
-import type { Incident } from "@/hooks/api/build/incidents-schema";
+import type { IncidentsCreateIncidentResponse } from "@/contracts/build-contracts.generated";
 import { PmPageShell, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
@@ -80,8 +80,8 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
   const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
 
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [editIncident, setEditIncident] = useState<Incident | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Incident | null>(null);
+  const [editIncident, setEditIncident] = useState<IncidentsCreateIncidentResponse | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<IncidentsCreateIncidentResponse | null>(null);
 
   const statusValue = listFilters.value("status");
   const severityValue = listFilters.value("severity");
@@ -128,7 +128,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
     void refetch();
   }, [refetch]);
 
-  const handleEdit = useCallback((inc: Incident) => {
+  const handleEdit = useCallback((inc: IncidentsCreateIncidentResponse) => {
     setEditIncident(inc);
     setSheetOpen(true);
   }, []);
@@ -148,7 +148,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
       { projectId, incidentId: deleteTarget.id },
       {
         onSuccess: () => {
-          toast.success("Incident deleted");
+          toast.success("IncidentsCreateIncidentResponse deleted");
           setDeleteTarget(null);
         },
         onError: (e) => toast.error(getErrorMessage(e)),
@@ -199,7 +199,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
   );
 
   const renderMobileCard = useCallback(
-    (row: Incident) => (
+    (row: IncidentsCreateIncidentResponse) => (
       <IncidentMobileCard
         incident={row}
         canManage={canManage}
@@ -261,7 +261,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
               ? [
                   {
                     id: "new-incident",
-                    label: "New Incident",
+                    label: "New IncidentsCreateIncidentResponse",
                     icon: Plus,
                     primary: true,
                     onSelect: handleNew,
@@ -304,7 +304,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
               status or severity filter to see more.
             </p>
           ) : null}
-          <BuildListSurface<Incident>
+          <BuildListSurface<IncidentsCreateIncidentResponse>
             permission="build:incidents:view"
             rows={all}
             columns={columns}
@@ -333,7 +333,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
                 description="Create an incident to start tracking."
                 action={
                   canManage
-                    ? { label: "New Incident", onClick: handleNew }
+                    ? { label: "New IncidentsCreateIncidentResponse", onClick: handleNew }
                     : undefined
                 }
               />

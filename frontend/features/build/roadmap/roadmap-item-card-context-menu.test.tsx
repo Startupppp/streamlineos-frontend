@@ -87,3 +87,22 @@ describe("RoadmapItemCard — right click opens the same authorized actions as t
     expect(onDelete).toHaveBeenCalledWith(ITEM);
   });
 });
+
+describe("RoadmapItemCard — outcome delivery link (BT-1ea82c1d75fa)", () => {
+  it("renders the outcome text when set so the measurable delivery target is visible on the card", () => {
+    const ITEM_WITH_OUTCOME = {
+      ...ITEM,
+      outcome: "Reduce churn by 15% within 60 days of launch",
+    } as unknown as ScorableRoadmapItem;
+    render(<RoadmapItemCard item={ITEM_WITH_OUTCOME} onEdit={jest.fn()} onDelete={jest.fn()} />);
+    expect(screen.getByTestId("roadmap-item-outcome")).toBeInTheDocument();
+    expect(screen.getByTestId("roadmap-item-outcome")).toHaveTextContent(
+      "Reduce churn by 15% within 60 days of launch",
+    );
+  });
+
+  it("does not render the outcome block when outcome is null so the card stays compact for items with no stated outcome", () => {
+    render(<RoadmapItemCard item={ITEM} onEdit={jest.fn()} onDelete={jest.fn()} />);
+    expect(screen.queryByTestId("roadmap-item-outcome")).not.toBeInTheDocument();
+  });
+});

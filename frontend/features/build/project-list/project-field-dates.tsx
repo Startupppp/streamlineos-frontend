@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useUpdateProject } from "@/hooks/api/build/projects";
-import { InlineFieldWrapper } from "@/features/build/views/card-inline-fields";
+import { InlineFieldWrapper } from "@/features/build/views/card-field-wrapper";
 import { resolveDatePickerYearBounds } from "@/lib/date-constraints";
 import {
   dateToneClasses,

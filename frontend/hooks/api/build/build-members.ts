@@ -77,6 +77,21 @@ export function useAddBuildMember() {
   });
 }
 
+export function useMemberStanding(userId: string) {
+  const canView = useCan("build:members:view");
+  return useQuery({
+    queryKey: [...buildWorkQueryKeys.projects.buildMembers.all, "standing", userId],
+    queryFn: ({ signal }) =>
+      apiClient.get<{ orgStanding: string; buildStanding: boolean; projectCount: number }>(
+        `/build/members/${userId}/standing`,
+        undefined,
+        signal,
+      ),
+    staleTime: 60_000,
+    enabled: canView && !!userId,
+  });
+}
+
 export function useRemoveBuildMember() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:members:manage", {

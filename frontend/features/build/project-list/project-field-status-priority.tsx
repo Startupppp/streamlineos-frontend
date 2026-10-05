@@ -21,7 +21,7 @@ import {
   popoverOptionBaseClass,
   popoverOptionSelectedClass,
 } from "@/features/build/shared/popover-option-classes";
-import { InlineFieldWrapper } from "@/features/build/views/card-inline-fields";
+import { InlineFieldWrapper } from "@/features/build/views/card-field-wrapper";
 import { statusDotColors } from "./project-card-utils";
 import type { ProjectStatusValue } from "@/types/projects";
 

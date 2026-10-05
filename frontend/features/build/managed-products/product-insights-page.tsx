@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { BarChart2, CheckCircle2, FolderOpen, Inbox, LayoutGrid, MessageSquare, ThumbsUp } from "lucide-react";
+import { BarChart2, CheckCircle2, FolderOpen, Inbox, LayoutGrid, MessageSquare, ThumbsUp, Clock } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { PmPageShell, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
@@ -12,6 +12,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import { getUserDisplayName } from "@/lib/person-display";
 
 const RANGE_OPTIONS = [
   { label: "All time", value: "all" },
@@ -142,24 +143,28 @@ export function ProductInsightsPage({ managedProductId }: ProductInsightsPagePro
                     value={data?.submissionsByStatus.open ?? 0}
                     icon={Inbox}
                     tone="default"
+                    href={`/build/managed-products/${managedProductId}/feedback?status=open`}
                   />
                   <StatCard
                     label="In progress"
                     value={data?.submissionsByStatus.in_progress ?? 0}
                     icon={BarChart2}
                     tone="amber"
+                    href={`/build/managed-products/${managedProductId}/feedback?status=in_progress`}
                   />
                   <StatCard
                     label="Resolved"
                     value={data?.submissionsByStatus.resolved ?? 0}
                     icon={CheckCircle2}
                     tone="emerald"
+                    href={`/build/managed-products/${managedProductId}/feedback?status=resolved`}
                   />
                   <StatCard
                     label="Archived"
                     value={data?.submissionsByStatus.archived ?? 0}
                     icon={FolderOpen}
                     tone="default"
+                    href={`/build/managed-products/${managedProductId}/feedback?status=archived`}
                   />
                 </StatCardGrid>
               </div>
@@ -192,6 +197,37 @@ export function ProductInsightsPage({ managedProductId }: ProductInsightsPagePro
                     tone="emerald"
                   />
                 </StatCardGrid>
+              </div>
+
+              <div>
+                <h2 className="mb-3 text-sm font-medium text-foreground">Score</h2>
+                <StatCardGrid cols={2}>
+                  <StatCard
+                    label="Age (days)"
+                    value={data?.ageDays ?? 0}
+                    icon={Clock}
+                    tone="default"
+                  />
+                  {data?.confidenceScore != null && (
+                    <StatCard
+                      label="Confidence score"
+                      value={data.confidenceScore}
+                      icon={CheckCircle2}
+                      tone="blue"
+                    />
+                  )}
+                </StatCardGrid>
+                {data?.overrideReason != null && (
+                  <div className="mt-3 rounded-md border p-3 text-sm text-muted-foreground" data-testid="score-override-reason">
+                    <span className="font-medium text-foreground">Override: </span>
+                    {data.overrideReason}
+                    {data.overriddenBy != null && (
+                      <span className="ml-1">
+                        — {getUserDisplayName(data.overriddenBy)}
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </PageState>

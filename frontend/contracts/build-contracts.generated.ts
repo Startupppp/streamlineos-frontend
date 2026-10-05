@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const OPENAPI_HASH = "sha256:2db5b82c8bced4af298ce06629fc489f893ec25e94bb068aa9d6d50b1bd73c29" as const;
+export const OPENAPI_HASH = "sha256:4529f2379d991219517d895995c96e147aded427ac0bea6437c9f1f7fd71d93c" as const;
 
 export const agentTokensListResponseSchema = z.array(z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -2698,6 +2698,67 @@ export const projectsAutomationsUpdateBodySchema = z.strictObject({
 });
 export type ProjectsAutomationsUpdateBody = z.input<typeof projectsAutomationsUpdateBodySchema>;
 
+export const projectsAutomationsGetAiPolicyResponseSchema = z.object({
+  model: z.string().nullable(),
+  maxTokensPerRun: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  temperature: z.number().nullable(),
+});
+export type ProjectsAutomationsGetAiPolicyResponse = z.infer<typeof projectsAutomationsGetAiPolicyResponseSchema>;
+
+export const projectsAutomationsPutAiPolicyResponseSchema = z.object({
+  model: z.string().nullable(),
+  maxTokensPerRun: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  temperature: z.number().nullable(),
+});
+export type ProjectsAutomationsPutAiPolicyResponse = z.infer<typeof projectsAutomationsPutAiPolicyResponseSchema>;
+
+export const projectsAutomationsPutAiPolicyBodySchema = z.strictObject({
+  model: z.string().optional(),
+  maxTokensPerRun: z.number().int().gt(0).lte(100000).optional(),
+  temperature: z.number().gte(0).lte(2).optional(),
+});
+export type ProjectsAutomationsPutAiPolicyBody = z.input<typeof projectsAutomationsPutAiPolicyBodySchema>;
+
+export const projectsAutomationsGetHumanConfirmationResponseSchema = z.object({
+  requireConfirmation: z.boolean(),
+  actionTypes: z.array(z.enum(["set_status", "set_assignee", "set_priority", "add_label", "add_comment", "request_approval"])),
+});
+export type ProjectsAutomationsGetHumanConfirmationResponse = z.infer<typeof projectsAutomationsGetHumanConfirmationResponseSchema>;
+
+export const projectsAutomationsPutHumanConfirmationResponseSchema = z.object({
+  requireConfirmation: z.boolean(),
+  actionTypes: z.array(z.enum(["set_status", "set_assignee", "set_priority", "add_label", "add_comment", "request_approval"])),
+});
+export type ProjectsAutomationsPutHumanConfirmationResponse = z.infer<typeof projectsAutomationsPutHumanConfirmationResponseSchema>;
+
+export const projectsAutomationsPutHumanConfirmationBodySchema = z.strictObject({
+  requireConfirmation: z.boolean(),
+  actionTypes: z.array(z.enum(["set_status", "set_assignee", "set_priority", "add_label", "add_comment", "request_approval"])),
+});
+export type ProjectsAutomationsPutHumanConfirmationBody = z.input<typeof projectsAutomationsPutHumanConfirmationBodySchema>;
+
+export const projectsAutomationsGetTokenQuotaResponseSchema = z.object({
+  tokensUsedThisPeriod: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  quotaLimit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  resetAt: z.iso.datetime({ offset: true }),
+});
+export type ProjectsAutomationsGetTokenQuotaResponse = z.infer<typeof projectsAutomationsGetTokenQuotaResponseSchema>;
+
+export const projectsAutomationsGetToolPermissionsResponseSchema = z.object({
+  allowedTools: z.array(z.enum(["ticket.summarize", "ticket.improve-description", "ticket.suggest-subtasks", "ticket.suggest-fields", "ticket.generate-checklist", "ticket.suggest-title"])),
+});
+export type ProjectsAutomationsGetToolPermissionsResponse = z.infer<typeof projectsAutomationsGetToolPermissionsResponseSchema>;
+
+export const projectsAutomationsPutToolPermissionsResponseSchema = z.object({
+  allowedTools: z.array(z.enum(["ticket.summarize", "ticket.improve-description", "ticket.suggest-subtasks", "ticket.suggest-fields", "ticket.generate-checklist", "ticket.suggest-title"])),
+});
+export type ProjectsAutomationsPutToolPermissionsResponse = z.infer<typeof projectsAutomationsPutToolPermissionsResponseSchema>;
+
+export const projectsAutomationsPutToolPermissionsBodySchema = z.strictObject({
+  allowedTools: z.array(z.enum(["ticket.summarize", "ticket.improve-description", "ticket.suggest-subtasks", "ticket.suggest-fields", "ticket.generate-checklist", "ticket.suggest-title"])),
+});
+export type ProjectsAutomationsPutToolPermissionsBody = z.input<typeof projectsAutomationsPutToolPermissionsBodySchema>;
+
 export const projectsBudgetGetBudgetResponseSchema = z.object({
   projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   plannedBudget: z.number(),
@@ -3762,6 +3823,14 @@ export const ticketImportExportExportTicketsResponseSchema = z.object({
   content: z.string(),
 });
 export type TicketImportExportExportTicketsResponse = z.infer<typeof ticketImportExportExportTicketsResponseSchema>;
+
+export const ticketImportExportPreviewExportResponseSchema = z.object({
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  availableCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  cappedAt: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  columns: z.array(z.string()),
+});
+export type TicketImportExportPreviewExportResponse = z.infer<typeof ticketImportExportPreviewExportResponseSchema>;
 
 export const ticketImportExportPreviewImportResponseSchema = z.object({
   format: z.enum(["csv", "json"]),
@@ -6655,17 +6724,44 @@ export const projectsWebhooksUpdateWebhookBodySchema = z.strictObject({
 });
 export type ProjectsWebhooksUpdateWebhookBody = z.input<typeof projectsWebhooksUpdateWebhookBodySchema>;
 
-export const projectsWebhooksListDeliveriesResponseSchema = z.array(z.object({
-  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
-  webhookId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
-  event: z.string(),
-  status: z.enum(["pending", "success", "failed"]),
-  responseCode: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
-  attempts: z.number().int().gte(-9007199254740991).lte(9007199254740991),
-  lastError: z.string().nullable(),
-  deliveredAt: z.iso.datetime({ offset: true }),
-}));
+export const projectsWebhooksListDeliveriesResponseSchema = z.object({
+  items: z.array(z.object({
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    webhookId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    event: z.string(),
+    status: z.enum(["pending", "success", "failed"]),
+    responseCode: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    attempts: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    lastError: z.string().nullable(),
+    createdAt: z.iso.datetime({ offset: true }),
+    deliveredAt: z.iso.datetime({ offset: true }).nullable(),
+  })),
+  nextCursor: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+});
 export type ProjectsWebhooksListDeliveriesResponse = z.infer<typeof projectsWebhooksListDeliveriesResponseSchema>;
+
+export const projectsWebhooksRetryDeliveryResponseSchema = z.object({
+  success: z.boolean(),
+  responseCode: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+});
+export type ProjectsWebhooksRetryDeliveryResponse = z.infer<typeof projectsWebhooksRetryDeliveryResponseSchema>;
+
+export const projectsWebhooksGetImpactResponseSchema = z.object({
+  webhookId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  events: z.array(z.string()),
+  totalDeliveries: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  successfulDeliveries: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  lastSuccessAt: z.iso.datetime({ offset: true }).nullable(),
+  lastFailureAt: z.iso.datetime({ offset: true }).nullable(),
+});
+export type ProjectsWebhooksGetImpactResponse = z.infer<typeof projectsWebhooksGetImpactResponseSchema>;
+
+export const projectsWebhooksRotateSecretResponseSchema = z.object({
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  secret: z.string(),
+  secretHint: z.string(),
+});
+export type ProjectsWebhooksRotateSecretResponse = z.infer<typeof projectsWebhooksRotateSecretResponseSchema>;
 
 export const projectsWebhooksSendTestResponseSchema = z.object({
   success: z.boolean(),
@@ -7233,6 +7329,13 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "ProjectsAutomationsController_replayRun", method: "POST", path: "/build/{projectId}/automations/runs/{runId}/replay", response: "projectsAutomationsReplayRunResponseSchema" },
   { operationId: "ProjectsAutomationsController_update", method: "PATCH", path: "/build/{projectId}/automations/{automationId}", response: "projectsAutomationsUpdateResponseSchema", body: "projectsAutomationsUpdateBodySchema" },
   { operationId: "ProjectsAutomationsController_delete", method: "DELETE", path: "/build/{projectId}/automations/{automationId}" },
+  { operationId: "ProjectsAutomationsController_getAiPolicy", method: "GET", path: "/build/{projectId}/automations/{automationId}/ai-policy", response: "projectsAutomationsGetAiPolicyResponseSchema" },
+  { operationId: "ProjectsAutomationsController_putAiPolicy", method: "PUT", path: "/build/{projectId}/automations/{automationId}/ai-policy", response: "projectsAutomationsPutAiPolicyResponseSchema", body: "projectsAutomationsPutAiPolicyBodySchema" },
+  { operationId: "ProjectsAutomationsController_getHumanConfirmation", method: "GET", path: "/build/{projectId}/automations/{automationId}/human-confirmation", response: "projectsAutomationsGetHumanConfirmationResponseSchema" },
+  { operationId: "ProjectsAutomationsController_putHumanConfirmation", method: "PUT", path: "/build/{projectId}/automations/{automationId}/human-confirmation", response: "projectsAutomationsPutHumanConfirmationResponseSchema", body: "projectsAutomationsPutHumanConfirmationBodySchema" },
+  { operationId: "ProjectsAutomationsController_getTokenQuota", method: "GET", path: "/build/{projectId}/automations/{automationId}/token-quota", response: "projectsAutomationsGetTokenQuotaResponseSchema" },
+  { operationId: "ProjectsAutomationsController_getToolPermissions", method: "GET", path: "/build/{projectId}/automations/{automationId}/tool-permissions", response: "projectsAutomationsGetToolPermissionsResponseSchema" },
+  { operationId: "ProjectsAutomationsController_putToolPermissions", method: "PUT", path: "/build/{projectId}/automations/{automationId}/tool-permissions", response: "projectsAutomationsPutToolPermissionsResponseSchema", body: "projectsAutomationsPutToolPermissionsBodySchema" },
   { operationId: "ProjectsBudgetController_getBudget", method: "GET", path: "/build/{projectId}/budget", response: "projectsBudgetGetBudgetResponseSchema" },
   { operationId: "ProjectsBudgetController_updateBudget", method: "PATCH", path: "/build/{projectId}/budget", response: "projectsBudgetUpdateBudgetResponseSchema", body: "projectsBudgetUpdateBudgetBodySchema" },
   { operationId: "BugsController_listBugs", method: "GET", path: "/build/{projectId}/bugs", response: "bugsListBugsResponseSchema" },
@@ -7283,6 +7386,7 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "SubmissionsController_updateSubmission", method: "PATCH", path: "/build/{projectId}/forms/{formId}/submissions/{submissionId}", response: "submissionsUpdateSubmissionResponseSchema", body: "submissionsUpdateSubmissionBodySchema" },
   { operationId: "TicketImportExportController_commitImport", method: "POST", path: "/build/{projectId}/import-export/tickets", response: "ticketImportExportCommitImportResponseSchema", body: "ticketImportExportCommitImportBodySchema" },
   { operationId: "TicketImportExportController_exportTickets", method: "GET", path: "/build/{projectId}/import-export/tickets/export", response: "ticketImportExportExportTicketsResponseSchema" },
+  { operationId: "TicketImportExportController_previewExport", method: "GET", path: "/build/{projectId}/import-export/tickets/export/preview", response: "ticketImportExportPreviewExportResponseSchema" },
   { operationId: "TicketImportExportController_previewImport", method: "POST", path: "/build/{projectId}/import-export/tickets/preview", response: "ticketImportExportPreviewImportResponseSchema", body: "ticketImportExportPreviewImportBodySchema" },
   { operationId: "IncidentsController_listIncidents", method: "GET", path: "/build/{projectId}/incidents", response: "incidentsListIncidentsResponseSchema" },
   { operationId: "IncidentsController_createIncident", method: "POST", path: "/build/{projectId}/incidents", response: "incidentsCreateIncidentResponseSchema", body: "incidentsCreateIncidentBodySchema" },
@@ -7406,6 +7510,9 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "ProjectsWebhooksController_updateWebhook", method: "PATCH", path: "/build/{projectId}/webhooks/{webhookId}", response: "projectsWebhooksUpdateWebhookResponseSchema", body: "projectsWebhooksUpdateWebhookBodySchema" },
   { operationId: "ProjectsWebhooksController_deleteWebhook", method: "DELETE", path: "/build/{projectId}/webhooks/{webhookId}" },
   { operationId: "ProjectsWebhooksController_listDeliveries", method: "GET", path: "/build/{projectId}/webhooks/{webhookId}/deliveries", response: "projectsWebhooksListDeliveriesResponseSchema" },
+  { operationId: "ProjectsWebhooksController_retryDelivery", method: "POST", path: "/build/{projectId}/webhooks/{webhookId}/deliveries/{deliveryId}/retry", response: "projectsWebhooksRetryDeliveryResponseSchema" },
+  { operationId: "ProjectsWebhooksController_getImpact", method: "GET", path: "/build/{projectId}/webhooks/{webhookId}/impact", response: "projectsWebhooksGetImpactResponseSchema" },
+  { operationId: "ProjectsWebhooksController_rotateSecret", method: "POST", path: "/build/{projectId}/webhooks/{webhookId}/rotate-secret", response: "projectsWebhooksRotateSecretResponseSchema" },
   { operationId: "ProjectsWebhooksController_sendTest", method: "POST", path: "/build/{projectId}/webhooks/{webhookId}/test", response: "projectsWebhooksSendTestResponseSchema" },
   { operationId: "WhiteboardsController_listWhiteboards", method: "GET", path: "/build/{projectId}/whiteboards", response: "whiteboardsListWhiteboardsResponseSchema" },
   { operationId: "WhiteboardsController_createWhiteboard", method: "POST", path: "/build/{projectId}/whiteboards", response: "whiteboardsCreateWhiteboardResponseSchema", body: "whiteboardsCreateWhiteboardBodySchema" },

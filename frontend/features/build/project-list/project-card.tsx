@@ -30,9 +30,9 @@ import { ProjectCardDialogs } from "./project-card-dialogs";
 import { ProjectCardFooter } from "./project-card-footer";
 import {
   InlineProjectTitle,
-  InlineProjectStatus,
   InlineProjectDescription,
-} from "./project-card-inline-fields";
+} from "./project-field-text";
+import { InlineProjectStatus } from "./project-field-status-priority";
 import {
   avatarTints,
   statusDotColors,
@@ -234,7 +234,10 @@ export const ProjectCard = React.memo(function ProjectCard({
                   )}
                 >
                   <span
-                    className={cn("h-1.5 w-1.5 shrink-0 rounded-full", statusDot)}
+                    className={cn(
+                      "h-1.5 w-1.5 shrink-0 rounded-full",
+                      statusDot,
+                    )}
                     aria-hidden="true"
                   />
                   {displayLabel}

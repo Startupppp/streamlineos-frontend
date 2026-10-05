@@ -16,7 +16,8 @@ import {
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { useUpdateIncidentFollowUpAction } from "@/hooks/api/build/incidents";
-import type { IncidentFollowUpAction, IncidentFollowUpStatus } from "@/hooks/api/build/incidents-schema";
+import type { IncidentsAddFollowUpActionResponse } from "@/contracts/build-contracts.generated";
+import type { IncidentFollowUpStatus } from "@/hooks/api/build/incidents-schema";
 import type { ProjectMemberRecord } from "@/types/projects";
 import { formatShortDate } from "@/lib/date-utils";
 import {
@@ -64,7 +65,7 @@ const STATUS_FILTER_DEFINITIONS = [
   { param: "followUpStatus", options: ["open", "in_progress", "done", "cancelled"] as const },
 ] as const;
 
-export function unresolvedFollowUpCount(actions: IncidentFollowUpAction[]): number {
+export function unresolvedFollowUpCount(actions: IncidentsAddFollowUpActionResponse[]): number {
   return actions.filter((a) => a.status === "open" || a.status === "in_progress").length;
 }
 
@@ -74,7 +75,7 @@ function FollowUpStatusCell({
   incidentId,
   canManage,
 }: {
-  action: IncidentFollowUpAction;
+  action: IncidentsAddFollowUpActionResponse;
   projectId: number;
   incidentId: number;
   canManage: boolean;
@@ -129,7 +130,7 @@ function FollowUpActionsCell({
   projectId,
   incidentId,
 }: {
-  action: IncidentFollowUpAction;
+  action: IncidentsAddFollowUpActionResponse;
   canManage: boolean;
   projectId: number;
   incidentId: number;
@@ -166,7 +167,7 @@ function buildFollowUpColumns(options: {
   incidentId: number;
   canManage: boolean;
   members: ProjectMemberRecord[];
-}): DataTableColumn<IncidentFollowUpAction>[] {
+}): DataTableColumn<IncidentsAddFollowUpActionResponse>[] {
   const { projectId, incidentId, canManage, members } = options;
   return [
     {
@@ -243,7 +244,7 @@ export function IncidentFollowUps({
 }: {
   projectId: number;
   incidentId: number;
-  actions: IncidentFollowUpAction[];
+  actions: IncidentsAddFollowUpActionResponse[];
   canManage: boolean;
   members: ProjectMemberRecord[];
 }) {

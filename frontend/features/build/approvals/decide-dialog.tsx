@@ -38,7 +38,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import type { ApprovalDetail } from "@/types/projects";
+import type { BuildApprovalsGetApprovalResponse } from "@/contracts/build-contracts.generated";
 import { DECIDABLE } from "./approvals-constants";
 const ARTIFACT_DESCRIPTION_POLICY = { config: {
   ALLOWED_TAGS: ["p", "br", "strong", "b", "em", "i", "u", "s", "del", "code", "pre", "blockquote", "ul", "ol", "li", "a",
@@ -68,7 +68,7 @@ export function DecideDialog({
   const decide = useDecideApproval(projectId);
   const context = JSON.stringify([open, projectId, approvalId, detail.ownerStamp]);
   const committed = useRef<string | null>(null);
-  const [review, setReview] = useState<{ context: string; approval: ApprovalDetail | null; blocked: boolean; error: unknown }>({
+  const [review, setReview] = useState<{ context: string; approval: BuildApprovalsGetApprovalResponse | null; blocked: boolean; error: unknown }>({
     context, approval: detail.data ?? null, blocked: false, error: null,
   });
   const [latestRead, setLatestRead] = useState<{ context: string; pending: boolean }>({ context, pending: false });

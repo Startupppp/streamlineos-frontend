@@ -35,8 +35,9 @@ export function ChatChannelCombobox({
     isFetchingNextPage,
     loadMore,
   } = useChatChannels();
-  const numericLookup =
-    /^\d+$/.test(debouncedSearch.trim()) ? Number(debouncedSearch.trim()) : 0;
+  const numericLookup = /^\d+$/.test(debouncedSearch.trim())
+    ? Number(debouncedSearch.trim())
+    : 0;
   const { data: lookedUpChannel } = useChatChannel(numericLookup);
 
   const { options, truncated } = useMemo(() => {

@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import type { AccessState } from "@/lib/rbac/gate";
 import { ProjectSettingsRetentionPage } from "./project-settings-retention-page";
-import type { ProjectRetentionSettings } from "./project-settings-retention-schema";
+import type { ProjectsRetentionSettingsGetSettingsResponse } from "@/contracts/build-contracts.generated";
 
 let mockAccessState: AccessState = "denied";
 const mockSearchParams = new URLSearchParams();
@@ -27,7 +27,7 @@ jest.mock("@/hooks/api/use-page-state", () => ({
   },
 }));
 
-const mockSettings: ProjectRetentionSettings = {
+const mockSettings: ProjectsRetentionSettingsGetSettingsResponse = {
   projectId: 1,
   inheritOrgPolicy: true,
   closedTicketRetentionDays: null,

@@ -11,6 +11,20 @@ import {
   usePageState,
 } from "./product-scope-pages.test-harness";
 
+const mockRouteMutate = jest.fn();
+
+jest.mock("@/hooks/api/build/intake-mutations", () => ({
+  useRouteFeedbucketToIntake: jest.fn(() => ({ mutate: mockRouteMutate, isPending: false })),
+}));
+
+jest.mock("sonner", () => ({
+  toast: { success: jest.fn(), error: jest.fn() },
+}));
+
+jest.mock("@/lib/get-error-message", () => ({
+  getErrorMessage: jest.fn((e: unknown) => String(e)),
+}));
+
 jest.mock("@/components/ui/date-range-picker", () => ({
   DateRangePicker: ({ from, to }: { from?: string; to?: string }) => (
     <div data-testid="date-range-picker" data-from={from ?? ""} data-to={to ?? ""} />
@@ -193,5 +207,92 @@ describe("ProductFeedbackPage — URL-backed filter params (BSN-01-FB-FILTERS)",
     const [callParams] = useFeedbucketSubmissions.mock.calls[0] as [Record<string, unknown>];
     expect(callParams).not.toHaveProperty("from");
     expect(callParams).not.toHaveProperty("to");
+  });
+});
+
+import { buildFeedbackColumnsWithActions } from "./product-feedback-columns";
+import type { SubmissionRow } from "./product-feedback-columns";
+
+describe("buildFeedbackColumnsWithActions — route-to-intake column factory (BLD-014)", () => {
+  const row: SubmissionRow = {
+    id: 55, message: "Widget crashes on mobile", type: "bug", status: "open",
+    createdAt: null, screenshotUrl: null, reporterName: "Alice", reporterEmail: null,
+    widget: { projectId: 10, managedProductId: 7 },
+  } as unknown as SubmissionRow;
+
+  it("returns base FEEDBACK_COLUMNS when canRouteToIntake is false (FE-122 control)", () => {
+    const cols = buildFeedbackColumnsWithActions({ canRouteToIntake: false, onRouteToIntake: jest.fn() });
+    expect(cols.every((c) => c.key !== "actions")).toBe(true);
+  });
+
+  it("appends an actions column when canRouteToIntake is true", () => {
+    const cols = buildFeedbackColumnsWithActions({ canRouteToIntake: true, onRouteToIntake: jest.fn() });
+    expect(cols.some((c) => c.key === "actions")).toBe(true);
+  });
+
+  it("actions column cell renders a button with route-to-intake-btn testid", () => {
+    const cols = buildFeedbackColumnsWithActions({ canRouteToIntake: true, onRouteToIntake: jest.fn() });
+    const actionsCol = cols.find((c) => c.key === "actions");
+    const { render: renderCell } = require("@testing-library/react");
+    const { getByTestId } = renderCell(actionsCol!.cell(row));
+    expect(getByTestId("route-to-intake-btn")).toBeInTheDocument();
+  });
+
+  it("actions column cell button click calls onRouteToIntake with the original row preserving feedbackId", () => {
+    const onRouteToIntake = jest.fn();
+    const cols = buildFeedbackColumnsWithActions({ canRouteToIntake: true, onRouteToIntake });
+    const actionsCol = cols.find((c) => c.key === "actions");
+    const { render: renderCell } = require("@testing-library/react");
+    const { getByTestId } = renderCell(actionsCol!.cell(row));
+    getByTestId("route-to-intake-btn").click();
+    expect(onRouteToIntake).toHaveBeenCalledWith(row);
+    expect(onRouteToIntake.mock.calls[0]?.[0]?.id).toBe(55);
+  });
+});
+
+describe("ProductFeedbackPage — route-to-intake mutation wiring (BLD-014)", () => {
+  it("checks feedbucket:submissions:manage permission to gate the route-to-intake action", () => {
+    useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
+    render(<ProductFeedbackPage managedProductId={7} />);
+    const canCalls = useCan.mock.calls.map((c: unknown[]) => c[0]);
+    expect(canCalls).toContain("feedbucket:submissions:manage");
+  });
+});
+
+describe("ProductFeedbackPage — duplicate dedup candidates (BT-6733af0a3e35 item 2)", () => {
+  const dupRow = (id: number) => ({
+    id, message: "App crashes on login", type: "bug", status: "open",
+    createdAt: null, screenshotUrl: null, reporterName: null, reporterEmail: null,
+    widget: { projectId: 12, managedProductId: 7 },
+  });
+
+  it("surfaces both duplicate-flagged submissions as table rows so the actor can review all candidates", () => {
+    useFeedbucketSubmissions.mockReturnValue({
+      ...EMPTY_FEEDBUCKET_RESULT,
+      data: { data: [dupRow(31), dupRow(32)], total: 2 },
+    });
+    render(<ProductFeedbackPage managedProductId={7} />);
+    const buttons = screen.getAllByRole("button", { name: "App crashes on login" });
+    expect(buttons).toHaveLength(2);
+  });
+});
+
+describe("buildFeedbackColumnsWithActions — route-to-intake provenance and toast wiring (BT-6733af0a3e35 item 2)", () => {
+  const row: SubmissionRow = {
+    id: 31, message: "App crashes on login", type: "bug", status: "open",
+    createdAt: null, screenshotUrl: null, reporterName: null, reporterEmail: null,
+    widget: { projectId: 12, managedProductId: 7 },
+  } as unknown as SubmissionRow;
+
+  it("passes the submission's original id and projectId to the route mutation so provenance is preserved end-to-end", () => {
+    const onRouteToIntake = jest.fn();
+    const cols = buildFeedbackColumnsWithActions({ canRouteToIntake: true, onRouteToIntake });
+    const actionsCol = cols.find((c) => c.key === "actions");
+    const { render: renderCell } = require("@testing-library/react");
+    const { getByTestId } = renderCell(actionsCol!.cell(row));
+    getByTestId("route-to-intake-btn").click();
+    expect(onRouteToIntake).toHaveBeenCalledWith(row);
+    expect(onRouteToIntake.mock.calls[0]?.[0]?.id).toBe(31);
+    expect(onRouteToIntake.mock.calls[0]?.[0]?.widget?.projectId).toBe(12);
   });
 });

@@ -30,7 +30,11 @@ import { useReleases } from "@/hooks/api/build/releases";
 import { ProjectMemberSelect } from "@/components/members/project-member-select";
 import { TicketCombobox } from "@/features/build/shared/ticket-combobox";
 import { BuildDateTimeField } from "@/features/build/shared/build-datetime-field";
-import type { Incident, IncidentDetail, IncidentSeverity, IncidentStatus } from "@/hooks/api/build/incidents-schema";
+import type {
+  IncidentsCreateIncidentResponse,
+  IncidentsGetIncidentResponse,
+} from "@/contracts/build-contracts.generated";
+import type { IncidentSeverity, IncidentStatus } from "@/hooks/api/build/incidents-schema";
 
 const SEVERITIES: IncidentSeverity[] = ["critical", "high", "medium", "low"];
 const STATUSES: IncidentStatus[] = ["detected", "investigating", "mitigating", "resolved", "postmortem", "closed"];
@@ -137,7 +141,7 @@ interface IncidentSheetProps {
   projectId: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  editIncident: Incident | IncidentDetail | null;
+  editIncident: IncidentsCreateIncidentResponse | IncidentsGetIncidentResponse | null;
 }
 
 export function IncidentSheet({ projectId, open, onOpenChange, editIncident }: IncidentSheetProps) {
@@ -229,7 +233,7 @@ export function IncidentSheet({ projectId, open, onOpenChange, editIncident }: I
         },
         {
           onSuccess: () => {
-            toast.success("Incident updated");
+            toast.success("IncidentsCreateIncidentResponse updated");
             onOpenChange(false);
           },
           onError: (e) => toast.error(getErrorMessage(e)),
@@ -238,7 +242,7 @@ export function IncidentSheet({ projectId, open, onOpenChange, editIncident }: I
     } else {
       create.mutate(input, {
         onSuccess: () => {
-          toast.success("Incident created");
+          toast.success("IncidentsCreateIncidentResponse created");
           onOpenChange(false);
         },
         onError: (e) => toast.error(getErrorMessage(e)),
@@ -253,7 +257,7 @@ export function IncidentSheet({ projectId, open, onOpenChange, editIncident }: I
       <SheetContent className="p-0 flex flex-col w-full sm:max-w-xl">
         <SheetHeader className="px-5 py-4 border-b shrink-0">
           <SheetTitle>
-            {editIncident ? "Edit Incident" : "New Incident"}
+            {editIncident ? "Edit IncidentsCreateIncidentResponse" : "New IncidentsCreateIncidentResponse"}
           </SheetTitle>
           <SheetDescription>
             {editIncident
@@ -501,7 +505,7 @@ export function IncidentSheet({ projectId, open, onOpenChange, editIncident }: I
                   isPending={isPending}
                   loadingText="Saving…"
                 >
-                  {editIncident ? "Save Changes" : "Create Incident"}
+                  {editIncident ? "Save Changes" : "Create IncidentsCreateIncidentResponse"}
                 </LoadingButton>
               </div>
             </SheetFooter>

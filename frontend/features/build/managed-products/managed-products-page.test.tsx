@@ -57,7 +57,7 @@ jest.mock("@/hooks/api/organization", () => ({
 }));
 
 jest.mock("@/hooks/common/use-query-param-open", () => ({
-  useQueryParamOpen: () => ({ open: false, onOpenChange: jest.fn(), setOpen: jest.fn() }),
+  useQueryParamOpen: jest.fn(() => ({ open: false, onOpenChange: jest.fn(), setOpen: jest.fn() })),
 }));
 
 jest.mock("@/hooks/common/use-debounce", () => ({
@@ -133,7 +133,7 @@ jest.mock("@/components/ui/confirm-dialog", () => ({
 }));
 
 jest.mock("./managed-product-form-sheet", () => ({
-  ManagedProductFormSheet: () => null,
+  ManagedProductFormSheet: jest.fn(),
 }));
 
 jest.mock("./managed-product-bulk-toolbar", () => ({
@@ -355,5 +355,102 @@ describe("ManagedProductsPage — URL stability (BT-d1f0e28c8509)", () => {
     expect(mockRouterPush).toHaveBeenCalledWith(`/build/managed-products/${productId}`);
     expect(mockRouterPush).not.toHaveBeenCalledWith(expect.stringContaining("Original Name"));
     expect(mockRouterPush).not.toHaveBeenCalledWith(expect.stringContaining("Renamed Name"));
+  });
+});
+
+import type { CreateManagedProductInput } from "@/types/projects";
+
+const { ManagedProductFormSheet } = jest.requireMock("./managed-product-form-sheet") as {
+  ManagedProductFormSheet: jest.Mock;
+};
+const { useCreateManagedProduct, useDeleteManagedProduct } = jest.requireMock(
+  "@/hooks/api/build/managed-products",
+) as {
+  useCreateManagedProduct: jest.Mock;
+  useDeleteManagedProduct: jest.Mock;
+};
+const { toast } = jest.requireMock("sonner") as {
+  toast: { success: jest.Mock; error: jest.Mock };
+};
+const { useQueryParamOpen } = jest.requireMock("@/hooks/common/use-query-param-open") as {
+  useQueryParamOpen: jest.Mock;
+};
+
+type MutateCallbacks = { onSuccess?: () => void; onError?: (e: Error) => void };
+
+describe("ManagedProductsPage — create product (BT-6733af0a3e35 item 1)", () => {
+  const INPUT: CreateManagedProductInput = { name: "Omega Suite", key: "OMEGA-001" };
+  let capturedMutate: jest.Mock;
+  let capturedCallbacks: MutateCallbacks;
+
+  beforeEach(() => {
+    capturedCallbacks = {};
+    capturedMutate = jest.fn((_input: CreateManagedProductInput, cbs: MutateCallbacks) => {
+      capturedCallbacks = cbs;
+    });
+    useCreateManagedProduct.mockReturnValue({ mutate: capturedMutate, isPending: false });
+    useQueryParamOpen.mockReturnValue({ open: true, onOpenChange: jest.fn(), setOpen: jest.fn() });
+    ManagedProductFormSheet.mockImplementation(
+      ({ onSubmitCreate }: { onSubmitCreate?: (i: CreateManagedProductInput) => void }) => {
+        onSubmitCreate?.(INPUT);
+        return null;
+      },
+    );
+  });
+
+  it("fires createProduct.mutate with the submitted input when the form calls onSubmitCreate", () => {
+    render(<ManagedProductsPage />);
+    expect(capturedMutate).toHaveBeenCalledWith(INPUT, expect.any(Object));
+  });
+
+  it("shows success toast and closes the create form on mutation success", () => {
+    render(<ManagedProductsPage />);
+    expect(capturedMutate).toHaveBeenCalledTimes(1);
+    capturedCallbacks.onSuccess?.();
+    expect(toast.success).toHaveBeenCalledWith("Managed product created");
+  });
+
+  it("shows error toast and leaves the create form open on mutation failure", () => {
+    render(<ManagedProductsPage />);
+    expect(capturedMutate).toHaveBeenCalledTimes(1);
+    capturedCallbacks.onError?.(new Error("Name taken"));
+    expect(toast.error).toHaveBeenCalledWith("Name taken");
+    expect(toast.success).not.toHaveBeenCalled();
+  });
+
+  it("forwards productType to createProduct.mutate when the form includes a template type selection (BT-1680ac475463)", () => {
+    const inputWithType: CreateManagedProductInput = { name: "Content Hub", key: "CNTHUB", productType: "content_brief" };
+    ManagedProductFormSheet.mockImplementation(
+      ({ onSubmitCreate }: { onSubmitCreate?: (i: CreateManagedProductInput) => void }) => {
+        onSubmitCreate?.(inputWithType);
+        return null;
+      },
+    );
+    render(<ManagedProductsPage />);
+    expect(capturedMutate).toHaveBeenCalledWith(
+      expect.objectContaining({ productType: "content_brief" }),
+      expect.any(Object),
+    );
+  });
+});
+
+describe("ManagedProductsPage — delete product (BT-6733af0a3e35 item 1)", () => {
+  const product = {
+    id: 55, name: "Delete Me", key: "DEL-055", status: "active" as const,
+    ownerId: null, description: null, orgId: "org-1", vision: null, missionStatement: null,
+    targetCustomer: null, differentiators: null, currentPhase: null, targetLaunchDate: null,
+    successMetrics: null, ownerMembershipId: null, deletedAt: null,
+    createdAt: "2025-01-01T00:00:00Z", updatedAt: "2025-01-01T00:00:00Z",
+  };
+
+  it("does not call deleteProduct.mutate before the confirmation step", () => {
+    const mockDeleteMutate = jest.fn();
+    useDeleteManagedProduct.mockReturnValue({ mutate: mockDeleteMutate, isPending: false });
+    useManagedProducts.mockReturnValue({
+      data: { data: [product], pagination: { hasMore: false, nextCursor: null, limit: 20 } },
+      isLoading: false, isError: false, error: null, refetch: jest.fn(),
+    });
+    render(<ManagedProductsPage />);
+    expect(mockDeleteMutate).not.toHaveBeenCalled();
   });
 });

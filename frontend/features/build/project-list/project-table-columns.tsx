@@ -17,10 +17,7 @@ import {
   projectStatusColors,
   projectStatusDisplayLabels,
 } from "@/lib/theme-constants";
-import {
-  getUserDisplayName,
-  getUserInitials,
-} from "@/lib/person-display";
+import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { TEXT_FLEX_CHILD } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { ProjectListItem, ProjectHealth } from "@/types/projects/projects";
@@ -28,8 +25,8 @@ import type { DisplayPrefs } from "./use-display-prefs";
 import {
   InlineProjectLead,
   InlineProjectMembers,
-  InlineProjectPriority,
-} from "./project-card-inline-fields";
+} from "./project-field-people";
+import { InlineProjectPriority } from "./project-field-status-priority";
 import {
   ActionsCell,
   StatusDot,

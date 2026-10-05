@@ -27,7 +27,8 @@ import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useEmployeeOnboardingDocs, useReviewDocument } from "@/hooks/api/hr/document-review";
-import { DocCard, type OnboardingDoc } from "./doc-card";
+import type { OnboardingChecklistDoc } from "@/hooks/api/hr/onboarding";
+import { DocCard } from "./doc-card";
 import { UploadDocSheet } from "./upload-doc-sheet";
 
 interface ReviewSheetProps {
@@ -66,9 +67,9 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
 
   const employeeDocs = docsData?.data;
 
-  const [reuploadDoc, setReuploadDoc] = useState<OnboardingDoc | null>(null);
+  const [reuploadDoc, setReuploadDoc] = useState<OnboardingChecklistDoc | null>(null);
   const [reuploadRemarks, setReuploadRemarks] = useState("");
-  const [approveDoc, setApproveDoc] = useState<OnboardingDoc | null>(null);
+  const [approveDoc, setApproveDoc] = useState<OnboardingChecklistDoc | null>(null);
   const [uploadSheetOpen, setUploadSheetOpen] = useState(false);
 
   const handleSheetOpenChange = useCallback(
@@ -94,7 +95,7 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
     }
   }, [docsData?.pagination.nextCursor]);
 
-  const handleSetApproveDoc = useCallback((doc: OnboardingDoc) => setApproveDoc(doc), []);
+  const handleSetApproveDoc = useCallback((doc: OnboardingChecklistDoc) => setApproveDoc(doc), []);
 
   const handleApprove = useCallback(() => {
     if (!approveDoc) return;
@@ -116,7 +117,7 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
 
   const handleOpenUploadSheet = useCallback(() => setUploadSheetOpen(true), []);
 
-  const handleOpenReupload = useCallback((doc: OnboardingDoc) => {
+  const handleOpenReupload = useCallback((doc: OnboardingChecklistDoc) => {
     setReuploadDoc(doc);
     setReuploadRemarks("");
   }, []);

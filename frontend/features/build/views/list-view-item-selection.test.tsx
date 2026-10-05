@@ -43,12 +43,10 @@ jest.mock("../shared/ticket-type-icon", () => ({
   TicketTypeIcon: () => null,
 }));
 
-jest.mock("./card-inline-fields", () => ({
-  InlineStatus: () => null,
-  InlinePriority: () => null,
-  InlineAssignee: () => null,
-  InlineEstimate: () => null,
-}));
+jest.mock("./card-field-status", () => ({ InlineStatus: () => null }));
+jest.mock("./card-field-priority", () => ({ InlinePriority: () => null }));
+jest.mock("./card-field-assignee", () => ({ InlineAssignee: () => null }));
+jest.mock("./card-field-estimate", () => ({ InlineEstimate: () => null }));
 
 jest.mock("./card-inline-extra-fields", () => ({
   InlineType: () => null,

@@ -50,7 +50,8 @@ import { useReleases } from "@/hooks/api/build/releases";
 import { useChangeRequests } from "@/hooks/api/build/change-requests";
 import { useTimesheetEntries } from "@/hooks/api/timesheets-core/entries";
 import { useProjectFiles } from "@/hooks/api/build/project-files";
-import type { ApprovalEntityType, CreateApprovalInput } from "@/types/projects";
+import type { BuildApprovalsCreateApprovalBody } from "@/contracts/build-contracts.generated";
+import type { ApprovalEntityType } from "@/types/projects";
 import { DB_ENUMS } from "@/contracts/db-enums.generated";
 import { entityTypeLabel, entityTypeSearchLabel, entityTypeTitlePrefix } from "./approvals-constants";
 
@@ -63,7 +64,7 @@ const ENTITY_TYPES = DB_ENUMS.approval_entity_type.map((v) => ({
 interface RequestApprovalSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (input: CreateApprovalInput) => void | Promise<unknown>;
+  onSubmit: (input: BuildApprovalsCreateApprovalBody) => void | Promise<unknown>;
   isPending?: boolean;
   projectId: number;
   currentUserId?: string;

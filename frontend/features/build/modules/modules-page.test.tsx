@@ -367,3 +367,11 @@ it("renders ModuleFormSheet in create mode unconditionally so create sheet is av
   render(<ModulesPage projectId={7} />);
   expect(screen.getByTestId("module-form-sheet-create")).toBeInTheDocument();
 });
+
+it("labels the page Modules, not Workstreams, because modules is the correct vocabulary for this feature area", () => {
+  mockUseModulePages.mockReturnValue(
+    basePages({ data: { pages: [{ data: [] }] } }),
+  );
+  render(<ModulesPage projectId={7} />);
+  expect(screen.getByRole("heading", { level: 1, name: "Modules" })).toBeInTheDocument();
+});

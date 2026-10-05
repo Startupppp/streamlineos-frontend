@@ -10,7 +10,14 @@ import { expectedRequestIdentitySchema, type ExpectedRequestIdentity } from "@/l
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { useCan } from "@/hooks/api/access";
-import type { Approval, ApprovalDetail, CreateApprovalInput, DecideApprovalInput, UpdateApprovalInput, DeleteApprovalInput } from "@/types/projects";
+import type {
+  BuildApprovalsCreateApprovalResponse,
+  BuildApprovalsGetApprovalResponse,
+  BuildApprovalsCreateApprovalBody,
+  BuildApprovalsDecideApprovalBody,
+  BuildApprovalsUpdateApprovalBody,
+  BuildApprovalsSoftDeleteApprovalBody,
+} from "@/contracts/build-contracts.generated";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
@@ -26,7 +33,7 @@ const approvalDecideContract = lazyContract(() => import("./approvals-schema").t
 const noContentContract = lazyContract(() => import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract));
 const notificationCountContract = lazyContract(() => import("@/hooks/api/notifications-schema").then((m) => m.notificationCountContract));
 type ApprovalOwner = { identity: ExpectedRequestIdentity; signal: AbortSignal; isCurrent: () => boolean };
-type ApprovalReceipt = { approval: ApprovalDetail; ownerStamp: string };
+type ApprovalReceipt = { approval: BuildApprovalsGetApprovalResponse; ownerStamp: string };
 type ApprovalReadFailure = { error: unknown; ownerStamp: string };
 type ApprovalTarget = { approvalId: number; projectId?: number };
 interface ApprovalFilters { status?: string; entityType?: string; actorId?: string }
@@ -141,7 +148,7 @@ export function useApproval(projectId: number, approvalId: number, enabled = tru
           signal: controller.signal, expectedIdentity: lease.owner.identity,
         });
         requireOwner(lease.owner);
-        const approval = await parseApiResponse<ApprovalDetail>(response, await approvalDetailContract(), "/build/approvals/detail");
+        const approval = await parseApiResponse<BuildApprovalsGetApprovalResponse>(response, await approvalDetailContract(), "/build/approvals/detail");
         requireOwner(lease.owner);
         if (controller.signal.aborted) throw new ApiError("Request was cancelled.", undefined, "ABORTED");
         if (approval.id !== approvalId || approval.projectId !== projectId || approval.orgId !== lease.owner.identity.orgId)
@@ -199,24 +206,24 @@ function useApprovalMutation<TInput, TData>(permission: PermissionKey, projectOf
 }
 
 export function useCreateApproval(projectId: number) {
-  return useApprovalMutation<CreateApprovalInput, Approval>("build:approvals:request", () => projectId,
-    async (data, config) => apiClient.post<Approval>(`/build/${projectId}/approvals`,
+  return useApprovalMutation<BuildApprovalsCreateApprovalBody, BuildApprovalsCreateApprovalResponse>("build:approvals:request", () => projectId,
+    async (data, config) => apiClient.post<BuildApprovalsCreateApprovalResponse>(`/build/${projectId}/approvals`,
       (await import("./approvals-schema")).createApprovalInputSchema.parse(data), config, approvalCreateContract));
 }
 export function useDecideApproval(projectId: number) {
-  return useApprovalMutation<DecideApprovalInput & { approvalId: number }, Approval>("build:approvals:decide", () => projectId,
+  return useApprovalMutation<BuildApprovalsDecideApprovalBody & { approvalId: number }, BuildApprovalsCreateApprovalResponse>("build:approvals:decide", () => projectId,
     async ({ approvalId, ...data }, config) =>
-      apiClient.patch<Approval>(`/build/${projectId}/approvals/${approvalId}/decide`,
+      apiClient.patch<BuildApprovalsCreateApprovalResponse>(`/build/${projectId}/approvals/${approvalId}/decide`,
         (await import("./approvals-schema")).decideApprovalInputSchema.parse(data), config, approvalDecideContract));
 }
 export function useUpdateApproval(projectId?: number) {
-  return useApprovalMutation("build:approvals:manage", (input: UpdateApprovalInput & ApprovalTarget) => projectId ?? input.projectId ?? 0,
+  return useApprovalMutation("build:approvals:manage", (input: BuildApprovalsUpdateApprovalBody & ApprovalTarget) => projectId ?? input.projectId ?? 0,
     async ({ approvalId, projectId: targetProject, ...data }, config) =>
-      apiClient.patch<Approval>(`/build/${projectId ?? targetProject ?? 0}/approvals/${approvalId}`,
+      apiClient.patch<BuildApprovalsCreateApprovalResponse>(`/build/${projectId ?? targetProject ?? 0}/approvals/${approvalId}`,
         (await import("./approvals-schema")).updateApprovalInputSchema.parse(data), config, approvalUpdateContract));
 }
 export function useDeleteApproval(projectId: number) {
-  return useApprovalMutation<DeleteApprovalInput & { approvalId: number }, void>("build:approvals:manage", () => projectId,
+  return useApprovalMutation<BuildApprovalsSoftDeleteApprovalBody & { approvalId: number }, void>("build:approvals:manage", () => projectId,
     async ({ approvalId, ...data }, config) =>
       apiClient.delete<void>(`/build/${projectId}/approvals/${approvalId}`,
         (await import("./approvals-schema")).deleteApprovalInputSchema.parse(data), config, noContentContract));

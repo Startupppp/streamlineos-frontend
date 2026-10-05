@@ -17,6 +17,7 @@ import { buildOrganizationCatalog } from "./nav/build-organization-catalog";
 import { buildManagedProductCatalog } from "./nav/build-managed-product-catalog";
 import { buildProjectCatalog } from "./nav/build-project-catalog";
 import { VIEW_TYPES, isKnownViewParam } from "./view-types";
+import { authorizedBuildRouteIds } from "@/lib/capabilities/build-capability-registry";
 
 const WORK_BOARD_VIEWS: ReadonlySet<string> = new Set(VIEW_TYPES);
 
@@ -127,6 +128,13 @@ export function resolveAuthorizedToolIds(
   return permitted(buildScopeCatalog(scope).moreTools, access).map(
     (destination) => destination.id,
   );
+}
+
+export function canReachBuildOrgRoute(
+  routeId: string,
+  can: (key: string) => boolean,
+): boolean {
+  return authorizedBuildRouteIds(can).includes(routeId);
 }
 
 export function countBuildScopePins(

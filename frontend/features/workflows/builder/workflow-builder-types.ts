@@ -1,4 +1,4 @@
-import type { Edge, Node } from "@xyflow/react";
+import type { Node } from "@xyflow/react";
 import type { NodeType } from "@/hooks/api/workflows";
 
 export interface WorkflowNodeData {
@@ -10,4 +10,3 @@ export interface WorkflowNodeData {
 }
 
 export type WorkflowNode = Node<WorkflowNodeData>;
-export type WorkflowEdge = Edge;

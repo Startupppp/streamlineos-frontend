@@ -16,7 +16,7 @@ import {
 import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import type { Incident } from "@/hooks/api/build/incidents-schema";
+import type { IncidentsCreateIncidentResponse } from "@/contracts/build-contracts.generated";
 import type { OrgMember } from "@/hooks/api/organization";
 import { getSlaState } from "./sla";
 
@@ -70,7 +70,7 @@ export function IncidentSeverityBadge({ severity }: { severity: string }) {
   );
 }
 
-export function IncidentSlaBadge({ incident }: { incident: Incident }) {
+export function IncidentSlaBadge({ incident }: { incident: IncidentsCreateIncidentResponse }) {
   if (!incident.responseDueAt && !incident.resolutionDueAt) {
     return <span className="text-dense text-muted-foreground">—</span>;
   }
@@ -104,8 +104,8 @@ interface IncidentRowHandlers {
   canManage: boolean;
   members: OrgMember[];
   projectId: number;
-  onEdit: (i: Incident) => void;
-  onDelete: (i: Incident) => void;
+  onEdit: (i: IncidentsCreateIncidentResponse) => void;
+  onDelete: (i: IncidentsCreateIncidentResponse) => void;
 }
 
 export function IncidentRowActions({
@@ -113,9 +113,9 @@ export function IncidentRowActions({
   onEdit,
   onDelete,
 }: {
-  incident: Incident;
-  onEdit: (i: Incident) => void;
-  onDelete: (i: Incident) => void;
+  incident: IncidentsCreateIncidentResponse;
+  onEdit: (i: IncidentsCreateIncidentResponse) => void;
+  onDelete: (i: IncidentsCreateIncidentResponse) => void;
 }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   const handleEdit = useCallback(() => onEdit(incident), [incident, onEdit]);
@@ -149,7 +149,7 @@ export function buildIncidentsColumns({
   projectId,
   onEdit,
   onDelete,
-}: IncidentRowHandlers): DataTableColumn<Incident>[] {
+}: IncidentRowHandlers): DataTableColumn<IncidentsCreateIncidentResponse>[] {
   return [
     {
       key: "incidentNumber",
@@ -231,11 +231,11 @@ export function IncidentMobileCard({
   onEdit,
   onDelete,
 }: {
-  incident: Incident;
+  incident: IncidentsCreateIncidentResponse;
   members: OrgMember[];
   canManage: boolean;
-  onEdit: (i: Incident) => void;
-  onDelete: (i: Incident) => void;
+  onEdit: (i: IncidentsCreateIncidentResponse) => void;
+  onDelete: (i: IncidentsCreateIncidentResponse) => void;
 }) {
   const owner = incident.ownerId
     ? members.find((m) => m.userId === incident.ownerId)

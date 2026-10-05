@@ -1,7 +1,11 @@
 ﻿"use client";
 
 import { useState, memo } from "react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -9,7 +13,7 @@ import { FIELD_DATE_POPOVER_CONTENT_CLASS } from "@/components/ui/field-control"
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useUpdateTicket } from "@/hooks/api/build/tickets";
-import { InlineFieldWrapper } from "./card-inline-fields";
+import { InlineFieldWrapper } from "./card-field-wrapper";
 import { format, parseISO, isValid } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 
@@ -40,18 +44,23 @@ export const InlineDueDate = memo(function InlineDueDate({
       })()
     : undefined;
 
-  const fallbackParsed = !parsedDate && fallbackDate
-    ? (() => {
-        const d = parseISO(fallbackDate);
-        return isValid(d) ? d : undefined;
-      })()
-    : undefined;
+  const fallbackParsed =
+    !parsedDate && fallbackDate
+      ? (() => {
+          const d = parseISO(fallbackDate);
+          return isValid(d) ? d : undefined;
+        })()
+      : undefined;
 
   const displayDate = parsedDate ?? fallbackParsed;
 
   function handleDateSelect(date: Date | undefined) {
     if (date) {
-      updateTicket.mutate({ ticketId, version, dueDate: format(date, "yyyy-MM-dd") });
+      updateTicket.mutate({
+        ticketId,
+        version,
+        dueDate: format(date, "yyyy-MM-dd"),
+      });
       setOpen(false);
     }
   }
@@ -86,7 +95,10 @@ export const InlineDueDate = memo(function InlineDueDate({
             </span>
           </button>
         </PopoverTrigger>
-        <PopoverContent className={cn(FIELD_DATE_POPOVER_CONTENT_CLASS, "p-0")} align="start">
+        <PopoverContent
+          className={cn(FIELD_DATE_POPOVER_CONTENT_CLASS, "p-0")}
+          align="start"
+        >
           <Calendar
             mode="single"
             selected={parsedDate}
@@ -138,7 +150,11 @@ export const InlineStartDate = memo(function InlineStartDate({
 
   function handleDateSelect(date: Date | undefined) {
     if (date) {
-      updateTicket.mutate({ ticketId, version, startDate: format(date, "yyyy-MM-dd") });
+      updateTicket.mutate({
+        ticketId,
+        version,
+        startDate: format(date, "yyyy-MM-dd"),
+      });
       setOpen(false);
     }
   }
@@ -173,7 +189,10 @@ export const InlineStartDate = memo(function InlineStartDate({
             </span>
           </button>
         </PopoverTrigger>
-        <PopoverContent className={cn(FIELD_DATE_POPOVER_CONTENT_CLASS, "p-0")} align="start">
+        <PopoverContent
+          className={cn(FIELD_DATE_POPOVER_CONTENT_CLASS, "p-0")}
+          align="start"
+        >
           <Calendar
             mode="single"
             selected={parsedDate}

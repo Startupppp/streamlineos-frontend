@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { SavedViewsMenu } from "./saved-views-menu";
+import { ViewCard } from "./saved-views/view-card";
 
 const replace = jest.fn();
 
@@ -13,7 +14,7 @@ jest.mock("next-auth/react", () => ({
 }));
 
 jest.mock("@/hooks/api/access", () => ({
-  useCan: () => false,
+  useCan: jest.fn().mockReturnValue(false),
   useCanState: () => "allowed",
 }));
 
@@ -41,16 +42,24 @@ jest.mock("@/components/ui/responsive-popover", () => ({
 }));
 
 jest.mock("./saved-views/view-card", () => ({
-  ViewCard: ({
-    view,
-    onNavigate,
-  }: {
-    view: { id: number; name: string; layoutType: string };
-    onNavigate: (view: { id: number; layoutType: string }) => void;
-  }) => (
-    <button type="button" onClick={() => onNavigate(view)}>
-      {view.name}
-    </button>
+  ViewCard: jest.fn(
+    ({
+      view,
+      onNavigate,
+    }: {
+      view: { id: number; name: string; layoutType: string };
+      onNavigate: (view: { id: number; layoutType: string }) => void;
+      canManage: boolean;
+      isPinned: boolean;
+      currentUserId?: string;
+      onTogglePin: () => void;
+      onRename: () => void;
+      onDelete: () => void;
+    }) => (
+      <button type="button" onClick={() => onNavigate(view)}>
+        {view.name}
+      </button>
+    ),
   ),
 }));
 
@@ -64,6 +73,7 @@ jest.mock("./saved-views/rename-view-dialog", () => ({
 
 beforeEach(() => {
   replace.mockClear();
+  jest.requireMock("@/hooks/api/access").useCan.mockReturnValue(false);
   window.history.replaceState({}, "", "/build/42/workload?status=TODO");
 });
 
@@ -76,4 +86,44 @@ it("opens a saved view on the project Issues route from Workload", () => {
     "/build/42/issues?viewId=9&view=list&status=TODO",
     { scroll: false },
   );
+});
+
+describe("SavedViewsMenu — owner permission gate on edit/delete actions", () => {
+  beforeEach(() => {
+    (ViewCard as jest.Mock).mockClear();
+  });
+
+  it("non-owner: ViewCard receives canManage=false when useCan returns false", () => {
+    (ViewCard as jest.Mock).mockImplementationOnce(
+      ({ canManage }: { canManage: boolean }) => (
+        <div data-testid={`view-card-can-manage-${String(canManage)}`} />
+      ),
+    );
+    render(<SavedViewsMenu projectId={42} />);
+    expect(screen.getByTestId("view-card-can-manage-false")).toBeInTheDocument();
+  });
+
+  it("owner (useCan=true): ViewCard receives canManage=true", () => {
+    jest.requireMock("@/hooks/api/access").useCan.mockReturnValue(true);
+    (ViewCard as jest.Mock).mockImplementationOnce(
+      ({
+        canManage,
+        view,
+        onNavigate,
+      }: {
+        canManage: boolean;
+        view: { id: number; name: string; layoutType: string };
+        onNavigate: (v: { id: number; layoutType: string }) => void;
+      }) => (
+        <div data-testid={`view-card-can-manage-${String(canManage)}`}>
+          <button type="button" onClick={() => onNavigate(view)}>
+            {view.name}
+          </button>
+        </div>
+      ),
+    );
+    render(<SavedViewsMenu projectId={42} />);
+    expect(screen.getByTestId("view-card-can-manage-true")).toBeInTheDocument();
+    jest.requireMock("@/hooks/api/access").useCan.mockReturnValue(false);
+  });
 });

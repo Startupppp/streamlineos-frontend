@@ -17,7 +17,7 @@ import { popoverOptionBaseClass, popoverOptionSelectedClass } from "../shared/po
 import { LabelsSearchCommand } from "../shared/labels-search-command";
 import { typeConfig } from "../shared/types";
 import { TicketTypeIcon } from "../shared/ticket-type-icon";
-import { InlineFieldWrapper } from "./card-inline-fields";
+import { InlineFieldWrapper } from "./card-field-wrapper";
 import { Boxes, Check, Tag, RefreshCw } from "lucide-react";
 import type { TicketLabel } from "@/types/projects";
 import { resolveLabelColor } from "@/components/labels/label-colors";

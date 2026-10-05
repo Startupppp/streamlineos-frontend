@@ -9,15 +9,12 @@ import { cn } from "@/lib/utils";
 import { useCan } from "@/hooks/api/access";
 import { buildStatusConfig } from "../shared/types";
 import { getStatusEntry } from "@/lib/status-config";
-import {
-  InlineStatus,
-  InlinePriority,
-  InlineAssignee,
-  InlineEstimate,
-  InlineTitle,
-  InlineDescription,
-  stopEvent,
-} from "../views/card-inline-fields";
+import { stopEvent } from "../views/card-field-wrapper";
+import { InlineStatus } from "../views/card-field-status";
+import { InlinePriority } from "../views/card-field-priority";
+import { InlineAssignee } from "../views/card-field-assignee";
+import { InlineEstimate } from "../views/card-field-estimate";
+import { InlineTitle, InlineDescription } from "../views/card-field-title-description";
 import { InlineLabels } from "../views/card-inline-extra-fields";
 import {
   InlineDueDate,

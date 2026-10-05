@@ -10,8 +10,9 @@ import { CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { NamedUser } from "@/lib/person-display";
-import type { Risk, Decision, Approval, ApprovalStatus } from "@/types/projects";
-import type { Incident } from "@/hooks/api/build/incidents-schema";
+import type { BuildApprovalsCreateApprovalResponse } from "@/contracts/build-contracts.generated";
+import type { Risk, Decision, ApprovalStatus } from "@/types/projects";
+import type { IncidentsCreateIncidentResponse } from "@/contracts/build-contracts.generated";
 import { createAppQueryClient } from "@/components/providers/query-provider";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { BuildListSurface } from "@/features/build/shared/build-list-surface";
@@ -136,11 +137,11 @@ function IncidentsTable() {
     onDelete: noop,
   });
 
-  function getRowKey(row: Incident) {
+  function getRowKey(row: IncidentsCreateIncidentResponse) {
     return row.id;
   }
 
-  function renderMobileCard(row: Incident) {
+  function renderMobileCard(row: IncidentsCreateIncidentResponse) {
     return (
       <IncidentMobileCard
         incident={row}
@@ -153,7 +154,7 @@ function IncidentsTable() {
   }
 
   return (
-    <BuildListSurface<Incident>
+    <BuildListSurface<IncidentsCreateIncidentResponse>
       permission="build:incidents:view"
       rows={GOVERNANCE_INCIDENT_ROWS}
       columns={columns}
@@ -233,11 +234,11 @@ function ApprovalsTable() {
     setDeleteTarget: noop,
   });
 
-  function getRowKey(row: Approval) {
+  function getRowKey(row: BuildApprovalsCreateApprovalResponse) {
     return row.id;
   }
 
-  function renderMobileCard(row: Approval) {
+  function renderMobileCard(row: BuildApprovalsCreateApprovalResponse) {
     return (
       <BuildMobileCard
         title={row.title}
@@ -252,7 +253,7 @@ function ApprovalsTable() {
   }
 
   return (
-    <BuildListSurface<Approval>
+    <BuildListSurface<BuildApprovalsCreateApprovalResponse>
       permission="build:approvals:view"
       rows={GOVERNANCE_APPROVAL_ROWS}
       columns={columns}

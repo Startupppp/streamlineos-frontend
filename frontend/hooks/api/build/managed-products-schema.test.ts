@@ -1,9 +1,9 @@
 import { ZodError } from "zod";
 import {
-  managedProductBulkResultContract,
-  managedProductInsightsContract,
-  managedProductRowContract,
-} from "./managed-products-schema";
+  managedProductsGetManagedProductResponseSchema as managedProductRowContract,
+  managedProductsBulkUpdateManagedProductsResponseSchema as managedProductBulkResultContract,
+} from "@/contracts/build-contracts.generated";
+import { managedProductInsightsContract } from "./managed-products-schema";
 
 function baseRow(status: string) {
   return {
@@ -77,7 +77,7 @@ it("rejects a bulk result item with an unknown outcome", () => {
   ).toThrow(ZodError);
 });
 
-it("parses roadmap and feedback outcome aggregates from managed-product insights", () => {
+it("parses roadmap and feedback outcome aggregates from managed-product insights including score override fields", () => {
   const insights = managedProductInsightsContract.parse({
     linkedProjectCount: 2,
     projectsByStatus: { active: 1, completed: 1, archived: 0 },
@@ -86,7 +86,7 @@ it("parses roadmap and feedback outcome aggregates from managed-product insights
     roadmapItemsByStatus: { planned: 1, in_progress: 1, completed: 1, cancelled: 0 },
     feedbackByStatus: { open: 2, planned: 0, in_progress: 0, completed: 1, declined: 0 },
     linkedFeedbackVoteCount: 7,
-    ageDays: 42,
+    ageDays: 5,
     confidenceScore: null,
     overrideReason: null,
     overriddenBy: null,
@@ -94,6 +94,8 @@ it("parses roadmap and feedback outcome aggregates from managed-product insights
   });
   expect(insights.roadmapItemsByStatus.completed).toBe(1);
   expect(insights.linkedFeedbackVoteCount).toBe(7);
+  expect(insights.ageDays).toBe(5);
+  expect(insights.confidenceScore).toBeNull();
 });
 
 it("keeps the resolved owner projection the detail endpoint sends, because z.object strips unknown keys and a stripped owner leaves the page with only a raw id to render", () => {

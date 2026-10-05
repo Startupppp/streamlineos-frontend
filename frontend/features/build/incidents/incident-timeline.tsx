@@ -23,7 +23,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useAddIncidentUpdate } from "@/hooks/api/build/incidents";
-import type { IncidentDetail, IncidentStatus } from "@/hooks/api/build/incidents-schema";
+import type { IncidentsGetIncidentResponse } from "@/contracts/build-contracts.generated";
+import type { IncidentStatus } from "@/hooks/api/build/incidents-schema";
 import { formatDateTime } from "@/lib/date-utils";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -139,7 +140,7 @@ function AddUpdateForm({ projectId, incidentId, unresolvedFollowUps }: AddUpdate
   );
 }
 
-type IncidentTimelineUpdate = IncidentDetail["updates"][number];
+type IncidentTimelineUpdate = IncidentsGetIncidentResponse["updates"][number];
 
 const TimelineEntry = memo(function TimelineEntry({ update }: { update: IncidentTimelineUpdate }) {
   return (

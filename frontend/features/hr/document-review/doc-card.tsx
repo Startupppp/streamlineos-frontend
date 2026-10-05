@@ -11,9 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { viewProtectedFile } from "@/hooks/common/use-file-url";
 
-export type OnboardingDoc = OnboardingChecklistDoc;
-
-export function getDocStatusBadgeClass(status: OnboardingDoc["status"]): string {
+export function getDocStatusBadgeClass(status: OnboardingChecklistDoc["status"]): string {
   switch (status) {
     case "APPROVED":
       return "bg-status-success-surface text-status-success-ink border-status-success-rule";
@@ -28,7 +26,7 @@ export function getDocStatusBadgeClass(status: OnboardingDoc["status"]): string 
   }
 }
 
-export function getDocStatusAccentClass(status: OnboardingDoc["status"]): string {
+export function getDocStatusAccentClass(status: OnboardingChecklistDoc["status"]): string {
   switch (status) {
     case "APPROVED":
       return "border-l-status-success-rule";
@@ -43,7 +41,7 @@ export function getDocStatusAccentClass(status: OnboardingDoc["status"]): string
   }
 }
 
-export function docStatusLabel(status: OnboardingDoc["status"]): string {
+export function docStatusLabel(status: OnboardingChecklistDoc["status"]): string {
   switch (status) {
     case "PENDING":
       return "Pending";
@@ -85,10 +83,10 @@ function DocFileLink({ docId, fileName, ariaLabel }: { docId: number; fileName: 
 }
 
 interface DocCardProps {
-  doc: OnboardingDoc;
+  doc: OnboardingChecklistDoc;
   canReview: boolean;
-  onApprove: (doc: OnboardingDoc) => void;
-  onRequestReupload: (doc: OnboardingDoc) => void;
+  onApprove: (doc: OnboardingChecklistDoc) => void;
+  onRequestReupload: (doc: OnboardingChecklistDoc) => void;
 }
 
 export function DocCard({ doc, canReview, onApprove, onRequestReupload }: DocCardProps) {

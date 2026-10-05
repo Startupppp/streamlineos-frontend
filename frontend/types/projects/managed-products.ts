@@ -36,9 +36,12 @@ export interface ManagedProductsPage {
   pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
+export type ManagedProductType = "software_product" | "content_brief" | "freelancer_project";
+
 export interface CreateManagedProductInput {
   name: string;
   key: string;
+  productType?: ManagedProductType;
   description?: string;
   ownerId?: string;
 }

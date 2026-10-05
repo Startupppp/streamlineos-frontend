@@ -15,7 +15,7 @@ import {
 } from "@/lib/person-display";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { TEXT_FLEX_CHILD } from "@/lib/text-overflow";
-import { InlineFieldWrapper } from "@/features/build/views/card-inline-fields";
+import { InlineFieldWrapper } from "@/features/build/views/card-field-wrapper";
 import type { ProjectListItem } from "@/types/projects/projects";
 
 type ProjectPerson = ProjectListItem["manager"];

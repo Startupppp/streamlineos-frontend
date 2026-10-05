@@ -11,3 +11,19 @@ export const updateIterationSettingsSchema = z.object({
 });
 
 export type UpdateIterationSettingsInput = z.infer<typeof updateIterationSettingsSchema>;
+
+export interface CycleDateRange {
+  startDate: string;
+  endDate: string;
+}
+
+export function cycleDateRangesOverlap(a: CycleDateRange, b: CycleDateRange): boolean {
+  return a.startDate <= b.endDate && b.startDate <= a.endDate;
+}
+
+export function proposedCycleOverlapsExisting(
+  proposed: CycleDateRange,
+  existing: readonly CycleDateRange[],
+): boolean {
+  return existing.some((e) => cycleDateRangesOverlap(proposed, e));
+}

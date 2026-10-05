@@ -10,11 +10,9 @@ jest.mock("./ticket-quick-actions", () => ({
     open ? <div data-testid="card-menu-open" /> : null,
 }));
 
-jest.mock("./card-inline-fields", () => ({
-  InlinePriority: () => null,
-  InlineAssignee: () => null,
-  InlineEstimate: () => null,
-}));
+jest.mock("./card-field-priority", () => ({ InlinePriority: () => null }));
+jest.mock("./card-field-assignee", () => ({ InlineAssignee: () => null }));
+jest.mock("./card-field-estimate", () => ({ InlineEstimate: () => null }));
 
 jest.mock("./card-inline-extra-fields", () => ({
   InlineType: () => null,

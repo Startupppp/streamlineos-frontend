@@ -3,7 +3,7 @@
 import type { ChangeEvent, FormEvent, KeyboardEvent } from "react";
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ReactFlowProvider } from "@xyflow/react";
+import { ReactFlowProvider, type Edge } from "@xyflow/react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,7 +15,7 @@ import { usePublishWorkflow, useUpdateWorkflow, useWorkflow, type Workflow } fro
 import { WorkflowBuilderCanvasSurface } from "./workflow-builder-canvas-surface";
 import { WorkflowBuilderToolbar } from "./workflow-builder-toolbar";
 import { isWorkflowNodeType } from "./workflow-node-palette";
-import type { WorkflowEdge, WorkflowNode } from "./workflow-builder-types";
+import type { WorkflowNode } from "./workflow-builder-types";
 
 const DEFAULT_NODES: WorkflowNode[] = [{
   id: "trigger-1", type: "workflowNode", position: { x: 200, y: 120 },
@@ -31,7 +31,7 @@ function BuilderCanvas({ workflow, workflowId }: BuilderCanvasProps) {
   const [definition, setDefinition] = useState(() => ({ nodes: extractDefinitionNodes(workflow), edges: extractDefinitionEdges(workflow) }));
   const [workflowName, setWorkflowName] = useState(workflow.name);
   const [isEditingName, setIsEditingName] = useState(false);
-  const handleDefinitionChange = useCallback((nodes: WorkflowNode[], edges: WorkflowEdge[]) => setDefinition({ nodes, edges }), []);
+  const handleDefinitionChange = useCallback((nodes: WorkflowNode[], edges: Edge[]) => setDefinition({ nodes, edges }), []);
 
   function handleNameSubmit(event: FormEvent) {
     event.preventDefault();
@@ -146,9 +146,9 @@ function extractDefinitionNodes(workflow: Workflow): WorkflowNode[] {
   return validNodes.length > 0 ? validNodes : DEFAULT_NODES;
 }
 
-function extractDefinitionEdges(workflow: Workflow): WorkflowEdge[] {
+function extractDefinitionEdges(workflow: Workflow): Edge[] {
   const edges = workflow.definitionJson?.edges;
-  return Array.isArray(edges) ? edges.filter(isWorkflowEdge) : [];
+  return Array.isArray(edges) ? edges.filter(isEdge) : [];
 }
 
 function isWorkflowNode(value: unknown): value is WorkflowNode {
@@ -168,7 +168,7 @@ function isWorkflowNode(value: unknown): value is WorkflowNode {
   );
 }
 
-function isWorkflowEdge(value: unknown): value is WorkflowEdge {
+function isEdge(value: unknown): value is Edge {
   return isRecord(value) && typeof value.id === "string" && typeof value.source === "string" && typeof value.target === "string";
 }
 

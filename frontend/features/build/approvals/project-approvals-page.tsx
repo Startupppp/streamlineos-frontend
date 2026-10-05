@@ -31,10 +31,12 @@ import {
 import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { STATUS_OPTIONS, ENTITY_OPTIONS } from "./approvals-constants";
 import type {
-  Approval,
+  BuildApprovalsCreateApprovalResponse,
+  BuildApprovalsCreateApprovalBody,
+} from "@/contracts/build-contracts.generated";
+import type {
   ApprovalEntityType,
   ApprovalStatus,
-  CreateApprovalInput,
 } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -82,10 +84,10 @@ export function ProjectApprovalsPage({
   const [defaultEntityType, setDefaultEntityType] = useState<
     ApprovalEntityType | undefined
   >(undefined);
-  const [decideTarget, setDecideTarget] = useState<Approval | null>(null);
-  const [delegateTarget, setDelegateTarget] = useState<Approval | null>(null);
-  const [cancelTarget, setCancelTarget] = useState<Approval | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Approval | null>(null);
+  const [decideTarget, setDecideTarget] = useState<BuildApprovalsCreateApprovalResponse | null>(null);
+  const [delegateTarget, setDelegateTarget] = useState<BuildApprovalsCreateApprovalResponse | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<BuildApprovalsCreateApprovalResponse | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<BuildApprovalsCreateApprovalResponse | null>(null);
   const [isBulkPending, setIsBulkPending] = useState(false);
 
   const statusValue = listFilters.value("status");
@@ -203,7 +205,7 @@ export function ProjectApprovalsPage({
   }, []);
 
   const handleCreate = useCallback(
-    async (input: CreateApprovalInput) => {
+    async (input: BuildApprovalsCreateApprovalBody) => {
       const owner = createApproval.captureOwner();
       await createApproval.mutateAsync(input);
       if (!owner?.isCurrent()) return;
@@ -231,7 +233,7 @@ export function ProjectApprovalsPage({
   );
 
   const handleEscalate = useCallback(
-    (row: Approval) => {
+    (row: BuildApprovalsCreateApprovalResponse) => {
       updateApproval.mutate(
         { approvalId: row.id, expectedRevision: row.revision, status: "escalated" },
         {
@@ -317,7 +319,7 @@ export function ProjectApprovalsPage({
   });
 
   const renderMobileCard = useCallback(
-    (row: Approval) => {
+    (row: BuildApprovalsCreateApprovalResponse) => {
       const narrowStatus =
         APPROVAL_STATUS_VALUES.find((v) => v === row.status) ?? "pending";
       return (
@@ -377,7 +379,7 @@ export function ProjectApprovalsPage({
               onClear={handleClearSelection}
             />
           )}
-          <BuildListSurface<Approval>
+          <BuildListSurface<BuildApprovalsCreateApprovalResponse>
             permission="build:approvals:view"
             rows={items}
             columns={columns}

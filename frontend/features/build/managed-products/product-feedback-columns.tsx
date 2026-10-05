@@ -1,7 +1,9 @@
 "use client";
 
 import { formatDistanceToNow } from "date-fns";
+import { ArrowRightCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { resolveImageUrl } from "@/lib/utils";
 import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
@@ -108,7 +110,13 @@ export const FILTER_DEFINITIONS = [
   { param: "to" },
 ] as const;
 
-export const FEEDBACK_SKELETON_HEADERS = ["", "Type", "Message", "Status", "Age"] as const;
+export const FEEDBACK_SKELETON_HEADERS = [
+  "",
+  "Type",
+  "Message",
+  "Status",
+  "Age",
+] as const;
 
 export function formatAge(value: string | null | undefined): string {
   if (!value) return "—";
@@ -149,7 +157,9 @@ export const FEEDBACK_COLUMNS: DataTableColumn<SubmissionRow>[] = [
     key: "message",
     header: "Message",
     cell: (row) => (
-      <span className="max-w-xs text-sm text-foreground line-clamp-2">{row.message}</span>
+      <span className="max-w-xs text-sm text-foreground line-clamp-2">
+        {row.message}
+      </span>
     ),
   },
   {
@@ -173,6 +183,37 @@ export const FEEDBACK_COLUMNS: DataTableColumn<SubmissionRow>[] = [
     className: "hidden sm:table-cell w-[120px] text-right",
   },
 ];
+
+export function buildFeedbackColumnsWithActions(opts: {
+  canRouteToIntake: boolean;
+  onRouteToIntake: (row: SubmissionRow) => void;
+}): DataTableColumn<SubmissionRow>[] {
+  if (!opts.canRouteToIntake) return FEEDBACK_COLUMNS;
+  return [
+    ...FEEDBACK_COLUMNS,
+    {
+      key: "actions",
+      header: "",
+      cell: (row) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          aria-label="Route to Intake"
+          data-testid="route-to-intake-btn"
+          data-submission-id={row.id}
+          onClick={(e) => {
+            e.stopPropagation();
+            opts.onRouteToIntake(row);
+          }}
+        >
+          <ArrowRightCircle className="h-4 w-4 mr-1" />
+          Intake
+        </Button>
+      ),
+      className: "w-[100px] text-right",
+    },
+  ];
+}
 
 export function ProductFeedbackMobileCard({ row }: { row: SubmissionRow }) {
   return (

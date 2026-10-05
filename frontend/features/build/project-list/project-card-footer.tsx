@@ -10,7 +10,7 @@ import {
 import { TEXT_FLEX_CHILD } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { ProjectListItem } from "@/types/projects/projects";
-import { InlineProjectDates } from "./project-card-inline-fields";
+import { InlineProjectDates } from "./project-field-dates";
 import {
   dateToneClasses,
   resolveDateMeta,

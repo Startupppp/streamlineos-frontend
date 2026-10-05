@@ -3,9 +3,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createElement } from "react";
 import type { ReactNode } from "react";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
-import { iterationSettingsSchema } from "./iteration-settings-schema";
+import {
+  iterationSettingsSchema,
+  cycleDateRangesOverlap,
+  proposedCycleOverlapsExisting,
+} from "./iteration-settings-schema";
 import { useUpdateIterationSettings } from "./iteration-settings";
-import type { IterationSettings } from "./iteration-settings-schema";
+import type { IterationSettings, CycleDateRange } from "./iteration-settings-schema";
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn().mockReturnValue(true),
@@ -155,5 +159,66 @@ describe("useUpdateIterationSettings — invalidation contract (C5)", () => {
       undefined,
       expect.anything(),
     );
+  });
+});
+
+describe("cycleDateRangesOverlap — cycle-designer overlap denial", () => {
+  it("detects an exact duplicate date range as overlapping", () => {
+    const a: CycleDateRange = { startDate: "2026-09-01", endDate: "2026-09-14" };
+    const b: CycleDateRange = { startDate: "2026-09-01", endDate: "2026-09-14" };
+    expect(cycleDateRangesOverlap(a, b)).toBe(true);
+  });
+
+  it("detects partial overlap when the new cycle starts before the existing cycle ends", () => {
+    const existing: CycleDateRange = { startDate: "2026-09-01", endDate: "2026-09-14" };
+    const proposed: CycleDateRange = { startDate: "2026-09-10", endDate: "2026-09-21" };
+    expect(cycleDateRangesOverlap(existing, proposed)).toBe(true);
+  });
+
+  it("detects overlap when the new cycle completely contains an existing cycle", () => {
+    const existing: CycleDateRange = { startDate: "2026-09-05", endDate: "2026-09-10" };
+    const proposed: CycleDateRange = { startDate: "2026-09-01", endDate: "2026-09-14" };
+    expect(cycleDateRangesOverlap(existing, proposed)).toBe(true);
+  });
+
+  it("detects overlap when ranges share only the boundary date", () => {
+    const existing: CycleDateRange = { startDate: "2026-09-01", endDate: "2026-09-14" };
+    const proposed: CycleDateRange = { startDate: "2026-09-14", endDate: "2026-09-28" };
+    expect(cycleDateRangesOverlap(existing, proposed)).toBe(true);
+  });
+
+  it("allows a non-overlapping cycle immediately after an existing one", () => {
+    const existing: CycleDateRange = { startDate: "2026-09-01", endDate: "2026-09-14" };
+    const proposed: CycleDateRange = { startDate: "2026-09-15", endDate: "2026-09-28" };
+    expect(cycleDateRangesOverlap(existing, proposed)).toBe(false);
+  });
+
+  it("allows a non-overlapping cycle that ends before an existing one starts", () => {
+    const existing: CycleDateRange = { startDate: "2026-10-01", endDate: "2026-10-14" };
+    const proposed: CycleDateRange = { startDate: "2026-09-01", endDate: "2026-09-30" };
+    expect(cycleDateRangesOverlap(existing, proposed)).toBe(false);
+  });
+});
+
+describe("proposedCycleOverlapsExisting — overlap denial across a list of existing cycles", () => {
+  const existingCycles: CycleDateRange[] = [
+    { startDate: "2026-08-01", endDate: "2026-08-14" },
+    { startDate: "2026-09-01", endDate: "2026-09-14" },
+    { startDate: "2026-10-01", endDate: "2026-10-14" },
+  ];
+
+  it("returns true when the proposed cycle overlaps any existing cycle", () => {
+    const proposed: CycleDateRange = { startDate: "2026-09-08", endDate: "2026-09-21" };
+    expect(proposedCycleOverlapsExisting(proposed, existingCycles)).toBe(true);
+  });
+
+  it("returns false when the proposed cycle fits cleanly between two existing cycles", () => {
+    const proposed: CycleDateRange = { startDate: "2026-08-15", endDate: "2026-08-31" };
+    expect(proposedCycleOverlapsExisting(proposed, existingCycles)).toBe(false);
+  });
+
+  it("returns false for an empty existing cycles list", () => {
+    const proposed: CycleDateRange = { startDate: "2026-09-01", endDate: "2026-09-14" };
+    expect(proposedCycleOverlapsExisting(proposed, [])).toBe(false);
   });
 });

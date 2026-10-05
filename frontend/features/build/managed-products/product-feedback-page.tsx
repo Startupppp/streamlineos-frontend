@@ -23,7 +23,7 @@ import {
   type SubmissionRow,
   FILTER_DEFINITIONS,
   FEEDBACK_SKELETON_HEADERS,
-  FEEDBACK_COLUMNS,
+  buildFeedbackColumnsWithActions,
   TYPE_OPTIONS,
   STATUS_OPTIONS_VALUES,
   TYPE_FILTER_OPTIONS,
@@ -32,6 +32,9 @@ import {
   DUPLICATE_FILTER_OPTIONS,
   ProductFeedbackMobileCard,
 } from "./product-feedback-columns";
+import { useRouteFeedbucketToIntake } from "@/hooks/api/build/intake-mutations";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type {
   FeedbucketSubmissionFilters,
   ListFeedbucketSubmissionsQuery,
@@ -69,6 +72,8 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
   const canOpenSubmissionDetail = useCan("feedbucket:widgets:view");
   const canUpdateSubmission = useCan("feedbucket:submissions:update");
   const canDeleteSubmission = useCan("feedbucket:submissions:delete");
+  const canRouteToIntake = useCan("feedbucket:submissions:manage");
+  const routeToIntake = useRouteFeedbucketToIntake();
   const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -231,6 +236,26 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
 
   const handleClearSelection = useCallback(() => setSelected(new Set()), []);
 
+  const handleRouteToIntake = useCallback((row: SubmissionRow) => {
+    const projectId = row.widget?.projectId;
+    if (!projectId) return;
+    routeToIntake.mutate(
+      { submissionId: row.id, projectId },
+      {
+        onSuccess: (result) => {
+          if (result.created) toast.success("Routed to Intake");
+          else toast.success("Already in Intake");
+        },
+        onError: (err) => { toast.error(getErrorMessage(err)); },
+      },
+    );
+  }, [routeToIntake]);
+
+  const feedbackColumns = useMemo(
+    () => buildFeedbackColumnsWithActions({ canRouteToIntake, onRouteToIntake: handleRouteToIntake }),
+    [canRouteToIntake, handleRouteToIntake],
+  );
+
   useBuildListKeyboard({
     itemCount: rows.length,
     onOpen: handleOpenFocused,
@@ -374,7 +399,7 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
           <BuildListSurface<SubmissionRow>
             permission="feedbucket:submissions:view"
             rows={data?.data ?? []}
-            columns={FEEDBACK_COLUMNS}
+            columns={feedbackColumns}
             isLoading={isLoading}
             isError={isError}
             error={error}

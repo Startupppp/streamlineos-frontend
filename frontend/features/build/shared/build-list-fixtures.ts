@@ -1,14 +1,14 @@
+import type { BuildApprovalsCreateApprovalResponse } from "@/contracts/build-contracts.generated";
 import type {
   Risk,
   TestCase,
   Decision,
-  Approval,
   TestRunResult,
   TestResultStatus,
   TestCasePriority,
   ManagedProduct,
 } from "@/types/projects";
-import type { Incident } from "@/hooks/api/build/incidents-schema";
+import type { IncidentsCreateIncidentResponse } from "@/contracts/build-contracts.generated";
 import type { OrgMember } from "@/hooks/api/organization";
 import type { AccessResponse } from "@/hooks/api/access-schema";
 
@@ -163,12 +163,12 @@ const GOV_INCIDENT_STATUSES = [
   "closed",
 ] as const;
 
-export const GOVERNANCE_INCIDENT_ROWS: Incident[] = Array.from({ length: 8 }, (_, i) => ({
+export const GOVERNANCE_INCIDENT_ROWS: IncidentsCreateIncidentResponse[] = Array.from({ length: 8 }, (_, i) => ({
   id: i + 1,
   orgId: "org_gallery",
   projectId: 1,
   incidentNumber: 300 + i,
-  title: `Incident ${i + 1}: ${(["API timeout", "DB connection pool exhausted", "CDN outage", "Auth service down"] as const)[i % 4]}`,
+  title: `IncidentsCreateIncidentResponse ${i + 1}: ${(["API timeout", "DB connection pool exhausted", "CDN outage", "Auth service down"] as const)[i % 4]}`,
   description: null,
   severity: GOV_INCIDENT_SEVERITIES[i % GOV_INCIDENT_SEVERITIES.length],
   status: GOV_INCIDENT_STATUSES[i % GOV_INCIDENT_STATUSES.length],
@@ -214,7 +214,7 @@ export const GOVERNANCE_DECISION_ROWS: Decision[] = Array.from({ length: 8 }, (_
 const GOV_APPROVAL_ENTITIES = ["task", "milestone", "release", "budget"] as const;
 const GOV_APPROVAL_STATUSES = ["requested", "pending", "approved", "rejected", "escalated"] as const;
 
-export const GOVERNANCE_APPROVAL_ROWS: Approval[] = Array.from({ length: 8 }, (_, i) => ({
+export const GOVERNANCE_APPROVAL_ROWS: BuildApprovalsCreateApprovalResponse[] = Array.from({ length: 8 }, (_, i) => ({
   id: i + 1,
   revision: 1,
   orgId: "org_gallery",

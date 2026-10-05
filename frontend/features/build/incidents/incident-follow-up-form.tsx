@@ -34,7 +34,7 @@ import {
   incidentFollowUpSchema,
   type IncidentFollowUpValues,
 } from "@/features/build/incidents/incident-schema";
-import type { IncidentFollowUpAction } from "@/hooks/api/build/incidents-schema";
+import type { IncidentsAddFollowUpActionResponse } from "@/contracts/build-contracts.generated";
 import { ProjectMemberSelect } from "@/components/members/project-member-select";
 
 export function EditFollowUpDialog({
@@ -46,7 +46,7 @@ export function EditFollowUpDialog({
 }: {
   projectId: number;
   incidentId: number;
-  action: IncidentFollowUpAction;
+  action: IncidentsAddFollowUpActionResponse;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
