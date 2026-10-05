@@ -83,7 +83,7 @@ export function WorkloadBoardPage({ params }: PageProps) {
   const { data: boardTickets, isLoading: ticketsLoading } =
     useProjectBoardTickets(projectId, boardFilters);
 
-  const capacityByMemberId = useWorkloadCapacity(
+  const { data: capacityByMemberId } = useWorkloadCapacity(
     projectId,
     capacityWindow.start,
     capacityWindow.end,

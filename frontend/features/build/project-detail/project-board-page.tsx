@@ -112,7 +112,7 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
     };
   }, []);
 
-  const capacityByMemberId = useWorkloadCapacity(
+  const { data: capacityByMemberId } = useWorkloadCapacity(
     projectId,
     capacityWindow.start,
     capacityWindow.end,

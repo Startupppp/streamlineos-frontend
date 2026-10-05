@@ -51,7 +51,7 @@ jest.mock("@/hooks/api/build/tickets", () => ({
   useBulkUpdateTickets: (...args: unknown[]) => mockUseBulkUpdateTickets(...args),
 }));
 
-const mockUseWorkloadCapacity = jest.fn((..._args: unknown[]) => ({}));
+const mockUseWorkloadCapacity = jest.fn((..._args: unknown[]) => ({ data: new Map() }));
 jest.mock("@/hooks/api/build/workload-capacity", () => ({
   useWorkloadCapacity: (...args: unknown[]) => mockUseWorkloadCapacity(...args),
 }));

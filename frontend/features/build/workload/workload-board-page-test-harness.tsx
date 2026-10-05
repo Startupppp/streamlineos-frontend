@@ -36,7 +36,7 @@ jest.mock("@/hooks/api/build/tickets", () => ({
     mockUseProjectBoardTickets(...args),
 }));
 
-export const mockUseWorkloadCapacity = jest.fn((..._args: unknown[]) => new Map());
+export const mockUseWorkloadCapacity = jest.fn((..._args: unknown[]) => ({ data: new Map() }));
 
 jest.mock("@/hooks/api/build/workload-capacity", () => ({
   useWorkloadCapacity: (...args: unknown[]) =>

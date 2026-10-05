@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
-import { apiClient, isApiError } from "@/lib/api-client";
-import { lazyContract } from "@/lib/api-envelope";
+import { apiClient } from "@/lib/api-client";
+import { isApiError, lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type { MemberCapacityData } from "@/features/build/views/workload-types";
 
 const workloadCapacityContract = lazyContract(() =>
@@ -18,9 +18,10 @@ export function useWorkloadCapacity(
   end: string,
   teamId?: number,
   options?: { enabled?: boolean },
-): Map<string, MemberCapacityData> {
+) {
   const canView = useCan("build:tickets:view");
-  const { data } = useQuery({
+  return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: buildWorkQueryKeys.projects.workloadCapacity(projectId, start, end, teamId),
     queryFn: async ({ signal }) => {
       const query: Record<string, string> = { start, end };
@@ -34,12 +35,7 @@ export function useWorkloadCapacity(
     },
     enabled: canView && !!projectId && options?.enabled !== false,
     staleTime: 60_000,
-  });
-
-  return useMemo(() => {
-    if (!data?.members) return new Map<string, MemberCapacityData>();
-
-    return new Map(
+    select: (data) => new Map(
       data.members.map((m) => [
         m.userId,
         {
@@ -55,6 +51,6 @@ export function useWorkloadCapacity(
           utilizationPercent: m.utilizationPercent,
         } satisfies MemberCapacityData,
       ]),
-    );
-  }, [data]);
+    ),
+  });
 }
