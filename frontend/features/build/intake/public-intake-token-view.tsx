@@ -15,24 +15,11 @@ import { Loader2, CheckCircle2, Send } from "lucide-react";
 import {
   intakeFormSchema,
   type IntakeFormValues,
+  INTAKE_PRIORITY_OPTIONS,
+  INTAKE_REQUEST_TYPE_OPTIONS,
 } from "@/features/build/intake/public-intake-schema";
 import { useSubmitIntakeByToken } from "@/hooks/api/build/public-intake";
 import { getErrorMessage } from "@/lib/get-error-message";
-
-const PRIORITY_OPTIONS = [
-  { value: "low", label: "Low" },
-  { value: "medium", label: "Medium" },
-  { value: "high", label: "High" },
-  { value: "urgent", label: "Urgent" },
-] as const;
-
-const REQUEST_TYPE_OPTIONS = [
-  { value: "bug", label: "Bug" },
-  { value: "feature", label: "Feature" },
-  { value: "task", label: "Task" },
-  { value: "question", label: "Question" },
-  { value: "other", label: "Other" },
-] as const;
 
 interface IntakeTokenFormProps {
   intakeToken: string;
@@ -103,7 +90,7 @@ function IntakeTokenForm({ intakeToken }: IntakeTokenFormProps) {
                   <SelectValue placeholder="Select type…" />
                 </SelectTrigger>
                 <SelectContent>
-                  {REQUEST_TYPE_OPTIONS.map((opt) => (
+                  {INTAKE_REQUEST_TYPE_OPTIONS.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                   ))}
                 </SelectContent>
@@ -123,7 +110,7 @@ function IntakeTokenForm({ intakeToken }: IntakeTokenFormProps) {
                   <SelectValue placeholder="Select priority…" />
                 </SelectTrigger>
                 <SelectContent>
-                  {PRIORITY_OPTIONS.map((opt) => (
+                  {INTAKE_PRIORITY_OPTIONS.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                   ))}
                 </SelectContent>

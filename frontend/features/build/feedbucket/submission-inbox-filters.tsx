@@ -11,7 +11,7 @@ import {
   ALL_TYPES,
   STATUS_LABELS,
   TYPE_LABELS,
-} from "./submission-inbox-columns";
+} from "./feedbucket-constants";
 import type {
   FeedbucketSubmissionStatus,
   FeedbucketSubmissionType,

@@ -1,6 +1,5 @@
 "use client";
 
-import { formatDistanceToNow } from "date-fns";
 import { ArrowRightCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,51 +7,16 @@ import type { DataTableColumn } from "@/components/ui/data-table";
 import { resolveImageUrl } from "@/lib/utils";
 import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
 import { BUILD_FILTER_ALL } from "@/features/build/shared/use-build-list-filters";
-import type {
-  PaginatedFeedbucketSubmissions,
-  FeedbucketSubmissionType,
-  FeedbucketSubmissionStatus,
-} from "@/types/feedbucket";
+import type { PaginatedFeedbucketSubmissions } from "@/types/feedbucket";
+import {
+  STATUS_LABELS,
+  STATUS_VARIANTS,
+  TYPE_LABELS,
+  TYPE_VARIANTS,
+  formatSubmissionAge,
+} from "@/features/build/feedbucket/feedbucket-constants";
 
 export type SubmissionRow = PaginatedFeedbucketSubmissions["data"][number];
-
-export const TYPE_LABELS: Record<FeedbucketSubmissionType, string> = {
-  bug: "Bug",
-  idea: "Idea",
-  feature: "Feature",
-  question: "Question",
-  praise: "Praise",
-  other: "Other",
-};
-
-export const TYPE_VARIANTS: Record<
-  FeedbucketSubmissionType,
-  "default" | "secondary" | "outline" | "destructive"
-> = {
-  bug: "destructive",
-  idea: "default",
-  feature: "secondary",
-  question: "secondary",
-  praise: "default",
-  other: "outline",
-};
-
-export const STATUS_VARIANTS: Record<
-  FeedbucketSubmissionStatus,
-  "default" | "secondary" | "outline"
-> = {
-  open: "default",
-  in_progress: "secondary",
-  resolved: "outline",
-  archived: "outline",
-};
-
-export const STATUS_LABELS: Record<FeedbucketSubmissionStatus, string> = {
-  open: "Open",
-  in_progress: "In Progress",
-  resolved: "Resolved",
-  archived: "Archived",
-};
 
 export const TYPE_OPTIONS = [
   "bug",
@@ -118,12 +82,6 @@ export const FEEDBACK_SKELETON_HEADERS = [
   "Age",
 ] as const;
 
-export function formatAge(value: string | null | undefined): string {
-  if (!value) return "—";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
-  return formatDistanceToNow(date, { addSuffix: true });
-}
 
 export const FEEDBACK_COLUMNS: DataTableColumn<SubmissionRow>[] = [
   {
@@ -177,7 +135,7 @@ export const FEEDBACK_COLUMNS: DataTableColumn<SubmissionRow>[] = [
     header: "Age",
     cell: (row) => (
       <span className="text-xs text-muted-foreground whitespace-nowrap">
-        {formatAge(row.createdAt)}
+        {formatSubmissionAge(row.createdAt)}
       </span>
     ),
     className: "hidden sm:table-cell w-[120px] text-right",
@@ -241,7 +199,7 @@ export function ProductFeedbackMobileCard({ row }: { row: SubmissionRow }) {
             </Badge>
           ),
         },
-        { label: "Age", value: formatAge(row.createdAt) },
+        { label: "Age", value: formatSubmissionAge(row.createdAt) },
       ]}
     />
   );

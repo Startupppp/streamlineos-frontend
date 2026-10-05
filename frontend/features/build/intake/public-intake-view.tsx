@@ -15,26 +15,13 @@ import { Loader2, CheckCircle2, Send } from "lucide-react";
 import {
   intakeFormSchema,
   type IntakeFormValues,
+  INTAKE_PRIORITY_OPTIONS,
+  INTAKE_REQUEST_TYPE_OPTIONS,
 } from "@/features/build/intake/public-intake-schema";
 import { useSubmitIntake } from "@/hooks/api/build/public-intake";
 import { useProjectIntakeForm, useSubmitPublicForm } from "@/hooks/api/build/public-form";
 import { FieldInput } from "@/features/build/forms/field-input";
 import { buildDynamicSchema, type FormField } from "@/features/build/forms/form-submission-schema";
-
-const PRIORITY_OPTIONS = [
-  { value: "low", label: "Low" },
-  { value: "medium", label: "Medium" },
-  { value: "high", label: "High" },
-  { value: "urgent", label: "Urgent" },
-] as const;
-
-const REQUEST_TYPE_OPTIONS = [
-  { value: "bug", label: "Bug" },
-  { value: "feature", label: "Feature" },
-  { value: "task", label: "Task" },
-  { value: "question", label: "Question" },
-  { value: "other", label: "Other" },
-] as const;
 
 function LegacyIntakeForm({ projectId }: { projectId: string }) {
   const {
@@ -101,7 +88,7 @@ function LegacyIntakeForm({ projectId }: { projectId: string }) {
                   <SelectValue placeholder="Select type…" />
                 </SelectTrigger>
                 <SelectContent>
-                  {REQUEST_TYPE_OPTIONS.map((opt) => (
+                  {INTAKE_REQUEST_TYPE_OPTIONS.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                   ))}
                 </SelectContent>
@@ -121,7 +108,7 @@ function LegacyIntakeForm({ projectId }: { projectId: string }) {
                   <SelectValue placeholder="Select priority…" />
                 </SelectTrigger>
                 <SelectContent>
-                  {PRIORITY_OPTIONS.map((opt) => (
+                  {INTAKE_PRIORITY_OPTIONS.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                   ))}
                 </SelectContent>

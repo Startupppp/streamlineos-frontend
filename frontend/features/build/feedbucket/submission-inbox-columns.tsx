@@ -1,7 +1,6 @@
 "use client";
 
 import { forwardRef, type MouseEvent, type ReactNode } from "react";
-import { formatDistanceToNow } from "date-fns";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Badge } from "@/components/ui/badge";
@@ -9,73 +8,16 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { resolveImageUrl } from "@/lib/utils";
 import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
-import type {
-  PaginatedFeedbucketSubmissions,
-  FeedbucketSubmissionType,
-  FeedbucketSubmissionStatus,
-} from "@/types/feedbucket";
+import type { PaginatedFeedbucketSubmissions } from "@/types/feedbucket";
+import {
+  STATUS_LABELS,
+  STATUS_VARIANTS,
+  TYPE_LABELS,
+  TYPE_VARIANTS,
+  formatSubmissionAge,
+} from "./feedbucket-constants";
 
 export type SubmissionRow = PaginatedFeedbucketSubmissions["data"][number];
-
-export const TYPE_LABELS: Record<FeedbucketSubmissionType, string> = {
-  bug: "Bug",
-  idea: "Idea",
-  feature: "Feature",
-  question: "Question",
-  praise: "Praise",
-  other: "Other",
-};
-
-const TYPE_VARIANTS: Record<
-  FeedbucketSubmissionType,
-  "default" | "secondary" | "outline" | "destructive"
-> = {
-  bug: "destructive",
-  idea: "default",
-  feature: "secondary",
-  question: "secondary",
-  praise: "default",
-  other: "outline",
-};
-
-const STATUS_VARIANTS: Record<
-  FeedbucketSubmissionStatus,
-  "default" | "secondary" | "outline"
-> = {
-  open: "default",
-  in_progress: "secondary",
-  resolved: "outline",
-  archived: "outline",
-};
-
-export const STATUS_LABELS: Record<FeedbucketSubmissionStatus, string> = {
-  open: "Open",
-  in_progress: "In Progress",
-  resolved: "Resolved",
-  archived: "Archived",
-};
-
-export const ALL_STATUSES: FeedbucketSubmissionStatus[] = [
-  "open",
-  "in_progress",
-  "resolved",
-  "archived",
-];
-export const ALL_TYPES: FeedbucketSubmissionType[] = [
-  "bug",
-  "idea",
-  "feature",
-  "question",
-  "praise",
-  "other",
-];
-
-function formatSubmissionAge(value: string | null | undefined): string {
-  if (!value) return "—";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
-  return formatDistanceToNow(date, { addSuffix: true });
-}
 
 function ScreenshotCell(row: SubmissionRow) {
   return row.screenshotUrl ? (

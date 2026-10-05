@@ -1,6 +1,9 @@
 import { memo } from "react";
 import type { ApprovalStatus } from "@/types/projects";
-import { StatusMapBadge, type StatusEntry } from "@/components/ui/status-map-badge";
+import {
+  StatusMapBadge,
+  type StatusEntry,
+} from "@/components/ui/status-map-badge";
 
 const APPROVAL_STATUS_MAP: Record<ApprovalStatus, StatusEntry> = {
   requested: { label: "Requested", tone: "warning" },
@@ -11,7 +14,8 @@ const APPROVAL_STATUS_MAP: Record<ApprovalStatus, StatusEntry> = {
   escalated: {
     label: "Escalated",
     tone: "warning",
-    className: "bg-status-warning-surface text-status-warning-ink-strong border-status-warning-rule",
+    className:
+      "bg-status-warning-surface text-status-warning-ink-strong border-status-warning-rule",
   },
   cancelled: {
     label: "Cancelled",
@@ -29,19 +33,11 @@ export const ApprovalStatusBadge = memo(function ApprovalStatusBadge({
   status,
   className,
 }: ApprovalStatusBadgeProps) {
-  return <StatusMapBadge status={status} map={APPROVAL_STATUS_MAP} className={className} />;
+  return (
+    <StatusMapBadge
+      status={status}
+      map={APPROVAL_STATUS_MAP}
+      className={className}
+    />
+  );
 });
-
-export function entityTypeLabel(type: string): string {
-  const MAP: Record<string, string> = {
-    task: "Task",
-    milestone: "Milestone",
-    budget: "Budget",
-    release: "Release",
-    change_request: "Change Request",
-    document: "Document",
-    timesheet: "Timesheet",
-    client_approval: "Client Approval",
-  };
-  return MAP[type] ?? type;
-}

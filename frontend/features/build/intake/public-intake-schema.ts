@@ -34,3 +34,18 @@ export const intakeSubmitResponseContract = z.object({
 });
 
 export type IntakeSubmitResponse = z.infer<typeof intakeSubmitResponseContract>;
+
+export const INTAKE_PRIORITY_OPTIONS = [
+  { value: "low", label: "Low" },
+  { value: "medium", label: "Medium" },
+  { value: "high", label: "High" },
+  { value: "urgent", label: "Urgent" },
+] as const;
+
+export const INTAKE_REQUEST_TYPE_OPTIONS = [
+  { value: "bug", label: "Bug" },
+  { value: "feature", label: "Feature" },
+  { value: "task", label: "Task" },
+  { value: "question", label: "Question" },
+  { value: "other", label: "Other" },
+] as const;

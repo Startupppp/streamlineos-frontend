@@ -192,13 +192,13 @@ jest.mock("./use-approvals-columns", () => ({
 
 jest.mock("./approval-status-badge", () => ({
   ApprovalStatusBadge: () => null,
-  entityTypeLabel: (type: string) => type,
 }));
 
 jest.mock("./approvals-constants", () => ({
   STATUS_OPTIONS: [],
   ENTITY_OPTIONS: [],
   DECIDABLE: new Set(),
+  entityTypeLabel: (type: string) => type,
 }));
 
 import {

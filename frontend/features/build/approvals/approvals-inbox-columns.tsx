@@ -9,10 +9,10 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import type { NamedUser } from "@/lib/person-display";
-import { ApprovalStatusBadge, entityTypeLabel } from "./approval-status-badge";
+import { ApprovalStatusBadge } from "./approval-status-badge";
 import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
 import type { ApprovalInboxItem, ApprovalStatus } from "@/types/projects";
-import { DECIDABLE } from "./approvals-constants";
+import { DECIDABLE, entityTypeLabel } from "./approvals-constants";
 
 export const INBOX_TABLE_HEADERS = [
   "Project",

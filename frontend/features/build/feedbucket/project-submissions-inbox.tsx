@@ -16,9 +16,8 @@ import {
 } from "@/hooks/api/feedbucket";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { FeedbucketSubmissionFilters } from "@/types/feedbucket";
+import { ALL_TYPES, ALL_STATUSES } from "./feedbucket-constants";
 import {
-  ALL_TYPES,
-  ALL_STATUSES,
   type SubmissionRow,
   SubmissionMobileCard,
   DeleteSubmissionButton,

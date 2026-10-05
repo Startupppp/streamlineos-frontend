@@ -22,14 +22,14 @@ import { RequestApprovalMenuButton } from "./approvals-toolbar";
 import { ApprovalBulkActionBar } from "./approval-bulk-action-bar";
 import { ApprovalsFilterBar } from "./approvals-filter-bar";
 import { useApprovalsColumns, APPROVALS_TABLE_HEADERS } from "./use-approvals-columns";
-import { ApprovalStatusBadge, entityTypeLabel } from "./approval-status-badge";
+import { ApprovalStatusBadge } from "./approval-status-badge";
 import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
 import {
   BUILD_FILTER_ALL,
   useBuildListFilters,
 } from "@/features/build/shared/use-build-list-filters";
 import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
-import { STATUS_OPTIONS, ENTITY_OPTIONS } from "./approvals-constants";
+import { STATUS_OPTIONS, ENTITY_OPTIONS, entityTypeLabel } from "./approvals-constants";
 import type {
   BuildApprovalsCreateApprovalResponse,
   BuildApprovalsCreateApprovalBody,

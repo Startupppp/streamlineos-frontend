@@ -132,7 +132,6 @@ jest.mock("@/components/pm-chrome", () => ({
 
 jest.mock("./approval-status-badge", () => ({
   ApprovalStatusBadge: () => null,
-  entityTypeLabel: () => "Task",
 }));
 
 jest.mock("./decide-dialog", () => ({
