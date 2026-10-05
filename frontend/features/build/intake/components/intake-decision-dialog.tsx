@@ -146,24 +146,24 @@ function DecisionOwner({
   const ticketHref = enabled && canViewTicket && ticketNumber > 0
       ? getTicketDetailHref(projectId, null, ticketNumber)
       : null;
-  const currentTicketHref = useRef<string | null>(null);
+  const currentTicketNavigation = useRef<{ href: string; requestLeave: typeof requestLeave } | null>(null);
   const offeredTicket = useRef<typeof acceptedTicket>(null);
 
   useLayoutEffect(() => {
-    currentTicketHref.current = ticketHref;
+    currentTicketNavigation.current = ticketHref ? { href: ticketHref, requestLeave } : null;
     return () => {
-      currentTicketHref.current = null;
+      currentTicketNavigation.current = null;
     };
-  }, [ticketHref]);
+  }, [ticketHref, requestLeave]);
 
   useEffect(() => {
     if (!acceptedTicket || !ticketHref || offeredTicket.current === acceptedTicket) return;
     offeredTicket.current = acceptedTicket;
     const destinationHref = ticketHref;
     function handleViewTicket() {
-      if (currentTicketHref.current !== destinationHref) return;
-      requestLeave(() => {
-        if (currentTicketHref.current === destinationHref)
+      if (currentTicketNavigation.current?.href !== destinationHref) return;
+      currentTicketNavigation.current.requestLeave(() => {
+        if (currentTicketNavigation.current?.href === destinationHref)
           router.push(destinationHref);
       });
     }

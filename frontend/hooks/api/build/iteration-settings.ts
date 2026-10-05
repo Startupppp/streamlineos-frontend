@@ -7,10 +7,15 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
-import type { IterationSettings, UpdateIterationSettingsInput } from "./iteration-settings-schema";
+import type {
+  IterationSettings,
+  UpdateIterationSettingsInput,
+} from "./iteration-settings-schema";
 
 const iterationSettingsContract = lazyContract(() =>
-  import("./iteration-settings-schema").then((m) => m.iterationSettingsSchema),
+  import("@/contracts/build-contracts.generated").then(
+    (m) => m.projectsSettingsIterationsGetSettingsResponseSchema,
+  ),
 );
 
 export function useIterationSettings(
@@ -37,26 +42,27 @@ export function useIterationSettings(
 
 export function useUpdateIterationSettings(projectId: number) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<IterationSettings, Error, UpdateIterationSettingsInput>(
-    "build:update",
-    {
-      mutationKey: ["projects", "settings", "iterations", "update", projectId],
-      mutationFn: (data) =>
-        apiClient.patch<IterationSettings>(
-          `/build/${projectId}/settings/iterations`,
-          data,
-          undefined,
-          iterationSettingsContract,
-        ),
-      onSuccess: (updatedSettings) => {
-        queryClient.setQueryData<IterationSettings>(
-          buildWorkQueryKeys.projects.iterationSettings(projectId),
-          updatedSettings,
-        );
-        queryClient.invalidateQueries({
-          queryKey: buildWorkQueryKeys.projects.iterationSettings(projectId),
-        });
-      },
+  return useAuthorizedMutation<
+    IterationSettings,
+    Error,
+    UpdateIterationSettingsInput
+  >("build:update", {
+    mutationKey: ["projects", "settings", "iterations", "update", projectId],
+    mutationFn: (data) =>
+      apiClient.patch<IterationSettings>(
+        `/build/${projectId}/settings/iterations`,
+        data,
+        undefined,
+        iterationSettingsContract,
+      ),
+    onSuccess: (updatedSettings) => {
+      queryClient.setQueryData<IterationSettings>(
+        buildWorkQueryKeys.projects.iterationSettings(projectId),
+        updatedSettings,
+      );
+      queryClient.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.iterationSettings(projectId),
+      });
     },
-  );
+  });
 }

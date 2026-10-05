@@ -4,11 +4,13 @@ import { ApiError } from "@/lib/api-envelope";
 import userEvent from "@testing-library/user-event";
 import type { IntakeRequest } from "@/types/projects";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { DirtyStateProvider, useHasUnsavedWork, useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 
 const mockRequests = jest.fn(), mockCreate = jest.fn(), mockUpdate = jest.fn(), mockAccept = jest.fn();
 const mockCan = jest.fn(), mockAccess = jest.fn(), mockFilters = jest.fn(), mockTickets = jest.fn(), mockSession = jest.fn();
 const mockMembers = jest.fn(), mockCycles = jest.fn(), mockModules = jest.fn();
 const mockTicket = jest.fn(), mockPush = jest.fn(), mockLeave = jest.fn();
+let mockRealDirtyBoundary = false, mockOtherDirty = false;
 type ToastOptions = { action?: { label: string; onClick: () => void }; id?: string | number };
 const mockToast = { success: jest.fn((message: string, options?: ToastOptions) => { void message; void options; }), error: jest.fn() };
 jest.mock("@/hooks/api/build/advanced", () => ({
@@ -25,7 +27,10 @@ jest.mock("next-auth/react", () => ({ useSession: () => mockSession() }));
 jest.mock("@/hooks/api/entitlements", () => ({ useEntitlements: () => ({ data: undefined }) }));
 jest.mock("@/hooks/api/access", () => ({ useCan: (...args: unknown[]) => mockCan(...args), useAccess: () => mockAccess() }));
 jest.mock("@/features/build/shared/use-build-list-filters", () => ({ useBuildListFilters: () => mockFilters() }));
-jest.mock("@/components/shared/dirty-state-context", () => ({ useRegisterDirtyState: jest.fn(), useNavigationLeave: () => mockLeave }));
+jest.mock("@/components/shared/dirty-state-context", () => {
+  const actual = jest.requireActual<typeof import("@/components/shared/dirty-state-context")>("@/components/shared/dirty-state-context");
+  return { ...actual, useNavigationLeave() { const leave = actual.useNavigationLeave(); return mockRealDirtyBoundary ? leave : mockLeave; } };
+});
 jest.mock("sonner", () => ({ toast: { success: (message: string, options?: ToastOptions) => mockToast.success(message, options), error: (...args: unknown[]) => mockToast.error(...args) } }));
 jest.mock("next/navigation", () => ({ useRouter: () => ({ push: mockPush, replace: jest.fn() }), usePathname: () => "/build/1/intake" }));
 jest.mock("@/components/illustrations", () => ({ EmptyInboxIllustration: () => <div /> }));
@@ -37,17 +42,17 @@ const callbacks: Callbacks[] = [];
 function ack(status: IntakeRequest["status"], overrides: Partial<IntakeRequest> = {}): IntakeRequest {
   return { id: 42, projectId: 1, orgId: "org-1", title: request.title, description: null, source: "manual", status, submitterEmail: null, submitterName: null, priority: null, requestType: null, linkedWorkItemId: 91, declineReason: null, createdAt: "2026-10-04T00:00:00Z", updatedAt: "2026-10-04T00:00:00Z", ...overrides };
 }
-function query(overrides: Record<string, unknown> = {}) {
-  return { data: undefined, isLoading: false, isError: false, error: undefined, refetch: jest.fn(), ...overrides };
-}
+const query = (overrides: Record<string, unknown> = {}) => ({ data: undefined, isLoading: false, isError: false, error: undefined, refetch: jest.fn(), ...overrides });
+function OtherWork() { useRegisterDirtyState(mockOtherDirty); return <output data-testid="dirty-work">{useHasUnsavedWork() ? "dirty" : "clean"}</output>; }
 function showRequest(projectId = 1) {
   mockCan.mockReturnValue(true);
   mockRequests.mockReturnValue(query({ data: { data: [request] } }));
-  return render(<IntakePage projectId={projectId} />);
+  return render(mockRealDirtyBoundary ? <DirtyStateProvider><OtherWork /><IntakePage projectId={projectId} /></DirtyStateProvider> : <IntakePage projectId={projectId} />);
 }
 beforeEach(() => {
   jest.clearAllMocks();
   callbacks.length = 0;
+  mockRealDirtyBoundary = false; mockOtherDirty = false;
   mockLeave.mockImplementation((action: () => void) => action());
   mockTicket.mockReturnValue(query({ data: { id: 91, projectId: 1, ticketNumber: 7 }, isPending: false }));
   jest.spyOn(window, "open").mockImplementation(() => null);
@@ -324,15 +329,16 @@ async function acceptRequest(result = ack("accepted"), projectId = 1, canView = 
   return view;
 }
 
-function ticketActions() {
-  return mockToast.success.mock.calls.flatMap(([, options]) => options?.action ? [options.action] : []);
+const ticketActions = () => mockToast.success.mock.calls.flatMap(([, options]) => options?.action ? [options.action] : []);
+function ticketAction() {
+  const action = ticketActions()[0];
+  if (!action) throw new Error("Expected actual View ticket action");
+  return action;
 }
-
 it("opens the accepted ticket using its authorized number rather than its database id", async () => {
   await acceptRequest();
   await waitFor(() => expect(ticketActions()).toHaveLength(1));
-  const action = ticketActions()[0];
-  if (!action) throw new Error("Expected actual View ticket action");
+  const action = ticketAction();
   expect(action.label).toBe("View ticket");
   act(() => action.onClick());
   expect(mockPush).toHaveBeenCalledWith("/build/1/tickets/7");
@@ -378,23 +384,26 @@ it.each(["project", "session"])("ignores delayed accepted-ticket data after %s c
   expect(mockPush).not.toHaveBeenCalled();
 });
 
-it("lets the navigation leave guard fence the actual View ticket action", async () => {
-  await acceptRequest();
-  await waitFor(() => expect(ticketActions()).toHaveLength(1));
-  mockLeave.mockImplementation(() => undefined);
-  const action = ticketActions()[0];
-  if (!action) throw new Error("Expected actual View ticket action");
+it.each([false, true])("uses current real dirty work after acceptance, unrelated dirty=%s", async (otherDirty) => {
+  mockRealDirtyBoundary = true; mockOtherDirty = otherDirty;
+  await acceptRequest({ ...ack("accepted"), linkedTicket: { id: 91, projectId: 1, ticketNumber: 7 } });
+  await waitFor(() => expect(screen.getByTestId("dirty-work")).toHaveTextContent(otherDirty ? "dirty" : "clean"));
+  const action = ticketAction();
   act(() => action.onClick());
-  expect(mockLeave).toHaveBeenCalledTimes(1);
-  expect(mockPush).not.toHaveBeenCalled();
+  expect(screen.queryByRole("alertdialog", { name: "Unsaved changes" }) !== null).toBe(otherDirty);
+  if (otherDirty) {
+    expect(mockPush).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Discard" }));
+  }
+  expect(mockPush).toHaveBeenCalledWith("/build/1/tickets/7");
+  expect(mockAccept).toHaveBeenCalledTimes(1);
   expect(window.open).not.toHaveBeenCalled();
 });
 
 it.each(["project", "session", "permission"])("refuses a captured View ticket action after %s context changes", async (change) => {
   const view = await acceptRequest();
   await waitFor(() => expect(ticketActions()).toHaveLength(1));
-  const action = ticketActions()[0];
-  if (!action) throw new Error("Expected actual View ticket action");
+  const action = ticketAction();
   if (change === "session") mockSession.mockReturnValue({ status: "unauthenticated", data: null });
   if (change === "permission") mockCan.mockReturnValue(false);
   view.rerender(<IntakePage projectId={change === "project" ? 2 : 1} />);
@@ -409,8 +418,7 @@ it("rechecks the authorized ticket after a delayed navigation leave confirmation
   await waitFor(() => expect(ticketActions()).toHaveLength(1));
   let confirmLeave: (() => void) | undefined;
   mockLeave.mockImplementation((action: () => void) => { confirmLeave = action; });
-  const action = ticketActions()[0];
-  if (!action) throw new Error("Expected actual View ticket action");
+  const action = ticketAction();
   act(() => action.onClick());
   expect(mockPush).not.toHaveBeenCalled();
   mockTicket.mockReturnValue(query({ isError: true, error: new ApiError("Access revoked", 403) }));
@@ -445,8 +453,7 @@ it("offers View ticket immediately from the accepted summary while the fallback 
   const view = await acceptRequest({ ...ack("accepted", { projectId: 22 }), linkedTicket: { id: 91, projectId: 22, ticketNumber: 7 } }, 22);
   expect(ticketActions()).toHaveLength(1);
   expect(mockTicket).toHaveBeenLastCalledWith(22, 0, INLINE_READ_ERROR);
-  const action = ticketActions()[0];
-  if (!action) throw new Error("Expected summary View ticket action");
+  const action = ticketAction();
   act(() => action.onClick());
   expect(mockPush).toHaveBeenCalledWith("/build/22/tickets/7");
   expect(mockLeave).toHaveBeenCalledTimes(1);
@@ -467,8 +474,7 @@ it.each(["wrong-id", "wrong-project", "denied", "zero", "fraction"])("keeps summ
 it.each(["project", "session", "permission", "delayed-permission"])("fences a captured summary action after %s changes", async (change) => {
   mockTicket.mockReturnValue(query({ isPending: true }));
   const view = await acceptRequest({ ...ack("accepted"), linkedTicket: { id: 91, projectId: 1, ticketNumber: 7 } });
-  const action = ticketActions()[0];
-  if (!action) throw new Error("Expected summary action");
+  const action = ticketAction();
   let confirm: (() => void) | undefined;
   if (change === "delayed-permission") {
     mockLeave.mockImplementation((leave: () => void) => { confirm = leave; });
@@ -487,8 +493,7 @@ it.each(["project", "session", "permission", "delayed-permission"])("fences a ca
 it("retains the authorized legacy lookup when an accepted summary does not match", async () => {
   await acceptRequest({ ...ack("accepted"), linkedTicket: { id: 92, projectId: 1, ticketNumber: 99 } });
   expect(mockTicket).toHaveBeenLastCalledWith(1, 91, INLINE_READ_ERROR);
-  const action = ticketActions()[0];
-  if (!action) throw new Error("Expected authorized fallback action");
+  const action = ticketAction();
   act(() => action.onClick());
   expect(mockPush).toHaveBeenCalledWith("/build/1/tickets/7");
 });
