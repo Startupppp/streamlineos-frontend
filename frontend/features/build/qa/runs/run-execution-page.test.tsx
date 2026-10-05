@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { ApiError } from "@/lib/api-envelope";
 
@@ -10,10 +10,12 @@ const mockUseCan = jest.fn();
 const mockUseAccess = jest.fn();
 const mockUseRegisterBuildDirtyState = jest.fn();
 const mockUseBuildListFilters = jest.fn();
+const mockPush = jest.fn();
+const mockRequestLeave = jest.fn();
 
 jest.mock("next/navigation", () => ({
   useSearchParams: () => ({ get: jest.fn().mockReturnValue(null), toString: () => "" }),
-  useRouter: () => ({ replace: jest.fn() }),
+  useRouter: () => ({ replace: jest.fn(), push: mockPush }),
   usePathname: () => "/build/1/qa/runs/1",
 }));
 
@@ -35,6 +37,7 @@ jest.mock("@/hooks/api/entitlements", () => ({
 
 jest.mock("@/components/shared/dirty-state-context", () => ({
   useRegisterDirtyState: (...args: unknown[]) => mockUseRegisterBuildDirtyState(...args),
+  useNavigationLeave: () => mockRequestLeave,
 }));
 
 jest.mock("@/hooks/common/use-animated-icon", () => ({
@@ -49,13 +52,8 @@ jest.mock("@animateicons/react/lucide", () => ({
 
 jest.mock("next/link", () => ({
   __esModule: true,
-  default: ({ children, href }: { children: ReactNode; href: string }) => <a href={href}>{children}</a>,
-}));
-
-jest.mock("@/components/ui/page-wrapper", () => ({
-  PageWrapper: ({ children, title }: { children: ReactNode; title?: string }) => (
-    <div>{title ? <h1>{title}</h1> : null}{children}</div>
-  ),
+  default: ({ children, href, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { href: string }) =>
+    <a href={href} {...props}>{children}</a>,
 }));
 
 jest.mock("@/components/ui/skeleton", () => ({
@@ -67,7 +65,8 @@ jest.mock("@/components/shared/error-state", () => ({
 }));
 
 jest.mock("@/components/ui/empty-state", () => ({
-  EmptyState: ({ title }: { title: string }) => <div data-testid="empty-state">{title}</div>,
+  EmptyState: ({ title, action }: { title: string; action?: { label: string; href: string } }) =>
+    <div data-testid="empty-state">{title}{action ? <a href={action.href}>{action.label}</a> : null}</div>,
 }));
 
 jest.mock("@/components/pm-chrome", () => ({
@@ -184,10 +183,11 @@ beforeEach(() => {
 
 it("renders NoPermissionState when build:qa:view is denied instead of error state", () => {
   mockUseAccess.mockReturnValue(ACCESS_DENIED);
-  mockUseTestRunDetail.mockReturnValue(baseQuery());
   render(<RunExecutionPage projectId={1} runId={1} />);
   expect(screen.getByText(/access restricted/i)).toBeInTheDocument();
   expect(screen.queryByTestId("error-state")).not.toBeInTheDocument();
+  expect(screen.queryByText("Run 1")).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Complete Run" })).not.toBeInTheDocument();
 });
 
 it("shows loading state while the access snapshot is still in flight rather than error state", () => {
@@ -203,6 +203,25 @@ it("renders a not-found state when the test run no longer exists", () => {
   render(<RunExecutionPage projectId={1} runId={1} />);
   expect(screen.getByText("Test run not found")).toBeInTheDocument();
   expect(screen.queryByTestId("error-state")).not.toBeInTheDocument();
+});
+
+it.each([false, true])("returns to the originating project's runs when missing=%s", (missing) => {
+  if (missing) mockUseTestRunDetail.mockReturnValue(baseQuery({ data: null }));
+  render(<RunExecutionPage projectId={7} runId={1} />);
+  expect(screen.getByRole("link", { name: "Back" })).toHaveAttribute("href", "/build/7/qa?tab=runs");
+  if (missing) expect(screen.getByRole("link", { name: "Back to QA" })).toHaveAttribute("href", "/build/7/qa?tab=runs");
+});
+
+it("defers the run return through the existing dirty-state leave guard", () => {
+  render(<RunExecutionPage projectId={7} runId={1} />);
+  fireEvent.click(screen.getByRole("link", { name: "Back" }));
+  expect(mockRequestLeave).toHaveBeenCalledTimes(1);
+  expect(mockPush).not.toHaveBeenCalled();
+  const command = mockRequestLeave.mock.calls[0]?.[0];
+  if (typeof command !== "function") throw new Error("Expected the guarded navigation command");
+  command();
+  expect(mockPush).toHaveBeenCalledTimes(1);
+  expect(mockPush).toHaveBeenCalledWith("/build/7/qa?tab=runs");
 });
 
 it("renders the upgrade path the backend sent with a 402 rather than a generic error", () => {

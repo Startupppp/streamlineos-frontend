@@ -111,6 +111,7 @@ interface RunExecutionPageProps {
 }
 
 export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
+  const qaHref = `/build/${projectId}/qa?tab=runs`;
   const canManage = useCan("build:qa:manage");
   const canExecute = useCan("build:qa:execute");
   const canCreateBug = useCan("build:bugs:create");
@@ -253,7 +254,7 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
 
   if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
     return (
-      <PageWrapper title="Run" backHref={`/build/${projectId}/qa`}>
+      <PageWrapper title="Run" backHref={qaHref}>
         <PmPageShell>
           <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
             {null}
@@ -265,7 +266,7 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
 
   if (pageState.kind === "loading") {
     return (
-      <PageWrapper title="Loading…" backHref={`/build/${projectId}/qa`}>
+      <PageWrapper title="Loading…" backHref={qaHref}>
         <PmPageShell>
           <div className="space-y-2">
             {Array.from({ length: 10 }).map((_, i) => (
@@ -279,14 +280,14 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
 
   if (pageState.kind === "empty") {
     return (
-      <PageWrapper title="Run not found" backHref={`/build/${projectId}/qa`}>
+      <PageWrapper title="Run not found" backHref={qaHref}>
         <PmPageShell>
           <EmptyState
             className="flex-1"
             illustrationPreset="ticket"
             title="Test run not found"
             description="This test run no longer exists, or you no longer have access to it."
-            action={{ label: "Back to QA", href: `/build/${projectId}/qa` }}
+            action={{ label: "Back to QA", href: qaHref }}
           />
         </PmPageShell>
       </PageWrapper>
@@ -295,7 +296,7 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
 
   if (!run) {
     return (
-      <PageWrapper title="Run" backHref={`/build/${projectId}/qa`}>
+      <PageWrapper title="Run" backHref={qaHref}>
         <PmPageShell>
           <ErrorState onRetry={handleRetry} />
         </PmPageShell>
@@ -325,7 +326,7 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
   return (
     <PageWrapper
       title={run.name}
-      backHref={`/build/${projectId}/qa`}
+      backHref={qaHref}
       actions={
         canManage && effectiveStatus !== "completed" ? (
           <CompleteRunButton onClick={handleCompleteRun} isPending={updateRun.isPending} />
