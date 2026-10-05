@@ -133,12 +133,6 @@ function SlackConnectionRow({
   );
 }
 
-const PROVIDER_LABELS: Record<string, string> = {
-  postmark: "Postmark",
-  mailgun: "Mailgun",
-  sendgrid: "SendGrid",
-};
-
 export function SlackIntegrationSettings() {
   const canManage = useCan("integrations:slack:manage");
   const { data, isLoading, isError, refetch } = useSlackConnections();
@@ -360,5 +354,3 @@ export function SlackIntegrationSettings() {
     </>
   );
 }
-
-export { PROVIDER_LABELS };

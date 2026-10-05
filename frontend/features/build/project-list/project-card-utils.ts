@@ -1,5 +1,4 @@
 import { differenceInDays, format, isPast } from "date-fns";
-import type { ProjectListItem } from "@/types/projects/projects";
 
 export const statusStripe: Record<string, string> = {
   ACTIVE: "border-l-emerald-500",
@@ -60,11 +59,4 @@ export function resolveDateMeta(
     return { label: format(new Date(startDate), "'Started' MMM d"), tone: "muted" };
   }
   return null;
-}
-
-export function buildTeamMembers(project: ProjectListItem) {
-  if (project.manager && !project.members.some((member) => member.id === project.manager?.id)) {
-    return [project.manager, ...project.members];
-  }
-  return project.members;
 }

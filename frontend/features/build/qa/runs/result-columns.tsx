@@ -13,10 +13,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { Bug as BugIcon } from "lucide-react";
 import Link from "next/link";
 
-export const RESULT_TABLE_HEADERS = [
-  "TC#", "Title", "Priority", "Status", "Actions",
-] as const;
-
 const STATUS_OPTIONS: { value: TestResultStatus; label: string; activeClass: string }[] = [
   { value: "not_run", label: "Not Run", activeClass: "bg-muted text-foreground border-border" },
   { value: "passed", label: "Pass", activeClass: "bg-status-success-surface text-status-success-ink-strong border-status-success-rule" },

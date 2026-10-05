@@ -105,7 +105,6 @@ jest.mock("@/features/build/shared/build-filter-select", () => ({
 }));
 
 jest.mock("./result-columns", () => ({
-  RESULT_TABLE_HEADERS: ["TC#", "Title", "Priority", "Status", "Actions"],
   buildResultColumns: () => [],
 }));
 

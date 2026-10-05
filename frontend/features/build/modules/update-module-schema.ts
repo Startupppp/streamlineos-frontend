@@ -35,8 +35,6 @@ export const updateModuleSchema = z
     });
   });
 
-export type UpdateModulePayload = z.infer<typeof updateModuleSchema>;
-
 export const editModuleSchema = z.object({
   name: z
     .string()

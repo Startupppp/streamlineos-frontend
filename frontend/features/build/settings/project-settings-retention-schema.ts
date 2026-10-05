@@ -63,7 +63,6 @@ export const setLegalHoldSchema = z
   })
   .strict();
 
-export type ProjectRetentionSettings = z.infer<typeof projectRetentionSettingsContract>;
 export type UpdateRetentionPolicyInput = z.infer<
   typeof updateRetentionPolicySchema
 >;

@@ -16,16 +16,8 @@ import type {
 } from "@/lib/build/nav/build-nav-destination";
 import { resolveBuildScope, type BuildScope } from "@/lib/build/build-scope";
 import { useBuildNavPins } from "./use-build-nav-preferences";
-import {
-  BUILD_DEFAULT_PERSONA,
-  getPersonaDefaultPinIds,
-} from "@/lib/build/nav/build-persona-defaults";
 
 const FEEDBACK_ORG_MODULE = "feedbucket";
-
-export function getDefaultPinIds(): readonly string[] {
-  return getPersonaDefaultPinIds(BUILD_DEFAULT_PERSONA);
-}
 
 export function useBuildScope(): BuildScope {
   const pathname = usePathname() ?? "";
