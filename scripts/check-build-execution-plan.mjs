@@ -45,6 +45,31 @@ const checkExactSet = (name, expected, actual, failures) => {
 };
 
 const checkNumberedRows = (name, content, prefix, floor, failures) => {
+  if (prefix === "BLD") {
+    const header = "ID|Requirement|Source|Role|Route|UI files|API|Schema|Permission|Cache|Events/jobs|Tests|Browser evidence|Status|Open questions";
+    const lines = content.split("\n").map((line) => line.trim());
+    const headers = lines.flatMap((line, index) =>
+      line.startsWith("|") && line.endsWith("|") &&
+      line.slice(1, -1).split("|").map((cell) => cell.trim().replace(/\s+/g, " ")).join("|") === header ? [index] : []);
+    if (headers.length !== 1) {
+      failures.push(`${name}: expected one canonical header; found ${headers.length}`);
+      return 0;
+    }
+    const start = headers[0] + 1;
+    if (!/^\|(?:\s*:?-{3,}:?\s*\|){15}$/.test(lines[start] ?? ""))
+      failures.push(`${name}: malformed canonical table separator`);
+    const rows = [];
+    for (let index = start + 1; index < lines.length && lines[index].startsWith("|"); index++) {
+      const line = lines[index];
+      const cells = line.slice(1, -1).split("|").map((cell) => cell.trim());
+      if (!line.endsWith("|") || cells.length !== 15 || cells.some((cell) => !cell) || !/^BLD-\d{3}$/.test(cells[0])) {
+        failures.push(`${name}: malformed canonical row ${line.slice(0, 120)}`);
+        continue;
+      }
+      rows.push(line);
+    }
+    content = rows.join("\n");
+  }
   const ids = [...content.matchAll(new RegExp(`^\\|\\s*(${prefix}-?(\\d+))\\s*\\|`, "gm"))]
     .map((match) => ({ id: match[1], number: Number(match[2]) }));
   if (ids.length < floor) failures.push(`${name}: found ${ids.length} rows; expected at least ${floor}`);
@@ -237,6 +262,53 @@ const runSelfTest = () => {
     catch (error) { cases.push({ name, passed: false, error: error.message }); }
   };
   const assert = (condition, detail) => { if (!condition) throw new Error(detail); };
+  const ledgerHeader = "| ID | Requirement | Source | Role | Route | UI files | API | Schema | Permission | Cache | Events/jobs | Tests | Browser evidence | Status | Open questions |";
+  const ledgerRows = Array.from({ length: floors.ledger }, (_, index) =>
+    `| BLD-${String(index + 1).padStart(3, "0")} | ${Array(14).fill("fixture").join(" | ")} |`);
+  const ledgerFixture = `${ledgerHeader}\n${`|${Array(15).fill("---").join("|")}|`}\n${ledgerRows.join("\n")}`;
+
+  test("implementation ledger counts canonical rows despite repeated references", () => {
+    const failures = [];
+    const references = "\n\n## Supporting references\n| ID | Evidence |\n|---|---|\n| BLD-001 | proof |\n| BLD-036 | proof |";
+    const count = checkNumberedRows("implementation ledger", ledgerFixture + references, "BLD", floors.ledger, failures);
+    assert(count === floors.ledger && failures.length === 0, `${count}; ${JSON.stringify(failures)}`);
+  });
+  test("implementation ledger accepts whitespace-only header formatting", () => {
+    const failures = [];
+    const formatted = ledgerFixture.replace(ledgerHeader, ledgerHeader.replace(/ \| /g, "\t|\t").replace("UI files", "UI   files"));
+    assert(checkNumberedRows("implementation ledger", formatted, "BLD", floors.ledger, failures) === floors.ledger && failures.length === 0, JSON.stringify(failures));
+  });
+  test("implementation ledger rejects missing and ambiguous canonical headers", () => {
+    for (const fixture of [ledgerFixture.replace("Browser evidence", "Evidence"), `${ledgerFixture}\n\n${ledgerFixture}`]) {
+      const failures = [];
+      checkNumberedRows("implementation ledger", fixture, "BLD", floors.ledger, failures);
+      assert(failures.some((failure) => failure.includes("canonical header")), JSON.stringify(failures));
+    }
+  });
+  test("implementation ledger rejects malformed canonical rows and separator", () => {
+    for (const fixture of [
+      ledgerFixture.replace(ledgerRows[0], "| BLD-001 | incomplete |"),
+      ledgerFixture.replace(ledgerRows[0], ledgerRows[0].replace("fixture", "")),
+      ledgerFixture.replace("| BLD-001 |", "| UNKNOWN |"),
+      ledgerFixture.replace("| BLD-001 |", "| BLD-1 |"),
+      ledgerFixture.replace("|---|", "|--|"),
+    ]) {
+      const failures = [];
+      checkNumberedRows("implementation ledger", fixture, "BLD", floors.ledger, failures);
+      assert(failures.some((failure) => failure.includes("malformed canonical")), JSON.stringify(failures));
+    }
+  });
+  test("implementation ledger retains canonical floor, duplicate and outlier failures", () => {
+    for (const [fixture, marker] of [
+      [ledgerFixture.replace(`\n${ledgerRows.at(-1)}`, ""), "expected at least 36"],
+      [ledgerFixture.replace("BLD-036", "BLD-035"), "duplicate BLD-035"],
+      [ledgerFixture.replace("BLD-036", "BLD-999"), "missing BLD-036"],
+    ]) {
+      const failures = [];
+      checkNumberedRows("implementation ledger", fixture, "BLD", floors.ledger, failures);
+      assert(failures.some((failure) => failure.includes(marker)), JSON.stringify(failures));
+    }
+  });
 
   test("route comparison rejects missing, extra, and duplicate rows", () => {
     const failures = [];
