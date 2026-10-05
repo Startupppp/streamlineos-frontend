@@ -247,3 +247,23 @@ describe("BLD-001 — target field invariant enforced by schema", () => {
     expect(violations).toEqual([]);
   });
 });
+
+describe("ARCH-16 — legacy deep links: every CONSOLIDATE target is itself a KEEP route", () => {
+  const keptRoutes = new Set(
+    BUILD_ROUTE_MANIFEST.filter((e) => e.decision === "KEEP").map((e) => e.route),
+  );
+
+  it("has at least one CONSOLIDATE entry so the invariant cannot pass vacuously on an empty list", () => {
+    const consolidations = BUILD_ROUTE_MANIFEST.filter(
+      (e) => e.decision === "CONSOLIDATE",
+    );
+    expect(consolidations.length).toBeGreaterThan(0);
+  });
+
+  it("every CONSOLIDATE entry's target route is a KEEP entry so the legacy deep link resolves to a live page", () => {
+    const danglingConsolidations = BUILD_ROUTE_MANIFEST.filter(
+      (e) => e.decision === "CONSOLIDATE",
+    ).filter((e) => !keptRoutes.has(e.target!));
+    expect(danglingConsolidations).toEqual([]);
+  });
+});

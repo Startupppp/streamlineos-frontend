@@ -3,6 +3,12 @@ import {
   findBuildCapability,
   authorizedBuildRouteIds,
 } from "./build-capability-registry";
+import { BUILD_ROUTE_MANIFEST } from "@/lib/build/build-route-manifest";
+import { buildOrganizationCatalog } from "@/lib/build/nav/build-organization-catalog";
+import {
+  BUILD_MY_WORK_DESTINATIONS,
+  BUILD_BROWSE_ALL_DESTINATION,
+} from "@/lib/build/nav/build-stable-destinations";
 
 describe("BT-23009d74e88d — build capability registry", () => {
   it("registry contains at least one entry for org catalog and stable destinations", () => {
@@ -77,5 +83,34 @@ describe("BT-23009d74e88d — authorizedBuildRouteIds filters by can()", () => {
     const routes = authorizedBuildRouteIds((key) => key === "build:view");
     expect(routes).not.toContain("org-members");
     expect(routes).toContain("org-overview");
+  });
+});
+
+describe("ARCH-16 — nav destinations parity: every org-scope nav destination has a KEEP manifest route", () => {
+  const keptRoutes = new Set(
+    BUILD_ROUTE_MANIFEST.filter((e) => e.decision === "KEEP").map((e) => e.route),
+  );
+
+  it("covers enough destinations that a empty catalog cannot pass vacuously", () => {
+    const catalog = buildOrganizationCatalog();
+    const all = [...catalog.primary, ...(catalog.moreTools ?? [])];
+    expect(all.length).toBeGreaterThan(5);
+  });
+
+  it("every org catalog primary and moreTools destination href is a KEEP manifest route so nav cannot link to a removed route", () => {
+    const catalog = buildOrganizationCatalog();
+    const all = [...catalog.primary, ...(catalog.moreTools ?? [])];
+    const notInManifest = all
+      .map((d) => ({ id: d.id, route: d.href.split("?")[0] }))
+      .filter(({ route }) => !keptRoutes.has(route));
+    expect(notInManifest).toEqual([]);
+  });
+
+  it("every stable destination href is a KEEP manifest route so my-work and browse-all cannot link to a removed route", () => {
+    const all = [...BUILD_MY_WORK_DESTINATIONS, BUILD_BROWSE_ALL_DESTINATION];
+    const notInManifest = all
+      .map((d) => ({ id: d.id, route: d.href.split("?")[0] }))
+      .filter(({ route }) => !keptRoutes.has(route));
+    expect(notInManifest).toEqual([]);
   });
 });
