@@ -152,13 +152,13 @@ describe("Webhook update request contract mirrors the backend strict body", () =
     expect(projectWebhookUpdateRequestContract.safeParse({ version: 3, isActive: false }).success).toBe(true);
   });
 
-  it("accepts zero and negative token values because the backend body uses z.number().int() without a positivity constraint", async () => {
+  it("rejects zero and negative token values because the backend body requires a positive integer version", async () => {
     const { projectWebhookUpdateRequestContract } = await import(
       "@/hooks/api/build/build-project-schema"
     );
 
-    expect(projectWebhookUpdateRequestContract.safeParse({ version: 0, isActive: true }).success).toBe(true);
-    expect(projectWebhookUpdateRequestContract.safeParse({ version: -1, isActive: true }).success).toBe(true);
+    expect(projectWebhookUpdateRequestContract.safeParse({ version: 0, isActive: true }).success).toBe(false);
+    expect(projectWebhookUpdateRequestContract.safeParse({ version: -1, isActive: true }).success).toBe(false);
     expect(projectWebhookUpdateRequestContract.safeParse({ version: 1, isActive: true }).success).toBe(true);
   });
 
