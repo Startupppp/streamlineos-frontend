@@ -48,6 +48,24 @@ describe("ErrorState — accessibility", () => {
     const { container } = render(<ErrorState compact />);
     expect(container.firstElementChild).not.toHaveClass("flex-1");
   });
+
+  it("renders the full-page workspace error with a retry action", () => {
+    const handleRetry = jest.fn();
+    render(
+      <ErrorState
+        fullPage
+        title="Couldn't load your workspace"
+        description="Request timed out. Please try again."
+        onRetry={handleRetry}
+      />,
+    );
+
+    expect(screen.getByRole("alert").tagName).toBe("MAIN");
+    expect(screen.getByRole("heading", { level: 1, name: "Couldn't load your workspace" })).toBeInTheDocument();
+    expect(screen.getByAltText("StreamlineOS")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(handleRetry).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe("ErrorState — request reference", () => {

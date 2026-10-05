@@ -1,5 +1,23 @@
 # Bugs and verification ledger
 
+## Readiness review88 — 2026-10-05
+
+Current verified review and gate observations: three disjoint read-only reviewers assessed standards, backend security/specification behavior and requirement evidence. Frontend baseline d777ec284 advanced to f0b6a158; backend641be6ffc advanced to5725b462. External working changes were preserved. These observations do not establish application readiness.
+
+Standards: `frontend/features/build/my-work/my-work-rows.tsx` still intercepted primary clicks into pane/projectId parameters that My Work did not consume. Its canonical native href differed from the intercepted destination. The existing row test omitted the click handler from its Link mock. Row SHA25640c95343449afba2df6a01c96ee496dad319e209a4bd323c128c5b893573663c stayed unchanged at f0b6a158. Successful details/history/mobile/denied actors remain Current unverified; source correction is now assigned under89 after explicit human handoff.
+
+Specification/security: `backend/src/modules/portal/client/portal-client.service.ts` used any live project client_approval with pending/requested status for waiting=true, without capability or recipient scope. The Build producer uses that type for internal Client access requests assigned to a project manager, rather than an external client's required action. Comparing lists can therefore reveal hidden approval existence. Source SHA256b000679e4a2a5d79f2b30e5fe025ef5bbcf5d88ef75e97e2a29088d375533ef3; waiting test SHA256d65a4627565e4dafa66aca90ef2858f03f82dc404bb250bad826b427aa3aee9e. Runtime exposure remains Current unverified.89 contains the filter with an actionable unsupported-filter error until a canonical external-recipient action projection exists; the broader approval projection is a separately owned follow-up.
+
+Gate baseline: tracker check failed stale index with zero missing delivery checklists. Execution-plan self-test passed9 cases, while normal execution failed on missing BLD037–099 and duplicate references. Independent inspection found36 canonical requirements but99 numeric table occurrences; the parser incorrectly scans later reference tables.89 will scope the existing parser to its unique complete canonical header without weakening floor, sequence, duplicate or malformed-row validation. Historical failure remains retained.
+
+Tracker provenance: eabc56314 contained114 checked/409 open523 total; d777ec284/f0b6a158 report300 checked/235 open535 total.174 existing items were newly checked,12 new checked local-worker receipt items were added, and no checkbox texts were removed. Counts describe document state. Evidence reconciliation is required for BT-be12f9c005dd (deployed project-read parity despite follow-up86 HTTP500), BT-47a503e85f08 (deployed outbox dispatch while source-only evidence excludes delivery/leases), and BT-8a6d5a615ca5 (every-action/actor/tenant/recovery authority while the ledger retains missing proof). No mass completion or unrelated checkbox reversal is inferred.
+
+Cleanup87 evidence gap: its claim names the15 cleanup plan as inventory, but the reviewed plan and cleanup manifest contain no cleanup87-specific before hashes, replacement sections, reviewer and validation mapping. Historical entries do not prove new deletions. No Markdown, source or evidence file was deleted by88.
+
+Browser: existing port1000 `/build/6/settings/workflow` moved from organization synchronization to Couldn't load your organization / Request timed out. Try again returned to synchronization; successful workflow loading was not observed. Independent production health GET timed out after15 seconds. Listener16500 and parent10072 remained present. These are availability failures, not authentication/authorization/persistence evidence. No process was restarted, secret printed, production write performed or browser security workaround attempted.
+
+Authorized Railway metadata89 identifies FAILED deployment bad561a4-3139-4a5b-a50f-8ff1d56f1733 at5725b462bf258161cf60f99c5b26e39390ee4233, created2026-10-05T10:48:00.833Z; prior fcd4279a-6971-478e-8899-33c6d427740d is CRASHED atc483b239dfa97c15c9db554638bbf062d24d73d2. Metadata does not prove the precise outage cause. No deployment was initiated by this coordinator.
+
 ## Browser navigation follow-up86 — 2026-10-04
 
 Current verified at frontend eabc56314/backend b70fcc91e: authenticated port1000 My Work search for QA-070 updated q=QA-070 and displayed one matching row. This supersedes the earlier inconclusive search observation during the frontend restart. Ordinary row click changed the URL to pane=159&projectId=1 without displaying ticket details; unchanged accessibility state and a screenshot confirmed the missing pane. Browser Back preserved the search and matching row.

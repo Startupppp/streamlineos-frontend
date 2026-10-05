@@ -108,6 +108,19 @@ describe("AppLoadingScreen — ARIA attributes", () => {
     render(<AppLoadingScreen label="Preparing workspace" />);
     expect(screen.getByText("Preparing workspace")).toBeInTheDocument();
   });
+
+  it("types the visible label one character at a time", () => {
+    jest.useFakeTimers();
+    const { unmount } = render(<AppLoadingScreen label="Build" />);
+    const typedLabel = screen.getByTestId("loading-typed-label");
+    expect(typedLabel).toHaveTextContent("");
+    act(() => jest.advanceTimersByTime(200));
+    expect(typedLabel).toHaveTextContent("Bu");
+    act(() => jest.advanceTimersByTime(300));
+    expect(typedLabel).toHaveTextContent("Build");
+    unmount();
+    jest.useRealTimers();
+  });
 });
 
 describe("AppLoadingScreen — reduced-motion preference", () => {
@@ -120,7 +133,7 @@ describe("AppLoadingScreen — reduced-motion preference", () => {
     render(<AppLoadingScreen />);
 
     expect(screen.getByRole("status")).toBeInTheDocument();
-    expect(screen.getByText("Loading")).toBeInTheDocument();
+    expect(screen.getByTestId("loading-typed-label")).toHaveTextContent("Loading");
   });
 
   it("renders the full decorative path when motion is not reduced", () => {

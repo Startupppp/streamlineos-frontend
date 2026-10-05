@@ -230,9 +230,10 @@ export function DashboardShell({
       <div className="flex h-dvh flex-col overflow-hidden">
         {accessError ? (
           <ErrorState
-            className="flex-1"
-            title="Couldn't load your organization"
+            fullPage
+            title="Couldn't load your workspace"
             description={getErrorMessage(accessErr)}
+            error={accessErr}
             onRetry={handleRetryAccess}
           />
         ) : (

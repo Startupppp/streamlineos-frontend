@@ -3,6 +3,7 @@
 import { useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { ErrorState } from "@/components/shared/error-state";
@@ -10,6 +11,7 @@ import { PortalHeader } from "@/features/portal/components/portal-header";
 import { PortalProjectCard } from "@/features/portal/components/portal-project-card";
 import { usePortalGuard } from "@/hooks/api/portal/use-portal-guard";
 import { useExternalPortalProjects } from "@/hooks/api/portal/use-portal-projects";
+import { PortalApiError } from "@/lib/portal-api-client";
 
 function ProjectsListSkeleton() {
   return (
@@ -46,7 +48,7 @@ export default function PortalProjectsPage() {
 
   const filters = waiting ? { waiting } : undefined;
 
-  const { data, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
+  const { data, isLoading, isError, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useExternalPortalProjects(filters);
 
   const handleLoadMore = useCallback(() => {
@@ -88,18 +90,14 @@ export default function PortalProjectsPage() {
         </div>
 
         <div className="mb-4 flex items-center gap-2">
-          <button
+          <Button
             type="button"
             aria-pressed={waiting === true}
             onClick={handleToggleWaiting}
-            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-              waiting === true
-                ? "border-primary bg-primary/10 text-primary"
-                : "border-border bg-card text-muted-foreground hover:text-foreground hover:border-primary/30"
-            }`}
+            variant={waiting === true ? "default" : "outline"}
           >
             Awaiting my approval
-          </button>
+          </Button>
         </div>
 
         {!isReady || isLoading ? (
@@ -107,7 +105,9 @@ export default function PortalProjectsPage() {
         ) : isError ? (
           <ErrorState
             title="Could not load projects"
-            description="There was a problem fetching your projects. Please try again."
+            description={error instanceof PortalApiError && error.code === "PORTAL_WAITING_FILTER_UNAVAILABLE"
+              ? 'Approval filtering is unavailable. Turn off "Awaiting my approval" to view your projects.'
+              : "There was a problem fetching your projects. Please try again."}
             onRetry={handleRetry}
             className="min-h-[320px]"
           />

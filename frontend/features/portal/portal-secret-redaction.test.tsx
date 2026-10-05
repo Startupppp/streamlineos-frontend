@@ -1,15 +1,21 @@
 "use client";
 
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+
+const mockReplace = jest.fn();
+const mockUseSearchParams = jest.fn();
+const mockUsePortalGuard = jest.fn();
+const mockUseExternalPortalProjects = jest.fn();
 
 const INVITE_TOKEN = "inv-tok-super-secret-one-time-exchange-abc123";
 const GRANT_TOKEN = "eyJhbGciOiJIUzI1NiJ9.portal-grant-bearer-secret-xyz789";
 const GRANT_ID = "pgc-internal-uuid-secret-should-not-leak-to-portal";
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: jest.fn() }),
+  useRouter: () => ({ replace: mockReplace }),
   usePathname: () => "/client-portal",
-  useSearchParams: jest.fn(),
+  useSearchParams: () => mockUseSearchParams(),
 }));
 
 jest.mock("next/link", () => ({
@@ -34,11 +40,11 @@ jest.mock("@/features/portal/components/portal-project-card", () => ({
 }));
 
 jest.mock("@/hooks/api/portal/use-portal-guard", () => ({
-  usePortalGuard: jest.fn(),
+  usePortalGuard: () => mockUsePortalGuard(),
 }));
 
 jest.mock("@/hooks/api/portal/use-portal-projects", () => ({
-  useExternalPortalProjects: jest.fn(),
+  useExternalPortalProjects: (...args: unknown[]) => mockUseExternalPortalProjects(...args),
 }));
 
 jest.mock("@/hooks/api/portal/use-accept-invitation", () => ({
@@ -46,6 +52,7 @@ jest.mock("@/hooks/api/portal/use-accept-invitation", () => ({
 }));
 
 jest.mock("@/lib/portal-api-client", () => ({
+  PortalApiError: jest.requireActual<typeof import("@/lib/portal-api-client")>("@/lib/portal-api-client").PortalApiError,
   setPortalToken: jest.fn(),
   getPortalToken: jest.fn(),
   clearPortalToken: jest.fn(),
@@ -61,11 +68,8 @@ jest.mock("sonner", () => ({
   toast: { success: jest.fn(), error: jest.fn() },
 }));
 
-import { useSearchParams } from "next/navigation";
-import { usePortalGuard } from "@/hooks/api/portal/use-portal-guard";
-import { useExternalPortalProjects } from "@/hooks/api/portal/use-portal-projects";
 import { useAcceptInvitation } from "@/hooks/api/portal/use-accept-invitation";
-import { getPortalToken } from "@/lib/portal-api-client";
+import { getPortalToken, PortalApiError } from "@/lib/portal-api-client";
 
 const STUB_PROJECT = {
   id: 7,
@@ -77,7 +81,7 @@ const STUB_PROJECT = {
 };
 
 function makeSearchParams(token: string | null) {
-  return { get: (key: string) => (key === "token" ? token : null) };
+  return new URLSearchParams(token ? { token } : undefined);
 }
 
 function makePendingMutation() {
@@ -104,11 +108,61 @@ function makeErrorMutation(message: string) {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockUseSearchParams.mockReturnValue(new URLSearchParams());
+});
+
+describe("Portal waiting filter recovery", () => {
+  it("shows safe recovery and clears waiting while preserving the current URL", async () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("waiting=true&status=active&cursor=7"));
+    mockUsePortalGuard.mockReturnValue({ isReady: true });
+    mockUseExternalPortalProjects.mockReturnValue({ isError: true, error: new PortalApiError(
+      `${INVITE_TOKEN} ${GRANT_TOKEN} ${GRANT_ID}`, 400, "PORTAL_WAITING_FILTER_UNAVAILABLE",
+    ), refetch: jest.fn() });
+    const { default: PortalProjectsPage } = await import("../../app/(portal)/client-portal/page");
+    const { rerender } = render(<PortalProjectsPage />);
+    expect(mockUseExternalPortalProjects).toHaveBeenLastCalledWith({ waiting: true });
+    expect(screen.getByText('Approval filtering is unavailable. Turn off "Awaiting my approval" to view your projects.')).toBeInTheDocument();
+    const toggle = screen.getByRole("button", { name: "Awaiting my approval" });
+    expect(toggle).toHaveAttribute("aria-pressed", "true");
+    expect(toggle).toHaveAttribute("data-slot", "button");
+    expect(toggle).toHaveClass("bg-primary", "text-primary-foreground");
+    expect(document.body.innerHTML).not.toContain(INVITE_TOKEN);
+    expect(document.body.innerHTML).not.toContain(GRANT_TOKEN);
+    expect(document.body.innerHTML).not.toContain(GRANT_ID);
+    await userEvent.click(toggle);
+    expect(mockReplace).toHaveBeenCalledWith("?status=active&cursor=7", { scroll: false });
+    mockUseSearchParams.mockReturnValue(new URLSearchParams(mockReplace.mock.calls[0][0]));
+    mockUseExternalPortalProjects.mockReturnValue({
+      data: { pages: [{ data: [STUB_PROJECT], hasMore: false, nextCursor: null }] },
+      isLoading: false, isError: false, refetch: jest.fn(), fetchNextPage: jest.fn(),
+      hasNextPage: false, isFetchingNextPage: false,
+    });
+    rerender(<PortalProjectsPage />);
+    expect(mockUseExternalPortalProjects).toHaveBeenLastCalledWith(undefined);
+    expect(screen.getByTestId("project-card-7")).toBeInTheDocument();
+    expect(toggle).toHaveAttribute("aria-pressed", "false");
+    expect(toggle).toHaveClass("border-input", "bg-card");
+    expect(screen.queryByText(/Approval filtering is unavailable/)).not.toBeInTheDocument();
+  });
+
+  it.each([new Error(GRANT_TOKEN), new PortalApiError(INVITE_TOKEN, 403, "PORTAL_GRANT_REVOKED")])(
+    "keeps unrelated failures generic and secret-safe (case %#)", async (error) => {
+      mockUsePortalGuard.mockReturnValue({ isReady: true });
+      const refetch = jest.fn();
+      mockUseExternalPortalProjects.mockReturnValue({ isError: true, error, refetch });
+      const { default: PortalProjectsPage } = await import("../../app/(portal)/client-portal/page");
+      render(<PortalProjectsPage />);
+      expect(screen.getByText("There was a problem fetching your projects. Please try again.")).toBeInTheDocument();
+      expect(document.body.innerHTML).not.toContain(error.message);
+      await userEvent.click(screen.getByRole("button", { name: /try again/i }));
+      expect(refetch).toHaveBeenCalledTimes(1);
+    },
+  );
 });
 
 describe("SPEC C6 — invitation token is never rendered in the DOM", () => {
   it("does not expose the raw invite token while the acceptance mutation is pending", async () => {
-    (useSearchParams as jest.Mock).mockReturnValue(makeSearchParams(INVITE_TOKEN));
+    mockUseSearchParams.mockReturnValue(makeSearchParams(INVITE_TOKEN));
     (useAcceptInvitation as jest.Mock).mockReturnValue(makePendingMutation());
 
     const { default: AcceptInvitationPage } = await import(
@@ -121,7 +175,7 @@ describe("SPEC C6 — invitation token is never rendered in the DOM", () => {
   });
 
   it("does not expose the raw invite token in the expired/error state", async () => {
-    (useSearchParams as jest.Mock).mockReturnValue(makeSearchParams(INVITE_TOKEN));
+    mockUseSearchParams.mockReturnValue(makeSearchParams(INVITE_TOKEN));
     (useAcceptInvitation as jest.Mock).mockReturnValue(
       makeErrorMutation("This invitation link has expired"),
     );
@@ -139,8 +193,8 @@ describe("SPEC C6 — invitation token is never rendered in the DOM", () => {
 describe("SPEC C6 — portal session JWT (grant token) is never rendered in the DOM", () => {
   it("does not render the bearer token while the portal projects page is loading", async () => {
     (getPortalToken as jest.Mock).mockReturnValue(GRANT_TOKEN);
-    (usePortalGuard as jest.Mock).mockReturnValue({ isReady: false });
-    (useExternalPortalProjects as jest.Mock).mockReturnValue({
+    mockUsePortalGuard.mockReturnValue({ isReady: false });
+    mockUseExternalPortalProjects.mockReturnValue({
       data: undefined,
       isLoading: true,
       isError: false,
@@ -158,8 +212,8 @@ describe("SPEC C6 — portal session JWT (grant token) is never rendered in the 
 
   it("does not render the bearer token in the portal projects ready state", async () => {
     (getPortalToken as jest.Mock).mockReturnValue(GRANT_TOKEN);
-    (usePortalGuard as jest.Mock).mockReturnValue({ isReady: true });
-    (useExternalPortalProjects as jest.Mock).mockReturnValue({
+    mockUsePortalGuard.mockReturnValue({ isReady: true });
+    mockUseExternalPortalProjects.mockReturnValue({
       data: { pages: [{ data: [STUB_PROJECT], hasMore: false, nextCursor: null }] },
       isLoading: false,
       isError: false,
@@ -182,8 +236,8 @@ describe("SPEC C6 — portal session JWT (grant token) is never rendered in the 
 describe("SPEC C6 — internal grant identifier is never exposed in the external portal view", () => {
   it("does not render the internal grant UUID in the portal project list", async () => {
     (getPortalToken as jest.Mock).mockReturnValue("valid-portal-jwt");
-    (usePortalGuard as jest.Mock).mockReturnValue({ isReady: true });
-    (useExternalPortalProjects as jest.Mock).mockReturnValue({
+    mockUsePortalGuard.mockReturnValue({ isReady: true });
+    mockUseExternalPortalProjects.mockReturnValue({
       data: { pages: [{ data: [{ ...STUB_PROJECT, _internalGrantId: GRANT_ID }], hasMore: false, nextCursor: null }] },
       isLoading: false,
       isError: false,
@@ -204,8 +258,8 @@ describe("SPEC C6 — internal grant identifier is never exposed in the external
 
   it("does not embed the internal grant UUID in any rendered href or attribute", async () => {
     (getPortalToken as jest.Mock).mockReturnValue("valid-portal-jwt");
-    (usePortalGuard as jest.Mock).mockReturnValue({ isReady: true });
-    (useExternalPortalProjects as jest.Mock).mockReturnValue({
+    mockUsePortalGuard.mockReturnValue({ isReady: true });
+    mockUseExternalPortalProjects.mockReturnValue({
       data: { pages: [{ data: [STUB_PROJECT], hasMore: false, nextCursor: null }] },
       isLoading: false,
       isError: false,
