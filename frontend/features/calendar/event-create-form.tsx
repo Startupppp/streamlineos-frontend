@@ -13,7 +13,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { CalendarListItem, CalendarOrgMember } from "@/hooks/api/calendar";
 import type { IntegrationConnection } from "@/hooks/api/integrations";
-import type { TicketSearchResult } from "@/hooks/api/build";
+import type { TicketSearchResult } from "@/types/projects";
 import { EventFormFields } from "./event-form-fields";
 import { TicketPickerDialog } from "./ticket-picker-dialog";
 import type { FormState, RecurrenceState } from "./event-form-state";

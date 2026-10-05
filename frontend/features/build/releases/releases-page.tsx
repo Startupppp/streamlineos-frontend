@@ -17,8 +17,8 @@ import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pa
 import {
   useReleases,
   useDeleteRelease,
-  type Release,
 } from "@/hooks/api/build/releases";
+import type { Release } from "@/types/projects";
 import { useCan } from "@/hooks/api/access";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { ReleaseFormSheet } from "./release-form-sheet";
@@ -107,7 +107,7 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
     y: number;
   } | null>(null);
 
-  const releases = data?.data ?? [];
+  const releases = useMemo(() => data?.data ?? [], [data]);
   const pagination = data?.pagination;
 
   const stats = useMemo(

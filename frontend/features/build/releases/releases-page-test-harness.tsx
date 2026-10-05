@@ -1,6 +1,4 @@
-import { render } from "@testing-library/react";
 import type { UseMutationResult, UseQueryResult } from "@tanstack/react-query";
-import { ReleasesPage } from "./releases-page";
 
 export const releaseState: {
   isOnline: boolean;
@@ -167,7 +165,7 @@ jest.mock("./release-form-sheet", () => ({
 }));
 
 import { ReleaseMobileCard, buildReleasesColumns } from "./releases-table-columns";
-import type { Release } from "@/hooks/api/build/releases";
+import type { Release } from "@/types/projects";
 
 export { ReleaseMobileCard, buildReleasesColumns };
 

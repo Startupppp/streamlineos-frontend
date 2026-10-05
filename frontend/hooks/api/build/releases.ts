@@ -25,7 +25,6 @@ const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 import { queryKeyBase } from "@/lib/query-keys/base";
-export type { Release } from "@/types/projects";
 
 interface ReleaseListQuery {
   cursor?: string;

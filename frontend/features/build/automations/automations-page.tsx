@@ -31,9 +31,8 @@ import {
   useDeleteAutomation,
   TRIGGER_EVENTS,
   ACTION_TYPES,
-  type ProjectAutomation,
-  type AutomationActionType,
 } from "@/hooks/api/build/automations";
+import type { ProjectAutomation, AutomationActionType } from "@/types/projects";
 import {
   useBuildListFilters,
   BUILD_FILTER_ALL,

@@ -35,8 +35,8 @@ import {
 } from "@/components/ui/select";
 import {
   useCreateAgentToken,
-  type CreateAgentTokenResponse,
 } from "@/hooks/api/build/agent-tokens";
+import type { CreateAgentTokenResponse } from "@/hooks/api/build/agent-tokens-schema";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   EXPIRY_OPTIONS,

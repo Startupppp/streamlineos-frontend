@@ -1,7 +1,7 @@
 import { render, screen, act, fireEvent } from "@testing-library/react";
 import type { AccessState } from "@/lib/rbac/gate";
 import { AutomationsPage } from "./automations-page";
-import type { ProjectAutomation } from "@/hooks/api/build/automations";
+import type { ProjectAutomation } from "@/types/projects";
 
 let mockAccessState: AccessState = "denied";
 let mockDeleteMutate = jest.fn();

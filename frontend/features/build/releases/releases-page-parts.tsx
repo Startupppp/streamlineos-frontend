@@ -1,6 +1,6 @@
 "use client";
 
-import type { Release } from "@/hooks/api/build/releases";
+import type { Release } from "@/types/projects";
 
 export const STATUS_CONFIG: Record<
   Release["status"],

@@ -26,7 +26,7 @@ import {
   buildReleasesColumns,
   ReleaseMobileCard,
 } from "@/features/build/releases/releases-table-columns";
-import type { Release } from "@/hooks/api/build/releases";
+import type { Release } from "@/types/projects";
 import {
   MILESTONE_STATUS_OPTIONS,
   RELEASE_STATUS_OPTIONS,

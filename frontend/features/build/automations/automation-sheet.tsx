@@ -31,7 +31,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
-import { TRIGGER_EVENTS, ACTION_TYPES, type ProjectAutomation } from "@/hooks/api/build/automations";
+import { TRIGGER_EVENTS, ACTION_TYPES } from "@/hooks/api/build/automations";
+import type { ProjectAutomation } from "@/types/projects";
 import { AutomationValueInput } from "./automation-value-input";
 import { RemoveButton } from "./remove-button";
 import {

@@ -8,7 +8,7 @@ import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type { AccessResponse } from "@/hooks/api/access-schema";
 import type { IterationSettings } from "@/hooks/api/build/iteration-settings-schema";
 import type { ProjectsRetentionSettingsGetSettingsResponse } from "@/contracts/build-contracts.generated";
-import type { ProjectAutomation } from "@/hooks/api/build/automations";
+import type { ProjectAutomation } from "@/types/projects";
 import type { AgentToken } from "@/hooks/api/build/agent-tokens-schema";
 import type { CustomState } from "@/hooks/api/build/custom-states";
 import { ProjectSettingsIterationsPage } from "@/features/build/settings/project-settings-iterations-page";

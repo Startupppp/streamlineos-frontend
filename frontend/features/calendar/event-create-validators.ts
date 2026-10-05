@@ -1,8 +1,7 @@
 import { differenceInMinutes } from "date-fns";
 import { isValidUrl, resolveEventDateTimes, type FormState } from "./event-form-state";
 import { buildRrule } from "./event-recurrence-schema";
-import type { TicketSearchResult } from "@/hooks/api/build";
-import type { CreateCalendarEventPayload } from "@/hooks/api/calendar";
+import type { TicketSearchResult } from "@/types/projects";
 
 export function validateEventTitle(title: string): string | null {
   const trimmed = title.trim();

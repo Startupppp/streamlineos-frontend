@@ -16,8 +16,8 @@ import { getUserDisplayName } from "@/lib/person-display";
 import {
   TRIGGER_EVENTS,
   ACTION_TYPES,
-  type ProjectAutomation,
 } from "@/hooks/api/build/automations";
+import type { ProjectAutomation } from "@/types/projects";
 import { PM_PANEL } from "@/components/pm-chrome";
 
 function getTriggerLabel(event: string): string {

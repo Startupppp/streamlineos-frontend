@@ -14,7 +14,7 @@ import {
   isAllowedChatAttachment,
 } from "./chat-attachment-types";
 import type { Message, MessageMetadata, TicketEntityRef } from "./chat-types";
-import type { TicketSearchResult } from "@/hooks/api/build";
+import type { TicketSearchResult } from "@/types/projects";
 import type { AttachmentInput, EditMessageInput, SendMessageInput } from "@/types/chat";
 
 type Attachment = AttachmentInput;

@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import type { AgentToken } from "@/hooks/api/build/agent-tokens";
+import type { AgentToken } from "@/hooks/api/build/agent-tokens-schema";
 import { PM_ROW } from "@/components/pm-chrome";
 import { cn } from "@/lib/utils";
 

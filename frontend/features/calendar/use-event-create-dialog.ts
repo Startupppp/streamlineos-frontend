@@ -15,7 +15,7 @@ import {
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import { useCalendarConnections } from "./use-calendar-connections";
 import { toast } from "sonner";
-import type { TicketSearchResult } from "@/hooks/api/build";
+import type { TicketSearchResult } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { describeEventConflicts } from "./event-conflict-notice";
 import {

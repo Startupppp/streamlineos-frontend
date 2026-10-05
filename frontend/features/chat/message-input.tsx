@@ -18,7 +18,6 @@ import {
   CHAT_ATTACHMENT_ACCEPT,
   CHAT_ATTACHMENT_SUMMARY,
 } from "./chat-attachment-types";
-import type { TicketSearchResult } from "@/hooks/api/build";
 import { ChatPopoverFallback } from "./chat-lazy-fallbacks";
 import { getChatMobileComposerInsetClassName } from "@/components/layout/mobile/chat-mobile-chrome-layout";
 import type { MessageInputProps } from "./message-input-types";

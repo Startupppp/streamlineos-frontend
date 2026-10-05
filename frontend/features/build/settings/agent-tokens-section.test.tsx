@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, within } from "@testing-library/react";
 import { AgentTokensSection } from "./agent-tokens-section";
-import type { AgentToken } from "@/hooks/api/build/agent-tokens";
+import type { AgentToken } from "@/hooks/api/build/agent-tokens-schema";
 
 const ACTIVE_TOKEN: AgentToken = {
   id: 1,

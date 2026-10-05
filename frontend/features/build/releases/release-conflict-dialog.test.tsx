@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { ReleaseFormSheet } from "./release-form-sheet";
 import { ApiError } from "@/lib/api-envelope";
-import type { Release } from "@/hooks/api/build/releases";
+import type { Release } from "@/types/projects";
 
 const updateMutate = jest.fn();
 

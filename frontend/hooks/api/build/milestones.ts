@@ -43,7 +43,6 @@ const projectBudgetUpdateContract = lazyContract(() =>
     (m) => m.projectBudgetUpdateContract,
   ),
 );
-export type { ProjectBudget, ProjectBudgetUpdate } from "@/types/projects";
 
 interface CreateMilestoneInput {
   name: string;

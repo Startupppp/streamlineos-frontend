@@ -36,7 +36,6 @@ const projectAutomationRowContract = lazyContract(() =>
 const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
-export type { ProjectAutomation, AutomationActionType } from "@/types/projects";
 
 type AutomationWriteInput = Pick<
   ProjectAutomation,

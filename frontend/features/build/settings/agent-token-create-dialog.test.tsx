@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { CreateTokenDialog } from "./agent-token-create-dialog";
-import type { CreateAgentTokenResponse } from "@/hooks/api/build/agent-tokens";
+import type { CreateAgentTokenResponse } from "@/hooks/api/build/agent-tokens-schema";
 
 
 const FAKE_TOKEN = "slos_" + "0".repeat(48);

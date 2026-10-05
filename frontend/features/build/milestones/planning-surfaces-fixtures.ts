@@ -1,5 +1,5 @@
 import type { ProjectMilestone } from "@/hooks/api/build/milestones";
-import type { Release } from "@/hooks/api/build/releases";
+import type { Release } from "@/types/projects";
 
 export const MILESTONE_STATUS_OPTIONS = [
   { value: "all", label: "All statuses" },

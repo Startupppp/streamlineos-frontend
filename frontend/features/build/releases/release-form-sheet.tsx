@@ -49,8 +49,8 @@ import {
   releaseBaseKey,
   useCreateRelease,
   useUpdateRelease,
-  type Release,
 } from "@/hooks/api/build/releases";
+import type { Release } from "@/types/projects";
 import { toast } from "sonner";
 import { getApiErrorCode, isApiError } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
