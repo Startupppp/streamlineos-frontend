@@ -35,7 +35,10 @@ jest.mock("@/hooks/api/build/tickets", () => ({
     jest.requireActual<typeof import("@tanstack/react-query")>("@tanstack/react-query").useMutation({ ...options, mutationFn: mockCreateTicket, retry: false }),
   useAddAttachment: () => ({ mutateAsync: mockAddAttachment }),
 }));
-jest.mock("@/lib/api-client", () => ({ apiClient: { upload: (...args: unknown[]) => mockUpload(...args) } }));
+jest.mock("@/hooks/api/build/project-files", () => ({
+  MAX_PROJECT_FILE_BYTES: 2 * 1024 * 1024,
+  useUploadProjectFile: () => ({ mutateAsync: (...args: unknown[]) => mockUpload(...args) }),
+}));
 jest.mock("./use-duplicate-title-warning", () => ({ useDuplicateTitleWarning: () => [] }));
 
 jest.mock("@/hooks/api/build/ticket-related-links", () => ({
@@ -124,7 +127,7 @@ describe("CreateTicketDialog registers with the shared dirty-state guard (BSN-04
 
   it.each(["create", "upload"])("retains the selected project when a queued selection runs during %s", async phase => {
     const pending = deferred<{ id: number }>();
-    const upload = deferred<{ key: string }>();
+    const upload = deferred<{ id: number }>();
     if (phase === "create") mockCreateTicket.mockReturnValueOnce(pending.promise);
     else { mockCreateTicket.mockResolvedValueOnce({ id: 359 }); mockUpload.mockReturnValueOnce(upload.promise); }
     renderDialog(null);
@@ -141,7 +144,7 @@ describe("CreateTicketDialog registers with the shared dirty-state guard (BSN-04
       fireEvent.click(nextProject);
       expect(screen.getByRole("combobox", { name: "Select project" })).toHaveTextContent("FIRST");
       expect(screen.getByRole("combobox", { name: "Select project" })).toBeDisabled();
-    } finally { await act(async () => { if (phase === "create") pending.reject(new Error("Create unavailable")); else upload.resolve({ key: "synthetic-proof.pdf" }); }); }
+    } finally { await act(async () => { if (phase === "create") pending.reject(new Error("Create unavailable")); else upload.resolve({ id: 77 }); }); }
   });
 
   it("retains the exact failed request and project for retry, then closes only once after acknowledgement", async () => {
@@ -175,7 +178,7 @@ describe("CreateTicketDialog registers with the shared dirty-state guard (BSN-04
   });
 
   it("keeps upload work and its selected project until attachment acknowledgement", async () => {
-    const upload = deferred<{ key: string }>();
+    const upload = deferred<{ id: number }>();
     mockCreateTicket.mockResolvedValueOnce({ id: 359 });
     mockUpload.mockReturnValueOnce(upload.promise);
     const close = jest.fn();
@@ -192,9 +195,9 @@ describe("CreateTicketDialog registers with the shared dirty-state guard (BSN-04
     expect(screen.getByRole("dialog")).toBeVisible();
     expect(close).not.toHaveBeenCalled();
     expect(mockAddAttachment).not.toHaveBeenCalled();
-    await act(async () => { upload.resolve({ key: "synthetic-proof.pdf" }); });
+    await act(async () => { upload.resolve({ id: 77 }); });
     await waitFor(() => expect(close).toHaveBeenCalledTimes(1));
-    expect(mockAddAttachment).toHaveBeenCalledWith(expect.objectContaining({ projectId: 1, ticketId: 359, fileName: "proof.pdf", fileUrl: "synthetic-proof.pdf" }));
+    expect(mockAddAttachment).toHaveBeenCalledWith(expect.objectContaining({ projectId: 1, ticketId: 359, fileId: 77 }));
   });
 
   it("preserves create-more context and resets only the completed draft", async () => {

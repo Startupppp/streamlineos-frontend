@@ -7,6 +7,7 @@ jest.mock("@/hooks/api/build/project-files", () => ({
   useUploadProjectFile: jest.fn(),
   useDeleteProjectFile: jest.fn(),
   useProjectFileSignedUrl: jest.fn(),
+  MAX_PROJECT_FILE_BYTES: 2 * 1024 * 1024,
 }));
 
 jest.mock("next/navigation", () => ({

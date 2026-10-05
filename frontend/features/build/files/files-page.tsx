@@ -8,6 +8,7 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import {
   useProjectFiles,
   useUploadProjectFile,
+  MAX_PROJECT_FILE_BYTES,
   useDeleteProjectFile,
   useProjectFileSignedUrl,
   type ProjectFileRow,
@@ -42,7 +43,6 @@ const ALLOWED_TYPES = [
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 ].join(",");
 
-const MAX_BYTES = 2 * 1024 * 1024;
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -174,24 +174,14 @@ export function FilesPage({ projectId }: FilesPageProps) {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
-      if (file.size > MAX_BYTES) {
+      if (file.size > MAX_PROJECT_FILE_BYTES) {
         toast.error(`File is too large. Maximum size is 2 MB.`);
         return;
       }
-      const reader = new FileReader();
-      reader.onload = () => {
-        const raw = reader.result;
-        if (typeof raw !== "string") return;
-        const base64 = raw.includes(",") ? raw.slice(raw.indexOf(",") + 1) : raw;
-        uploadFile.mutate(
-          { fileName: file.name, mimeType: file.type, contentBase64: base64 },
-          {
-            onSuccess: () => toast.success("File uploaded"),
-            onError: (err) => toast.error(getErrorMessage(err)),
-          },
-        );
-      };
-      reader.readAsDataURL(file);
+      uploadFile.mutate(file, {
+        onSuccess: () => toast.success("File uploaded"),
+        onError: (err) => toast.error(getErrorMessage(err)),
+      });
       e.target.value = "";
     },
     [uploadFile],

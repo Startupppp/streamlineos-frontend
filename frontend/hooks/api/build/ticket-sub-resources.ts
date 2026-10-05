@@ -238,10 +238,7 @@ export function useCreateOrgLabel(
 type AddAttachmentInput = {
   ticketId: number;
   projectId: number;
-  fileName: string;
-  fileUrl: string;
-  fileSize: number;
-  mimeType: string;
+  fileId: number;
 };
 
 export function useAddAttachment(
@@ -251,12 +248,9 @@ export function useAddAttachment(
   return useMutation<{ id: number }, Error, AddAttachmentInput>({
     ...options,
     mutationKey: ["projects", "tickets", "attachments", "add"],
-    mutationFn: ({ ticketId, projectId, fileName, fileUrl, fileSize, mimeType }) =>
+    mutationFn: ({ ticketId, projectId, fileId }) =>
       apiClient.post<{ id: number }>(`/build/${projectId}/tickets/${ticketId}/attachments`, {
-        fileName,
-        fileUrl,
-        fileSize,
-        mimeType,
+        fileId,
       }, undefined, attachmentCreateResultLazy),
     onSuccess: (data, variables, context, mutFnCtx) => {
       queryClient.invalidateQueries({

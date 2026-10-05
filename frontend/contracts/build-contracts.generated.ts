@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const OPENAPI_HASH = "sha256:3fdf19130799add92a11c299a1e2d1a9a6ebb71db71cd3e1c17e3a5a396dd8c9" as const;
+export const OPENAPI_HASH = "sha256:5442d474a43139d3dc65f165fa6b241865a6b438963d5d88408de40ef25b9599" as const;
 
 export const agentTokensListResponseSchema = z.array(z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -5972,6 +5972,7 @@ export const projectsTicketsUpdateTicketBodySchema = z.strictObject({
   customerId: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
   parentTicketId: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
   health: z.enum(["on_track", "at_risk", "off_track"]).nullable().optional(),
+  clientVisible: z.boolean().optional(),
 });
 export type ProjectsTicketsUpdateTicketBody = z.input<typeof projectsTicketsUpdateTicketBodySchema>;
 
@@ -6003,10 +6004,7 @@ export const projectsTicketAssociationsAddAttachmentResponseSchema = z.object({
 export type ProjectsTicketAssociationsAddAttachmentResponse = z.infer<typeof projectsTicketAssociationsAddAttachmentResponseSchema>;
 
 export const projectsTicketAssociationsAddAttachmentBodySchema = z.strictObject({
-  fileName: z.string(),
-  fileUrl: z.string(),
-  fileSize: z.number(),
-  mimeType: z.string(),
+  fileId: z.number().int().gt(0).lte(9007199254740991),
 });
 export type ProjectsTicketAssociationsAddAttachmentBody = z.input<typeof projectsTicketAssociationsAddAttachmentBodySchema>;
 

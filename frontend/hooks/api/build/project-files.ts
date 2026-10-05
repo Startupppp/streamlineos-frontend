@@ -39,10 +39,22 @@ export interface ProjectFilePage {
   pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 }
 
-export interface UploadProjectFileInput {
-  fileName: string;
-  mimeType: string;
-  contentBase64: string;
+export const MAX_PROJECT_FILE_BYTES = 2 * 1024 * 1024;
+
+function readFileAsBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const raw = reader.result;
+      if (typeof raw !== "string") {
+        reject(new Error(`Could not read ${file.name}`));
+        return;
+      }
+      resolve(raw.slice(raw.indexOf(",") + 1));
+    };
+    reader.onerror = () => reject(reader.error ?? new Error(`Could not read ${file.name}`));
+    reader.readAsDataURL(file);
+  });
 }
 
 export interface ProjectFileSignedUrl {
@@ -82,10 +94,14 @@ export function useUploadProjectFile(projectId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:files:manage", {
     mutationKey: ["projects", projectId, "files", "upload"],
-    mutationFn: (input: UploadProjectFileInput) =>
+    mutationFn: async (file: File) =>
       apiClient.post<ProjectFileRow>(
         `/build/${projectId}/files`,
-        input,
+        {
+          fileName: file.name,
+          mimeType: file.type || "application/octet-stream",
+          contentBase64: await readFileAsBase64(file),
+        },
         undefined,
         fileRowContract,
       ),

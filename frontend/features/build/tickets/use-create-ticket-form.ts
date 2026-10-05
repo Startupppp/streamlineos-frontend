@@ -10,6 +10,7 @@ import { useProjectLabels } from "@/hooks/api/build/projects";
 import { useProjectMembers } from "@/hooks/api/build/projects";
 import { useAddLabelToTicket } from "@/hooks/api/build/tickets";
 import { useAddRelatedLink } from "@/hooks/api/build/ticket-related-links";
+import { MAX_PROJECT_FILE_BYTES, useUploadProjectFile } from "@/hooks/api/build/project-files";
 import type { RelatedLinkDraft } from "./ticket-related-links-editor";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { toast } from "sonner";
@@ -17,8 +18,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { createTicketInputSchema } from "@/lib/validation/projects";
 import { z } from "zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api-client";
-import { lazyContract } from "@/lib/api-envelope";
 import type { CreateTicketPropertiesValue } from "./ticket-create-properties";
 import type {
   ProjectMemberRecord,
@@ -27,12 +26,7 @@ import type {
   TicketLabel,
 } from "@/types/projects";
 
-const storageUploadContract = lazyContract(() =>
-  import("@/hooks/api/chat-extra-schema").then((m) => m.storageUploadContract),
-);
-
-const MAX_ATTACHMENT_MB = 10;
-const MAX_ATTACHMENT_BYTES = MAX_ATTACHMENT_MB * 1024 * 1024;
+const MAX_ATTACHMENT_MB = MAX_PROJECT_FILE_BYTES / (1024 * 1024);
 
 const formSchema = createTicketInputSchema.omit({
   projectId: true,
@@ -137,6 +131,7 @@ export function useCreateTicketForm({
   const addAttachmentMutation = useAddAttachment();
   const addLabelMutation = useAddLabelToTicket();
   const addRelatedLinkMutation = useAddRelatedLink();
+  const uploadFileMutation = useUploadProjectFile(queryProjectId);
 
   const handlePropertiesChange = useCallback(
     (patch: Partial<CreateTicketPropertiesValue>) => {
@@ -271,21 +266,11 @@ export function useCreateTicketForm({
           await Promise.all([labelTask, linksTask]);
           const outcomes = await Promise.allSettled(
             pendingFiles.map(async (file) => {
-              const formData = new FormData();
-              formData.append("file", file);
-              formData.append("folder", "tickets");
-              const result = await apiClient.upload<{ key: string }>(
-                "/storage/upload",
-                formData,
-                storageUploadContract,
-              );
+              const uploaded = await uploadFileMutation.mutateAsync(file);
               await addAttachmentMutation.mutateAsync({
                 ticketId: data.id,
                 projectId,
-                fileUrl: result.key,
-                fileName: file.name,
-                fileSize: file.size,
-                mimeType: file.type,
+                fileId: uploaded.id,
               });
             }),
           );
@@ -358,7 +343,7 @@ export function useCreateTicketForm({
 
   const addFiles = useCallback((incoming: File[]) => {
     const valid = incoming.filter((f) => {
-      if (f.size > MAX_ATTACHMENT_BYTES) {
+      if (f.size > MAX_PROJECT_FILE_BYTES) {
         toast.error(`${f.name} exceeds ${MAX_ATTACHMENT_MB}MB limit`);
         return false;
       }

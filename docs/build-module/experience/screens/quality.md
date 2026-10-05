@@ -1,6 +1,6 @@
 # quality screen specifications
 
-Status: Planned
+Status: Planned. Bounded current source and read-only browser evidence are classified separately below.
 
 ## Problem Statement
 
@@ -9,6 +9,30 @@ Users need explicit quality flows instead of disconnected screens or empty shell
 ## Solution
 
 Use the following route contracts with the [shared screen contract](./shared-screen-contract.md). All listed endpoints and additions are Planned. Screen-specific rules below override the general overview catalog.
+
+## Current QA reconciliation — 2026-10-05
+
+Current verified: Reports Quality is implemented through canonical `GET /build/:projectId/test-runs`, `useTestRuns`, existing `build:qa:view`, response schemas and scoped query keys. Its exact current fields/filters/pagination are in the [reporting specification](./reporting.md#quality-report-projection). [Evidence114](../../audit/bugs-and-verification.md#quality-report114-browser-and-review-reconciliation--2026-10-05) proves genuine empty/filter/reload/QA return behavior on desktop/tablet/mobile and restricted persisted run count0. It does not establish populated QA execution or release confidence.
+
+Current verified source at backend40c7f4017b753e22ef08ca668655a2f21dc96492: existing case commands use `/build/:projectId/test-cases`; run/detail/result commands use `/build/:projectId/test-runs/:runId` and its `/results/:resultId` child. These are the existing API owners; illustrative `/build/projects/.../qa` paths below are Planned, not current endpoints or an instruction to create duplicates. Current case/run POSTs require Idempotency-Key. Result PATCH currently accepts only status/optional notes; run PATCH has optional version. Canonical response parsing currently omits run version. Source project/permission checks are not deployed authorization proof.
+
+Current verified source defects from independent review:
+
+| Gap | Existing owner | Required repair and proof |
+|---|---|---|
+| Result update has no live-parent-run check. | `backend/src/modules/build/qa/test-runs.service.ts`; existing `__tests__/test-runs-tenant-isolation.spec.ts`. | Deny retained results under a deleted/foreign/mismatched run using real403/404, preserve unrelated result state and verify read-after-write/DB negatives. |
+| Run version is stripped; run completion permits versionless last-write-wins; result update has no revision field. | Existing QA DTO/response schemas, official generator, run execution consumer and focused concurrency/contract tests. | Preserve canonical revision in responses, require the agreed conflict predicate for mutations, show409 with edits retained and prove exactly one authorized write. Do not hand-edit generated contracts or invent an alternate revision API. |
+| Suite/ticket/release bindings are not consistently checked against the project. | Existing test-management/test-runs services and `qa-scope-guards.ts` seam. | Reject same-org foreign-project bindings and cross-tenant IDs; reuse existing authority/permissions and prove no result/case/run side effects. |
+| Case/run/result commands lack transactional audit/outbox; retained test-version/attempt lifecycle is not established. | Existing QA command transaction, audit/event/outbox and DB schema owners. | Prove committed command plus exactly-once authorized event/audit behavior under retry, rollback and conflict; retest retains earlier failed evidence rather than overwriting it. Include physical persistence and canonical browser cache refresh. |
+
+Current unverified: whether every defect is reachable on the current deployment, complete six-role/project/tenant authority, populated execution, evidence-file access, incident/release signoff and deployment/operations. These longer service/contract/schema changes require a separate exact source package for Claude under the user's long-code handoff rule; current114 owns documentation and read-only evidence only. No production case/result/run write or deletion is authorized by this reconciliation.
+
+Acceptance mapping for the individually reopened historical checks:
+
+1. BT-9ea775d73705: prove versioned catalog and case snapshots; assignee/environment; retained result attempts/evidence; authorized defect links/regression filters; in-progress navigation and refresh. Current report/empty-state proof covers none of these mutation clauses completely.
+2. BT-e19e42776b5a: prove concurrent QA conflict refusal; release-gate refusal; incident timeline ordering; signed evidence access; direct-link/Back; project/tenant denial; persisted status/audit; real canonical cache/report refresh. Optional run CAS and mock cache tests do not satisfy the full task.
+
+Keep both task texts and IDs unchanged, reopen only their unsupported checked states, and advance no whole-task D/I/T/R/B/L stage. The canonical requirement ledger retains partial evidence and the existing delivery checklist remains the sole completion authority.
 
 ## User Stories
 
@@ -177,8 +201,8 @@ The [route table](../routes-and-screen-decisions.md) distinguishes existing rout
 Track completion in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
 
 - [ ] Implement Releases list/detail with version, scope, milestone, readiness, risk, QA state, approval, and publish/deploy event links; require a review preview before release transitions.
-- [x] Implement QA catalog and run execution with case/version, assignee, environment, result, evidence attachment, defect link, and regression filters; preserve in-progress run state on navigation.
+- [ ] Implement QA catalog and run execution with case/version, assignee, environment, result, evidence attachment, defect link, and regression filters; preserve in-progress run state on navigation.
 - [ ] Implement Incidents list and command/postmortem detail with severity, owner, timeline, affected release/tickets, actions, communications, and audit trail.
 - [ ] Apply typed filters for release state/date/owner, QA result/environment, and incident severity/status/time; counts and report drill-downs must reflect only authorized records.
 - [x] Use full pages for QA execution and incident command, panes for source tickets, and mobile ordered-list alternatives for dense matrices with usable sticky actions.
-- [x] Verify concurrent QA edits, release gate refusal, incident timeline ordering, evidence file access, direct-link/Back behavior, tenant/project denial, persisted status/audit, and cache/report refresh.
+- [ ] Verify concurrent QA edits, release gate refusal, incident timeline ordering, evidence file access, direct-link/Back behavior, tenant/project denial, persisted status/audit, and cache/report refresh.
