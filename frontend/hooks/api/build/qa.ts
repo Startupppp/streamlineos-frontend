@@ -2,8 +2,8 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
-import { apiClient, isApiError } from "@/lib/api-client";
-import { lazyContract } from "@/lib/api-envelope";
+import { apiClient } from "@/lib/api-client";
+import { isApiError, lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type {
