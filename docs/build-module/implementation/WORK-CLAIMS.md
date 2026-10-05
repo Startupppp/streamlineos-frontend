@@ -1,5 +1,20 @@
 # Build work claims
 
+## Build cleanup87 — coordinator claim (2026-10-05)
+
+Coordinator owns integration, commits, generators, full gates, and the cleanup inventory in existing `15-migration-cleanup-and-reuse-plan.md`. No requirement ID advances from cleanup alone. Lane ownership is by directory and is disjoint. The first five lanes were claimed in the coordinator brief before this entry was written; this entry records them retroactively.
+
+| Lane | Exclusive ownership | Excluded | Verification | Handoff |
+|---|---|---|---|---|
+| FE-A | `frontend/features/build/` folders `ai` through `members` | hooks, lib, types, app routes, the six split files | focused jest, `check:named-handlers`, `check:gated-reads`, madge | committed `d34c4cfc6` |
+| FE-B | `frontend/features/build/` folders `milestones` through `workload`, plus loose files | same as FE-A | same as FE-A | committed in frontend `refactor(build): remove unused Build files…` |
+| FE-SPLIT | the six `check:file-sizes` overruns (invitation page, client-portal-management test, command-center test, epics test harness, incident-sheet, reports-agile test), their new siblings, `scripts/file-size-exceptions.md` | all other files | file-size, over-300, named-handlers, type-assertions, eslint, identical jest counts | report before commit |
+| FE-HOOKS | `frontend/hooks/api/build`, `frontend/lib/build`, `frontend/types/projects`, `frontend/app/(authenticated)/build` | features | focused jest, query-key and invalidation tests per fix | report before commit |
+| BE-CORE | `backend/src/modules/build/core` | other Build folders, schema, migrations | focused jest, `check:dead-code`, madge, a test per efficiency fix | report before commit |
+| BE-NONCORE | `backend/src/modules/build` except `core` | `core`, schema, migrations | focused jest, madge | committed `536f41a73` and adapter deletion |
+
+Constraints for every lane: no tables, columns, migrations, public endpoints, or persisted field keys are removed. Generated files are regenerated only. Agents do not run git state commands or tsc. Do not add code comments.
+
 ## Browser follow-up86 — existing coordinator claim
 
 BT-7f60ba90ec64 / BT-60a1986f3a4c remain open. Coordinator retains only existing canonical evidence documents and browser interaction. At eabc56314/b70fcc91e, QA-070 search and Back preservation work, but primary row click produces an unused pane URL and direct native ticket navigation encounters production GET /build/1 HTTP500 SQLSTATE42702. Independent reviewer confirms the legacy row handler; authorized Railway correlation confirms the ambiguous role projection. Existing ARCH-16 row ownership and module_grants_resume project-access ownership are excluded from edits; exact owner handoff requested. Acceptance remains canonical primary/modifier navigation, real detail rendering, refresh/return/mobile and controlled authorization outcomes. See [bounded evidence86](../audit/bugs-and-verification.md#browser-navigation-follow-up86--2026-10-04). No checkbox or stage advance.

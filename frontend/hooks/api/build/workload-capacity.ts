@@ -32,7 +32,7 @@ export function useWorkloadCapacity(
         return apiClient.get(`/build/${projectId}/workload/capacity`, { start, end }, signal, workloadCapacityContract);
       }
     },
-    enabled: canView && options?.enabled !== false,
+    enabled: canView && !!projectId && options?.enabled !== false,
     staleTime: 60_000,
   });
 
