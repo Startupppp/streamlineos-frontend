@@ -1,5 +1,5 @@
 import type { RoadmapStatus, FeedbackStatus, ChangelogType } from "@/types/projects";
-import type { CrmAccountTier } from "@/hooks/api/build/roadmap-schema";
+import type { CrmAccountTier } from "@/types/crm";
 
 export const ROADMAP_COLUMNS: { status: RoadmapStatus; label: string }[] = [
   { status: "planned", label: "Planned" },

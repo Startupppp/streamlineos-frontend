@@ -19,7 +19,6 @@ import {
 export const RICE_INPUT_NAMES = ["reach", "impact", "confidence", "effort"] as const;
 export const RICE_SCORE_UNAVAILABLE_REASONS = ["missing_inputs", "non_positive_effort"] as const;
 export const ROADMAP_DELIVERY_SOURCES = ["epic_ticket", "project", "none"] as const;
-export const CRM_ACCOUNT_TIERS = ["free", "pro", "enterprise"] as const;
 export const ROADMAP_TIER_UNWEIGHTED_REASONS = [
   "no_linked_feedback",
   "no_linked_account",
@@ -37,7 +36,6 @@ export const roadmapSignalsContract = projectsRoadmapGetRoadmapSignalsResponseSc
 
 export type RoadmapPrioritization = z.infer<typeof roadmapPrioritizationContract>;
 export type RoadmapTierWeighting = z.infer<typeof roadmapTierWeightingContract>;
-export type CrmAccountTier = (typeof CRM_ACCOUNT_TIERS)[number];
 export type RoadmapSignals = z.infer<typeof roadmapSignalsContract>;
 
 export const roadmapOwnerContract =
