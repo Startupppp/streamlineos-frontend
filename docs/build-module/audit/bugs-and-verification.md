@@ -1,5 +1,33 @@
 # Bugs and verification ledger
 
+## QA tab URL126 reconciliation — 2026-10-06
+
+Scope: root directly repairs two existing frontend files, claimed before edits, supporting open BT-9ea775d73705/BT-e19e42776b5a and recovery BT-3e9ebfaad21e. Exact rootda6c9ae3c commits only qa-page.tsx and test-cases-tab.test.tsx with36 insertions/6 deletions. The existing generic useUrlTab owns validated cases/runs selection, default removal, preserved query facets and replace/no-scroll navigation; its HR-directory location adds no HR dependency or new API. It is reused unchanged. Existing Tabs styling, permissions, create nonces, leaf components, contracts and query keys remain unchanged. No new helper, component, test or Markdown file, source comment or live Ticket comment.
+
+Current verified tests: meaningful4 RED/11 controls/15 total18.811s precedes source edits. Initial expanded39/40 identifies the existing AnimatedIconButton mock's missing hover handlers when the actual parent create control is exercised. Root corrects only that fixture with named handlers; final40 tests/3 suites pass7.472s. Exact two-path strict ESLint/diff passes. Existing tsconfig.specs.json with two roots/four existing ambient declarations/dependencies reports0 diagnostics9.546s. Both independent source reviewers report CLEAR at unchanged hashes: page4e21b5576d7c221875d4a2c2ea6b5bf0dc3659614e78055f1e28b5c7d25217a6 (88 versus91 lines), testd9c949653b8027a07dec304ca26d88830324ac26f879af5d2d9de48642a08019 (288 versus255). Actual parent/Tabs/shared-hook tests preserve every prior leaf case and pair view-only negatives with manage positives.
+
+Current verified browser: before repair, selecting Test Runs leaves /build/1/qa unchanged and normal refresh returns to Test Cases. After repair, Test Runs writes ?tab=runs and normal refresh retains the selected pane and New Test Run control. Actual debounced search QA126 adds q; switching to default Test Cases removes tab and preserves q. At768px ArrowRight focuses Test Runs without selecting, then Enter selects it and updates the URL. At375px cases and at768/1280px runs show correct black/white tabs, corresponding creation controls, search and filtered empty states. Focused invalid tab=unknown&q=QA126 deep link settles on Test Cases with the preserved keyword and filtered empty state. Temporary viewport overrides are reset. No Create/Save/Submit, customer mutation, comment, grant, credential change, DDL or deployment occurs. These observations do not establish mutable run/case persistence or server authorization.
+
+Three new immutable JPEGs reside beside existing browser evidence, created with exclusive-write semantics on2026-10-06; the collection folder date is2026-10-05. Independent capture review is CLEAR at matching before/after hashes. Images contain app context but no address bar; URL, refresh and keyboard assertions come from the actual recorded browser observations, not the images alone.
+
+| Actual view | Screenshot | SHA256 |
+|---|---|---|
+| 1280×800, runs, QA126 | [Desktop](./evidence/2026-10-05-browser/qa126-url-runs-desktop-1280.jpg) | 463a3a074e1d2403246797ab4418ac5b371ba0637651a2e39912bf6b85f6a103 |
+| 375×812, cases, QA126 | [Mobile](./evidence/2026-10-05-browser/qa126-url-cases-mobile-375.jpg) | 9df998538bedf803dc3b723585c9084b4c49f19c086dff35ced2f615f85c4309 |
+| 768×1024, runs, QA126 | [Tablet](./evidence/2026-10-05-browser/qa126-url-runs-tablet-768.jpg) | 861a55b2d9dd59621b7fde040e0bc556ec8111f4255da92faf65ef715ab8b431 |
+
+The Feedback toolbar still overlaps navigation at1280 and obscures header/tab/search content at375/768. This is an observed remaining defect, not complete unobstructed mobile proof; reserved widget-cache configuration handoff and fresh-asset paint remain pending. Source116 host layering alone has not established the current browser fix.
+
+Failed gates retained: production frontend typecheck exits2 with13 diagnostics in externally moving navigation build-scope-browser/rows, project-list/projects-page and teams team-home-page/member-section paths. No diagnostic names either126 path. Full-spec repetition waits for that same active migration; no passing full gate is inferred. Named-handler self-tests33 pass, real gate fails one outside-owned governance-qa-tables.tsx161 inline onClick. Feature-cycle self/real checks pass47 features/18 edges/7848 resolved imports/4688 files. Assertion self-tests48 and actual scan pass6840 files, with404 plain assertions and no prohibited suppression. No external file, limit, exception or generated artifact is changed.
+
+```text
+pnpm -C frontend exec jest --runInBand --runTestsByPath features/build/qa/test-cases-tab.test.tsx features/build/qa/test-runs-tab.test.tsx features/build/qa/qa-schema.test.ts
+pnpm -C frontend exec eslint features/build/qa/qa-page.tsx features/build/qa/test-cases-tab.test.tsx --max-warnings 0
+pnpm -C frontend type-check
+```
+
+Current unverified: complete QA execution, mutable persistence/read-after-write, actual six-role/project/tenant/PAT denials, effects/cache/audit/outbox, case/run concurrency/history, complete unobstructed mobile flow and deployment/operations. Isolated mutable target remains required. All535 task identities/text/statuses/stages remain298 checked/237 open; the URL recovery slice does not close any broad task or whole stage. Earlier124 tab-reset observations remain historical and are superseded only by this126 repair and browser evidence.
+
 ## QA run live-write124 reconciliation — 2026-10-06
 
 Scope: root implements only the existing TestRunsService and qa-concurrent-edit.spec.ts, claimed before edits at backend97ee854b1. All controller/DTO/response/permission/generated/frontend files and external Ticket/automation work remain excluded. No new or deleted file, source comment, live Ticket comment, wrapper or schema. This supports open BT-9ea775d73705/BT-e19e42776b5a without a task or whole D/I/T/R/B/L closure.
