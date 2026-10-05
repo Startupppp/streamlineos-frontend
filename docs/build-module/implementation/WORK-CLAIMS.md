@@ -1,5 +1,15 @@
 # Build work claims
 
+## Readiness follow-up88 — coordinator claim (2026-10-05)
+
+Selected requirements: BT-7f60ba90ec64, BT-60a1986f3a4c and BT-f7dce3a272af. Classification: Current unverified pending current runtime evidence. Coordinator exclusively owns evidence additions to existing `docs/build-module/implementation/WORK-CLAIMS.md`, `docs/build-module/implementation/REQUIREMENT-LEDGER.md` and `docs/build-module/audit/bugs-and-verification.md`, plus read-only browser verification on port1000. TODO-INDEX.md is read-only for this claim; regeneration requires coordination with cleanup87. No application source, tests, generated contracts, migrations, cleanup inventory or deletion is owned.
+
+Avoid every cleanup87 lane and prior ARCH-16/module_grants_resume source claim. Frontend baseline d777ec28487b8b90cf33d1bdbf12ade3ebaef3eb; backend baseline641be6ffc5c1f17b394ba18f3cd52477beac0e2a. Existing roadmap/frontend and Build/backend working changes are external and excluded. Standards, backend/security and evidence inventory agents are read-only and do not receive edit rights.
+
+Acceptance: verify canonical primary/modifier ticket navigation, origin and Back/Forward, real detail loading, refresh and applicable mobile behavior; identify exact API/authorization/persistence/cache/event/release gaps. Do not close the broad requirements from bounded rendering or focused tests. Existing authenticated browser first; no live Ticket comments, publication, role grants or unrelated-record mutations. Production access remains limited to the previously authorized backend/database/log boundaries; secrets stay in memory.
+
+Verification commands: `node scripts/build-doc-todo-tracker.mjs --check`, applicable existing focused suites after ownership and source freeze, exact documentation `git diff --check`, and the existing Build route/plan validation commands discovered from the repository. Database evidence uses only approved READ ONLY application-role transactions. A source correction requires a new exact file claim and handoff before editing. Handoff includes revisions, source hashes, actual browser/API results, tests run, independent review and explicit outstanding evidence; no implicit ownership transfer.
+
 ## Build cleanup87 — coordinator claim (2026-10-05)
 
 Coordinator owns integration, commits, generators, full gates, and the cleanup inventory in existing `15-migration-cleanup-and-reuse-plan.md`. No requirement ID advances from cleanup alone. Lane ownership is by directory and is disjoint. The first five lanes were claimed in the coordinator brief before this entry was written; this entry records them retroactively.
