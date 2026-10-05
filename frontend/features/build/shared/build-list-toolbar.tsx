@@ -92,6 +92,13 @@ export function BuildListToolbar({
   drawerTitle = BUILD_TOOLBAR_FILTERS_LABEL,
   className,
 }: BuildListToolbarProps) {
+  const {
+    value: searchValue,
+    onValueChange: onSearchValueChange,
+    placeholder: searchPlaceholder,
+    label: searchLabel,
+    inputRef: searchInputRef,
+  } = search ?? {};
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
   const drawerBodyRef = useRef<HTMLDivElement>(null);
@@ -234,14 +241,14 @@ export function BuildListToolbar({
       data-slot="build-list-toolbar"
       className={cn(BUILD_TOOLBAR_ROOT_CLASS, layout.mobileColumns, className)}
     >
-      {search ? (
+      {search && searchValue !== undefined && onSearchValueChange ? (
         <SearchInput
           fill
-          ref={search.inputRef}
-          value={search.value}
-          onValueChange={search.onValueChange}
-          placeholder={search.placeholder}
-          aria-label={search.label ?? search.placeholder}
+          ref={searchInputRef}
+          value={searchValue}
+          onValueChange={onSearchValueChange}
+          placeholder={searchPlaceholder}
+          aria-label={searchLabel ?? searchPlaceholder}
           onFocus={handleSearchFocus}
           onBlur={handleSearchBlur}
           className={cn(

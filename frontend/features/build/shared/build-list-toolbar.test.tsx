@@ -357,4 +357,29 @@ describe("BuildListToolbar", () => {
     expect(screen.getByLabelText("Search bugs")).toBeInTheDocument();
     expect(screen.getByLabelText("Search bugs")).not.toHaveFocus();
   });
+
+  it("refreshes controlled search metadata and replaces the caller ref without losing the actual input", () => {
+    const firstRef = createRef<HTMLInputElement>();
+    const nextRef = createRef<HTMLInputElement>();
+    const firstChange = jest.fn();
+    const nextChange = jest.fn();
+    const view = render(<BuildListToolbar search={{ ...search, value: "first", inputRef: firstRef, onValueChange: firstChange }} filters={[statusFilter()]} />);
+    const input = screen.getByLabelText("Search bugs");
+    expect(firstRef.current).toBe(input);
+    fireEvent.change(input, { target: { value: "first edit" } });
+    expect(firstChange).toHaveBeenCalledWith("first edit");
+    view.rerender(<BuildListToolbar search={{ value: "second", inputRef: nextRef, onValueChange: nextChange, placeholder: "Search work…", label: "Search work" }} filters={[statusFilter()]} />);
+    expect(firstRef.current).toBeNull();
+    expect(nextRef.current).toBe(input);
+    expect(screen.queryByLabelText("Search bugs")).toBeNull();
+    expect(screen.getByLabelText("Search work")).toHaveValue("second");
+    expect(input).toHaveAttribute("placeholder", "Search work…");
+    act(() => nextRef.current?.focus());
+    expect(input).toHaveFocus();
+    fireEvent.change(input, { target: { value: "second edit" } });
+    expect(nextChange).toHaveBeenCalledWith("second edit");
+    expect(firstChange).toHaveBeenCalledTimes(1);
+    view.unmount();
+    expect(nextRef.current).toBeNull();
+  });
 });
