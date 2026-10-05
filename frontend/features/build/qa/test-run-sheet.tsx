@@ -1,9 +1,9 @@
 ﻿"use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { isFormFieldPath } from "@/lib/form-field-path";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { testRunSchema, type TestRunFormValues } from "./qa-schema";
 import {
@@ -11,6 +11,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetDescription,
   SheetFooter,
   SheetClose,
   SheetBody,
@@ -50,9 +51,6 @@ interface TestRunSheetProps {
 
 export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProps) {
   const create = useCreateTestRun();
-  const [mode, setMode] = useState<"suite" | "cases">("suite");
-  const [selectedCaseIds, setSelectedCaseIds] = useState<Set<number>>(new Set());
-
   const { data: suites } = useTestSuites(projectId);
   const { data: casesData } = useTestCases(projectId);
 
@@ -66,8 +64,11 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
       browserDevice: "",
       testerId: "",
       suiteId: "none",
+      mode: "suite", caseIds: [],
     },
   });
+  const mode = useWatch({ control: form.control, name: "mode" });
+  const selectedCaseIds = useWatch({ control: form.control, name: "caseIds" });
   useRegisterDirtyState(open && form.formState.isDirty);
 
   useEffect(() => {
@@ -78,33 +79,25 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
         browserDevice: "",
         testerId: "",
         suiteId: "none",
+        mode: "suite", caseIds: [],
       });
-      setSelectedCaseIds(new Set());
-      setMode("suite");
     }
   }, [open, form]);
 
   function toggleCase(id: number) {
-    setSelectedCaseIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
+    const next = selectedCaseIds.includes(id) ? selectedCaseIds.filter((selected) => selected !== id) : [...selectedCaseIds, id];
+    form.setValue("caseIds", next, { shouldDirty: true, shouldValidate: true });
   }
 
   function handleModeChange(v: string) {
-    if (v === "suite" || v === "cases") setMode(v);
+    if (v === "suite" || v === "cases") form.setValue("mode", v, { shouldDirty: true, shouldValidate: true });
   }
 
   function handleSubmit(values: TestRunFormValues) {
     const suiteId =
-      mode === "suite" && values.suiteId !== "none" ? Number(values.suiteId) : undefined;
+      values.mode === "suite" && values.suiteId !== "none" ? Number(values.suiteId) : undefined;
     const caseIds =
-      mode === "cases" && selectedCaseIds.size > 0 ? Array.from(selectedCaseIds) : undefined;
+      values.mode === "cases" ? values.caseIds : undefined;
     const testerId = values.testerId || undefined;
 
     create.mutate(
@@ -136,11 +129,30 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
     );
   }
 
+  function renderCaseSelection() {
+    function renderCase(tc: typeof cases[number]) {
+      function handleToggle() { toggleCase(tc.id); }
+      return <div key={tc.id} className="flex items-center gap-2 py-1">
+        <Checkbox id={`tc-${tc.id}`} checked={selectedCaseIds.includes(tc.id)} onCheckedChange={handleToggle} />
+        <label htmlFor={`tc-${tc.id}`} className="text-dense cursor-pointer">TC-{tc.caseNumber} — {tc.title}</label>
+      </div>;
+    }
+    return <FormItem>
+      <ScrollArea className="h-40 border rounded-md p-2">
+        {cases.length === 0 && <p className="text-micro text-muted-foreground">No test cases found.</p>}
+        {cases.map(renderCase)}
+      </ScrollArea>
+      {selectedCaseIds.length > 0 && <p className="text-micro text-muted-foreground mt-1">{selectedCaseIds.length} case(s) selected</p>}
+      <FormMessage className="text-micro" />
+    </FormItem>;
+  }
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="p-0 flex flex-col w-full sm:max-w-lg">
         <SheetHeader className="px-5 py-4 border-b shrink-0">
           <SheetTitle>New Test Run</SheetTitle>
+          <SheetDescription className="sr-only">Choose tests and execution details for this project’s test run.</SheetDescription>
         </SheetHeader>
 
         <Form {...form}>
@@ -194,28 +206,7 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
                       />
                     </TabsContent>
                     <TabsContent value="cases" className="mt-2">
-                      <ScrollArea className="h-40 border rounded-md p-2">
-                        {cases.length === 0 && (
-                          <p className="text-micro text-muted-foreground">No test cases found.</p>
-                        )}
-                        {cases.map((tc) => (
-                          <div key={tc.id} className="flex items-center gap-2 py-1">
-                            <Checkbox
-                              id={`tc-${tc.id}`}
-                              checked={selectedCaseIds.has(tc.id)}
-                              onCheckedChange={() => toggleCase(tc.id)}
-                            />
-                            <label htmlFor={`tc-${tc.id}`} className="text-dense cursor-pointer">
-                              TC-{tc.caseNumber} — {tc.title}
-                            </label>
-                          </div>
-                        ))}
-                      </ScrollArea>
-                      {selectedCaseIds.size > 0 && (
-                        <p className="text-micro text-muted-foreground mt-1">
-                          {selectedCaseIds.size} case(s) selected
-                        </p>
-                      )}
+                      <FormField control={form.control} name="caseIds" render={renderCaseSelection} />
                     </TabsContent>
                   </Tabs>
                 </div>
@@ -276,7 +267,7 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
             <SheetFooter className="px-5 py-3 border-t shrink-0">
               <div className="grid w-full grid-cols-2 gap-2">
                 <SheetClose asChild>
-                  <Button variant="outline" size="sm" className="text-dense">Cancel</Button>
+                  <Button type="button" variant="outline" size="sm" className="text-dense">Cancel</Button>
                 </SheetClose>
                 <LoadingButton
                   type="submit"

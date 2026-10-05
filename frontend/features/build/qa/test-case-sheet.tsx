@@ -11,6 +11,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetDescription,
   SheetFooter,
   SheetClose,
   SheetBody,
@@ -179,6 +180,7 @@ export function TestCaseSheet({
       <SheetContent className="p-0 flex flex-col w-full sm:max-w-lg">
         <SheetHeader className="px-5 py-4 border-b shrink-0">
           <SheetTitle>{editCase ? "Edit Test Case" : "New Test Case"}</SheetTitle>
+          <SheetDescription className="sr-only">Define the test steps and expected results for this project.</SheetDescription>
         </SheetHeader>
 
         <Form {...form}>

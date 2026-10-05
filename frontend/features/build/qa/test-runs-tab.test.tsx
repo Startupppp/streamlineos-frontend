@@ -1,4 +1,5 @@
 import { render, screen, fireEvent } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { ApiError } from "@/lib/api-envelope";
 import type { TestRun } from "@/types/projects";
@@ -7,10 +8,20 @@ const mockUseTestRuns = jest.fn();
 const mockUseDeleteTestRun = jest.fn();
 const mockUseCan = jest.fn();
 const mockUseAccess = jest.fn();
+const mockCreateRun = jest.fn();
+const mockDirtyRegistered = jest.fn();
+jest.mock("@/components/shared/dirty-state-context", () => {
+  const actual = jest.requireActual<typeof import("@/components/shared/dirty-state-context")>("@/components/shared/dirty-state-context");
+  return { ...actual, useRegisterDirtyState: (value: boolean) => { mockDirtyRegistered(value); actual.useRegisterDirtyState(value); } };
+});
+jest.mock("@/components/members/project-member-select", () => ({ ProjectMemberSelect: () => null }));
 
 jest.mock("@/hooks/api/build/qa", () => ({
   useTestRuns: (...args: unknown[]) => mockUseTestRuns(...args),
   useDeleteTestRun: () => mockUseDeleteTestRun(),
+  useCreateTestRun: () => ({ mutate: mockCreateRun, isPending: false }),
+  useTestCases: () => ({ data: { data: [{ id: 42, caseNumber: 1, title: "Login flow" }] } }),
+  useTestSuites: () => ({ data: [] }),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -108,12 +119,37 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => mockSearchParams,
 }));
 
-beforeEach(() => {
-  mockReplace.mockClear();
-  mockRouterPush.mockClear();
-  mockSearchParams = new URLSearchParams();
+it("gives the actual run sheet an accessible description and cancels without creating", async () => {
+  const { TestRunSheet } = jest.requireActual<typeof import("./test-run-sheet")>("./test-run-sheet");
+  const warning = jest.spyOn(console, "warn");
+  const close = jest.fn();
+  const view = render(<TestRunSheet projectId={1} open onOpenChange={close} />);
+  const dialog = screen.getByRole("dialog", { name: "New Test Run" });
+  try {
+    expect(dialog).toHaveAccessibleDescription("Choose tests and execution details for this project’s test run.");
+    expect(warning).not.toHaveBeenCalledWith(expect.stringContaining("Missing `Description`"));
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("tab", { name: "By Cases" }));
+    expect(mockDirtyRegistered).toHaveBeenLastCalledWith(true);
+    await user.type(screen.getByPlaceholderText("e.g. Cycle 12 Regression"), "Regression");
+    await user.click(screen.getByRole("button", { name: "Create Run" }));
+    expect(await screen.findByText("Select at least one test case.")).toBeVisible();
+    expect(mockCreateRun).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("checkbox", { name: /Login flow/ }));
+    await user.click(screen.getByRole("button", { name: "Create Run" }));
+    expect(mockCreateRun).toHaveBeenCalledWith(expect.objectContaining({ caseIds: [42], suiteId: undefined }), expect.anything());
+    mockCreateRun.mockClear();
+    view.rerender(<TestRunSheet projectId={1} open={false} onOpenChange={close} />);
+    view.rerender(<TestRunSheet projectId={1} open onOpenChange={close} />);
+    expect(screen.getByRole("tab", { name: "By Suite" })).toHaveAttribute("data-state", "active");
+    expect(screen.getByPlaceholderText("e.g. Cycle 12 Regression")).toHaveValue("");
+    expect(mockDirtyRegistered).toHaveBeenLastCalledWith(false);
+    await user.type(screen.getByPlaceholderText("e.g. Cycle 12 Regression"), "Canceled run");
+    await userEvent.setup().click(screen.getByRole("button", { name: "Cancel" }));
+    expect(close).toHaveBeenCalledWith(false);
+    expect(mockCreateRun).not.toHaveBeenCalled();
+  } finally { warning.mockRestore(); }
 });
-
 
 const ACCESS_GRANTED = {
   data: { isOrgOwner: false, scopes: { "build:qa:view": "all" }, modules: {} },
@@ -140,6 +176,7 @@ const EMPTY_PAGE = { data: [], hasMore: false, nextCursor: null };
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockSearchParams = new URLSearchParams();
   mockUseCan.mockReturnValue(true);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseTestRuns.mockReturnValue(baseQuery({ data: EMPTY_PAGE }));

@@ -1,4 +1,5 @@
 import { render, screen, fireEvent } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { ApiError } from "@/lib/api-envelope";
 
@@ -8,17 +9,22 @@ const mockUseDeleteTestCase = jest.fn();
 const mockUseUpdateTestCase = jest.fn();
 const mockUseCan = jest.fn();
 const mockUseAccess = jest.fn();
+const mockCreateCase = jest.fn();
+jest.mock("@/hooks/api/build/projects", () => ({ useProject: () => ({ data: { key: "QA" } }) }));
+jest.mock("@/features/build/shared/ticket-combobox", () => ({ TicketCombobox: () => null }));
 
 jest.mock("@/hooks/api/build/qa", () => ({
   useTestCases: (...args: unknown[]) => mockUseTestCases(...args),
   useTestSuites: (...args: unknown[]) => mockUseTestSuites(...args),
   useDeleteTestCase: () => mockUseDeleteTestCase(),
   useUpdateTestCase: () => mockUseUpdateTestCase(),
+  useCreateTestCase: () => ({ mutate: mockCreateCase, isPending: false }),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: (...args: unknown[]) => mockUseCan(...args),
   useAccess: () => mockUseAccess(),
+  useCanState: () => "granted",
 }));
 
 jest.mock("@/hooks/api/entitlements", () => ({
@@ -108,6 +114,28 @@ jest.mock("next/navigation", () => ({
 beforeEach(() => {
   mockReplace.mockClear();
   mockSearchParams = new URLSearchParams();
+});
+
+it.each([false, true])("gives the actual case sheet an accessible description and cancels without mutation (editing=%s)", async (editing) => {
+  const { TestCaseSheet } = jest.requireActual<typeof import("./test-case-sheet")>("./test-case-sheet");
+  const warning = jest.spyOn(console, "warn");
+  const close = jest.fn();
+  const editCase = editing ? testCasePageContract.shape.data.element.parse({
+    id: 42, orgId: "test-org", projectId: 1, suiteId: null, caseNumber: 1,
+    title: "Login flow", preconditions: null, steps: [], expectedResult: null,
+    priority: "medium", component: null, linkedTicketId: null, automationStatus: "manual",
+    createdBy: null, createdAt: "2026-10-05T00:00:00Z", updatedAt: "2026-10-05T00:00:00Z", deletedAt: null,
+  }) : null;
+  render(<TestCaseSheet projectId={1} open onOpenChange={close} editCase={editCase} suites={[]} />);
+  const dialog = screen.getByRole("dialog", { name: editing ? "Edit Test Case" : "New Test Case" });
+  try {
+    expect(dialog).toHaveAccessibleDescription("Define the test steps and expected results for this project.");
+    expect(warning).not.toHaveBeenCalledWith(expect.stringContaining("Missing `Description`"));
+    await userEvent.setup().click(screen.getByRole("button", { name: "Cancel" }));
+    expect(close).toHaveBeenCalledWith(false);
+    expect(mockCreateCase).not.toHaveBeenCalled();
+    expect(mockUseUpdateTestCase().mutate).not.toHaveBeenCalled();
+  } finally { warning.mockRestore(); }
 });
 
 

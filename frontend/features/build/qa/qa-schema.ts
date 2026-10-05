@@ -20,6 +20,12 @@ export const testRunSchema = z.object({
   browserDevice: z.string(),
   testerId: z.string(),
   suiteId: z.string(),
+  mode: z.enum(["suite", "cases"]),
+  caseIds: z.array(z.number().int().positive()).refine((ids) => new Set(ids).size === ids.length, "Choose each test case once."),
+}).superRefine((values, context) => {
+  if (values.mode === "cases" && values.caseIds.length === 0) {
+    context.addIssue({ code: "custom", path: ["caseIds"], message: "Select at least one test case." });
+  }
 });
 
 export type TestRunFormValues = z.infer<typeof testRunSchema>;
