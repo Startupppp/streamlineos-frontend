@@ -132,22 +132,19 @@ function DecisionOwner({
   const router = useRouter();
   const requestLeave = useNavigationLeave();
   const canViewTicket = useCan("build:tickets:view");
-  const [acceptedTicket, setAcceptedTicket] = useState<{ id: number; toastId: string | number } | null>(null);
+  const [acceptedTicket, setAcceptedTicket] = useState<{ id: number; ticketNumber?: number; toastId: string | number } | null>(null);
   const { data: ticket, isPending: ticketPending, isError: ticketError } = useTicket(
     enabled ? projectId : 0,
-    enabled ? (acceptedTicket?.id ?? 0) : 0,
+    enabled && !acceptedTicket?.ticketNumber ? (acceptedTicket?.id ?? 0) : 0,
     INLINE_READ_ERROR,
   );
-  const ticketHref =
-    enabled &&
-    canViewTicket &&
-    acceptedTicket &&
-    !ticketPending &&
-    !ticketError &&
-    ticket?.id === acceptedTicket.id &&
-    ticket.projectId === projectId &&
-    ticket.ticketNumber > 0
-      ? getTicketDetailHref(projectId, null, ticket.ticketNumber)
+  const ticketNumber = acceptedTicket?.ticketNumber ?? (
+    acceptedTicket && !ticketPending && !ticketError &&
+    ticket?.id === acceptedTicket.id && ticket.projectId === projectId
+      ? ticket.ticketNumber : 0
+  );
+  const ticketHref = enabled && canViewTicket && ticketNumber > 0
+      ? getTicketDetailHref(projectId, null, ticketNumber)
       : null;
   const currentTicketHref = useRef<string | null>(null);
   const offeredTicket = useRef<typeof acceptedTicket>(null);
@@ -246,7 +243,11 @@ function DecisionOwner({
         setDecision(null);
         if (submitted.action === "accept" && result.linkedWorkItemId) {
           const toastId = toast.success("Item accepted — ticket created", {});
-          setAcceptedTicket({ id: result.linkedWorkItemId, toastId });
+          const summary = result.linkedTicket;
+          const ticketNumber = summary?.id === result.linkedWorkItemId &&
+            summary.projectId === projectId && Number.isSafeInteger(summary.ticketNumber) &&
+            summary.ticketNumber > 0 ? summary.ticketNumber : undefined;
+          setAcceptedTicket({ id: result.linkedWorkItemId, ticketNumber, toastId });
         } else
           toast.success(
             submitted.action === "accept"

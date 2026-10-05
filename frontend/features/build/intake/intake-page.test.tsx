@@ -23,7 +23,7 @@ jest.mock("@/hooks/api/build/tickets", () => ({ useTickets: (...args: unknown[])
 jest.mock("@/hooks/api/build/projects", () => ({ useProject: () => ({ data: { id: 1, key: "PROJ" } }) }));
 jest.mock("next-auth/react", () => ({ useSession: () => mockSession() }));
 jest.mock("@/hooks/api/entitlements", () => ({ useEntitlements: () => ({ data: undefined }) }));
-jest.mock("@/hooks/api/access", () => ({ useCan: () => mockCan(), useAccess: () => mockAccess() }));
+jest.mock("@/hooks/api/access", () => ({ useCan: (...args: unknown[]) => mockCan(...args), useAccess: () => mockAccess() }));
 jest.mock("@/features/build/shared/use-build-list-filters", () => ({ useBuildListFilters: () => mockFilters() }));
 jest.mock("@/components/shared/dirty-state-context", () => ({ useRegisterDirtyState: jest.fn(), useNavigationLeave: () => mockLeave }));
 jest.mock("sonner", () => ({ toast: { success: (message: string, options?: ToastOptions) => mockToast.success(message, options), error: (...args: unknown[]) => mockToast.error(...args) } }));
@@ -40,10 +40,10 @@ function ack(status: IntakeRequest["status"], overrides: Partial<IntakeRequest> 
 function query(overrides: Record<string, unknown> = {}) {
   return { data: undefined, isLoading: false, isError: false, error: undefined, refetch: jest.fn(), ...overrides };
 }
-function showRequest() {
+function showRequest(projectId = 1) {
   mockCan.mockReturnValue(true);
   mockRequests.mockReturnValue(query({ data: { data: [request] } }));
-  return render(<IntakePage projectId={1} />);
+  return render(<IntakePage projectId={projectId} />);
 }
 beforeEach(() => {
   jest.clearAllMocks();
@@ -310,14 +310,15 @@ it("highlights the card whose id matches highlightId", () => {
   expect(screen.queryByTestId("intake-item-not-found")).not.toBeInTheDocument();
 });
 
-async function acceptRequest() {
-  const view = showRequest();
+async function acceptRequest(result = ack("accepted"), projectId = 1, canView = true) {
+  const view = showRequest(projectId);
+  if (!canView) { mockCan.mockImplementation((permission: string) => permission !== "build:tickets:view"); view.rerender(<IntakePage projectId={projectId} />); }
   fireEvent.click(screen.getByRole("button", { name: "Accept — move to work queue" }));
   await screen.findByRole("dialog");
   await choose("State", "Todo");
   fireEvent.click(screen.getByRole("button", { name: "Accept & Create" }));
   await waitFor(() => expect(mockAccept).toHaveBeenCalledTimes(1));
-  act(() => latestCallbacks().onSuccess(ack("accepted")));
+  act(() => latestCallbacks().onSuccess(result));
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   expect(mockToast.success.mock.calls[0]?.[0]).toBe("Item accepted — ticket created");
   return view;
@@ -437,4 +438,57 @@ it("switches the active tab to 'all' when the highlighted item is on a different
   mockRequests.mockReturnValue(query({ data: { data: [{ id: 77, title: "Accepted item", status: "accepted" }] } }));
   render(<IntakePage projectId={1} highlightId={77} />);
   expect(mockSetValue).toHaveBeenCalledWith("tab", "all");
+});
+
+it("offers View ticket immediately from the accepted summary while the fallback remains pending and disabled", async () => {
+  mockTicket.mockReturnValue(query({ isPending: true }));
+  const view = await acceptRequest({ ...ack("accepted", { projectId: 22 }), linkedTicket: { id: 91, projectId: 22, ticketNumber: 7 } }, 22);
+  expect(ticketActions()).toHaveLength(1);
+  expect(mockTicket).toHaveBeenLastCalledWith(22, 0, INLINE_READ_ERROR);
+  const action = ticketActions()[0];
+  if (!action) throw new Error("Expected summary View ticket action");
+  act(() => action.onClick());
+  expect(mockPush).toHaveBeenCalledWith("/build/22/tickets/7");
+  expect(mockLeave).toHaveBeenCalledTimes(1);
+  mockTicket.mockReturnValue(query({ isError: true, error: new TypeError("Disabled fallback failure") }));
+  view.rerender(<IntakePage projectId={22} />);
+  expect(ticketActions()).toHaveLength(1);
+  expect(window.open).not.toHaveBeenCalled();
+});
+
+it.each(["wrong-id", "wrong-project", "denied", "zero", "fraction"])("keeps summary acceptance successful without offering unauthorized navigation for %s", async (state) => {
+  mockTicket.mockReturnValue(query({ isPending: true }));
+  await acceptRequest({ ...ack("accepted"), linkedTicket: { id: state === "wrong-id" ? 92 : 91, projectId: state === "wrong-project" ? 2 : 1, ticketNumber: state === "zero" ? 0 : state === "fraction" ? 1.5 : 7 } }, 1, state !== "denied");
+  expect(ticketActions()).toHaveLength(0);
+  expect(mockToast.error).not.toHaveBeenCalled();
+  expect(mockPush).not.toHaveBeenCalled();
+});
+
+it.each(["project", "session", "permission", "delayed-permission"])("fences a captured summary action after %s changes", async (change) => {
+  mockTicket.mockReturnValue(query({ isPending: true }));
+  const view = await acceptRequest({ ...ack("accepted"), linkedTicket: { id: 91, projectId: 1, ticketNumber: 7 } });
+  const action = ticketActions()[0];
+  if (!action) throw new Error("Expected summary action");
+  let confirm: (() => void) | undefined;
+  if (change === "delayed-permission") {
+    mockLeave.mockImplementation((leave: () => void) => { confirm = leave; });
+    act(() => action.onClick());
+  }
+  if (change === "session") mockSession.mockReturnValue({ status: "unauthenticated", data: null });
+  if (change === "permission" || change === "delayed-permission") mockCan.mockReturnValue(false);
+  view.rerender(<IntakePage projectId={change === "project" ? 2 : 1} />);
+  if (change === "delayed-permission" && !confirm) throw new Error("Expected leave confirmation");
+  if (confirm) act(() => confirm?.());
+  act(() => action.onClick());
+  expect(mockPush).not.toHaveBeenCalled();
+  expect(mockLeave).toHaveBeenCalledTimes(change === "delayed-permission" ? 1 : 0);
+});
+
+it("retains the authorized legacy lookup when an accepted summary does not match", async () => {
+  await acceptRequest({ ...ack("accepted"), linkedTicket: { id: 92, projectId: 1, ticketNumber: 99 } });
+  expect(mockTicket).toHaveBeenLastCalledWith(1, 91, INLINE_READ_ERROR);
+  const action = ticketActions()[0];
+  if (!action) throw new Error("Expected authorized fallback action");
+  act(() => action.onClick());
+  expect(mockPush).toHaveBeenCalledWith("/build/1/tickets/7");
 });

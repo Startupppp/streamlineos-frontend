@@ -182,6 +182,7 @@ export interface IntakeRequest {
   priority: string | null;
   requestType: string | null;
   linkedWorkItemId: number | null;
+  linkedTicket?: Pick<Ticket, "id" | "projectId" | "ticketNumber">;
   declineReason: string | null;
   createdAt: string;
   updatedAt: string;

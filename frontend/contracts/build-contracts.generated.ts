@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const OPENAPI_HASH = "sha256:625d07220bcffc252da83208d6820047fe6612cfa983dff08cde0dfbb2cedf1b" as const;
+export const OPENAPI_HASH = "sha256:3fdf19130799add92a11c299a1e2d1a9a6ebb71db71cd3e1c17e3a5a396dd8c9" as const;
 
 export const agentTokensListResponseSchema = z.array(z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -4150,6 +4150,11 @@ export const intakeListIntakeResponseSchema = z.object({
     priority: z.string().nullable(),
     requestType: z.string().nullable(),
     linkedWorkItemId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    linkedTicket: z.object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+      ticketNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    }).optional(),
     declineReason: z.string().nullable(),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
@@ -4175,6 +4180,11 @@ export const intakeCreateIntakeResponseSchema = z.object({
   priority: z.string().nullable(),
   requestType: z.string().nullable(),
   linkedWorkItemId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  linkedTicket: z.object({
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    ticketNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  }).optional(),
   declineReason: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -4205,6 +4215,11 @@ export const intakeUpdateIntakeResponseSchema = z.object({
   priority: z.string().nullable(),
   requestType: z.string().nullable(),
   linkedWorkItemId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  linkedTicket: z.object({
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    ticketNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  }).optional(),
   declineReason: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
