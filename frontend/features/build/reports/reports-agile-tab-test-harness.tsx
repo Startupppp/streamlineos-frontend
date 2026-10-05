@@ -78,9 +78,9 @@ jest.mock(
         Component = mod.default;
       })
       .catch(() => {});
-    return function DynamicStub(props: unknown) {
+    return function DynamicStub(props: Record<string, unknown>) {
       return Component ? (
-        <Component {...(props as object)} />
+        <Component {...props} />
       ) : (
         <div data-testid="dynamic-loading" />
       );

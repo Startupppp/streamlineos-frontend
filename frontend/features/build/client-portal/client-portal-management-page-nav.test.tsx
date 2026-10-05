@@ -60,8 +60,7 @@ describe("ClientPortalManagementPage — tab navigation writes the section param
 describe("ClientPortalManagementPage — client actor isolation: portal client cannot reach internal management (BT-716b46bf3292)", () => {
   it("hides the publication banner when pageState is denied so a portal-only actor cannot see the portal settings panel", () => {
     mockUsePageState.mockReturnValue({ kind: "denied" });
-    const { ClientPortalManagementPage: Page } = require("./client-portal-management-page");
-    render(<Page projectId={1} />);
+    render(<ClientPortalManagementPage projectId={1} />);
     expect(screen.queryByText("Portal not published")).toBeNull();
     expect(screen.queryByText("Portal published")).toBeNull();
   });
@@ -69,8 +68,7 @@ describe("ClientPortalManagementPage — client actor isolation: portal client c
   it("NEGATIVE — renders the publication banner when pageState is ready confirming the denied case is permission-specific and not a render bug", () => {
     mockUsePageState.mockReturnValue({ kind: "ready" });
     mockUsePortalSettings.mockReturnValue(baseQuery({ data: UNPUBLISHED_SETTINGS }));
-    const { ClientPortalManagementPage: Page } = require("./client-portal-management-page");
-    render(<Page projectId={1} />);
+    render(<ClientPortalManagementPage projectId={1} />);
     expect(screen.getByText("Portal not published")).toBeInTheDocument();
   });
 });
