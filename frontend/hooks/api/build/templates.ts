@@ -111,7 +111,7 @@ export function useApplyProjectTemplate() {
   return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "templates", "apply"],
     mutationFn: ({ templateId, input }: { templateId: number; input: ApplyProjectTemplateInput }) =>
-      apiClient.post<{ projectId: number; key: string; ticketsCreated: number }>(
+      apiClient.post<{ projectId: number; key: string; ticketsCreated: number; customFieldsCreated: number; savedViewsCreated: number }>(
         `/build/templates/${templateId}/apply`,
         input,
         undefined,
@@ -119,6 +119,18 @@ export function useApplyProjectTemplate() {
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.all });
+    },
+  });
+}
+
+export function useSeedSystemTemplates() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("build:manage", {
+    mutationKey: ["projects", "templates", "seed-system"],
+    mutationFn: () =>
+      apiClient.post<{ seeded: number }>("/build/templates/seed-system", undefined, undefined),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.templates() });
     },
   });
 }

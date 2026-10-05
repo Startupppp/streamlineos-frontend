@@ -118,6 +118,8 @@ export const STUB_RELEASES: Release[] = [
     updatedAt: "2026-06-01T00:00:00Z",
     ticketCount: 24,
     publishedAt: null,
+    readiness: null,
+    riskLevel: null,
     createdByUser: null,
   },
   {
@@ -134,6 +136,8 @@ export const STUB_RELEASES: Release[] = [
     updatedAt: "2026-06-15T00:00:00Z",
     ticketCount: 3,
     publishedAt: null,
+    readiness: null,
+    riskLevel: null,
     createdByUser: null,
   },
   {
@@ -150,6 +154,8 @@ export const STUB_RELEASES: Release[] = [
     updatedAt: "2026-09-20T00:00:00Z",
     ticketCount: 11,
     publishedAt: null,
+    readiness: null,
+    riskLevel: null,
     createdByUser: null,
   },
   {
@@ -166,6 +172,8 @@ export const STUB_RELEASES: Release[] = [
     updatedAt: "2026-03-01T00:00:00Z",
     ticketCount: 8,
     publishedAt: null,
+    readiness: null,
+    riskLevel: null,
     createdByUser: null,
   },
 ];

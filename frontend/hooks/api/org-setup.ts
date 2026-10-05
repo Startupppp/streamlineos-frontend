@@ -33,7 +33,8 @@ export type OrgSetupPayload = {
   invitees?: OrgSetupInvitee[];
 };
 
-export type OrgSetupResponse = { success: boolean; orgId: string; autoLoginToken?: string; destination: string };
+export type OrgSetupResponse = { success: boolean; orgId: string; autoLoginToken?: string };
+export type OrgSetupCompleteResponse = OrgSetupResponse & { destination: string };
 
 export type OrgSetupSession = {
   id: number;
@@ -77,7 +78,7 @@ export function useCompleteOrgSetupMutation() {
   return useMutation({
     mutationKey: ["org", "setup", "complete"],
     mutationFn: (payload: OrgSetupPayload) =>
-      apiClient.post<OrgSetupResponse>("/org/setup/complete", payload, { timeoutMs: 5 * 60_000 }, orgSetupCompleteContract),
+      apiClient.post<OrgSetupCompleteResponse>("/org/setup/complete", payload, { timeoutMs: 5 * 60_000 }, orgSetupCompleteContract),
     retry: false,
   });
 }

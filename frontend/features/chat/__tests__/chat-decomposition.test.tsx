@@ -3,9 +3,12 @@ import { convertToTaskSchema } from "../convert-to-task-dialog-schema";
 import { ChannelMembersSection } from "../channel-members-section";
 import type { ChannelMember } from "@/types/chat";
 
-jest.mock("@/hooks/api", () => ({
-  useActiveHuddle: () => ({ data: undefined }),
+jest.mock("@/hooks/api/chat-core-mutations-b", () => ({
   useRemoveChannelMember: () => ({ mutateAsync: jest.fn(), isPending: false }),
+}));
+
+jest.mock("@/hooks/api/chat-huddles", () => ({
+  useActiveHuddle: () => ({ data: undefined }),
 }));
 
 jest.mock("@/hooks/common/use-animated-icon", () => ({

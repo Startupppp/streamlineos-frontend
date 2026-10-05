@@ -14,6 +14,4 @@ export const activateClientFormSchema = z.object({
 
 export type ActivateClientFormValues = z.infer<typeof activateClientFormSchema>;
 
-export type ActivateClientFormInput = Omit<ActivateClientFormValues, "projectId"> & {
-  projectId: number | string;
-};
+export type ActivateClientFormInput = z.input<typeof activateClientFormSchema>;

@@ -1,4 +1,4 @@
-import type { useChatChannels } from "@/hooks/api";
+import type { useChatChannels } from "@/hooks/api/chat-core-read";
 import type { TicketEntityRef, CommentEntityRef, MessageMetadata } from "@/types/chat";
 export type { TicketEntityRef, CommentEntityRef, MessageMetadata };
 

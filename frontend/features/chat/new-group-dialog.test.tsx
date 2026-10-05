@@ -11,7 +11,7 @@ jest.mock("sonner", () => ({
   },
 }));
 
-jest.mock("@/hooks/api", () => ({
+jest.mock("@/hooks/api/chat-core-mutations-b", () => ({
   useCreateGroupChannel: () => ({ mutateAsync: mockGroupMutateAsync, isPending: false }),
   useCreatePublicChannel: () => ({ mutateAsync: jest.fn(), isPending: false }),
   useCreatePrivateChannel: () => ({ mutateAsync: jest.fn(), isPending: false }),
@@ -75,6 +75,8 @@ jest.mock("@/lib/api-client", () => ({
 
 jest.mock("@/lib/api-envelope", () => ({
   lazyContract: () => undefined,
+  isApiError: () => false,
+  getRetryAfterSeconds: () => null,
 }));
 
 jest.mock("next/image", () => ({

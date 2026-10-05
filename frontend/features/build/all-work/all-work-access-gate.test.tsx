@@ -44,6 +44,7 @@ jest.mock("@/hooks/api/entitlements", () => ({
 }));
 jest.mock("@/hooks/api/build/all-work", () => ({
   useAllWork: () => useAllWork(),
+  useAllWorkIds: () => ({ data: undefined }),
 }));
 jest.mock("@/hooks/api/build/projects", () => ({
   useProjects: () => useProjects(),
@@ -98,6 +99,9 @@ jest.mock("./use-all-work-bulk", () => ({
     handleBulkAssignee: jest.fn(),
     handleBulkCycleNoOp: jest.fn(),
     handleClearSelection: jest.fn(),
+    isExpandedSelection: false,
+    expandedTotal: 0,
+    expandToAllMatching: jest.fn(),
   }),
 }));
 jest.mock("./use-all-work-keyboard", () => ({

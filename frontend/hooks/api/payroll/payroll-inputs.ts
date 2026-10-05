@@ -11,6 +11,7 @@ import type {
   PayrollSnapshotItem,
   PayrollAdjustmentListItem as SchemaAdjustmentListItem,
   PayrollPeriod as SchemaPeriod,
+  PayrollAdjustment,
 } from "@/hooks/api/payroll/payroll-inputs-schema";
 
 const payrollPeriodListC = lazyContract(() =>

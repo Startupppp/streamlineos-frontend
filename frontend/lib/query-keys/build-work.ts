@@ -300,6 +300,8 @@ export const buildWorkQueryKeys = {
         : ([...base, "projects", "all-work", filters] as const),
     allWorkInfinite: (filters: QueryKeyParams) =>
       [...base, "projects", "all-work", filters, "infinite"] as const,
+    allWorkIds: (filters: QueryKeyParams) =>
+      [...base, "projects", "all-work", "ids", filters] as const,
     customStates: (projectId: number) =>
       [...base, "projects", projectId, "custom-states"] as const,
     orgCustomStates: () =>

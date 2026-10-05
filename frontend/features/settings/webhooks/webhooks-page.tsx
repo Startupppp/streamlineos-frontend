@@ -34,6 +34,7 @@ import {
   useToggleWebhook,
   useDeleteWebhook,
   useRotateWebhookSecret,
+  useWebhookImpact,
   type WebhookEndpoint,
 } from "@/hooks/api/webhooks";
 import { WebhookCard, WebhookCardSkeleton } from "./webhook-card";
@@ -61,14 +62,15 @@ export function WebhooksPage() {
   const { data, error, isLoading, isPlaceholderData, isError, refetch } =
     useWebhooks({ cursor, limit: pageSize });
 
-  const toggleWebhook = useToggleWebhook();
-  const deleteWebhook = useDeleteWebhook();
-  const rotateSecret = useRotateWebhookSecret();
-
   const [createOpen, setCreateOpen] = useState(false);
   const [revealedSecret, setRevealedSecret] = useState<string | null>(null);
   const [rotateId, setRotateId] = useState<number | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+
+  const toggleWebhook = useToggleWebhook();
+  const deleteWebhook = useDeleteWebhook();
+  const rotateSecret = useRotateWebhookSecret();
+  const { data: deleteImpact } = useWebhookImpact(deleteId);
   const [logsWebhook, setLogsWebhook] = useState<WebhookEndpoint | null>(null);
   const [logsOpen, setLogsOpen] = useState(false);
 
@@ -338,9 +340,42 @@ export function WebhooksPage() {
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Webhook?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This webhook will stop receiving events immediately. This action
-                cannot be undone.
+              <AlertDialogDescription asChild>
+                <div className="space-y-2">
+                  <p>
+                    This webhook will stop receiving events immediately. This
+                    action cannot be undone.
+                  </p>
+                  {deleteImpact && (
+                    <div className="rounded-md border border-border bg-muted/50 px-3 py-2 text-xs space-y-1">
+                      {deleteImpact.totalDeliveries > 0 && (
+                        <p>
+                          <span className="font-medium tabular-nums">
+                            {deleteImpact.totalDeliveries}
+                          </span>{" "}
+                          deliveries recorded ({deleteImpact.successfulDeliveries} successful) — all history will be removed.
+                        </p>
+                      )}
+                      {deleteImpact.subscribedEvents.length > 0 && (
+                        <p>
+                          Subscribed to:{" "}
+                          <span className="font-mono">
+                            {deleteImpact.subscribedEvents.join(", ")}
+                          </span>
+                        </p>
+                      )}
+                      {deleteImpact.lastDeadLetterAt && (
+                        <p className="text-destructive">
+                          Last dead-letter:{" "}
+                          {new Date(deleteImpact.lastDeadLetterAt).toLocaleString(
+                            "en-IN",
+                            { dateStyle: "short", timeStyle: "short" },
+                          )}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

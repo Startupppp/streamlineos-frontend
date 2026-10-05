@@ -4,7 +4,7 @@ import type { WizardDraft } from "../use-project-create";
 
 let mockPageStateResolution: { kind: string; error?: unknown; permission?: string | null } = { kind: "ready" };
 let mockTemplatesResult: {
-  data: { pages: { data: { id: number; name: string; description?: string | null; tickets?: unknown[] }[] }[] } | undefined;
+  data: { pages: { data: { id: number; name: string; description?: string | null; category: string; tickets?: unknown[] }[] }[] } | undefined;
   isLoading: boolean;
   isError?: boolean;
   error?: Error;
@@ -105,8 +105,8 @@ it("renders template names when templates are loaded", () => {
       pages: [
         {
           data: [
-            { id: 10, name: "Scrum Starter", description: "Sprint-based workflow", tickets: [] },
-            { id: 11, name: "Kanban Flow", description: null, tickets: [] },
+            { id: 10, name: "Scrum Starter", description: "Sprint-based workflow", category: "GENERAL", tickets: [] },
+            { id: 11, name: "Kanban Flow", description: null, category: "GENERAL", tickets: [] },
           ],
         },
       ],
@@ -129,7 +129,7 @@ it("calls updateDraft with the template id when a template is selected", () => {
       pages: [
         {
           data: [
-            { id: 10, name: "Scrum Starter", description: null, tickets: [] },
+            { id: 10, name: "Scrum Starter", description: null, category: "GENERAL", tickets: [] },
           ],
         },
       ],
@@ -152,7 +152,7 @@ it("calls updateDraft with null when Blank Project is selected", () => {
       pages: [
         {
           data: [
-            { id: 10, name: "Scrum Starter", description: null, tickets: [] },
+            { id: 10, name: "Scrum Starter", description: null, category: "GENERAL", tickets: [] },
           ],
         },
       ],

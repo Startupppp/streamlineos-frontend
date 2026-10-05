@@ -9,7 +9,8 @@ export type AutomationActionType =
   | "set_assignee"
   | "set_priority"
   | "add_label"
-  | "add_comment";
+  | "add_comment"
+  | "request_approval";
 
 export interface AutomationCondition {
   field: string;

@@ -6,6 +6,8 @@ import { PageState } from "@/components/shared/page-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PmPageShell, PmPanel, PmSection } from "@/components/pm-chrome";
 import { ProjectsGitIntegrationSettings } from "@/features/build/settings/git-integration-settings";
+import { SlackIntegrationSettings } from "@/features/build/settings/slack-integration-settings";
+import { EmailInboundSettings } from "@/features/build/settings/email-inbound-settings";
 import { cn } from "@/lib/utils";
 import { TEXT_ONE_LINE, TEXT_BODY } from "@/lib/text-overflow";
 
@@ -50,6 +52,18 @@ export function ProjectSettingsIntegrationsPage({ projectId: _projectId }: Proje
                 </p>
               </div>
               <ProjectsGitIntegrationSettings />
+            </PmPanel>
+          </PmSection>
+
+          <PmSection index={1}>
+            <PmPanel className="p-4" solid>
+              <SlackIntegrationSettings />
+            </PmPanel>
+          </PmSection>
+
+          <PmSection index={2}>
+            <PmPanel className="p-4" solid>
+              <EmailInboundSettings />
             </PmPanel>
           </PmSection>
         </PageState>

@@ -13,9 +13,19 @@ import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 const allWorkPageContract = lazyContract(() =>
   import("@/hooks/api/build/build-tickets-subresource-schema").then((m) => m.allWorkPageContract),
 );
+const allWorkIdsContractLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-subresource-schema").then((m) => m.allWorkIdsContract),
+);
 import type { AllWorkFilters, AllWorkTicket, CursorPaginatedResponse } from "@/types/projects";
 import { useCan } from "@/hooks/api/access";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+
+export interface AllWorkIdsResponse {
+  entries: { projectId: number; ids: number[] }[];
+  total: number;
+  capped: boolean;
+  cap: number;
+}
 
 export const COMMAND_CENTER_MY_ISSUES_PAGE_SIZE = 15;
 
@@ -68,6 +78,22 @@ export function useInfiniteAllWork(
       }, signal, allWorkPageContract),
     initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    staleTime: 30_000,
+    ...restOptions,
+    enabled: canView && (enabledOption ?? true),
+  });
+}
+
+export function useAllWorkIds(
+  filters: Omit<AllWorkFilters, "cursor" | "limit" | "orderBy" | "orderDir"> | undefined,
+  options?: Omit<UseQueryOptions<AllWorkIdsResponse>, "queryKey" | "queryFn">
+) {
+  const canView = useCan("build:tickets:view");
+  const { enabled: enabledOption, ...restOptions } = options ?? {};
+  return useQuery<AllWorkIdsResponse>({
+    queryKey: buildWorkQueryKeys.projects.allWorkIds(filters ?? {}),
+    queryFn: ({ signal }) =>
+      apiClient.get<AllWorkIdsResponse>("/build/all-work/ids", filters ?? undefined, signal, allWorkIdsContractLazy),
     staleTime: 30_000,
     ...restOptions,
     enabled: canView && (enabledOption ?? true),

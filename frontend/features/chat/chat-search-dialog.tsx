@@ -10,7 +10,7 @@ import {
   useSearchMessages,
   useSearchChannels,
   useSearchUsers,
-} from "@/hooks/api";
+} from "@/hooks/api/chat-search";
 import { formatMessageTime } from "./chat-helpers";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { ChatDialogHeader } from "./chat-dialog-header";

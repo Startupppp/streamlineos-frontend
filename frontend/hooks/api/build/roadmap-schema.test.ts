@@ -350,6 +350,10 @@ it("accepts the flat projectId/key/ticketsCreated shape the applyTemplate wire c
     projectId: 42,
     key: "PRJ-001",
     ticketsCreated: 3,
+    customFieldsCreated: 0,
+    savedViewsCreated: 0,
   });
-  expect(result).toEqual({ projectId: 42, key: "PRJ-001", ticketsCreated: 3 });
+  expect(result.projectId).toBe(42);
+  expect(result.key).toBe("PRJ-001");
+  expect(result.ticketsCreated).toBe(3);
 });

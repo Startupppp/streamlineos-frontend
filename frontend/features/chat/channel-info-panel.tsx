@@ -16,14 +16,9 @@ import React from "react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatDistanceToNow } from "date-fns";
-import {
-  useChatChannel,
-  useChatOnlineUsers,
-  useChatPins,
-  useUnpinMessage,
-  useArchiveChannel,
-  useUnarchiveChannel,
-} from "@/hooks/api";
+import { useChatChannel, useChatOnlineUsers } from "@/hooks/api/chat-core-read";
+import { useChatPins, useUnpinMessage } from "@/hooks/api/chat-search";
+import { useArchiveChannel, useUnarchiveChannel } from "@/hooks/api/chat-personal-b";
 import { resolveImageUrl } from "@/lib/utils";
 import { ChannelInfoPanelProfile } from "./channel-info-panel-profile";
 import { ChannelMembersSection } from "./channel-members-section";

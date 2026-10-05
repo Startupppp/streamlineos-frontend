@@ -14,11 +14,8 @@ import { Users } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
-import {
-  useChatOrgUsers,
-  useChatOnlineUsers,
-  useCreateDMChannel,
-} from "@/hooks/api";
+import { useChatOrgUsers, useChatOnlineUsers } from "@/hooks/api/chat-core-read";
+import { useCreateDMChannel } from "@/hooks/api/chat-core-mutations-b";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { resolveImageUrl } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";

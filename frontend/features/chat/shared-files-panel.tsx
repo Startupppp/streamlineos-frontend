@@ -9,7 +9,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { XIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import React from "react";
-import { useChannelFiles } from "@/hooks/api";
+import { useChannelFiles } from "@/hooks/api/chat-personal-b";
 import { ChatAttachment } from "./chat-attachment";
 import { usePanelRenderWindow } from "./panel-render-window";
 import { TablePagination } from "@/components/ui/table-pagination";

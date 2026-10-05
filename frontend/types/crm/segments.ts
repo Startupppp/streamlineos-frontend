@@ -1,6 +1,7 @@
 import type {
   ReportingCompiledColumn,
   ReportingFieldType,
+  ReportingFilterNode,
 } from "./reporting";
 
 /**
@@ -69,7 +70,7 @@ export interface Segment {
   readonly name: string;
   readonly description: string | null;
   readonly sourceKey: string;
-  readonly criteria: SegmentFilterNode;
+  readonly criteria: ReportingFilterNode;
   readonly createdByUserId: string | null;
   readonly createdAt: string;
   readonly updatedAt: string;
@@ -79,7 +80,7 @@ export interface CreateSegmentInput {
   readonly name: string;
   readonly description?: string;
   readonly source: string;
-  readonly criteria: SegmentFilterNode;
+  readonly criteria: ReportingFilterNode;
 }
 
 /**
@@ -94,13 +95,13 @@ export interface CreateSegmentInput {
 export interface UpdateSegmentInput {
   readonly name?: string;
   readonly description?: string | null;
-  readonly criteria?: SegmentFilterNode;
+  readonly criteria?: ReportingFilterNode;
 }
 
 /** `POST /crm/segments/preview` — how many match, before anybody names them. */
 export interface SegmentPreviewInput {
   readonly source: string;
-  readonly criteria: SegmentFilterNode;
+  readonly criteria: ReportingFilterNode;
 }
 
 /**

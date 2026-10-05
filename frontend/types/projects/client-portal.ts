@@ -36,12 +36,21 @@ export interface ClientPortalComment {
   createdAt: string;
 }
 
+export interface ClientPortalCapabilities {
+  canViewMilestones: boolean;
+  canViewTasks: boolean;
+  canViewAttachments: boolean;
+  canViewComments: boolean;
+  canSubmitChangeRequests: boolean;
+}
+
 export interface ClientPortalOverview {
   project: ClientPortalProject;
   milestones: ClientPortalMilestone[];
   tasks: ClientPortalTask[];
   attachments: ClientPortalFile[];
   comments: ClientPortalComment[];
+  capabilities?: ClientPortalCapabilities;
 }
 
 export interface ClientVisibilityTicket {

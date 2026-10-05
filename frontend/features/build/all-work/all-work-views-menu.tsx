@@ -30,13 +30,21 @@ import {
 } from "@/hooks/api/build/advanced";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-import type { ProjectView } from "@/types/projects";
+import type { ProjectView, ViewLayoutType } from "@/types/projects";
 import {
   BUILD_LIST_CURSOR_PARAM,
   BUILD_LIST_FILTER_PARAMS,
 } from "@/features/build/shared/use-build-list-url-state";
 import type { AllWorkView } from "./all-work-view-switcher";
 import { AllWorkViewRow } from "./all-work-view-row";
+
+const VIEW_TO_LAYOUT: Record<AllWorkView, ViewLayoutType> = {
+  list: "list",
+  table: "table",
+  board: "board",
+  calendar: "calendar",
+  timeline: "gantt",
+};
 
 const FILTER_KEYS = [
   ...BUILD_LIST_FILTER_PARAMS,
@@ -171,7 +179,7 @@ export function AllWorkViewsMenu({
         {
           name,
           filters,
-          layoutType: activeView,
+          layoutType: VIEW_TO_LAYOUT[activeView],
           ...(meta ? { visibility: meta.visibility } : {}),
         },
         {
