@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, type ReactNode } from "react";
+import { useCallback } from "react";
 import { Pencil, Shield } from "lucide-react";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
@@ -96,7 +96,7 @@ function RoleListItem({ role, isSelected, onSelect, onDelete, onRename }: RoleLi
   );
 }
 
-interface RolesBodyParams {
+interface RolesListBodyProps {
   isLoading: boolean;
   rolesError: boolean;
   rolesQueryError: unknown;
@@ -110,7 +110,7 @@ interface RolesBodyParams {
   onClearSearch: (() => void) | undefined;
 }
 
-function resolveRolesBody({
+function RolesListBody({
   isLoading,
   rolesError,
   rolesQueryError,
@@ -122,7 +122,7 @@ function resolveRolesBody({
   onDelete,
   onRename,
   onClearSearch,
-}: RolesBodyParams): ReactNode {
+}: RolesListBodyProps) {
   if (isLoading) {
     return (
       <div className="h-full min-h-0 flex-1 overflow-y-auto scrollbar-hide">
@@ -224,24 +224,6 @@ export function RolesListPanel({
   onPageSizeChange,
   onClearSearch,
 }: RolesListPanelProps) {
-  const body = useMemo(
-    () =>
-      resolveRolesBody({
-        isLoading,
-        rolesError,
-        rolesQueryError,
-        roles,
-        search,
-        selectedRoleId,
-        onRetry,
-        onSelect,
-        onDelete,
-        onRename,
-        onClearSearch,
-      }),
-    [isLoading, rolesError, rolesQueryError, roles, search, selectedRoleId, onRetry, onSelect, onDelete, onRename, onClearSearch],
-  );
-
   return (
     <Card className="flex h-full min-h-0 flex-col overflow-hidden">
       <CardHeader className="shrink-0 gap-0 border-b px-3 py-2 [.border-b]:pb-2">
@@ -250,7 +232,19 @@ export function RolesListPanel({
         </CardTitle>
       </CardHeader>
       <CardContent className="flex min-h-0 flex-1 flex-col overflow-hidden p-0">
-        {body}
+        <RolesListBody
+          isLoading={isLoading}
+          rolesError={rolesError}
+          rolesQueryError={rolesQueryError}
+          roles={roles}
+          search={search}
+          selectedRoleId={selectedRoleId}
+          onRetry={onRetry}
+          onSelect={onSelect}
+          onDelete={onDelete}
+          onRename={onRename}
+          onClearSearch={onClearSearch}
+        />
         {!isLoading && !rolesError && roles.length > 0 ? (
           <div
             className={cn(

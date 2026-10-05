@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -91,7 +91,7 @@ function PersonRow({ person, selected, onPick }: PersonRowProps) {
   );
 }
 
-interface PickerBodyParams {
+interface PickerBodyProps {
   access: "loading" | "granted" | "denied";
   isLoading: boolean;
   isError: boolean;
@@ -105,7 +105,7 @@ interface PickerBodyParams {
   selectedKey: string | null;
 }
 
-function resolvePickerBody({
+function PickerBody({
   access,
   isLoading,
   isError,
@@ -117,7 +117,7 @@ function resolvePickerBody({
   label,
   onPick,
   selectedKey,
-}: PickerBodyParams): React.ReactNode {
+}: PickerBodyProps) {
   if (access === "denied") {
     return (
       <p className="py-2 text-dense text-muted-foreground">
@@ -182,31 +182,14 @@ export function PayrollPersonPicker({ enabled, selectedKey, onPick, label }: Pay
   const debounced = useDebouncedValue(search.trim(), 300);
   const access = useCanState("payroll:salaries:view");
   const people = usePayrollPeople({ search: debounced }, { enabled });
-  const { refetch } = people;
 
   function handleSearchChange(event: React.ChangeEvent<HTMLInputElement>) {
     setSearch(event.target.value);
   }
 
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
-
-  const body = useMemo(
-    () =>
-      resolvePickerBody({
-        access,
-        isLoading: people.isLoading,
-        isError: people.isError,
-        error: people.error,
-        rows: people.data?.data ?? [],
-        hasMore: people.data?.pagination.hasMore,
-        debounced,
-        handleRetry,
-        label,
-        onPick,
-        selectedKey,
-      }),
-    [access, people.isLoading, people.isError, people.error, people.data, debounced, handleRetry, label, onPick, selectedKey],
-  );
+  function handleRetry() {
+    void people.refetch();
+  }
 
   return (
     <div className="w-full space-y-2">
@@ -217,7 +200,19 @@ export function PayrollPersonPicker({ enabled, selectedKey, onPick, label }: Pay
         placeholder="Search by name, email or employee number…"
         aria-label={`Search ${label.toLowerCase()}`}
       />
-      {body}
+      <PickerBody
+        access={access}
+        isLoading={people.isLoading}
+        isError={people.isError}
+        error={people.error}
+        rows={people.data?.data ?? []}
+        hasMore={people.data?.pagination.hasMore}
+        debounced={debounced}
+        handleRetry={handleRetry}
+        label={label}
+        onPick={onPick}
+        selectedKey={selectedKey}
+      />
     </div>
   );
 }

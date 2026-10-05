@@ -26,7 +26,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useSendTestWebhook,
   useRotateWebhookSecret,
-  useWebhookImpact,
+  useProjectWebhookImpact,
   type ProjectWebhook,
 } from "@/hooks/api/build/webhooks";
 import { cn } from "@/lib/utils";
@@ -122,7 +122,7 @@ export function WebhookCard({
   const [secretCopied, setSecretCopied] = useState(false);
   const sendTest = useSendTestWebhook(projectId);
   const rotateSecret = useRotateWebhookSecret(projectId);
-  const { data: impact } = useWebhookImpact(projectId, webhook.id, deleteOpen);
+  const { data: impact } = useProjectWebhookImpact(projectId, webhook.id, deleteOpen);
   const { iconRef: sendIconRef, hoverHandlers: sendHoverHandlers } =
     useAnimatedIcon();
   const { iconRef: chevronIconRef, hoverHandlers: chevronHoverHandlers } =

@@ -116,7 +116,7 @@ export function useWebhookDeliveries(
   });
 }
 
-export function useProjectsWebhooksGetImpactResponse(
+export function useProjectWebhookImpact(
   projectId: number,
   webhookId: number,
   enabled = false,
