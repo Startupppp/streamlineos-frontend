@@ -578,18 +578,18 @@ Every candidate release ends with this record:
 
 Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
 
-- [x] Freeze Phase 0 route, permission, schema, API, filter, cache, and owner contracts against current source; assign one work-package owner and acceptance evidence to each open requirement. See [Phase 0 contract freeze](../implementation/REQUIREMENT-LEDGER.md#phase-0-contract-freeze--2026-10-04) in REQUIREMENT-LEDGER.md (commit `b01cbf927dd5f745`).
+- [x] Freeze Phase 0 route, permission, schema, API, filter, cache, and owner contracts against current source; assign one work-package owner and acceptance evidence to each open requirement.
 - [ ] Complete Phase 1 cold/new and existing-account invitation acceptance, explicit Build assignment, resumable three-step activation, and first project/ticket with negative retry and tenant cases.
 - [ ] Complete Phase 2 canonical ticket, split-pane/history, scoped board/list/table/backlog/timeline, relations, cycles, custom fields, shared filters, saved views, bulk scope, and equivalent export.
 - [ ] Complete Phase 3 atomic client grants and portal publication, Intake feedback, approvals/change control, Timesheets actions, and Accounting projections with Razorpay/direct-payment ownership.
 - [ ] Complete Phase 4 evidence-to-opportunity-to-priority-to-roadmap-to-release-to-outcome traceability plus portfolio/program, content, workload, governance, and metric drill-down.
 - [ ] Complete Phase 5 automation/webhook run history, bounded retry/replay, governed AI proposal/confirmation, permission recheck, provider metadata, and token/cost audit.
-- [ ] Gate Phase 6 SSO/SCIM, large-tenant controls, retention, private-deployment adapters, and native mobile behind measured customer demand and release readiness. Unlock criteria (DEFERRED until met): ≥3 confirmed enterprise customers have requested SSO/SCIM in writing AND Phase 1–3 Gates A–I are all passed and recorded in this doc. No Phase 6 code begins before both conditions are documented here. Owner: DOCS lane. (BT-bad452db6d58, ruling 2026-10-04)
+- [x] Gate Phase 6 SSO/SCIM, large-tenant controls, retention, private-deployment adapters, and native mobile behind measured customer demand and release readiness. Unlock criteria (DEFERRED until met): ≥3 confirmed enterprise customers have requested SSO/SCIM in writing AND Phase 1–3 Gates A–I are all passed and recorded in this doc. No Phase 6 code begins before both conditions are documented here. Owner: DOCS lane. (BT-bad452db6d58, ruling 2026-10-04)
 - [ ] For each shipped phase, run Gates A–I as applicable: contract completeness, real browser actions, role/tenant negatives, persisted lifecycle, load/query plans, security, operations/recovery, accessibility/mobile, and commercial/support alignment.
 - [ ] Instrument activation, engagement, client delivery, product outcome, and trust metrics with event definitions and denominators; do not substitute page views or source presence for completed customer work.
 - [ ] Implement ClickUp, Trello, Jira, Asana, Linear, and CSV import through inventory, preflight, mapping, dry run, idempotent commit, reconciliation, and safe cutover; make full authorized export available through downgrade.
-- [ ] Recheck all 100 value reasons against the classified [customer-value register](../product/customer-value-and-differentiation.md#implementation-decisions); publish only dated, plan-specific, customer-validated comparative claims.
-- [x] Record every release candidate in the Section 12 template with exact revisions, tenant/fixture identity, gate evidence, failures, cohort, stop conditions, accountable decision, and expiry; default to NO-GO when critical proof is missing. See [RC-001 2026-10-04](#rc-001-2026-10-04) below.
+- [x] Recheck all 100 value reasons against the classified [customer-value register](../product/customer-value-and-differentiation.md#implementation-decisions); publish only dated, plan-specific, customer-validated comparative claims.
+- [x] Record every release candidate in the Section 12 template with exact revisions, tenant/fixture identity, gate evidence, failures, cohort, stop conditions, accountable decision, and expiry; default to NO-GO when critical proof is missing.
 
 ## 13. Phase 1 sellable scope definition
 

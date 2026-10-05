@@ -121,8 +121,8 @@ Track completion in the [requirement ledger](implementation/REQUIREMENT-LEDGER.m
 
 - [x] Canonical planning, evidence, and historical research locations are linked from this index; checked on the current documentation revision.
 - [x] Current verified, Current unverified, Planned, Conditional, and Deferred are defined here and used as the status vocabulary for the planning set.
-- [ ] Every accepted requirement has a current owner, implementation status, and evidence link in the requirement ledger.
-- [ ] Every active work package has a committed claim and an unambiguous handoff or completion row.
-- [ ] The request-to-commercial-outcome chain works across Build and its owning modules with authorized record links.
+- [x] Every accepted requirement has a current owner, implementation status, and evidence link in the requirement ledger.
+- [x] Every active work package has a committed claim and an unambiguous handoff or completion row.
+- [x] The request-to-commercial-outcome chain works across Build and its owning modules with authorized record links.
 - [ ] Every documented Build screen, route, component, and cross-module action has the required source and runtime evidence.
 - [ ] Release evidence covers browser behavior, permissions, tenant isolation, persistence, deployment, and operations for the sellable scope.

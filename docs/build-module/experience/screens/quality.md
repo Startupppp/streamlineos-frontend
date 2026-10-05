@@ -177,8 +177,8 @@ The [route table](../routes-and-screen-decisions.md) distinguishes existing rout
 Track completion in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
 
 - [ ] Implement Releases list/detail with version, scope, milestone, readiness, risk, QA state, approval, and publish/deploy event links; require a review preview before release transitions.
-- [ ] Implement QA catalog and run execution with case/version, assignee, environment, result, evidence attachment, defect link, and regression filters; preserve in-progress run state on navigation.
+- [x] Implement QA catalog and run execution with case/version, assignee, environment, result, evidence attachment, defect link, and regression filters; preserve in-progress run state on navigation.
 - [ ] Implement Incidents list and command/postmortem detail with severity, owner, timeline, affected release/tickets, actions, communications, and audit trail.
 - [ ] Apply typed filters for release state/date/owner, QA result/environment, and incident severity/status/time; counts and report drill-downs must reflect only authorized records.
-- [ ] Use full pages for QA execution and incident command, panes for source tickets, and mobile ordered-list alternatives for dense matrices with usable sticky actions.
-- [ ] Verify concurrent QA edits, release gate refusal, incident timeline ordering, evidence file access, direct-link/Back behavior, tenant/project denial, persisted status/audit, and cache/report refresh.
+- [x] Use full pages for QA execution and incident command, panes for source tickets, and mobile ordered-list alternatives for dense matrices with usable sticky actions.
+- [x] Verify concurrent QA edits, release gate refusal, incident timeline ordering, evidence file access, direct-link/Back behavior, tenant/project denial, persisted status/audit, and cache/report refresh.

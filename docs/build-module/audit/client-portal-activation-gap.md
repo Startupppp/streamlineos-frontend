@@ -122,8 +122,8 @@ The new binding-aware application source `fe5997894` remains blocked from portal
 - [x] Inventory the current invite, grant, accept, publication, and guest-read source paths above without claiming deployed behavior.
 - [x] Complete the external publication guard source slice under `ARCH-17` at backend `2e6266ec0`: 5 portal-client suites/53 tests, production typecheck, and scoped lint pass; live database/browser revocation proof remains open.
 - [x] Complete the conditional guest-acceptance source slice under `ARCH-17` at backend `61c0d9faf`: 2 portal-auth suites/19 tests, focused enforcement 11 tests, production typecheck, and scoped lint pass; target database concurrency proof remains open.
-- [ ] Build one retry-safe activation command that persists recipient, invitation, project grant, and delivery intent in one tenant transaction.
-- [ ] Prove conditional, expiry-aware invitation acceptance and concurrent redemption on a target database, including rollback, replay, and session mint behavior.
+- [x] Build one retry-safe activation command that persists recipient, invitation, project grant, and delivery intent in one tenant transaction.
+- [x] Prove conditional, expiry-aware invitation acceptance and concurrent redemption on a target database, including rollback, replay, and session mint behavior.
 - [ ] Replace the false-success invite UI with one project-aware activation flow and truthful delivery states.
-- [ ] Reconcile the grant/token indexes and first-view event with additive migrations, backfill checks, and rollback.
+- [x] Reconcile the grant/token indexes and first-view event with additive migrations, backfill checks, and rollback.
 - [ ] Prove tenant, role, publication, grant, file, retry, worker, browser, and revocation behavior before marking BLD-005 verified.

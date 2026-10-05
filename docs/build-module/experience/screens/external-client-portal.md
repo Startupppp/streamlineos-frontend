@@ -63,5 +63,5 @@ Track completion in the [requirement ledger](../../implementation/REQUIREMENT-LE
 - [ ] Deliver `/client-portal/[projectId]` with published overview and capability-filtered tabs that survive refresh; direct tab and record URLs must reauthorize the same grant.
 - [ ] Implement Deliverables, Requests, Approvals, Files, Updates, and conditional Invoices with the specified safe row fields, filters, source-owner commands, revision checks, and portal-only return paths.
 - [ ] Bind signed file access and cache keys to actor/grant/publication revisions; revoke sessions and future URLs immediately, and suppress newly unpublished or cross-project artifacts.
-- [ ] Show accurate expired, revoked, delivery-failed, no-project, no-published-content, filtered-empty, and partial-source states without exposing hidden project names or counts.
+- [x] Show accurate expired, revoked, delivery-failed, no-project, no-published-content, filtered-empty, and partial-source states without exposing hidden project names or counts.
 - [ ] Verify new/existing client, wrong identity, A/B project isolation, replayed link, stale approval, duplicate submission, file revocation, Back/Forward, keyboard/mobile, persisted audit, and deployment revision.

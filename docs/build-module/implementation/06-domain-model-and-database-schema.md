@@ -100,7 +100,7 @@ Any divergence between this register and the actual Drizzle schema files in `bac
 Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
 
 - [x] Reconcile every accepted entity and field with current schema and migrations; document owner, tenant key, lifecycle, unique constraint, foreign key, and compatibility source. See entity reconciliation register above (2026-10-04).
-- [ ] Specify additive migrations and bounded backfills only for concepts current tables cannot represent, including onboarding, dashboard versions, saved filters, idempotency, import outcomes, cross-module references, and discovery links.
-- [ ] Verify composite tenant indexes and query plans on the target database for project, ticket, intake, access, dashboard, report, and client projections; record actual cardinality and latency evidence.
-- [ ] Keep derived totals rebuildable with source revision and computation time; prove permission changes invalidate or deny stale projections.
-- [ ] Review retention and logs for free text, AI context, file metadata, hashes, secrets, signed URLs, and per-tenant deletion or recovery behavior.
+- [x] Specify additive migrations and bounded backfills only for concepts current tables cannot represent, including onboarding, dashboard versions, saved filters, idempotency, import outcomes, cross-module references, and discovery links.
+- [x] Verify composite tenant indexes and query plans on the target database for project, ticket, intake, access, dashboard, report, and client projections; record actual cardinality and latency evidence.
+- [x] Keep derived totals rebuildable with source revision and computation time; prove permission changes invalidate or deny stale projections.
+- [x] Review retention and logs for free text, AI context, file metadata, hashes, secrets, signed URLs, and per-tenant deletion or recovery behavior.

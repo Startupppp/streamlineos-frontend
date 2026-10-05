@@ -45,6 +45,6 @@ Browser, persistence, target-DB, tenant/RBAC, deployment, provider, load, revoca
 Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
 
 - [x] Map R01–R29 to a canonical specification, decision, and acceptance criterion; the 29-row count is recorded in the [validation report](./validation-report.md#checks-performed). This is specification coverage only.
-- [ ] For every implemented R ID, link its current `BLD-*` row in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) to code revision, focused tests, and required runtime evidence.
-- [ ] Recheck route, screen, onboarding, and cross-module destinations after implementation changes; add a mapping if a user requirement acquires a new decision or gap.
+- [x] For every implemented R ID, link its current `BLD-*` row in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) to code revision, focused tests, and required runtime evidence.
+- [x] Recheck route, screen, onboarding, and cross-module destinations after implementation changes; add a mapping if a user requirement acquires a new decision or gap.
 - [ ] Close no release criterion from a Markdown link or source file alone; attach the role/tenant, persistence, browser, and operations proof named by that row.

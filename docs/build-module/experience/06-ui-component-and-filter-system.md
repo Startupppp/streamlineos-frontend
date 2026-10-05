@@ -310,7 +310,7 @@ Full screen contracts: [screen index](./screens/README.md). Exact route and alia
 Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
 
 - [ ] Implement the shared page shell, RecordCard, DataTable, KanbanBoard, DetailPane, forms, empty states, confirmations, and operation feedback with the exact field/permission contracts above.
-- [ ] Use one versioned FilterEnvelope v1 parser and field registry across saved views, dashboards, reports, exports, search, and AI; enforce typed operators, maximum depth, authorized fields, and bounded pagination on the server.
+- [x] Use one versioned FilterEnvelope v1 parser and field registry across saved views, dashboards, reports, exports, search, and AI; enforce typed operators, maximum depth, authorized fields, and bounded pagination on the server.
 - [ ] Implement filter-builder chips, nested groups, validation, clear/reset, URL serialization, and migration/error states for removed or inaccessible custom fields.
 - [ ] Persist private/team/project saved views with owner permissions, layout columns, grouping/sort, revision conflicts, and safe defaults; test cross-device reload and revoked access.
 - [ ] Implement command search and collection search with debouncing, permission-aware suggestions, keyboard navigation, source freshness, and no cross-tenant result leakage.

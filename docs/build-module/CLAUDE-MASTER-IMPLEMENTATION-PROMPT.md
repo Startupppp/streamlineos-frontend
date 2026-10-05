@@ -48,7 +48,7 @@ Do not call the slice done until the relevant route exists and is authorized, th
 Track completion in the [requirement ledger](implementation/REQUIREMENT-LEDGER.md) and [work claims](implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
 
 - [x] This prompt names the canonical sources, package claim, inventory, output, negative cases, and completion gate for one vertical slice.
-- [ ] Every dispatched agent follows a committed, nonoverlapping claim and records the implementation revision in the ledger.
-- [ ] Each delivered slice connects user interaction, authorization, persistence, cache/events, and error handling without duplicated ownership.
-- [ ] Focused negative cases pass for unauthorized, cross-tenant, revoked, invalid, duplicate, conflicting, and retry behavior.
+- [x] Every dispatched agent follows a committed, nonoverlapping claim and records the implementation revision in the ledger.
+- [x] Each delivered slice connects user interaction, authorization, persistence, cache/events, and error handling without duplicated ownership.
+- [x] Focused negative cases pass for unauthorized, cross-tenant, revoked, invalid, duplicate, conflicting, and retry behavior.
 - [ ] Browser, target database, deployment, and operational evidence is attached before any slice is labeled VERIFIED.

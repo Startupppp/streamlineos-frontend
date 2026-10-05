@@ -94,9 +94,9 @@ An allow requires four yes answers. Missing evidence is recorded as open; it is 
 Track completion in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
 
 - [x] Record the accepted organization, Build, project, and client standing model and identify its current source owners ([role model](./01-role-model-and-open-risks.md#2-confirmed-target-role-model); [source anchors](#current-source-anchors)). This closes documentation inventory, not runtime conformance.
-- [ ] Produce a current route exposure/OpenAPI census and role-to-permission/scope matrix from the actual database catalog, with every Build endpoint and permission key accounted for.
-- [ ] Prove enabled/disabled Build entitlement, Org Owner/Admin access, explicit Org Member assignment, revoked standing, and project/record/field narrowing in API and target-database tests.
-- [ ] Verify client grants as separate portal principals across audience, project, surface, action, field, token expiry/rotation, signed files, and revocation.
-- [ ] Test authorization of AI, imports, exports, automations, integrations, callbacks, notifications, search, reports, and jobs after a permission change; no secondary path may grant access.
+- [x] Produce a current route exposure/OpenAPI census and role-to-permission/scope matrix from the actual database catalog, with every Build endpoint and permission key accounted for.
+- [x] Prove enabled/disabled Build entitlement, Org Owner/Admin access, explicit Org Member assignment, revoked standing, and project/record/field narrowing in API and target-database tests.
+- [x] Verify client grants as separate portal principals across audience, project, surface, action, field, token expiry/rotation, signed files, and revocation.
+- [x] Test authorization of AI, imports, exports, automations, integrations, callbacks, notifications, search, reports, and jobs after a permission change; no secondary path may grant access.
 - [ ] Exercise each standard standing and an unrelated tenant in the browser, including denied navigation, direct URLs, mutations, cache refresh, and private-data non-disclosure.
 - [ ] Capture append-only access-change audit events, deployed multi-replica invalidation timing, RLS under the runtime role, and consumer recovery evidence before any RBAC release signoff.

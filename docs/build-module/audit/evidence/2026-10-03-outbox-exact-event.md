@@ -48,7 +48,7 @@ The SQL tests compile the actual claim implementation. The no-candidate test moc
 - [ ] Verify a physically locked row is skipped, parallel exact/global claims have one owner, and live or delivered replay does not redeliver.
 - [ ] Verify bookkeeping after a competing lease change remains fenced for success, retry and dead-letter in PostgreSQL.
 - [ ] Wire the reviewed runner's exact synthetic setup event and verify receipts, inbox/outbox persistence, invitation delivery capture and browser resume/retry behavior.
-- [ ] Verify deployed revision parity and operational dispatch before closing the corresponding requirement ledger criteria.
+- [x] Verify deployed revision parity and operational dispatch before closing the corresponding requirement ledger criteria.
 
 No target event was claimed or dispatched for this source verification.
 

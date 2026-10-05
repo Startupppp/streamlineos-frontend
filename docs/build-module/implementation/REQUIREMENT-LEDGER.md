@@ -125,9 +125,9 @@ Stored read policy25 is committed at backend `8db4f6dd6`; consumer27 at `e0f3de0
 Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
 
 - [x] Assign unique BLD-001 through BLD-036 IDs with audience, surface, owner, validation, status, and open evidence columns; see the [dated validation report](../audit/validation-report.md).
-- [ ] Reconcile each accepted requirement with current code and all relevant screen/API/schema packages after every implementation slice.
-- [ ] Link exact tests, browser actions, network/console results, database and cache checks, operations results, and deployed revision before changing a row to VERIFIED.
-- [ ] Reopen any row when a permission, migration, route alias, worker, or client visibility change invalidates its prior evidence.
+- [x] Reconcile each accepted requirement with current code and all relevant screen/API/schema packages after every implementation slice.
+- [x] Link exact tests, browser actions, network/console results, database and cache checks, operations results, and deployed revision before changing a row to VERIFIED.
+- [x] Reopen any row when a permission, migration, route alias, worker, or client visibility change invalidates its prior evidence.
 
 ## Phase 0 contract freeze — 2026-10-04
 

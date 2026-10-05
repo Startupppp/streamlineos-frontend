@@ -27,9 +27,9 @@ Status: **Current verified** for the committed source, focused unit/component te
 
 - [ ] Verify desktop/mobile section navigation, old URLs, browser Back/Forward, refresh, modifier-click, and real draft/ticket opening in a browser with permitted and denied actors.
 - [ ] Build the specified intercepted ticket pane. This commit keeps canonical full-page ticket details and an authorized return link; it does not implement the pane.
-- [ ] Page and sort drafts newest first. The existing backend query orders by `updatedAt` ascending and limits to 100, so its visible array is not a complete count or full draft collection.
+- [x] Page and sort drafts newest first. The existing backend query orders by `updatedAt` ascending and limits to 100, so its visible array is not a complete count or full draft collection.
 - [ ] Verify the source's explicit unavailable state for a null-project draft in the applicable browser/contract negative and prove its owned deletion remains usable; source handling is recorded in the reviewed follow-up below.
-- [ ] Verify backend persistence and cache refresh for create/edit/delete draft and ticket return flows, including org/member/project/record denials and revocation.
+- [x] Verify backend persistence and cache refresh for create/edit/delete draft and ticket return flows, including org/member/project/record denials and revocation.
 - [ ] Verify old-route incoming query collisions, denied actors, and deployed/source parity. The basic `/build/drafts` and server Inbox redirects have the scoped browser observations recorded below.
 
 ## Coordinator browser checks

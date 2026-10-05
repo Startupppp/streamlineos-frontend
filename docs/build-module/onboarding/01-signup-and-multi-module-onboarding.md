@@ -869,7 +869,7 @@ Runtime evidence must separately cover UI behavior, database state, network/cons
 ### Signup and resume
 
 - [ ] Google and email OTP create or authenticate without exposing whether an email already exists.
-- [ ] Safe redirect priority is enforced and open redirects are rejected.
+- [x] Safe redirect priority is enforced and open redirects are rejected.
 - [ ] A saved setup resumes on another device at the canonical revision.
 - [ ] An offline edit is visibly unsynced and is never presented as saved.
 
@@ -878,7 +878,7 @@ Runtime evidence must separately cover UI behavior, database state, network/cons
 - [ ] A solo Build customer can launch in three onboarding steps with no invitation.
 - [ ] No more than five inputs are visible before launch in the default Build-only path.
 - [ ] Multi-module selection uses one flow and applies only selected/required modules.
-- [ ] Deselecting and reselecting a module restores its draft without enabling it prematurely.
+- [x] Deselecting and reselecting a module restores its draft without enabling it prematurely.
 - [ ] Every adaptive question is owned and validated by the selected module contract.
 
 ### Templates and custom fields
@@ -886,17 +886,17 @@ Runtime evidence must separately cover UI behavior, database state, network/cons
 - [ ] The review identifies exact template versions and created objects.
 - [ ] Replaying activation does not duplicate template-created records.
 - [ ] Onboarding custom fields use module entity allowlists and the module mutation service.
-- [ ] Sensitive fields do not appear in logs, events, client views, general search, AI context, or exports without explicit policy.
+- [x] Sensitive fields do not appear in logs, events, client views, general search, AI context, or exports without explicit policy.
 - [ ] A project-scoped Build field resolves its project alias correctly.
 
 ### Plans and access
 
 - [ ] Catalog and plan truth come from the server and changed limits invalidate previews.
 - [ ] Over-limit invitees are never silently omitted.
-- [ ] Owner is unavailable as an onboarding invite role.
-- [ ] An internal invite commits organization role plus selected module access without a second admin trip.
-- [ ] A client invite creates only scoped portal access.
-- [ ] All mutations deny unauthorized and cross-tenant attempts on the server.
+- [x] Owner is unavailable as an onboarding invite role.
+- [x] An internal invite commits organization role plus selected module access without a second admin trip.
+- [x] A client invite creates only scoped portal access.
+- [x] All mutations deny unauthorized and cross-tenant attempts on the server.
 
 ### Activation and recovery
 
@@ -910,10 +910,10 @@ Runtime evidence must separately cover UI behavior, database state, network/cons
 ### Invitations
 
 - [ ] A cold valid invitation renders an actionable card within two seconds on apex and `www` hosts.
-- [ ] Pending remains pending until acceptance commits.
-- [ ] Matching authentication creates exactly one membership and the intended module/project access.
+- [x] Pending remains pending until acceptance commits.
+- [x] Matching authentication creates exactly one membership and the intended module/project access.
 - [ ] Expired, revoked, already-active, wrong-account, limit-reached, and duplicate-submit states have complete non-blank UI.
-- [ ] Tokens do not appear in logs, analytics, referrers, or support-visible error text.
+- [x] Tokens do not appear in logs, analytics, referrers, or support-visible error text.
 
 ### Quality
 
@@ -949,7 +949,7 @@ Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGE
 - [x] Reconcile the 2026-10-03 current wizard and payload against the target in the [onboarding source gap](../audit/onboarding-current-state-gap.md); target behavior remains open below.
 - [x] Reject plan-locked setup module selections in source at backend `9fd0b94d2` using a fresh transaction-bound tier read; five suites/109 focused tests, production typecheck, and lint pass. Preview agreement and target database/browser proof remain open.
 - [x] Recover from a plan-locked setup response in frontend `3aba4c3c8` by returning to Products with draft and invitations intact; three focused suites/23 tests and scoped lint pass. Setup-target-aware preview and browser proof remain open.
-- [ ] Signup and invitation-first identity work for new, existing, wrong-email, expired, and replay paths.
+- [x] Signup and invitation-first identity work for new, existing, wrong-email, expired, and replay paths.
 - [ ] Workspace step has a five-visible-input Build-only default and reversible advanced settings.
 - [ ] Products step selects one or many modules, previews plan limits, and saves adaptive answers, template versions, and custom-field drafts.
 - [ ] Verify setup plan eligibility, preview agreement, and error states on the target database and browser, including mixed-selection rollback and concurrent subscription transitions.
@@ -957,9 +957,9 @@ Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGE
 - [ ] People step supports multiple invites, optional skip, quota and grantability preview, and separate internal versus client access.
 - [ ] Activation is durable, revisioned, idempotent, resumable across devices, and safe under double submit or worker retry.
 - [ ] Invitation acceptance commits membership and intended module standing, resolves a fresh authorized destination, and explains partial grants.
-- [ ] Client invitation activates only scoped portal grants with a secure magic link.
+- [x] Client invitation activates only scoped portal grants with a secure magic link.
 - [ ] First-use Build setup creates a useful project, ticket, and guided action without requiring unrelated module configuration.
-- [ ] Request, event, and response schemas reject unknown or unavailable modules, duplicate grants, forbidden roles, and stale revisions.
-- [ ] Authorization, cache invalidation, privacy, and rate limits pass cross-tenant and role-negative tests.
+- [x] Request, event, and response schemas reject unknown or unavailable modules, duplicate grants, forbidden roles, and stale revisions.
+- [x] Authorization, cache invalidation, privacy, and rate limits pass cross-tenant and role-negative tests.
 - [ ] Every step and invitation state works at 375, 768, and desktop widths with keyboard and screen-reader checks.
 - [ ] Browser, target-DB, outbox recovery, performance, and funnel evidence satisfies section 25 before release verification.

@@ -1023,10 +1023,10 @@ Add nullable target membership and target epoch as a strict pair, reusing the ex
 Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
 
 - [x] ARCH-10, ARCH-16, ARCH-06, ARCH-01, and ARCH-14 have disjoint primary seams recorded before their application edits.
-- [ ] Move each completed source slice to the completed table with its exact revision, checks, and remaining follow-up.
+- [x] Move each completed source slice to the completed table with its exact revision, checks, and remaining follow-up.
 - [ ] Close ARCH-01 only after inherited grants and revocation are covered end to end.
 - [ ] Close ARCH-14 only after invitation acceptance, authorized landing, and selected grants pass browser and persistence checks.
-- [ ] Mark any package RELEASE_VERIFIED only after the evidence contract in document 14 is satisfied.
+- [x] Mark any package RELEASE_VERIFIED only after the evidence contract in document 14 is satisfied.
 
 
 ### BT-27a037364398 — Ticket scalar artifact binding 47

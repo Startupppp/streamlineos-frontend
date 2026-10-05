@@ -84,10 +84,10 @@ Each module must publish: `GET /module/navigation`, bounded collection queries w
 
 Track completion in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
 
-- [ ] Reconcile CRM, Timesheets, and Accounting route families with their existing owning controllers/OpenAPI operations; do not create duplicate Build ledgers or foreign-table UI joins.
+- [x] Reconcile CRM, Timesheets, and Accounting route families with their existing owning controllers/OpenAPI operations; do not create duplicate Build ledgers or foreign-table UI joins.
 - [ ] Deliver CRM account/contact/lead/deal/activity indexes and details with the declared filters, stage history, consent masking, import reconciliation, and previewed Create Build project handoff.
 - [ ] Deliver Timesheets My Week, entry detail, review, project/rate/policy/report/export surfaces with effective-dated rates, lock/approval rules, bounded queries, and Build ticket return.
 - [ ] Deliver Accounting overview, customer, estimate, invoice, payment, expense, reconciliation, report, integration, and settings surfaces with currency-safe metrics and immutable numbered documents.
-- [ ] Implement the signed, expiring origin/return envelope for Build→CRM/Timesheets/Accounting; reauthorize at destination and restore source pane/filter/anchor on cancel or completion.
-- [ ] Use owning-module commands with strict Zod validation, expectedRevision, idempotency, durable jobs/outbox where needed, permission-scoped cache invalidation, and no payment-success claim before reconciliation.
+- [x] Implement the signed, expiring origin/return envelope for Build→CRM/Timesheets/Accounting; reauthorize at destination and restore source pane/filter/anchor on cancel or completion.
+- [x] Use owning-module commands with strict Zod validation, expectedRevision, idempotency, durable jobs/outbox where needed, permission-scoped cache invalidation, and no payment-success claim before reconciliation.
 - [ ] Verify cross-module deep links, mobile return, tampered/expired context, role/tenant/client denial, duplicate submit/import, invoice/time approval races, persisted audit, and source projection freshness.
