@@ -1,6 +1,6 @@
 "use client";
 
-import { type Dispatch, type MouseEvent, type SetStateAction } from "react";
+import { type MouseEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import dynamic from "next/dynamic";
@@ -19,6 +19,7 @@ import { MY_WORK_VIEWS } from "./my-work-view";
 import { MyWorkSortControl } from "./my-work-sort-control";
 import { WORK_TABS, TAB_CONFIG } from "./my-work-data-model";
 import type { DisplayOptions, StatusOptionSource } from "@/features/build/shared/types";
+import type { BuildListSortField, BuildListSortDirection } from "@/features/build/shared/use-build-list-url-state";
 
 const TicketFilterBar = dynamic(
   () =>
@@ -111,14 +112,14 @@ interface MyWorkTicketsFiltersProps {
   activeView: ViewType;
   hasActiveFilters: boolean;
   showViewSwitcher: boolean;
-  sortField: string;
-  sortDirection: "asc" | "desc";
+  sortField: BuildListSortField;
+  sortDirection: BuildListSortDirection;
   orgStates: readonly StatusOptionSource[] | undefined;
   displayOptions: DisplayOptions;
   showGroupingSidebar: boolean;
-  onSortChange: (field: string, direction: "asc" | "desc") => void;
+  onSortChange: (field: BuildListSortField, direction: BuildListSortDirection) => void;
   onViewChange: (next: ViewType) => void;
-  onDisplayOptionsChange: Dispatch<SetStateAction<DisplayOptions>>;
+  onDisplayOptionsChange: (next: DisplayOptions) => void;
   onToggleSidebar: () => void;
 }
 

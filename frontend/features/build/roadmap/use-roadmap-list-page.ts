@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo, useRef } from "react";
-import { BUILD_FILTER_ALL } from "@/features/build/shared/use-build-list-filters";
+import { BUILD_FILTER_ALL, type BuildListFiltersState } from "@/features/build/shared/use-build-list-filters";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { getUserDisplayName } from "@/lib/person-display";
 import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
@@ -9,19 +9,7 @@ import type { ScorableRoadmapItem } from "./roadmap-item-card";
 
 type RoadmapTabValue = "roadmap" | "feedback" | "changelog";
 
-interface UseBuildListFiltersReturn {
-  value: (param: string) => string;
-  setValue: (param: string, value: string) => void;
-  debouncedSearch: string;
-  search: string;
-  setSearch: (value: string) => void;
-  cursor: string;
-  setCursor: (value: string) => void;
-  clearAll: () => void;
-  resetKey: string;
-}
-
-export function useRoadmapListPage(listFilters: UseBuildListFiltersReturn) {
+export function useRoadmapListPage(listFilters: BuildListFiltersState) {
   const [roadmapCreateOpen, setRoadmapCreateOpen] = useState(false);
   const [changelogCreateOpen, setChangelogCreateOpen] = useState(false);
   const [roadmapItems, setRoadmapItems] = useState<ScorableRoadmapItem[]>([]);

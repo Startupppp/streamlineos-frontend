@@ -9,7 +9,7 @@ interface KanbanColumnRenameInputProps {
   isRenaming: boolean;
   renameValue: string;
   renameError: string | null;
-  inputRef: RefObject<HTMLInputElement>;
+  inputRef: RefObject<HTMLInputElement | null>;
   isPending: boolean;
   columnName: string;
   isEditable: boolean;

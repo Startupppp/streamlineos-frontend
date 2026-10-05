@@ -13,7 +13,6 @@ import {
 } from "@hello-pangea/dnd";
 import {
   type ListViewProps,
-  type Ticket,
   LIST_RENDER_PAGE_SIZE,
   getGroupStatus,
   encodeNestedAccordionValue,

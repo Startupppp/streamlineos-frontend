@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback, useRef, useMemo } from "react";
+import { useCallback, useMemo } from "react";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { useReducedMotion } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
 import { type DropResult } from "@hello-pangea/dnd";
@@ -46,21 +47,15 @@ export function useListView({
   const canAssign = useCan("build:tickets:assign");
   const queryClient = useQueryClient();
 
-  const [optimisticTickets, setOptimisticTickets] = useState(tickets);
-  const [visibleFlatCount, setVisibleFlatCount] = useState(
+  const [optimisticTickets, setOptimisticTickets] = useSourceOverride(tickets, tickets);
+  const [visibleFlatCount, setVisibleFlatCount] = useSourceOverride(
+    tickets,
     LIST_RENDER_PAGE_SIZE,
   );
-  const prevTicketsRef = useRef(tickets);
-
-  if (prevTicketsRef.current !== tickets) {
-    prevTicketsRef.current = tickets;
-    setOptimisticTickets(tickets);
-    setVisibleFlatCount(LIST_RENDER_PAGE_SIZE);
-  }
 
   const handleShowMoreFlat = useCallback(() => {
     setVisibleFlatCount((count) => count + LIST_RENDER_PAGE_SIZE);
-  }, []);
+  }, [setVisibleFlatCount]);
 
   const handleItemSelect = useItemSelectHandler(selection);
 
@@ -213,7 +208,7 @@ export function useListView({
         });
       }
     },
-    [groupBy, projectId, optimisticTickets, grouped, updateTicket, rankTicket],
+    [groupBy, projectId, optimisticTickets, grouped, updateTicket, rankTicket, setOptimisticTickets],
   );
 
   return {

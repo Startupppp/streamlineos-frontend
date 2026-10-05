@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/form";
 import { AiFieldTrigger, AiInlinePreview, type AiInlineSession } from "@/components/ai";
 import type { TicketSearchResult } from "@/types/projects";
-import type { CreateTicketFormValues } from "./use-create-ticket-form";
+import type { CreateTicketFormValues } from "./ticket-create-model";
 
 interface AiTriggerProps {
   label: string;

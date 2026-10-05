@@ -25,7 +25,7 @@ describe("Build UI consistency contracts", () => {
   });
 
   it("keeps My Work search and filters visible while stacking dense controls", () => {
-    const source = readSource("features/build/my-work/my-work-page.tsx");
+    const source = readSource("features/build/my-work/my-work-sections.tsx");
 
     expect(source).toContain('collapseBelow="xl"');
     expect(source).toContain("search={");
