@@ -394,7 +394,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
               key={label.id}
               variant="secondary"
               className="h-5 gap-1 px-1.5 text-micro leading-none"
-              style={{ borderLeft: `2px solid ${label.color}` }}
+              style={{ borderLeft: `2px solid ${label.color ?? "#3b82f6"}` }}
             >
               <span className="leading-none">{label.name}</span>
               <RemoveLabelChipButton labelId={label.id} labelName={label.name} onRemove={makeLabelRemoveHandler} />

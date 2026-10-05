@@ -131,7 +131,7 @@ export function LabelsSearchCommand({
               >
                 <span
                   className="mr-2 h-2.5 w-2.5 shrink-0 rounded-full border border-border"
-                  style={{ backgroundColor: label.color }}
+                  style={{ backgroundColor: label.color ?? undefined }}
                 />
                 <span className="min-w-0 flex-1 truncate text-left text-xs">{label.name}</span>
                 {active ? <Check className="ml-auto h-3 w-3 shrink-0" /> : null}
