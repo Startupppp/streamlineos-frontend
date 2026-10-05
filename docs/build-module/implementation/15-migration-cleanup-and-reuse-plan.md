@@ -231,10 +231,10 @@ madge reports no circular dependency in backend `src/modules/build` or in fronte
 | Candidate | Status |
 |---|---|
 | Type re-exports in `hooks/api/build/{automations,milestones,releases,ticket-search,agent-tokens}.ts` | removed in `40322030a`; calendar and chat now import `TicketSearchResult` from `types/projects` |
-| `TicketLabel` in `hooks/api/build/labels.ts` vs `types/projects/tasks.ts` | drift on `color` nullability; verify against the ticket-detail contract before consolidating |
+| `TicketLabel` and label hooks | consolidated in `464f1a003` and `a7792dfd9`: one type in `types/projects`, `useProjectLabels` and `useCreateOrgLabel` own the list and create paths. Remaining: backend ticket embeds declare label `color` nullable while `ticket_labels.color` is NOT NULL; tighten the response schemas and regenerate before narrowing the type |
 | `CrmAccountTier` in `hooks/api/build/roadmap-schema.ts` and `types/crm/contacts.ts` | exact duplicate across modules; the CRM owner decides the home |
 | Build timesheet approve/reject | since HO-03 (`65894d8cb`) only org owners pass `canActOnPeriod`; needs a manage-scope read or retirement with the Build Timesheets duplicate surface |
-| BOLA body-id detector | does not list the Risk routes; extend it so the ratchet sees them |
+| BOLA body-id detector | already enumerated Risk routes; the two linked-ticket sites are now named behind `fk_project_risks_org_ticket` and the baselines tightened to 164 and 149 in backend `d79b1e9cc` |
 | Backend files over 500 lines on the baseline | `projects-roadmap.service.ts`, `apply-ticket-change.ts`, `projects-tickets-read.service.ts`, `managed-products.service.ts`, `test-runs.service.ts`, `cron-build.controller.ts` |
 | Frontend files over 500 lines on the baseline | `cycles-page.tsx`, `all-work-page.tsx`, `risks-page.tsx`, `command-center-page.tsx` and the other rows in the exceptions table |
 
