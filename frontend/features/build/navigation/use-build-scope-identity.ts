@@ -12,8 +12,8 @@ import {
 import {
   useBuildScopeRecents,
   useBuildScopeStars,
-  type BuildScopeRef,
 } from "./use-build-nav-preferences";
+import type { BuildScopeRef } from "./build-nav-storage";
 import { ORGANIZATION_SCOPE_REF } from "./use-build-scope-directory";
 
 export interface BuildScopeIdentity {

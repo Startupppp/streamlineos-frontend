@@ -11,7 +11,7 @@ import {
   useBuildScopeStars,
   useBuildScopeRecents,
 } from "./use-build-nav-preferences";
-import type { BuildScopeRef } from "./use-build-nav-preferences";
+import type { BuildScopeRef } from "./build-nav-storage";
 
 const SCOPE_ORG_A_USER_1 = "authenticated:org-a:user-1";
 const SCOPE_ORG_A_USER_2 = "authenticated:org-a:user-2";

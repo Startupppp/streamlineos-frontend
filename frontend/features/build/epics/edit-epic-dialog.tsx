@@ -37,6 +37,12 @@ import type { TicketConflictFieldDiff } from "@/features/build/ticket-details/ti
 import { TicketConflictDialog } from "@/features/build/ticket-details/ticket-conflict-dialog";
 import { activationProps } from "@/lib/keyboard-activation";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
+import {
+  toPriority,
+  toStatus,
+  STATUS_LABEL,
+  buildEpicConflictDiffs,
+} from "./edit-epic-model";
 
 interface EditEpicDialogProps {
   epic: {
@@ -52,61 +58,6 @@ interface EditEpicDialogProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
-
-function toPriority(
-  value: string | null | undefined,
-): EditEpicInput["priority"] {
-  return EPIC_PRIORITIES.find((p) => p === value) ?? "MEDIUM";
-}
-
-function toStatus(value: string | null | undefined): EditEpicInput["status"] {
-  return EPIC_STATUSES.find((s) => s === value) ?? "TODO";
-}
-
-function buildEpicConflictDiffs(
-  pending: EditEpicInput,
-  server: EditEpicDialogProps["epic"],
-): TicketConflictFieldDiff[] {
-  const shown = (value: unknown): string =>
-    value === null || value === undefined || value === "" ? "—" : String(value);
-  const diffs: TicketConflictFieldDiff[] = [];
-  if (pending.title !== server.title)
-    diffs.push({
-      key: "title",
-      label: "Title",
-      serverValue: shown(server.title),
-      pendingValue: shown(pending.title),
-    });
-  if ((pending.description ?? "") !== (server.description ?? ""))
-    diffs.push({
-      key: "description",
-      label: "Description",
-      serverValue: shown(server.description),
-      pendingValue: shown(pending.description),
-    });
-  if (pending.priority !== toPriority(server.priority))
-    diffs.push({
-      key: "priority",
-      label: "Priority",
-      serverValue: shown(toPriority(server.priority)),
-      pendingValue: shown(pending.priority),
-    });
-  if (pending.status !== toStatus(server.status))
-    diffs.push({
-      key: "status",
-      label: "Status",
-      serverValue: shown(toStatus(server.status)),
-      pendingValue: shown(pending.status),
-    });
-  return diffs;
-}
-
-const STATUS_LABEL: Record<EditEpicInput["status"], string> = {
-  TODO: "To Do",
-  IN_PROGRESS: "In Progress",
-  IN_REVIEW: "In Review",
-  DONE: "Done",
-};
 
 export function EditEpicDialog({
   epic,

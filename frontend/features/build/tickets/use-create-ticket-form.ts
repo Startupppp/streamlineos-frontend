@@ -10,13 +10,10 @@ import { useProjectLabels } from "@/hooks/api/build/projects";
 import { useProjectMembers } from "@/hooks/api/build/projects";
 import { useAddLabelToTicket } from "@/hooks/api/build/tickets";
 import { useAddRelatedLink } from "@/hooks/api/build/ticket-related-links";
-import { MAX_PROJECT_FILE_BYTES, useUploadProjectFile } from "@/hooks/api/build/project-files";
-import type { RelatedLinkDraft } from "./ticket-related-links-editor";
+import { useUploadProjectFile, MAX_PROJECT_FILE_BYTES } from "@/hooks/api/build/project-files";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { createTicketInputSchema } from "@/lib/validation/projects";
-import { z } from "zod";
 import { useQueryClient } from "@tanstack/react-query";
 import type { CreateTicketPropertiesValue } from "./ticket-create-properties";
 import type {
@@ -25,38 +22,16 @@ import type {
   Cycle,
   TicketLabel,
 } from "@/types/projects";
-
-const MAX_ATTACHMENT_MB = MAX_PROJECT_FILE_BYTES / (1024 * 1024);
-
-const formSchema = createTicketInputSchema.omit({
-  projectId: true,
-  labelIds: true,
-});
-
-export type CreateTicketFormValues = z.infer<typeof formSchema>;
-
-function findActiveCycle(cycles: Cycle[]): Cycle | null {
-  const today = new Date().toISOString().slice(0, 10);
-  const active = cycles.find((c) => c.status === "active");
-  if (active) return active;
-  return cycles.find((c) => c.startDate <= today && c.endDate >= today) ?? null;
-}
-
-export interface UseCreateTicketFormOptions {
-  projectId: number | null;
-  defaultStatus?: string;
-  defaultCycleId?: number | null;
-  onCreated?: () => void;
-  onClose?: () => void;
-}
-
-function resolveDefaultCycleId(
-  defaultCycleId: number | null | undefined,
-  activeCycleId: number | null,
-): number | null {
-  if (defaultCycleId !== undefined) return defaultCycleId;
-  return activeCycleId;
-}
+import type { RelatedLinkDraft } from "./ticket-related-links-editor";
+import {
+  MAX_ATTACHMENT_MB,
+  formSchema,
+  type CreateTicketFormValues,
+  findActiveCycle,
+  resolveDefaultCycleId,
+  type UseCreateTicketFormOptions,
+  applyPostCreate,
+} from "./ticket-create-model";
 
 export function useCreateTicketForm({
   projectId,
@@ -222,96 +197,20 @@ export function useCreateTicketForm({
   }, [queryClient, projectId, createMore, resetForm, onCreated, onClose]);
 
   const createTicketMutation = useCreateTicket({
-    onSuccess: async (data) => {
+    onSuccess: (data) => {
       if (projectId == null) return;
-
-      const pendingLabels = properties.labelIds;
-      const pendingFiles = files;
-      const pendingLinks = relatedLinks;
-
-      const labelTask =
-        pendingLabels.length > 0
-          ? Promise.all(
-              pendingLabels.map((labelId) =>
-                addLabelMutation.mutateAsync({
-                  ticketId: data.id,
-                  projectId,
-                  labelId,
-                }),
-              ),
-            ).catch(() =>
-              toast.error("Ticket created but some labels failed to attach"),
-            )
-          : Promise.resolve();
-
-      const linksTask =
-        pendingLinks.length > 0
-          ? Promise.all(
-              pendingLinks.map((link) =>
-                addRelatedLinkMutation.mutateAsync({
-                  projectId,
-                  ticketId: data.id,
-                  url: link.url,
-                  label: link.label || undefined,
-                }),
-              ),
-            ).catch(() =>
-              toast.error("Ticket created but some links failed to attach"),
-            )
-          : Promise.resolve();
-
-      if (pendingFiles.length > 0) {
-        try {
-          setIsUploading(true);
-          await Promise.all([labelTask, linksTask]);
-          const outcomes = await Promise.allSettled(
-            pendingFiles.map(async (file) => {
-              const uploaded = await uploadFileMutation.mutateAsync(file);
-              await addAttachmentMutation.mutateAsync({
-                ticketId: data.id,
-                projectId,
-                fileId: uploaded.id,
-              });
-            }),
-          );
-
-          const failed = pendingFiles.filter(
-            (_, index) => outcomes[index]?.status === "rejected",
-          );
-          const succeeded = pendingFiles.length - failed.length;
-
-          if (failed.length === 0) {
-            toast.success(
-              `Issue created with ${succeeded} attachment${succeeded > 1 ? "s" : ""}`,
-            );
-          } else {
-            const firstRejection = outcomes.find(
-              (outcome) => outcome.status === "rejected",
-            );
-            const reason =
-              firstRejection?.status === "rejected"
-                ? getErrorMessage(firstRejection.reason)
-                : "Upload failed.";
-            const names = failed.map((file) => file.name).join(", ");
-            toast.error(
-              succeeded > 0
-                ? `Issue created. ${succeeded} attached, but ${names} failed: ${reason}`
-                : `Issue created, but ${names} could not be attached: ${reason}`,
-            );
-          }
-        } catch (error) {
-          toast.error(
-            `Issue created, but attachments failed: ${getErrorMessage(error)}`,
-          );
-        } finally {
-          setIsUploading(false);
-          finishCreation();
-        }
-      } else {
-        await Promise.all([labelTask, linksTask]);
-        toast.success("Issue created");
-        finishCreation();
-      }
+      void applyPostCreate(data, {
+        projectId,
+        labelIds: properties.labelIds,
+        files,
+        relatedLinks,
+        addLabel: (p) => addLabelMutation.mutateAsync(p),
+        addRelatedLink: (p) => addRelatedLinkMutation.mutateAsync(p),
+        uploadFile: (f) => uploadFileMutation.mutateAsync(f),
+        addAttachment: (p) => addAttachmentMutation.mutateAsync(p),
+        setIsUploading,
+        onComplete: finishCreation,
+      });
     },
     onError: (error) => {
       toast.error(getErrorMessage(error));

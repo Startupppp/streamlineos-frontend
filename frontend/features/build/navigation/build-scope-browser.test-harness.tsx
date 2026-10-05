@@ -10,7 +10,7 @@ import type {
   BuildScopeDirectory,
   BuildScopeDirectoryEntry,
 } from "./use-build-scope-directory";
-import type { BuildScopeRef } from "./use-build-nav-preferences";
+import type { BuildScopeRef } from "./build-nav-storage";
 
 export const mockUseBuildScopeDirectory = jest.mocked(useBuildScopeDirectory);
 export const mockUseReconciledBuildScopes = jest.mocked(useReconciledBuildScopes);

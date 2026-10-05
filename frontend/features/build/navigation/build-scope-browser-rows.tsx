@@ -4,7 +4,7 @@ import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BuildScopeRow } from "./build-scope-row";
 import type { BuildScopeDirectoryEntry } from "./use-build-scope-directory";
-import type { BuildScopeRef } from "./use-build-nav-preferences";
+import type { BuildScopeRef } from "./build-nav-storage";
 
 export function SectionLabel({ children }: { children: string }) {
   return (

@@ -14,7 +14,7 @@ import {
   resolveLinkedProjectParentPath,
   detectsQuarantinedProject,
 } from "./build-scope-tree";
-import type { BuildScopeRef } from "./use-build-nav-preferences";
+import type { BuildScopeRef } from "./build-nav-storage";
 
 export const BUILD_SCOPE_SEARCH_DEBOUNCE_MS = 300;
 export const BUILD_SCOPE_PAGE_LIMIT = 100;

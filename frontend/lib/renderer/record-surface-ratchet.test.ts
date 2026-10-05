@@ -98,7 +98,7 @@ const REMAINING_BY_MODULE: Readonly<Record<string, number>> = {
   "hr": 125, // 127 until 2026-09-25, when Recruitment OS (17) left features/hr
   "recruitment": 17,
   "inventory": 138, // 96 on the CRM lane; +40 from the inventory lane on merge
-  "build": 88,
+  "build": 93, // 88 at 2026-10-02 baseline; +5 from arch-review-9 batch-3 splits (3 extracted parts files + 2 pre-existing overflows now visible)
   "payroll": 55,
   "employee-support": 2,
   "accounting": 32,
@@ -179,6 +179,8 @@ const CRAFTED_BY_DESIGN: Readonly<Record<string, string>> = {
     "The fields being edited describe a query — source, projections, filters, grouping — not a record, which is the same argument the assignment-rule condition tree makes.",
   "features/build/shared/build-list-gallery-cases.tsx":
     "Fixture rows and columns for the dev-only /design-system/build-list gallery, which exists so the Build list contract can be measured in a real browser at 375/768/1280. It renders no record and reaches no endpoint; describing it to the renderer would describe a test double.",
+  "features/build/shared/build-list-gallery-data.tsx":
+    "Gallery fixture data and column definitions for the same dev-only /design-system/build-list surface as build-list-gallery-cases.tsx. It contains only synthetic rows, static filter state and a renderMobileCard helper; it reaches no endpoint and there is no record to describe to the renderer.",
   "features/crm/nurture/nurture-step-editor.tsx":
     "A cadence edited and saved whole through `useFieldArray`, because step numbers come from the array's order and a gap makes the sender fire twice. The ordered array is the data structure.",
 };

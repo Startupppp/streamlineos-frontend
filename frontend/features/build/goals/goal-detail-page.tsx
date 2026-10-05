@@ -3,27 +3,16 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
-  EmptyTasksIllustration,
-  EmptyActivityIllustration,
-} from "@/components/illustrations";
-import { Trash2Icon, PlusIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import {
-  Pencil,
-  ListChecks,
-  History,
-  Link2,
   CalendarDays,
   Users,
   FolderKanban,
 } from "lucide-react";
-import { format, formatDistanceToNow } from "date-fns";
+import { format } from "date-fns";
 import { toast } from "sonner";
 import {
   useGoal,
@@ -36,8 +25,6 @@ import { useCan } from "@/hooks/api/access";
 import { GoalFormSheet } from "@/features/build/goals/goal-form-sheet";
 import { CheckInDialog } from "@/features/build/goals/check-in-dialog";
 import { AddLinkDialog } from "@/features/build/goals/add-link-dialog";
-import { KeyResultRow } from "@/features/build/goals/key-result-row";
-import { LinkRow } from "@/features/build/goals/link-row";
 import { GoalDetailSkeleton } from "@/features/build/goals/goal-detail-skeleton";
 import { STATUS_CONFIG } from "@/features/build/goals/constants";
 import {
@@ -52,44 +39,12 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { cn } from "@/lib/utils";
-
-function GoalDetailActions({
-  onEdit,
-  onDelete,
-}: {
-  onEdit: () => void;
-  onDelete: () => void;
-}) {
-  const { iconRef: trashRef, hoverHandlers: trashHandlers } = useAnimatedIcon();
-  return (
-    <div className="flex items-center gap-2">
-      <Button variant="outline" size="sm" aria-label="Edit" onClick={onEdit}>
-        <Pencil className="h-4 w-4 sm:mr-1" />
-        <span className="hidden sm:inline">Edit</span>
-      </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        className="text-destructive hover:text-destructive"
-        aria-label="Delete"
-        onClick={onDelete}
-        {...trashHandlers}
-      >
-        <Trash2Icon ref={trashRef} size={16} className="sm:mr-1" />
-        <span className="hidden sm:inline">Delete</span>
-      </Button>
-    </div>
-  );
-}
-
-function AddLinkButton({ onClick }: { onClick: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button size="sm" variant="outline" onClick={onClick} {...hoverHandlers}>
-      <PlusIcon ref={iconRef} size={14} className="mr-1" /> Link
-    </Button>
-  );
-}
+import { GoalDetailActions } from "./goal-detail-actions";
+import {
+  GoalKeyResultsSection,
+  GoalLinkedItemsSection,
+  GoalUpdatesTimeline,
+} from "./goal-detail-sections";
 
 export function GoalDetailPage({ goalId }: { goalId: number }) {
   const router = useRouter();
@@ -242,121 +197,18 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
           </PmPanel>
         </PmSection>
 
-        <PmSection index={1} className="space-y-3">
-          <div className="flex items-center gap-2">
-            <ListChecks className="h-4 w-4 text-muted-foreground" />
-            <h2 className="text-sm font-medium">Key Results</h2>
-            <Badge variant="secondary" className="text-micro">
-              {detail.keyResults.length}
-            </Badge>
-          </div>
-          {detail.keyResults.length === 0 ? (
-            <PmPanel className="flex items-center justify-center p-4">
-              <EmptyState
-                illustration={<EmptyTasksIllustration />}
-                compact
-                title="No key results"
-                description="Edit this goal to add measurable key results."
-              />
-            </PmPanel>
-          ) : (
-            <div className="space-y-2">
-              {detail.keyResults.map((kr) => (
-                <KeyResultRow
-                  key={kr.id}
-                  keyResult={kr}
-                  onCheckIn={handleCheckIn}
-                  canManage={canManage}
-                />
-              ))}
-            </div>
-          )}
-        </PmSection>
-
-        <PmSection index={2} className="space-y-3">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <Link2 className="h-4 w-4 text-muted-foreground" />
-              <h2 className="text-sm font-medium">Linked Work Items</h2>
-              <Badge variant="secondary" className="text-micro">
-                {detail.links.length}
-              </Badge>
-            </div>
-            {canManage ? <AddLinkButton onClick={handleOpenAddLink} /> : null}
-          </div>
-          {detail.links.length === 0 ? (
-            <PmPanel className="flex items-center justify-center p-4">
-              <EmptyState
-                illustration={<EmptyActivityIllustration />}
-                compact
-                title="No linked work"
-                description="Connect projects or tickets that contribute to this goal."
-              />
-            </PmPanel>
-          ) : (
-            <PmPanel>
-              {detail.links.map((link) => (
-                <LinkRow
-                  key={link.id}
-                  link={link}
-                  onRemove={handleRemoveLink}
-                  canManage={canManage}
-                />
-              ))}
-            </PmPanel>
-          )}
-        </PmSection>
-
-        <PmSection index={3} className="space-y-3">
-          <div className="flex items-center gap-2">
-            <History className="h-4 w-4 text-muted-foreground" />
-            <h2 className="text-sm font-medium">Updates Timeline</h2>
-          </div>
-          {detail.updates.length === 0 ? (
-            <PmPanel className="flex items-center justify-center p-4">
-              <EmptyState
-                illustration={<EmptyActivityIllustration />}
-                compact
-                title="No updates yet"
-                description="Check-ins on key results will appear here."
-              />
-            </PmPanel>
-          ) : (
-            <PmPanel className="space-y-0 p-3">
-              {detail.updates.map((update) => (
-                <div key={update.id} className="flex gap-3">
-                  <div className="flex flex-col items-center">
-                    <div className="mt-1.5 h-2 w-2 rounded-full bg-primary" />
-                    <div className="w-px flex-1 bg-border" />
-                  </div>
-                  <div className="min-w-0 pb-3">
-                    <p className={cn(TEXT_BODY, "text-sm")}>
-                      <span className="font-medium">{update.userName ?? "Someone"}</span>
-                      {update.previousValue !== null && update.newValue !== null ? (
-                        <>
-                          {" updated a key result from "}
-                          <span className="font-normal tabular-nums">{update.previousValue}</span>
-                          {" to "}
-                          <span className="font-normal tabular-nums">{update.newValue}</span>
-                        </>
-                      ) : (
-                        " posted an update"
-                      )}
-                    </p>
-                    {update.note ? (
-                      <p className={cn(TEXT_BODY, "mt-0.5 text-xs text-muted-foreground")}>
-                        {update.note}
-                      </p>
-                    ) : null}
-                    <p className="mt-0.5 text-dense text-muted-foreground">
-                      {formatDistanceToNow(new Date(update.createdAt), { addSuffix: true })}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </PmPanel>
-          )}
-        </PmSection>
+        <GoalKeyResultsSection
+          keyResults={detail.keyResults}
+          onCheckIn={handleCheckIn}
+          canManage={canManage}
+        />
+        <GoalLinkedItemsSection
+          links={detail.links}
+          canManage={canManage}
+          onOpenAddLink={handleOpenAddLink}
+          onRemoveLink={handleRemoveLink}
+        />
+        <GoalUpdatesTimeline updates={detail.updates} />
       </PmPageShell>
 
       {editOpen ? <GoalFormSheet open={editOpen} onOpenChange={setEditOpen} goal={detail} /> : null}
@@ -373,7 +225,7 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
         title="Delete goal?"
-        description={`“${detail.title}” and all its key results, updates, and links will be permanently deleted.`}
+        description={`"${detail.title}" and all its key results, updates, and links will be permanently deleted.`}
         confirmLabel="Delete"
         destructive
         isPending={deleteGoal.isPending}

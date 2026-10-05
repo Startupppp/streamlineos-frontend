@@ -21,7 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { BUILD_SCOPE_TYPE_LABELS } from "@/lib/build/build-scope";
-import type { BuildScopeRef } from "./use-build-nav-preferences";
+import type { BuildScopeRef } from "./build-nav-storage";
 
 interface BuildScopeRowProps {
   scope: BuildScopeRef;

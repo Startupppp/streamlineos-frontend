@@ -7,7 +7,7 @@ import {
 import { BuildScopeSelector } from "./build-scope-selector";
 import { ORGANIZATION_BUILD_SCOPE } from "@/lib/build/build-scope";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import type { BuildScopeRef } from "./use-build-nav-preferences";
+import type { BuildScopeRef } from "./build-nav-storage";
 import type { BuildScopeIdentity } from "./use-build-scope-identity";
 
 const push = jest.fn();

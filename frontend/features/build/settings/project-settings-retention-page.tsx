@@ -18,10 +18,8 @@ import {
   parseRetentionSection,
   type RetentionSection,
 } from "@/features/build/settings/project-settings-retention-schema";
-import {
-  PolicySection,
-  HoldsSection,
-} from "./project-settings-retention-sections";
+import { PolicySection } from "./project-settings-retention-sections";
+import { HoldsSection } from "./project-settings-holds-section";
 
 const SECTION_PARAM = "section";
 

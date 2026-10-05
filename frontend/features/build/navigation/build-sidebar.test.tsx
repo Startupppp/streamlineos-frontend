@@ -6,7 +6,7 @@ import { useBuildScopeRecovery } from "./use-build-scope-recovery";
 import { useBuildNotificationUnreadCount } from "@/hooks/api/build/approvals";
 import type { BuildNavModel } from "@/lib/build/nav/build-nav-destination";
 import { ORGANIZATION_BUILD_SCOPE } from "@/lib/build/build-scope";
-import type { BuildScopeRef } from "./use-build-nav-preferences";
+import type { BuildScopeRef } from "./build-nav-storage";
 import { buildProjectCatalog } from "@/lib/build/nav/build-project-catalog";
 
 jest.mock("next/navigation", () => ({

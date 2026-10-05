@@ -2,7 +2,7 @@ import { renderHook } from "@testing-library/react";
 import { useReconciledBuildScopes } from "./use-reconciled-build-scopes";
 import { useBuildScopeResolve } from "@/hooks/api/build/scope-directory";
 import type { BuildScopeResolvedRef } from "@/hooks/api/build/scope-directory";
-import type { BuildScopeRef } from "./use-build-nav-preferences";
+import type { BuildScopeRef } from "./build-nav-storage";
 
 jest.mock("@/hooks/api/build/scope-directory", () => ({
   useBuildScopeResolve: jest.fn(),

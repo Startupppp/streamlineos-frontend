@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const GUARDED_NAVIGATION_FILES = [
-  "cycles/cycle-detail-page.tsx",
+  "cycles/use-cycle-detail.ts",
   "feedbucket/project-submissions-inbox.tsx",
   "managed-products/product-feedback-page.tsx",
   "project-list/project-card.tsx",

@@ -20,8 +20,8 @@ import {
 import {
   useBuildScopeRecents,
   useBuildScopeStars,
-  type BuildScopeRef,
 } from "./use-build-nav-preferences";
+import type { BuildScopeRef } from "./build-nav-storage";
 import { useBuildScopeBrowserKeyboard } from "./use-build-scope-browser-keyboard";
 import {
   SectionLabel,

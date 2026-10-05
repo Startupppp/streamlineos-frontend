@@ -4,7 +4,7 @@ import { useEffect, useMemo } from "react";
 import { useBuildScopeResolve } from "@/hooks/api/build/scope-directory";
 import { BUILD_ROOT_PATH } from "@/lib/build/build-scope";
 import type { BuildScopeResolvedRef } from "@/hooks/api/build/scope-directory";
-import type { BuildScopeRef } from "./use-build-nav-preferences";
+import type { BuildScopeRef } from "./build-nav-storage";
 
 function hrefFor(ref: BuildScopeResolvedRef): string {
   if (ref.type === "product")

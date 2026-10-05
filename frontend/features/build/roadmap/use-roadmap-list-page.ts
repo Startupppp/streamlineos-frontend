@@ -1,0 +1,152 @@
+"use client";
+
+import { useState, useCallback, useMemo, useRef } from "react";
+import { BUILD_FILTER_ALL } from "@/features/build/shared/use-build-list-filters";
+import { useOrgMembers } from "@/hooks/api/organization";
+import { getUserDisplayName } from "@/lib/person-display";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
+import type { ScorableRoadmapItem } from "./roadmap-item-card";
+
+type RoadmapTabValue = "roadmap" | "feedback" | "changelog";
+
+interface UseBuildListFiltersReturn {
+  value: (param: string) => string;
+  setValue: (param: string, value: string) => void;
+  debouncedSearch: string;
+  search: string;
+  setSearch: (value: string) => void;
+  cursor: string;
+  setCursor: (value: string) => void;
+  clearAll: () => void;
+  resetKey: string;
+}
+
+export function useRoadmapListPage(listFilters: UseBuildListFiltersReturn) {
+  const [roadmapCreateOpen, setRoadmapCreateOpen] = useState(false);
+  const [changelogCreateOpen, setChangelogCreateOpen] = useState(false);
+  const [roadmapItems, setRoadmapItems] = useState<ScorableRoadmapItem[]>([]);
+  const [externalEditTarget, setExternalEditTarget] = useState<ScorableRoadmapItem | null>(null);
+  const [horizonDraft, setHorizonDraft] = useState(() => {
+    const v = listFilters.value("horizon");
+    return v !== BUILD_FILTER_ALL ? v : "";
+  });
+  const roadmapItemsRef = useRef<ScorableRoadmapItem[]>([]);
+  roadmapItemsRef.current = roadmapItems;
+
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const tabValue = listFilters.value("tab");
+  const activeTab: RoadmapTabValue =
+    tabValue === "feedback" ? "feedback" : tabValue === "changelog" ? "changelog" : "roadmap";
+
+  const statusValue = listFilters.value("status");
+  const sortValue = listFilters.value("sort");
+  const productIdValue = listFilters.value("productId");
+  const managedProductId = /^\d+$/.test(productIdValue) ? Number(productIdValue) : undefined;
+  const projectIdValue = listFilters.value("projectId");
+  const projectId = /^\d+$/.test(projectIdValue) ? Number(projectIdValue) : undefined;
+  const horizonValue = listFilters.value("horizon");
+  const horizon = horizonValue !== BUILD_FILTER_ALL && horizonValue !== "" ? horizonValue : undefined;
+  const ownerIdValue = listFilters.value("ownerId");
+  const ownerId = /^\d+$/.test(ownerIdValue) ? Number(ownerIdValue) : undefined;
+
+  const { data: membersPage } = useOrgMembers(1, 100);
+  const ownerOptions = useMemo(
+    () => [
+      { value: BUILD_FILTER_ALL, label: "Any owner" },
+      ...(membersPage?.data ?? []).map((m) => ({
+        value: String(m.membershipId),
+        label: getUserDisplayName(m),
+      })),
+    ],
+    [membersPage],
+  );
+
+  const handleTabChange = useCallback(
+    (value: string) => { listFilters.setValue("tab", value); },
+    [listFilters],
+  );
+
+  const handleOpenRoadmapCreate = useCallback(() => { setRoadmapCreateOpen(true); }, []);
+  const handleOpenChangelogCreate = useCallback(() => { setChangelogCreateOpen(true); }, []);
+  const handleRoadmapCreateOpenChange = useCallback((open: boolean) => { setRoadmapCreateOpen(open); }, []);
+  const handleChangelogCreateOpenChange = useCallback((open: boolean) => { setChangelogCreateOpen(open); }, []);
+
+  const handleRoadmapEditByIndex = useCallback((index: number) => {
+    const item = roadmapItemsRef.current[index];
+    if (item) setExternalEditTarget(item);
+  }, []);
+
+  const handleExternalEditClose = useCallback(() => { setExternalEditTarget(null); }, []);
+  const handleRoadmapItemsChange = useCallback((items: ScorableRoadmapItem[]) => { setRoadmapItems(items); }, []);
+
+  const handleStatusFilterChange = useCallback(
+    (value: string) => listFilters.setValue("status", value),
+    [listFilters],
+  );
+  const handleSortFilterChange = useCallback(
+    (value: string) => listFilters.setValue("sort", value),
+    [listFilters],
+  );
+  const handleOwnerFilterChange = useCallback(
+    (value: string) => listFilters.setValue("ownerId", value === BUILD_FILTER_ALL ? "" : value),
+    [listFilters],
+  );
+  const handleHorizonDraftChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => setHorizonDraft(event.target.value),
+    [],
+  );
+  const handleHorizonCommit = useCallback(() => {
+    listFilters.setValue("horizon", horizonDraft.trim());
+  }, [listFilters, horizonDraft]);
+  const handleHorizonKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLInputElement>) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      listFilters.setValue("horizon", horizonDraft.trim());
+    },
+    [listFilters, horizonDraft],
+  );
+
+  const handleClearSelection = useCallback(() => {}, []);
+  useBuildListKeyboard({
+    itemCount: roadmapItems.length,
+    onOpen: handleRoadmapEditByIndex,
+    onEdit: handleRoadmapEditByIndex,
+    onCreate: handleOpenRoadmapCreate,
+    onClearSelection: handleClearSelection,
+    enabled: activeTab === "roadmap",
+    searchInputRef,
+  });
+
+  return {
+    activeTab,
+    roadmapCreateOpen,
+    changelogCreateOpen,
+    roadmapItems,
+    externalEditTarget,
+    horizonDraft,
+    statusValue,
+    sortValue,
+    managedProductId,
+    projectId,
+    horizon,
+    ownerId,
+    ownerOptions,
+    searchInputRef,
+    handleTabChange,
+    handleOpenRoadmapCreate,
+    handleOpenChangelogCreate,
+    handleRoadmapCreateOpenChange,
+    handleChangelogCreateOpenChange,
+    handleRoadmapEditByIndex,
+    handleExternalEditClose,
+    handleRoadmapItemsChange,
+    handleStatusFilterChange,
+    handleSortFilterChange,
+    handleOwnerFilterChange,
+    handleHorizonDraftChange,
+    handleHorizonCommit,
+    handleHorizonKeyDown,
+  };
+}

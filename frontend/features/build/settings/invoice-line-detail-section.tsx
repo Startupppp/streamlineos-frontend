@@ -25,6 +25,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import { useCan } from "@/hooks/api/access";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useProjectInvoiceLineDetail,
@@ -90,6 +91,8 @@ function InvoiceLineDetailForm({
     resolver: zodResolver(invoiceLineDetailFormSchema),
     defaultValues: { invoiceLineDetail: initial },
   });
+
+  useRegisterDirtyState(form.formState.isDirty);
 
   const handleSubmit = useCallback(
     (values: InvoiceLineDetailFormValues) => {

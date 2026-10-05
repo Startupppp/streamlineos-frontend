@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { BuildScopeRow } from "./build-scope-row";
-import type { BuildScopeRef } from "./use-build-nav-preferences";
+import type { BuildScopeRef } from "./build-nav-storage";
 
 function makeScope(overrides: Partial<BuildScopeRef> = {}): BuildScopeRef {
   return {

@@ -28,10 +28,8 @@ import {
 import { buildOrganizationCatalog } from "@/lib/build/nav/build-organization-catalog";
 import { buildProjectCatalog } from "@/lib/build/nav/build-project-catalog";
 import { BuildScopeBrowser } from "./build-scope-browser";
-import {
-  useBuildScopeRecents,
-  type BuildScopeRef,
-} from "./use-build-nav-preferences";
+import { useBuildScopeRecents } from "./use-build-nav-preferences";
+import type { BuildScopeRef } from "./build-nav-storage";
 import { useBuildScopeIdentity } from "./use-build-scope-identity";
 import { useHasUnsavedWork } from "@/components/shared/dirty-state-context";
 
