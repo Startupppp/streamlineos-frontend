@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Clock, TrendingUp, AlertCircle, CheckCircle, Hourglass } from "lucide-react";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Badge } from "@/components/ui/badge";
@@ -63,6 +63,10 @@ interface ProjectTimeBudgetSectionProps {
 
 export function ProjectTimeBudgetSection({ projectId }: ProjectTimeBudgetSectionProps) {
   const [rangeKey, setRangeKey] = useState<RangeKey>("this_month");
+  const handleRangeChange = useCallback((value: string) => {
+    const match = RANGE_OPTIONS.find((o) => o.value === value);
+    if (match) setRangeKey(match.value);
+  }, []);
   const range = toDateRange(rangeKey);
   const {
     data,
@@ -97,7 +101,7 @@ export function ProjectTimeBudgetSection({ projectId }: ProjectTimeBudgetSection
         <h3 className={cn("text-sm font-medium", TEXT_ONE_LINE)}>
           Time &amp; Cost Analytics
         </h3>
-        <Select value={rangeKey} onValueChange={(v) => setRangeKey(v as RangeKey)}>
+        <Select value={rangeKey} onValueChange={handleRangeChange}>
           <SelectTrigger className="h-7 w-36 text-xs" aria-label="Select date range">
             <SelectValue />
           </SelectTrigger>

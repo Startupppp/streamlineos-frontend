@@ -1,8 +1,8 @@
 import { z } from "zod";
-import type { KnownModule } from "./module-record-ref";
+import { KNOWN_MODULES, type KnownModule } from "./module-record-ref";
 
 const handoffPayloadSchema = z.object({
-  sourceModule: z.string(),
+  sourceModule: z.enum(KNOWN_MODULES),
   sourceId: z.string(),
   tenantId: z.string(),
   actorUserId: z.string(),
@@ -57,7 +57,7 @@ export interface HandoffContext {
 
 export function toHandoffContext(payload: HandoffPayload): HandoffContext {
   return {
-    sourceModule: payload.sourceModule as KnownModule,
+    sourceModule: payload.sourceModule,
     sourceId: payload.sourceId,
     returnUrl: payload.returnUrl,
     sourcePaneState: payload.sourcePaneState,

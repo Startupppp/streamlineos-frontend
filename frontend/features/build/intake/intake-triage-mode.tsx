@@ -141,13 +141,14 @@ export function IntakeTriageMode({
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      const target = e.target as HTMLElement;
+      const target = e.target;
       if (helpOpen || e.metaKey || e.ctrlKey || e.altKey) return;
       if (
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.tagName === "SELECT" ||
-        target.isContentEditable
+        target instanceof HTMLElement &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT" ||
+          target.isContentEditable)
       )
         return;
       if (e.key === "ArrowUp" || e.key === "k") {

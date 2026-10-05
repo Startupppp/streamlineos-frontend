@@ -9,6 +9,7 @@ import {
   MODULE_CATALOG,
   ALWAYS_ENABLED_MODULES,
 } from "../lib/constants";
+import { ORG_MODULE_KEYS } from "@/hooks/api/org-setup-schema";
 import type { OrgModuleKey, WizardData } from "../lib/wizard-data-schema";
 import type { AdaptiveQuestion, FrontendModuleAdapter } from "../lib/module-adapters/index";
 import { buildAdapter } from "../lib/module-adapters/build.adapter";
@@ -123,10 +124,10 @@ export function StepProducts({ data, patch, onBack, onNext }: StepProductsProps)
     }
   }
 
-  const catalogEntries = Object.entries(MODULE_CATALOG) as [
-    OrgModuleKey,
-    { label: string; description: string; setupTasks: string[] },
-  ][];
+  const catalogEntries = ORG_MODULE_KEYS.flatMap((key) => {
+    const meta = MODULE_CATALOG[key];
+    return meta ? [[key, meta] as const] : [];
+  });
 
   return (
     <StepBody footer={<NavButtons onBack={onBack} onNext={onNext} />}>
