@@ -1,6 +1,8 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import "./reports-agile-tab-test-harness";
+import { useCan } from "@/hooks/api/access";
+import { useCaptureSnapshot } from "@/hooks/api/build/reports";
 import {
   mockUsePageState,
   mockUseCfdReport,
@@ -10,8 +12,6 @@ import {
 } from "./reports-agile-tab-test-harness";
 import {
   installAgileMocks,
-  settledVelocity,
-  VELOCITY_DATA,
   CRITICAL_PATH_DATA,
   STATUS_FILTER,
 } from "./reports-agile-tab-test-fixtures";
@@ -24,7 +24,10 @@ import { CriticalPathSection } from "./critical-path-section";
 import { VelocitySection } from "./velocity-section";
 import { BurnupSection } from "./burnup-section";
 
-beforeEach(installAgileMocks);
+beforeEach(() => {
+  installAgileMocks();
+  jest.mocked(useCan).mockReturnValue(true);
+});
 
 describe("ReportFilterEnvelope — encode/decode round-trip (BT-9ce12613e7f6)", () => {
   it("round-trips an envelope with a single status clause through encode and decode without data loss", () => {
@@ -76,7 +79,6 @@ describe("CfdSection — page states", () => {
   it("renders the empty state when there are no CFD data points — positive control shows flow history prompt", () => {
     mockUsePageState.mockReturnValueOnce({ kind: "empty" });
     render(<CfdSection projectId={1} />);
-    expect(screen.getByTestId("empty-state")).toBeInTheDocument();
     expect(screen.getByText(/no flow history yet/i)).toBeInTheDocument();
   });
 
@@ -89,7 +91,7 @@ describe("CfdSection — page states", () => {
       refetch: jest.fn(),
     });
     render(<CfdSection projectId={1} />);
-    expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
+    expect(screen.queryByText(/no flow history yet/i)).not.toBeInTheDocument();
     expect(screen.queryByTestId("error-state")).not.toBeInTheDocument();
   });
 
@@ -97,6 +99,29 @@ describe("CfdSection — page states", () => {
     mockUsePageState.mockReturnValueOnce({ kind: "denied", permission: "build:view" });
     render(<CfdSection projectId={1} />);
     expect(screen.getByTestId("no-permission")).toBeInTheDocument();
+  });
+
+  it.each(["ready", "empty"])("offers no snapshot action to a report viewer in the %s state", (kind) => {
+    jest.mocked(useCan).mockImplementation((permission) => permission !== "build:manage");
+    mockUsePageState.mockReturnValue({ kind });
+    render(<CfdSection projectId={1} />);
+
+    expect(screen.getByRole("heading", { name: "Cumulative Flow" })).toBeInTheDocument();
+    expect(screen.queryAllByRole("button", { name: /capture/i })).toHaveLength(0);
+    expect(jest.mocked(useCaptureSnapshot).mock.results[0].value.mutate).not.toHaveBeenCalled();
+  });
+
+  it.each(["ready", "empty"])("preserves the authorized snapshot action in the %s state", (kind) => {
+    mockUsePageState.mockReturnValue({ kind });
+    render(<CfdSection projectId={1} />);
+
+    const name = kind === "empty" ? "Capture today's snapshot" : "Capture today";
+    fireEvent.click(screen.getByRole("button", { name }));
+
+    expect(jest.mocked(useCaptureSnapshot).mock.results[0].value.mutate).toHaveBeenCalledWith(
+      undefined,
+      expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
+    );
   });
 });
 
@@ -125,7 +150,6 @@ describe("CriticalPathSection — page states", () => {
   it("renders the empty state when there are no dependency chain nodes", () => {
     mockUsePageState.mockReturnValueOnce({ kind: "empty" });
     render(<CriticalPathSection projectId={1} />);
-    expect(screen.getByTestId("empty-state")).toBeInTheDocument();
     expect(screen.getByText(/no dependency chain yet/i)).toBeInTheDocument();
   });
 
@@ -134,7 +158,7 @@ describe("CriticalPathSection — page states", () => {
     render(<CriticalPathSection projectId={1} />);
     expect(screen.getByText("Design API")).toBeInTheDocument();
     expect(screen.getByText("Implement endpoint")).toBeInTheDocument();
-    expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
+    expect(screen.queryByText(/no dependency chain yet/i)).not.toBeInTheDocument();
   });
 
   it("shows a denied view instead of a blank panel when build:view is denied — FE-40 compliance", () => {

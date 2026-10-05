@@ -16,6 +16,7 @@ import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Layers, Camera } from "lucide-react";
 import { useCfdReport, useCaptureSnapshot } from "@/hooks/api/build/reports";
+import { useCan } from "@/hooks/api/access";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -29,6 +30,7 @@ const CfdChart = dynamic(
 );
 
 export function CfdSection({ projectId, filtersActive = false }: { projectId: number; filtersActive?: boolean }) {
+  const canManage = useCan("build:manage");
   const [days, setDays] = useState(30);
   const { data, isLoading, isError, error, refetch } = useCfdReport(projectId, days);
   const capture = useCaptureSnapshot(projectId);
@@ -81,17 +83,19 @@ export function CfdSection({ projectId, filtersActive = false }: { projectId: nu
           <SelectItem value="90">90 days</SelectItem>
         </SelectContent>
       </Select>
-      <LoadingButton
-        size="sm"
-        variant="outline"
-        className=""
-        onClick={handleCapture}
-        isPending={capture.isPending}
-        loadingText="Capturing…"
-      >
-        <Camera className="h-3.5 w-3.5 mr-1.5" />
-        Capture today
-      </LoadingButton>
+      {canManage ? (
+        <LoadingButton
+          size="sm"
+          variant="outline"
+          className=""
+          onClick={handleCapture}
+          isPending={capture.isPending}
+          loadingText="Capturing…"
+        >
+          <Camera className="h-3.5 w-3.5 mr-1.5" />
+          Capture today
+        </LoadingButton>
+      ) : null}
     </div>
   );
 
@@ -107,11 +111,17 @@ export function CfdSection({ projectId, filtersActive = false }: { projectId: nu
           <EmptyState
             illustration={<EmptyLeaderboardIllustration />}
             title="No flow history yet"
-            description="The cumulative flow diagram accrues one data point per day. Capture today's snapshot to start building history."
-            action={{
-              label: capture.isPending ? "Capturing…" : "Capture today's snapshot",
-              onClick: handleCapture,
-            }}
+            description={
+              canManage
+                ? "The cumulative flow diagram accrues one data point per day. Capture today's snapshot to start building history."
+                : "The cumulative flow diagram accrues one data point per day. History appears once project snapshots are available."
+            }
+            action={
+              canManage ? {
+                label: capture.isPending ? "Capturing…" : "Capture today's snapshot",
+                onClick: handleCapture,
+              } : undefined
+            }
             compact
           />
         }

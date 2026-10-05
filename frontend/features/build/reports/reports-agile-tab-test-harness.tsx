@@ -66,6 +66,7 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
 }));
 
 jest.mock("@/components/pm-chrome", () => ({
+  ...jest.requireActual("@/components/pm-chrome"),
   PmSection: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
 
@@ -97,10 +98,7 @@ jest.mock("@/components/illustrations", () => ({
   EmptySearchIllustration: () => null,
 }));
 
-jest.mock("./chart-card", () => ({
-  ChartCard: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  numberFormatter: { format: (n: number) => String(n) },
-}));
+jest.mock("./chart-card", () => jest.requireActual("./chart-card"));
 
 jest.mock("./velocity-chart", () => ({
   VelocityChart: () => <div data-testid="velocity-chart" />,
@@ -118,11 +116,14 @@ jest.mock("./lead-time-chart", () => ({
   LeadTimeChart: () => <div data-testid="lead-time-chart" />,
 }));
 
-jest.mock("@/components/ui/empty-state", () => ({
-  EmptyState: ({ title }: { title: string }) => (
-    <div data-testid="empty-state">{title}</div>
-  ),
-}));
+jest.mock("@/components/ui/empty-state", () => {
+  const { EmptyState } = jest.requireActual<typeof import("@/components/ui/empty-state")>("@/components/ui/empty-state");
+  return {
+    EmptyState: (props: React.ComponentProps<typeof EmptyState>) => (
+      <div data-testid="empty-state"><EmptyState {...props} /></div>
+    ),
+  };
+});
 
 jest.mock("@/components/shared/loading-state", () => ({
   LoadingState: () => <div data-testid="loading-state" />,
