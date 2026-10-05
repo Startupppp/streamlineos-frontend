@@ -1,7 +1,15 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, createEvent, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { BucketSection, BUCKET_SYNC_LIMIT, WorkItemRow } from "./my-work-rows";
 import type { MyWorkItem } from "@/types/projects/my-work";
+
+const mockPush = jest.fn();
+const mockRequestLeave = jest.fn((action: () => void) => action());
+
+beforeEach(() => {
+  mockPush.mockClear();
+  mockRequestLeave.mockReset().mockImplementation((action: () => void) => action());
+});
 
 function makeItem(id: number): MyWorkItem {
   return {
@@ -19,21 +27,87 @@ function makeItem(id: number): MyWorkItem {
 }
 
 jest.mock("next/link", () => {
-  const LinkMock = ({ href, children }: { href: string; children: React.ReactNode }) => (
-    <a href={href}>{children}</a>
+  const LinkMock = ({ href, children, ...props }: React.ComponentProps<"a">) => (
+    <a href={href} {...props}>{children}</a>
   );
   LinkMock.displayName = "Link";
   return LinkMock;
 });
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: jest.fn() }),
+  useRouter: () => ({ push: mockPush }),
 }));
 
-jest.mock("@/features/build/ticket-details/build-ticket-detail-url", () => ({
-  getMyWorkTicketHref: (_pid: number, key: string, num: number, ret: string) =>
-    `/build/${_pid}/tickets/${key}-${num}?returnTo=${encodeURIComponent(ret)}`,
+jest.mock("@/components/shared/dirty-state-context", () => ({
+  useNavigationLeave: () => mockRequestLeave,
 }));
+
+describe("WorkItemRow navigation", () => {
+  it("opens the canonical ticket href through the leave guard on primary click", async () => {
+    render(<WorkItemRow item={makeItem(81)} returnHref="/build/my-work?relation=created&q=review" />);
+    const link = screen.getByRole("link", { name: /Ticket 81/i });
+    await userEvent.click(link);
+    expect(mockRequestLeave).toHaveBeenCalledTimes(1);
+    expect(mockPush).toHaveBeenCalledTimes(1);
+    expect(mockPush).toHaveBeenCalledWith(link.getAttribute("href"), { scroll: false });
+    expect(link).toHaveAttribute("href", "/build/1/tickets/AL-81?returnTo=%2Fbuild%2Fmy-work%3Frelation%3Dcreated%26q%3Dreview");
+  });
+
+  it("opens the canonical ticket href when Enter activates the link", async () => {
+    render(<WorkItemRow item={makeItem(81)} />);
+    const link = screen.getByRole("link", { name: /Ticket 81/i });
+    link.focus();
+    await userEvent.keyboard("{Enter}");
+    expect(mockRequestLeave).toHaveBeenCalledTimes(1);
+    expect(mockPush).toHaveBeenCalledWith(link.getAttribute("href"), { scroll: false });
+  });
+
+  it("prevents navigation when the leave guard refuses", async () => {
+    mockRequestLeave.mockImplementation(() => {});
+    render(<WorkItemRow item={makeItem(81)} />);
+    const event = createEvent.click(screen.getByRole("link"), { button: 0 });
+    fireEvent(screen.getByRole("link"), event);
+    expect(event.defaultPrevented).toBe(true);
+    expect(mockRequestLeave).toHaveBeenCalledTimes(1);
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it("waits for leave approval before opening the canonical href", async () => {
+    mockRequestLeave.mockImplementation(() => {});
+    render(<WorkItemRow item={makeItem(81)} />);
+    const link = screen.getByRole("link");
+    await userEvent.click(link);
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(mockRequestLeave).toHaveBeenCalledTimes(1);
+    const [approveLeave] = mockRequestLeave.mock.calls[0];
+    act(() => approveLeave());
+    expect(mockPush).toHaveBeenCalledTimes(1);
+    expect(mockPush).toHaveBeenCalledWith(link.getAttribute("href"), { scroll: false });
+  });
+
+  it.each([{ ctrlKey: true }, { metaKey: true }, { shiftKey: true }, { altKey: true }, { button: 1 }])(
+    "preserves native canonical navigation for %o",
+    (options) => {
+      render(<WorkItemRow item={makeItem(81)} />);
+      const link = screen.getByRole("link");
+      const event = createEvent.click(link, { button: 0, ...options });
+      fireEvent(link, event);
+      expect(event.defaultPrevented).toBe(false);
+      expect(mockRequestLeave).not.toHaveBeenCalled();
+      expect(mockPush).not.toHaveBeenCalled();
+      expect(link).toHaveAttribute("href", "/build/1/tickets/AL-81?returnTo=%2Fbuild%2Fmy-work");
+    },
+  );
+
+  it("keeps the project fallback when a ticket number is unavailable", async () => {
+    render(<WorkItemRow item={{ ...makeItem(81), ticketNumber: undefined }} />);
+    const link = screen.getByRole("link");
+    expect(link).toHaveAttribute("href", "/build/1");
+    await userEvent.click(link);
+    expect(mockRequestLeave).toHaveBeenCalledTimes(1);
+    expect(mockPush).toHaveBeenCalledWith("/build/1", { scroll: false });
+  });
+});
 
 describe("BucketSection", () => {
   it("renders all items when count is at or below the sync limit", () => {

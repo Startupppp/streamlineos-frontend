@@ -25,6 +25,7 @@ import {
   TEXT_ONE_LINE,
 } from "@/lib/text-overflow";
 import { getMyWorkTicketHref } from "@/features/build/ticket-details/build-ticket-detail-url";
+import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 
 export type DueBucket = "overdue" | "today" | "upcoming" | "none";
 
@@ -72,6 +73,7 @@ export const WorkItemRow = memo(function WorkItemRow({
   onDelete?: () => void;
 }) {
   const router = useRouter();
+  const requestLeave = useNavigationLeave();
 
   if (item.projectId === null) {
     function handleDeleteClick() {
@@ -99,11 +101,14 @@ export const WorkItemRow = memo(function WorkItemRow({
     );
   }
 
+  const href = item.ticketNumber != null
+    ? getMyWorkTicketHref(item.projectId, item.projectKey, item.ticketNumber, returnHref)
+    : `/build/${item.projectId}`;
+
   function handlePrimaryClick(e: React.MouseEvent<HTMLAnchorElement>) {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
     e.preventDefault();
-    const paneUrl = `${returnHref}${returnHref.includes("?") ? "&" : "?"}pane=${item.id}&projectId=${item.projectId}`;
-    router.push(paneUrl, { scroll: false });
+    requestLeave(() => router.push(href, { scroll: false }));
   }
 
   return (
@@ -117,11 +122,7 @@ export const WorkItemRow = memo(function WorkItemRow({
       data-overdue={isOverdue ? true : undefined}
     >
       <Link
-        href={
-          item.ticketNumber != null
-            ? getMyWorkTicketHref(item.projectId, item.projectKey, item.ticketNumber, returnHref)
-            : `/build/${item.projectId}`
-        }
+        href={href}
         onClick={handlePrimaryClick}
         className={cn(PM_ROW, "gap-2.5")}
       >
