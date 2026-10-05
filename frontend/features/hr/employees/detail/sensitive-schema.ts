@@ -14,6 +14,11 @@ import type { HrSensitiveData } from "@/types/hr/core";
 const emptyOrValid = (schema: z.ZodString) =>
   schema.or(z.literal(""));
 
+export const MASKED_SENSITIVE_VALUE = /^\*{4}[^*]{1,4}$/;
+
+const emptyMaskedOrValid = (schema: z.ZodString) =>
+  emptyOrValid(schema).or(z.string().regex(MASKED_SENSITIVE_VALUE));
+
 export const sensitiveSchema = z.object({
   salaryAmount: emptyOrValid(
     z
@@ -24,7 +29,7 @@ export const sensitiveSchema = z.object({
     z.string().regex(/^[A-Za-z]{3}$/, "Use a 3-letter ISO currency code"),
   ),
   salaryFrequency: emptyOrValid(z.string().trim().min(1).max(30)),
-  bankAccountNumber: emptyOrValid(
+  bankAccountNumber: emptyMaskedOrValid(
     z.string().refine(
       (v) => /^\d{9,18}$/.test(v),
       "Must be 9–18 digits"
@@ -39,10 +44,10 @@ export const sensitiveSchema = z.object({
   ),
   esiIpNumber: emptyOrValid(z.string().max(20)),
   taxId: emptyOrValid(z.string().min(1).max(100)),
-  panNumber: emptyOrValid(
+  panNumber: emptyMaskedOrValid(
     z.string().regex(/^[A-Za-z]{5}\d{4}[A-Za-z]$/, "Invalid PAN number")
   ),
-  passportNumber: emptyOrValid(
+  passportNumber: emptyMaskedOrValid(
     z.string().regex(/^[A-Za-z0-9]{6,9}$/, "Must be 6–9 alphanumeric characters")
   ),
   nationalId: emptyOrValid(z.string().min(1).max(100)),
