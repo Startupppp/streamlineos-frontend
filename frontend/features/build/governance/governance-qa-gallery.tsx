@@ -9,10 +9,15 @@ import { ErrorState } from "@/components/shared/error-state";
 import { CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { NamedUser } from "@/lib/person-display";
 import type { BuildApprovalsCreateApprovalResponse } from "@/contracts/build-contracts.generated";
-import type { Risk, Decision, ApprovalStatus } from "@/types/projects";
+import type { Risk, Decision } from "@/types/projects";
 import type { IncidentsCreateIncidentResponse } from "@/contracts/build-contracts.generated";
+import {
+  ownerOf,
+  memberName,
+  approvalMemberName,
+  toApprovalStatus,
+} from "./governance-qa-helpers";
 import { createAppQueryClient } from "@/components/providers/query-provider";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { BuildListSurface } from "@/features/build/shared/build-list-surface";
@@ -25,15 +30,14 @@ import {
   GOVERNANCE_APPROVAL_ROWS,
 } from "@/features/build/shared/build-list-fixtures";
 import {
-  GalleryCase,
   GalleryList,
   ONE_ACTION,
-  TWO_ACTIONS,
   noop,
   GALLERY_STATIC_PAGINATION,
 } from "@/features/build/shared/build-list-gallery-cases";
 import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
-import { ApprovalStatusBadge, entityTypeLabel } from "@/features/build/approvals/approval-status-badge";
+import { ApprovalStatusBadge } from "@/features/build/approvals/approval-status-badge";
+import { entityTypeLabel } from "@/features/build/approvals/approvals-constants";
 import {
   buildRiskColumns,
   RiskMobileCard,
@@ -54,32 +58,6 @@ import {
   APPROVALS_TABLE_HEADERS,
 } from "@/features/build/approvals/use-approvals-columns";
 
-const OWNERS: Record<string, NamedUser> = {
-  user_priya: { firstName: "Priya", lastName: "Nair" },
-  user_daniel: { firstName: "Daniel", lastName: "Okafor" },
-};
-
-function ownerOf(userId: string | null): NamedUser | null {
-  return userId ? (OWNERS[userId] ?? null) : null;
-}
-
-function memberName(userId: string | null): string {
-  const owner = ownerOf(userId);
-  if (!owner) return "Unassigned";
-  return `${owner.firstName ?? ""} ${owner.lastName ?? ""}`.trim();
-}
-
-function approvalMemberName(membershipId: number | null): string {
-  return membershipId == null ? "Unassigned" : `Member ${membershipId}`;
-}
-
-const APPROVAL_STATUS_VALUES: ApprovalStatus[] = [
-  "requested", "pending", "approved", "rejected", "changes_requested", "escalated", "cancelled",
-];
-
-function toApprovalStatus(s: string): ApprovalStatus {
-  return APPROVAL_STATUS_VALUES.find((v) => v === s) ?? "pending";
-}
 
 function RisksTable() {
   const columns = buildRiskColumns({
@@ -275,7 +253,9 @@ function ApprovalsTable() {
 }
 
 function RisksWithSelection() {
-  const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<Set<string | number>>(
+    new Set(),
+  );
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -367,133 +347,134 @@ export function GovernanceQaGallery() {
   });
   return (
     <QueryClientProvider client={queryClient}>
-    <div className="flex flex-col gap-8 p-4">
-      <header>
-        <h1 className="text-lg font-semibold tracking-tight">
-          Governance &amp; QA surfaces
-        </h1>
-        <p className="mt-1 text-label text-muted-foreground">
-          Browser-verifiable layout facts for Governance and QA list surfaces:
-          horizontal overflow, computed control heights, focus order, and ARIA structure.
-        </p>
-      </header>
+      <div className="flex flex-col gap-8 p-4">
+        <header>
+          <h1 className="text-lg font-semibold tracking-tight">
+            Governance &amp; QA surfaces
+          </h1>
+          <p className="mt-1 text-label text-muted-foreground">
+            Browser-verifiable layout facts for Governance and QA list surfaces:
+            horizontal overflow, computed control heights, focus order, and ARIA
+            structure.
+          </p>
+        </header>
 
-      <GalleryList
-        caseId="governance-risks"
-        title="Risks list · status filter"
-        actions={ONE_ACTION}
-        filterCount={2}
-        body={<RisksTable />}
-      />
-      <GalleryList
-        caseId="incidents"
-        title="Incidents list · severity + status filters"
-        actions={ONE_ACTION}
-        filterCount={2}
-        body={<IncidentsTable />}
-      />
-      <GalleryList
-        caseId="decisions"
-        title="Decisions log · status filter"
-        actions={ONE_ACTION}
-        filterCount={1}
-        body={<DecisionsTable />}
-      />
-      <GalleryList
-        caseId="approvals"
-        title="Approvals · status + entity type filters"
-        actions={ONE_ACTION}
-        filterCount={2}
-        body={<ApprovalsTable />}
-      />
-      <GalleryList
-        caseId="risks-with-selection"
-        title="Risks list · keyboard selection"
-        actions={ONE_ACTION}
-        filterCount={2}
-        body={<RisksWithSelection />}
-      />
-      <GalleryList
-        caseId="loading-governance"
-        title="Loading — governance list"
-        actions={ONE_ACTION}
-        filterCount={2}
-        body={
-          <DataTableSkeleton
-            mobileCards
-            rows={8}
-            headers={[...RISK_TABLE_HEADERS]}
-            className="flex-1"
-          />
-        }
-      />
-      <GalleryList
-        caseId="loading-incidents"
-        title="Loading — incidents"
-        actions={ONE_ACTION}
-        filterCount={2}
-        body={
-          <DataTableSkeleton
-            mobileCards
-            rows={8}
-            headers={[...INCIDENTS_TABLE_HEADERS]}
-            className="flex-1"
-          />
-        }
-      />
-      <GalleryList
-        caseId="loading-decisions"
-        title="Loading — decisions"
-        actions={ONE_ACTION}
-        filterCount={1}
-        body={
-          <DataTableSkeleton
-            mobileCards
-            rows={8}
-            headers={[...DECISION_TABLE_HEADERS]}
-            className="flex-1"
-          />
-        }
-      />
-      <GalleryList
-        caseId="loading-approvals"
-        title="Loading — approvals"
-        actions={ONE_ACTION}
-        filterCount={2}
-        body={
-          <DataTableSkeleton
-            mobileCards
-            rows={8}
-            headers={[...APPROVALS_TABLE_HEADERS]}
-            className="flex-1"
-          />
-        }
-      />
-      <GalleryList
-        caseId="empty-governance"
-        title="True empty — no risks"
-        actions={ONE_ACTION}
-        filterCount={2}
-        body={
-          <EmptyState
-            className={CONTENT_FILL_PANEL}
-            illustrationPreset="documents"
-            title="No risks recorded"
-            description="Track project risks to stay ahead of blockers."
-            action={{ label: "New Risk" }}
-          />
-        }
-      />
-      <GalleryList
-        caseId="error-governance"
-        title="Error state"
-        actions={ONE_ACTION}
-        filterCount={2}
-        body={
-          <ErrorState title="We could not load risks" className="flex-1" />
-        }
-      />
-    </div>
+        <GalleryList
+          caseId="governance-risks"
+          title="Risks list · status filter"
+          actions={ONE_ACTION}
+          filterCount={2}
+          body={<RisksTable />}
+        />
+        <GalleryList
+          caseId="incidents"
+          title="Incidents list · severity + status filters"
+          actions={ONE_ACTION}
+          filterCount={2}
+          body={<IncidentsTable />}
+        />
+        <GalleryList
+          caseId="decisions"
+          title="Decisions log · status filter"
+          actions={ONE_ACTION}
+          filterCount={1}
+          body={<DecisionsTable />}
+        />
+        <GalleryList
+          caseId="approvals"
+          title="Approvals · status + entity type filters"
+          actions={ONE_ACTION}
+          filterCount={2}
+          body={<ApprovalsTable />}
+        />
+        <GalleryList
+          caseId="risks-with-selection"
+          title="Risks list · keyboard selection"
+          actions={ONE_ACTION}
+          filterCount={2}
+          body={<RisksWithSelection />}
+        />
+        <GalleryList
+          caseId="loading-governance"
+          title="Loading — governance list"
+          actions={ONE_ACTION}
+          filterCount={2}
+          body={
+            <DataTableSkeleton
+              mobileCards
+              rows={8}
+              headers={[...RISK_TABLE_HEADERS]}
+              className="flex-1"
+            />
+          }
+        />
+        <GalleryList
+          caseId="loading-incidents"
+          title="Loading — incidents"
+          actions={ONE_ACTION}
+          filterCount={2}
+          body={
+            <DataTableSkeleton
+              mobileCards
+              rows={8}
+              headers={[...INCIDENTS_TABLE_HEADERS]}
+              className="flex-1"
+            />
+          }
+        />
+        <GalleryList
+          caseId="loading-decisions"
+          title="Loading — decisions"
+          actions={ONE_ACTION}
+          filterCount={1}
+          body={
+            <DataTableSkeleton
+              mobileCards
+              rows={8}
+              headers={[...DECISION_TABLE_HEADERS]}
+              className="flex-1"
+            />
+          }
+        />
+        <GalleryList
+          caseId="loading-approvals"
+          title="Loading — approvals"
+          actions={ONE_ACTION}
+          filterCount={2}
+          body={
+            <DataTableSkeleton
+              mobileCards
+              rows={8}
+              headers={[...APPROVALS_TABLE_HEADERS]}
+              className="flex-1"
+            />
+          }
+        />
+        <GalleryList
+          caseId="empty-governance"
+          title="True empty — no risks"
+          actions={ONE_ACTION}
+          filterCount={2}
+          body={
+            <EmptyState
+              className={CONTENT_FILL_PANEL}
+              illustrationPreset="documents"
+              title="No risks recorded"
+              description="Track project risks to stay ahead of blockers."
+              action={{ label: "New Risk" }}
+            />
+          }
+        />
+        <GalleryList
+          caseId="error-governance"
+          title="Error state"
+          actions={ONE_ACTION}
+          filterCount={2}
+          body={
+            <ErrorState title="We could not load risks" className="flex-1" />
+          }
+        />
+      </div>
     </QueryClientProvider>
   );
 }

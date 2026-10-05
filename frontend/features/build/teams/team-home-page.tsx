@@ -3,8 +3,6 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { PlusIcon, XIcon, EllipsisIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import {
   useProjectTeam,
   useTeamMembers,
@@ -23,9 +21,7 @@ import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { TablePagination } from "@/components/ui/table-pagination";
 import {
   Select,
@@ -42,136 +38,34 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LoadingButton } from "@/components/ui/loading-button";
 import { SearchInput } from "@/components/ui/search-input";
 import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
 import { TeamFormSheet } from "./team-form-sheet";
 import { TeamProjectsSection } from "./team-projects-section";
 import { MemberPicker } from "@/components/members/member-picker";
-import type { ProjectTeamMember, UpdateTeamInput } from "@/types/projects";
+import type { UpdateTeamInput } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   PmPageShell,
   PmPanel,
   PmSection,
-  PM_PANEL,
   PM_ROW,
 } from "@/components/pm-chrome";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 import { resolveImageUrl } from "@/lib/utils";
+import {
+  TeamActionsButton,
+  AddMemberButton,
+  RemoveMemberButton,
+  MemberRoleSelect,
+  TeamDetailSkeleton,
+} from "./team-member-controls";
 
 const TEAM_MEMBER_ROLES = ["member", "lead"] as const;
 
 const FILTER_DEFINITIONS = [{ param: "leadId" }, { param: "memberId" }] as const;
-
-function TeamActionsButton() {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button variant="outline" {...hoverHandlers}>
-      <EllipsisIcon ref={iconRef} size={14} /> Actions
-    </Button>
-  );
-}
-
-function AddMemberButton({
-  isPending,
-  onClick,
-  disabled,
-}: {
-  isPending: boolean;
-  onClick: () => void;
-  disabled: boolean;
-}) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <LoadingButton
-      size="sm"
-      className="gap-1 text-xs"
-      onClick={onClick}
-      disabled={disabled}
-      isPending={isPending}
-      loadingText="Adding…"
-      {...hoverHandlers}
-    >
-      <PlusIcon ref={iconRef} size={12} /> Add
-    </LoadingButton>
-  );
-}
-
-export function RemoveMemberButton({
-  member,
-  isPending,
-  onRemove,
-}: {
-  member: ProjectTeamMember;
-  isPending: boolean;
-  onRemove: (userId: string) => void;
-}) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  const handleClick = useCallback(() => onRemove(member.userId), [member.userId, onRemove]);
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="w-7 shrink-0"
-      onClick={handleClick}
-      disabled={isPending}
-      aria-label={`Remove ${getUserDisplayName(member)}`}
-      {...hoverHandlers}
-    >
-      <XIcon ref={iconRef} size={14} />
-    </Button>
-  );
-}
-
-export function MemberRoleSelect({
-  member,
-  isPending,
-  onRoleChange,
-}: {
-  member: ProjectTeamMember;
-  isPending: boolean;
-  onRoleChange: (memberUserId: string, role: "member" | "lead") => void;
-}) {
-  const role = (member.role === "lead" ? "lead" : "member") as "member" | "lead";
-  const roleLabel = `Role for ${getUserDisplayName(member)}`;
-
-  function handleValueChange(value: string) {
-    onRoleChange(member.userId, value as "member" | "lead");
-  }
-
-  return (
-    <Select value={role} onValueChange={handleValueChange} disabled={isPending}>
-      <SelectTrigger className="w-24 shrink-0 border-input bg-card" aria-label={roleLabel}>
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-        <SelectItem value="member">Member</SelectItem>
-        <SelectItem value="lead">Lead</SelectItem>
-      </SelectContent>
-    </Select>
-  );
-}
-
-function DetailSkeleton() {
-  return (
-    <PmPageShell>
-      <div className={cn(PM_PANEL, "space-y-3 p-4")}>
-        <div className="flex gap-2">
-          <Skeleton className="h-5 w-16 rounded-full" />
-          <Skeleton className="h-4 w-24" />
-        </div>
-      </div>
-      <div className={cn(PM_PANEL, "space-y-2 p-2")}>
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="h-10 w-full rounded-md" />
-        ))}
-      </div>
-    </PmPageShell>
-  );
-}
 
 interface Props {
   teamId: number;
@@ -310,7 +204,7 @@ export function TeamHomePage({ teamId }: Props) {
           <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
             <PageState
               resolution={pageState}
-              loading={<DetailSkeleton />}
+              loading={<TeamDetailSkeleton />}
               onRetry={handleRetry}
               className="flex-1"
             >

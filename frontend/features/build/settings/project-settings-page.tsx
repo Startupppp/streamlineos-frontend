@@ -1,15 +1,6 @@
 "use client";
 
 import { use, useState, useCallback, useEffect, useRef } from "react";
-import {
-  CircleDot,
-  ListChecks,
-  Settings2,
-  ShieldAlert,
-  Tags,
-  UsersRound,
-  type LucideIcon,
-} from "lucide-react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -53,78 +44,19 @@ import {
   TEXT_ONE_LINE,
   TEXT_BODY,
 } from "@/lib/text-overflow";
+import {
+  type SectionId,
+  BASE_NAV,
+  DANGER_SECTION,
+  isSectionId,
+  ProjectSettingsNavList,
+} from "./project-settings-nav";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
 }
 
 type FormValues = z.infer<typeof formSchema>;
-
-type SectionId =
-  | "general"
-  | "labels"
-  | "statuses"
-  | "custom-fields"
-  | "teams"
-  | "danger";
-
-interface NavSection {
-  id: SectionId;
-  label: string;
-  description: string;
-  icon: LucideIcon;
-}
-
-const BASE_NAV: NavSection[] = [
-  {
-    id: "general",
-    label: "General",
-    description: "Identity, ownership, members, and billing",
-    icon: Settings2,
-  },
-  {
-    id: "labels",
-    label: "Labels",
-    description: "Reusable work classification",
-    icon: Tags,
-  },
-  {
-    id: "statuses",
-    label: "Statuses",
-    description: "Workflow states and limits",
-    icon: CircleDot,
-  },
-  {
-    id: "custom-fields",
-    label: "Custom Fields",
-    description: "Structured project metadata",
-    icon: ListChecks,
-  },
-  {
-    id: "teams",
-    label: "Teams & Roster",
-    description: "Inherited access and staffing",
-    icon: UsersRound,
-  },
-];
-
-const DANGER_SECTION: NavSection = {
-  id: "danger",
-  label: "Danger Zone",
-  description: "Permanent project actions",
-  icon: ShieldAlert,
-};
-
-function isSectionId(value: string): value is SectionId {
-  return (
-    value === "general" ||
-    value === "labels" ||
-    value === "statuses" ||
-    value === "custom-fields" ||
-    value === "teams" ||
-    value === "danger"
-  );
-}
 
 export function ProjectSettingsPage({ params }: PageProps) {
   const { projectId: projectIdStr } = use(params);
@@ -185,11 +117,6 @@ export function ProjectSettingsPage({ params }: PageProps) {
 
   const rawSection = searchParams.get("section") ?? "general";
   const parsedSection: SectionId = isSectionId(rawSection) ? rawSection : "general";
-  const [selectedSection, setSelectedSection] = useState<SectionId>(parsedSection);
-
-  useEffect(() => {
-    setSelectedSection(parsedSection);
-  }, [parsedSection]);
 
   useEffect(() => {
     if (!searchParams.has("q")) return;
@@ -200,7 +127,7 @@ export function ProjectSettingsPage({ params }: PageProps) {
   }, [pathname, router, searchParams]);
 
   const activeSection: SectionId =
-    selectedSection === "danger" && !isOwner ? "general" : selectedSection;
+    parsedSection === "danger" && !isOwner ? "general" : parsedSection;
 
   const allNavSections = isOwner ? [...BASE_NAV, DANGER_SECTION] : BASE_NAV;
 
@@ -219,7 +146,6 @@ export function ProjectSettingsPage({ params }: PageProps) {
     (e: React.MouseEvent<HTMLButtonElement>) => {
       const rawId = e.currentTarget.dataset.section;
       if (!rawId || !isSectionId(rawId)) return;
-      setSelectedSection(rawId);
       const next = new URLSearchParams(searchParams.toString());
       next.set("section", rawId);
       router.replace(`${pathname}?${next.toString()}`, { scroll: false });
@@ -340,53 +266,11 @@ export function ProjectSettingsPage({ params }: PageProps) {
               )}
               <div className="grid gap-5 pb-8 lg:h-[calc(100dvh-9rem)] lg:min-h-0 lg:grid-cols-[17rem_minmax(0,1fr)] lg:overflow-hidden lg:pb-4">
               <PmSection index={0} className="min-w-0 lg:h-full lg:min-h-0">
-                <PmPanel className="p-2 lg:flex lg:h-full lg:min-h-0 lg:flex-col" solid>
-                  <div className="px-2 pb-2 pt-1">
-                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                      Project configuration
-                    </p>
-                  </div>
-                  <nav
-                    aria-label="Project settings"
-                    className="grid w-full grid-cols-2 gap-1.5 sm:grid-cols-3 lg:min-h-0 lg:flex-1 lg:grid-cols-1 lg:content-start lg:overflow-y-auto lg:overscroll-contain lg:pr-1"
-                  >
-                    {allNavSections.map((section) => {
-                      const Icon = section.icon;
-                      const isActive = activeSection === section.id;
-                      return (
-                        <button
-                          key={section.id}
-                          type="button"
-                          data-section={section.id}
-                          aria-label={section.label}
-                          aria-current={isActive ? "page" : undefined}
-                          onClick={handleSectionClick}
-                          className={cn(
-                            "group flex min-w-0 items-start gap-2.5 rounded-lg border border-transparent px-3 py-2.5 text-left transition-colors",
-                            section.id === "danger" && "lg:mt-2 lg:border-t-border",
-                            isActive
-                              ? section.id === "danger"
-                                ? "border-destructive/20 bg-destructive/10 text-destructive"
-                                : "border-border bg-accent text-accent-foreground shadow-xs"
-                              : section.id === "danger"
-                                ? "text-destructive hover:bg-destructive/5"
-                                : "text-foreground/80 hover:border-border hover:bg-muted/60 hover:text-foreground",
-                          )}
-                        >
-                          <Icon className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-                          <span className="min-w-0">
-                            <span className="block text-sm font-medium leading-5">
-                              {section.label}
-                            </span>
-                            <span className="mt-0.5 hidden text-xs leading-4 text-muted-foreground lg:block">
-                              {section.description}
-                            </span>
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </nav>
-                </PmPanel>
+                <ProjectSettingsNavList
+                  sections={allNavSections}
+                  activeSection={activeSection}
+                  onSectionClick={handleSectionClick}
+                />
               </PmSection>
 
               <PmSection index={1} className="min-w-0 flex-1 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain lg:pr-1">

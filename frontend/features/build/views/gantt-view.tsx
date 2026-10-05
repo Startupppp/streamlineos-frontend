@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ChevronLeftIcon, ChevronRightIcon } from "@animateicons/react/lucide";
+import { GanttNavIconButton } from "./gantt/gantt-nav-icon-button";
 import { useCriticalPath } from "@/hooks/api/build/reports";
 import { useProjectMilestones } from "@/hooks/api/build/milestones";
 import { computeBarGeometry } from "./gantt/gantt-geometry";
@@ -27,7 +27,7 @@ import { GanttDependencyOverlay } from "./gantt/gantt-dependency-overlay";
 import { GanttMilestoneMarkers } from "./gantt/gantt-milestone-markers";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+
 import { PmPanel, PM_TOOLBAR } from "@/components/pm-chrome";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
@@ -75,31 +75,6 @@ interface GanttViewProps {
   projectId: number;
   onTicketClick: (ticketId: number) => void;
   onCreateTicket?: () => void;
-}
-
-function NavIconButton({
-  onClick,
-  ariaLabel,
-  direction,
-}: {
-  onClick: () => void;
-  ariaLabel: string;
-  direction: "left" | "right";
-}) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  const Icon = direction === "left" ? ChevronLeftIcon : ChevronRightIcon;
-  return (
-    <Button
-      variant="outline"
-      size="icon"
-      className="shrink-0"
-      onClick={onClick}
-      aria-label={ariaLabel}
-      {...hoverHandlers}
-    >
-      <Icon ref={iconRef} size={14} />
-    </Button>
-  );
 }
 
 export function GanttView({
@@ -311,7 +286,7 @@ export function GanttView({
           </Select>
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          <NavIconButton
+          <GanttNavIconButton
             onClick={handlePrevWeek}
             ariaLabel="Previous week"
             direction="left"
@@ -324,7 +299,7 @@ export function GanttView({
           >
             Today
           </Button>
-          <NavIconButton
+          <GanttNavIconButton
             onClick={handleNextWeek}
             ariaLabel="Next week"
             direction="right"

@@ -35,16 +35,14 @@ import {
   PmSection,
   PM_FILL_SECTION,
 } from "@/components/pm-chrome";
+import { ROADMAP_STATUS_OPTIONS } from "./roadmap-constants";
 
 type RoadmapTabValue = "roadmap" | "feedback" | "changelog";
 
-const ROADMAP_STATUS_OPTIONS = [
+const ROADMAP_FILTER_STATUS_OPTIONS = [
   { value: BUILD_FILTER_ALL, label: "All statuses" },
-  { value: "planned", label: "Planned" },
-  { value: "in_progress", label: "In progress" },
-  { value: "completed", label: "Completed" },
-  { value: "cancelled", label: "Cancelled" },
-] as const;
+  ...ROADMAP_STATUS_OPTIONS,
+];
 
 const ROADMAP_SORT_OPTIONS = [
   { value: BUILD_FILTER_ALL, label: "Default order" },
@@ -174,7 +172,7 @@ export function RoadmapListPage() {
           label="Status"
           value={statusValue}
           onValueChange={handleStatusFilterChange}
-          options={ROADMAP_STATUS_OPTIONS}
+          options={ROADMAP_FILTER_STATUS_OPTIONS}
         />
         <BuildFilterSelect
           label="Sort"

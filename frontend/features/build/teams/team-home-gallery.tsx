@@ -3,7 +3,7 @@
 import { PmPageShell, PmPanel, PmSection, PM_ROW } from "@/components/pm-chrome";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MemberRoleSelect, RemoveMemberButton } from "./team-home-page";
+import { MemberRoleSelect, RemoveMemberButton } from "./team-member-controls";
 import type { ProjectTeamMember } from "@/types/projects";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 

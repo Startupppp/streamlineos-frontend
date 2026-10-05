@@ -3,8 +3,6 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { PlusIcon, XIcon, EllipsisIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import Link from "next/link";
 import {
   useDeletePortfolio,
@@ -20,10 +18,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { LoadingButton } from "@/components/ui/loading-button";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import {
@@ -51,98 +46,18 @@ import {
   PmPageShell,
   PmPanel,
   PmSection,
-  PM_PANEL,
   PM_ROW,
 } from "@/components/pm-chrome";
 import { TEXT_ONE_LINE, TEXT_BODY } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
-
-function UnlinkProjectButton({
-  projectName,
-  projectId,
-  isPending,
-  onUnlink,
-}: {
-  projectName: string;
-  projectId: number;
-  isPending: boolean;
-  onUnlink: (id: number) => void;
-}) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  function handleClick() {
-    onUnlink(projectId);
-  }
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="w-7 shrink-0"
-      onClick={handleClick}
-      disabled={isPending}
-      aria-label={`Unlink ${projectName}`}
-      {...hoverHandlers}
-    >
-      <XIcon ref={iconRef} size={14} />
-    </Button>
-  );
-}
-
-function LinkProjectButton({
-  disabled,
-  isPending,
-  onClick,
-}: {
-  disabled: boolean;
-  isPending: boolean;
-  onClick: () => void;
-}) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <LoadingButton
-      size="sm"
-      className="gap-1 text-xs"
-      onClick={onClick}
-      disabled={disabled}
-      isPending={isPending}
-      loadingText="Linking…"
-      {...hoverHandlers}
-    >
-      <PlusIcon ref={iconRef} size={12} /> Link
-    </LoadingButton>
-  );
-}
-
-function PortfolioActionsButton() {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button variant="outline" {...hoverHandlers}>
-      <EllipsisIcon ref={iconRef} size={14} /> Actions
-    </Button>
-  );
-}
+import {
+  UnlinkProjectButton,
+  LinkProjectButton,
+  PortfolioActionsButton,
+  DetailSkeleton,
+} from "./portfolio-detail-helpers";
 
 type Props = { portfolioId: number };
-
-function DetailSkeleton() {
-  return (
-    <PmPageShell>
-      <div className={cn(PM_PANEL, "space-y-3 p-4")}>
-        <div className="flex gap-2">
-          <Skeleton className="h-5 w-16 rounded-full" />
-          <Skeleton className="h-5 w-16 rounded-full" />
-          <Skeleton className="h-4 w-32" />
-        </div>
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-2/3" />
-      </div>
-      <div className={cn(PM_PANEL, "space-y-2 p-2")}>
-        {Array.from({ length: 8 }).map((_, i) => (
-          <Skeleton key={i} className="h-10 w-full rounded-md" />
-        ))}
-      </div>
-    </PmPageShell>
-  );
-}
 
 function PortfolioDetailContent({ portfolioId }: Props) {
   const canManage = useCan("build:portfolios:manage");

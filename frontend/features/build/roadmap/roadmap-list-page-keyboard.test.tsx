@@ -257,7 +257,7 @@ describe("RoadmapListPage — search is URL-backed as q", () => {
 describe("RoadmapListPage — every response-shaping value has a control that writes the URL", () => {
   it("writes a picked status to the URL rather than filtering the loaded page in memory", () => {
     render(<RoadmapListPage />);
-    fireEvent.click(screen.getByRole("button", { name: "In progress" }));
+    fireEvent.click(screen.getByRole("button", { name: "In Progress" }));
     expect(mockReplace).toHaveBeenCalledWith(expect.stringContaining("status=in_progress"), { scroll: false });
   });
 
