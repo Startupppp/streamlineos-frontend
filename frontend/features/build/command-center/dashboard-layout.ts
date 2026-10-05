@@ -27,14 +27,6 @@ export interface DashboardLayoutConfig {
   widgets: WidgetSlot[];
 }
 
-export interface DashboardLayout {
-  layoutVersion: number;
-  config: DashboardLayoutConfig;
-  updatedAt: string;
-}
-
-export const MAX_WIDGETS = 12;
-
 export const DEFAULT_LAYOUT_FREELANCER: DashboardLayoutConfig = {
   widgets: [
     { type: "my-issues", position: { col: 0, row: 0, w: 5, h: 4 } },
