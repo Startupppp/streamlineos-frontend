@@ -10,6 +10,7 @@ import {
   ClipboardList,
   Receipt,
   Download,
+  FileText,
 } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
@@ -21,6 +22,7 @@ import type {
   PortalDeliverable,
   PortalApproval,
   PortalInvoice,
+  PortalRequest,
 } from "@/features/portal/lib/portal-types";
 
 const STATUS_STYLES: Record<string, string> = {
@@ -383,6 +385,55 @@ export function InvoicesSection({ invoices }: { invoices: PortalInvoice[] }) {
                   )}
                 >
                   {formatPortalStatus(inv.status)}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+export function RequestsSection({ requests }: { requests: PortalRequest[] }) {
+  return (
+    <section aria-labelledby="requests-heading">
+      <SectionHeader
+        icon={<FileText className="h-3.5 w-3.5" />}
+        titleId="requests-heading"
+        title="Requests"
+        count={requests.length}
+      />
+      {requests.length === 0 ? (
+        <EmptyState
+          compact
+          illustrationPreset="default"
+          title="No requests yet"
+          description="Change requests you submit will appear here once they are processed."
+        />
+      ) : (
+        <div className="divide-y divide-border rounded-lg border border-border overflow-hidden">
+          {requests.map((r) => (
+            <div key={r.id} className="px-4 py-3 bg-card">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0 flex-1">
+                  <span className="text-sm text-foreground truncate block">{r.title}</span>
+                  {r.decisionComment && (
+                    <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                      {r.decisionComment}
+                    </p>
+                  )}
+                  <span className="mt-1 text-micro text-muted-foreground block">
+                    {formatPortalDate(r.createdAt)}
+                  </span>
+                </div>
+                <span
+                  className={cn(
+                    "inline-flex shrink-0 px-1.5 py-0.5 rounded text-micro font-semibold",
+                    portalStatusStyle(r.status),
+                  )}
+                >
+                  {formatPortalStatus(r.status)}
                 </span>
               </div>
             </div>

@@ -22,6 +22,7 @@ import {
   CommentsSection,
   ApprovalsSection,
   InvoicesSection,
+  RequestsSection,
 } from "./portal-project-sections";
 
 function ChangeRequestDialogTrigger({
@@ -149,10 +150,11 @@ const NO_CAPABILITIES = {
   canSubmitChangeRequests: false,
   canViewApprovals: false,
   canViewInvoices: false,
+  canViewRequests: false,
 } as const;
 
 export function PortalProjectDetail({ data }: PortalProjectDetailProps) {
-  const { project, milestones, tasks, attachments, comments, deliverables, approvals, invoices } = data;
+  const { project, milestones, tasks, attachments, comments, deliverables, approvals, invoices, requests } = data;
   const capabilities = data.capabilities ?? NO_CAPABILITIES;
   return (
     <>
@@ -209,6 +211,7 @@ export function PortalProjectDetail({ data }: PortalProjectDetailProps) {
         {capabilities.canViewComments && <CommentsSection comments={comments} />}
         {capabilities.canViewApprovals && <ApprovalsSection approvals={approvals} />}
         {capabilities.canViewInvoices && <InvoicesSection invoices={invoices} />}
+        {capabilities.canViewRequests && <RequestsSection requests={requests} />}
       </div>
     </>
   );

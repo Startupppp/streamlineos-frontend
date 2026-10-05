@@ -22,19 +22,31 @@ export const backendPortalProjectListSchema = z.object({
 
 export type BackendPortalProject = z.infer<typeof backendPortalProjectSchema>;
 
-const PORTAL_PROJECTS_KEY = directoryAndOwnershipQueryKeys.portal.projects();
+export interface PortalProjectsFilters {
+  name?: string;
+  status?: string;
+  waiting?: boolean;
+}
 
 export const portalProjectsQueryOptions = {
-  queryKey: PORTAL_PROJECTS_KEY,
+  queryKey: directoryAndOwnershipQueryKeys.portal.projects(),
 } as const;
 
-export function useExternalPortalProjects() {
+export function useExternalPortalProjects(filters?: PortalProjectsFilters) {
+  const params = filters ?? {};
+  const queryKey = directoryAndOwnershipQueryKeys.portal.projects(
+    Object.keys(params).length > 0 ? params : undefined,
+  );
+
   return useInfiniteQuery({
-    queryKey: PORTAL_PROJECTS_KEY,
+    queryKey,
     queryFn: async ({ pageParam }) => {
-      const params: Record<string, unknown> = {};
-      if (pageParam !== undefined) params["cursor"] = pageParam;
-      const raw = await portalApiClient.get<unknown>("/portal/v1/projects", params);
+      const reqParams: Record<string, unknown> = {};
+      if (pageParam !== undefined) reqParams["cursor"] = pageParam;
+      if (params.name) reqParams["name"] = params.name;
+      if (params.status) reqParams["status"] = params.status;
+      if (params.waiting !== undefined) reqParams["waiting"] = String(params.waiting);
+      const raw = await portalApiClient.get<unknown>("/portal/v1/projects", reqParams);
       return backendPortalProjectListSchema.parse(raw);
     },
     initialPageParam: NO_ID_CURSOR_YET,
