@@ -2,6 +2,8 @@
 
 Status: Planned. Bounded current source and read-only browser evidence are classified separately below.
 
+Current verified bounded133 live-delete source at backend254518fdc6d2882fe2fded9c5ee5b908cce6d764: the [canonical deletion receipt](../../audit/bugs-and-verification.md#qa-run-delete133-reconciliation--2026-10-06) records live org/project/ID write scope, projected affected-row refusal404 before audit,162 focused tests, exact strict/scoped checks, sequential production/test-inclusive TypeScript exit0 and two matching-hash independent reviews. Four exact source/test paths are clean/released after commit. Real SQL/RLS/races, complete authorization/persistence/effects, browser/mobile and deployment/operations remain Current unverified. No QA checklist or whole stage closes.
+
 Current verified bounded132 request behavior: the [canonical query receipt](../../audit/bugs-and-verification.md#qa-failure-query132-reconciliation--2026-10-06) records false-string correction through the existing boolean parser, strict query validation,64 focused and41 actual local HTTP harness tests, backend production/test-inclusive TypeScript exit0 and reviewed official query-only contracts. Physical populated filtering, complete authorization/persistence/browser/mobile/deployment scope stays Current unverified; no QA checklist or whole stage closes. Six overwritten129/130 frontend paths remain pending an ownership handoff, so prior Clear/search/pager proof is historical rather than current implementation.
 
 ## Problem Statement
