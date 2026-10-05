@@ -1,12 +1,24 @@
 import type { ReactNode } from "react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { SessionProvider } from "next-auth/react";
+import { createAppQueryClient } from "@/components/providers/query-provider";
 
+let mockPathname = "/build/1/tickets/211";
+const mockPush = jest.fn();
+const mockApiGet = jest.fn();
 jest.mock("next/navigation", () => ({
+  usePathname: () => mockPathname,
+  useRouter: () => ({ push: mockPush }),
   notFound: jest.fn(() => {
     throw new Error("NEXT_NOT_FOUND");
   }),
 }));
 let mockIsApiError = false;
-jest.mock("@/lib/api-client", () => ({ isApiError: () => mockIsApiError }));
+jest.mock("@/lib/api-client", () => ({
+  isApiError: () => mockIsApiError,
+  apiClient: { get: (path: string) => mockApiGet(path) },
+}));
 jest.mock("@/lib/prefetch/build", () => ({ prefetchBuildProject: jest.fn() }));
 jest.mock("@/features/build/sidebar/remember-last-project", () => ({
   RememberLastProject: () => null,
@@ -18,10 +30,12 @@ jest.mock("@/features/build/project-detail/backend-unavailable-view", () => ({
   BackendUnavailableView: () => <div data-testid="backend-unavailable" />,
 }));
 jest.mock("@/features/build/project-detail/project-hydration-context", () => ({
+  ...jest.requireActual("@/features/build/project-detail/project-hydration-context"),
   ProjectHydrationProvider: ({ children }: { children: ReactNode }) => children,
 }));
 
 import ProjectLayout from "./layout";
+import { TicketPanelInner } from "./@panel/(.)tickets/[ticketKey]/ticket-panel-inner";
 
 const { notFound } = jest.requireMock("next/navigation") as {
   notFound: jest.Mock;
@@ -89,5 +103,78 @@ describe("ProjectLayout", () => {
 
     expect(result).toEqual(expect.objectContaining({ props: expect.any(Object) }));
     expect(notFound).not.toHaveBeenCalled();
+  });
+});
+
+describe("retained ticket panel", () => {
+  it.each([
+    ["/build/1/tickets/211", "211"],
+    ["/build/01/tickets/211/", "211"],
+    ["/build/1/tickets/%53TRE-211", "STRE-211"],
+  ])("dismisses the retained pane from %s and restores only its own route", async (ticketPath, ticketKey) => {
+    mockPathname = ticketPath;
+    let returnHref = "/build/1/issues";
+    const ticket = {
+      id: 365,
+      ticketNumber: 211,
+      projectId: 1,
+      title: "Reserved navigation verification",
+      description: "",
+      status: "IN_REVIEW",
+      priority: "MEDIUM",
+      version: 1,
+    };
+    mockApiGet.mockImplementation((path: string) => {
+      if (path === "/me/access") return Promise.resolve({
+        membershipId: 1,
+        scopes: { "build:tickets:view": "all", "build:projects:view": "all" },
+        modules: { build: true },
+        isOrgOwner: false,
+        version: 1,
+      });
+      if (path === "/build/1/tickets/key/211" || path === "/build/1/tickets/365")
+        return Promise.resolve(ticket);
+      if (path === "/build/1/tickets/365/subtasks") return Promise.resolve([]);
+      if (path === "/build/1") return Promise.resolve({ id: 1, members: [], statuses: [] });
+      return Promise.reject(new Error(`Unexpected API read: ${path}`));
+    });
+    const client = createAppQueryClient("authenticated:reserved-org:reserved-user");
+    const route = () => (
+      <SessionProvider session={{
+        user: { id: "reserved-user", role: "MEMBER" },
+        orgId: "reserved-org",
+        expires: "2099-01-01T00:00:00.000Z",
+      }} refetchOnWindowFocus={false}>
+        <QueryClientProvider client={client}>
+          <h1>Issues collection</h1>
+          <TicketPanelInner projectId={1} ticketKey={ticketKey} returnTo={returnHref} />
+        </QueryClientProvider>
+      </SessionProvider>
+    );
+    const view = render(route());
+    try {
+      fireEvent.click(await screen.findByRole("button", { name: "Close ticket pane" }));
+      expect(mockPush).toHaveBeenCalledWith("/build/1/issues", { scroll: false });
+      mockPathname = "/build/1/issues";
+      view.rerender(route());
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      expect(screen.getByRole("heading", { name: "Issues collection" })).toBeVisible();
+      mockPathname = ticketPath;
+      view.rerender(route());
+      expect(await screen.findByRole("button", { name: "Close ticket pane" })).toBeVisible();
+      returnHref = "/build/1/issues?q=reserved";
+      view.rerender(route());
+      fireEvent.click(screen.getByRole("button", { name: "Close ticket pane" }));
+      expect(mockPush).toHaveBeenLastCalledWith(returnHref, { scroll: false });
+      mockPathname = "/build/1/tickets/212";
+      view.rerender(route());
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      mockPathname = "/build/2/tickets/211";
+      view.rerender(route());
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    } finally {
+      view.unmount();
+      client.clear();
+    }
   });
 });

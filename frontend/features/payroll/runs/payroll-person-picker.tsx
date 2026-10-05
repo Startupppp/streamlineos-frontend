@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -91,6 +91,85 @@ function PersonRow({ person, selected, onPick }: PersonRowProps) {
   );
 }
 
+interface PickerBodyParams {
+  access: "loading" | "granted" | "denied";
+  isLoading: boolean;
+  isError: boolean;
+  error: unknown;
+  rows: PayrollPerson[];
+  hasMore: boolean | undefined;
+  debounced: string;
+  handleRetry: () => void;
+  label: string;
+  onPick: (person: PayrollPerson) => void;
+  selectedKey: string | null;
+}
+
+function resolvePickerBody({
+  access,
+  isLoading,
+  isError,
+  error,
+  rows,
+  hasMore,
+  debounced,
+  handleRetry,
+  label,
+  onPick,
+  selectedKey,
+}: PickerBodyParams): React.ReactNode {
+  if (access === "denied") {
+    return (
+      <p className="py-2 text-dense text-muted-foreground">
+        Choosing a person needs access to view salaries. Ask a payroll admin to grant it.
+      </p>
+    );
+  }
+  if (access === "loading" || isLoading) {
+    return (
+      <div className="space-y-2 py-1" aria-label="Loading people">
+        <Skeleton className="h-9 w-full rounded-md" />
+        <Skeleton className="h-9 w-full rounded-md" />
+        <Skeleton className="h-9 w-full rounded-md" />
+      </div>
+    );
+  }
+  if (isError) {
+    return (
+      <div role="alert" className="flex items-center justify-between gap-2 rounded-md border border-border px-3 py-2">
+        <p className="text-dense text-muted-foreground">{getErrorMessage(error)}</p>
+        <Button type="button" size="sm" variant="outline" onClick={handleRetry}>
+          Retry
+        </Button>
+      </div>
+    );
+  }
+  if (rows.length === 0) {
+    return debounced ? (
+      <p className="py-2 text-dense text-muted-foreground">No one matches &ldquo;{debounced}&rdquo;.</p>
+    ) : (
+      <p className="py-2 text-dense text-muted-foreground">
+        No one in your directory yet.{" "}
+        <Link href="/directory" className="underline underline-offset-2">
+          Open Directory
+        </Link>
+      </p>
+    );
+  }
+  return (
+    <>
+      <ul className="max-h-72 overflow-y-auto divide-y divide-border" aria-label={label}>
+        {rows.map((person) => (
+          <PersonRow key={personKey(person)} person={person} selected={personKey(person) === selectedKey} onPick={onPick} />
+        ))}
+      </ul>
+      {hasMore ? (
+        <p className="pt-1 text-micro text-muted-foreground">Showing first {rows.length} — refine search</p>
+      ) : null}
+    </>
+  );
+}
+
 interface PayrollPersonPickerProps {
   enabled: boolean;
   selectedKey: string | null;
@@ -103,65 +182,31 @@ export function PayrollPersonPicker({ enabled, selectedKey, onPick, label }: Pay
   const debounced = useDebouncedValue(search.trim(), 300);
   const access = useCanState("payroll:salaries:view");
   const people = usePayrollPeople({ search: debounced }, { enabled });
-  const rows = people.data?.data ?? [];
+  const { refetch } = people;
 
   function handleSearchChange(event: React.ChangeEvent<HTMLInputElement>) {
     setSearch(event.target.value);
   }
 
-  function handleRetry() {
-    void people.refetch();
-  }
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
-  let body: React.ReactNode;
-  if (access === "denied") {
-    body = (
-      <p className="py-2 text-dense text-muted-foreground">
-        Choosing a person needs access to view salaries. Ask a payroll admin to grant it.
-      </p>
-    );
-  } else if (access === "loading" || people.isLoading) {
-    body = (
-      <div className="space-y-2 py-1" aria-label="Loading people">
-        <Skeleton className="h-9 w-full rounded-md" />
-        <Skeleton className="h-9 w-full rounded-md" />
-        <Skeleton className="h-9 w-full rounded-md" />
-      </div>
-    );
-  } else if (people.isError) {
-    body = (
-      <div role="alert" className="flex items-center justify-between gap-2 rounded-md border border-border px-3 py-2">
-        <p className="text-dense text-muted-foreground">{getErrorMessage(people.error)}</p>
-        <Button type="button" size="sm" variant="outline" onClick={handleRetry}>
-          Retry
-        </Button>
-      </div>
-    );
-  } else if (rows.length === 0) {
-    body = debounced ? (
-      <p className="py-2 text-dense text-muted-foreground">No one matches &ldquo;{debounced}&rdquo;.</p>
-    ) : (
-      <p className="py-2 text-dense text-muted-foreground">
-        No one in your directory yet.{" "}
-        <Link href="/directory" className="underline underline-offset-2">
-          Open Directory
-        </Link>
-      </p>
-    );
-  } else {
-    body = (
-      <>
-        <ul className="max-h-72 overflow-y-auto divide-y divide-border" aria-label={label}>
-          {rows.map((person) => (
-            <PersonRow key={personKey(person)} person={person} selected={personKey(person) === selectedKey} onPick={onPick} />
-          ))}
-        </ul>
-        {people.data?.pagination.hasMore ? (
-          <p className="pt-1 text-micro text-muted-foreground">Showing first {rows.length} — refine search</p>
-        ) : null}
-      </>
-    );
-  }
+  const body = useMemo(
+    () =>
+      resolvePickerBody({
+        access,
+        isLoading: people.isLoading,
+        isError: people.isError,
+        error: people.error,
+        rows: people.data?.data ?? [],
+        hasMore: people.data?.pagination.hasMore,
+        debounced,
+        handleRetry,
+        label,
+        onPick,
+        selectedKey,
+      }),
+    [access, people.isLoading, people.isError, people.error, people.data, debounced, handleRetry, label, onPick, selectedKey],
+  );
 
   return (
     <div className="w-full space-y-2">

@@ -1,5 +1,5 @@
 import { renderHook } from "@testing-library/react";
-import { usePageState } from "./use-page-state";
+import { resolveModuleAvailability, usePageState } from "./use-page-state";
 
 jest.mock("@/hooks/api/access", () => ({
   useAccess: jest.fn(),
@@ -27,6 +27,35 @@ function mockEntitlements(snapshot: { data: unknown; isError?: boolean }): void 
 beforeEach(() => {
   jest.clearAllMocks();
   mockEntitlements({ data: undefined });
+});
+
+describe("resolveModuleAvailability", () => {
+  it("returns loading when access is still in flight", () => {
+    expect(resolveModuleAvailability("hr", true, undefined, undefined)).toEqual({ status: "loading" });
+  });
+
+  it("returns loading when modules snapshot has not arrived yet", () => {
+    expect(resolveModuleAvailability("hr", false, undefined, undefined)).toEqual({ status: "loading" });
+  });
+
+  it("returns available when the module flag is true", () => {
+    expect(resolveModuleAvailability("hr", false, { hr: true }, undefined)).toEqual({ status: "available" });
+  });
+
+  it("returns unavailable org-disabled when entitlements list does not include the module", () => {
+    expect(resolveModuleAvailability("hr", false, { hr: false }, ["payroll"])).toMatchObject({
+      status: "unavailable",
+      reason: "org-disabled",
+    });
+  });
+
+  it("returns unavailable not-in-plan when entitlements list includes the module", () => {
+    expect(resolveModuleAvailability("hr", false, { hr: false }, ["hr"])).toMatchObject({
+      status: "unavailable",
+      reason: "not-in-plan",
+      upgradePath: "/settings/billing",
+    });
+  });
 });
 
 describe("usePageState", () => {

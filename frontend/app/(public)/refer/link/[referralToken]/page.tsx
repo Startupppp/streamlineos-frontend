@@ -24,18 +24,22 @@ function BlockedState() {
   );
 }
 
+async function fetchReferrerPortalData(token: string): Promise<PublicReferrerPortal | null | "blocked"> {
+  try {
+    return await publicGetNoStore<PublicReferrerPortal>(`/public/referrals/${token}`, undefined, publicReferrerPortalContract);
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 403) return "blocked";
+    throw e;
+  }
+}
+
 export default async function ExternalReferrerPortalPage({ params }: Props) {
   const { referralToken } = await params;
 
-  let data: PublicReferrerPortal | null;
-  try {
-    data = await publicGetNoStore<PublicReferrerPortal>(`/public/referrals/${referralToken}`, undefined, publicReferrerPortalContract);
-  } catch (e) {
-    if (e instanceof ApiError && e.status === 403) return <BlockedState />;
-    throw e;
-  }
-
-  if (!data) return notFound();
+  const portalResult = await fetchReferrerPortalData(referralToken);
+  if (portalResult === "blocked") return <BlockedState />;
+  if (!portalResult) return notFound();
+  const data = portalResult;
 
   return (
     <main className="min-h-dvh bg-background">

@@ -131,6 +131,32 @@ export function resolveTicketBackHref(
   return `${candidate.pathname}${candidate.search}`;
 }
 
+const TICKET_ROUTE_PATTERN = /^\/build\/([^/]+)\/tickets\/([^/]+)\/?$/;
+
+export function decodeRouteSegment(segment: string): string | null {
+  try {
+    return decodeURIComponent(segment);
+  } catch {
+    return null;
+  }
+}
+
+export function isTicketDetailPath(
+  pathname: string | null,
+  projectId: number,
+  ticketKey: string,
+): boolean {
+  const match = pathname?.match(TICKET_ROUTE_PATTERN);
+  if (!match) return false;
+  const routeProjectId = decodeRouteSegment(match[1]);
+  const routeTicketKey = decodeRouteSegment(match[2]);
+  return (
+    routeProjectId !== null &&
+    Number(routeProjectId) === projectId &&
+    routeTicketKey === ticketKey
+  );
+}
+
 export function buildEpicDetailUrl(
   projectId: number,
   epicId: number,

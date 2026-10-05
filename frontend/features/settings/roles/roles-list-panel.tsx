@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, type ReactNode } from "react";
+import { useCallback, useMemo, type ReactNode } from "react";
 import { Pencil, Shield } from "lucide-react";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
@@ -96,6 +96,97 @@ function RoleListItem({ role, isSelected, onSelect, onDelete, onRename }: RoleLi
   );
 }
 
+interface RolesBodyParams {
+  isLoading: boolean;
+  rolesError: boolean;
+  rolesQueryError: unknown;
+  roles: RoleListRow[];
+  search: string;
+  selectedRoleId: number | null;
+  onRetry: () => void;
+  onSelect: (roleId: number) => void;
+  onDelete: (role: RoleListRow) => void;
+  onRename: (role: Role) => void;
+  onClearSearch: (() => void) | undefined;
+}
+
+function resolveRolesBody({
+  isLoading,
+  rolesError,
+  rolesQueryError,
+  roles,
+  search,
+  selectedRoleId,
+  onRetry,
+  onSelect,
+  onDelete,
+  onRename,
+  onClearSearch,
+}: RolesBodyParams): ReactNode {
+  if (isLoading) {
+    return (
+      <div className="h-full min-h-0 flex-1 overflow-y-auto scrollbar-hide">
+        <div className="divide-y divide-border/60">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="flex items-center justify-between px-4 py-3">
+              <div className="space-y-1.5">
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-3 w-16" />
+              </div>
+              <Skeleton className="h-4 w-12 rounded-full" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  if (rolesError) {
+    return (
+      <div className="flex h-full min-h-0 flex-1 flex-col items-center justify-center gap-3 px-4 py-12 text-center">
+        <Shield className="h-10 w-10 text-destructive/50" />
+        <div>
+          <p className="text-sm font-medium">Failed to load roles</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {getErrorMessage(rolesQueryError)}
+          </p>
+        </div>
+        <Button size="sm" variant="outline" onClick={onRetry} className="gap-1.5">
+          Retry
+        </Button>
+      </div>
+    );
+  }
+  if (roles.length === 0) {
+    return (
+      <EmptyState
+        illustrationPreset="security"
+        title="No roles yet"
+        description={search.trim() ? "No results match your filters." : "Create a role to manage permissions."}
+        filtersActive={!!search.trim()}
+        onClearFilters={onClearSearch}
+        compact
+        className="h-full min-h-0 flex-1 border-0 bg-transparent"
+      />
+    );
+  }
+  return (
+    <div className="h-full min-h-0 flex-1 overflow-y-auto scrollbar-hide">
+      <div className="divide-y divide-border/60">
+        {roles.map((role) => (
+          <RoleListItem
+            key={role.id}
+            role={role}
+            isSelected={selectedRoleId === role.id}
+            onSelect={onSelect}
+            onDelete={onDelete}
+            onRename={onRename}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export interface RolesListPanelProps {
   isLoading: boolean;
   rolesError: boolean;
@@ -133,69 +224,23 @@ export function RolesListPanel({
   onPageSizeChange,
   onClearSearch,
 }: RolesListPanelProps) {
-  let body: ReactNode;
-
-  if (isLoading) {
-    body = (
-      <div className="h-full min-h-0 flex-1 overflow-y-auto scrollbar-hide">
-        <div className="divide-y divide-border/60">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="flex items-center justify-between px-4 py-3">
-              <div className="space-y-1.5">
-                <Skeleton className="h-4 w-28" />
-                <Skeleton className="h-3 w-16" />
-              </div>
-              <Skeleton className="h-4 w-12 rounded-full" />
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  } else if (rolesError) {
-    body = (
-      <div className="flex h-full min-h-0 flex-1 flex-col items-center justify-center gap-3 px-4 py-12 text-center">
-        <Shield className="h-10 w-10 text-destructive/50" />
-        <div>
-          <p className="text-sm font-medium">Failed to load roles</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {getErrorMessage(rolesQueryError)}
-          </p>
-        </div>
-        <Button size="sm" variant="outline" onClick={onRetry} className="gap-1.5">
-          Retry
-        </Button>
-      </div>
-    );
-  } else if (roles.length === 0) {
-    body = (
-      <EmptyState
-        illustrationPreset="security"
-        title="No roles yet"
-        description={search.trim() ? "No results match your filters." : "Create a role to manage permissions."}
-        filtersActive={!!search.trim()}
-        onClearFilters={onClearSearch}
-        compact
-        className="h-full min-h-0 flex-1 border-0 bg-transparent"
-      />
-    );
-  } else {
-    body = (
-      <div className="h-full min-h-0 flex-1 overflow-y-auto scrollbar-hide">
-        <div className="divide-y divide-border/60">
-          {roles.map((role) => (
-            <RoleListItem
-              key={role.id}
-              role={role}
-              isSelected={selectedRoleId === role.id}
-              onSelect={onSelect}
-              onDelete={onDelete}
-              onRename={onRename}
-            />
-          ))}
-        </div>
-      </div>
-    );
-  }
+  const body = useMemo(
+    () =>
+      resolveRolesBody({
+        isLoading,
+        rolesError,
+        rolesQueryError,
+        roles,
+        search,
+        selectedRoleId,
+        onRetry,
+        onSelect,
+        onDelete,
+        onRename,
+        onClearSearch,
+      }),
+    [isLoading, rolesError, rolesQueryError, roles, search, selectedRoleId, onRetry, onSelect, onDelete, onRename, onClearSearch],
+  );
 
   return (
     <Card className="flex h-full min-h-0 flex-col overflow-hidden">

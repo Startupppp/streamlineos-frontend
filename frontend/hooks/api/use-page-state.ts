@@ -22,6 +22,27 @@ export interface UsePageStateOptions {
   readonly isEmpty?: boolean;
 }
 
+export function resolveModuleAvailability(
+  module: string,
+  accessLoading: boolean,
+  modules: Record<string, boolean> | undefined,
+  lockedModules: string[] | undefined,
+): ModuleAvailability {
+  const moduleKey = normalizeOrgModuleKey(module);
+  if (accessLoading || modules === undefined) return { status: "loading" };
+  if (modules[moduleKey] === true) return { status: "available" };
+  const planLocked =
+    lockedModules?.some(
+      (locked) => normalizeOrgModuleKey(locked) === moduleKey,
+    ) ?? false;
+  return {
+    status: "unavailable",
+    moduleKey,
+    reason: planLocked ? "not-in-plan" : "org-disabled",
+    upgradePath: planLocked ? "/settings/billing" : null,
+  };
+}
+
 export function usePageState(options: UsePageStateOptions): PageStateResolution {
   const {
     data: access,
@@ -30,6 +51,16 @@ export function usePageState(options: UsePageStateOptions): PageStateResolution 
     error: accessError,
   } = useAccess();
   const { data: entitlements } = useEntitlements(options.module !== undefined);
+
+  const moduleAvailability: ModuleAvailability | undefined =
+    options.module !== undefined
+      ? resolveModuleAvailability(
+          options.module,
+          accessLoading || access === undefined,
+          access?.modules,
+          entitlements?.lockedModules,
+        )
+      : undefined;
 
   /**
    * A failed access read is a failed read, not a slow one.
@@ -57,25 +88,6 @@ export function usePageState(options: UsePageStateOptions): PageStateResolution 
           isLoading: accessLoading || access === undefined,
           granted: access !== undefined && grantsPermission(access, options.permission),
         });
-
-  let moduleAvailability: ModuleAvailability | undefined;
-  if (options.module !== undefined) {
-    const moduleKey = normalizeOrgModuleKey(options.module);
-    if (accessLoading || access === undefined) moduleAvailability = { status: "loading" };
-    else if (access.modules[moduleKey] === true) moduleAvailability = { status: "available" };
-    else {
-      const planLocked =
-        entitlements?.lockedModules.some(
-          (locked) => normalizeOrgModuleKey(locked) === moduleKey,
-        ) ?? false;
-      moduleAvailability = {
-        status: "unavailable",
-        moduleKey,
-        reason: planLocked ? "not-in-plan" : "org-disabled",
-        upgradePath: planLocked ? "/settings/billing" : null,
-      };
-    }
-  }
 
   return resolvePageState({
     permission: options.permission,

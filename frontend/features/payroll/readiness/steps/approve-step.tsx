@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { ApprovalStagePanel, LockActions, SubmitApprovalAction } from "@/features/payroll/payout";
 import { useCan } from "@/hooks/api/access";
 import { StepNote, StepPanel } from "./step-panel";
@@ -12,24 +13,38 @@ interface ApproveStepProps {
   isCurrent: boolean;
 }
 
-export function ApproveStep({ runId, status, isCurrent }: ApproveStepProps) {
-  const canSubmit = useCan("payroll:runs:update");
-  const canLock = useCan("payroll:runs:manage");
-
-  let cta = null;
+function resolveApproveCta(
+  isCurrent: boolean,
+  status: string,
+  canSubmit: boolean,
+  canLock: boolean,
+  runId: number,
+): React.ReactNode {
   if (isCurrent && SUBMITTABLE.has(status)) {
-    cta = canSubmit ? (
+    return canSubmit ? (
       <SubmitApprovalAction runId={runId} status={status} />
     ) : (
       <StepNote>Someone who can update payroll runs needs to submit this run.</StepNote>
     );
-  } else if (isCurrent && status === "APPROVED") {
-    cta = canLock ? (
+  }
+  if (isCurrent && status === "APPROVED") {
+    return canLock ? (
       <LockActions runId={runId} status={status} />
     ) : (
       <StepNote>Someone who can manage payroll runs needs to lock this run.</StepNote>
     );
   }
+  return null;
+}
+
+export function ApproveStep({ runId, status, isCurrent }: ApproveStepProps) {
+  const canSubmit = useCan("payroll:runs:update");
+  const canLock = useCan("payroll:runs:manage");
+
+  const cta = useMemo(
+    () => resolveApproveCta(isCurrent, status, canSubmit, canLock, runId),
+    [isCurrent, status, canSubmit, canLock, runId],
+  );
 
   return (
     <StepPanel title="Approve & lock" cta={cta}>

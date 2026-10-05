@@ -6,6 +6,7 @@ import {
   buildPersonDetailUrl,
   buildClientDetailUrl,
   getMyWorkTicketHref,
+  isTicketDetailPath,
   resolveTicketBackHref,
 } from "./build-ticket-detail-url";
 
@@ -119,5 +120,27 @@ describe("canonical record URLs — non-ticket record types use their own canoni
 
   it("buildClientDetailUrl returns the canonical CRM client path", () => {
     expect(buildClientDetailUrl(99)).toBe("/crm/clients/99");
+  });
+});
+
+describe("isTicketDetailPath", () => {
+  it("matches the ticket route for the same project and key", () => {
+    expect(isTicketDetailPath("/build/7/tickets/ABC-12", 7, "ABC-12")).toBe(true);
+    expect(isTicketDetailPath("/build/7/tickets/ABC-12/", 7, "ABC-12")).toBe(true);
+  });
+
+  it("decodes encoded segments before comparing", () => {
+    expect(isTicketDetailPath("/build/7/tickets/A%20B-1", 7, "A B-1")).toBe(true);
+  });
+
+  it("rejects other projects, keys, paths and a missing pathname", () => {
+    expect(isTicketDetailPath("/build/8/tickets/ABC-12", 7, "ABC-12")).toBe(false);
+    expect(isTicketDetailPath("/build/7/tickets/ABC-13", 7, "ABC-12")).toBe(false);
+    expect(isTicketDetailPath("/build/7/issues", 7, "ABC-12")).toBe(false);
+    expect(isTicketDetailPath(null, 7, "ABC-12")).toBe(false);
+  });
+
+  it("returns false instead of throwing on malformed percent-encoding", () => {
+    expect(isTicketDetailPath("/build/7/tickets/%E0%A4%A", 7, "ABC-12")).toBe(false);
   });
 });

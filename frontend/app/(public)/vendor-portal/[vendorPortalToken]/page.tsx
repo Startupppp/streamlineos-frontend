@@ -33,18 +33,22 @@ function ExpiredState() {
   );
 }
 
+async function fetchVendorPortalData(token: string): Promise<PublicVendorPortal | null | "expired"> {
+  try {
+    return await publicGetNoStore<PublicVendorPortal>(`/public/vendor-portal/${token}`, undefined, publicVendorPortalContract);
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 410) return "expired";
+    throw e;
+  }
+}
+
 export default async function VendorPortalPage({ params }: Props) {
   const { vendorPortalToken } = await params;
 
-  let data: PublicVendorPortal | null;
-  try {
-    data = await publicGetNoStore<PublicVendorPortal>(`/public/vendor-portal/${vendorPortalToken}`, undefined, publicVendorPortalContract);
-  } catch (e) {
-    if (e instanceof ApiError && e.status === 410) return <ExpiredState />;
-    throw e;
-  }
-
-  if (!data) return notFound();
+  const portalResult = await fetchVendorPortalData(vendorPortalToken);
+  if (portalResult === "expired") return <ExpiredState />;
+  if (!portalResult) return notFound();
+  const data = portalResult;
 
   return (
     <main className="min-h-dvh bg-background">

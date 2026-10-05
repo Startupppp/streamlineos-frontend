@@ -1,10 +1,15 @@
 "use client";
 
+import { useCallback, useMemo } from "react";
+import { usePathname } from "next/navigation";
 import { parseTicketKey } from "@/components/shared/format-ticket-key";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { TicketDetailPane } from "@/features/build/ticket-details/ticket-detail-pane";
-import { resolveTicketBackHref } from "@/features/build/ticket-details/build-ticket-detail-url";
+import {
+  isTicketDetailPath,
+  resolveTicketBackHref,
+} from "@/features/build/ticket-details/build-ticket-detail-url";
 import { useTicketByKey } from "@/hooks/api/build/ticket-queries";
 
 interface TicketPanelInnerProps {
@@ -18,19 +23,32 @@ export function TicketPanelInner({
   ticketKey,
   returnTo,
 }: TicketPanelInnerProps) {
-  const parsed = parseTicketKey(ticketKey);
-  const lookup = useTicketByKey(projectId, parsed?.ticketNumber ?? null);
-  const originHref = resolveTicketBackHref(projectId, returnTo);
+  const pathname = usePathname();
+  const isCurrentTicketRoute = useMemo(
+    () => isTicketDetailPath(pathname, projectId, ticketKey),
+    [pathname, projectId, ticketKey],
+  );
+  const parsed = useMemo(() => parseTicketKey(ticketKey), [ticketKey]);
+  const lookup = useTicketByKey(
+    projectId,
+    isCurrentTicketRoute ? (parsed?.ticketNumber ?? null) : null,
+  );
+  const originHref = useMemo(
+    () => resolveTicketBackHref(projectId, returnTo),
+    [projectId, returnTo],
+  );
   const pageState = usePageState({
     permission: "build:tickets:view",
     isLoading: lookup.isLoading,
     isError: lookup.isError || !parsed,
     error: lookup.error,
   });
+  const { refetch } = lookup;
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
-  function handleRetry() {
-    void lookup.refetch();
-  }
+  if (!isCurrentTicketRoute) return null;
 
   return (
     <PageState resolution={pageState} loading={null} onRetry={handleRetry}>

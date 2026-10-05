@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { keepPreviousData } from "@tanstack/react-query";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { Loader2, Building2, UserCircle } from "lucide-react";
@@ -95,49 +95,60 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
   const assign = useAssignRoleMember();
   const unassign = useUnassignRoleMember();
 
-  const members = Array.isArray(membersQuery.data) ? membersQuery.data : [];
-  const directUsers = members.filter(
-    (member) => member.principalType === "user" && member.via === "direct",
+  const members = useMemo(
+    () => (Array.isArray(membersQuery.data) ? membersQuery.data : []),
+    [membersQuery.data],
   );
-  const assignedDepartments = members.filter(
-    (member) => member.principalType === "group",
+  const directUsers = useMemo(
+    () => members.filter((member) => member.principalType === "user" && member.via === "direct"),
+    [members],
   );
-  const directUserIds = new Set(
-    directUsers.map((member) => member.principalId),
+  const assignedDepartments = useMemo(
+    () => members.filter((member) => member.principalType === "group"),
+    [members],
   );
-  const assignedDepartmentIds = new Set(
-    assignedDepartments.map((member) => member.principalId),
+  const directUserIds = useMemo(
+    () => new Set(directUsers.map((member) => member.principalId)),
+    [directUsers],
+  );
+  const assignedDepartmentIds = useMemo(
+    () => new Set(assignedDepartments.map((member) => member.principalId)),
+    [assignedDepartments],
   );
 
   const orgMembersPage = orgMembersQuery.data;
-  const orgMembers = orgMembersPage?.data ?? [];
+  const orgMembers = useMemo(() => orgMembersPage?.data ?? [], [orgMembersPage]);
   const orgMembersTruncated = orgMembers.length >= ORG_MEMBERS_PAGE_SIZE;
-  const departments = departmentsQuery.data ?? [];
+  const departments = useMemo(() => departmentsQuery.data ?? [], [departmentsQuery.data]);
 
-  const availableUsers = orgMembers.filter(
-    (member) => !directUserIds.has(member.userId),
+  const availableUsers = useMemo(
+    () => orgMembers.filter((member) => !directUserIds.has(member.userId)),
+    [orgMembers, directUserIds],
   );
-  const availableDepartments = departments.filter(
-    (department) => !assignedDepartmentIds.has(String(department.id)),
+  const availableDepartments = useMemo(
+    () => departments.filter((department) => !assignedDepartmentIds.has(String(department.id))),
+    [departments, assignedDepartmentIds],
   );
 
-  const effectiveUsers = new Map<string, EffectiveUser>();
-  for (const member of members) {
-    if (member.principalType !== "user") continue;
-    const existing = effectiveUsers.get(member.principalId) ?? {
-      name: member.name,
-      email: member.email,
-      image: member.image,
-      vias: [],
-    };
-    const via =
-      member.via === "direct"
-        ? "Direct"
-        : `via ${member.groupName ?? "Department"}`;
-    if (!existing.vias.includes(via)) existing.vias.push(via);
-    effectiveUsers.set(member.principalId, existing);
-  }
-  const effectiveList = Array.from(effectiveUsers.entries());
+  const effectiveList = useMemo(() => {
+    const effectiveUsers = new Map<string, EffectiveUser>();
+    for (const member of members) {
+      if (member.principalType !== "user") continue;
+      const existing = effectiveUsers.get(member.principalId) ?? {
+        name: member.name,
+        email: member.email,
+        image: member.image,
+        vias: [],
+      };
+      const via =
+        member.via === "direct"
+          ? "Direct"
+          : `via ${member.groupName ?? "Department"}`;
+      if (!existing.vias.includes(via)) existing.vias.push(via);
+      effectiveUsers.set(member.principalId, existing);
+    }
+    return Array.from(effectiveUsers.entries());
+  }, [members]);
 
   const isAdding = useCallback(
     (principalType: "user" | "group", principalId: string) =>
@@ -211,9 +222,10 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
     [unassign, roleId],
   );
 
+  const { refetch: refetchMembers } = membersQuery;
   const handleRetry = useCallback(() => {
-    membersQuery.refetch();
-  }, [membersQuery]);
+    refetchMembers();
+  }, [refetchMembers]);
 
   const isLoading =
     membersQuery.isLoading ||

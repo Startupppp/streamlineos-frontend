@@ -65,18 +65,22 @@ function AlreadyRespondedState({ offer }: { offer: PublicOffer }) {
   );
 }
 
+async function fetchOfferData(token: string): Promise<PublicOffer | null | "expired"> {
+  try {
+    return await publicGetNoStore<PublicOffer>(`/public/offer/${token}`, undefined, publicOfferDetailContract);
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 410) return "expired";
+    throw e;
+  }
+}
+
 export default async function OfferAcceptancePage({ params }: Props) {
   const { offerToken } = await params;
 
-  let offer: PublicOffer | null;
-  try {
-    offer = await publicGetNoStore<PublicOffer>(`/public/offer/${offerToken}`, undefined, publicOfferDetailContract);
-  } catch (e) {
-    if (e instanceof ApiError && e.status === 410) return <ExpiredState />;
-    throw e;
-  }
-
-  if (!offer) return notFound();
+  const offerResult = await fetchOfferData(offerToken);
+  if (offerResult === "expired") return <ExpiredState />;
+  if (!offerResult) return notFound();
+  const offer = offerResult;
 
   if (offer.offerStatus !== "SENT" && offer.offerStatus !== "VIEWED") {
     return <AlreadyRespondedState offer={offer} />;
