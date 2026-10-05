@@ -3,8 +3,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createElement } from "react";
 import type { ReactNode } from "react";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import { projectsSettingsIterationsGetSettingsResponseSchema } from "@/contracts/build-contracts.generated";
 import {
-  iterationSettingsSchema,
   cycleDateRangesOverlap,
   proposedCycleOverlapsExisting,
 } from "./iteration-settings-schema";
@@ -46,9 +46,9 @@ function wrap(client: QueryClient) {
   };
 }
 
-describe("iterationSettingsSchema — contract (C5)", () => {
+describe("projectsSettingsIterationsGetSettingsResponseSchema — contract (C5)", () => {
   it("accepts a well-formed iteration settings response with defaults", () => {
-    const result = iterationSettingsSchema.safeParse({
+    const result = projectsSettingsIterationsGetSettingsResponseSchema.safeParse({
       defaultDurationWeeks: 2,
       namingPrefix: "Cycle",
     });
@@ -61,14 +61,14 @@ describe("iterationSettingsSchema — contract (C5)", () => {
 
   it("rejects a response missing namingPrefix — a null prefix would render unnamed cycles in the creation form", () => {
     expect(
-      iterationSettingsSchema.safeParse({ defaultDurationWeeks: 2 }).success,
+      projectsSettingsIterationsGetSettingsResponseSchema.safeParse({ defaultDurationWeeks: 2 }).success,
     ).toBe(false);
   });
 
   it("accepts all four valid duration values — 1, 2, 3, 4 weeks are the supported cadences", () => {
     for (const weeks of [1, 2, 3, 4]) {
       expect(
-        iterationSettingsSchema.safeParse({ defaultDurationWeeks: weeks, namingPrefix: "Sprint" }).success,
+        projectsSettingsIterationsGetSettingsResponseSchema.safeParse({ defaultDurationWeeks: weeks, namingPrefix: "Sprint" }).success,
       ).toBe(true);
     }
   });
