@@ -62,6 +62,7 @@ jest.mock("@/hooks/api/portal/use-submit-change-request", () => ({
 }));
 
 jest.mock("@/lib/portal-api-client", () => ({
+  PortalApiError: jest.requireActual<typeof import("@/lib/portal-api-client")>("@/lib/portal-api-client").PortalApiError,
   setPortalToken: jest.fn(),
   getPortalToken: jest.fn().mockReturnValue(null),
   clearPortalToken: jest.fn(),
