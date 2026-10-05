@@ -9,12 +9,12 @@ import {
   mockUseKeyboardShortcuts,
 } from "./command-center-page-test-harness";
 
-export const mockUseCan = jest.mocked(useCan);
-export const mockUseAccess = jest.mocked(useAccess);
-export const mockUseProjects = jest.mocked(useProjects);
-export const mockUseInfiniteAllWork = jest.mocked(useInfiniteAllWork);
-export const mockUseAllWork = jest.mocked(useAllWork);
-export const mockUseDashboardLayoutEditor = jest.mocked(useDashboardLayoutEditor);
+export const mockUseCan: jest.Mock = jest.mocked(useCan);
+export const mockUseAccess: jest.Mock = jest.mocked(useAccess);
+export const mockUseProjects: jest.Mock = jest.mocked(useProjects);
+export const mockUseInfiniteAllWork: jest.Mock = jest.mocked(useInfiniteAllWork);
+export const mockUseAllWork: jest.Mock = jest.mocked(useAllWork);
+export const mockUseDashboardLayoutEditor: jest.Mock = jest.mocked(useDashboardLayoutEditor);
 
 export const DEFAULT_LAYOUT_MOCK = {
   config: {
