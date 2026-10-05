@@ -32,6 +32,16 @@ jest.mock("@/hooks/api/entitlements", () => ({ useEntitlements: () => ({}) }));
 
 import { ReportsQualityTab } from "./reports-quality-tab";
 
+it("shows a desktop failures caption that toggles the associated filter", async () => {
+  mount();
+  await screen.findByRole("row", { name: /Regression run/ });
+  const caption = screen.getByText("Completed runs with failures");
+  expect(caption).toBeVisible();
+  await userEvent.setup().click(caption);
+  expect(lastParams().get("failuresOnly")).toBe("true");
+  expect(lastParams().get("status")).toBe("completed");
+});
+
 const run: TestRunListItem = {
   id: 42, orgId: "org", projectId: 1, runNumber: 4, name: "Regression run",
   cycleId: null, releaseId: null, environment: null, browserDevice: null,

@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import type { TestRunListItem } from "@/types/projects";
@@ -114,7 +115,7 @@ export function ReportsQualityTab({ projectId }: ReportsQualityTabProps) {
         <BuildListToolbar search={{ value: filters.search, onValueChange: filters.setSearch, placeholder: "Search test runs…" }}
           filters={[
             { id: "status", label: "Status", active: filters.isActive("status"), control: <BuildFilterSelect label="Status" value={status} onValueChange={handleStatus} options={STATUS_OPTIONS} /> },
-            { id: "failuresOnly", label: "Completed runs with failures", active: failuresOnly, control: <Switch aria-label="Completed runs with failures" checked={failuresOnly} onCheckedChange={handleFailures} /> },
+            { id: "failuresOnly", label: "Completed runs with failures", active: failuresOnly, control: <Label className="font-normal"><Switch aria-label="Completed runs with failures" checked={failuresOnly} onCheckedChange={handleFailures} /><span className="hidden md:inline">Completed runs with failures</span></Label> },
           ]} onClearAll={filters.clearAll}
           trailing={filters.isFiltered ? <Button type="button" variant="outline" onClick={filters.clearAll}>Clear filters</Button> : undefined} />
         <BuildListSurface permission="build:qa:view" rows={runs} columns={columns}
