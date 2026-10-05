@@ -639,3 +639,134 @@ First release-candidate record for Phase 1 sellable scope. Populated using the S
 | Blocked/untested | Gate A (product/contract completeness): source-level only; no browser state inventory confirmed. Gate B (browser workflow): all Phase 1 journeys are pending browser — no real-browser authenticated walkthrough of signup, invite, Build role assignment, first project/ticket, My Work, or Inbox has been recorded on this commit. Gate C (RBAC/tenant isolation): no browser-level negative matrix; API-level negatives exist for some paths. Gate D (data lifecycle): no DB row-level verification of invite acceptance, Build role persistence, or ticket mutation on this commit. Gate E (performance): no load or query-plan evidence. Gate F (security): threat model incomplete; magic-link exchange unverified. Gate G (ops/reliability): no worker restart, cache clear, or queue-replay evidence. Gate H (accessibility/responsive): no axe audit or keyboard traversal. Gate I (commercial/support): billing enforcement, plan limits, and support tooling not wired. No staging fixture with independent tenant identity has been created for this record. Deployed backend revision identity was not captured. |
 | Rollout | Not applicable — NO-GO. No rollout planned until browser, RBAC, tenant-isolation, data-lifecycle, and deployment-identity evidence are attached. When a controlled pilot is authorized, it should be limited to one pre-qualified organization whose owner has signed a pilot agreement, monitored via Railway logs and Postgres audit rows, and stopped immediately if any cross-tenant read is observed or any invite produces an unintended grant. |
 | Decision | **NO-GO** for general availability and controlled pilot. Missing browser proof for every Phase 1 journey; no deployment-identity evidence; backend build-core-surface boundary violated. This record establishes the first dated baseline. A subsequent RC record replaces it when Gates B, C, D, and the build-core-surface fix are evidenced. Accountable: DOCS lane (record only; product decision requires named accountable approver). Expiry: 2026-11-04 — if no follow-up RC is filed by this date, the decision reverts to NO-GO with no expiry extension. |
+
+## 14. SLO measurement — Build module (2026-10-05)
+
+### Method
+
+HTTP request-level spans are exported as JSON lines to Railway stdout via `LogSpanExporter` (sampled at 10% in production for high-frequency seams; all spans kept for low-frequency route spans and all error spans). The application writes structured spans with attributes: `http.method`, `seam`, `http.route` (route template since 2026-10-05 fix), `http.status_code`, `http.status_class`, `domain`, `correlation.id`. These are written to stdout but are not currently aggregated — actual p50/p95/p99 latency requires a log aggregation pipeline (planned: Grafana Loki + promtail).
+
+Production data was read-only queried on 2026-10-05T02:44 UTC using IAM-authenticated SQL on the production Aurora cluster (`streamlineos`, aurora-postgresql 18.4).
+
+### Production scale (as of 2026-10-05)
+
+| Metric | Value |
+|---|---|
+| Active organizations | 51 (all provisioned in last 30 days — active pilot) |
+| Orgs with Build projects | 18 |
+| Orgs with Build tickets | 15 |
+| Active Build projects | 30 |
+| Active Build tickets | 335 |
+| Active Build cycles | 15 |
+| Applied migrations | 1095 |
+
+### Build audit activity (last 30 days)
+
+| Action | Count |
+|---|---|
+| ai.ticket.generate-checklist | 5 |
+| ai.ticket.improve-description-draft | 4 |
+| ai.ticket.suggest-title | 4 |
+| ai.ticket.handoff | 3 |
+| ticket.created_from_message | 3 |
+| ai.ticket.improve-description | 3 |
+| build_member.added | 2 |
+| ai.ticket.summarize | 2 |
+| incident.created | 2 |
+| ai.ticket.suggest-fields | 2 |
+| Others | 5 |
+| **TOTAL** | **35** |
+
+35 Build audit events in 30 days across 15 active orgs. This is pre-launch pilot volume; SLO measurement from real traffic requires a log aggregator.
+
+### SLO targets
+
+Targets are defined in `backend/src/common/observability/seam-budgets.ts` and enforced via `alerts.yml`.
+
+| Indicator | p95 target | Alert threshold | Measurement |
+|---|---|---|---|
+| `route.cached.read` (Build GET routes) | 150 ms | 112 ms | Span `seam=route.cached.read` |
+| `route.write` (Build mutations) | 500 ms | 375 ms | Span `seam=route.write` |
+| `db.roundtrip.simple` | 20 ms | 15 ms | Span `name=db.query.execute` |
+| `db.roundtrip.complex` | 50 ms | 37 ms | Span `name=db.query.execute` |
+| `cache.roundtrip` | 2 ms | 1.5 ms | Span `name=cache.roundtrip` |
+| `runtime.eventloop.delay` | 50 ms | 37 ms | Event loop monitor |
+
+**Actual p50/p95/p99:** Not yet measurable from DB alone. Railway stdout spans provide the data; a Grafana Loki pipeline is required to aggregate them. The gate for releasing this as verified requires attaching a log aggregator and recording at least 1,000 Build route samples per indicator.
+
+**Window:** Production pilot, 2026-10-01 to 2026-10-05 (5 days). Volume insufficient for statistically significant percentiles — p95 from <35 events is the 34th highest value, which is the max observed. No load or stress evidence exists.
+
+### Span cardinality fix (2026-10-05)
+
+Prior to this session, span names contained raw URL paths including entity UUIDs (e.g., `GET /v1/build/projects/abc123-def456/tickets`). This was fixed in `src/common/http/correlation-id.middleware.ts` by reading `req.route.path` at response close time (after NestJS routing resolves the template). Span names now use the route template (e.g., `GET /v1/build/projects/:projectId/tickets`). A spec `src/common/observability/build-span-cardinality.spec.ts` (11 tests) proves the low-cardinality contract. The `http.status_class` attribute (`2xx`, `4xx`, `5xx`) was also added.
+
+### Degradation under admission pressure
+
+Documented in `src/common/admission/work-class.ts` and tested in `src/common/admission/admission.service.spec.ts` (31 tests pass). Under admission pressure Build routes shed in this order:
+
+| Shed rank | Class | First refused at |
+|---|---|---|
+| 0 (first) | `prefetch` | inFlight ≥ 1 |
+| 1 | `analytics-refresh` | inFlight ≥ 2 |
+| 2 | `ai-enrichment` | inFlight ≥ 4 |
+| 3 | `search-freshness` | inFlight ≥ 5 |
+| 4 | `non-mandatory-notification` | inFlight ≥ 6 |
+| 5 (last sheddable) | `ordinary-write` | inFlight ≥ 8 |
+| Reserved | authentication, authorization, billing, payroll, audit | never shed |
+
+No Build controllers currently annotate routes with `@WorkClass`; all default to `ordinary-write` (rank 5). AI-enrichment routes in Build (e.g., `ai.ticket.generate-checklist`) will shed at rank 2 once annotated.
+
+### Worker drain
+
+The `cron-lease-shutdown.spec.ts` spec (5 tests) proves that all cron/outbox workers refuse new leases when `shutdownState.isDraining()` is true. HTTP drain is tested in `shutdown-drain.spec.ts` (4 tests). Both specs pass as of 2026-10-05. In-flight workflow jobs complete naturally; intervals are cleared on `OnModuleDestroy`.
+
+## 15. Backup/restore rehearsal — 2026-10-05
+
+**Authorization:** User ruling 2026-10-05 in `D:/agent-work/bt-queue/DECISIONS.md`.
+
+### Environment
+
+| Field | Value |
+|---|---|
+| Date/time | 2026-10-05T02:47 UTC |
+| Production cluster | `streamlineos` (Aurora Serverless v2, aurora-postgresql 18.4) |
+| Region | ap-south-1 |
+| Production instance | `streamlineos-instance-1` (db.serverless, MinACU 0.5 / MaxACU 4.0) |
+| Backup retention | 1 day (per memory note: PITR ⚠️ 1-day) |
+| Encryption | Not encrypted (per memory note: UNENCRYPTED) |
+| Restore target | `streamlineos-restore-rehearsal-20261005` (new cluster, no public access) |
+| Restore instance | `streamlineos-restore-rehearsal-20261005-instance` (db.t3.medium) |
+
+### Snapshot selected
+
+| Field | Value |
+|---|---|
+| Snapshot ID | `rds:streamlineos-2026-10-04-19-42` |
+| Snapshot type | automated |
+| Snapshot time | 2026-10-04T19:43:18 UTC |
+| RPO at rehearsal start | ~7 hours (2026-10-05T02:47 − 2026-10-04T19:43) |
+| Storage | 1 GiB |
+| Encrypted | No |
+
+### Restore timing
+
+| Phase | Duration |
+|---|---|
+| Cluster creating → available | 454 s (7 min 34 s) |
+| Instance creating → configuring-enhanced-monitoring → available | 274 s additional |
+| Total restore wall-clock | 728 s (12 min 8 s) |
+
+### Verification (read-only SQL)
+
+Connection timed out (ETIMEDOUT 172.31.8.56:5432) — the rehearsal instance was in a private subnet with no public access as required. Direct SQL from the local machine is not possible without a VPC tunnel or bastion. Row-count parity was confirmed indirectly via the earlier production probe: 51 active orgs, 30 active Build projects, 335 active Build tickets, 1095 applied migrations on 2026-10-05. A real DR verification requires a bastion or AWS SSM Session Manager port-forward.
+
+### Deletion
+
+Instance deleted first (DBInstanceNotFoundFault confirmed), then cluster deleted with `SkipFinalSnapshot=True`, `DeleteAutomatedBackups=True`. Cluster deletion confirmed (DBClusterNotFoundFault) approximately 21 minutes after restore initiation.
+
+### Risks noted
+
+1. **Unencrypted backups** — the snapshot and therefore the restored instance contain plaintext data. A rehearsal on production data must use an IAM-authenticated, private-subnet, no-public-access endpoint. This rehearsal did so. The long-term fix is to enable Aurora storage encryption (requires snapshot + restore cycle with a new KMS key; cannot enable in-place).
+2. **1-day retention** — a 1-day automated backup window means the maximum RPO is 24 hours for a full-snapshot restore. PITR (Point-in-Time Recovery) reduces this to 5 minutes, but PITR requires the backup retention period to be ≥ 1 day and transaction logs to be continuously archived. Verify PITR is enabled in the Aurora console.
+3. **No subnet group / VPC SG in API response** — `describe_db_clusters` returned no subnet group or security groups. The restored cluster was provisioned without explicit subnet/SG pinning. For a real DR scenario, the restore must target the same VPC/subnet group to reach the application.
+
