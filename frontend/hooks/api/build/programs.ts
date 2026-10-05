@@ -4,12 +4,18 @@ import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-quer
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import { useGatedQuery } from "@/hooks/api/gated-query";
+import type { z } from "zod";
+import type { programDetailContract as ProgramDetailContract } from "./portfolios-schema";
 
 const programPageContract = lazyContract(() =>
   import("@/hooks/api/build/portfolios-schema").then((m) => m.programPageContract),
 );
 const programRowContract = lazyContract(() =>
   import("@/hooks/api/build/portfolios-schema").then((m) => m.programRowContract),
+);
+const programDetailContract = lazyContract(() =>
+  import("@/hooks/api/build/portfolios-schema").then((m) => m.programDetailContract),
 );
 const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
@@ -66,6 +72,25 @@ export function usePrograms(filters?: ProgramListFilters) {
   });
 }
 
+export function useProgram(
+  programId: number,
+  filters?: { projectsCursor?: string; projectsLimit?: number },
+) {
+  const params: Record<string, string> = {};
+  if (filters?.projectsCursor) params["projectsCursor"] = filters.projectsCursor;
+  if (filters?.projectsLimit) params["projectsLimit"] = String(filters.projectsLimit);
+  const hasParams = Object.keys(params).length > 0;
+  return useGatedQuery<z.infer<typeof ProgramDetailContract>>("build:programs:view", {
+    queryKey: buildWorkQueryKeys.projects.programs.detail(programId, hasParams ? params : undefined),
+    queryFn: ({ signal }) => apiClient.get<z.infer<typeof ProgramDetailContract>>(
+      `/build/programs/${programId}`, hasParams ? params : undefined, signal, programDetailContract,
+    ),
+    enabled: Number.isInteger(programId) && programId > 0,
+    staleTime: 60_000,
+    throwOnError: false,
+  });
+}
+
 export function useCreateProgram() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:programs:manage", {
@@ -102,8 +127,9 @@ export function useDeleteProgram() {
     mutationKey: ["projects", "programs", "delete"],
     mutationFn: (programId: number) =>
       apiClient.delete<void>(`/build/programs/${programId}`, undefined, undefined, noContentContract),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.programs.list() });
-    },
+    onSuccess: (_, programId) => Promise.all([
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.programs.list() }),
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.programs.detail(programId) }),
+    ]),
   });
 }

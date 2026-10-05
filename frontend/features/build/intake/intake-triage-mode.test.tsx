@@ -10,6 +10,14 @@ jest.mock("@/components/ui/badge", () => ({
   Badge: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
 }));
 
+jest.mock("@/components/ui/dialog", () => ({
+  Dialog: ({ open, children }: { open: boolean; children: React.ReactNode }) =>
+    open ? <div data-testid="triage-help-dialog">{children}</div> : null,
+  DialogContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DialogHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DialogTitle: ({ children }: { children: React.ReactNode }) => <h2>{children}</h2>,
+}));
+
 const ITEMS = [
   {
     id: 10,
@@ -179,4 +187,61 @@ it("does not show action buttons in the empty state", () => {
   render(<IntakeTriageMode items={[]} {...makeHandlers()} />);
   expect(screen.queryByRole("button", { name: /accept.*work queue/i })).not.toBeInTheDocument();
   expect(screen.queryByRole("button", { name: /decline.*intake/i })).not.toBeInTheDocument();
+});
+
+describe("IntakeTriageMode — keyboard help dialog (BT-6bce4f4e5ecd)", () => {
+  it("does not show the help dialog on initial render so the default state is unobtrusive", () => {
+    render(<IntakeTriageMode items={ITEMS} {...makeHandlers()} />);
+    expect(screen.queryByTestId("triage-help-dialog")).not.toBeInTheDocument();
+  });
+
+  it("opens the keyboard help dialog when the ? button is clicked", () => {
+    render(<IntakeTriageMode items={ITEMS} {...makeHandlers()} />);
+    fireEvent.click(screen.getByRole("button", { name: "Keyboard shortcuts" }));
+    expect(screen.getByTestId("triage-help-dialog")).toBeInTheDocument();
+  });
+
+  it("opens the help dialog when the ? key is pressed so keyboard-only users can discover shortcuts", () => {
+    render(<IntakeTriageMode items={ITEMS} {...makeHandlers()} />);
+    fireEvent.keyDown(document.body, { key: "?" });
+    expect(screen.getByTestId("triage-help-dialog")).toBeInTheDocument();
+  });
+
+  it("shows the help dialog heading when opened", () => {
+    render(<IntakeTriageMode items={ITEMS} {...makeHandlers()} />);
+    fireEvent.click(screen.getByRole("button", { name: "Keyboard shortcuts" }));
+    expect(screen.getByText("Triage keyboard shortcuts")).toBeInTheDocument();
+  });
+
+  it("the ? key does not open help when focus is on an input so form users are not disrupted", () => {
+    render(
+      <div>
+        <input data-testid="search-input" defaultValue="" />
+        <IntakeTriageMode items={ITEMS} {...makeHandlers()} />
+      </div>,
+    );
+    fireEvent.keyDown(screen.getByTestId("search-input"), { key: "?" });
+    expect(screen.queryByTestId("triage-help-dialog")).not.toBeInTheDocument();
+  });
+
+  it("a key triggers accept on the current item confirming the keyboard shortcut is wired", () => {
+    const handlers = makeHandlers();
+    render(<IntakeTriageMode items={ITEMS} {...handlers} />);
+    fireEvent.keyDown(document.body, { key: "a" });
+    expect(handlers.onAccept).toHaveBeenCalledWith(10);
+  });
+
+  it("d key triggers decline on the current item confirming the keyboard shortcut is wired", () => {
+    const handlers = makeHandlers();
+    render(<IntakeTriageMode items={ITEMS} {...handlers} />);
+    fireEvent.keyDown(document.body, { key: "d" });
+    expect(handlers.onDecline).toHaveBeenCalledWith(10);
+  });
+
+  it("l key triggers duplicate/link on the current item confirming the keyboard shortcut is wired", () => {
+    const handlers = makeHandlers();
+    render(<IntakeTriageMode items={ITEMS} {...handlers} />);
+    fireEvent.keyDown(document.body, { key: "l" });
+    expect(handlers.onDuplicate).toHaveBeenCalledWith(10);
+  });
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useLayoutEffect, useRef, useState, type ChangeEvent, type ReactNode } from "react";
 import { useSession } from "next-auth/react";
 import dynamic from "next/dynamic";
 import { Controller, useFormContext } from "react-hook-form";
@@ -19,6 +19,7 @@ import { intakeDecisionSchema, type IntakeDecisionForm } from "../intake-schema"
 import { authenticatedScope } from "@/lib/query-scope";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { getUserDisplayName } from "@/lib/person-display";
+import { numericFieldValue } from "@/lib/numeric-field";
 import type { IntakeRequest } from "@/types/projects";
 
 type DecisionAction = IntakeDecisionForm["action"];
@@ -154,6 +155,16 @@ function DecisionFields({ projectId, action, pending }: { projectId: number; act
   const { data: modules } = useModules(projectId);
   const { data: project } = useProject(projectId);
   useRegisterDirtyState(form.formState.isDirty);
+  function idFieldChange(onChange: (value: number | undefined) => void) {
+    return function handleIdFieldChange(value: string) {
+      if (!pending) onChange(numericFieldValue(value));
+    };
+  }
+  function reasonFieldChange(onChange: (event: ChangeEvent<HTMLTextAreaElement>) => void) {
+    return function handleReasonFieldChange(event: ChangeEvent<HTMLTextAreaElement>) {
+      if (!pending) onChange(event);
+    };
+  }
   return (
     <fieldset disabled={pending} className="space-y-4">
       {action === "accept" ? (
@@ -177,14 +188,14 @@ function DecisionFields({ projectId, action, pending }: { projectId: number; act
           )} />
           <Label htmlFor="intake-cycle">Cycle</Label>
           <Controller control={form.control} name="cycleId" render={({ field }) => (
-            <Select value={field.value?.toString() ?? ""} onValueChange={(value) => { if (!pending) field.onChange(value ? Number(value) : undefined); }} disabled={pending}>
+            <Select value={field.value?.toString() ?? ""} onValueChange={idFieldChange(field.onChange)} disabled={pending}>
               <SelectTrigger id="intake-cycle"><SelectValue placeholder="Select cycle..." /></SelectTrigger>
               <SelectContent>{cycles?.map((cycle) => <SelectItem key={cycle.id} value={String(cycle.id)}>{cycle.name}</SelectItem>)}</SelectContent>
             </Select>
           )} />
           <Label htmlFor="intake-module">Workstream</Label>
           <Controller control={form.control} name="moduleId" render={({ field }) => (
-            <Select value={field.value?.toString() ?? ""} onValueChange={(value) => { if (!pending) field.onChange(value ? Number(value) : undefined); }} disabled={pending}>
+            <Select value={field.value?.toString() ?? ""} onValueChange={idFieldChange(field.onChange)} disabled={pending}>
               <SelectTrigger id="intake-module"><SelectValue placeholder="Select module..." /></SelectTrigger>
               <SelectContent>{modules?.map((module) => <SelectItem key={module.id} value={String(module.id)}>{module.name}</SelectItem>)}</SelectContent>
             </Select>
@@ -196,7 +207,7 @@ function DecisionFields({ projectId, action, pending }: { projectId: number; act
           <Controller control={form.control} name="reason" render={({ field, fieldState }) => (
             <>
               <Textarea id="decline-reason" placeholder="Why is this being declined?" {...field} value={field.value ?? ""}
-                onChange={(event) => { if (!pending) field.onChange(event); }} />
+                onChange={reasonFieldChange(field.onChange)} />
               {fieldState.error && <p className="text-xs text-destructive" role="alert">{fieldState.error.message}</p>}
             </>
           )} />
@@ -207,7 +218,7 @@ function DecisionFields({ projectId, action, pending }: { projectId: number; act
           <Controller control={form.control} name="linkedWorkItemId" render={({ field, fieldState }) => (
             <>
               <TicketCombobox projectId={projectId} projectKey={project?.key ?? ""}
-                value={field.value?.toString() ?? ""} onChange={(value) => { if (!pending) field.onChange(value ? Number(value) : undefined); }} disabled={pending} />
+                value={field.value?.toString() ?? ""} onChange={idFieldChange(field.onChange)} disabled={pending} />
               {fieldState.error && <p className="text-xs text-destructive" role="alert">Select a valid existing ticket.</p>}
             </>
           )} />

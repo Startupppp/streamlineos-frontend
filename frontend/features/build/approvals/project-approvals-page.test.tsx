@@ -93,24 +93,30 @@ jest.mock("@/components/ui/data-table", () => ({
     data: typeof approvalRow[];
     selection?: { onChange?: (ids: Set<string>) => void; selected?: Set<string | number> };
     mobileCard?: (row: typeof approvalRow) => React.ReactNode;
-  }) => (
+  }) => {
+    function handleSelectRow() {
+      selection?.onChange?.(new Set(["1"]));
+      mockDataTableOnChange(new Set(["1"]));
+    }
+    function handleOpenDelegate() {
+      if (data[0]) mockSetDelegateTarget?.(data[0]);
+    }
+    return (
     <div data-testid="data-table" data-rows={data.length} data-selected={selection?.selected?.size ?? 0}>
       <button
         type="button"
         data-testid="select-row-1"
-        onClick={() => {
-          selection?.onChange?.(new Set(["1"]));
-          mockDataTableOnChange(new Set(["1"]));
-        }}
+        onClick={handleSelectRow}
       />
       <button
         type="button"
         data-testid="open-delegate"
-        onClick={() => data[0] && mockSetDelegateTarget?.(data[0])}
+        onClick={handleOpenDelegate}
       />
       {data[0] && mobileCard ? mobileCard(data[0]) : null}
     </div>
-  ),
+    );
+  },
   DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
 }));
 

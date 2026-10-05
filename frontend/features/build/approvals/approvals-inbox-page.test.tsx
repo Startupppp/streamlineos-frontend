@@ -84,12 +84,17 @@ jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
 }));
 
 jest.mock("@/components/ui/data-table", () => ({
-  DataTable: ({ data, selection, columns }: { data: ApprovalInboxItem[]; columns: DataTableColumn<ApprovalInboxItem>[]; selection?: { selected: Set<string | number>; onChange: (ids: Set<string | number>) => void } }) => (
+  DataTable: ({ data, selection, columns }: { data: ApprovalInboxItem[]; columns: DataTableColumn<ApprovalInboxItem>[]; selection?: { selected: Set<string | number>; onChange: (ids: Set<string | number>) => void } }) => {
+    function handleSelectApprovals() {
+      selection?.onChange(new Set(data.map((row) => `${row.projectId}-${row.id}`)));
+    }
+    return (
     <div data-testid="data-table" data-rows={data.length} data-selected={selection?.selected.size ?? 0}>
-      <button onClick={() => selection?.onChange(new Set(data.map((row) => `${row.projectId}-${row.id}`)))}>Select approvals</button>
+      <button onClick={handleSelectApprovals}>Select approvals</button>
       {data.map((row) => <div key={row.id}>{columns.find((column) => column.key === "actions")?.cell?.(row)}</div>)}
     </div>
-  ),
+    );
+  },
   DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
 }));
 

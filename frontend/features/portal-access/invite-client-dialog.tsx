@@ -22,6 +22,7 @@ import { useActivateClient } from "@/hooks/api/portal-access/grants";
 import { useProjects } from "@/hooks/api/build/projects";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { numericSelectChange } from "@/lib/numeric-field";
 import type { ActivationResult } from "@/hooks/api/portal-access/portal-access-schema";
 import {
   activateClientFormSchema,
@@ -236,7 +237,7 @@ export function InviteClientDialog({ open, onOpenChange, onInvited, defaultProje
                   <FormItem>
                     <FormLabel>Project</FormLabel>
                     <Select
-                      onValueChange={(v) => field.onChange(Number(v))}
+                      onValueChange={numericSelectChange(field.onChange)}
                       value={field.value ? String(field.value) : ""}
                     >
                       <FormControl>

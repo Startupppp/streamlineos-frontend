@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useCallback, useState, type UIEvent } from "react";
+import React, { useMemo, useCallback, useState, type UIEvent } from "react";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { format, subDays } from "date-fns";
@@ -57,6 +57,10 @@ import { AgentRunsPanel } from "./command-center-agent-runs-panel";
 import { RisksPanel } from "./command-center-risks-panel";
 import { ReleasesPanel } from "./command-center-releases-panel";
 import { BlockersPanel } from "./command-center-rows";
+import { useDashboardLayoutEditor } from "./use-dashboard-layout";
+import { CommandCenterLayoutPanel, LayoutResetButton } from "./command-center-layout-manager";
+import { toast } from "sonner";
+import type { WidgetType } from "./dashboard-layout";
 
 const COMMAND_CENTER_HEALTH_VALUES = [
   "on_track",
@@ -315,6 +319,24 @@ export function CommandCenterPage() {
 
   const isReady = pageState.kind === "ready";
 
+  const handleLayoutConflict = useCallback(() => {
+    toast.error("Layout conflict — refreshed to latest version.");
+  }, []);
+
+  const { config, reorder: reorderWidget, removeWidget, resetToDefault } =
+    useDashboardLayoutEditor(handleLayoutConflict);
+
+  const handleResetLayout = useCallback(() => {
+    resetToDefault("member");
+  }, [resetToDefault]);
+
+  const orderedWidgetTypes = useMemo((): WidgetType[] => {
+    if (config.widgets.length === 0) {
+      return ["my-issues", "projects", "approvals", "agent-runs", "risks", "releases", "blockers"];
+    }
+    return config.widgets.map((w) => w.type);
+  }, [config.widgets]);
+
   return (
     <>
       <PageWrapper
@@ -409,36 +431,68 @@ export function CommandCenterPage() {
               <CommandCenterToolbar />
             </PmSection>
 
+            <div className="flex min-w-0 w-full max-w-full items-center justify-end">
+              <LayoutResetButton onReset={handleResetLayout} />
+            </div>
             <div className={COMMAND_CENTER_PANELS_GRID}>
-              <MyIssuesPanel
-                items={myWorkItems}
-                projects={projects}
-                isLoading={myIssuesLoading}
-                isError={myIssuesError}
-                error={myIssuesRawError}
-                isFetchingNextPage={isFetchingNextPage}
-                emptyActions={myIssuesEmpty}
-                focusedIndex={focusedIndex}
-                onRetry={handleMyIssuesRetry}
-                onScroll={handleMyIssuesScroll}
-                onCreateIssue={handleCreateIssueShortcut}
-                onCreateForProject={handleCreateForProject}
-              />
-              <ProjectsPanel
-                projects={projects}
-                canCreateProject={canCreateProject}
-                canCreateIssue={canCreateIssue}
-                isError={projectsError}
-                error={projectsRawError}
-                onCreateProject={handleOpenWizard}
-                onCreateForProject={handleCreateForProject}
-                onRetry={() => void refetchProjects()}
-              />
-              {canViewApprovals && <ApprovalsPanel />}
-              {canViewTickets && <AgentRunsPanel />}
-              {canViewRisks && <RisksPanel />}
-              <ReleasesPanel />
-              {canViewTickets && <BlockersPanel />}
+              {orderedWidgetTypes.map((type, i) => {
+                let panel: React.ReactNode = null;
+                if (type === "my-issues") {
+                  panel = (
+                    <MyIssuesPanel
+                      items={myWorkItems}
+                      projects={projects}
+                      isLoading={myIssuesLoading}
+                      isError={myIssuesError}
+                      error={myIssuesRawError}
+                      isFetchingNextPage={isFetchingNextPage}
+                      emptyActions={myIssuesEmpty}
+                      focusedIndex={focusedIndex}
+                      onRetry={handleMyIssuesRetry}
+                      onScroll={handleMyIssuesScroll}
+                      onCreateIssue={handleCreateIssueShortcut}
+                      onCreateForProject={handleCreateForProject}
+                    />
+                  );
+                } else if (type === "projects") {
+                  panel = (
+                    <ProjectsPanel
+                      projects={projects}
+                      canCreateProject={canCreateProject}
+                      canCreateIssue={canCreateIssue}
+                      isError={projectsError}
+                      error={projectsRawError}
+                      onCreateProject={handleOpenWizard}
+                      onCreateForProject={handleCreateForProject}
+                      onRetry={() => void refetchProjects()}
+                    />
+                  );
+                } else if (type === "approvals" && canViewApprovals) {
+                  panel = <ApprovalsPanel />;
+                } else if (type === "agent-runs" && canViewTickets) {
+                  panel = <AgentRunsPanel />;
+                } else if (type === "risks" && canViewRisks) {
+                  panel = <RisksPanel />;
+                } else if (type === "releases") {
+                  panel = <ReleasesPanel />;
+                } else if (type === "blockers" && canViewTickets) {
+                  panel = <BlockersPanel />;
+                }
+                if (!panel) return null;
+                return (
+                  <CommandCenterLayoutPanel
+                    key={type}
+                    widgetType={type}
+                    index={i}
+                    total={orderedWidgetTypes.length}
+                    onMoveUp={() => reorderWidget(i, i - 1)}
+                    onMoveDown={() => reorderWidget(i, i + 1)}
+                    onRemove={() => removeWidget(type)}
+                  >
+                    {panel}
+                  </CommandCenterLayoutPanel>
+                );
+              })}
             </div>
 
             <motion.p

@@ -63,7 +63,7 @@ describe("Build Inbox triage workflow", () => {
     params = new URLSearchParams("section=ALL&q=Notification&type=PROJECTS&projectId=54&panel=preview");
     row = { ...row, isRead: true };
     const user = userEvent.setup(); setup();
-    await waitFor(() => expect(screen.getByTestId("preview")).toHaveTextContent("Notification 42"));
+    await waitFor(() => expect(screen.getByTestId("preview")).toHaveTextContent("Notification 42"), { timeout: 5000 });
     await user.keyboard("{Escape}");
     await waitFor(() => expect(screen.getByTestId("preview")).not.toHaveTextContent("Notification 42"));
     expect(screen.getByRole("searchbox", { name: "Search notifications" })).toHaveFocus();

@@ -402,6 +402,59 @@ export const projectsRoadmapUpdateChangelogBodySchema = z.strictObject({
 });
 export type ProjectsRoadmapUpdateChangelogBody = z.input<typeof projectsRoadmapUpdateChangelogBodySchema>;
 
+export const dashboardLayoutGetLayoutResponseSchema = z.object({
+  layoutVersion: z.number().int().gte(0).lte(9007199254740991),
+  config: z.object({
+    widgets: z.array(z.object({
+      type: z.enum(["my-issues", "projects", "approvals", "agent-runs", "risks", "releases", "blockers"]),
+      position: z.object({
+        col: z.number().int().gte(0).lte(9007199254740991),
+        row: z.number().int().gte(0).lte(9007199254740991),
+        w: z.number().int().gte(1).lte(12),
+        h: z.number().int().gte(1).lte(8),
+      }),
+      config: z.record(z.string(), z.unknown()).optional(),
+    })),
+  }),
+  updatedAt: z.string(),
+});
+export type DashboardLayoutGetLayoutResponse = z.infer<typeof dashboardLayoutGetLayoutResponseSchema>;
+
+export const dashboardLayoutSaveLayoutResponseSchema = z.object({
+  layoutVersion: z.number().int().gte(0).lte(9007199254740991),
+  config: z.object({
+    widgets: z.array(z.object({
+      type: z.enum(["my-issues", "projects", "approvals", "agent-runs", "risks", "releases", "blockers"]),
+      position: z.object({
+        col: z.number().int().gte(0).lte(9007199254740991),
+        row: z.number().int().gte(0).lte(9007199254740991),
+        w: z.number().int().gte(1).lte(12),
+        h: z.number().int().gte(1).lte(8),
+      }),
+      config: z.record(z.string(), z.unknown()).optional(),
+    })),
+  }),
+  updatedAt: z.string(),
+});
+export type DashboardLayoutSaveLayoutResponse = z.infer<typeof dashboardLayoutSaveLayoutResponseSchema>;
+
+export const dashboardLayoutSaveLayoutBodySchema = z.strictObject({
+  layoutVersion: z.number().int().gte(0).lte(9007199254740991),
+  config: z.strictObject({
+    widgets: z.array(z.strictObject({
+      type: z.enum(["my-issues", "projects", "approvals", "agent-runs", "risks", "releases", "blockers"]),
+      position: z.strictObject({
+        col: z.number().int().gte(0).lte(9007199254740991),
+        row: z.number().int().gte(0).lte(9007199254740991),
+        w: z.number().int().gte(1).lte(12),
+        h: z.number().int().gte(1).lte(8),
+      }),
+      config: z.record(z.string(), z.unknown()).optional(),
+    })),
+  }),
+});
+export type DashboardLayoutSaveLayoutBody = z.input<typeof dashboardLayoutSaveLayoutBodySchema>;
+
 export const commentDraftsReadByTicketResponseSchema = z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
@@ -857,6 +910,12 @@ export const managedProductsGetProductInsightsResponseSchema = z.object({
 });
 export type ManagedProductsGetProductInsightsResponse = z.infer<typeof managedProductsGetProductInsightsResponseSchema>;
 
+export const managedProductsSetScoreOverrideBodySchema = z.strictObject({
+  confidenceScore: z.number().int().gte(0).lte(100),
+  overrideReason: z.string(),
+});
+export type ManagedProductsSetScoreOverrideBody = z.input<typeof managedProductsSetScoreOverrideBodySchema>;
+
 export const buildMembersListResponseSchema = z.object({
   data: z.array(z.object({
     id: z.string(),
@@ -891,6 +950,13 @@ export const buildMembersAddBodySchema = z.strictObject({
   role: z.enum(["member", "admin"]).optional(),
 });
 export type BuildMembersAddBody = z.input<typeof buildMembersAddBodySchema>;
+
+export const buildStandingGetMemberStandingResponseSchema = z.object({
+  orgStanding: z.string(),
+  buildStanding: z.boolean(),
+  projectCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+});
+export type BuildStandingGetMemberStandingResponse = z.infer<typeof buildStandingGetMemberStandingResponseSchema>;
 
 export const projectResourcesListOrgCustomStatesResponseSchema = z.array(z.object({
   name: z.string(),
@@ -1161,6 +1227,36 @@ export const programsCreateProgramBodySchema = z.strictObject({
   health: z.enum(["on_track", "at_risk", "off_track"]).optional(),
 });
 export type ProgramsCreateProgramBody = z.input<typeof programsCreateProgramBodySchema>;
+
+export const programsGetProgramResponseSchema = z.object({
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  orgId: z.string(),
+  portfolioId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  name: z.string(),
+  description: z.string().nullable(),
+  ownerId: z.string().nullable(),
+  status: z.enum(["active", "on_hold", "completed", "archived"]),
+  health: z.enum(["on_track", "at_risk", "off_track"]).nullable(),
+  createdBy: z.string().nullable(),
+  createdAt: z.iso.datetime({ offset: true }),
+  updatedAt: z.iso.datetime({ offset: true }),
+  deletedAt: z.iso.datetime({ offset: true }).nullable(),
+  projects: z.object({
+    data: z.array(z.object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      name: z.string(),
+      key: z.string(),
+      status: z.enum(["ACTIVE", "COMPLETED", "ARCHIVED"]),
+      addedAt: z.iso.datetime({ offset: true }),
+    })),
+    pagination: z.object({
+      limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      hasMore: z.boolean(),
+      nextCursor: z.string().nullable(),
+    }),
+  }),
+});
+export type ProgramsGetProgramResponse = z.infer<typeof programsGetProgramResponseSchema>;
 
 export const programsUpdateProgramResponseSchema = z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -6846,6 +6942,12 @@ export const workloadCapacityCapacityResponseSchema = z.object({
 });
 export type WorkloadCapacityCapacityResponse = z.infer<typeof workloadCapacityCapacityResponseSchema>;
 
+export const feedbucketRouteToIntakeResponseSchema = z.object({
+  intakeId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  created: z.boolean(),
+});
+export type FeedbucketRouteToIntakeResponse = z.infer<typeof feedbucketRouteToIntakeResponseSchema>;
+
 export const notificationsUnreadCountResponseSchema = z.object({
   count: z.number().int().gte(0).lte(9007199254740991),
 });
@@ -7029,6 +7131,8 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "ProjectsRoadmapController_createChangelog", method: "POST", path: "/build/changelog", response: "projectsRoadmapCreateChangelogResponseSchema", body: "projectsRoadmapCreateChangelogBodySchema" },
   { operationId: "ProjectsRoadmapController_updateChangelog", method: "PATCH", path: "/build/changelog/{entryId}", response: "projectsRoadmapUpdateChangelogResponseSchema", body: "projectsRoadmapUpdateChangelogBodySchema" },
   { operationId: "ProjectsRoadmapController_deleteChangelog", method: "DELETE", path: "/build/changelog/{entryId}" },
+  { operationId: "DashboardLayoutController_getLayout", method: "GET", path: "/build/command-center/layout", response: "dashboardLayoutGetLayoutResponseSchema" },
+  { operationId: "DashboardLayoutController_saveLayout", method: "PUT", path: "/build/command-center/layout", response: "dashboardLayoutSaveLayoutResponseSchema", body: "dashboardLayoutSaveLayoutBodySchema" },
   { operationId: "CommentDraftsController_readByTicket", method: "GET", path: "/build/comment-drafts/by-ticket/{ticketId}", response: "commentDraftsReadByTicketResponseSchema" },
   { operationId: "CommentDraftsController_deleteByTicket", method: "DELETE", path: "/build/comment-drafts/by-ticket/{ticketId}", response: "commentDraftsDeleteByTicketResponseSchema" },
   { operationId: "CommentDraftsController_listMine", method: "GET", path: "/build/comment-drafts/mine", response: "commentDraftsListMineResponseSchema" },
@@ -7053,9 +7157,11 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "ManagedProductsController_updateManagedProduct", method: "PATCH", path: "/build/managed-products/{managedProductId}", response: "managedProductsUpdateManagedProductResponseSchema", body: "managedProductsUpdateManagedProductBodySchema" },
   { operationId: "ManagedProductsController_deleteManagedProduct", method: "DELETE", path: "/build/managed-products/{managedProductId}" },
   { operationId: "ManagedProductsController_getProductInsights", method: "GET", path: "/build/managed-products/{managedProductId}/insights", response: "managedProductsGetProductInsightsResponseSchema" },
+  { operationId: "ManagedProductsController_setScoreOverride", method: "PATCH", path: "/build/managed-products/{managedProductId}/insights/score-override", body: "managedProductsSetScoreOverrideBodySchema" },
   { operationId: "BuildMembersController_list", method: "GET", path: "/build/members", response: "buildMembersListResponseSchema" },
   { operationId: "BuildMembersController_add", method: "POST", path: "/build/members", response: "buildMembersAddResponseSchema", body: "buildMembersAddBodySchema" },
   { operationId: "BuildMembersController_remove", method: "DELETE", path: "/build/members/{userId}" },
+  { operationId: "BuildStandingController_getMemberStanding", method: "GET", path: "/build/members/{userId}/standing", response: "buildStandingGetMemberStandingResponseSchema" },
   { operationId: "ProjectResourcesController_listOrgCustomStates", method: "GET", path: "/build/org-custom-states", response: "projectResourcesListOrgCustomStatesResponseSchema" },
   { operationId: "ClientPortalController_listPortalProjects", method: "GET", path: "/build/portal/projects", response: "clientPortalListPortalProjectsResponseSchema" },
   { operationId: "ClientPortalController_listPortalChangeRequests", method: "GET", path: "/build/portal/projects/{projectId}/change-requests", response: "clientPortalListPortalChangeRequestsResponseSchema" },
@@ -7070,6 +7176,7 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "PortfoliosController_unlinkProject", method: "DELETE", path: "/build/portfolios/{portfolioId}/projects/{projectId}" },
   { operationId: "ProgramsController_listPrograms", method: "GET", path: "/build/programs", response: "programsListProgramsResponseSchema" },
   { operationId: "ProgramsController_createProgram", method: "POST", path: "/build/programs", response: "programsCreateProgramResponseSchema", body: "programsCreateProgramBodySchema" },
+  { operationId: "ProgramsController_getProgram", method: "GET", path: "/build/programs/{programId}", response: "programsGetProgramResponseSchema" },
   { operationId: "ProgramsController_updateProgram", method: "PATCH", path: "/build/programs/{programId}", response: "programsUpdateProgramResponseSchema", body: "programsUpdateProgramBodySchema" },
   { operationId: "ProgramsController_deleteProgram", method: "DELETE", path: "/build/programs/{programId}" },
   { operationId: "ProjectsReleasesController_listOrgReleases", method: "GET", path: "/build/releases", response: "projectsReleasesListOrgReleasesResponseSchema" },
@@ -7315,6 +7422,7 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "WorkflowController_updateTransition", method: "PATCH", path: "/build/{projectId}/workflow/transitions/{transitionId}", response: "workflowUpdateTransitionResponseSchema", body: "workflowUpdateTransitionBodySchema" },
   { operationId: "WorkflowController_deleteTransition", method: "DELETE", path: "/build/{projectId}/workflow/transitions/{transitionId}" },
   { operationId: "WorkloadCapacityController_capacity", method: "GET", path: "/build/{projectId}/workload/capacity", response: "workloadCapacityCapacityResponseSchema" },
+  { operationId: "FeedbucketController_routeToIntake", method: "POST", path: "/feedbucket/submissions/{submissionId}/route-to-intake", response: "feedbucketRouteToIntakeResponseSchema" },
   { operationId: "NotificationsController_unreadCount", method: "GET", path: "/notifications/unread-count", response: "notificationsUnreadCountResponseSchema" },
   { operationId: "PublicController_getPublicForm", method: "GET", path: "/public/forms/{token}", response: "publicGetPublicFormResponseSchema" },
   { operationId: "PublicController_submitPublicForm", method: "POST", path: "/public/forms/{token}/submit", response: "publicSubmitPublicFormResponseSchema", body: "publicSubmitPublicFormBodySchema" },

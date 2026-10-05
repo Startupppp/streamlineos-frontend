@@ -30,6 +30,19 @@ jest.mock("./command-center-toolbar", () => ({
   CommandCenterToolbar: () => <div data-testid="command-center-toolbar" />,
 }));
 
+jest.mock("./use-dashboard-layout", () => ({
+  useDashboardLayoutEditor: jest.fn(),
+}));
+
+jest.mock("./command-center-layout-manager", () => ({
+  CommandCenterLayoutPanel: ({ children }: { children: ReactNode }) => <>{children}</>,
+  LayoutResetButton: () => <button type="button">Reset layout</button>,
+}));
+
+jest.mock("sonner", () => ({
+  toast: { error: jest.fn(), success: jest.fn() },
+}));
+
 jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
   useBuildListKeyboard: jest.fn(() => ({ focusedIndex: null, setFocusedIndex: jest.fn() })),
 }));
@@ -173,12 +186,34 @@ jest.mock("@/components/ui/skeleton", () => ({
 import { useCan, useAccess } from "@/hooks/api/access";
 import { useProjects } from "@/hooks/api/build/projects";
 import { useInfiniteAllWork, useAllWork } from "@/hooks/api/build/all-work";
+import { useDashboardLayoutEditor } from "./use-dashboard-layout";
 
 const mockUseCan = useCan as jest.Mock;
 const mockUseAccess = useAccess as jest.Mock;
 const mockUseProjects = useProjects as jest.Mock;
 const mockUseInfiniteAllWork = useInfiniteAllWork as jest.Mock;
 const mockUseAllWork = useAllWork as jest.Mock;
+const mockUseDashboardLayoutEditor = useDashboardLayoutEditor as jest.Mock;
+
+const DEFAULT_LAYOUT_MOCK = {
+  config: {
+    widgets: [
+      { type: "my-issues", position: { col: 0, row: 0, w: 3, h: 4 } },
+      { type: "projects", position: { col: 3, row: 0, w: 2, h: 4 } },
+      { type: "approvals", position: { col: 0, row: 4, w: 2, h: 3 } },
+      { type: "agent-runs", position: { col: 2, row: 4, w: 2, h: 3 } },
+      { type: "risks", position: { col: 4, row: 4, w: 1, h: 3 } },
+      { type: "releases", position: { col: 0, row: 7, w: 3, h: 3 } },
+      { type: "blockers", position: { col: 3, row: 7, w: 2, h: 3 } },
+    ],
+  },
+  layoutVersion: 1,
+  isPending: false,
+  reorder: jest.fn(),
+  removeWidget: jest.fn(),
+  addWidget: jest.fn(),
+  resetToDefault: jest.fn(),
+};
 
 const ACCESS_GRANTED = {
   data: { isOrgOwner: false, scopes: { "build:view": "all" }, modules: {} },
@@ -219,6 +254,7 @@ beforeEach(() => {
   mockUseOnlineStatus.mockReturnValue(true);
   mockUseKeyboardShortcuts.mockReset();
   mockRouterPush.mockClear();
+  mockUseDashboardLayoutEditor.mockReturnValue({ ...DEFAULT_LAYOUT_MOCK, reorder: jest.fn(), removeWidget: jest.fn(), addWidget: jest.fn(), resetToDefault: jest.fn() });
   mockSearchParams = new URLSearchParams();
 });
 

@@ -71,8 +71,8 @@ export function useInboxSelectedNotification(id: number | null, section: Selecte
       }
       try {
         requireCurrent();
-        const path = "/notifications?" + new URLSearchParams(toStringParams({ section, sourceModule: "build", ids: String(id), limit: 1 }));
-        const response = await apiClient.request(path, { method: "GET" }, { signal: controller.signal, expectedIdentity: lease.owner.identity });
+        const search = new URLSearchParams(toStringParams({ section, sourceModule: "build", ids: String(id), limit: 1 }));
+        const response = await apiClient.request(`/notifications?${search}`, { method: "GET" }, { signal: controller.signal, expectedIdentity: lease.owner.identity });
         requireCurrent();
         const page = await parseApiResponse<IdCursorPage<Notification>>(response, await notificationListLazy(), "/notifications");
         requireCurrent();

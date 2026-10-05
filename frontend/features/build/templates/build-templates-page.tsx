@@ -47,6 +47,9 @@ const CATEGORY_OPTIONS = [
   { value: "OPERATIONS", label: "Operations" },
   { value: "DESIGN", label: "Design" },
   { value: "SALES", label: "Sales" },
+  { value: "CONTENT", label: "Content Production" },
+  { value: "FREELANCER", label: "Freelancer" },
+  { value: "SOFTWARE_PRODUCT", label: "Software Product" },
 ] as const;
 
 const SORT_OPTIONS = [
