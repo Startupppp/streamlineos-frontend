@@ -104,6 +104,9 @@ jest.mock("./use-all-work-bulk", () => ({
     expandToAllMatching: jest.fn(),
   }),
 }));
+jest.mock("./use-all-work-export", () => ({
+  useAllWorkExport: () => ({ open: false, setOpen: jest.fn(), groups: [], handleOpen: jest.fn(), handleConfirm: jest.fn(), isExporting: false }),
+}));
 jest.mock("./use-all-work-keyboard", () => ({
   useAllWorkKeyboard: (...args: unknown[]) => mockUseAllWorkKeyboard(...args),
 }));

@@ -1,10 +1,13 @@
 "use client";
 
 import { useRef } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useCan } from "@/hooks/api/access";
 import { newIdempotencyKey } from "@/lib/idempotency-key";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import {
   commitTicketImport,
   exportTickets,
@@ -14,6 +17,7 @@ import type {
   TicketImportExportPreviewImportResponse,
   TicketImportExportCommitImportResponse,
   TicketImportExportExportTicketsResponse,
+  TicketImportExportPreviewExportResponse,
 } from "@/contracts/build-contracts.generated";
 import type { ImportFormat, ImportMode } from "@/features/build/import-export/import-export-contract";
 
@@ -84,6 +88,47 @@ export function useCommitTicketImport(projectId: number) {
         qc.invalidateQueries({
           queryKey: buildWorkQueryKeys.projects.columnCounts(projectId),
         });
+      },
+    },
+  );
+}
+
+const ticketExportPreviewContract = lazyContract(() =>
+  import("@/contracts/build-contracts.generated").then((m) => m.ticketImportExportPreviewExportResponseSchema),
+);
+
+export function useExportTicketsPreview(projectId: number) {
+  const canView = useCan("build:tickets:view");
+  return useQuery({
+    queryKey: buildWorkQueryKeys.projects.importExport.exportPreview(projectId),
+    queryFn: ({ signal }) =>
+      apiClient.get<TicketImportExportPreviewExportResponse>(
+        `/build/${projectId}/import-export/tickets/export/preview`,
+        undefined,
+        signal,
+        ticketExportPreviewContract,
+      ),
+    enabled: canView && projectId > 0,
+    staleTime: 30_000,
+  });
+}
+
+export interface TicketSelectionExportGroup {
+  projectId: number;
+  ticketIds: number[];
+}
+
+export function useExportTicketSelection() {
+  return useAuthorizedMutation<TicketImportExportExportTicketsResponse[], Error, TicketSelectionExportGroup[]>(
+    "build:tickets:view",
+    {
+      mutationKey: buildWorkQueryKeys.projects.importExport.selectionExport(),
+      mutationFn: async (groups) => {
+        const results: TicketImportExportExportTicketsResponse[] = [];
+        for (const group of groups) {
+          results.push(await exportTickets({ projectId: group.projectId, format: "csv", ticketIds: group.ticketIds }));
+        }
+        return results;
       },
     },
   );

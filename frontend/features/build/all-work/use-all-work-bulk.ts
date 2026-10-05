@@ -55,6 +55,7 @@ interface UseAllWorkBulkReturn {
   isPendingBulk: boolean;
   isExpandedSelection: boolean;
   expandedTotal: number;
+  expandedEntries: AllWorkIdsSnapshot["entries"] | undefined;
   expandToAllMatching: (snapshot: AllWorkIdsSnapshot) => void;
   handleBulkStatus: (value: string) => void;
   handleBulkPriority: (value: string) => void;
@@ -68,6 +69,7 @@ export function useAllWorkBulk(tickets: AllWorkTicket[]): UseAllWorkBulkReturn {
   const [tableSelection, setTableSelection] = useState<Set<string | number>>(new Set());
   const [isExpandedSelection, setIsExpandedSelection] = useState(false);
   const [expandedTotal, setExpandedTotal] = useState(0);
+  const [expandedEntries, setExpandedEntries] = useState<AllWorkIdsSnapshot["entries"] | undefined>(undefined);
 
   const selectedTicketIds = useMemo(
     () => [...tableSelection].map((id) => Number(id)),
@@ -176,6 +178,7 @@ export function useAllWorkBulk(tickets: AllWorkTicket[]): UseAllWorkBulkReturn {
       if (totalUpdated > 0) {
         setTableSelection(new Set());
         setIsExpandedSelection(false);
+        setExpandedEntries(undefined);
         setExpandedTotal(0);
       }
     },
@@ -218,6 +221,7 @@ export function useAllWorkBulk(tickets: AllWorkTicket[]): UseAllWorkBulkReturn {
   const handleClearSelection = useCallback(() => {
     setTableSelection(new Set());
     setIsExpandedSelection(false);
+    setExpandedEntries(undefined);
     setExpandedTotal(0);
   }, []);
 
@@ -226,6 +230,7 @@ export function useAllWorkBulk(tickets: AllWorkTicket[]): UseAllWorkBulkReturn {
     setTableSelection(new Set(all));
     setIsExpandedSelection(true);
     setExpandedTotal(snapshot.total);
+    setExpandedEntries(snapshot.entries);
   }, []);
 
   return {
@@ -236,6 +241,7 @@ export function useAllWorkBulk(tickets: AllWorkTicket[]): UseAllWorkBulkReturn {
     isPendingBulk: crossProjectBulkMutation.isPending,
     isExpandedSelection,
     expandedTotal,
+    expandedEntries,
     expandToAllMatching,
     handleBulkStatus,
     handleBulkPriority,

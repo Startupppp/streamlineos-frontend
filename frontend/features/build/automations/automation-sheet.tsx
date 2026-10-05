@@ -42,8 +42,9 @@ import {
 } from "./automation-schema";
 import { AutomationDryRunPanel } from "./automation-dry-run-panel";
 import { AutomationRunHistory } from "./automation-run-history";
+import { AutomationSettingsTab } from "./automation-settings-tab";
 
-type SheetTab = "rules" | "test" | "history";
+type SheetTab = "rules" | "test" | "history" | "settings";
 
 interface AutomationSheetProps {
   open: boolean;
@@ -84,6 +85,7 @@ export function AutomationSheet({
   const handleTabRules = useCallback(() => setActiveTab("rules"), []);
   const handleTabTest = useCallback(() => setActiveTab("test"), []);
   const handleTabHistory = useCallback(() => setActiveTab("history"), []);
+  const handleTabSettings = useCallback(() => setActiveTab("settings"), []);
 
   function makeRemoveConditionHandler(idx: number) {
     return () => onRemoveCondition(idx);
@@ -155,6 +157,20 @@ export function AutomationSheet({
               >
                 History
               </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === "settings"}
+                className={cn(
+                  "rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
+                  activeTab === "settings"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-muted",
+                )}
+                onClick={handleTabSettings}
+              >
+                Settings
+              </button>
             </div>
           )}
         </SheetHeader>
@@ -172,6 +188,15 @@ export function AutomationSheet({
         {editingAutomation !== null && activeTab === "history" && (
           <SheetBody className="px-4 py-3">
             <AutomationRunHistory
+              projectId={projectId}
+              automationId={editingAutomation.id}
+            />
+          </SheetBody>
+        )}
+
+        {editingAutomation !== null && activeTab === "settings" && (
+          <SheetBody className="px-4 py-3">
+            <AutomationSettingsTab
               projectId={projectId}
               automationId={editingAutomation.id}
             />

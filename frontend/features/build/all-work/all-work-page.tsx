@@ -52,6 +52,8 @@ import { useAllWorkBulk } from "./use-all-work-bulk";
 import { useAllWorkIds } from "@/hooks/api/build/all-work";
 import { useAllWorkKeyboard } from "./use-all-work-keyboard";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
+import { AllWorkExportPreviewDialog } from "./all-work-export-preview-dialog";
+import { useAllWorkExport } from "./use-all-work-export";
 
 const GROUP_OPTIONS = [
   { value: "project", label: "By Project" },
@@ -167,6 +169,7 @@ export function AllWorkPage() {
     handleClearSelection,
     isExpandedSelection,
     expandedTotal,
+    expandedEntries,
     expandToAllMatching,
   } = useAllWorkBulk(tickets);
 
@@ -202,6 +205,8 @@ export function AllWorkPage() {
   }, [idsSnapshot, expandToAllMatching]);
 
   const [focusedIndex, setFocusedIndex] = useState(0);
+
+  const allWorkExport = useAllWorkExport(tableSelection, tickets, expandedEntries);
 
   const handleTicketClickForTable = useCallback(
     (ticketId: number) => {
@@ -428,7 +433,15 @@ export function AllWorkPage() {
                     onBulkPriority={handleBulkPriority}
                     onBulkAssignee={handleBulkAssignee}
                     onBulkCycle={handleBulkCycleNoOp}
+                    onBulkExport={allWorkExport.handleOpen}
                     onClear={handleClearSelection}
+                  />
+                  <AllWorkExportPreviewDialog
+                    open={allWorkExport.open}
+                    onOpenChange={allWorkExport.setOpen}
+                    groups={allWorkExport.groups}
+                    isExporting={allWorkExport.isExporting}
+                    onConfirm={allWorkExport.handleConfirm}
                   />
                   {showExpandBanner && (
                     <div className="flex items-center justify-center gap-2 rounded-md border border-dashed bg-muted/40 px-4 py-2 text-sm text-muted-foreground">

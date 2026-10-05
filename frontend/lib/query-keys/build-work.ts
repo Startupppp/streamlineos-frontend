@@ -58,6 +58,8 @@ export const buildWorkQueryKeys = {
       [...base, "projects", projectId, "tickets", ticketId, "custom-field-values"] as const,
     automations: (projectId: number) =>
       [...base, "projects", projectId, "automations"] as const,
+    automationSettings: (projectId: number, automationId: number, section: "ai-policy" | "tool-permissions" | "token-quota" | "human-confirmation") =>
+      [...base, "projects", projectId, "automations", automationId, section] as const,
     invoiceLineDetail: (projectId: number) =>
       [...base, "projects", projectId, "invoice-line-detail"] as const,
     intake: (projectId: number, params?: QueryKeyParams) =>
@@ -318,6 +320,10 @@ export const buildWorkQueryKeys = {
         [...base, "projects", "import-export", "commit", projectId] as const,
       export: (projectId: number) =>
         [...base, "projects", "import-export", "export", projectId] as const,
+      exportPreview: (projectId: number) =>
+        [...base, "projects", "import-export", "export-preview", projectId] as const,
+      selectionExport: () =>
+        [...base, "projects", "import-export", "selection-export"] as const,
     },
     webhooks: (projectId: number, filters?: Record<string, unknown>) =>
       filters !== undefined
