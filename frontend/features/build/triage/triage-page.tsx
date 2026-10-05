@@ -4,7 +4,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useProject } from "@/hooks/api/build/projects";
 import { useCycles } from "@/hooks/api/build/advanced";
-import { useTickets, useUpdateTicket, useBulkUpdateTickets } from "@/hooks/api/build/tickets";
+import {
+  useTickets,
+  useUpdateTicket,
+  useBulkUpdateTickets,
+} from "@/hooks/api/build/tickets";
 import type { BulkUpdateTicketsInput } from "@/hooks/api/build/tickets";
 import { removeTicketFromCollections } from "@/hooks/api/build/ticket-cache";
 import { useProjectMembers } from "@/hooks/api/build/project-members";
@@ -31,15 +35,25 @@ import { TriageRow } from "./triage-row";
 import type { Ticket } from "@/types/projects";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
-import { BUILD_FILTER_ALL, useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import {
+  BUILD_FILTER_ALL,
+  useBuildListFilters,
+} from "@/features/build/shared/use-build-list-filters";
 import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { toBulkPriority } from "@/features/build/shared/bulk-priority";
 
-const TRIAGE_STATUS = "TODO";
-const ACCEPT_STATUS = "IN_PROGRESS";
-const DECLINE_STATUS = "CANCELLED";
 const PAGE_LIMIT = 50;
+const TRIAGE_STATUS = "TODO";
+const DECLINE_STATUS = "CANCELLED";
+const ACCEPT_STATUS = "IN_PROGRESS";
+const TRIAGE_SORT_OPTIONS = [
+  "created",
+  "updated",
+  "priority",
+  "dueDate",
+  "rank",
+] as const;
 
 function TriagePageLoading() {
   return (
@@ -62,7 +76,11 @@ export function TriagePage({ projectId }: TriagePageProps) {
   const queryClient = useQueryClient();
   const requestLeave = useNavigationLeave();
   const listFilters = useBuildListFilters({
-    filters: [{ param: "status" }],
+    filters: [
+      { param: "status" },
+      { param: "ownerId" },
+      { param: "sort", options: TRIAGE_SORT_OPTIONS, all: "created" },
+    ],
   });
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [storedTrail, setStoredTrail] = useState<(string | null)[]>([null]);
@@ -85,11 +103,10 @@ export function TriagePage({ projectId }: TriagePageProps) {
   const triageOwner = ownerValue !== BUILD_FILTER_ALL ? ownerValue : undefined;
   const sortValue = listFilters.value("sort");
   const triageSort =
-    sortValue === "created" || sortValue === "updated" || sortValue === "priority" || sortValue === "dueDate" || sortValue === "rank"
-      ? sortValue
-      : "created";
+    TRIAGE_SORT_OPTIONS.find((option) => option === sortValue) ?? "created";
   const urlStatus = listFilters.value("status");
-  const triageStatus = urlStatus === BUILD_FILTER_ALL ? TRIAGE_STATUS : urlStatus;
+  const triageStatus =
+    urlStatus === BUILD_FILTER_ALL ? TRIAGE_STATUS : urlStatus;
   const {
     data: ticketPage,
     isLoading: ticketsLoading,
@@ -113,13 +130,17 @@ export function TriagePage({ projectId }: TriagePageProps) {
 
   const isLoading = projectLoading || ticketsLoading;
   const tickets = useMemo(
-    () => (ticketPage?.data ?? []).filter((t) => t.type !== "EPIC" && t.cycleId === null),
+    () =>
+      (ticketPage?.data ?? []).filter(
+        (t) => t.type !== "EPIC" && t.cycleId === null,
+      ),
     [ticketPage?.data],
   );
   const visibleCount = tickets.length;
   const hasMore = ticketPage?.pagination.hasMore ?? false;
 
-  const handleNextPage = useCallback((nextCursor: string | null | undefined) => {
+  const handleNextPage = useCallback(
+    (nextCursor: string | null | undefined) => {
       if (!nextCursor) return;
       setStoredTrail([...cursorTrail, nextCursor]);
       listFilters.setCursor(nextCursor);
@@ -228,7 +249,10 @@ export function TriagePage({ projectId }: TriagePageProps) {
     },
     [tickets, handleOpen],
   );
-  const handleClearTriageKeyboard = useCallback(() => setSelectedIds(new Set()), []);
+  const handleClearTriageKeyboard = useCallback(
+    () => setSelectedIds(new Set()),
+    [],
+  );
   const handleToggleSelect = useCallback((id: number) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
@@ -241,14 +265,45 @@ export function TriagePage({ projectId }: TriagePageProps) {
     });
   }, []);
   const handleBulkUpdate = useCallback(
-    (update: Partial<Pick<BulkUpdateTicketsInput, "status" | "priority" | "assigneeId" | "cycleId">>) =>
-      bulkUpdate.mutate({ ticketIds: [...selectedIds], ...update }, { onSuccess: () => { setSelectedIds(new Set()); toast.success("Updated"); }, onError: (e) => toast.error(getErrorMessage(e)) }),
+    (
+      update: Partial<
+        Pick<
+          BulkUpdateTicketsInput,
+          "status" | "priority" | "assigneeId" | "cycleId"
+        >
+      >,
+    ) =>
+      bulkUpdate.mutate(
+        { ticketIds: [...selectedIds], ...update },
+        {
+          onSuccess: () => {
+            setSelectedIds(new Set());
+            toast.success("Updated");
+          },
+          onError: (e) => toast.error(getErrorMessage(e)),
+        },
+      ),
     [bulkUpdate, selectedIds],
   );
-  const handleBulkStatus = useCallback((v: string) => handleBulkUpdate({ status: v }), [handleBulkUpdate]);
-  const handleBulkPriority = useCallback((v: string) => { const p = toBulkPriority(v); if (p) handleBulkUpdate({ priority: p }); }, [handleBulkUpdate]);
-  const handleBulkAssignee = useCallback((v: string) => handleBulkUpdate({ assigneeId: v || undefined }), [handleBulkUpdate]);
-  const handleBulkCycle = useCallback((v: string) => handleBulkUpdate({ cycleId: parseInt(v) || null }), [handleBulkUpdate]);
+  const handleBulkStatus = useCallback(
+    (v: string) => handleBulkUpdate({ status: v }),
+    [handleBulkUpdate],
+  );
+  const handleBulkPriority = useCallback(
+    (v: string) => {
+      const p = toBulkPriority(v);
+      if (p) handleBulkUpdate({ priority: p });
+    },
+    [handleBulkUpdate],
+  );
+  const handleBulkAssignee = useCallback(
+    (v: string) => handleBulkUpdate({ assigneeId: v || undefined }),
+    [handleBulkUpdate],
+  );
+  const handleBulkCycle = useCallback(
+    (v: string) => handleBulkUpdate({ cycleId: parseInt(v) || null }),
+    [handleBulkUpdate],
+  );
   const { focusedIndex: triageFocusedIndex } = useBuildListKeyboard({
     itemCount: tickets.length,
     onOpen: handleOpenTicketByIndex,
@@ -264,11 +319,26 @@ export function TriagePage({ projectId }: TriagePageProps) {
       if (e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
       if (e.target instanceof HTMLElement) {
         const tag = e.target.tagName;
-        if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" ||
-          e.target.isContentEditable || e.target.closest('[contenteditable="true"], [contenteditable=""], [contenteditable="plaintext-only"]')) return;
+        if (
+          tag === "INPUT" ||
+          tag === "TEXTAREA" ||
+          tag === "SELECT" ||
+          e.target.isContentEditable ||
+          e.target.closest(
+            '[contenteditable="true"], [contenteditable=""], [contenteditable="plaintext-only"]',
+          )
+        )
+          return;
       }
-      if (shortcutPending || updateTicket.isPending || pendingAccept.size > 0 || pendingDecline.size > 0) return;
-      if (triageFocusedIndex === null || triageFocusedIndex === undefined) return;
+      if (
+        shortcutPending ||
+        updateTicket.isPending ||
+        pendingAccept.size > 0 ||
+        pendingDecline.size > 0
+      )
+        return;
+      if (triageFocusedIndex === null || triageFocusedIndex === undefined)
+        return;
       const focused = tickets[triageFocusedIndex];
       if (!focused) return;
       if (e.key === "a") {
@@ -283,7 +353,17 @@ export function TriagePage({ projectId }: TriagePageProps) {
     }
     document.addEventListener("keydown", handleTriageKeyDown);
     return () => document.removeEventListener("keydown", handleTriageKeyDown);
-  }, [isReady, canUpdate, triageFocusedIndex, tickets, handleAccept, handleDecline, updateTicket.isPending, pendingAccept, pendingDecline]);
+  }, [
+    isReady,
+    canUpdate,
+    triageFocusedIndex,
+    tickets,
+    handleAccept,
+    handleDecline,
+    updateTicket.isPending,
+    pendingAccept,
+    pendingDecline,
+  ]);
 
   return (
     <PageWrapper
@@ -316,25 +396,50 @@ export function TriagePage({ projectId }: TriagePageProps) {
             <PmSection index={0} className={PM_FILL_SECTION}>
               <EmptyState
                 illustrationPreset="tasks"
-                title={listFilters.isFiltered ? "No results match your filters" : "Nothing to triage"}
-                description={listFilters.isFiltered ? "Try adjusting the filters to find triage issues." : "All issues have been processed. New issues added to the backlog will appear here."}
+                title={
+                  listFilters.isFiltered
+                    ? "No results match your filters"
+                    : "Nothing to triage"
+                }
+                description={
+                  listFilters.isFiltered
+                    ? "Try adjusting the filters to find triage issues."
+                    : "All issues have been processed. New issues added to the backlog will appear here."
+                }
                 filtersActive={listFilters.isFiltered}
                 filteredTitle="No results match your filters"
-                onClearFilters={listFilters.isFiltered ? listFilters.clearAll : undefined}
+                onClearFilters={
+                  listFilters.isFiltered ? listFilters.clearAll : undefined
+                }
                 className={CONTENT_FILL_PANEL}
               />
             </PmSection>
           ) : (
             <PmSection index={0} className={PM_FILL_SECTION}>
               {canUpdate && selectedIds.size > 0 && (
-                <BulkActionBar selectedCount={selectedIds.size} members={members} cycles={cycles ?? []} statuses={project?.statuses} onBulkStatus={handleBulkStatus} onBulkPriority={handleBulkPriority} onBulkAssignee={handleBulkAssignee} onBulkCycle={handleBulkCycle} onClear={handleClearTriageKeyboard} />
+                <BulkActionBar
+                  selectedCount={selectedIds.size}
+                  members={members}
+                  cycles={cycles ?? []}
+                  statuses={project?.statuses}
+                  onBulkStatus={handleBulkStatus}
+                  onBulkPriority={handleBulkPriority}
+                  onBulkAssignee={handleBulkAssignee}
+                  onBulkCycle={handleBulkCycle}
+                  onClear={handleClearTriageKeyboard}
+                />
               )}
               <div className="min-h-0 flex-1 overflow-y-auto">
                 <PmStaggerList className="flex flex-col gap-2.5">
                   {tickets.map((ticket, index) => (
                     <div key={ticket.id} className="flex items-start gap-2">
                       {canUpdate && (
-                        <Checkbox className="mt-4 shrink-0" checked={selectedIds.has(ticket.id)} onCheckedChange={() => handleToggleSelect(ticket.id)} aria-label={`Select ticket ${ticket.ticketNumber}`} />
+                        <Checkbox
+                          className="mt-4 shrink-0"
+                          checked={selectedIds.has(ticket.id)}
+                          onCheckedChange={() => handleToggleSelect(ticket.id)}
+                          aria-label={`Select ticket ${ticket.ticketNumber}`}
+                        />
                       )}
                       <div className="min-w-0 flex-1">
                         <TriageRow

@@ -2,6 +2,11 @@ import React from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { TriagePage } from "./triage-page";
 import { ApiError } from "@/lib/api-envelope";
+import type { UseBuildListFiltersOptions } from "@/features/build/shared/use-build-list-filters";
+
+let mockRealFilters = false;
+let mockSearchParams = new URLSearchParams();
+const mockRouter = { push: jest.fn(), replace: jest.fn() };
 
 const mockBuildListFilters = {
   search: "",
@@ -13,8 +18,10 @@ const mockBuildListFilters = {
   resetKey: "",
   value: jest.fn(() => ""),
   setValue: jest.fn(),
+  isActive: jest.fn(() => false),
   activeCount: 0,
   isFiltered: false,
+  isPending: false,
 };
 
 jest.mock("@/hooks/api/build/projects", () => ({
@@ -39,13 +46,16 @@ jest.mock("@/hooks/api/access", () => ({
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
+  useRouter: () => mockRouter,
   usePathname: () => "/build/1/triage",
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => mockSearchParams,
 }));
 
 jest.mock("@/features/build/shared/use-build-list-filters", () => ({
-  useBuildListFilters: () => mockBuildListFilters,
+  ...jest.requireActual("@/features/build/shared/use-build-list-filters"),
+  useBuildListFilters: (options: UseBuildListFiltersOptions) => mockRealFilters
+    ? jest.requireActual<typeof import("@/features/build/shared/use-build-list-filters")>("@/features/build/shared/use-build-list-filters").useBuildListFilters(options)
+    : mockBuildListFilters,
 }));
 
 jest.mock("@/components/ui/table-pagination", () => ({
@@ -53,7 +63,7 @@ jest.mock("@/components/ui/table-pagination", () => ({
 }));
 
 jest.mock("@/features/build/shared/build-list-toolbar", () => ({
-  BuildListToolbar: () => <div data-testid="build-list-toolbar" />,
+  BuildListToolbar: ({ onClearAll }: { onClearAll: () => void }) => <div data-testid="build-list-toolbar"><button onClick={onClearAll}>Clear triage filters</button></div>,
 }));
 
 jest.mock("next/link", () => ({
@@ -64,10 +74,10 @@ jest.mock("next/link", () => ({
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({
-  PageWrapper: ({ children, title }: { children: React.ReactNode; title?: string }) => (
+  PageWrapper: ({ children, title, filters }: { children: React.ReactNode; title?: string; filters?: React.ReactNode }) => (
     <div>
       {title ? <h1>{title}</h1> : null}
-      {children}
+      {filters}{children}
     </div>
   ),
 }));
@@ -198,6 +208,10 @@ function baseTicketsResult(overrides = {}) {
 }
 
 beforeEach(() => {
+  mockRealFilters = false;
+  mockSearchParams = new URLSearchParams();
+  mockRouter.replace.mockClear();
+  mockBuildListFilters.value.mockReturnValue("all");
   mockBuildListFilters.isFiltered = false;
   mockUseCan.mockReturnValue(true);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
@@ -262,11 +276,6 @@ it("renders the error state with the backend message on query failure, preservin
 });
 
 it("renders an empty state when there are no submissions, so triage-empty is distinguishable from a denied state", () => {
-  mockUseTickets.mockReturnValue(
-    baseTicketsResult({
-      data: { data: [], pagination: { hasMore: false } },
-    }),
-  );
   render(<TriagePage projectId={1} />);
   expect(screen.queryByTestId("error-state")).not.toBeInTheDocument();
   expect(screen.queryByTestId("no-permission")).not.toBeInTheDocument();
@@ -282,14 +291,7 @@ it("labels an empty filtered result as no matches and offers filter clearing", (
 });
 
 it("renders triage rows when submissions are present, confirming the ready state renders content", () => {
-  const submission = {
-    id: 99, orgId: "org-1", projectId: 1, title: "Bug: button broken",
-    type: "BUG", status: "TRIAGE", priority: "HIGH", ticketNumber: 99,
-    epicId: null, reporterId: "user-1", points: null, storyPoints: null,
-    link: null, rank: "1000", parentTicketId: null, originalEstimate: null,
-    timeSpent: null, startDate: null, dueDate: null, moduleId: null, cycleId: null,
-    sequenceId: "PROJ-99", estimate: null, createdAt: "2026-09-01", updatedAt: "2026-09-01",
-  };
+  const submission = { ...SUBMISSION, status: "TRIAGE" };
   mockUseTickets.mockReturnValue(
     baseTicketsResult({
       data: { data: [submission], pagination: { hasMore: false } },
@@ -301,14 +303,7 @@ it("renders triage rows when submissions are present, confirming the ready state
 });
 
 it("wires useBuildListKeyboard enabled only when triage is in the ready state, not during loading or denial", () => {
-  const submission = {
-    id: 99, orgId: "org-1", projectId: 1, title: "Bug: button broken",
-    type: "BUG", status: "TRIAGE", priority: "HIGH", ticketNumber: 99,
-    epicId: null, reporterId: "user-1", points: null, storyPoints: null,
-    link: null, rank: "1000", parentTicketId: null, originalEstimate: null,
-    timeSpent: null, startDate: null, dueDate: null, moduleId: null, cycleId: null,
-    sequenceId: "PROJ-99", estimate: null, createdAt: "2026-09-01", updatedAt: "2026-09-01",
-  };
+  const submission = { ...SUBMISSION, status: "TRIAGE" };
   mockUseTickets.mockReturnValue(
     baseTicketsResult({ data: { data: [submission], pagination: { hasMore: false } } }),
   );
@@ -321,14 +316,7 @@ it("wires useBuildListKeyboard enabled only when triage is in the ready state, n
 });
 
 it("renders a checkbox per row when the user has build:tickets:update permission", () => {
-  const submission = {
-    id: 99, orgId: "org-1", projectId: 1, title: "Bug: button broken",
-    type: "BUG", status: "TRIAGE", priority: "HIGH", ticketNumber: 99,
-    epicId: null, reporterId: "user-1", points: null, storyPoints: null,
-    link: null, rank: "1000", parentTicketId: null, originalEstimate: null,
-    timeSpent: null, startDate: null, dueDate: null, moduleId: null, cycleId: null,
-    sequenceId: "PROJ-99", estimate: null, createdAt: "2026-09-01", updatedAt: "2026-09-01",
-  };
+  const submission = { ...SUBMISSION, status: "TRIAGE" };
   mockUseTickets.mockReturnValue(
     baseTicketsResult({ data: { data: [submission], pagination: { hasMore: false } } }),
   );
@@ -483,4 +471,26 @@ describe("BUG-037 — triage list excludes epics and cycle-assigned tickets, and
       mockQueryClient, 1, SUBMISSION.id,
     );
   });
+});
+
+it.each([
+  ["ownerId=user-1&sort=priority&status=BACKLOG&cursor=next", "user-1", "priority", "BACKLOG", "next"],
+  ["ownerId=user-2&sort=updated", "user-2", "updated", "TODO", undefined],
+  ["sort=unknown", undefined, "created", "TODO", undefined],
+  ["", undefined, "created", "TODO", undefined],
+])("passes canonical URL filters into the ticket query: %s", (url, owner, order, status, cursor) => {
+  mockRealFilters = true;
+  mockSearchParams = new URLSearchParams(url);
+  render(<TriagePage projectId={1} />);
+  expect(mockUseTickets).toHaveBeenLastCalledWith(1, expect.objectContaining({
+    assigneeId: owner, orderBy: order, status, cursor, orderDir: "asc", limit: 50,
+  }));
+});
+
+it("clears registered facets and cursor while retaining unrelated URL state", () => {
+  mockRealFilters = true;
+  mockSearchParams = new URLSearchParams("ownerId=user-1&sort=priority&status=TODO&cursor=next&view=board");
+  render(<TriagePage projectId={1} />);
+  fireEvent.click(screen.getByRole("button", { name: "Clear triage filters" }));
+  expect(mockRouter.replace).toHaveBeenCalledWith("/build/1/triage?view=board", { scroll: false });
 });

@@ -3,11 +3,14 @@ import { IntakePage } from "./intake-page";
 import { ApiError } from "@/lib/api-envelope";
 import userEvent from "@testing-library/user-event";
 import type { IntakeRequest } from "@/types/projects";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const mockRequests = jest.fn(), mockCreate = jest.fn(), mockUpdate = jest.fn(), mockAccept = jest.fn();
 const mockCan = jest.fn(), mockAccess = jest.fn(), mockFilters = jest.fn(), mockTickets = jest.fn(), mockSession = jest.fn();
 const mockMembers = jest.fn(), mockCycles = jest.fn(), mockModules = jest.fn();
-const mockToast = { success: jest.fn(), error: jest.fn() };
+const mockTicket = jest.fn(), mockPush = jest.fn(), mockLeave = jest.fn();
+type ToastOptions = { action?: { label: string; onClick: () => void }; id?: string | number };
+const mockToast = { success: jest.fn((message: string, options?: ToastOptions) => { void message; void options; }), error: jest.fn() };
 jest.mock("@/hooks/api/build/advanced", () => ({
   useIntakeRequests: (...args: unknown[]) => mockRequests(...args),
   useCreateIntakeRequest: () => ({ mutate: mockCreate, isPending: false }),
@@ -16,15 +19,15 @@ jest.mock("@/hooks/api/build/advanced", () => ({
 }));
 jest.mock("@/hooks/api/build/intake-mutations", () => ({ useAcceptIntakeRequest: () => ({ mutate: mockAccept, isPending: false }) }));
 jest.mock("@/hooks/api/build/project-members", () => ({ useProjectMembers: () => mockMembers() }));
-jest.mock("@/hooks/api/build/tickets", () => ({ useTickets: (...args: unknown[]) => mockTickets(...args) }));
+jest.mock("@/hooks/api/build/tickets", () => ({ useTickets: (...args: unknown[]) => mockTickets(...args), useTicket: (...args: unknown[]) => mockTicket(...args) }));
 jest.mock("@/hooks/api/build/projects", () => ({ useProject: () => ({ data: { id: 1, key: "PROJ" } }) }));
 jest.mock("next-auth/react", () => ({ useSession: () => mockSession() }));
 jest.mock("@/hooks/api/entitlements", () => ({ useEntitlements: () => ({ data: undefined }) }));
 jest.mock("@/hooks/api/access", () => ({ useCan: () => mockCan(), useAccess: () => mockAccess() }));
 jest.mock("@/features/build/shared/use-build-list-filters", () => ({ useBuildListFilters: () => mockFilters() }));
-jest.mock("@/components/shared/dirty-state-context", () => ({ useRegisterDirtyState: jest.fn(), useNavigationLeave: () => (fn: () => void) => fn() }));
-jest.mock("sonner", () => ({ toast: { success: (...args: unknown[]) => mockToast.success(...args), error: (...args: unknown[]) => mockToast.error(...args) } }));
-jest.mock("next/navigation", () => ({ useRouter: () => ({ push: jest.fn(), replace: jest.fn() }), usePathname: () => "/build/1/intake" }));
+jest.mock("@/components/shared/dirty-state-context", () => ({ useRegisterDirtyState: jest.fn(), useNavigationLeave: () => mockLeave }));
+jest.mock("sonner", () => ({ toast: { success: (message: string, options?: ToastOptions) => mockToast.success(message, options), error: (...args: unknown[]) => mockToast.error(...args) } }));
+jest.mock("next/navigation", () => ({ useRouter: () => ({ push: mockPush, replace: jest.fn() }), usePathname: () => "/build/1/intake" }));
 jest.mock("@/components/illustrations", () => ({ EmptyInboxIllustration: () => <div /> }));
 
 const ACCESS_GRANTED = { data: { isOrgOwner: false, scopes: { "build:view": "all" }, modules: {} }, isLoading: false };
@@ -45,6 +48,9 @@ function showRequest() {
 beforeEach(() => {
   jest.clearAllMocks();
   callbacks.length = 0;
+  mockLeave.mockImplementation((action: () => void) => action());
+  mockTicket.mockReturnValue(query({ data: { id: 91, projectId: 1, ticketNumber: 7 }, isPending: false }));
+  jest.spyOn(window, "open").mockImplementation(() => null);
   mockUpdate.mockImplementation((_body: unknown, handlers: Callbacks) => callbacks.push(handlers));
   mockAccept.mockImplementation((_body: unknown, handlers: Callbacks) => callbacks.push(handlers));
   mockCan.mockReturnValue(false);
@@ -57,6 +63,7 @@ beforeEach(() => {
   mockCycles.mockReturnValue(query({ data: [{ id: 5, name: "Cycle five" }] }));
   mockModules.mockReturnValue(query({ data: [{ id: 2, name: "Workstream two" }] }));
 });
+afterEach(() => jest.restoreAllMocks());
 it("renders permission denial instead of an empty queue", () => {
   mockAccess.mockReturnValue({ data: { isOrgOwner: false, scopes: {}, modules: {} }, isLoading: false });
   mockRequests.mockReturnValue(query());
@@ -301,6 +308,119 @@ it("highlights the card whose id matches highlightId", () => {
   expect(highlighted).toHaveClass("ring-2");
   expect(screen.getByText("Linked item")).toBeInTheDocument();
   expect(screen.queryByTestId("intake-item-not-found")).not.toBeInTheDocument();
+});
+
+async function acceptRequest() {
+  const view = showRequest();
+  fireEvent.click(screen.getByRole("button", { name: "Accept — move to work queue" }));
+  await screen.findByRole("dialog");
+  await choose("State", "Todo");
+  fireEvent.click(screen.getByRole("button", { name: "Accept & Create" }));
+  await waitFor(() => expect(mockAccept).toHaveBeenCalledTimes(1));
+  act(() => latestCallbacks().onSuccess(ack("accepted")));
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  expect(mockToast.success.mock.calls[0]?.[0]).toBe("Item accepted — ticket created");
+  return view;
+}
+
+function ticketActions() {
+  return mockToast.success.mock.calls.flatMap(([, options]) => options?.action ? [options.action] : []);
+}
+
+it("opens the accepted ticket using its authorized number rather than its database id", async () => {
+  await acceptRequest();
+  await waitFor(() => expect(ticketActions()).toHaveLength(1));
+  const action = ticketActions()[0];
+  if (!action) throw new Error("Expected actual View ticket action");
+  expect(action.label).toBe("View ticket");
+  act(() => action.onClick());
+  expect(mockPush).toHaveBeenCalledWith("/build/1/tickets/7");
+  expect(mockLeave).toHaveBeenCalledTimes(1);
+  expect(window.open).not.toHaveBeenCalled();
+  expect(mockTicket).toHaveBeenLastCalledWith(1, 91, INLINE_READ_ERROR);
+});
+
+it.each(["pending", "denied", "missing", "error", "wrong-id", "wrong-project"])("keeps acceptance successful without a View ticket action for %s lookup", async (state) => {
+  mockTicket.mockReturnValue(query({
+    data: state === "wrong-id" ? { id: 92, projectId: 1, ticketNumber: 7 } : state === "wrong-project" ? { id: 91, projectId: 2, ticketNumber: 7 } : null,
+    isPending: state === "pending",
+    isError: state === "denied" || state === "error",
+    error: state === "denied" ? new ApiError("Denied", 403) : state === "error" ? new TypeError("Failed to fetch") : null,
+  }));
+  await acceptRequest();
+  expect(ticketActions()).toHaveLength(0);
+  expect(mockToast.error).not.toHaveBeenCalled();
+  expect(mockPush).not.toHaveBeenCalled();
+  expect(window.open).not.toHaveBeenCalled();
+});
+
+it("offers one action after pending lookup resolves and preserves it across repeated renders", async () => {
+  mockTicket.mockReturnValue(query({ isPending: true }));
+  const view = await acceptRequest();
+  expect(ticketActions()).toHaveLength(0);
+  mockTicket.mockReturnValue(query({ data: { id: 91, projectId: 1, ticketNumber: 7 }, isPending: false }));
+  view.rerender(<IntakePage projectId={1} />);
+  await waitFor(() => expect(ticketActions()).toHaveLength(1));
+  view.rerender(<IntakePage projectId={1} />);
+  view.rerender(<IntakePage projectId={1} />);
+  expect(ticketActions()).toHaveLength(1);
+});
+
+it.each(["project", "session"])("ignores delayed accepted-ticket data after %s context changes", async (change) => {
+  mockTicket.mockReturnValue(query({ isPending: true }));
+  const view = await acceptRequest();
+  mockToast.success.mockClear();
+  if (change === "session") mockSession.mockReturnValue({ status: "authenticated", data: { orgId: "org-2", user: { id: "actor-2" } } });
+  mockTicket.mockReturnValue(query({ data: { id: 91, projectId: 1, ticketNumber: 7 }, isPending: false }));
+  view.rerender(<IntakePage projectId={change === "project" ? 2 : 1} />);
+  expect(ticketActions()).toHaveLength(0);
+  expect(mockPush).not.toHaveBeenCalled();
+});
+
+it("lets the navigation leave guard fence the actual View ticket action", async () => {
+  await acceptRequest();
+  await waitFor(() => expect(ticketActions()).toHaveLength(1));
+  mockLeave.mockImplementation(() => undefined);
+  const action = ticketActions()[0];
+  if (!action) throw new Error("Expected actual View ticket action");
+  act(() => action.onClick());
+  expect(mockLeave).toHaveBeenCalledTimes(1);
+  expect(mockPush).not.toHaveBeenCalled();
+  expect(window.open).not.toHaveBeenCalled();
+});
+
+it.each(["project", "session", "permission"])("refuses a captured View ticket action after %s context changes", async (change) => {
+  const view = await acceptRequest();
+  await waitFor(() => expect(ticketActions()).toHaveLength(1));
+  const action = ticketActions()[0];
+  if (!action) throw new Error("Expected actual View ticket action");
+  if (change === "session") mockSession.mockReturnValue({ status: "unauthenticated", data: null });
+  if (change === "permission") mockCan.mockReturnValue(false);
+  view.rerender(<IntakePage projectId={change === "project" ? 2 : 1} />);
+  act(() => action.onClick());
+  expect(mockPush).not.toHaveBeenCalled();
+  expect(mockLeave).not.toHaveBeenCalled();
+  expect(window.open).not.toHaveBeenCalled();
+});
+
+it("rechecks the authorized ticket after a delayed navigation leave confirmation", async () => {
+  const view = await acceptRequest();
+  await waitFor(() => expect(ticketActions()).toHaveLength(1));
+  let confirmLeave: (() => void) | undefined;
+  mockLeave.mockImplementation((action: () => void) => { confirmLeave = action; });
+  const action = ticketActions()[0];
+  if (!action) throw new Error("Expected actual View ticket action");
+  act(() => action.onClick());
+  expect(mockPush).not.toHaveBeenCalled();
+  mockTicket.mockReturnValue(query({ isError: true, error: new ApiError("Access revoked", 403) }));
+  view.rerender(<IntakePage projectId={1} />);
+  const confirm = confirmLeave;
+  if (!confirm) throw new Error("Expected navigation leave confirmation");
+  act(() => confirm());
+  expect(mockPush).not.toHaveBeenCalled();
+  act(() => action.onClick());
+  expect(mockLeave).toHaveBeenCalledTimes(1);
+  expect(window.open).not.toHaveBeenCalled();
 });
 
 it("shows the not-in-this-view banner when highlightId does not match any loaded item", () => {
