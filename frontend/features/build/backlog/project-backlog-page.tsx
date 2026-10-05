@@ -2,7 +2,7 @@
 
 import { useMemo, useCallback, useState, useEffect } from "react";
 import { useProject } from "@/hooks/api/build/projects";
-import { useCycles } from "@/hooks/api/build/advanced";
+import { useCycles } from "@/hooks/api/build/cycles";
 import { useBulkUpdateTickets, useProjectBoardTickets } from "@/hooks/api/build/tickets";
 import type { BulkUpdateTicketsInput } from "@/hooks/api/build/tickets";
 import { useRouter, useSearchParams } from "next/navigation";

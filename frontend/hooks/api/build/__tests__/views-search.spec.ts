@@ -20,7 +20,7 @@ jest.mock("@/lib/api-envelope", () => ({
   lazyContract: jest.fn((factory: () => unknown) => factory),
 }));
 
-import { useViews } from "../advanced";
+import { useViews } from "../views";
 
 const PROJECT_ID = 42;
 

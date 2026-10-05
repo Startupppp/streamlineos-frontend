@@ -1,27 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useProject } from "@/hooks/api/build/projects";
-import { useCycles } from "@/hooks/api/build/advanced";
-import {
-  useTickets,
-  useUpdateTicket,
-  useBulkUpdateTickets,
-} from "@/hooks/api/build/tickets";
-import type { BulkUpdateTicketsInput } from "@/hooks/api/build/tickets";
-import { removeTicketFromCollections } from "@/hooks/api/build/ticket-cache";
+import { useCycles } from "@/hooks/api/build/cycles";
+import { useTickets } from "@/hooks/api/build/tickets";
 import { useProjectMembers } from "@/hooks/api/build/project-members";
 import { useCan } from "@/hooks/api/access";
 import { BulkActionBar } from "@/features/build/shared/bulk-action-bar";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Skeleton } from "@/components/ui/skeleton";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import {
@@ -32,8 +20,6 @@ import {
   PM_FILL_SECTION,
 } from "@/components/pm-chrome";
 import { TriageRow } from "./triage-row";
-import type { Ticket } from "@/types/projects";
-import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import {
   BUILD_FILTER_ALL,
@@ -41,12 +27,13 @@ import {
 } from "@/features/build/shared/use-build-list-filters";
 import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { TablePagination } from "@/components/ui/table-pagination";
-import { toBulkPriority } from "@/features/build/shared/bulk-priority";
+import { TriagePageLoading } from "./triage-page-loading";
+import { useTriageTicketActions } from "./use-triage-ticket-actions";
+import { useTriageBulkActions } from "./use-triage-bulk-actions";
+import { useTriageKeyboard } from "./use-triage-keyboard";
 
 const PAGE_LIMIT = 50;
 const TRIAGE_STATUS = "TODO";
-const DECLINE_STATUS = "CANCELLED";
-const ACCEPT_STATUS = "IN_PROGRESS";
 const TRIAGE_SORT_OPTIONS = [
   "created",
   "updated",
@@ -55,26 +42,11 @@ const TRIAGE_SORT_OPTIONS = [
   "rank",
 ] as const;
 
-function TriagePageLoading() {
-  return (
-    <PmPageShell>
-      <div className="flex flex-col gap-2.5">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="h-16 w-full rounded-xl" />
-        ))}
-      </div>
-    </PmPageShell>
-  );
-}
-
 interface TriagePageProps {
   projectId: number;
 }
 
 export function TriagePage({ projectId }: TriagePageProps) {
-  const router = useRouter();
-  const queryClient = useQueryClient();
-  const requestLeave = useNavigationLeave();
   const listFilters = useBuildListFilters({
     filters: [
       { param: "status" },
@@ -84,9 +56,7 @@ export function TriagePage({ projectId }: TriagePageProps) {
   });
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [storedTrail, setStoredTrail] = useState<(string | null)[]>([null]);
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const canUpdate = useCan("build:tickets:update");
-  const bulkUpdate = useBulkUpdateTickets(projectId);
   const { data: membersPage } = useProjectMembers(projectId);
   const members = membersPage?.data ?? [];
   const { data: cycles } = useCycles(projectId);
@@ -124,10 +94,6 @@ export function TriagePage({ projectId }: TriagePageProps) {
   });
   const { data: project, isLoading: projectLoading } = useProject(projectId);
 
-  const updateTicket = useUpdateTicket(projectId);
-  const [pendingAccept, setPendingAccept] = useState<Set<number>>(new Set());
-  const [pendingDecline, setPendingDecline] = useState<Set<number>>(new Set());
-
   const isLoading = projectLoading || ticketsLoading;
   const tickets = useMemo(
     () =>
@@ -164,83 +130,15 @@ export function TriagePage({ projectId }: TriagePageProps) {
 
   const isReady = pageState.kind === "ready";
 
-  const handleAccept = useCallback(
-    (ticketId: number) => {
-      const target = tickets.find((t) => t.id === ticketId);
-      if (!target) return;
-      setPendingAccept((prev) => new Set(prev).add(ticketId));
-      updateTicket.mutate(
-        { ticketId, version: target.version, status: ACCEPT_STATUS },
-        {
-          onSuccess: () => {
-            setPendingAccept((prev) => {
-              const next = new Set(prev);
-              next.delete(ticketId);
-              return next;
-            });
-            removeTicketFromCollections(queryClient, projectId, ticketId);
-            toast.success("Ticket moved to In Progress");
-          },
-          onError: (err) => {
-            setPendingAccept((prev) => {
-              const next = new Set(prev);
-              next.delete(ticketId);
-              return next;
-            });
-            toast.error(getErrorMessage(err));
-          },
-        },
-      );
-    },
-    [updateTicket, queryClient, projectId, tickets],
-  );
-
-  const handleDecline = useCallback(
-    (ticketId: number) => {
-      const target = tickets.find((t) => t.id === ticketId);
-      if (!target) return;
-      setPendingDecline((prev) => new Set(prev).add(ticketId));
-      updateTicket.mutate(
-        { ticketId, version: target.version, status: DECLINE_STATUS },
-        {
-          onSuccess: () => {
-            setPendingDecline((prev) => {
-              const next = new Set(prev);
-              next.delete(ticketId);
-              return next;
-            });
-            removeTicketFromCollections(queryClient, projectId, ticketId);
-            toast.success("Ticket declined");
-          },
-          onError: (err) => {
-            setPendingDecline((prev) => {
-              const next = new Set(prev);
-              next.delete(ticketId);
-              return next;
-            });
-            toast.error(getErrorMessage(err));
-          },
-        },
-      );
-    },
-    [updateTicket, queryClient, projectId, tickets],
-  );
-
-  const handleOpen = useCallback(
-    (ticket: Ticket) => {
-      const href = getTicketDetailHref(
-        projectId,
-        project?.key,
-        ticket.ticketNumber,
-      );
-      requestLeave(() => router.push(href));
-    },
-    [router, projectId, project?.key, requestLeave],
-  );
-
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  const { handleAccept, handleDecline, handleOpen, pendingAccept, pendingDecline, updateTicket } =
+    useTriageTicketActions({ projectId, tickets, project });
+
+  const { selectedIds, handleToggleSelect, handleClearSelection, handleBulkStatus, handleBulkPriority, handleBulkAssignee, handleBulkCycle } =
+    useTriageBulkActions({ projectId });
 
   const handleOpenTicketByIndex = useCallback(
     (index: number) => {
@@ -249,121 +147,26 @@ export function TriagePage({ projectId }: TriagePageProps) {
     },
     [tickets, handleOpen],
   );
-  const handleClearTriageKeyboard = useCallback(
-    () => setSelectedIds(new Set()),
-    [],
-  );
-  const handleToggleSelect = useCallback((id: number) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  }, []);
-  const handleBulkUpdate = useCallback(
-    (
-      update: Partial<
-        Pick<
-          BulkUpdateTicketsInput,
-          "status" | "priority" | "assigneeId" | "cycleId"
-        >
-      >,
-    ) =>
-      bulkUpdate.mutate(
-        { ticketIds: [...selectedIds], ...update },
-        {
-          onSuccess: () => {
-            setSelectedIds(new Set());
-            toast.success("Updated");
-          },
-          onError: (e) => toast.error(getErrorMessage(e)),
-        },
-      ),
-    [bulkUpdate, selectedIds],
-  );
-  const handleBulkStatus = useCallback(
-    (v: string) => handleBulkUpdate({ status: v }),
-    [handleBulkUpdate],
-  );
-  const handleBulkPriority = useCallback(
-    (v: string) => {
-      const p = toBulkPriority(v);
-      if (p) handleBulkUpdate({ priority: p });
-    },
-    [handleBulkUpdate],
-  );
-  const handleBulkAssignee = useCallback(
-    (v: string) => handleBulkUpdate({ assigneeId: v || undefined }),
-    [handleBulkUpdate],
-  );
-  const handleBulkCycle = useCallback(
-    (v: string) => handleBulkUpdate({ cycleId: parseInt(v) || null }),
-    [handleBulkUpdate],
-  );
+
   const { focusedIndex: triageFocusedIndex } = useBuildListKeyboard({
     itemCount: tickets.length,
     onOpen: handleOpenTicketByIndex,
-    onClearSelection: handleClearTriageKeyboard,
+    onClearSelection: handleClearSelection,
     enabled: isReady,
     searchInputRef,
   });
 
-  useEffect(() => {
-    if (!isReady || !canUpdate) return;
-    let shortcutPending = false;
-    function handleTriageKeyDown(e: KeyboardEvent) {
-      if (e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
-      if (e.target instanceof HTMLElement) {
-        const tag = e.target.tagName;
-        if (
-          tag === "INPUT" ||
-          tag === "TEXTAREA" ||
-          tag === "SELECT" ||
-          e.target.isContentEditable ||
-          e.target.closest(
-            '[contenteditable="true"], [contenteditable=""], [contenteditable="plaintext-only"]',
-          )
-        )
-          return;
-      }
-      if (
-        shortcutPending ||
-        updateTicket.isPending ||
-        pendingAccept.size > 0 ||
-        pendingDecline.size > 0
-      )
-        return;
-      if (triageFocusedIndex === null || triageFocusedIndex === undefined)
-        return;
-      const focused = tickets[triageFocusedIndex];
-      if (!focused) return;
-      if (e.key === "a") {
-        e.preventDefault();
-        shortcutPending = true;
-        handleAccept(focused.id);
-      } else if (e.key === "d") {
-        e.preventDefault();
-        shortcutPending = true;
-        handleDecline(focused.id);
-      }
-    }
-    document.addEventListener("keydown", handleTriageKeyDown);
-    return () => document.removeEventListener("keydown", handleTriageKeyDown);
-  }, [
+  useTriageKeyboard({
     isReady,
     canUpdate,
     triageFocusedIndex,
     tickets,
     handleAccept,
     handleDecline,
-    updateTicket.isPending,
+    isPending: updateTicket.isPending,
     pendingAccept,
     pendingDecline,
-  ]);
+  });
 
   return (
     <PageWrapper
@@ -426,7 +229,7 @@ export function TriagePage({ projectId }: TriagePageProps) {
                   onBulkPriority={handleBulkPriority}
                   onBulkAssignee={handleBulkAssignee}
                   onBulkCycle={handleBulkCycle}
-                  onClear={handleClearTriageKeyboard}
+                  onClear={handleClearSelection}
                 />
               )}
               <div className="min-h-0 flex-1 overflow-y-auto">

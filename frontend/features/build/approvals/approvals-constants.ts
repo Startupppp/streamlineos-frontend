@@ -1,6 +1,16 @@
 import type { ApprovalStatus } from "@/types/projects";
 import { DB_ENUMS } from "@/contracts/db-enums.generated";
 
+export const APPROVAL_STATUS_VALUES: ApprovalStatus[] = [
+  "requested",
+  "pending",
+  "approved",
+  "rejected",
+  "changes_requested",
+  "escalated",
+  "cancelled",
+];
+
 export const STATUS_OPTIONS: { value: string; label: string }[] = [
   { value: "all", label: "All statuses" },
   { value: "pending", label: "Pending" },

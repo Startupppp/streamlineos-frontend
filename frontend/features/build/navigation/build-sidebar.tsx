@@ -17,7 +17,7 @@ import type { BuildNavDestination } from "@/lib/build/nav/build-nav-destination"
 import { ErrorState } from "@/components/shared/error-state";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { BuildAgentPulse } from "./build-agent-pulse";
-import { BuildSidebarSkeleton } from "./build-sidebar-skeleton";
+import { BuildSidebarSkeleton } from "@/components/layout/sidebar/build-sidebar-skeleton";
 import { BuildMoreToolsMenu } from "./build-more-tools-menu";
 import { BuildNavLink } from "./build-nav-link";
 import { BuildQuickCreate } from "./build-quick-create";

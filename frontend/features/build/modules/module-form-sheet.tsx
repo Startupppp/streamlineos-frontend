@@ -4,7 +4,7 @@ import { useCallback, useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { useCreateModule } from "@/hooks/api/build/advanced";
+import { useCreateModule } from "@/hooks/api/build/modules";
 import { useUpdateModule } from "@/hooks/api/build/modules";
 import { isWriteConflict } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";

@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import type { AccessState } from "@/lib/rbac/gate";
 import type { PageStateResolution } from "@/lib/page-state/resolve-page-state";
 import { CustomFieldsSettings } from "./custom-fields-settings";
-import type { CustomFieldItem } from "./custom-fields-settings";
+import type { CustomFieldItem } from "./custom-field-row";
 import { customFieldSchema } from "./custom-fields-schema";
 
 let mockAccessState: AccessState = "denied";

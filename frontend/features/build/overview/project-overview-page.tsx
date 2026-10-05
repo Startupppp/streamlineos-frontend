@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useProject } from "@/hooks/api/build/projects";
-import { useCycles, useProjectAnalytics, type ProjectAnalyticsParams } from "@/hooks/api/build/advanced";
+import { useCycles } from "@/hooks/api/build/cycles";
+import { useProjectAnalytics, type ProjectAnalyticsParams } from "@/hooks/api/build/project-analytics";
 import { useTicketColumnCounts } from "@/hooks/api/build/ticket-queries";
 import { useProjectMilestones } from "@/hooks/api/build/milestones";
 import { useReleases } from "@/hooks/api/build/releases";

@@ -117,8 +117,8 @@ jest.mock("@/features/build/views/view-switcher", () => ({
   ViewSwitcher: () => null,
 }));
 
-jest.mock("@/hooks/api/build/advanced", () => ({
-  ...jest.requireActual("@/hooks/api/build/advanced"),
+jest.mock("@/hooks/api/build/modules", () => ({
+  ...jest.requireActual("@/hooks/api/build/modules"),
   useModules: () => ({ data: [] }),
 }));
 

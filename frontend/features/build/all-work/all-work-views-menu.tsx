@@ -27,7 +27,7 @@ import {
   useCreateWorkspaceView,
   useUpdateWorkspaceView,
   useDeleteWorkspaceView,
-} from "@/hooks/api/build/advanced";
+} from "@/hooks/api/build/views";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import type { ProjectView, ViewLayoutType } from "@/types/projects";

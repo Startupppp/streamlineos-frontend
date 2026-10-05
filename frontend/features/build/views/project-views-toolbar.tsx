@@ -25,7 +25,7 @@ import type { FilterState as WorkloadFilterState } from "@/features/build/views/
 import type { TeamOption } from "@/features/build/views/workload-filter-types";
 import type { DisplayOptions } from "@/features/build/shared/types";
 import { useCan } from "@/hooks/api/access";
-import { useModules } from "@/hooks/api/build/advanced";
+import { useModules } from "@/hooks/api/build/modules";
 import { useModuleFilterParam } from "@/features/build/views/use-module-filter-param";
 
 type AnimatedToolbarIcon = React.ForwardRefExoticComponent<

@@ -11,8 +11,10 @@ jest.mock("@/hooks/api/build/projects", () => ({
   useProject: jest.fn(),
 }));
 
-jest.mock("@/hooks/api/build/advanced", () => ({
+jest.mock("@/hooks/api/build/cycles", () => ({
   useCycles: jest.fn(() => ({ data: undefined, isLoading: true })),
+}));
+jest.mock("@/hooks/api/build/project-analytics", () => ({
   useProjectAnalytics: jest.fn(() => ({ data: undefined, isLoading: true })),
 }));
 

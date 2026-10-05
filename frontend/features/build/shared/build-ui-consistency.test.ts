@@ -7,7 +7,7 @@ function readSource(relativePath: string) {
 
 describe("Build UI consistency contracts", () => {
   it("keeps timeline period selectors readable at every breakpoint", () => {
-    const source = readSource("features/build/views/gantt-view.tsx");
+    const source = readSource("features/build/views/gantt/gantt-toolbar.tsx");
 
     expect(source).toContain('className="w-40 shrink-0"');
     expect(source).toContain('className="w-28 shrink-0"');
@@ -104,9 +104,10 @@ describe("Build UI consistency contracts", () => {
   });
 
   it("keeps timeline labels readable on compact screens", () => {
+    const viewportSource = readSource("features/build/views/gantt/use-gantt-viewport.ts");
     const source = readSource("features/build/views/gantt-view.tsx");
 
-    expect(source).toContain("? 144 :");
+    expect(viewportSource).toContain("? 144 :");
     expect(source).toContain("labelFontSize={11}");
   });
 

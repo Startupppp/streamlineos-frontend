@@ -15,7 +15,7 @@ import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
-import type { CustomFieldItem } from "@/features/build/settings/custom-fields-settings";
+import type { CustomFieldItem } from "@/features/build/settings/custom-field-row";
 
 interface ProjectSettingsFieldsPageProps {
   projectId: number;

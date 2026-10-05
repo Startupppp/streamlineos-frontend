@@ -1,6 +1,8 @@
 "use client";
 
-import { useEpics, useModules, useCycles } from "@/hooks/api/build/advanced";
+import { useEpics } from "@/hooks/api/build/epics";
+import { useModules } from "@/hooks/api/build/modules";
+import { useCycles } from "@/hooks/api/build/cycles";
 import { LabelPicker } from "../tickets/label-picker";
 import { RecurrencePicker } from "../tickets/recurrence-picker";
 import {

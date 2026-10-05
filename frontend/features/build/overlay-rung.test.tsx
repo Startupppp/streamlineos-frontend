@@ -7,7 +7,7 @@ jest.mock("sonner", () => ({
 
 const mutation = { mutate: jest.fn(), mutateAsync: jest.fn(), isPending: false };
 
-jest.mock("@/hooks/api/build/advanced", () => ({
+jest.mock("@/hooks/api/build/views", () => ({
   useCreateView: () => mutation,
 }));
 

@@ -7,7 +7,7 @@ const GUARDED_NAVIGATION_FILES = [
   "managed-products/product-feedback-page.tsx",
   "project-list/project-card.tsx",
   "project-list/project-table.tsx",
-  "triage/triage-page.tsx",
+  "triage/use-triage-ticket-actions.ts",
   "views/gantt-view.tsx",
   "views/use-board-navigation-actions.ts",
 ] as const;

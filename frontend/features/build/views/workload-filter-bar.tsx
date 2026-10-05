@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { FilterChip } from "@/components/list-view";
 import { getUserDisplayName } from "@/lib/person-display";
-import { useCycles } from "@/hooks/api/build/advanced";
+import { useCycles } from "@/hooks/api/build/cycles";
 import { WorkloadFilterMenu } from "./workload-filter-menu";
 import type { FilterState } from "./workload-types";
 import { hasActiveWorkloadFilters } from "./workload-types";

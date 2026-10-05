@@ -13,8 +13,10 @@ jest.mock("@/hooks/api/build/projects", () => ({
   useProjectLabels: () => ({ data: [] }),
 }));
 
-jest.mock("@/hooks/api/build/advanced", () => ({
+jest.mock("@/hooks/api/build/cycles", () => ({
   useCycles: () => ({ data: [] }),
+}));
+jest.mock("@/hooks/api/build/modules", () => ({
   useModules: () => ({
     data: [
       { id: 3, name: "Payments" },

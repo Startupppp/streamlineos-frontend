@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback, useRef } from "react";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
 import { useProject } from "@/hooks/api/build/projects";
-import { useCycles } from "@/hooks/api/build/advanced";
+import { useCycles } from "@/hooks/api/build/cycles";
 import { useProjectBoardTickets, useBulkUpdateTickets } from "@/hooks/api/build/tickets";
 import { useProjectMembers } from "@/hooks/api/build/project-members";
 import { useTicketColumnCounts } from "@/hooks/api/build/ticket-queries";

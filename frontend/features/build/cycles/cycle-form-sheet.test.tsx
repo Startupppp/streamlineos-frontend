@@ -2,13 +2,13 @@ import { readFileSync } from "node:fs";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { CycleFormSheet } from "./cycle-form-sheet";
-import { useCreateCycle, useUpdateCycle } from "@/hooks/api/build/advanced";
+import { useCreateCycle, useUpdateCycle } from "@/hooks/api/build/cycles";
 import type { Cycle } from "@/types/projects";
 import { backendPath, backendReachable } from "@/lib/test-support/backend-path";
 import { ApiError } from "@/lib/api-envelope";
 import { toast } from "sonner";
 
-jest.mock("@/hooks/api/build/advanced", () => ({
+jest.mock("@/hooks/api/build/cycles", () => ({
   useCreateCycle: jest.fn(),
   useUpdateCycle: jest.fn(),
 }));

@@ -22,7 +22,7 @@ jest.mock("./build-scope-selector", () => ({
 jest.mock("./build-scope-recovery", () => ({
   BuildScopeRecovery: () => null,
 }));
-jest.mock("./build-sidebar-skeleton", () => ({
+jest.mock("@/components/layout/sidebar/build-sidebar-skeleton", () => ({
   BuildSidebarSkeleton: () => <div data-testid="sidebar-skeleton" />,
 }));
 jest.mock("./build-agent-pulse", () => ({

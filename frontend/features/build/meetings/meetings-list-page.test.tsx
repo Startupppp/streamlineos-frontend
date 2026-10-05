@@ -18,7 +18,7 @@ jest.mock("@/hooks/api/build/project-members", () => ({
   useProjectMembers: jest.fn(),
 }));
 
-jest.mock("@/hooks/api/build/advanced", () => ({
+jest.mock("@/hooks/api/build/cycles", () => ({
   useCycles: jest.fn(),
 }));
 
@@ -113,7 +113,7 @@ jest.mock("./generate-agenda", () => ({
 
 import { useMeetings, useCreateMeeting } from "@/hooks/api/build/meetings";
 import { useProjectMembers } from "@/hooks/api/build/project-members";
-import { useCycles } from "@/hooks/api/build/advanced";
+import { useCycles } from "@/hooks/api/build/cycles";
 import { useProjectBoardTickets } from "@/hooks/api/build/tickets";
 import { useCan, useAccess } from "@/hooks/api/access";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";

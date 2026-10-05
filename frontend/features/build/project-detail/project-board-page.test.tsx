@@ -43,7 +43,7 @@ jest.mock("@/hooks/api/build/projects", () => ({
   useProjectLabels: (...args: unknown[]) => mockUseProjectLabels(...args),
 }));
 
-jest.mock("@/hooks/api/build/advanced", () => ({
+jest.mock("@/hooks/api/build/cycles", () => ({
   useCycles: (...args: unknown[]) => mockUseCycles(...args),
 }));
 

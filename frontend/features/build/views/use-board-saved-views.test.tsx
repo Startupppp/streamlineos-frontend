@@ -11,7 +11,7 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams("status=TODO"),
 }));
 
-jest.mock("@/hooks/api/build/advanced", () => ({
+jest.mock("@/hooks/api/build/views", () => ({
   useCreateView: () => ({ mutate: createViewMutate, isPending: false }),
   useUpdateView: () => ({ mutate: jest.fn(), isPending: false }),
 }));

@@ -1,238 +1,33 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { Plus, Archive } from "lucide-react";
-import { QueryClientProvider } from "@tanstack/react-query";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { NoPermissionState } from "@/components/shared";
 import { CONTENT_FILL_PANEL, PmPageShell, PmSection } from "@/components/pm-chrome";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
-import type { BuildHeaderAction } from "@/features/build/shared/build-header-actions-plan";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
-import type { ManagedProduct } from "@/types/projects";
-import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { GalleryCase as SharedGalleryCase } from "@/features/build/shared/build-list-gallery-cases";
-import { MANAGED_PRODUCT_GALLERY_ROWS, GALLERY_STUB_ACCESS } from "@/features/build/shared/build-list-fixtures";
-import {
-  MANAGED_PRODUCT_TABLE_HEADERS,
-  buildManagedProductColumns,
-  ManagedProductMobileCard,
-} from "./managed-product-table-columns";
+import { MANAGED_PRODUCT_TABLE_HEADERS } from "./managed-product-table-columns";
 import { FEEDBACK_SKELETON_HEADERS } from "./product-feedback-columns";
 import { GoalsSkeleton } from "./product-goals-page";
 import { RoadmapSkeleton } from "./product-roadmap-page";
-import { ProductInsightsPage } from "./product-insights-page";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { ManagedProductOverviewSkeleton } from "@/features/build/overview/managed-product-overview-page";
 import { GridSkeleton } from "@/features/build/project-list/projects-page-skeletons";
-import { createAppQueryClient } from "@/components/providers/query-provider";
-import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
-import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
-import type { ManagedProductInsights } from "@/hooks/api/build/managed-products-schema";
-
-function stubOwnerOf(_id: string | null) {
-  return _id ? { name: "Priya Nair", email: "priya@example.com" } : null;
-}
-
-const STUB_EDIT = () => undefined;
-const STUB_DELETE = () => undefined;
-
-const STATUS_OPTIONS = [
-  { value: "all", label: "All statuses" },
-  { value: "active", label: "Active" },
-  { value: "archived", label: "Archived" },
-];
-
-const SORT_OPTIONS = [
-  { value: "all", label: "Default" },
-  { value: "name", label: "Name" },
-  { value: "updated", label: "Last updated" },
-];
-
-const ONE_ACTION: BuildHeaderAction[] = [
-  { id: "create", label: "New product", icon: Plus, primary: true },
-];
-
-const TWO_ACTIONS: BuildHeaderAction[] = [
-  { id: "archive", label: "Archive", icon: Archive },
-  ...ONE_ACTION,
-];
-
-const RANGE_OPTIONS = [
-  { label: "All time", value: "all" },
-  { label: "Last 7 days", value: "7d" },
-  { label: "Last 30 days", value: "30d" },
-  { label: "Last 90 days", value: "90d" },
-];
-
-const STUB_CHANGE = () => undefined;
-
-const STUB_INSIGHTS_ID = 1;
-
-const STUB_INSIGHTS_DATA: ManagedProductInsights = {
-  linkedProjectCount: 42,
-  projectsByStatus: { active: 27, completed: 8, archived: 7 },
-  submissionsByStatus: { open: 17, in_progress: 5, resolved: 14, archived: 6 },
-  roadmapItemCount: 9,
-  roadmapItemsByStatus: { planned: 4, in_progress: 3, completed: 1, cancelled: 1 },
-  feedbackByStatus: { open: 11, planned: 3, in_progress: 4, completed: 6, declined: 2 },
-  linkedFeedbackVoteCount: 38,
-  ageDays: 120,
-  confidenceScore: null,
-  overrideReason: null,
-  overriddenBy: null,
-  overriddenAt: null,
-};
-
-function InsightsReadyFrame() {
-  const [queryClient] = useState(() => {
-    const client = createAppQueryClient("insights-ready-gallery");
-    client.setQueryData(platformCoreQueryKeys.access.me(), GALLERY_STUB_ACCESS);
-    client.setQueryData(
-      buildWorkQueryKeys.projects.managedProducts.insights(STUB_INSIGHTS_ID),
-      STUB_INSIGHTS_DATA,
-    );
-    return client;
-  });
-  return (
-    <QueryClientProvider client={queryClient}>
-      <ProductInsightsPage managedProductId={STUB_INSIGHTS_ID} />
-    </QueryClientProvider>
-  );
-}
-
-function ManagedProductsReadyTable() {
-  const columns = buildManagedProductColumns({
-    canManage: true,
-    ownerOf: stubOwnerOf,
-    onEdit: STUB_EDIT,
-    onDelete: STUB_DELETE,
-  });
-
-  const renderMobileCard = useCallback(
-    (row: ManagedProduct) => (
-      <ManagedProductMobileCard
-        product={row}
-        canManage
-        ownerOf={stubOwnerOf}
-        onEdit={STUB_EDIT}
-        onDelete={STUB_DELETE}
-      />
-    ),
-    [],
-  );
-
-  function getRowKey(row: ManagedProduct) { return row.id; }
-  function handleNext() { return undefined; }
-  function handlePrevious() { return undefined; }
-
-  return (
-    <BuildListSurface<ManagedProduct>
-      permission="build:managed-products:view"
-      rows={MANAGED_PRODUCT_GALLERY_ROWS}
-      columns={columns}
-      isLoading={false}
-      isError={false}
-      getRowKey={getRowKey}
-      mobileCard={renderMobileCard}
-      minWidth="720px"
-      pagination={{ mode: "cursor", pageSize: 20, pageNumber: 2, hasMore: true, hasPrevious: true, onNext: handleNext, onPrevious: handlePrevious }}
-      empty={<EmptyState className={CONTENT_FILL_PANEL} illustrationPreset="projects" title="No managed products yet" />}
-    />
-  );
-}
-
-function ManagedProductsGalleryList({
-  caseId,
-  title,
-  actions,
-  body,
-  navActive,
-}: {
-  caseId: string;
-  title: string;
-  actions: BuildHeaderAction[];
-  body: React.ReactNode;
-  navActive?: boolean;
-}) {
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("all");
-  const [sort, setSort] = useState("all");
-  const handleClearAll = useCallback(() => {
-    setSearch("");
-    setStatus("all");
-    setSort("all");
-  }, []);
-
-  return (
-    <SharedGalleryCase id={caseId} title={title} navActive={navActive}>
-      <PageWrapper
-        title="Managed Products"
-        subtitle="Track products and link projects to them"
-        actions={<BuildHeaderActions actions={actions} />}
-        filters={
-          <BuildListToolbar
-            search={{
-              value: search,
-              onValueChange: setSearch,
-              placeholder: "Search products…",
-              label: "Search products",
-            }}
-            filters={[
-              {
-                id: "status",
-                label: "Status",
-                active: status !== "all",
-                control: (
-                  <BuildFilterSelect
-                    label="Status"
-                    value={status}
-                    onValueChange={setStatus}
-                    options={STATUS_OPTIONS}
-                  />
-                ),
-              },
-              {
-                id: "sort",
-                label: "Sort",
-                active: sort !== "all",
-                control: (
-                  <BuildFilterSelect
-                    label="Sort"
-                    value={sort}
-                    onValueChange={setSort}
-                    options={SORT_OPTIONS}
-                  />
-                ),
-              },
-            ]}
-            onClearAll={handleClearAll}
-          />
-        }
-      >
-        <PmPageShell>
-          <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-            {body}
-          </PmSection>
-        </PmPageShell>
-      </PageWrapper>
-    </SharedGalleryCase>
-  );
-}
+import {
+  InsightsReadyFrame,
+  ManagedProductsReadyTable,
+  ManagedProductsGalleryList,
+  ManagedProductsGalleryBase,
+} from "./managed-products-gallery-frames";
+import { ONE_ACTION, TWO_ACTIONS, STUB_CHANGE, RANGE_OPTIONS } from "./managed-products-gallery-stubs";
 
 export function ManagedProductsGallery() {
-  const [queryClient] = useState(() => {
-    const client = createAppQueryClient("managed-products-gallery");
-    client.setQueryData(platformCoreQueryKeys.access.me(), GALLERY_STUB_ACCESS);
-    return client;
-  });
   return (
-    <QueryClientProvider client={queryClient}>
+    <ManagedProductsGalleryBase>
     <div className="flex flex-col gap-8 p-4">
       <header>
         <h1 className="text-lg font-semibold tracking-tight">
@@ -491,6 +286,6 @@ export function ManagedProductsGallery() {
         </PageWrapper>
       </SharedGalleryCase>
     </div>
-    </QueryClientProvider>
+    </ManagedProductsGalleryBase>
   );
 }

@@ -12,11 +12,12 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => mockSearchParamsContainer.current,
 }));
 
-jest.mock("@/hooks/api/build/advanced", () => ({
+jest.mock("@/hooks/api/build/cycles", () => ({
   useCyclePage: jest.fn(),
   useCreateCycle: jest.fn(),
   useUpdateCycle: jest.fn(),
   useDeleteCycle: jest.fn(),
+  useCycles: jest.fn(() => ({ data: [] })),
 }));
 
 jest.mock("@/hooks/api/build/tickets", () => ({
@@ -196,7 +197,7 @@ jest.mock("@/components/ui/date-picker", () => ({
   DatePicker: () => <input data-testid="date-picker" />,
 }));
 
-import { useCyclePage, useCreateCycle, useDeleteCycle, useUpdateCycle } from "@/hooks/api/build/advanced";
+import { useCyclePage, useCreateCycle, useDeleteCycle, useUpdateCycle } from "@/hooks/api/build/cycles";
 import { useCan, useAccess } from "@/hooks/api/access";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 

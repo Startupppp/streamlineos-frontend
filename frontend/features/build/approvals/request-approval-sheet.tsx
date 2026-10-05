@@ -1,12 +1,10 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { isApiError } from "@/lib/api-envelope";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { ErrorReference } from "@/components/shared/error-reference";
 import { createApprovalInputSchema } from "@/hooks/api/build/approvals-schema";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
-import { useForm, type ControllerRenderProps } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { requestApprovalSchema, type RequestApprovalValues } from "./approvals-schema";
 import {
@@ -18,48 +16,14 @@ import {
   SheetFooter,
   SheetBody,
 } from "@/components/ui/sheet";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-  FormDescription,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { DatePicker } from "@/components/ui/date-picker";
+import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Combobox } from "@/components/ui/combobox";
-import type { ComboboxOption } from "@/components/ui/combobox";
-import { UserCombobox } from "@/components/ui/user-combobox";
-import { useProject } from "@/hooks/api/build/projects";
-import { usePortalChangeRequests } from "@/hooks/api/build/client-portal";
-import { useTickets } from "@/hooks/api/build/tickets";
-import { useProjectMilestones, useProjectBudget } from "@/hooks/api/build/milestones";
-import { useReleases } from "@/hooks/api/build/releases";
-import { useChangeRequests } from "@/hooks/api/build/change-requests";
-import { useTimesheetEntries } from "@/hooks/api/timesheets-core/entries";
-import { useProjectFiles } from "@/hooks/api/build/project-files";
 import type { BuildApprovalsCreateApprovalBody } from "@/contracts/build-contracts.generated";
 import type { ApprovalEntityType } from "@/types/projects";
-import { DB_ENUMS } from "@/contracts/db-enums.generated";
-import { entityTypeLabel, entityTypeSearchLabel, entityTypeTitlePrefix } from "./approvals-constants";
-
-const ENTITY_TYPES = DB_ENUMS.approval_entity_type.map((v) => ({
-  value: v,
-  label: entityTypeLabel(v),
-  searchLabel: entityTypeSearchLabel(v),
-}));
+import { useEntityItems, type SelectionState } from "./use-entity-items";
+import { RequestApprovalFormBody } from "./request-approval-form-body";
+import { entityTypeTitlePrefix } from "./approvals-constants";
 
 interface RequestApprovalSheetProps {
   open: boolean;
@@ -71,129 +35,15 @@ interface RequestApprovalSheetProps {
   defaultEntityType?: ApprovalEntityType;
 }
 
-interface EntityItem extends ComboboxOption {
-  rawTitle: string;
-  version?: number;
-}
-
-function useEntityItems(projectId: number, entityType: ApprovalEntityType) {
-  const { data: project } = useProject(projectId);
-  const projectKey = project?.key ?? "";
-  const idFor = (type: ApprovalEntityType) => (entityType === type ? projectId : 0);
-
-  const { data: ticketsData, isFetching: ticketsFetching } = useTickets(idFor("task"), { limit: 50 });
-  const { data: milestonesPage, isFetching: milestonesFetching } = useProjectMilestones(idFor("milestone"));
-  const { data: releasesPage, isFetching: releasesFetching } = useReleases(idFor("release"));
-  const milestones = milestonesPage?.data;
-  const releases = releasesPage?.data;
-  const { data: changeRequests, isFetching: crFetching } = useChangeRequests(idFor("change_request"));
-  const { data: timesheetData, isFetching: timesheetFetching } = useTimesheetEntries({ projectId, limit: 50 }, entityType === "timesheet" && projectId > 0);
-  const { data: budget, isFetching: budgetFetching } = useProjectBudget(idFor("budget"));
-  const { data: projectFiles, isFetching: filesFetching } = useProjectFiles(idFor("document"));
-  const portalLookup = entityType === "client_approval" && projectId > 0;
-  const { data: portalCRs, isFetching: portalCRFetching } = usePortalChangeRequests(projectId, {
-    enabled: portalLookup,
-  });
-
-  if (entityType === "task") {
-    const tickets = ticketsData?.data ?? [];
-    return {
-      items: tickets.map((t): EntityItem => ({
-        value: String(t.id),
-        label: projectKey ? `${projectKey}-${t.ticketNumber} · ${t.title}` : t.title,
-        sublabel: t.status,
-        rawTitle: t.title,
-        version: t.version,
-      })),
-      isFetching: ticketsFetching,
-    };
-  }
-
-  if (entityType === "milestone") {
-    return {
-      items: (milestones ?? []).map((m): EntityItem => ({
-        value: String(m.id),
-        label: m.name,
-        sublabel: m.status ?? undefined,
-        rawTitle: m.name,
-      })),
-      isFetching: milestonesFetching,
-    };
-  }
-
-  if (entityType === "release") {
-    return {
-      items: (releases ?? []).map((r): EntityItem => ({
-        value: String(r.id),
-        label: `${r.name} (${r.version})`,
-        sublabel: r.status,
-        rawTitle: r.name,
-      })),
-      isFetching: releasesFetching,
-    };
-  }
-
-  if (entityType === "change_request") {
-    return {
-      items: (changeRequests?.data ?? []).map((cr): EntityItem => ({
-        value: String(cr.id),
-        label: `CR-${cr.crNumber}: ${cr.title}`,
-        sublabel: cr.status,
-        rawTitle: cr.title,
-      })),
-      isFetching: crFetching,
-    };
-  }
-
-  if (entityType === "timesheet") {
-    return {
-      items: (timesheetData?.data ?? []).map((entry): EntityItem => ({
-        value: String(entry.id),
-        label: `${entry.date} — ${entry.description ?? entry.ticket?.title ?? "(no description)"}`,
-        sublabel: `${entry.hours}h · ${entry.status}`,
-        rawTitle: entry.description ?? entry.ticket?.title ?? `Entry ${entry.id}`,
-      })),
-      isFetching: timesheetFetching,
-    };
-  }
-
-  if (entityType === "budget") {
-    return {
-      items: budget
-        ? [{ value: String(budget.projectId), label: "Project Budget", rawTitle: "Project Budget" } satisfies EntityItem]
-        : ([] as EntityItem[]),
-      isFetching: budgetFetching,
-    };
-  }
-
-  if (entityType === "document") {
-    return {
-      items: projectFiles.map((f): EntityItem => ({
-        value: String(f.id),
-        label: f.fileName,
-        sublabel: f.mimeType,
-        rawTitle: f.fileName,
-      })),
-      isFetching: filesFetching,
-    };
-  }
-
-  if (entityType === "client_approval") {
-    return {
-      items: (portalCRs ?? []).map((cr): EntityItem => ({
-        value: String(cr.id),
-        label: `CR-${cr.crNumber}: ${cr.title}`,
-        sublabel: cr.status,
-        rawTitle: cr.title,
-      })),
-      isFetching: portalCRFetching,
-    };
-  }
-
-  return { items: [] as EntityItem[], isFetching: false };
-}
-
-export function RequestApprovalSheet({ open, onOpenChange, onSubmit, isPending, projectId, currentUserId, defaultEntityType }: RequestApprovalSheetProps) {
+export function RequestApprovalSheet({
+  open,
+  onOpenChange,
+  onSubmit,
+  isPending,
+  projectId,
+  currentUserId,
+  defaultEntityType,
+}: RequestApprovalSheetProps) {
   const form = useForm<RequestApprovalValues>({
     resolver: zodResolver(requestApprovalSchema),
     defaultValues: {
@@ -210,17 +60,45 @@ export function RequestApprovalSheet({ open, onOpenChange, onSubmit, isPending, 
 
   const entityType = form.watch("entityType");
   const entityId = form.watch("entityId");
-  const context = JSON.stringify([open, projectId, currentUserId, defaultEntityType, entityType]);
+  const context = JSON.stringify([
+    open,
+    projectId,
+    currentUserId,
+    defaultEntityType,
+    entityType,
+  ]);
   const committed = useRef<object | null>(null);
-  const [selection, setSelection] = useState<{ context: string; task: { id: string; version?: number } | null; error: unknown; blocked: boolean }>({ context, task: null, error: null, blocked: false });
-  if (selection.context !== context) setSelection({ context, task: null, error: null, blocked: false });
-  useLayoutEffect(() => { committed.current = {}; return () => { committed.current = null; }; }, [context]);
+  const [selection, setSelection] = useState<SelectionState>({
+    context,
+    task: null,
+    error: null,
+    blocked: false,
+  });
+  if (selection.context !== context)
+    setSelection({ context, task: null, error: null, blocked: false });
+  useLayoutEffect(() => {
+    committed.current = {};
+    return () => {
+      committed.current = null;
+    };
+  }, [context]);
 
-  const { items: entityItems, isFetching: entityFetching } = useEntityItems(open ? projectId : 0, entityType);
+  const { items: entityItems, isFetching: entityFetching } = useEntityItems(
+    open ? projectId : 0,
+    entityType,
+  );
 
   useEffect(() => {
     if (open) {
-      form.reset({ entityType: defaultEntityType ?? "task", entityId: "", title: "", approverId: "", reason: "", dueAt: "", level: "1" });
+      form.reset({
+        entityType: defaultEntityType ?? "task",
+        entityId: "",
+        title: "",
+        approverId: "",
+        reason: "",
+        dueAt: "",
+        level: "1",
+      });
     }
   }, [open, projectId, currentUserId, defaultEntityType, form]);
 
@@ -246,9 +124,26 @@ export function RequestApprovalSheet({ open, onOpenChange, onSubmit, isPending, 
 
   async function handleSubmit(values: RequestApprovalValues) {
     const owner = committed.current;
-    if (!open || !owner || isPending || selection.blocked || selection.context !== context) return;
-    if (values.entityType === "task" && (!selection.task || selection.task.id !== values.entityId || selection.task.version === undefined)) {
-      setSelection({ ...selection, error: new Error("Select a ticket with a current version before requesting approval.") });
+    if (
+      !open ||
+      !owner ||
+      isPending ||
+      selection.blocked ||
+      selection.context !== context
+    )
+      return;
+    if (
+      values.entityType === "task" &&
+      (!selection.task ||
+        selection.task.id !== values.entityId ||
+        selection.task.version === undefined)
+    ) {
+      setSelection({
+        ...selection,
+        error: new Error(
+          "Select a ticket with a current version before requesting approval.",
+        ),
+      });
       return;
     }
     const input = {
@@ -259,42 +154,38 @@ export function RequestApprovalSheet({ open, onOpenChange, onSubmit, isPending, 
       ...(values.reason?.trim() ? { reason: values.reason.trim() } : {}),
       ...(values.dueAt ? { dueAt: values.dueAt } : {}),
       ...(values.level ? { level: parseInt(values.level, 10) } : {}),
-      ...(values.entityType === "task" ? { expectedArtifactVersion: selection.task?.version } : {}),
+      ...(values.entityType === "task"
+        ? { expectedArtifactVersion: selection.task?.version }
+        : {}),
     };
     try {
       await onSubmit(createApprovalInputSchema.parse(input));
     } catch (error: unknown) {
-      if (committed.current === owner) setSelection((current) => current.context === context && current.task === selection.task
-        ? { ...current, error, blocked: isApiError(error) && error.status === 409 } : current);
+      if (committed.current === owner)
+        setSelection((current) =>
+          current.context === context && current.task === selection.task
+            ? {
+                ...current,
+                error,
+                blocked: isApiError(error) && error.status === 409,
+              }
+            : current,
+        );
     }
   }
 
   function handleOpenChange(next: boolean) {
-    if (!next) form.reset({ entityType: defaultEntityType ?? "task", entityId: "", title: "", approverId: "", reason: "", dueAt: "", level: "1" });
+    if (!next)
+      form.reset({
+        entityType: defaultEntityType ?? "task",
+        entityId: "",
+        title: "",
+        approverId: "",
+        reason: "",
+        dueAt: "",
+        level: "1",
+      });
     onOpenChange(next);
-  }
-
-  const showEntityPicker = entityType !== "budget";
-  const isBudgetType = entityType === "budget";
-  const activeEntityType = ENTITY_TYPES.find((t) => t.value === entityType);
-
-  function renderEntityField({ field }: { field: ControllerRenderProps<RequestApprovalValues, "entityId"> }) {
-    function handleEntityChange(value: string) {
-      field.onChange(value);
-      setSelection({ context, task: entityType === "task" && value ? { id: value, version: entityItems.find((item) => item.value === value)?.version } : null, error: null, blocked: false });
-    }
-    return (
-      <FormItem>
-        <FormLabel>{activeEntityType?.label ?? "Item"}</FormLabel>
-        <FormControl>
-          <Combobox options={entityItems} value={field.value} onChange={handleEntityChange}
-            placeholder={entityFetching ? "Loading…" : `Search ${activeEntityType?.searchLabel ?? "items"}…`}
-            searchPlaceholder="Search by name…" emptyText={entityFetching ? "Loading…" : "No items found."} disabled={entityFetching} />
-        </FormControl>
-        <FormMessage />
-        {entityType === "task" && selection.task && <FormDescription>Ticket version {selection.task.version ?? "unavailable"} selected for this request.</FormDescription>}
-      </FormItem>
-    );
   }
 
   return (
@@ -310,136 +201,16 @@ export function RequestApprovalSheet({ open, onOpenChange, onSubmit, isPending, 
             className="flex flex-col flex-1 min-h-0"
           >
             <SheetBody className="px-6 py-5 space-y-4">
-              {Boolean(selection.error) && <div role="alert" className="text-sm text-destructive">{getErrorMessage(selection.error)}<ErrorReference error={selection.error} />{selection.blocked && <p>Select the ticket again to review its current version. Your request fields are retained.</p>}</div>}
-              <FormField
-                control={form.control}
-                name="entityType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Entity Type</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {ENTITY_TYPES.map((t) => (
-                          <SelectItem key={t.value} value={t.value}>
-                            {t.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              {showEntityPicker && (
-                <FormField control={form.control} name="entityId" render={renderEntityField} />
-              )}
-              {isBudgetType && (
-                <FormField
-                  control={form.control}
-                  name="entityId"
-                  render={(_) => (
-                    <FormItem>
-                      <FormLabel>Budget</FormLabel>
-                      <div className="flex h-9 items-center rounded-md border border-input bg-muted px-3 text-sm text-muted-foreground">
-                        {entityFetching ? "Loading budget…" : "Project Budget (auto-selected)"}
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Title</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Describe what needs approval" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="approverId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Approver</FormLabel>
-                    <FormControl>
-                      <UserCombobox
-                        value={field.value}
-                        onChange={field.onChange}
-                        placeholder="Search for approver…"
-                        excludeUserId={currentUserId}
-                        projectId={projectId}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="reason"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Reason / Notes (optional)</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        {...field}
-                        placeholder="Provide context: risk, deadline, decision needed…"
-                        className="resize-none h-20 text-sm"
-                        maxLength={2000}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="dueAt"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Due Date (optional)</FormLabel>
-                    <FormControl>
-                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="level"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Approval Level</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="1">Level 1 — Standard (team lead or peer review)</SelectItem>
-                        <SelectItem value="2">Level 2 — Escalated (department manager)</SelectItem>
-                        <SelectItem value="3">Level 3 — Executive (director or above)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormDescription className="text-xs">
-                      Higher levels route the approval to more senior stakeholders.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
+              <RequestApprovalFormBody
+                form={form}
+                entityType={entityType}
+                entityItems={entityItems}
+                entityFetching={entityFetching}
+                selection={selection}
+                setSelection={setSelection}
+                context={context}
+                currentUserId={currentUserId}
+                projectId={projectId}
               />
             </SheetBody>
             <SheetFooter className="px-6 py-4 border-t shrink-0">
@@ -452,7 +223,13 @@ export function RequestApprovalSheet({ open, onOpenChange, onSubmit, isPending, 
                 >
                   Cancel
                 </Button>
-                <LoadingButton type="submit" size="sm" disabled={selection.blocked} isPending={Boolean(isPending || form.formState.isSubmitting)} loadingText="Submitting…">
+                <LoadingButton
+                  type="submit"
+                  size="sm"
+                  disabled={selection.blocked}
+                  isPending={Boolean(isPending || form.formState.isSubmitting)}
+                  loadingText="Submitting…"
+                >
                   Submit Request
                 </LoadingButton>
               </div>

@@ -23,7 +23,7 @@ jest.mock("@/hooks/api/build/projects", () => ({
   }),
 }));
 
-jest.mock("@/hooks/api/build/advanced", () => ({
+jest.mock("@/hooks/api/build/views", () => ({
   useViews: () => ({
     data: {
       data: boardState.views,

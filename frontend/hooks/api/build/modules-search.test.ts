@@ -1,7 +1,7 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createElement } from "react";
-import { useModulePages } from "@/hooks/api/build/advanced";
+import { useModulePages } from "@/hooks/api/build/modules";
 
 jest.mock("@/lib/api-client", () => ({
   apiClient: {

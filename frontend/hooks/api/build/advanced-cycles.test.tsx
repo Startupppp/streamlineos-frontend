@@ -2,10 +2,10 @@ import { act, renderHook } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createElement } from "react";
 import type { ReactNode } from "react";
-import { useDeleteCycle, useUpdateCycle } from "./advanced";
+import { useDeleteCycle, useUpdateCycle } from "./cycles";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type { Cycle } from "@/types/projects";
-import type { CyclePage } from "./advanced";
+import type { CyclePage } from "./cycles";
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn().mockReturnValue(true),

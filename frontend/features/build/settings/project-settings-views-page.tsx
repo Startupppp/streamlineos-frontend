@@ -7,7 +7,7 @@ import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useCan } from "@/hooks/api/access";
-import { useDeleteView, useUpdateView, useViews } from "@/hooks/api/build/advanced";
+import { useDeleteView, useUpdateView, useViews } from "@/hooks/api/build/views";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";

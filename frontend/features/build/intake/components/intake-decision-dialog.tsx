@@ -19,11 +19,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { useCan } from "@/hooks/api/access";
 import { useAcceptIntakeRequest } from "@/hooks/api/build/intake-mutations";
-import {
-  useUpdateIntakeRequest,
-  useCycles,
-  useModules,
-} from "@/hooks/api/build/advanced";
+import { useUpdateIntakeRequest } from "@/hooks/api/build/intake";
+import { useCycles } from "@/hooks/api/build/cycles";
+import { useModules } from "@/hooks/api/build/modules";
 import { useProjectMembers } from "@/hooks/api/build/project-members";
 import { useProject } from "@/hooks/api/build/projects";
 import { useTicket } from "@/hooks/api/build/tickets";

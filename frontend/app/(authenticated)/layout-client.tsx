@@ -7,7 +7,7 @@ import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { useAccessVersionSync } from "@/hooks/common/use-access-version-sync";
 import { useNotificationEvents } from "@/features/notifications/use-notification-events";
 import { I18nProvider } from "@/lib/i18n/i18n";
-import { BuildSidebarSkeleton } from "@/features/build/navigation/build-sidebar-skeleton";
+import { BuildSidebarSkeleton } from "@/components/layout/sidebar/build-sidebar-skeleton";
 import type { BuildSidebarSlotProps } from "@/components/layout/sidebar/build-sidebar-slot";
 
 const BuildSidebar = dynamic(

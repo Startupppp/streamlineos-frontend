@@ -33,7 +33,7 @@ jest.mock("@/hooks/common/use-online-status", () => ({
   useOnlineStatus: () => mockIsOnline,
 }));
 
-jest.mock("@/hooks/api/build/advanced", () => ({
+jest.mock("@/hooks/api/build/modules", () => ({
   useModules: () => ({ data: [{ id: 11, name: "Payments" }] }),
 }));
 

@@ -16,7 +16,7 @@ jest.mock("next/dynamic", () => () => () => null);
 
 
 
-jest.mock("@/hooks/api/build/advanced", () => ({
+jest.mock("@/hooks/api/build/cycles", () => ({
   useCycles: (...args: [number, Record<string, unknown>?]) => mockUseCycles(...args),
 }));
 jest.mock("@/hooks/api/build/projects", () => ({

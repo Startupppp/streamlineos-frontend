@@ -26,7 +26,7 @@ jest.mock("next/navigation", () => ({
 jest.mock("next-auth/react", () => ({
   useSession: () => ({ data: { user: { id: mockCurrentUserId } } }),
 }));
-jest.mock("@/hooks/api/build/advanced", () => ({
+jest.mock("@/hooks/api/build/views", () => ({
   useWorkspaceViews: () => ({ data: [mockView], isLoading: false, isError: false }),
   useCreateWorkspaceView: () => ({ mutate: jest.fn(), isPending: false }),
   useUpdateWorkspaceView: () => ({ mutate: mockUpdateView }),

@@ -13,12 +13,13 @@ const mockTicket = jest.fn(), mockPush = jest.fn(), mockLeave = jest.fn();
 let mockRealDirtyBoundary = false, mockOtherDirty = false;
 type ToastOptions = { action?: { label: string; onClick: () => void }; id?: string | number };
 const mockToast = { success: jest.fn((message: string, options?: ToastOptions) => { void message; void options; }), error: jest.fn() };
-jest.mock("@/hooks/api/build/advanced", () => ({
+jest.mock("@/hooks/api/build/intake", () => ({
   useIntakeRequests: (...args: unknown[]) => mockRequests(...args),
   useCreateIntakeRequest: () => ({ mutate: mockCreate, isPending: false }),
   useUpdateIntakeRequest: () => ({ mutate: mockUpdate, isPending: false }),
-  useCycles: () => mockCycles(), useModules: () => mockModules(),
 }));
+jest.mock("@/hooks/api/build/cycles", () => ({ useCycles: () => mockCycles() }));
+jest.mock("@/hooks/api/build/modules", () => ({ useModules: () => mockModules() }));
 jest.mock("@/hooks/api/build/intake-mutations", () => ({ useAcceptIntakeRequest: () => ({ mutate: mockAccept, isPending: false }) }));
 jest.mock("@/hooks/api/build/project-members", () => ({ useProjectMembers: () => mockMembers() }));
 jest.mock("@/hooks/api/build/tickets", () => ({ useTickets: (...args: unknown[]) => mockTickets(...args), useTicket: (...args: unknown[]) => mockTicket(...args) }));

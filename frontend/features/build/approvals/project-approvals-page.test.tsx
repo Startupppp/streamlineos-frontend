@@ -199,6 +199,7 @@ jest.mock("./approvals-constants", () => ({
   ENTITY_OPTIONS: [],
   DECIDABLE: new Set(),
   entityTypeLabel: (type: string) => type,
+  APPROVAL_STATUS_VALUES: ["requested", "pending", "approved", "rejected", "changes_requested", "escalated", "cancelled"],
 }));
 
 import {

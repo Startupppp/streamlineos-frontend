@@ -1,6 +1,5 @@
 "use client";
 
-import { useRef, useCallback, useEffect, useState, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -18,26 +17,13 @@ import {
 } from "@/components/ui/select";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PlusIcon } from "@animateicons/react/lucide";
-import { useProjects } from "@/hooks/api/build/projects";
-import {
-  useCreateTicketAi,
-  type CreateTicketAiFieldPatch,
-} from "@/features/build/ai/create-ticket-ai-menu";
-import { AiFieldTrigger, AiInlinePreview, type AiInlineSession } from "@/components/ai";
-import { useCreateTicketForm } from "./use-create-ticket-form";
+import { AiFieldTrigger, AiInlinePreview } from "@/components/ai";
 import { TicketCreateProperties } from "./ticket-create-properties";
-import {
-  MAX_FILES,
-  MAX_TOTAL_BYTES,
-  MAX_FILE_BYTES,
-  isImageMime,
-} from "./ticket-attachment-preview";
-import { useDuplicateTitleWarning } from "./use-duplicate-title-warning";
 import { TicketDialogTitleField } from "./ticket-dialog-title-field";
 import { TicketDialogDescriptionSection } from "./ticket-dialog-description-section";
 import { TicketDialogFooter } from "./ticket-dialog-footer";
 import { useCan } from "@/hooks/api/access";
-import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
+import { useCreateTicketDialogState } from "./use-create-ticket-dialog-state";
 
 interface CreateTicketDialogProps {
   projectId?: number;
@@ -66,18 +52,10 @@ function CreateTicketDialogContent({
   externalOpen,
   onExternalOpenChange,
 }: CreateTicketDialogProps) {
-  const projectLocked = lockedProjectId != null;
-  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(
-    lockedProjectId ?? null,
-  );
-
-  const handleExternalClose = useCallback(() => {
-    onExternalOpenChange?.(false);
-  }, [onExternalOpenChange]);
-
   const {
-    open: internalOpen,
-    setOpen,
+    projectLocked,
+    selectedProjectId,
+    resolvedOpen,
     form,
     files,
     relatedLinks,
@@ -86,252 +64,46 @@ function CreateTicketDialogContent({
     isPending,
     properties,
     handlePropertiesChange,
-    handleSubmit,
-    addFiles,
-    handleRemoveFile,
     createMore,
-    handleToggleCreateMore,
     titleRef,
     projectStatuses,
     members,
     labels,
     cycles,
-    project,
-  } = useCreateTicketForm({
-    projectId: selectedProjectId,
+    projects,
+    projectsLoading,
+    showLinksEditor,
+    descriptionEditorKey,
+    titleInlineSession,
+    descriptionInlineSession,
+    fieldsInlineSession,
+    duplicates,
+    previewUrls,
+    fileError,
+    createTicketAi,
+    handleOpenTrigger,
+    handleOpenChange,
+    handleProjectChange,
+    handleShowLinksEditor,
+    handleCreateMoreChange,
+    handleFileChange,
+    handleRemoveFileWithPreview,
+    handleDragEnter,
+    handleDragLeave,
+    handleDragOver,
+    handleDrop,
+    handleFormSubmit,
+    canSubmit,
+    projectSelectValue,
+    projectTriggerLabel,
+    currentProjectKey,
+  } = useCreateTicketDialogState({
+    lockedProjectId,
     defaultStatus,
     defaultCycleId,
-    onClose: handleExternalClose,
+    externalOpen,
+    onExternalOpenChange,
   });
-
-  const resolvedOpen =
-    externalOpen !== undefined ? externalOpen || internalOpen : internalOpen;
-
-  useRegisterDirtyState(resolvedOpen && form.formState.isDirty);
-
-  const { data: projectsData, isLoading: projectsLoading } = useProjects(
-    { status: "ACTIVE", limit: 100 },
-    { enabled: resolvedOpen },
-  );
-  const projects = useMemo(() => projectsData?.data ?? [], [projectsData]);
-
-  const [showLinksEditor, setShowLinksEditor] = useState(false);
-  const [descriptionEditorKey, setDescriptionEditorKey] = useState(0);
-  const [titleInlineSession, setTitleInlineSession] = useState<AiInlineSession | null>(null);
-  const [descriptionInlineSession, setDescriptionInlineSession] = useState<AiInlineSession | null>(null);
-  const [fieldsInlineSession, setFieldsInlineSession] = useState<AiInlineSession | null>(null);
-
-  const [previewUrls, setPreviewUrls] = useState<(string | null)[]>([]);
-  const [fileError, setFileError] = useState<string | null>(null);
-  const dragCounterRef = useRef(0);
-
-  const watchedTitle = form.watch("title") ?? "";
-  const watchedDescription = form.watch("description") ?? "";
-  const duplicates = useDuplicateTitleWarning(watchedTitle, selectedProjectId);
-
-  const handleApplyAiTitle = useCallback(
-    (nextTitle: string) => {
-      form.setValue("title", nextTitle, { shouldValidate: true, shouldDirty: true });
-    },
-    [form],
-  );
-
-  const handleApplyAiDescription = useCallback(
-    (html: string) => {
-      form.setValue("description", html, { shouldValidate: true, shouldDirty: true });
-      setDescriptionEditorKey((k) => k + 1);
-    },
-    [form],
-  );
-
-  const handleApplyAiFields = useCallback(
-    (patch: CreateTicketAiFieldPatch) => {
-      handlePropertiesChange({
-        ...(patch.priority !== undefined ? { priority: patch.priority } : {}),
-        ...(patch.points !== undefined ? { points: patch.points } : {}),
-        ...(patch.labelIds !== undefined ? { labelIds: patch.labelIds } : {}),
-      });
-    },
-    [handlePropertiesChange],
-  );
-
-  const createTicketAi = useCreateTicketAi({
-    projectId: selectedProjectId,
-    title: watchedTitle,
-    description: watchedDescription,
-    onApplyTitle: handleApplyAiTitle,
-    onApplyDescription: handleApplyAiDescription,
-    onApplyFields: handleApplyAiFields,
-    onTitleInlineChange: setTitleInlineSession,
-    onDescriptionInlineChange: setDescriptionInlineSession,
-    onFieldsInlineChange: setFieldsInlineSession,
-    disabled: isPending || isUploading,
-  });
-
-  useEffect(() => {
-    if (lockedProjectId != null) {
-      setSelectedProjectId(lockedProjectId);
-    }
-  }, [lockedProjectId]);
-
-  useEffect(() => {
-    if (externalOpen === true) setOpen(true);
-  }, [externalOpen, setOpen]);
-
-  useEffect(() => {
-    if (!resolvedOpen) return;
-    if (lockedProjectId != null) {
-      setSelectedProjectId(lockedProjectId);
-      return;
-    }
-    if (selectedProjectId == null && projects.length === 1) {
-      const only = projects[0];
-      if (only) setSelectedProjectId(only.id);
-    }
-  }, [resolvedOpen, lockedProjectId, projects, selectedProjectId]);
-
-  useEffect(() => {
-    const urls = files.map((f) => {
-      if (isImageMime(f.type)) return URL.createObjectURL(f);
-      return null;
-    });
-    setPreviewUrls(urls);
-    return () => {
-      urls.forEach((u) => {
-        if (u) URL.revokeObjectURL(u);
-      });
-    };
-  }, [files]);
-
-  const handleOpenTrigger = useCallback(() => setOpen(true), [setOpen]);
-  const handleOpenChange = useCallback(
-    (v: boolean) => {
-      if (!v && (isPending || isUploading)) return;
-      if (!v) {
-        titleInlineSession?.reject();
-        descriptionInlineSession?.reject();
-        fieldsInlineSession?.reject();
-        setTitleInlineSession(null);
-        setDescriptionInlineSession(null);
-        setFieldsInlineSession(null);
-      }
-      setOpen(v);
-      onExternalOpenChange?.(v);
-      if (!v && !projectLocked) {
-        setSelectedProjectId(null);
-      }
-    },
-    [
-      setOpen,
-      onExternalOpenChange,
-      projectLocked,
-      titleInlineSession,
-      descriptionInlineSession,
-      fieldsInlineSession,
-      isPending,
-      isUploading,
-    ],
-  );
-
-  const handleProjectChange = useCallback((value: string) => {
-    if (isPending || isUploading) return;
-    const parsed = Number(value);
-    setSelectedProjectId(Number.isFinite(parsed) ? parsed : null);
-  }, [isPending, isUploading]);
-
-  const handleShowLinksEditor = useCallback(() => setShowLinksEditor(true), []);
-  const handleCreateMoreChange = useCallback(
-    (_: boolean) => {
-      handleToggleCreateMore();
-    },
-    [handleToggleCreateMore],
-  );
-
-  const validateAndAddFiles = useCallback(
-    (selected: File[]) => {
-      const nextCount = files.length + selected.length;
-      if (nextCount > MAX_FILES) {
-        setFileError(`You can upload up to ${MAX_FILES} files per ticket.`);
-        return;
-      }
-      const oversized = selected.find((f) => f.size > MAX_FILE_BYTES);
-      if (oversized) {
-        setFileError(`${oversized.name} exceeds the 25MB per-file limit.`);
-        return;
-      }
-      const currentTotal = files.reduce((sum, f) => sum + f.size, 0);
-      const newTotal = selected.reduce((sum, f) => sum + f.size, currentTotal);
-      if (newTotal > MAX_TOTAL_BYTES) {
-        setFileError("Total attachments exceed the 100MB limit.");
-        return;
-      }
-      setFileError(null);
-      addFiles(selected);
-    },
-    [files, addFiles],
-  );
-
-  const handleFileChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const selected = Array.from(e.target.files ?? []);
-      e.target.value = "";
-      validateAndAddFiles(selected);
-    },
-    [validateAndAddFiles],
-  );
-
-  const handleRemoveFileWithPreview = useCallback(
-    (idx: number) => {
-      handleRemoveFile(idx);
-    },
-    [handleRemoveFile],
-  );
-
-  const handleDragEnter = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dragCounterRef.current += 1;
-  }, []);
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dragCounterRef.current -= 1;
-  }, []);
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  }, []);
-
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      dragCounterRef.current = 0;
-      const dropped = Array.from(e.dataTransfer.files);
-      if (dropped.length > 0) validateAndAddFiles(dropped);
-    },
-    [validateAndAddFiles],
-  );
-
-  const handleFormSubmit = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-      form.handleSubmit(handleSubmit)();
-    },
-    [form, handleSubmit],
-  );
-
-  const canSubmit = selectedProjectId != null;
-  const projectSelectValue =
-    selectedProjectId != null ? String(selectedProjectId) : undefined;
-  const projectTriggerLabel =
-    project?.key ??
-    projects.find((p) => p.id === selectedProjectId)?.key ??
-    (projectsLoading ? "Loading…" : "Select project");
-  const currentProjectKey =
-    project?.key ?? projects.find((p) => p.id === selectedProjectId)?.key;
 
   return (
     <>

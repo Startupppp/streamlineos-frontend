@@ -61,10 +61,15 @@ jest.mock("@/hooks/api/build/tickets", () => ({
     refetch: mockRetryByKey,
   }),
 }));
-jest.mock("@/hooks/api/build/advanced", () => ({
+jest.mock("@/hooks/api/build/epics", () => ({
   useEpics: jest.fn(),
+}));
+jest.mock("@/hooks/api/build/modules", () => ({
   useModules: jest.fn(),
+}));
+jest.mock("@/hooks/api/build/cycles", () => ({
   useCycles: jest.fn(),
+  useCyclePage: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, error: null })),
 }));
 jest.mock("@/hooks/api/build/ticket-queries", () => ({ useProjectBoardTickets: jest.fn() }));
 jest.mock("@/hooks/api/access", () => ({

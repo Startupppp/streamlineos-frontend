@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useProject } from "@/hooks/api/build/projects";
-import { useViews } from "@/hooks/api/build/advanced";
+import { useViews } from "@/hooks/api/build/views";
 import { useProjectBoardTickets } from "@/hooks/api/build/tickets";
 import { useBugs } from "@/hooks/api/build/bugs";
 import { useBoardSavedViews } from "./use-board-saved-views";

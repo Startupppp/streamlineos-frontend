@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
-import { useModulePages } from "@/hooks/api/build/advanced";
+import { useModulePages } from "@/hooks/api/build/modules";
 import { useDeleteModule } from "@/hooks/api/build/modules";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";

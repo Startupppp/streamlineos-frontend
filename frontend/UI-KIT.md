@@ -37,6 +37,7 @@ Reference for `frontend/CLAUDE.md`. Rules live there and cite this file by ancho
 | Pickers | `PhoneInput` · `DatePicker`, `DateRangePicker` · `Combobox`, `UserCombobox` — `components/ui/` |
 | Member selection | `MemberPicker` — `components/members/member-picker.tsx` (explicit candidates, project, organization, or `moduleKey` directory; module mode defaults to `excludeAssigned=true` and `includeRevoked=false`. Access-management Add Member and Group Member flows opt into revoked candidates, show the restoration warning, and keep the Revoked label after selection.) |
 | Board skeletons | `KanbanBoardSkeleton`, `KanbanColumnSkeleton` — `components/ui/kanban-skeleton.tsx` |
+| Module sidebar skeleton | `BuildSidebarSkeleton` — `components/layout/sidebar/build-sidebar-skeleton.tsx` (the shell paints it while the Build sidebar chunk loads; the Build sidebar renders the same skeleton, so the swap does not shift) |
 | Rich surface (HR + Administration) | `RichPanel`, `RichPageContent`, `RichHero`, `RichQuickAction`, `RichIconWell` — `components/shared/rich-surface.tsx` (re-exported `Hr*` from `features/hr/shared/hr-ui.tsx`) |
 | AI | `AiActionsMenu`, `AiUsageChip` — `components/ai/` |
 | Plate list model (KB Wiki) | `listStyleTypeOf`, `listIndentOf`, `listPaddingRem`, `listOrdinalOf`, `listOrdinalLabel`, `isListItemChecked` — `components/editor/plate/plate-list-model.ts` |

@@ -23,7 +23,7 @@ import {
   useViews,
   useUpdateView,
   useDeleteView,
-} from "@/hooks/api/build/advanced";
+} from "@/hooks/api/build/views";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { currentSearchParams } from "@/lib/current-search-params";
 import { parseViewType } from "@/lib/build/view-types";

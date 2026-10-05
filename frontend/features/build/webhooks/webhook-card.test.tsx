@@ -13,6 +13,8 @@ jest.mock("@/hooks/api/access", () => ({
 jest.mock("@/hooks/api/build/webhooks", () => ({
   useWebhookDeliveries: () => ({ data: [], isLoading: false }),
   useSendTestWebhook: () => ({ mutate: jest.fn(), isPending: false }),
+  useRotateWebhookSecret: () => ({ mutate: jest.fn(), isPending: false }),
+  useProjectWebhookImpact: () => ({ data: undefined, isLoading: false, isError: false }),
 }));
 
 jest.mock("@/components/pm-chrome", () => ({

@@ -3,7 +3,7 @@
 import { use, useCallback, useMemo, useRef, useState } from "react";
 import { format, addDays } from "date-fns";
 import { useProject, useProjectLabels } from "@/hooks/api/build/projects";
-import { useCycles } from "@/hooks/api/build/advanced";
+import { useCycles } from "@/hooks/api/build/cycles";
 import { useBulkUpdateTickets } from "@/hooks/api/build/tickets";
 import { useWorkloadCapacity } from "@/hooks/api/build/workload-capacity";
 import { useExportTickets } from "@/hooks/api/build/ticket-import-export";

@@ -6,7 +6,7 @@ let mockFetchedModules: { id: number; name: string }[] = [];
 const mockReplace = jest.fn();
 let mockSearchParams = new URLSearchParams();
 
-jest.mock("@/hooks/api/build/advanced", () => ({
+jest.mock("@/hooks/api/build/modules", () => ({
   useModules: () => ({ data: mockFetchedModules }),
 }));
 

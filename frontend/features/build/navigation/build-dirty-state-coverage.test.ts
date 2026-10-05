@@ -40,7 +40,6 @@ function buildSummaries(): FileSummary[] {
     return files.some(
       (candidate) =>
         candidate.absPath !== absPath &&
-        candidate.absPath.endsWith(".tsx") &&
         importsThisModule.test(candidate.source) &&
         REGISTRATION_CALL.test(candidate.source),
     );

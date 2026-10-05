@@ -14,8 +14,10 @@ jest.mock("@/hooks/api/build/ticket-import-export", () => ({
   useExportTickets: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
 
-jest.mock("@/hooks/api/build/advanced", () => ({
+jest.mock("@/hooks/api/build/cycles", () => ({
   useCycles: jest.fn(),
+}));
+jest.mock("@/hooks/api/build/epics", () => ({
   useEpicPage: jest.fn(),
 }));
 jest.mock("@/hooks/api/build/project-members", () => ({
@@ -176,7 +178,7 @@ import { useProject, useProjectBoardTickets, useUpdateTicket, useDeleteTicket, u
 import { useCan, useAccess } from "@/hooks/api/access";
 import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
-import { useEpicPage } from "@/hooks/api/build/advanced";
+import { useEpicPage } from "@/hooks/api/build/epics";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import type { AccessResponse } from "@/hooks/api/access-schema";
 import type { Cycle, ProjectWithDetails, Ticket } from "@/types/projects";

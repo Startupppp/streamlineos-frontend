@@ -20,8 +20,9 @@ jest.mock("@/hooks/api/build/projects", () => ({
   useProject: jest.fn(),
 }));
 
-jest.mock("@/hooks/api/build/advanced", () => ({
+jest.mock("@/hooks/api/build/cycles", () => ({
   useCycles: jest.fn(),
+  useCyclePage: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, error: null })),
 }));
 
 jest.mock("@/hooks/api/build/tickets", () => ({
@@ -175,7 +176,7 @@ jest.mock("@/features/build/ticket-details/build-ticket-detail-url", () => ({
 }));
 
 import { useProject } from "@/hooks/api/build/projects";
-import { useCycles } from "@/hooks/api/build/advanced";
+import { useCycles } from "@/hooks/api/build/cycles";
 import { useProjectBoardTickets, useBulkUpdateTickets } from "@/hooks/api/build/tickets";
 import { useTicketColumnCounts } from "@/hooks/api/build/ticket-queries";
 import { useCan, useAccess } from "@/hooks/api/access";

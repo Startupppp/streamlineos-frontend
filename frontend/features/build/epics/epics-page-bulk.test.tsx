@@ -27,9 +27,12 @@ jest.mock("sonner", () => ({
   },
 }));
 
-jest.mock("@/hooks/api/build/advanced", () => ({
+jest.mock("@/hooks/api/build/cycles", () => ({
   useCycles: jest.fn(),
+}));
+jest.mock("@/hooks/api/build/epics", () => ({
   useEpicPage: jest.fn(),
+  useEpics: jest.fn(() => ({ data: [] })),
 }));
 jest.mock("@/hooks/api/build/project-members", () => ({
   useProjectMembers: jest.fn(() => ({ data: [] })),
@@ -120,7 +123,7 @@ jest.mock("@/features/build/shared/use-build-list-filters", () => ({
 import { useProject, useProjectBoardTickets, useUpdateTicket, useDeleteTicket, useCreateTicket, useBulkUpdateTickets, useCycles } from "@/hooks/api/build";
 import { useCan, useAccess } from "@/hooks/api/access";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
-import { useEpicPage } from "@/hooks/api/build/advanced";
+import { useEpicPage } from "@/hooks/api/build/epics";
 import type { EpicItem } from "@/hooks/api/build/execution-schema";
 import { useExportTickets } from "@/hooks/api/build/ticket-import-export";
 import { downloadTextFile } from "@/features/build/import-export/download-text-file";

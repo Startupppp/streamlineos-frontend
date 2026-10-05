@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createElement } from "react";
 import type { ReactNode } from "react";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
-import { useCreateView, useDeleteView } from "./advanced";
+import { useCreateView, useDeleteView } from "./views";
 import { useCreateProjectCustomField, useDeleteProjectCustomField } from "./custom-fields";
 import { useCreateAgentToken, useRevokeAgentToken } from "./agent-tokens";
 import { useCreateTransition, useDeleteTransition } from "./workflow";

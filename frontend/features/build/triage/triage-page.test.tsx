@@ -133,7 +133,7 @@ jest.mock("@/hooks/api/build/project-members", () => ({
   useProjectMembers: jest.fn(() => ({ data: [] })),
 }));
 
-jest.mock("@/hooks/api/build/advanced", () => ({
+jest.mock("@/hooks/api/build/cycles", () => ({
   useCycles: jest.fn(() => ({ data: [] })),
 }));
 

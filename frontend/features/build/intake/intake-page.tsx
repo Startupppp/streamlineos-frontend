@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import {
   useIntakeRequests,
   useCreateIntakeRequest,
-} from "@/hooks/api/build/advanced";
+} from "@/hooks/api/build/intake";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";

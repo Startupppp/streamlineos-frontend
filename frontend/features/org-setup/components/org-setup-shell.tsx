@@ -46,7 +46,7 @@ export function OrgSetupShell({
   const currentStepId = sequence[currentIndex] ?? "welcome";
   const isWelcome = currentStepId === "welcome";
   const previewSnapshot = useMemo(() => toPreviewSnapshot(data), [data]);
-  const visibleSteps = useMemo(() => sequence.filter((id) => id !== "welcome"), [sequence]);
+  const visibleSteps = useMemo((): StepId[] => sequence.filter((id) => id !== "welcome"), [sequence]);
   const visibleIndex = visibleSteps.indexOf(currentStepId);
   const handleVisibleStepSelect = useMemo(
     () => (onStepSelect ? (index: number) => {

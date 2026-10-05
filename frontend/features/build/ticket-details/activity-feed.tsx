@@ -1,41 +1,19 @@
 "use client";
 
-import { useState, useCallback, useMemo, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
-import { useQueryClient } from "@tanstack/react-query";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
 import { ErrorReference } from "@/components/shared/error-reference";
 import { MessageSquare, AlertTriangle } from "lucide-react";
 import { SendIcon, XIcon } from "@animateicons/react/lucide";
-import { useAddComment } from "@/hooks/api/build/ticket-sub-resources";
-import { useCreateTicket } from "@/hooks/api/build/tickets";
-import {
-  useUpdateComment,
-  useDeleteComment,
-} from "@/hooks/api/build/comment-mutations";
-import { useDeleteCommentDraftByTicket } from "@/hooks/api/build/comment-draft-commands";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { AiActionsMenu } from "@/components/ai/ai-actions-menu";
-import { useDraftCommentAction } from "./use-draft-comment-action";
-import { useTicketCommentComposer } from "./use-ticket-comment-composer";
-import {
-  useAddReaction,
-  useRemoveReaction,
-} from "@/hooks/api/build/reactions";
-import { useCan } from "@/hooks/api/access";
-import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { TicketComment } from "@/types/projects";
-import {
-  MentionTextarea,
-  type MentionUser,
-} from "@/features/build/comments/mention-textarea";
+import { MentionTextarea, type MentionUser } from "@/features/build/comments/mention-textarea";
 import { CommentItem } from "./comment-item";
-import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
-import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
+import { useActivityFeed } from "./use-activity-feed";
 
-const COMMENT_RENDER_PAGE_SIZE = 20;
+const noopVoid = () => {};
+const noopStr = (_: string) => {};
 
 interface ActivityFeedProps {
   ticketId: number;
@@ -48,9 +26,6 @@ interface ActivityFeedProps {
   activityAiActions?: React.ReactNode;
 }
 
-const noopVoid = () => {};
-const noopStr = (_: string) => {};
-
 export function ActivityFeed({
   ticketId,
   projectId,
@@ -61,260 +36,24 @@ export function ActivityFeed({
   highlightCommentId,
   activityAiActions,
 }: ActivityFeedProps) {
-  const [replyingTo, setReplyingTo] = useState<number | null>(null);
-  const [replyText, setReplyText] = useState("");
-  const [editingSaveId, setEditingSaveId] = useState<number | null>(null);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
-  const [commentNotFoundDismissed, setCommentNotFoundDismissed] =
-    useState(false);
-  const { data: session } = useSession();
-  const currentUserId = session?.user?.id;
-  const commentRefs = useRef<Map<number, HTMLDivElement>>(new Map());
-  const deleteDraftByTicket = useDeleteCommentDraftByTicket();
-  const canUpdate = useCan("build:tickets:update");
   const {
-    body: newComment, change: setNewComment, clear: clearNewComment,
-    ready: composerReady, loading: draftLoading, loadError: draftLoadError, retry: retryDraft,
-    persistenceStatus: draftPersistenceStatus, persistenceError: draftPersistenceError, retryPersistence,
-  } = useTicketCommentComposer(ticketId, canUpdate);
-  const canCreate = useCan("build:tickets:create");
-  const canAi = useCan("build:ai:use");
-  const router = useRouter();
-  const queryClient = useQueryClient();
-
-  const commentPermalink = useCallback(
-    (commentId: number) => {
-      if (ticketNumber == null) return undefined;
-      return getTicketDetailHref(
-        projectId,
-        projectKey,
-        ticketNumber,
-        commentId,
-      );
-    },
-    [projectId, projectKey, ticketNumber],
-  );
-
-  const commentNotFound =
-    !commentNotFoundDismissed &&
-    !!highlightCommentId &&
-    comments.length > 0 &&
-    !comments.some((c) => c.id === highlightCommentId);
-
-  useEffect(() => {
-    if (!highlightCommentId) return;
-    const el = commentRefs.current.get(highlightCommentId);
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [highlightCommentId, comments]);
-
-  const addComment = useAddComment({
-    onSuccess: () => {
-      clearNewComment();
-      deleteDraftByTicket.mutate(ticketId);
-    },
-    onError: (error) => toast.error(getErrorMessage(error)),
-  });
-
-  const addReply = useAddComment({
-    onSuccess: () => {
-      setReplyText("");
-      setReplyingTo(null);
-    },
-    onError: (error) => toast.error(getErrorMessage(error)),
-  });
-
-  const updateComment = useUpdateComment();
-  const deleteComment = useDeleteComment();
-  const addReaction = useAddReaction(projectId, ticketId);
-  const removeReaction = useRemoveReaction(projectId, ticketId);
-
-  const handleSubmit = useCallback(() => {
-    const content = newComment.trim();
-    if (!content) return;
-    const optimisticAuthor =
-      session?.user?.id
-        ? { id: session.user.id, name: session.user.name ?? null, image: session.user.image ?? null }
-        : undefined;
-    addComment.mutate({ ticketId, projectId, content, optimisticAuthor });
-  }, [newComment, ticketId, projectId, addComment, session]);
-
-  const handleReplySubmit = useCallback(
-    (commentId: number) => {
-      const content = replyText.trim();
-      if (!content) return;
-      const optimisticAuthor =
-        session?.user?.id
-          ? { id: session.user.id, name: session.user.name ?? null, image: session.user.image ?? null }
-          : undefined;
-      addReply.mutate({
-        ticketId,
-        projectId,
-        content,
-        parentCommentId: commentId,
-        optimisticAuthor,
-      });
-    },
-    [replyText, ticketId, projectId, addReply, session],
-  );
-
-  const handleSaveEdit = useCallback(
-    (commentId: number, content: string) => {
-      setEditingSaveId(commentId);
-      updateComment.mutate(
-        { commentId, ticketId, projectId, content },
-        {
-          onSuccess: () => toast.success("Comment updated"),
-          onError: (err) => toast.error(getErrorMessage(err)),
-          onSettled: () => setEditingSaveId(null),
-        },
-      );
-    },
-    [updateComment, ticketId, projectId],
-  );
-
-  const handleDeleteComment = useCallback(
-    (commentId: number) => {
-      setDeletingId(commentId);
-      deleteComment.mutate(
-        { commentId, ticketId, projectId },
-        {
-          onSuccess: () => toast.success("Comment deleted"),
-          onError: (err) => toast.error(getErrorMessage(err)),
-          onSettled: () => setDeletingId(null),
-        },
-      );
-    },
-    [deleteComment, ticketId, projectId],
-  );
-
-  const handleTopKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        handleSubmit();
-      }
-    },
-    [handleSubmit],
-  );
-
-  const handleReplyKeyDown = useCallback(
-    (parentId: number) => (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        handleReplySubmit(parentId);
-      }
-    },
-    [handleReplySubmit],
-  );
-
-  const handleReply = useCallback((commentId: number) => {
-    setReplyingTo(commentId);
-  }, []);
-
-  const handleReact = useCallback(
-    (commentId: number, emoji: string) => {
-      if (!currentUserId) return;
-      addReaction.mutate({ commentId, emoji, userId: currentUserId });
-    },
-    [addReaction, currentUserId],
-  );
-
-  const handleUnreact = useCallback(
-    (commentId: number, emoji: string) => {
-      if (!currentUserId) return;
-      removeReaction.mutate({ commentId, emoji, userId: currentUserId });
-    },
-    [removeReaction, currentUserId],
-  );
-
-  const handleCancelReply = useCallback(() => {
-    setReplyingTo(null);
-    setReplyText("");
-  }, []);
-
-  const handleDismissNotFound = useCallback(
-    () => setCommentNotFoundDismissed(true),
-    [],
-  );
-
-  const createTicket = useCreateTicket({
-    onSuccess: (ticket) => {
-      queryClient.invalidateQueries({
-        queryKey: accountingAndSupportQueryKeys.ticketActivity.list(ticketId),
-      });
-      toast.success("Issue created");
-      if (ticket.projectId != null && ticket.ticketNumber != null) {
-        router.push(
-          getTicketDetailHref(
-            ticket.projectId,
-            ticket.project?.key ?? projectKey,
-            ticket.ticketNumber,
-          ),
-        );
-      }
-    },
-    onError: (error) => toast.error(getErrorMessage(error)),
-  });
-
-  const handleCreateIssue = useCallback(
-    (commentId: number, content: string) => {
-      if (!projectId) return;
-      const sourceRef =
-        ticketNumber != null && projectKey
-          ? `${projectKey}-${ticketNumber}`
-          : `ticket #${ticketId}`;
-      createTicket.mutate({
-        projectId,
-        title: `Issue from comment on ${sourceRef}`,
-        description: `${content}\n\n---\nCreated from a comment on ${sourceRef} (comment #${commentId}).`,
-        type: "TASK",
-      });
-    },
-    [createTicket, projectId, ticketId, ticketNumber, projectKey],
-  );
-
-  const handleApplyDraft = useCallback((text: string) => setNewComment(text), [setNewComment]);
-  const draftAction = useDraftCommentAction(ticketId, handleApplyDraft);
-  const handleRetryDraft = useCallback(() => { void retryDraft(); }, [retryDraft]);
-  const handleRetryPersistence = useCallback(() => { void retryPersistence(); }, [retryPersistence]);
-
-  const { repliesMap, sortedTopLevel } = useMemo(() => {
-    const topLevel = comments.filter((c) => !c.parentCommentId);
-    const built = comments.reduce<Record<number, TicketComment[]>>((acc, r) => {
-      const parentId = r.parentCommentId;
-      if (!parentId) return acc;
-      if (!acc[parentId]) acc[parentId] = [];
-      acc[parentId].push(r);
-      return acc;
-    }, {});
-    const sortedTopLevel = [...topLevel].sort(
-      (a, b) =>
-        new Date(b.createdAt || 0).getTime() -
-        new Date(a.createdAt || 0).getTime(),
-    );
-    return { repliesMap: built, sortedTopLevel };
-  }, [comments]);
-
-  const [visibleCount, setVisibleCount] = useState(COMMENT_RENDER_PAGE_SIZE);
-  const handleShowOlderComments = useCallback(
-    () => setVisibleCount((count) => count + COMMENT_RENDER_PAGE_SIZE),
-    [],
-  );
-
-  const visibleTopLevel = useMemo(() => {
-    let count = visibleCount;
-    if (highlightCommentId) {
-      const index = sortedTopLevel.findIndex(
-        (comment) =>
-          comment.id === highlightCommentId ||
-          (repliesMap[comment.id] ?? []).some(
-            (reply) => reply.id === highlightCommentId,
-          ),
-      );
-      if (index >= count) count = index + 1;
-    }
-    return sortedTopLevel.slice(0, count);
-  }, [sortedTopLevel, repliesMap, visibleCount, highlightCommentId]);
+    newComment, setNewComment, composerReady, draftLoading, draftLoadError,
+    draftPersistenceStatus, draftPersistenceError,
+    canUpdate, canCreate, canAi,
+    currentUserId, commentRefs,
+    replyingTo, replyText, setReplyText,
+    editingSaveId, deletingId,
+    commentNotFound,
+    addComment, addReply,
+    repliesMap, sortedTopLevel, visibleTopLevel,
+    commentPermalink,
+    draftAction,
+    handleSubmit, handleReplySubmit, handleSaveEdit, handleDeleteComment,
+    handleTopKeyDown, handleReplyKeyDown, handleReply, handleReact, handleUnreact,
+    handleCancelReply, handleDismissNotFound, handleCreateIssue,
+    handleRetryDraft, handleRetryPersistence,
+    handleShowOlderComments,
+  } = useActivityFeed({ ticketId, projectId, projectKey, ticketNumber, comments, members, highlightCommentId });
 
   return (
     <div className="w-full space-y-4">
@@ -323,55 +62,57 @@ export function ActivityFeed({
           <MessageSquare className="h-3.5 w-3.5 shrink-0" />
           <span className="truncate">Activity</span>
           {comments.length > 0 && (
-            <span className="shrink-0 text-muted-foreground">
-              ({comments.length})
-            </span>
+            <span className="shrink-0 text-muted-foreground">({comments.length})</span>
           )}
           {activityAiActions}
           {canAi ? <AiActionsMenu actions={[draftAction]} triggerLabel="Draft comment" align="end" /> : null}
         </h4>
 
-        {canUpdate && composerReady ? <div className="flex w-full min-w-0 flex-row items-end gap-2">
-          <MentionTextarea
-            value={newComment}
-            onChange={setNewComment}
-            onKeyDown={handleTopKeyDown}
-            placeholder="Write a comment... (Ctrl+Enter to send)"
-            wrapperClassName="flex-1 min-w-0"
-            className="min-h-[80px] text-sm"
-            users={members}
-          />
-          <AnimatedIconButton
-            type="button"
-            size="icon-sm"
-            icon={SendIcon}
-            iconSize={14}
-            className="shrink-0"
-            onClick={handleSubmit}
-            disabled={!newComment.trim() || addComment.isPending}
-            aria-label="Post comment"
-          />
-        </div> : null}
+        {canUpdate && composerReady ? (
+          <div className="flex w-full min-w-0 flex-row items-end gap-2">
+            <MentionTextarea
+              value={newComment}
+              onChange={setNewComment}
+              onKeyDown={handleTopKeyDown}
+              placeholder="Write a comment... (Ctrl+Enter to send)"
+              wrapperClassName="flex-1 min-w-0"
+              className="min-h-[80px] text-sm"
+              users={members}
+            />
+            <AnimatedIconButton
+              type="button"
+              size="icon-sm"
+              icon={SendIcon}
+              iconSize={14}
+              className="shrink-0"
+              onClick={handleSubmit}
+              disabled={!newComment.trim() || addComment.isPending}
+              aria-label="Post comment"
+            />
+          </div>
+        ) : null}
         {canUpdate && draftLoading ? <p role="status" className="text-xs text-muted-foreground">Loading saved draft…</p> : null}
         {canUpdate && draftPersistenceStatus ? <p role="status" className="text-xs text-muted-foreground">{draftPersistenceStatus}</p> : null}
-        {canUpdate && draftPersistenceError ? <div role="alert" className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          <span>{getErrorMessage(draftPersistenceError)}</span>
-          <ErrorReference error={draftPersistenceError} />
-          <Button type="button" variant="outline" size="sm" onClick={handleRetryPersistence}>Retry saving draft</Button>
-        </div> : null}
-        {canUpdate && draftLoadError ? <div role="alert" className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          <span>{getErrorMessage(draftLoadError)}</span>
-          <ErrorReference error={draftLoadError} />
-          <Button type="button" variant="outline" size="sm" onClick={handleRetryDraft}>Retry draft</Button>
-        </div> : null}
+        {canUpdate && draftPersistenceError ? (
+          <div role="alert" className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            <span>{getErrorMessage(draftPersistenceError)}</span>
+            <ErrorReference error={draftPersistenceError} />
+            <Button type="button" variant="outline" size="sm" onClick={handleRetryPersistence}>Retry saving draft</Button>
+          </div>
+        ) : null}
+        {canUpdate && draftLoadError ? (
+          <div role="alert" className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            <span>{getErrorMessage(draftLoadError)}</span>
+            <ErrorReference error={draftLoadError} />
+            <Button type="button" variant="outline" size="sm" onClick={handleRetryDraft}>Retry draft</Button>
+          </div>
+        ) : null}
       </div>
 
       {commentNotFound && (
         <div className="flex items-start gap-2 rounded-md border border-status-warning-rule bg-status-warning-surface px-3 py-2.5 text-xs text-status-warning-ink-strong">
           <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-status-warning-ink" />
-          <span className="flex-1">
-            Comment not found — it may have been deleted.
-          </span>
+          <span className="flex-1">Comment not found — it may have been deleted.</span>
           <button
             type="button"
             onClick={handleDismissNotFound}
@@ -419,11 +160,7 @@ export function ActivityFeed({
               {(repliesMap[comment.id]?.length ?? 0) > 0 && (
                 <div className="ml-4 mt-2 space-y-2 border-l border-border pl-3 sm:ml-9">
                   {[...repliesMap[comment.id]]
-                    .sort(
-                      (a, b) =>
-                        new Date(a.createdAt || 0).getTime() -
-                        new Date(b.createdAt || 0).getTime(),
-                    )
+                    .sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime())
                     .map((reply) => (
                       <div
                         key={reply.id}

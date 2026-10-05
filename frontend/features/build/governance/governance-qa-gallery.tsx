@@ -1,343 +1,37 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { useState } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { CONTENT_FILL_PANEL } from "@/components/pm-chrome";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import type { BuildApprovalsCreateApprovalResponse } from "@/contracts/build-contracts.generated";
-import type { Risk, Decision } from "@/types/projects";
-import type { IncidentsCreateIncidentResponse } from "@/contracts/build-contracts.generated";
-import {
-  ownerOf,
-  memberName,
-  approvalMemberName,
-  toApprovalStatus,
-} from "./governance-qa-helpers";
 import { createAppQueryClient } from "@/components/providers/query-provider";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
-import { BuildListSurface } from "@/features/build/shared/build-list-surface";
-import {
-  GALLERY_STUB_ACCESS,
-  GOVERNANCE_RISK_ROWS,
-  GOVERNANCE_INCIDENT_ROWS,
-  GOVERNANCE_INCIDENT_MEMBERS,
-  GOVERNANCE_DECISION_ROWS,
-  GOVERNANCE_APPROVAL_ROWS,
-} from "@/features/build/shared/build-list-fixtures";
 import {
   GalleryList,
   ONE_ACTION,
-  noop,
-  GALLERY_STATIC_PAGINATION,
 } from "@/features/build/shared/build-list-gallery-cases";
-import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
-import { ApprovalStatusBadge } from "@/features/build/approvals/approval-status-badge";
-import { entityTypeLabel } from "@/features/build/approvals/approvals-constants";
+import { GALLERY_STUB_ACCESS } from "@/features/build/shared/build-list-fixtures";
 import {
-  buildRiskColumns,
-  RiskMobileCard,
   RISK_TABLE_HEADERS,
 } from "./risks-table-columns";
 import {
-  buildDecisionColumns,
-  DecisionMobileCard,
   DECISION_TABLE_HEADERS,
 } from "./decisions-table-columns";
 import {
-  buildIncidentsColumns,
-  IncidentMobileCard,
   INCIDENTS_TABLE_HEADERS,
 } from "@/features/build/incidents/incidents-table-columns";
 import {
-  useApprovalsColumns,
   APPROVALS_TABLE_HEADERS,
 } from "@/features/build/approvals/use-approvals-columns";
-
-
-function RisksTable() {
-  const columns = buildRiskColumns({
-    canManage: true,
-    memberName,
-    ownerOf,
-    onEdit: noop,
-    onDelete: noop,
-  });
-
-  function getRowKey(row: Risk) {
-    return row.id;
-  }
-
-  function renderMobileCard(row: Risk) {
-    return (
-      <RiskMobileCard
-        risk={row}
-        canManage
-        ownerOf={ownerOf}
-        onEdit={noop}
-        onDelete={noop}
-      />
-    );
-  }
-
-  return (
-    <BuildListSurface<Risk>
-      permission="build:risks:view"
-      rows={GOVERNANCE_RISK_ROWS}
-      columns={columns}
-      isLoading={false}
-      isError={false}
-      getRowKey={getRowKey}
-      mobileCard={renderMobileCard}
-      minWidth="720px"
-      pagination={GALLERY_STATIC_PAGINATION}
-      empty={
-        <EmptyState
-          className={CONTENT_FILL_PANEL}
-          illustrationPreset="documents"
-          title="No risks recorded"
-        />
-      }
-    />
-  );
-}
-
-function IncidentsTable() {
-  const columns = buildIncidentsColumns({
-    canManage: true,
-    members: GOVERNANCE_INCIDENT_MEMBERS,
-    projectId: 1,
-    onEdit: noop,
-    onDelete: noop,
-  });
-
-  function getRowKey(row: IncidentsCreateIncidentResponse) {
-    return row.id;
-  }
-
-  function renderMobileCard(row: IncidentsCreateIncidentResponse) {
-    return (
-      <IncidentMobileCard
-        incident={row}
-        canManage
-        members={GOVERNANCE_INCIDENT_MEMBERS}
-        onEdit={noop}
-        onDelete={noop}
-      />
-    );
-  }
-
-  return (
-    <BuildListSurface<IncidentsCreateIncidentResponse>
-      permission="build:incidents:view"
-      rows={GOVERNANCE_INCIDENT_ROWS}
-      columns={columns}
-      isLoading={false}
-      isError={false}
-      getRowKey={getRowKey}
-      mobileCard={renderMobileCard}
-      minWidth="760px"
-      pagination={GALLERY_STATIC_PAGINATION}
-      empty={
-        <EmptyState
-          className={CONTENT_FILL_PANEL}
-          illustrationPreset="documents"
-          title="No incidents"
-        />
-      }
-    />
-  );
-}
-
-function DecisionsTable() {
-  const columns = buildDecisionColumns({
-    canManage: true,
-    memberName,
-    ownerOf,
-    onEdit: noop,
-    onDelete: noop,
-  });
-
-  function getRowKey(row: Decision) {
-    return row.id;
-  }
-
-  function renderMobileCard(row: Decision) {
-    return (
-      <DecisionMobileCard
-        decision={row}
-        canManage
-        ownerOf={ownerOf}
-        onEdit={noop}
-        onDelete={noop}
-      />
-    );
-  }
-
-  return (
-    <BuildListSurface<Decision>
-      permission="build:decisions:view"
-      rows={GOVERNANCE_DECISION_ROWS}
-      columns={columns}
-      isLoading={false}
-      isError={false}
-      getRowKey={getRowKey}
-      mobileCard={renderMobileCard}
-      minWidth="720px"
-      pagination={GALLERY_STATIC_PAGINATION}
-      empty={
-        <EmptyState
-          className={CONTENT_FILL_PANEL}
-          illustrationPreset="documents"
-          title="No decisions recorded"
-        />
-      }
-    />
-  );
-}
-
-function ApprovalsTable() {
-  const columns = useApprovalsColumns({
-    canDecide: true,
-    canManage: true,
-    memberName: approvalMemberName,
-    setDecideTarget: noop,
-    setDelegateTarget: noop,
-    handleEscalate: noop,
-    setCancelTarget: noop,
-    setDeleteTarget: noop,
-  });
-
-  function getRowKey(row: BuildApprovalsCreateApprovalResponse) {
-    return row.id;
-  }
-
-  function renderMobileCard(row: BuildApprovalsCreateApprovalResponse) {
-    return (
-      <BuildMobileCard
-        title={row.title}
-        status={<ApprovalStatusBadge status={toApprovalStatus(row.status)} />}
-        person={{ user: ownerOf(row.requestedById), role: "Requester" }}
-        meta={[
-          { label: "Type", value: entityTypeLabel(row.entityType) },
-          { label: "Due", value: row.dueAt ? row.dueAt.slice(0, 10) : "—" },
-        ]}
-      />
-    );
-  }
-
-  return (
-    <BuildListSurface<BuildApprovalsCreateApprovalResponse>
-      permission="build:approvals:view"
-      rows={GOVERNANCE_APPROVAL_ROWS}
-      columns={columns}
-      isLoading={false}
-      isError={false}
-      getRowKey={getRowKey}
-      mobileCard={renderMobileCard}
-      minWidth="720px"
-      pagination={GALLERY_STATIC_PAGINATION}
-      empty={
-        <EmptyState
-          className={CONTENT_FILL_PANEL}
-          illustrationPreset="documents"
-          title="No approvals"
-        />
-      }
-    />
-  );
-}
-
-function RisksWithSelection() {
-  const [selectedIds, setSelectedIds] = useState<Set<string | number>>(
-    new Set(),
-  );
-
-  useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") setSelectedIds(new Set());
-    }
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, []);
-
-  const columns = buildRiskColumns({
-    canManage: true,
-    memberName,
-    ownerOf,
-    onEdit: noop,
-    onDelete: noop,
-  });
-
-  function getRowKey(row: Risk) {
-    return row.id;
-  }
-
-  function renderMobileCard(row: Risk) {
-    return (
-      <RiskMobileCard
-        risk={row}
-        canManage
-        ownerOf={ownerOf}
-        onEdit={noop}
-        onDelete={noop}
-      />
-    );
-  }
-
-  function handleClearSelection() {
-    setSelectedIds(new Set());
-  }
-
-  return (
-    <div className="flex min-h-0 flex-1 flex-col gap-2">
-      {selectedIds.size > 0 && (
-        <div
-          role="region"
-          aria-label="Bulk actions"
-          className="flex items-center gap-2 rounded-md border bg-muted/50 px-3 py-2 text-sm"
-        >
-          <Badge variant="secondary">{selectedIds.size} selected</Badge>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            aria-label="Clear selection"
-            onClick={handleClearSelection}
-          >
-            <X className="h-4 w-4" aria-hidden="true" />
-          </Button>
-        </div>
-      )}
-      <BuildListSurface<Risk>
-        permission="build:risks:view"
-        rows={GOVERNANCE_RISK_ROWS}
-        columns={columns}
-        isLoading={false}
-        isError={false}
-        getRowKey={getRowKey}
-        mobileCard={renderMobileCard}
-        minWidth="720px"
-        pagination={GALLERY_STATIC_PAGINATION}
-        selection={{
-          selected: selectedIds,
-          onChange: setSelectedIds,
-        }}
-        empty={
-          <EmptyState
-            className={CONTENT_FILL_PANEL}
-            illustrationPreset="documents"
-            title="No risks recorded"
-          />
-        }
-      />
-    </div>
-  );
-}
+import {
+  RisksTable,
+  IncidentsTable,
+  DecisionsTable,
+  ApprovalsTable,
+  RisksWithSelection,
+} from "./governance-qa-tables";
 
 export function GovernanceQaGallery() {
   const [queryClient] = useState(() => {

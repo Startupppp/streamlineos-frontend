@@ -24,13 +24,15 @@ jest.mock("@/hooks/api/build/projects", () => ({
   })),
 }));
 
-jest.mock("@/hooks/api/build/advanced", () => ({
+jest.mock("@/hooks/api/build/project-analytics", () => ({
   useProjectAnalytics: jest.fn(() => ({
     data: undefined,
     isLoading: false,
     isError: false,
     refetch: jest.fn(),
   })),
+}));
+jest.mock("@/hooks/api/build/cycles", () => ({
   useCycles: jest.fn(() => ({
     data: [],
     isLoading: false,
@@ -124,7 +126,7 @@ describe("ProjectOverviewPage", () => {
   it("renders the Progress stat card with completion percentage from analytics healthBreakdown", () => {
     usePageState.mockReturnValue({ kind: "ready" });
 
-    const { useProjectAnalytics } = jest.requireMock("@/hooks/api/build/advanced");
+    const { useProjectAnalytics } = jest.requireMock("@/hooks/api/build/project-analytics");
     (useProjectAnalytics as jest.Mock).mockReturnValue({
       data: {
         healthStatus: "GOOD",
@@ -151,7 +153,7 @@ describe("ProjectOverviewPage", () => {
   it("renders the Overdue stat card with count from analytics healthBreakdown so risks are visible without navigating to issues", () => {
     usePageState.mockReturnValue({ kind: "ready" });
 
-    const { useProjectAnalytics } = jest.requireMock("@/hooks/api/build/advanced");
+    const { useProjectAnalytics } = jest.requireMock("@/hooks/api/build/project-analytics");
     (useProjectAnalytics as jest.Mock).mockReturnValue({
       data: {
         healthStatus: "AT_RISK",
@@ -199,7 +201,7 @@ describe("ProjectOverviewPage", () => {
   it("points the Active cycle stat card at the same /cycles route its own data was read from", () => {
     usePageState.mockReturnValue({ kind: "ready" });
 
-    const { useCycles } = jest.requireMock("@/hooks/api/build/advanced");
+    const { useCycles } = jest.requireMock("@/hooks/api/build/cycles");
     (useCycles as jest.Mock).mockReturnValue({
       data: [{ id: 1, name: "Sprint 12", status: "active" }],
       isLoading: false,
@@ -235,7 +237,7 @@ describe("ProjectOverviewPage", () => {
   it("renders the active cycle name when one exists", () => {
     usePageState.mockReturnValue({ kind: "ready" });
 
-    const { useCycles } = jest.requireMock("@/hooks/api/build/advanced");
+    const { useCycles } = jest.requireMock("@/hooks/api/build/cycles");
     (useCycles as jest.Mock).mockReturnValue({
       data: [
         { id: 1, name: "Sprint 12", status: "active" },
@@ -409,7 +411,7 @@ describe("ProjectOverviewPage", () => {
     mockSearchParams = new URLSearchParams("range=7d");
     usePageState.mockReturnValue({ kind: "ready" });
 
-    const { useProjectAnalytics } = jest.requireMock("@/hooks/api/build/advanced");
+    const { useProjectAnalytics } = jest.requireMock("@/hooks/api/build/project-analytics");
 
     render(<ProjectOverviewPage projectId={101} />);
 
@@ -423,7 +425,7 @@ describe("ProjectOverviewPage", () => {
     mockSearchParams = new URLSearchParams("teamId=5");
     usePageState.mockReturnValue({ kind: "ready" });
 
-    const { useProjectAnalytics } = jest.requireMock("@/hooks/api/build/advanced");
+    const { useProjectAnalytics } = jest.requireMock("@/hooks/api/build/project-analytics");
 
     render(<ProjectOverviewPage projectId={101} />);
 
@@ -437,7 +439,7 @@ describe("ProjectOverviewPage", () => {
     mockSearchParams = new URLSearchParams("ownerId=user-abc");
     usePageState.mockReturnValue({ kind: "ready" });
 
-    const { useProjectAnalytics } = jest.requireMock("@/hooks/api/build/advanced");
+    const { useProjectAnalytics } = jest.requireMock("@/hooks/api/build/project-analytics");
 
     render(<ProjectOverviewPage projectId={101} />);
 
@@ -450,7 +452,7 @@ describe("ProjectOverviewPage", () => {
   it("passes undefined params to useProjectAnalytics when no URL params are set so the unfiltered analytics query key is stable", () => {
     usePageState.mockReturnValue({ kind: "ready" });
 
-    const { useProjectAnalytics } = jest.requireMock("@/hooks/api/build/advanced");
+    const { useProjectAnalytics } = jest.requireMock("@/hooks/api/build/project-analytics");
 
     render(<ProjectOverviewPage projectId={101} />);
 
@@ -461,7 +463,7 @@ describe("ProjectOverviewPage", () => {
     mockSearchParams = new URLSearchParams("range=invalid");
     usePageState.mockReturnValue({ kind: "ready" });
 
-    const { useProjectAnalytics } = jest.requireMock("@/hooks/api/build/advanced");
+    const { useProjectAnalytics } = jest.requireMock("@/hooks/api/build/project-analytics");
 
     render(<ProjectOverviewPage projectId={101} />);
 
@@ -601,7 +603,7 @@ describe("ProjectOverviewPage", () => {
   it("Open issues stat shows analytics openTickets not the column-count sum so Done tickets are excluded (BUG-036)", () => {
     usePageState.mockReturnValue({ kind: "ready" });
 
-    const { useProjectAnalytics } = jest.requireMock("@/hooks/api/build/advanced");
+    const { useProjectAnalytics } = jest.requireMock("@/hooks/api/build/project-analytics");
     (useProjectAnalytics as jest.Mock).mockReturnValue({
       data: {
         healthStatus: "AT_RISK",
@@ -643,7 +645,7 @@ describe("ProjectOverviewPage", () => {
   it("Open issues stat shows dash when analytics has not loaded yet so the card never shows a stale sum including Done (BUG-036)", () => {
     usePageState.mockReturnValue({ kind: "ready" });
 
-    const { useProjectAnalytics } = jest.requireMock("@/hooks/api/build/advanced");
+    const { useProjectAnalytics } = jest.requireMock("@/hooks/api/build/project-analytics");
     (useProjectAnalytics as jest.Mock).mockReturnValue({
       data: undefined,
       isLoading: true,
@@ -659,7 +661,7 @@ describe("ProjectOverviewPage", () => {
   it("empty project renders health as Not started not At risk so a newly created project is not alarming (BUG-003)", () => {
     usePageState.mockReturnValue({ kind: "ready" });
 
-    const { useProjectAnalytics } = jest.requireMock("@/hooks/api/build/advanced");
+    const { useProjectAnalytics } = jest.requireMock("@/hooks/api/build/project-analytics");
     (useProjectAnalytics as jest.Mock).mockReturnValue({
       data: {
         healthStatus: "NOT_STARTED",

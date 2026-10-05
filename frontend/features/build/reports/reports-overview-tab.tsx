@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { useProjectAnalytics } from "@/hooks/api/build/advanced";
+import { useProjectAnalytics } from "@/hooks/api/build/project-analytics";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { Skeleton } from "@/components/ui/skeleton";

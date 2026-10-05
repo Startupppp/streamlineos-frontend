@@ -26,7 +26,7 @@ import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 import type { ProjectStatus, BoardMember } from "./use-board-url-state";
 import { useCan } from "@/hooks/api/access";
-import { useModules } from "@/hooks/api/build/advanced";
+import { useModules } from "@/hooks/api/build/modules";
 import { ModuleNamesProvider } from "./module-names-context";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { usePageState } from "@/hooks/api/use-page-state";

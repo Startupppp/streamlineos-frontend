@@ -8,14 +8,12 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
-jest.mock("@/hooks/api/build/advanced", () => ({
+jest.mock("@/hooks/api/build/modules", () => ({
   useModulePages: jest.fn(),
   useCreateModule: jest.fn(),
-}));
-
-jest.mock("@/hooks/api/build/modules", () => ({
   useDeleteModule: jest.fn(),
   useUpdateModule: jest.fn(),
+  useModules: jest.fn(() => ({ data: [] })),
 }));
 
 jest.mock("@/features/build/modules/module-form-sheet", () => ({
@@ -109,7 +107,7 @@ jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
   useBuildListKeyboard: jest.fn(() => ({ focusedIndex: null, setFocusedIndex: jest.fn() })),
 }));
 
-import { useModulePages } from "@/hooks/api/build/advanced";
+import { useModulePages } from "@/hooks/api/build/modules";
 import { useDeleteModule, useUpdateModule } from "@/hooks/api/build/modules";
 import { useCan, useAccess } from "@/hooks/api/access";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";

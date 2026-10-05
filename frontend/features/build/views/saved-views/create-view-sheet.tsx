@@ -20,7 +20,7 @@ import { AppDialog } from "@/components/shared/app-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { useCreateView } from "@/hooks/api/build/advanced";
+import { useCreateView } from "@/hooks/api/build/views";
 
 const VISIBILITY_OPTIONS = [
   { value: "shared" as const, label: "Shared" },

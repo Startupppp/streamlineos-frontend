@@ -48,7 +48,7 @@ jest.mock("@/hooks/api/build/projects", () => ({
 }));
 
 const mockUseCycles = jest.fn((..._args: unknown[]) => ({ data: [] }));
-jest.mock("@/hooks/api/build/advanced", () => ({
+jest.mock("@/hooks/api/build/cycles", () => ({
   useCycles: (...args: unknown[]) => mockUseCycles(...args),
 }));
 

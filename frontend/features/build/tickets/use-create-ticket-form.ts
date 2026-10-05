@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCreateTicket, useAddAttachment } from "@/hooks/api/build/tickets";
 import { useProject } from "@/hooks/api/build/projects";
-import { useCycles } from "@/hooks/api/build/advanced";
+import { useCycles } from "@/hooks/api/build/cycles";
 import { useProjectLabels } from "@/hooks/api/build/projects";
 import { useProjectMembers } from "@/hooks/api/build/projects";
 import { useAddLabelToTicket } from "@/hooks/api/build/tickets";

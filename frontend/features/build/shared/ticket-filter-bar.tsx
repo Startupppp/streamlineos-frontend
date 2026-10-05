@@ -20,7 +20,7 @@ import { CircleCheckIcon, XIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { cn } from "@/lib/utils";
 import { getUserDisplayName } from "@/lib/person-display";
-import { useCycles } from "@/hooks/api/build/advanced";
+import { useCycles } from "@/hooks/api/build/cycles";
 import { useProjectLabels } from "@/hooks/api/build/projects";
 import { FilterChip } from "@/components/list-view/filter-chip";
 import { FilterTriggerButton } from "@/components/list-view/filter-trigger-button";

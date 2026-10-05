@@ -1,5 +1,5 @@
 import { render } from "@testing-library/react";
-import { BuildSidebarSkeleton } from "./build-sidebar-skeleton";
+import { BuildSidebarSkeleton } from "@/components/layout/sidebar/build-sidebar-skeleton";
 
 describe("BuildSidebarSkeleton — mirrors the real sidebar's sections rather than being one generic block", () => {
   test("expanded: a scope-selector block, a section-label block, a primary nav group and a separate trailing utility group all render as distinct pieces", () => {

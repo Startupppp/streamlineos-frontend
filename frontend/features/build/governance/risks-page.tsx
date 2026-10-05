@@ -1,34 +1,13 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
-import { toast } from "sonner";
+import { useCallback } from "react";
 import { ShieldAlert, AlertTriangle, CheckCircle2, Plus } from "lucide-react";
-import {
-  useProjectRisks,
-  useProjectRiskStats,
-  useCreateRisk,
-  useUpdateRisk,
-  useDeleteRisk,
-  GOVERNANCE_PAGE_SIZE,
-} from "@/hooks/api/build/governance";
-import { useProjectMembers } from "@/hooks/api/build/project-members";
-import { useCan } from "@/hooks/api/access";
-import type {
-  Risk,
-  RiskProbability,
-  RiskImpact,
-  RiskStatus,
-  CreateRiskInput,
-  UpdateRiskInput,
-} from "@/types/projects";
+import { GOVERNANCE_PAGE_SIZE } from "@/hooks/api/build/governance";
+import type { Risk } from "@/types/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { getValidationFieldErrors, type ValidationFieldError } from "@/lib/api-envelope";
-import { getUserDisplayName, type NamedUser } from "@/lib/person-display";
 import { RiskMatrix } from "./risk-matrix";
 import { RiskFormSheet } from "./risk-form-sheet";
 import {
@@ -41,261 +20,67 @@ import { BuildHeaderActions } from "@/features/build/shared/build-header-actions
 import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
-import {
-  BUILD_FILTER_ALL,
-  useBuildListFilters,
-} from "@/features/build/shared/use-build-list-filters";
-import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
-import {
-  RISK_TABLE_HEADERS,
-  buildRiskColumns,
-  RiskMobileCard,
-} from "./risks-table-columns";
+import { RISK_TABLE_HEADERS, RiskMobileCard } from "./risks-table-columns";
 import { RiskBulkActionBar } from "./risk-bulk-action-bar";
-import {
-  STATUS_OPTIONS,
-  PROBABILITY_OPTIONS,
-  IMPACT_OPTIONS,
-  FILTER_DEFINITIONS,
-} from "./risks-filter-options";
+import { STATUS_OPTIONS, PROBABILITY_OPTIONS, IMPACT_OPTIONS } from "./risks-filter-options";
+import { useRisksPage } from "./use-risks-page";
 
 interface RisksPageProps {
   projectId: number;
 }
 
 export function RisksPage({ projectId }: RisksPageProps) {
-  const canManage = useCan("build:risks:manage");
-  const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
-
-  const [matrixCell, setMatrixCell] = useState<{
-    probability: RiskProbability;
-    impact: RiskImpact;
-  } | null>(null);
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [editRisk, setEditRisk] = useState<Risk | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Risk | null>(null);
-  const [riskFieldErrors, setRiskFieldErrors] = useState<readonly ValidationFieldError[]>([]);
-
-  const { cursor, pageNumber, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
-    listFilters.resetKey,
-  );
-
-  const statusValue = listFilters.value("status");
-  const probabilityValue = listFilters.value("probability");
-  const impactValue = listFilters.value("impact");
-  const { data, isLoading, isError, error, refetch } = useProjectRisks(
-    projectId,
-    {
-      status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
-      probability: probabilityValue !== BUILD_FILTER_ALL ? probabilityValue : undefined,
-      impact: impactValue !== BUILD_FILTER_ALL ? impactValue : undefined,
-      cursor: cursor === undefined ? undefined : Number(cursor),
-      search: listFilters.debouncedSearch || undefined,
-    },
-  );
-  const { data: stats, isLoading: isStatsLoading } =
-    useProjectRiskStats(projectId);
-
-  const { data: membersPage } = useProjectMembers(projectId);
-  const members = membersPage?.data ?? [];
-
-  const createRisk = useCreateRisk(projectId);
-  const updateRisk = useUpdateRisk(projectId);
-  const deleteRisk = useDeleteRisk(projectId);
-
-  const memberName = useCallback(
-    (userId: string | null): string => {
-      if (!userId) return "—";
-      const m = members.find((x) => x.id === userId);
-      return getUserDisplayName(m) || userId;
-    },
-    [members],
-  );
-
-  const ownerOf = useCallback(
-    (userId: string | null): NamedUser | null => {
-      if (!userId) return null;
-      const m = members.find((x) => x.id === userId);
-      return m ? { name: m.name ?? undefined, email: m.email } : null;
-    },
-    [members],
-  );
-
-  const filteredRisks = useMemo(() => data?.data ?? [], [data]);
-  const openCount = stats?.open ?? 0;
-  const highCritCount = stats?.highCritical ?? 0;
-  const closedCount = stats?.closed ?? 0;
-
-  const isFiltered = listFilters.isFiltered || !!matrixCell;
-
-  const displayed = useMemo(() => {
-    if (!matrixCell) return filteredRisks;
-    return filteredRisks.filter(
-      (r) =>
-        r.probability === matrixCell.probability &&
-        r.impact === matrixCell.impact,
-    );
-  }, [filteredRisks, matrixCell]);
-
-  const handleCreate = useCallback(
-    (input: CreateRiskInput) => {
-      createRisk.mutate(input, {
-        onSuccess: () => {
-          setRiskFieldErrors([]);
-          toast.success("Risk added");
-          setSheetOpen(false);
-        },
-        onError: (e) => {
-          const fieldErrors = getValidationFieldErrors(e);
-          if (fieldErrors.length > 0) {
-            setRiskFieldErrors(fieldErrors);
-          } else {
-            toast.error(getErrorMessage(e));
-          }
-        },
-      });
-    },
-    [createRisk],
-  );
-
-  const handleUpdate = useCallback(
-    (input: UpdateRiskInput & { riskId: number }) => {
-      updateRisk.mutate(input, {
-        onSuccess: () => {
-          setRiskFieldErrors([]);
-          toast.success("Risk updated");
-          setEditRisk(null);
-        },
-        onError: (e) => {
-          const fieldErrors = getValidationFieldErrors(e);
-          if (fieldErrors.length > 0) {
-            setRiskFieldErrors(fieldErrors);
-          } else {
-            toast.error(getErrorMessage(e));
-          }
-        },
-      });
-    },
-    [updateRisk],
-  );
-
-  const handleDeleteConfirm = useCallback(() => {
-    if (!deleteTarget) return;
-    deleteRisk.mutate(deleteTarget.id, {
-      onSuccess: () => {
-        toast.success("Risk deleted");
-        setDeleteTarget(null);
-      },
-      onError: (e) => toast.error(getErrorMessage(e)),
-    });
-  }, [deleteRisk, deleteTarget]);
-
-  const handleStatusChange = useCallback(
-    (value: string) => listFilters.setValue("status", value),
-    [listFilters],
-  );
-
-  const handleProbabilityChange = useCallback(
-    (value: string) => listFilters.setValue("probability", value),
-    [listFilters],
-  );
-
-  const handleImpactChange = useCallback(
-    (value: string) => listFilters.setValue("impact", value),
-    [listFilters],
-  );
-
-  const handleNewRisk = useCallback(() => setSheetOpen(true), []);
-
-  const handleClearAll = useCallback(() => {
-    listFilters.clearAll();
-    setMatrixCell(null);
-  }, [listFilters]);
-
-  const handleRetry = useCallback(() => {
-    void refetch();
-  }, [refetch]);
-
-  const handleNextPage = useCallback(() => {
-    goNext(data?.nextCursor == null ? null : String(data.nextCursor));
-  }, [goNext, data]);
-
-  const handleAlertOpenChange = useCallback((open: boolean) => {
-    if (!open) setDeleteTarget(null);
-  }, []);
-
-  const handleSheetOpenChange = useCallback((open: boolean) => {
-    if (!open) {
-      setSheetOpen(false);
-      setEditRisk(null);
-    }
-  }, []);
-
-  const handleCellClick = useCallback(
-    (probability: RiskProbability, impact: RiskImpact) => {
-      setMatrixCell((prev) =>
-        prev?.probability === probability && prev?.impact === impact
-          ? null
-          : { probability, impact },
-      );
-    },
-    [],
-  );
-
-  const handleEditRow = useCallback((r: Risk) => setEditRisk(r), []);
-  const handleDeleteRow = useCallback((r: Risk) => setDeleteTarget(r), []);
-
-  const [selectedIds, setSelectedIds] = useState(new Set<string | number>());
-
-  const handleEditRiskByIndex = useCallback(
-    (index: number) => { if (filteredRisks[index]) handleEditRow(filteredRisks[index]); },
-    [filteredRisks, handleEditRow],
-  );
-  const handleClearKeyboardSelection = useCallback(() => {}, []);
-  useBuildListKeyboard({
-    itemCount: filteredRisks.length,
-    onOpen: handleEditRiskByIndex,
-    onEdit: canManage ? handleEditRiskByIndex : undefined,
-    onCreate: canManage ? handleNewRisk : undefined,
-    onClearSelection: handleClearKeyboardSelection,
-    enabled: !sheetOpen && !editRisk && !deleteTarget,
-  });
-
-  const handleBulkStatus = useCallback(
-    (status: RiskStatus) => {
-      selectedIds.forEach((id) => {
-        const risk = filteredRisks.find((r) => r.id === Number(id));
-        if (risk) updateRisk.mutate({ riskId: risk.id, status });
-      });
-      setSelectedIds(new Set());
-    },
-    [selectedIds, filteredRisks, updateRisk],
-  );
-
-  const handleBulkOwner = useCallback(
-    (ownerId: string) => {
-      selectedIds.forEach((id) => {
-        const risk = filteredRisks.find((r) => r.id === Number(id));
-        if (risk) updateRisk.mutate({ riskId: risk.id, ownerId });
-      });
-      setSelectedIds(new Set());
-    },
-    [selectedIds, filteredRisks, updateRisk],
-  );
-
-  const handleBulkClear = useCallback(() => setSelectedIds(new Set()), []);
-
-  const columns = useMemo(
-    () =>
-      buildRiskColumns({
-        canManage,
-        memberName,
-        ownerOf,
-        onEdit: handleEditRow,
-        onDelete: handleDeleteRow,
-      }),
-    [canManage, memberName, ownerOf, handleEditRow, handleDeleteRow],
-  );
+  const {
+    canManage,
+    listFilters,
+    statusValue,
+    probabilityValue,
+    impactValue,
+    matrixCell,
+    sheetOpen,
+    editRisk,
+    deleteTarget,
+    data,
+    isLoading,
+    isError,
+    error,
+    stats,
+    isStatsLoading,
+    members,
+    createRisk,
+    updateRisk,
+    riskFieldErrors,
+    handleCreate,
+    handleUpdate,
+    handleDeleteConfirm,
+    displayed,
+    isFiltered,
+    selectedIds,
+    setSelectedIds,
+    handleBulkStatus,
+    handleBulkOwner,
+    handleBulkClear,
+    openCount,
+    highCritCount,
+    closedCount,
+    columns,
+    pageNumber,
+    hasPrevious,
+    goPrevious,
+    handleStatusChange,
+    handleProbabilityChange,
+    handleImpactChange,
+    handleNewRisk,
+    handleClearAll,
+    handleRetry,
+    handleNextPage,
+    handleAlertOpenChange,
+    handleSheetOpenChange,
+    handleCellClick,
+    handleEditRow,
+    handleDeleteRow,
+    ownerOf,
+  } = useRisksPage(projectId);
 
   const renderMobileCard = useCallback(
     (row: Risk) => (
