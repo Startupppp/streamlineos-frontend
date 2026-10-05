@@ -268,7 +268,6 @@ export function useAddAttachment(
 }
 
 export type TicketRelation = z.infer<typeof ticketRelationListContractDef>[number];
-export type TicketRelationRelatedTicket = NonNullable<TicketRelation["relatedTicket"]>;
 export type WorkItemRelationType = TicketRelation["relationType"];
 
 export function useTicketRelations(ticketId: number, projectId: number) {

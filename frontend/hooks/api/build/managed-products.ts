@@ -303,31 +303,6 @@ export function useDeleteManagedProduct() {
   });
 }
 
-export interface SetScoreOverrideParams {
-  managedProductId: number;
-  confidenceScore: number;
-  overrideReason: string;
-}
-
-export function useSetProductScoreOverride() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("build:managed-products:update", {
-    mutationKey: ["projects", "managed-products", "score-override"],
-    mutationFn: ({ managedProductId, confidenceScore, overrideReason }: SetScoreOverrideParams) =>
-      apiClient.patch<void>(
-        `/build/managed-products/${managedProductId}/insights/score-override`,
-        { confidenceScore, overrideReason },
-        undefined,
-        noContentContract,
-      ),
-    onSuccess: (_data, vars) => {
-      qc.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.managedProducts.insights(vars.managedProductId),
-      });
-    },
-  });
-}
-
 export interface BulkUpdateManagedProductsInput {
   ids: number[];
   action: "update_status";

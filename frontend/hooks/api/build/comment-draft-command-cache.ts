@@ -1,15 +1,23 @@
 import type { InfiniteData, QueryClient } from "@tanstack/react-query";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
-import type { CommentDraftsListMineResponse, CommentDraftsUpsertResponse } from "@/contracts/build-contracts.generated";
+import type {
+  CommentDraftsListMineResponse,
+  CommentDraftsUpsertResponse,
+} from "@/contracts/build-contracts.generated";
 
-export type CommentDraftListItem = CommentDraftsListMineResponse["data"][number];
+export type CommentDraftListItem =
+  CommentDraftsListMineResponse["data"][number];
 export type CommentDraftTicket = CommentDraftListItem["ticket"];
-export type CommentDraftAssignee = NonNullable<CommentDraftTicket["assignee"]>;
-export type CommentDraft = CommentDraftsUpsertResponse & { ticket?: CommentDraftTicket };
+export type CommentDraft = CommentDraftsUpsertResponse & {
+  ticket?: CommentDraftTicket;
+};
 
 type DraftPages = InfiniteData<CommentDraftsListMineResponse>;
 
-function mapPages(pages: DraftPages, fn: (items: CommentDraftListItem[]) => CommentDraftListItem[]): DraftPages {
+function mapPages(
+  pages: DraftPages,
+  fn: (items: CommentDraftListItem[]) => CommentDraftListItem[],
+): DraftPages {
   return {
     ...pages,
     pages: pages.pages.map((page) => ({
@@ -19,20 +27,34 @@ function mapPages(pages: DraftPages, fn: (items: CommentDraftListItem[]) => Comm
   };
 }
 
-export async function beginCommentDraftDeletion(client: QueryClient, ticketId: number, canApply: () => boolean) {
+export async function beginCommentDraftDeletion(
+  client: QueryClient,
+  ticketId: number,
+  canApply: () => boolean,
+) {
   const listKey = buildWorkQueryKeys.projects.commentDrafts.mine();
   if (!canApply()) return undefined;
   await client.cancelQueries({ queryKey: listKey, exact: true });
   if (!canApply()) return undefined;
   const previous = client.getQueryData<DraftPages>(listKey);
   if (previous && "pages" in previous && Array.isArray(previous.pages)) {
-    client.setQueryData<DraftPages>(listKey, mapPages(previous, (items) => items.filter((d) => d.ticketId !== ticketId)));
+    client.setQueryData<DraftPages>(
+      listKey,
+      mapPages(previous, (items) =>
+        items.filter((d) => d.ticketId !== ticketId),
+      ),
+    );
   }
   return previous;
 }
 
-export function restoreCommentDraftDeletion(client: QueryClient, ticketId: number, previous: DraftPages) {
-  if (!previous || !("pages" in previous) || !Array.isArray(previous.pages)) return;
+export function restoreCommentDraftDeletion(
+  client: QueryClient,
+  ticketId: number,
+  previous: DraftPages,
+) {
+  if (!previous || !("pages" in previous) || !Array.isArray(previous.pages))
+    return;
   const listKey = buildWorkQueryKeys.projects.commentDrafts.mine();
   const current = client.getQueryData<DraftPages>(listKey);
   const restoredItem = previous.pages
@@ -55,27 +77,46 @@ export function restoreCommentDraftDeletion(client: QueryClient, ticketId: numbe
   });
 }
 
-export function applyCommentDraftReceipt(client: QueryClient, ticketId: number, draft: CommentDraft | null) {
-  void client.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.commentDrafts.byTicket(ticketId), exact: true });
-  void client.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.agentPulseAll() });
+export function applyCommentDraftReceipt(
+  client: QueryClient,
+  ticketId: number,
+  draft: CommentDraft | null,
+) {
+  void client.invalidateQueries({
+    queryKey: buildWorkQueryKeys.projects.commentDrafts.byTicket(ticketId),
+    exact: true,
+  });
+  void client.invalidateQueries({
+    queryKey: buildWorkQueryKeys.projects.agentPulseAll(),
+  });
   const listKey = buildWorkQueryKeys.projects.commentDrafts.mine();
   const pages = client.getQueryData<DraftPages>(listKey);
   if (!draft) {
     if (pages && "pages" in pages && Array.isArray(pages.pages)) {
-      client.setQueryData<DraftPages>(listKey, mapPages(pages, (items) => items.filter((item) => item.ticketId !== ticketId)));
+      client.setQueryData<DraftPages>(
+        listKey,
+        mapPages(pages, (items) =>
+          items.filter((item) => item.ticketId !== ticketId),
+        ),
+      );
     }
     void client.invalidateQueries({ queryKey: listKey });
     return;
   }
   if (!pages || !("pages" in pages) || !Array.isArray(pages.pages)) {
-    void client.invalidateQueries({ queryKey: listKey }); return;
+    void client.invalidateQueries({ queryKey: listKey });
+    return;
   }
   const firstPage = pages.pages[0];
   const list = firstPage?.data;
-  const index = list?.findIndex((item) => item.ticketId === draft.ticketId) ?? -1;
+  const index =
+    list?.findIndex((item) => item.ticketId === draft.ticketId) ?? -1;
   const cached = index === -1 ? undefined : list?.[index];
   const ticket = draft.ticket ?? cached?.ticket;
-  if (!ticket) { void client.invalidateQueries({ queryKey: listKey }); return; }
+  if (!ticket) {
+    void client.invalidateQueries({ queryKey: listKey });
+    return;
+  }
   const merged: CommentDraftListItem = {
     id: draft.id,
     orgId: draft.orgId,
@@ -86,10 +127,13 @@ export function applyCommentDraftReceipt(client: QueryClient, ticketId: number, 
     updatedAt: draft.updatedAt,
     ticket,
   };
-  client.setQueryData<DraftPages>(listKey, mapPages(pages, (items) => {
-    const next = [...items];
-    if (index === -1) next.unshift(merged);
-    else next[index] = merged;
-    return next;
-  }));
+  client.setQueryData<DraftPages>(
+    listKey,
+    mapPages(pages, (items) => {
+      const next = [...items];
+      if (index === -1) next.unshift(merged);
+      else next[index] = merged;
+      return next;
+    }),
+  );
 }

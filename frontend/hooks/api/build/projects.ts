@@ -42,7 +42,6 @@ import { projectReadErrorReachesBoundary } from "@/lib/query-error-policy";
 export {
   useAddProjectMember,
   useProjectMembers,
-  useUpdateProjectMemberRole,
 } from "@/hooks/api/build/project-members";
 
 const projectListPageLazy = lazyContract(() =>

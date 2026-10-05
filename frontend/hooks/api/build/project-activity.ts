@@ -15,7 +15,6 @@ const projectActivityPageLazy = lazyContract(() =>
 );
 
 type ProjectActivityPage = z.infer<typeof projectActivityPageContractDef>;
-export type ProjectActivityEntry = ProjectActivityPage["data"][number];
 
 export function useProjectActivity(projectId: number) {
   const canView = useCan("build:view");

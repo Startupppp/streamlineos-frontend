@@ -1,4 +1,4 @@
-export type AutomationTriggerEvent =
+type AutomationTriggerEvent =
   | "ticket.created"
   | "ticket.updated"
   | "ticket.status_changed"

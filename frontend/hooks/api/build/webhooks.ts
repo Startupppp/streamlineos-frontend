@@ -5,7 +5,7 @@ import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
-import type { ProjectWebhook, WebhookDelivery } from "@/types/projects";
+import type { ProjectWebhook } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { WebhookDeliveryPage, ProjectWebhookRotateSecret, WebhookImpact } from "@/hooks/api/build/webhook-lifecycle-schema";
 
@@ -50,7 +50,7 @@ const webhookRetryResultContract = lazyContract(() =>
 const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
-export type { ProjectWebhook, WebhookDelivery } from "@/types/projects";
+export type { ProjectWebhook } from "@/types/projects";
 
 export function useWebhooks(projectId: number, filters?: WebhookListFilters) {
   const canManage = useCan("build:manage");

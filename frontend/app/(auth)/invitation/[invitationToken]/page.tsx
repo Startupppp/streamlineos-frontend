@@ -6,16 +6,6 @@ import { useForm } from "react-hook-form";
 import { useSession } from "next-auth/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
@@ -26,16 +16,11 @@ import {
   useValidateInvitation,
 } from "@/hooks/common/auth-hooks";
 import { useConfirmedSessionClaimsRefresh } from "@/hooks/common/use-confirmed-session-claims-refresh";
-import { motion } from "framer-motion";
-import { useMotionVariants } from "@/lib/motion-variants";
-import { ArrowRight } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isApiError, getApiErrorCode } from "@/lib/api-envelope";
 import {
   InvitationCard,
   InvitationHero,
-  InvitationDetails,
-  DeclineInvitationDialog,
   CardContent,
 } from "@/components/auth/invitation-card";
 import {
@@ -52,6 +37,9 @@ import {
   InvitationAtCapacityState,
 } from "@/features/auth/components/invitation-acceptance-error";
 import { persistPartialGrants } from "@/features/auth/components/post-invite-transition";
+import { InvitationExistingUserStep } from "@/features/auth/components/invitation-existing-user-step";
+import { InvitationOtpStep } from "@/features/auth/components/invitation-otp-step";
+import { InvitationNewUserStep } from "@/features/auth/components/invitation-new-user-step";
 
 const INVITATION_SIGN_IN_UNCONFIRMED_MESSAGE =
   "We could not confirm the sign-in for the invited account. Please sign in with that email to finish joining.";
@@ -71,7 +59,6 @@ function classifyAcceptanceError(error: unknown): AcceptanceBlocker | null {
 }
 
 export default function InvitationPage() {
-  const { staggerContainer, fadeUp } = useMotionVariants();
   const router = useRouter();
   const params = useParams();
   const invitationToken =
@@ -392,267 +379,57 @@ export default function InvitationPage() {
     );
   }
 
-  // `otpStep` first: an existing account now verifies the same code as a new one,
-  // so this card must yield to the OTP form once one has been sent.
   if (invitation.userExists && !otpStep) {
     const sessionEmail = session?.user?.email;
     const signedInAsOtherAccount =
       sessionEmail !== undefined &&
       sessionEmail !== null &&
       canonicalEmail(sessionEmail) !== canonicalEmail(invitation.email);
-
     return (
-      <motion.div
-        className="w-full max-w-[480px]"
-        variants={staggerContainer}
-        initial="hidden"
-        animate="visible"
-      >
-        <motion.div variants={fadeUp}>
-          <InvitationCard>
-            <InvitationHero
-              title="You're invited"
-              description={`Join ${invitation.organizationName} with your existing StreamlineOS account.`}
-            />
-            <CardContent className="space-y-5 px-6 pb-6 pt-5">
-              <InvitationDetails
-                organizationName={invitation.organizationName}
-                role={invitation.role}
-                invitedEmail={invitation.email}
-                accountEmail={session?.user?.email}
-              />
-              {signedInAsOtherAccount && (
-                <p className="rounded-lg border border-status-warning-rule bg-status-warning-surface px-3 py-2 text-xs text-status-warning-ink">
-                  You are currently signed in as{" "}
-                  <span className="font-medium">{sessionEmail}</span>. Accepting
-                  will sign you in as the invited account instead.
-                </p>
-              )}
-              <div className="space-y-2">
-                <LoadingButton
-                  className="h-11 w-full gap-2 font-medium"
-                  onClick={handleExistingUserAccept}
-                  isPending={acceptInvitation.isPending}
-                >
-                  {session ? "Accept & join" : "Sign in & join"}
-                  <ArrowRight className="h-4 w-4" />
-                </LoadingButton>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="h-10 w-full text-muted-foreground hover:text-foreground"
-                  onClick={openDecline}
-                  disabled={
-                    acceptInvitation.isPending || declineInvitation.isPending
-                  }
-                >
-                  Decline invitation
-                </Button>
-              </div>
-            </CardContent>
-          </InvitationCard>
-        </motion.div>
-        <DeclineInvitationDialog
-          open={declineOpen}
-          onOpenChange={setDeclineOpen}
-          organizationName={invitation.organizationName}
-          isPending={declineInvitation.isPending}
-          onConfirm={confirmDecline}
-        />
-      </motion.div>
+      <InvitationExistingUserStep
+        organizationName={invitation.organizationName}
+        invitedEmail={invitation.email}
+        role={invitation.role}
+        sessionEmail={sessionEmail}
+        isSignedIn={!!session}
+        signedInAsOtherAccount={signedInAsOtherAccount}
+        isAcceptPending={acceptInvitation.isPending}
+        isDeclinePending={declineInvitation.isPending}
+        declineOpen={declineOpen}
+        onSetDeclineOpen={setDeclineOpen}
+        onAccept={handleExistingUserAccept}
+        onDecline={openDecline}
+        onConfirmDecline={confirmDecline}
+      />
     );
   }
 
   if (otpStep) {
     return (
-      <motion.div
-        className="w-full max-w-[480px]"
-        variants={staggerContainer}
-        initial="hidden"
-        animate="visible"
-      >
-        <motion.div variants={fadeUp}>
-          <InvitationCard>
-            <InvitationHero
-              title="Verify your email"
-              description={`Enter the 6-digit code sent to ${invitation.email} to confirm your identity.`}
-            />
-            <CardContent className="px-5 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5">
-              <Form {...otpForm}>
-                <form
-                  onSubmit={handleOtpFormSubmit}
-                  className="space-y-4"
-                  aria-busy={acceptInvitation.isPending}
-                >
-                  <FormField
-                    control={otpForm.control}
-                    name="emailOtp"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-foreground text-xs font-medium">
-                          Verification code
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type="text"
-                            inputMode="numeric"
-                            maxLength={6}
-                            placeholder="6-digit code"
-                            autoComplete="one-time-code"
-                            disabled={acceptInvitation.isPending}
-                            className="text-center text-lg font-mono tracking-widest"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="space-y-1.5 pt-0.5">
-                    <LoadingButton
-                      type="submit"
-                      className="h-11 w-full gap-2 font-medium"
-                      isPending={acceptInvitation.isPending}
-                      loadingText="Verifying..."
-                    >
-                      Verify & create account
-                      <ArrowRight className="h-4 w-4" />
-                    </LoadingButton>
-
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      className="h-10 w-full text-muted-foreground hover:text-foreground"
-                      onClick={handleResendOtp}
-                      disabled={
-                        acceptInvitation.isPending ||
-                        requestInvitationOtp.isPending
-                      }
-                    >
-                      Resend code
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            </CardContent>
-          </InvitationCard>
-        </motion.div>
-      </motion.div>
+      <InvitationOtpStep
+        invitedEmail={invitation.email}
+        otpForm={otpForm}
+        onSubmit={handleOtpFormSubmit}
+        onResend={handleResendOtp}
+        isVerifyPending={acceptInvitation.isPending}
+        isResendPending={requestInvitationOtp.isPending}
+      />
     );
   }
 
   return (
-    <motion.div
-      className="w-full max-w-[480px]"
-      variants={staggerContainer}
-      initial="hidden"
-      animate="visible"
-    >
-      <motion.div variants={fadeUp}>
-        <InvitationCard>
-          <InvitationHero
-            title="You're invited"
-            description={`Create your account to join ${invitation.organizationName}.`}
-          />
-          <CardContent className="px-5 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5">
-            <InvitationDetails
-              organizationName={invitation.organizationName}
-              role={invitation.role}
-              invitedEmail={invitation.email}
-            />
-
-            <Form {...nameForm}>
-              <form
-                onSubmit={handleNameFormSubmit}
-                className="mt-4 space-y-3.5"
-                aria-busy={requestInvitationOtp.isPending}
-              >
-                <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2">
-                  <FormField
-                    control={nameForm.control}
-                    name="firstName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-foreground text-xs font-medium">
-                          First name
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            value={field.value ?? ""}
-                            type="text"
-                            placeholder="Your first name"
-                            autoComplete="given-name"
-                            disabled={requestInvitationOtp.isPending}
-                            className="text-sm"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={nameForm.control}
-                    name="lastName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-foreground text-xs font-medium">
-                          Last name
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            value={field.value ?? ""}
-                            type="text"
-                            placeholder="Your last name"
-                            autoComplete="family-name"
-                            disabled={requestInvitationOtp.isPending}
-                            className="text-sm"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="space-y-1.5 pt-0.5">
-                  <LoadingButton
-                    type="submit"
-                    className="h-11 w-full gap-2 font-medium"
-                    isPending={requestInvitationOtp.isPending}
-                    loadingText="Sending verification code..."
-                  >
-                    Continue
-                    <ArrowRight className="h-4 w-4" />
-                  </LoadingButton>
-
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="h-10 w-full text-muted-foreground hover:text-foreground"
-                    onClick={openDecline}
-                    disabled={
-                      requestInvitationOtp.isPending ||
-                      declineInvitation.isPending
-                    }
-                  >
-                    Decline invitation
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </CardContent>
-        </InvitationCard>
-      </motion.div>
-      <DeclineInvitationDialog
-        open={declineOpen}
-        onOpenChange={setDeclineOpen}
-        organizationName={invitation.organizationName}
-        isPending={declineInvitation.isPending}
-        onConfirm={confirmDecline}
-      />
-    </motion.div>
+    <InvitationNewUserStep
+      organizationName={invitation.organizationName}
+      invitedEmail={invitation.email}
+      role={invitation.role}
+      nameForm={nameForm}
+      onSubmit={handleNameFormSubmit}
+      isOtpPending={requestInvitationOtp.isPending}
+      isDeclinePending={declineInvitation.isPending}
+      declineOpen={declineOpen}
+      onSetDeclineOpen={setDeclineOpen}
+      onDecline={openDecline}
+      onConfirmDecline={confirmDecline}
+    />
   );
 }

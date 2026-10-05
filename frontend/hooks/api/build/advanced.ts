@@ -64,7 +64,6 @@ export {
   useEpicPage,
   useEpics,
   type EpicListFilters,
-  type EpicPage,
 } from "@/hooks/api/build/epics";
 
 export interface CycleListFilters {

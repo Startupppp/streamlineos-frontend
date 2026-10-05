@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
-import { useForm, useWatch, type Control, type FieldPath } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { incidentFormSchema, type IncidentFormValues } from "@/features/build/incidents/incident-schema";
 import { Sheet, SheetBody, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -29,7 +29,7 @@ import { useProject } from "@/hooks/api/build/projects";
 import { useReleases } from "@/hooks/api/build/releases";
 import { ProjectMemberSelect } from "@/components/members/project-member-select";
 import { TicketCombobox } from "@/features/build/shared/ticket-combobox";
-import { BuildDateTimeField } from "@/features/build/shared/build-datetime-field";
+import { IncidentInputField, IncidentTextareaField } from "./incident-form-helpers";
 import type {
   IncidentsCreateIncidentResponse,
   IncidentsGetIncidentResponse,
@@ -68,73 +68,6 @@ const DEFAULT_VALUES: IncidentFormValues = {
 function toLocalDt(iso: string | null): string {
   if (!iso) return "";
   return iso.slice(0, 16);
-}
-function IncidentInputField({
-  control,
-  name,
-  label,
-  type,
-  placeholder,
-}: {
-  control: Control<IncidentFormValues>;
-  name: FieldPath<IncidentFormValues>;
-  label: string;
-  type?: string;
-  placeholder?: string;
-}) {
-  return (
-    <FormField
-      control={control}
-      name={name}
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>{label}</FormLabel>
-          {type === "datetime-local" ? (
-            <BuildDateTimeField
-              value={typeof field.value === "string" ? field.value : ""}
-              onChange={field.onChange}
-              dateLabel={label}
-              timeLabel={`${label} time`}
-              clearable
-            />
-          ) : (
-            <FormControl>
-              <Input {...field} type={type} placeholder={placeholder} />
-            </FormControl>
-          )}
-          <FormMessage />
-        </FormItem>
-      )}
-    />
-  );
-}
-
-function IncidentTextareaField({
-  control,
-  name,
-  label,
-  placeholder,
-}: {
-  control: Control<IncidentFormValues>;
-  name: FieldPath<IncidentFormValues>;
-  label: string;
-  placeholder: string;
-}) {
-  return (
-    <FormField
-      control={control}
-      name={name}
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>{label}</FormLabel>
-          <FormControl>
-            <Textarea {...field} className="min-h-[72px] resize-none" placeholder={placeholder} />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
-  );
 }
 
 interface IncidentSheetProps {

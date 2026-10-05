@@ -123,14 +123,4 @@ export function useApplyProjectTemplate() {
   });
 }
 
-export function useSeedSystemTemplates() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("build:manage", {
-    mutationKey: ["projects", "templates", "seed-system"],
-    mutationFn: () =>
-      apiClient.post<{ seeded: number }>("/build/templates/seed-system", undefined, undefined),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.templates() });
-    },
-  });
-}
+

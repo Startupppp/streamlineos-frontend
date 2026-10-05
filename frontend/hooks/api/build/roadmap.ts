@@ -1,6 +1,11 @@
 ﻿"use client";
 
-import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  keepPreviousData,
+} from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient, isApiError } from "@/lib/api-client";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
@@ -32,34 +37,52 @@ const roadmapItemContract = lazyContract(() =>
   import("@/hooks/api/build/roadmap-schema").then((m) => m.roadmapItemContract),
 );
 const feedbackPageContract = lazyContract(() =>
-  import("@/hooks/api/build/roadmap-schema").then((m) => m.feedbackPageContract),
+  import("@/hooks/api/build/roadmap-schema").then(
+    (m) => m.feedbackPageContract,
+  ),
 );
 const feedbackPostContract = lazyContract(() =>
-  import("@/hooks/api/build/roadmap-schema").then((m) => m.feedbackPostContract),
+  import("@/hooks/api/build/roadmap-schema").then(
+    (m) => m.feedbackPostContract,
+  ),
 );
 const changelogPageContract = lazyContract(() =>
-  import("@/hooks/api/build/roadmap-schema").then((m) => m.changelogPageContract),
+  import("@/hooks/api/build/roadmap-schema").then(
+    (m) => m.changelogPageContract,
+  ),
 );
 const changelogEntryContract = lazyContract(() =>
-  import("@/hooks/api/build/roadmap-schema").then((m) => m.changelogEntryContract),
+  import("@/hooks/api/build/roadmap-schema").then(
+    (m) => m.changelogEntryContract,
+  ),
 );
 const noContentLazy = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 const publicRoadmapBoardContract = lazyContract(() =>
-  import("@/hooks/api/build/roadmap-schema").then((m) => m.publicRoadmapBoardContract),
+  import("@/hooks/api/build/roadmap-schema").then(
+    (m) => m.publicRoadmapBoardContract,
+  ),
 );
 const publicVoteResultContract = lazyContract(() =>
-  import("@/hooks/api/build/roadmap-schema").then((m) => m.publicVoteResultContract),
+  import("@/hooks/api/build/roadmap-schema").then(
+    (m) => m.publicVoteResultContract,
+  ),
 );
 const publicFeedbackResultContract = lazyContract(() =>
-  import("@/hooks/api/build/roadmap-schema").then((m) => m.publicFeedbackResultContract),
+  import("@/hooks/api/build/roadmap-schema").then(
+    (m) => m.publicFeedbackResultContract,
+  ),
 );
 const roadmapSignalsContract = lazyContract(() =>
-  import("@/hooks/api/build/roadmap-schema").then((m) => m.roadmapSignalsContract),
+  import("@/hooks/api/build/roadmap-schema").then(
+    (m) => m.roadmapSignalsContract,
+  ),
 );
 const roadmapPublicationLazy = lazyContract(() =>
-  import("@/hooks/api/build/roadmap-schema").then((m) => m.roadmapPublicationContract),
+  import("@/hooks/api/build/roadmap-schema").then(
+    (m) => m.roadmapPublicationContract,
+  ),
 );
 
 export interface RoadmapPublication {
@@ -67,7 +90,13 @@ export interface RoadmapPublication {
   path: string | null;
 }
 
-export type { CrmAccountTier, RoadmapOwner, RoadmapPrioritization, RoadmapSignals, RoadmapTierWeighting };
+export type {
+  CrmAccountTier,
+  RoadmapOwner,
+  RoadmapPrioritization,
+  RoadmapSignals,
+  RoadmapTierWeighting,
+};
 
 export type {
   ChangelogType,
@@ -160,7 +189,6 @@ interface FeedbackPostFilters {
   limit?: number;
 }
 
-
 interface UpdateFeedbackPostInput {
   title?: string;
   description?: string | null;
@@ -230,7 +258,13 @@ export function useRoadmapItems(filters: RoadmapItemFilters = {}) {
   const canView = useCan("build:roadmap:view");
   return useQuery({
     queryKey: knowledgeAndSurveysQueryKeys.roadmap.items(params),
-    queryFn: ({ signal }) => apiClient.get<CursorPaginated<ScoredRoadmapItem>>("/build/roadmap", params, signal, roadmapPageContract),
+    queryFn: ({ signal }) =>
+      apiClient.get<CursorPaginated<ScoredRoadmapItem>>(
+        "/build/roadmap",
+        params,
+        signal,
+        roadmapPageContract,
+      ),
     enabled: canView,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
@@ -265,8 +299,16 @@ export function useCreateRoadmapItem() {
   return useAuthorizedMutation("build:roadmap:manage", {
     mutationKey: ["projects", "roadmap", "create"],
     mutationFn: (input: CreateRoadmapItemInput) =>
-      apiClient.post<ScoredRoadmapItem>("/build/roadmap", input, undefined, roadmapItemContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.items() }),
+      apiClient.post<ScoredRoadmapItem>(
+        "/build/roadmap",
+        input,
+        undefined,
+        roadmapItemContract,
+      ),
+    onSuccess: () =>
+      qc.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.roadmap.items(),
+      }),
   });
 }
 
@@ -274,11 +316,23 @@ export function useUpdateRoadmapItem() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:roadmap:manage", {
     mutationKey: ["projects", "roadmap", "update"],
-    mutationFn: ({ roadmapItemId, ...input }: UpdateRoadmapItemInput & { roadmapItemId: number }) =>
-      apiClient.patch<ScoredRoadmapItem>(`/build/roadmap/${roadmapItemId}`, input, undefined, roadmapItemContract),
+    mutationFn: ({
+      roadmapItemId,
+      ...input
+    }: UpdateRoadmapItemInput & { roadmapItemId: number }) =>
+      apiClient.patch<ScoredRoadmapItem>(
+        `/build/roadmap/${roadmapItemId}`,
+        input,
+        undefined,
+        roadmapItemContract,
+      ),
     onSuccess: (_result, vars) => {
-      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.items() });
-      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.item(vars.roadmapItemId) });
+      qc.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.roadmap.items(),
+      });
+      qc.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.roadmap.item(vars.roadmapItemId),
+      });
     },
   });
 }
@@ -288,10 +342,19 @@ export function useDeleteRoadmapItem() {
   return useAuthorizedMutation("build:roadmap:manage", {
     mutationKey: ["projects", "roadmap", "delete"],
     mutationFn: (roadmapItemId: number) =>
-      apiClient.delete<void>(`/build/roadmap/${roadmapItemId}`, undefined, undefined, noContentLazy),
+      apiClient.delete<void>(
+        `/build/roadmap/${roadmapItemId}`,
+        undefined,
+        undefined,
+        noContentLazy,
+      ),
     onSuccess: (_result, roadmapItemId) => {
-      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.items() });
-      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.item(roadmapItemId) });
+      qc.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.roadmap.items(),
+      });
+      qc.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.roadmap.item(roadmapItemId),
+      });
     },
   });
 }
@@ -301,7 +364,13 @@ export function useFeedbackPosts(filters: FeedbackPostFilters = {}) {
   const canView = useCan("build:roadmap:view");
   return useQuery({
     queryKey: knowledgeAndSurveysQueryKeys.roadmap.feedback(params),
-    queryFn: ({ signal }) => apiClient.get<CursorPaginated<FeedbackPost>>("/build/feedback", params, signal, feedbackPageContract),
+    queryFn: ({ signal }) =>
+      apiClient.get<CursorPaginated<FeedbackPost>>(
+        "/build/feedback",
+        params,
+        signal,
+        feedbackPageContract,
+      ),
     enabled: canView,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
@@ -312,12 +381,26 @@ export function useUpdateFeedbackPost() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:roadmap:manage", {
     mutationKey: ["projects", "feedback", "update"],
-    mutationFn: ({ postId, ...input }: UpdateFeedbackPostInput & { postId: number }) =>
-      apiClient.patch<FeedbackPost>(`/build/feedback/${postId}`, input, undefined, feedbackPostContract),
+    mutationFn: ({
+      postId,
+      ...input
+    }: UpdateFeedbackPostInput & { postId: number }) =>
+      apiClient.patch<FeedbackPost>(
+        `/build/feedback/${postId}`,
+        input,
+        undefined,
+        feedbackPostContract,
+      ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.feedback() });
-      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.items() });
-      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.itemRoot });
+      qc.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.roadmap.feedback(),
+      });
+      qc.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.roadmap.items(),
+      });
+      qc.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.roadmap.itemRoot,
+      });
     },
   });
 }
@@ -326,12 +409,29 @@ export function useMergeFeedbackPost() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:roadmap:manage", {
     mutationKey: ["projects", "feedback", "merge"],
-    mutationFn: ({ postId, targetPostId }: { postId: number; targetPostId: number }) =>
-      apiClient.post<FeedbackPost>(`/build/feedback/${postId}/merge`, { targetPostId }, undefined, feedbackPostContract),
+    mutationFn: ({
+      postId,
+      targetPostId,
+    }: {
+      postId: number;
+      targetPostId: number;
+    }) =>
+      apiClient.post<FeedbackPost>(
+        `/build/feedback/${postId}/merge`,
+        { targetPostId },
+        undefined,
+        feedbackPostContract,
+      ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.feedback() });
-      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.items() });
-      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.itemRoot });
+      qc.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.roadmap.feedback(),
+      });
+      qc.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.roadmap.items(),
+      });
+      qc.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.roadmap.itemRoot,
+      });
     },
   });
 }
@@ -341,11 +441,22 @@ export function useDeleteFeedbackPost() {
   return useAuthorizedMutation("build:roadmap:manage", {
     mutationKey: ["projects", "feedback", "delete"],
     mutationFn: (postId: number) =>
-      apiClient.delete<void>(`/build/feedback/${postId}`, undefined, undefined, noContentLazy),
+      apiClient.delete<void>(
+        `/build/feedback/${postId}`,
+        undefined,
+        undefined,
+        noContentLazy,
+      ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.feedback() });
-      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.items() });
-      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.itemRoot });
+      qc.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.roadmap.feedback(),
+      });
+      qc.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.roadmap.items(),
+      });
+      qc.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.roadmap.itemRoot,
+      });
     },
   });
 }
@@ -355,7 +466,13 @@ export function useChangelog(filters: ChangelogFilters = {}) {
   const canView = useCan("build:roadmap:view");
   return useQuery({
     queryKey: knowledgeAndSurveysQueryKeys.roadmap.changelog(params),
-    queryFn: ({ signal }) => apiClient.get<CursorPaginated<ChangelogEntry>>("/build/changelog", params, signal, changelogPageContract),
+    queryFn: ({ signal }) =>
+      apiClient.get<CursorPaginated<ChangelogEntry>>(
+        "/build/changelog",
+        params,
+        signal,
+        changelogPageContract,
+      ),
     enabled: canView,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
@@ -367,8 +484,16 @@ export function useCreateChangelogEntry() {
   return useAuthorizedMutation("build:roadmap:manage", {
     mutationKey: ["projects", "changelog", "create"],
     mutationFn: (input: CreateChangelogEntryInput) =>
-      apiClient.post<ChangelogEntry>("/build/changelog", input, undefined, changelogEntryContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.changelog() }),
+      apiClient.post<ChangelogEntry>(
+        "/build/changelog",
+        input,
+        undefined,
+        changelogEntryContract,
+      ),
+    onSuccess: () =>
+      qc.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.roadmap.changelog(),
+      }),
   });
 }
 
@@ -376,9 +501,20 @@ export function useUpdateChangelogEntry() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:roadmap:manage", {
     mutationKey: ["projects", "changelog", "update"],
-    mutationFn: ({ entryId, ...input }: UpdateChangelogEntryInput & { entryId: number }) =>
-      apiClient.patch<ChangelogEntry>(`/build/changelog/${entryId}`, input, undefined, changelogEntryContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.changelog() }),
+    mutationFn: ({
+      entryId,
+      ...input
+    }: UpdateChangelogEntryInput & { entryId: number }) =>
+      apiClient.patch<ChangelogEntry>(
+        `/build/changelog/${entryId}`,
+        input,
+        undefined,
+        changelogEntryContract,
+      ),
+    onSuccess: () =>
+      qc.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.roadmap.changelog(),
+      }),
   });
 }
 
@@ -387,15 +523,29 @@ export function useDeleteChangelogEntry() {
   return useAuthorizedMutation("build:roadmap:manage", {
     mutationKey: ["projects", "changelog", "delete"],
     mutationFn: (entryId: number) =>
-      apiClient.delete<void>(`/build/changelog/${entryId}`, undefined, undefined, noContentLazy),
-    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.changelog() }),
+      apiClient.delete<void>(
+        `/build/changelog/${entryId}`,
+        undefined,
+        undefined,
+        noContentLazy,
+      ),
+    onSuccess: () =>
+      qc.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.roadmap.changelog(),
+      }),
   });
 }
 
 export function usePublicRoadmap(orgId: string) {
   return useQuery({
     queryKey: knowledgeAndSurveysQueryKeys.roadmap.publicBoard(orgId),
-    queryFn: ({ signal }) => apiClient.get<PublicRoadmapBoard>("/public/roadmap", { org: orgId }, signal, publicRoadmapBoardContract),
+    queryFn: ({ signal }) =>
+      apiClient.get<PublicRoadmapBoard>(
+        "/public/roadmap",
+        { org: orgId },
+        signal,
+        publicRoadmapBoardContract,
+      ),
     enabled: Boolean(orgId),
     staleTime: 60_000,
     retry: false,
@@ -407,8 +557,16 @@ export function usePublicVote(orgId: string) {
   return useMutation({
     mutationKey: ["projects", "roadmap", "vote"],
     mutationFn: (input: PublicVoteInput) =>
-      apiClient.post<PublicVoteResult>(`/public/roadmap/vote?org=${encodeURIComponent(orgId)}`, input, undefined, publicVoteResultContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.publicBoard(orgId) }),
+      apiClient.post<PublicVoteResult>(
+        `/public/roadmap/vote?org=${encodeURIComponent(orgId)}`,
+        input,
+        undefined,
+        publicVoteResultContract,
+      ),
+    onSuccess: () =>
+      qc.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.roadmap.publicBoard(orgId),
+      }),
   });
 }
 
@@ -423,7 +581,10 @@ export function useSubmitPublicFeedback(orgId: string) {
         undefined,
         publicFeedbackResultContract,
       ),
-    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.publicBoard(orgId) }),
+    onSuccess: () =>
+      qc.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.roadmap.publicBoard(orgId),
+      }),
   });
 }
 
@@ -433,7 +594,12 @@ export function useRoadmapPublication() {
     queryKey: knowledgeAndSurveysQueryKeys.roadmap.publication,
     queryFn: async ({ signal }) => {
       try {
-        return await apiClient.get<RoadmapPublication>("/build/roadmap-publication", undefined, signal, roadmapPublicationLazy);
+        return await apiClient.get<RoadmapPublication>(
+          "/build/roadmap-publication",
+          undefined,
+          signal,
+          roadmapPublicationLazy,
+        );
       } catch (error) {
         if (isApiError(error) && error.status === 400) return null;
         throw error;
@@ -449,30 +615,16 @@ export function usePublishRoadmap() {
   return useAuthorizedMutation("build:roadmap:manage", {
     mutationKey: ["projects", "roadmap", "publication", "publish"],
     mutationFn: () =>
-      apiClient.post<RoadmapPublication>("/build/roadmap-publication", {}, undefined, roadmapPublicationLazy),
+      apiClient.post<RoadmapPublication>(
+        "/build/roadmap-publication",
+        {},
+        undefined,
+        roadmapPublicationLazy,
+      ),
     onSuccess: (publication) =>
-      qc.setQueryData(knowledgeAndSurveysQueryKeys.roadmap.publication, publication),
-  });
-}
-
-export function useRotateRoadmapPublicationToken() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("build:roadmap:manage", {
-    mutationKey: ["projects", "roadmap", "publication", "rotate"],
-    mutationFn: () =>
-      apiClient.post<RoadmapPublication>("/build/roadmap-publication/rotate", {}, undefined, roadmapPublicationLazy),
-    onSuccess: (publication) =>
-      qc.setQueryData(knowledgeAndSurveysQueryKeys.roadmap.publication, publication),
-  });
-}
-
-export function useUnpublishRoadmap() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("build:roadmap:manage", {
-    mutationKey: ["projects", "roadmap", "publication", "unpublish"],
-    mutationFn: () =>
-      apiClient.delete<void>("/build/roadmap-publication", undefined, undefined, noContentLazy),
-    onSuccess: () =>
-      qc.setQueryData(knowledgeAndSurveysQueryKeys.roadmap.publication, { token: null, path: null }),
+      qc.setQueryData(
+        knowledgeAndSurveysQueryKeys.roadmap.publication,
+        publication,
+      ),
   });
 }

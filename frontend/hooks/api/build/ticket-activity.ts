@@ -17,7 +17,6 @@ const ticketActivityPageLazy = lazyContract(() =>
 type TicketActivityPage = z.infer<typeof ticketActivityPageContractDef>;
 
 export type TicketActivityEntry = TicketActivityPage["data"][number];
-export type TicketActivityAction = TicketActivityEntry["action"];
 
 export function useTicketActivity(projectId: number, ticketId: number) {
   const canView = useCan("build:tickets:view");

@@ -3,11 +3,7 @@ import { render, screen, act, fireEvent } from "@testing-library/react";
 import {
   ACCESS_DENIED,
   ACCESS_LOADING,
-  EPIC_ROW,
   disabledQueryResult,
-  epicPageResult,
-  filtersReturning,
-  installEpicsPageMocks,
   makeMutationResult,
   mockUseAccess,
   mockUseBuildListFilters,
@@ -17,10 +13,16 @@ import {
   mockUseOnlineStatus,
   mockUseProject,
   mockUseUpdateTicket,
-  params,
   readCapturedToolbarFilters,
-  readyPage,
 } from "./epics-page-test-harness";
+import {
+  EPIC_ROW,
+  epicPageResult,
+  filtersReturning,
+  installEpicsPageMocks,
+  params,
+  readyPage,
+} from "./epics-test-fixtures";
 import { EpicsPage } from "./epics-page";
 import { ApiError } from "@/lib/api-envelope";
 import type { UseQueryResult } from "@tanstack/react-query";

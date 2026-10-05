@@ -130,13 +130,6 @@ export function resolveAuthorizedToolIds(
   );
 }
 
-export function canReachBuildOrgRoute(
-  routeId: string,
-  can: (key: string) => boolean,
-): boolean {
-  return authorizedBuildRouteIds(can).includes(routeId);
-}
-
 export function countBuildScopePins(
   storedIds: readonly string[],
   authorizedToolIds: readonly string[],

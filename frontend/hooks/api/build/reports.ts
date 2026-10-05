@@ -36,8 +36,6 @@ const timeBudgetContract = lazyContract(() =>
   import("@/hooks/api/build/reports-schema").then((m) => m.timeBudgetContract),
 );
 
-export type VelocitySprint = ProjectsReportsVelocityResponse["data"][number];
-
 interface BurnupPoint {
   date: string;
   scope: number;
