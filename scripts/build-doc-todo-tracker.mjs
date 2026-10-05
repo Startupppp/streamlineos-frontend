@@ -135,7 +135,7 @@ function indexText(files) {
     "",
     `## Item-level task register (${tasks.length})`,
     "",
-    "Every row below maps to exactly one checkbox in a current specification. Its BT ID is stable while that checkbox text and file stay unchanged. The source checkbox is the final completion authority; these stages show partial progress without increasing the 522-item denominator. Historical checked items are not retroactively assigned stage evidence.",
+    `Every row below maps to exactly one checkbox in a current specification. Its BT ID is stable while that checkbox text and file stay unchanged. The source checkbox is the final completion authority; these stages show partial progress without increasing the ${tasks.length}-item denominator. Historical checked items are not retroactively assigned stage evidence.`,
     "",
     "Stages: D = decision and exclusive work claim; I = implementation and contracts; T = focused positive and negative checks; R = applicable database, authorization, cache, and event proof; B = applicable browser and mobile proof; L = applicable deployment and operations proof. `?` means unassessed/open, `x` means proven, and `-` means inapplicable with a reason. A stage marked `x` needs a proof link; `-` needs an `N/A:` rationale in Evidence. Stage evidence can advance while the source checkbox remains open. Complete that checkbox only when its own acceptance text and all applicable stages are satisfied.",
     "",

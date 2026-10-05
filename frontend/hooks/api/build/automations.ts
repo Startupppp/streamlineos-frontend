@@ -14,12 +14,12 @@ import type {
   ProjectsAutomationsPutAiPolicyBody,
   ProjectsAutomationsPutToolPermissionsBody,
   ProjectsAutomationsPutHumanConfirmationBody,
+  ProjectsAutomationsDryRunResponse,
+  ProjectsAutomationsReplayRunResponse,
 } from "@/contracts/build-contracts.generated";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import type {
   DryRunTicketInput,
-  AutomationDryRunResult,
-  AutomationReplayResult,
   AutomationRunRow,
 } from "@/hooks/api/build/automation-analysis-schema";
 
@@ -140,20 +140,20 @@ export function useUpdateAutomation(projectId: number) {
 }
 
 const automationDryRunContract = lazyContract(() =>
-  import("@/hooks/api/build/automation-analysis-schema").then(
-    (m) => m.automationDryRunResultContract,
+  import("@/contracts/build-contracts.generated").then(
+    (m) => m.projectsAutomationsDryRunResponseSchema,
   ),
 );
 
 const automationReplayContract = lazyContract(() =>
-  import("@/hooks/api/build/automation-analysis-schema").then(
-    (m) => m.automationReplayResultContract,
+  import("@/contracts/build-contracts.generated").then(
+    (m) => m.projectsAutomationsReplayRunResponseSchema,
   ),
 );
 
 const automationRunListContract = lazyContract(() =>
-  import("@/hooks/api/build/automation-analysis-schema").then(
-    (m) => m.automationRunListContract,
+  import("@/contracts/build-contracts.generated").then(
+    (m) => m.projectsAutomationsListRunsResponseSchema,
   ),
 );
 
@@ -184,7 +184,7 @@ export function useAutomationDryRun(projectId: number) {
   return useAuthorizedMutation("build:view", {
     mutationKey: ["projects", projectId, "automations", "dry-run"],
     mutationFn: (data: { triggerEvent: string; ticket: DryRunTicketInput }) =>
-      apiClient.post<AutomationDryRunResult>(
+      apiClient.post<ProjectsAutomationsDryRunResponse>(
         `/build/${projectId}/automations/dry-run`,
         data,
         undefined,
@@ -198,7 +198,7 @@ export function useReplayAutomationRun(projectId: number) {
   return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", projectId, "automations", "replay"],
     mutationFn: (runId: number) =>
-      apiClient.post<AutomationReplayResult>(
+      apiClient.post<ProjectsAutomationsReplayRunResponse>(
         `/build/${projectId}/automations/runs/${runId}/replay`,
         undefined,
         undefined,

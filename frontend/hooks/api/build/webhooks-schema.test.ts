@@ -87,23 +87,23 @@ describe("webhookDeliveryPageContract (BLD-X-BE-SETTINGS-WH-002b — paginated d
   };
 
   it("accepts a valid page with items and null nextCursor — paired with reject test", async () => {
-    const { webhookDeliveryPageContract } = await import(
-      "@/hooks/api/build/webhook-lifecycle-schema"
+    const { projectsWebhooksListDeliveriesResponseSchema: webhookDeliveryPageContract } = await import(
+      "@/contracts/build-contracts.generated"
     );
     const raw = { items: [BASE_DELIVERY], nextCursor: null };
     expect(() => webhookDeliveryPageContract.parse(raw)).not.toThrow();
   });
 
   it("rejects a page missing items — the field is required for pagination to work", async () => {
-    const { webhookDeliveryPageContract } = await import(
-      "@/hooks/api/build/webhook-lifecycle-schema"
+    const { projectsWebhooksListDeliveriesResponseSchema: webhookDeliveryPageContract } = await import(
+      "@/contracts/build-contracts.generated"
     );
     expect(() => webhookDeliveryPageContract.parse({ nextCursor: null })).toThrow(ZodError);
   });
 
   it("accepts nextCursor as a number for keyset pagination", async () => {
-    const { webhookDeliveryPageContract } = await import(
-      "@/hooks/api/build/webhook-lifecycle-schema"
+    const { projectsWebhooksListDeliveriesResponseSchema: webhookDeliveryPageContract } = await import(
+      "@/contracts/build-contracts.generated"
     );
     const raw = { items: [BASE_DELIVERY], nextCursor: 55 };
     const parsed = webhookDeliveryPageContract.parse(raw);
@@ -111,8 +111,8 @@ describe("webhookDeliveryPageContract (BLD-X-BE-SETTINGS-WH-002b — paginated d
   });
 
   it("accepts failed deliveries with null deliveredAt — delivery was not completed", async () => {
-    const { webhookDeliveryPageContract } = await import(
-      "@/hooks/api/build/webhook-lifecycle-schema"
+    const { projectsWebhooksListDeliveriesResponseSchema: webhookDeliveryPageContract } = await import(
+      "@/contracts/build-contracts.generated"
     );
     const failedDelivery = {
       ...BASE_DELIVERY,
@@ -125,8 +125,8 @@ describe("webhookDeliveryPageContract (BLD-X-BE-SETTINGS-WH-002b — paginated d
   });
 
   it("rejects a delivery with an unknown status — prevents 'timeout' slipping past the enum", async () => {
-    const { webhookDeliveryPageContract } = await import(
-      "@/hooks/api/build/webhook-lifecycle-schema"
+    const { projectsWebhooksListDeliveriesResponseSchema: webhookDeliveryPageContract } = await import(
+      "@/contracts/build-contracts.generated"
     );
     const badDelivery = { ...BASE_DELIVERY, status: "timeout" };
     expect(() =>
@@ -137,16 +137,16 @@ describe("webhookDeliveryPageContract (BLD-X-BE-SETTINGS-WH-002b — paginated d
 
 describe("projectWebhookRotateSecretContract (BLD-X-BE-SETTINGS-WH-005)", () => {
   it("accepts a valid rotate-secret response — paired with reject to prevent vacuous positive", async () => {
-    const { projectWebhookRotateSecretContract } = await import(
-      "@/hooks/api/build/webhook-lifecycle-schema"
+    const { projectsWebhooksRotateSecretResponseSchema: projectWebhookRotateSecretContract } = await import(
+      "@/contracts/build-contracts.generated"
     );
     const raw = { id: 1, secret: "abc123def456", secretHint: "abc1..." };
     expect(() => projectWebhookRotateSecretContract.parse(raw)).not.toThrow();
   });
 
   it("rejects a response missing secret — the whole point is returning the new secret once", async () => {
-    const { projectWebhookRotateSecretContract } = await import(
-      "@/hooks/api/build/webhook-lifecycle-schema"
+    const { projectsWebhooksRotateSecretResponseSchema: projectWebhookRotateSecretContract } = await import(
+      "@/contracts/build-contracts.generated"
     );
     expect(() => projectWebhookRotateSecretContract.parse({ id: 1, secretHint: "abc1..." })).toThrow(ZodError);
   });
@@ -154,8 +154,8 @@ describe("projectWebhookRotateSecretContract (BLD-X-BE-SETTINGS-WH-005)", () => 
 
 describe("webhookImpactContract (BLD-X-BE-SETTINGS-WH-006)", () => {
   it("accepts a valid impact response with delivery stats", async () => {
-    const { webhookImpactContract } = await import(
-      "@/hooks/api/build/webhook-lifecycle-schema"
+    const { projectsWebhooksGetImpactResponseSchema: webhookImpactContract } = await import(
+      "@/contracts/build-contracts.generated"
     );
     const raw = {
       webhookId: 1,
@@ -169,8 +169,8 @@ describe("webhookImpactContract (BLD-X-BE-SETTINGS-WH-006)", () => {
   });
 
   it("accepts zero-delivery stats when no deliveries have been made yet", async () => {
-    const { webhookImpactContract } = await import(
-      "@/hooks/api/build/webhook-lifecycle-schema"
+    const { projectsWebhooksGetImpactResponseSchema: webhookImpactContract } = await import(
+      "@/contracts/build-contracts.generated"
     );
     const raw = {
       webhookId: 2,
@@ -184,8 +184,8 @@ describe("webhookImpactContract (BLD-X-BE-SETTINGS-WH-006)", () => {
   });
 
   it("rejects a response missing webhookId — paired with accept to prevent vacuous positive", async () => {
-    const { webhookImpactContract } = await import(
-      "@/hooks/api/build/webhook-lifecycle-schema"
+    const { projectsWebhooksGetImpactResponseSchema: webhookImpactContract } = await import(
+      "@/contracts/build-contracts.generated"
     );
     const raw = { events: [], totalDeliveries: 0, successfulDeliveries: 0, lastSuccessAt: null, lastFailureAt: null };
     expect(() => webhookImpactContract.parse(raw)).toThrow(ZodError);

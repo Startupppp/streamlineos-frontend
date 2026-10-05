@@ -78,9 +78,3 @@ export const allWorkPageContract = projectsTicketsGetAllWorkResponseSchema.trans
 
 export const projectActivityPageContract = projectsActivityFeedGetProjectActivityResponseSchema;
 
-export const allWorkIdsContract = z.object({
-  entries: z.array(z.object({ projectId: z.number().int(), ids: z.array(z.number().int()) })),
-  total: z.number().int(),
-  capped: z.boolean(),
-  cap: z.number().int(),
-});

@@ -33,7 +33,7 @@ const snapshotResultContract = lazyContract(() =>
 );
 
 const timeBudgetContract = lazyContract(() =>
-  import("@/hooks/api/build/reports-schema").then((m) => m.timeBudgetContract),
+  import("@/contracts/build-contracts.generated").then((m) => m.projectsReportsGetTimeBudgetResponseSchema),
 );
 
 interface BurnupPoint {
