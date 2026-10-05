@@ -2,6 +2,8 @@
 
 Status: Planned. Bounded current source and read-only browser evidence are classified separately below.
 
+Current verified bounded132 request behavior: the [canonical query receipt](../../audit/bugs-and-verification.md#qa-failure-query132-reconciliation--2026-10-06) records false-string correction through the existing boolean parser, strict query validation,64 focused and41 actual local HTTP harness tests, backend production/test-inclusive TypeScript exit0 and reviewed official query-only contracts. Physical populated filtering, complete authorization/persistence/browser/mobile/deployment scope stays Current unverified; no QA checklist or whole stage closes. Six overwritten129/130 frontend paths remain pending an ownership handoff, so prior Clear/search/pager proof is historical rather than current implementation.
+
 ## Problem Statement
 
 Users need explicit quality flows instead of disconnected screens or empty shells.
@@ -11,6 +13,8 @@ Users need explicit quality flows instead of disconnected screens or empty shell
 Use the following route contracts with the [shared screen contract](./shared-screen-contract.md). All listed endpoints and additions are Planned. Screen-specific rules below override the general overview catalog.
 
 ## Current QA reconciliation — 2026-10-05
+
+Current unverified129/130 current source: the [ownership collision receipt](../../audit/bugs-and-verification.md#qa-filter129-and-pager130-ownership-collision--2026-10-06) distinguishes the reviewed177-test/strict/scoped/browser desktop checkpoint from later replacement of all six uncommitted QA/filter/pager files. Root refuses staging and preserves replacement contents pending an exact handoff. Clear/filter/pagination/search repairs cannot be treated as currently implemented until restored and retested. No whole delivery item/stage closes; mobile, populated result/cursor, complete authorization/persistence/effect/deployment/operations proof remains open.
 
 Current verified bounded125/128: [case live-write125](../../audit/bugs-and-verification.md#qa-case-live-write125-reconciliation--2026-10-06) records existing service live/zero-row404 handling,215 focused tests, strict/scoped checks and matching-hash independent CLEAR at backend842aac4be. [Run return128](../../audit/bugs-and-verification.md#qa-run-return128-reconciliation--2026-10-06) records all six existing return destinations selecting runs,65 tests including actual PageWrapper/dirty-state guard and cached-data denial, strict/scoped checks and independent CLEAR at root37303cad1. Actual missing-run Back→runs→refresh is verified with two immutable captures; populated execution and unobstructed mobile remain open. Fresh full gates fail four external backend fixtures and17 external frontend consumer diagnostics; full-spec waits for those owners. No schema/permission or whole task/stage changes; physical authorization/persistence/effects/CAS/history/deployment/operations remain Current unverified,535 statuses stay298/237.
 
