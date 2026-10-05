@@ -1,6 +1,17 @@
 import { getStyles } from "./styles";
 
 describe("feedbucket widget styles — pointer-events isolation", () => {
+  it("contains its overlays below application modals in a positioned host", () => {
+    const stylesheet = new CSSStyleSheet();
+    stylesheet.insertRule(getStyles().match(/:host\s*\{[^}]*\}/)?.[0] ?? ":host {}");
+    const hostRule = stylesheet.cssRules[0];
+    expect(hostRule).toBeInstanceOf(CSSStyleRule);
+    if (!(hostRule instanceof CSSStyleRule)) throw new Error("Missing host style rule");
+    expect(hostRule.style.getPropertyValue("position")).toBe("relative");
+    expect(Number(hostRule.style.getPropertyValue("z-index"))).toBeGreaterThan(0);
+    expect(Number(hostRule.style.getPropertyValue("z-index"))).toBeLessThan(50);
+  });
+
   it("widget container has pointer-events none so it does not intercept primary UI controls", () => {
     const css = getStyles();
     const widgetBlock = css.match(/\.widget\s*\{[^}]*\}/)?.[0] ?? "";

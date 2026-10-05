@@ -11,7 +11,7 @@
  */
 export function getStyles(): string {
   return `
-:host { all: initial; }
+:host { all: initial; position: relative; z-index: 40; }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 [hidden] { display: none !important; }
 
