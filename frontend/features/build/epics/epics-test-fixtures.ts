@@ -1,6 +1,7 @@
 import type { UseMutationResult } from "@tanstack/react-query";
 import type { useUpdateTicket } from "@/hooks/api/build/ticket-update-mutation";
-import type { useDeleteTicket, useCreateTicket, useBulkUpdateTickets } from "@/hooks/api/build/ticket-create-rank-mutations";
+import type { useDeleteTicket, useCreateTicket } from "@/hooks/api/build/ticket-create-rank-mutations";
+import type { useBulkUpdateTickets } from "@/hooks/api/build/ticket-bulk-update-mutation";
 import type { Cycle, ProjectWithDetails, Ticket } from "@/types/projects";
 import type { EpicPage, EpicItem } from "@/hooks/api/build/execution-schema";
 import {

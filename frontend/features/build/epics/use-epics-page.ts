@@ -2,10 +2,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useProject, useProjectLabels } from "@/hooks/api/build/projects";
 import { useUpdateTicket } from "@/hooks/api/build/ticket-update-mutation";
 import {
-  useBulkUpdateTickets,
   useCreateTicket,
   useDeleteTicket,
 } from "@/hooks/api/build/ticket-create-rank-mutations";
+import { useBulkUpdateTickets } from "@/hooks/api/build/ticket-bulk-update-mutation";
 import { useProjectBoardTickets } from "@/hooks/api/build/ticket-queries";
 import {
   useEpicPage,

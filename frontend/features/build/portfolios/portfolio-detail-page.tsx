@@ -1,9 +1,8 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import Link from "next/link";
 import {
   useDeletePortfolio,
   useLinkPortfolioProject,
@@ -15,19 +14,9 @@ import { useProjects } from "@/hooks/api/build/projects";
 import { useCan } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
-import { Badge } from "@/components/ui/badge";
-import { TablePagination } from "@/components/ui/table-pagination";
 import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   DropdownMenu,
@@ -46,16 +35,15 @@ import {
   PmPageShell,
   PmPanel,
   PmSection,
-  PM_ROW,
 } from "@/components/pm-chrome";
-import { TEXT_ONE_LINE, TEXT_BODY } from "@/lib/text-overflow";
+import { TEXT_BODY } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 import {
-  UnlinkProjectButton,
-  LinkProjectButton,
   PortfolioActionsButton,
   DetailSkeleton,
 } from "./portfolio-detail-helpers";
+import { PortfolioLinkedProjectsSection } from "./portfolio-linked-projects-section";
+import { PortfolioLinkedProgramsSection } from "./portfolio-linked-programs-section";
 
 type Props = { portfolioId: number };
 
@@ -159,26 +147,15 @@ function PortfolioDetailContent({ portfolioId }: Props) {
     });
   }
 
-  function handleOpenEdit() {
-    setEditOpen(true);
-  }
-
-  function handleOpenDelete() {
-    setDeleteOpen(true);
-  }
-
   function handleRetry() {
     void refetch();
   }
-
   function handleProjectsNext() {
     projectsPager.goNext(data?.projects.pagination.nextCursor);
   }
-
   function handleProgramsNext() {
     programsPager.goNext(data?.programs.pagination.nextCursor);
   }
-
   function handleNoopCreate() {
     return undefined;
   }
@@ -220,12 +197,12 @@ function PortfolioDetailContent({ portfolioId }: Props) {
               <PortfolioActionsButton />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleOpenEdit}>
+              <DropdownMenuItem onClick={() => setEditOpen(true)}>
                 Edit Portfolio
               </DropdownMenuItem>
               <DropdownMenuItem
                 variant="destructive"
-                onClick={handleOpenDelete}
+                onClick={() => setDeleteOpen(true)}
               >
                 Delete Portfolio
               </DropdownMenuItem>
@@ -247,7 +224,6 @@ function PortfolioDetailContent({ portfolioId }: Props) {
                 </span>
               </span>
             </div>
-
             {data.strategicGoal ? (
               <div>
                 <p className="mb-1 text-dense font-medium uppercase tracking-wider text-muted-foreground">
@@ -258,7 +234,6 @@ function PortfolioDetailContent({ portfolioId }: Props) {
                 </p>
               </div>
             ) : null}
-
             {data.description ? (
               <div>
                 <p className="mb-1 text-dense font-medium uppercase tracking-wider text-muted-foreground">
@@ -272,131 +247,27 @@ function PortfolioDetailContent({ portfolioId }: Props) {
           </PmPanel>
         </PmSection>
 
-        <PmSection index={1} className="space-y-3">
-          <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
-            <p className="text-dense font-medium uppercase tracking-wider text-muted-foreground">
-              Linked Projects
-              {linkedProjects.length > 0 ? ` (${linkedProjects.length})` : ""}
-            </p>
-            {canManage && availableProjects.length > 0 ? (
-              <div className="flex min-w-0 flex-wrap items-center gap-2">
-                <Select value={linkProjectId} onValueChange={setLinkProjectId}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Link a project…" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableProjects.map((p) => (
-                      <SelectItem key={p.id} value={String(p.id)}>
-                        {p.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <LinkProjectButton
-                  disabled={!linkProjectId}
-                  isPending={linkProject.isPending}
-                  onClick={handleLink}
-                />
-              </div>
-            ) : null}
-          </div>
+        <PortfolioLinkedProjectsSection
+          linkedProjects={linkedProjects}
+          canManage={canManage}
+          availableProjects={availableProjects}
+          linkProjectId={linkProjectId}
+          onLinkProjectIdChange={setLinkProjectId}
+          isLinkPending={linkProject.isPending}
+          isUnlinkPending={unlinkProject.isPending}
+          onLink={handleLink}
+          onUnlink={handleUnlink}
+          hasMore={data.projects.pagination.hasMore}
+          pager={projectsPager}
+          onNext={handleProjectsNext}
+        />
 
-          {linkedProjects.length === 0 ? (
-            <PmPanel className="flex items-center justify-center p-4">
-              <EmptyState
-                illustrationPreset="projects"
-                title="No linked projects"
-                description="Link projects to this portfolio to track them here."
-                compact
-              />
-            </PmPanel>
-          ) : (
-            <PmPanel>
-              {linkedProjects.map((proj) => (
-                <div key={proj.id} className={PM_ROW}>
-                  <span className="shrink-0 font-mono text-xs text-muted-foreground">
-                    {proj.key}
-                  </span>
-                  <Link
-                    href={`/build/${proj.id}`}
-                    className={cn(
-                      TEXT_ONE_LINE,
-                      "flex-1 text-sm font-medium text-foreground hover:text-primary",
-                    )}
-                    title={proj.name}
-                  >
-                    {proj.name}
-                  </Link>
-                  <Badge
-                    variant="outline"
-                    className="shrink-0 px-1.5 py-0.5 text-micro"
-                  >
-                    {proj.status}
-                  </Badge>
-                  {canManage ? (
-                    <UnlinkProjectButton
-                      projectName={proj.name}
-                      projectId={proj.id}
-                      isPending={unlinkProject.isPending}
-                      onUnlink={handleUnlink}
-                    />
-                  ) : null}
-                </div>
-              ))}
-              <TablePagination
-                mode="cursor"
-                rowCount={linkedProjects.length}
-                pageNumber={projectsPager.pageNumber}
-                hasMore={data.projects.pagination.hasMore}
-                hasPrevious={projectsPager.hasPrevious}
-                onNext={handleProjectsNext}
-                onPrevious={projectsPager.goPrevious}
-              />
-            </PmPanel>
-          )}
-        </PmSection>
-
-        <PmSection index={2} className="space-y-3">
-          <p className="text-dense font-medium uppercase tracking-wider text-muted-foreground">
-            Programs
-            {linkedPrograms.length > 0 ? ` (${linkedPrograms.length})` : ""}
-          </p>
-          {linkedPrograms.length === 0 ? (
-            <PmPanel className="flex items-center justify-center p-4">
-              <EmptyState
-                illustrationPreset="projects"
-                title="No linked programs"
-                description="Programs assigned to this portfolio will appear here."
-                compact
-              />
-            </PmPanel>
-          ) : (
-            <PmPanel>
-              {linkedPrograms.map((program) => (
-                <div key={program.id} className={PM_ROW}>
-                  <span
-                    className={cn(
-                      TEXT_ONE_LINE,
-                      "flex-1 text-sm font-medium text-foreground",
-                    )}
-                  >
-                    {program.name}
-                  </span>
-                  <PortfolioStatusBadge status={program.status} />
-                </div>
-              ))}
-              <TablePagination
-                mode="cursor"
-                rowCount={linkedPrograms.length}
-                pageNumber={programsPager.pageNumber}
-                hasMore={data.programs.pagination.hasMore}
-                hasPrevious={programsPager.hasPrevious}
-                onNext={handleProgramsNext}
-                onPrevious={programsPager.goPrevious}
-              />
-            </PmPanel>
-          )}
-        </PmSection>
+        <PortfolioLinkedProgramsSection
+          linkedPrograms={linkedPrograms}
+          hasMore={data.programs.pagination.hasMore}
+          pager={programsPager}
+          onNext={handleProgramsNext}
+        />
       </PmPageShell>
 
       <PortfolioFormSheet

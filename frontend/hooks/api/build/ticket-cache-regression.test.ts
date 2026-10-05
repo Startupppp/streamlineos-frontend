@@ -5,7 +5,8 @@ import { createAppQueryClient } from "@/components/providers/query-provider";
 import { queryKeys } from "@/lib/query-keys";
 import { apiClient } from "@/lib/api-client";
 import { useUpdateTicket } from "./ticket-update-mutation";
-import { useBulkUpdateTickets, useRankTicket, useDeleteTicket } from "./ticket-create-rank-mutations";
+import { useRankTicket, useDeleteTicket } from "./ticket-create-rank-mutations";
+import { useBulkUpdateTickets } from "./ticket-bulk-update-mutation";
 import { useAddTicketRelation, useRemoveTicketRelation } from "./ticket-sub-resources";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 

@@ -11,6 +11,9 @@ jest.mock("@/hooks/api/access", () => ({
 
 jest.mock("@/hooks/api/build/ticket-create-rank-mutations", () => ({
   useDeleteTicket: () => ({ mutate: deleteMutate, isPending: false }),
+}));
+
+jest.mock("@/hooks/api/build/ticket-bulk-update-mutation", () => ({
   useBulkUpdateTickets: () => ({ mutate: bulkMutate, isPending: false }),
 }));
 

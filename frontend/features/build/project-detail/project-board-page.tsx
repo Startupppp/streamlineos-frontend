@@ -4,13 +4,10 @@ import { use, useCallback, useMemo, useRef, useState } from "react";
 import { format, addDays } from "date-fns";
 import { useProject, useProjectLabels } from "@/hooks/api/build/projects";
 import { useCycles } from "@/hooks/api/build/cycles";
-import { useBulkUpdateTickets } from "@/hooks/api/build/tickets";
 import { useWorkloadCapacity } from "@/hooks/api/build/workload-capacity";
-import { useExportTickets } from "@/hooks/api/build/ticket-import-export";
-import { downloadTextFile } from "@/features/build/import-export/download-text-file";
-import type { BulkUpdateTicketsInput } from "@/hooks/api/build/tickets";
 import { useBoardUrlState } from "@/features/build/views/use-board-url-state";
 import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
+import { useProjectBoardBulkActions } from "./use-project-board-bulk-actions";
 import { ProjectBoardContent } from "@/features/build/views/project-board-content";
 import { ProjectViewsToolbar } from "@/features/build/views/project-views-toolbar";
 import { ProjectBoardHeaderActions } from "@/features/build/project-detail/project-board-header-actions";
@@ -20,8 +17,6 @@ import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProjectLoadFallback } from "@/features/build/shared/project-load-fallback";
 import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
-import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { notFound } from "next/navigation";
 import type { ViewType } from "@/features/build/views/view-switcher";
 import { PageState } from "@/components/shared/page-state";
@@ -46,59 +41,21 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
     refetch: refetchProject,
   } = useProject(projectId);
   const { data: cycles } = useCycles(projectId);
-  const bulkUpdate = useBulkUpdateTickets(projectId);
   const { data: orgLabels } = useProjectLabels();
-  const exportMutation = useExportTickets(projectId);
-  const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
 
   const {
-    view,
-    filterType,
-    filterSeverity,
-    filterQaState,
-    displayOptions,
-    setDisplayOptions,
-    hideCompleted,
-    setHideCompleted,
-    workloadFilters,
-    saveViewOpen,
-    setSaveViewOpen,
-    saveViewName,
-    createView,
-    updateView,
-    selectedIds,
-    ticketsLoading,
-    ticketsError,
-    ticketsErrorValue,
-    refetchTickets,
-    isTruncated,
-    fetchMoreTickets,
-    isFetchingMoreTickets,
-    filteredTickets,
-    statuses,
-    members,
-    wipLimits,
-    doneCount,
-    showEmptyFilterState,
-    showFirstRunState,
-    hasActiveFilters,
-    boardFilters,
-    activeView,
-    createParamOpen,
-    createDefaultCycleId,
-    handleViewChange,
-    handleClearSearch,
-    handleQaFilterChange,
-    handleClearView,
-    handleCreateOpenChange,
-    handleOpenSaveView,
-    handleSaveViewNameChange,
-    handleSaveView,
-    handleUpdateActiveView,
-    handleWorkloadFilterChange,
-    handleClearWorkloadFilters,
-    handleTicketSelect,
-    handleSelectionChange,
+    view, filterType, filterSeverity, filterQaState,
+    displayOptions, setDisplayOptions, hideCompleted, setHideCompleted,
+    workloadFilters, saveViewOpen, setSaveViewOpen, saveViewName,
+    createView, updateView, selectedIds, ticketsLoading, ticketsError,
+    ticketsErrorValue, refetchTickets, isTruncated, fetchMoreTickets,
+    isFetchingMoreTickets, filteredTickets, statuses, members, wipLimits,
+    doneCount, showEmptyFilterState, showFirstRunState, hasActiveFilters,
+    boardFilters, activeView, createParamOpen, createDefaultCycleId,
+    handleViewChange, handleClearSearch, handleQaFilterChange, handleClearView,
+    handleCreateOpenChange, handleOpenSaveView, handleSaveViewNameChange,
+    handleSaveView, handleUpdateActiveView, handleWorkloadFilterChange,
+    handleClearWorkloadFilters, handleTicketSelect, handleSelectionChange,
     handleClearSelection,
   } = useBoardUrlState(projectId, defaultView);
 
@@ -132,12 +89,10 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
   );
 
   const canCreateTicket = useCan("build:tickets:create");
-
   const handleKeyboardCreate = useCallback(
     () => handleCreateOpenChange(true),
     [handleCreateOpenChange],
   );
-
   const handleShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
 
   const { focusedIndex } = useBuildListKeyboard({
@@ -165,119 +120,24 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
     [refetchTickets],
   );
 
-  const handleBulkUpdate = useCallback(
-    (
-      update: Partial<
-        Pick<
-          BulkUpdateTicketsInput,
-          | "assigneeId"
-          | "status"
-          | "cycleId"
-          | "priority"
-          | "parentTicketId"
-          | "labelIds"
-          | "archive"
-        >
-      >,
-    ) => {
-      if (selectedIds.size === 0) {
-        toast.error("No tickets selected");
-        return;
-      }
-      bulkUpdate.mutate(
-        { ticketIds: [...selectedIds].map(Number), ...update },
-        {
-          onSuccess: (d) => {
-            const blockedCount = d.blocked?.length ?? 0;
-            if (blockedCount > 0 && d.updated === 0) {
-              toast.error(
-                `${blockedCount} ticket${blockedCount !== 1 ? "s" : ""} could not be archived — ${blockedCount !== 1 ? "they have" : "it has"} active sub-tasks not in the selection. Nothing was changed.`,
-              );
-              return;
-            }
-            if (blockedCount > 0) {
-              toast.warning(
-                `${d.updated} archived, ${blockedCount} could not be archived — ${blockedCount !== 1 ? "they have" : "it has"} active sub-tasks not in the selection.`,
-              );
-              handleClearSelection();
-              return;
-            }
-            toast.success(
-              `${d.updated} ticket${d.updated !== 1 ? "s" : ""} updated`,
-            );
-            handleClearSelection();
-          },
-          onError: (e) => toast.error(getErrorMessage(e)),
-        },
-      );
-    },
-    [selectedIds, bulkUpdate, handleClearSelection],
-  );
-
-  const handleBulkStatus = useCallback(
-    (v: string) => handleBulkUpdate({ status: v }),
-    [handleBulkUpdate],
-  );
-  const handleBulkPriority = useCallback(
-    (v: string) => {
-      if (v === "LOW" || v === "MEDIUM" || v === "HIGH" || v === "URGENT") {
-        handleBulkUpdate({ priority: v });
-      }
-    },
-    [handleBulkUpdate],
-  );
-  const handleBulkAssignee = useCallback(
-    (v: string) => handleBulkUpdate({ assigneeId: v }),
-    [handleBulkUpdate],
-  );
-  const handleBulkCycle = useCallback(
-    (v: string) =>
-      handleBulkUpdate({ cycleId: v === "backlog" ? null : Number(v) }),
-    [handleBulkUpdate],
-  );
-  const handleBulkParent = useCallback(
-    (parentTicketId: number | null) => handleBulkUpdate({ parentTicketId }),
-    [handleBulkUpdate],
-  );
-
-  const handleBulkLabel = useCallback(
-    (labelId: string) => handleBulkUpdate({ labelIds: [Number(labelId)] }),
-    [handleBulkUpdate],
-  );
-
-  const handleBulkArchiveRequest = useCallback(
-    () => setArchiveConfirmOpen(true),
-    [],
-  );
-
-  const handleBulkArchiveConfirm = useCallback(() => {
-    handleBulkUpdate({ archive: true });
-    setArchiveConfirmOpen(false);
-  }, [handleBulkUpdate]);
-
-  const handleArchiveDialogChange = useCallback(
-    (open: boolean) => setArchiveConfirmOpen(open),
-    [],
-  );
-
-  const handleBulkExport = useCallback(() => {
-    if (selectedIds.size === 0) {
-      toast.error("No tickets selected");
-      return;
-    }
-    exportMutation.mutate(
-      { format: "csv", ticketIds: [...selectedIds].map(Number) },
-      {
-        onSuccess: (result) => {
-          downloadTextFile(result.filename, result.contentType, result.content);
-          toast.success(
-            `Exported ${result.rowCount} ticket${result.rowCount !== 1 ? "s" : ""}`,
-          );
-        },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      },
-    );
-  }, [selectedIds, exportMutation]);
+  const {
+    handleBulkStatus,
+    handleBulkPriority,
+    handleBulkAssignee,
+    handleBulkCycle,
+    handleBulkParent,
+    handleBulkLabel,
+    handleBulkArchiveRequest,
+    handleBulkArchiveConfirm,
+    handleBulkExport,
+    archiveConfirmOpen,
+    handleArchiveDialogChange,
+    isBulkPending,
+  } = useProjectBoardBulkActions({
+    projectId,
+    selectedIds,
+    onClearSelection: handleClearSelection,
+  });
 
   const resolution = usePageState({
     permission: "build:view",
@@ -286,43 +146,27 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
     error: projectErrorValue,
   });
 
-  if (isLoading) {
-    return (
-      <PageWrapper title={<Skeleton className="h-5 w-40" />} noInternalScroll>
-        <KanbanBoardSkeleton />
-      </PageWrapper>
-    );
-  }
+  if (isLoading) return (
+    <PageWrapper title={<Skeleton className="h-5 w-40" />} noInternalScroll>
+      <KanbanBoardSkeleton />
+    </PageWrapper>
+  );
 
-  if (resolution.kind !== "ready" && resolution.kind !== "error") {
-    return (
-      <PageWrapper title="Board" noInternalScroll>
-        <PageState resolution={resolution} loading={<KanbanBoardSkeleton />}>
-          {null}
-        </PageState>
-      </PageWrapper>
-    );
-  }
+  if (resolution.kind !== "ready" && resolution.kind !== "error") return (
+    <PageWrapper title="Board" noInternalScroll>
+      <PageState resolution={resolution} loading={<KanbanBoardSkeleton />}>{null}</PageState>
+    </PageWrapper>
+  );
 
-  if (projectError) {
-    return (
-      <ProjectLoadFallback
-        title="Board"
-        error={projectErrorValue}
-        onRetry={handleRetryProject}
-      />
-    );
-  }
+  if (projectError) return (
+    <ProjectLoadFallback title="Board" error={projectErrorValue} onRetry={handleRetryProject} />
+  );
 
-  if (resolution.kind !== "ready") {
-    return (
-      <PageWrapper title="Board" noInternalScroll>
-        <PageState resolution={resolution} loading={<KanbanBoardSkeleton />}>
-          {null}
-        </PageState>
-      </PageWrapper>
-    );
-  }
+  if (resolution.kind !== "ready") return (
+    <PageWrapper title="Board" noInternalScroll>
+      <PageState resolution={resolution} loading={<KanbanBoardSkeleton />}>{null}</PageState>
+    </PageWrapper>
+  );
 
   if (!data) return notFound();
 
@@ -447,7 +291,7 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
         description={`Archive ${selectedIds.size} ticket${selectedIds.size !== 1 ? "s" : ""}? Tickets with active sub-tasks not in your selection cannot be archived and nothing will change.`}
         confirmLabel={`Archive ${selectedIds.size} ticket${selectedIds.size !== 1 ? "s" : ""}`}
         destructive
-        isPending={bulkUpdate.isPending}
+        isPending={isBulkPending}
         onConfirm={handleBulkArchiveConfirm}
       />
     </PageWrapper>

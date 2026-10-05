@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { BuildListSurface } from "@/features/build/shared/build-list-surface";
@@ -13,19 +13,14 @@ import { useCan } from "@/hooks/api/access";
 import { SubmissionBulkToolbar } from "@/components/shared/submission-bulk-toolbar";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
-import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { UserCombobox } from "@/components/ui/user-combobox";
-import { BUILD_FILTER_ALL } from "@/features/build/shared/use-build-list-filters";
 import {
   type SubmissionRow,
-  FILTER_DEFINITIONS,
   FEEDBACK_SKELETON_HEADERS,
   buildFeedbackColumnsWithActions,
-  TYPE_OPTIONS,
-  STATUS_OPTIONS_VALUES,
   TYPE_FILTER_OPTIONS,
   STATUS_FILTER_OPTIONS,
   LINKED_FILTER_OPTIONS,
@@ -35,35 +30,11 @@ import {
 import { useRouteFeedbucketToIntake } from "@/hooks/api/build/intake-mutations";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type {
-  FeedbucketSubmissionFilters,
-  ListFeedbucketSubmissionsQuery,
-} from "@/types/feedbucket";
-
-const PAGE_SIZE = 25;
+import { resolveProductFeedbackSubmissionHref } from "./product-feedback-model";
+import { useProductFeedbackFilters, PAGE_SIZE } from "./use-product-feedback-filters";
 
 interface ProductFeedbackPageProps {
   managedProductId: number;
-}
-
-function resolveProductFeedbackSubmissionHref(
-  row: SubmissionRow,
-  managedProductId: number,
-  canOpenDetail: boolean,
-): string | null {
-  const projectId = row.widget?.projectId;
-  const owningManagedProductId = row.widget?.managedProductId;
-  if (
-    !canOpenDetail ||
-    !Number.isSafeInteger(row.id) ||
-    row.id <= 0 ||
-    !Number.isSafeInteger(projectId) ||
-    (projectId ?? 0) <= 0 ||
-    owningManagedProductId !== managedProductId
-  ) {
-    return null;
-  }
-  return `/build/${projectId}/feedbucket/${row.id}`;
 }
 
 export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPageProps) {
@@ -74,119 +45,34 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
   const canDeleteSubmission = useCan("feedbucket:submissions:delete");
   const canRouteToIntake = useCan("feedbucket:submissions:manage");
   const routeToIntake = useRouteFeedbucketToIntake();
-  const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
-  const searchInputRef = useRef<HTMLInputElement | null>(null);
 
-  const typeValue = listFilters.value("type");
-  const statusValue = listFilters.value("status");
-  const linkedValue = listFilters.value("linked");
-  const assigneeIdValue = listFilters.value("assigneeId");
-  const duplicateValue = listFilters.value("duplicate");
-  const fromValue = listFilters.value("from");
-  const toValue = listFilters.value("to");
-
-  const typedType = useMemo(
-    () => TYPE_OPTIONS.find((v) => v === typeValue),
-    [typeValue],
-  );
-
-  const typedStatus = useMemo(
-    () => STATUS_OPTIONS_VALUES.find((v) => v === statusValue),
-    [statusValue],
-  );
-
-  const typedLinked = useMemo(
-    () => (linkedValue === "linked" || linkedValue === "unlinked" ? linkedValue : undefined),
-    [linkedValue],
-  );
-
-  const typedAssigneeId = useMemo(
-    () => (assigneeIdValue !== BUILD_FILTER_ALL ? assigneeIdValue : undefined),
-    [assigneeIdValue],
-  );
-
-  const typedDuplicate = useMemo(
-    () => (duplicateValue === "true" || duplicateValue === "false" ? duplicateValue : undefined),
-    [duplicateValue],
-  );
-
-  const typedFrom = listFilters.isActive("from") ? fromValue : undefined;
-  const typedTo = listFilters.isActive("to") ? toValue : undefined;
-
-  const [appliedFilterKey, setAppliedFilterKey] = useState(listFilters.resetKey);
-  const [page, setPage] = useState(1);
-  const [selected, setSelected] = useState<Set<string | number>>(new Set());
-  if (appliedFilterKey !== listFilters.resetKey) {
-    setAppliedFilterKey(listFilters.resetKey);
-    setPage(1);
-    setSelected(new Set());
-  }
-
-  const queryParams = useMemo((): ListFeedbucketSubmissionsQuery => ({
-      managedProductId,
-      page,
-      limit: PAGE_SIZE,
-      ...(listFilters.debouncedSearch.trim() ? { search: listFilters.debouncedSearch.trim() } : {}),
-      ...(typedType ? { type: typedType } : {}),
-      ...(typedStatus ? { status: typedStatus } : {}),
-      ...(typedLinked ? { linked: typedLinked } : {}),
-      ...(typedAssigneeId ? { assigneeId: typedAssigneeId } : {}),
-      ...(typedDuplicate ? { duplicate: typedDuplicate } : {}),
-      ...(typedFrom ? { from: typedFrom } : {}),
-      ...(typedTo ? { to: typedTo } : {}),
-    }),
-    [
-      managedProductId,
-      page,
-      listFilters.debouncedSearch,
-      typedType,
-      typedStatus,
-      typedLinked,
-      typedAssigneeId,
-      typedDuplicate,
-      typedFrom,
-      typedTo,
-    ],
-  );
+  const {
+    listFilters,
+    searchInputRef,
+    page,
+    selected,
+    setSelected,
+    queryParams,
+    bulkFilters,
+    typeValue,
+    statusValue,
+    linkedValue,
+    assigneeIdValue,
+    duplicateValue,
+    typedFrom,
+    typedTo,
+    typedAssigneeId,
+    handleTypeChange,
+    handleStatusChange,
+    handleLinkedChange,
+    handleAssigneeChange,
+    handleDuplicateChange,
+    handleDateRangeChange,
+    handlePageChange,
+    handleClearSelection,
+  } = useProductFeedbackFilters(managedProductId);
 
   const { data, isLoading, isError, error, refetch } = useFeedbucketSubmissions(queryParams);
-
-  const handleTypeChange = useCallback(
-    (value: string) => listFilters.setValue("type", value),
-    [listFilters],
-  );
-
-  const handleStatusChange = useCallback(
-    (value: string) => listFilters.setValue("status", value),
-    [listFilters],
-  );
-
-  const handleLinkedChange = useCallback(
-    (value: string) => listFilters.setValue("linked", value),
-    [listFilters],
-  );
-
-  const handleAssigneeChange = useCallback(
-    (value: string) => listFilters.setValue("assigneeId", value || BUILD_FILTER_ALL),
-    [listFilters],
-  );
-
-  const handleDuplicateChange = useCallback(
-    (value: string) => listFilters.setValue("duplicate", value),
-    [listFilters],
-  );
-
-  const handleDateRangeChange = useCallback(
-    (range: { from: string; to: string }) => {
-      listFilters.setValue("from", range.from);
-      listFilters.setValue("to", range.to);
-    },
-    [listFilters],
-  );
-
-  const handlePageChange = useCallback((next: number) => {
-    setPage(next);
-  }, []);
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
@@ -198,31 +84,6 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
   );
   const selectionEnabled = canUpdateSubmission || canDeleteSubmission;
 
-  const bulkFilters = useMemo<FeedbucketSubmissionFilters>(
-    () => ({
-      managedProductId,
-      ...(typedType ? { type: typedType } : {}),
-      ...(typedStatus ? { status: typedStatus } : {}),
-      ...(typedLinked ? { linked: typedLinked } : {}),
-      ...(typedAssigneeId ? { assigneeId: typedAssigneeId } : {}),
-      ...(typedDuplicate ? { duplicate: typedDuplicate } : {}),
-      ...(typedFrom ? { from: typedFrom } : {}),
-      ...(typedTo ? { to: typedTo } : {}),
-      ...(listFilters.debouncedSearch.trim() ? { search: listFilters.debouncedSearch.trim() } : {}),
-    }),
-    [
-      managedProductId,
-      typedType,
-      typedStatus,
-      typedLinked,
-      typedAssigneeId,
-      typedDuplicate,
-      typedFrom,
-      typedTo,
-      listFilters.debouncedSearch,
-    ],
-  );
-
   const handleOpenFocused = useCallback(
     (index: number) => {
       const row = rows[index];
@@ -233,8 +94,6 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
     },
     [rows, managedProductId, canOpenSubmissionDetail, requestLeave, router],
   );
-
-  const handleClearSelection = useCallback(() => setSelected(new Set()), []);
 
   const handleRouteToIntake = useCallback((row: SubmissionRow) => {
     const projectId = row.widget?.projectId;
@@ -265,13 +124,10 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
     enabled: true,
   });
 
-  const resolveSubmissionHref = useCallback((row: SubmissionRow): string | null => {
-    return resolveProductFeedbackSubmissionHref(
-      row,
-      managedProductId,
-      canOpenSubmissionDetail,
-    );
-  }, [canOpenSubmissionDetail, managedProductId]);
+  const resolveSubmissionHref = useCallback(
+    (row: SubmissionRow) => resolveProductFeedbackSubmissionHref(row, managedProductId, canOpenSubmissionDetail),
+    [canOpenSubmissionDetail, managedProductId],
+  );
 
   const handleRowClick = useCallback((row: SubmissionRow) => {
     const href = resolveSubmissionHref(row);
@@ -279,14 +135,13 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
     requestLeave(() => router.push(href));
   }, [resolveSubmissionHref, requestLeave, router]);
 
-  const resolveRowClassName = useCallback((row: SubmissionRow): string => {
-    return resolveSubmissionHref(row) === null ? "" : "cursor-pointer";
-  }, [resolveSubmissionHref]);
-
-  const renderMobileCard = useCallback(
-    (row: SubmissionRow) => <ProductFeedbackMobileCard row={row} />,
-    [],
+  const resolveRowClassName = useCallback(
+    (row: SubmissionRow): string =>
+      resolveSubmissionHref(row) === null ? "" : "cursor-pointer",
+    [resolveSubmissionHref],
   );
+
+  const renderMobileCard = useCallback((row: SubmissionRow) => <ProductFeedbackMobileCard row={row} />, []);
 
   const getSubmissionRowLabel = useCallback((row: SubmissionRow): string => row.message.slice(0, 80), []);
 

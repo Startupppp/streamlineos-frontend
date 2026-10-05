@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import type { ChangeEvent } from "react";
-import { DEFAULT_DISPLAY_OPTIONS } from "./display-options-panel";
+import { DEFAULT_DISPLAY_OPTIONS } from "./display-options-model";
 import { useBoardSavedViews } from "./use-board-saved-views";
 
 const replace = jest.fn();

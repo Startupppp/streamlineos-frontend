@@ -13,7 +13,7 @@ import {
 import { InlineGroupCreate } from "@/features/build/views/list-view-group-create";
 import { BulkActionBar } from "@/features/build/shared/bulk-action-bar";
 import { ProjectViewsToolbar } from "@/features/build/views/project-views-toolbar";
-import { DEFAULT_DISPLAY_OPTIONS } from "@/features/build/views/display-options-panel";
+import { DEFAULT_DISPLAY_OPTIONS } from "@/features/build/views/display-options-model";
 import { INITIAL_FILTERS } from "@/features/build/views/workload-types";
 
 jest.mock("@/hooks/api/access", () => ({

@@ -1,0 +1,180 @@
+"use client";
+
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import {
+  HEALTH_OPTIONS,
+  STATUS_OPTIONS,
+  type ProjectActiveFilters,
+} from "@/features/build/project-list/add-filter-popover";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { buildListSearchParams } from "@/features/build/shared/use-build-list-url-state";
+
+type ViewMode = "grid" | "list";
+const VIEW_MODES: readonly ViewMode[] = ["grid", "list"];
+
+export type { ViewMode };
+export { VIEW_MODES };
+
+export interface ProjectsPageUrlState {
+  createOpen: boolean;
+  handleCreateOpenChange: (open: boolean) => void;
+  handleOpenCreate: () => void;
+  localSearch: string;
+  debouncedSearch: string;
+  updateParams: (updates: Record<string, string | null>) => void;
+  viewMode: ViewMode;
+  activeFilters: ProjectActiveFilters;
+  filterManagerId: string | undefined;
+  filterProductId: string | null;
+  filterClientId: string | undefined;
+  filterHealth: (typeof HEALTH_OPTIONS)[number] | undefined;
+  handleSearchChange: (value: string) => void;
+  handleViewModeChange: (value: ViewMode) => void;
+  handleFiltersChange: (next: ProjectActiveFilters) => void;
+}
+
+export function useProjectsPage(): ProjectsPageUrlState {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [, startTransition] = useTransition();
+
+  const [manualCreateOpen, setManualCreateOpen] = useState(false);
+  const createFromUrl = searchParams.get("create") === "1";
+  const createOpen = createFromUrl || manualCreateOpen;
+
+  const handleCreateOpenChange = useCallback(
+    (open: boolean) => {
+      setManualCreateOpen(open);
+      if (!open && searchParams.get("create")) {
+        const params = new URLSearchParams(searchParams.toString());
+        params.delete("create");
+        const query = params.toString();
+        startTransition(() => {
+          router.replace(query ? `${pathname}?${query}` : pathname, {
+            scroll: false,
+          });
+        });
+      }
+    },
+    [searchParams, router, pathname],
+  );
+
+  const handleOpenCreate = useCallback(() => {
+    setManualCreateOpen(true);
+  }, []);
+
+  const updateParams = useCallback(
+    (updates: Record<string, string | null>) => {
+      const params = buildListSearchParams(searchParams, updates, {
+        resetCursor: true,
+      });
+      startTransition(() => {
+        const query = params.toString();
+        router.replace(query ? `${pathname}?${query}` : pathname, {
+          scroll: false,
+        });
+      });
+    },
+    [searchParams, router, pathname],
+  );
+
+  const urlSearch = searchParams.get("q") || "";
+  const [localSearch, setLocalSearch] = useState(() => urlSearch);
+  const lastPushedSearchRef = useRef<string>(urlSearch);
+
+  useEffect(() => {
+    if (urlSearch !== lastPushedSearchRef.current) {
+      setLocalSearch(urlSearch);
+      lastPushedSearchRef.current = urlSearch;
+    }
+  }, [urlSearch]);
+
+  const debouncedSearch = useDebouncedValue(localSearch, 300);
+
+  const updateParamsRef = useRef(updateParams);
+  useLayoutEffect(() => {
+    updateParamsRef.current = updateParams;
+  });
+
+  const isMountedRef = useRef(false);
+  useEffect(() => {
+    if (!isMountedRef.current) {
+      isMountedRef.current = true;
+      return;
+    }
+    lastPushedSearchRef.current = debouncedSearch;
+    updateParamsRef.current({ q: debouncedSearch || null });
+  }, [debouncedSearch]);
+
+  const viewMode =
+    VIEW_MODES.find((v) => v === searchParams.get("view")) ?? "list";
+  const filterStatus = STATUS_OPTIONS.find(
+    (s) => s === searchParams.get("filterStatus"),
+  );
+  const filterHealth = HEALTH_OPTIONS.find(
+    (h) => h === searchParams.get("filterHealth"),
+  );
+  const filterLead = searchParams.get("filterLead") ?? undefined;
+  const filterManagerId = searchParams.get("managerId") ?? filterLead;
+  const filterProductId = searchParams.get("productId");
+  const filterClientId = searchParams.get("clientId") ?? undefined;
+
+  const activeFilters: ProjectActiveFilters = useMemo(
+    () => ({
+      ...(filterStatus ? { status: filterStatus } : {}),
+      ...(filterHealth ? { health: filterHealth } : {}),
+      ...(filterManagerId ? { lead: filterManagerId } : {}),
+    }),
+    [filterStatus, filterHealth, filterManagerId],
+  );
+
+  const handleSearchChange = useCallback(
+    (value: string) => setLocalSearch(value),
+    [],
+  );
+
+  const handleViewModeChange = useCallback(
+    (value: ViewMode) =>
+      updateParams({ view: value === "list" ? null : value }),
+    [updateParams],
+  );
+
+  const handleFiltersChange = useCallback(
+    (next: ProjectActiveFilters) => {
+      updateParams({
+        filterStatus: next.status ?? null,
+        filterHealth: next.health ?? null,
+        filterLead: next.lead ?? null,
+      });
+    },
+    [updateParams],
+  );
+
+  return {
+    createOpen,
+    handleCreateOpenChange,
+    handleOpenCreate,
+    localSearch,
+    debouncedSearch,
+    updateParams,
+    viewMode,
+    activeFilters,
+    filterManagerId,
+    filterProductId,
+    filterClientId,
+    filterHealth,
+    handleSearchChange,
+    handleViewModeChange,
+    handleFiltersChange,
+  };
+}

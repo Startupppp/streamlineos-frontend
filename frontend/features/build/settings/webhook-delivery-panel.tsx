@@ -7,6 +7,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useWebhookDeliveries, useRetryDelivery } from "@/hooks/api/build/webhooks";
+import { useCan } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import type { WebhookDeliveryItem } from "@/hooks/api/build/webhook-lifecycle-schema";
 import { cn } from "@/lib/utils";
 
@@ -98,6 +100,7 @@ export function WebhookDeliveryPanel({
 }: WebhookDeliveryPanelProps) {
   const [cursor, setCursor] = useState<number | undefined>(undefined);
   const [cursorStack, setCursorStack] = useState<number[]>([]);
+  const canViewDeliveries = useCan("build:manage");
   const { data, isLoading } = useWebhookDeliveries(projectId, webhookId, expanded, cursor);
   const items = data?.items ?? [];
   const nextCursor = data?.nextCursor ?? null;
@@ -122,7 +125,9 @@ export function WebhookDeliveryPanel({
         <Clock className="h-3 w-3" />
         Recent Deliveries
       </p>
-      {isLoading ? (
+      {!canViewDeliveries ? (
+        <NoPermissionState permission="build:manage" compact />
+      ) : isLoading ? (
         <Skeleton className="h-24 w-full rounded-lg" />
       ) : items.length === 0 ? (
         <p className="text-xs text-muted-foreground py-4 text-center">

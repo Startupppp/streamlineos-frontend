@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { memo, useCallback } from "react";
 import { Settings2 } from "lucide-react";
@@ -25,163 +25,15 @@ import type {
   OrderByOption,
   CompletedIssuesFilter,
 } from "../shared/types";
-
-export const DEFAULT_DISPLAY_OPTIONS: DisplayOptions = {
-  columnBy: "status",
-  rowBy: "none",
-  groupBy: "status",
-  orderBy: "manual",
-  orderCompleteByRecency: false,
-  completedIssues: "all",
-  showSubIssues: false,
-  showEmptyGroups: true,
-  showEmptyColumns: true,
-  showEmptyRows: false,
-  showId: true,
-  showStatus: true,
-  showAssignee: true,
-  showPriority: true,
-  showEstimate: true,
-  showCycle: true,
-  showLabels: true,
-  showDescription: false,
-  showDueDate: true,
-  showProject: false,
-  showMilestone: false,
-  showLinks: false,
-  showTimeInStatus: false,
-  showCreated: false,
-  showUpdated: false,
-  showPRs: false,
-};
-
-const COLUMN_OPTIONS: { value: ColumnByOption; label: string }[] = [
-  { value: "status", label: "Status" },
-  { value: "assignee", label: "Assignee" },
-  { value: "priority", label: "Priority" },
-  { value: "label", label: "Label" },
-  { value: "cycle", label: "Cycle" },
-  { value: "project", label: "Project" },
-];
-
-const GROUP_OPTIONS: { value: GroupByOption; label: string }[] = [
-  { value: "none", label: "None" },
-  { value: "status", label: "Status" },
-  { value: "assignee", label: "Assignee" },
-  { value: "priority", label: "Priority" },
-  { value: "label", label: "Label" },
-  { value: "cycle", label: "Cycle" },
-  { value: "project", label: "Project" },
-];
-
-type PropertyKey = keyof Pick<
-  DisplayOptions,
-  | "showId"
-  | "showStatus"
-  | "showAssignee"
-  | "showPriority"
-  | "showEstimate"
-  | "showCycle"
-  | "showLabels"
-  | "showDescription"
-  | "showDueDate"
-  | "showProject"
-  | "showMilestone"
-  | "showLinks"
-  | "showTimeInStatus"
-  | "showCreated"
-  | "showUpdated"
-  | "showPRs"
->;
-
-const PROPERTY_CHIPS: { key: PropertyKey; label: string }[] = [
-  { key: "showId", label: "ID" },
-  { key: "showStatus", label: "Status" },
-  { key: "showAssignee", label: "Assignee" },
-  { key: "showPriority", label: "Priority" },
-  { key: "showProject", label: "Project" },
-  { key: "showDueDate", label: "Due date" },
-  { key: "showMilestone", label: "Milestone" },
-  { key: "showCycle", label: "Cycle" },
-  { key: "showEstimate", label: "Estimate" },
-  { key: "showLabels", label: "Labels" },
-  { key: "showDescription", label: "Description" },
-  { key: "showLinks", label: "Links" },
-  { key: "showTimeInStatus", label: "Time in status" },
-  { key: "showCreated", label: "Created" },
-  { key: "showUpdated", label: "Updated" },
-  { key: "showPRs", label: "PRs" },
-];
-
-const BOARD_PROPERTIES: PropertyKey[] = [
-  "showId",
-  "showPriority",
-  "showAssignee",
-  "showEstimate",
-  "showCycle",
-  "showLabels",
-  "showDescription",
-  "showDueDate",
-];
-
-const LIST_PROPERTIES: PropertyKey[] = [
-  "showId",
-  "showPriority",
-  "showAssignee",
-  "showEstimate",
-  "showLabels",
-  "showDueDate",
-];
-
-const TABLE_PROPERTIES: PropertyKey[] = [
-  "showId",
-  "showStatus",
-  "showPriority",
-  "showAssignee",
-  "showEstimate",
-  "showLabels",
-  "showDueDate",
-  "showCycle",
-];
-
-function propertyChipsForView(viewType: ViewType): { key: PropertyKey; label: string }[] {
-  const keys =
-    viewType === "board"
-      ? BOARD_PROPERTIES
-      : viewType === "list"
-        ? LIST_PROPERTIES
-        : viewType === "table"
-          ? TABLE_PROPERTIES
-          : [];
-  const keySet = new Set<PropertyKey>(keys);
-  return PROPERTY_CHIPS.filter((chip) => keySet.has(chip.key));
-}
-
-const ROW_OPTIONS: { value: SwimlaneBy; label: string }[] = [
-  { value: "none", label: "None" },
-  { value: "status", label: "Status" },
-  { value: "assignee", label: "Assignee" },
-  { value: "priority", label: "Priority" },
-  { value: "cycle", label: "Cycle" },
-];
-
-const ORDER_OPTIONS: { value: OrderByOption; label: string }[] = [
-  { value: "manual", label: "Manual" },
-  { value: "created", label: "Created" },
-  { value: "updated", label: "Updated" },
-  { value: "priority", label: "Priority" },
-  { value: "dueDate", label: "Due date" },
-];
-
-const COMPLETED_OPTIONS: { value: CompletedIssuesFilter; label: string }[] = [
-  { value: "all", label: "All" },
-  { value: "none", label: "None" },
-  { value: "last-day", label: "Last day" },
-  { value: "last-week", label: "Last week" },
-  { value: "last-month", label: "Last month" },
-];
-
-export type { DisplayOptions };
+import {
+  DEFAULT_DISPLAY_OPTIONS,
+  COLUMN_OPTIONS,
+  GROUP_OPTIONS,
+  ROW_OPTIONS,
+  ORDER_OPTIONS,
+  COMPLETED_OPTIONS,
+  propertyChipsForView,
+} from "./display-options-model";
 
 interface DisplayOptionsPanelProps {
   viewType: ViewType;

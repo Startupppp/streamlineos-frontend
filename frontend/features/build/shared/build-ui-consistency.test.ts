@@ -15,7 +15,7 @@ describe("Build UI consistency contracts", () => {
 
   it("uses the standard navigation type scale in project settings", () => {
     const source = readSource(
-      "features/build/settings/project-settings-page.tsx",
+      "features/build/settings/project-settings-section-panels.tsx",
     );
 
     expect(source).toContain("text-sm font-medium");

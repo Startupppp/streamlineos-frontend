@@ -1,4 +1,4 @@
-import { filterVisibleProjects } from "./projects-page";
+import { filterVisibleProjects } from "./project-list-shaping";
 import type { ProjectListItem } from "@/types/projects/projects";
 
 function makeProject(overrides: Partial<ProjectListItem>): ProjectListItem {

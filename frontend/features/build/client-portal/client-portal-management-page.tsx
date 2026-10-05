@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
-import { usePortalSettings, usePublishPortal, useUnpublishPortal, usePortalPreview } from "@/hooks/api/build/client-portal-management";
+import { usePortalSettings, usePublishPortal, useUnpublishPortal } from "@/hooks/api/build/client-portal-management";
 import { useProjectClientGrants } from "@/hooks/api/portal-access/grants";
 import { GrantRow } from "@/features/build/client-portal/grant-row";
 import { useCan } from "@/hooks/api/access";
@@ -11,14 +11,11 @@ import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
-import { TablePagination } from "@/components/ui/table-pagination";
 import {
   BUILD_FILTER_ALL,
   useBuildListFilters,
@@ -32,8 +29,9 @@ import {
 } from "@/components/pm-chrome";
 import { ClientVisibilityPage } from "@/features/build/client-portal/client-visibility-page";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { isApiError } from "@/lib/api-envelope";
-import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
+import { GrantsPager } from "./grants-pager";
+import { PublicationStateBanner } from "./publication-state-banner";
+import { PortalPreviewSection } from "./portal-preview-section";
 
 const PORTAL_TABS = ["grants", "visibility", "preview"] as const;
 type PortalTab = (typeof PORTAL_TABS)[number];
@@ -56,202 +54,6 @@ function filterValue(raw: string): string | undefined {
 }
 
 function noop() {}
-
-interface GrantsPagerProps {
-  cursor: string | null;
-  nextCursor: string | null;
-  hasMore: boolean;
-  isPending: boolean;
-  rowCount: number;
-  onCursorChange: (cursor: string | null) => void;
-}
-
-function GrantsPager({
-  cursor,
-  nextCursor,
-  hasMore,
-  isPending,
-  rowCount,
-  onCursorChange,
-}: GrantsPagerProps) {
-  const [trail, setTrail] = useState<string[]>(cursor ? [cursor] : []);
-
-  const handleNext = useCallback(() => {
-    if (!nextCursor) return;
-    setTrail([...trail, nextCursor]);
-    onCursorChange(nextCursor);
-  }, [nextCursor, onCursorChange, trail]);
-
-  const handlePrevious = useCallback(() => {
-    const next = trail.slice(0, -1);
-    setTrail(next);
-    onCursorChange(next.at(-1) ?? null);
-  }, [onCursorChange, trail]);
-
-  return (
-    <TablePagination
-      mode="cursor"
-      rowCount={rowCount}
-      pageNumber={trail.length + 1}
-      hasMore={hasMore && nextCursor !== null}
-      hasPrevious={trail.length > 0}
-      onPrevious={handlePrevious}
-      onNext={handleNext}
-      disabled={isPending}
-    />
-  );
-}
-
-interface PublicationStateBannerProps {
-  portalPublishedAt: string | null;
-  grantCount: number;
-  isPending: boolean;
-  canManage: boolean;
-  onPublish: () => void;
-  onUnpublish: () => void;
-}
-
-function PublicationStateBanner({
-  portalPublishedAt,
-  grantCount,
-  isPending,
-  canManage,
-  onPublish,
-  onUnpublish,
-}: PublicationStateBannerProps) {
-  const [confirmUnpublish, setConfirmUnpublish] = useState(false);
-  const isPublished = portalPublishedAt !== null;
-
-  function handleToggle(checked: boolean) {
-    if (checked) {
-      onPublish();
-    } else {
-      setConfirmUnpublish(true);
-    }
-  }
-
-  return (
-    <>
-      <div className="flex items-center justify-between rounded-lg border border-border bg-muted/40 px-4 py-3">
-        <div className="flex flex-col gap-0.5">
-          <span className="text-sm font-medium">
-            {isPublished ? "Portal published" : "Portal not published"}
-          </span>
-          <span className="text-xs text-muted-foreground">
-            {isPublished
-              ? `Published since ${new Date(portalPublishedAt).toLocaleDateString()}. ${grantCount} active ${grantCount === 1 ? "grant" : "grants"}.`
-              : "Clients with a grant cannot access the portal until it is published."}
-          </span>
-        </div>
-        <Switch
-          checked={isPublished}
-          onCheckedChange={handleToggle}
-          disabled={isPending || !canManage}
-          aria-label={isPublished ? "Unpublish client portal" : "Publish client portal"}
-        />
-      </div>
-      <ConfirmDialog
-        open={confirmUnpublish}
-        onOpenChange={setConfirmUnpublish}
-        title="Unpublish portal?"
-        description="Clients will lose access immediately. Grants are preserved and the portal can be republished."
-        confirmLabel="Unpublish"
-        onConfirm={onUnpublish}
-        destructive
-      />
-    </>
-  );
-}
-
-function PreviewSection({ projectId }: { projectId: number }) {
-  const { data, isLoading, isError, error } = usePortalPreview(projectId);
-
-  if (isLoading) {
-    return (
-      <div className="flex flex-col gap-2 p-4">
-        <Skeleton className="h-6 w-48" />
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-3/4" />
-      </div>
-    );
-  }
-
-  if (isError || !data) {
-    if (isApiError(error) && error.status === 404) {
-      return (
-        <EmptyState
-          illustrationPreset="projects"
-          title="No portal published yet"
-          description="Publish a grant to preview the client view."
-          compact
-          className={CONTENT_FILL_PANEL}
-        />
-      );
-    }
-    return (
-      <EmptyState
-        illustrationPreset="projects"
-        title="Preview unavailable"
-        description="Unable to load the client view of this project."
-        compact
-        className={CONTENT_FILL_PANEL}
-      />
-    );
-  }
-
-  const isEmpty =
-    data.milestones.length === 0 &&
-    data.tasks.length === 0 &&
-    data.attachments.length === 0 &&
-    data.comments.length === 0;
-
-  if (isEmpty) {
-    return (
-      <EmptyState
-        illustrationPreset="ticket"
-        title="Nothing visible to clients yet"
-        description="Toggle visibility on tickets and milestones to populate the client view."
-        compact
-        className={CONTENT_FILL_PANEL}
-      />
-    );
-  }
-
-  return (
-    <div className="flex flex-col gap-3 p-4">
-      {data.milestones.length > 0 && (
-        <div>
-          <p className="mb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            Milestones
-          </p>
-          <div className="flex flex-col gap-1">
-            {data.milestones.map((m) => (
-              <div key={m.id} className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-sm">
-                <span>{m.name}</span>
-                <Badge variant="outline" className="text-micro">{m.status}</Badge>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-      {data.tasks.length > 0 && (
-        <div>
-          <p className="mb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            Tasks
-          </p>
-          <div className="flex flex-col gap-1">
-            {data.tasks.map((t) => (
-              <div key={t.id} className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-sm">
-                <span>#{t.ticketNumber} {t.title}</span>
-                <Badge variant="outline" className="text-micro">{t.status}</Badge>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 
 interface ClientPortalManagementPageProps {
   projectId: number;
@@ -415,24 +217,22 @@ export function ClientPortalManagementPage({ projectId }: ClientPortalManagement
                   }
                 />
               ) : (
-                <>
-                  <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-                    <PmPanel className="min-h-0 flex-1 overflow-y-auto p-0">
-                      {grants.map((grant) => (
-                        <GrantRow key={grant.projectClientGrantId} grant={grant} />
-                      ))}
-                    </PmPanel>
-                    <GrantsPager
-                      key={listFilters.resetKey}
-                      cursor={listFilters.cursor}
-                      nextCursor={grantsPage?.pagination.nextCursor ?? null}
-                      hasMore={grantsPage?.pagination.hasMore ?? false}
-                      isPending={grantsLoading || listFilters.isPending}
-                      rowCount={grants.length}
-                      onCursorChange={listFilters.setCursor}
-                    />
-                  </div>
-                </>
+                <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                  <PmPanel className="min-h-0 flex-1 overflow-y-auto p-0">
+                    {grants.map((grant) => (
+                      <GrantRow key={grant.projectClientGrantId} grant={grant} />
+                    ))}
+                  </PmPanel>
+                  <GrantsPager
+                    key={listFilters.resetKey}
+                    cursor={listFilters.cursor}
+                    nextCursor={grantsPage?.pagination.nextCursor ?? null}
+                    hasMore={grantsPage?.pagination.hasMore ?? false}
+                    isPending={grantsLoading || listFilters.isPending}
+                    rowCount={grants.length}
+                    onCursorChange={listFilters.setCursor}
+                  />
+                </div>
               )}
             </TabsContent>
 
@@ -442,7 +242,7 @@ export function ClientPortalManagementPage({ projectId }: ClientPortalManagement
 
             <TabsContent value="preview" className="mt-0 flex min-h-0 flex-1 flex-col">
               <PmPanel className="flex min-h-0 flex-1 flex-col overflow-hidden p-0">
-                <PreviewSection projectId={projectId} />
+                <PortalPreviewSection projectId={projectId} />
               </PmPanel>
             </TabsContent>
           </Tabs>

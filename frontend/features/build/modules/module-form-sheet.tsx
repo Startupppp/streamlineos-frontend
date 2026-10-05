@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { useCreateModule } from "@/hooks/api/build/modules";
@@ -12,19 +12,6 @@ import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { FormSheetChrome } from "@/components/shared";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { DatePicker } from "@/components/ui/date-picker";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { ProjectMemberSelect } from "@/components/members/project-member-select";
-import { EmojiIconPicker } from "@/components/ui/emoji-icon-picker";
 import { formatModuleName } from "@/features/build/modules/lib/module-name";
 import {
   clearEndIfInvalid,
@@ -36,14 +23,16 @@ import {
   createModuleSchema,
   type CreateModuleForm,
   FORM_DEFAULTS,
-  MODULE_STATUSES,
-  DESC_MAX,
 } from "./create-module-schema";
 import {
   editModuleSchema,
   type EditModuleForm,
   EDIT_FORM_DEFAULTS,
 } from "./update-module-schema";
+import {
+  ModuleCreateFormFields,
+  ModuleEditFormFields,
+} from "./module-form-fields";
 
 interface BaseProps {
   projectId: number;
@@ -127,6 +116,7 @@ export function ModuleFormSheet(props: ModuleFormSheetProps) {
     },
     [isEdit, editForm, createForm],
   );
+
   const setEndDate = useCallback(
     (v: string) => {
       if (isEdit) editForm.setValue("endDate", v, { shouldValidate: true });
@@ -134,6 +124,7 @@ export function ModuleFormSheet(props: ModuleFormSheetProps) {
     },
     [isEdit, editForm, createForm],
   );
+
   const handleLeadChange = useCallback(
     (userId: string | null) => {
       if (isEdit) editForm.setValue("leadId", userId ?? undefined);
@@ -141,6 +132,7 @@ export function ModuleFormSheet(props: ModuleFormSheetProps) {
     },
     [isEdit, editForm, createForm],
   );
+
   const handleIconChange = useCallback(
     (icon: string | null) => {
       createForm.setValue("icon", icon ?? undefined, { shouldValidate: true });
@@ -231,9 +223,6 @@ export function ModuleFormSheet(props: ModuleFormSheetProps) {
   const activeLeadId = isEdit
     ? editForm.watch("leadId")
     : createForm.watch("leadId");
-  const activeStatus = isEdit
-    ? editForm.watch("status")
-    : createForm.watch("status");
 
   return (
     <FormSheetChrome
@@ -248,97 +237,19 @@ export function ModuleFormSheet(props: ModuleFormSheetProps) {
           onSubmit={editForm.handleSubmit(handleEditSubmit)}
           className="space-y-4"
         >
-          <div className="space-y-1.5">
-            <Label htmlFor="mod-edit-name">Name</Label>
-            <Input id="mod-edit-name" {...editForm.register("name")} />
-            {editForm.formState.errors.name && (
-              <p className="text-xs text-destructive mt-1">
-                {editForm.formState.errors.name.message}
-              </p>
-            )}
-          </div>
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="mod-edit-desc">Description</Label>
-              <span
-                className={`text-xs ${descValue.length > DESC_MAX ? "text-destructive" : "text-muted-foreground"}`}
-              >
-                {descValue.length}/{DESC_MAX}
-              </span>
-            </div>
-            <Textarea
-              id="mod-edit-desc"
-              rows={3}
-              {...editForm.register("description")}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Status</Label>
-            <Controller
-              control={editForm.control}
-              name="status"
-              render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {MODULE_STATUSES.map((s) => (
-                      <SelectItem key={s} value={s}>
-                        {s
-                          .replace(/-/g, " ")
-                          .replace(/\b\w/g, (c) => c.toUpperCase())}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="mod-edit-start">Start Date</Label>
-              <DatePicker
-                id="mod-edit-start"
-                value={startDateValue}
-                onChange={setStartDate}
-                placeholder="Start date"
-                fromDate={startBounds.fromDate}
-                fromYear={startBounds.fromYear}
-                toYear={startBounds.toYear}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="mod-edit-end">End Date</Label>
-              <DatePicker
-                id="mod-edit-end"
-                value={endDateValue}
-                onChange={setEndDate}
-                placeholder="End date"
-                fromDate={endBounds.fromDate}
-                fromYear={endBounds.fromYear}
-                toYear={endBounds.toYear}
-              />
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Lead</Label>
-            <Controller
-              control={editForm.control}
-              name="leadId"
-              render={() => (
-                <ProjectMemberSelect
-                  projectId={projectId}
-                  mode="single"
-                  value={activeLeadId}
-                  onChange={handleLeadChange}
-                  allowUnassigned
-                  placeholder="No lead"
-                  className="h-9 text-sm"
-                />
-              )}
-            />
-          </div>
+          <ModuleEditFormFields
+            form={editForm}
+            descValue={descValue}
+            startDateValue={startDateValue}
+            endDateValue={endDateValue}
+            startBounds={startBounds}
+            endBounds={endBounds}
+            setStartDate={setStartDate}
+            setEndDate={setEndDate}
+            handleLeadChange={handleLeadChange}
+            projectId={projectId}
+            activeLeadId={activeLeadId}
+          />
         </form>
       ) : (
         <form
@@ -346,114 +257,20 @@ export function ModuleFormSheet(props: ModuleFormSheetProps) {
           onSubmit={createForm.handleSubmit(handleCreateSubmit)}
           className="space-y-4"
         >
-          <div className="space-y-1.5">
-            <Label htmlFor="mod-create-name">Name</Label>
-            <div className="flex gap-2">
-              <Controller
-                control={createForm.control}
-                name="icon"
-                render={({ field }) => (
-                  <EmojiIconPicker
-                    id="mod-icon"
-                    icon={field.value}
-                    onIconChange={handleIconChange}
-                  />
-                )}
-              />
-              <Input
-                id="mod-create-name"
-                className="flex-1"
-                {...createForm.register("name")}
-              />
-            </div>
-            {createForm.formState.errors.name && (
-              <p className="text-xs text-destructive mt-1">
-                {createForm.formState.errors.name.message}
-              </p>
-            )}
-          </div>
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="mod-create-desc">Description</Label>
-              <span
-                className={`text-xs ${descValue.length > DESC_MAX ? "text-destructive" : "text-muted-foreground"}`}
-              >
-                {descValue.length}/{DESC_MAX}
-              </span>
-            </div>
-            <Textarea
-              id="mod-create-desc"
-              rows={3}
-              {...createForm.register("description")}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Status</Label>
-            <Controller
-              control={createForm.control}
-              name="status"
-              render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {MODULE_STATUSES.map((s) => (
-                      <SelectItem key={s} value={s}>
-                        {s
-                          .replace(/-/g, " ")
-                          .replace(/\b\w/g, (c) => c.toUpperCase())}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="mod-create-start">Start Date</Label>
-              <DatePicker
-                id="mod-create-start"
-                value={startDateValue}
-                onChange={setStartDate}
-                placeholder="Start date"
-                fromDate={startBounds.fromDate}
-                fromYear={startBounds.fromYear}
-                toYear={startBounds.toYear}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="mod-create-end">End Date</Label>
-              <DatePicker
-                id="mod-create-end"
-                value={endDateValue}
-                onChange={setEndDate}
-                placeholder="End date"
-                fromDate={endBounds.fromDate}
-                fromYear={endBounds.fromYear}
-                toYear={endBounds.toYear}
-              />
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Lead</Label>
-            <Controller
-              control={createForm.control}
-              name="leadId"
-              render={() => (
-                <ProjectMemberSelect
-                  projectId={projectId}
-                  mode="single"
-                  value={activeLeadId}
-                  onChange={handleLeadChange}
-                  allowUnassigned
-                  placeholder="No lead"
-                  className="h-9 text-sm"
-                />
-              )}
-            />
-          </div>
+          <ModuleCreateFormFields
+            form={createForm}
+            descValue={descValue}
+            startDateValue={startDateValue}
+            endDateValue={endDateValue}
+            startBounds={startBounds}
+            endBounds={endBounds}
+            setStartDate={setStartDate}
+            setEndDate={setEndDate}
+            handleLeadChange={handleLeadChange}
+            handleIconChange={handleIconChange}
+            projectId={projectId}
+            activeLeadId={activeLeadId}
+          />
         </form>
       )}
     </FormSheetChrome>

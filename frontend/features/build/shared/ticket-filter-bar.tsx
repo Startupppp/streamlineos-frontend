@@ -1,59 +1,12 @@
 "use client";
 
-import {
-  useMemo,
-  useState,
-  useCallback,
-  type ReactNode,
-  type RefObject,
-} from "react";
-import dynamic from "next/dynamic";
+import { type ReactNode, type RefObject } from "react";
 import { SearchInput } from "@/components/ui/search-input";
-import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { CircleCheckIcon, XIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { cn } from "@/lib/utils";
-import { getUserDisplayName } from "@/lib/person-display";
-import { useCycles } from "@/hooks/api/build/cycles";
-import { useProjectLabels } from "@/hooks/api/build/projects";
-import { FilterChip } from "@/components/list-view/filter-chip";
-import { FilterTriggerButton } from "@/components/list-view/filter-trigger-button";
-import type { StatusFilterOption } from "@/components/list-view/filter-types";
-import {
-  buildStatusConfig,
-  resolveStatusOptions,
-  type StatusOptionSource,
-} from "@/features/build/shared/types";
+import type { StatusOptionSource } from "@/features/build/shared/types";
 import { useTicketFilterParams } from "./use-ticket-filter-params";
-
-const FilterCommandMenu = dynamic(
-  () =>
-    import("./filter-command-menu").then((m) => ({
-      default: m.FilterCommandMenu,
-    })),
-  { ssr: false },
-);
-
-interface Member {
-  id: string;
-  name: string | null;
-  firstName: string | null;
-  lastName: string | null;
-  image?: string | null;
-  email?: string | null;
-}
-
-interface ProjectOption {
-  id: number;
-  name: string;
-  key: string;
-}
+import { TicketFilterActions } from "./ticket-filter-actions";
+import { TicketFilterChips, type Member, type ProjectOption } from "./ticket-filter-chips";
 
 interface TicketFilterBarProps {
   members?: Member[];
@@ -75,12 +28,6 @@ interface TicketFilterBarProps {
   presentation?: "default" | "all-work";
 }
 
-function formatDueRange(from: string, to: string): string {
-  if (from && to) return `${from} → ${to}`;
-  if (from) return `From ${from}`;
-  return `Until ${to}`;
-}
-
 export function TicketFilterBar({
   members,
   statuses,
@@ -100,100 +47,7 @@ export function TicketFilterBar({
   searchInputRef,
   presentation = "default",
 }: TicketFilterBarProps) {
-  const [filterMounted, setFilterMounted] = useState(false);
-  const handleFilterOpen = useCallback(() => setFilterMounted(true), []);
-
-  const { iconRef: hideDoneIconRef, hoverHandlers: hideDoneHoverHandlers } =
-    useAnimatedIcon();
-  const { iconRef: clearAllIconRef, hoverHandlers: clearAllHoverHandlers } =
-    useAnimatedIcon();
-
-  const {
-    dueDateFrom,
-    dueDateTo,
-    selectedStatuses,
-    selectedPriorities,
-    selectedTypes,
-    selectedAssignees,
-    selectedLabels,
-    selectedCycles,
-    selectedProjectIds,
-    localSearch,
-    activeFilterCount,
-    handleSearchChange,
-    handleToggleStatus,
-    handleTogglePriority,
-    handleToggleType,
-    handleToggleAssignee,
-    handleToggleLabel,
-    handleToggleCycle,
-    handleToggleProject,
-    handleDueDateFromChange,
-    handleDueDateToChange,
-    makeRemoveStatus,
-    makeRemovePriority,
-    makeRemoveType,
-    makeRemoveAssignee,
-    makeRemoveLabel,
-    makeRemoveCycle,
-    makeRemoveProject,
-    handleRemoveDueDate,
-    clearAll,
-  } = useTicketFilterParams();
-
-  const loadTaxonomyOptions =
-    filterMounted || selectedLabels.length > 0 || selectedCycles.length > 0;
-  const { data: cycles = [] } = useCycles(
-    loadTaxonomyOptions ? (projectId ?? 0) : 0,
-  );
-  const { data: labels = [] } = useProjectLabels(projectId, {
-    enabled: loadTaxonomyOptions,
-  });
-
-  const statusItems = useMemo<StatusFilterOption[]>(
-    () => resolveStatusOptions(statuses),
-    [statuses],
-  );
-
-  const statusConfig = useMemo(
-    () => buildStatusConfig(statusItems),
-    [statusItems],
-  );
-
-  const labelMap = useMemo(
-    () => new Map(labels.map((l) => [String(l.id), l])),
-    [labels],
-  );
-  const cycleMap = useMemo(
-    () => new Map(cycles.map((c) => [String(c.id), c])),
-    [cycles],
-  );
-  const memberMap = useMemo(
-    () => new Map((members ?? []).map((m) => [m.id, m])),
-    [members],
-  );
-  const projectMap = useMemo(
-    () => new Map((projectOptions ?? []).map((p) => [String(p.id), p])),
-    [projectOptions],
-  );
-
-  const filterState = {
-    selectedStatuses,
-    selectedPriorities,
-    selectedTypes,
-    selectedAssignees,
-    selectedLabels,
-    selectedCycles,
-    selectedProjectIds,
-    dueDateFrom,
-    dueDateTo,
-  };
-
-  function handleHideDoneClick() {
-    onHideCompletedChange?.(!hideCompleted);
-  }
-
-  const hasFilterChips = activeFilterCount > 0;
+  const { localSearch, handleSearchChange } = useTicketFilterParams();
 
   const searchField = (
     <div
@@ -219,83 +73,20 @@ export function TicketFilterBar({
     </div>
   );
 
-  const filterMenuProps = {
-    activeFilterCount,
-    presentation,
-    simplifySingleOptionCategories: true,
-    triggerLabel: presentation === "all-work" ? "Filters" : "Add filter",
-    statusItems,
-    statusConfig,
-    members: members ?? [],
-    labels,
-    cycles,
-    projectOptions,
-    showTypeFilter,
-    showAssigneeFilter,
-    filterState,
-    onToggleStatus: handleToggleStatus,
-    onTogglePriority: handleTogglePriority,
-    onToggleType: handleToggleType,
-    onToggleAssignee: handleToggleAssignee,
-    onToggleLabel: handleToggleLabel,
-    onToggleCycle: handleToggleCycle,
-    onToggleProject: handleToggleProject,
-    onDueDateFromChange: handleDueDateFromChange,
-    onDueDateToChange: handleDueDateToChange,
-  };
-
-  const filterActions = (
-    <>
-      {filterMounted ? (
-        <FilterCommandMenu {...filterMenuProps} defaultOpen />
-      ) : (
-        <FilterTriggerButton
-          activeFilterCount={activeFilterCount}
-          label={presentation === "all-work" ? "Filters" : "Add filter"}
-          onClick={handleFilterOpen}
-          className={cn(
-            presentation === "all-work" &&
-              "h-9 w-auto min-w-28 rounded-lg border-border/80 bg-muted/45 px-3 font-medium shadow-sm hover:border-primary/35 hover:bg-muted/70",
-          )}
-        />
-      )}
-
-      {showDoneToggle &&
-        onHideCompletedChange !== undefined &&
-        hideCompleted !== undefined && (
-          <TooltipProvider delayDuration={200}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={handleHideDoneClick}
-                  className={cn(
-                    "size-9 shrink-0",
-                    hideCompleted &&
-                      "border-primary bg-primary/10 text-primary",
-                  )}
-                  aria-label={
-                    doneCount > 0 ? `Hide done (${doneCount})` : "Hide done"
-                  }
-                  aria-pressed={hideCompleted}
-                  {...hideDoneHoverHandlers}
-                >
-                  <CircleCheckIcon
-                    ref={hideDoneIconRef}
-                    size={14}
-                    className={hideCompleted ? "text-primary" : undefined}
-                  />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-xs">
-                {doneCount > 0 ? `Hide done (${doneCount})` : "Hide done"}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
-    </>
+  const actions = (
+    <TicketFilterActions
+      presentation={presentation}
+      statuses={statuses}
+      members={members}
+      projectId={projectId}
+      projectOptions={projectOptions}
+      showTypeFilter={showTypeFilter}
+      showAssigneeFilter={showAssigneeFilter}
+      showDoneToggle={showDoneToggle}
+      hideCompleted={hideCompleted}
+      onHideCompletedChange={onHideCompletedChange}
+      doneCount={doneCount}
+    />
   );
 
   const toolbar = mobileSearchFirst ? (
@@ -320,7 +111,7 @@ export function TicketFilterBar({
           </div>
         ) : null}
         <div className="order-3 flex shrink-0 items-center gap-0.5 sm:gap-1">
-          {filterActions}
+          {actions}
           {trailing}
         </div>
       </div>
@@ -329,7 +120,11 @@ export function TicketFilterBar({
     <div
       className={cn(
         "flex w-full min-w-0 flex-wrap items-center gap-1 sm:gap-1.5",
-        leading ? "justify-between" : align === "end" ? "sm:justify-end" : "justify-start",
+        leading
+          ? "justify-between"
+          : align === "end"
+            ? "sm:justify-end"
+            : "justify-start",
       )}
     >
       {leading}
@@ -341,7 +136,7 @@ export function TicketFilterBar({
         )}
       >
         {searchField}
-        {filterActions}
+        {actions}
         {trailing}
       </div>
     </div>
@@ -350,101 +145,11 @@ export function TicketFilterBar({
   return (
     <div className={cn("flex w-full min-w-0 flex-col gap-1.5", className)}>
       {toolbar}
-
-      {hasFilterChips ? (
-        <div className="flex w-full min-w-0 items-center gap-1.5">
-          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1 [&>*]:shrink-0">
-            {selectedStatuses.map((s) => (
-              <FilterChip
-                key={`status-${s}`}
-                label={s.replace(/_/g, " ")}
-                onRemove={makeRemoveStatus(s)}
-              />
-            ))}
-            {selectedPriorities.map((p) => (
-              <FilterChip
-                key={`priority-${p}`}
-                label={p.charAt(0) + p.slice(1).toLowerCase()}
-                onRemove={makeRemovePriority(p)}
-              />
-            ))}
-            {selectedTypes.map((t) => (
-              <FilterChip
-                key={`type-${t}`}
-                label={t.charAt(0) + t.slice(1).toLowerCase()}
-                onRemove={makeRemoveType(t)}
-              />
-            ))}
-            {selectedAssignees.map((id) => {
-              const member = memberMap.get(id);
-              const label =
-                id === "@me"
-                  ? "Me"
-                  : id === "__unassigned__"
-                    ? "Unassigned"
-                    : member
-                      ? getUserDisplayName(member)
-                      : id;
-              return (
-                <FilterChip
-                  key={`assignee-${id}`}
-                  label={label}
-                  onRemove={makeRemoveAssignee(id)}
-                />
-              );
-            })}
-            {selectedLabels.map((id) => {
-              const l = labelMap.get(id);
-              return (
-                <FilterChip
-                  key={`label-${id}`}
-                  label={l?.name ?? id}
-                  color={l?.color ?? undefined}
-                  onRemove={makeRemoveLabel(id)}
-                />
-              );
-            })}
-            {selectedCycles.map((id) => {
-              const c = cycleMap.get(id);
-              return (
-                <FilterChip
-                  key={`cycle-${id}`}
-                  label={c?.name ?? id}
-                  onRemove={makeRemoveCycle(id)}
-                />
-              );
-            })}
-            {selectedProjectIds.map((id) => {
-              const p = projectMap.get(id);
-              return (
-                <FilterChip
-                  key={`project-${id}`}
-                  label={p?.name ?? id}
-                  onRemove={makeRemoveProject(id)}
-                />
-              );
-            })}
-            {dueDateFrom || dueDateTo ? (
-              <FilterChip
-                key="due-date"
-                label={formatDueRange(dueDateFrom, dueDateTo)}
-                onRemove={handleRemoveDueDate}
-              />
-            ) : null}
-          </div>
-
-          <button
-            type="button"
-            onClick={clearAll}
-            className="inline-flex h-6 shrink-0 items-center gap-1 rounded-md px-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
-            aria-label="Clear all filters"
-            {...clearAllHoverHandlers}
-          >
-            <XIcon ref={clearAllIconRef} size={12} className="shrink-0" />
-            <span>Clear</span>
-          </button>
-        </div>
-      ) : null}
+      <TicketFilterChips
+        members={members}
+        projectId={projectId}
+        projectOptions={projectOptions}
+      />
     </div>
   );
 }

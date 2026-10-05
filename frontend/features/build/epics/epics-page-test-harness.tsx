@@ -7,6 +7,9 @@ jest.mock("@/hooks/api/build/ticket-update-mutation", () => ({ useUpdateTicket: 
 jest.mock("@/hooks/api/build/ticket-create-rank-mutations", () => ({
   useDeleteTicket: jest.fn(),
   useCreateTicket: jest.fn(),
+}));
+
+jest.mock("@/hooks/api/build/ticket-bulk-update-mutation", () => ({
   useBulkUpdateTickets: jest.fn(),
 }));
 

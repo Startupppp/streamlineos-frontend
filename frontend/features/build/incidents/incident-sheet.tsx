@@ -1,74 +1,39 @@
-﻿"use client";
+"use client";
 
 import { useEffect } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { incidentFormSchema, type IncidentFormValues } from "@/features/build/incidents/incident-schema";
-import { Sheet, SheetBody, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import dynamic from "next/dynamic";
-const TiptapEditor = dynamic(
-  () => import("@/components/editor/tiptap-editor").then((m) => ({ default: m.TiptapEditor })),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="rounded-md border border-input bg-background animate-pulse min-h-[120px]" />
-    ),
-  },
-);
 import { useCreateIncident, useUpdateIncident } from "@/hooks/api/build/incidents";
 import { useProject } from "@/hooks/api/build/projects";
 import { useReleases } from "@/hooks/api/build/releases";
-import { ProjectMemberSelect } from "@/components/members/project-member-select";
-import { TicketCombobox } from "@/features/build/shared/ticket-combobox";
-import { IncidentInputField, IncidentTextareaField } from "./incident-form-helpers";
 import type {
   IncidentsCreateIncidentResponse,
   IncidentsGetIncidentResponse,
 } from "@/contracts/build-contracts.generated";
-import type { IncidentSeverity, IncidentStatus } from "@/hooks/api/build/incidents-schema";
-
-const SEVERITIES: IncidentSeverity[] = ["critical", "high", "medium", "low"];
-const STATUSES: IncidentStatus[] = ["detected", "investigating", "mitigating", "resolved", "postmortem", "closed"];
-const NO_RELEASE = "none";
-const STATUS_LABELS: Record<IncidentStatus, string> = {
-  detected: "Detected",
-  investigating: "Investigating",
-  mitigating: "Mitigating",
-  resolved: "Resolved",
-  postmortem: "Post-mortem",
-  closed: "Closed",
-};
-
-const DEFAULT_VALUES: IncidentFormValues = {
-  title: "",
-  description: "",
-  severity: "medium",
-  status: "detected",
-  impact: "",
-  ownerId: "",
-  rootCause: "",
-  customerComms: "",
-  detectedAt: "",
-  responseDueAt: "",
-  resolutionDueAt: "",
-  linkedTicketId: "",
-  releaseId: "",
-  followUpWaiverReason: "",
-};
-
-function toLocalDt(iso: string | null): string {
-  if (!iso) return "";
-  return iso.slice(0, 16);
-}
+import {
+  SEVERITIES,
+  STATUSES,
+  NO_RELEASE,
+  DEFAULT_VALUES,
+  toLocalDt,
+} from "./incident-sheet-constants";
+import { IncidentSheetFields } from "./incident-sheet-fields";
 
 interface IncidentSheetProps {
   projectId: number;
@@ -205,225 +170,14 @@ export function IncidentSheet({ projectId, open, onOpenChange, editIncident }: I
             onSubmit={form.handleSubmit(handleSubmit)}
             className="flex flex-col flex-1 min-h-0"
           >
-            <SheetBody className="px-5 py-4 space-y-4">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Title <span className="text-destructive">*</span></FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="Short incident summary"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <TiptapEditor
-                        content={field.value}
-                        output="html"
-                        onChangeHtml={field.onChange}
-                        placeholder="What happened?"
-                        minHeightClassName="min-h-[80px]"
-                        menuMode="static"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="severity"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Severity</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {SEVERITIES.map((s) => (
-                            <SelectItem key={s} value={s} className="capitalize">
-                              {s}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {STATUSES.map((s) => (
-                            <SelectItem key={s} value={s}>
-                              {STATUS_LABELS[s]}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <IncidentInputField
-                control={form.control}
-                name="impact"
-                label="Impact"
-                placeholder="Who / what is affected?"
-              />
-
-              <IncidentTextareaField
-                control={form.control}
-                name="rootCause"
-                label="Root cause"
-                placeholder="What caused the incident?"
-              />
-
-              <IncidentTextareaField
-                control={form.control}
-                name="customerComms"
-                label="Customer communication"
-                placeholder="What has been communicated?"
-              />
-
-              <FormField
-                control={form.control}
-                name="ownerId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Owner</FormLabel>
-                    <ProjectMemberSelect
-                      projectId={projectId}
-                      mode="single"
-                      value={field.value}
-                      onChange={(v) => field.onChange(v ?? "")}
-                      allowUnassigned
-                      placeholder="Unassigned"
-                    />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid gap-4">
-                <IncidentInputField
-                  control={form.control}
-                  name="detectedAt"
-                  label="Detected at"
-                  type="datetime-local"
-                />
-                <IncidentInputField
-                  control={form.control}
-                  name="responseDueAt"
-                  label="Response due"
-                  type="datetime-local"
-                />
-                <IncidentInputField
-                  control={form.control}
-                  name="resolutionDueAt"
-                  label="Resolution due"
-                  type="datetime-local"
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="linkedTicketId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Linked Ticket</FormLabel>
-                    <FormControl>
-                      <TicketCombobox
-                        projectId={projectId}
-                        projectKey={projectKey}
-                        value={field.value}
-                        onChange={field.onChange}
-                        placeholder="Link a ticket…"
-                        allowClear
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="releaseId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Affected release</FormLabel>
-                    <Select value={field.value || NO_RELEASE} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="No release" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value={NO_RELEASE}>No release</SelectItem>
-                        {releases.map((release) => (
-                          <SelectItem key={release.id} value={String(release.id)}>
-                            {release.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {editIncident &&
-              "followUpActions" in editIncident &&
-              selectedStatus === "closed" &&
-              editIncident.followUpActions.some(
-                (action) => action.status === "open" || action.status === "in_progress",
-              ) ? (
-                <FormField
-                  control={form.control}
-                  name="followUpWaiverReason"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Closure waiver</FormLabel>
-                      <FormControl>
-                        <Textarea {...field} className="min-h-[72px] resize-none" placeholder="Why can unresolved follow-ups be waived?" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              ) : null}
-            </SheetBody>
+            <IncidentSheetFields
+              control={form.control}
+              projectId={projectId}
+              projectKey={projectKey}
+              releases={releases}
+              editIncident={editIncident}
+              selectedStatus={selectedStatus}
+            />
 
             <SheetFooter className="px-5 py-3 border-t shrink-0">
               <div className="grid w-full grid-cols-2 gap-2">

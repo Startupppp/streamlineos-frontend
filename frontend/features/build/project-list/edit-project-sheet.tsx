@@ -1,11 +1,10 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { Users } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -14,26 +13,9 @@ import {
   SheetFooter,
   SheetBody,
 } from "@/components/ui/sheet";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { DatePicker } from "@/components/ui/date-picker";
 import { toast } from "sonner";
 import {
   clearEndIfInvalid,
@@ -42,9 +24,7 @@ import {
 } from "@/lib/date-constraints";
 import { useUpdateProject } from "@/hooks/api/build/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { MemberPicker } from "@/components/members/member-picker";
 import {
-  MembersSelector,
   ReassignDialog,
 } from "@/features/build/settings/project-member-selector";
 import {
@@ -54,6 +34,7 @@ import {
   type EditProjectFormValues,
 } from "./edit-project-schema";
 import type { ProjectListItem } from "@/types/projects/projects";
+import { EditProjectFormFields } from "./edit-project-form-fields";
 
 function toDateString(value: string | Date | null | undefined): string {
   if (!value) return "";
@@ -218,174 +199,15 @@ export function EditProjectSheet({
               className="flex flex-col flex-1 min-h-0"
             >
               <SheetBody className="px-6 py-4 space-y-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Project Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g. Website Redesign" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                <EditProjectFormFields
+                  form={form}
+                  handleStartDateChange={handleStartDateChange}
+                  handleMemberRemoved={handleMemberRemoved}
+                  handleMemberIdsChange={handleMemberIdsChange}
+                  originalMemberIds={originalMemberIds}
+                  startPickerBounds={startPickerBounds}
+                  endPickerBounds={endPickerBounds}
                 />
-
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="What is this project about?"
-                          className="resize-none"
-                          rows={3}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="ACTIVE">Active</SelectItem>
-                          <SelectItem value="COMPLETED">Completed</SelectItem>
-                          <SelectItem value="ARCHIVED">Archived</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="priority"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Priority</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value ?? ""}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="No priority" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="URGENT">Urgent</SelectItem>
-                          <SelectItem value="HIGH">High</SelectItem>
-                          <SelectItem value="MEDIUM">Medium</SelectItem>
-                          <SelectItem value="LOW">Low</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="managerId"
-                  render={({ field }) => {
-                    function handleManagerChange(userId: string | null) {
-                      field.onChange(userId ?? undefined);
-                    }
-
-                    return (
-                      <FormItem>
-                        <FormLabel>Project Lead</FormLabel>
-                        <FormControl>
-                          <MemberPicker
-                            value={field.value}
-                            onChange={handleManagerChange}
-                            allowUnassigned
-                            placeholder="Unassigned"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    );
-                  }}
-                />
-
-                <div className="grid grid-cols-2 gap-3">
-                  <FormField
-                    control={form.control}
-                    name="startDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Start Date</FormLabel>
-                        <FormControl>
-                          <DatePicker
-                            value={field.value}
-                            onChange={handleStartDateChange}
-                            placeholder="Start date"
-                            dateFormat="dd/MM/yyyy"
-                            fromDate={startPickerBounds.fromDate}
-                            fromYear={startPickerBounds.fromYear}
-                            toYear={startPickerBounds.toYear}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="endDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Target Date</FormLabel>
-                        <FormControl>
-                          <DatePicker
-                            value={field.value}
-                            onChange={field.onChange}
-                            placeholder="Target date"
-                            dateFormat="dd/MM/yyyy"
-                            fromDate={endPickerBounds.fromDate}
-                            fromYear={endPickerBounds.fromYear}
-                            toYear={endPickerBounds.toYear}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="space-y-2 pt-1">
-                  <div className="flex items-center gap-2 text-sm font-medium">
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                    Team Members
-                  </div>
-                  <MembersSelector
-                    memberIds={form.watch("memberIds") ?? []}
-                    onMemberIdsChange={handleMemberIdsChange}
-                    originalMemberIds={originalMemberIds}
-                    onMemberRemoved={handleMemberRemoved}
-                  />
-                </div>
               </SheetBody>
 
               <SheetFooter className="border-t px-6 py-4 gap-2">

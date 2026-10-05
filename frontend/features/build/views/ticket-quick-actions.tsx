@@ -15,7 +15,8 @@ import {
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
-import { useDeleteTicket, useBulkUpdateTickets } from "@/hooks/api/build/ticket-create-rank-mutations";
+import { useDeleteTicket } from "@/hooks/api/build/ticket-create-rank-mutations";
+import { useBulkUpdateTickets } from "@/hooks/api/build/ticket-bulk-update-mutation";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { formatTicketKey, getTicketDetailHref } from "@/components/shared/format-ticket-key";
 

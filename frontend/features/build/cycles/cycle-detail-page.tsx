@@ -14,10 +14,8 @@ import {
   parseViewType,
   type ViewType,
 } from "@/features/build/views/view-switcher";
-import {
-  DisplayOptionsPanel,
-  DEFAULT_DISPLAY_OPTIONS,
-} from "@/features/build/views/display-options-panel";
+import { DisplayOptionsPanel } from "@/features/build/views/display-options-panel";
+import { DEFAULT_DISPLAY_OPTIONS } from "@/features/build/views/display-options-model";
 import type {
   DisplayOptions,
   KanbanTicket,

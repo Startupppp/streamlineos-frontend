@@ -11,7 +11,7 @@ import {
   setParams,
 } from "./use-board-url-state-test-harness";
 import { useBoardUrlState } from "./use-board-url-state";
-import { DEFAULT_DISPLAY_OPTIONS } from "./display-options-panel";
+import { DEFAULT_DISPLAY_OPTIONS } from "./display-options-model";
 
 beforeEach(installBoardUrlStateMocks);
 

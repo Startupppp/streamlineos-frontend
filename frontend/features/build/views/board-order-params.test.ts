@@ -4,7 +4,7 @@ import {
   readOrderBy,
   writeDisplayOptionParams,
 } from "./use-display-options";
-import { DEFAULT_DISPLAY_OPTIONS } from "./display-options-panel";
+import { DEFAULT_DISPLAY_OPTIONS } from "./display-options-model";
 import { parseBoardOrderBy, parseBoardOrderDir } from "./board-filter-params";
 
 describe("one orderBy key, two spellings of the same order", () => {

@@ -5,8 +5,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { downloadTextFile } from "@/features/build/import-export/download-text-file";
 import { toBulkPriority } from "@/features/build/shared/bulk-priority";
-import type { BulkUpdateTicketsInput } from "@/hooks/api/build/ticket-create-rank-mutations";
-import type { useBulkUpdateTickets } from "@/hooks/api/build/ticket-create-rank-mutations";
+import type { BulkUpdateTicketsInput, useBulkUpdateTickets } from "@/hooks/api/build/ticket-bulk-update-mutation";
 import type { useExportTickets } from "@/hooks/api/build/ticket-import-export";
 
 type BulkUpdateMutation = ReturnType<typeof useBulkUpdateTickets>;

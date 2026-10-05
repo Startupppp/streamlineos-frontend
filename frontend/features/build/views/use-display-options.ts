@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { orgScopedStorageKey, useOrgStorageScope } from "@/lib/org-scoped-storage";
-import { DEFAULT_DISPLAY_OPTIONS } from "./display-options-panel";
+import { DEFAULT_DISPLAY_OPTIONS } from "./display-options-model";
 import type {
   ColumnByOption,
   CompletedIssuesFilter,

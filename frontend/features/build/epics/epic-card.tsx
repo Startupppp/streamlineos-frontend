@@ -1,25 +1,18 @@
-﻿"use client";
+"use client";
 
 import { memo, useCallback, useMemo, useState } from "react";
-import type { MouseEvent, KeyboardEvent, ChangeEvent } from "react";
+import type { MouseEvent, KeyboardEvent } from "react";
 import {
   Layers,
   Pencil,
   Trash2,
-  Link2,
 } from "lucide-react";
-import { EllipsisIcon, ChevronDownIcon, ChevronRightIcon, PlusIcon } from "@animateicons/react/lucide";
+import { EllipsisIcon, ChevronDownIcon, ChevronRightIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import {
-  ResponsivePopover,
-  ResponsivePopoverContent,
-  ResponsivePopoverTrigger,
-} from "@/components/ui/responsive-popover";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,26 +20,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { EditEpicDialog } from "./edit-epic-dialog";
-import { EpicStoryRow } from "./epic-story-row";
-import { EmptyState } from "@/components/ui/empty-state";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { getColorSafe, priorityColors } from "@/lib/theme-constants";
 import type { ProjectStatusRecord, Ticket } from "@/types/projects";
 import { PM_PANEL } from "@/components/pm-chrome";
-import { getCompletedStatusNames } from "@/features/build/shared/completed-status";
 import { TEXT_TWO_LINES } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useCan } from "@/hooks/api/access";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
-function formatStatusName(name: string): string {
-  const words = name.toLowerCase().split(/[_\s]+/).filter(Boolean);
-  const first = words[0];
-  if (!first) return name;
-  return [first.charAt(0).toUpperCase() + first.slice(1), ...words.slice(1)].join(" ");
-}
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { format, parseISO, isValid } from "date-fns";
+import { computeEpicRollup, formatStatusName } from "./epic-card-model";
+import { EpicProgressBar, EpicStoriesPanel } from "./epic-card-parts";
 
 export interface EpicCardProps {
   epic: {
@@ -81,61 +66,6 @@ export interface EpicCardProps {
   isDeleting?: boolean;
 }
 
-export function computeEpicRollup(
-  children: Ticket[],
-  projectStatuses: ProjectStatusRecord[] | undefined,
-): {
-  totalItems: number;
-  completedItems: number;
-  inProgressItems: number;
-  todoItems: number;
-  totalPoints: number;
-  completedPoints: number;
-} {
-  const completedNames = getCompletedStatusNames(projectStatuses);
-  const hasConfiguredStatuses = projectStatuses != null && projectStatuses.length > 0;
-  const startedNames: Set<string> = hasConfiguredStatuses
-    ? new Set(projectStatuses.filter((s) => s.type === "started").map((s) => s.name))
-    : new Set(["IN_PROGRESS", "IN_REVIEW"]);
-
-  let done = 0, inProgress = 0, totalPts = 0, completedPts = 0;
-  for (const child of children) {
-    const pts = child.points ?? 0;
-    totalPts += pts;
-    if (completedNames.has(child.status)) {
-      done++;
-      completedPts += pts;
-    } else if (startedNames.has(child.status)) {
-      inProgress++;
-    }
-  }
-  return {
-    totalItems: children.length,
-    completedItems: done,
-    inProgressItems: inProgress,
-    todoItems: children.length - done - inProgress,
-    totalPoints: totalPts,
-    completedPoints: completedPts,
-  };
-}
-
-export interface LinkStoryItemProps {
-  story: { id: number; title: string };
-  onSelect: (id: number) => void;
-}
-
-export const LinkStoryItem = memo(function LinkStoryItem({ story, onSelect }: LinkStoryItemProps) {
-  const handleClick = useCallback(() => onSelect(story.id), [onSelect, story.id]);
-  return (
-    <button
-      onClick={handleClick}
-      className="w-full min-w-0 rounded-md p-2 text-left text-xs transition-colors hover:bg-primary/[0.06]"
-    >
-      <TruncatedText text={story.title} />
-    </button>
-  );
-});
-
 export const EpicCard = memo(function EpicCard({ epic, stories, dependencyCount, projectId, projectKey, projectStatuses, unlinkedStories, onDeleteEpic, onLinkStory, onCreateStory, isDeleting }: EpicCardProps) {
   const canCreate = useCan("build:tickets:create");
   const canUpdate = useCan("build:tickets:update");
@@ -143,13 +73,10 @@ export const EpicCard = memo(function EpicCard({ epic, stories, dependencyCount,
   const canDeleteEpic = canDelete && (stories.length === 0 || canUpdate);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
-  const [newStoryTitle, setNewStoryTitle] = useState("");
-  const [linkOpen, setLinkOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
   const { iconRef: actionsIconRef, hoverHandlers: actionsHoverHandlers } = useAnimatedIcon();
   const { iconRef: expandIconRef, hoverHandlers: expandHoverHandlers } = useAnimatedIcon();
-  const { iconRef: addIconRef, hoverHandlers: addHoverHandlers } = useAnimatedIcon();
 
   const { totalItems, completedItems, inProgressItems, todoItems, totalPoints, completedPoints } = useMemo(
     () => computeEpicRollup(stories, projectStatuses),
@@ -166,7 +93,7 @@ export const EpicCard = memo(function EpicCard({ epic, stories, dependencyCount,
     setActionsOpen(true);
   }, [canDeleteEpic, canUpdate]);
 
-  const handleStopPropagation = useCallback((e: MouseEvent | React.KeyboardEvent) => {
+  const handleStopPropagation = useCallback((e: MouseEvent | KeyboardEvent) => {
     e.stopPropagation();
   }, []);
 
@@ -178,37 +105,6 @@ export const EpicCard = memo(function EpicCard({ epic, stories, dependencyCount,
       setIsExpanded(prev => !prev);
     }
   }, []);
-
-  const handleEpicLinkStory = useCallback((storyId: number) => {
-    onLinkStory(storyId, epic.id);
-  }, [onLinkStory, epic.id]);
-
-  const handleEpicCreateStory = useCallback((title: string) => {
-    onCreateStory(title, epic.id);
-  }, [onCreateStory, epic.id]);
-
-  const handleSelectLink = useCallback((storyId: number) => {
-    handleEpicLinkStory(storyId);
-    setLinkOpen(false);
-  }, [handleEpicLinkStory]);
-
-  const handleTitleChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    setNewStoryTitle(e.target.value);
-  }, []);
-
-  const handleTitleKeyDown = useCallback((e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && newStoryTitle.trim()) {
-      handleEpicCreateStory(newStoryTitle.trim());
-      setNewStoryTitle("");
-    }
-  }, [newStoryTitle, handleEpicCreateStory]);
-
-  const handleAddStory = useCallback(() => {
-    if (newStoryTitle.trim()) {
-      handleEpicCreateStory(newStoryTitle.trim());
-      setNewStoryTitle("");
-    }
-  }, [newStoryTitle, handleEpicCreateStory]);
 
   const handleEditMenuSelect = useCallback(() => {
     setEditOpen(true);
@@ -280,25 +176,27 @@ export const EpicCard = memo(function EpicCard({ epic, stories, dependencyCount,
                   onOpenChange={setEditOpen}
                 />
               )}
-              {(canUpdate || canDeleteEpic) && <DropdownMenu open={actionsOpen} onOpenChange={setActionsOpen}>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="More actions" {...actionsHoverHandlers}>
-                    <EllipsisIcon ref={actionsIconRef} size={14} />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {canUpdate && (
-                    <DropdownMenuItem onSelect={handleEditMenuSelect}>
-                      <Pencil className="mr-2 h-3.5 w-3.5" /> Edit
-                    </DropdownMenuItem>
-                  )}
-                  {canDeleteEpic && (
-                    <DropdownMenuItem variant="destructive" onSelect={handleDeleteMenuSelect}>
-                      <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>}
+              {(canUpdate || canDeleteEpic) && (
+                <DropdownMenu open={actionsOpen} onOpenChange={setActionsOpen}>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="More actions" {...actionsHoverHandlers}>
+                      <EllipsisIcon ref={actionsIconRef} size={14} />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {canUpdate && (
+                      <DropdownMenuItem onSelect={handleEditMenuSelect}>
+                        <Pencil className="mr-2 h-3.5 w-3.5" /> Edit
+                      </DropdownMenuItem>
+                    )}
+                    {canDeleteEpic && (
+                      <DropdownMenuItem variant="destructive" onSelect={handleDeleteMenuSelect}>
+                        <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </div>
           </div>
 
@@ -328,116 +226,31 @@ export const EpicCard = memo(function EpicCard({ epic, stories, dependencyCount,
             ) : null}
           </div>
 
-          <div className="ml-7 mt-2 space-y-1">
-            <div className="flex items-center justify-between gap-2 text-micro tabular-nums text-muted-foreground">
-              <span className="min-w-0 truncate">
-                {completedItems} of {totalItems} items
-              </span>
-              <span className="shrink-0">
-                {completedPoints} / {totalPoints} pts
-              </span>
-            </div>
-            <div
-              className="flex h-1 w-full overflow-hidden rounded-full bg-muted/80"
-              role="progressbar"
-              aria-valuenow={totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-label={`Epic progress: ${completedItems} of ${totalItems} items completed`}
-              aria-valuetext={`${totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0}% complete`}
-            >
-              {totalItems > 0 ? (
-                <>
-                  <div
-                    className="h-full bg-status-success-fill transition-[width] duration-300"
-                    style={{ width: `${(completedItems / totalItems) * 100}%` }}
-                  />
-                  <div
-                    className="h-full bg-primary/70 transition-[width] duration-300"
-                    style={{ width: `${(inProgressItems / totalItems) * 100}%` }}
-                  />
-                  <div
-                    className="h-full bg-muted-foreground/20 transition-[width] duration-300"
-                    style={{ width: `${(todoItems / totalItems) * 100}%` }}
-                  />
-                </>
-              ) : null}
-            </div>
-            {totalItems > 0 ? (
-              <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-micro text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-status-success-fill" /> Done ({completedItems})
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-primary/70" /> In Progress ({inProgressItems})
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/30" /> To Do ({todoItems})
-                </span>
-              </div>
-            ) : null}
-          </div>
+          <EpicProgressBar
+            completedItems={completedItems}
+            inProgressItems={inProgressItems}
+            todoItems={todoItems}
+            totalItems={totalItems}
+            completedPoints={completedPoints}
+            totalPoints={totalPoints}
+          />
         </CardHeader>
 
         {isExpanded ? (
-          <CardContent
-            className="border-t border-border/50 px-3 pb-2.5 pt-2"
-            id={epicCardId}
-            role="region"
-            aria-label={`Stories for ${epic.title}`}
-          >
-            <div className="ml-6 space-y-1 border-l border-border/60 pl-2.5">
-              {stories.map((story) => (
-                <EpicStoryRow
-                  key={story.id}
-                  story={story}
-                  projectId={projectId}
-                  projectKey={projectKey}
-                  projectStatuses={projectStatuses}
-                />
-              ))}
-
-              {stories.length === 0 ? (
-                <EmptyState compact title="No stories linked yet" className="border-0 bg-transparent py-2.5" />
-              ) : null}
-
-              {(canCreate || canUpdate) && <div className="flex min-w-0 flex-wrap gap-1.5 pt-1">
-                {canCreate && (
-                  <>
-                <Input
-                  value={newStoryTitle}
-                  onChange={handleTitleChange}
-                  placeholder="New story title..."
-                  aria-label={`Add new story to ${epic.title}`}
-                  className="min-w-0 flex-1 border-border/70 bg-background/60 text-xs backdrop-blur-sm"
-                  onKeyDown={handleTitleKeyDown}
-                />
-                <Button size="sm" className="px-2.5 text-xs" onClick={handleAddStory} disabled={!newStoryTitle.trim()} {...addHoverHandlers}>
-                  <PlusIcon ref={addIconRef} size={14} className="mr-1" />
-                  Add
-                </Button>
-                  </>
-                )}
-                {canUpdate && unlinkedStories.length > 0 ? (
-                  <ResponsivePopover open={linkOpen} onOpenChange={setLinkOpen}>
-                    <ResponsivePopoverTrigger asChild>
-                      <Button variant="outline" size="sm" className=" border-border/70 bg-background/60 px-2.5 text-xs backdrop-blur-sm">
-                        <Link2 className="mr-1 h-3.5 w-3.5" />
-                        Link
-                      </Button>
-                    </ResponsivePopoverTrigger>
-                    <ResponsivePopoverContent title="Link story" className="w-72 p-1.5" align="end">
-                      <div className="max-h-48 space-y-0.5 overflow-y-auto">
-                        {unlinkedStories.map((s) => (
-                          <LinkStoryItem key={s.id} story={s} onSelect={handleSelectLink} />
-                        ))}
-                      </div>
-                    </ResponsivePopoverContent>
-                  </ResponsivePopover>
-                ) : null}
-              </div>}
-            </div>
-          </CardContent>
+          <EpicStoriesPanel
+            epicId={epic.id}
+            epicTitle={epic.title}
+            epicCardId={epicCardId}
+            stories={stories}
+            projectId={projectId}
+            projectKey={projectKey}
+            projectStatuses={projectStatuses}
+            canCreate={canCreate}
+            canUpdate={canUpdate}
+            unlinkedStories={unlinkedStories}
+            onCreateStory={onCreateStory}
+            onLinkStory={onLinkStory}
+          />
         ) : null}
       </Card>
 

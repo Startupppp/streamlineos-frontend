@@ -5,7 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createElement } from "react";
 import type { ReactNode } from "react";
 import { useUpdateTicket } from "./ticket-update-mutation";
-import { useCreateTicket, useDeleteTicket, useBulkUpdateTickets } from "./ticket-create-rank-mutations";
+import { useCreateTicket, useDeleteTicket } from "./ticket-create-rank-mutations";
+import { useBulkUpdateTickets } from "./ticket-bulk-update-mutation";
 import { queryKeys } from "@/lib/query-keys";
 
 jest.mock("@/lib/api-client", () => ({

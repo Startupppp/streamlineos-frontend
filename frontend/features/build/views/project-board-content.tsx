@@ -1,27 +1,14 @@
 "use client";
 
 import { useMemo } from "react";
-import { formatDistanceToNow } from "date-fns";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import dynamic from "next/dynamic";
+import { AnimatePresence, useReducedMotion } from "framer-motion";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
-import { Skeleton } from "@/components/ui/skeleton";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
-import { TableView } from "./table-view";
-import { GanttView } from "./gantt-view";
-import { WorkloadView } from "./workload-view";
-import { BulkActionBar } from "@/features/build/shared/bulk-action-bar";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
-import { ListPlus, SearchX, WifiOff } from "lucide-react";
 import type { KanbanTicket, DisplayOptions } from "@/features/build/shared/types";
 import type { ViewType } from "./view-switcher";
 import type { BoardFilters } from "@/hooks/api/build/ticket-queries";
-
-import { type FilterState as WorkloadFilterState, type MemberCapacityData } from "./workload-types";
+import type { FilterState as WorkloadFilterState, MemberCapacityData } from "./workload-types";
 import type { Cycle } from "@/types/projects";
-import { pmSnappy, viewSwap, viewSwapReduced } from "@/lib/motion-presets";
-import { PM_PANEL } from "@/components/pm-chrome";
 import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 import type { ProjectStatus, BoardMember } from "./use-board-url-state";
@@ -31,17 +18,12 @@ import { ModuleNamesProvider } from "./module-names-context";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
-import { EmptyState } from "@/components/ui/empty-state";
-
-const KanbanBoard = dynamic(
-  () => import("./kanban-board").then((m) => m.KanbanBoard),
-  { ssr: false, loading: () => <KanbanBoardSkeleton /> },
-);
-
-const ListView = dynamic(
-  () => import("./list-view").then((m) => m.ListView),
-  { ssr: false, loading: () => <Skeleton className="flex-1 min-h-[400px] rounded-xl" /> },
-);
+import { ProjectBoardViewPane } from "./project-board-view-pane";
+import {
+  OfflineEmptyState,
+  FirstRunEmptyState,
+  FilteredEmptyState,
+} from "./project-board-empty-states";
 
 interface ProjectBoardContentProps {
   view: ViewType;
@@ -142,255 +124,10 @@ export function ProjectBoardContent({
     error,
     isEmpty: view !== "workload" && filteredTickets.length === 0,
   });
-  const viewVariants = shouldReduceMotion ? viewSwapReduced : viewSwap;
   const selection = useMemo(
     () => canUpdate ? { selected: selectedIds, onChange: onSelectionChange } : undefined,
     [canUpdate, selectedIds, onSelectionChange],
   );
-
-  const offlineEmptyState = (
-    <div className="relative flex h-full flex-1 flex-col items-center justify-center py-12">
-      <div
-        className={cn(
-          PM_PANEL,
-          "relative flex w-full max-w-sm flex-col items-center gap-3 px-6 py-8 text-center",
-        )}
-      >
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-border/60 bg-primary/[0.06] shadow-sm">
-          <WifiOff className="h-5 w-5 text-muted-foreground" />
-        </div>
-        <div className="space-y-1">
-          <p className="text-sm font-medium text-foreground">
-            You&apos;re offline
-          </p>
-          <p className="text-xs leading-relaxed text-muted-foreground">
-            Results may not be up to date. Reconnect to see the latest tickets.
-          </p>
-          {dataUpdatedAt !== undefined ? (
-            <p className="text-xs text-muted-foreground">
-              Last updated {formatDistanceToNow(new Date(dataUpdatedAt), { addSuffix: true })}
-            </p>
-          ) : null}
-        </div>
-      </div>
-    </div>
-  );
-
-  const firstRunEmptyState = (
-    <EmptyState
-      illustration={<ListPlus className="h-5 w-5 text-muted-foreground" />}
-      illustrationSize="xs"
-      title="No tickets yet"
-      description="Create the first ticket to start tracking work on this project."
-    />
-  );
-
-  const filteredEmptyState = (
-    <div className="relative flex h-full flex-1 flex-col items-center justify-center py-12">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-6 right-1/4 h-36 w-36 rounded-full bg-primary/[0.06] blur-3xl"
-      />
-      <div
-        className={cn(
-          PM_PANEL,
-          "relative flex w-full max-w-sm flex-col items-center gap-3 px-6 py-8 text-center",
-        )}
-      >
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-border/60 bg-primary/[0.06] shadow-sm">
-          <SearchX className="h-5 w-5 text-muted-foreground" />
-        </div>
-        <div className="space-y-1">
-          <p className="text-sm font-medium text-foreground">No tickets match your filters</p>
-          <p className="text-xs leading-relaxed text-muted-foreground">
-            Try adjusting your search or filters to find what you&apos;re looking for.
-          </p>
-        </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={onClearSearch}
-          className="mt-0.5 h-8 border-border/70 bg-background/60 text-xs backdrop-blur-sm"
-        >
-          Clear all filters
-        </Button>
-      </div>
-    </div>
-  );
-
-  function renderViewPane(v: ViewType): React.ReactNode {
-    switch (v) {
-      case "calendar":
-        return null;
-      case "board":
-        return (
-          <motion.div
-            key="board"
-            className="flex h-full min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden pb-1"
-            variants={viewVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={pmSnappy}
-          >
-            <KanbanBoard
-              tickets={filteredTickets}
-              projectId={projectId}
-              projectKey={projectKey}
-              statuses={statuses}
-              wipLimits={wipLimits}
-              onTicketSelect={onTicketSelect}
-              displayOptions={displayOptions}
-              hideCompleted={hideCompleted}
-              hasActiveFilters={hasActiveFilters}
-              filters={boardFilters}
-            />
-          </motion.div>
-        );
-      case "list":
-        return (
-          <motion.div
-            key="list"
-            className="min-h-0 flex-1 flex flex-col overflow-hidden pb-1"
-            variants={viewVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={pmSnappy}
-          >
-            {canUpdate && selectedIds.size > 0 && (
-              <BulkActionBar
-                selectedCount={selectedIds.size}
-                members={members}
-                cycles={cycles}
-                statuses={statuses}
-                labels={labels}
-                projectId={projectId}
-                excludeIds={selectedIds}
-                onBulkStatus={onBulkStatus}
-                onBulkPriority={onBulkPriority}
-                onBulkAssignee={onBulkAssignee}
-                onBulkCycle={onBulkCycle}
-                onBulkParent={onBulkParent}
-                onBulkLabel={onBulkLabel}
-                onBulkArchive={onBulkArchive}
-                onBulkExport={onBulkExport}
-                onClear={onClearSelection}
-              />
-            )}
-            <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
-              <div className="overscroll-contain">
-                <ListView
-                  tickets={filteredTickets}
-                  onTicketClick={onTicketSelect}
-                  groupBy={displayOptions.groupBy !== "none" ? displayOptions.groupBy : undefined}
-                  rowBy={displayOptions.rowBy !== "none" ? displayOptions.rowBy : undefined}
-                  projectKey={projectKey}
-                  projectStatuses={statuses}
-                  displayOptions={displayOptions}
-                  showEmptyColumns={displayOptions.showEmptyColumns}
-                  showEmptyRows={displayOptions.showEmptyRows}
-                  projectId={projectId}
-                  selection={selection}
-                  focusedTicketId={focusedTicketId}
-                />
-              </div>
-            </ScrollArea>
-          </motion.div>
-        );
-      case "table":
-        return (
-          <motion.div
-            key="table"
-            className="min-h-0 flex-1 flex flex-col overflow-hidden pb-1"
-            variants={viewVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={pmSnappy}
-          >
-            <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
-              <div className="overscroll-contain">
-                {canUpdate && selectedIds.size > 0 && (
-                  <BulkActionBar
-                    selectedCount={selectedIds.size}
-                    members={members}
-                    cycles={cycles}
-                    statuses={statuses}
-                    labels={labels}
-                    projectId={projectId}
-                    excludeIds={selectedIds}
-                    onBulkStatus={onBulkStatus}
-                    onBulkPriority={onBulkPriority}
-                    onBulkAssignee={onBulkAssignee}
-                    onBulkCycle={onBulkCycle}
-                    onBulkParent={onBulkParent}
-                    onBulkLabel={onBulkLabel}
-                    onBulkArchive={onBulkArchive}
-                    onBulkExport={onBulkExport}
-                    onClear={onClearSelection}
-                  />
-                )}
-                <TableView
-                  tickets={filteredTickets}
-                  onTicketClick={onTicketSelect}
-                  projectKey={projectKey}
-                  projectId={projectId}
-                  projectStatuses={statuses}
-                  displayOptions={displayOptions}
-                  selection={selection}
-                />
-              </div>
-            </ScrollArea>
-          </motion.div>
-        );
-      case "timeline":
-        return (
-          <motion.div
-            key="timeline"
-            className="flex min-h-0 flex-1 flex-col overflow-hidden pb-2 pt-0"
-            variants={viewVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={pmSnappy}
-          >
-            <GanttView
-              tickets={filteredTickets}
-              projectId={projectId}
-              onTicketClick={onTicketSelect}
-            />
-          </motion.div>
-        );
-      case "workload":
-        return (
-          <motion.div
-            key="workload"
-            className="flex min-h-0 flex-1 flex-col overflow-hidden pb-2 pt-0"
-            variants={viewVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={pmSnappy}
-          >
-            <WorkloadView
-              tickets={filteredTickets}
-              projectId={projectId}
-              projectKey={projectKey}
-              projectStatuses={statuses}
-              members={members}
-              filters={workloadFilters}
-              onFilterChange={onWorkloadFilterChange}
-              onClearFilters={onClearWorkloadFilters}
-              capacityByMemberId={capacityByMemberId}
-            />
-          </motion.div>
-        );
-      default:
-        return null;
-    }
-  }
 
   return (
     <ModuleNamesProvider modules={modules}>
@@ -400,16 +137,50 @@ export function ProjectBoardContent({
         loading={<KanbanBoardSkeleton />}
         empty={
           !isOnline
-            ? offlineEmptyState
+            ? <OfflineEmptyState dataUpdatedAt={dataUpdatedAt} />
             : hasActiveFilters || showEmptyFilterState
-              ? filteredEmptyState
-              : firstRunEmptyState
+              ? <FilteredEmptyState onClearSearch={onClearSearch} />
+              : <FirstRunEmptyState />
         }
         onRetry={onRetry}
         className="min-w-0 overflow-hidden flex-1"
       >
         <AnimatePresence mode="wait" initial={false}>
-          {renderViewPane(view)}
+          <ProjectBoardViewPane
+            view={view}
+            filteredTickets={filteredTickets}
+            projectId={projectId}
+            projectKey={projectKey}
+            statuses={statuses}
+            wipLimits={wipLimits}
+            displayOptions={displayOptions}
+            hideCompleted={hideCompleted}
+            hasActiveFilters={hasActiveFilters}
+            boardFilters={boardFilters}
+            onTicketSelect={onTicketSelect}
+            selectedIds={selectedIds}
+            members={members}
+            cycles={cycles}
+            labels={labels}
+            onBulkStatus={onBulkStatus}
+            onBulkPriority={onBulkPriority}
+            onBulkAssignee={onBulkAssignee}
+            onBulkCycle={onBulkCycle}
+            onBulkParent={onBulkParent}
+            onBulkLabel={onBulkLabel}
+            onBulkArchive={onBulkArchive}
+            onBulkExport={onBulkExport}
+            onClearSelection={onClearSelection}
+            onSelectionChange={onSelectionChange}
+            workloadFilters={workloadFilters}
+            onWorkloadFilterChange={onWorkloadFilterChange}
+            onClearWorkloadFilters={onClearWorkloadFilters}
+            capacityByMemberId={capacityByMemberId}
+            focusedTicketId={focusedTicketId}
+            canUpdate={canUpdate}
+            selection={selection}
+            shouldReduceMotion={shouldReduceMotion}
+          />
         </AnimatePresence>
         <InfiniteScrollSentinel
           hasNextPage={isTruncated}

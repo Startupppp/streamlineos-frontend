@@ -1,187 +1,27 @@
-﻿"use client";
+"use client";
 
-import {
-  Fragment,
-  useState,
-  useMemo,
-  memo,
-  useCallback,
-  type ComponentType,
-} from "react";
+import { Fragment, useState, useMemo, memo, useCallback } from "react";
 import { useReducedMotion } from "framer-motion";
-import { format, addDays, isSameDay, parseISO } from "date-fns";
-import { Users, AlertTriangle, CheckCircle2, TrendingUp } from "lucide-react";
+import { format, addDays, isSameDay } from "date-fns";
 import { cn } from "@/lib/utils";
 import type { KanbanTicket } from "../shared/types";
-import { isCompletedTicketStatus } from "../shared/completed-status";
 import { WorkloadMemberRow } from "./workload-member-row";
 import { WorkloadUnassignedRow } from "./workload-unassigned-row";
-import type {
-  FilterState,
-  MemberCapacityData,
-  StatFilter,
-  WorkloadGroup,
-} from "./workload-types";
+import type { FilterState, StatFilter } from "./workload-types";
 import { hasActiveWorkloadFilters, isMemberOverCapacity } from "./workload-types";
 import { EmptyState } from "@/components/ui/empty-state";
-
-interface WorkloadMember {
-  id: string;
-  name: string | null;
-  firstName: string | null;
-  lastName: string | null;
-  image?: string | null;
-}
-
-interface WorkloadMemberEntry {
-  member: WorkloadMember;
-  memberTickets: KanbanTicket[];
-  ticketsByDay: { day: Date; count: number }[];
-  total: number;
-  overdue: number;
-  points: number;
-}
-
-interface WorkloadGroupEntry {
-  key: string;
-  label: string | null;
-  rows: WorkloadMemberEntry[];
-}
-
-interface WorkloadViewProps {
-  tickets: KanbanTicket[];
-  projectId: number;
-  projectKey?: string | null;
-  projectStatuses?: Array<{ name: string; type?: string | null }>;
-  members: WorkloadMember[];
-  filters: FilterState;
-  onFilterChange: <K extends keyof FilterState>(
-    key: K,
-    value: FilterState[K],
-  ) => void;
-  onClearFilters: () => void;
-  capacityByMemberId?: Map<string, MemberCapacityData>;
-  focusedMemberId?: string | null;
-  group?: WorkloadGroup;
-}
-
-function applyTicketFilters(
-  tickets: KanbanTicket[],
-  filters: FilterState,
-): KanbanTicket[] {
-  let result = tickets;
-  if (filters.cycleId !== "all") {
-    result = result.filter((t) => t.cycleId === Number(filters.cycleId));
-  }
-  if (filters.priority !== "all") {
-    result = result.filter((t) => t.priority === filters.priority);
-  }
-  if (filters.type !== "all") {
-    result = result.filter((t) => t.type === filters.type);
-  }
-  if (filters.status !== "all") {
-    result = result.filter((t) => t.status === filters.status);
-  }
-  if (filters.assigneeId !== "all") {
-    result = result.filter((t) => t.assigneeId === filters.assigneeId);
-  }
-  return result;
-}
-
-function ticketMatchesDay(ticket: KanbanTicket, day: Date): boolean {
-  if (!ticket.dueDate) return false;
-  try {
-    return isSameDay(parseISO(ticket.dueDate), day);
-  } catch {
-    return false;
-  }
-}
-
-function isTicketOverdue(ticket: KanbanTicket, statuses?: Array<{ name: string; type?: string | null }>): boolean {
-  if (!ticket.dueDate) return false;
-  try {
-    return parseISO(ticket.dueDate) < new Date() && !isCompletedTicketStatus(ticket.status, statuses);
-  } catch {
-    return false;
-  }
-}
-
-interface WorkloadStat {
-  id: StatFilter;
-  label: string;
-  icon: ComponentType<{ className?: string }>;
-  bg: string;
-  text: string;
-}
-
-const STATS: readonly WorkloadStat[] = [
-  {
-    id: "all",
-    label: "Total Tickets",
-    icon: TrendingUp,
-    bg: "bg-primary/10",
-    text: "text-primary",
-  },
-  {
-    id: "assigned",
-    label: "Assigned",
-    icon: CheckCircle2,
-    bg: "bg-status-success-surface",
-    text: "text-status-success-ink-strong",
-  },
-  {
-    id: "unassigned",
-    label: "Unassigned",
-    icon: Users,
-    bg: "bg-status-warning-surface",
-    text: "text-status-warning-ink-strong",
-  },
-  {
-    id: "over-capacity",
-    label: "Over Capacity",
-    icon: AlertTriangle,
-    bg: "bg-status-danger-surface",
-    text: "text-status-danger-ink-strong",
-  },
-];
-
-interface StatButtonProps {
-  stat: WorkloadStat;
-  value: number;
-  isActive: boolean;
-  onToggle: (id: StatFilter) => void;
-}
-
-function StatButton({ stat, value, isActive, onToggle }: StatButtonProps) {
-  function handleClick() {
-    onToggle(stat.id);
-  }
-  return (
-    <button
-      type="button"
-      onClick={handleClick}
-      className={cn(
-        "bg-card rounded-lg border border-border p-3 flex h-full items-center gap-3 shadow-sm text-left transition-colors hover:bg-muted/40",
-        isActive && stat.id !== "all" && "ring-2 ring-primary/30 bg-primary/5",
-      )}
-    >
-      <div
-        className={cn(
-          "h-8 w-8 rounded-md flex items-center justify-center shrink-0",
-          stat.bg,
-        )}
-      >
-        <stat.icon className={cn("h-4 w-4", stat.text)} />
-      </div>
-      <div>
-        <p className="text-lg font-medium text-foreground tabular-nums">
-          {value}
-        </p>
-        <p className="text-dense text-muted-foreground">{stat.label}</p>
-      </div>
-    </button>
-  );
-}
+import type {
+  WorkloadMemberEntry,
+  WorkloadGroupEntry,
+  WorkloadViewProps,
+} from "./workload-view-model";
+import {
+  STATS,
+  applyTicketFilters,
+  ticketMatchesDay,
+  isTicketOverdue,
+} from "./workload-view-model";
+import { StatButton } from "./workload-stat-button";
 
 export const WorkloadView = memo(function WorkloadView({
   tickets,
@@ -278,12 +118,7 @@ export const WorkloadView = memo(function WorkloadView({
     isMemberOverCapacity(m.total, capacityByMemberId?.get(m.member.id)),
   ).length;
 
-  const statValues: Record<StatFilter, number> = {
-    all: filteredTickets.length,
-    assigned: totalAssigned,
-    unassigned: unassigned.length,
-    "over-capacity": overCapacityCount,
-  };
+  const statValues: Record<StatFilter, number> = { all: filteredTickets.length, assigned: totalAssigned, unassigned: unassigned.length, "over-capacity": overCapacityCount };
 
   const handleToggleExpand = useCallback((memberId: string) => {
     setExpandedMembers((prev) => {
