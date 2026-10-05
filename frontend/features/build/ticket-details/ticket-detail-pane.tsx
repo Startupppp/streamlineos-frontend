@@ -3,7 +3,12 @@
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -13,7 +18,10 @@ import { StatusBadge } from "@/components/shared/ticket-status-badge";
 import { PriorityBadge } from "@/features/build/shared/priority-badge";
 
 const TiptapEditorDynamic = dynamic(
-  () => import("@/components/editor/tiptap-editor").then((m) => ({ default: m.TiptapEditor })),
+  () =>
+    import("@/components/editor/tiptap-editor").then((m) => ({
+      default: m.TiptapEditor,
+    })),
   { ssr: false },
 );
 
@@ -29,7 +37,7 @@ export function TicketDetailPane({
   originHref,
 }: TicketDetailPaneProps) {
   const router = useRouter();
-  const { ticket, isLoading, ticketError } = useTicketDetail({
+  const { ticket, isLoading, ticketError, refetchTicket } = useTicketDetail({
     ticketId,
     projectId,
   });
@@ -74,7 +82,7 @@ export function TicketDetailPane({
           <PageState
             resolution={pageState}
             loading={null}
-            onRetry={handleClose}
+            onRetry={refetchTicket}
           >
             {ticket ? (
               <ScrollArea className="flex-1">

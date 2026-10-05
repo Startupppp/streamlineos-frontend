@@ -1,8 +1,14 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { UsePageStateOptions } from "@/hooks/api/use-page-state";
+import { resolvePageState } from "@/lib/page-state/resolve-page-state";
 
 const mockPush = jest.fn();
+const mockRefetchTicket = jest.fn();
+let mockTicketError: Error | null = null;
+let mockIsLoading = false;
+let mockTicket: { id: number; title: string; status: string; priority: string; description: string } | null = null;
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
@@ -10,10 +16,10 @@ jest.mock("next/navigation", () => ({
 
 jest.mock("../ticket-details/use-ticket-detail", () => ({
   useTicketDetail: () => ({
-    ticket: null,
-    isLoading: false,
-    ticketError: null,
-    refetchTicket: jest.fn(),
+    ticket: mockTicket,
+    isLoading: mockIsLoading,
+    ticketError: mockTicketError,
+    refetchTicket: mockRefetchTicket,
     projectData: null,
     subtasks: [],
     members: [],
@@ -32,7 +38,7 @@ jest.mock("../ticket-details/use-ticket-detail", () => ({
 }));
 
 jest.mock("@/hooks/api/use-page-state", () => ({
-  usePageState: () => ({ kind: "ready" }),
+  usePageState: (options: UsePageStateOptions) => resolvePageState({ ...options, access: "granted" }),
 }));
 
 jest.mock("@/components/ui/sheet", () => ({
@@ -44,10 +50,6 @@ jest.mock("@/components/ui/sheet", () => ({
 
 jest.mock("@/components/ui/scroll-area", () => ({
   ScrollArea: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-}));
-
-jest.mock("@/components/shared/page-state", () => ({
-  PageState: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 jest.mock("@/components/shared/ticket-status-badge", () => ({
@@ -63,6 +65,10 @@ import { TicketDetailPane } from "../ticket-details/ticket-detail-pane";
 describe("TicketDetailPane", () => {
   beforeEach(() => {
     mockPush.mockClear();
+    mockRefetchTicket.mockClear();
+    mockTicketError = null;
+    mockIsLoading = false;
+    mockTicket = null;
   });
 
   it("renders the pane without crashing", () => {
@@ -93,5 +99,21 @@ describe("TicketDetailPane", () => {
       <TicketDetailPane ticketId={42} projectId={5} originHref="/build/my-work" />,
     );
     expect(screen.getByText("Ticket")).toBeInTheDocument();
+  });
+
+  it("retries a failed detail read inside the pane and renders the recovered ticket", async () => {
+    mockTicketError = new TypeError("Failed to fetch");
+    const view = render(<TicketDetailPane ticketId={1} projectId={1} originHref="/build/my-work?tab=assigned" />);
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: /try again/i }));
+    expect(mockRefetchTicket).toHaveBeenCalledTimes(1);
+    expect(mockPush).not.toHaveBeenCalled();
+    mockTicketError = null;
+    mockTicket = { id: 1, title: "Recovered ticket", status: "TODO", priority: "HIGH", description: "" };
+    view.rerender(<TicketDetailPane ticketId={1} projectId={1} originHref="/build/my-work?tab=assigned" />);
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.getAllByText("Recovered ticket")).toHaveLength(2);
+    await userEvent.click(screen.getByRole("button", { name: /close ticket pane/i }));
+    expect(mockPush).toHaveBeenCalledWith("/build/my-work?tab=assigned", { scroll: false });
   });
 });

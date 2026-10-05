@@ -7,6 +7,7 @@ const mockRetryByKey = jest.fn();
 const mockRetryTicket = jest.fn();
 const mockNotFound = jest.fn(() => { throw new Error("NEXT_NOT_FOUND"); });
 let mockByKeyError: Error | null = null;
+let mockByKeyPending = false;
 let mockByKeyTicket: { id: number } | undefined = { id: 1 };
 let mockTicketError: Error | null = null;
 let mockCanViewAccess: "loading" | "granted" | "denied" = "granted";
@@ -56,6 +57,7 @@ jest.mock("@/hooks/api/build/tickets", () => ({
     data: mockByKeyError ? undefined : mockByKeyTicket,
     error: mockByKeyError,
     isLoading: false,
+    isPending: mockByKeyPending,
     refetch: mockRetryByKey,
   }),
 }));
@@ -121,6 +123,7 @@ jest.mock("./ticket-parent-control", () => ({ TicketParentControl: () => null })
 
 beforeEach(() => {
   mockByKeyError = null;
+  mockByKeyPending = false;
   mockByKeyTicket = { id: 1 };
   mockTicketError = null;
   mockCanViewAccess = "granted";
@@ -149,6 +152,34 @@ it("offers retry for a network failure while resolving a ticket key", () => {
   expect(mockNotFound).not.toHaveBeenCalled();
 });
 
+it("keeps an unresolved pending key read loading until a versioned ticket resolves", () => {
+  mockByKeyPending = true;
+  mockByKeyTicket = undefined;
+  const view = render(<TicketDetailPage projectId={9} ticketKey="TEST-1" />);
+  expect(mockNotFound).not.toHaveBeenCalled();
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  mockByKeyPending = false;
+  mockByKeyTicket = { id: 1 };
+  mockResolvedTicket = { id: 1, ticketNumber: 1, title: "Resolved ticket", version: 3 };
+  view.rerender(<TicketDetailPage projectId={9} ticketKey="TEST-1" />);
+  expect(screen.getByTestId("page-subtitle")).toHaveTextContent("TEST-1");
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+});
+
+it("preserves not-found for a settled missing key read", () => {
+  mockByKeyTicket = undefined;
+  expect(() => render(<TicketDetailPage projectId={9} ticketKey="TEST-1" />)).toThrow("NEXT_NOT_FOUND");
+});
+
+it("keeps access loading ahead of a pending missing key read", () => {
+  mockCanViewAccess = "loading";
+  mockByKeyPending = true;
+  mockByKeyTicket = undefined;
+  render(<TicketDetailPage projectId={9} ticketKey="TEST-1" />);
+  expect(mockNotFound).not.toHaveBeenCalled();
+  expect(screen.queryByText("Access Restricted")).not.toBeInTheDocument();
+});
+
 it("offers retry for a failed ticket detail read after its key was resolved", () => {
   mockTicketError = new ApiError("Internal server error", 500);
   render(<TicketDetailPage projectId={9} ticketKey="TEST-1" />);
@@ -165,6 +196,7 @@ it("preserves the real not-found response", () => {
 
 it("shows NoPermissionState when build:tickets:view is denied, not a 404", () => {
   mockCanViewAccess = "denied";
+  mockByKeyPending = true;
   mockByKeyTicket = undefined;
   render(<TicketDetailPage projectId={9} ticketKey="TEST-1" />);
   expect(screen.getByText("Access Restricted")).toBeInTheDocument();

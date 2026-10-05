@@ -2,7 +2,7 @@
 
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Clock, User, Calendar } from "lucide-react";
+import { Clock, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import { resolveImageUrl } from "@/lib/utils";
 import {
@@ -30,11 +30,11 @@ interface TicketSidebarMetadataProps {
 
 function PropertyRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="grid grid-cols-[100px_1fr] items-center gap-2 min-h-[36px]">
-      <span className="text-xs text-muted-foreground font-normal truncate">
+    <div className="flex min-h-9 items-center gap-3 py-1">
+      <span className="w-24 shrink-0 truncate text-xs text-muted-foreground">
         {label}
       </span>
-      <div className="min-w-0">{children}</div>
+      <div className="min-w-0 flex-1 text-sm text-foreground">{children}</div>
     </div>
   );
 }
@@ -53,12 +53,12 @@ export function TicketSidebarMetadata({
     originalEstimate > 0 ? Math.min((timeSpent / originalEstimate) * 100, 100) : 0;
 
   return (
-    <>
+    <div className="flex flex-col gap-1">
+      <h3 className="mb-2 text-xs font-semibold text-muted-foreground">History</h3>
       {(timeSpent > 0 || originalEstimate > 0) && (
-        <div>
           <PropertyRow label="Time">
-            <div className="flex items-center gap-2 text-xs">
-              <Clock className="h-3 w-3 text-muted-foreground shrink-0" />
+            <div className="flex items-center gap-2 tabular-nums">
+              <Clock className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
               <span>{timeSpent}h logged</span>
               {originalEstimate > 0 && (
                 <span className="text-muted-foreground">
@@ -67,55 +67,46 @@ export function TicketSidebarMetadata({
               )}
             </div>
             {originalEstimate > 0 && (
-              <Progress value={timeProgress} className="h-1 mt-1" />
+              <Progress value={timeProgress} className="mt-2 h-1" />
             )}
           </PropertyRow>
-        </div>
       )}
 
-      <div className="grid grid-cols-1 gap-2 @[18rem]:grid-cols-2 @[18rem]:gap-3">
-        <div className="flex items-center gap-1.5 text-dense text-muted-foreground">
-          <Calendar className="h-3 w-3 shrink-0" />
-          <span>
-            Created{" "}
-            {createdAt ? format(new Date(createdAt), "MMM d, yyyy") : "—"}
-          </span>
-        </div>
-        <div className="flex items-center gap-1.5 text-dense text-muted-foreground">
-          <Clock className="h-3 w-3 shrink-0" />
-          <span>
-            Updated{" "}
-            {updatedAt ? format(new Date(updatedAt), "MMM d, yyyy") : "—"}
-          </span>
-        </div>
-      </div>
-
-      {rank ? (
-        <PropertyRow label="Rank">
-          <span className="font-mono text-xs text-muted-foreground">{rank}</span>
-        </PropertyRow>
-      ) : null}
-
-      {reporter && (
+      <PropertyRow label="Created">
         <div className="flex items-center gap-2">
-          <span className="text-micro text-muted-foreground font-medium uppercase tracking-wide shrink-0">
-            <User className="h-3 w-3 inline mr-0.5" />
-            Reporter
-          </span>
-          <div className="flex items-center gap-1.5 min-w-0">
+          <Calendar className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+          <span>{createdAt ? format(new Date(createdAt), "MMM d, yyyy") : "—"}</span>
+        </div>
+      </PropertyRow>
+      <PropertyRow label="Updated">
+        <div className="flex items-center gap-2">
+          <Clock className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+          <span>{updatedAt ? format(new Date(updatedAt), "MMM d, yyyy") : "—"}</span>
+        </div>
+      </PropertyRow>
+
+      {reporter ? (
+        <PropertyRow label="Reporter">
+          <div className="flex min-w-0 items-center gap-2">
             <Avatar className="h-5 w-5 shrink-0">
               <AvatarImage src={resolveImageUrl(reporter.image)} />
-              <AvatarFallback className="text-micro bg-primary/10 text-primary">
+              <AvatarFallback className="bg-primary/10 text-micro text-primary">
                 {getUserInitials(reporter)}
               </AvatarFallback>
             </Avatar>
             <TruncatedText
               text={getUserDisplayName(reporter)}
-              className="min-w-0 flex-1 text-xs"
+              className="min-w-0 flex-1 text-sm"
             />
           </div>
-        </div>
-      )}
-    </>
+        </PropertyRow>
+      ) : null}
+
+      {rank ? (
+        <PropertyRow label="Rank">
+          <span className="font-mono text-sm tabular-nums text-muted-foreground">{rank}</span>
+        </PropertyRow>
+      ) : null}
+    </div>
   );
 }

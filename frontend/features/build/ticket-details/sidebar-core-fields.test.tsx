@@ -44,7 +44,7 @@ function renderSelects(disabled = false) {
 }
 
 describe("Issue detail sidebar — the core fields the page contract lists are on screen", () => {
-  it("labels status, priority, type, points, epic, module and cycle, so seven of the eleven core fields are reachable", () => {
+  it("labels status, priority, type, points, epic, workstream and cycle, so seven of the eleven core fields are reachable", () => {
     renderSelects();
     for (const label of [
       "Status",
@@ -52,7 +52,7 @@ describe("Issue detail sidebar — the core fields the page contract lists are o
       "Type",
       "Points",
       "Epic",
-      "Module",
+      "Workstream",
       "Cycle",
     ]) {
       expect(screen.getByText(label)).toBeInTheDocument();

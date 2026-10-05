@@ -13,7 +13,10 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useProject } from "@/hooks/api/build/projects";
 import { useTicketByKey } from "@/hooks/api/build/tickets";
 import { useEpics, useModules, useCycles } from "@/hooks/api/build/advanced";
-import { formatTicketKey, parseTicketKey } from "@/components/shared/format-ticket-key";
+import {
+  formatTicketKey,
+  parseTicketKey,
+} from "@/components/shared/format-ticket-key";
 import { TicketDetailMainSection } from "./ticket-detail-main-section";
 import { TicketDetailRightPanel } from "./ticket-detail-right-panel";
 import { TicketDetailToolbar } from "./ticket-detail-toolbar";
@@ -30,13 +33,13 @@ import { resolveTicketBackHref } from "./build-ticket-detail-url";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { formatDistanceToNow } from "date-fns";
 
-
 interface TicketDetailPageProps {
   projectId: number;
   ticketKey: string;
 }
 
-const RIGHT_PANEL_COLLAPSED_KEY = "streamlineos:ticket-detail:right-panel:collapsed";
+const RIGHT_PANEL_COLLAPSED_KEY =
+  "streamlineos:ticket-detail:right-panel:collapsed";
 
 function DetailSkeleton() {
   return (
@@ -60,7 +63,10 @@ function DetailSkeleton() {
   );
 }
 
-export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps) {
+export function TicketDetailPage({
+  projectId,
+  ticketKey,
+}: TicketDetailPageProps) {
   const isOnline = useOnlineStatus();
   const canViewAccess = useCanState("build:tickets:view");
   const canUpdate = useCan("build:tickets:update");
@@ -70,16 +76,28 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
   const isMobile = useIsMobile();
   const commentParam = searchParams.get("comment");
   const highlightCommentId = commentParam ? parseInt(commentParam, 10) : null;
-  const backHref = resolveTicketBackHref(projectId, searchParams.get("returnTo"));
-  const [rightPanelCollapsed, setRightPanelCollapsed] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    return localStorage.getItem(RIGHT_PANEL_COLLAPSED_KEY) === "true";
-  });
+  const backHref = resolveTicketBackHref(
+    projectId,
+    searchParams.get("returnTo"),
+  );
+  const [rightPanelCollapsed, setRightPanelCollapsed] = useState<boolean>(
+    () => {
+      if (typeof window === "undefined") return false;
+      return localStorage.getItem(RIGHT_PANEL_COLLAPSED_KEY) === "true";
+    },
+  );
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
 
   const parsed = useMemo(() => parseTicketKey(ticketKey), [ticketKey]);
-  const { data: projectData, isLoading: projectLoading } = useProject(projectId);
-  const { data: byKeyTicket, isLoading: byKeyLoading, error: byKeyError, refetch: refetchByKey } = useTicketByKey(
+  const { data: projectData, isLoading: projectLoading } =
+    useProject(projectId);
+  const {
+    data: byKeyTicket,
+    isLoading: byKeyLoading,
+    isPending: byKeyPending,
+    error: byKeyError,
+    refetch: refetchByKey,
+  } = useTicketByKey(
     projectId,
     parsed?.ticketNumber ?? null,
     INLINE_READ_ERROR,
@@ -117,7 +135,10 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
     isDeleting,
   } = useTicketDetail({ projectId, ticketId, onDeleted: handleDeleted });
 
-  const displayKey = formatTicketKey(projectData?.key, ticket?.ticketNumber ?? parsed?.ticketNumber);
+  const displayKey = formatTicketKey(
+    projectData?.key,
+    ticket?.ticketNumber ?? parsed?.ticketNumber,
+  );
 
   const versionedTicket = useMemo(
     () =>
@@ -153,21 +174,31 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
 
   if (projectLoading || byKeyLoading || canViewAccess === "loading") {
     return (
-      <PageWrapper title="Loading..." backHref={backHref} noInternalScroll className="h-full">
+      <PageWrapper
+        title="Loading..."
+        backHref={backHref}
+        noInternalScroll
+        className="h-full"
+      >
         <DetailSkeleton />
       </PageWrapper>
     );
   }
 
   if (byKeyError) {
-    if (isApiError(byKeyError) && getApiErrorCode(byKeyError) === "PROJECTS_FORBIDDEN_TICKET") {
+    if (
+      isApiError(byKeyError) &&
+      getApiErrorCode(byKeyError) === "PROJECTS_FORBIDDEN_TICKET"
+    ) {
       return (
         <PageWrapper title={displayKey} backHref={backHref}>
           <div className="px-4 py-16 text-center">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
               <AlertCircle className="h-6 w-6 text-muted-foreground" />
             </div>
-            <p className="mb-1 font-medium text-foreground">Restricted Access</p>
+            <p className="mb-1 font-medium text-foreground">
+              Restricted Access
+            </p>
             <p className="text-sm text-muted-foreground">
               You can only view details of tickets assigned to you.
             </p>
@@ -177,10 +208,18 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
     }
     if (isApiError(byKeyError) && byKeyError.status === 404) return notFound();
     const byKeyState = pageStateFromError(byKeyError);
-    if (byKeyState !== null && byKeyState.kind !== "error" && byKeyState.kind !== "denied") {
+    if (
+      byKeyState !== null &&
+      byKeyState.kind !== "error" &&
+      byKeyState.kind !== "denied"
+    ) {
       return (
         <PageWrapper title="Build" backHref={backHref}>
-          <PageState resolution={byKeyState} loading={<DetailSkeleton />} onRetry={refetchByKey}>
+          <PageState
+            resolution={byKeyState}
+            loading={<DetailSkeleton />}
+            onRetry={refetchByKey}
+          >
             <span />
           </PageState>
         </PageWrapper>
@@ -188,7 +227,13 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
     }
     return (
       <PageWrapper title="Ticket" backHref={backHref}>
-        <ErrorState className="flex-1" title="Couldn't load ticket" description={getErrorMessage(byKeyError)} error={byKeyError} onRetry={refetchByKey} />
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load ticket"
+          description={getErrorMessage(byKeyError)}
+          error={byKeyError}
+          onRetry={refetchByKey}
+        />
       </PageWrapper>
     );
   }
@@ -201,17 +246,25 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
     );
   }
 
-  if (!byKeyTicket) return notFound();
+  if (!byKeyTicket && !byKeyPending) return notFound();
 
-  if (isLoading) {
+  if (isLoading || byKeyPending) {
     return (
-      <PageWrapper title="Loading..." backHref={backHref} noInternalScroll className="h-full">
+      <PageWrapper
+        title="Loading..."
+        backHref={backHref}
+        noInternalScroll
+        className="h-full"
+      >
         <DetailSkeleton />
       </PageWrapper>
     );
   }
 
-  if (isApiError(ticketError) && getApiErrorCode(ticketError) === "PROJECTS_FORBIDDEN_TICKET") {
+  if (
+    isApiError(ticketError) &&
+    getApiErrorCode(ticketError) === "PROJECTS_FORBIDDEN_TICKET"
+  ) {
     return (
       <PageWrapper title={displayKey} backHref={backHref}>
         <div className="px-4 py-16 text-center">
@@ -227,16 +280,27 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
     );
   }
 
-  if (isApiError(ticketError) && getApiErrorCode(ticketError) === "PROJECTS_TICKET_NOT_FOUND") {
+  if (
+    isApiError(ticketError) &&
+    getApiErrorCode(ticketError) === "PROJECTS_TICKET_NOT_FOUND"
+  ) {
     return notFound();
   }
 
   if (ticketError && !ticket) {
     const ticketState = pageStateFromError(ticketError);
-    if (ticketState !== null && ticketState.kind !== "error" && ticketState.kind !== "denied") {
+    if (
+      ticketState !== null &&
+      ticketState.kind !== "error" &&
+      ticketState.kind !== "denied"
+    ) {
       return (
         <PageWrapper title="Build" backHref={backHref}>
-          <PageState resolution={ticketState} loading={<DetailSkeleton />} onRetry={refetchTicket}>
+          <PageState
+            resolution={ticketState}
+            loading={<DetailSkeleton />}
+            onRetry={refetchTicket}
+          >
             <span />
           </PageState>
         </PageWrapper>
@@ -244,7 +308,13 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
     }
     return (
       <PageWrapper title={displayKey} backHref={backHref}>
-        <ErrorState className="flex-1" title="Couldn't load ticket" description={getErrorMessage(ticketError)} error={ticketError} onRetry={refetchTicket} />
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load ticket"
+          description={getErrorMessage(ticketError)}
+          error={ticketError}
+          onRetry={refetchTicket}
+        />
       </PageWrapper>
     );
   }
@@ -255,7 +325,11 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
         <div className="px-4 py-16 text-center">
           <AlertCircle className="mx-auto mb-4 h-12 w-12 text-destructive" />
           <p className="mb-4 font-medium text-destructive">Ticket not found</p>
-          <Button variant="outline" size="sm" onClick={() => router.push(backHref)}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => router.push(backHref)}
+          >
             Back to issues
           </Button>
         </div>
@@ -310,7 +384,9 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
       actions={
         <TicketDetailToolbar
           isMobile={isMobile}
-          rightPanelCollapsed={isMobile ? !mobilePanelOpen : rightPanelCollapsed}
+          rightPanelCollapsed={
+            isMobile ? !mobilePanelOpen : rightPanelCollapsed
+          }
           onExpandRightPanel={handleExpandRightPanel}
           onDelete={handleDelete}
           isDeleting={isDeleting}

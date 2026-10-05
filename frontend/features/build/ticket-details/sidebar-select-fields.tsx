@@ -227,7 +227,7 @@ export function SidebarSelectFields({
         <div className="min-w-0">
           <FieldLabel>
             <Boxes className="mr-0.5 inline h-3 w-3" />
-            Module
+            Workstream
           </FieldLabel>
           <Select value={ticket.moduleId?.toString() || "none"} onValueChange={onModuleChange} disabled={disabled}>
             <SelectTrigger className={CONTROL_CLASS}>

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import type { Ticket } from "@/types/projects";
 import { TicketDetailMainSection } from "./ticket-detail-main-section";
 
@@ -45,18 +45,19 @@ function renderSection(canUpdate: boolean) {
   );
 }
 
-describe("Issue detail title — the core title field is on screen and follows the update gate", () => {
-  it("renders the stored title in an editable control for a viewer who may update", () => {
+describe("Issue detail title — editing follows the update gate", () => {
+  it("keeps the page title singular until an editor opens it", () => {
     renderSection(true);
+    expect(screen.queryByPlaceholderText("Ticket title")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Edit title" }));
     const title = screen.getByPlaceholderText("Ticket title");
     expect(title).toHaveValue("Checkout drops the coupon");
     expect(title).not.toHaveAttribute("readonly");
   });
 
-  it("still renders the title, read-only, for a viewer who may not update, so denial is not emptiness", () => {
+  it("does not offer the editor to a viewer who may not update", () => {
     renderSection(false);
-    const title = screen.getByPlaceholderText("Ticket title");
-    expect(title).toHaveValue("Checkout drops the coupon");
-    expect(title).toHaveAttribute("readonly");
+    expect(screen.queryByRole("button", { name: "Edit title" })).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText("Ticket title")).not.toBeInTheDocument();
   });
 });

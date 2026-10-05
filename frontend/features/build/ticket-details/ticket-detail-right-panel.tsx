@@ -117,31 +117,34 @@ function TicketDetailRightPanelBody({
   const updateVisibility = useUpdateTicketVisibility(projectId);
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
-      <div className="shrink-0 border-b border-border bg-card px-4 py-3 md:border md:border-l-0">
-        <div className="relative flex items-center justify-center gap-2">
-          <div className="flex min-w-0 flex-wrap items-center justify-center gap-1.5">
-            <Badge variant="outline" className="hidden h-5 px-1.5 font-mono text-dense md:inline-flex">
-              {displayKey}
-            </Badge>
-            <StatusBadge status={ticket.status ?? "TODO"} />
-            <PriorityBadge priority={ticket.priority ?? "MEDIUM"} showLabel size="sm" />
+      <div className="shrink-0 border-b border-border bg-card px-4 py-3">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-sm font-semibold text-foreground">Details</h2>
+          <div className="flex items-center gap-2">
             {saving && (
-              <span className="flex items-center gap-1 text-dense text-muted-foreground">
-                <Loader2 className="h-3 w-3 animate-spin" />
+              <span className="flex items-center gap-1 text-xs text-muted-foreground" role="status">
+                <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
                 Saving
               </span>
             )}
+            <AnimatedIconButton
+              type="button"
+              variant="ghost"
+              size="icon"
+              icon={XIcon}
+              iconSize={16}
+              className="h-9 w-9 shrink-0 text-muted-foreground hover:text-foreground"
+              onClick={onClose}
+              aria-label="Close details panel"
+            />
           </div>
-          <AnimatedIconButton
-            type="button"
-            variant="ghost"
-            size="icon"
-            icon={XIcon}
-            iconSize={16}
-            className="absolute right-0 top-1/2 h-8 w-8 shrink-0 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            onClick={onClose}
-            aria-label="Close details panel"
-          />
+        </div>
+        <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2">
+          <Badge variant="outline" className="h-6 px-2 font-mono text-xs">
+            {displayKey}
+          </Badge>
+          <StatusBadge status={ticket.status ?? "TODO"} />
+          <PriorityBadge priority={ticket.priority ?? "MEDIUM"} showLabel size="sm" />
         </div>
       </div>
 
@@ -157,19 +160,23 @@ function TicketDetailRightPanelBody({
           canAssign={canAssign}
         />
 
-        <div className="space-y-4 bg-card px-4 py-3">
-          <TicketGitLinks projectId={projectId} ticketId={ticketId} />
-          <TicketRelatedLinks projectId={projectId} ticketId={ticketId} />
+        <div className="divide-y divide-border bg-card">
+          <div className="space-y-4 px-4 py-4">
+            <TicketGitLinks projectId={projectId} ticketId={ticketId} />
+            <TicketRelatedLinks projectId={projectId} ticketId={ticketId} />
+          </div>
           {canViewTimesheets ? (
-            <TicketTimeTracker
-              ticketId={ticketId}
-              projectId={projectId}
-              timeSpent={ticket.timeSpent ?? null}
-            />
+            <div className="px-4 py-4">
+              <TicketTimeTracker
+                ticketId={ticketId}
+                projectId={projectId}
+                timeSpent={ticket.timeSpent ?? null}
+              />
+            </div>
           ) : null}
           {canManageClientVisibility ? (
-            <div className="flex items-center justify-between gap-3 py-1">
-              <span className="text-sm text-muted-foreground">Share with client</span>
+            <div className="flex items-center justify-between gap-3 px-4 py-4">
+              <span className="text-sm font-medium text-foreground">Share with client</span>
               <Switch
                 checked={ticket.clientVisible ?? false}
                 disabled={updateVisibility.isPending}
@@ -180,7 +187,9 @@ function TicketDetailRightPanelBody({
               />
             </div>
           ) : null}
-          <WatcherList projectId={projectId} ticketId={ticketId} />
+          <div className="px-4 py-4">
+            <WatcherList projectId={projectId} ticketId={ticketId} />
+          </div>
         </div>
       </div>
     </div>

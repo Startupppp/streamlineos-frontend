@@ -1,5 +1,3 @@
-
-
 export interface TicketUser {
   id: string;
   name: string | null;
@@ -65,10 +63,6 @@ export interface TicketAssignee {
   user?: TicketUser;
 }
 
-/**
- * `userId` is nullable because a watcher whose organization row is gone flattens to nulls
- * rather than to missing keys — the backend lifts both off the `organization_members` join.
- */
 export interface TicketWatcher {
   id: number;
   ticketId: number;
@@ -81,11 +75,6 @@ export interface Ticket {
   id: number;
   orgId: string;
   title: string;
-  /**
-   * Absent on list and board responses, which project it away rather than ship a
-   * body no column renders. Present on the detail read. Optional so a consumer
-   * has to handle the absence instead of trusting a null that never arrives.
-   */
   description?: string | null;
   type: string;
   status: string;
@@ -120,7 +109,13 @@ export interface Ticket {
   labels?: TicketLabelMapping[];
   watchers?: TicketWatcher[];
   project?: { id: number; name: string; key: string } | null;
-  cycle?: { id: number; name: string; status: string; startDate: string; endDate: string } | null;
+  cycle?: {
+    id: number;
+    name: string;
+    status: string;
+    startDate: string;
+    endDate: string;
+  } | null;
   health?: "on_track" | "at_risk" | "off_track" | null;
   descriptionExcerpt?: string;
   dependencyCount?: number;

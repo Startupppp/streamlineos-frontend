@@ -1,7 +1,11 @@
 ﻿"use client";
 
+import { useState } from "react";
 import dynamic from "next/dynamic";
+import { motion, useReducedMotion } from "framer-motion";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { fadeIn } from "@/lib/motion-variants";
 import { viewFile, downloadFile } from "@/hooks/common/use-file-url";
 import { TicketSubtasks } from "./ticket-subtasks";
 import { TicketRelations } from "./ticket-relations";
@@ -114,6 +118,8 @@ export function TicketDetailMainSection({
   canUpdate,
 }: TicketDetailMainSectionProps) {
   const isPreview = variant === "preview";
+  const reduceMotion = useReducedMotion();
+  const [editingTitle, setEditingTitle] = useState(false);
   const ticketDetailAi = useTicketDetailAi({
     projectId,
     ticketId,
@@ -124,19 +130,45 @@ export function TicketDetailMainSection({
   });
 
   return (
-    <div className="min-w-0 max-w-full space-y-4 sm:space-y-5">
-      <div className="min-w-0">
-        <Textarea
-          value={localTitle}
-          onChange={onTitleChange}
-          readOnly={!canUpdate}
-          rows={2}
-          className="h-auto w-full max-w-full min-h-0 resize-none break-words border-0 bg-transparent px-0 py-1 text-lg font-medium leading-snug shadow-none [overflow-wrap:anywhere] [word-break:break-word] hover:border-0 focus-visible:border-0 focus-visible:ring-0 focus-visible:ring-offset-0 sm:text-xl"
-          placeholder="Ticket title"
-        />
-      </div>
+    <motion.div
+      className="mx-auto flex w-full max-w-4xl min-w-0 flex-col gap-5 pb-6"
+      initial={reduceMotion ? false : "hidden"}
+      animate={reduceMotion ? undefined : "visible"}
+      variants={reduceMotion ? undefined : fadeIn}
+    >
+      {canUpdate ? (
+        <div className="flex justify-start">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="px-0 text-xs text-muted-foreground hover:bg-transparent hover:text-foreground"
+            aria-expanded={editingTitle}
+            aria-controls={editingTitle ? `ticket-title-${ticketId}` : undefined}
+            onClick={() => setEditingTitle((current) => !current)}
+          >
+            {editingTitle ? "Done editing" : "Edit title"}
+          </Button>
+        </div>
+      ) : null}
+      {editingTitle && canUpdate ? (
+        <div className="flex min-w-0 flex-col gap-2">
+          <label htmlFor={`ticket-title-${ticketId}`} className="text-xs font-semibold text-muted-foreground">
+            Title
+          </label>
+          <Textarea
+            id={`ticket-title-${ticketId}`}
+            value={localTitle}
+            onChange={onTitleChange}
+            rows={2}
+            autoFocus
+            className="h-auto min-h-12 w-full max-w-full resize-none break-words rounded-md border-border bg-card px-3 py-2 text-base font-medium leading-snug shadow-none transition-colors duration-200 [overflow-wrap:anywhere] [word-break:break-word] hover:border-foreground/30 focus-visible:ring-1"
+            placeholder="Ticket title"
+          />
+        </div>
+      ) : null}
 
-      <div className="min-w-0">
+      <div className="min-w-0 border-b border-border pb-6">
         {isPreview || !canUpdate ? (
           <h3 className="mb-2 text-dense font-medium uppercase tracking-wide text-muted-foreground">
             Description
@@ -156,19 +188,21 @@ export function TicketDetailMainSection({
           onChangeHtml={onDescriptionChange}
           editable={canUpdate}
           output="html"
-          minHeightClassName="min-h-[120px] sm:min-h-[160px]"
+          minHeightClassName="min-h-24 sm:min-h-32"
           placeholder="Add a description..."
         />
       </div>
 
       {!isPreview && (
         <>
-          <TicketSubtasks
-            ticketId={ticketId}
-            projectId={projectId}
-            subtasks={subtasks}
-            canUseAI={ticketDetailAi.canUseAI}
-          />
+          <div className="border-b border-border pb-6">
+            <TicketSubtasks
+              ticketId={ticketId}
+              projectId={projectId}
+              subtasks={subtasks}
+              canUseAI={ticketDetailAi.canUseAI}
+            />
+          </div>
           {ticket.attachments && ticket.attachments.length > 0 && (
             <div>
               <h4 className="text-dense font-medium uppercase tracking-wide text-muted-foreground mb-2">
@@ -205,12 +239,14 @@ export function TicketDetailMainSection({
               </div>
             </div>
           )}
-          <TicketChecklists
-            projectId={projectId}
-            ticketId={ticketId}
-            canUseAI={ticketDetailAi.canUseAI}
-            generateChecklistDisabledReason={ticketDetailAi.generateChecklistDisabledReason}
-          />
+          <div className="border-b border-border pb-6">
+            <TicketChecklists
+              projectId={projectId}
+              ticketId={ticketId}
+              canUseAI={ticketDetailAi.canUseAI}
+              generateChecklistDisabledReason={ticketDetailAi.generateChecklistDisabledReason}
+            />
+          </div>
           <TicketQaEvidence
             projectId={projectId}
             ticketId={ticketId}
@@ -241,6 +277,6 @@ export function TicketDetailMainSection({
         }
       />
       <TicketActivityLog ticketId={ticketId} projectId={projectId} />
-    </div>
+    </motion.div>
   );
 }
