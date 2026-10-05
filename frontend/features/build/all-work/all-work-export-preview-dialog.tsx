@@ -68,7 +68,7 @@ export function AllWorkExportPreviewDialog({
             ) : null}
             {preview ? (
               <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Columns included:</p>
+                <p className="text-xs text-muted-foreground">{groups.length > 1 ? `Columns included (${groups[0]?.label ?? "first project"}):` : "Columns included:"}</p>
                 <ul className="grid grid-cols-2 gap-x-2 gap-y-0.5">
                   {preview.columns.map((col) => (
                     <li key={col} className="truncate font-mono text-xs">{col}</li>

@@ -27,7 +27,7 @@ export function InvitationAlreadyMemberState({
             You are already a member of this organization. Sign in to continue
             working.
           </p>
-          <Button className="w-full" onClick={onGoToSignIn}>
+          <Button type="button" className="w-full" onClick={onGoToSignIn}>
             Sign in
           </Button>
         </CardContent>
@@ -52,7 +52,7 @@ export function InvitationSuspendedState({
             Contact your platform administrator to restore your account before
             accepting this invitation.
           </p>
-          <Button className="w-full" onClick={onGoToSignIn}>
+          <Button type="button" className="w-full" onClick={onGoToSignIn}>
             Go to sign in
           </Button>
         </CardContent>
@@ -77,7 +77,7 @@ export function InvitationAtCapacityState({
             Ask an organization administrator to upgrade the plan or free a
             seat, then request a new invitation.
           </p>
-          <Button className="w-full" onClick={onGoToSignIn}>
+          <Button type="button" className="w-full" onClick={onGoToSignIn}>
             Go to sign in
           </Button>
         </CardContent>

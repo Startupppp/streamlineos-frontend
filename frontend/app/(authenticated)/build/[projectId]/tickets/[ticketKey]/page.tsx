@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
 import { TicketDetailPage } from "@/features/build/ticket-details/ticket-detail-page";
 
@@ -12,10 +13,16 @@ export default async function ProjectTicketDetailRoute({ params }: PageProps) {
   if (!Number.isFinite(parsedProjectId) || parsedProjectId <= 0) {
     return null;
   }
+  let decodedTicketKey: string;
+  try {
+    decodedTicketKey = decodeURIComponent(ticketKey);
+  } catch {
+    notFound();
+  }
   return (
     <TicketDetailPage
       projectId={parsedProjectId}
-      ticketKey={decodeURIComponent(ticketKey)}
+      ticketKey={decodedTicketKey}
     />
   );
 }

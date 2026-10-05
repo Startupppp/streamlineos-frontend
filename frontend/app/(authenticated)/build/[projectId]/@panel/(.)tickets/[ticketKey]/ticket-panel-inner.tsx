@@ -24,7 +24,7 @@ export function TicketPanelInner({
   const pageState = usePageState({
     permission: "build:tickets:view",
     isLoading: lookup.isLoading,
-    isError: lookup.isError,
+    isError: lookup.isError || !parsed,
     error: lookup.error,
   });
 

@@ -63,10 +63,10 @@ type AcceptanceBlocker = "already-member" | "suspended" | "at-capacity";
 function classifyAcceptanceError(error: unknown): AcceptanceBlocker | null {
   if (!isApiError(error)) return null;
   const code = getApiErrorCode(error);
-  if (code === "ALREADY_MEMBER" || code === "MEMBERSHIP_ARCHIVED" || error.status === 409)
-    return "already-member";
+  if (code === "ALREADY_MEMBER" || code === "MEMBERSHIP_ARCHIVED") return "already-member";
   if (code === "ACCOUNT_SUSPENDED") return "suspended";
   if (code === "ORG_AT_CAPACITY") return "at-capacity";
+  if (error.status === 409) return "already-member";
   return null;
 }
 
@@ -205,6 +205,7 @@ export default function InvitationPage() {
               setIsCompletingAcceptance(false);
               return;
             }
+            persistPartialGrants(data.skippedGrants ?? []);
             router.push("/post-invite");
           },
           onError: (error) => {

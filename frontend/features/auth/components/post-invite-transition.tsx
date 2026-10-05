@@ -31,10 +31,13 @@ function moduleLabel(key: string): string {
 function readStoredGrants(): SkippedGrant[] {
   try {
     const stored = sessionStorage.getItem(PARTIAL_GRANTS_KEY);
-    sessionStorage.removeItem(PARTIAL_GRANTS_KEY);
     if (!stored) return [];
     const parsed = storedGrantsContract.safeParse(JSON.parse(stored));
-    return parsed.success ? parsed.data : [];
+    if (parsed.success) {
+      sessionStorage.removeItem(PARTIAL_GRANTS_KEY);
+      return parsed.data;
+    }
+    return [];
   } catch {
     return [];
   }
@@ -65,8 +68,11 @@ export function PostInviteTransition({ destination }: PostInviteTransitionProps)
 
   const [skippedGrants, setSkippedGrants] = useState<SkippedGrant[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const didReadRef = useRef(false);
 
   useEffect(() => {
+    if (didReadRef.current) return;
+    didReadRef.current = true;
     const grants = readStoredGrants();
     if (grants.length === 0) {
       routerRef.current.replace(destinationRef.current);

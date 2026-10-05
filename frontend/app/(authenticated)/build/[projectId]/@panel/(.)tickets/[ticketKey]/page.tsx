@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
 import { TicketPanelInner } from "./ticket-panel-inner";
 
@@ -15,10 +16,16 @@ export default async function TicketDetailPanePage({
   const { returnTo } = await searchParams;
   const parsedProjectId = parseInt(projectId, 10);
   if (!Number.isFinite(parsedProjectId) || parsedProjectId <= 0) return null;
+  let decodedTicketKey: string;
+  try {
+    decodedTicketKey = decodeURIComponent(ticketKey);
+  } catch {
+    notFound();
+  }
   return (
     <TicketPanelInner
       projectId={parsedProjectId}
-      ticketKey={decodeURIComponent(ticketKey)}
+      ticketKey={decodedTicketKey}
       returnTo={returnTo ?? null}
     />
   );

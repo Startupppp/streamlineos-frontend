@@ -12,10 +12,16 @@ const LEGACY_PROJECT_QUERY_KEYS = [
 
 const ALLOWED_SAVED_DESTINATION_PREFIX = "/build/";
 
+const DESTINATION_BASE = "http://build.local";
+
 export function isAllowedLandingDestination(destination: string): boolean {
+  if (!destination.startsWith(ALLOWED_SAVED_DESTINATION_PREFIX) || destination.length > 200) return false;
+  if (destination.includes("\\")) return false;
+  const resolved = new URL(destination, DESTINATION_BASE);
   return (
-    destination.startsWith(ALLOWED_SAVED_DESTINATION_PREFIX) &&
-    destination.length <= 200
+    resolved.origin === DESTINATION_BASE &&
+    resolved.pathname.startsWith(ALLOWED_SAVED_DESTINATION_PREFIX) &&
+    `${resolved.pathname}${resolved.search}${resolved.hash}` === destination
   );
 }
 

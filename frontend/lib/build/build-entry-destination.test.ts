@@ -62,4 +62,15 @@ describe("BT-f02ef63c7b0f — saved landing preference", () => {
     expect(isAllowedLandingDestination("/settings/billing")).toBe(false);
     expect(isAllowedLandingDestination("")).toBe(false);
   });
+
+  it("isAllowedLandingDestination rejects traversal and backslash escapes out of /build/", () => {
+    expect(isAllowedLandingDestination("/build/../../settings/billing")).toBe(false);
+    expect(isAllowedLandingDestination("/build/%2e%2e/settings/billing")).toBe(false);
+    expect(isAllowedLandingDestination("/build/./projects")).toBe(false);
+    expect(isAllowedLandingDestination("/build/\\evil.com")).toBe(false);
+  });
+
+  it("isAllowedLandingDestination keeps a /build/ path with a query string", () => {
+    expect(isAllowedLandingDestination("/build/projects?view=board")).toBe(true);
+  });
 });

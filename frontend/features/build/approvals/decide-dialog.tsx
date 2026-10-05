@@ -165,7 +165,7 @@ export function DecideDialog({
           {getErrorMessage(detail.error ?? review.error)}
           <ErrorReference error={detail.error ?? review.error} />
         </div>}
-        {(review.blocked || Boolean(detail.error) || (task && !artifactReady)) && <LoadingButton type="button" variant="outline" size="sm" isPending={reviewing} onClick={handleReviewLatest}>Review latest</LoadingButton>}
+        {(review.blocked || Boolean(detail.error) || (task && !artifactReady && latestArtifact?.state !== "stale")) && <LoadingButton type="button" variant="outline" size="sm" isPending={reviewing} onClick={handleReviewLatest}>Review latest</LoadingButton>}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3">
             <FormField
