@@ -1,5 +1,57 @@
 # Bugs and verification ledger
 
+## QA live-parent and defect-command118 reconciliation — 2026-10-05
+
+Scope: the13 existing Backend118 paths claimed before edits, followed by a root-only two-line SQL-scope narrowing in the same BugsService. No new source/test/schema/API/helper/Markdown file, migration, generated contract or comment. All external planning-graph, portfolio, goal, Ticket, import/export and other working changes are excluded. Supports open BT-9ea775d73705/BT-e19e42776b5a without closing either task or any whole D/I/T/R/B/L stage. Exact separate backend source commit11eb3509ad8f48eb9a55c9f0178b12454c2150c5 follows reviewed final checks; physical runtime proof remains open.
+
+Final integration118: root's sequential existing-config final production and test-inclusive backend TypeScript both exit0 after the fail-closed narrowing. The pre-narrowing production pass is a separate historical checkpoint. Both final heavy gates finish before committing, with no OOM or suppression. External process commits its separately owned planning work as0ba605b2051591e19bea5e358c58d5ee0ca9d2d4 during verification; root preserves it, rechecks every owned frozen hash and an empty index, stages exactly13 paths, confirms the exact index and commits only the reviewed QA package. Backend worktree is clean immediately afterward. Fresh contract-vendor equality and official generator comparison pass at OpenAPI5442d474a431 with417 schemas/331 operations. Official tracker/route/link checks pass71 specifications/116 research files,78 pages and72 canonical Markdown files; native semantic comparison proves535 unchanged IDs/statuses/stages/evidence/text, with only source-line anchors moving. This is source integration, not deployment or clearance of external changes.
+
+### Current verified implementation and focused proof
+
+Result writes now select against the matching live parent run and repeat all org/project/run/result/live-parent predicates in UPDATE FROM RETURNING. A retained result under a deleted, mismatched or foreign parent is refused; identical replay is checked only after the parent lookup. A write whose binding disappears returns404 instead of an undefined success. Database call count is unchanged. Predicate tests are source-level proof, not a PostgreSQL locking or isolation result.
+
+Result-origin defect creation now belongs to the existing BugsService command that owns canonical Ticket creation, QA-detail materialization and publication. Its sole controller injects that already registered service directly; the old TestRunsService command and unused constructor dependency are removed, and every affected explicit constructor/caller test is adapted. This is a real transaction/projection seam, not a forwarding service. Ordinary Bug creation keeps its existing validated bindings, defaults and return projection.
+
+Origin lookup requires the same matching live parent. Result linking is guarded inside the Ticket/QA-detail transaction; zero linked rows throw before returning from the callback, publication or audit. The focused fixture evaluates actual query predicates and staged inserts, refusing deleted/mismatched parents and binding loss between lookup and linking. Its rollback model covers Ticket/QA-detail tables, not physical creator activity/outbox writes, concurrent PostgreSQL transactions or an ambient request transaction.
+
+Independent consumer review finds a historical response defect: result-origin creation returned a bare Ticket while its unchanged controller and frontend require bugRowSchema QA fields. Persisted creation could therefore appear to fail at frontend parsing before invalidation/success callbacks. A meaningful RED against the actual existing schema fails on14 missing QA fields with a valid base Ticket. Both commands now return the already materialized QA enrichment, null ownership/default fields and canonical Ticket version. The real schema parses the positive and persisted QA-field assertions remain; there is no new schema, invented persisted value, response family or extra query. HTTP201, endpoint, body validation, permission keys and frontend query keys remain unchanged. No production creation/retry experiment occurs.
+
+Meaningful RED checkpoints: result-parent protection6 failures/13 passes; origin protection9 failures/5 passes; declared response1 failure/14 passes. Author final121 tests/11 suites pass29.747s, exact13-path zero-warning lint/diff and existing-config scoped TypeScript pass. Root repeats121/11 at32.554s before narrowing, then121/11 at24.615s after narrowing. Final exact13-path strict lint/diff pass; root13 changed roots plus one existing ambient declaration/dependencies pass0 TypeScript diagnostics50.822s. No test-inclusive gate is inferred from these scoped results.
+
+```text
+pnpm -C backend exec jest --runInBand --runTestsByPath src/modules/build/qa/test-runs-tenant-isolation.spec.ts src/modules/build/qa/qa-by-id-project-access.spec.ts src/modules/build/qa/test-runs-search-predicate.spec.ts src/modules/build/qa/test-runs-bola-binding.spec.ts src/modules/build/qa/qa-concurrent-edit.spec.ts src/modules/build/qa/qa-controllers-forward-actor.spec.ts src/modules/build/qa/bug-consolidation/test-run-cycle-bridge.spec.ts src/modules/build/qa/bug-consolidation/bug-test-run-link-survival.spec.ts src/modules/build/qa/bug-consolidation/legacy-bug-writer-unreachable.spec.ts src/modules/build/lifecycle/build-delete-restore.spec.ts src/modules/build/qa/bugs.service.spec.ts
+```
+
+### Current verified independent review and standards correction
+
+Security reviewer qa_security118 independently matches all13 frozen hashes and reports CLEAR for live-parent scope, command ownership, staged rollback, response enrichment and retained actor/permissions. Independent frontend_review101 matches command/controller/origin-test hashes and reports consumer CLEAR. Root's subsequent real type-assertion gate catches the newly added scope non-null assertion: BugsService grows1→2. Root records the single-path handoff, rejects an absent scope before querying and passes the narrowed SQL without that assertion. Security review repeats CLEAR at final BugsService8fec3de6a54520ecece40db5ba4ddabfebb5e32f23b43b5a6a9756c0c7b7c995. Every prior predicate/transaction/response behavior remains reviewed; the final focused/scoped/lint results above cover that change.
+
+Final production services are452/488 lines; origin test203, tenant test459, by-ID test495. Existing query/response/DTO/permission/module owners are reused. Final13-path diff is358 insertions/361 deletions. Read-only ordinary BugsService regression test stays unchanged. Baseline backend4517bb218f1fd6aa8319ea192db1acbfbebd0d05 and external ancestry are preserved.
+
+| Existing claimed path beneath backend/src/modules/build/ | Final SHA256 |
+|---|---|
+| qa/test-runs.service.ts |9217d5b31f9844c749b07b789f1fd2cbb2f56762b4d8ee1f5342251f103ad14a|
+| qa/bugs.service.ts |8fec3de6a54520ecece40db5ba4ddabfebb5e32f23b43b5a6a9756c0c7b7c995|
+| qa/test-runs.controller.ts |7341057e78392458a1671e424bddea58213d956e1a831fc858e714d018d5fd2b|
+| qa/test-runs-tenant-isolation.spec.ts |4f27d34db4506e98718d52f43df637833b85fd3230557be79f97a6e28b636360|
+| qa/qa-by-id-project-access.spec.ts |523c652717644c1ce61185a6bd6aafae60eaecb5e9d61c2338c12ac6899bbc30|
+| qa/test-runs-search-predicate.spec.ts |acbc8af3a50a840c834af7cd0152b8a1cca521082ad9152ca9fab6451767e895|
+| qa/test-runs-bola-binding.spec.ts |851194764e85a1d8d2970e9035775d903906965fd15b115e20420f2f03302b88|
+| qa/qa-concurrent-edit.spec.ts |d8479f0e51c375324c2b48a9f010371a747f47eae5c1b4b6d008c3fe167f06a8|
+| qa/qa-controllers-forward-actor.spec.ts |fd53b03c810a252cb1f5ca43e78cc64e3debb0327c851e8a21534b301cba5d5b|
+| qa/bug-consolidation/test-run-cycle-bridge.spec.ts |6816a823efa866611d5484ac96a267fb6765db920487e378834c3dca82cb3794|
+| qa/bug-consolidation/bug-test-run-link-survival.spec.ts |625762a3dfd6fbdba33c74712112237e3f29794098e97f29250e25e7a21184a8|
+| qa/bug-consolidation/legacy-bug-writer-unreachable.spec.ts |1b50781b1bcea2aaf4a7ec7e3699eec7e9dcc8f842ca58e2ce5f20e9deab4dc1|
+| lifecycle/build-delete-restore.spec.ts |f62f6ab506cafa6df5ca67af083b285e8c17660f76f314cea8d1a6deb2945826|
+
+### Failed repository gates and Current unverified acceptance
+
+The52 type-assertion and8 canonical Ticket-write self-tests pass; the real Ticket-write scan passes369 sources with its existing2 grandfathered update bypasses, zero new/stale bypasses and one creation module. The real assertion scan still fails unrelated raw-row/plain-assertion/stale-ledger entries. After root narrowing it no longer names BugsService; no exception ceiling is raised. Size self-tests65 and over300 self-tests16 pass, but actual size scans fail44 unowned files above500 and540 files versus413 over300. Measured owned files create no new threshold crossing. These are failed repository gates, not a full green release or an authorization to refactor other owners' files.
+
+Before the narrowing, production backend TypeScript exits0. The final integration above supersedes pending full-gate wording: production and test-inclusive gates both exit0, run sequentially from backend with `node --max-old-space-size=10240 node_modules/typescript/bin/tsc --noEmit --incremental false -p tsconfig.build.json`, then `node --max-old-space-size=12288 node_modules/typescript/bin/tsc --noEmit --incremental false -p tsconfig.test.json`. Contract definitions/decorators have not changed; generator/vendor freshness remains an independently recorded static check.
+
+Current unverified: isolated real401/403/404/409/validation responses, authenticated persistence and denial invariants, six-role/object/tenant matrix, physical parent-deletion concurrency, ambient transaction/creator outbox effects, request idempotency/replay, mandatory run/result CAS, suite/ticket/release project bindings, transactional audit/attempt history, result-origin browser/cache refresh and deployment/operations. No QA mutation, deployment or customer-data cleanup occurs. Configured application-role metadata has no scratch_e2e target; PATH has no psql/pg_ctl/initdb and the default Windows PostgreSQL directory is absent. This bounded inventory does not prove every possible tool location or authorize provisioning on the production cluster. Approved isolated credentials and fresh widget browser bytes remain pending user input.535 task identities/statuses/stages stay298 checked/237 open; no broad item is completed from this source package.
+
 ## QA forms115 and widget116 reconciliation — 2026-10-05
 
 Scope: bounded existing QA form accessibility/state repair, actual port1000 open/Cancel/reset observations, existing feedback-widget paint correction and canonical QA error import. All production observations are read-only; no case/run/result, ticket comment, feedback submission, grant or financial record is written. The new user attachment prohibits disposable production verification. No broad BT checkbox or D/I/T/R/B/L stage advances;298 checked/237 open/535 total remains tracker state, not release readiness.
