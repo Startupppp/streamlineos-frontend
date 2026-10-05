@@ -325,6 +325,8 @@ export const buildWorkQueryKeys = {
         : ([...base, "projects", projectId, "webhooks"] as const),
     webhookDeliveries: (projectId: number, webhookId: number) =>
       [...base, "projects", projectId, "webhooks", webhookId, "deliveries"] as const,
+    webhookImpact: (projectId: number, webhookId: number) =>
+      [...base, "projects", projectId, "webhooks", webhookId, "impact"] as const,
     workspaceViews: () => [...base, "projects", "workspace-views"] as const,
     agentTokens: () => [...base, "projects", "agent-tokens"] as const,
     iterationSettings: (projectId: number) =>

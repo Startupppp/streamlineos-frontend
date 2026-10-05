@@ -7,6 +7,7 @@ import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type { ProjectWebhook, WebhookDelivery } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import type { WebhookDeliveryPage, ProjectWebhookRotateSecret, WebhookImpact } from "@/hooks/api/build/webhook-lifecycle-schema";
 
 export interface WebhookListFilters extends Record<string, unknown> {
   state?: "active" | "inactive";
@@ -28,14 +29,23 @@ const projectWebhookPageContract = lazyContract<WebhookPage>(() =>
     (m) => m.projectWebhookPageContract,
   ),
 );
-const webhookDeliveryListContract = lazyContract(() =>
-  import("@/hooks/api/build/build-project-schema").then((m) => m.webhookDeliveryListContract),
+const webhookDeliveryPageContract = lazyContract<WebhookDeliveryPage>(() =>
+  import("@/hooks/api/build/webhook-lifecycle-schema").then((m) => m.webhookDeliveryPageContract),
 );
 const projectWebhookRowContract = lazyContract(() =>
   import("@/hooks/api/build/build-project-schema").then((m) => m.projectWebhookRowContract),
 );
 const webhookTestResultContract = lazyContract(() =>
   import("@/hooks/api/build/build-project-schema").then((m) => m.webhookTestResultContract),
+);
+const projectWebhookRotateSecretContract = lazyContract<ProjectWebhookRotateSecret>(() =>
+  import("@/hooks/api/build/webhook-lifecycle-schema").then((m) => m.projectWebhookRotateSecretContract),
+);
+const webhookImpactContract = lazyContract<WebhookImpact>(() =>
+  import("@/hooks/api/build/webhook-lifecycle-schema").then((m) => m.webhookImpactContract),
+);
+const webhookRetryResultContract = lazyContract(() =>
+  import("@/hooks/api/build/webhook-lifecycle-schema").then((m) => m.webhookRetryResultContract),
 );
 const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
@@ -60,13 +70,41 @@ export function useWebhooks(projectId: number, filters?: WebhookListFilters) {
   });
 }
 
-export function useWebhookDeliveries(projectId: number, webhookId: number, enabled = false) {
+export function useWebhookDeliveries(
+  projectId: number,
+  webhookId: number,
+  enabled = false,
+  cursor?: number,
+) {
   const canManage = useCan("build:manage");
-  return useQuery<WebhookDelivery[]>({
+  const params = cursor !== undefined ? { cursor } : undefined;
+  return useQuery<WebhookDeliveryPage>({
     queryKey: buildWorkQueryKeys.projects.webhookDeliveries(projectId, webhookId),
-    queryFn: ({ signal }) => apiClient.get<WebhookDelivery[]>(`/build/${projectId}/webhooks/${webhookId}/deliveries`, undefined, signal, webhookDeliveryListContract),
+    queryFn: ({ signal }) =>
+      apiClient.get<WebhookDeliveryPage>(
+        `/build/${projectId}/webhooks/${webhookId}/deliveries`,
+        params,
+        signal,
+        webhookDeliveryPageContract,
+      ),
     enabled: canManage && enabled && !!projectId && !!webhookId,
     staleTime: 15_000,
+  });
+}
+
+export function useWebhookImpact(projectId: number, webhookId: number, enabled = false) {
+  const canManage = useCan("build:manage");
+  return useQuery<WebhookImpact>({
+    queryKey: buildWorkQueryKeys.projects.webhookImpact(projectId, webhookId),
+    queryFn: ({ signal }) =>
+      apiClient.get<WebhookImpact>(
+        `/build/${projectId}/webhooks/${webhookId}/impact`,
+        undefined,
+        signal,
+        webhookImpactContract,
+      ),
+    enabled: canManage && enabled && !!projectId && !!webhookId,
+    staleTime: 30_000,
   });
 }
 
@@ -120,6 +158,38 @@ export function useSendTestWebhook(projectId: number) {
         webhookTestResultContract,
       ),
     onSuccess: (_, webhookId) => {
+      void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.webhookDeliveries(projectId, webhookId) });
+    },
+  });
+}
+
+export function useRotateWebhookSecret(projectId: number) {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("build:manage", {
+    mutationKey: ["projects", projectId, "webhooks", "rotate-secret"],
+    mutationFn: (webhookId: number) =>
+      apiClient.post<ProjectWebhookRotateSecret>(
+        `/build/${projectId}/webhooks/${webhookId}/rotate-secret`,
+        {},
+        undefined,
+        projectWebhookRotateSecretContract,
+      ),
+    onSuccess: () => qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.webhooks(projectId) }),
+  });
+}
+
+export function useRetryDelivery(projectId: number, webhookId: number) {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("build:manage", {
+    mutationKey: ["projects", projectId, "webhooks", webhookId, "retry"],
+    mutationFn: (deliveryId: number) =>
+      apiClient.post<{ success: boolean; responseCode: number | null }>(
+        `/build/${projectId}/webhooks/${webhookId}/deliveries/${deliveryId}/retry`,
+        {},
+        undefined,
+        webhookRetryResultContract,
+      ),
+    onSuccess: () => {
       void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.webhookDeliveries(projectId, webhookId) });
     },
   });

@@ -2,7 +2,7 @@
 
 import { useState, useCallback, type MouseEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Zap, Clock, Ellipsis } from "lucide-react";
+import { Zap, Ellipsis, Copy, Check } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   ChevronDownIcon,
@@ -12,7 +12,6 @@ import {
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -25,56 +24,16 @@ import {
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
-  useWebhookDeliveries,
   useSendTestWebhook,
+  useRotateWebhookSecret,
+  useWebhookImpact,
   type ProjectWebhook,
-  type WebhookDelivery,
 } from "@/hooks/api/build/webhooks";
 import { cn } from "@/lib/utils";
 import { PM_PANEL } from "@/components/pm-chrome";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useCanState } from "@/hooks/api/access";
-
-function DeliveryRow({ delivery }: { delivery: WebhookDelivery }) {
-  const statusColor =
-    delivery.status === "success"
-      ? "bg-status-success-fill"
-      : delivery.status === "failed"
-        ? "bg-status-danger-fill"
-        : "bg-status-warning-fill";
-  return (
-    <div className="py-2 px-3 border-b last:border-0">
-      <div className="flex items-center gap-3 text-sm">
-        <div className={cn("h-2 w-2 rounded-full shrink-0", statusColor)} />
-        <span
-          className="min-w-0 flex-1 font-mono text-xs text-muted-foreground truncate"
-          title={delivery.event}
-        >
-          {delivery.event}
-        </span>
-        <Badge variant="outline" className="text-micro shrink-0 font-mono">
-          {delivery.responseCode ?? "—"}
-        </Badge>
-        {delivery.attempts > 1 && (
-          <Badge variant="secondary" className="text-micro shrink-0">
-            {delivery.attempts}x
-          </Badge>
-        )}
-        <span className="text-micro text-muted-foreground shrink-0">
-          {new Date(delivery.deliveredAt).toLocaleTimeString()}
-        </span>
-      </div>
-      {delivery.lastError && delivery.status === "failed" && (
-        <p
-          className="mt-0.5 ml-5 text-micro text-status-danger-ink-strong truncate"
-          title={delivery.lastError}
-        >
-          {delivery.lastError}
-        </p>
-      )}
-    </div>
-  );
-}
+import { WebhookDeliveryPanel } from "@/features/build/settings/webhook-delivery-panel";
 
 function LastDeliveryMeta({
   lastDeliveryAt,
@@ -158,12 +117,12 @@ export function WebhookCard({
   const [internalExpanded, setInternalExpanded] = useState(false);
   const expanded = expandedProp ?? internalExpanded;
   const [menuOpen, setMenuOpen] = useState(false);
-  const { data: deliveries = [], isLoading } = useWebhookDeliveries(
-    projectId,
-    webhook.id,
-    expanded,
-  );
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [revealedSecret, setRevealedSecret] = useState<string | null>(null);
+  const [secretCopied, setSecretCopied] = useState(false);
   const sendTest = useSendTestWebhook(projectId);
+  const rotateSecret = useRotateWebhookSecret(projectId);
+  const { data: impact } = useWebhookImpact(projectId, webhook.id, deleteOpen);
   const { iconRef: sendIconRef, hoverHandlers: sendHoverHandlers } =
     useAnimatedIcon();
   const { iconRef: chevronIconRef, hoverHandlers: chevronHoverHandlers } =
@@ -176,11 +135,6 @@ export function WebhookCard({
     }
     setInternalExpanded((v) => !v);
   }, [onExpandedChange, webhook.id, expanded]);
-
-  const handleConfirmDelete = useCallback(
-    () => onDelete(webhook.id),
-    [onDelete, webhook.id],
-  );
 
   const handleSendTest = useCallback(() => {
     sendTest.mutate(webhook.id, {
@@ -223,6 +177,28 @@ export function WebhookCard({
     toast.success("URL copied");
     setMenuOpen(false);
   }, [webhook.url]);
+
+  const handleRotateSecret = useCallback(() => {
+    setMenuOpen(false);
+    rotateSecret.mutate(webhook.id, {
+      onSuccess: (result) => {
+        setRevealedSecret(result.secret);
+        setSecretCopied(false);
+      },
+      onError: (e) => toast.error(getErrorMessage(e)),
+    });
+  }, [rotateSecret, webhook.id]);
+
+  const handleCopySecret = useCallback(() => {
+    if (!revealedSecret) return;
+    void navigator.clipboard.writeText(revealedSecret);
+    setSecretCopied(true);
+    setTimeout(() => setSecretCopied(false), 2000);
+  }, [revealedSecret]);
+
+  const handleDismissSecret = useCallback(() => setRevealedSecret(null), []);
+
+  const handleConfirmDelete = useCallback(() => onDelete(webhook.id), [onDelete, webhook.id]);
 
   const handleEditFromMenu = useCallback(() => {
     onEdit?.(webhook);
@@ -347,23 +323,30 @@ export function WebhookCard({
           </motion.div>
         </button>
         {canManage && (
-          <ConfirmDialog
-            title="Delete webhook?"
-            description="Deliveries will stop immediately. This cannot be undone."
-            confirmLabel="Delete"
-            destructive
-            onConfirm={handleConfirmDelete}
-            trigger={
-              <AnimatedIconButton
-                variant="ghost"
-                size="icon"
-                aria-label="Delete webhook"
-                className="w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
-                icon={Trash2Icon}
-                iconSize={14}
-              />
-            }
-          />
+          <>
+            <AnimatedIconButton
+              variant="ghost"
+              size="icon"
+              aria-label="Delete webhook"
+              className="w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+              icon={Trash2Icon}
+              iconSize={14}
+              onClick={() => setDeleteOpen(true)}
+            />
+            <ConfirmDialog
+              title="Delete webhook?"
+              description={
+                impact
+                  ? `${impact.totalDeliveries} total deliveries on record (${impact.successfulDeliveries} successful). Deliveries will stop immediately. This cannot be undone.`
+                  : "Deliveries will stop immediately. This cannot be undone."
+              }
+              confirmLabel="Delete"
+              destructive
+              open={deleteOpen}
+              onOpenChange={setDeleteOpen}
+              onConfirm={handleConfirmDelete}
+            />
+          </>
         )}
         <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
           <DropdownMenuTrigger asChild>
@@ -379,6 +362,11 @@ export function WebhookCard({
             <DropdownMenuItem onSelect={handleCopyUrl}>Copy URL</DropdownMenuItem>
             {canManage && onEdit && (
               <DropdownMenuItem onSelect={handleEditFromMenu}>Edit</DropdownMenuItem>
+            )}
+            {canManage && webhook.hasSecret && (
+              <DropdownMenuItem onSelect={handleRotateSecret} disabled={rotateSecret.isPending}>
+                Rotate Secret
+              </DropdownMenuItem>
             )}
             {canManage && onToggle && (
               <>
@@ -401,24 +389,49 @@ export function WebhookCard({
             transition={{ duration: 0.2 }}
             className="overflow-hidden border-t border-border"
           >
+            <WebhookDeliveryPanel projectId={projectId} webhookId={webhook.id} expanded={expanded} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {revealedSecret && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden border-t border-border bg-muted/30"
+          >
             <div className="p-3.5">
-              <p className="text-xs font-normal text-muted-foreground mb-2 flex items-center gap-1.5">
-                <Clock className="h-3 w-3" />
-                Recent Deliveries
+              <p className="text-xs font-normal text-muted-foreground mb-2">
+                New signing secret — copy it now, it will not be shown again.
               </p>
-              {isLoading ? (
-                <Skeleton className="h-24 w-full rounded-lg" />
-              ) : deliveries.length === 0 ? (
-                <p className="text-xs text-muted-foreground py-4 text-center">
-                  No deliveries yet
-                </p>
-              ) : (
-                <div className="rounded-md border border-border overflow-hidden bg-muted/20">
-                  {deliveries.slice(0, 5).map((d) => (
-                    <DeliveryRow key={d.id} delivery={d} />
-                  ))}
-                </div>
-              )}
+              <div className="flex items-center gap-2">
+                <code className="flex-1 text-xs font-mono bg-background border border-border rounded px-2 py-1 truncate">
+                  {revealedSecret}
+                </code>
+                <button
+                  type="button"
+                  onClick={handleCopySecret}
+                  aria-label="Copy signing secret"
+                  className="flex items-center justify-center h-7 w-7 rounded border border-border bg-background hover:bg-muted transition-colors shrink-0"
+                >
+                  {secretCopied ? (
+                    <Check className="h-3.5 w-3.5 text-status-success-ink-strong" />
+                  ) : (
+                    <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDismissSecret}
+                  aria-label="Dismiss secret"
+                  className="text-micro text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                >
+                  Dismiss
+                </button>
+              </div>
             </div>
           </motion.div>
         )}

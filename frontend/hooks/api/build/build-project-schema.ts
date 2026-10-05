@@ -20,7 +20,6 @@ import {
   projectsWebhooksListWebhooksResponseSchema,
   projectsWebhooksCreateWebhookResponseSchema,
   projectsWebhooksUpdateWebhookBodySchema,
-  projectsWebhooksListDeliveriesResponseSchema,
   projectsWebhooksSendTestResponseSchema,
   projectsAutomationsListResponseSchema,
   projectsAutomationsCreateResponseSchema,
@@ -85,8 +84,6 @@ export const projectWebhookRowContract =
   projectsWebhooksCreateWebhookResponseSchema;
 export const projectWebhookUpdateRequestContract =
   projectsWebhooksUpdateWebhookBodySchema;
-export const webhookDeliveryListContract =
-  projectsWebhooksListDeliveriesResponseSchema;
 export const webhookTestResultContract = projectsWebhooksSendTestResponseSchema;
 export const projectAutomationListContract =
   projectsAutomationsListResponseSchema;
