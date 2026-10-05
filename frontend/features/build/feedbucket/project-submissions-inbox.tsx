@@ -286,6 +286,7 @@ export function ProjectSubmissionsInbox({
       <SubmissionInboxFilters
         values={filterValues}
         onChange={handleFilterChange}
+        onClearAll={handleClearFilters}
         searchInputRef={searchInputRef}
       />
 

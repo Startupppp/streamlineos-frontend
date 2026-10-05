@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
+import type { ComponentProps } from "react";
 import * as mockInboxModules from "./inbox-test-mocks";
 import { ProjectSubmissionsInbox } from "./project-submissions-inbox";
 
@@ -7,6 +8,9 @@ const { SAMPLE_SUBMISSION_ROW, baseInboxQueryResult, makeCursorPage } = mockInbo
 const mockUseSearchParams = jest.fn(() => new URLSearchParams());
 const mockRouterReplace = jest.fn();
 const mockRouterPush = jest.fn();
+const mockCan = jest.fn(() => false);
+const mockIsMobile = jest.fn(() => false);
+jest.mock("@/hooks/common/use-mobile", () => ({ useIsMobile: () => mockIsMobile() }));
 
 jest.mock("next/navigation", () => ({
   useSearchParams: () => mockUseSearchParams(),
@@ -27,14 +31,20 @@ jest.mock("@/hooks/api/entitlements", () => ({
 }));
 
 jest.mock("@/hooks/api/access", () => ({
-  useCan: () => false,
+  useCan: () => mockCan(),
   useAccess: () => ({ data: { isOrgOwner: true, scopes: {}, modules: {} }, isLoading: false }),
 }));
 jest.mock("@/hooks/common/use-animated-icon", () => mockInboxModules.animatedIconModule);
 jest.mock("date-fns", () => mockInboxModules.dateFnsModule);
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 jest.mock("@/lib/utils", () => mockInboxModules.utilsModule);
-jest.mock("@/components/ui/data-table", () => mockInboxModules.dataTableModule);
+jest.mock("@/components/ui/data-table", () => ({
+  ...mockInboxModules.dataTableModule,
+  DataTable: (props: Omit<ComponentProps<typeof mockInboxModules.dataTableModule.DataTable>, "selection"> & { selection?: { selected: Set<string | number>; onChange: (selected: Set<string | number>) => void } }) => {
+    function selectRow() { props.selection?.onChange(new Set([SAMPLE_SUBMISSION_ROW.id])); }
+    return <><mockInboxModules.dataTableModule.DataTable {...props} /><button type="button" onClick={selectRow}>Select submission</button></>;
+  },
+}));
 jest.mock("@/components/shared/submission-bulk-toolbar", () => mockInboxModules.bulkToolbarModule);
 jest.mock("@/components/ui/search-input", () => mockInboxModules.searchInputModule);
 jest.mock("@/components/ui/user-combobox", () => mockInboxModules.userComboboxModule);
@@ -70,6 +80,8 @@ function renderWalkablePage() {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockCan.mockReturnValue(false);
+  mockIsMobile.mockReturnValue(false);
   mockUseSearchParams.mockReturnValue(new URLSearchParams());
   mockUseDeleteFeedbucketSubmission.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUseFeedbucketSubmissions.mockReturnValue(
@@ -178,6 +190,23 @@ describe("ProjectSubmissionsInbox — every filter is sent to the server, none a
 });
 
 describe("ProjectSubmissionsInbox — keyset pagination", () => {
+  it("clears every facet in one mobile drawer URL write while resetting cursor and selection", () => {
+    mockCan.mockReturnValue(true);
+    mockIsMobile.mockReturnValue(true);
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("search=crash&status=open&type=feature&linked=linked&duplicate=true&assigneeId=user-owner&from=2026-01-01&to=2026-06-01&keep=context"));
+    renderWalkablePage();
+    fireEvent.click(screen.getByTestId("page-next"));
+    expect(lastQueryArgs().cursor).toBe("cursor-2");
+    fireEvent.click(screen.getByRole("button", { name: "Select submission" }));
+    expect(screen.getByTestId("bulk-toolbar")).toHaveAttribute("data-selected-count", "1");
+    fireEvent.click(screen.getByRole("button", { name: /^Filters/ }));
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Clear all" }));
+    expect(mockRouterReplace).toHaveBeenCalledTimes(1);
+    expect(mockRouterReplace).toHaveBeenCalledWith("/build/1/feedbucket?keep=context", { scroll: false });
+    expect(lastQueryArgs().cursor).toBeUndefined();
+    expect(screen.queryByTestId("bulk-toolbar")).not.toBeInTheDocument();
+  });
+
   it("drives the table in cursor mode so no page number is presented for a live list", () => {
     renderWalkablePage();
     expect(screen.getByTestId("data-table")).toHaveAttribute("data-pagination-mode", "cursor");

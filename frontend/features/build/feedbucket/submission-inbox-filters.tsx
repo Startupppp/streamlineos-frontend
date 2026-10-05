@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState, type RefObject } from "react";
+import { useEffect, useReducer, type RefObject } from "react";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { DatePicker } from "@/components/ui/date-picker";
 import { UserCombobox } from "@/components/ui/user-combobox";
-import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import {
@@ -30,8 +30,44 @@ export interface SubmissionInboxFilterValues {
 
 interface SubmissionInboxFiltersProps {
   values: SubmissionInboxFilterValues;
-  onChange: (key: keyof SubmissionInboxFilterValues, value: string | null) => void;
+  onChange: (
+    key: keyof SubmissionInboxFilterValues,
+    value: string | null,
+  ) => void;
+  onClearAll: () => void;
   searchInputRef?: RefObject<HTMLInputElement | null>;
+}
+
+type SearchState = {
+  draft: string;
+  appliedSearch: string;
+  writtenSearch: string | null;
+};
+type SearchAction =
+  | { type: "input" | "publish" | "synchronize"; value: string }
+  | { type: "clear" };
+
+function searchReducer(state: SearchState, action: SearchAction): SearchState {
+  switch (action.type) {
+    case "input":
+      return { ...state, draft: action.value };
+    case "publish":
+      return { ...state, writtenSearch: action.value };
+    case "clear":
+      return {
+        ...state,
+        draft: "",
+        writtenSearch: state.appliedSearch ? "" : null,
+      };
+    case "synchronize":
+      if (state.appliedSearch === action.value) return state;
+      return {
+        draft:
+          action.value === state.writtenSearch ? state.draft : action.value,
+        appliedSearch: action.value,
+        writtenSearch: null,
+      };
+  }
 }
 
 function dateParamToInput(value: string | null): string {
@@ -42,15 +78,40 @@ function inputToDateParam(value: string): string | null {
   return value ? `${value}T00:00:00Z` : null;
 }
 
-export function SubmissionInboxFilters({ values, onChange, searchInputRef }: SubmissionInboxFiltersProps) {
-  const [searchDraft, setSearchDraft] = useState(values.search ?? "");
+export function SubmissionInboxFilters({
+  values,
+  onChange,
+  onClearAll,
+  searchInputRef,
+}: SubmissionInboxFiltersProps) {
+  const incomingSearch = values.search ?? "";
+  const [searchState, dispatchSearch] = useReducer(searchReducer, {
+    draft: incomingSearch,
+    appliedSearch: incomingSearch,
+    writtenSearch: null,
+  });
+  const searchDraft =
+    searchState.appliedSearch !== incomingSearch &&
+    incomingSearch !== searchState.writtenSearch
+      ? incomingSearch
+      : searchState.draft;
   const debouncedSearch = useDebouncedValue(searchDraft, 300);
 
   useEffect(() => {
+    dispatchSearch({ type: "synchronize", value: incomingSearch });
+  }, [incomingSearch]);
+
+  useEffect(() => {
+    if (searchState.appliedSearch !== incomingSearch) return;
     const next = debouncedSearch.trim();
-    if (next === (values.search ?? "")) return;
+    if (next !== searchState.draft.trim() || next === incomingSearch || searchState.writtenSearch !== null) return;
+    dispatchSearch({ type: "publish", value: next });
     onChange("search", next === "" ? null : next);
-  }, [debouncedSearch, values.search, onChange]);
+  }, [searchState, debouncedSearch, incomingSearch, onChange]);
+
+  function handleSearchChange(value: string) {
+    dispatchSearch({ type: "input", value });
+  }
 
   function handleStatusChange(value: string) {
     onChange("status", value === "all" ? null : value);
@@ -77,10 +138,8 @@ export function SubmissionInboxFilters({ values, onChange, searchInputRef }: Sub
   }
 
   function handleClearAll() {
-    setSearchDraft("");
-    for (const key of ["status", "type", "linked", "duplicate", "assigneeId", "search", "from", "to"] as const) {
-      onChange(key, null);
-    }
+    dispatchSearch({ type: "clear" });
+    onClearAll();
   }
 
   return (
@@ -88,10 +147,10 @@ export function SubmissionInboxFilters({ values, onChange, searchInputRef }: Sub
       className="border-b border-border px-3 py-2"
       search={{
         value: searchDraft,
-        onValueChange: setSearchDraft,
-        placeholder: "Search messages…",
-        label: "Search submissions",
         inputRef: searchInputRef,
+        label: "Search submissions",
+        placeholder: "Search messages…",
+        onValueChange: handleSearchChange,
       }}
       filters={[
         {
@@ -105,7 +164,10 @@ export function SubmissionInboxFilters({ values, onChange, searchInputRef }: Sub
               onValueChange={handleStatusChange}
               options={[
                 { value: "all", label: "All statuses" },
-                ...ALL_STATUSES.map((status) => ({ value: status, label: STATUS_LABELS[status] })),
+                ...ALL_STATUSES.map((status) => ({
+                  value: status,
+                  label: STATUS_LABELS[status],
+                })),
               ]}
             />
           ),
@@ -121,7 +183,10 @@ export function SubmissionInboxFilters({ values, onChange, searchInputRef }: Sub
               onValueChange={handleTypeChange}
               options={[
                 { value: "all", label: "All types" },
-                ...ALL_TYPES.map((type) => ({ value: type, label: TYPE_LABELS[type] })),
+                ...ALL_TYPES.map((type) => ({
+                  value: type,
+                  label: TYPE_LABELS[type],
+                })),
               ]}
             />
           ),
