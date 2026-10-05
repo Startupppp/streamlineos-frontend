@@ -46,6 +46,15 @@ export function OrgSetupShell({
   const currentStepId = sequence[currentIndex] ?? "welcome";
   const isWelcome = currentStepId === "welcome";
   const previewSnapshot = useMemo(() => toPreviewSnapshot(data), [data]);
+  const visibleSteps = useMemo(() => sequence.filter((id) => id !== "welcome"), [sequence]);
+  const visibleIndex = visibleSteps.indexOf(currentStepId);
+  const handleVisibleStepSelect = useMemo(
+    () => (onStepSelect ? (index: number) => {
+      const stepId = visibleSteps[index];
+      if (stepId !== undefined) onStepSelect(sequence.indexOf(stepId));
+    } : undefined),
+    [onStepSelect, sequence, visibleSteps],
+  );
 
   return (
     <WizardSplitShell
@@ -59,14 +68,17 @@ export function OrgSetupShell({
       }
       header={
         <>
-          <StepRail
-            sequence={sequence}
-            currentIndex={currentIndex}
-            saveState={saveState}
-            onStepSelect={onStepSelect}
-          />
-
-          <MobileProgressBar sequence={sequence} currentIndex={currentIndex} />
+          {!isWelcome && (
+            <>
+              <StepRail
+                sequence={visibleSteps}
+                currentIndex={visibleIndex}
+                saveState={saveState}
+                onStepSelect={handleVisibleStepSelect}
+              />
+              <MobileProgressBar sequence={visibleSteps} currentIndex={visibleIndex} />
+            </>
+          )}
 
           {!isWelcome ? (
             <div className="mb-2 hidden min-w-0 space-y-0.5 md:block">
