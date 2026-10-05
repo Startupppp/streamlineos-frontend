@@ -54,13 +54,11 @@ export function isToolbarFieldFilter(filter: BuildToolbarFilter): boolean {
 export function isToolbarMobileSearchExpanded({
   isMobile,
   focused,
-  value,
 }: {
   isMobile: boolean;
   focused: boolean;
-  value?: string;
 }): boolean {
-  return isMobile && (focused || Boolean(value));
+  return isMobile && focused;
 }
 
 function mobileColumnsFor({

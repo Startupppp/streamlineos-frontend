@@ -1,4 +1,4 @@
-import { createRef } from "react";
+import { createRef, useState } from "react";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { BuildListToolbar } from "./build-list-toolbar";
 import { BuildFilterSelect } from "./build-filter-select";
@@ -272,6 +272,33 @@ describe("BuildListToolbar", () => {
       expect(screen.getByRole("button", { name: "Grid view" })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: /^Filters/ })).toBeInTheDocument();
     });
+  });
+
+  it("restores mobile Filters after populated search blurs and opens the drawer without clearing search", async () => {
+    useIsMobile.mockReturnValue(true);
+    function SearchToolbar() {
+      const [value, setValue] = useState("");
+      return <BuildListToolbar search={{ ...search, value, onValueChange: setValue }} filters={[statusFilter(), severityFilter()]} trailing={<button type="button">Grid view</button>} />;
+    }
+    render(<SearchToolbar />);
+    const input = screen.getByLabelText("Search bugs");
+    expect(screen.getByRole("button", { name: /^Filters/ })).toBeInTheDocument();
+    fireEvent.focus(input);
+    await waitFor(() => expect(screen.queryByRole("button", { name: /^Filters/ })).toBeNull());
+    fireEvent.change(input, { target: { value: "QA-094" } });
+    expect(input).toHaveValue("QA-094");
+    expect(screen.queryByRole("button", { name: /^Filters/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Grid view" })).toBeNull();
+    fireEvent.blur(input);
+    await waitFor(() => expect(screen.getByRole("button", { name: /^Filters/ })).toBeInTheDocument());
+    expect(screen.getByRole("button", { name: "Grid view" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /^Filters/ }));
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByRole("combobox", { name: "Status" })).toBeInTheDocument();
+    expect(input).toHaveValue("QA-094");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Done" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(input).toHaveValue("QA-094");
   });
 
   it("keeps view and display controls on the toolbar instead of nesting them in a sheet", () => {

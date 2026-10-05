@@ -128,25 +128,24 @@ describe("Build adaptive filter layout", () => {
 });
 
 describe("isToolbarMobileSearchExpanded", () => {
-  it("expands on mobile when search is focused or has a value", () => {
+  it("expands mobile search only while focused and restores actions after nonempty blur", () => {
     expect(
-      isToolbarMobileSearchExpanded({ isMobile: true, focused: true, value: "" }),
+      isToolbarMobileSearchExpanded({ isMobile: true, focused: true }),
     ).toBe(true);
     expect(
       isToolbarMobileSearchExpanded({
         isMobile: true,
         focused: false,
-        value: "acme",
       }),
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it("stays collapsed on desktop and when mobile search is idle and empty", () => {
     expect(
-      isToolbarMobileSearchExpanded({ isMobile: false, focused: true, value: "x" }),
+      isToolbarMobileSearchExpanded({ isMobile: false, focused: true }),
     ).toBe(false);
     expect(
-      isToolbarMobileSearchExpanded({ isMobile: true, focused: false, value: "" }),
+      isToolbarMobileSearchExpanded({ isMobile: true, focused: false }),
     ).toBe(false);
   });
 });

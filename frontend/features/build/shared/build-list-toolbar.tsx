@@ -102,7 +102,6 @@ export function BuildListToolbar({
   const searchExpanded = isToolbarMobileSearchExpanded({
     isMobile,
     focused: searchFocused,
-    value: search?.value,
   });
   const showActions = !searchExpanded;
 
