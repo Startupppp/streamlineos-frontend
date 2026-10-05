@@ -230,7 +230,7 @@ madge reports no circular dependency in backend `src/modules/build` or in fronte
 
 | Candidate | Status |
 |---|---|
-| Type re-exports in `hooks/api/build/{automations,milestones,releases,ticket-search,agent-tokens}.ts` | FE-126 pass-throughs; repoint importers and delete |
+| Type re-exports in `hooks/api/build/{automations,milestones,releases,ticket-search,agent-tokens}.ts` | removed in `40322030a`; calendar and chat now import `TicketSearchResult` from `types/projects` |
 | `TicketLabel` in `hooks/api/build/labels.ts` vs `types/projects/tasks.ts` | drift on `color` nullability; verify against the ticket-detail contract before consolidating |
 | `CrmAccountTier` in `hooks/api/build/roadmap-schema.ts` and `types/crm/contacts.ts` | exact duplicate across modules; the CRM owner decides the home |
 | Build timesheet approve/reject | since HO-03 (`65894d8cb`) only org owners pass `canActOnPeriod`; needs a manage-scope read or retirement with the Build Timesheets duplicate surface |
@@ -239,6 +239,10 @@ madge reports no circular dependency in backend `src/modules/build` or in fronte
 | Frontend files over 500 lines on the baseline | `cycles-page.tsx`, `all-work-page.tsx`, `risks-page.tsx`, `command-center-page.tsx` and the other rows in the exceptions table |
 
 ### Baseline gate failures (not caused by cleanup)
+
+The peer change removing the notifications lifecycle cache left a no-op `invalidateCache` and specs still passing a cache double, which broke `pnpm build`; both were removed in backend `2ac45cf15`, with after-commit ordering asserted on emitted events.
+
+Frontend: `check:over-300` (736 against a 724 baseline; no file crossed 300 lines since `d45e50df9`).
 
 Backend: `check:params-schema-completeness` (approvals `projectAndApprovalIdParams` is built with `.extend`), `check:file-sizes` and `check:over-300` (non-Build files and the six files above), `check:dead-code` (non-Build unclassified findings), `check:type-assertions` (inventory and sales ledgers), `check:transaction-callbacks` (leads and invitation specs).
 

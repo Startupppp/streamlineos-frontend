@@ -38,12 +38,14 @@ Coordinator owns integration, commits, generators, full gates, and the cleanup i
 |---|---|---|---|---|
 | FE-A | `frontend/features/build/` folders `ai` through `members` | hooks, lib, types, app routes, the six split files | focused jest, `check:named-handlers`, `check:gated-reads`, madge | committed `d34c4cfc6` |
 | FE-B | `frontend/features/build/` folders `milestones` through `workload`, plus loose files | same as FE-A | same as FE-A | committed in frontend `refactor(build): remove unused Build files…` |
-| FE-SPLIT | the six `check:file-sizes` overruns (invitation page, client-portal-management test, command-center test, epics test harness, incident-sheet, reports-agile test), their new siblings, `scripts/file-size-exceptions.md` | all other files | file-size, over-300, named-handlers, type-assertions, eslint, identical jest counts | report before commit |
-| FE-HOOKS | `frontend/hooks/api/build`, `frontend/lib/build`, `frontend/types/projects`, `frontend/app/(authenticated)/build` | features | focused jest, query-key and invalidation tests per fix | report before commit |
-| BE-CORE | `backend/src/modules/build/core` | other Build folders, schema, migrations | focused jest, `check:dead-code`, madge, a test per efficiency fix | report before commit |
+| FE-SPLIT | the six `check:file-sizes` overruns (invitation page, client-portal-management test, command-center test, epics test harness, incident-sheet, reports-agile test), their new siblings, `scripts/file-size-exceptions.md` | all other files | file-size, over-300, named-handlers, type-assertions, eslint, identical jest counts | committed `d777ec284`, `401ab708d`, `7fd3e99a2` |
+| FE-HOOKS | `frontend/hooks/api/build`, `frontend/lib/build`, `frontend/types/projects`, `frontend/app/(authenticated)/build` | features | focused jest, query-key and invalidation tests per fix | committed `70961872b`, `40322030a` |
+| BE-CORE | `backend/src/modules/build/core` | other Build folders, schema, migrations | focused jest, `check:dead-code`, madge, a test per efficiency fix | committed `641be6ffc`, `16dc56471`, `33fe8411d` |
 | BE-NONCORE | `backend/src/modules/build` except `core` | `core`, schema, migrations | focused jest, madge | committed `536f41a73` and adapter deletion |
 
 Constraints for every lane: no tables, columns, migrations, public endpoints, or persisted field keys are removed. Generated files are regenerated only. Agents do not run git state commands or tsc. Do not add code comments.
+
+Status 2026-10-05: all lanes released. Coordinator follow-ups committed: frontend FE-A consolidation `b4056fc27`, FE-126 type owners `40322030a`; backend spec repairs `52dd1ef31`, `5c4298616`, notifications no-op cache removal `2ac45cf15`. Backend `tsc -p tsconfig.test.json` and `pnpm build` exit 0; frontend `type-check`, `type-check:specs`, `next build`, named-handlers, gated-reads, type-assertions, permission-binding, file-sizes and import-direction exit 0. `check:over-300` fails on the 724 baseline with no file crossing 300 since `d45e50df9`. Remaining candidates and user decisions are in `15-migration-cleanup-and-reuse-plan.md`.
 
 ## Browser follow-up86 — existing coordinator claim
 
