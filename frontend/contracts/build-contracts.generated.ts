@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const OPENAPI_HASH = "sha256:4a9c539b7aa0bc2932d6b632876c1059253b363f63ccca571a16c8f576b88e7b" as const;
+export const OPENAPI_HASH = "sha256:7838edf15df590da115f6892712e2bbebba3bc04a36a8107bef97a95e66da2d7" as const;
 
 export const agentTokensListResponseSchema = z.array(z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -280,7 +280,7 @@ export const projectsTicketsGetAllWorkResponseSchema = z.object({
     labels: z.array(z.object({
       id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       name: z.string(),
-      color: z.string().nullable(),
+      color: z.string(),
     })),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
@@ -910,12 +910,6 @@ export const managedProductsGetProductInsightsResponseSchema = z.object({
 });
 export type ManagedProductsGetProductInsightsResponse = z.infer<typeof managedProductsGetProductInsightsResponseSchema>;
 
-export const managedProductsSetScoreOverrideBodySchema = z.strictObject({
-  confidenceScore: z.number().int().gte(0).lte(100),
-  overrideReason: z.string(),
-});
-export type ManagedProductsSetScoreOverrideBody = z.input<typeof managedProductsSetScoreOverrideBodySchema>;
-
 export const buildMembersListResponseSchema = z.object({
   data: z.array(z.object({
     id: z.string(),
@@ -950,13 +944,6 @@ export const buildMembersAddBodySchema = z.strictObject({
   role: z.enum(["member", "admin"]).optional(),
 });
 export type BuildMembersAddBody = z.input<typeof buildMembersAddBodySchema>;
-
-export const buildStandingGetMemberStandingResponseSchema = z.object({
-  orgStanding: z.string(),
-  buildStanding: z.boolean(),
-  projectCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
-});
-export type BuildStandingGetMemberStandingResponse = z.infer<typeof buildStandingGetMemberStandingResponseSchema>;
 
 export const projectResourcesListOrgCustomStatesResponseSchema = z.array(z.object({
   name: z.string(),
@@ -1484,12 +1471,6 @@ export const projectsRoadmapPublishRoadmapResponseSchema = z.object({
 });
 export type ProjectsRoadmapPublishRoadmapResponse = z.infer<typeof projectsRoadmapPublishRoadmapResponseSchema>;
 
-export const projectsRoadmapRotateRoadmapPublicationTokenResponseSchema = z.object({
-  token: z.string().nullable(),
-  path: z.string().nullable(),
-});
-export type ProjectsRoadmapRotateRoadmapPublicationTokenResponse = z.infer<typeof projectsRoadmapRotateRoadmapPublicationTokenResponseSchema>;
-
 export const projectsRoadmapUpdateRoadmapResponseSchema = z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
@@ -1954,11 +1935,6 @@ export const projectsTemplatesCreateTemplateBodySchema = z.strictObject({
   })).optional(),
 });
 export type ProjectsTemplatesCreateTemplateBody = z.input<typeof projectsTemplatesCreateTemplateBodySchema>;
-
-export const projectsTemplatesSeedSystemTemplatesResponseSchema = z.object({
-  seeded: z.number().int().gte(-9007199254740991).lte(9007199254740991),
-});
-export type ProjectsTemplatesSeedSystemTemplatesResponse = z.infer<typeof projectsTemplatesSeedSystemTemplatesResponseSchema>;
 
 export const projectsTemplatesApplyTemplateResponseSchema = z.object({
   projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -5528,7 +5504,7 @@ export const projectsTicketsListTicketsResponseSchema = z.object({
         id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
         orgId: z.string(),
         name: z.string(),
-        color: z.string().nullable(),
+        color: z.string(),
         createdAt: z.iso.datetime({ offset: true }),
       }),
     })),
@@ -5766,7 +5742,7 @@ export const projectsTicketsGetTicketByKeyResponseSchema = z.object({
   labels: z.array(z.object({
     id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     name: z.string(),
-    color: z.string().nullable(),
+    color: z.string(),
   })),
   comments: z.array(z.object({
     id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -5916,7 +5892,7 @@ export const projectsTicketsGetTicketResponseSchema = z.object({
   labels: z.array(z.object({
     id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     name: z.string(),
-    color: z.string().nullable(),
+    color: z.string(),
   })),
   comments: z.array(z.object({
     id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -6418,7 +6394,7 @@ export const projectsTicketAssociationsGetSubtasksResponseSchema = z.array(z.obj
       id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       orgId: z.string(),
       name: z.string(),
-      color: z.string().nullable(),
+      color: z.string(),
       createdAt: z.iso.datetime({ offset: true }),
     }),
   })),
@@ -7253,11 +7229,9 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "ManagedProductsController_updateManagedProduct", method: "PATCH", path: "/build/managed-products/{managedProductId}", response: "managedProductsUpdateManagedProductResponseSchema", body: "managedProductsUpdateManagedProductBodySchema" },
   { operationId: "ManagedProductsController_deleteManagedProduct", method: "DELETE", path: "/build/managed-products/{managedProductId}" },
   { operationId: "ManagedProductsController_getProductInsights", method: "GET", path: "/build/managed-products/{managedProductId}/insights", response: "managedProductsGetProductInsightsResponseSchema" },
-  { operationId: "ManagedProductsController_setScoreOverride", method: "PATCH", path: "/build/managed-products/{managedProductId}/insights/score-override", body: "managedProductsSetScoreOverrideBodySchema" },
   { operationId: "BuildMembersController_list", method: "GET", path: "/build/members", response: "buildMembersListResponseSchema" },
   { operationId: "BuildMembersController_add", method: "POST", path: "/build/members", response: "buildMembersAddResponseSchema", body: "buildMembersAddBodySchema" },
   { operationId: "BuildMembersController_remove", method: "DELETE", path: "/build/members/{userId}" },
-  { operationId: "BuildStandingController_getMemberStanding", method: "GET", path: "/build/members/{userId}/standing", response: "buildStandingGetMemberStandingResponseSchema" },
   { operationId: "ProjectResourcesController_listOrgCustomStates", method: "GET", path: "/build/org-custom-states", response: "projectResourcesListOrgCustomStatesResponseSchema" },
   { operationId: "ClientPortalController_listPortalProjects", method: "GET", path: "/build/portal/projects", response: "clientPortalListPortalProjectsResponseSchema" },
   { operationId: "ClientPortalController_listPortalChangeRequests", method: "GET", path: "/build/portal/projects/{projectId}/change-requests", response: "clientPortalListPortalChangeRequestsResponseSchema" },
@@ -7281,8 +7255,6 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "ProjectsRoadmapController_createRoadmap", method: "POST", path: "/build/roadmap", response: "projectsRoadmapCreateRoadmapResponseSchema", body: "projectsRoadmapCreateRoadmapBodySchema" },
   { operationId: "ProjectsRoadmapController_readRoadmapPublication", method: "GET", path: "/build/roadmap-publication", response: "projectsRoadmapReadRoadmapPublicationResponseSchema" },
   { operationId: "ProjectsRoadmapController_publishRoadmap", method: "POST", path: "/build/roadmap-publication", response: "projectsRoadmapPublishRoadmapResponseSchema" },
-  { operationId: "ProjectsRoadmapController_unpublishRoadmap", method: "DELETE", path: "/build/roadmap-publication" },
-  { operationId: "ProjectsRoadmapController_rotateRoadmapPublicationToken", method: "POST", path: "/build/roadmap-publication/rotate", response: "projectsRoadmapRotateRoadmapPublicationTokenResponseSchema" },
   { operationId: "ProjectsRoadmapController_updateRoadmap", method: "PATCH", path: "/build/roadmap/{itemId}", response: "projectsRoadmapUpdateRoadmapResponseSchema", body: "projectsRoadmapUpdateRoadmapBodySchema" },
   { operationId: "ProjectsRoadmapController_deleteRoadmap", method: "DELETE", path: "/build/roadmap/{itemId}" },
   { operationId: "ProjectsRoadmapController_getRoadmapSignals", method: "GET", path: "/build/roadmap/{itemId}/signals", response: "projectsRoadmapGetRoadmapSignalsResponseSchema" },
@@ -7303,7 +7275,6 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "TeamsController_removeProject", method: "DELETE", path: "/build/teams/{teamId}/projects/{projectId}" },
   { operationId: "ProjectsTemplatesController_listTemplates", method: "GET", path: "/build/templates", response: "projectsTemplatesListTemplatesResponseSchema" },
   { operationId: "ProjectsTemplatesController_createTemplate", method: "POST", path: "/build/templates", response: "projectsTemplatesCreateTemplateResponseSchema", body: "projectsTemplatesCreateTemplateBodySchema" },
-  { operationId: "ProjectsTemplatesController_seedSystemTemplates", method: "POST", path: "/build/templates/seed-system", response: "projectsTemplatesSeedSystemTemplatesResponseSchema" },
   { operationId: "ProjectsTemplatesController_deleteTemplate", method: "DELETE", path: "/build/templates/{templateId}" },
   { operationId: "ProjectsTemplatesController_applyTemplate", method: "POST", path: "/build/templates/{templateId}/apply", response: "projectsTemplatesApplyTemplateResponseSchema", body: "projectsTemplatesApplyTemplateBodySchema" },
   { operationId: "WorkspaceViewsController_listWorkspaceViews", method: "GET", path: "/build/views", response: "workspaceViewsListWorkspaceViewsResponseSchema" },

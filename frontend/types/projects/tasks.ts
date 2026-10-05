@@ -44,7 +44,7 @@ export interface TicketLabel {
   id: number;
   orgId: string;
   name: string;
-  color: string | null;
+  color: string;
   createdAt: string | Date | null;
 }
 
