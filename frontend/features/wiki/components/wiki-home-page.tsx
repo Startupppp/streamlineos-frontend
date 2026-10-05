@@ -31,8 +31,8 @@ import {
   KB_PAGE_CURSOR_PARAM,
 } from "./wiki-home-all-pages";
 import { WikiCompanyDocumentsStrip } from "./wiki-company-documents-strip";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
-import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
+import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
 import PageTree from "./page-tree";
 
 interface WikiHomePageProps {

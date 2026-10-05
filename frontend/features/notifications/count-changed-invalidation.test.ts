@@ -1,6 +1,4 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { installAbortSignalPolyfill } from "@/test-utils/abort-signal-polyfill";
-installAbortSignalPolyfill();
 import type { QueryKey } from "@tanstack/react-query";
 import {
   clearStreamToken,
@@ -14,6 +12,9 @@ import type {
 } from "./notification-event-stream";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
+import { installAbortSignalPolyfill } from "@/test-utils/abort-signal-polyfill";
+
+installAbortSignalPolyfill();
 
 jest.mock("./notification-event-stream", () => ({
   consumeNotificationStream: jest.fn(),
@@ -86,10 +87,15 @@ describe("a count_changed frame refreshes the inbox, because all eleven backend 
     fetchMock.mockImplementation((input: unknown) =>
       Promise.resolve(
         String(input).includes("/notifications/events/token")
-          ? { ok: true, json: async () => ({ token: "stream-token" }) }
+          ? {
+              ok: true,
+              status: 200,
+              headers: new Headers({ "content-type": "application/json" }),
+              json: async () => ({ token: "stream-token" }),
+            }
           : String(input).includes("/notifications?")
             ? { ok: true, status: 200, headers: new Headers(), json: async () => ({ success: true, data: { data: [{ id: 1, orgId: "org-1", userId: "user-1", type: "INFO", title: "Deploy finished", message: "main is live", priority: "NORMAL", category: "SYSTEM", sourceModule: null, link: null, isRead: false, pinned: false, channel: "IN_APP", archivedAt: null, snoozedUntil: null, createdAt: "2026-10-03T00:00:00Z", ticketContext: null }], hasMore: false, nextCursor: null } }) }
-            : { ok: true, json: async () => ({ backendJwt }) },
+            : { ok: true, status: 200, json: async () => ({ backendJwt }) },
       ),
     );
   });

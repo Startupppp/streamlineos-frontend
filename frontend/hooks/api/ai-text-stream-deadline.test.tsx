@@ -119,7 +119,9 @@ describe("the client deadline on an AI stream must not be tighter than the backe
     await new Promise((r) => setTimeout(r, 0));
 
     expect(timeout.requested.length).toBeGreaterThan(0);
-    expect(timeout.requested.at(-1)).toBeGreaterThanOrEqual(
+    // Max, not last: the shared session-token read arms its own 20 s deadline
+    // too, which can land after the stream's.
+    expect(Math.max(...timeout.requested)).toBeGreaterThanOrEqual(
       BACKEND_LONGEST_STREAM_DEADLINE_MS,
     );
 

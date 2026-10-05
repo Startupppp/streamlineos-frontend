@@ -53,8 +53,8 @@ function PreviewFields({ preview }: { preview: Record<string, unknown> }) {
     <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1">
       {entries.map(([key, value]) => (
         <div key={key} className="contents">
-          <dt className="pt-px text-[11px] font-medium text-muted-foreground">{previewLabel(key)}</dt>
-          <dd className="min-w-0 break-words text-[13px] leading-5 text-foreground">{String(value)}</dd>
+          <dt className="pt-px text-dense font-medium text-muted-foreground">{previewLabel(key)}</dt>
+          <dd className="min-w-0 break-words text-label leading-5 text-foreground">{String(value)}</dd>
         </div>
       ))}
     </dl>
@@ -72,9 +72,9 @@ function ConfirmationRecord({ summary, preview, title }: RecordProps) {
   const cardTitle = title ?? summary;
   return (
     <div className="space-y-2">
-      <p className="text-[13px] font-medium leading-5 text-foreground">{cardTitle}</p>
+      <p className="text-label font-medium leading-5 text-foreground">{cardTitle}</p>
       <PreviewFields preview={preview} />
-      <p className="text-[11px] text-muted-foreground">Past proposal — view only.</p>
+      <p className="text-dense text-muted-foreground">Past proposal — view only.</p>
     </div>
   );
 }
@@ -115,9 +115,9 @@ function ConfirmationLive({
 
   return (
     <div className="space-y-2">
-      <p className="text-[13px] font-medium leading-5 text-foreground">{cardTitle}</p>
+      <p className="text-label font-medium leading-5 text-foreground">{cardTitle}</p>
       {expired ? (
-        <p className="text-[11px] text-muted-foreground">This action has expired.</p>
+        <p className="text-dense text-muted-foreground">This action has expired.</p>
       ) : (
         <PreviewFields preview={preview} />
       )}

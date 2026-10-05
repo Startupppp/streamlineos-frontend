@@ -80,13 +80,15 @@ describe("page anatomy holds at every reference width", () => {
       }
     });
 
-    it(`keeps the filter row on one non-wrapping line at ${VIEWPORTS[viewport]}px`, () => {
+    it(`wraps the filter row inside the page width instead of scrolling it sideways at ${VIEWPORTS[viewport]}px`, () => {
       const restore = atViewport(viewport);
       try {
         const { container } = render(<ListSurface state="empty" />);
-        const filterRow = container.querySelector(".flex-nowrap.overflow-x-auto");
-        expect(filterRow).not.toBeNull();
-        expect(filterRow?.className).not.toContain("flex-wrap");
+        const search = container.querySelector("[data-slot=search-input]");
+        const filterRow = search?.parentElement;
+        expect(filterRow?.className).toContain("flex-wrap");
+        expect(filterRow?.className).toContain("overflow-x-hidden");
+        expect(filterRow?.className).not.toContain("overflow-x-auto");
       } finally {
         restore();
       }

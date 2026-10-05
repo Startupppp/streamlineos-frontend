@@ -51,7 +51,7 @@ import {
   sortProjects,
 } from "@/features/build/project-list/project-list-shaping";
 import { buildListSearchParams } from "@/features/build/shared/use-build-list-url-state";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 export { filterVisibleProjects };

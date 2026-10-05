@@ -25,7 +25,7 @@ import {
   BUILD_FILTER_ALL,
   useBuildListFilters,
 } from "@/features/build/shared/use-build-list-filters";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { ENTITY_OPTIONS, STATUS_OPTIONS } from "./approvals-constants";
 import type { ApprovalInboxItem } from "@/types/projects";
 import { PmPageShell, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";

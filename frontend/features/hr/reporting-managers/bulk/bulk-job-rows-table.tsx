@@ -3,6 +3,7 @@
 import { useId } from "react";
 import { useFormContext } from "react-hook-form";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { ReportingRowStatusBadge } from "@/components/hr/reporting-lines/reporting-status-badge";
 import type { BulkJobRow } from "@/hooks/api/hr/reporting-line-bulk-jobs-schema";
@@ -108,6 +109,7 @@ export function BulkJobRowsTable({ rows, pager, nextRowCursor, withReasons = fal
       data={rows}
       columns={withReasons ? [...BASE_COLUMNS, REASON_COLUMN] : BASE_COLUMNS}
       getRowKey={rowKey}
+      emptyState={<EmptyState compact title="No rows to show" description="This job holds no employee rows on this page." />}
       minWidth="56rem"
       pagination={{
         mode: "cursor",

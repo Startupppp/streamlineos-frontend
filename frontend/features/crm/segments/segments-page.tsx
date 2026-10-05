@@ -206,20 +206,16 @@ export function SegmentsPage() {
 
   const emptyState = (
     <EmptyState
-      title={query === "" ? "No segments yet" : "No segments match that search"}
+      title="No segments yet"
+      filtersActive={query !== ""}
+      filteredTitle="No segments match that search"
+      onClearFilters={handleClearSearch}
       description={
         query === ""
           ? "A segment is criteria with a name — industry, lifecycle stage, owner — re-evaluated every time somebody opens it, so it is never a stale list."
           : "Nothing on this page matches. Clear the search to see every segment."
       }
-      action={
-        query === ""
-          ? canManage
-            ? { label: "New segment", onClick: handleOpenCreate }
-            : undefined
-          : { label: "Clear search", onClick: handleClearSearch }
-      }
-      actionVariant={query === "" ? undefined : "outline"}
+      action={canManage ? { label: "New segment", onClick: handleOpenCreate } : undefined}
       className="flex-1 min-h-0"
     />
   );

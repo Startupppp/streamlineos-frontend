@@ -1,3 +1,4 @@
+import { ZodError } from "zod";
 import { getCompletedStatusNames, isCompletedTicketStatus, filterHiddenCompletedTickets } from "./completed-status";
 import { projectDetailContract } from "@/hooks/api/build/build-project-schema";
 
@@ -180,7 +181,7 @@ describe("projectDetailContract — statuses include type field parsed from actu
       ],
       members: [],
     };
-    expect(() => projectDetailContract.parse(payload)).toThrow();
+    expect(() => projectDetailContract.parse(payload)).toThrow(ZodError);
   });
 
   it("the parsed type field drives getCompletedStatusNames without any type cast", () => {

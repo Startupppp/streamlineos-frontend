@@ -25,7 +25,7 @@ jest.mock("@/features/build/shared/use-build-list-filters", () => ({
   })),
 }));
 
-jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
   useBuildListKeyboard: jest.fn(() => ({
     focusedIndex: null,
     setFocusedIndex: jest.fn(),
@@ -434,7 +434,7 @@ describe("ManagedProductOverviewPage — keyboard navigation (BSN-OVW-KB)", () =
   });
 
   it("wires useBuildListKeyboard with linked project count so j/k/Enter navigate the preview rows", () => {
-    const { useBuildListKeyboard } = jest.requireMock("@/features/build/shared/use-build-list-keyboard");
+    const { useBuildListKeyboard } = jest.requireMock("@/hooks/common/use-build-list-keyboard");
 
     render(<ManagedProductOverviewPage managedProductId={42} />);
 
@@ -444,7 +444,7 @@ describe("ManagedProductOverviewPage — keyboard navigation (BSN-OVW-KB)", () =
   });
 
   it("marks the keyboard-focused row with aria-selected so screen readers can announce position in the list", () => {
-    const { useBuildListKeyboard } = jest.requireMock("@/features/build/shared/use-build-list-keyboard");
+    const { useBuildListKeyboard } = jest.requireMock("@/hooks/common/use-build-list-keyboard");
     (useBuildListKeyboard as jest.Mock).mockReturnValue({
       focusedIndex: 0,
       setFocusedIndex: jest.fn(),

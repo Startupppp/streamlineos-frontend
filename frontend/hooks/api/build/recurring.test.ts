@@ -19,8 +19,9 @@ function makeWrapper() {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
-  return ({ children }: { children: ReactNode }) =>
-    createElement(QueryClientProvider, { client }, children);
+  return function Wrapper({ children }: { children: ReactNode }) {
+    return createElement(QueryClientProvider, { client }, children);
+  };
 }
 
 it("sends the version token alongside the recurrence rule so the backend can detect stale writes", async () => {

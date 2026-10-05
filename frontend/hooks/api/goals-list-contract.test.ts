@@ -1,3 +1,4 @@
+import { ZodError } from "zod";
 import { readFileSync } from "node:fs";
 import { backendPath, backendReachable } from "@/lib/test-support/backend-path";
 import {
@@ -85,13 +86,13 @@ describe("goals list contract matches the backend goals response schema", () => 
   it("rejects a level the backend enum never emits, where z.string() would pass it through silently", () => {
     expect(() =>
       goalListItemContract.parse({ ...GOAL_LIST_ITEM, level: "department" }),
-    ).toThrow();
+    ).toThrow(ZodError);
   });
 
   it("rejects a status the backend enum never emits", () => {
     expect(() =>
       goalListItemContract.parse({ ...GOAL_LIST_ITEM, status: "ACTIVE" }),
-    ).toThrow();
+    ).toThrow(ZodError);
   });
 
   it("accepts every valid goal status the backend can emit", () => {
@@ -155,7 +156,7 @@ describe("goal stats contract matches backend GoalStats shape", () => {
   it("rejects a stats payload missing atRisk, because atRisk drives the status strip", () => {
     expect(() =>
       goalStatsContract.parse({ total: 10, byStatus: {}, avgProgress: 0, completed: 0 }),
-    ).toThrow();
+    ).toThrow(ZodError);
   });
 });
 

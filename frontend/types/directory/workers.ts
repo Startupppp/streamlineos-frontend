@@ -89,6 +89,11 @@ export type CreateWorkerInput = CreateWorkerSubject & {
   isPayee?: boolean;
 };
 
+export interface UpdateWorkerInput {
+  workerId: string;
+  isPayee: boolean;
+}
+
 export interface CreateEngagementInput {
   workerId: string;
   startsOn: string;

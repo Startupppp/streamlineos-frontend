@@ -74,6 +74,7 @@ jest.mock("@/lib/api-client", () => ({
 }));
 
 jest.mock("@/lib/api-envelope", () => ({
+  ...jest.requireActual("@/lib/api-envelope"),
   lazyContract: () => undefined,
 }));
 

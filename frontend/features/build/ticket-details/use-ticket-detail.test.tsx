@@ -1,7 +1,7 @@
 import { act, fireEvent, render, renderHook, screen } from "@testing-library/react";
 import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { toast } from "sonner";
 import { ApiError } from "@/lib/api-envelope";
 import { ticketUpdateRequestContract } from "@/hooks/api/build/build-tickets-subresource-schema";

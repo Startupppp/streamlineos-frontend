@@ -12,6 +12,7 @@ import {
   useApplyRegularization,
   useRejectRegularization,
 } from "@/hooks/api/hr/attendance-regularization-queue";
+import { useUpdateExpenseStatus } from "@/hooks/api/hr/expenses";
 import {
   useApproveInstance,
   useRejectInstance,
@@ -36,6 +37,7 @@ const DECIDE_PERMISSION: Record<ActionCenterSource, string> = {
   leave: "hr:leaves:approve",
   wfh: "hr:attendance:manage",
   attendance: "hr:attendance:manage",
+  expense: "hr:expenses:approve",
   workflow: "hr:workflows:approve",
 };
 
@@ -46,12 +48,14 @@ export function useActionCenterDecisions() {
   const canDecideLeave = useCan("hr:leaves:approve");
   const canDecideAttendance = useCan("hr:attendance:manage");
   const canDecideWorkflow = useCan("hr:workflows:approve");
+  const canDecideExpense = useCan("hr:expenses:approve");
 
   const approveLeave = useApproveLeaveDedicated();
   const rejectLeave = useRejectLeaveDedicated();
   const processWfh = useProcessWfhRequest();
   const applyRegularization = useApplyRegularization();
   const rejectRegularization = useRejectRegularization();
+  const updateExpenseStatus = useUpdateExpenseStatus();
   const approveInstance = useApproveInstance();
   const rejectInstance = useRejectInstance();
 
@@ -59,9 +63,10 @@ export function useActionCenterDecisions() {
     (source: ActionCenterSource): boolean => {
       if (source === "leave") return canDecideLeave;
       if (source === "workflow") return canDecideWorkflow;
+      if (source === "expense") return canDecideExpense;
       return canDecideAttendance;
     },
-    [canDecideLeave, canDecideWorkflow, canDecideAttendance],
+    [canDecideLeave, canDecideWorkflow, canDecideExpense, canDecideAttendance],
   );
 
   const run = useCallback(
@@ -98,6 +103,14 @@ export function useActionCenterDecisions() {
           });
         return;
       }
+      if (item.source === "expense") {
+        await updateExpenseStatus.mutateAsync(
+          decision === "approve"
+            ? { expenseId: item.sourceId, status: "APPROVED" }
+            : { expenseId: item.sourceId, status: "REJECTED", rejectionReason: reason },
+        );
+        return;
+      }
       if (decision === "approve")
         await approveInstance.mutateAsync({ instanceId: item.sourceId });
       else
@@ -112,6 +125,7 @@ export function useActionCenterDecisions() {
       processWfh,
       applyRegularization,
       rejectRegularization,
+      updateExpenseStatus,
       approveInstance,
       rejectInstance,
     ],

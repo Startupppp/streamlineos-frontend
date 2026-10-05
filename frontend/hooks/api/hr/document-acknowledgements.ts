@@ -18,7 +18,7 @@ const acknowledgeLazy = lazyContract(() =>
   ),
 );
 
-export type DocumentAcknowledgementStatus = "PENDING" | "ACKNOWLEDGED";
+export type DocumentAcknowledgementStatus = "PENDING" | "ACKNOWLEDGED" | "DECLINED";
 
 export interface DocumentAcknowledgement {
   id: number;

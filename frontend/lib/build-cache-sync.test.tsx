@@ -16,7 +16,9 @@ let mockOrgId = "org-a";
 jest.mock("@/lib/api-client", () => ({
   apiClient: {
     get: jest.fn(async (url: string) =>
-      url.endsWith("/automations") ? { data: [], pagination: { limit: 50, hasMore: false, nextCursor: null } } : [],
+      url.endsWith("/automations")
+        ? { data: [], pagination: { limit: 20, hasMore: false, nextCursor: null } }
+        : [],
     ),
   },
 }));

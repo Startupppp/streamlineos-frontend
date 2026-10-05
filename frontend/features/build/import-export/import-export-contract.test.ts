@@ -1,8 +1,10 @@
+import { ZodError } from "zod";
 import {
   ticketImportExportPreviewImportResponseSchema,
   ticketImportExportCommitImportResponseSchema,
   ticketImportExportExportTicketsResponseSchema,
 } from "@/contracts/build-contracts.generated";
+
 
 const preview = {
   format: "csv",
@@ -64,7 +66,7 @@ describe("ticketImportExportPreviewImportResponseSchema", () => {
         ...preview,
         issues: [{ rowNumber: 3, field: null, kind: "SOMETHING_NEW", message: "x" }],
       }),
-    ).toThrow();
+    ).toThrow(ZodError);
   });
 
   it("rejects a ticket priority outside the database enum", () => {
@@ -73,7 +75,7 @@ describe("ticketImportExportPreviewImportResponseSchema", () => {
         ...preview,
         rows: [{ rowNumber: 2, values: { title: "A", status: "TODO", priority: "SOON" } }],
       }),
-    ).toThrow();
+    ).toThrow(ZodError);
   });
 
   it("keeps a nullable field distinct from a missing one", () => {
@@ -96,12 +98,12 @@ describe("ticketImportExportCommitImportResponseSchema", () => {
         ...report,
         rows: [{ rowNumber: 2, outcome: "PARTIALLY", ticketId: null, message: null }],
       }),
-    ).toThrow();
+    ).toThrow(ZodError);
   });
 
   it("requires the replay flag, so a replay cannot be read as a fresh import", () => {
     const { replayed: _replayed, ...withoutFlag } = report;
-    expect(() => ticketImportExportCommitImportResponseSchema.parse(withoutFlag)).toThrow();
+    expect(() => ticketImportExportCommitImportResponseSchema.parse(withoutFlag)).toThrow(ZodError);
   });
 });
 
@@ -126,6 +128,6 @@ describe("ticketImportExportExportTicketsResponseSchema", () => {
         rowCount: 0,
         content: "",
       }),
-    ).toThrow();
+    ).toThrow(ZodError);
   });
 });

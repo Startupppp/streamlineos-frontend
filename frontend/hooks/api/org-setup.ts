@@ -33,7 +33,8 @@ export type OrgSetupPayload = {
   invitees?: OrgSetupInvitee[];
 };
 
-export type OrgSetupResponse = { success: boolean; orgId: string; autoLoginToken?: string; destination: string };
+export type OrgSetupResponse = { success: true; orgId: string; autoLoginToken?: string; destination: string };
+export type OrgSetupSkipResponse = { success: true; orgId: string; autoLoginToken?: string };
 
 export type OrgSetupSession = {
   id: number;
@@ -86,7 +87,7 @@ export function useSkipOrgSetupMutation() {
   return useMutation({
     mutationKey: ["org", "setup", "skip"],
     mutationFn: (payload: { reason?: string } = {}) =>
-      apiClient.post<OrgSetupResponse>("/org/setup/skip", payload, undefined, orgSetupSkipContract),
+      apiClient.post<OrgSetupSkipResponse>("/org/setup/skip", payload, undefined, orgSetupSkipContract),
     retry: false,
   });
 }

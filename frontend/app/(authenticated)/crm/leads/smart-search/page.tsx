@@ -291,10 +291,10 @@ export default function SmartLeadSearchPage() {
         ) : rows.length === 0 ? (
           <EmptyState
             illustration={<EmptyLeadsIllustration />}
-            title="No leads match your search"
+            filtersActive
+            filteredTitle="No leads match your search"
+            onClearFilters={handleClear}
             description={`Nothing came back for "${data.query}". Try describing the lead differently, or widen the range.`}
-            action={{ label: "Clear search", onClick: handleClear }}
-            actionVariant="outline"
             className={CONTENT_FILL_PANEL}
           />
         ) : (

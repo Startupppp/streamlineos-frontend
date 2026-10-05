@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { PortalsGallery } from "@/features/portal/portals-gallery";
+import { PortalsGallery } from "./portals-gallery";
 
 export const metadata: Metadata = {
   title: "Portal surfaces",

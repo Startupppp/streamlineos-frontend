@@ -40,7 +40,7 @@ export const wizardDataSchema = z.object({
   installedApps: z.array(z.string()).catch([]),
   modules: z.array(z.enum(ORG_MODULE_KEYS)).catch([]),
   invitees: z.array(inviteeSchema).catch([]),
-  moduleAnswers: z.record(z.record(z.unknown())).catch({}),
+  moduleAnswers: z.record(z.string(), z.record(z.string(), z.unknown())).catch({}),
 });
 
 export type Invitee = z.infer<typeof inviteeSchema>;

@@ -9,6 +9,12 @@ jest.mock("@/hooks/api/build/project-files", () => ({
   useProjectFileSignedUrl: jest.fn(),
 }));
 
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: jest.fn(), push: jest.fn() }),
+  usePathname: () => "/build/1/files",
+  useSearchParams: () => new URLSearchParams(),
+}));
+
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(),
   useAccess: jest.fn(),

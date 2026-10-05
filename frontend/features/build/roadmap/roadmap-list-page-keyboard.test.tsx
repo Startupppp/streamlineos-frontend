@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { RoadmapListPage } from "./roadmap-list-page";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 
 const mockReplace = jest.fn();
 let mockSearchParams = new URLSearchParams();
@@ -121,7 +121,7 @@ jest.mock("./roadmap-publication-actions", () => ({
   RoadmapPublicationActions: () => null,
 }));
 
-jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
   useBuildListKeyboard: jest.fn(() => ({ focusedIndex: null, setFocusedIndex: jest.fn() })),
 }));
 

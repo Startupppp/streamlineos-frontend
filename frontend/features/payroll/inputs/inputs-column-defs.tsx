@@ -27,6 +27,13 @@ function payloadCount(payload: unknown, key: string): number {
   return Array.isArray(value) ? value.length : 0;
 }
 
+function excludedReasons(payload: unknown): string[] {
+  if (!isRecord(payload) || !Array.isArray(payload.excludedItems)) return [];
+  return payload.excludedItems.flatMap((item) =>
+    isRecord(item) && typeof item.reason === "string" ? [item.reason] : [],
+  );
+}
+
 export function resolveDisplayName(row: PayrollSnapshotItem | PayrollAdjustmentListItem): string {
   return getUserDisplayName({
     name: row.userName,
@@ -177,6 +184,16 @@ export const reimbursementColumns: DataTableColumn<PayrollSnapshotItem>[] = [
     className: "text-right",
     cell: (row) => {
       return formatCurrencyFull(payloadNumber(row.payload, "totalAmount"), "INR", "en-IN", 0);
+    },
+  },
+  {
+    key: "excluded",
+    header: "Not paid via payroll",
+    className: "max-w-64",
+    cell: (row) => {
+      const reasons = excludedReasons(row.payload);
+      if (reasons.length === 0) return null;
+      return <span className="text-micro text-status-warning-ink">{reasons.join("; ")}</span>;
     },
   },
   {

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { LayoutGrid, List, UserPlus } from "lucide-react";
 import { useInfiniteHrEmployees, useHrDepartments } from "@/hooks/api/hr";
+import { useHrEmployeeCounts } from "@/hooks/api/hr/employee-list";
 import { useFlushableDebouncedValue } from "@/hooks/common/use-debounce";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -97,6 +98,12 @@ export function EmployeesListPage() {
   const activeHasNextPage = integrityFailed
     ? Boolean(scopedFallback.hasNextPage)
     : Boolean(hasNextPage);
+
+  const countsFilters = useMemo(
+    () => ({ search: activeParams.search, departmentId: activeParams.departmentId, role: activeParams.role }),
+    [activeParams.search, activeParams.departmentId, activeParams.role],
+  );
+  useHrEmployeeCounts(countsFilters);
 
   const pageState = usePageState({
     permission: "hr:employees:view",
@@ -251,11 +258,7 @@ export function EmployeesListPage() {
               loadedCount={employees.length}
               hasMore={activeHasNextPage}
               statusFilter={filters.status}
-              filters={{
-                search: activeParams.search,
-                departmentId: activeParams.departmentId,
-                role: activeParams.role,
-              }}
+              filters={countsFilters}
               statusHref={statusHref}
             />
           </div>

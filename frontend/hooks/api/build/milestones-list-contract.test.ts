@@ -1,3 +1,4 @@
+import { ZodError } from "zod";
 import { readFileSync } from "node:fs";
 import { backendPath, backendReachable } from "@/lib/test-support/backend-path";
 import { milestoneListContract } from "./workspace-schema";
@@ -113,11 +114,11 @@ describe("milestone progress fields are required, so a dropped projection fails 
 
   it("rejects a row that omits completedTicketCount rather than decoding a milestone with no progress", () => {
     const { completedTicketCount: _dropped, ...row } = MILESTONE_ROW;
-    expect(() => milestoneListContract.parse({ ...CURSOR_PAGE, data: [row] })).toThrow();
+    expect(() => milestoneListContract.parse({ ...CURSOR_PAGE, data: [row] })).toThrow(ZodError);
   });
 
   it("rejects a row that omits owner, because nullable is not optional", () => {
     const { owner: _dropped, ...row } = MILESTONE_ROW;
-    expect(() => milestoneListContract.parse({ ...CURSOR_PAGE, data: [row] })).toThrow();
+    expect(() => milestoneListContract.parse({ ...CURSOR_PAGE, data: [row] })).toThrow(ZodError);
   });
 });

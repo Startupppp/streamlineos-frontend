@@ -8,14 +8,16 @@ jest.mock("framer-motion", () => ({
   AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   motion: {
     div: React.forwardRef(
-      (
+      function MotionDiv(
         { children, ...rest }: React.HTMLAttributes<HTMLDivElement>,
         ref: React.Ref<HTMLDivElement>,
-      ) => (
-        <div ref={ref} {...rest}>
-          {children}
-        </div>
-      ),
+      ) {
+        return (
+          <div ref={ref} {...rest}>
+            {children}
+          </div>
+        );
+      },
     ),
   },
 }));
@@ -36,7 +38,7 @@ jest.mock("@/components/layout/mobile/chat-mobile-chrome-layout", () => ({
 function makeProps(
   messageInput: string,
   setMessageInput: jest.Mock,
-  inputRef: React.RefObject<HTMLTextAreaElement>,
+  inputRef: React.RefObject<HTMLTextAreaElement | null>,
 ): MessageInputProps {
   return {
     channelId: 7,

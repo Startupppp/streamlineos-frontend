@@ -24,7 +24,7 @@ import {
   PM_FILL_SECTION,
 } from "@/components/pm-chrome";
 import { useCan } from "@/hooks/api/access";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { usePageState } from "@/hooks/api/use-page-state";

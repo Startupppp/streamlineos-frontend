@@ -19,6 +19,15 @@ jest.mock("@/hooks/api/access", () => ({
   useAccess: () => ({ data: { isOrgOwner: true, scopes: {} }, refetch: jest.fn() }),
 }));
 
+jest.mock("@/hooks/api/authorized-mutation", () => ({
+  useAuthorizedMutation: jest.fn(
+    (_permission: string, options: Record<string, unknown>) => {
+      const { useMutation } = jest.requireActual<typeof import("@tanstack/react-query")>("@tanstack/react-query");
+      return useMutation(options);
+    },
+  ),
+}));
+
 import { apiClient } from "@/lib/api-client";
 
 const PULSE_KEY = buildWorkQueryKeys.projects.agentPulseAll();

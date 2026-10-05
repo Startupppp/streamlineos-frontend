@@ -171,7 +171,7 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
         <div className="flex flex-1 min-h-0 flex-col gap-6">
           {!isOnline && (
             <p className="text-sm text-muted-foreground px-4 py-2 bg-muted/50 rounded-md">
-              You're offline — results may not be up to date
+              You&apos;re offline — results may not be up to date
             </p>
           )}
 

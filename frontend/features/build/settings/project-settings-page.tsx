@@ -27,8 +27,8 @@ import { usePageState } from "@/hooks/api/use-page-state";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
-import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
+import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
 import {
   ProjectInfoSection,
   formSchema,
@@ -342,7 +342,7 @@ export function ProjectSettingsPage({ params }: PageProps) {
               <PmSection index={0} className="min-w-0 lg:h-full lg:min-h-0">
                 <PmPanel className="p-2 lg:flex lg:h-full lg:min-h-0 lg:flex-col" solid>
                   <div className="px-2 pb-2 pt-1">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                       Project configuration
                     </p>
                   </div>
@@ -375,7 +375,7 @@ export function ProjectSettingsPage({ params }: PageProps) {
                         >
                           <Icon className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
                           <span className="min-w-0">
-                            <span className="block text-sm font-semibold leading-5">
+                            <span className="block text-sm font-medium leading-5">
                               {section.label}
                             </span>
                             <span className="mt-0.5 hidden text-xs leading-4 text-muted-foreground lg:block">

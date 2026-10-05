@@ -12,8 +12,8 @@ import { toast } from "sonner";
 import {
   useAutomationRuns,
   useReplayAutomationRun,
-  type AutomationRunRow,
 } from "@/hooks/api/build/automations";
+import type { AutomationRunRow } from "@/hooks/api/build/automation-analysis-schema";
 import { useCan } from "@/hooks/api/access";
 
 type RunOutcome = AutomationRunRow["outcome"];

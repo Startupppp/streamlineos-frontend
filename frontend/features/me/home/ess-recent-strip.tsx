@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { format, parseISO } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { useCanState } from "@/hooks/api/access";
 import { useHrAttendanceStatus } from "@/hooks/api/hr/attendance";
 import { useHrMyLeaveRequests } from "@/hooks/api/hr/leaves";
 import { useEssPayslips } from "@/hooks/api/payroll/ess";
@@ -37,9 +39,13 @@ function RecentItem({
   );
 }
 
+const NOT_IN_ACCESS = "Not included in your access";
+
 function LastPunch() {
+  const access = useCanState("self:attendance");
   const { data, isLoading, isError } = useHrAttendanceStatus();
-  if (isLoading) return <Skeleton className="h-9 w-32" />;
+  if (access === "denied") return <RecentItem label="Last punch">{NOT_IN_ACCESS}</RecentItem>;
+  if (access === "loading" || isLoading) return <Skeleton className="h-9 w-32" />;
   if (isError) return <RecentItem label="Last punch">Attendance unavailable</RecentItem>;
 
   const log = data?.todayLog ?? data?.logs?.[0] ?? null;
@@ -55,8 +61,10 @@ function LastPunch() {
 }
 
 function LastLeaveDecision() {
+  const access = useCanState("self:leaves");
   const { data, isLoading, isError } = useHrMyLeaveRequests();
-  if (isLoading) return <Skeleton className="h-9 w-32" />;
+  if (access === "denied") return <RecentItem label="Last leave decision">{NOT_IN_ACCESS}</RecentItem>;
+  if (access === "loading" || isLoading) return <Skeleton className="h-9 w-32" />;
   if (isError) return <RecentItem label="Last leave decision">Leave history unavailable</RecentItem>;
 
   const decision = latestLeaveDecision(data?.requests ?? []);
@@ -69,13 +77,25 @@ function LastLeaveDecision() {
 }
 
 function LastPayslip() {
+  const access = useCanState("self:payslips");
   const { data, isLoading, isError } = useEssPayslips();
-  if (isLoading) return <Skeleton className="h-9 w-32" />;
+  if (access === "denied") return <RecentItem label="Last payslip">{NOT_IN_ACCESS}</RecentItem>;
+  if (access === "loading" || isLoading) return <Skeleton className="h-9 w-32" />;
   if (isError) return <RecentItem label="Last payslip">Payslips unavailable</RecentItem>;
 
   const payslips = data ?? [];
   if (payslips.length === 0)
-    return <RecentItem label="Last payslip">No payslips yet. HR hasn&apos;t published a run.</RecentItem>;
+    return (
+      <div className="flex flex-col gap-0.5 py-2 sm:py-0">
+        <span className="text-micro uppercase tracking-wide text-muted-foreground">Last payslip</span>
+        <EmptyState
+          bare
+          illustrationSize="xs"
+          className="items-start text-left"
+          title="No payslips yet. HR hasn't published a run."
+        />
+      </div>
+    );
   const latest = payslips.reduce((newest, row) => (row.month > newest.month ? row : newest), payslips[0]);
   return (
     <RecentItem label="Last payslip" href="/me/pay">

@@ -142,6 +142,7 @@ export interface Invitation {
   status: "PENDING" | "ACCEPTED" | "DECLINED" | "EXPIRED" | "REVOKED";
   revokedAt: string | null;
   declinedAt: string | null;
+  moduleAccess: Array<{ moduleKey: string; standing: "MEMBER" | "ADMIN" }>;
   deliveryFailed: boolean;
 }
 

@@ -3,7 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 import { TemplateCard } from "@/features/build/templates/template-card";
 import { TemplatesGridSkeleton } from "@/features/build/templates/templates-grid-skeleton";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import type { ProjectTemplate } from "@/hooks/api/build";
 import {
   AllWorkSkeleton,

@@ -338,19 +338,16 @@ export function UserInvitationsPanel() {
   const emptyState = (
     <EmptyState
       illustrationPreset="mail"
-      title={hasFilters ? "No results" : "No invitations yet"}
+      title="No invitations yet"
+      filtersActive={hasFilters}
+      filteredTitle="No results"
+      onClearFilters={handleClearFilters}
       description={
         hasFilters
           ? "No invitations match your filters."
           : "Invite your first team member to get started."
       }
-      action={
-        hasFilters
-          ? { label: "Clear filters", onClick: handleClearFilters }
-          : canInvite
-            ? { label: "Invite User", onClick: handleOpenInvite }
-            : undefined
-      }
+      action={canInvite ? { label: "Invite User", onClick: handleOpenInvite } : undefined}
       className="border-0 bg-transparent"
     />
   );

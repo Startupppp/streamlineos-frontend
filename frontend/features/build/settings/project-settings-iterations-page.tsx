@@ -32,6 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { numericSelectChange } from "@/lib/numeric-field";
 import { TEXT_ONE_LINE, TEXT_BODY } from "@/lib/text-overflow";
 
 interface ProjectSettingsIterationsPageProps {
@@ -132,7 +133,7 @@ export function ProjectSettingsIterationsPage({ projectId }: ProjectSettingsIter
                         <Select
                           disabled={!canUpdate || updateSettings.isPending}
                           value={String(field.value ?? 2)}
-                          onValueChange={(value) => field.onChange(Number(value))}
+                          onValueChange={numericSelectChange(field.onChange)}
                         >
                           <FormControl>
                             <SelectTrigger>

@@ -65,6 +65,12 @@ jest.mock("@/hooks/api/hr/onboarding", () => ({
 
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 
+const mockCanState = jest.fn();
+jest.mock("@/hooks/api/access", () => ({
+  ...jest.requireActual("@/hooks/api/access"),
+  useCanState: (key: string) => mockCanState(key),
+}));
+
 function settled(data: unknown) {
   return { data, isLoading: false, isError: false };
 }
@@ -81,6 +87,7 @@ beforeEach(() => {
   mockMyLeaveRequests.mockReturnValue(settled({ requests: [] }));
   mockPayslips.mockReturnValue(settled([]));
   mockOnboarding.mockReturnValue(settled([]));
+  mockCanState.mockReturnValue("granted");
 });
 
 describe("EssHomePage — the employee's /me home (PAGE_DIRECTION §12)", () => {
@@ -106,7 +113,7 @@ describe("EssHomePage — the employee's /me home (PAGE_DIRECTION §12)", () => 
     const button = screen.getByRole("button", { name: "Clock in" });
     expect(button.className).toContain("min-h-11");
     fireEvent.click(button);
-    expect(mockCheckIn).toHaveBeenCalledWith({ location: undefined });
+    expect(mockCheckIn).toHaveBeenCalledWith({});
   });
 
   it("offers a regularisation path when the punch fails instead of swallowing it", () => {
@@ -147,6 +154,13 @@ describe("EssHomePage — the employee's /me home (PAGE_DIRECTION §12)", () => 
   it("keeps the honest empty-pay sentence when HR has published nothing", () => {
     render(<EssHomePage />);
     expect(screen.getByText("No payslips yet. HR hasn't published a run.")).toBeInTheDocument();
+  });
+
+  it("says a payslip is outside the employee's access rather than that none exists", () => {
+    mockCanState.mockImplementation((key: string) => (key === "self:payslips" ? "denied" : "granted"));
+    render(<EssHomePage />);
+    expect(screen.queryByText("No payslips yet. HR hasn't published a run.")).not.toBeInTheDocument();
+    expect(screen.getByText("Not included in your access")).toBeInTheDocument();
   });
 
   it("links the last payslip once one exists", () => {

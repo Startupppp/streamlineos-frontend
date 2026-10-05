@@ -21,7 +21,7 @@ import { useOrgCustomStates } from "@/hooks/api/build/custom-states";
 import { MY_WORK_VIEWS } from "./my-work-view";
 import { MyWorkSortControl } from "./my-work-sort-control";
 import { useMyWorkBulk } from "./use-my-work-bulk";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 import {
   buildMyWorkReturnHref,

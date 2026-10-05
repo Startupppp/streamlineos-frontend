@@ -182,11 +182,11 @@ describe("EpicsPage — dependencies reach the card from the epic row itself", (
     expect(screen.getByTestId("epic-card")).toHaveAttribute("data-dependency-count", "3");
   });
 
-  it("passes no dependency count for a row that carries none, rather than inventing zero", async () => {
+  it("passes a zero dependency count through as the epic endpoint projected it", async () => {
     readyPage([]);
-    mockUseEpicPage.mockReturnValue(epicPageResult([epicRow]));
+    mockUseEpicPage.mockReturnValue(epicPageResult([{ ...epicRow, dependencyCount: 0 }]));
     await act(async () => { render(<EpicsPage params={params} />); });
-    expect(screen.getByTestId("epic-card")).toHaveAttribute("data-dependency-count", "");
+    expect(screen.getByTestId("epic-card")).toHaveAttribute("data-dependency-count", "0");
   });
 });
 

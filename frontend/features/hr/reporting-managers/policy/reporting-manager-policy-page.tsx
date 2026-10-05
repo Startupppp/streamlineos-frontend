@@ -10,7 +10,8 @@ import { usePageState } from "@/hooks/api/use-page-state";
 import { Form } from "@/components/ui/form";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCan } from "@/hooks/api/access";
+import { useCan, usePermissionGate } from "@/hooks/api/access";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useReportingManagerPolicy, useUpdateReportingManagerPolicy } from "@/hooks/api/hr/reporting-manager-policy";
 import type { ReportingManagerPolicy } from "@/hooks/api/hr/reporting-lines-schema";
 import { PolicyMissingBanner } from "@/components/hr/reporting-lines/policy-missing-banner";
@@ -108,6 +109,7 @@ function PolicyForm({ policy, onConflict }: PolicyFormProps) {
 export function ReportingManagerPolicyPage() {
   const { data, isLoading, isError, error, refetch } = useReportingManagerPolicy();
   const pageState = usePageState({ permission: "hr:reporting-lines:manage", module: "hr", isLoading, isError, error });
+  const policyRead = usePermissionGate("hr:employees:view");
 
   function handleRetry() {
     void refetch();
@@ -122,7 +124,14 @@ export function ReportingManagerPolicyPage() {
             <PrimaryVersusAdditional />
             <PolicyForm policy={data} onConflict={handleRetry} />
           </div>
-        ) : null}
+        ) : (
+          <EmptyState
+            access={policyRead}
+            title="No policy to show yet"
+            description="The reporting manager policy has not loaded for your session."
+            action={{ label: "Reload policy", onClick: handleRetry }}
+          />
+        )}
       </PageState>
     </PageWrapper>
   );

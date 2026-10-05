@@ -1,3 +1,4 @@
+import { ZodError } from "zod";
 import { kbAskResultSchema } from "./ask-result-schema";
 import { kbChatHistoryPageContract } from "./kb-chat-schema";
 
@@ -14,13 +15,13 @@ describe("the answer contract", () => {
   });
 
   it("refuses a company document citation that claims to belong to a space, since it belongs to none", () => {
-    expect(() => kbAskResultSchema.parse(answer([{ ...document, spaceId: 4 }]))).toThrow();
+    expect(() => kbAskResultSchema.parse(answer([{ ...document, spaceId: 4 }]))).toThrow(ZodError);
   });
 
   it("refuses a company document citation with no entry id, rather than a chip that goes nowhere", () => {
     const { linkedDocumentId: _omitted, ...withoutId } = document;
 
-    expect(() => kbAskResultSchema.parse(answer([withoutId]))).toThrow();
+    expect(() => kbAskResultSchema.parse(answer([withoutId]))).toThrow(ZodError);
   });
 });
 
@@ -55,7 +56,7 @@ describe("answer parts — six answer parts are accepted in the answer schema", 
   it("rejects a disagreement without a summary string, so the banner always has something to show", () => {
     expect(() =>
       kbAskResultSchema.parse({ ...baseAnswer, disagreement: { } }),
-    ).toThrow();
+    ).toThrow(ZodError);
   });
 
   it("accepts a passage on a page citation, enabling the source-passage part", () => {
@@ -82,7 +83,7 @@ describe("answer parts — six answer parts are accepted in the answer schema", 
   it("rejects an undeclared answer field, so backend drift surfaces as a parse failure and not an empty render", () => {
     expect(() =>
       kbAskResultSchema.parse({ ...baseAnswer, unknownFutureField: "surprise" }),
-    ).toThrow();
+    ).toThrow(ZodError);
   });
 
   it("preserves all six answer part fields together in a single parse", () => {

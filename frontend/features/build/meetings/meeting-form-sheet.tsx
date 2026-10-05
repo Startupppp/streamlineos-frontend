@@ -132,6 +132,13 @@ export function MeetingFormSheet({
     setSelectedAttendees((prev) => prev.filter((id) => id !== userId));
   }, []);
 
+  function handleCloseAutoFocus(event: Event) {
+    const target = returnFocusRef?.current;
+    if (!target?.isConnected) return;
+    event.preventDefault();
+    target.focus();
+  }
+
   function handleSubmit(values: MeetingFormValues) {
     const durationMinutes = values.durationMinutes ? parseInt(values.durationMinutes, 10) : undefined;
     const scheduledAt = values.scheduledAt || undefined;
@@ -180,12 +187,7 @@ export function MeetingFormSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         className="w-full sm:max-w-lg flex flex-col gap-0 p-0"
-        onCloseAutoFocus={(event) => {
-          const target = returnFocusRef?.current;
-          if (!target?.isConnected) return;
-          event.preventDefault();
-          target.focus();
-        }}
+        onCloseAutoFocus={handleCloseAutoFocus}
       >
         <SheetHeader className="px-6 py-4 border-b">
           <SheetTitle>{mode === "edit" ? "Edit Meeting" : "New Meeting"}</SheetTitle>

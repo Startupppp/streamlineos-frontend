@@ -129,13 +129,6 @@ describe.each(HRMS_STATIC_ROUTES.map((route) => [route] as const))(
       expect(heading.textContent?.trim()).not.toBe("");
     });
 
-    it("titles its loading skeleton with the page's own declared title, when both are static strings", () => {
-      const loadingTitle = declaredLoadingTitle(route);
-      const pageTitle = declaredPageTitle(route);
-      if (loadingTitle === null || pageTitle === null) return;
-      expect(loadingTitle).toBe(pageTitle);
-    });
-
     it("announces typed skeleton headers, not numbered columns — the known list may only shrink, and an entry that stops matching must be removed", async () => {
       if (!files.loading) return;
       const Loading = await loadRouteComponent(files.loading);
@@ -147,5 +140,20 @@ describe.each(HRMS_STATIC_ROUTES.map((route) => [route] as const))(
       if (known) expect(numbered).toContain("Column 1");
       else expect(numbered).toEqual([]);
     });
+  },
+);
+
+const STATIC_TITLE_PAIRS = HRMS_STATIC_ROUTES.map(
+  (route) => [route, declaredLoadingTitle(route), declaredPageTitle(route)] as const,
+).filter(([, loadingTitle, pageTitle]) => loadingTitle !== null && pageTitle !== null);
+
+it("finds at least one HRMS route whose loading and page titles are both static strings", () => {
+  expect(STATIC_TITLE_PAIRS.length).toBeGreaterThan(0);
+});
+
+it.each(STATIC_TITLE_PAIRS)(
+  "HRMS static route %s titles its loading skeleton with the page's own declared title",
+  (_route, loadingTitle, pageTitle) => {
+    expect(loadingTitle).toBe(pageTitle);
   },
 );

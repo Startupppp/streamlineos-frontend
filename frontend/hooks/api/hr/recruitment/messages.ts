@@ -59,10 +59,13 @@ export interface SendCandidateMessageInput {
 export function useCandidateMessages(candidateId?: number) {
   return useGatedQuery("hr:requisitions:view", {
     queryKey: humanResourcesQueryKeys.hr.candidateMessages(candidateId),
-    queryFn: ({ signal }) => {
-      const params = candidateId ? `?candidateId=${candidateId}` : "";
-      return apiClient.get<CandidateMessage[]>(`/hr/recruitment/messages${params}`, undefined, signal, candidateMessagesListC);
-    },
+    queryFn: ({ signal }) =>
+      apiClient.get<CandidateMessage[]>(
+        "/hr/recruitment/messages",
+        candidateId ? { candidateId } : undefined,
+        signal,
+        candidateMessagesListC,
+      ),
     staleTime: 30_000,
     enabled: candidateId !== undefined,
   });

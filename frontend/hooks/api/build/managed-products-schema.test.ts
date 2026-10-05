@@ -86,6 +86,11 @@ it("parses roadmap and feedback outcome aggregates from managed-product insights
     roadmapItemsByStatus: { planned: 1, in_progress: 1, completed: 1, cancelled: 0 },
     feedbackByStatus: { open: 2, planned: 0, in_progress: 0, completed: 1, declined: 0 },
     linkedFeedbackVoteCount: 7,
+    ageDays: 42,
+    confidenceScore: null,
+    overrideReason: null,
+    overriddenBy: null,
+    overriddenAt: null,
   });
   expect(insights.roadmapItemsByStatus.completed).toBe(1);
   expect(insights.linkedFeedbackVoteCount).toBe(7);
@@ -116,7 +121,7 @@ it("keeps the resolved owner projection the detail endpoint sends, because z.obj
 
 it("rejects a row that omits owner entirely, because the backend always sends it (null when unset)", () => {
   const { owner: _owner, ...withoutOwner } = baseRow("active");
-  expect(() => managedProductRowContract.parse(withoutOwner)).toThrow();
+  expect(() => managedProductRowContract.parse(withoutOwner)).toThrow(ZodError);
 });
 
 it("parses a detail row whose owner is null, because a managed product need not have an owner membership", () => {

@@ -93,7 +93,7 @@ jest.mock("@/components/ui/data-table", () => ({
     if (data?.length === 0) return <>{emptyState}</>;
     const handleSelect = () => selection?.onChange(new Set([1]));
     return (
-      <div data-testid="table-rows" onClick={handleSelect}>
+      <div data-testid="table-rows" onClick={handleSelect} onKeyDown={handleSelect}>
         {(data ?? []).map((row) => {
           const handleContextMenu = () =>
             onRowContextMenu?.(row, { preventDefault: mockPreventDefault, clientX: 120, clientY: 240 });
@@ -313,8 +313,8 @@ export function installReleasesMocks() {
 function makeMutationResult<
   TData = unknown,
   TError = Error,
-  TVariables = any,
-  TContext = any,
+  TVariables = unknown,
+  TContext = unknown,
 >(): UseMutationResult<TData, TError, TVariables, TContext> {
   return {
     context: undefined,

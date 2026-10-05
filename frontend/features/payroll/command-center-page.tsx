@@ -26,6 +26,7 @@ import { usePayrollPolicyCurrent } from "@/hooks/api/payroll/policies";
 import { useCreateRun } from "@/hooks/api/payroll/runs";
 import { useCan } from "@/hooks/api/access";
 import { payrollRunStartGate } from "@/features/payroll/runs/run-start-gate";
+import { PayrollSetupTour } from "@/features/payroll/setup-tour/payroll-setup-tour";
 import type { PayrollRunStatus } from "@/types/payroll/runs";
 
 function currentYearMonth(): string {
@@ -186,6 +187,8 @@ export function PayrollCommandCenterPage() {
         </div>
       }
     >
+      <PayrollSetupTour />
+
       {isLoading && (
         <div className="flex flex-1 min-h-0 flex-col gap-4">
           <StatCardGridSkeleton cols={5} count={5} />

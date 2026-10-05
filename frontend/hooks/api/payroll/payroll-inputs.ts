@@ -9,6 +9,7 @@ import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   PayrollSnapshotItem,
+  PayrollAdjustment,
   PayrollAdjustmentListItem as SchemaAdjustmentListItem,
   PayrollPeriod as SchemaPeriod,
 } from "@/hooks/api/payroll/payroll-inputs-schema";
@@ -54,6 +55,9 @@ export type HrPayrollInputSection =
 export type HrPayrollAdjustmentType = "arrears" | "recovery" | "correction";
 export type HrPayrollAdjustmentStatus = "pending" | "approved" | "applied";
 
+export type PayrollInputPeriod = SchemaPeriod;
+export type PayrollInputSnapshot = PayrollSnapshotItem;
+export type PayrollAdjustmentListItem = SchemaAdjustmentListItem;
 
 interface Pagination {
   limit: number;

@@ -1,8 +1,10 @@
+import { gitConnectionCreateContract, gitConnectionListContract } from "@/hooks/api/git-integration-schema";
+import { ZodError } from "zod";
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ProjectsGitIntegrationSettings } from "./git-integration-settings";
 import type { CreatedGitConnection } from "@/hooks/api/git-integration";
-import type { UseBuildListKeyboardOptions } from "@/features/build/shared/use-build-list-keyboard";
+import type { UseBuildListKeyboardOptions } from "@/hooks/common/use-build-list-keyboard";
 
 const mockRouterReplace = jest.fn();
 let mockSearchParamsValue = new URLSearchParams();
@@ -17,7 +19,7 @@ const mockUseBuildListKeyboard = jest.fn((_options: UseBuildListKeyboardOptions)
   focusedIndex: null,
   setFocusedIndex: jest.fn(),
 }));
-jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
   useBuildListKeyboard: (options: UseBuildListKeyboardOptions) => mockUseBuildListKeyboard(options),
 }));
 
@@ -25,7 +27,7 @@ jest.mock("@/hooks/common/use-online-status", () => ({
   useOnlineStatus: jest.fn(() => true),
 }));
 
-jest.mock("@/features/build/shared/shortcut-help-dialog", () => ({
+jest.mock("@/components/shared/shortcut-help-dialog", () => ({
   ShortcutHelpDialog: ({ open }: { open: boolean }) =>
     open ? <div data-testid="shortcut-help-dialog" /> : null,
 }));
@@ -202,13 +204,11 @@ describe("ProjectsGitIntegrationSettings — populated state (BLD-X-FE-SETTINGS-
 
 describe("ProjectsGitIntegrationSettings — CreatedSecretDialog (BLD-X-FE-SETTINGS-INT-014)", () => {
   it("shows the webhook secret in the created-secret dialog on connection creation — the raw secret is never returned from reads, so this is the only display opportunity", () => {
-    const { gitConnectionCreateContract } = require("@/hooks/api/git-integration-schema");
     const parsed = gitConnectionCreateContract.parse(CREATED_CONNECTION);
     expect(parsed.webhookSecret).toBe(CREATED_CONNECTION.webhookSecret);
   });
 
   it("the list contract only returns maskedSecret, never the raw webhookSecret — prevents secret re-rendering", () => {
-    const { gitConnectionListContract } = require("@/hooks/api/git-integration-schema");
     const parsed = gitConnectionListContract.parse({
       data: [BASE_CONNECTION],
       pagination: { limit: 20, hasMore: false, nextCursor: null },
@@ -219,8 +219,7 @@ describe("ProjectsGitIntegrationSettings — CreatedSecretDialog (BLD-X-FE-SETTI
   });
 
   it("CREATED_CONNECTION contract rejects a list row payload used in place of a create response — the envelopes are distinct", () => {
-    const { gitConnectionCreateContract } = require("@/hooks/api/git-integration-schema");
-    expect(() => gitConnectionCreateContract.parse(BASE_CONNECTION)).toThrow();
+    expect(() => gitConnectionCreateContract.parse(BASE_CONNECTION)).toThrow(ZodError);
   });
 });
 

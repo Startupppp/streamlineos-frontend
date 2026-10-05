@@ -138,7 +138,7 @@ export const orgSetupDraftSaveContract = z.object({ success: z.literal(true) });
 export const orgSetupDraftContract = z
   .object({
     revision: z.number().int(),
-    stepData: z.record(z.unknown()),
+    stepData: z.record(z.string(), z.unknown()),
     expiresAt: z.string(),
   })
   .nullable();

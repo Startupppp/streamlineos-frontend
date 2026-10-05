@@ -1,6 +1,7 @@
 import { render } from "@testing-library/react";
 import { EventCreateForm } from "./event-create-form";
 import type { FormState, RecurrenceState } from "./event-form-state";
+import { defaultRecurrenceState } from "./event-recurrence-schema";
 
 jest.mock("@/components/ui/drawer", () => ({
   Drawer: ({ children, open }: { children: React.ReactNode; open: boolean }) =>
@@ -41,7 +42,7 @@ jest.mock("@/components/ui/loading-button", () => ({
   LoadingButton: ({ children }: { children: React.ReactNode }) => <button type="button">{children}</button>,
 }));
 
-const recurrence: RecurrenceState = { type: "none" };
+const recurrence: RecurrenceState = defaultRecurrenceState();
 
 const baseForm: FormState = {
   title: "Team sync",
@@ -58,7 +59,7 @@ const baseForm: FormState = {
   syncConnectionId: "none",
   addConference: false,
   attendeeIds: [],
-  recurrence: { type: "none" },
+  recurrence: defaultRecurrenceState(),
 };
 
 const baseProps = {

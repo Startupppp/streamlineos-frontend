@@ -1,3 +1,4 @@
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { agentTokenListContract, agentTokenCreateContract } from "./agent-tokens-schema";
 
 const validListItem = {
@@ -128,14 +129,12 @@ describe("agentTokenCreateContract (BLD-X-BE-SETTINGS-TOKENS-002)", () => {
 
 describe("agent-tokens cache key contract (BLD-X-BE-SETTINGS-AT-003)", () => {
   it("agent tokens key is organization-scoped (no projectId) — all tokens visible org-wide", () => {
-    const { buildWorkQueryKeys } = require("@/lib/query-keys/build-work");
     const key = buildWorkQueryKeys.projects.agentTokens();
     expect(Array.isArray(key)).toBe(true);
     expect(key.some((s: unknown) => typeof s === "number")).toBe(false);
   });
 
   it("the key contains the 'agent-tokens' segment", () => {
-    const { buildWorkQueryKeys } = require("@/lib/query-keys/build-work");
     const key = buildWorkQueryKeys.projects.agentTokens();
     expect(key.some((s: unknown) => s === "agent-tokens")).toBe(true);
   });

@@ -1,7 +1,7 @@
 "use client";
 
 import { render, screen, fireEvent } from "@testing-library/react";
-import { ClientPortalManagementPage as PortalPage } from "./client-portal-management-page";
+import { ClientPortalManagementPage } from "./client-portal-management-page";
 
 const mockIsApiError = jest.fn((_e: unknown): _e is { status: number } => false);
 jest.mock("@/lib/api-envelope", () => ({
@@ -330,21 +330,18 @@ beforeEach(() => {
 describe("ClientPortalManagementPage — publication state banner", () => {
   it("shows 'Portal not published' when portalPublishedAt is null", () => {
     mockUsePortalSettings.mockReturnValue(baseQuery({ data: UNPUBLISHED_SETTINGS }));
-    const { ClientPortalManagementPage } = require("./client-portal-management-page");
     render(<ClientPortalManagementPage projectId={1} />);
     expect(screen.getByText("Portal not published")).toBeInTheDocument();
   });
 
   it("shows 'Portal published' when portalPublishedAt is set", () => {
     mockUsePortalSettings.mockReturnValue(baseQuery({ data: PUBLISHED_SETTINGS }));
-    const { ClientPortalManagementPage } = require("./client-portal-management-page");
     render(<ClientPortalManagementPage projectId={1} />);
     expect(screen.getByText("Portal published")).toBeInTheDocument();
   });
 
   it("NEGATIVE — 'Portal published' does not appear when portal is unpublished", () => {
     mockUsePortalSettings.mockReturnValue(baseQuery({ data: UNPUBLISHED_SETTINGS }));
-    const { ClientPortalManagementPage } = require("./client-portal-management-page");
     render(<ClientPortalManagementPage projectId={1} />);
     expect(screen.queryByText("Portal published")).toBeNull();
   });
@@ -353,7 +350,6 @@ describe("ClientPortalManagementPage — publication state banner", () => {
 describe("ClientPortalManagementPage — Switch state reflects publication", () => {
   it("Switch is unchecked when portal is not published", () => {
     mockUsePortalSettings.mockReturnValue(baseQuery({ data: UNPUBLISHED_SETTINGS }));
-    const { ClientPortalManagementPage } = require("./client-portal-management-page");
     render(<ClientPortalManagementPage projectId={1} />);
     const toggle = screen.getByRole("switch");
     expect(toggle).toHaveAttribute("aria-checked", "false");
@@ -361,7 +357,6 @@ describe("ClientPortalManagementPage — Switch state reflects publication", () 
 
   it("Switch is checked when portal is published", () => {
     mockUsePortalSettings.mockReturnValue(baseQuery({ data: PUBLISHED_SETTINGS }));
-    const { ClientPortalManagementPage } = require("./client-portal-management-page");
     render(<ClientPortalManagementPage projectId={1} />);
     const toggle = screen.getByRole("switch");
     expect(toggle).toHaveAttribute("aria-checked", "true");
@@ -370,7 +365,6 @@ describe("ClientPortalManagementPage — Switch state reflects publication", () 
   it("Switch is disabled when canManage is false so mutation control fails closed (FE-44)", () => {
     mockUseCan.mockReturnValue(false);
     mockUsePortalSettings.mockReturnValue(baseQuery({ data: UNPUBLISHED_SETTINGS }));
-    const { ClientPortalManagementPage } = require("./client-portal-management-page");
     render(<ClientPortalManagementPage projectId={1} />);
     expect(screen.getByRole("switch")).toBeDisabled();
   });
@@ -378,7 +372,6 @@ describe("ClientPortalManagementPage — Switch state reflects publication", () 
   it("NEGATIVE — Switch is not disabled when canManage is true and nothing is pending", () => {
     mockUseCan.mockReturnValue(true);
     mockUsePortalSettings.mockReturnValue(baseQuery({ data: UNPUBLISHED_SETTINGS }));
-    const { ClientPortalManagementPage } = require("./client-portal-management-page");
     render(<ClientPortalManagementPage projectId={1} />);
     expect(screen.getByRole("switch")).not.toBeDisabled();
   });
@@ -389,7 +382,6 @@ describe("ClientPortalManagementPage — publish flow", () => {
     const publishMutate = jest.fn();
     mockUsePublishPortal.mockReturnValue(baseMutation({ mutate: publishMutate }));
     mockUsePortalSettings.mockReturnValue(baseQuery({ data: UNPUBLISHED_SETTINGS }));
-    const { ClientPortalManagementPage } = require("./client-portal-management-page");
     render(<ClientPortalManagementPage projectId={1} />);
     fireEvent.click(screen.getByRole("switch"));
     expect(publishMutate).toHaveBeenCalledTimes(1);
@@ -399,7 +391,6 @@ describe("ClientPortalManagementPage — publish flow", () => {
     const unpublishMutate = jest.fn();
     mockUseUnpublishPortal.mockReturnValue(baseMutation({ mutate: unpublishMutate }));
     mockUsePortalSettings.mockReturnValue(baseQuery({ data: UNPUBLISHED_SETTINGS }));
-    const { ClientPortalManagementPage } = require("./client-portal-management-page");
     render(<ClientPortalManagementPage projectId={1} />);
     fireEvent.click(screen.getByRole("switch"));
     expect(unpublishMutate).not.toHaveBeenCalled();
@@ -409,7 +400,6 @@ describe("ClientPortalManagementPage — publish flow", () => {
 describe("ClientPortalManagementPage — unpublish confirms destructively", () => {
   it("clicking Switch on a published portal opens the ConfirmDialog (destructive path)", () => {
     mockUsePortalSettings.mockReturnValue(baseQuery({ data: PUBLISHED_SETTINGS }));
-    const { ClientPortalManagementPage } = require("./client-portal-management-page");
     render(<ClientPortalManagementPage projectId={1} />);
     fireEvent.click(screen.getByRole("switch"));
     expect(screen.getByRole("dialog")).toBeInTheDocument();
@@ -419,7 +409,6 @@ describe("ClientPortalManagementPage — unpublish confirms destructively", () =
     const unpublishMutate = jest.fn();
     mockUseUnpublishPortal.mockReturnValue(baseMutation({ mutate: unpublishMutate }));
     mockUsePortalSettings.mockReturnValue(baseQuery({ data: PUBLISHED_SETTINGS }));
-    const { ClientPortalManagementPage } = require("./client-portal-management-page");
     render(<ClientPortalManagementPage projectId={1} />);
     fireEvent.click(screen.getByRole("switch"));
     fireEvent.click(screen.getByText("Confirm"));
@@ -430,7 +419,6 @@ describe("ClientPortalManagementPage — unpublish confirms destructively", () =
     const unpublishMutate = jest.fn();
     mockUseUnpublishPortal.mockReturnValue(baseMutation({ mutate: unpublishMutate }));
     mockUsePortalSettings.mockReturnValue(baseQuery({ data: PUBLISHED_SETTINGS }));
-    const { ClientPortalManagementPage } = require("./client-portal-management-page");
     render(<ClientPortalManagementPage projectId={1} />);
     fireEvent.click(screen.getByRole("switch"));
     fireEvent.click(screen.getByText("Cancel"));
@@ -443,21 +431,19 @@ describe("ClientPortalManagementPage — grants tab", () => {
     mockUseProjectClientGrants.mockReturnValue(
       baseQuery({ data: { data: [], pagination: { limit: 50, nextCursor: null, hasMore: false } } }),
     );
-    const { ClientPortalManagementPage } = require("./client-portal-management-page");
     render(<ClientPortalManagementPage projectId={1} />);
     expect(screen.getAllByText("No grants").length).toBeGreaterThan(0);
   });
 
   it("shows grant contact name when grants exist", () => {
     mockUseProjectClientGrants.mockReturnValue(baseQuery({ data: GRANTS_PAGE }));
-    const { ClientPortalManagementPage } = require("./client-portal-management-page");
     render(<ClientPortalManagementPage projectId={1} />);
     expect(screen.getByText("Jane Smith")).toBeInTheDocument();
   });
 
   it("opens the shortcut help dialog when ? is pressed, so the shortcut has a target instead of setting dead state", () => {
     mockUseProjectClientGrants.mockReturnValue(baseQuery({ data: GRANTS_PAGE }));
-    render(<PortalPage projectId={1} />);
+    render(<ClientPortalManagementPage projectId={1} />);
 
     expect(screen.queryByText("Keyboard shortcuts")).toBeNull();
     fireEvent.keyDown(document, { key: "?" });
@@ -467,14 +453,14 @@ describe("ClientPortalManagementPage — grants tab", () => {
   it("offers a revoke control on an active grant when the viewer holds build:clientvisibility:manage", () => {
     mockUseCan.mockReturnValue(true);
     mockUseProjectClientGrants.mockReturnValue(baseQuery({ data: GRANTS_PAGE }));
-    render(<PortalPage projectId={1} />);
+    render(<ClientPortalManagementPage projectId={1} />);
     expect(screen.getByRole("button", { name: "Revoke" })).toBeInTheDocument();
   });
 
   it("NEGATIVE — offers no revoke control when the viewer lacks build:clientvisibility:manage, so the control fails closed (FE-44)", () => {
     mockUseCan.mockReturnValue(false);
     mockUseProjectClientGrants.mockReturnValue(baseQuery({ data: GRANTS_PAGE }));
-    render(<PortalPage projectId={1} />);
+    render(<ClientPortalManagementPage projectId={1} />);
     expect(screen.getByText("Jane Smith")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Revoke" })).toBeNull();
   });
@@ -489,14 +475,14 @@ describe("ClientPortalManagementPage — grants tab", () => {
         },
       }),
     );
-    render(<PortalPage projectId={1} />);
+    render(<ClientPortalManagementPage projectId={1} />);
     expect(screen.queryByRole("button", { name: "Revoke" })).toBeNull();
   });
 
   it("confirms through a destructive ConfirmDialog before revoking, and does not revoke on the click alone (FE-83)", () => {
     mockUseCan.mockReturnValue(true);
     mockUseProjectClientGrants.mockReturnValue(baseQuery({ data: GRANTS_PAGE }));
-    render(<PortalPage projectId={1} />);
+    render(<ClientPortalManagementPage projectId={1} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Revoke" }));
     expect(mockRevokeMutate).not.toHaveBeenCalled();
@@ -511,7 +497,7 @@ describe("ClientPortalManagementPage — grants tab", () => {
   it("revokes the grant the row belongs to, not some other grant in the list", () => {
     mockUseCan.mockReturnValue(true);
     mockUseProjectClientGrants.mockReturnValue(baseQuery({ data: GRANTS_PAGE }));
-    render(<PortalPage projectId={1} />);
+    render(<ClientPortalManagementPage projectId={1} />);
     expect(mockUseRevokeGrant).toHaveBeenCalledWith(
       SAMPLE_GRANT.projectClientGrantId,
     );
@@ -521,7 +507,6 @@ describe("ClientPortalManagementPage — grants tab", () => {
     mockUseProjectClientGrants.mockReturnValue(
       baseQuery({ data: { data: [], pagination: { limit: 50, nextCursor: null, hasMore: false } } }),
     );
-    const { ClientPortalManagementPage } = require("./client-portal-management-page");
     render(<ClientPortalManagementPage projectId={1} />);
     expect(screen.queryByText("Jane Smith")).toBeNull();
   });
@@ -530,7 +515,6 @@ describe("ClientPortalManagementPage — grants tab", () => {
 describe("ClientPortalManagementPage — error + loading states do not render banner content (FE-40)", () => {
   it("when page state is not ready, the publication banner is absent", () => {
     mockUsePageState.mockReturnValue({ kind: "error" });
-    const { ClientPortalManagementPage } = require("./client-portal-management-page");
     render(<ClientPortalManagementPage projectId={1} />);
     expect(screen.queryByRole("switch")).toBeNull();
   });
@@ -538,7 +522,6 @@ describe("ClientPortalManagementPage — error + loading states do not render ba
   it("NEGATIVE — when page state is ready, Switch is present", () => {
     mockUsePageState.mockReturnValue({ kind: "ready" });
     mockUsePortalSettings.mockReturnValue(baseQuery({ data: UNPUBLISHED_SETTINGS }));
-    const { ClientPortalManagementPage } = require("./client-portal-management-page");
     render(<ClientPortalManagementPage projectId={1} />);
     expect(screen.getByRole("switch")).toBeInTheDocument();
   });
@@ -551,7 +534,6 @@ describe("ClientPortalManagementPage — URL-backed grant filter axes (FE-86)", 
   }
 
   it("sends no filter axis to the grants read when the URL carries none", () => {
-    const { ClientPortalManagementPage } = require("./client-portal-management-page");
     render(<ClientPortalManagementPage projectId={1} />);
     expect(lastGrantParams()).toEqual({
       projectId: 1,
@@ -567,7 +549,6 @@ describe("ClientPortalManagementPage — URL-backed grant filter axes (FE-86)", 
     currentSearch = new URLSearchParams(
       "grantId=grant-abc-123&from=2026-01-01&to=2026-06-30&status=active&cursor=cur-2",
     );
-    const { ClientPortalManagementPage } = require("./client-portal-management-page");
     render(<ClientPortalManagementPage projectId={1} />);
     expect(lastGrantParams()).toEqual({
       projectId: 1,
@@ -581,7 +562,6 @@ describe("ClientPortalManagementPage — URL-backed grant filter axes (FE-86)", 
 
   it("drops an unknown status value rather than sending it, so a bookmarked URL cannot 400 the strict backend schema", () => {
     currentSearch = new URLSearchParams("status=NOT_A_STATE");
-    const { ClientPortalManagementPage } = require("./client-portal-management-page");
     render(<ClientPortalManagementPage projectId={1} />);
     expect(lastGrantParams()?.state).toBeUndefined();
   });
@@ -591,7 +571,6 @@ describe("ClientPortalManagementPage — URL-backed grant filter axes (FE-86)", 
     mockUseProjectClientGrants.mockReturnValue(
       baseQuery({ data: { data: [], pagination: { limit: 50, nextCursor: null, hasMore: false } } }),
     );
-    const { ClientPortalManagementPage } = require("./client-portal-management-page");
     render(<ClientPortalManagementPage projectId={1} />);
     expect(screen.getAllByText("No matching grants").length).toBeGreaterThan(0);
     expect(screen.queryByText("No grants")).toBeNull();
@@ -601,7 +580,6 @@ describe("ClientPortalManagementPage — URL-backed grant filter axes (FE-86)", 
     mockUseProjectClientGrants.mockReturnValue(
       baseQuery({ data: { data: [], pagination: { limit: 50, nextCursor: null, hasMore: false } } }),
     );
-    const { ClientPortalManagementPage } = require("./client-portal-management-page");
     render(<ClientPortalManagementPage projectId={1} />);
     expect(screen.getAllByText("No grants").length).toBeGreaterThan(0);
     expect(screen.queryByText("No matching grants")).toBeNull();
@@ -618,7 +596,6 @@ describe("ClientPortalManagementPage — grants cursor pagination writes the URL
         },
       }),
     );
-    const { ClientPortalManagementPage } = require("./client-portal-management-page");
     render(<ClientPortalManagementPage projectId={1} />);
     fireEvent.click(screen.getByText("Next"));
     const target = mockReplace.mock.calls.at(-1)?.[0] as string;
@@ -627,7 +604,6 @@ describe("ClientPortalManagementPage — grants cursor pagination writes the URL
 
   it("NEGATIVE — Next is disabled on the last page, so there is no cursor write", () => {
     mockUseProjectClientGrants.mockReturnValue(baseQuery({ data: GRANTS_PAGE }));
-    const { ClientPortalManagementPage } = require("./client-portal-management-page");
     render(<ClientPortalManagementPage projectId={1} />);
     expect(screen.getByText("Next")).toBeDisabled();
     fireEvent.click(screen.getByText("Next"));
@@ -644,7 +620,6 @@ describe("ClientPortalManagementPage — grants cursor pagination writes the URL
         },
       }),
     );
-    const { ClientPortalManagementPage } = require("./client-portal-management-page");
     render(<ClientPortalManagementPage projectId={1} />);
     expect(screen.getByTestId("cursor-page-controls")).toHaveAttribute("data-page", "2");
     fireEvent.click(screen.getByText("Previous"));
@@ -656,7 +631,6 @@ describe("ClientPortalManagementPage — grants cursor pagination writes the URL
     mockUseProjectClientGrants.mockReturnValue(
       baseQuery({ data: { data: [], pagination: { limit: 50, nextCursor: null, hasMore: false } } }),
     );
-    const { ClientPortalManagementPage } = require("./client-portal-management-page");
     render(<ClientPortalManagementPage projectId={1} />);
     expect(screen.queryByTestId("cursor-page-controls")).toBeNull();
   });
@@ -664,7 +638,6 @@ describe("ClientPortalManagementPage — grants cursor pagination writes the URL
 
 describe("ClientPortalManagementPage — tab navigation writes the section param (FE-86, BUG-047)", () => {
   it("clicking Visibility sets section=visibility in the URL so the tab survives a reload (FE-86 positive)", () => {
-    const { ClientPortalManagementPage } = require("./client-portal-management-page");
     render(<ClientPortalManagementPage projectId={1} />);
     fireEvent.click(screen.getByRole("tab", { name: /Visibility/i }));
     const target = mockReplace.mock.calls.at(-1)?.[0] as string;
@@ -674,7 +647,6 @@ describe("ClientPortalManagementPage — tab navigation writes the section param
 
   it("NEGATIVE — clicking Grants removes the section param so the default tab has a clean URL (FE-86, BUG-047 negative)", () => {
     currentSearch = new URLSearchParams("section=visibility");
-    const { ClientPortalManagementPage } = require("./client-portal-management-page");
     render(<ClientPortalManagementPage projectId={1} />);
     fireEvent.click(screen.getByRole("tab", { name: /Grants/i }));
     const target = mockReplace.mock.calls.at(-1)?.[0] as string;
@@ -683,7 +655,6 @@ describe("ClientPortalManagementPage — tab navigation writes the section param
   });
 
   it("clicking Preview sets section=preview and does not leave a trailing question mark", () => {
-    const { ClientPortalManagementPage } = require("./client-portal-management-page");
     render(<ClientPortalManagementPage projectId={1} />);
     fireEvent.click(screen.getByRole("tab", { name: /Preview/i }));
     const target = mockReplace.mock.calls.at(-1)?.[0] as string;
@@ -692,7 +663,6 @@ describe("ClientPortalManagementPage — tab navigation writes the section param
   });
 
   it("active tab defaults to grants when the URL carries no section param", () => {
-    const { ClientPortalManagementPage } = require("./client-portal-management-page");
     render(<ClientPortalManagementPage projectId={1} />);
     const activeTabEl = document.querySelector("[data-active-tab]");
     expect(activeTabEl?.getAttribute("data-active-tab")).toBe("grants");
@@ -700,7 +670,6 @@ describe("ClientPortalManagementPage — tab navigation writes the section param
 
   it("active tab reflects section=preview from the URL on mount, so a deep-linked preview tab renders immediately", () => {
     currentSearch = new URLSearchParams("section=preview");
-    const { ClientPortalManagementPage } = require("./client-portal-management-page");
     render(<ClientPortalManagementPage projectId={1} />);
     const activeTabEl = document.querySelector("[data-active-tab]");
     expect(activeTabEl?.getAttribute("data-active-tab")).toBe("preview");
@@ -730,7 +699,6 @@ describe("ClientPortalManagementPage — preview section 404 vs generic error (F
     const err = { status: 404 };
     mockIsApiError.mockImplementation((e) => e === err);
     mockUsePortalPreview.mockReturnValue(baseQuery({ isError: true, error: err }));
-    const { ClientPortalManagementPage } = require("./client-portal-management-page");
     render(<ClientPortalManagementPage projectId={1} />);
     expect(screen.getByText("No portal published yet")).toBeInTheDocument();
   });
@@ -739,7 +707,6 @@ describe("ClientPortalManagementPage — preview section 404 vs generic error (F
     const err = { status: 500 };
     mockIsApiError.mockImplementation((e) => e === err);
     mockUsePortalPreview.mockReturnValue(baseQuery({ isError: true, error: err }));
-    const { ClientPortalManagementPage } = require("./client-portal-management-page");
     render(<ClientPortalManagementPage projectId={1} />);
     expect(screen.getByText("Preview unavailable")).toBeInTheDocument();
     expect(screen.queryByText("No portal published yet")).toBeNull();

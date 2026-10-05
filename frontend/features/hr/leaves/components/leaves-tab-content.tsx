@@ -22,6 +22,7 @@ import { LeaveCalendarWidget } from "./leave-calendar-widget";
 import { RequestActionCell } from "./leave-request-action-cell";
 import { useCancelLeave } from "@/hooks/api/hr";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/i18n";
 
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useLeavePolicy } from "@/hooks/api/hr";
@@ -49,6 +50,7 @@ export function LeavesTabContent({
   isLoadingMore = false,
   onLoadMore,
 }: LeavesTabContentProps) {
+  const t = useT();
   const { data: policy } = useLeavePolicy();
   const allowedLeaveTypeNames = useMemo(
     () => new Set(policy?.leaveTypes.map((t) => t.name) ?? []),
@@ -282,11 +284,11 @@ export function LeavesTabContent({
       {myLeaveRequests.length === 0 ? (
         <EmptyState
           illustrationPreset="calendar"
-          title="No leave requests"
-          description="You haven't submitted any leave requests yet."
+          title={t("timeOff.noRequestsTitle")}
+          description={t("timeOff.noRequestsDescription")}
           action={
             onRequestLeave
-              ? { label: "Request leave", onClick: onRequestLeave }
+              ? { label: t("timeOff.requestLeave"), onClick: onRequestLeave }
               : undefined
           }
           className={PAGE_BODY_EMPTY_CLASS}

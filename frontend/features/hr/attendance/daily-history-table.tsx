@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +19,8 @@ import { AttendanceEmailDialog } from "./attendance-email-dialog";
 import { formatDuration } from "./attendance-utils";
 import { cn } from "@/lib/utils";
 import type { AttendanceLog } from "@/types/hr";
+import { useT } from "@/lib/i18n/i18n";
+import type { MessageKey } from "@/lib/i18n/messages/en";
 
 const statusBadgeClasses: Record<string, string> = {
   PRESENT: "bg-status-success-surface text-status-success-ink border-status-success-rule",
@@ -31,18 +33,29 @@ const statusBadgeClasses: Record<string, string> = {
   MISSING_CHECKOUT: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
 };
 
-function getStatusLabel(statusKey: string): string {
-  if (statusKey === "CHECKED_OUT") return "Checked Out";
-  if (statusKey === "ON_BREAK") return "On Break";
-  if (statusKey === "HALF_DAY") return "Half Day";
-  if (statusKey === "MISSING_CHECKOUT") return "Missing Checkout";
+const STATUS_LABEL_KEYS: Readonly<Record<string, MessageKey>> = {
+  PRESENT: "attendance.statusPresent",
+  ABSENT: "attendance.statusAbsent",
+  LATE: "attendance.statusLate",
+  HALF_DAY: "attendance.statusHalfDay",
+  WFH: "attendance.statusWfh",
+  ON_BREAK: "attendance.statusOnBreak",
+  CHECKED_OUT: "attendance.statusCheckedOut",
+  MISSING_CHECKOUT: "attendance.statusMissingCheckout",
+};
+
+type Translate = ReturnType<typeof useT>;
+
+function getStatusLabel(statusKey: string, t: Translate): string {
+  const key = STATUS_LABEL_KEYS[statusKey];
+  if (key) return t(key);
   return statusKey.charAt(0) + statusKey.slice(1).toLowerCase();
 }
 
-const columns: DataTableColumn<AttendanceLog>[] = [
+const buildColumns = (t: Translate): DataTableColumn<AttendanceLog>[] => [
   {
     key: "date",
-    header: "Date",
+    header: t("attendance.colDate"),
     cell: (log) => (
       <span className="text-sm font-medium">
         {format(new Date(log.date), "EEE, MMM dd")}
@@ -51,7 +64,7 @@ const columns: DataTableColumn<AttendanceLog>[] = [
   },
   {
     key: "checkIn",
-    header: "Check In",
+    header: t("attendance.colCheckIn"),
     headerClassName: "hidden md:table-cell",
     className: "hidden md:table-cell font-mono text-sm tabular-nums text-muted-foreground",
     cell: (log) => (
@@ -62,7 +75,7 @@ const columns: DataTableColumn<AttendanceLog>[] = [
   },
   {
     key: "checkOut",
-    header: "Check Out",
+    header: t("attendance.colCheckOut"),
     headerClassName: "hidden md:table-cell",
     className: "hidden md:table-cell font-mono text-sm tabular-nums text-muted-foreground",
     cell: (log) => (
@@ -73,7 +86,7 @@ const columns: DataTableColumn<AttendanceLog>[] = [
   },
   {
     key: "totalHours",
-    header: "Total Hours",
+    header: t("attendance.colTotalHours"),
     headerClassName: "hidden md:table-cell",
     className: "hidden md:table-cell font-mono text-sm tabular-nums",
     cell: (log) => (
@@ -84,7 +97,7 @@ const columns: DataTableColumn<AttendanceLog>[] = [
   },
   {
     key: "status",
-    header: "Status",
+    header: t("attendance.colStatus"),
     cell: (log) => {
       const recordedStatus = log.status?.toUpperCase();
       const isClassifiedStatus =
@@ -110,7 +123,7 @@ const columns: DataTableColumn<AttendanceLog>[] = [
             badgeClass,
           )}
         >
-          {getStatusLabel(statusKey)}
+          {getStatusLabel(statusKey, t)}
         </Badge>
       );
     },
@@ -167,6 +180,8 @@ export const DailyHistoryTable = memo(function DailyHistoryTable({
   fill?: boolean;
   chrome?: boolean;
 }) {
+  const t = useT();
+  const columns = useMemo(() => buildColumns(t), [t]);
   const [pageSize, setPageSize] = useState(20);
   /**
    * The page-overshoot correction this component used to run — snapping
@@ -227,8 +242,8 @@ export const DailyHistoryTable = memo(function DailyHistoryTable({
   const emptyState = (
     <EmptyState
       illustrationPreset="calendar"
-      title="No attendance records"
-      description="Your attendance history will appear here."
+      title={t("attendance.historyEmptyTitle")}
+      description={t("attendance.historyEmptyDescription")}
       className={cn(PAGE_BODY_EMPTY_CLASS, !fill && "py-10")}
     />
   );
@@ -278,7 +293,7 @@ export const DailyHistoryTable = memo(function DailyHistoryTable({
         <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle className="flex items-center gap-2 text-sm font-semibold text-foreground">
             <ClipboardList className="h-4 w-4 text-muted-foreground" />
-            Daily History
+            {t("attendance.dailyHistory")}
           </CardTitle>
           <div className="flex items-center gap-2">
             <AttendanceEmailDialog />
@@ -292,7 +307,7 @@ export const DailyHistoryTable = memo(function DailyHistoryTable({
               iconSize={14}
               iconClassName="mr-1.5"
             >
-              Download page
+              {t("attendance.downloadPage")}
             </AnimatedIconButton>
           </div>
         </div>

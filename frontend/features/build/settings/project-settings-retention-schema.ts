@@ -1,4 +1,8 @@
 import { z } from "zod";
+import {
+  projectsRetentionSettingsGetSettingsResponseSchema,
+  type ProjectsRetentionSettingsGetSettingsResponse,
+} from "@/contracts/build-contracts.generated";
 
 export const RETENTION_SECTION_VALUES = ["policy", "holds"] as const;
 export type RetentionSection = (typeof RETENTION_SECTION_VALUES)[number];
@@ -36,6 +40,13 @@ export const retentionDaysOptionSchema = z
   })
   .nullable();
 
+export const projectRetentionSettingsContract =
+  projectsRetentionSettingsGetSettingsResponseSchema.extend({
+    closedTicketRetentionDays: retentionDaysOptionSchema,
+    attachmentRetentionDays: retentionDaysOptionSchema,
+    auditLogRetentionDays: retentionDaysOptionSchema,
+  });
+
 export const updateRetentionPolicySchema = z
   .object({
     inheritOrgPolicy: z.boolean(),
@@ -52,6 +63,7 @@ export const setLegalHoldSchema = z
   })
   .strict();
 
+export type ProjectRetentionSettings = z.infer<typeof projectRetentionSettingsContract>;
 export type UpdateRetentionPolicyInput = z.infer<
   typeof updateRetentionPolicySchema
 >;

@@ -57,6 +57,14 @@ import {
   prefetchAiCreditsSettings,
   prefetchBillingSettings,
 } from "./settings-billing";
+import {
+  prefetchMyNotificationPreferences,
+  prefetchNotificationBroadcasts,
+  prefetchNotificationEvents,
+  prefetchNotificationPolicy,
+  prefetchNotificationProviders,
+  prefetchNotificationTemplates,
+} from "./settings-notifications";
 
 const BACKEND_JWT = "backend-jwt-must-never-cross-the-boundary";
 const ORG = "org-settings";
@@ -73,6 +81,11 @@ const ALL_KEYS = [
   "billing:seats:view",
   "billing:profile:view",
   "billing:ai-credits:view",
+  "notifications:broadcasts:view",
+  "notifications:events:view",
+  "notifications:policy:view",
+  "notifications:providers:view",
+  "notifications:templates:view",
 ] as const;
 
 function accessWith(keys: readonly string[]): AccessResponse {
@@ -104,7 +117,11 @@ const ORG_MODULES_BODY = [{ moduleKey: "HR", enabled: true }];
 function respondByPath(): void {
   (serverGet as jest.Mock).mockImplementation((path: string) =>
     Promise.resolve(
-      path === "/access/org-modules" ? ORG_MODULES_BODY : { readFrom: path },
+      path === "/access/org-modules"
+        ? ORG_MODULES_BODY
+        : path === "/notification-templates"
+          ? { items: [{ readFrom: path }] }
+          : { readFrom: path },
     ),
   );
 }
@@ -287,6 +304,61 @@ const CASES: readonly PrefetchCase[] = [
         path: "/audit-log?limit=25&actions=role.changed%2Crole.permissions.set%2Crole.member.added%2Crole.member.removed%2Crole.assigned%2Crole.unassigned%2Crole.created%2Crole.updated%2Crole.deleted%2Cpermission.granted%2Cpermission.revoked",
       },
     ],
+  },  {
+    route: "/settings/notifications/broadcasts",
+    run: prefetchNotificationBroadcasts,
+    expected: [{ key: platformCoreQueryKeys.notifications.broadcasts(), path: "/broadcasts" }],
+  },
+  {
+    route: "/settings/notifications/events",
+    run: prefetchNotificationEvents,
+    expected: [
+      { key: platformCoreQueryKeys.notifications.events(), path: "/notifications/admin/events" },
+    ],
+  },
+  {
+    route: "/settings/notifications/policy",
+    run: prefetchNotificationPolicy,
+    expected: [
+      { key: platformCoreQueryKeys.notifications.policy(), path: "/notifications/admin/policy" },
+    ],
+  },
+  {
+    route: "/settings/notifications/providers",
+    run: prefetchNotificationProviders,
+    expected: [
+      {
+        key: platformCoreQueryKeys.notifications.providers(),
+        path: "/notifications/admin/providers",
+      },
+    ],
+  },
+  {
+    route: "/settings/notifications/templates",
+    run: prefetchNotificationTemplates,
+    expected: [
+      {
+        key: platformCoreQueryKeys.notifications.templates(),
+        path: "/notification-templates",
+        value: [{ readFrom: "/notification-templates" }],
+      },
+    ],
+  },
+  {
+    route: "/settings/notifications/my-preferences",
+    run: prefetchMyNotificationPreferences,
+    expected: [
+      {
+        key: platformCoreQueryKeys.notifications.preferences(),
+        path: "/notification-preferences",
+        ungated: true,
+      },
+      {
+        key: platformCoreQueryKeys.notifications.suppressions(),
+        path: "/notification-preferences/suppressions",
+        ungated: true,
+      },
+    ],
   },
 ];
 
@@ -362,6 +434,8 @@ describe("every gated read is really gated", () => {
       "/billing/entitlements",
       "/billing/plans",
       "/me/login-history?page=1&limit=5",
+      "/notification-preferences",
+      "/notification-preferences/suppressions",
       "/sessions",
     ]);
   });

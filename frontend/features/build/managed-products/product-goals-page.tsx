@@ -41,8 +41,8 @@ import {
 } from "@/components/pm-chrome";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import { BUILD_FILTER_ALL, useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
-import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
+import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
 import { BuildOfflineNotice } from "@/features/build/shared/build-offline-notice";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import {

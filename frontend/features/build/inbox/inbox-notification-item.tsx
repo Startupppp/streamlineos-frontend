@@ -14,6 +14,7 @@ import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { TicketTypeIcon } from "@/features/build/shared/ticket-type-icon";
 import { getStatusDotClass, getStatusBadgeClass } from "@/components/shared/ticket-status-badge";
 import { priorityConfig, statusConfig } from "@/features/build/shared/types";
+import { propagationShield } from "@/lib/keyboard-activation";
 import { parseInboxTicketLink } from "./parse-inbox-ticket-link";
 
 interface InboxNotificationItemProps {
@@ -93,10 +94,6 @@ export const InboxNotificationItem = React.memo(function InboxNotificationItem({
     if (typeof checked === "boolean") {
       onToggleSelect?.(notification.id);
     }
-  }
-
-  function handleCheckboxClick(e: React.MouseEvent) {
-    e.stopPropagation();
   }
 
   const priorityKey = priority ? resolvePriorityKey(priority) : null;
@@ -239,7 +236,7 @@ export const InboxNotificationItem = React.memo(function InboxNotificationItem({
     <div className="flex items-stretch">
       {isSelectable ? <div
         className="flex items-start pl-4 pt-3.5"
-        onClick={handleCheckboxClick}
+        {...propagationShield}
       >
         <Checkbox
           checked={isChecked}

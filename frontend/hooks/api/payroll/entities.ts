@@ -2,14 +2,18 @@
 import type { z } from "zod";
 import type { entityContextResponseContract } from "@/hooks/api/payroll/entities-schema";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const entityListC = lazyContract(() =>
   import("@/hooks/api/payroll/entities-schema").then((m) => m.payrollEntityListContract),
+);
+const entityC = lazyContract(() =>
+  import("@/hooks/api/payroll/entities-schema").then((m) => m.payrollEntityContract),
 );
 const countryPacksC = lazyContract(() =>
   import("@/hooks/api/payroll/entities-schema").then((m) => m.countryPacksResponseContract),
@@ -86,5 +90,27 @@ export function useEntityContext(entityId: number | null) {
       apiClient.get<EntityContext>(`/payroll/entities/${entityId}/context`, undefined, signal, entityContextC),
     enabled: canView && entityId != null && entityId > 0,
     staleTime: 60_000,
+  });
+}
+
+export type EntityFilingPatch = Partial<{
+  legalName: string;
+  pan: string | null;
+  tan: string | null;
+  pfEstablishmentCode: string | null;
+  esiCode: string | null;
+  ptStateCode: string | null;
+  stateCode: string | null;
+}>;
+
+export function useUpdatePayrollEntity(entityId: number) {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("payroll:policies:manage", {
+    mutationKey: ["payroll", "entities", entityId, "update"],
+    mutationFn: (body: EntityFilingPatch) =>
+      apiClient.patch(`/payroll/entities/${entityId}`, body, undefined, entityC),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.entitiesAll });
+    },
   });
 }

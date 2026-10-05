@@ -472,8 +472,12 @@ export type PermissionKey =
   | "hr:workforce:manage"
   | "integrations:connections:manage"
   | "integrations:connections:view"
+  | "integrations:email-inbound:manage"
+  | "integrations:email-inbound:view"
   | "integrations:git:manage"
   | "integrations:git:view"
+  | "integrations:slack:manage"
+  | "integrations:slack:view"
   | "inventory:3pl:manage"
   | "inventory:access:manage"
   | "inventory:access:view"
@@ -1255,8 +1259,12 @@ export const PERMISSION_METADATA: Readonly<Record<PermissionKey, PermissionMetad
   "hr:workforce:manage": { resource: "hr:workforce", action: "manage", description: "Manage workforce plans, hiring plans, and headcount budgets" },
   "integrations:connections:manage": { resource: "integrations:connections", action: "manage", description: "Connect and manage external app accounts" },
   "integrations:connections:view": { resource: "integrations:connections", action: "view", description: "View connected external app accounts" },
+  "integrations:email-inbound:manage": { resource: "integrations:email-inbound", action: "manage", description: "Connect, edit and remove inbound email connections" },
+  "integrations:email-inbound:view": { resource: "integrations:email-inbound", action: "view", description: "View inbound email connections and their status" },
   "integrations:git:manage": { resource: "integrations:git", action: "manage", description: "Connect, edit and remove repository connections" },
   "integrations:git:view": { resource: "integrations:git", action: "view", description: "View repository connections and their webhook targets" },
+  "integrations:slack:manage": { resource: "integrations:slack", action: "manage", description: "Connect, edit and remove Slack workspace connections" },
+  "integrations:slack:view": { resource: "integrations:slack", action: "view", description: "View Slack workspace connections and their status" },
   "inventory:3pl:manage": { resource: "inventory:3pl", action: "manage", description: "Manage 3PL warehouse connections" },
   "inventory:access:manage": { resource: "inventory:access", action: "manage", description: "View access administration for the inventory module; changing roles, permissions, or assignments additionally requires Module Admin, Module Owner, Org Admin, or Org Owner authority" },
   "inventory:access:view": { resource: "inventory:access", action: "view", description: "View roles, permissions and assignments for the inventory module" },

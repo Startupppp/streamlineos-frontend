@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { BuildTemplatesPage } from "./build-templates-page";
 import { ApiError } from "@/lib/api-envelope";
 
@@ -109,7 +109,9 @@ jest.mock("./create-template-sheet", () => ({
 }));
 
 jest.mock("./apply-template-dialog", () => ({
-  ApplyTemplateDialog: () => null,
+  ApplyTemplateDialog: ({ template }: { template: { name: string } }) => (
+    <div data-testid="apply-template-dialog">{template.name}</div>
+  ),
 }));
 
 jest.mock("./templates-grid-skeleton", () => ({
@@ -117,7 +119,7 @@ jest.mock("./templates-grid-skeleton", () => ({
 }));
 
 const mockUseBuildListKeyboard = jest.fn();
-jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
   useBuildListKeyboard: (args: unknown) => mockUseBuildListKeyboard(args),
 }));
 
@@ -273,7 +275,9 @@ it("opens the apply dialog via onOpen callback so Enter on a focused template ap
   render(<BuildTemplatesPage />);
   const [call] = mockUseBuildListKeyboard.mock.calls;
   const { onOpen } = call[0] as { onOpen: (index: number) => void };
-  onOpen(0);
+  expect(screen.queryByTestId("apply-template-dialog")).not.toBeInTheDocument();
+  act(() => onOpen(0));
+  expect(screen.getByTestId("apply-template-dialog")).toHaveTextContent("Kanban");
 });
 
 it("renders a search input via BuildListToolbar so the / shortcut has a reachable DOM target", () => {

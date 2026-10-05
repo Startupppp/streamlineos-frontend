@@ -30,7 +30,7 @@ import {
 } from "./submission-inbox-filters";
 import { SubmissionBulkToolbar } from "@/components/shared/submission-bulk-toolbar";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 
 const PAGE_SIZE = 25;
 

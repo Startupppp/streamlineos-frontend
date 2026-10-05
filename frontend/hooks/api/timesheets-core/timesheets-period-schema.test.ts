@@ -1,3 +1,4 @@
+import { ZodError } from "zod";
 import { DB_ENUMS } from "@/contracts/db-enums.generated";
 import { timesheetPeriodContract } from "./timesheets-period-schema";
 import { PERIOD_STATUS_BADGE, PERIOD_STATUS_LABEL } from "@/features/timesheets/types";
@@ -7,7 +8,7 @@ describe("timesheetPeriodContract — period status field", () => {
   const schemaMembers: string[] = (statusSchema as { options: string[] }).options;
 
   it("rejects REOPENED, a timesheet period status no row can hold because timesheet_period_status does not declare it", () => {
-    expect(() => statusSchema.parse("REOPENED")).toThrow();
+    expect(() => statusSchema.parse("REOPENED")).toThrow(ZodError);
   });
 
   it("accepts exactly the six members timesheet_period_status declares, so a filter chip cannot be offered for a state that never occurs", () => {

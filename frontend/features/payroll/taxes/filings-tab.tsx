@@ -37,6 +37,7 @@ const FALLBACK_CAPABILITY_NOTE =
 
 const FILING_TYPE_LABEL: Record<FilingType, string> = {
   PF_ECR: "PF ECR",
+  PF_ECR_TXT: "PF ECR 2.0 (EPFO text)",
   ESI: "ESI",
   PT: "Professional Tax",
   TDS_24Q: "TDS (Form 24Q)",
@@ -44,7 +45,7 @@ const FILING_TYPE_LABEL: Record<FilingType, string> = {
   LWF: "Labour Welfare Fund",
 };
 
-const FILING_TYPE_OPTIONS: FilingType[] = ["PF_ECR", "ESI", "PT", "TDS_24Q", "FORM16", "LWF"];
+const FILING_TYPE_OPTIONS: FilingType[] = ["PF_ECR", "PF_ECR_TXT", "ESI", "PT", "TDS_24Q", "FORM16", "LWF"];
 
 const STATUS_BADGE: Record<FilingStatus, string> = {
   DRAFT: "bg-muted text-muted-foreground border-border",
@@ -120,8 +121,8 @@ export function FilingsTab() {
     if (downloadingId != null) return;
     setDownloadingId(filing.id);
     try {
-      await downloadFilingExport(filing.id);
-      toast.success("CSV export downloaded");
+      await downloadFilingExport(filing.id, filing.filingType);
+      toast.success("Export downloaded");
     } catch (err) {
       toast.error(getErrorMessage(err));
     } finally {

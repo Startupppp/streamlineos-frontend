@@ -20,7 +20,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useCan } from "@/hooks/api/access";
 import { useLockRun, useReopenRun, useCloseRun } from "@/hooks/api/payroll";
-import { useRunConflictHandler } from "@/features/payroll/shared/run-conflict";
+import { isRunConflict, useRunConflictHandler } from "@/features/payroll/shared/run-conflict";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 interface Props {
   runId: number;
@@ -151,12 +152,21 @@ function CloseButton({ runId }: { runId: number }) {
 
   function handleOpen() { setOpen(true); }
 
+  function handleCloseError(err: unknown) {
+    setOpen(false);
+    if (isRunConflict(err)) {
+      toast.error(getErrorMessage(err));
+      return;
+    }
+    handleError(err);
+  }
+
   function handleConfirm() {
     mutate(
       { runId },
       {
         onSuccess: () => { setOpen(false); toast.success("Run closed"); },
-        onError: handleError,
+        onError: handleCloseError,
       },
     );
   }

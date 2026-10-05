@@ -130,6 +130,11 @@ jest.mock("@/hooks/api/payroll/payroll-cutoff", () => ({
   currentPayrollMonth: () => "2026-10",
 }));
 
+// A pending own-leave row asks who approves it (BUG-HRMS-017/018).
+jest.mock("@/hooks/api/hr/approvers", () => ({
+  useMyApprover: () => ({ data: undefined }),
+}));
+
 jest.mock("@/hooks/api/hr/documents", () => ({
   useMyOnboardingDocs: () => stub({ data: rows([DOCUMENT]) }),
   useUploadMyOnboardingDoc: () => stub(undefined),

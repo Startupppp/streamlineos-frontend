@@ -166,7 +166,7 @@ jest.mock("@/features/build/shared/build-list-toolbar", () => ({
 
 const mockUseBuildListKeyboard = jest.fn();
 
-jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
   useBuildListKeyboard: (...args: unknown[]) => mockUseBuildListKeyboard(...args),
 }));
 

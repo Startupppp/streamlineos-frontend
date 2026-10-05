@@ -88,7 +88,7 @@ export function ReportResultsPanel({
    * makes a next page reachable without claiming a number nobody measured.
    */
   const seen = offset + rows.length;
-  const total = result?.truncated ? seen + 1 : Math.max(seen, offset + 1);
+  const total = result?.truncated || rows.length === 0 ? seen + 1 : seen;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2">

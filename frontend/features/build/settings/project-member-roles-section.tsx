@@ -20,6 +20,7 @@ import {
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import type { ProjectMemberRecord } from "@/types/projects";
 import { resolveImageUrl } from "@/lib/utils";
@@ -114,11 +115,13 @@ const MemberRoleRow = memo(function MemberRoleRow({
 interface ProjectMemberRolesSectionProps {
   projectId: number;
   search?: string;
+  onClearSearch?: () => void;
 }
 
 export function ProjectMemberRolesSection({
   projectId,
   search = "",
+  onClearSearch,
 }: ProjectMemberRolesSectionProps) {
   const canManage = useCan("build:manage");
   const pager = useBuildCursorPager();
@@ -167,9 +170,14 @@ export function ProjectMemberRolesSection({
   return (
     <PageState resolution={resolution} loading={loadingSkeleton} onRetry={handleRetry} compact>
       {!filteredMembers.length ? (
-        <p className="text-sm text-muted-foreground py-2">
-          {search.trim() ? "No direct members match your search." : "No members yet."}
-        </p>
+        <EmptyState
+          compact
+          illustrationSize="xs"
+          title="No members yet."
+          filtersActive={search.trim().length > 0}
+          filteredTitle="No direct members match your search."
+          onClearFilters={onClearSearch}
+        />
       ) : (
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <div className="min-h-0 flex-1 divide-y divide-border overflow-y-auto">

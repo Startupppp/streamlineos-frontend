@@ -19,8 +19,7 @@ import { OnboardingWizard } from "@/components/hr/onboarding-wizard";
 const STEP_LABELS = [
   "Personal",
   "Job Details",
-  "Skills & Pay",
-  "Banking",
+  "Pay setup (optional)",
   "Review",
 ] as const;
 

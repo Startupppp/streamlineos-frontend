@@ -1,3 +1,4 @@
+import { ZodError } from "zod";
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import WikiSearchPage from "./wiki-search-page";
@@ -799,7 +800,7 @@ describe("kbSearchResponseContract — cursor envelope (S-cursor-FE)", () => {
   });
 
   it("S-cursor-FE-03: a pre-cursor response carrying only items is rejected, so shipping this contract against a backend that does not yet send the envelope fails loudly instead of rendering an empty result list", () => {
-    expect(() => kbSearchResponseContract.parse({ items: [] })).toThrow();
+    expect(() => kbSearchResponseContract.parse({ items: [] })).toThrow(ZodError);
   });
 
   it("S-cursor-FE-03 control: the same payload parses once hasMore and nextCursor are present, proving the rejection is caused by the two envelope fields and not by the empty items array", () => {

@@ -120,6 +120,7 @@ export interface EssFnfSettlement {
   id: number;
   basicDues: string | null;
   leaveEncashment: string | null;
+  gratuity: string | null;
   bonusDue: string | null;
   deductions: string | null;
   loanRecovery: string | null;

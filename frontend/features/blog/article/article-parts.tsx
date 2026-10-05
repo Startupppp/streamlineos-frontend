@@ -1,12 +1,13 @@
 import Link from "next/link";
 import type { BlogArticle, BlogCard } from "@/lib/blog/contracts";
 import { blogCta } from "@/lib/blog/cta";
+import { resolveImageUrl } from "@/lib/utils";
 import { PostCard } from "../post-card";
 
 export function AuthorBox({ author }: { author: NonNullable<BlogArticle["author"]> }) {
   return (
     <section aria-labelledby="author-box-title" className="mt-16 flex gap-5 border-y border-journal-rule py-8">
-      {author.avatar ? <img src={author.avatar} alt="" width={64} height={64} loading="lazy" className="size-16 shrink-0 rounded-full object-cover" /> : null}
+      {author.avatar ? <img src={resolveImageUrl(author.avatar)} alt="" width={64} height={64} loading="lazy" className="size-16 shrink-0 rounded-full object-cover" /> : null}
       <div>
         <p className="text-xs font-semibold uppercase tracking-widest text-journal-accent-ink">About the author</p>
         <h2 id="author-box-title" className="mt-1 font-journal text-xl text-journal-ink">

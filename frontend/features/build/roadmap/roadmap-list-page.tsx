@@ -14,7 +14,7 @@ import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { Input } from "@/components/ui/input";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { getUserDisplayName } from "@/lib/person-display";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import {
   Tabs,
   TabsContent,

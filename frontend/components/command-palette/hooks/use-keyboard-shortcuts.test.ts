@@ -21,7 +21,7 @@ jest.mock("next/navigation", () => ({
 import { useKeyboardShortcuts } from "./use-keyboard-shortcuts";
 import {
   claimBuildListSearchTarget,
-} from "@/features/build/shared/build-list-search-target";
+} from "@/lib/build/build-list-search-target";
 
 function press(key: string) {
   document.dispatchEvent(

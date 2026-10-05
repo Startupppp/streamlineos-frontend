@@ -10,9 +10,9 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { HrSheet } from "@/components/shared/hr-sheet";
-import { formatINR } from "@/lib/format-utils";
 import type { SalaryStructureTemplate, CreateSalaryTemplateInput } from "@/hooks/api/hr/salary-structures";
 import { estimateTemplateNet } from "./salary-structure-template-preview";
+import { ComponentsUsed, SampleCtcPreview } from "./salary-breakup-preview";
 
 const NON_NEGATIVE_DECIMAL = /^\d+(\.\d{1,2})?$/;
 
@@ -85,63 +85,17 @@ function FieldGroup({
   );
 }
 
-function CtcPreview({ values }: { values: TemplateFormValues }) {
-  const basic = parseFloat(values.basicSalary || "0") || 0;
-  const hraPercent = parseFloat(values.hraPercent || "0") || 0;
-  const special = parseFloat(values.specialAllowance || "0") || 0;
-  const medical = parseFloat(values.medicalAllowance || "0") || 0;
-  const travel = parseFloat(values.travelAllowance || "0") || 0;
-  const other = parseFloat(values.otherAllowances || "0") || 0;
-  const pfPercent = parseFloat(values.pfDeductionPercent || "0") || 0;
-  const profTax = parseFloat(values.professionalTax || "0") || 0;
-
-  const hra = basic * hraPercent / 100;
-  const gross = basic + hra + special + medical + travel + other;
-  const pfDeduction = basic * pfPercent / 100;
+function TemplateValidity({ values }: { values: TemplateFormValues }) {
   const preview = estimateTemplateNet(values);
-
-  const rows: Array<{ label: string; value: string; highlight?: boolean }> = [
-    { label: "Basic", value: formatINR(basic) },
-    { label: "HRA", value: formatINR(hra) },
-    { label: "Special Allowance", value: formatINR(special) },
-    { label: "Medical Allowance", value: formatINR(medical) },
-    { label: "Travel Allowance", value: formatINR(travel) },
-    { label: "Other Allowances", value: formatINR(other) },
-    { label: "Gross", value: formatINR(gross), highlight: true },
-    { label: "PF Deduction", value: `− ${formatINR(pfDeduction)}` },
-    { label: "Professional Tax", value: `− ${formatINR(profTax)}` },
-    {
-      label: "Estimated Net",
-      value: preview.valid ? formatINR(preview.net) : "Invalid",
-      highlight: true,
-    },
-  ];
-
+  if (preview.valid) return null;
   return (
-    <div className="rounded-xl bg-primary/5 border border-border px-4 py-3 space-y-1.5">
-      <p className="text-micro font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-        Live CTC Preview
-      </p>
-      {rows.map((row) => (
-        <div key={row.label} className="flex items-center justify-between">
-          <span className={`text-xs ${row.highlight ? "font-semibold text-foreground" : "text-muted-foreground"}`}>
-            {row.label}
-          </span>
-          <span className={`text-xs tabular-nums ${row.highlight ? "font-bold text-foreground" : "text-foreground"}`}>
-            {row.value}
-          </span>
-        </div>
-      ))}
-      {!preview.valid && (
-        <p className="text-xs text-destructive pt-1">
-          {values.basicSalary.trim() === ""
-            ? "Enter a basic salary before this preview is a payable estimate."
-            : preview.hasNegativeComponent
-              ? "A salary component cannot be negative. Enter zero or more in every amount."
-              : "Estimated net cannot be negative. Raise basic salary or lower deductions."}
-        </p>
-      )}
-    </div>
+    <p className="text-xs text-destructive">
+      {values.basicSalary.trim() === ""
+        ? "Enter a basic salary before this template can be saved."
+        : preview.hasNegativeComponent
+          ? "A salary component cannot be negative. Enter zero or more in every amount."
+          : "Deductions cannot exceed gross. Raise basic salary or lower deductions."}
+    </p>
   );
 }
 
@@ -284,7 +238,7 @@ export function SalaryStructureTemplateSheet({
         </FieldGroup>
       </div>
 
-      <CtcPreview values={watchedValues} />
+      <TemplateValidity values={watchedValues} />
 
       <Separator />
 
@@ -358,6 +312,12 @@ export function SalaryStructureTemplateSheet({
           />
         </FieldGroup>
       </div>
+
+      <Separator />
+
+      <ComponentsUsed />
+
+      <SampleCtcPreview />
 
       <Separator />
 

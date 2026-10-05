@@ -1,5 +1,7 @@
 "use client";
 
+import { PortalListPage } from "./portal-list-page";
+import { PortalDashboardPage } from "./portal-dashboard-page";
 import { render, screen } from "@testing-library/react";
 import { ApiError } from "@/lib/api-envelope";
 
@@ -147,7 +149,6 @@ beforeEach(() => {
 describe("SPEC 9 — PortalListPage supplemental states (Requirement C3)", () => {
   it("empty state: renders 'No projects' when data=[] and access is granted so empty differs from denial", () => {
     mockUsePortalProjects.mockReturnValue(baseQuery({ data: [] }));
-    const { PortalListPage } = require("./portal-list-page");
     render(<PortalListPage />);
     expect(screen.getByText("No projects")).toBeInTheDocument();
   });
@@ -156,7 +157,6 @@ describe("SPEC 9 — PortalListPage supplemental states (Requirement C3)", () =>
     mockUsePortalProjects.mockReturnValue(
       baseQuery({ isError: true, error: new Error("Internal Server Error") }),
     );
-    const { PortalListPage } = require("./portal-list-page");
     render(<PortalListPage />);
     expect(screen.queryByText("No projects")).toBeNull();
   });
@@ -168,7 +168,6 @@ describe("SPEC 9 — PortalListPage supplemental states (Requirement C3)", () =>
         error: Object.assign(new Error("Too many requests"), { status: 429 }),
       }),
     );
-    const { PortalListPage } = require("./portal-list-page");
     render(<PortalListPage />);
     expect(screen.queryByText("No projects")).toBeNull();
   });
@@ -180,7 +179,6 @@ describe("SPEC 9 — PortalListPage supplemental states (Requirement C3)", () =>
         error: new TypeError("Failed to fetch"),
       }),
     );
-    const { PortalListPage } = require("./portal-list-page");
     render(<PortalListPage />);
     expect(screen.queryByText("No projects")).toBeNull();
   });
@@ -189,14 +187,12 @@ describe("SPEC 9 — PortalListPage supplemental states (Requirement C3)", () =>
     mockUsePortalProjects.mockReturnValue(
       baseQuery({ isError: true, error: new Error("500") }),
     );
-    const { PortalListPage } = require("./portal-list-page");
     const { unmount } = render(<PortalListPage />);
     expect(screen.queryByText("No projects")).toBeNull();
     unmount();
 
     mockUsePortalProjects.mockReturnValue(baseQuery({ data: [] }));
-    const { PortalListPage: PortalListPage2 } = require("./portal-list-page");
-    render(<PortalListPage2 />);
+    render(<PortalListPage />);
     expect(screen.getByText("No projects")).toBeInTheDocument();
   });
 });
@@ -207,7 +203,6 @@ describe("SPEC 10 — PortalDashboardPage states (Requirement C3)", () => {
       baseQuery({ isLoading: true }),
     );
     mockUsePortalChangeRequests.mockReturnValue(baseQuery({ isLoading: true }));
-    const { PortalDashboardPage } = require("./portal-dashboard-page");
     render(<PortalDashboardPage projectId={42} />);
     expect(screen.getByText("Project Dashboard")).toBeInTheDocument();
   });
@@ -238,7 +233,6 @@ describe("SPEC 10 — PortalDashboardPage states (Requirement C3)", () => {
       }),
     );
     mockUsePortalChangeRequests.mockReturnValue(baseQuery({ data: [] }));
-    const { PortalDashboardPage } = require("./portal-dashboard-page");
     render(<PortalDashboardPage projectId={42} />);
     expect(screen.getByText("Alpha Project")).toBeInTheDocument();
   });
@@ -269,7 +263,6 @@ describe("SPEC 10 — PortalDashboardPage states (Requirement C3)", () => {
       }),
     );
     mockUsePortalChangeRequests.mockReturnValue(baseQuery({ data: [] }));
-    const { PortalDashboardPage } = require("./portal-dashboard-page");
     render(<PortalDashboardPage projectId={42} />);
     expect(screen.getByText("No milestones")).toBeInTheDocument();
   });
@@ -279,7 +272,6 @@ describe("SPEC 10 — PortalDashboardPage states (Requirement C3)", () => {
       baseQuery({ isError: true, error: new Error("500") }),
     );
     mockUsePortalChangeRequests.mockReturnValue(baseQuery({ data: [] }));
-    const { PortalDashboardPage } = require("./portal-dashboard-page");
     render(<PortalDashboardPage projectId={42} />);
     expect(screen.queryByText("Alpha Project")).toBeNull();
     expect(screen.getByText("Project Dashboard")).toBeInTheDocument();
@@ -293,7 +285,6 @@ describe("SPEC 10 — PortalDashboardPage states (Requirement C3)", () => {
       }),
     );
     mockUsePortalChangeRequests.mockReturnValue(baseQuery({ data: [] }));
-    const { PortalDashboardPage } = require("./portal-dashboard-page");
     render(<PortalDashboardPage projectId={42} />);
     expect(screen.queryByText("No milestones")).toBeNull();
   });
@@ -306,7 +297,6 @@ describe("SPEC 10 — PortalDashboardPage states (Requirement C3)", () => {
         error: new TypeError("Failed to fetch"),
       }),
     );
-    const { PortalDashboardPage } = require("./portal-dashboard-page");
     render(<PortalDashboardPage projectId={42} />);
     expect(screen.queryByText("Alpha Project")).toBeNull();
   });
@@ -316,7 +306,6 @@ describe("SPEC 10 — PortalDashboardPage states (Requirement C3)", () => {
       baseQuery({ isLoading: true }),
     );
     mockUsePortalChangeRequests.mockReturnValue(baseQuery({ isLoading: true }));
-    const { PortalDashboardPage } = require("./portal-dashboard-page");
     render(<PortalDashboardPage projectId={42} />);
     expect(screen.getByText("Project Dashboard")).toBeInTheDocument();
     expect(screen.queryByText("Alpha Project")).toBeNull();

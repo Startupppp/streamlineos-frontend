@@ -33,6 +33,13 @@ let mockCanWriteTokens = true;
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => mockCanWriteTokens,
+  usePermissionGate: (permission: string) => ({
+    permission,
+    allowed: true,
+    denied: false,
+    pending: false,
+    unavailable: false,
+  }),
 }));
 
 jest.mock("@/hooks/api/build/agent-tokens", () => ({

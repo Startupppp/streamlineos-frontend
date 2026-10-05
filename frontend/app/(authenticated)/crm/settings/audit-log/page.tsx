@@ -256,22 +256,15 @@ export default function CrmAuditLogPage() {
         ) : rows.length === 0 ? (
           <EmptyState
             illustration={<EmptyActivityIllustration />}
-            title={
-              hasActiveFilters
-                ? "No entries match these filters"
-                : "Nothing has been logged yet"
-            }
+            title="Nothing has been logged yet"
+            filtersActive={hasActiveFilters}
+            filteredTitle="No entries match these filters"
+            onClearFilters={handleClearFilters}
             description={
               hasActiveFilters
                 ? "Nothing was recorded that matches what you have filtered to. Clear the filters to see the whole log."
                 : "Every create, edit, assignment and deletion in the CRM is recorded here as it happens."
             }
-            action={
-              hasActiveFilters
-                ? { label: "Clear filters", onClick: handleClearFilters }
-                : undefined
-            }
-            actionVariant={hasActiveFilters ? "outline" : undefined}
             className={CONTENT_FILL_PANEL}
           />
         ) : (

@@ -79,7 +79,7 @@ jest.mock("@/features/build/shared/use-build-list-filters", () => ({
   useBuildListFilters: jest.fn(),
 }));
 
-jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
   useBuildListKeyboard: jest.fn(),
 }));
 

@@ -48,11 +48,20 @@ export interface PayrollChecklistItem {
   detail: string | null;
 }
 
+export interface PayrollSourceRef {
+  table: string;
+  id: number | string | null;
+  label: string;
+  date?: string | null;
+  endDate?: string | null;
+}
+
 export interface CalcExplainStep {
   steps: string[];
   note?: string;
   formula?: string;
   inputs?: Record<string, number>;
+  sources?: PayrollSourceRef[];
 }
 
 export interface CalculationSnapshotLine {
@@ -74,6 +83,7 @@ export interface CalculationSnapshot {
   paidDays: string;
   lopDays: string;
   overtimeHours: string;
+  lopSources?: PayrollSourceRef[];
   lines: CalculationSnapshotLine[];
   totals: {
     gross: string;

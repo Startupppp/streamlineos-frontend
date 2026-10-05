@@ -1,10 +1,11 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useIdempotentMutation } from "./use-idempotent-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 /**
  * NEO-4 - handling units.
@@ -138,7 +139,7 @@ export function useMoveHandlingUnit() {
 
 export function useNestHandlingUnit() {
   const qc = useQueryClient();
-  return useMutation<HandlingUnitDetail, Error, NestHandlingUnitInput>({
+  return useAuthorizedMutation<HandlingUnitDetail, Error, NestHandlingUnitInput>("inventory:stock:transfer", {
     mutationKey: ["inventory", "handling-unit", "nest"],
     mutationFn: ({ handlingUnitId, ...data }) =>
       apiClient.patch<HandlingUnitDetail>(`/inventory/handling-units/${handlingUnitId}/nesting`, data),

@@ -91,6 +91,7 @@ jest.mock("./share-dialog", () => ({
 
 jest.mock("./scene-utils", () => ({
   computeStoredVersion: () => 0,
+  isExcalidrawScene: () => false,
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({

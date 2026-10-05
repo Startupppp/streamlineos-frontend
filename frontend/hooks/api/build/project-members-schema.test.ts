@@ -1,3 +1,5 @@
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import { ZodError } from "zod";
 import {
   buildMemberPageContract,
   buildMemberRowContract,
@@ -37,7 +39,7 @@ describe("buildMemberPageContract (BLD-X-BE-SETTINGS-ACCESS-001)", () => {
   });
 
   it("rejects a page missing pagination envelope — envelope is required", () => {
-    expect(() => buildMemberPageContract.parse({ data: [validMember] })).toThrow();
+    expect(() => buildMemberPageContract.parse({ data: [validMember] })).toThrow(ZodError);
   });
 
   it("accepts null name — members may not have a display name set", () => {
@@ -47,7 +49,7 @@ describe("buildMemberPageContract (BLD-X-BE-SETTINGS-ACCESS-001)", () => {
 
   it("rejects an unknown role — z.enum(['member','admin']) prevents non-member values from passing", () => {
     const withUnknownRole = { ...validPage, data: [{ ...validMember, role: "owner" }] };
-    expect(() => buildMemberPageContract.parse(withUnknownRole)).toThrow();
+    expect(() => buildMemberPageContract.parse(withUnknownRole)).toThrow(ZodError);
   });
 
   it("accepts both valid role values — member and admin are the only allowed project roles", () => {
@@ -83,32 +85,28 @@ describe("buildMemberRowContract (BLD-X-BE-SETTINGS-ACCESS-002)", () => {
 
   it("rejects a row missing membershipId", () => {
     const { membershipId: _m, ...withoutMembership } = validRow;
-    expect(() => buildMemberRowContract.parse(withoutMembership)).toThrow();
+    expect(() => buildMemberRowContract.parse(withoutMembership)).toThrow(ZodError);
   });
 });
 
 describe("project members cache key contract (BLD-X-BE-SETTINGS-ACCESS-003)", () => {
   it("includes projectId in the members cache key — correct scope prevents cross-project member list leaks", () => {
-    const { buildWorkQueryKeys } = require("@/lib/query-keys/build-work");
     const key = buildWorkQueryKeys.projects.members(10);
     expect(key).toContain(10);
   });
 
   it("includes 'members' segment in the cache key", () => {
-    const { buildWorkQueryKeys } = require("@/lib/query-keys/build-work");
     const key = buildWorkQueryKeys.projects.members(10);
     expect(key.some((s: unknown) => s === "members")).toBe(true);
   });
 
   it("two different projectIds produce different member cache keys — cross-project cache collision is impossible", () => {
-    const { buildWorkQueryKeys } = require("@/lib/query-keys/build-work");
     const key1 = buildWorkQueryKeys.projects.members(1);
     const key2 = buildWorkQueryKeys.projects.members(2);
     expect(JSON.stringify(key1)).not.toBe(JSON.stringify(key2));
   });
 
   it("org-scope members key omits projectId — global member list is project-independent", () => {
-    const { buildWorkQueryKeys } = require("@/lib/query-keys/build-work");
     const orgKey = buildWorkQueryKeys.projects.members();
     expect(orgKey.some((s: unknown) => typeof s === "number")).toBe(false);
   });
@@ -116,26 +114,22 @@ describe("project members cache key contract (BLD-X-BE-SETTINGS-ACCESS-003)", ()
 
 describe("build org-level members cache key contract (BLD-X-BE-SETTINGS-BGMEM-001)", () => {
   it("includes 'buildMembers' segment in the org-level member cache key", () => {
-    const { buildWorkQueryKeys } = require("@/lib/query-keys/build-work");
     const key = buildWorkQueryKeys.projects.buildMembers.all;
     expect(key.some((s: unknown) => s === "buildMembers")).toBe(true);
   });
 
   it("list key with no params produces a stable base key", () => {
-    const { buildWorkQueryKeys } = require("@/lib/query-keys/build-work");
     const key = buildWorkQueryKeys.projects.buildMembers.list();
     expect(key.some((s: unknown) => s === "buildMembers")).toBe(true);
   });
 
   it("list key with params is longer than list key without params — filters do not collapse to the same key", () => {
-    const { buildWorkQueryKeys } = require("@/lib/query-keys/build-work");
     const base = buildWorkQueryKeys.projects.buildMembers.list();
     const withParams = buildWorkQueryKeys.projects.buildMembers.list({ search: "Alice" });
     expect(withParams.length).toBeGreaterThan(base.length);
   });
 
   it("all-key is a prefix of the list key — invalidating all invalidates every list variant", () => {
-    const { buildWorkQueryKeys } = require("@/lib/query-keys/build-work");
     const allKey = buildWorkQueryKeys.projects.buildMembers.all;
     const listKey = buildWorkQueryKeys.projects.buildMembers.list();
     const allStr = JSON.stringify(allKey);

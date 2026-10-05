@@ -17,6 +17,9 @@ const runEmployeeDetailC = lazyContract(() =>
 const runVarianceC = lazyContract(() =>
   import("@/hooks/api/payroll/run-employees-schema").then((m) => m.runVarianceResponseContract),
 );
+const releaseHoldC = lazyContract(() =>
+  import("@/hooks/api/payroll/publications-schema").then((m) => m.publishResponseContract),
+);
 const addAdjustmentC = lazyContract(() =>
   import("@/hooks/api/payroll/run-employees-schema").then((m) => m.addAdjustmentResponseContract),
 );
@@ -88,6 +91,24 @@ export function useSetEmployeeHold(runId: number, runEmployeeId: number) {
       void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runEmployeesAll(runId) });
       void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.run(runId) });
       void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runExceptionsAll(runId) });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.commandCenterAll });
+    },
+  });
+}
+
+export function useReleaseEmployeeHold(runId: number, runEmployeeId: number) {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("payroll:runs:manage", {
+    mutationKey: ["payroll", "run-employees", runId, runEmployeeId, "release"],
+    mutationFn: () =>
+      apiClient.post(`/payroll/runs/${runId}/employees/${runEmployeeId}/release`, undefined, undefined, releaseHoldC),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runEmployeesAll(runId) });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.run(runId) });
+      void qc.invalidateQueries({ queryKey: [...payrollQueryKeys.payroll.all, "runs"] });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runPublications(runId) });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runExceptionsAll(runId) });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.essPayslips() });
       void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.commandCenterAll });
     },
   });

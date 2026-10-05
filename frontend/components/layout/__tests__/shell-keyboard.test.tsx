@@ -142,6 +142,11 @@ jest.mock("@/components/layout/header/product-switcher-menu", () => ({
   ProductSwitcherMenu: () => null,
 }));
 
+jest.mock("@/components/layout/header/org-switcher", () => ({
+  ...jest.requireActual<object>("@/components/layout/header/org-switcher"),
+  WorkspaceSwitcher: () => null,
+}));
+
 jest.mock("@/components/assistant/ask-os-provider", () => ({
   AskOsProvider: ({ children }: PropsWithChildren) => <>{children}</>,
 }));

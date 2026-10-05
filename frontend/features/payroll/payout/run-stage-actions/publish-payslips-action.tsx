@@ -14,8 +14,14 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { useCan } from "@/hooks/api/access";
-import { usePublishPayslips } from "@/hooks/api/payroll";
+import { usePublishPayslips, useRunEmployees } from "@/hooks/api/payroll";
 import { useRunConflictHandler } from "@/features/payroll/shared/run-conflict";
+
+const HOLD_SCAN_LIMIT = 100;
+
+function payslips(n: number): string {
+  return `${n} payslip${n === 1 ? "" : "s"}`;
+}
 
 interface Props {
   runId: number;
@@ -27,6 +33,14 @@ export function PublishPayslipsAction({ runId, status }: Props) {
   const [open, setOpen] = useState(false);
   const { mutate, isPending } = usePublishPayslips();
   const handleError = useRunConflictHandler(runId);
+  const { data: roster } = useRunEmployees(status === "PAID" ? runId : 0, { limit: HOLD_SCAN_LIMIT });
+  const counts =
+    roster && !roster.pagination.hasMore
+      ? { total: roster.data.length, held: roster.data.filter((row) => row.holdReason !== null).length }
+      : null;
+  const releaseLabel = counts
+    ? `Release ${payslips(counts.total - counts.held)}${counts.held > 0 ? ` · ${counts.held} on hold` : ""}`
+    : "Release payslips";
 
   if (status !== "PAID") return null;
   if (!canManage) return null;
@@ -45,14 +59,15 @@ export function PublishPayslipsAction({ runId, status }: Props) {
       {
         onSuccess: (data) => {
           setOpen(false);
+          const onHold = data.heldCount > 0 ? ` ${data.heldCount} on hold.` : "";
           if (data.published < data.total) {
-            toast.warning(`Published ${data.published} of ${data.total} payslip(s)`, {
+            toast.warning(`Released ${data.published} of ${payslips(data.total)}.${onHold}`, {
               description:
                 "The remaining payslips failed. Open the Payslips tab to see which employees failed and retry them.",
             });
             return;
           }
-          toast.success(`Published ${data.published} of ${data.total} payslip(s)`);
+          toast.success(`Released ${payslips(data.published)}.${onHold}`);
           if (data.runStatus === "PAYSLIPS_PUBLISHED") {
             toast.success("Run status updated to Payslips Published");
           }
@@ -66,13 +81,13 @@ export function PublishPayslipsAction({ runId, status }: Props) {
     <>
       <Button size="sm" className="h-9" onClick={handleOpen}>
         <FileCheck className="mr-2 h-4 w-4" />
-        Publish Payslips
+        {releaseLabel}
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Publish Payslips</DialogTitle>
+            <DialogTitle>Release payslips</DialogTitle>
             <DialogDescription>
               Payslips will be published and made available to employees.
             </DialogDescription>
@@ -80,9 +95,9 @@ export function PublishPayslipsAction({ runId, status }: Props) {
 
           <div className="space-y-3 py-1">
             <div className="rounded-md bg-muted/50 border border-border p-3">
-              <p className="text-sm font-medium">Publish for all employees</p>
+              <p className="text-sm font-medium">{releaseLabel}</p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                All employees in this run will receive their payslip.
+                Employees on hold do not receive a payslip until you release their hold.
               </p>
             </div>
           </div>
@@ -91,8 +106,8 @@ export function PublishPayslipsAction({ runId, status }: Props) {
             <Button variant="outline" onClick={handleCancel} disabled={isPending}>
               Cancel
             </Button>
-            <LoadingButton onClick={handleConfirm} isPending={isPending} loadingText="Publishing…">
-              Publish
+            <LoadingButton onClick={handleConfirm} isPending={isPending} loadingText="Releasing…">
+              Release
             </LoadingButton>
           </DialogFooter>
         </DialogContent>

@@ -256,6 +256,20 @@ export function runSelfTest() {
       inlineParam[0].requestFields?.has("end") === true,
   );
 
+  const shadowedName = extract(
+    "    mutationFn: (data: BillingNarrativeInput) =>\n" +
+      '      apiClient.post<BillingNarrative>("/timesheets/billing/narrative", data),\n' +
+      "    mutationFn: (data: { timesheetEntryIds: number[] }) =>\n" +
+      '      apiClient.post<Released>("/timesheets/billing/release-draft", data),\n',
+  );
+  assert(
+    "an inline parameter type wins over an earlier same-named parameter in the file",
+    shadowedName.length === 2 &&
+      shadowedName[1].requestTypeName === null &&
+      shadowedName[1].requestFields?.has("timesheetEntryIds") === true &&
+      shadowedName[1].requestFields?.has("startDate") === false,
+  );
+
   const constParams = extract(
     "    const params = { userId: input.userId, page: input.page ?? 1, limit: 25 };\n" +
       '    apiClient.get<OverdueQueueResult>("/timesheets/periods/overdue", params),\n',

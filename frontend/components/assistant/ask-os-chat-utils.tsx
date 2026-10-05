@@ -81,7 +81,7 @@ export function EmptyAskOs({
       <AnimatedLogo size={36} gradient className="rounded-full" />
       <div className="space-y-1.5">
         <p className="text-lg font-semibold tracking-tight text-foreground">How can I help?</p>
-        <p className="mx-auto max-w-[18rem] text-[13px] leading-5 text-muted-foreground">
+        <p className="mx-auto max-w-[18rem] text-label leading-5 text-muted-foreground">
           CRM, HR, Build, mail, calendar, and your knowledge base.
         </p>
       </div>
@@ -92,7 +92,7 @@ export function EmptyAskOs({
             type="button"
             data-suggestion={s}
             onClick={onSuggestion}
-            className="rounded-full border border-border bg-background px-3 py-1.5 text-[13px] text-foreground transition-colors hover:bg-muted"
+            className="rounded-full border border-border bg-background px-3 py-1.5 text-label text-foreground transition-colors hover:bg-muted"
           >
             {s}
           </button>
@@ -161,12 +161,12 @@ function ConfirmDirectiveSlot({
 
   if (confirmedOutcome !== null)
     return (
-      <p className="text-[13px] text-muted-foreground">
+      <p className="text-label text-muted-foreground">
         {confirmOutcomeCopy(confirmedOutcome, directive.action)}
       </p>
     );
   if (cancelled)
-    return <p className="text-[13px] text-muted-foreground">Cancelled.</p>;
+    return <p className="text-label text-muted-foreground">Cancelled.</p>;
 
   return (
     <AskOsConfirmationCard

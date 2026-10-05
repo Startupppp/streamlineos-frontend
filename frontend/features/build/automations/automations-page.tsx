@@ -38,14 +38,14 @@ import {
   useBuildListFilters,
   BUILD_FILTER_ALL,
 } from "@/features/build/shared/use-build-list-filters";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { formSchema, type FormValues } from "./automation-schema";
 import { AutomationCard } from "./automation-card";
 import { NewAutomationButton } from "./new-automation-button";
 import { AutomationSheet } from "./automation-sheet";
-import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
+import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
 
 const TRIGGER_FILTER_OPTIONS = [
   { value: BUILD_FILTER_ALL, label: "All triggers" },

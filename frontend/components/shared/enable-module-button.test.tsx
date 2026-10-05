@@ -45,6 +45,7 @@ describe("EnableModuleButton", () => {
 
     expect(mockReplace).toHaveBeenCalledWith("/payroll/readiness");
     expect(screen.getByText(/switching it off keeps its data/i)).toBeInTheDocument();
+    expect(screen.getByText(/does not change your bill/i)).toBeInTheDocument();
   });
 
   it("refreshes in place rather than following an off-site return path", () => {

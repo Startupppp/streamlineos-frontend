@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
+import { payrollPeopleReadinessContract } from "@/hooks/api/payroll/people-schema";
 
 export const readinessStageKeyContract = z.enum([
   "timesheets_approved",
@@ -80,6 +81,7 @@ export const payrollReadinessContract = z.object({
     }),
   ),
   exceptions: z.array(readinessExceptionContract),
+  people: payrollPeopleReadinessContract,
 });
 
 export type PayrollReadiness = z.infer<typeof payrollReadinessContract>;

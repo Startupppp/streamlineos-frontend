@@ -37,12 +37,10 @@ const storageUploadContract = lazyContract(() =>
 const onboardingDocRowContract = lazyContract(() =>
   import("@/features/hr/onboarding/onboarding-schema").then((m) => m.onboardingDocumentRowContract),
 );
-import { useHrDocumentTypes } from "@/hooks/api/hr/document-types";
+import { useHrDocumentTypes, type HrDocumentType } from "@/hooks/api/hr/document-types";
 import { useMyOnboardingDocList, useSubmitOnboardingDoc } from "@/hooks/api/hr/onboarding";
-
 import {
   DocumentChecklistRow,
-  type DocumentType,
   type OnboardingDoc,
 } from "./onboarding-document-checklist-row";
 import { UploadSheet, ACCEPTED_EXTENSIONS, validateDocumentFile } from "./onboarding-upload-sheet";
@@ -89,12 +87,12 @@ export const EmployeeDocumentsTab = forwardRef<
   } = useHrDocumentTypes();
   const submitDoc = useSubmitOnboardingDoc();
 
-  const [uploadTarget, setUploadTarget] = useState<DocumentType | null>(null);
+  const [uploadTarget, setUploadTarget] = useState<HrDocumentType | null>(null);
   const [uploadExisting, setUploadExisting] = useState<OnboardingDoc | null>(null);
   const [uploadSheetOpen, setUploadSheetOpen] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<ReadonlyMap<number, File>>(new Map());
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const pickTargetRef = useRef<DocumentType | null>(null);
+  const pickTargetRef = useRef<HrDocumentType | null>(null);
 
   const isLoading = docsLoading || typesLoading;
   const isError = docsFailed || typesFailed;
@@ -138,13 +136,13 @@ export const EmployeeDocumentsTab = forwardRef<
     onCanContinueChange?.(!mandatoryUnsubmitted);
   }, [mandatoryUnsubmitted, onCanContinueChange]);
 
-  const handleOpenUpload = useCallback((dt: DocumentType, existing: OnboardingDoc | null) => {
+  const handleOpenUpload = useCallback((dt: HrDocumentType, existing: OnboardingDoc | null) => {
     setUploadTarget(dt);
     setUploadExisting(existing);
     setUploadSheetOpen(true);
   }, []);
 
-  const handlePickFile = useCallback((dt: DocumentType) => {
+  const handlePickFile = useCallback((dt: HrDocumentType) => {
     pickTargetRef.current = dt;
     fileInputRef.current?.click();
   }, []);

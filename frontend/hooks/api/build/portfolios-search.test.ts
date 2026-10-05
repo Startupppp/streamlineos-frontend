@@ -25,7 +25,7 @@ function wrapper({ children }: { children: React.ReactNode }) {
   return createElement(QueryClientProvider, { client: qc }, children);
 }
 
-const { apiClient } = require("@/lib/api-client") as { apiClient: { get: jest.Mock } };
+const { apiClient } = jest.requireMock("@/lib/api-client") as { apiClient: { get: jest.Mock } };
 
 describe("usePortfolios — search param forwarding", () => {
   beforeEach(() => jest.clearAllMocks());

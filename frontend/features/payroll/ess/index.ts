@@ -7,3 +7,4 @@ export { EssBankSection } from "./components/ess-bank-section";
 export { EssFnfSection } from "./components/ess-fnf-section";
 export { EssTotalRewardsSection } from "./components/ess-total-rewards-section";
 export { EssDisciplinarySection } from "./components/ess-disciplinary-section";
+export { EssForm16Section } from "./components/ess-form16-section";

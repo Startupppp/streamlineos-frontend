@@ -2,7 +2,9 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { BriefcaseBusiness, LockKeyhole } from "lucide-react";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { Separator } from "@/components/ui/separator";
@@ -10,9 +12,11 @@ import { SemanticBadge } from "@/components/ui/semantic-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCan } from "@/hooks/api/access";
 import {
+  useUpdateWorker,
   useWorkerEngagements,
   useWorkers,
 } from "@/hooks/api/directory/workers";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import type { OrganizationPerson } from "@/types/directory/people";
@@ -67,20 +71,44 @@ const ENGAGEMENT_COLUMNS: DataTableColumn<WorkerEngagement>[] = [
   },
 ];
 
-function WorkerSummary({ worker }: { worker: Worker }) {
+function WorkerSummary({ worker, canManage }: { worker: Worker; canManage: boolean }) {
+  const updateWorker = useUpdateWorker();
+
+  function handleMarkPayee() {
+    updateWorker.mutate(
+      { workerId: worker.workerId, isPayee: true },
+      {
+        onSuccess: () => toast.success("Marked as payee. Payroll can now set up their salary."),
+        onError: (error) => toast.error(getErrorMessage(error)),
+      },
+    );
+  }
+
   return (
-    <div className="flex flex-wrap items-center gap-2 text-sm">
-      <SemanticBadge
-        tone={worker.status === "ACTIVE" ? "success" : "neutral"}
-        label={worker.status}
-      />
-      {worker.workerNumber ? (
-        <span className="text-muted-foreground">#{worker.workerNumber}</span>
-      ) : null}
-      {worker.isPayee ? (
-        <Badge variant="outline" className="text-micro">
-          Payee
-        </Badge>
+    <div className="space-y-2">
+      <div className="flex flex-wrap items-center gap-2 text-sm">
+        <SemanticBadge
+          tone={worker.status === "ACTIVE" ? "success" : "neutral"}
+          label={worker.status}
+        />
+        {worker.workerNumber ? (
+          <span className="text-muted-foreground">#{worker.workerNumber}</span>
+        ) : null}
+        {worker.isPayee ? (
+          <Badge variant="outline" className="text-micro">
+            Payee
+          </Badge>
+        ) : null}
+      </div>
+      {!worker.isPayee ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-sm text-muted-foreground">Not payable yet. Payroll can only pay a payee.</p>
+          {canManage ? (
+            <LoadingButton size="sm" variant="outline" onClick={handleMarkPayee} isPending={updateWorker.isPending}>
+              Mark as payee
+            </LoadingButton>
+          ) : null}
+        </div>
       ) : null}
     </div>
   );
@@ -158,7 +186,7 @@ export function PersonWorkerTab({
 
   return (
     <div className="min-h-0 flex-1 space-y-4 overflow-y-auto">
-      <WorkerSummary worker={worker} />
+      <WorkerSummary worker={worker} canManage={canManageWorkers} />
       <Separator />
       <div className="space-y-2">
         <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">

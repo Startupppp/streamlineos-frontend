@@ -12,6 +12,7 @@ import { formatMoney } from "@/features/payroll/shared/payroll-format";
 import { BreakdownSheet } from "./breakdown-sheet";
 import type { RunEmployeeListItem } from "@/hooks/api/payroll/run-employees-schema";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { SemanticBadge } from "@/components/ui/semantic-badge";
 
 const PAGE_SIZE = 20;
 
@@ -26,6 +27,15 @@ const WORKER_TYPE_COLORS: Record<string, string> = {
 interface EmployeesTabProps {
   runId: number;
   isLocked?: boolean;
+}
+
+function RunEmployeeStatus({ row }: { row: RunEmployeeListItem }) {
+  if (row.holdReason) return <SemanticBadge tone="warning" size="xs" label="On hold" />;
+  return (
+    <span className="text-micro text-muted-foreground capitalize">
+      {row.status.toLowerCase().replace(/_/g, " ")}
+    </span>
+  );
 }
 
 const COLUMNS: DataTableColumn<RunEmployeeListItem>[] = [
@@ -83,11 +93,7 @@ const COLUMNS: DataTableColumn<RunEmployeeListItem>[] = [
   {
     key: "status",
     header: "Status",
-    cell: (row) => (
-      <span className="text-micro text-muted-foreground capitalize">
-        {row.status.toLowerCase().replace(/_/g, " ")}
-      </span>
-    ),
+    cell: (row) => <RunEmployeeStatus row={row} />,
   },
 ];
 
@@ -163,9 +169,9 @@ export function EmployeesTab({ runId, isLocked }: EmployeesTabProps) {
                 <p className="text-sm font-medium truncate">{row.userName}</p>
                 <p className="text-dense text-muted-foreground truncate">{row.userEmail}</p>
               </div>
-              <span className="text-micro text-muted-foreground shrink-0 capitalize">
-                {row.status.toLowerCase().replace(/_/g, " ")}
-              </span>
+              <div className="shrink-0">
+                <RunEmployeeStatus row={row} />
+              </div>
             </div>
             <div className="grid grid-cols-3 gap-2 text-dense">
               <div>

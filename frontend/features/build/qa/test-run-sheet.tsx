@@ -157,7 +157,7 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
                     <FormItem>
                       <FormLabel className="text-dense">Name <span className="text-destructive">*</span></FormLabel>
                       <FormControl>
-                        <Input {...field} className="text-dense" placeholder="e.g. Sprint 12 Regression" />
+                        <Input {...field} className="text-dense" placeholder="e.g. Cycle 12 Regression" />
                       </FormControl>
                       <FormMessage className="text-micro" />
                     </FormItem>

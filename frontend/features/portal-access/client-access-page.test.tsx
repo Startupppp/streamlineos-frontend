@@ -18,12 +18,10 @@ jest.mock("@/components/ui/page-wrapper", () => ({
 }));
 
 jest.mock("@/components/ui/data-table", () => ({
-  DataTable: ({ selection }: { selection?: { onChange: (sel: Set<string | number>) => void } }) => (
-    <div
-      data-testid="data-table"
-      onClick={() => selection?.onChange(new Set(["grant-1"]))}
-    />
-  ),
+  DataTable: ({ selection }: { selection?: { onChange: (sel: Set<string | number>) => void } }) => {
+    const handleSelectGrant = () => selection?.onChange(new Set(["grant-1"]));
+    return <div data-testid="data-table" onClick={handleSelectGrant} />;
+  },
   DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
 }));
 
@@ -160,7 +158,7 @@ jest.mock("@/components/pm-chrome", () => ({
 
 const mockUseBuildListKeyboard = jest.fn();
 
-jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
   useBuildListKeyboard: (...args: unknown[]) => mockUseBuildListKeyboard(...args),
 }));
 

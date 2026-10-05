@@ -29,6 +29,7 @@ const SETTINGS_ADMIN = "lib/prefetch/settings-admin.ts";
 const SETTINGS_ACCOUNT = "lib/prefetch/settings-account.ts";
 const SETTINGS_BILLING = "lib/prefetch/settings-billing.ts";
 const ROLES_PREFETCH = "lib/prefetch/roles.ts";
+const SETTINGS_NOTIFICATIONS = "lib/prefetch/settings-notifications.ts";
 
 const CENSUS: readonly CensusEntry[] = [
   {
@@ -101,6 +102,60 @@ const CENSUS: readonly CensusEntry[] = [
       helper: "prefetchOrgModules",
       module: SETTINGS_ADMIN,
       gate: "settings:manage",
+    },
+  },
+  {
+    route: "/settings/notifications/broadcasts",
+    classification: {
+      kind: "prefetch",
+      helper: "prefetchNotificationBroadcasts",
+      module: SETTINGS_NOTIFICATIONS,
+      gate: "notifications:broadcasts:view",
+    },
+  },
+  {
+    route: "/settings/notifications/events",
+    classification: {
+      kind: "prefetch",
+      helper: "prefetchNotificationEvents",
+      module: SETTINGS_NOTIFICATIONS,
+      gate: "notifications:events:view",
+    },
+  },
+  {
+    route: "/settings/notifications/my-preferences",
+    classification: {
+      kind: "prefetch",
+      helper: "prefetchMyNotificationPreferences",
+      module: SETTINGS_NOTIFICATIONS,
+      gate: "enforceRouteAccess",
+    },
+  },
+  {
+    route: "/settings/notifications/policy",
+    classification: {
+      kind: "prefetch",
+      helper: "prefetchNotificationPolicy",
+      module: SETTINGS_NOTIFICATIONS,
+      gate: "notifications:policy:view",
+    },
+  },
+  {
+    route: "/settings/notifications/providers",
+    classification: {
+      kind: "prefetch",
+      helper: "prefetchNotificationProviders",
+      module: SETTINGS_NOTIFICATIONS,
+      gate: "notifications:providers:view",
+    },
+  },
+  {
+    route: "/settings/notifications/templates",
+    classification: {
+      kind: "prefetch",
+      helper: "prefetchNotificationTemplates",
+      module: SETTINGS_NOTIFICATIONS,
+      gate: "notifications:templates:view",
     },
   },
   {
@@ -260,7 +315,7 @@ describe("the settings prefetch census", () => {
   const routes = settingsRoutes();
 
   it("reads real route files, so an empty sweep cannot pass", () => {
-    expect(routes.length).toBe(23);
+    expect(routes.length).toBe(29);
   });
 
   it("classifies every settings route on disk", () => {
@@ -293,8 +348,8 @@ describe("a prefetch classification is backed by real wiring", () => {
       entry.classification.kind === "prefetch",
   );
 
-  it("covers 22 of the 23 routes", () => {
-    expect(prefetched).toHaveLength(22);
+  it("covers 28 of the 29 routes", () => {
+    expect(prefetched).toHaveLength(28);
   });
 
   it.each(prefetched.map((entry) => [entry.route, entry] as const))(
@@ -340,7 +395,7 @@ describe("a prefetch classification is backed by real wiring", () => {
   );
 
   it("every prefetch module resolves its gate before issuing a protected read", () => {
-    for (const relative of [SETTINGS_ADMIN, SETTINGS_BILLING]) {
+    for (const relative of [SETTINGS_ADMIN, SETTINGS_BILLING, SETTINGS_NOTIFICATIONS]) {
       const source = moduleSource(relative);
       expect([relative, source.includes("resolvePrefetchGate")]).toEqual([relative, true]);
     }

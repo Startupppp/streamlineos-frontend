@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { cookies, headers } from "next/headers";
 import { HydrationBoundary } from "@tanstack/react-query";
 
-import { LayoutClient } from "../../components/layout/layout-client";
+import { LayoutClient } from "./layout-client";
 import { resolveWizardGate } from "../../lib/wizard-gate";
 import { prefetchAccess } from "../../lib/prefetch/access";
 import { resolveShellVariant } from "../../lib/shell-variant";

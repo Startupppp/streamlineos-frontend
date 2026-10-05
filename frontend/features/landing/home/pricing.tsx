@@ -18,7 +18,7 @@ export function Pricing() {
       <PricingTierGrid showAppsGrid={false} tiers={TIERS} />
       <p className="mt-10 text-center text-sm text-muted-foreground">
         Comparing against your current tools?{" "}
-        <Link href="/pricing" className="font-medium text-brand-deep underline-offset-4 hover:underline">
+        <Link href="/pricing" className="font-medium text-status-info-ink underline-offset-4 hover:underline">
           See the full plan comparison and savings calculator
         </Link>
       </p>
