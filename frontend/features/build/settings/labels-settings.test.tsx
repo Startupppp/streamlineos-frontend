@@ -32,18 +32,24 @@ jest.mock("@/components/shared/page-state", () => ({
   },
 }));
 
-jest.mock("@/hooks/api/build/labels", () => ({
-  useOrgLabels: () => ({
+jest.mock("@/hooks/api/build/projects", () => ({
+  useProjectLabels: () => ({
     data: [
-      { id: 1, orgId: "org-1", name: "Bug", color: "#ff0000" },
-      { id: 2, orgId: "org-1", name: "Feature", color: "#00ff00" },
+      { id: 1, orgId: "org-1", name: "Bug", color: "#ff0000", createdAt: null },
+      { id: 2, orgId: "org-1", name: "Feature", color: "#00ff00", createdAt: null },
     ],
     isLoading: false,
     isError: false,
     error: null,
     refetch: jest.fn(),
   }),
-  useCreateLabel: () => ({ mutate: jest.fn(), isPending: false }),
+}));
+
+jest.mock("@/hooks/api/build/ticket-sub-resources", () => ({
+  useCreateOrgLabel: () => ({ mutate: jest.fn(), isPending: false }),
+}));
+
+jest.mock("@/hooks/api/build/labels", () => ({
   useUpdateLabel: () => ({ mutate: jest.fn(), isPending: false }),
   useDeleteLabel: () => ({ mutate: jest.fn(), isPending: false }),
 }));

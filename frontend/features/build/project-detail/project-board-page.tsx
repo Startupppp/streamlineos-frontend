@@ -2,11 +2,10 @@
 
 import { use, useCallback, useMemo, useRef, useState } from "react";
 import { format, addDays } from "date-fns";
-import { useProject } from "@/hooks/api/build/projects";
+import { useProject, useProjectLabels } from "@/hooks/api/build/projects";
 import { useCycles } from "@/hooks/api/build/advanced";
 import { useBulkUpdateTickets } from "@/hooks/api/build/tickets";
 import { useWorkloadCapacity } from "@/hooks/api/build/workload-capacity";
-import { useOrgLabels } from "@/hooks/api/build/labels";
 import { useExportTickets } from "@/hooks/api/build/ticket-import-export";
 import { downloadTextFile } from "@/features/build/import-export/download-text-file";
 import type { BulkUpdateTicketsInput } from "@/hooks/api/build/tickets";
@@ -48,7 +47,7 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
   } = useProject(projectId);
   const { data: cycles } = useCycles(projectId);
   const bulkUpdate = useBulkUpdateTickets(projectId);
-  const { data: orgLabels } = useOrgLabels();
+  const { data: orgLabels } = useProjectLabels();
   const exportMutation = useExportTickets(projectId);
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
 

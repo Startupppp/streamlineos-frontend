@@ -15,13 +15,10 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
-import {
-  useOrgLabels,
-  useCreateLabel,
-  useUpdateLabel,
-  useDeleteLabel,
-  type TicketLabel,
-} from "@/hooks/api/build/labels";
+import { useProjectLabels } from "@/hooks/api/build/projects";
+import { useCreateOrgLabel } from "@/hooks/api/build/ticket-sub-resources";
+import { useUpdateLabel, useDeleteLabel } from "@/hooks/api/build/labels";
+import type { TicketLabel } from "@/types/projects";
 import { LabelEditRow } from "./label-edit-row";
 import { TEXT_BODY, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
@@ -192,8 +189,8 @@ export function LabelsSettings() {
     isError,
     error,
     refetch,
-  } = useOrgLabels();
-  const createLabel = useCreateLabel();
+  } = useProjectLabels();
+  const createLabel = useCreateOrgLabel();
   const updateLabel = useUpdateLabel();
   const deleteLabel = useDeleteLabel();
 

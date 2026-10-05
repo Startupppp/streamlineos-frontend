@@ -18,7 +18,6 @@ import {
   projectsTicketAssociationsGetSubtasksResponseSchema,
   projectsTicketCommentsGetCommentResponseSchema,
   projectsTicketsSearchTicketsResponseSchema,
-  projectsListLabelsResponseSchema,
   projectsTicketsGetAllWorkResponseSchema,
   projectsActivityFeedGetProjectActivityResponseSchema,
   projectsTicketAssociationsAddLabelResponseSchema,
@@ -65,8 +64,6 @@ export const commentPermalinkContract = projectsTicketCommentsGetCommentResponse
 export const ticketSearchResultListContract = projectsTicketsSearchTicketsResponseSchema;
 
 export const successContract = projectsTicketAssociationsAddLabelResponseSchema;
-
-export const ticketLabelListContract = projectsListLabelsResponseSchema;
 
 export const allWorkPageContract = projectsTicketsGetAllWorkResponseSchema.transform((page) => ({
   ...page,

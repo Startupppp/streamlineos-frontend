@@ -1,6 +1,6 @@
 import React from "react";
 import { render, screen, act, fireEvent } from "@testing-library/react";
-import type { TicketLabel } from "@/hooks/api/build/labels";
+import type { TicketLabel } from "@/types/projects";
 
 const mockNotFound = jest.fn();
 const mockUse = jest.fn();
@@ -37,8 +37,10 @@ const mockUseProject = jest.fn();
 const mockUseCycles = jest.fn((..._args: unknown[]) => ({ data: [] }));
 const mockUseBulkUpdateTickets = jest.fn((..._args: unknown[]) => ({ mutate: jest.fn(), isPending: false }));
 
+const mockUseProjectLabels = jest.fn((..._args: unknown[]) => ({ data: [] as TicketLabel[] }));
 jest.mock("@/hooks/api/build/projects", () => ({
   useProject: (...args: unknown[]) => mockUseProject(...args),
+  useProjectLabels: (...args: unknown[]) => mockUseProjectLabels(...args),
 }));
 
 jest.mock("@/hooks/api/build/advanced", () => ({
@@ -54,10 +56,6 @@ jest.mock("@/hooks/api/build/workload-capacity", () => ({
   useWorkloadCapacity: (...args: unknown[]) => mockUseWorkloadCapacity(...args),
 }));
 
-const mockUseOrgLabels = jest.fn((..._args: unknown[]) => ({ data: [] as TicketLabel[] }));
-jest.mock("@/hooks/api/build/labels", () => ({
-  useOrgLabels: (...args: unknown[]) => mockUseOrgLabels(...args),
-}));
 
 const mockExportMutate = jest.fn();
 const mockUseExportTickets = jest.fn((..._args: unknown[]) => ({ mutate: mockExportMutate, isPending: false }));
@@ -442,7 +440,7 @@ describe("ProjectBoardPage — bulk actions", () => {
 
   it("passes orgLabels to ProjectBoardContent so the label selector is populated with available labels", () => {
     const fakeLabels = [{ id: 1, name: "Bug", color: "#ff0000", orgId: "org1", createdAt: "" }];
-    mockUseOrgLabels.mockReturnValue({ data: fakeLabels });
+    mockUseProjectLabels.mockReturnValue({ data: fakeLabels });
     mockUseBoardUrlState.mockReturnValue({ ...BOARD_URL_STATE_DEFAULT, selectedIds: new Set([1]) });
     renderPage();
     expect(capturedBoardContentProps.labels).toEqual(fakeLabels);

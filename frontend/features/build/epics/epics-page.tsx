@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useCallback, useEffect, useRef, useState } from "react";
-import { useProject } from "@/hooks/api/build/projects";
+import { useProject, useProjectLabels } from "@/hooks/api/build/projects";
 import { useUpdateTicket } from "@/hooks/api/build/ticket-update-mutation";
 import {
   useBulkUpdateTickets,
@@ -15,7 +15,6 @@ import {
   type EpicListFilters,
 } from "@/hooks/api/build/advanced";
 import { useProjectMembers } from "@/hooks/api/build/project-members";
-import { useOrgLabels } from "@/hooks/api/build/labels";
 import { useExportTickets } from "@/hooks/api/build/ticket-import-export";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { CreateEpicDialog } from "@/features/build/epics/create-epic-dialog";
@@ -100,7 +99,7 @@ export function EpicsPage({ params }: PageProps) {
     refetch: refetchTickets,
   } = useProjectBoardTickets(projectId);
   const { data: cycles } = useCycles(projectId);
-  const { data: orgLabels } = useOrgLabels();
+  const { data: orgLabels } = useProjectLabels();
   const exportEpics = useExportTickets(projectId);
   const { data: membersPage } = useProjectMembers(projectId);
   const members = membersPage?.data ?? [];
