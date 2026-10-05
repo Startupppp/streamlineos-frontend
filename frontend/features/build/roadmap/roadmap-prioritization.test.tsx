@@ -3,7 +3,7 @@ import { RoadmapPriorityScore } from "./roadmap-priority-score";
 import { RoadmapDeliveryProgress } from "./roadmap-delivery-progress";
 import { roadmapItemSchema, parseRiceField } from "./roadmap-schema";
 import { useRoadmapItemSignals } from "@/hooks/api/build/roadmap";
-import type { RoadmapPrioritization, RoadmapSignals } from "@/hooks/api/build/roadmap";
+import type { RoadmapPrioritization, RoadmapSignals } from "@/hooks/api/build/roadmap-schema";
 
 jest.mock("@/hooks/api/build/roadmap", () => ({
   useRoadmapItemSignals: jest.fn(),

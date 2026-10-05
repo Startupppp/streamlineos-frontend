@@ -19,7 +19,7 @@ jest.mock("@/hooks/api/feedbucket", () => ({
   useCreateFeedbucketWidget: () => mutation,
 }));
 
-jest.mock("@/hooks/api/build/roadmap", () => ({
+jest.mock("@/hooks/api/build/changelog", () => ({
   useCreateChangelogEntry: () => mutation,
   useUpdateChangelogEntry: () => mutation,
 }));

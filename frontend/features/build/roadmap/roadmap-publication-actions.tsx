@@ -11,7 +11,7 @@ import { useCan } from "@/hooks/api/access";
 import {
   usePublishRoadmap,
   useRoadmapPublication,
-} from "@/hooks/api/build/roadmap";
+} from "@/hooks/api/build/roadmap-public";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { writeToClipboard } from "@/lib/clipboard";
 

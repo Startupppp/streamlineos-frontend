@@ -22,8 +22,6 @@ const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 
-export type { ProjectsRetentionSettingsGetSettingsResponse };
-
 export function useProjectRetentionSettings(projectId: number) {
   const canView = useCan("build:view");
   return useQuery<ProjectsRetentionSettingsGetSettingsResponse>({

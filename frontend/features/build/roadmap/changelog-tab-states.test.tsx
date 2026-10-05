@@ -4,10 +4,10 @@ import {
   useChangelog,
   useUpdateChangelogEntry,
   useDeleteChangelogEntry,
-} from "@/hooks/api/build/roadmap";
+} from "@/hooks/api/build/changelog";
 import { usePageState } from "@/hooks/api/use-page-state";
 
-jest.mock("@/hooks/api/build/roadmap", () => ({
+jest.mock("@/hooks/api/build/changelog", () => ({
   useChangelog: jest.fn(),
   useUpdateChangelogEntry: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useDeleteChangelogEntry: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),

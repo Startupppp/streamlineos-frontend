@@ -3,7 +3,7 @@ import "@testing-library/jest-dom";
 
 const mockReplace = jest.fn();
 
-jest.mock("@/hooks/api/build/roadmap", () => ({
+jest.mock("@/hooks/api/build/roadmap-public", () => ({
   usePublicRoadmap: jest.fn(),
   usePublicVote: jest.fn(),
   useSubmitPublicFeedback: jest.fn(),
@@ -18,7 +18,7 @@ import {
   usePublicRoadmap,
   usePublicVote,
   useSubmitPublicFeedback,
-} from "@/hooks/api/build/roadmap";
+} from "@/hooks/api/build/roadmap-public";
 import PublicRoadmapPage from "@/app/(public)/roadmap/[orgId]/page";
 
 const mockUsePublicRoadmap = usePublicRoadmap as jest.MockedFunction<typeof usePublicRoadmap>;

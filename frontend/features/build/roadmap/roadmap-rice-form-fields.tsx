@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { RoadmapPrioritization, RoadmapTierWeighting } from "@/hooks/api/build/roadmap";
+import type { RoadmapPrioritization, RoadmapTierWeighting } from "@/hooks/api/build/roadmap-schema";
 import type { RoadmapItemFormValues } from "./roadmap-schema";
 import { RICE_IMPACT_OPTIONS, ROADMAP_TIER_UNWEIGHTED_LABEL } from "./roadmap-constants";
 import { RoadmapPriorityScore } from "./roadmap-priority-score";

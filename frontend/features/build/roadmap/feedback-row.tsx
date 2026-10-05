@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { useUpdateFeedbackPost } from "@/hooks/api/build/roadmap";
+import { useUpdateFeedbackPost } from "@/hooks/api/build/feedback-posts";
 import { useCrmOrganizationsForPicker } from "@/hooks/api/crm";
 import { useCan } from "@/hooks/api/access";
 import type { FeedbackPost, RoadmapItem } from "@/types/projects";

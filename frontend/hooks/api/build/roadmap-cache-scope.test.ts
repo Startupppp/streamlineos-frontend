@@ -2,13 +2,20 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 
-const SOURCE = readFileSync(join(__dirname, "roadmap.ts"), "utf8");
+const SOURCES: Record<string, string> = {
+  "roadmap.ts": readFileSync(join(__dirname, "roadmap.ts"), "utf8"),
+  "feedback-posts.ts": readFileSync(join(__dirname, "feedback-posts.ts"), "utf8"),
+  "changelog.ts": readFileSync(join(__dirname, "changelog.ts"), "utf8"),
+};
 
 function invalidationsIn(hookName: string): string {
-  const start = SOURCE.indexOf(`export function ${hookName}(`);
-  expect(start).toBeGreaterThanOrEqual(0);
-  const next = SOURCE.indexOf("\nexport function ", start + 1);
-  return SOURCE.slice(start, next === -1 ? undefined : next);
+  for (const src of Object.values(SOURCES)) {
+    const start = src.indexOf(`export function ${hookName}(`);
+    if (start === -1) continue;
+    const next = src.indexOf("\nexport function ", start + 1);
+    return src.slice(start, next === -1 ? undefined : next);
+  }
+  throw new Error(`Hook ${hookName} not found in any source file`);
 }
 
 const ROADMAP_WRITES = [

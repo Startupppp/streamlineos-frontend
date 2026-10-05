@@ -10,7 +10,7 @@ import {
   useChangelog,
   useUpdateChangelogEntry,
   useDeleteChangelogEntry,
-} from "@/hooks/api/build/roadmap";
+} from "@/hooks/api/build/changelog";
 import { useCan } from "@/hooks/api/access";
 import type { ChangelogEntry } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";

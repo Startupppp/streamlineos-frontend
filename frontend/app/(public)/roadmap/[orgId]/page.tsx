@@ -26,11 +26,13 @@ import {
   usePublicRoadmap,
   usePublicVote,
   useSubmitPublicFeedback,
-  type PublicRoadmapItem,
-  type PublicFeedbackPost,
-  type PublicChangelogEntry,
-  type ChangelogType,
-} from "@/hooks/api/build/roadmap";
+} from "@/hooks/api/build/roadmap-public";
+import type {
+  PublicRoadmapItem,
+  PublicFeedbackPost,
+  PublicChangelogEntry,
+  ChangelogType,
+} from "@/types/projects";
 
 const VOTER_KEY_STORAGE = "streamlineos:roadmap:voterKey";
 

@@ -5,14 +5,14 @@ import { useCan } from "@/hooks/api/access";
 import {
   usePublishRoadmap,
   useRoadmapPublication,
-} from "@/hooks/api/build/roadmap";
+} from "@/hooks/api/build/roadmap-public";
 import { RoadmapPublicationActions } from "./roadmap-publication-actions";
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(),
 }));
 
-jest.mock("@/hooks/api/build/roadmap", () => ({
+jest.mock("@/hooks/api/build/roadmap-public", () => ({
   useRoadmapPublication: jest.fn(),
   usePublishRoadmap: jest.fn(),
 }));

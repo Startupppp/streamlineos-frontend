@@ -2,17 +2,20 @@ import { render, screen } from "@testing-library/react";
 import { FeedbackTab } from "./feedback-tab";
 import {
   useFeedbackPosts,
-  useRoadmapItems,
   useDeleteFeedbackPost,
-} from "@/hooks/api/build/roadmap";
+} from "@/hooks/api/build/feedback-posts";
+import { useRoadmapItems } from "@/hooks/api/build/roadmap";
 import { usePageState } from "@/hooks/api/use-page-state";
 
-jest.mock("@/hooks/api/build/roadmap", () => ({
+jest.mock("@/hooks/api/build/feedback-posts", () => ({
   useFeedbackPosts: jest.fn(),
-  useRoadmapItems: jest.fn(() => ({ data: undefined })),
   useDeleteFeedbackPost: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useMergeFeedbackPost: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useUpdateFeedbackPost: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+}));
+
+jest.mock("@/hooks/api/build/roadmap", () => ({
+  useRoadmapItems: jest.fn(() => ({ data: undefined })),
 }));
 
 jest.mock("@/hooks/api/use-page-state", () => ({

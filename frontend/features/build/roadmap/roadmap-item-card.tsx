@@ -20,7 +20,7 @@ import { PM_PANEL } from "@/components/pm-chrome";
 import { listItem, listItemReduced, pmSnappy } from "@/lib/motion-presets";
 import { TEXT_ONE_LINE, TEXT_TWO_LINES } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import type { RoadmapOwner, RoadmapPrioritization, RoadmapTierWeighting } from "@/hooks/api/build/roadmap";
+import type { RoadmapOwner, RoadmapPrioritization, RoadmapTierWeighting } from "@/hooks/api/build/roadmap-schema";
 import { getUserDisplayName } from "@/lib/person-display";
 import { RoadmapPriorityScore } from "./roadmap-priority-score";
 

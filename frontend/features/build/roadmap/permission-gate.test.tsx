@@ -17,7 +17,7 @@ jest.mock("framer-motion", () => ({
   useReducedMotion: () => false,
 }));
 
-jest.mock("@/hooks/api/build/roadmap", () => ({
+jest.mock("@/hooks/api/build/feedback-posts", () => ({
   useUpdateFeedbackPost: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
 

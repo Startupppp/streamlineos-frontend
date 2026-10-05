@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { formatMoneyCompact } from "@/lib/format-utils";
 import { useOrgDisplay } from "@/hooks/api/org-display";
-import type { RoadmapPrioritization, RoadmapTierWeighting } from "@/hooks/api/build/roadmap";
+import type { RoadmapPrioritization, RoadmapTierWeighting } from "@/hooks/api/build/roadmap-schema";
 import {
   CRM_ACCOUNT_TIER_LABEL,
   RICE_UNAVAILABLE_LABEL,

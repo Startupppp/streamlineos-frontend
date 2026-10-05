@@ -30,7 +30,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useCreateChangelogEntry,
   useUpdateChangelogEntry,
-} from "@/hooks/api/build/roadmap";
+} from "@/hooks/api/build/changelog";
 import type { ChangelogEntry } from "@/types/projects";
 import { CHANGELOG_TYPE_OPTIONS } from "./roadmap-constants";
 
