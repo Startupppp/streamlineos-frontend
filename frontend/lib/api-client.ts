@@ -45,14 +45,6 @@ function makeRequestSignal(
 }
 
 export interface AuthedFetchOptions {
-  /**
-   * Overrides the ordinary request timeout, which is a deadline this client
-   * imposes on the SERVER's work. A streamed AI answer is bounded by the
-   * backend's own deadline — 120 s for chat, 60 s for the other stream routes —
-   * so the 30 s every other call gets aborts a paid stream the server is still
-   * producing. The surface renders that as a cancellation nobody asked for, and
-   * the retry it invites reserves and spends a second time.
-   */
   timeoutMs?: number;
   asRealUser?: boolean;
   expectedIdentity?: ExpectedRequestIdentity;
@@ -65,10 +57,6 @@ const PUBLIC_AUTH_PATHS = new Set([
   "/auth/email-otp",
   "/auth/email-otp/verify",
   "/organization/invitations/validate",
-  // BUG-HRMS-010: the invitee requesting this code has no session yet — that is
-  // the whole point of it. Absent from this set, the call took the authenticated
-  // path: a mutation key it does not need, and `endSession()` on the 401 that a
-  // missing bearer invites, signing the visitor out of an invitation page.
   "/organization/invitations/request-otp",
   "/organization/invitations/accept",
   "/organization/invitations/decline",
@@ -161,15 +149,6 @@ const TOKEN_REFRESH_SKEW_MS = 30_000;
 const TOKEN_FALLBACK_TTL_MS = 8 * 60 * 1_000;
 
 const TOKEN_UNAVAILABLE_BACKOFF_MS = 3_000;
-/**
- * BUG-HRMS-011/012/019. Every authenticated request awaits this one shared
- * session read before its own 30s deadline starts, and it had no deadline of
- * its own: a stalled `/api/auth/session` left every query on the page pending,
- * which reads as a skeleton that never ends. The route's server side spends at
- * most 8s + 8s, so 20s only trips on a real stall — and a stall is a TIMEOUT
- * error the page can show with Retry, not a missing token that signs the user
- * out.
- */
 const SESSION_TOKEN_TIMEOUT_MS = 20_000;
 let tokenUnavailableUntil = 0;
 
@@ -317,14 +296,6 @@ function requestHost(url: string): string {
 
 const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
-/**
- * Re-exported because a caller that needs a key stable across *retries* has to
- * mint it once, outside the request. The per-fetch key below is minted inside
- * `authedFetch`, so a retried mutation would carry a new one and replay
- * nothing — which is fine for a request that is cheap to repeat and wrong for
- * one that spends money or holds a message. The key itself lives in
- * `lib/idempotency-key`; `hooks/common/use-idempotent-operation.ts` is the hook form.
- */
 export { newIdempotencyKey };
 
 export async function authedFetch(
@@ -334,9 +305,6 @@ export async function authedFetch(
   signal?: AbortSignal,
   options?: AuthedFetchOptions,
 ): Promise<Response> {
-  // `init.signal` is destructured out rather than left to be shadowed by the
-  // `signal:` written after the spread below — a caller that passed one had it
-  // silently overwritten, which is what made `useAskAI`'s stop() a no-op.
   const { signal: initSignal, ...requestInit } = init;
   const headers = new Headers(init.headers);
   const isPublic = isPublicPath(path);
@@ -345,8 +313,6 @@ export async function authedFetch(
     options?.timeoutMs,
   );
 
-  // One id per request, sent to the API and remembered here, so a browser error
-  // report and the server-side logs for the same call can be joined up.
   if (!headers.has("x-correlation-id")) {
     const correlationId = newCorrelationId();
     headers.set("x-correlation-id", correlationId);
@@ -354,9 +320,6 @@ export async function authedFetch(
   }
 
   if (!isPublic && MUTATING_METHODS.has((init.method ?? "GET").toUpperCase())) {
-    // Last resort only: an @Idempotent route 400s without the header, and the
-    // error reads like a body validation failure. A caller that can be retried
-    // supplies its own key — see hooks/common/use-idempotent-operation.ts.
     if (!headers.has(IDEMPOTENCY_HEADER))
       headers.set(IDEMPOTENCY_HEADER, newIdempotencyKey());
   }
@@ -390,21 +353,6 @@ export async function authedFetch(
   return res;
 }
 
-/**
- * Origin-outage circuit (SEC-HRMS-003). During an outage every layer above
- * retries on its own clock — query retry, the route boundary's auto-reset,
- * polling reads — so one tab hammered a down origin at ~60 req/min. Every
- * request passes through here, so this is the one place to stop it: a
- * transport failure or a gateway 502/503/504 opens the circuit for a backoff
- * window (5s doubling to 60s) during which requests fail fast with the same
- * NETWORK_ERROR the UI already shows as "Server temporarily unavailable".
- * The first request after the window is the probe; any other response proves
- * the origin is back and closes it.
- *
- * "Gateway" means a non-JSON body: the backend itself answers 503 (AI
- * provider down, mail unconfigured, …) in its JSON envelope, and that one
- * feature being degraded must not black out the whole app.
- */
 const OUTAGE_BASE_MS = 5_000;
 const OUTAGE_CEILING_MS = 60_000;
 const OUTAGE_STATUSES = new Set([502, 503, 504]);
@@ -412,8 +360,6 @@ let outageUntil = 0;
 let outageBackoffMs = OUTAGE_BASE_MS;
 
 function noteOriginOutage(): void {
-  // Requests already in flight when the outage began all fail together; only
-  // the first may open (and lengthen) the window.
   if (Date.now() < outageUntil) return;
   outageUntil = Date.now() + outageBackoffMs;
   outageBackoffMs = Math.min(OUTAGE_CEILING_MS, outageBackoffMs * 2);
@@ -487,8 +433,6 @@ type NoAbortSignal = {
   readonly throwIfAborted?: never;
 };
 
-// The union keeps fresh object literals, interfaces and Record shapes assignable
-// while making `apiClient.get(url, signal)` — signal in the params slot — a compile error.
 export type QueryParams =
   | ({ readonly [key: string]: unknown } & NoAbortSignal)
   | (object & NoAbortSignal);
@@ -507,16 +451,6 @@ export function buildUrl(path: string, params?: QueryParams): string {
 
 export { ApiError, isApiError, getApiErrorCode } from "@/lib/api-envelope";
 
-/**
- * Starts a lazy contract downloading in PARALLEL with the request instead of
- * after it, so deferring the schema module costs the read nothing it would not
- * already have paid — the chunk and the response race, and the body is parsed
- * when both have landed.
- *
- * The `catch` is a no-op on purpose: it keeps a failed chunk download from
- * becoming an unhandled rejection when the request itself throws first. The
- * awaited read at each call site is still the one that reports the failure.
- */
 function beginContract<T>(
   contract?: ContractSource<T>,
 ): Promise<ResponseContract<T> | undefined> {
@@ -550,12 +484,6 @@ export interface RequestConfig {
   expectedIdentity?: ExpectedRequestIdentity;
 }
 
-/**
- * Sends an authenticated request through the same token cache, 401 recovery,
- * correlation, timeout, and outage circuit as the typed API helpers while
- * leaving the response body untouched. Use this for streaming handshakes and
- * other endpoints whose headers or non-JSON body are part of their contract.
- */
 export async function request(
   url: string,
   init: RequestInit,
