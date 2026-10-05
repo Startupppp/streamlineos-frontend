@@ -111,26 +111,47 @@ export function useBuildListFilters(
   const urlSearch = withSearch ? (searchParams.get(searchParam) ?? "") : "";
   const cursor = searchParams.get(BUILD_LIST_CURSOR_PARAM);
   const [search, setSearchState] = useState(urlSearch);
-  const [appliedUrlSearch, setAppliedUrlSearch] = useState(urlSearch);
-  const debouncedSearch = useDebouncedValue(search, debounceMs);
-
-  if (appliedUrlSearch !== urlSearch) {
-    setAppliedUrlSearch(urlSearch);
-    if (urlSearch !== debouncedSearch) setSearchState(urlSearch);
-  }
-
+  const [isEditingSearch, setIsEditingSearch] = useState(false);
+  const appliedUrlSearch = useRef(urlSearch);
+  const pendingSearchWrites = useRef(new Set<string>());
+  const debouncedInput = useDebouncedValue(search, debounceMs);
+  const debouncedSearch = isEditingSearch ? debouncedInput : urlSearch;
   const writtenSearch = useRef<string | null>(null);
 
   useEffect(() => {
     if (!withSearch) return;
-    if (debouncedSearch === urlSearch) {
+    if (appliedUrlSearch.current !== urlSearch) {
+      appliedUrlSearch.current = urlSearch;
+      if (!pendingSearchWrites.current.delete(urlSearch)) {
+        pendingSearchWrites.current.clear();
+        writtenSearch.current = null;
+        function applyHistorySearch() {
+          setSearchState(urlSearch);
+          setIsEditingSearch(false);
+        }
+        startTransition(applyHistorySearch);
+        return;
+      }
+      if (!isEditingSearch) pendingSearchWrites.current.clear();
+    }
+    if (!isEditingSearch || debouncedInput !== search) return;
+    if (debouncedInput === urlSearch) {
+      pendingSearchWrites.current.clear();
       writtenSearch.current = null;
+      function finishSearchWrite() { setIsEditingSearch(false); }
+      startTransition(finishSearchWrite);
       return;
     }
-    if (writtenSearch.current === debouncedSearch) return;
-    writtenSearch.current = debouncedSearch;
-    writeParams({ [searchParam]: debouncedSearch || null });
-  }, [debouncedSearch, urlSearch, searchParam, withSearch, writeParams]);
+    if (writtenSearch.current === debouncedInput) return;
+    writtenSearch.current = debouncedInput;
+    pendingSearchWrites.current.add(debouncedInput);
+    writeParams({ [searchParam]: debouncedInput || null });
+  }, [debouncedInput, search, isEditingSearch, urlSearch, searchParam, withSearch, writeParams]);
+
+  const setSearch = useCallback((value: string) => {
+    setIsEditingSearch(true);
+    setSearchState(value);
+  }, []);
 
   const setValue = useCallback(
     (param: string, value: string) => {
@@ -160,9 +181,13 @@ export function useBuildListFilters(
     const updates: Record<string, string | null> = {};
     for (const definition of filters) updates[definition.param] = null;
     if (withSearch) updates[searchParam] = null;
+    pendingSearchWrites.current.delete("");
+    if (withSearch && urlSearch !== "") pendingSearchWrites.current.add("");
+    writtenSearch.current = null;
+    setIsEditingSearch(false);
     setSearchState("");
     writeParams(updates);
-  }, [filters, searchParam, withSearch, writeParams]);
+  }, [filters, searchParam, urlSearch, withSearch, writeParams]);
 
   const value = useCallback(
     (param: string) => values.get(param)?.value ?? BUILD_FILTER_ALL,
@@ -213,6 +238,6 @@ export function useBuildListFilters(
     ...base,
     search,
     debouncedSearch,
-    setSearch: setSearchState,
+    setSearch,
   };
 }

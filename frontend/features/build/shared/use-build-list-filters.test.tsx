@@ -39,6 +39,103 @@ afterEach(() => {
 });
 
 describe("useBuildListFilters", () => {
+  it("follows Back to an older search after only the latest own write is acknowledged", () => {
+    const { result, rerender } = renderHook(() => useBuildListFilters({ filters: FILTERS }));
+    act(() => result.current.setSearch("lo"));
+    act(() => { jest.advanceTimersByTime(300); });
+    expect(lastParams().get("q")).toBe("lo");
+    act(() => result.current.setSearch("login"));
+    act(() => { jest.advanceTimersByTime(300); });
+    setUrl(lastParams().toString());
+    rerender();
+    expect(result.current.search).toBe("login");
+    replace.mockClear();
+    setUrl("q=lo");
+    rerender();
+    act(() => { jest.advanceTimersByTime(600); });
+    expect(result.current.search).toBe("lo");
+    expect(result.current.debouncedSearch).toBe("lo");
+    expect(replace).not.toHaveBeenCalled();
+  });
+  it("follows Back to an absent search after status-only Clear and an acknowledged search", () => {
+    setUrl("status=open");
+    const { result, rerender } = renderHook(() => useBuildListFilters({ filters: FILTERS }));
+    act(() => result.current.clearAll());
+    setUrl(lastParams().toString());
+    rerender();
+    act(() => result.current.setSearch("login"));
+    act(() => { jest.advanceTimersByTime(300); });
+    setUrl(lastParams().toString());
+    rerender();
+    expect(result.current.search).toBe("login");
+    replace.mockClear();
+    setUrl("");
+    rerender();
+    act(() => { jest.advanceTimersByTime(600); });
+    expect(result.current.search).toBe("");
+    expect(result.current.debouncedSearch).toBe("");
+    expect(replace).not.toHaveBeenCalled();
+  });
+  it.each([false, true])("keeps clear applied after debounce and URL acknowledgement (pending=%s)", (pending) => {
+    setUrl("q=login&status=open&cursor=abc");
+    const { result, rerender } = renderHook(() => useBuildListFilters({ filters: FILTERS }));
+    if (pending) act(() => result.current.setSearch("login again"));
+    act(() => result.current.clearAll());
+    setUrl(lastParams().toString());
+    rerender();
+    act(() => { jest.advanceTimersByTime(600); });
+    expect(lastParams().has("q")).toBe(false);
+    expect(result.current.search).toBe("");
+    expect(result.current.debouncedSearch).toBe("");
+    expect(replace).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not restore pending input over external history navigation", () => {
+    setUrl("q=login");
+    const { result, rerender } = renderHook(() => useBuildListFilters({ filters: FILTERS }));
+    act(() => result.current.setSearch("pending input"));
+    setUrl("q=history&status=closed");
+    rerender();
+    act(() => { jest.advanceTimersByTime(600); });
+    expect(result.current.search).toBe("history");
+    expect(result.current.debouncedSearch).toBe("history");
+    expect(replace).not.toHaveBeenCalled();
+  });
+
+  it("preserves rapid input through multiple delayed own URL acknowledgements", () => {
+    const { result, rerender } = renderHook(() => useBuildListFilters({ filters: FILTERS }));
+    act(() => result.current.setSearch("lo"));
+    act(() => { jest.advanceTimersByTime(300); });
+    act(() => result.current.setSearch("log"));
+    act(() => { jest.advanceTimersByTime(300); });
+    act(() => result.current.setSearch("login"));
+    setUrl("q=lo");
+    rerender();
+    expect(result.current.search).toBe("login");
+    setUrl("q=log");
+    rerender();
+    expect(result.current.search).toBe("login");
+    act(() => { jest.advanceTimersByTime(300); });
+    expect(lastParams().get("q")).toBe("login");
+  });
+
+  it("keeps Clear authoritative when a previous search write is acknowledged first", () => {
+    setUrl("q=login");
+    const { result, rerender } = renderHook(() => useBuildListFilters({ filters: FILTERS }));
+    act(() => result.current.setSearch("login again"));
+    act(() => { jest.advanceTimersByTime(300); });
+    expect(lastParams().get("q")).toBe("login again");
+    act(() => result.current.clearAll());
+    setUrl("q=login+again");
+    rerender();
+    expect(result.current.search).toBe("");
+    setUrl("");
+    rerender();
+    act(() => { jest.advanceTimersByTime(600); });
+    expect(lastParams().has("q")).toBe(false);
+    expect(result.current.debouncedSearch).toBe("");
+    expect(replace).toHaveBeenCalledTimes(2);
+  });
   it("reads every filter from the URL", () => {
     setUrl("status=open&severity=high&q=login");
     const { result } = renderHook(() => useBuildListFilters({ filters: FILTERS }));

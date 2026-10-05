@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { parseEnum, useUrlFilters } from "@/lib/url-state/use-url-filters";
 import { ReportsAgileTab } from "./reports-agile-tab";
 import { ReportsOverviewTab } from "./reports-overview-tab";
+import { ReportsQualityTab } from "./reports-quality-tab";
 import { WorkloadSection } from "./workload-section";
 
 const REPORTS_TABS = ["agile", "overview", "quality", "workload"] as const;
@@ -79,7 +80,7 @@ export function ReportsTabs({ projectId }: ReportsTabsProps) {
               value="quality"
               className={cn(TABS_CONTENT_PAGE_BODY_CLASS, "gap-4 overflow-y-auto")}
             >
-              <p className="text-muted-foreground text-sm">Coming soon</p>
+              <ReportsQualityTab projectId={projectId} />
             </TabsContent>
             <TabsContent
               value="workload"

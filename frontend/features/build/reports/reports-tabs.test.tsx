@@ -32,6 +32,10 @@ jest.mock("./workload-section", () => ({
   WorkloadSection: () => <div data-testid="workload-section" />,
 }));
 
+jest.mock("./reports-quality-tab", () => ({
+  ReportsQualityTab: ({ projectId }: { projectId: number }) => <h2>Quality for project {projectId}</h2>,
+}), { virtual: true });
+
 import { ReportsTabs } from "./reports-tabs";
 
 function lastParams() {
@@ -122,6 +126,8 @@ describe("ReportsTabs — Quality and Workload tab triggers (BT-235ad1042755)", 
       "data-state",
       "active",
     );
+    expect(screen.getByRole("heading", { name: "Quality for project 1" })).toBeInTheDocument();
+    expect(screen.queryByText("Coming soon")).not.toBeInTheDocument();
   });
 
   it("activates the Workload tab when tab=workload is in the URL", () => {

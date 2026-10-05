@@ -5,6 +5,7 @@ import { useCan } from "@/hooks/api/access";
 import { apiClient, isApiError } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type {
   TestSuite,
   TestCase,
@@ -150,6 +151,7 @@ export function useTestRuns(projectId?: number, filters?: TestRunFilters) {
   if (filters?.failuresOnly) params["failuresOnly"] = "true";
 
   return useQuery<IdCursorPage<TestRunListItem>>({
+    ...INLINE_READ_ERROR,
     queryKey: buildWorkQueryKeys.projects.qa.runs(
       projectId ?? 0,
       Object.keys(params).length > 0 ? params : undefined,
@@ -247,7 +249,7 @@ export function useUpdateTestResult() {
         testRunResultRowContract,
       ),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.qa.run(vars.projectId, vars.runId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.qa.runs(vars.projectId) });
     },
   });
 }
