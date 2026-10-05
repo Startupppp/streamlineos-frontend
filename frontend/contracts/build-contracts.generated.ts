@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const OPENAPI_HASH = "sha256:4529f2379d991219517d895995c96e147aded427ac0bea6437c9f1f7fd71d93c" as const;
+export const OPENAPI_HASH = "sha256:4a9c539b7aa0bc2932d6b632876c1059253b363f63ccca571a16c8f576b88e7b" as const;
 
 export const agentTokensListResponseSchema = z.array(z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
