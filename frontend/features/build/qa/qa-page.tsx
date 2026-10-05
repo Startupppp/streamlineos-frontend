@@ -11,6 +11,7 @@ import {
   PmSection,
 } from "@/components/pm-chrome";
 import { useCan } from "@/hooks/api/access";
+import { useUrlTab } from "@/hooks/api/hr/use-url-tab";
 import { TestCasesTab } from "./test-cases-tab";
 import { TestRunsTab } from "./test-runs-tab";
 
@@ -20,13 +21,9 @@ interface QaPageProps {
 
 export function QaPage({ projectId }: QaPageProps) {
   const canManage = useCan("build:qa:manage");
-  const [tab, setTab] = useState<"cases" | "runs">("cases");
+  const { activeTab: tab, onTabChange: handleTabChange } = useUrlTab(["cases", "runs"], "cases");
   const [caseCreateNonce, setCaseCreateNonce] = useState(0);
   const [runCreateNonce, setRunCreateNonce] = useState(0);
-
-  const handleTabChange = useCallback((value: string) => {
-    if (value === "cases" || value === "runs") setTab(value);
-  }, []);
 
   const handleNewCase = useCallback(() => {
     setCaseCreateNonce((n) => n + 1);

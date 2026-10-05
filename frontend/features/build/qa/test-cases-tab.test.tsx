@@ -10,6 +10,10 @@ const mockUseUpdateTestCase = jest.fn();
 const mockUseCan = jest.fn();
 const mockUseAccess = jest.fn();
 const mockCreateCase = jest.fn();
+const mockTestRunsTab = jest.fn((_props: { projectId: number; createNonce?: number }) => null);
+jest.mock("./test-runs-tab", () => ({
+  TestRunsTab: (props: { projectId: number; createNonce?: number }) => { mockTestRunsTab(props); return null; },
+}));
 jest.mock("@/hooks/api/build/projects", () => ({ useProject: () => ({ data: { key: "QA" } }) }));
 jest.mock("@/features/build/shared/ticket-combobox", () => ({ TicketCombobox: () => null }));
 
@@ -36,7 +40,7 @@ jest.mock("@/hooks/common/use-debounce", () => ({
 }));
 
 jest.mock("@/hooks/common/use-animated-icon", () => ({
-  useAnimatedIcon: () => ({ iconRef: { current: null }, hoverHandlers: {} }),
+  useAnimatedIcon: () => ({ iconRef: { current: null }, hoverHandlers: { onMouseEnter: jest.fn(), onMouseLeave: jest.fn() } }),
 }));
 
 jest.mock("@/features/build/shared/use-build-cursor-pager", () => ({
@@ -100,6 +104,7 @@ jest.mock("./test-case-columns", () => ({
 }));
 
 import { TestCasesTab } from "./test-cases-tab";
+import { QaPage } from "./qa-page";
 import { testCasePageContract } from "@/hooks/api/build/qa-schema";
 
 const mockReplace = jest.fn();
@@ -252,4 +257,32 @@ it("bulk action bar renders with correct selected count when rows are selected v
   fireEvent.click(screen.getByTestId("data-table"));
   expect(screen.getByTestId("bulk-action-bar")).toBeInTheDocument();
   expect(screen.getByTestId("bulk-action-bar")).toHaveTextContent("1 selected");
+});
+
+it("restores the QA tab from the URL, preserves facets and dispatches only the matching create action", async () => {
+  mockSearchParams = new URLSearchParams("tab=runs&q=Regression&status=completed");
+  const view = render(<QaPage projectId={7} />);
+  expect(screen.getByRole("tab", { name: "Test Runs" })).toHaveAttribute("data-state", "active");
+  await userEvent.setup().click(screen.getByRole("button", { name: "New Test Run" }));
+  expect(mockTestRunsTab).toHaveBeenLastCalledWith({ projectId: 7, createNonce: 1 });
+  await userEvent.setup().click(screen.getByRole("tab", { name: "Test Cases" }));
+  expect(mockReplace).toHaveBeenLastCalledWith("?q=Regression&status=completed", { scroll: false });
+  mockSearchParams = new URLSearchParams("q=Regression&status=completed");
+  view.rerender(<QaPage projectId={7} />);
+  expect(screen.getByRole("tab", { name: "Test Cases" })).toHaveAttribute("data-state", "active");
+  mockSearchParams = new URLSearchParams("tab=runs&q=Regression&status=completed");
+  view.rerender(<QaPage projectId={7} />);
+  expect(screen.getByRole("tab", { name: "Test Runs" })).toHaveAttribute("data-state", "active");
+  mockUseCan.mockReturnValue(false);
+  view.rerender(<QaPage projectId={7} />);
+  expect(screen.queryByRole("button", { name: /New Test/ })).toBeNull();
+});
+
+it.each(["", "tab=cases", "tab=unknown"])("defaults safely from %s and writes the selected tab without losing facets", async (query) => {
+  mockSearchParams = new URLSearchParams(`${query}&q=Regression&priority=high`);
+  render(<QaPage projectId={1} />);
+  expect(screen.getByRole("tab", { name: "Test Cases" })).toHaveAttribute("data-state", "active");
+  expect(screen.getByRole("button", { name: "New Test Case" })).toBeVisible();
+  await userEvent.setup().click(screen.getByRole("tab", { name: "Test Runs" }));
+  expect(mockReplace).toHaveBeenLastCalledWith(query ? "?tab=runs&q=Regression&priority=high" : "?q=Regression&priority=high&tab=runs", { scroll: false });
 });
