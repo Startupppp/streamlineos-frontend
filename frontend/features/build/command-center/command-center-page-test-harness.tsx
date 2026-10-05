@@ -110,11 +110,23 @@ jest.mock("./command-center-releases-panel", () => ({
 }));
 
 jest.mock("./command-center-rows", () => ({
-  BlockersPanel: () => <div data-testid="blockers-panel" />,
-  MyWorkRow: () => null,
   CommandCenterRow: () => null,
   ProjectCard: () => null,
+}));
+
+jest.mock("./command-center-blockers-panel", () => ({
+  BlockersPanel: () => <div data-testid="blockers-panel" />,
+}));
+
+jest.mock("./command-center-my-work-row", () => ({
+  MyWorkRow: () => null,
+}));
+
+jest.mock("./command-center-rows-model", () => ({
   projectHealthClasses: () => "",
+  PROJECT_HEALTH_LABEL: {},
+  STATUS_COLOR: {},
+  isOverdue: () => false,
 }));
 
 jest.mock("@/components/pm-chrome", () => ({

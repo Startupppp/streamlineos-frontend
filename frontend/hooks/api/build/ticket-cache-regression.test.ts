@@ -7,7 +7,7 @@ import { apiClient } from "@/lib/api-client";
 import { useUpdateTicket } from "./ticket-update-mutation";
 import { useRankTicket, useDeleteTicket } from "./ticket-create-rank-mutations";
 import { useBulkUpdateTickets } from "./ticket-bulk-update-mutation";
-import { useAddTicketRelation, useRemoveTicketRelation } from "./ticket-sub-resources";
+import { useAddTicketRelation, useRemoveTicketRelation } from "./ticket-relation-mutations";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 
 jest.mock("@/lib/api-client", () => ({ apiClient: { patch: jest.fn(), post: jest.fn(), delete: jest.fn() } }));

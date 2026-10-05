@@ -10,6 +10,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
+import { ACTION_TYPES } from "@/hooks/api/build/automations";
 import {
   useAutomationAiPolicy,
   useUpdateAutomationAiPolicy,
@@ -18,11 +19,10 @@ import {
   useAutomationTokenQuota,
   useAutomationHumanConfirmation,
   useUpdateAutomationHumanConfirmation,
-  ACTION_TYPES,
   type AutomationAiPolicyInput,
   type AutomationToolPermissionsInput,
   type AutomationHumanConfirmationInput,
-} from "@/hooks/api/build/automations";
+} from "@/hooks/api/build/automation-settings";
 import { FIELD_CLASS } from "./automation-schema";
 
 type ToolName = AutomationToolPermissionsInput["allowedTools"][number];

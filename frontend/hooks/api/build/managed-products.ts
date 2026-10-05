@@ -96,24 +96,6 @@ export function useManagedProducts(params?: ListManagedProductsParams) {
 }
 
 type InfiniteManagedProductsParams = Omit<ListManagedProductsParams, "cursor">;
-type ManagedProductsListCache =
-  | ManagedProductsPage
-  | InfiniteData<ManagedProductsPage>;
-
-function patchManagedProductListCache(
-  cache: ManagedProductsListCache | undefined,
-  updated: ManagedProduct,
-): ManagedProductsListCache | undefined {
-  if (cache === undefined) return cache;
-  const patchPage = (page: ManagedProductsPage): ManagedProductsPage => ({
-    ...page,
-    data: page.data.map((row) => (row.id === updated.id ? updated : row)),
-  });
-  if ("pages" in cache) {
-    return { ...cache, pages: cache.pages.map(patchPage) };
-  }
-  return patchPage(cache);
-}
 
 export function useInfiniteManagedProducts(
   params: InfiniteManagedProductsParams,
@@ -221,6 +203,23 @@ export function useManagedProductInsights(
   });
 }
 
+type ManagedProductsListCache = ManagedProductsPage | InfiniteData<ManagedProductsPage>;
+
+function patchManagedProductListCache(
+  cache: ManagedProductsListCache | undefined,
+  updated: ManagedProduct,
+): ManagedProductsListCache | undefined {
+  if (cache === undefined) return cache;
+  const patchPage = (page: ManagedProductsPage): ManagedProductsPage => ({
+    ...page,
+    data: page.data.map((row) => (row.id === updated.id ? updated : row)),
+  });
+  if ("pages" in cache) {
+    return { ...cache, pages: cache.pages.map(patchPage) };
+  }
+  return patchPage(cache);
+}
+
 export function useCreateManagedProduct() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:managed-products:create", {
@@ -303,33 +302,3 @@ export function useDeleteManagedProduct() {
   });
 }
 
-export interface BulkUpdateManagedProductsInput {
-  ids: number[];
-  action: "update_status";
-  status: "active" | "archived";
-}
-
-const managedProductBulkResultContractLazy = lazyContract(() =>
-  import("@/contracts/build-contracts.generated").then(
-    (m) => m.managedProductsBulkUpdateManagedProductsResponseSchema,
-  ),
-);
-
-export function useBulkUpdateManagedProducts() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("build:managed-products:update", {
-    mutationKey: ["projects", "managed-products", "bulk"],
-    mutationFn: (input: BulkUpdateManagedProductsInput) =>
-      apiClient.post(
-        "/build/managed-products/bulk",
-        input,
-        undefined,
-        managedProductBulkResultContractLazy,
-      ),
-    onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.managedProducts.list(),
-      });
-    },
-  });
-}

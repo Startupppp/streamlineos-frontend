@@ -4,7 +4,7 @@ import { ManagedProductBulkToolbar, MANAGED_PRODUCT_BULK_MAX } from "./managed-p
 const mockMutateBulk = jest.fn();
 const mockUseBulkUpdateManagedProducts = jest.fn();
 
-jest.mock("@/hooks/api/build/managed-products", () => ({
+jest.mock("@/hooks/api/build/managed-products-schema", () => ({
   useBulkUpdateManagedProducts: () => mockUseBulkUpdateManagedProducts(),
 }));
 

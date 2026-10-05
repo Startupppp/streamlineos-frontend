@@ -30,6 +30,12 @@ import {
   CONTENT_FILL_PANEL,
   PM_PANEL,
 } from "@/components/pm-chrome";
+import {
+  ROADMAP_STATUS_OPTS,
+  ROADMAP_HORIZON_OPTS,
+  ROADMAP_SORT_OPTS,
+  ROADMAP_FILTER_DEFS,
+} from "./product-roadmap-model";
 
 interface ProductRoadmapPageProps {
   managedProductId: number;
@@ -48,34 +54,6 @@ export function RoadmapSkeleton() {
     </div>
   );
 }
-
-const ROADMAP_STATUS_OPTS = [
-  { value: BUILD_FILTER_ALL, label: "All statuses" },
-  { value: "planned", label: "Planned" },
-  { value: "in_progress", label: "In progress" },
-  { value: "completed", label: "Completed" },
-  { value: "cancelled", label: "Cancelled" },
-];
-
-const ROADMAP_HORIZON_OPTS = [
-  { value: BUILD_FILTER_ALL, label: "All horizons" },
-  { value: "now", label: "Now" },
-  { value: "next", label: "Next" },
-  { value: "later", label: "Later" },
-];
-
-const ROADMAP_SORT_OPTS = [
-  { value: BUILD_FILTER_ALL, label: "Default order" },
-  { value: "updated_at", label: "Last updated" },
-  { value: "created_at", label: "Created" },
-  { value: "title", label: "Title A–Z" },
-];
-
-const ROADMAP_FILTER_DEFS = [
-  { param: "status", options: ROADMAP_STATUS_OPTS.map((o) => o.value) },
-  { param: "horizon" },
-  { param: "sort", options: ROADMAP_SORT_OPTS.map((o) => o.value) },
-] as const;
 
 export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps) {
   const listFilters = useBuildListFilters({ filters: ROADMAP_FILTER_DEFS });

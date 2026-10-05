@@ -7,7 +7,7 @@ const mockMyWorkRow = jest.fn(({ isFocused }: { isFocused?: boolean; item: MyWor
   <div data-testid="my-work-row" data-focused={String(Boolean(isFocused))} />
 ));
 
-jest.mock("./command-center-rows", () => ({
+jest.mock("./command-center-my-work-row", () => ({
   MyWorkRow: (props: { item: MyWorkItem; isFocused?: boolean }) => mockMyWorkRow(props),
 }));
 

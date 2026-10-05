@@ -17,6 +17,14 @@ let mockUpdateToolPermsMutate: jest.Mock;
 let mockUpdateHumanConfMutate: jest.Mock;
 
 jest.mock("@/hooks/api/build/automations", () => ({
+  ACTION_TYPES: [
+    { value: "set_status", label: "Set Status" },
+    { value: "set_assignee", label: "Assign To" },
+    { value: "request_approval", label: "Request Approval" },
+  ],
+}));
+
+jest.mock("@/hooks/api/build/automation-settings", () => ({
   useAutomationAiPolicy: () => ({ data: mockAiPolicy, isLoading: false }),
   useUpdateAutomationAiPolicy: () => ({ mutate: mockUpdateAiPolicyMutate, isPending: false }),
   useAutomationToolPermissions: () => ({ data: mockToolPerms, isLoading: false }),
@@ -24,11 +32,6 @@ jest.mock("@/hooks/api/build/automations", () => ({
   useAutomationTokenQuota: () => ({ data: mockQuota, isLoading: false }),
   useAutomationHumanConfirmation: () => ({ data: mockHumanConfirmation, isLoading: false }),
   useUpdateAutomationHumanConfirmation: () => ({ mutate: mockUpdateHumanConfMutate, isPending: false }),
-  ACTION_TYPES: [
-    { value: "set_status", label: "Set Status" },
-    { value: "set_assignee", label: "Assign To" },
-    { value: "request_approval", label: "Request Approval" },
-  ],
 }));
 
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));

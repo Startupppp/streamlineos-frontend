@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useMemo, type ReactNode } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { useBuildListUrlState } from "@/features/build/shared/use-build-list-url-state";
 import { PriorityBadge } from "@/features/build/shared/priority-badge";
@@ -11,69 +11,17 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import { PM_PANEL } from "@/components/pm-chrome";
 import { cn } from "@/lib/utils";
 import type { AllWorkTicket } from "@/types/projects";
-
-const PRIORITY_ORDER = ["URGENT", "HIGH", "MEDIUM", "LOW"] as const;
-
-interface GroupRow {
-  key: string;
-  label: string;
-  count: number;
-  color?: string | null;
-}
-
-interface SidebarRowProps {
-  row: GroupRow;
-  isActive: boolean;
-  onToggle: (key: string) => void;
-  leading?: ReactNode;
-}
-
-const SidebarRow = memo(function SidebarRow({
-  row,
-  isActive,
-  onToggle,
-  leading,
-}: SidebarRowProps) {
-  function handleClick() {
-    onToggle(row.key);
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={handleClick}
-      className={cn(
-        "flex w-full min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors",
-        isActive
-          ? "bg-primary/10 text-primary"
-          : "text-foreground hover:bg-muted/60",
-      )}
-    >
-      {leading ? (
-        leading
-      ) : row.color ? (
-        <span
-          className="h-2 w-2 shrink-0 rounded-full"
-          style={{ backgroundColor: row.color }}
-        />
-      ) : null}
-      <span className="min-w-0 flex-1 truncate">{row.label}</span>
-      <span
-        className={cn(
-          "shrink-0 rounded px-1 py-0.5 text-micro font-normal tabular-nums",
-          isActive ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground",
-        )}
-      >
-        {row.count}
-      </span>
-    </button>
-  );
-});
+import {
+  type GroupRow,
+  SidebarRow,
+  PRIORITY_ORDER,
+  GroupingSkeleton,
+  EmptyGroup,
+} from "./grouping-sidebar-parts";
 
 interface GroupingSidebarBodyProps {
   tickets: AllWorkTicket[] | undefined;
@@ -316,18 +264,3 @@ export const GroupingSidebar = memo(function GroupingSidebar({
   );
 });
 
-function GroupingSkeleton() {
-  return (
-    <div className="space-y-1.5 py-1">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <Skeleton key={i} className="h-7 w-full rounded-md" />
-      ))}
-    </div>
-  );
-}
-
-function EmptyGroup({ label }: { label: string }) {
-  return (
-    <p className="py-4 text-center text-xs text-muted-foreground">{label}</p>
-  );
-}

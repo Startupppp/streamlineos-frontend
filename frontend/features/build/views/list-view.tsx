@@ -66,7 +66,7 @@ export const ListView = memo(function ListView({
           {visibleOuterKeys.map((outerKey) => {
             const innerGroups = nested[outerKey];
             if (!innerGroups) return null;
-            const outerTickets = Object.values(innerGroups).flat() as Ticket[];
+            const outerTickets = Object.values(innerGroups).flat();
             const innerAccordionValues = Object.keys(innerGroups).map((innerKey) =>
               encodeNestedAccordionValue(outerKey, innerKey),
             );

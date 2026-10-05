@@ -25,7 +25,6 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import dynamic from "next/dynamic";
 
 const TiptapEditor = dynamic(
@@ -40,16 +39,14 @@ const TiptapEditor = dynamic(
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateChangeRequest, useUpdateChangeRequest } from "@/hooks/api/build/change-requests";
-import { ProjectMemberSelect } from "@/components/members/project-member-select";
 import type { ChangeRequest } from "@/types/projects";
 import {
   CR_STATUSES,
-  CR_STATUS_LABELS,
   changeRequestFormSchema,
   type ChangeRequestFormValues,
   CHANGE_REQUEST_FORM_DEFAULTS,
 } from "./change-request-schema";
-import { ChangeRequestAffectedTickets } from "./change-request-affected-tickets";
+import { ChangeRequestEditFields } from "./change-request-edit-fields";
 
 type FormValues = ChangeRequestFormValues;
 
@@ -184,106 +181,11 @@ export function ChangeRequestSheet({ projectId, open, onOpenChange, editCr }: Ch
                   )}
                 />
                 {editCr && (
-                  <>
-                    <FormField
-                      control={form.control}
-                      name="status"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-dense">Status</FormLabel>
-                          <Select value={field.value} onValueChange={field.onChange}>
-                            <FormControl>
-                              <SelectTrigger><SelectValue /></SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {CR_STATUSES.map((s) => (
-                                <SelectItem key={s} value={s}>{CR_STATUS_LABELS[s]}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage className="text-micro" />
-                        </FormItem>
-                      )}
-                    />
-                    <div className="grid grid-cols-3 gap-3">
-                      <FormField
-                        control={form.control}
-                        name="estimateHours"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-dense">Estimate (hrs)</FormLabel>
-                            <FormControl>
-                              <Input {...field} type="number" step="0.5" className="text-dense" placeholder="0" />
-                            </FormControl>
-                            <FormMessage className="text-micro" />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="budgetRs"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-dense">Budget (₹)</FormLabel>
-                            <FormControl>
-                              <Input {...field} type="number" step="1" className="text-dense" placeholder="0" />
-                            </FormControl>
-                            <FormMessage className="text-micro" />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="timelineDays"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-dense">Timeline (days)</FormLabel>
-                            <FormControl>
-                              <Input {...field} type="number" className="text-dense" placeholder="0" />
-                            </FormControl>
-                            <FormMessage className="text-micro" />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    <FormField
-                      control={form.control}
-                      name="approvalOwnerId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-dense">Approval Owner</FormLabel>
-                          <ProjectMemberSelect
-                            projectId={projectId}
-                            mode="single"
-                            value={field.value === "none" ? "" : field.value}
-                            onChange={(v) => field.onChange(v ?? "none")}
-                            allowUnassigned
-                            placeholder="Unassigned"
-                            className="text-dense"
-                          />
-                          <FormMessage className="text-micro" />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="decisionComment"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-dense">Decision Comment</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              {...field}
-                              className="text-dense min-h-[56px] resize-none"
-                              placeholder="Approve/reject reasoning..."
-                            />
-                          </FormControl>
-                          <FormMessage className="text-micro" />
-                        </FormItem>
-                      )}
-                    />
-                    <ChangeRequestAffectedTickets projectId={projectId} changeRequestId={editCr.id} />
-                  </>
+                  <ChangeRequestEditFields
+                    control={form.control}
+                    projectId={projectId}
+                    changeRequestId={editCr.id}
+                  />
                 )}
               </div>
             </SheetBody>

@@ -5,19 +5,9 @@ import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { roadmapItemSchema, parseRiceField, type RoadmapItemFormValues } from "./roadmap-schema";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import {
   Sheet,
   SheetContent,
@@ -26,29 +16,19 @@ import {
   SheetFooter,
   SheetBody,
 } from "@/components/ui/sheet";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isApiError, getApiErrorCode } from "@/lib/api-client";
-import { getUserDisplayName } from "@/lib/person-display";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import {
   useCreateRoadmapItem,
   useUpdateRoadmapItem,
 } from "@/hooks/api/build/roadmap";
-import { ROADMAP_STATUS_OPTIONS } from "./roadmap-constants";
-import { RoadmapDeliveryProgress } from "./roadmap-delivery-progress";
-import { RoadmapRiceFormFields } from "./roadmap-rice-form-fields";
 import type { ScorableRoadmapItem } from "./roadmap-item-card";
 import { TicketConflictDialog } from "@/features/build/ticket-details/ticket-conflict-dialog";
 import type { TicketConflictFieldDiff } from "@/features/build/ticket-details/ticket-conflict-diff";
+import { RoadmapItemFormFields } from "./roadmap-item-form-fields";
 
 const CONFLICT_EMPTY = "Not set";
 
@@ -201,127 +181,7 @@ export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSave)} className="flex flex-col flex-1 min-h-0">
             <SheetBody className="px-6 py-5 space-y-4">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Title <span className="text-destructive">*</span></FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="e.g. Dark mode support" />
-                    </FormControl>
-                    <FormMessage className="text-xs" />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea {...field} rows={4} />
-                    </FormControl>
-                    <FormMessage className="text-xs" />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="outcome"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Outcome</FormLabel>
-                    <FormControl>
-                      <Textarea {...field} rows={2} placeholder="What success looks like when this ships" />
-                    </FormControl>
-                    <FormMessage className="text-xs" />
-                  </FormItem>
-                )}
-              />
-              {isEdit && item.owner ? (
-                <div className="rounded-lg border border-border bg-muted/30 px-3 py-2.5">
-                  <p className="text-xs text-muted-foreground">Owner</p>
-                  <p className="text-sm font-medium text-foreground">{getUserDisplayName(item.owner)}</p>
-                </div>
-              ) : null}
-              <div className="grid grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {ROADMAP_STATUS_OPTIONS.map((o) => (
-                            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage className="text-xs" />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="targetQuarter"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Target Quarter</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="e.g. Q3 2026" />
-                      </FormControl>
-                      <FormMessage className="text-xs" />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Category</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="e.g. Integrations" />
-                    </FormControl>
-                    <FormMessage className="text-xs" />
-                  </FormItem>
-                )}
-              />
-              <RoadmapRiceFormFields
-                control={form.control}
-                prioritization={item?.prioritization}
-                tierWeighting={item?.tierWeighting}
-              />
-              {isEdit ? <RoadmapDeliveryProgress roadmapItemId={item.id} /> : null}
-              <FormField
-                control={form.control}
-                name="isPublic"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-3 py-2.5">
-                      <div>
-                        <p className="text-sm font-medium text-foreground">Public</p>
-                        <p className="text-xs text-muted-foreground">Show this item on the public board</p>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          className="border border-border data-[state=unchecked]:bg-input"
-                        />
-                      </FormControl>
-                    </div>
-                    <FormMessage className="text-xs" />
-                  </FormItem>
-                )}
-              />
+              <RoadmapItemFormFields control={form.control} isEdit={isEdit} item={item} />
             </SheetBody>
             <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
               <Button type="button" variant="outline" className="flex-1" onClick={onClose}>Cancel</Button>
