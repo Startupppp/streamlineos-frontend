@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const OPENAPI_HASH = "sha256:7838edf15df590da115f6892712e2bbebba3bc04a36a8107bef97a95e66da2d7" as const;
+export const OPENAPI_HASH = "sha256:625d07220bcffc252da83208d6820047fe6612cfa983dff08cde0dfbb2cedf1b" as const;
 
 export const agentTokensListResponseSchema = z.array(z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -4215,6 +4215,10 @@ export const intakeUpdateIntakeBodySchema = z.strictObject({
   status: z.enum(["accepted", "declined", "duplicate"]).optional(),
   declineReason: z.string().optional(),
   linkedWorkItemId: z.number().int().gt(0).lte(2147483647).optional(),
+  state: z.string().optional(),
+  assigneeId: z.string().optional(),
+  cycleId: z.number().int().gt(0).lte(2147483647).optional(),
+  moduleId: z.number().int().gt(0).lte(2147483647).optional(),
 });
 export type IntakeUpdateIntakeBody = z.input<typeof intakeUpdateIntakeBodySchema>;
 
