@@ -38,7 +38,7 @@ jest.mock("../ticket-details/use-ticket-detail", () => ({
 }));
 
 jest.mock("@/hooks/api/use-page-state", () => ({
-  usePageState: (options: UsePageStateOptions) => resolvePageState({ ...options, access: "granted" }),
+  usePageState: ({ isLoading, isError, error, isEmpty }: UsePageStateOptions) => resolvePageState({ isLoading, isError, error, isEmpty, access: "granted" }),
 }));
 
 jest.mock("@/components/ui/sheet", () => ({
