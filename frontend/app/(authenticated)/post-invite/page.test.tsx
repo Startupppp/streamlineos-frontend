@@ -19,8 +19,11 @@ jest.mock("@/lib/rbac/get-server-access", () => ({
 jest.mock("@/lib/wizard-gate", () => ({
   resolveWizardGate: (...args: unknown[]) => mockWizardGate(...args),
 }));
-
 import PostInvitePage from "./page";
+
+function destinationOf(element: unknown): string {
+  return (element as { props: { destination: string } }).props.destination;
+}
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -39,8 +42,9 @@ beforeEach(() => {
 });
 
 describe("post-invite destination", () => {
-  it("loads effective access for the signed-in invited organization before entering Build", async () => {
-    await expect(PostInvitePage()).rejects.toThrow("NEXT_REDIRECT:/build");
+  it("loads effective access for the signed-in invited organization and renders the Build transition", async () => {
+    const result = await PostInvitePage();
+    expect(destinationOf(result)).toBe("/build");
     expect(mockSession).toHaveBeenCalledTimes(1);
     expect(mockAccess).toHaveBeenCalledTimes(1);
     expect(mockWizardGate).toHaveBeenCalledTimes(1);
@@ -57,7 +61,8 @@ describe("post-invite destination", () => {
       },
     });
 
-    await expect(PostInvitePage()).rejects.toThrow("NEXT_REDIRECT:/dashboard");
+    const result = await PostInvitePage();
+    expect(destinationOf(result)).toBe("/dashboard");
   });
 
   it("uses the existing HR wizard gate when HR permission is effective", async () => {
@@ -72,7 +77,8 @@ describe("post-invite destination", () => {
       },
     });
 
-    await expect(PostInvitePage()).rejects.toThrow("NEXT_REDIRECT:/employee-onboarding");
+    const result = await PostInvitePage();
+    expect(destinationOf(result)).toBe("/employee-onboarding");
   });
 
   it("resolves unfinished organization setup before reading effective module access", async () => {
@@ -95,7 +101,8 @@ describe("post-invite destination", () => {
       },
     });
 
-    await expect(PostInvitePage()).rejects.toThrow("NEXT_REDIRECT:/build");
+    const result = await PostInvitePage();
+    expect(destinationOf(result)).toBe("/build");
   });
 
   it("shows a retryable error boundary instead of inventing a landing when access cannot be read", async () => {

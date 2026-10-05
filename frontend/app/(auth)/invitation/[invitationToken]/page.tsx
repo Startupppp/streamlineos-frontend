@@ -51,6 +51,7 @@ import {
   InvitationSuspendedState,
   InvitationAtCapacityState,
 } from "@/features/auth/components/invitation-acceptance-error";
+import { persistPartialGrants } from "@/features/auth/components/post-invite-transition";
 
 const INVITATION_SIGN_IN_UNCONFIRMED_MESSAGE =
   "We could not confirm the sign-in for the invited account. Please sign in with that email to finish joining.";
@@ -194,6 +195,7 @@ export default function InvitationPage() {
               `Joined ${invitation?.organizationName ?? "organization"}!`,
             );
             if (data?.autoLoginToken) {
+              persistPartialGrants(data.skippedGrants ?? []);
               await autoLoginWithToken(data.autoLoginToken, "/post-invite");
               return;
             }
@@ -253,6 +255,7 @@ export default function InvitationPage() {
             setIsCompletingAcceptance(true);
             toast.success("Account created! Signing you in...");
             if (data?.autoLoginToken) {
+              persistPartialGrants(data.skippedGrants ?? []);
               await autoLoginWithToken(data.autoLoginToken, "/post-invite");
             } else {
               router.push("/signin");

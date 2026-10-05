@@ -4,6 +4,7 @@ import { requireSession, AccessUnavailableError } from "@/lib/rbac/require-permi
 import { getServerAccessResult } from "@/lib/rbac/get-server-access";
 import { resolveWizardGate } from "@/lib/wizard-gate";
 import { resolveInvitationLanding } from "@/lib/invitation-landing";
+import { PostInviteTransition } from "@/features/auth/components/post-invite-transition";
 
 export default async function PostInvitePage() {
   const session = await requireSession();
@@ -13,5 +14,6 @@ export default async function PostInvitePage() {
   const result = await getServerAccessResult();
   if (!result.ok) throw new AccessUnavailableError(result.error);
 
-  redirect(resolveInvitationLanding(result.access, gate));
+  const destination = resolveInvitationLanding(result.access, gate);
+  return <PostInviteTransition destination={destination} />;
 }

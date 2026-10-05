@@ -18,6 +18,7 @@ import {
   setAutoSignOutSuppressed,
 } from "@/lib/api-client";
 import { clearGateCookies } from "@/lib/onboarding-gate";
+import type { SkippedGrant } from "@/hooks/common/auth-schema";
 import { clearStreamToken } from "@/features/notifications/use-notification-events";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
@@ -183,7 +184,7 @@ export function useAcceptInvitation() {
       lastName?: string;
       emailOtp?: string;
     }) =>
-      apiClient.post<{ ok: true; autoLoginToken: string }>(
+      apiClient.post<{ ok: true; autoLoginToken: string; skippedGrants: SkippedGrant[] }>(
         "/organization/invitations/accept",
         variables,
         undefined,
