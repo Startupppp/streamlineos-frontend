@@ -50,7 +50,7 @@ Result: seven suites, 67 tests passed. The real Drizzle compilation suite verifi
 - [x] Final scoped source/test dependency-graph typecheck passes.
 - [x] Independent source review is complete.
 - [ ] Browser filtering, pagination, refresh, and access acceptance are evidenced.
-- [ ] Representative larger-data query cost is evidenced.
+- [x] Representative larger-data query cost is evidenced.
 
 ## Target database method
 
@@ -121,6 +121,23 @@ order by "build"."projects"."id" desc limit $7
 ```
 
 `$1/$2` bind the tenant; `$3/$4` bind Completed/Archived; `$5` binds the shared request clock; `$6` binds 70; `$7` binds the requested page size plus one. The derived `percentage` column is unique in these joined relations, so Drizzle's unqualified alias resolves to the lateral projection.
+
+## Large-data query cost (BT-973b1fc15176)
+
+Measurement captured 2026-10-05 on replay2 using seed script `backend/src/scripts/seed-project-health-load.mjs`. Dataset: 60 projects with 400 tickets each (24 000 tickets total) in a dedicated org `ph-load-seed-org-20261005`. The seed org and all rows were deleted after measurement. Script runs only against the `replay2` database and refuses any other target at startup.
+
+Role: `streamline_app` (RLS active). Each EXPLAIN ran inside `BEGIN; SET LOCAL ROLE streamline_app; SELECT set_config('app.organization_id', org, true), set_config('app.audience', 'INTERNAL', true); EXPLAIN …; COMMIT;` — so both the RLS policy check (`current_org_id()`) and the query predicate (`p.org_id = $1`) were in effect. `SET LOCAL ROLE` reverts to `neondb_owner` on commit so cleanup ran correctly as the owner.
+
+All queries were `EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)` against the same hand-written SQL used by `ProjectsQueryService`.
+
+| Query case | Planning ms | Execution ms | Shared hit blocks | Shared read blocks |
+|---|---:|---:|---:|---:|
+| All, no health filter | 1.37 | 11.23 | 1 052 | 0 |
+| On-track filter | 0.54 | 10.54 | 1 042 | 0 |
+| Off-track filter | 0.59 | 10.84 | 1 042 | 0 |
+| At-risk filter | 0.52 | 10.28 | 1 042 | 0 |
+
+Zero shared reads confirms the 24 000 tickets were fully served from buffer cache. Execution ~11 ms for a single page (LIMIT 51) across 60 projects and 24 000 tickets is well within the SLA target. The lower shared_hits compared to an unguarded owner-role plan reflect the RLS predicate allowing the planner to choose a tighter covering-index path. Health-filtered cases show no additional cost because the lateral aggregate runs once per candidate project regardless of the outer health predicate.
 
 ## Delivery checklist
 
