@@ -186,6 +186,62 @@ For each removal candidate, a static caller inventory was run on HEAD (`codex/bu
 
 **Conclusion:** Active callers; deletion blocked until Ticket query with `type=BUG` parity confirmed.
 
+## Build cleanup inventory (cleanup87, 2026-10-05)
+
+Scope: Build source and its direct shared dependencies, both repos. Six edit lanes plus an independent read-only review. Every removal was checked with rg across src, test and scripts, plus DI providers, module registration, decorators, dynamic imports and jest mock factories. No table, column, migration, public endpoint, permission key or persisted field key was removed.
+
+### Removed (unused with verified evidence)
+
+| Area | Removed |
+|---|---|
+| Backend files | `build/comment-draft-record-ids.ts` (single caller; inlined into agent-pulse), `build/core/dto/build-list-envelope.schema.ts`, `organization/setup/module-adapters/{build.adapter,build-custom-fields.adapter,index}.ts` (no importer; BLD-001 module adapters must follow the `OnboardingModuleAdapter` contract in the onboarding spec; recoverable from `6088bb50c^`) |
+| Backend symbols | `chunkRows`, `MAX_SEARCH_INPUT_LENGTH`, `ticketListEnvelopeSchema`, `authorizeOrganization`, `BuildAutomationTool`, and the inferred-type aliases `AgentPulseSignalType`, `ApplyDraftParams`, `BuildApprovalRequestedPayload`, `WidgetType`, `WidgetSlot`, `DashboardLayoutResponse`, `ImportAdapterType` (duplicate of `adapters/adapter-types.ts`), `BuildBlockerCreatedPayload` and the three `Template*ConfigInput` types |
+| Backend dependencies | the unused `CacheService` in `ProjectsTicketsCreateService` (invalidation stays in `BuildTicketCreationService.publish`), and the unused `Db` and webhook dispatch dependencies in the frozen `SprintsService` |
+| Frontend files | `project-detail/project-board-calendar.tsx`, `shared/build-permission-state.tsx`, the card inline-field barrels `project-list/project-card-inline-fields.tsx` and `views/card-inline-fields.tsx`, and `hooks/api/build/comment-drafts-schema.ts` |
+| Frontend symbols | `getDefaultPinIds`, `buildTeamMembers`, `RESULT_TABLE_HEADERS`, `PROVIDER_LABELS`, `MAX_WIDGETS`, `DashboardLayout`, the import/export alias schemas, intake form types, `useMemberStanding`, `useSetProductScoreOverride`, `useSeedSystemTemplates`, 13 incident contract aliases, four unused approval types, `WebhookDelivery`, `canReachBuildOrgRoute` and the unused roadmap publication hooks |
+
+### Wrappers and duplicates consolidated
+
+| Duplicate | Canonical owner |
+|---|---|
+| `ProjectsReportsService.authorizeProject` pass-through | `assertProjectAggregateAccess` |
+| Controller-local params schemas across Build, including copies of `projectIdParams` and `projectAndTicketIdParams` | each module's `dto/`; `core/dto/build-params.schemas.ts` |
+| Core sibling imports through the `../tickets` barrel | direct file imports |
+| `assertReleaseInProject` written twice | `build/qa/qa-scope-guards.ts` |
+| `entityTypeLabel` divergent copy in the approval badge | `features/build/approvals/approvals-constants.ts` |
+| Intake priority and request-type options in two views | `features/build/intake/public-intake-schema.ts` |
+| Feedback type/status labels, variants and age formatter in two column files | `features/build/feedbucket/feedbucket-constants.ts` |
+| Roadmap list status options | `features/build/roadmap/roadmap-constants.ts` (visible label now "In Progress") |
+| Hand-built labels query key | `buildWorkQueryKeys.projects.labels()` |
+
+### File organization
+
+Split at domain seams: `hooks/api/build/roadmap.ts` into `feedback-posts.ts`, `changelog.ts` and `roadmap-public.ts`; the invitation page into three step components; incident sheet, Gantt view, project settings, portfolio detail, team home, whiteboard and governance QA gallery each move one self-contained piece to a sibling file. The client portal management, command center and reports agile test files were split by describe block with identical case counts (41, 37, 44), and the epics harness moved its fixtures out. Eleven frontend file-size exception rows were deleted.
+
+### Efficiency and security
+
+Template apply inserts custom-field definitions and registry rows in two statements instead of two per field, keeping one registry row per definition. System template seeding uses one lookup instead of three. Bug create and update run their four ownership checks with one `Promise.all`. Body ids are now resolved against the organisation or project on bug, test run, change request, decision (create and update), risk (create and update) and module lead paths, each with paired foreign-404 and same-org tests. The 13 user-id write sites in `build/core` were audited and are already resolved. The workload capacity query no longer fires without a project id.
+
+### Cycles
+
+madge reports no circular dependency in backend `src/modules/build` or in frontend `features/build`, `hooks/api/build`, `lib/build` and `types/projects`, before and after cleanup.
+
+### Uncertain or remaining candidates
+
+| Candidate | Status |
+|---|---|
+| Type re-exports in `hooks/api/build/{automations,milestones,releases,ticket-search,agent-tokens}.ts` | FE-126 pass-throughs; repoint importers and delete |
+| `TicketLabel` in `hooks/api/build/labels.ts` vs `types/projects/tasks.ts` | drift on `color` nullability; verify against the ticket-detail contract before consolidating |
+| `CrmAccountTier` in `hooks/api/build/roadmap-schema.ts` and `types/crm/contacts.ts` | exact duplicate across modules; the CRM owner decides the home |
+| Build timesheet approve/reject | since HO-03 (`65894d8cb`) only org owners pass `canActOnPeriod`; needs a manage-scope read or retirement with the Build Timesheets duplicate surface |
+| BOLA body-id detector | does not list the Risk routes; extend it so the ratchet sees them |
+| Backend files over 500 lines on the baseline | `projects-roadmap.service.ts`, `apply-ticket-change.ts`, `projects-tickets-read.service.ts`, `managed-products.service.ts`, `test-runs.service.ts`, `cron-build.controller.ts` |
+| Frontend files over 500 lines on the baseline | `cycles-page.tsx`, `all-work-page.tsx`, `risks-page.tsx`, `command-center-page.tsx` and the other rows in the exceptions table |
+
+### Baseline gate failures (not caused by cleanup)
+
+Backend: `check:params-schema-completeness` (approvals `projectAndApprovalIdParams` is built with `.extend`), `check:file-sizes` and `check:over-300` (non-Build files and the six files above), `check:dead-code` (non-Build unclassified findings), `check:type-assertions` (inventory and sales ledgers), `check:transaction-callbacks` (leads and invitation specs).
+
 ## Delivery checklist
 
 Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
