@@ -40,6 +40,7 @@ overrides:
   "nanoid@^3": ">=3.3.11"
   "nanoid@^4": ">=5.1.16"
   "@auth/core": ">=0.41.3"
+  http-cache-semantics: ">=4.3.0"
 
 packageExtensions:
   "@animateicons/react@0.3.4":
