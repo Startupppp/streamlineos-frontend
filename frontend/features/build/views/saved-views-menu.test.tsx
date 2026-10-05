@@ -1,8 +1,11 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { SavedViewsMenu } from "./saved-views-menu";
-import { ViewCard } from "./saved-views/view-card";
 
 const replace = jest.fn();
+
+function viewCardMock(): jest.Mock {
+  return jest.requireMock<{ ViewCard: jest.Mock }>("./saved-views/view-card").ViewCard;
+}
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace }),
@@ -90,11 +93,11 @@ it("opens a saved view on the project Issues route from Workload", () => {
 
 describe("SavedViewsMenu — owner permission gate on edit/delete actions", () => {
   beforeEach(() => {
-    (ViewCard as jest.Mock).mockClear();
+    viewCardMock().mockClear();
   });
 
   it("non-owner: ViewCard receives canManage=false when useCan returns false", () => {
-    (ViewCard as jest.Mock).mockImplementationOnce(
+    viewCardMock().mockImplementationOnce(
       ({ canManage }: { canManage: boolean }) => (
         <div data-testid={`view-card-can-manage-${String(canManage)}`} />
       ),
@@ -105,7 +108,7 @@ describe("SavedViewsMenu — owner permission gate on edit/delete actions", () =
 
   it("owner (useCan=true): ViewCard receives canManage=true", () => {
     jest.requireMock("@/hooks/api/access").useCan.mockReturnValue(true);
-    (ViewCard as jest.Mock).mockImplementationOnce(
+    viewCardMock().mockImplementationOnce(
       ({
         canManage,
         view,

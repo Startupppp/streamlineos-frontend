@@ -32,7 +32,7 @@ jest.mock("@/hooks/api/build/automations", () => ({
 }));
 
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
-jest.mock("@/lib/get-error-message", () => ({ getErrorMessage: (e) => String(e) }));
+jest.mock("@/lib/get-error-message", () => ({ getErrorMessage: (e: unknown) => String(e) }));
 
 import { AutomationSettingsTab } from "./automation-settings-tab";
 
