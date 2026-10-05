@@ -2,6 +2,8 @@
 
 Status: Planned
 
+Current verified bounded source127: the [whiteboard delete receipt](../../audit/bugs-and-verification.md#whiteboard-delete127-reconciliation--2026-10-06) records backend940e7c7a39cc229af230724ddaaf6d2bbdc8a74d, root's existing scoped-write RETURNING/zero-row404 correction,101 focused tests, strict/scoped checks, fresh production/test-inclusive TypeScript and two matching-hash independent reviews. Authorization semantics remain unchanged; refusal precedes audit. Current unverified: physical SQL/RLS/concurrent deletion, complete actor/tenant/share/token matrix, durable canvas versions/export/keyboard, deletion/restore/persistence/cache/events/browser/mobile and deployment/operations. No live deletion or screenshot is claimed, and the complete Whiteboard delivery item stays open. Historical/planned route contracts below are not current runtime evidence.
+
 ## Problem Statement
 
 Users need explicit collaboration flows instead of disconnected screens or empty shells.

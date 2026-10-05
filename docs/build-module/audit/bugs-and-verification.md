@@ -1,5 +1,27 @@
 # Bugs and verification ledger
 
+## Whiteboard delete127 reconciliation — 2026-10-06
+
+Current verified bounded source: root personally repairs the existing WhiteboardsService delete command and its existing tenant/lifecycle suites, committed only as backend940e7c7a39cc229af230724ddaaf6d2bbdc8a74d with100 insertions/3 deletions. The already scoped live organization/project/ID UPDATE now projects RETURNING id and refuses empty404 before audit. Existing board lookup, creator/organization-owner and project manage authorization remain unchanged. The lifecycle positive fixture now returns its actual id6; all unrelated fixtures and external work are preserved. No new API/schema/helper/source/comment or duplicate file.
+
+Meaningful RED5 failures/14 controls/19 total49.098s precedes service edits, using an UPDATE double that supports both the baseline awaited WHERE and repaired RETURNING. Shared SQL-predicate evaluation proves creator/owner positives, write-time deleted/missing/foreign organization/project negatives, explicit zero/error and no audit on refusal. Private/project-visible noncreator viewer/editor controls run with manage permission false and true. Earlier54/3 and99/8 passes are retained as intermediate checkpoints. The final additional control initially contains a missing closing parenthesis: TS1005/zero executed tests and lint parse failure are recorded, then corrected without suppression. Final101 tests/8 suites passes24.266s; strict three-path ESLint/diff passes, existing tsconfig.test.json three-root/one-ambient/dependency TypeScript reports0 diagnostics56.047s. Fresh serialized12GB production and separate test-inclusive TypeScript both exit0. External Ticket constructor fixes belong to their active editor; root neither repeats nor stages them. Historical failed gates remain preserved.
+
+| Frozen source | Lines | SHA256 |
+|---|---:|---|
+| WhiteboardsService | 383 | 9b64965b8f95ca7b3874ea746c6cfb501795fef4f0d2c8963aa1d74644b344a5 |
+| Whiteboard tenant suite | 223 | 8bf9bf157ba07367c090cd6ca4aaf58dfd09e73950dc9017190884a25302156b |
+| Build delete/restore suite | 339 | 60e00f64e3f9e222843dabb84a03c75a7623c9caa8c8df29a80c1fd0fcbd855b |
+
+Two independent final reviews are CLEAR at unchanged three hashes. Exact staging starts with an empty backend index, checks only those three paths and releases them clean after commit. No new file-size crossing, raised exception, formatter, deployment or production mutation.
+
+```text
+pnpm -C backend exec jest --runInBand --runTestsByPath src/modules/build/execution/whiteboards-tenant-isolation.spec.ts src/modules/build/execution/whiteboard-access.spec.ts src/modules/build/execution/whiteboard-board-helpers.spec.ts src/modules/build/execution/whiteboard-sharing-tenant-isolation.spec.ts src/modules/build/execution/whiteboard-sharing.service.spec.ts src/modules/build/execution/whiteboards-cursor-pagination.spec.ts src/modules/build/execution/whiteboards-project-access.spec.ts src/modules/build/lifecycle/build-delete-restore.spec.ts
+pnpm -C backend exec eslint src/modules/build/execution/whiteboards.service.ts src/modules/build/execution/whiteboards-tenant-isolation.spec.ts src/modules/build/lifecycle/build-delete-restore.spec.ts --max-warnings 0
+pnpm -C backend exec tsc --noEmit --project tsconfig.test.json
+```
+
+Current unverified: actual concurrent PostgreSQL deletion/RLS, HTTP404/200/response contracts, complete six-role/project/tenant/PAT/private/shared/public-token matrix, persisted deletion/read-after-write, atomic audit/outbox/cache, canvas/delete/restore/mobile and deployment/operations. Conditional-write fixture proof does not establish physical races or atomic audit. The isolated mutable target is still pending; no production disposable write, fixture, grant, credential, live comment, DDL or screenshot of a deletion is claimed. Supports open BT-c7a2f16557bb/BT-05e68784a2c2; all535 task texts/statuses/stages remain298 checked/237 open.
+
 ## QA case live-write125 reconciliation — 2026-10-06
 
 Current verified bounded source: root directly repairs only existing TestManagementService and its tenant-isolation suite, claimed before edits and committed separately as backend842aac4be with22 insertions/9 deletions. Case UPDATE retains ID/organization/project, adds live state and rejects empty RETURNING404; existing authorization, supplied bindings, omitted fields and response remain unchanged. The suite's existing UPDATE fixture now evaluates real predicates; eight case/suite post-lookup organization/project/deleted/missing controls retain no-write assertions and every earlier binding/hierarchy/rename positive. No new file/helper/API/schema/comment or duplicate implementation.
