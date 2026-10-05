@@ -4,9 +4,11 @@ import { useState } from "react";
 import { toast } from "sonner";
 import {
   useBulkMarkRead,
+} from "@/hooks/api/notifications-inbox";
+import {
   useBulkArchive,
   useBulkDelete,
-} from "@/hooks/api/notifications";
+} from "@/hooks/api/notifications-inbox-actions";
 import { isApiError } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
 

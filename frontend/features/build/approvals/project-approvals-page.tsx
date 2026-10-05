@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import {
   useProjectApprovals,
   useCreateApproval,
-  useDecideApproval,
   useUpdateApproval,
   useDeleteApproval,
 } from "@/hooks/api/build/approvals";
@@ -36,7 +35,6 @@ import type {
   ApprovalEntityType,
   ApprovalStatus,
   CreateApprovalInput,
-  DecideApprovalInput,
 } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -88,6 +86,7 @@ export function ProjectApprovalsPage({
   const [delegateTarget, setDelegateTarget] = useState<Approval | null>(null);
   const [cancelTarget, setCancelTarget] = useState<Approval | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Approval | null>(null);
+  const [isBulkPending, setIsBulkPending] = useState(false);
 
   const statusValue = listFilters.value("status");
   const entityTypeValue = listFilters.value("entityType");
@@ -110,7 +109,6 @@ export function ProjectApprovalsPage({
   );
 
   const createApproval = useCreateApproval(projectId);
-  const decideApproval = useDecideApproval(projectId);
   const updateApproval = useUpdateApproval(projectId);
   const deleteApproval = useDeleteApproval(projectId);
 
@@ -177,59 +175,49 @@ export function ProjectApprovalsPage({
     enabled: !requestOpen && !decideTarget && !delegateTarget && !cancelTarget && !deleteTarget,
   });
 
-  const handleBulkCancel = useCallback(() => {
-    const count = selectedIds.size;
-    for (const id of selectedIds) {
-      const numId = Number(id);
-      if (!Number.isFinite(numId) || numId <= 0) continue;
-      updateApproval.mutate(
-        { approvalId: numId, status: "cancelled" },
-        { onError: (e) => toast.error(getErrorMessage(e)) },
-      );
-    }
-    setSelectedIds(new Set());
-    toast.success(`${count} approval${count === 1 ? "" : "s"} cancelled`);
-  }, [selectedIds, updateApproval]);
+  const handleBulkCancel = useCallback(async () => {
+    if (isBulkPending || !canManage) return;
+    const owner = updateApproval.captureOwner();
+    if (!owner) return;
+    const selected = items.filter((item) => selectedIds.has(item.id) || selectedIds.has(String(item.id)));
+    if (!selected.length) return;
+    setIsBulkPending(true);
+    try {
+      const results = await Promise.allSettled(selected.map((item) => updateApproval.mutateAsync({
+        approvalId: item.id, expectedRevision: item.revision, status: "cancelled",
+      })));
+      const succeeded = selected.filter((_item, index) => results[index]?.status === "fulfilled");
+      if (!owner.isCurrent()) return;
+      setSelectedIds((current) => {
+        const next = new Set(current);
+        for (const item of succeeded) { next.delete(item.id); next.delete(String(item.id)); }
+        return next;
+      });
+      if (succeeded.length) toast.success(`${succeeded.length} approval${succeeded.length === 1 ? "" : "s"} cancelled`);
+      if (succeeded.length !== selected.length) toast.error("Some approvals could not be cancelled. Review the latest state and try again.");
+    } finally { setIsBulkPending(false); }
+  }, [selectedIds, items, updateApproval, isBulkPending, canManage]);
 
   const handleClearSelection = useCallback(() => {
     setSelectedIds(new Set());
   }, []);
 
   const handleCreate = useCallback(
-    (input: CreateApprovalInput) => {
-      createApproval.mutate(input, {
-        onSuccess: () => {
-          toast.success("Approval requested");
-          setRequestOpen(false);
-        },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      });
+    async (input: CreateApprovalInput) => {
+      const owner = createApproval.captureOwner();
+      await createApproval.mutateAsync(input);
+      if (!owner?.isCurrent()) return;
+      toast.success("Approval requested");
+      setRequestOpen(false);
     },
     [createApproval],
-  );
-
-  const handleDecide = useCallback(
-    (input: DecideApprovalInput) => {
-      if (!decideTarget) return;
-      decideApproval.mutate(
-        { approvalId: decideTarget.id, ...input },
-        {
-          onSuccess: () => {
-            toast.success("Decision submitted");
-            setDecideTarget(null);
-          },
-          onError: (e) => toast.error(getErrorMessage(e)),
-        },
-      );
-    },
-    [decideTarget, decideApproval],
   );
 
   const handleDelegate = useCallback(
     (approverId: string) => {
       if (!delegateTarget) return;
       updateApproval.mutate(
-        { approvalId: delegateTarget.id, approverId },
+        { approvalId: delegateTarget.id, expectedRevision: delegateTarget.revision, approverId },
         {
           onSuccess: () => {
             toast.success("Approval delegated");
@@ -245,7 +233,7 @@ export function ProjectApprovalsPage({
   const handleEscalate = useCallback(
     (row: Approval) => {
       updateApproval.mutate(
-        { approvalId: row.id, status: "escalated" },
+        { approvalId: row.id, expectedRevision: row.revision, status: "escalated" },
         {
           onSuccess: () => toast.success("Approval escalated"),
           onError: (e) => toast.error(getErrorMessage(e)),
@@ -258,7 +246,7 @@ export function ProjectApprovalsPage({
   const handleCancelConfirm = useCallback(() => {
     if (!cancelTarget) return;
     updateApproval.mutate(
-      { approvalId: cancelTarget.id, status: "cancelled" },
+      { approvalId: cancelTarget.id, expectedRevision: cancelTarget.revision, status: "cancelled" },
       {
         onSuccess: () => {
           toast.success("Approval cancelled");
@@ -271,7 +259,7 @@ export function ProjectApprovalsPage({
 
   const handleDeleteConfirm = useCallback(() => {
     if (!deleteTarget) return;
-    deleteApproval.mutate(deleteTarget.id, {
+    deleteApproval.mutate({ approvalId: deleteTarget.id, expectedRevision: deleteTarget.revision }, {
       onSuccess: () => {
         toast.success("Approval deleted");
         setDeleteTarget(null);
@@ -381,10 +369,10 @@ export function ProjectApprovalsPage({
     >
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-          {selectedIds.size > 0 && (
+          {canManage && selectedIds.size > 0 && (
             <ApprovalBulkActionBar
               selectedCount={selectedIds.size}
-              isPending={updateApproval.isPending}
+              isPending={isBulkPending}
               onCancelSelected={handleBulkCancel}
               onClear={handleClearSelection}
             />
@@ -451,9 +439,9 @@ export function ProjectApprovalsPage({
       <DecideDialog
         open={!!decideTarget}
         onOpenChange={handleDecideDialogChange}
-        onConfirm={handleDecide}
-        isPending={decideApproval.isPending}
-        approvalTitle={decideTarget?.title}
+        projectId={projectId}
+        approvalId={decideTarget?.id ?? 0}
+        revision={decideTarget?.revision ?? 0}
       />
       <DelegateDialog
         open={!!delegateTarget}

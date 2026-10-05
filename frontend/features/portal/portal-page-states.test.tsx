@@ -134,7 +134,7 @@ describe("SPEC 7 — PortalProjectsPage states (Requirement C3)", () => {
   it("ready state: renders project cards when data is returned", async () => {
     (usePortalGuard as jest.Mock).mockReturnValue({ isReady: true });
     (useExternalPortalProjects as jest.Mock).mockReturnValue({
-      data: [STUB_PROJECT],
+      data: { pages: [{ data: [STUB_PROJECT], hasMore: false, nextCursor: null }], pageParams: [undefined] },
       isLoading: false,
       isError: false,
       refetch: jest.fn(),
@@ -150,7 +150,7 @@ describe("SPEC 7 — PortalProjectsPage states (Requirement C3)", () => {
   it("empty state: renders 'No projects yet' when grant list is empty", async () => {
     (usePortalGuard as jest.Mock).mockReturnValue({ isReady: true });
     (useExternalPortalProjects as jest.Mock).mockReturnValue({
-      data: [],
+      data: { pages: [{ data: [], hasMore: false, nextCursor: null }], pageParams: [undefined] },
       isLoading: false,
       isError: false,
       refetch: jest.fn(),
@@ -230,7 +230,7 @@ describe("SPEC 7 — PortalProjectsPage states (Requirement C3)", () => {
   it("ANTI-VACUITY: empty-vs-ready distinguishes data=[] from data=[project] so empty and ready states are not the same branch", async () => {
     (usePortalGuard as jest.Mock).mockReturnValue({ isReady: true });
     (useExternalPortalProjects as jest.Mock).mockReturnValue({
-      data: [STUB_PROJECT],
+      data: { pages: [{ data: [STUB_PROJECT], hasMore: false, nextCursor: null }], pageParams: [undefined] },
       isLoading: false,
       isError: false,
       refetch: jest.fn(),
@@ -398,11 +398,18 @@ describe("SPEC 8 — PortalProjectPage sub-component states (Requirement C3)", (
         canViewAttachments: false,
         canViewComments: false,
         canSubmitChangeRequests: false,
+        canViewApprovals: false,
+        canViewInvoices: false,
+        canViewRequests: false,
       },
       milestones: [],
       tasks: [],
       attachments: [],
       comments: [],
+      deliverables: [],
+      approvals: [],
+      invoices: [],
+      requests: [],
     };
     render(<PortalProjectDetail data={OVERVIEW} />);
     expect(screen.getByText("Beta Project")).toBeInTheDocument();
@@ -423,6 +430,10 @@ describe("SPEC 8 — PortalProjectPage sub-component states (Requirement C3)", (
       tasks: [],
       attachments: [],
       comments: [],
+      deliverables: [],
+      approvals: [],
+      invoices: [],
+      requests: [],
     };
     render(<PortalProjectDetail data={EMPTY_OVERVIEW} />);
     expect(screen.getByText("Empty Project")).toBeInTheDocument();

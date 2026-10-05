@@ -317,7 +317,7 @@ export function getInvitationColumns({
           <Badge
             variant="outline"
             className="h-4 border-status-danger-rule bg-status-danger-surface px-1.5 py-0 text-micro text-status-danger-ink"
-            title="The invitation email could not be delivered. Resend to try again."
+            title="Email delivery failed. Check provider settings or recipient suppression before resending. Copying a join link requires confirmation."
           >
             Email failed
           </Badge>

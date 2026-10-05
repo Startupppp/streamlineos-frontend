@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { Pin, PinOff } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -76,7 +77,9 @@ function ToolRow({
             : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
         )}
       >
-        <Icon className={cn("h-3.5 w-3.5 shrink-0", isActive && "text-primary")} />
+        <Icon
+          className={cn("h-3.5 w-3.5 shrink-0", isActive && "text-primary")}
+        />
         <span className="truncate">{tool.label}</span>
       </Link>
       <button
@@ -92,7 +95,11 @@ function ToolRow({
             : "text-muted-foreground opacity-0 hover:bg-muted hover:text-foreground focus-visible:opacity-100 group-hover/tool:opacity-100",
         )}
       >
-        {isPinned ? <PinOff className="h-3 w-3" /> : <Pin className="h-3 w-3" />}
+        {isPinned ? (
+          <PinOff className="h-3 w-3" />
+        ) : (
+          <Pin className="h-3 w-3" />
+        )}
       </button>
     </div>
   );
@@ -110,6 +117,7 @@ export function BuildMoreToolsMenu({
 }: BuildMoreToolsMenuProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const debouncedQuery = useDebouncedValue(query, 300);
   const { iconRef, animatedNavHoverHandlers } = useAnimatedNavIconHover();
 
   const filtered = useMemo(() => {
@@ -159,8 +167,7 @@ export function BuildMoreToolsMenu({
           aria-label="More Build tools"
           className={cn(
             "h-8 w-full justify-start gap-2.5 rounded-md px-2.5 text-label font-medium",
-            isCollapsed &&
-              "mx-auto size-8 justify-center p-0 has-[>svg]:px-0",
+            isCollapsed && "mx-auto size-8 justify-center p-0 has-[>svg]:px-0",
             anyActive
               ? "bg-primary/10 text-foreground"
               : "text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-foreground",
@@ -185,6 +192,7 @@ export function BuildMoreToolsMenu({
           <SearchInput
             value={query}
             onValueChange={setQuery}
+            aria-busy={debouncedQuery !== query}
             placeholder="Search tools…"
             autoFocus
           />

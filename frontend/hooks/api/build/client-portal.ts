@@ -1,7 +1,9 @@
 ﻿"use client";
 
-import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
@@ -69,9 +71,6 @@ export function usePortalChangeRequests(
     queryFn: ({ signal }) =>
       apiClient.get<PortalChangeRequest[]>(`/build/portal/projects/${projectId}/change-requests`, undefined, signal, portalChangeRequestListContract),
     enabled: canView && !!projectId && (options?.enabled ?? true),
-    // A missing portal grant is a 404 ("Project not found"), not a broken page.
-    // Callers render isError or an empty picker; the default boundary would
-    // unmount the host (the approval sheet) before that UI can run.
     throwOnError: false,
     staleTime: 60_000,
   });
@@ -189,8 +188,12 @@ export function useUpdateTicketVisibility(projectId: number) {
         undefined,
         toggleVisibilityContract,
       ),
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.clientPortal.visibility(projectId) });
+    onError: (error) => toast.error(getErrorMessage(error)),
+    onSettled: (_data, _error, { ticketId }) => {
+      return Promise.all([
+        qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.clientPortal.visibility(projectId) }),
+        qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.ticket(projectId, ticketId) }),
+      ]);
     },
   });
 }

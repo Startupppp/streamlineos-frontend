@@ -15,16 +15,48 @@ import { getUserDisplayName } from "@/lib/person-display";
 import type { Release } from "@/hooks/api/build/releases";
 import { format } from "date-fns";
 import { STATUS_CONFIG } from "./releases-page-parts";
+import { statusToneClasses } from "@/lib/design-tokens";
+import type { StatusTone } from "@/lib/design-tokens";
 
 export const RELEASES_TABLE_HEADERS = [
   "Name",
   "Status",
   "Release Date",
   "Published",
+  "Readiness",
+  "Risk",
   "Tickets",
   "Created By",
   "Actions",
 ] as const;
+
+const READINESS_TONE: Record<NonNullable<Release["readiness"]>, StatusTone> = {
+  not_started: "neutral",
+  in_progress: "info",
+  ready: "success",
+  blocked: "danger",
+};
+
+const READINESS_LABEL: Record<NonNullable<Release["readiness"]>, string> = {
+  not_started: "Not Started",
+  in_progress: "In Progress",
+  ready: "Ready",
+  blocked: "Blocked",
+};
+
+const RISK_TONE: Record<NonNullable<Release["riskLevel"]>, StatusTone> = {
+  low: "success",
+  medium: "warning",
+  high: "danger",
+  critical: "danger",
+};
+
+const RISK_LABEL: Record<NonNullable<Release["riskLevel"]>, string> = {
+  low: "Low",
+  medium: "Medium",
+  high: "High",
+  critical: "Critical",
+};
 
 interface ReleaseRowHandlers {
   canManage: boolean;
@@ -131,6 +163,32 @@ export function buildReleasesColumns({
         ) : (
           <span className="text-dense text-muted-foreground">—</span>
         ),
+    },
+    {
+      key: "readiness",
+      header: "Readiness",
+      cell: (r) => {
+        if (!r.readiness) return <span className="text-dense text-muted-foreground">—</span>;
+        const tone = statusToneClasses(READINESS_TONE[r.readiness]);
+        return (
+          <Badge variant="outline" className={cn("h-5 py-0 text-micro", tone.surface, tone.ink, tone.rule)}>
+            {READINESS_LABEL[r.readiness]}
+          </Badge>
+        );
+      },
+    },
+    {
+      key: "riskLevel",
+      header: "Risk",
+      cell: (r) => {
+        if (!r.riskLevel) return <span className="text-dense text-muted-foreground">—</span>;
+        const tone = statusToneClasses(RISK_TONE[r.riskLevel]);
+        return (
+          <Badge variant="outline" className={cn("h-5 py-0 text-micro", tone.surface, tone.ink, tone.rule)}>
+            {RISK_LABEL[r.riskLevel]}
+          </Badge>
+        );
+      },
     },
     {
       key: "ticketCount",

@@ -79,3 +79,51 @@ describe("ErrorState — request reference", () => {
     expect(screen.queryByText(/reference/i)).not.toBeInTheDocument();
   });
 });
+
+describe("ErrorState — HTTP status code mapping (autoMapStatus)", () => {
+  it("maps a 409 error to a conflict title with a reload message", () => {
+    const conflict = new ApiError("Conflict", 409, "CONFLICT", {}, "/build/tickets/1");
+    render(<ErrorState error={conflict} autoMapStatus />);
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+    expect(screen.getByText("Conflict")).toBeInTheDocument();
+    expect(screen.getByText(/someone else updated/i)).toBeInTheDocument();
+  });
+
+  it("maps a 403 error to a permission-denied message", () => {
+    const denied = new ApiError("Forbidden", 403, "FORBIDDEN", {}, "/build/tickets/1");
+    render(<ErrorState error={denied} autoMapStatus />);
+    expect(screen.getByText("Permission denied")).toBeInTheDocument();
+    expect(screen.getByText(/permission to perform/i)).toBeInTheDocument();
+  });
+
+  it("maps a 422 error to a validation-failed message", () => {
+    const validation = new ApiError("Unprocessable", 422, "VALIDATION", {}, "/build/tickets/1");
+    render(<ErrorState error={validation} autoMapStatus />);
+    expect(screen.getByText("Validation failed")).toBeInTheDocument();
+    expect(screen.getByText(/highlighted fields/i)).toBeInTheDocument();
+  });
+
+  it("maps a 503 error to a service-unavailable message", () => {
+    const unavailable = new ApiError("Unavailable", 503, "SERVICE_UNAVAILABLE", {}, "/build");
+    render(<ErrorState error={unavailable} autoMapStatus />);
+    expect(screen.getByText("Service unavailable")).toBeInTheDocument();
+    expect(screen.getByText(/temporarily unavailable/i)).toBeInTheDocument();
+  });
+
+  it("falls back to generic title when error is not an ApiError", () => {
+    render(<ErrorState error={new Error("network error")} autoMapStatus />);
+    expect(screen.getByText("Something went wrong")).toBeInTheDocument();
+  });
+
+  it("respects an explicit title even when autoMapStatus is true", () => {
+    const conflict = new ApiError("Conflict", 409, "CONFLICT", {}, "/build");
+    render(<ErrorState error={conflict} autoMapStatus title="Custom title" />);
+    expect(screen.getByText("Custom title")).toBeInTheDocument();
+  });
+
+  it("carries role=alert and aria-live=assertive so errors are announced immediately", () => {
+    render(<ErrorState autoMapStatus error={new ApiError("Bad", 422, "VAL", {}, "/")} />);
+    const alert = screen.getByRole("alert");
+    expect(alert).toHaveAttribute("aria-live", "assertive");
+  });
+});

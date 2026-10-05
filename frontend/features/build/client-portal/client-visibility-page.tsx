@@ -60,7 +60,6 @@ function TicketRow({
   function handleChange(checked: boolean) {
     update.mutate(
       { ticketId: ticket.id, clientVisible: checked, version: ticket.version },
-      { onError: (e) => toast.error(getErrorMessage(e)) },
     );
   }
 

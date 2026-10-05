@@ -11,6 +11,8 @@ const mutationGrantPayload = {
   canViewAttachments: false,
   canViewComments: true,
   canSubmitChangeRequests: false,
+  canViewApprovals: false,
+  canViewInvoices: false,
   status: "ACTIVE" as const,
   expiresAt: null,
   createdAt: "2026-09-01T10:00:00.000Z",

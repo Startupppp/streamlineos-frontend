@@ -65,4 +65,16 @@ describe("proxy observes the two code-owned Build compatibility redirects", () =
     expect(legacyRedirectHits("/projects")).toBe(0);
     expect(legacyRedirectHits("/product-management")).toBe(0);
   });
+
+  it("keeps the post-invite resolver behind sign-in and its callback on the same origin", async () => {
+    const response = await proxy(request("https://app.test/post-invite?callbackUrl=https://external.test"));
+    const location = response.headers.get("location");
+    expect(location).not.toBeNull();
+    const destination = new URL(location ?? "https://app.test");
+    expect(destination.origin).toBe("https://app.test");
+    expect(destination.pathname).toBe("/signin");
+    expect(destination.searchParams.get("callbackUrl")).toBe(
+      "/post-invite?callbackUrl=https://external.test",
+    );
+  });
 });

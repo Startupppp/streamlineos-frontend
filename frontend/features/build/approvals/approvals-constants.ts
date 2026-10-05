@@ -53,4 +53,5 @@ export const ENTITY_OPTIONS: { value: string; label: string }[] = [
   })),
 ];
 
-export const DECIDABLE = new Set<ApprovalStatus>(["pending", "requested", "escalated", "changes_requested"]);
+export const DECIDABLE = new Set<ApprovalStatus>(["pending", "escalated", "changes_requested"]);
+export const EDITABLE = new Set<ApprovalStatus>(["requested", "pending", "escalated", "changes_requested"]);

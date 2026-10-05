@@ -13,8 +13,8 @@
 
 ## Evidence
 
-- `/workspace/streamlineos-ux/evidence/member2-invite/invite-confirmation.webp` — invitation confirmation dialog
-- `/workspace/streamlineos-ux/evidence/member2-invite/pending-invitations.webp` — Invitations tab showing this address as Pending
-- `/workspace/streamlineos-ux/evidence/member2-invite/existing-admin-unchanged.webp` — Build Access showing `[REDACTED-TEST-EMAIL]` retains Build Module Member + Build Module Admin
+- `evidence/member2-invite/invite-confirmation.webp` — invitation confirmation dialog
+- `evidence/member2-invite/pending-invitations.webp` — Invitations tab showing this address as Pending
+- `evidence/member2-invite/existing-admin-unchanged.webp` — Build Access showing `[REDACTED-TEST-EMAIL]` retains Build Module Member + Build Module Admin
 
 Existing admin intentionally left unchanged: `[REDACTED-TEST-EMAIL]`.

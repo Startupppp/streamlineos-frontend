@@ -177,6 +177,10 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
         );
         return;
       }
+      if (!isApiError(error) || error.status === 0 || (error.status !== undefined && error.status >= 500)) {
+        toast.warning("This save may have succeeded. Check the ticket before retrying.");
+        return;
+      }
       toast.error(getErrorMessage(error));
     },
   });

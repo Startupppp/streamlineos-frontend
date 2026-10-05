@@ -196,7 +196,8 @@ export function buildProjectCatalog(basePath: string): BuildScopeCatalog {
         label: "Wiki",
         href: `${basePath}/wiki`,
         icon: BookOpenText,
-        requiredPermission: "build:view",
+        requiredPermission: "kb:pages:view",
+        requiredOrgModule: "kb",
       },
       {
         id: "project-whiteboard",
@@ -249,7 +250,7 @@ export function buildProjectCatalog(basePath: string): BuildScopeCatalog {
       },
       {
         id: "project-modules",
-        label: "Modules",
+        label: "Workstreams",
         href: `${basePath}/modules`,
         icon: PackageOpen,
         requiredPermission: "build:view",

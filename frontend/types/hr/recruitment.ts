@@ -389,12 +389,6 @@ export interface CreateReferralInput {
 }
 
 export type EmailSequenceTrigger = "MANUAL" | "CANDIDATE_ADDED" | "APPLICATION_RECEIVED" | "STAGE_CHANGED" | "OFFER_SENT";
-/**
- * Derived from the contract rather than restated, so this type cannot fall
- * behind the parser the way it did: it listed four values while the backend had
- * been writing a fifth, `HELD_NO_CONSENT`, and the enum threw on parse.
- */
-export type EmailSequenceEnrollmentStatus = EnrollmentStatus;
 
 export interface EmailSequenceStep {
   id: number;
@@ -411,7 +405,7 @@ export interface EmailSequenceEnrollment {
   sequenceId: number;
   candidateId: number;
   currentStep: number;
-  status: EmailSequenceEnrollmentStatus;
+  status: EnrollmentStatus;
   enrolledAt: string;
   nextSendAt: string | null;
   completedAt: string | null;

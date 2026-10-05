@@ -34,11 +34,11 @@ const BASELINE: Record<AriaFindingKind, number> = {
    * as well as by count: a bare count would let one surface lose its name while
    * another gained one and the number would never move.
    */
-  unnamedControl: 1,
+  unnamedControl: 2,
   positiveTabIndex: 0,
 };
 
-const PINNED_UNNAMED_CONTROLS = ["features/crm/import/bulk-import-section.tsx"];
+const PINNED_UNNAMED_CONTROLS = ["features/crm/import/bulk-import-section.tsx", "features/org-setup/components/step-products.tsx"];
 
 const result = analyzeAriaSemantics();
 

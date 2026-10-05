@@ -171,7 +171,13 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
       update: Partial<
         Pick<
           BulkUpdateTicketsInput,
-          "assigneeId" | "status" | "cycleId" | "priority" | "parentTicketId" | "labelIds" | "archive"
+          | "assigneeId"
+          | "status"
+          | "cycleId"
+          | "priority"
+          | "parentTicketId"
+          | "labelIds"
+          | "archive"
         >
       >,
     ) => {
@@ -245,13 +251,10 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
     [],
   );
 
-  const handleBulkArchiveConfirm = useCallback(
-    () => {
-      handleBulkUpdate({ archive: true });
-      setArchiveConfirmOpen(false);
-    },
-    [handleBulkUpdate],
-  );
+  const handleBulkArchiveConfirm = useCallback(() => {
+    handleBulkUpdate({ archive: true });
+    setArchiveConfirmOpen(false);
+  }, [handleBulkUpdate]);
 
   const handleArchiveDialogChange = useCallback(
     (open: boolean) => setArchiveConfirmOpen(open),
@@ -268,7 +271,9 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
       {
         onSuccess: (result) => {
           downloadTextFile(result.filename, result.contentType, result.content);
-          toast.success(`Exported ${result.rowCount} ticket${result.rowCount !== 1 ? "s" : ""}`);
+          toast.success(
+            `Exported ${result.rowCount} ticket${result.rowCount !== 1 ? "s" : ""}`,
+          );
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
@@ -300,8 +305,6 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
     );
   }
 
-  // A failure to READ the project is not the same fact as a project that is
-  // gone: only the fallback's resolved 404 reaches notFound().
   if (projectError) {
     return (
       <ProjectLoadFallback
@@ -380,47 +383,49 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
           }
           className="min-h-full w-full flex-1"
         />
-      ) : <ProjectBoardContent
-        view={view}
-        focusedTicketId={focusedTicketId}
-        filteredTickets={filteredTickets}
-        showEmptyFilterState={showEmptyFilterState}
-        onClearSearch={handleClearSearch}
-        projectId={projectId}
-        projectKey={data.key}
-        statuses={statuses}
-        wipLimits={wipLimits}
-        members={members}
-        displayOptions={displayOptions}
-        hideCompleted={hideCompleted}
-        hasActiveFilters={hasActiveFilters}
-        boardFilters={boardFilters}
-        workloadFilters={workloadFilters}
-        capacityByMemberId={capacityByMemberId}
-        onTicketSelect={handleTicketSelect}
-        onWorkloadFilterChange={handleWorkloadFilterChange}
-        onClearWorkloadFilters={handleClearWorkloadFilters}
-        cycles={cycles ?? []}
-        selectedIds={selectedIds}
-        onBulkStatus={handleBulkStatus}
-        onBulkPriority={handleBulkPriority}
-        onBulkAssignee={handleBulkAssignee}
-        onBulkCycle={handleBulkCycle}
-        onBulkParent={handleBulkParent}
-        onBulkLabel={handleBulkLabel}
-        onBulkArchive={handleBulkArchiveRequest}
-        onBulkExport={handleBulkExport}
-        labels={orgLabels}
-        onClearSelection={handleClearSelection}
-        onSelectionChange={handleSelectionChange}
-        isTruncated={isTruncated}
-        isFetchingMore={isFetchingMoreTickets}
-        onLoadMore={fetchMoreTickets}
-        isLoading={ticketsLoading}
-        isError={ticketsError}
-        error={ticketsErrorValue}
-        onRetry={handleRetryTickets}
-      />}
+      ) : (
+        <ProjectBoardContent
+          view={view}
+          focusedTicketId={focusedTicketId}
+          filteredTickets={filteredTickets}
+          showEmptyFilterState={showEmptyFilterState}
+          onClearSearch={handleClearSearch}
+          projectId={projectId}
+          projectKey={data.key}
+          statuses={statuses}
+          wipLimits={wipLimits}
+          members={members}
+          displayOptions={displayOptions}
+          hideCompleted={hideCompleted}
+          hasActiveFilters={hasActiveFilters}
+          boardFilters={boardFilters}
+          workloadFilters={workloadFilters}
+          capacityByMemberId={capacityByMemberId}
+          onTicketSelect={handleTicketSelect}
+          onWorkloadFilterChange={handleWorkloadFilterChange}
+          onClearWorkloadFilters={handleClearWorkloadFilters}
+          cycles={cycles ?? []}
+          selectedIds={selectedIds}
+          onBulkStatus={handleBulkStatus}
+          onBulkPriority={handleBulkPriority}
+          onBulkAssignee={handleBulkAssignee}
+          onBulkCycle={handleBulkCycle}
+          onBulkParent={handleBulkParent}
+          onBulkLabel={handleBulkLabel}
+          onBulkArchive={handleBulkArchiveRequest}
+          onBulkExport={handleBulkExport}
+          labels={orgLabels}
+          onClearSelection={handleClearSelection}
+          onSelectionChange={handleSelectionChange}
+          isTruncated={isTruncated}
+          isFetchingMore={isFetchingMoreTickets}
+          onLoadMore={fetchMoreTickets}
+          isLoading={ticketsLoading}
+          isError={ticketsError}
+          error={ticketsErrorValue}
+          onRetry={handleRetryTickets}
+        />
+      )}
       <SaveViewDialog
         open={saveViewOpen}
         onOpenChange={setSaveViewOpen}
@@ -432,7 +437,10 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
         isSaving={createView.isPending}
         activeLayout={view}
       />
-      <ShortcutHelpDialog open={shortcutHelpOpen} onOpenChange={setShortcutHelpOpen} />
+      <ShortcutHelpDialog
+        open={shortcutHelpOpen}
+        onOpenChange={setShortcutHelpOpen}
+      />
       <ConfirmDialog
         open={archiveConfirmOpen}
         onOpenChange={handleArchiveDialogChange}

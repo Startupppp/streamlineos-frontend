@@ -3,6 +3,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { ManagedProductsPage } from "./managed-products-page";
 
 const mockRouterPush = jest.fn();
+const mockUseBuildListFilters = jest.fn();
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: jest.fn(), push: mockRouterPush }),
@@ -152,6 +153,11 @@ jest.mock("sonner", () => ({
   toast: { success: jest.fn(), error: jest.fn() },
 }));
 
+jest.mock("@/features/build/shared/use-build-list-filters", () => ({
+  useBuildListFilters: (...args: unknown[]) => mockUseBuildListFilters(...args),
+  BUILD_FILTER_ALL: "all",
+}));
+
 const { useManagedProducts } = jest.requireMock("@/hooks/api/build/managed-products") as {
   useManagedProducts: jest.Mock;
 };
@@ -175,6 +181,24 @@ beforeEach(() => {
   useCan.mockReturnValue(true);
   usePageState.mockReturnValue({ kind: "ready" });
   useManagedProducts.mockReturnValue(EMPTY_RESULT);
+});
+
+beforeEach(() => {
+  mockUseBuildListFilters.mockReturnValue({
+    value: (_param: string) => "all",
+    isActive: (_param: string) => false,
+    setValue: jest.fn(),
+    clearAll: jest.fn(),
+    search: "",
+    debouncedSearch: "",
+    setSearch: jest.fn(),
+    resetKey: "status=all&sort=all&ownerId=all&q=",
+    isPending: false,
+    isFiltered: false,
+    activeCount: 0,
+    cursor: null,
+    setCursor: jest.fn(),
+  });
 });
 
 describe("ManagedProductsPage — BUG-053: ownerId sentinel not forwarded to hook", () => {
@@ -254,5 +278,82 @@ describe("ManagedProductsPage — usePageState integration (BSN-01-027)", () => 
     render(<ManagedProductsPage />);
     expect(screen.getByText("Alpha Service")).toBeInTheDocument();
     expect(screen.getByText("Beta Platform")).toBeInTheDocument();
+  });
+});
+
+describe("ManagedProductsPage — filter round-trip (BT-d1f0e28c8509)", () => {
+  it("passes status=active to useManagedProducts when the status filter param is active so server-side filtering applies", () => {
+    mockUseBuildListFilters.mockReturnValue({
+      value: (param: string) => (param === "status" ? "active" : "all"),
+      isActive: (param: string) => param === "status",
+      setValue: jest.fn(),
+      clearAll: jest.fn(),
+      search: "",
+      debouncedSearch: "",
+      setSearch: jest.fn(),
+      resetKey: "status=active&sort=all&ownerId=all&q=",
+      isPending: false,
+      isFiltered: true,
+      activeCount: 1,
+      cursor: null,
+      setCursor: jest.fn(),
+    });
+    render(<ManagedProductsPage />);
+    expect(useManagedProducts).toHaveBeenCalledWith(
+      expect.objectContaining({ status: "active" }),
+    );
+  });
+});
+
+describe("ManagedProductsPage — URL stability (BT-d1f0e28c8509)", () => {
+  it("navigation URL uses product id not name after rename so bookmarks and deep links remain valid", () => {
+    const productId = 77;
+    const product = {
+      id: productId,
+      name: "Original Name",
+      key: "PROD-077",
+      status: "active" as const,
+      ownerId: null,
+      description: null,
+      orgId: "org-1",
+      vision: null,
+      missionStatement: null,
+      targetCustomer: null,
+      differentiators: null,
+      currentPhase: null,
+      targetLaunchDate: null,
+      successMetrics: null,
+      ownerMembershipId: null,
+      deletedAt: null,
+      createdAt: "2025-01-01T00:00:00Z",
+      updatedAt: "2025-01-01T00:00:00Z",
+    };
+    useManagedProducts.mockReturnValue({
+      data: { data: [product], pagination: { hasMore: false, nextCursor: null, limit: 20 } },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    const { rerender } = render(<ManagedProductsPage />);
+
+    useManagedProducts.mockReturnValue({
+      data: {
+        data: [{ ...product, name: "Renamed Name" }],
+        pagination: { hasMore: false, nextCursor: null, limit: 20 },
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    rerender(<ManagedProductsPage />);
+
+    fireEvent.keyDown(document, { key: "j" });
+    fireEvent.keyDown(document, { key: "Enter" });
+
+    expect(mockRouterPush).toHaveBeenCalledWith(`/build/managed-products/${productId}`);
+    expect(mockRouterPush).not.toHaveBeenCalledWith(expect.stringContaining("Original Name"));
+    expect(mockRouterPush).not.toHaveBeenCalledWith(expect.stringContaining("Renamed Name"));
   });
 });

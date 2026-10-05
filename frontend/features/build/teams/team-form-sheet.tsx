@@ -19,10 +19,18 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { FormSheetChrome } from "@/components/shared";
 import { EmojiIconPicker } from "@/components/ui/emoji-icon-picker";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { ColumnColorPicker } from "@/features/build/shared/column-color-picker";
 import { DEFAULT_COLUMN_COLOR } from "@/lib/column-colors";
-import type { ProjectTeam, CreateTeamInput, UpdateTeamInput } from "@/types/projects";
+import type {
+  ProjectTeam,
+  CreateTeamInput,
+  UpdateTeamInput,
+} from "@/types/projects";
 import { cn } from "@/lib/utils";
 import {
   teamFormSchema,
@@ -120,11 +128,6 @@ interface Props {
   isPending?: boolean;
 }
 
-/**
- * A team key is uppercase alphanumerics only. The rule belongs beside the
- * schema that enforces it, not inside a JSX prop where the field and the
- * validator can drift apart.
- */
 function toTeamKey(raw: string): string {
   return raw.toUpperCase().replace(/[^A-Z0-9]/g, "");
 }
@@ -155,7 +158,9 @@ export function TeamFormSheet({
   useEffect(() => {
     if (open) {
       form.reset(
-        mode === "edit" && defaultValues ? toForm(defaultValues) : teamFormDefaults,
+        mode === "edit" && defaultValues
+          ? toForm(defaultValues)
+          : teamFormDefaults,
       );
     }
   }, [open, mode, defaultValues, form]);

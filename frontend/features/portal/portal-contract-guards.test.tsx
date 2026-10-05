@@ -46,6 +46,9 @@ const allGranted: PortalCapabilities = {
   canViewAttachments: true,
   canViewComments: true,
   canSubmitChangeRequests: true,
+  canViewApprovals: true,
+  canViewInvoices: true,
+  canViewRequests: true,
 };
 
 const overviewWithAllGranted: PortalProjectOverview = {
@@ -55,6 +58,10 @@ const overviewWithAllGranted: PortalProjectOverview = {
   tasks: [],
   attachments: [],
   comments: [],
+  deliverables: [],
+  approvals: [],
+  invoices: [],
+  requests: [],
 };
 
 const overviewWithoutCapabilities: PortalProjectOverview = {
@@ -63,6 +70,10 @@ const overviewWithoutCapabilities: PortalProjectOverview = {
   tasks: [],
   attachments: [],
   comments: [],
+  deliverables: [],
+  approvals: [],
+  invoices: [],
+  requests: [],
 };
 
 describe("PortalProjectCard — optional capabilities field", () => {
@@ -86,6 +97,9 @@ describe("PortalProjectCard — optional capabilities field", () => {
         canViewAttachments: false,
         canViewComments: false,
         canSubmitChangeRequests: false,
+        canViewApprovals: false,
+        canViewInvoices: false,
+        canViewRequests: false,
       },
     };
     withQueryClient(<PortalProjectCard project={projectWithCaps} />);
@@ -158,6 +172,9 @@ describe("PortalProjectDetail — case 3: partial grant (view true, submit false
         canViewAttachments: false,
         canViewComments: false,
         canSubmitChangeRequests: false,
+        canViewApprovals: false,
+        canViewInvoices: false,
+        canViewRequests: false,
       },
     };
     withQueryClient(<PortalProjectDetail data={milestonesOnlyOverview} />);
@@ -165,6 +182,30 @@ describe("PortalProjectDetail — case 3: partial grant (view true, submit false
     expect(screen.queryByText("Tasks")).not.toBeInTheDocument();
     expect(screen.queryByText("Files")).not.toBeInTheDocument();
     expect(screen.queryByText("Updates")).not.toBeInTheDocument();
+  });
+});
+
+describe("PortalProjectDetail — no internal field leaks into the portal surface", () => {
+  it("portal list response does not render orgId in the DOM so the internal UUID is not visible to clients", () => {
+    withQueryClient(<PortalProjectCard project={baseProject} />);
+    expect(document.body.textContent).not.toContain("org-");
+    expect(document.body.textContent).not.toContain("11111111");
+  });
+
+  it("portal detail response does not render any internal Build navigation count so portal consumers cannot enumerate internal work volume", () => {
+    withQueryClient(<PortalProjectDetail data={overviewWithAllGranted} />);
+    const text = document.body.textContent ?? "";
+    expect(text).not.toMatch(/\d+ total task/i);
+    expect(text).not.toMatch(/internalCount/);
+    expect(text).not.toMatch(/navigationCount/);
+  });
+
+  it("portal detail does not contain any /build/ href so portal routing stays within the portal surface", () => {
+    withQueryClient(<PortalProjectDetail data={overviewWithAllGranted} />);
+    const anchors = document.querySelectorAll("a[href]");
+    for (const a of anchors) {
+      expect(a.getAttribute("href")).not.toMatch(/^\/build\//);
+    }
   });
 });
 

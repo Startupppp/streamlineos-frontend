@@ -1,9 +1,10 @@
-import { render, screen, act } from "@testing-library/react";
+import { render, screen, act, fireEvent } from "@testing-library/react";
 import type { AccessState } from "@/lib/rbac/gate";
 import { AutomationsPage } from "./automations-page";
 import type { ProjectAutomation } from "@/hooks/api/build/automations";
 
 let mockAccessState: AccessState = "denied";
+let mockDeleteMutate = jest.fn();
 let mockDebouncedSearch = "";
 let mockTriggerFilter = "all";
 let mockActionFilter = "all";
@@ -43,7 +44,7 @@ jest.mock("@/hooks/api/build/automations", () => ({
   }),
   useCreateAutomation: () => ({ mutate: jest.fn(), isPending: false }),
   useUpdateAutomation: () => ({ mutate: jest.fn(), isPending: false }),
-  useDeleteAutomation: () => ({ mutate: jest.fn(), isPending: false }),
+  useDeleteAutomation: () => ({ mutate: mockDeleteMutate, isPending: false }),
   TRIGGER_EVENTS: [
     { value: "ticket.created", label: "Ticket Created" },
     { value: "ticket.updated", label: "Ticket Updated" },
@@ -166,6 +167,7 @@ const SAMPLE_AUTOMATION: ProjectAutomation = {
 
 beforeEach(() => {
   mockAccessState = "denied";
+  mockDeleteMutate = jest.fn();
   mockDebouncedSearch = "";
   mockTriggerFilter = "all";
   mockActionFilter = "all";
@@ -425,5 +427,31 @@ describe("AutomationsPage — offline state", () => {
     render(<AutomationsPage projectId={1} />);
     expect(screen.queryByText("You are offline")).not.toBeInTheDocument();
     expect(screen.getByText("No automations yet")).toBeInTheDocument();
+  });
+});
+
+describe("AutomationsPage — human-confirmation gate blocks automation deletion until confirmed (BLD-X-FE-SETTINGS-AUTO-CONFIRM)", () => {
+  it("shows confirmation dialog when delete button is clicked — gate is open before confirmation", () => {
+    mockAccessState = "granted";
+    mockAutomations = [SAMPLE_AUTOMATION];
+    render(<AutomationsPage projectId={1} />);
+    fireEvent.click(screen.getByRole("button", { name: /delete automation/i }));
+    expect(screen.getByRole("alertdialog")).toBeInTheDocument();
+  });
+
+  it("does not call delete mutate before the user confirms — no premature mutation", () => {
+    mockAccessState = "granted";
+    mockAutomations = [SAMPLE_AUTOMATION];
+    render(<AutomationsPage projectId={1} />);
+    fireEvent.click(screen.getByRole("button", { name: /delete automation/i }));
+    expect(screen.getByRole("alertdialog")).toBeInTheDocument();
+    expect(mockDeleteMutate).not.toHaveBeenCalled();
+  });
+
+  it("delete button is not present when access is denied — confirmation gate never reached without permission", () => {
+    mockAccessState = "denied";
+    mockAutomations = [SAMPLE_AUTOMATION];
+    render(<AutomationsPage projectId={1} />);
+    expect(screen.queryByRole("button", { name: /delete automation/i })).not.toBeInTheDocument();
   });
 });

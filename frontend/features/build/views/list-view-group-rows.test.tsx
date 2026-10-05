@@ -1,8 +1,4 @@
-/**
- * The flat list path has always capped its render at LIST_RENDER_PAGE_SIZE.
- * The three grouped paths did not, so turning on `groupBy` silently mounted
- * every autoloaded ticket — up to BOARD_AUTOLOAD_LIMIT (500) rows — at once.
- */
+
 import { render, screen, fireEvent } from "@testing-library/react";
 import { GroupRows } from "./list-view-group-rows";
 import { LIST_RENDER_PAGE_SIZE } from "./list-view-shared";

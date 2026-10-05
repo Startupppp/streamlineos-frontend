@@ -11,12 +11,11 @@ import {
   previewTicketImport,
 } from "@/features/build/import-export/import-export-client";
 import type {
-  ImportFormat,
-  ImportMode,
-  TicketExport,
-  TicketImportPreview,
-  TicketImportReport,
-} from "@/features/build/import-export/import-export-contract";
+  TicketImportExportPreviewImportResponse,
+  TicketImportExportCommitImportResponse,
+  TicketImportExportExportTicketsResponse,
+} from "@/contracts/build-contracts.generated";
+import type { ImportFormat, ImportMode } from "@/features/build/import-export/import-export-contract";
 
 export interface PreviewTicketImportVariables {
   format: ImportFormat;
@@ -47,7 +46,7 @@ function useCommitKey(): (confirmationToken: string) => string {
 }
 
 export function usePreviewTicketImport(projectId: number) {
-  return useAuthorizedMutation<TicketImportPreview, Error, PreviewTicketImportVariables>(
+  return useAuthorizedMutation<TicketImportExportPreviewImportResponse, Error, PreviewTicketImportVariables>(
     "build:tickets:create",
     {
       mutationKey: buildWorkQueryKeys.projects.importExport.preview(projectId),
@@ -65,7 +64,7 @@ export function usePreviewTicketImport(projectId: number) {
 export function useCommitTicketImport(projectId: number) {
   const qc = useQueryClient();
   const keyFor = useCommitKey();
-  return useAuthorizedMutation<TicketImportReport, Error, CommitTicketImportVariables>(
+  return useAuthorizedMutation<TicketImportExportCommitImportResponse, Error, CommitTicketImportVariables>(
     "build:tickets:create",
     {
       mutationKey: buildWorkQueryKeys.projects.importExport.commit(projectId),
@@ -91,7 +90,7 @@ export function useCommitTicketImport(projectId: number) {
 }
 
 export function useExportTickets(projectId: number) {
-  return useAuthorizedMutation<TicketExport, Error, ExportTicketsVariables>(
+  return useAuthorizedMutation<TicketImportExportExportTicketsResponse, Error, ExportTicketsVariables>(
     "build:tickets:view",
     {
       mutationKey: buildWorkQueryKeys.projects.importExport.export(projectId),

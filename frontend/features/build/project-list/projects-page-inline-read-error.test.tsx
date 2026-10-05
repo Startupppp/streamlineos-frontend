@@ -11,7 +11,7 @@ const USER_ID = "user-1";
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: jest.fn(), push: jest.fn() }),
-  usePathname: () => "/build",
+  usePathname: () => "/build/projects",
   useSearchParams: () => new URLSearchParams(),
 }));
 

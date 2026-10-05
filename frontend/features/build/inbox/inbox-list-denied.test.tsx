@@ -9,7 +9,7 @@ jest.mock("@/hooks/api/use-page-state", () => ({
   usePageState: (...args: unknown[]) => mockUsePageState(...args),
 }));
 
-jest.mock("@/hooks/api/notifications", () => ({
+jest.mock("@/hooks/api/notifications-inbox", () => ({
   useInfiniteNotifications: () => ({
     data: { pages: [] as unknown[], pageParams: [] },
     isPending: false,
@@ -24,6 +24,9 @@ jest.mock("@/hooks/api/notifications", () => ({
   useMarkNotificationRead: () => ({ mutate: jest.fn() }),
   useMarkAllNotificationsRead: () => ({ mutate: jest.fn(), isPending: false }),
   useBulkMarkRead: () => ({ mutateAsync: jest.fn() }),
+}));
+
+jest.mock("@/hooks/api/notifications-inbox-actions", () => ({
   useBulkArchive: () => ({ mutateAsync: jest.fn() }),
   useBulkDelete: () => ({ mutateAsync: jest.fn() }),
 }));

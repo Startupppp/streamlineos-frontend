@@ -1,9 +1,9 @@
 import { z } from "zod";
 
-export const OPENAPI_HASH = "sha256:03948fc64867b0401856777fdebabce0a73e7c106cefca1c0992ab0c281cfd7a" as const;
+export const OPENAPI_HASH = "sha256:2db5b82c8bced4af298ce06629fc489f893ec25e94bb068aa9d6d50b1bd73c29" as const;
 
 export const agentTokensListResponseSchema = z.array(z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   name: z.string(),
   tokenPrefix: z.string(),
   scopes: z.array(z.string()),
@@ -16,7 +16,7 @@ export type AgentTokensListResponse = z.infer<typeof agentTokensListResponseSche
 
 export const agentTokensCreateResponseSchema = z.object({
   token: z.string(),
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   name: z.string(),
   tokenPrefix: z.string(),
   scopes: z.array(z.string()),
@@ -27,7 +27,7 @@ export type AgentTokensCreateResponse = z.infer<typeof agentTokensCreateResponse
 
 export const agentTokensCreateBodySchema = z.strictObject({
   name: z.string(),
-  expiresInDays: z.number().int().optional(),
+  expiresInDays: z.number().int().gte(1).lte(365).optional(),
   scopes: z.array(z.string()).optional(),
 });
 export type AgentTokensCreateBody = z.input<typeof agentTokensCreateBodySchema>;
@@ -37,11 +37,11 @@ export const projectsAiSummaryResponseSchema = z.object({
   highlights: z.array(z.string()),
   atRisk: z.boolean(),
   evidence: z.object({
-    totalTasks: z.number().int(),
-    done: z.number().int(),
-    inProgress: z.number().int(),
-    blocked: z.number().int(),
-    overdue: z.number().int(),
+    totalTasks: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    done: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    inProgress: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    blocked: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    overdue: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     sprintProgressPct: z.number().optional(),
   }),
 });
@@ -60,8 +60,8 @@ export type ProjectsAiImproveDraftDescriptionBody = z.input<typeof projectsAiImp
 
 export const projectsAiSuggestDraftFieldsResponseSchema = z.object({
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL", "URGENT"]).optional(),
-  points: z.number().int().optional(),
-  labelIds: z.array(z.number().int()),
+  points: z.number().int().gte(-9007199254740991).lte(9007199254740991).optional(),
+  labelIds: z.array(z.number().int().gte(-9007199254740991).lte(9007199254740991)),
   labelNames: z.array(z.string()),
   rationale: z.string(),
 });
@@ -139,7 +139,7 @@ export type ProjectsAiSummarizeTicketCommentsResponse = z.infer<typeof projectsA
 
 export const projectsListProjectsResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     name: z.string(),
     description: z.string().nullable(),
     key: z.string(),
@@ -147,7 +147,7 @@ export const projectsListProjectsResponseSchema = z.object({
     priority: z.string().nullable(),
     startDate: z.iso.datetime({ offset: true }).nullable(),
     endDate: z.iso.datetime({ offset: true }).nullable(),
-    managedProductId: z.number().int().nullable(),
+    managedProductId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     manager: z.object({
       id: z.string(),
       firstName: z.string().nullable(),
@@ -155,9 +155,9 @@ export const projectsListProjectsResponseSchema = z.object({
       image: z.string().nullable(),
     }).nullable(),
     progress: z.object({
-      total: z.number().int(),
-      done: z.number().int(),
-      percentage: z.number().int(),
+      total: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      done: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      percentage: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     }),
     health: z.enum(["on_track", "at_risk", "off_track"]),
     members: z.array(z.object({
@@ -169,26 +169,26 @@ export const projectsListProjectsResponseSchema = z.object({
     teams: z.array(z.string()),
   })),
   hasMore: z.boolean(),
-  nextCursor: z.number().int().nullable(),
+  nextCursor: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
 });
 export type ProjectsListProjectsResponse = z.infer<typeof projectsListProjectsResponseSchema>;
 
 export const projectsCreateProjectResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
   name: z.string(),
   description: z.string().nullable(),
   key: z.string(),
-  clientMembershipId: z.number().int().nullable(),
-  managerMembershipId: z.number().int().nullable(),
+  clientMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  managerMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   startDate: z.iso.datetime({ offset: true }).nullable(),
   endDate: z.iso.datetime({ offset: true }).nullable(),
   status: z.enum(["ACTIVE", "COMPLETED", "ARCHIVED"]),
   priority: z.string().nullable(),
-  dealId: z.number().int().nullable(),
-  managedProductId: z.number().int().nullable(),
+  dealId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  managedProductId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   budget: z.string().nullable(),
-  budgetMinor: z.number().int().nullable(),
+  budgetMinor: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   budgetCurrency: z.string().nullable(),
   settings: z.object({
     modules: z.object({
@@ -230,44 +230,44 @@ export const projectsCreateProjectBodySchema = z.strictObject({
   workflow: z.string().optional(),
   features: z.record(z.string(), z.boolean()).optional(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
-  managedProductId: z.number().int().optional(),
+  managedProductId: z.number().int().gt(0).lte(9007199254740991).optional(),
 });
 export type ProjectsCreateProjectBody = z.input<typeof projectsCreateProjectBodySchema>;
 
 export const agentPulseGetTopSignalResponseSchema = z.object({
   type: z.enum(["overdue_approval", "blocked_milestone", "delivery_risk", "dependency_change", "comment_draft"]),
-  entityId: z.number().int(),
-  projectId: z.number().int(),
+  entityId: z.number().int().gt(0).lte(9007199254740991),
+  projectId: z.number().int().gte(0).lte(9007199254740991),
   title: z.string(),
   dueAt: z.string().nullable(),
   evidence: z.string().nullable().optional(),
   proposedChange: z.string().nullable().optional(),
   impact: z.string().nullable().optional(),
-  confidence: z.number().int().nullable().optional(),
-  affectedRecordIds: z.array(z.number().int()).nullable().optional(),
-  retryCount: z.number().int().optional(),
+  confidence: z.number().int().gte(0).lte(100).nullable().optional(),
+  affectedRecordIds: z.array(z.number().int().gte(-9007199254740991).lte(9007199254740991)).nullable().optional(),
+  retryCount: z.number().int().gte(0).lte(9007199254740991).optional(),
 }).nullable();
 export type AgentPulseGetTopSignalResponse = z.infer<typeof agentPulseGetTopSignalResponseSchema>;
 
 export const projectsTicketsGetAllWorkResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     title: z.string(),
     type: z.enum(["EPIC", "STORY", "TASK", "BUG"]),
     status: z.string(),
     priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).nullable(),
-    projectId: z.number().int().nullable(),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     projectKey: z.string().nullable(),
     projectName: z.string().nullable(),
-    ticketNumber: z.number().int(),
+    ticketNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     dueDate: z.string().nullable(),
     startDate: z.string().nullable(),
     points: z.number().nullable(),
     estimate: z.number().nullable(),
     rank: z.string().nullable(),
-    version: z.number().int(),
-    cycleId: z.number().int().nullable(),
-    epicId: z.number().int().nullable(),
+    version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    cycleId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    epicId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     assigneeId: z.string().nullable(),
     assignee: z.object({
       id: z.string(),
@@ -278,37 +278,49 @@ export const projectsTicketsGetAllWorkResponseSchema = z.object({
       image: z.string().nullable(),
     }).nullable(),
     labels: z.array(z.object({
-      id: z.number().int(),
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       name: z.string(),
       color: z.string().nullable(),
     })),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
   })),
-  limit: z.number().int(),
+  limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   nextCursor: z.string().nullable(),
   hasMore: z.boolean(),
-  total: z.number().int().optional(),
+  total: z.number().int().gte(-9007199254740991).lte(9007199254740991).optional(),
 });
 export type ProjectsTicketsGetAllWorkResponse = z.infer<typeof projectsTicketsGetAllWorkResponseSchema>;
 
+export const projectsTicketsGetAllWorkIdsResponseSchema = z.object({
+  entries: z.array(z.object({
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    ids: z.array(z.number().int().gte(-9007199254740991).lte(9007199254740991)),
+  })),
+  total: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  capped: z.boolean(),
+  cap: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+});
+export type ProjectsTicketsGetAllWorkIdsResponse = z.infer<typeof projectsTicketsGetAllWorkIdsResponseSchema>;
+
 export const approvalsInboxGetInboxResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
-    projectId: z.number().int().nullable(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    revision: z.number().int().gt(0).lte(9007199254740991),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     projectName: z.string().nullable(),
     projectKey: z.string().nullable(),
     entityType: z.enum(["task", "milestone", "budget", "release", "change_request", "document", "timesheet", "client_approval"]),
-    entityId: z.number().int(),
+    entityId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     title: z.string(),
     status: z.enum(["requested", "pending", "approved", "rejected", "changes_requested", "escalated", "cancelled"]),
-    level: z.number().int(),
+    level: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     dueAt: z.iso.datetime({ offset: true }).nullable(),
     requestedById: z.string().nullable(),
     decidedAt: z.iso.datetime({ offset: true }).nullable(),
   })),
   pagination: z.object({
-    limit: z.number().int(),
+    limit: z.number().int().gt(0).lte(9007199254740991),
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
   }),
@@ -317,21 +329,21 @@ export type ApprovalsInboxGetInboxResponse = z.infer<typeof approvalsInboxGetInb
 
 export const projectsRoadmapListChangelogResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
     title: z.string(),
     content: z.string(),
     version: z.string().nullable(),
     type: z.enum(["feature", "improvement", "fix"]),
     isPublished: z.boolean(),
-    linkedRoadmapItemId: z.number().int().nullable(),
+    linkedRoadmapItemId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     publishedAt: z.iso.datetime({ offset: true }).nullable(),
     createdBy: z.string().nullable(),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
   })),
   pagination: z.object({
-    limit: z.number().int(),
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
   }),
@@ -339,14 +351,14 @@ export const projectsRoadmapListChangelogResponseSchema = z.object({
 export type ProjectsRoadmapListChangelogResponse = z.infer<typeof projectsRoadmapListChangelogResponseSchema>;
 
 export const projectsRoadmapCreateChangelogResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
   title: z.string(),
   content: z.string(),
   version: z.string().nullable(),
   type: z.enum(["feature", "improvement", "fix"]),
   isPublished: z.boolean(),
-  linkedRoadmapItemId: z.number().int().nullable(),
+  linkedRoadmapItemId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   publishedAt: z.iso.datetime({ offset: true }).nullable(),
   createdBy: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
@@ -360,19 +372,19 @@ export const projectsRoadmapCreateChangelogBodySchema = z.strictObject({
   version: z.string().optional(),
   type: z.enum(["feature", "improvement", "fix"]).optional(),
   isPublished: z.boolean().optional(),
-  linkedRoadmapItemId: z.number().int().optional(),
+  linkedRoadmapItemId: z.number().int().gt(0).lte(9007199254740991).optional(),
 });
 export type ProjectsRoadmapCreateChangelogBody = z.input<typeof projectsRoadmapCreateChangelogBodySchema>;
 
 export const projectsRoadmapUpdateChangelogResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
   title: z.string(),
   content: z.string(),
   version: z.string().nullable(),
   type: z.enum(["feature", "improvement", "fix"]),
   isPublished: z.boolean(),
-  linkedRoadmapItemId: z.number().int().nullable(),
+  linkedRoadmapItemId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   publishedAt: z.iso.datetime({ offset: true }).nullable(),
   createdBy: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
@@ -386,37 +398,113 @@ export const projectsRoadmapUpdateChangelogBodySchema = z.strictObject({
   version: z.string().nullable().optional(),
   type: z.enum(["feature", "improvement", "fix"]).optional(),
   isPublished: z.boolean().optional(),
-  linkedRoadmapItemId: z.number().int().nullable().optional(),
+  linkedRoadmapItemId: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
 });
 export type ProjectsRoadmapUpdateChangelogBody = z.input<typeof projectsRoadmapUpdateChangelogBodySchema>;
 
-export const commentDraftsListMineResponseSchema = z.array(z.object({
-  id: z.number().int(),
+export const dashboardLayoutGetLayoutResponseSchema = z.object({
+  layoutVersion: z.number().int().gte(0).lte(9007199254740991),
+  config: z.object({
+    widgets: z.array(z.object({
+      type: z.enum(["my-issues", "projects", "approvals", "agent-runs", "risks", "releases", "blockers"]),
+      position: z.object({
+        col: z.number().int().gte(0).lte(9007199254740991),
+        row: z.number().int().gte(0).lte(9007199254740991),
+        w: z.number().int().gte(1).lte(12),
+        h: z.number().int().gte(1).lte(8),
+      }),
+      config: z.record(z.string(), z.unknown()).optional(),
+    })),
+  }),
+  updatedAt: z.string(),
+});
+export type DashboardLayoutGetLayoutResponse = z.infer<typeof dashboardLayoutGetLayoutResponseSchema>;
+
+export const dashboardLayoutSaveLayoutResponseSchema = z.object({
+  layoutVersion: z.number().int().gte(0).lte(9007199254740991),
+  config: z.object({
+    widgets: z.array(z.object({
+      type: z.enum(["my-issues", "projects", "approvals", "agent-runs", "risks", "releases", "blockers"]),
+      position: z.object({
+        col: z.number().int().gte(0).lte(9007199254740991),
+        row: z.number().int().gte(0).lte(9007199254740991),
+        w: z.number().int().gte(1).lte(12),
+        h: z.number().int().gte(1).lte(8),
+      }),
+      config: z.record(z.string(), z.unknown()).optional(),
+    })),
+  }),
+  updatedAt: z.string(),
+});
+export type DashboardLayoutSaveLayoutResponse = z.infer<typeof dashboardLayoutSaveLayoutResponseSchema>;
+
+export const dashboardLayoutSaveLayoutBodySchema = z.strictObject({
+  layoutVersion: z.number().int().gte(0).lte(9007199254740991),
+  config: z.strictObject({
+    widgets: z.array(z.strictObject({
+      type: z.enum(["my-issues", "projects", "approvals", "agent-runs", "risks", "releases", "blockers"]),
+      position: z.strictObject({
+        col: z.number().int().gte(0).lte(9007199254740991),
+        row: z.number().int().gte(0).lte(9007199254740991),
+        w: z.number().int().gte(1).lte(12),
+        h: z.number().int().gte(1).lte(8),
+      }),
+      config: z.record(z.string(), z.unknown()).optional(),
+    })),
+  }),
+});
+export type DashboardLayoutSaveLayoutBody = z.input<typeof dashboardLayoutSaveLayoutBodySchema>;
+
+export const commentDraftsReadByTicketResponseSchema = z.object({
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  membershipId: z.number().int().nullable(),
-  ticketId: z.number().int(),
+  membershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  ticketId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   body: z.string(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
-  ticket: z.object({
-    id: z.number().int(),
-    type: z.enum(["EPIC", "STORY", "TASK", "BUG"]),
-    title: z.string(),
-    projectId: z.number().int().nullable(),
-    status: z.string(),
-    ticketNumber: z.number().int(),
-    projectKey: z.string().nullable(),
-    priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).nullable(),
-    projectName: z.string().nullable(),
-    assignee: z.object({
-      id: z.string(),
-      name: z.string().nullable(),
-      image: z.string().nullable(),
-      lastName: z.string().nullable(),
-      firstName: z.string().nullable(),
-    }).nullable(),
+}).nullable();
+export type CommentDraftsReadByTicketResponse = z.infer<typeof commentDraftsReadByTicketResponseSchema>;
+
+export const commentDraftsDeleteByTicketResponseSchema = z.object({
+  deleted: z.boolean(),
+});
+export type CommentDraftsDeleteByTicketResponse = z.infer<typeof commentDraftsDeleteByTicketResponseSchema>;
+
+export const commentDraftsListMineResponseSchema = z.object({
+  data: z.array(z.object({
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    orgId: z.string(),
+    membershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    ticketId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    body: z.string(),
+    createdAt: z.iso.datetime({ offset: true }),
+    updatedAt: z.iso.datetime({ offset: true }),
+    ticket: z.object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      type: z.enum(["EPIC", "STORY", "TASK", "BUG"]),
+      title: z.string(),
+      projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+      status: z.string(),
+      ticketNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      projectKey: z.string().nullable(),
+      priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).nullable(),
+      projectName: z.string().nullable(),
+      assignee: z.object({
+        id: z.string(),
+        name: z.string().nullable(),
+        image: z.string().nullable(),
+        lastName: z.string().nullable(),
+        firstName: z.string().nullable(),
+      }).nullable(),
+    }),
+  })),
+  pagination: z.object({
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
   }),
-}));
+});
 export type CommentDraftsListMineResponse = z.infer<typeof commentDraftsListMineResponseSchema>;
 
 export const commentDraftsDeleteAllResponseSchema = z.object({
@@ -425,10 +513,10 @@ export const commentDraftsDeleteAllResponseSchema = z.object({
 export type CommentDraftsDeleteAllResponse = z.infer<typeof commentDraftsDeleteAllResponseSchema>;
 
 export const commentDraftsUpsertResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  membershipId: z.number().int().nullable(),
-  ticketId: z.number().int(),
+  membershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  ticketId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   body: z.string(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -440,31 +528,26 @@ export const commentDraftsUpsertBodySchema = z.strictObject({
 });
 export type CommentDraftsUpsertBody = z.input<typeof commentDraftsUpsertBodySchema>;
 
-export const commentDraftsDeleteByTicketResponseSchema = z.object({
-  deleted: z.boolean(),
-});
-export type CommentDraftsDeleteByTicketResponse = z.infer<typeof commentDraftsDeleteByTicketResponseSchema>;
-
 export const commentDraftsGenerateDraftResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  membershipId: z.number().int().nullable(),
-  ticketId: z.number().int(),
+  membershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  ticketId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   body: z.string(),
   evidence: z.string().nullable(),
   proposedChange: z.string().nullable(),
   impact: z.string().nullable(),
-  confidence: z.number().int().nullable(),
+  confidence: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   affectedRecordIds: z.string().nullable(),
-  retryCount: z.number().int().nullable(),
+  retryCount: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   lastError: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
   aiUsage: z.object({
     model: z.string(),
-    promptTokens: z.number().int(),
-    completionTokens: z.number().int(),
-    totalTokens: z.number().int(),
+    promptTokens: z.number().int().gte(0).lte(9007199254740991),
+    completionTokens: z.number().int().gte(0).lte(9007199254740991),
+    totalTokens: z.number().int().gte(0).lte(9007199254740991),
     credits: z.number(),
     costUsd: z.number(),
   }),
@@ -478,21 +561,21 @@ export type CommentDraftsDeleteOneResponse = z.infer<typeof commentDraftsDeleteO
 
 export const projectsRoadmapListFeedbackResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
     title: z.string(),
     description: z.string().nullable(),
     status: z.enum(["open", "planned", "in_progress", "completed", "declined"]),
     category: z.string().nullable(),
-    votes: z.number().int(),
+    votes: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     submittedByName: z.string().nullable(),
     submittedByEmail: z.string().nullable(),
-    crmContactId: z.number().int().nullable(),
-    crmOrganizationId: z.number().int().nullable(),
+    crmContactId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    crmOrganizationId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     accountValueSnapshot: z.string().nullable(),
     accountTierSnapshot: z.enum(["free", "pro", "enterprise"]).nullable(),
-    linkedRoadmapItemId: z.number().int().nullable(),
-    duplicateOfId: z.number().int().nullable(),
+    linkedRoadmapItemId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    duplicateOfId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     mergedAt: z.iso.datetime({ offset: true }).nullable(),
     createdBy: z.string().nullable(),
     createdAt: z.iso.datetime({ offset: true }),
@@ -500,7 +583,7 @@ export const projectsRoadmapListFeedbackResponseSchema = z.object({
     deletedAt: z.iso.datetime({ offset: true }).nullable(),
   })),
   pagination: z.object({
-    limit: z.number().int(),
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
   }),
@@ -508,21 +591,21 @@ export const projectsRoadmapListFeedbackResponseSchema = z.object({
 export type ProjectsRoadmapListFeedbackResponse = z.infer<typeof projectsRoadmapListFeedbackResponseSchema>;
 
 export const projectsRoadmapUpdateFeedbackResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
   title: z.string(),
   description: z.string().nullable(),
   status: z.enum(["open", "planned", "in_progress", "completed", "declined"]),
   category: z.string().nullable(),
-  votes: z.number().int(),
+  votes: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   submittedByName: z.string().nullable(),
   submittedByEmail: z.string().nullable(),
-  crmContactId: z.number().int().nullable(),
-  crmOrganizationId: z.number().int().nullable(),
+  crmContactId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  crmOrganizationId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   accountValueSnapshot: z.string().nullable(),
   accountTierSnapshot: z.enum(["free", "pro", "enterprise"]).nullable(),
-  linkedRoadmapItemId: z.number().int().nullable(),
-  duplicateOfId: z.number().int().nullable(),
+  linkedRoadmapItemId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  duplicateOfId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   mergedAt: z.iso.datetime({ offset: true }).nullable(),
   createdBy: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
@@ -536,27 +619,27 @@ export const projectsRoadmapUpdateFeedbackBodySchema = z.strictObject({
   description: z.string().nullable().optional(),
   status: z.enum(["open", "planned", "in_progress", "completed", "declined"]).optional(),
   category: z.string().nullable().optional(),
-  crmOrganizationId: z.number().int().nullable().optional(),
-  linkedRoadmapItemId: z.number().int().nullable().optional(),
+  crmOrganizationId: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
+  linkedRoadmapItemId: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
 });
 export type ProjectsRoadmapUpdateFeedbackBody = z.input<typeof projectsRoadmapUpdateFeedbackBodySchema>;
 
 export const projectsRoadmapMergeFeedbackResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
   title: z.string(),
   description: z.string().nullable(),
   status: z.enum(["open", "planned", "in_progress", "completed", "declined"]),
   category: z.string().nullable(),
-  votes: z.number().int(),
+  votes: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   submittedByName: z.string().nullable(),
   submittedByEmail: z.string().nullable(),
-  crmContactId: z.number().int().nullable(),
-  crmOrganizationId: z.number().int().nullable(),
+  crmContactId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  crmOrganizationId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   accountValueSnapshot: z.string().nullable(),
   accountTierSnapshot: z.enum(["free", "pro", "enterprise"]).nullable(),
-  linkedRoadmapItemId: z.number().int().nullable(),
-  duplicateOfId: z.number().int().nullable(),
+  linkedRoadmapItemId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  duplicateOfId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   mergedAt: z.iso.datetime({ offset: true }).nullable(),
   createdBy: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
@@ -566,12 +649,12 @@ export const projectsRoadmapMergeFeedbackResponseSchema = z.object({
 export type ProjectsRoadmapMergeFeedbackResponse = z.infer<typeof projectsRoadmapMergeFeedbackResponseSchema>;
 
 export const projectsRoadmapMergeFeedbackBodySchema = z.strictObject({
-  targetPostId: z.number().int(),
+  targetPostId: z.number().int().gt(0).lte(9007199254740991),
 });
 export type ProjectsRoadmapMergeFeedbackBody = z.input<typeof projectsRoadmapMergeFeedbackBodySchema>;
 
 export const projectsListLabelsResponseSchema = z.array(z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
   name: z.string(),
   color: z.string(),
@@ -580,7 +663,7 @@ export const projectsListLabelsResponseSchema = z.array(z.object({
 export type ProjectsListLabelsResponse = z.infer<typeof projectsListLabelsResponseSchema>;
 
 export const projectsCreateLabelResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
   name: z.string(),
   color: z.string(),
@@ -595,7 +678,7 @@ export const projectsCreateLabelBodySchema = z.strictObject({
 export type ProjectsCreateLabelBody = z.input<typeof projectsCreateLabelBodySchema>;
 
 export const projectsUpdateLabelResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
   name: z.string(),
   color: z.string(),
@@ -609,9 +692,24 @@ export const projectsUpdateLabelBodySchema = z.strictObject({
 });
 export type ProjectsUpdateLabelBody = z.input<typeof projectsUpdateLabelBodySchema>;
 
+export const landingPreferenceGetPreferenceResponseSchema = z.object({
+  destination: z.string().nullable(),
+});
+export type LandingPreferenceGetPreferenceResponse = z.infer<typeof landingPreferenceGetPreferenceResponseSchema>;
+
+export const landingPreferenceSetPreferenceResponseSchema = z.object({
+  destination: z.string().nullable(),
+});
+export type LandingPreferenceSetPreferenceResponse = z.infer<typeof landingPreferenceSetPreferenceResponseSchema>;
+
+export const landingPreferenceSetPreferenceBodySchema = z.strictObject({
+  destination: z.string(),
+});
+export type LandingPreferenceSetPreferenceBody = z.input<typeof landingPreferenceSetPreferenceBodySchema>;
+
 export const managedProductsListManagedProductsResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
     name: z.string(),
     key: z.string(),
@@ -625,7 +723,7 @@ export const managedProductsListManagedProductsResponseSchema = z.object({
     currentPhase: z.string().nullable(),
     targetLaunchDate: z.iso.datetime({ offset: true }).nullable(),
     successMetrics: z.unknown(),
-    ownerMembershipId: z.number().int().nullable(),
+    ownerMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     owner: z.object({
       id: z.string(),
       firstName: z.string().nullable(),
@@ -633,13 +731,13 @@ export const managedProductsListManagedProductsResponseSchema = z.object({
       email: z.string(),
       image: z.string().nullable(),
     }).nullable(),
-    version: z.number().int(),
+    version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     deletedAt: z.iso.datetime({ offset: true }).nullable(),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
   })),
   pagination: z.object({
-    limit: z.number().int(),
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
   }),
@@ -647,7 +745,7 @@ export const managedProductsListManagedProductsResponseSchema = z.object({
 export type ManagedProductsListManagedProductsResponse = z.infer<typeof managedProductsListManagedProductsResponseSchema>;
 
 export const managedProductsCreateManagedProductResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
   name: z.string(),
   key: z.string(),
@@ -661,7 +759,7 @@ export const managedProductsCreateManagedProductResponseSchema = z.object({
   currentPhase: z.string().nullable(),
   targetLaunchDate: z.iso.datetime({ offset: true }).nullable(),
   successMetrics: z.unknown(),
-  ownerMembershipId: z.number().int().nullable(),
+  ownerMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   owner: z.object({
     id: z.string(),
     firstName: z.string().nullable(),
@@ -669,7 +767,7 @@ export const managedProductsCreateManagedProductResponseSchema = z.object({
     email: z.string(),
     image: z.string().nullable(),
   }).nullable(),
-  version: z.number().int(),
+  version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -685,11 +783,11 @@ export const managedProductsCreateManagedProductBodySchema = z.strictObject({
 export type ManagedProductsCreateManagedProductBody = z.input<typeof managedProductsCreateManagedProductBodySchema>;
 
 export const managedProductsBulkUpdateManagedProductsResponseSchema = z.object({
-  requested: z.number().int(),
-  succeeded: z.number().int(),
-  skipped: z.number().int(),
+  requested: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  succeeded: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  skipped: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   results: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     outcome: z.enum(["updated", "skipped"]),
     reason: z.string().nullable(),
   })),
@@ -697,14 +795,14 @@ export const managedProductsBulkUpdateManagedProductsResponseSchema = z.object({
 export type ManagedProductsBulkUpdateManagedProductsResponse = z.infer<typeof managedProductsBulkUpdateManagedProductsResponseSchema>;
 
 export const managedProductsBulkUpdateManagedProductsBodySchema = z.strictObject({
-  ids: z.array(z.number().int()),
+  ids: z.array(z.number().int().gt(0).lte(9007199254740991)),
   action: z.literal("update_status"),
   status: z.enum(["active", "archived"]).optional(),
 });
 export type ManagedProductsBulkUpdateManagedProductsBody = z.input<typeof managedProductsBulkUpdateManagedProductsBodySchema>;
 
 export const managedProductsGetManagedProductResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
   name: z.string(),
   key: z.string(),
@@ -718,7 +816,7 @@ export const managedProductsGetManagedProductResponseSchema = z.object({
   currentPhase: z.string().nullable(),
   targetLaunchDate: z.iso.datetime({ offset: true }).nullable(),
   successMetrics: z.unknown(),
-  ownerMembershipId: z.number().int().nullable(),
+  ownerMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   owner: z.object({
     id: z.string(),
     firstName: z.string().nullable(),
@@ -726,7 +824,7 @@ export const managedProductsGetManagedProductResponseSchema = z.object({
     email: z.string(),
     image: z.string().nullable(),
   }).nullable(),
-  version: z.number().int(),
+  version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -734,7 +832,7 @@ export const managedProductsGetManagedProductResponseSchema = z.object({
 export type ManagedProductsGetManagedProductResponse = z.infer<typeof managedProductsGetManagedProductResponseSchema>;
 
 export const managedProductsUpdateManagedProductResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
   name: z.string(),
   key: z.string(),
@@ -748,7 +846,7 @@ export const managedProductsUpdateManagedProductResponseSchema = z.object({
   currentPhase: z.string().nullable(),
   targetLaunchDate: z.iso.datetime({ offset: true }).nullable(),
   successMetrics: z.unknown(),
-  ownerMembershipId: z.number().int().nullable(),
+  ownerMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   owner: z.object({
     id: z.string(),
     firstName: z.string().nullable(),
@@ -756,7 +854,7 @@ export const managedProductsUpdateManagedProductResponseSchema = z.object({
     email: z.string(),
     image: z.string().nullable(),
   }).nullable(),
-  version: z.number().int(),
+  version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -764,7 +862,7 @@ export const managedProductsUpdateManagedProductResponseSchema = z.object({
 export type ManagedProductsUpdateManagedProductResponse = z.infer<typeof managedProductsUpdateManagedProductResponseSchema>;
 
 export const managedProductsUpdateManagedProductBodySchema = z.strictObject({
-  version: z.number().int(),
+  version: z.number().int().gte(1).lte(9007199254740991),
   name: z.string().optional(),
   description: z.string().nullable().optional(),
   ownerId: z.string().nullable().optional(),
@@ -773,40 +871,55 @@ export const managedProductsUpdateManagedProductBodySchema = z.strictObject({
 export type ManagedProductsUpdateManagedProductBody = z.input<typeof managedProductsUpdateManagedProductBodySchema>;
 
 export const managedProductsGetProductInsightsResponseSchema = z.object({
-  linkedProjectCount: z.number().int(),
+  linkedProjectCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   projectsByStatus: z.object({
-    active: z.number().int(),
-    completed: z.number().int(),
-    archived: z.number().int(),
+    active: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    completed: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    archived: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   }),
   submissionsByStatus: z.object({
-    open: z.number().int(),
-    in_progress: z.number().int(),
-    resolved: z.number().int(),
-    archived: z.number().int(),
+    open: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    in_progress: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    resolved: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    archived: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   }),
-  roadmapItemCount: z.number().int(),
+  roadmapItemCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   roadmapItemsByStatus: z.object({
-    planned: z.number().int(),
-    in_progress: z.number().int(),
-    completed: z.number().int(),
-    cancelled: z.number().int(),
+    planned: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    in_progress: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    completed: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    cancelled: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   }),
   feedbackByStatus: z.object({
-    open: z.number().int(),
-    planned: z.number().int(),
-    in_progress: z.number().int(),
-    completed: z.number().int(),
-    declined: z.number().int(),
+    open: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    planned: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    in_progress: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    completed: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    declined: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   }),
-  linkedFeedbackVoteCount: z.number().int(),
+  linkedFeedbackVoteCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  ageDays: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  confidenceScore: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  overrideReason: z.string().nullable(),
+  overriddenBy: z.object({
+    id: z.string(),
+    firstName: z.string().nullable(),
+    lastName: z.string().nullable(),
+  }).nullable(),
+  overriddenAt: z.string().nullable(),
 });
 export type ManagedProductsGetProductInsightsResponse = z.infer<typeof managedProductsGetProductInsightsResponseSchema>;
+
+export const managedProductsSetScoreOverrideBodySchema = z.strictObject({
+  confidenceScore: z.number().int().gte(0).lte(100),
+  overrideReason: z.string(),
+});
+export type ManagedProductsSetScoreOverrideBody = z.input<typeof managedProductsSetScoreOverrideBodySchema>;
 
 export const buildMembersListResponseSchema = z.object({
   data: z.array(z.object({
     id: z.string(),
-    role: z.string(),
+    role: z.enum(["member", "admin"]),
     addedAt: z.iso.datetime({ offset: true }),
     name: z.string().nullable(),
     firstName: z.string().nullable(),
@@ -816,7 +929,7 @@ export const buildMembersListResponseSchema = z.object({
     teams: z.array(z.string()),
   })),
   pagination: z.object({
-    limit: z.number().int(),
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
   }),
@@ -824,9 +937,9 @@ export const buildMembersListResponseSchema = z.object({
 export type BuildMembersListResponse = z.infer<typeof buildMembersListResponseSchema>;
 
 export const buildMembersAddResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  membershipId: z.number().int(),
+  membershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   role: z.string(),
   addedAt: z.iso.datetime({ offset: true }),
 });
@@ -838,6 +951,13 @@ export const buildMembersAddBodySchema = z.strictObject({
 });
 export type BuildMembersAddBody = z.input<typeof buildMembersAddBodySchema>;
 
+export const buildStandingGetMemberStandingResponseSchema = z.object({
+  orgStanding: z.string(),
+  buildStanding: z.boolean(),
+  projectCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+});
+export type BuildStandingGetMemberStandingResponse = z.infer<typeof buildStandingGetMemberStandingResponseSchema>;
+
 export const projectResourcesListOrgCustomStatesResponseSchema = z.array(z.object({
   name: z.string(),
   color: z.string().nullable(),
@@ -846,7 +966,7 @@ export const projectResourcesListOrgCustomStatesResponseSchema = z.array(z.objec
 export type ProjectResourcesListOrgCustomStatesResponse = z.infer<typeof projectResourcesListOrgCustomStatesResponseSchema>;
 
 export const clientPortalListPortalProjectsResponseSchema = z.array(z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   name: z.string(),
   key: z.string(),
   status: z.enum(["ACTIVE", "COMPLETED", "ARCHIVED"]),
@@ -856,30 +976,30 @@ export const clientPortalListPortalProjectsResponseSchema = z.array(z.object({
 export type ClientPortalListPortalProjectsResponse = z.infer<typeof clientPortalListPortalProjectsResponseSchema>;
 
 export const clientPortalListPortalChangeRequestsResponseSchema = z.array(z.object({
-  id: z.number().int(),
-  crNumber: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  crNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   title: z.string(),
   description: z.string().nullable(),
   impact: z.string().nullable(),
   status: z.enum(["submitted", "under_review", "estimated", "awaiting_approval", "approved", "rejected", "in_progress", "completed"]),
-  estimateMinutes: z.number().int().nullable(),
-  budgetImpactCents: z.number().int().nullable(),
-  timelineImpactDays: z.number().int().nullable(),
+  estimateMinutes: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  budgetImpactCents: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  timelineImpactDays: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   decisionComment: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
 }));
 export type ClientPortalListPortalChangeRequestsResponse = z.infer<typeof clientPortalListPortalChangeRequestsResponseSchema>;
 
 export const clientPortalCreatePortalChangeRequestResponseSchema = z.object({
-  id: z.number().int(),
-  crNumber: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  crNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   title: z.string(),
   description: z.string().nullable(),
   impact: z.string().nullable(),
   status: z.enum(["submitted", "under_review", "estimated", "awaiting_approval", "approved", "rejected", "in_progress", "completed"]),
-  estimateMinutes: z.number().int().nullable(),
-  budgetImpactCents: z.number().int().nullable(),
-  timelineImpactDays: z.number().int().nullable(),
+  estimateMinutes: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  budgetImpactCents: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  timelineImpactDays: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   decisionComment: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
 });
@@ -889,15 +1009,15 @@ export const clientPortalCreatePortalChangeRequestBodySchema = z.strictObject({
   title: z.string(),
   description: z.string().optional(),
   impact: z.string().optional(),
-  estimateMinutes: z.number().int().optional(),
-  budgetImpactCents: z.number().int().optional(),
-  timelineImpactDays: z.number().int().optional(),
+  estimateMinutes: z.number().int().gte(0).lte(9007199254740991).optional(),
+  budgetImpactCents: z.number().int().gte(-9007199254740991).lte(9007199254740991).optional(),
+  timelineImpactDays: z.number().int().gte(-9007199254740991).lte(9007199254740991).optional(),
 });
 export type ClientPortalCreatePortalChangeRequestBody = z.input<typeof clientPortalCreatePortalChangeRequestBodySchema>;
 
 export const clientPortalGetProjectOverviewResponseSchema = z.object({
   project: z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     name: z.string(),
     key: z.string(),
     status: z.enum(["ACTIVE", "COMPLETED", "ARCHIVED"]),
@@ -905,25 +1025,25 @@ export const clientPortalGetProjectOverviewResponseSchema = z.object({
     targetEndDate: z.iso.datetime({ offset: true }).nullable(),
   }),
   milestones: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     name: z.string(),
     dueDate: z.string().nullable(),
     status: z.string(),
   })),
   tasks: z.array(z.object({
-    id: z.number().int(),
-    ticketNumber: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    ticketNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     title: z.string(),
     status: z.string(),
     dueDate: z.string().nullable(),
   })),
   attachments: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     filename: z.string(),
     url: z.string(),
   })),
   comments: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     body: z.string(),
     authorName: z.string(),
     createdAt: z.iso.datetime({ offset: true }),
@@ -933,7 +1053,7 @@ export type ClientPortalGetProjectOverviewResponse = z.infer<typeof clientPortal
 
 export const portfoliosListPortfoliosResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
     name: z.string(),
     description: z.string().nullable(),
@@ -944,10 +1064,10 @@ export const portfoliosListPortfoliosResponseSchema = z.object({
     createdBy: z.string().nullable(),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
-    projectCount: z.number().int(),
+    projectCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   })),
   pagination: z.object({
-    limit: z.number().int(),
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
   }),
@@ -955,7 +1075,7 @@ export const portfoliosListPortfoliosResponseSchema = z.object({
 export type PortfoliosListPortfoliosResponse = z.infer<typeof portfoliosListPortfoliosResponseSchema>;
 
 export const portfoliosCreatePortfolioResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
   name: z.string(),
   description: z.string().nullable(),
@@ -981,7 +1101,7 @@ export const portfoliosCreatePortfolioBodySchema = z.strictObject({
 export type PortfoliosCreatePortfolioBody = z.input<typeof portfoliosCreatePortfolioBodySchema>;
 
 export const portfoliosGetPortfolioResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
   name: z.string(),
   description: z.string().nullable(),
@@ -995,27 +1115,27 @@ export const portfoliosGetPortfolioResponseSchema = z.object({
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
   projects: z.object({
     data: z.array(z.object({
-      id: z.number().int(),
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       name: z.string(),
       key: z.string(),
       status: z.enum(["ACTIVE", "COMPLETED", "ARCHIVED"]),
-      openCount: z.number().int(),
-      doneCount: z.number().int(),
+      openCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      doneCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     })),
     pagination: z.object({
-      limit: z.number().int(),
+      limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       hasMore: z.boolean(),
       nextCursor: z.string().nullable(),
     }),
   }),
   programs: z.object({
     data: z.array(z.object({
-      id: z.number().int(),
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       name: z.string(),
       status: z.enum(["active", "on_hold", "completed", "archived"]),
     })),
     pagination: z.object({
-      limit: z.number().int(),
+      limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       hasMore: z.boolean(),
       nextCursor: z.string().nullable(),
     }),
@@ -1024,7 +1144,7 @@ export const portfoliosGetPortfolioResponseSchema = z.object({
 export type PortfoliosGetPortfolioResponse = z.infer<typeof portfoliosGetPortfolioResponseSchema>;
 
 export const portfoliosUpdatePortfolioResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
   name: z.string(),
   description: z.string().nullable(),
@@ -1055,15 +1175,15 @@ export const portfoliosLinkProjectResponseSchema = z.object({
 export type PortfoliosLinkProjectResponse = z.infer<typeof portfoliosLinkProjectResponseSchema>;
 
 export const portfoliosLinkProjectBodySchema = z.strictObject({
-  projectId: z.number().int(),
+  projectId: z.number().int().gt(0).lte(9007199254740991),
 });
 export type PortfoliosLinkProjectBody = z.input<typeof portfoliosLinkProjectBodySchema>;
 
 export const programsListProgramsResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
-    portfolioId: z.number().int().nullable(),
+    portfolioId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     name: z.string(),
     description: z.string().nullable(),
     ownerId: z.string().nullable(),
@@ -1072,10 +1192,10 @@ export const programsListProgramsResponseSchema = z.object({
     createdBy: z.string().nullable(),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
-    projectCount: z.number().int(),
+    projectCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   })),
   pagination: z.object({
-    limit: z.number().int(),
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
   }),
@@ -1083,9 +1203,9 @@ export const programsListProgramsResponseSchema = z.object({
 export type ProgramsListProgramsResponse = z.infer<typeof programsListProgramsResponseSchema>;
 
 export const programsCreateProgramResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  portfolioId: z.number().int().nullable(),
+  portfolioId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   name: z.string(),
   description: z.string().nullable(),
   ownerId: z.string().nullable(),
@@ -1101,17 +1221,47 @@ export type ProgramsCreateProgramResponse = z.infer<typeof programsCreateProgram
 export const programsCreateProgramBodySchema = z.strictObject({
   name: z.string(),
   description: z.string().optional(),
-  portfolioId: z.number().int().optional(),
+  portfolioId: z.number().int().gt(0).lte(9007199254740991).optional(),
   ownerId: z.string().optional(),
   status: z.enum(["active", "on_hold", "completed", "archived"]).optional(),
   health: z.enum(["on_track", "at_risk", "off_track"]).optional(),
 });
 export type ProgramsCreateProgramBody = z.input<typeof programsCreateProgramBodySchema>;
 
-export const programsUpdateProgramResponseSchema = z.object({
-  id: z.number().int(),
+export const programsGetProgramResponseSchema = z.object({
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  portfolioId: z.number().int().nullable(),
+  portfolioId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  name: z.string(),
+  description: z.string().nullable(),
+  ownerId: z.string().nullable(),
+  status: z.enum(["active", "on_hold", "completed", "archived"]),
+  health: z.enum(["on_track", "at_risk", "off_track"]).nullable(),
+  createdBy: z.string().nullable(),
+  createdAt: z.iso.datetime({ offset: true }),
+  updatedAt: z.iso.datetime({ offset: true }),
+  deletedAt: z.iso.datetime({ offset: true }).nullable(),
+  projects: z.object({
+    data: z.array(z.object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      name: z.string(),
+      key: z.string(),
+      status: z.enum(["ACTIVE", "COMPLETED", "ARCHIVED"]),
+      addedAt: z.iso.datetime({ offset: true }),
+    })),
+    pagination: z.object({
+      limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      hasMore: z.boolean(),
+      nextCursor: z.string().nullable(),
+    }),
+  }),
+});
+export type ProgramsGetProgramResponse = z.infer<typeof programsGetProgramResponseSchema>;
+
+export const programsUpdateProgramResponseSchema = z.object({
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  orgId: z.string(),
+  portfolioId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   name: z.string(),
   description: z.string().nullable(),
   ownerId: z.string().nullable(),
@@ -1127,7 +1277,7 @@ export type ProgramsUpdateProgramResponse = z.infer<typeof programsUpdateProgram
 export const programsUpdateProgramBodySchema = z.strictObject({
   name: z.string().optional(),
   description: z.string().nullable().optional(),
-  portfolioId: z.number().int().nullable().optional(),
+  portfolioId: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
   ownerId: z.string().nullable().optional(),
   status: z.enum(["active", "on_hold", "completed", "archived"]).optional(),
   health: z.enum(["on_track", "at_risk", "off_track"]).nullable().optional(),
@@ -1136,16 +1286,18 @@ export type ProgramsUpdateProgramBody = z.input<typeof programsUpdateProgramBody
 
 export const projectsReleasesListOrgReleasesResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
-    projectId: z.number().int(),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     name: z.string(),
     version: z.string(),
-    rowVersion: z.number().int(),
+    rowVersion: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     description: z.string().nullable(),
     status: z.enum(["draft", "released", "archived"]),
     releaseDate: z.string().nullable(),
     publishedAt: z.iso.datetime({ offset: true }).nullable(),
+    readiness: z.enum(["not_started", "in_progress", "ready", "blocked"]).nullable(),
+    riskLevel: z.enum(["low", "medium", "high", "critical"]).nullable(),
     createdBy: z.string().nullable(),
     createdByUser: z.object({
       name: z.string().nullable(),
@@ -1155,10 +1307,10 @@ export const projectsReleasesListOrgReleasesResponseSchema = z.object({
     }).nullable(),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
-    ticketCount: z.number().int(),
+    ticketCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   })),
   pagination: z.object({
-    limit: z.number().int(),
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
   }),
@@ -1167,10 +1319,10 @@ export type ProjectsReleasesListOrgReleasesResponse = z.infer<typeof projectsRel
 
 export const risksListOrgRisksResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
-    projectId: z.number().int(),
-    riskNumber: z.number().int(),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    riskNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     title: z.string(),
     description: z.string().nullable(),
     probability: z.enum(["low", "medium", "high"]),
@@ -1178,20 +1330,20 @@ export const risksListOrgRisksResponseSchema = z.object({
     status: z.enum(["open", "mitigating", "monitoring", "accepted", "closed"]),
     ownerId: z.string().nullable(),
     mitigation: z.string().nullable(),
-    linkedTicketId: z.number().int().nullable(),
+    linkedTicketId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     createdBy: z.string().nullable(),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
     deletedAt: z.iso.datetime({ offset: true }).nullable(),
   })),
   hasMore: z.boolean(),
-  nextCursor: z.number().int().nullable(),
+  nextCursor: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
 });
 export type RisksListOrgRisksResponse = z.infer<typeof risksListOrgRisksResponseSchema>;
 
 export const projectsRoadmapListRoadmapResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
     title: z.string(),
     description: z.string().nullable(),
@@ -1199,16 +1351,16 @@ export const projectsRoadmapListRoadmapResponseSchema = z.object({
     status: z.enum(["planned", "in_progress", "completed", "cancelled"]),
     category: z.string().nullable(),
     isPublic: z.boolean(),
-    projectId: z.number().int().nullable(),
-    epicTicketId: z.number().int().nullable(),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    epicTicketId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     targetQuarter: z.string().nullable(),
-    sortOrder: z.number().int(),
-    votes: z.number().int(),
-    reach: z.number().int().nullable(),
-    impact: z.number().int().nullable(),
-    confidence: z.number().int().nullable(),
-    effort: z.number().int().nullable(),
-    ownerMembershipId: z.number().int().nullable(),
+    sortOrder: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    votes: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    reach: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    impact: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    confidence: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    effort: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    ownerMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     owner: z.object({
       name: z.string().nullable(),
       firstName: z.string().nullable(),
@@ -1216,7 +1368,7 @@ export const projectsRoadmapListRoadmapResponseSchema = z.object({
       email: z.string(),
       image: z.string().nullable(),
     }).nullable(),
-    version: z.number().int(),
+    version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     createdBy: z.string().nullable(),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
@@ -1234,23 +1386,23 @@ export const projectsRoadmapListRoadmapResponseSchema = z.object({
       weight: z.number().nullable(),
       weightedScore: z.number().nullable(),
       unweightedReason: z.enum(["no_linked_feedback", "no_linked_account", "account_tier_unset", "score_unavailable"]).nullable(),
-      linkedFeedbackCount: z.number().int(),
-      linkedAccountCount: z.number().int(),
+      linkedFeedbackCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      linkedAccountCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       linkedRevenue: z.number().nullable(),
-      revenueKnownAccountCount: z.number().int(),
+      revenueKnownAccountCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     }),
   })),
   pagination: z.object({
-    limit: z.number().int(),
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
   }),
-  total: z.number().int().optional(),
+  total: z.number().int().gte(-9007199254740991).lte(9007199254740991).optional(),
 });
 export type ProjectsRoadmapListRoadmapResponse = z.infer<typeof projectsRoadmapListRoadmapResponseSchema>;
 
 export const projectsRoadmapCreateRoadmapResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
   title: z.string(),
   description: z.string().nullable(),
@@ -1258,16 +1410,16 @@ export const projectsRoadmapCreateRoadmapResponseSchema = z.object({
   status: z.enum(["planned", "in_progress", "completed", "cancelled"]),
   category: z.string().nullable(),
   isPublic: z.boolean(),
-  projectId: z.number().int().nullable(),
-  epicTicketId: z.number().int().nullable(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  epicTicketId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   targetQuarter: z.string().nullable(),
-  sortOrder: z.number().int(),
-  votes: z.number().int(),
-  reach: z.number().int().nullable(),
-  impact: z.number().int().nullable(),
-  confidence: z.number().int().nullable(),
-  effort: z.number().int().nullable(),
-  ownerMembershipId: z.number().int().nullable(),
+  sortOrder: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  votes: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  reach: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  impact: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  confidence: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  effort: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  ownerMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   owner: z.object({
     name: z.string().nullable(),
     firstName: z.string().nullable(),
@@ -1275,7 +1427,7 @@ export const projectsRoadmapCreateRoadmapResponseSchema = z.object({
     email: z.string(),
     image: z.string().nullable(),
   }).nullable(),
-  version: z.number().int(),
+  version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   createdBy: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -1293,10 +1445,10 @@ export const projectsRoadmapCreateRoadmapResponseSchema = z.object({
     weight: z.number().nullable(),
     weightedScore: z.number().nullable(),
     unweightedReason: z.enum(["no_linked_feedback", "no_linked_account", "account_tier_unset", "score_unavailable"]).nullable(),
-    linkedFeedbackCount: z.number().int(),
-    linkedAccountCount: z.number().int(),
+    linkedFeedbackCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    linkedAccountCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     linkedRevenue: z.number().nullable(),
-    revenueKnownAccountCount: z.number().int(),
+    revenueKnownAccountCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   }),
 });
 export type ProjectsRoadmapCreateRoadmapResponse = z.infer<typeof projectsRoadmapCreateRoadmapResponseSchema>;
@@ -1308,15 +1460,15 @@ export const projectsRoadmapCreateRoadmapBodySchema = z.strictObject({
   status: z.enum(["planned", "in_progress", "completed", "cancelled"]).optional(),
   category: z.string().optional(),
   isPublic: z.boolean().optional(),
-  projectId: z.number().int().optional(),
-  epicTicketId: z.number().int().optional(),
+  projectId: z.number().int().gt(0).lte(9007199254740991).optional(),
+  epicTicketId: z.number().int().gt(0).lte(9007199254740991).optional(),
   targetQuarter: z.string().optional(),
-  sortOrder: z.number().int().optional(),
-  reach: z.number().int().optional(),
-  impact: z.number().int().optional(),
-  confidence: z.number().int().optional(),
-  effort: z.number().int().optional(),
-  ownerMembershipId: z.number().int().nullable().optional(),
+  sortOrder: z.number().int().gte(-9007199254740991).lte(9007199254740991).optional(),
+  reach: z.number().int().gte(0).lte(1000000).optional(),
+  impact: z.number().int().gte(1).lte(5).optional(),
+  confidence: z.number().int().gte(0).lte(100).optional(),
+  effort: z.number().int().gte(1).lte(10000).optional(),
+  ownerMembershipId: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
 });
 export type ProjectsRoadmapCreateRoadmapBody = z.input<typeof projectsRoadmapCreateRoadmapBodySchema>;
 
@@ -1339,7 +1491,7 @@ export const projectsRoadmapRotateRoadmapPublicationTokenResponseSchema = z.obje
 export type ProjectsRoadmapRotateRoadmapPublicationTokenResponse = z.infer<typeof projectsRoadmapRotateRoadmapPublicationTokenResponseSchema>;
 
 export const projectsRoadmapUpdateRoadmapResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
   title: z.string(),
   description: z.string().nullable(),
@@ -1347,16 +1499,16 @@ export const projectsRoadmapUpdateRoadmapResponseSchema = z.object({
   status: z.enum(["planned", "in_progress", "completed", "cancelled"]),
   category: z.string().nullable(),
   isPublic: z.boolean(),
-  projectId: z.number().int().nullable(),
-  epicTicketId: z.number().int().nullable(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  epicTicketId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   targetQuarter: z.string().nullable(),
-  sortOrder: z.number().int(),
-  votes: z.number().int(),
-  reach: z.number().int().nullable(),
-  impact: z.number().int().nullable(),
-  confidence: z.number().int().nullable(),
-  effort: z.number().int().nullable(),
-  ownerMembershipId: z.number().int().nullable(),
+  sortOrder: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  votes: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  reach: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  impact: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  confidence: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  effort: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  ownerMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   owner: z.object({
     name: z.string().nullable(),
     firstName: z.string().nullable(),
@@ -1364,7 +1516,7 @@ export const projectsRoadmapUpdateRoadmapResponseSchema = z.object({
     email: z.string(),
     image: z.string().nullable(),
   }).nullable(),
-  version: z.number().int(),
+  version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   createdBy: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -1382,36 +1534,36 @@ export const projectsRoadmapUpdateRoadmapResponseSchema = z.object({
     weight: z.number().nullable(),
     weightedScore: z.number().nullable(),
     unweightedReason: z.enum(["no_linked_feedback", "no_linked_account", "account_tier_unset", "score_unavailable"]).nullable(),
-    linkedFeedbackCount: z.number().int(),
-    linkedAccountCount: z.number().int(),
+    linkedFeedbackCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    linkedAccountCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     linkedRevenue: z.number().nullable(),
-    revenueKnownAccountCount: z.number().int(),
+    revenueKnownAccountCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   }),
 });
 export type ProjectsRoadmapUpdateRoadmapResponse = z.infer<typeof projectsRoadmapUpdateRoadmapResponseSchema>;
 
 export const projectsRoadmapUpdateRoadmapBodySchema = z.strictObject({
-  version: z.number().int(),
+  version: z.number().int().gt(0).lte(9007199254740991),
   title: z.string().optional(),
   description: z.string().nullable().optional(),
   outcome: z.string().nullable().optional(),
   status: z.enum(["planned", "in_progress", "completed", "cancelled"]).optional(),
   category: z.string().nullable().optional(),
   isPublic: z.boolean().optional(),
-  projectId: z.number().int().nullable().optional(),
-  epicTicketId: z.number().int().nullable().optional(),
+  projectId: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
+  epicTicketId: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
   targetQuarter: z.string().nullable().optional(),
-  sortOrder: z.number().int().optional(),
-  reach: z.number().int().nullable().optional(),
-  impact: z.number().int().nullable().optional(),
-  confidence: z.number().int().nullable().optional(),
-  effort: z.number().int().nullable().optional(),
-  ownerMembershipId: z.number().int().nullable().optional(),
+  sortOrder: z.number().int().gte(-9007199254740991).lte(9007199254740991).optional(),
+  reach: z.number().int().gte(0).lte(1000000).nullable().optional(),
+  impact: z.number().int().gte(1).lte(5).nullable().optional(),
+  confidence: z.number().int().gte(0).lte(100).nullable().optional(),
+  effort: z.number().int().gte(1).lte(10000).nullable().optional(),
+  ownerMembershipId: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
 });
 export type ProjectsRoadmapUpdateRoadmapBody = z.input<typeof projectsRoadmapUpdateRoadmapBodySchema>;
 
 export const projectsRoadmapGetRoadmapSignalsResponseSchema = z.object({
-  itemId: z.number().int(),
+  itemId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   prioritization: z.object({
     method: z.literal("rice"),
     score: z.number().nullable(),
@@ -1425,24 +1577,24 @@ export const projectsRoadmapGetRoadmapSignalsResponseSchema = z.object({
     weight: z.number().nullable(),
     weightedScore: z.number().nullable(),
     unweightedReason: z.enum(["no_linked_feedback", "no_linked_account", "account_tier_unset", "score_unavailable"]).nullable(),
-    linkedFeedbackCount: z.number().int(),
-    linkedAccountCount: z.number().int(),
+    linkedFeedbackCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    linkedAccountCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     linkedRevenue: z.number().nullable(),
-    revenueKnownAccountCount: z.number().int(),
+    revenueKnownAccountCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   }),
   demand: z.object({
-    votes: z.number().int(),
-    linkedFeedbackCount: z.number().int(),
-    openLinkedFeedbackCount: z.number().int(),
+    votes: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    linkedFeedbackCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    openLinkedFeedbackCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   }),
   delivery: z.object({
-    projectId: z.number().int().nullable(),
-    epicTicketId: z.number().int().nullable(),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    epicTicketId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     source: z.enum(["epic_ticket", "project", "none"]),
-    linkedTicketCount: z.number().int(),
-    countedTicketCount: z.number().int(),
-    completedTicketCount: z.number().int(),
-    progressPercent: z.number().int().nullable(),
+    linkedTicketCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    countedTicketCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    completedTicketCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    progressPercent: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   }),
 });
 export type ProjectsRoadmapGetRoadmapSignalsResponse = z.infer<typeof projectsRoadmapGetRoadmapSignalsResponseSchema>;
@@ -1484,12 +1636,12 @@ export const scopeDirectorySearchResponseSchema = z.object({
 export type ScopeDirectorySearchResponse = z.infer<typeof scopeDirectorySearchResponseSchema>;
 
 export const projectsTicketsSearchTicketsResponseSchema = z.array(z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   title: z.string(),
   status: z.string(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
-  ticketNumber: z.number().int(),
-  projectId: z.number().int(),
+  ticketNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   projectKey: z.string(),
   projectName: z.string(),
 }));
@@ -1497,20 +1649,20 @@ export type ProjectsTicketsSearchTicketsResponse = z.infer<typeof projectsTicket
 
 export const teamsListTeamsResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
     name: z.string(),
     key: z.string(),
     icon: z.string().nullable(),
     color: z.string().nullable(),
     isPrivate: z.boolean(),
-    capacity: z.number().int().nullable(),
+    capacity: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
-    memberCount: z.number().int(),
+    memberCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   })),
   pagination: z.object({
-    limit: z.number().int(),
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
   }),
@@ -1518,14 +1670,14 @@ export const teamsListTeamsResponseSchema = z.object({
 export type TeamsListTeamsResponse = z.infer<typeof teamsListTeamsResponseSchema>;
 
 export const teamsCreateTeamResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
   name: z.string(),
   key: z.string(),
   icon: z.string().nullable(),
   color: z.string().nullable(),
   isPrivate: z.boolean(),
-  capacity: z.number().int().nullable(),
+  capacity: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
@@ -1538,19 +1690,19 @@ export const teamsCreateTeamBodySchema = z.strictObject({
   icon: z.string().optional(),
   color: z.string().optional(),
   isPrivate: z.boolean().optional(),
-  capacity: z.number().int().optional(),
+  capacity: z.number().int().gt(0).lte(9007199254740991).optional(),
 });
 export type TeamsCreateTeamBody = z.input<typeof teamsCreateTeamBodySchema>;
 
 export const teamsGetTeamResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
   name: z.string(),
   key: z.string(),
   icon: z.string().nullable(),
   color: z.string().nullable(),
   isPrivate: z.boolean(),
-  capacity: z.number().int().nullable(),
+  capacity: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
@@ -1566,14 +1718,14 @@ export const teamsGetTeamResponseSchema = z.object({
 export type TeamsGetTeamResponse = z.infer<typeof teamsGetTeamResponseSchema>;
 
 export const teamsUpdateTeamResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
   name: z.string(),
   key: z.string(),
   icon: z.string().nullable(),
   color: z.string().nullable(),
   isPrivate: z.boolean(),
-  capacity: z.number().int().nullable(),
+  capacity: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
@@ -1585,13 +1737,13 @@ export const teamsUpdateTeamBodySchema = z.strictObject({
   icon: z.string().nullable().optional(),
   color: z.string().nullable().optional(),
   isPrivate: z.boolean().optional(),
-  capacity: z.number().int().nullable().optional(),
+  capacity: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
 });
 export type TeamsUpdateTeamBody = z.input<typeof teamsUpdateTeamBodySchema>;
 
 export const teamsListTeamMembersResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     userId: z.string(),
     role: z.string(),
     joinedAt: z.iso.datetime({ offset: true }),
@@ -1601,7 +1753,7 @@ export const teamsListTeamMembersResponseSchema = z.object({
     image: z.string().nullable(),
   })),
   pagination: z.object({
-    limit: z.number().int(),
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
   }),
@@ -1609,10 +1761,10 @@ export const teamsListTeamMembersResponseSchema = z.object({
 export type TeamsListTeamMembersResponse = z.infer<typeof teamsListTeamMembersResponseSchema>;
 
 export const teamsAddMemberResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  teamId: z.number().int(),
-  membershipId: z.number().int(),
+  teamId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  membershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   role: z.string(),
   joinedAt: z.iso.datetime({ offset: true }),
 });
@@ -1625,10 +1777,10 @@ export const teamsAddMemberBodySchema = z.strictObject({
 export type TeamsAddMemberBody = z.input<typeof teamsAddMemberBodySchema>;
 
 export const teamsUpdateMemberRoleResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  teamId: z.number().int(),
-  membershipId: z.number().int(),
+  teamId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  membershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   role: z.string(),
   joinedAt: z.iso.datetime({ offset: true }),
 });
@@ -1640,7 +1792,7 @@ export const teamsUpdateMemberRoleBodySchema = z.strictObject({
 export type TeamsUpdateMemberRoleBody = z.input<typeof teamsUpdateMemberRoleBodySchema>;
 
 export const teamsListTeamProjectsResponseSchema = z.array(z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   name: z.string(),
   key: z.string(),
   status: z.enum(["ACTIVE", "COMPLETED", "ARCHIVED"]),
@@ -1649,43 +1801,67 @@ export const teamsListTeamProjectsResponseSchema = z.array(z.object({
 export type TeamsListTeamProjectsResponse = z.infer<typeof teamsListTeamProjectsResponseSchema>;
 
 export const teamsAddProjectResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
-  teamId: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  teamId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   addedAt: z.iso.datetime({ offset: true }),
 });
 export type TeamsAddProjectResponse = z.infer<typeof teamsAddProjectResponseSchema>;
 
 export const teamsAddProjectBodySchema = z.strictObject({
-  projectId: z.number().int(),
+  projectId: z.number().int().gt(0).lte(9007199254740991),
 });
 export type TeamsAddProjectBody = z.input<typeof teamsAddProjectBodySchema>;
 
 export const projectsTemplatesListTemplatesResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
     name: z.string(),
     description: z.string().nullable(),
     category: z.string(),
     createdBy: z.string().nullable(),
+    customFieldsConfig: z.array(z.object({
+      name: z.string(),
+      fieldType: z.string(),
+      options: z.array(z.object({
+        label: z.string(),
+        value: z.string(),
+      })).nullable().optional(),
+      isRequired: z.boolean(),
+      displayOrder: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    })).nullable().optional(),
+    savedViewsConfig: z.array(z.object({
+      name: z.string(),
+      filters: z.record(z.string(), z.unknown()),
+      groupBy: z.string().nullable().optional(),
+      orderBy: z.string().nullable().optional(),
+      layoutType: z.string(),
+      isPinned: z.boolean(),
+    })).nullable().optional(),
+    statusesConfig: z.array(z.object({
+      name: z.string(),
+      order: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      color: z.string(),
+      type: z.string(),
+    })).nullable().optional(),
     deletedAt: z.iso.datetime({ offset: true }).nullable(),
     createdAt: z.iso.datetime({ offset: true }),
     tickets: z.array(z.object({
-      id: z.number().int(),
-      templateId: z.number().int(),
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      templateId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       title: z.string(),
       description: z.string().nullable(),
       type: z.string(),
       priority: z.string(),
       estimatedHours: z.string().nullable(),
-      order: z.number().int(),
+      order: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       phase: z.string().nullable(),
     })),
   })),
   pagination: z.object({
-    limit: z.number().int(),
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
   }),
@@ -1693,23 +1869,47 @@ export const projectsTemplatesListTemplatesResponseSchema = z.object({
 export type ProjectsTemplatesListTemplatesResponse = z.infer<typeof projectsTemplatesListTemplatesResponseSchema>;
 
 export const projectsTemplatesCreateTemplateResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
   name: z.string(),
   description: z.string().nullable(),
   category: z.string(),
   createdBy: z.string().nullable(),
+  customFieldsConfig: z.array(z.object({
+    name: z.string(),
+    fieldType: z.string(),
+    options: z.array(z.object({
+      label: z.string(),
+      value: z.string(),
+    })).nullable().optional(),
+    isRequired: z.boolean(),
+    displayOrder: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  })).nullable().optional(),
+  savedViewsConfig: z.array(z.object({
+    name: z.string(),
+    filters: z.record(z.string(), z.unknown()),
+    groupBy: z.string().nullable().optional(),
+    orderBy: z.string().nullable().optional(),
+    layoutType: z.string(),
+    isPinned: z.boolean(),
+  })).nullable().optional(),
+  statusesConfig: z.array(z.object({
+    name: z.string(),
+    order: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    color: z.string(),
+    type: z.string(),
+  })).nullable().optional(),
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   tickets: z.array(z.object({
-    id: z.number().int(),
-    templateId: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    templateId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     title: z.string(),
     description: z.string().nullable(),
     type: z.string(),
     priority: z.string(),
     estimatedHours: z.string().nullable(),
-    order: z.number().int(),
+    order: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     phase: z.string().nullable(),
   })),
 });
@@ -1724,17 +1924,48 @@ export const projectsTemplatesCreateTemplateBodySchema = z.strictObject({
     description: z.string().optional(),
     type: z.enum(["EPIC", "STORY", "TASK", "BUG"]).optional(),
     priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
-    estimatedHours: z.number().optional(),
-    order: z.number().int().optional(),
+    estimatedHours: z.number().gt(0).optional(),
+    order: z.number().int().gte(-9007199254740991).lte(9007199254740991).optional(),
     phase: z.string().optional(),
+  })).optional(),
+  customFields: z.array(z.object({
+    name: z.string(),
+    fieldType: z.enum(["text", "number", "date", "user", "select", "multi_select", "checkbox", "url", "currency"]),
+    options: z.array(z.object({
+      label: z.string(),
+      value: z.string(),
+    })).optional(),
+    isRequired: z.boolean().optional(),
+    displayOrder: z.number().int().gte(-9007199254740991).lte(9007199254740991).optional(),
+  })).optional(),
+  savedViews: z.array(z.object({
+    name: z.string(),
+    filters: z.record(z.string(), z.unknown()).optional(),
+    groupBy: z.string().optional(),
+    orderBy: z.string().optional(),
+    layoutType: z.enum(["board", "list", "table", "calendar", "gantt"]).optional(),
+    isPinned: z.boolean().optional(),
+  })).optional(),
+  statuses: z.array(z.object({
+    name: z.string(),
+    order: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    color: z.string(),
+    type: z.enum(["unstarted", "started", "completed", "cancelled"]),
   })).optional(),
 });
 export type ProjectsTemplatesCreateTemplateBody = z.input<typeof projectsTemplatesCreateTemplateBodySchema>;
 
+export const projectsTemplatesSeedSystemTemplatesResponseSchema = z.object({
+  seeded: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+});
+export type ProjectsTemplatesSeedSystemTemplatesResponse = z.infer<typeof projectsTemplatesSeedSystemTemplatesResponseSchema>;
+
 export const projectsTemplatesApplyTemplateResponseSchema = z.object({
-  projectId: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   key: z.string(),
-  ticketsCreated: z.number().int(),
+  ticketsCreated: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  customFieldsCreated: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  savedViewsCreated: z.number().int().gte(-9007199254740991).lte(9007199254740991),
 });
 export type ProjectsTemplatesApplyTemplateResponse = z.infer<typeof projectsTemplatesApplyTemplateResponseSchema>;
 
@@ -1748,8 +1979,8 @@ export const projectsTemplatesApplyTemplateBodySchema = z.strictObject({
 export type ProjectsTemplatesApplyTemplateBody = z.input<typeof projectsTemplatesApplyTemplateBodySchema>;
 
 export const workspaceViewsListWorkspaceViewsResponseSchema = z.array(z.object({
-  id: z.number().int(),
-  projectId: z.number().int().nullable(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   orgId: z.string(),
   createdBy: z.string(),
   name: z.string(),
@@ -1767,8 +1998,8 @@ export const workspaceViewsListWorkspaceViewsResponseSchema = z.array(z.object({
 export type WorkspaceViewsListWorkspaceViewsResponse = z.infer<typeof workspaceViewsListWorkspaceViewsResponseSchema>;
 
 export const workspaceViewsCreateWorkspaceViewResponseSchema = z.object({
-  id: z.number().int(),
-  projectId: z.number().int().nullable(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   orgId: z.string(),
   createdBy: z.string(),
   name: z.string(),
@@ -1798,8 +2029,8 @@ export const workspaceViewsCreateWorkspaceViewBodySchema = z.strictObject({
 export type WorkspaceViewsCreateWorkspaceViewBody = z.input<typeof workspaceViewsCreateWorkspaceViewBodySchema>;
 
 export const workspaceViewsUpdateWorkspaceViewResponseSchema = z.object({
-  id: z.number().int(),
-  projectId: z.number().int().nullable(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   orgId: z.string(),
   createdBy: z.string(),
   name: z.string(),
@@ -1829,21 +2060,21 @@ export const workspaceViewsUpdateWorkspaceViewBodySchema = z.strictObject({
 export type WorkspaceViewsUpdateWorkspaceViewBody = z.input<typeof workspaceViewsUpdateWorkspaceViewBodySchema>;
 
 export const projectsByIdGetProjectResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
   name: z.string(),
   description: z.string().nullable(),
   key: z.string(),
-  clientMembershipId: z.number().int().nullable(),
-  managerMembershipId: z.number().int().nullable(),
+  clientMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  managerMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   startDate: z.iso.datetime({ offset: true }).nullable(),
   endDate: z.iso.datetime({ offset: true }).nullable(),
   status: z.enum(["ACTIVE", "COMPLETED", "ARCHIVED"]),
   priority: z.string().nullable(),
-  dealId: z.number().int().nullable(),
-  managedProductId: z.number().int().nullable(),
+  dealId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  managedProductId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   budget: z.string().nullable(),
-  budgetMinor: z.number().int().nullable(),
+  budgetMinor: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   budgetCurrency: z.string().nullable(),
   settings: z.object({
     modules: z.object({
@@ -1864,25 +2095,25 @@ export const projectsByIdGetProjectResponseSchema = z.object({
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
   statuses: z.array(z.object({
-    id: z.number().int(),
-    projectId: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
     name: z.string(),
-    order: z.number().int(),
+    order: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     color: z.string().nullable(),
     type: z.enum(["backlog", "unstarted", "started", "completed", "cancelled"]).nullable(),
-    wipLimit: z.number().int().nullable(),
+    wipLimit: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
   })),
   members: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
-    projectId: z.number().int(),
-    membershipId: z.number().int(),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    membershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     role: z.string(),
     user: z.object({
-      id: z.number().int(),
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       user: z.object({
         id: z.string(),
         name: z.string().nullable(),
@@ -1894,28 +2125,28 @@ export const projectsByIdGetProjectResponseSchema = z.object({
     }),
   })),
   crmClient: z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     name: z.string(),
   }).nullable(),
 });
 export type ProjectsByIdGetProjectResponse = z.infer<typeof projectsByIdGetProjectResponseSchema>;
 
 export const projectsByIdUpdateProjectResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
   name: z.string(),
   description: z.string().nullable(),
   key: z.string(),
-  clientMembershipId: z.number().int().nullable(),
-  managerMembershipId: z.number().int().nullable(),
+  clientMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  managerMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   startDate: z.iso.datetime({ offset: true }).nullable(),
   endDate: z.iso.datetime({ offset: true }).nullable(),
   status: z.enum(["ACTIVE", "COMPLETED", "ARCHIVED"]),
   priority: z.string().nullable(),
-  dealId: z.number().int().nullable(),
-  managedProductId: z.number().int().nullable(),
+  dealId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  managedProductId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   budget: z.string().nullable(),
-  budgetMinor: z.number().int().nullable(),
+  budgetMinor: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   budgetCurrency: z.string().nullable(),
   settings: z.object({
     modules: z.object({
@@ -1936,25 +2167,25 @@ export const projectsByIdUpdateProjectResponseSchema = z.object({
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
   statuses: z.array(z.object({
-    id: z.number().int(),
-    projectId: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
     name: z.string(),
-    order: z.number().int(),
+    order: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     color: z.string().nullable(),
     type: z.enum(["backlog", "unstarted", "started", "completed", "cancelled"]).nullable(),
-    wipLimit: z.number().int().nullable(),
+    wipLimit: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
   })),
   members: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
-    projectId: z.number().int(),
-    membershipId: z.number().int(),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    membershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     role: z.string(),
     user: z.object({
-      id: z.number().int(),
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       user: z.object({
         id: z.string(),
         name: z.string().nullable(),
@@ -1966,7 +2197,7 @@ export const projectsByIdUpdateProjectResponseSchema = z.object({
     }),
   })),
   crmClient: z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     name: z.string(),
   }).nullable(),
 });
@@ -1992,15 +2223,15 @@ export type ProjectsByIdUpdateProjectBody = z.input<typeof projectsByIdUpdatePro
 
 export const projectsActivityFeedGetProjectActivityResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     action: z.enum(["created", "status_changed", "priority_changed", "assignee_changed", "title_changed", "sprint_changed", "due_date_changed", "comment_added", "comment_updated", "comment_deleted", "label_changed", "estimate_changed", "cycle_changed", "type_changed"]),
     label: z.string(),
     fromValue: z.string().nullable(),
     toValue: z.string().nullable(),
     createdAt: z.iso.datetime({ offset: true }),
-    ticketId: z.number().int(),
+    ticketId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     ticketTitle: z.string(),
-    ticketNumber: z.number().int(),
+    ticketNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     projectKey: z.string(),
     user: z.object({
       id: z.string().nullable(),
@@ -2009,7 +2240,7 @@ export const projectsActivityFeedGetProjectActivityResponseSchema = z.object({
     }).nullable(),
   })),
   pagination: z.object({
-    limit: z.number().int(),
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
   }),
@@ -2036,42 +2267,62 @@ export const projectsReportsGetAnalyticsResponseSchema = z.object({
     count: z.number(),
   })),
   cycleVelocity: z.array(z.object({
-    cycleId: z.number().int(),
+    cycleId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     cycleName: z.string(),
     completedPoints: z.number(),
   })),
   estimateVsActual: z.array(z.object({
-    ticketId: z.number().int(),
+    ticketId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     title: z.string(),
     estimated: z.string().nullable(),
     actual: z.number(),
   })),
-  healthScore: z.number().int(),
+  healthScore: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   healthStatus: z.enum(["NOT_STARTED", "EXCELLENT", "GOOD", "AT_RISK", "CRITICAL"]),
   healthBreakdown: z.object({
-    completionPct: z.number().int(),
-    onTimePct: z.number().int(),
-    velocityScore: z.number().int(),
-    overdueTickets: z.number().int(),
-    totalTickets: z.number().int(),
-    openTickets: z.number().int(),
+    completionPct: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    onTimePct: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    velocityScore: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    overdueTickets: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    totalTickets: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    openTickets: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   }),
 });
 export type ProjectsReportsGetAnalyticsResponse = z.infer<typeof projectsReportsGetAnalyticsResponseSchema>;
 
+export const projectsReportsGetTimeBudgetResponseSchema = z.object({
+  loggedHours: z.number().gte(0),
+  billableHours: z.number().gte(0),
+  nonBillableHours: z.number().gte(0),
+  costEntries: z.array(z.object({
+    currency: z.string().nullable(),
+    costMinor: z.number().int().gte(0).lte(9007199254740991),
+    rateSources: z.array(z.string()),
+  })),
+  includedStatus: z.array(z.string()),
+  glExpenseDebitMinor: z.number().gte(0),
+  glFunctionalCurrency: z.string().nullable(),
+  estimateBudgetMinor: z.number().gte(0).nullable(),
+  budgetCurrency: z.string().nullable(),
+  varianceMinor: z.number().nullable(),
+  reconciliationStatus: z.enum(["unstarted", "gl_pending", "matched", "unmatched", "currency_mismatch"]),
+});
+export type ProjectsReportsGetTimeBudgetResponse = z.infer<typeof projectsReportsGetTimeBudgetResponseSchema>;
+
 export const buildApprovalsListApprovalsResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    revision: z.number().int().gt(0).lte(9007199254740991),
     orgId: z.string(),
-    projectId: z.number().int().nullable(),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     entityType: z.enum(["task", "milestone", "budget", "release", "change_request", "document", "timesheet", "client_approval"]),
-    entityId: z.number().int(),
+    entityId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     title: z.string(),
     reason: z.string().nullable(),
     requestedById: z.string().nullable(),
-    approverMembershipId: z.number().int().nullable(),
+    approverMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     status: z.enum(["requested", "pending", "approved", "rejected", "changes_requested", "escalated", "cancelled"]),
-    level: z.number().int(),
+    level: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     dueAt: z.iso.datetime({ offset: true }).nullable(),
     decisionComment: z.string().nullable(),
     decidedAt: z.iso.datetime({ offset: true }).nullable(),
@@ -2081,7 +2332,7 @@ export const buildApprovalsListApprovalsResponseSchema = z.object({
     deletedAt: z.iso.datetime({ offset: true }).nullable(),
   })),
   pagination: z.object({
-    limit: z.number().int(),
+    limit: z.number().int().gt(0).lte(9007199254740991),
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
   }),
@@ -2089,17 +2340,18 @@ export const buildApprovalsListApprovalsResponseSchema = z.object({
 export type BuildApprovalsListApprovalsResponse = z.infer<typeof buildApprovalsListApprovalsResponseSchema>;
 
 export const buildApprovalsCreateApprovalResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  revision: z.number().int().gt(0).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int().nullable(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   entityType: z.enum(["task", "milestone", "budget", "release", "change_request", "document", "timesheet", "client_approval"]),
-  entityId: z.number().int(),
+  entityId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   title: z.string(),
   reason: z.string().nullable(),
   requestedById: z.string().nullable(),
-  approverMembershipId: z.number().int().nullable(),
+  approverMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   status: z.enum(["requested", "pending", "approved", "rejected", "changes_requested", "escalated", "cancelled"]),
-  level: z.number().int(),
+  level: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   dueAt: z.iso.datetime({ offset: true }).nullable(),
   decisionComment: z.string().nullable(),
   decidedAt: z.iso.datetime({ offset: true }).nullable(),
@@ -2110,29 +2362,87 @@ export const buildApprovalsCreateApprovalResponseSchema = z.object({
 });
 export type BuildApprovalsCreateApprovalResponse = z.infer<typeof buildApprovalsCreateApprovalResponseSchema>;
 
-export const buildApprovalsCreateApprovalBodySchema = z.strictObject({
-  entityType: z.enum(["task", "milestone", "budget", "release", "change_request", "document", "timesheet", "client_approval"]),
-  entityId: z.number().int(),
+export const buildApprovalsCreateApprovalBodySchema = z.union([z.strictObject({
+  entityId: z.number().int().gt(0).lte(2147483647),
   title: z.string(),
   approverId: z.string(),
   reason: z.string().optional(),
   dueAt: z.unknown().optional(),
-  level: z.number().int().optional(),
-});
+  level: z.number().int().gte(1).lte(2147483647).optional(),
+  entityType: z.literal("task"),
+  expectedArtifactVersion: z.number().int().gt(0).lte(2147483647),
+}), z.strictObject({
+  entityId: z.number().int().gt(0).lte(2147483647),
+  title: z.string(),
+  approverId: z.string(),
+  reason: z.string().optional(),
+  dueAt: z.unknown().optional(),
+  level: z.number().int().gte(1).lte(2147483647).optional(),
+  entityType: z.enum(["milestone", "budget", "release", "change_request", "document", "timesheet", "client_approval"]),
+})]);
 export type BuildApprovalsCreateApprovalBody = z.input<typeof buildApprovalsCreateApprovalBodySchema>;
 
-export const buildApprovalsUpdateApprovalResponseSchema = z.object({
-  id: z.number().int(),
+export const buildApprovalsGetApprovalResponseSchema = z.object({
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  revision: z.number().int().gt(0).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int().nullable(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   entityType: z.enum(["task", "milestone", "budget", "release", "change_request", "document", "timesheet", "client_approval"]),
-  entityId: z.number().int(),
+  entityId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   title: z.string(),
   reason: z.string().nullable(),
   requestedById: z.string().nullable(),
-  approverMembershipId: z.number().int().nullable(),
+  approverMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   status: z.enum(["requested", "pending", "approved", "rejected", "changes_requested", "escalated", "cancelled"]),
-  level: z.number().int(),
+  level: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  dueAt: z.iso.datetime({ offset: true }).nullable(),
+  decisionComment: z.string().nullable(),
+  decidedAt: z.iso.datetime({ offset: true }).nullable(),
+  createdBy: z.string().nullable(),
+  createdAt: z.iso.datetime({ offset: true }),
+  updatedAt: z.iso.datetime({ offset: true }),
+  deletedAt: z.iso.datetime({ offset: true }).nullable(),
+  artifact: z.union([z.object({
+    state: z.enum(["unbound", "restricted", "unavailable"]),
+  }), z.object({
+    state: z.enum(["current", "stale"]),
+    requestedArtifactVersion: z.number().int().gt(0).lte(2147483647),
+    currentArtifactVersion: z.number().int().gt(0).lte(2147483647),
+    capturedAt: z.iso.datetime({ offset: true }),
+    digest: z.string(),
+    snapshot: z.object({
+      schemaVersion: z.literal(1),
+      id: z.number().int().gt(0).lte(2147483647),
+      projectId: z.number().int().gt(0).lte(2147483647),
+      ticketNumber: z.number().int().gt(0).lte(9007199254740991),
+      version: z.number().int().gt(0).lte(2147483647),
+      title: z.string(),
+      description: z.string().nullable(),
+      type: z.enum(["EPIC", "STORY", "TASK", "BUG"]),
+      status: z.string(),
+      priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
+      points: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+      originalEstimate: z.string().nullable(),
+      startDate: z.iso.date().nullable(),
+      dueDate: z.iso.date().nullable(),
+    }),
+  })]),
+});
+export type BuildApprovalsGetApprovalResponse = z.infer<typeof buildApprovalsGetApprovalResponseSchema>;
+
+export const buildApprovalsUpdateApprovalResponseSchema = z.object({
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  revision: z.number().int().gt(0).lte(9007199254740991),
+  orgId: z.string(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  entityType: z.enum(["task", "milestone", "budget", "release", "change_request", "document", "timesheet", "client_approval"]),
+  entityId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  title: z.string(),
+  reason: z.string().nullable(),
+  requestedById: z.string().nullable(),
+  approverMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  status: z.enum(["requested", "pending", "approved", "rejected", "changes_requested", "escalated", "cancelled"]),
+  level: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   dueAt: z.iso.datetime({ offset: true }).nullable(),
   decisionComment: z.string().nullable(),
   decidedAt: z.iso.datetime({ offset: true }).nullable(),
@@ -2144,24 +2454,31 @@ export const buildApprovalsUpdateApprovalResponseSchema = z.object({
 export type BuildApprovalsUpdateApprovalResponse = z.infer<typeof buildApprovalsUpdateApprovalResponseSchema>;
 
 export const buildApprovalsUpdateApprovalBodySchema = z.strictObject({
+  expectedRevision: z.number().int().gt(0).lte(9007199254740991),
   approverId: z.string().optional(),
   dueAt: z.unknown().nullable().optional(),
-  status: z.enum(["requested", "pending", "approved", "rejected", "changes_requested", "escalated", "cancelled"]).optional(),
+  status: z.enum(["pending", "escalated", "cancelled"]).optional(),
 });
 export type BuildApprovalsUpdateApprovalBody = z.input<typeof buildApprovalsUpdateApprovalBodySchema>;
 
+export const buildApprovalsSoftDeleteApprovalBodySchema = z.strictObject({
+  expectedRevision: z.number().int().gt(0).lte(9007199254740991),
+});
+export type BuildApprovalsSoftDeleteApprovalBody = z.input<typeof buildApprovalsSoftDeleteApprovalBodySchema>;
+
 export const buildApprovalsDecideApprovalResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  revision: z.number().int().gt(0).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int().nullable(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   entityType: z.enum(["task", "milestone", "budget", "release", "change_request", "document", "timesheet", "client_approval"]),
-  entityId: z.number().int(),
+  entityId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   title: z.string(),
   reason: z.string().nullable(),
   requestedById: z.string().nullable(),
-  approverMembershipId: z.number().int().nullable(),
+  approverMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   status: z.enum(["requested", "pending", "approved", "rejected", "changes_requested", "escalated", "cancelled"]),
-  level: z.number().int(),
+  level: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   dueAt: z.iso.datetime({ offset: true }).nullable(),
   decisionComment: z.string().nullable(),
   decidedAt: z.iso.datetime({ offset: true }).nullable(),
@@ -2173,6 +2490,7 @@ export const buildApprovalsDecideApprovalResponseSchema = z.object({
 export type BuildApprovalsDecideApprovalResponse = z.infer<typeof buildApprovalsDecideApprovalResponseSchema>;
 
 export const buildApprovalsDecideApprovalBodySchema = z.strictObject({
+  expectedRevision: z.number().int().gt(0).lte(9007199254740991),
   decision: z.enum(["approved", "rejected", "changes_requested"]),
   decisionComment: z.string().optional(),
 });
@@ -2180,8 +2498,8 @@ export type BuildApprovalsDecideApprovalBody = z.input<typeof buildApprovalsDeci
 
 export const projectsAutomationsListResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
-    projectId: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     name: z.string(),
     triggerEvent: z.string(),
     isActive: z.boolean(),
@@ -2191,7 +2509,7 @@ export const projectsAutomationsListResponseSchema = z.object({
       value: z.string().optional(),
     })),
     actions: z.array(z.object({
-      type: z.enum(["set_status", "set_assignee", "set_priority", "add_label", "add_comment"]),
+      type: z.enum(["set_status", "set_assignee", "set_priority", "add_label", "add_comment", "request_approval"]),
       value: z.string(),
     })),
     createdBy: z.string().nullable(),
@@ -2207,7 +2525,7 @@ export const projectsAutomationsListResponseSchema = z.object({
     updatedAt: z.iso.datetime({ offset: true }),
   })),
   pagination: z.object({
-    limit: z.number().int(),
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
   }),
@@ -2215,9 +2533,9 @@ export const projectsAutomationsListResponseSchema = z.object({
 export type ProjectsAutomationsListResponse = z.infer<typeof projectsAutomationsListResponseSchema>;
 
 export const projectsAutomationsCreateResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   name: z.string(),
   isActive: z.boolean(),
   triggerEvent: z.string(),
@@ -2227,7 +2545,7 @@ export const projectsAutomationsCreateResponseSchema = z.object({
     value: z.string().optional(),
   })),
   actions: z.array(z.object({
-    type: z.enum(["set_status", "set_assignee", "set_priority", "add_label", "add_comment"]),
+    type: z.enum(["set_status", "set_assignee", "set_priority", "add_label", "add_comment", "request_approval"]),
     value: z.string(),
   })),
   createdBy: z.string().nullable(),
@@ -2244,18 +2562,93 @@ export const projectsAutomationsCreateBodySchema = z.strictObject({
     operator: z.enum(["equals", "not_equals", "contains", "is_empty", "is_not_empty"]),
     value: z.string().optional(),
   })).optional(),
-  actions: z.array(z.object({
-    type: z.enum(["set_status", "set_assignee", "set_priority", "add_label", "add_comment"]),
+  actions: z.array(z.union([z.object({
+    type: z.literal("set_status"),
     value: z.string(),
-  })),
+  }), z.object({
+    type: z.literal("set_assignee"),
+    value: z.string(),
+  }), z.object({
+    type: z.literal("set_priority"),
+    value: z.string(),
+  }), z.object({
+    type: z.literal("add_label"),
+    value: z.string(),
+  }), z.object({
+    type: z.literal("add_comment"),
+    value: z.string(),
+  }), z.object({
+    type: z.literal("request_approval"),
+    value: z.string().optional(),
+  })])),
   isActive: z.boolean().optional(),
 });
 export type ProjectsAutomationsCreateBody = z.input<typeof projectsAutomationsCreateBodySchema>;
 
+export const projectsAutomationsDryRunResponseSchema = z.object({
+  items: z.array(z.object({
+    ruleId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    matched: z.boolean(),
+    actions: z.array(z.object({
+      type: z.string(),
+      value: z.string(),
+    })),
+  })),
+});
+export type ProjectsAutomationsDryRunResponse = z.infer<typeof projectsAutomationsDryRunResponseSchema>;
+
+export const projectsAutomationsDryRunBodySchema = z.strictObject({
+  triggerEvent: z.enum(["ticket.created", "ticket.updated", "ticket.status_changed", "ticket.assigned"]),
+  ticket: z.strictObject({
+    ticketId: z.number().int().gt(0).lte(9007199254740991).optional(),
+    status: z.string().optional(),
+    priority: z.string().optional(),
+    assigneeId: z.string().nullable().optional(),
+    title: z.string().optional(),
+    type: z.string().optional(),
+  }),
+});
+export type ProjectsAutomationsDryRunBody = z.input<typeof projectsAutomationsDryRunBodySchema>;
+
+export const projectsAutomationsListRunsResponseSchema = z.object({
+  items: z.array(z.object({
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    orgId: z.string(),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    automationId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    ticketId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    triggerEvent: z.string(),
+    matched: z.boolean(),
+    outcome: z.enum(["matched_success", "matched_partial_failure", "matched_failed", "not_matched", "blocked_loop_guard", "blocked_rate_limit", "error"]),
+    errorMessage: z.string().nullable(),
+    createdAt: z.iso.datetime({ offset: true }),
+    actions: z.array(z.object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      actionIndex: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      actionType: z.string(),
+      outcome: z.enum(["success", "failure"]),
+      errorMessage: z.string().nullable(),
+      createdAt: z.iso.datetime({ offset: true }),
+    })),
+  })),
+  pagination: z.object({
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+export type ProjectsAutomationsListRunsResponse = z.infer<typeof projectsAutomationsListRunsResponseSchema>;
+
+export const projectsAutomationsReplayRunResponseSchema = z.object({
+  replayedCount: z.number().int().gte(0).lte(9007199254740991),
+  outcome: z.enum(["matched_success", "matched_partial_failure", "matched_failed", "not_matched", "blocked_loop_guard", "blocked_rate_limit", "error"]),
+});
+export type ProjectsAutomationsReplayRunResponse = z.infer<typeof projectsAutomationsReplayRunResponseSchema>;
+
 export const projectsAutomationsUpdateResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   name: z.string(),
   isActive: z.boolean(),
   triggerEvent: z.string(),
@@ -2265,7 +2658,7 @@ export const projectsAutomationsUpdateResponseSchema = z.object({
     value: z.string().optional(),
   })),
   actions: z.array(z.object({
-    type: z.enum(["set_status", "set_assignee", "set_priority", "add_label", "add_comment"]),
+    type: z.enum(["set_status", "set_assignee", "set_priority", "add_label", "add_comment", "request_approval"]),
     value: z.string(),
   })),
   createdBy: z.string().nullable(),
@@ -2282,20 +2675,35 @@ export const projectsAutomationsUpdateBodySchema = z.strictObject({
     operator: z.enum(["equals", "not_equals", "contains", "is_empty", "is_not_empty"]),
     value: z.string().optional(),
   })).optional(),
-  actions: z.array(z.object({
-    type: z.enum(["set_status", "set_assignee", "set_priority", "add_label", "add_comment"]),
+  actions: z.array(z.union([z.object({
+    type: z.literal("set_status"),
     value: z.string(),
-  })).optional(),
+  }), z.object({
+    type: z.literal("set_assignee"),
+    value: z.string(),
+  }), z.object({
+    type: z.literal("set_priority"),
+    value: z.string(),
+  }), z.object({
+    type: z.literal("add_label"),
+    value: z.string(),
+  }), z.object({
+    type: z.literal("add_comment"),
+    value: z.string(),
+  }), z.object({
+    type: z.literal("request_approval"),
+    value: z.string().optional(),
+  })])).optional(),
   isActive: z.boolean().optional(),
 });
 export type ProjectsAutomationsUpdateBody = z.input<typeof projectsAutomationsUpdateBodySchema>;
 
 export const projectsBudgetGetBudgetResponseSchema = z.object({
-  projectId: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   plannedBudget: z.number(),
   actualCost: z.number(),
   remaining: z.number(),
-  utilizationPct: z.number().int(),
+  utilizationPct: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   currency: z.string().nullable(),
   totalHours: z.number(),
   unratedHours: z.number(),
@@ -2311,28 +2719,28 @@ export const projectsBudgetGetBudgetResponseSchema = z.object({
 export type ProjectsBudgetGetBudgetResponse = z.infer<typeof projectsBudgetGetBudgetResponseSchema>;
 
 export const projectsBudgetUpdateBudgetResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   budget: z.number(),
   currency: z.string().nullable(),
 });
 export type ProjectsBudgetUpdateBudgetResponse = z.infer<typeof projectsBudgetUpdateBudgetResponseSchema>;
 
 export const projectsBudgetUpdateBudgetBodySchema = z.strictObject({
-  budget: z.number(),
+  budget: z.number().gte(0),
 });
 export type ProjectsBudgetUpdateBudgetBody = z.input<typeof projectsBudgetUpdateBudgetBodySchema>;
 
 export const bugsListBugsResponseSchema = z.array(z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
-  ticketNumber: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  ticketNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   title: z.string(),
   description: z.string().nullable(),
   type: z.literal("BUG"),
   status: z.string(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
-  assigneeMembershipId: z.number().int().nullable(),
+  assigneeMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   reporterId: z.string().nullable(),
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
@@ -2344,28 +2752,28 @@ export const bugsListBugsResponseSchema = z.array(z.object({
   actualResult: z.string().nullable(),
   environment: z.string().nullable(),
   browserDevice: z.string().nullable(),
-  affectedReleaseId: z.number().int().nullable(),
-  fixedReleaseId: z.number().int().nullable(),
+  affectedReleaseId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  fixedReleaseId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   qaOwnerUserId: z.string().nullable(),
-  qaOwnerMembershipId: z.number().int().nullable(),
-  linkedTestCaseId: z.number().int().nullable(),
-  reopenCount: z.number().int().nullable(),
+  qaOwnerMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  linkedTestCaseId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  reopenCount: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   createdByUserId: z.string().nullable(),
-  version: z.number().int(),
+  version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
 }));
 export type BugsListBugsResponse = z.infer<typeof bugsListBugsResponseSchema>;
 
 export const bugsGetBugResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
-  ticketNumber: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  ticketNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   title: z.string(),
   description: z.string().nullable(),
   type: z.literal("BUG"),
   status: z.string(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
-  assigneeMembershipId: z.number().int().nullable(),
+  assigneeMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   reporterId: z.string().nullable(),
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
@@ -2377,37 +2785,37 @@ export const bugsGetBugResponseSchema = z.object({
   actualResult: z.string().nullable(),
   environment: z.string().nullable(),
   browserDevice: z.string().nullable(),
-  affectedReleaseId: z.number().int().nullable(),
-  fixedReleaseId: z.number().int().nullable(),
+  affectedReleaseId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  fixedReleaseId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   qaOwnerUserId: z.string().nullable(),
-  qaOwnerMembershipId: z.number().int().nullable(),
-  linkedTestCaseId: z.number().int().nullable(),
-  reopenCount: z.number().int().nullable(),
+  qaOwnerMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  linkedTestCaseId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  reopenCount: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   createdByUserId: z.string().nullable(),
-  version: z.number().int(),
+  version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
 });
 export type BugsGetBugResponse = z.infer<typeof bugsGetBugResponseSchema>;
 
 export const changeRequestsListChangeRequestsResponseSchema = z.object({
   data: z.array(z.object({
-    affectedItemCount: z.number().int(),
-    id: z.number().int(),
+    affectedItemCount: z.number().int().gte(0).lte(9007199254740991),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
-    projectId: z.number().int(),
-    crNumber: z.number().int(),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    crNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     title: z.string(),
     description: z.string().nullable(),
     impact: z.string().nullable(),
-    estimateMinutes: z.number().int().nullable(),
-    budgetImpactCents: z.number().int().nullable(),
-    timelineImpactDays: z.number().int().nullable(),
+    estimateMinutes: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    budgetImpactCents: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    timelineImpactDays: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     status: z.enum(["submitted", "under_review", "estimated", "awaiting_approval", "approved", "rejected", "in_progress", "completed"]),
     requestedById: z.string().nullable(),
     approvalOwnerId: z.string().nullable(),
-    approvalOwnerMembershipId: z.number().int().nullable(),
+    approvalOwnerMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     decisionComment: z.string().nullable(),
     decidedAt: z.iso.datetime({ offset: true }).nullable(),
-    releaseId: z.number().int().nullable(),
+    releaseId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     clientVisible: z.boolean(),
     createdBy: z.string().nullable(),
     createdAt: z.union([z.iso.datetime({ offset: true }), z.string()]),
@@ -2415,7 +2823,7 @@ export const changeRequestsListChangeRequestsResponseSchema = z.object({
     deletedAt: z.iso.datetime({ offset: true }).nullable(),
   })),
   pagination: z.object({
-    limit: z.number().int(),
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
   }),
@@ -2423,23 +2831,23 @@ export const changeRequestsListChangeRequestsResponseSchema = z.object({
 export type ChangeRequestsListChangeRequestsResponse = z.infer<typeof changeRequestsListChangeRequestsResponseSchema>;
 
 export const changeRequestsCreateChangeRequestResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
-  crNumber: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  crNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   title: z.string(),
   description: z.string().nullable(),
   impact: z.string().nullable(),
-  estimateMinutes: z.number().int().nullable(),
-  budgetImpactCents: z.number().int().nullable(),
-  timelineImpactDays: z.number().int().nullable(),
+  estimateMinutes: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  budgetImpactCents: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  timelineImpactDays: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   status: z.enum(["submitted", "under_review", "estimated", "awaiting_approval", "approved", "rejected", "in_progress", "completed"]),
   requestedById: z.string().nullable(),
   approvalOwnerId: z.string().nullable(),
-  approvalOwnerMembershipId: z.number().int().nullable(),
+  approvalOwnerMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   decisionComment: z.string().nullable(),
   decidedAt: z.iso.datetime({ offset: true }).nullable(),
-  releaseId: z.number().int().nullable(),
+  releaseId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   clientVisible: z.boolean(),
   createdBy: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
@@ -2452,32 +2860,32 @@ export const changeRequestsCreateChangeRequestBodySchema = z.strictObject({
   title: z.string(),
   description: z.string().optional(),
   impact: z.string().optional(),
-  estimateMinutes: z.number().int().optional(),
-  budgetImpactCents: z.number().int().optional(),
-  timelineImpactDays: z.number().int().optional(),
-  releaseId: z.number().int().optional(),
+  estimateMinutes: z.number().int().gte(0).lte(9007199254740991).optional(),
+  budgetImpactCents: z.number().int().gte(-9007199254740991).lte(9007199254740991).optional(),
+  timelineImpactDays: z.number().int().gte(-9007199254740991).lte(9007199254740991).optional(),
+  releaseId: z.number().int().gt(0).lte(9007199254740991).optional(),
   clientVisible: z.boolean().optional(),
 });
 export type ChangeRequestsCreateChangeRequestBody = z.input<typeof changeRequestsCreateChangeRequestBodySchema>;
 
 export const changeRequestsUpdateChangeRequestResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
-  crNumber: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  crNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   title: z.string(),
   description: z.string().nullable(),
   impact: z.string().nullable(),
-  estimateMinutes: z.number().int().nullable(),
-  budgetImpactCents: z.number().int().nullable(),
-  timelineImpactDays: z.number().int().nullable(),
+  estimateMinutes: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  budgetImpactCents: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  timelineImpactDays: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   status: z.enum(["submitted", "under_review", "estimated", "awaiting_approval", "approved", "rejected", "in_progress", "completed"]),
   requestedById: z.string().nullable(),
   approvalOwnerId: z.string().nullable(),
-  approvalOwnerMembershipId: z.number().int().nullable(),
+  approvalOwnerMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   decisionComment: z.string().nullable(),
   decidedAt: z.iso.datetime({ offset: true }).nullable(),
-  releaseId: z.number().int().nullable(),
+  releaseId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   clientVisible: z.boolean(),
   createdBy: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
@@ -2490,36 +2898,36 @@ export const changeRequestsUpdateChangeRequestBodySchema = z.strictObject({
   title: z.string().optional(),
   description: z.string().optional(),
   impact: z.string().optional(),
-  estimateMinutes: z.number().int().optional(),
-  budgetImpactCents: z.number().int().optional(),
-  timelineImpactDays: z.number().int().optional(),
+  estimateMinutes: z.number().int().gte(0).lte(9007199254740991).optional(),
+  budgetImpactCents: z.number().int().gte(-9007199254740991).lte(9007199254740991).optional(),
+  timelineImpactDays: z.number().int().gte(-9007199254740991).lte(9007199254740991).optional(),
   status: z.enum(["submitted", "under_review", "estimated", "awaiting_approval", "approved", "rejected", "in_progress", "completed"]).optional(),
   approvalOwnerId: z.string().optional(),
   decisionComment: z.string().optional(),
-  releaseId: z.number().int().nullable().optional(),
+  releaseId: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
   clientVisible: z.boolean().optional(),
 });
 export type ChangeRequestsUpdateChangeRequestBody = z.input<typeof changeRequestsUpdateChangeRequestBodySchema>;
 
 export const changeRequestAffectedItemsListAffectedTicketsResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
-    changeRequestId: z.number().int(),
-    ticketId: z.number().int(),
+    changeRequestId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    ticketId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     createdAt: z.iso.datetime({ offset: true }),
     createdBy: z.string().nullable(),
     ticket: z.object({
-      id: z.number().int(),
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       title: z.string(),
-      ticketNumber: z.number().int(),
+      ticketNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       status: z.string(),
       priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
       type: z.enum(["EPIC", "STORY", "TASK", "BUG"]),
     }),
   })),
   pagination: z.object({
-    limit: z.number().int(),
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
   }),
@@ -2527,16 +2935,16 @@ export const changeRequestAffectedItemsListAffectedTicketsResponseSchema = z.obj
 export type ChangeRequestAffectedItemsListAffectedTicketsResponse = z.infer<typeof changeRequestAffectedItemsListAffectedTicketsResponseSchema>;
 
 export const changeRequestAffectedItemsLinkTicketResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  changeRequestId: z.number().int(),
-  ticketId: z.number().int(),
+  changeRequestId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  ticketId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   createdAt: z.iso.datetime({ offset: true }),
   createdBy: z.string().nullable(),
   ticket: z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     title: z.string(),
-    ticketNumber: z.number().int(),
+    ticketNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     status: z.string(),
     priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
     type: z.enum(["EPIC", "STORY", "TASK", "BUG"]),
@@ -2545,13 +2953,13 @@ export const changeRequestAffectedItemsLinkTicketResponseSchema = z.object({
 export type ChangeRequestAffectedItemsLinkTicketResponse = z.infer<typeof changeRequestAffectedItemsLinkTicketResponseSchema>;
 
 export const changeRequestAffectedItemsLinkTicketBodySchema = z.strictObject({
-  ticketId: z.number().int(),
+  ticketId: z.number().int().gt(0).lte(9007199254740991),
 });
 export type ChangeRequestAffectedItemsLinkTicketBody = z.input<typeof changeRequestAffectedItemsLinkTicketBodySchema>;
 
 export const clientPortalManagementGetPreviewResponseSchema = z.object({
   project: z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     name: z.string(),
     key: z.string(),
     status: z.enum(["ACTIVE", "COMPLETED", "ARCHIVED"]),
@@ -2559,25 +2967,25 @@ export const clientPortalManagementGetPreviewResponseSchema = z.object({
     targetEndDate: z.iso.datetime({ offset: true }).nullable(),
   }),
   milestones: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     name: z.string(),
     dueDate: z.string().nullable(),
     status: z.string(),
   })),
   tasks: z.array(z.object({
-    id: z.number().int(),
-    ticketNumber: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    ticketNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     title: z.string(),
     status: z.string(),
     dueDate: z.string().nullable(),
   })),
   attachments: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     filename: z.string(),
     url: z.string(),
   })),
   comments: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     body: z.string(),
     authorName: z.string(),
     createdAt: z.iso.datetime({ offset: true }),
@@ -2587,46 +2995,46 @@ export type ClientPortalManagementGetPreviewResponse = z.infer<typeof clientPort
 
 export const clientPortalManagementPublishPortalResponseSchema = z.object({
   portalPublishedAt: z.iso.datetime({ offset: true }).nullable(),
-  grantCount: z.number().int(),
+  grantCount: z.number().int().gte(0).lte(9007199254740991),
 });
 export type ClientPortalManagementPublishPortalResponse = z.infer<typeof clientPortalManagementPublishPortalResponseSchema>;
 
 export const clientPortalManagementGetSettingsResponseSchema = z.object({
   portalPublishedAt: z.iso.datetime({ offset: true }).nullable(),
-  grantCount: z.number().int(),
+  grantCount: z.number().int().gte(0).lte(9007199254740991),
 });
 export type ClientPortalManagementGetSettingsResponse = z.infer<typeof clientPortalManagementGetSettingsResponseSchema>;
 
 export const clientPortalManagementUnpublishPortalResponseSchema = z.object({
   portalPublishedAt: z.iso.datetime({ offset: true }).nullable(),
-  grantCount: z.number().int(),
+  grantCount: z.number().int().gte(0).lte(9007199254740991),
 });
 export type ClientPortalManagementUnpublishPortalResponse = z.infer<typeof clientPortalManagementUnpublishPortalResponseSchema>;
 
 export const clientVisibilityGetVisibilitySummaryResponseSchema = z.object({
   tickets: z.object({
     data: z.array(z.object({
-      id: z.number().int(),
-      ticketNumber: z.number().int(),
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      ticketNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       title: z.string(),
       type: z.enum(["EPIC", "STORY", "TASK", "BUG"]),
       clientVisible: z.boolean(),
-      version: z.number().int(),
+      version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     })),
     pagination: z.object({
-      limit: z.number().int(),
+      limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       hasMore: z.boolean(),
       nextCursor: z.string().nullable(),
     }),
   }),
   milestones: z.object({
     data: z.array(z.object({
-      id: z.number().int(),
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       name: z.string(),
       clientVisible: z.boolean(),
     })),
     pagination: z.object({
-      limit: z.number().int(),
+      limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       hasMore: z.boolean(),
       nextCursor: z.string().nullable(),
     }),
@@ -2635,51 +3043,51 @@ export const clientVisibilityGetVisibilitySummaryResponseSchema = z.object({
 export type ClientVisibilityGetVisibilitySummaryResponse = z.infer<typeof clientVisibilityGetVisibilitySummaryResponseSchema>;
 
 export const clientVisibilityToggleMilestoneVisibilityResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   clientVisible: z.boolean(),
 });
 export type ClientVisibilityToggleMilestoneVisibilityResponse = z.infer<typeof clientVisibilityToggleMilestoneVisibilityResponseSchema>;
 
 export const clientVisibilityToggleMilestoneVisibilityBodySchema = z.strictObject({
   clientVisible: z.boolean(),
-  version: z.number().int().optional(),
+  version: z.number().int().gt(0).lte(9007199254740991).optional(),
 });
 export type ClientVisibilityToggleMilestoneVisibilityBody = z.input<typeof clientVisibilityToggleMilestoneVisibilityBodySchema>;
 
 export const clientVisibilityToggleTicketVisibilityResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   clientVisible: z.boolean(),
 });
 export type ClientVisibilityToggleTicketVisibilityResponse = z.infer<typeof clientVisibilityToggleTicketVisibilityResponseSchema>;
 
 export const clientVisibilityToggleTicketVisibilityBodySchema = z.strictObject({
   clientVisible: z.boolean(),
-  version: z.number().int().optional(),
+  version: z.number().int().gt(0).lte(9007199254740991).optional(),
 });
 export type ClientVisibilityToggleTicketVisibilityBody = z.input<typeof clientVisibilityToggleTicketVisibilityBodySchema>;
 
 export const projectsCustomFieldsListFieldsResponseSchema = z.array(z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int().nullable(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   name: z.string(),
   type: z.string(),
   options: z.array(z.string()).nullable(),
   required: z.boolean().nullable(),
-  position: z.number().int().nullable(),
+  position: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
 }));
 export type ProjectsCustomFieldsListFieldsResponse = z.infer<typeof projectsCustomFieldsListFieldsResponseSchema>;
 
 export const projectsCustomFieldsCreateFieldResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int().nullable(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   name: z.string(),
   type: z.string(),
   options: z.array(z.string()).nullable(),
   required: z.boolean().nullable(),
-  position: z.number().int().nullable(),
+  position: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
 });
 export type ProjectsCustomFieldsCreateFieldResponse = z.infer<typeof projectsCustomFieldsCreateFieldResponseSchema>;
@@ -2689,19 +3097,19 @@ export const projectsCustomFieldsCreateFieldBodySchema = z.strictObject({
   type: z.enum(["text", "number", "date", "user", "select", "multi_select", "checkbox", "url", "currency"]).optional(),
   options: z.array(z.string()).nullable().optional(),
   required: z.boolean().optional(),
-  position: z.number().int().optional(),
+  position: z.number().int().gte(-9007199254740991).lte(9007199254740991).optional(),
 });
 export type ProjectsCustomFieldsCreateFieldBody = z.input<typeof projectsCustomFieldsCreateFieldBodySchema>;
 
 export const projectsCustomFieldsUpdateFieldResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int().nullable(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   name: z.string(),
   type: z.string(),
   options: z.array(z.string()).nullable(),
   required: z.boolean().nullable(),
-  position: z.number().int().nullable(),
+  position: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
 });
 export type ProjectsCustomFieldsUpdateFieldResponse = z.infer<typeof projectsCustomFieldsUpdateFieldResponseSchema>;
@@ -2711,33 +3119,33 @@ export const projectsCustomFieldsUpdateFieldBodySchema = z.strictObject({
   type: z.enum(["text", "number", "date", "user", "select", "multi_select", "checkbox", "url", "currency"]).optional(),
   options: z.array(z.string()).nullable().optional(),
   required: z.boolean().optional(),
-  position: z.number().int().optional(),
+  position: z.number().int().gte(-9007199254740991).lte(9007199254740991).optional(),
 });
 export type ProjectsCustomFieldsUpdateFieldBody = z.input<typeof projectsCustomFieldsUpdateFieldBodySchema>;
 
 export const projectResourcesListCustomStatesResponseSchema = z.array(z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   name: z.string(),
-  order: z.number().int(),
+  order: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   color: z.string().nullable(),
   type: z.enum(["backlog", "unstarted", "started", "completed", "cancelled"]).nullable(),
-  wipLimit: z.number().int().nullable(),
+  wipLimit: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
 }));
 export type ProjectResourcesListCustomStatesResponse = z.infer<typeof projectResourcesListCustomStatesResponseSchema>;
 
 export const projectResourcesCreateCustomStateResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   name: z.string(),
-  order: z.number().int(),
+  order: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   color: z.string().nullable(),
   type: z.enum(["backlog", "unstarted", "started", "completed", "cancelled"]).nullable(),
-  wipLimit: z.number().int().nullable(),
+  wipLimit: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
 });
@@ -2746,37 +3154,37 @@ export type ProjectResourcesCreateCustomStateResponse = z.infer<typeof projectRe
 export const projectResourcesCreateCustomStateBodySchema = z.strictObject({
   name: z.string(),
   color: z.string(),
-  order: z.number().int().optional(),
+  order: z.number().int().gte(0).lte(9007199254740991).optional(),
   type: z.enum(["unstarted", "started", "completed", "cancelled"]).optional(),
 });
 export type ProjectResourcesCreateCustomStateBody = z.input<typeof projectResourcesCreateCustomStateBodySchema>;
 
 export const projectResourcesBulkReorderCustomStatesResponseSchema = z.object({
   items: z.array(z.object({
-    id: z.number().int(),
-    order: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    order: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   })),
 });
 export type ProjectResourcesBulkReorderCustomStatesResponse = z.infer<typeof projectResourcesBulkReorderCustomStatesResponseSchema>;
 
 export const projectResourcesBulkReorderCustomStatesBodySchema = z.strictObject({
   items: z.array(z.strictObject({
-    stateId: z.number().int(),
-    order: z.number().int(),
-    expectedOrder: z.number().int().optional(),
+    stateId: z.number().int().gt(0).lte(9007199254740991),
+    order: z.number().int().gte(0).lte(9007199254740991),
+    expectedOrder: z.number().int().gte(0).lte(9007199254740991).optional(),
   })),
 });
 export type ProjectResourcesBulkReorderCustomStatesBody = z.input<typeof projectResourcesBulkReorderCustomStatesBodySchema>;
 
 export const projectResourcesUpdateCustomStateResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   name: z.string(),
-  order: z.number().int(),
+  order: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   color: z.string().nullable(),
   type: z.enum(["backlog", "unstarted", "started", "completed", "cancelled"]).nullable(),
-  wipLimit: z.number().int().nullable(),
+  wipLimit: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
 });
@@ -2785,33 +3193,33 @@ export type ProjectResourcesUpdateCustomStateResponse = z.infer<typeof projectRe
 export const projectResourcesUpdateCustomStateBodySchema = z.strictObject({
   name: z.string().optional(),
   color: z.string().optional(),
-  order: z.number().int().optional(),
+  order: z.number().int().gte(0).lte(9007199254740991).optional(),
   type: z.enum(["unstarted", "started", "completed", "cancelled"]).optional(),
 });
 export type ProjectResourcesUpdateCustomStateBody = z.input<typeof projectResourcesUpdateCustomStateBodySchema>;
 
 export const cyclesListCyclesResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
-    projectId: z.number().int(),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     name: z.string(),
     description: z.string().nullable(),
     goal: z.string().nullable(),
-    capacity: z.number().int().nullable(),
+    capacity: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     startDate: z.string(),
     endDate: z.string(),
     status: z.enum(["draft", "active", "completed"]),
-    version: z.number().int(),
+    version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     createdBy: z.string(),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
-    totalItems: z.number().int(),
-    completedItems: z.number().int(),
-    progress: z.number().int(),
+    totalItems: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    completedItems: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    progress: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   })),
   pagination: z.object({
-    limit: z.number().int(),
+    limit: z.number().int().gt(0).lte(9007199254740991),
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
   }),
@@ -2819,17 +3227,17 @@ export const cyclesListCyclesResponseSchema = z.object({
 export type CyclesListCyclesResponse = z.infer<typeof cyclesListCyclesResponseSchema>;
 
 export const cyclesCreateCycleResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   name: z.string(),
   description: z.string().nullable(),
   goal: z.string().nullable(),
-  capacity: z.number().int().nullable(),
+  capacity: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   status: z.enum(["draft", "active", "completed"]),
   startDate: z.string(),
   endDate: z.string(),
-  version: z.number().int(),
+  version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   createdBy: z.string(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -2841,22 +3249,22 @@ export const cyclesCreateCycleBodySchema = z.strictObject({
   description: z.string().optional(),
   startDate: z.string(),
   endDate: z.string(),
-  capacity: z.number().int().optional(),
+  capacity: z.number().int().gte(0).lte(9007199254740991).optional(),
 });
 export type CyclesCreateCycleBody = z.input<typeof cyclesCreateCycleBodySchema>;
 
 export const cyclesUpdateCycleResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   name: z.string(),
   description: z.string().nullable(),
   goal: z.string().nullable(),
-  capacity: z.number().int().nullable(),
+  capacity: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   status: z.enum(["draft", "active", "completed"]),
   startDate: z.string(),
   endDate: z.string(),
-  version: z.number().int(),
+  version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   createdBy: z.string(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -2864,23 +3272,24 @@ export const cyclesUpdateCycleResponseSchema = z.object({
 export type CyclesUpdateCycleResponse = z.infer<typeof cyclesUpdateCycleResponseSchema>;
 
 export const cyclesUpdateCycleBodySchema = z.strictObject({
-  version: z.number().int(),
+  version: z.number().int().gt(0).lte(9007199254740991),
   name: z.string().optional(),
   description: z.string().optional(),
   goal: z.string().optional(),
-  capacity: z.number().int().nullable().optional(),
+  capacity: z.number().int().gte(0).lte(9007199254740991).nullable().optional(),
   status: z.enum(["draft", "active", "completed"]).optional(),
   startDate: z.union([z.literal(""), z.string()]).optional(),
   endDate: z.union([z.literal(""), z.string()]).optional(),
+  carryForwardCycleId: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
 });
 export type CyclesUpdateCycleBody = z.input<typeof cyclesUpdateCycleBodySchema>;
 
 export const decisionsListDecisionsResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
-    projectId: z.number().int(),
-    decisionNumber: z.number().int(),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    decisionNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     title: z.string(),
     context: z.string().nullable(),
     decision: z.string().nullable(),
@@ -2889,22 +3298,22 @@ export const decisionsListDecisionsResponseSchema = z.object({
     ownerId: z.string().nullable(),
     decidedAt: z.iso.datetime({ offset: true }).nullable(),
     revisitAt: z.iso.datetime({ offset: true }).nullable(),
-    linkedTicketId: z.number().int().nullable(),
+    linkedTicketId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     createdBy: z.string().nullable(),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
     deletedAt: z.iso.datetime({ offset: true }).nullable(),
   })),
   hasMore: z.boolean(),
-  nextCursor: z.number().int().nullable(),
+  nextCursor: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
 });
 export type DecisionsListDecisionsResponse = z.infer<typeof decisionsListDecisionsResponseSchema>;
 
 export const decisionsCreateDecisionResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
-  decisionNumber: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  decisionNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   title: z.string(),
   context: z.string().nullable(),
   decision: z.string().nullable(),
@@ -2913,7 +3322,7 @@ export const decisionsCreateDecisionResponseSchema = z.object({
   ownerId: z.string().nullable(),
   decidedAt: z.iso.datetime({ offset: true }).nullable(),
   revisitAt: z.iso.datetime({ offset: true }).nullable(),
-  linkedTicketId: z.number().int().nullable(),
+  linkedTicketId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   createdBy: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -2930,15 +3339,15 @@ export const decisionsCreateDecisionBodySchema = z.strictObject({
   ownerId: z.string().optional(),
   decidedAt: z.unknown().optional(),
   revisitAt: z.unknown().optional(),
-  linkedTicketId: z.number().int().optional(),
+  linkedTicketId: z.number().int().gt(0).lte(9007199254740991).optional(),
 });
 export type DecisionsCreateDecisionBody = z.input<typeof decisionsCreateDecisionBodySchema>;
 
 export const decisionsUpdateDecisionResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
-  decisionNumber: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  decisionNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   title: z.string(),
   context: z.string().nullable(),
   decision: z.string().nullable(),
@@ -2947,7 +3356,7 @@ export const decisionsUpdateDecisionResponseSchema = z.object({
   ownerId: z.string().nullable(),
   decidedAt: z.iso.datetime({ offset: true }).nullable(),
   revisitAt: z.iso.datetime({ offset: true }).nullable(),
-  linkedTicketId: z.number().int().nullable(),
+  linkedTicketId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   createdBy: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -2964,13 +3373,13 @@ export const decisionsUpdateDecisionBodySchema = z.strictObject({
   ownerId: z.string().nullable().optional(),
   decidedAt: z.unknown().nullable().optional(),
   revisitAt: z.unknown().nullable().optional(),
-  linkedTicketId: z.number().int().nullable().optional(),
+  linkedTicketId: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
 });
 export type DecisionsUpdateDecisionBody = z.input<typeof decisionsUpdateDecisionBodySchema>;
 
 export const epicsListEpicsResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
     title: z.string(),
     description: z.string().nullable(),
@@ -2978,21 +3387,21 @@ export const epicsListEpicsResponseSchema = z.object({
     status: z.string(),
     priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
     health: z.enum(["on_track", "at_risk", "off_track"]).nullable(),
-    projectId: z.number().int().nullable(),
-    ticketNumber: z.number().int(),
-    cycleId: z.number().int().nullable(),
-    epicId: z.number().int().nullable(),
-    assigneeMembershipId: z.number().int().nullable(),
-    points: z.number().int().nullable(),
-    storyPoints: z.number().int().nullable(),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    ticketNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    cycleId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    epicId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    assigneeMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    points: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    storyPoints: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     startDate: z.string().nullable(),
     dueDate: z.string().nullable(),
-    estimate: z.number().int().nullable(),
-    completionPercentage: z.number().int(),
+    estimate: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    completionPercentage: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     rank: z.string(),
     timeSpent: z.string(),
-    version: z.number().int(),
-    dependencyCount: z.number().int(),
+    version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    dependencyCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     deletedAt: z.iso.datetime({ offset: true }).nullable(),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
@@ -3008,7 +3417,7 @@ export const epicsListEpicsResponseSchema = z.object({
     }).nullable().optional(),
   })),
   pagination: z.object({
-    limit: z.number().int(),
+    limit: z.number().int().gt(0).lte(9007199254740991),
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
   }),
@@ -3017,18 +3426,18 @@ export type EpicsListEpicsResponse = z.infer<typeof epicsListEpicsResponseSchema
 
 export const filesListFilesResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
-    projectId: z.number().int(),
-    uploadedByMembershipId: z.number().int(),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    uploadedByMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     fileName: z.string(),
     mimeType: z.string(),
-    sizeBytes: z.number().int(),
+    sizeBytes: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     createdAt: z.iso.datetime({ offset: true }),
     deletedAt: z.iso.datetime({ offset: true }).nullable(),
   })),
   pagination: z.object({
-    limit: z.number().int(),
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
   }),
@@ -3036,13 +3445,13 @@ export const filesListFilesResponseSchema = z.object({
 export type FilesListFilesResponse = z.infer<typeof filesListFilesResponseSchema>;
 
 export const filesUploadFileResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
-  uploadedByMembershipId: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  uploadedByMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   fileName: z.string(),
   mimeType: z.string(),
-  sizeBytes: z.number().int(),
+  sizeBytes: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   createdAt: z.iso.datetime({ offset: true }),
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
 });
@@ -3057,16 +3466,16 @@ export type FilesUploadFileBody = z.input<typeof filesUploadFileBodySchema>;
 
 export const filesGetSignedUrlResponseSchema = z.object({
   url: z.string(),
-  expiresIn: z.number().int(),
+  expiresIn: z.number().int().gte(-9007199254740991).lte(9007199254740991),
 });
 export type FilesGetSignedUrlResponse = z.infer<typeof filesGetSignedUrlResponseSchema>;
 
 export const formsListFormsResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
-    projectId: z.number().int(),
-    formNumber: z.number().int(),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    formNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     name: z.string(),
     description: z.string().nullable(),
     type: z.enum(["task_request", "bug_report", "feature_request", "change_request", "client_approval", "risk_report", "qa_issue", "generic"]),
@@ -3090,7 +3499,7 @@ export const formsListFormsResponseSchema = z.object({
     deletedAt: z.iso.datetime({ offset: true }).nullable(),
   })),
   pagination: z.object({
-    limit: z.number().int(),
+    limit: z.number().int().gt(0).lte(9007199254740991),
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
   }),
@@ -3098,10 +3507,10 @@ export const formsListFormsResponseSchema = z.object({
 export type FormsListFormsResponse = z.infer<typeof formsListFormsResponseSchema>;
 
 export const formsCreateFormResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
-  formNumber: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  formNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   name: z.string(),
   description: z.string().nullable(),
   type: z.enum(["task_request", "bug_report", "feature_request", "change_request", "client_approval", "risk_report", "qa_issue", "generic"]),
@@ -3156,10 +3565,10 @@ export const formsCreateFormBodySchema = z.strictObject({
 export type FormsCreateFormBody = z.input<typeof formsCreateFormBodySchema>;
 
 export const formsGetFormResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
-  formNumber: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  formNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   name: z.string(),
   description: z.string().nullable(),
   type: z.enum(["task_request", "bug_report", "feature_request", "change_request", "client_approval", "risk_report", "qa_issue", "generic"]),
@@ -3185,10 +3594,10 @@ export const formsGetFormResponseSchema = z.object({
 export type FormsGetFormResponse = z.infer<typeof formsGetFormResponseSchema>;
 
 export const formsUpdateFormResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
-  formNumber: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  formNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   name: z.string(),
   description: z.string().nullable(),
   type: z.enum(["task_request", "bug_report", "feature_request", "change_request", "client_approval", "risk_report", "qa_issue", "generic"]),
@@ -3245,19 +3654,19 @@ export type FormsUpdateFormBody = z.input<typeof formsUpdateFormBodySchema>;
 
 export const submissionsListSubmissionsResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
-    formId: z.number().int(),
-    projectId: z.number().int(),
+    formId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     values: z.record(z.string(), z.unknown()),
     status: z.enum(["submitted", "processed", "rejected"]),
     submittedByName: z.string().nullable(),
     submittedById: z.string().nullable(),
-    convertedTicketId: z.number().int().nullable(),
+    convertedTicketId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     createdAt: z.iso.datetime({ offset: true }),
   })),
   pagination: z.object({
-    limit: z.number().int(),
+    limit: z.number().int().gt(0).lte(9007199254740991),
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
   }),
@@ -3265,17 +3674,17 @@ export const submissionsListSubmissionsResponseSchema = z.object({
 export type SubmissionsListSubmissionsResponse = z.infer<typeof submissionsListSubmissionsResponseSchema>;
 
 export const submissionsCreateSubmissionResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  formId: z.number().int(),
-  projectId: z.number().int(),
+  formId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   values: z.record(z.string(), z.unknown()),
   status: z.enum(["submitted", "processed", "rejected"]),
   submittedByName: z.string().nullable(),
   submittedById: z.string().nullable(),
-  convertedTicketId: z.number().int().nullable(),
+  convertedTicketId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
-  createdTicketIds: z.array(z.number().int()),
+  createdTicketIds: z.array(z.number().int().gte(-9007199254740991).lte(9007199254740991)),
   executedActionTypes: z.array(z.string()),
   skippedActionTypes: z.array(z.string()),
 });
@@ -3288,15 +3697,15 @@ export const submissionsCreateSubmissionBodySchema = z.strictObject({
 export type SubmissionsCreateSubmissionBody = z.input<typeof submissionsCreateSubmissionBodySchema>;
 
 export const submissionsUpdateSubmissionResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  formId: z.number().int(),
-  projectId: z.number().int(),
+  formId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   values: z.record(z.string(), z.unknown()),
   status: z.enum(["submitted", "processed", "rejected"]),
   submittedByName: z.string().nullable(),
   submittedById: z.string().nullable(),
-  convertedTicketId: z.number().int().nullable(),
+  convertedTicketId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
 });
 export type SubmissionsUpdateSubmissionResponse = z.infer<typeof submissionsUpdateSubmissionResponseSchema>;
@@ -3307,27 +3716,28 @@ export const submissionsUpdateSubmissionBodySchema = z.strictObject({
 export type SubmissionsUpdateSubmissionBody = z.input<typeof submissionsUpdateSubmissionBodySchema>;
 
 export const ticketImportExportCommitImportResponseSchema = z.object({
-  projectId: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   format: z.enum(["csv", "json"]),
   mode: z.enum(["atomic", "partial"]),
   idempotencyKey: z.string().nullable(),
+  jobId: z.string().nullable().optional(),
   replayed: z.boolean(),
   confirmationToken: z.string(),
   summary: z.object({
-    attempted: z.number().int(),
-    imported: z.number().int(),
-    skipped: z.number().int(),
-    failed: z.number().int(),
-    rolledBack: z.number().int(),
+    attempted: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    imported: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    skipped: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    failed: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    rolledBack: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   }),
   rows: z.array(z.object({
-    rowNumber: z.number().int(),
+    rowNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     outcome: z.enum(["IMPORTED", "SKIPPED", "FAILED", "ROLLED_BACK"]),
-    ticketId: z.number().int().nullable(),
+    ticketId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     message: z.string().nullable(),
   })),
   issues: z.array(z.object({
-    rowNumber: z.number().int(),
+    rowNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     field: z.string().nullable(),
     kind: z.enum(["INVALID", "DUPLICATE_IN_FILE", "DUPLICATE_EXISTING"]),
     message: z.string(),
@@ -3340,6 +3750,7 @@ export const ticketImportExportCommitImportBodySchema = z.strictObject({
   content: z.string(),
   confirmationToken: z.string(),
   mode: z.enum(["atomic", "partial"]).optional(),
+  adapterType: z.enum(["clickup", "trello", "jira-csv", "jira-xml", "asana", "linear"]).optional(),
 });
 export type TicketImportExportCommitImportBody = z.input<typeof ticketImportExportCommitImportBodySchema>;
 
@@ -3347,24 +3758,24 @@ export const ticketImportExportExportTicketsResponseSchema = z.object({
   format: z.enum(["csv", "json"]),
   filename: z.string(),
   contentType: z.string(),
-  rowCount: z.number().int(),
+  rowCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   content: z.string(),
 });
 export type TicketImportExportExportTicketsResponse = z.infer<typeof ticketImportExportExportTicketsResponseSchema>;
 
 export const ticketImportExportPreviewImportResponseSchema = z.object({
   format: z.enum(["csv", "json"]),
-  projectId: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   fileError: z.string().nullable(),
   summary: z.object({
-    totalRows: z.number().int(),
-    importable: z.number().int(),
-    invalid: z.number().int(),
-    duplicateInFile: z.number().int(),
-    duplicateExisting: z.number().int(),
+    totalRows: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    importable: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    invalid: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    duplicateInFile: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    duplicateExisting: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   }),
   rows: z.array(z.object({
-    rowNumber: z.number().int(),
+    rowNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     values: z.object({
       title: z.string(),
       status: z.string(),
@@ -3373,16 +3784,16 @@ export const ticketImportExportPreviewImportResponseSchema = z.object({
       priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
       startDate: z.string().nullable().optional(),
       dueDate: z.string().nullable().optional(),
-      points: z.number().int().nullable().optional(),
-      storyPoints: z.number().int().nullable().optional(),
-      estimate: z.number().int().nullable().optional(),
-      completionPercentage: z.number().int().optional(),
+      points: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable().optional(),
+      storyPoints: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable().optional(),
+      estimate: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable().optional(),
+      completionPercentage: z.number().int().gte(-9007199254740991).lte(9007199254740991).optional(),
       clientVisible: z.boolean().optional(),
       link: z.string().nullable().optional(),
     }),
   })),
   issues: z.array(z.object({
-    rowNumber: z.number().int(),
+    rowNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     field: z.string().nullable(),
     kind: z.enum(["INVALID", "DUPLICATE_IN_FILE", "DUPLICATE_EXISTING"]),
     message: z.string(),
@@ -3394,15 +3805,16 @@ export type TicketImportExportPreviewImportResponse = z.infer<typeof ticketImpor
 export const ticketImportExportPreviewImportBodySchema = z.strictObject({
   format: z.enum(["csv", "json"]),
   content: z.string(),
+  adapterType: z.enum(["clickup", "trello", "jira-csv", "jira-xml", "asana", "linear"]).optional(),
 });
 export type TicketImportExportPreviewImportBody = z.input<typeof ticketImportExportPreviewImportBodySchema>;
 
 export const incidentsListIncidentsResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
-    projectId: z.number().int(),
-    incidentNumber: z.number().int(),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    incidentNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     title: z.string(),
     description: z.string().nullable(),
     severity: z.enum(["critical", "high", "medium", "low"]),
@@ -3416,15 +3828,15 @@ export const incidentsListIncidentsResponseSchema = z.object({
     resolvedAt: z.iso.datetime({ offset: true }).nullable(),
     responseDueAt: z.iso.datetime({ offset: true }).nullable(),
     resolutionDueAt: z.iso.datetime({ offset: true }).nullable(),
-    linkedTicketId: z.number().int().nullable(),
-    releaseId: z.number().int().nullable(),
+    linkedTicketId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    releaseId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     createdBy: z.string().nullable(),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
     deletedAt: z.iso.datetime({ offset: true }).nullable(),
   })),
   pagination: z.object({
-    limit: z.number().int(),
+    limit: z.number().int().gt(0).lte(9007199254740991),
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
   }),
@@ -3432,10 +3844,10 @@ export const incidentsListIncidentsResponseSchema = z.object({
 export type IncidentsListIncidentsResponse = z.infer<typeof incidentsListIncidentsResponseSchema>;
 
 export const incidentsCreateIncidentResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
-  incidentNumber: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  incidentNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   title: z.string(),
   description: z.string().nullable(),
   severity: z.enum(["critical", "high", "medium", "low"]),
@@ -3449,8 +3861,8 @@ export const incidentsCreateIncidentResponseSchema = z.object({
   resolvedAt: z.iso.datetime({ offset: true }).nullable(),
   responseDueAt: z.iso.datetime({ offset: true }).nullable(),
   resolutionDueAt: z.iso.datetime({ offset: true }).nullable(),
-  linkedTicketId: z.number().int().nullable(),
-  releaseId: z.number().int().nullable(),
+  linkedTicketId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  releaseId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   createdBy: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -3470,16 +3882,16 @@ export const incidentsCreateIncidentBodySchema = z.strictObject({
   detectedAt: z.unknown().optional(),
   responseDueAt: z.unknown().optional(),
   resolutionDueAt: z.unknown().optional(),
-  linkedTicketId: z.number().int().optional(),
-  releaseId: z.number().int().optional(),
+  linkedTicketId: z.number().int().gt(0).lte(9007199254740991).optional(),
+  releaseId: z.number().int().gt(0).lte(9007199254740991).optional(),
 });
 export type IncidentsCreateIncidentBody = z.input<typeof incidentsCreateIncidentBodySchema>;
 
 export const incidentsGetIncidentResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
-  incidentNumber: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  incidentNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   title: z.string(),
   description: z.string().nullable(),
   severity: z.enum(["critical", "high", "medium", "low"]),
@@ -3493,16 +3905,16 @@ export const incidentsGetIncidentResponseSchema = z.object({
   resolvedAt: z.iso.datetime({ offset: true }).nullable(),
   responseDueAt: z.iso.datetime({ offset: true }).nullable(),
   resolutionDueAt: z.iso.datetime({ offset: true }).nullable(),
-  linkedTicketId: z.number().int().nullable(),
-  releaseId: z.number().int().nullable(),
+  linkedTicketId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  releaseId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   createdBy: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
   updates: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
-    incidentId: z.number().int(),
+    incidentId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     message: z.string(),
     newStatus: z.enum(["detected", "investigating", "mitigating", "resolved", "postmortem", "closed"]).nullable(),
     createdBy: z.string().nullable(),
@@ -3511,18 +3923,18 @@ export const incidentsGetIncidentResponseSchema = z.object({
     createdByEmail: z.string().nullable(),
   })),
   decisions: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
-    incidentId: z.number().int(),
+    incidentId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     decision: z.string(),
     rationale: z.string().nullable(),
     decidedBy: z.string().nullable(),
     createdAt: z.iso.datetime({ offset: true }),
   })),
   followUpActions: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
-    incidentId: z.number().int(),
+    incidentId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     title: z.string(),
     description: z.string().nullable(),
     ownerId: z.string().nullable(),
@@ -3534,29 +3946,29 @@ export const incidentsGetIncidentResponseSchema = z.object({
   })),
   childrenPagination: z.object({
     updates: z.object({
-      limit: z.number().int(),
+      limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       hasMore: z.boolean(),
-      nextCursor: z.number().int().nullable(),
+      nextCursor: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     }),
     decisions: z.object({
-      limit: z.number().int(),
+      limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       hasMore: z.boolean(),
-      nextCursor: z.number().int().nullable(),
+      nextCursor: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     }),
     followUpActions: z.object({
-      limit: z.number().int(),
+      limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       hasMore: z.boolean(),
-      nextCursor: z.number().int().nullable(),
+      nextCursor: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     }),
   }),
 });
 export type IncidentsGetIncidentResponse = z.infer<typeof incidentsGetIncidentResponseSchema>;
 
 export const incidentsUpdateIncidentResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
-  incidentNumber: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  incidentNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   title: z.string(),
   description: z.string().nullable(),
   severity: z.enum(["critical", "high", "medium", "low"]),
@@ -3570,8 +3982,8 @@ export const incidentsUpdateIncidentResponseSchema = z.object({
   resolvedAt: z.iso.datetime({ offset: true }).nullable(),
   responseDueAt: z.iso.datetime({ offset: true }).nullable(),
   resolutionDueAt: z.iso.datetime({ offset: true }).nullable(),
-  linkedTicketId: z.number().int().nullable(),
-  releaseId: z.number().int().nullable(),
+  linkedTicketId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  releaseId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   createdBy: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -3591,16 +4003,16 @@ export const incidentsUpdateIncidentBodySchema = z.strictObject({
   detectedAt: z.unknown().nullable().optional(),
   responseDueAt: z.unknown().nullable().optional(),
   resolutionDueAt: z.unknown().nullable().optional(),
-  linkedTicketId: z.number().int().nullable().optional(),
-  releaseId: z.number().int().nullable().optional(),
+  linkedTicketId: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
+  releaseId: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
   followUpWaiverReason: z.string().optional(),
 });
 export type IncidentsUpdateIncidentBody = z.input<typeof incidentsUpdateIncidentBodySchema>;
 
 export const incidentsAddDecisionResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  incidentId: z.number().int(),
+  incidentId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   decision: z.string(),
   rationale: z.string().nullable(),
   decidedBy: z.string().nullable(),
@@ -3615,9 +4027,9 @@ export const incidentsAddDecisionBodySchema = z.strictObject({
 export type IncidentsAddDecisionBody = z.input<typeof incidentsAddDecisionBodySchema>;
 
 export const incidentsAddFollowUpActionResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  incidentId: z.number().int(),
+  incidentId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   title: z.string(),
   description: z.string().nullable(),
   ownerId: z.string().nullable(),
@@ -3638,9 +4050,9 @@ export const incidentsAddFollowUpActionBodySchema = z.strictObject({
 export type IncidentsAddFollowUpActionBody = z.input<typeof incidentsAddFollowUpActionBodySchema>;
 
 export const incidentsUpdateFollowUpActionResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  incidentId: z.number().int(),
+  incidentId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   title: z.string(),
   description: z.string().nullable(),
   ownerId: z.string().nullable(),
@@ -3662,9 +4074,9 @@ export const incidentsUpdateFollowUpActionBodySchema = z.strictObject({
 export type IncidentsUpdateFollowUpActionBody = z.input<typeof incidentsUpdateFollowUpActionBodySchema>;
 
 export const incidentsAddUpdateResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  incidentId: z.number().int(),
+  incidentId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   message: z.string(),
   newStatus: z.enum(["detected", "investigating", "mitigating", "resolved", "postmortem", "closed"]).nullable(),
   createdBy: z.string().nullable(),
@@ -3681,24 +4093,24 @@ export type IncidentsAddUpdateBody = z.input<typeof incidentsAddUpdateBodySchema
 
 export const intakeListIntakeResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
-    projectId: z.number().int().nullable(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     orgId: z.string(),
     title: z.string(),
     description: z.unknown(),
-    source: z.enum(["manual", "web_form", "email"]),
+    source: z.enum(["manual", "web_form", "email", "feedbucket", "portal_client"]),
     status: z.enum(["pending", "accepted", "declined", "duplicate"]),
     submitterEmail: z.string().nullable(),
     submitterName: z.string().nullable(),
     priority: z.string().nullable(),
     requestType: z.string().nullable(),
-    linkedWorkItemId: z.number().int().nullable(),
+    linkedWorkItemId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     declineReason: z.string().nullable(),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
   })),
   pagination: z.object({
-    limit: z.number().int(),
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
   }),
@@ -3706,18 +4118,18 @@ export const intakeListIntakeResponseSchema = z.object({
 export type IntakeListIntakeResponse = z.infer<typeof intakeListIntakeResponseSchema>;
 
 export const intakeCreateIntakeResponseSchema = z.object({
-  id: z.number().int(),
-  projectId: z.number().int().nullable(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   orgId: z.string(),
   title: z.string(),
   description: z.unknown(),
-  source: z.enum(["manual", "web_form", "email"]),
+  source: z.enum(["manual", "web_form", "email", "feedbucket", "portal_client"]),
   status: z.enum(["pending", "accepted", "declined", "duplicate"]),
   submitterEmail: z.string().nullable(),
   submitterName: z.string().nullable(),
   priority: z.string().nullable(),
   requestType: z.string().nullable(),
-  linkedWorkItemId: z.number().int().nullable(),
+  linkedWorkItemId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   declineReason: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -3736,18 +4148,18 @@ export const intakeCreateIntakeBodySchema = z.strictObject({
 export type IntakeCreateIntakeBody = z.input<typeof intakeCreateIntakeBodySchema>;
 
 export const intakeUpdateIntakeResponseSchema = z.object({
-  id: z.number().int(),
-  projectId: z.number().int().nullable(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   orgId: z.string(),
   title: z.string(),
   description: z.unknown(),
-  source: z.enum(["manual", "web_form", "email"]),
+  source: z.enum(["manual", "web_form", "email", "feedbucket", "portal_client"]),
   status: z.enum(["pending", "accepted", "declined", "duplicate"]),
   submitterEmail: z.string().nullable(),
   submitterName: z.string().nullable(),
   priority: z.string().nullable(),
   requestType: z.string().nullable(),
-  linkedWorkItemId: z.number().int().nullable(),
+  linkedWorkItemId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   declineReason: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -3757,18 +4169,18 @@ export type IntakeUpdateIntakeResponse = z.infer<typeof intakeUpdateIntakeRespon
 export const intakeUpdateIntakeBodySchema = z.strictObject({
   status: z.enum(["accepted", "declined", "duplicate"]).optional(),
   declineReason: z.string().optional(),
-  linkedWorkItemId: z.number().optional(),
+  linkedWorkItemId: z.number().int().gt(0).lte(2147483647).optional(),
 });
 export type IntakeUpdateIntakeBody = z.input<typeof intakeUpdateIntakeBodySchema>;
 
 export const projectsGetInvoiceLineDetailResponseSchema = z.object({
-  projectId: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   invoiceLineDetail: z.enum(["summary", "raw"]),
 });
 export type ProjectsGetInvoiceLineDetailResponse = z.infer<typeof projectsGetInvoiceLineDetailResponseSchema>;
 
 export const projectResourcesListProjectLabelsResponseSchema = z.array(z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
   name: z.string(),
   color: z.string(),
@@ -3778,10 +4190,10 @@ export type ProjectResourcesListProjectLabelsResponse = z.infer<typeof projectRe
 
 export const meetingsListMeetingsResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
-    projectId: z.number().int(),
-    meetingNumber: z.number().int(),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    meetingNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     title: z.string(),
     type: z.enum(["meeting", "standup", "retro", "planning", "review"]),
     status: z.enum(["scheduled", "in_progress", "completed", "cancelled"]),
@@ -3789,20 +4201,20 @@ export const meetingsListMeetingsResponseSchema = z.object({
     notes: z.string().nullable(),
     scheduledAt: z.iso.datetime({ offset: true }).nullable(),
     endAt: z.iso.datetime({ offset: true }).nullable(),
-    durationMinutes: z.number().int().nullable(),
+    durationMinutes: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     timezone: z.string().nullable(),
     recurrenceRule: z.unknown(),
-    cycleId: z.number().int().nullable(),
+    cycleId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     createdBy: z.string().nullable(),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
     deletedAt: z.iso.datetime({ offset: true }).nullable(),
-    attendeeCount: z.number().int(),
-    actionItemCount: z.number().int(),
-    unresolvedActionItemCount: z.number().int(),
+    attendeeCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    actionItemCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    unresolvedActionItemCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   })),
   pagination: z.object({
-    limit: z.number().int(),
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
   }),
@@ -3810,10 +4222,10 @@ export const meetingsListMeetingsResponseSchema = z.object({
 export type MeetingsListMeetingsResponse = z.infer<typeof meetingsListMeetingsResponseSchema>;
 
 export const meetingsCreateMeetingResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
-  meetingNumber: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  meetingNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   title: z.string(),
   type: z.enum(["meeting", "standup", "retro", "planning", "review"]),
   status: z.enum(["scheduled", "in_progress", "completed", "cancelled"]),
@@ -3821,10 +4233,10 @@ export const meetingsCreateMeetingResponseSchema = z.object({
   notes: z.string().nullable(),
   scheduledAt: z.iso.datetime({ offset: true }).nullable(),
   endAt: z.iso.datetime({ offset: true }).nullable(),
-  durationMinutes: z.number().int().nullable(),
+  durationMinutes: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   timezone: z.string().nullable(),
   recurrenceRule: z.unknown(),
-  cycleId: z.number().int().nullable(),
+  cycleId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   createdBy: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -3840,24 +4252,24 @@ export const meetingsCreateMeetingBodySchema = z.strictObject({
   notes: z.string().optional(),
   scheduledAt: z.unknown().optional(),
   endAt: z.unknown().optional(),
-  durationMinutes: z.number().int().optional(),
-  cycleId: z.number().int().optional(),
+  durationMinutes: z.number().int().gt(0).lte(9007199254740991).optional(),
+  cycleId: z.number().int().gt(0).lte(9007199254740991).optional(),
   attendeeUserIds: z.array(z.string()).optional(),
   recurrenceRule: z.object({
     frequency: z.enum(["daily", "weekly", "biweekly", "custom"]),
-    weekdays: z.array(z.number().int()).optional(),
+    weekdays: z.array(z.number().int().gte(0).lte(6)).optional(),
     endDate: z.string().optional(),
-    occurrences: z.number().int().optional(),
+    occurrences: z.number().int().gt(0).lte(9007199254740991).optional(),
   }).optional(),
   timezone: z.string().optional(),
 });
 export type MeetingsCreateMeetingBody = z.input<typeof meetingsCreateMeetingBodySchema>;
 
 export const meetingsGetMeetingResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
-  meetingNumber: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  meetingNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   title: z.string(),
   type: z.enum(["meeting", "standup", "retro", "planning", "review"]),
   status: z.enum(["scheduled", "in_progress", "completed", "cancelled"]),
@@ -3865,45 +4277,45 @@ export const meetingsGetMeetingResponseSchema = z.object({
   notes: z.string().nullable(),
   scheduledAt: z.iso.datetime({ offset: true }).nullable(),
   endAt: z.iso.datetime({ offset: true }).nullable(),
-  durationMinutes: z.number().int().nullable(),
+  durationMinutes: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   timezone: z.string().nullable(),
   recurrenceRule: z.unknown(),
-  cycleId: z.number().int().nullable(),
+  cycleId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   createdBy: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
   attendees: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
-    meetingId: z.number().int(),
-    membershipId: z.number().int(),
+    meetingId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    membershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     userId: z.string(),
     attended: z.boolean(),
     createdAt: z.iso.datetime({ offset: true }),
   })),
   actionItems: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
-    meetingId: z.number().int(),
-    projectId: z.number().int(),
+    meetingId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     title: z.string(),
     description: z.string().nullable(),
     assigneeId: z.string().nullable(),
     dueDate: z.string().nullable(),
     status: z.enum(["open", "in_progress", "done", "converted", "cancelled"]),
-    convertedTicketId: z.number().int().nullable(),
+    convertedTicketId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     createdBy: z.string().nullable(),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
     deletedAt: z.iso.datetime({ offset: true }).nullable(),
   })),
   standupEntries: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
-    meetingId: z.number().int(),
+    meetingId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     userId: z.string(),
-    membershipId: z.number().int().nullable(),
+    membershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     yesterday: z.string().nullable(),
     today: z.string().nullable(),
     blockers: z.string().nullable(),
@@ -3914,10 +4326,10 @@ export const meetingsGetMeetingResponseSchema = z.object({
 export type MeetingsGetMeetingResponse = z.infer<typeof meetingsGetMeetingResponseSchema>;
 
 export const meetingsUpdateMeetingResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
-  meetingNumber: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  meetingNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   title: z.string(),
   type: z.enum(["meeting", "standup", "retro", "planning", "review"]),
   status: z.enum(["scheduled", "in_progress", "completed", "cancelled"]),
@@ -3925,10 +4337,10 @@ export const meetingsUpdateMeetingResponseSchema = z.object({
   notes: z.string().nullable(),
   scheduledAt: z.iso.datetime({ offset: true }).nullable(),
   endAt: z.iso.datetime({ offset: true }).nullable(),
-  durationMinutes: z.number().int().nullable(),
+  durationMinutes: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   timezone: z.string().nullable(),
   recurrenceRule: z.unknown(),
-  cycleId: z.number().int().nullable(),
+  cycleId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   createdBy: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -3944,29 +4356,29 @@ export const meetingsUpdateMeetingBodySchema = z.strictObject({
   notes: z.string().nullable().optional(),
   scheduledAt: z.unknown().nullable().optional(),
   endAt: z.unknown().nullable().optional(),
-  durationMinutes: z.number().int().nullable().optional(),
-  cycleId: z.number().int().nullable().optional(),
+  durationMinutes: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
+  cycleId: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
   recurrenceRule: z.object({
     frequency: z.enum(["daily", "weekly", "biweekly", "custom"]),
-    weekdays: z.array(z.number().int()).optional(),
+    weekdays: z.array(z.number().int().gte(0).lte(6)).optional(),
     endDate: z.string().optional(),
-    occurrences: z.number().int().optional(),
+    occurrences: z.number().int().gt(0).lte(9007199254740991).optional(),
   }).nullable().optional(),
   timezone: z.string().nullable().optional(),
 });
 export type MeetingsUpdateMeetingBody = z.input<typeof meetingsUpdateMeetingBodySchema>;
 
 export const actionItemsCreateItemResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  meetingId: z.number().int(),
-  projectId: z.number().int(),
+  meetingId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   title: z.string(),
   description: z.string().nullable(),
   assigneeId: z.string().nullable(),
   dueDate: z.string().nullable(),
   status: z.enum(["open", "in_progress", "done", "converted", "cancelled"]),
-  convertedTicketId: z.number().int().nullable(),
+  convertedTicketId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   createdBy: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -3983,16 +4395,16 @@ export const actionItemsCreateItemBodySchema = z.strictObject({
 export type ActionItemsCreateItemBody = z.input<typeof actionItemsCreateItemBodySchema>;
 
 export const actionItemsUpdateItemResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  meetingId: z.number().int(),
-  projectId: z.number().int(),
+  meetingId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   title: z.string(),
   description: z.string().nullable(),
   assigneeId: z.string().nullable(),
   dueDate: z.string().nullable(),
   status: z.enum(["open", "in_progress", "done", "converted", "cancelled"]),
-  convertedTicketId: z.number().int().nullable(),
+  convertedTicketId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   createdBy: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -4011,27 +4423,27 @@ export type ActionItemsUpdateItemBody = z.input<typeof actionItemsUpdateItemBody
 
 export const actionItemsConvertToTaskResponseSchema = z.object({
   actionItem: z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
-    meetingId: z.number().int(),
-    projectId: z.number().int(),
+    meetingId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     title: z.string(),
     description: z.string().nullable(),
     assigneeId: z.string().nullable(),
     dueDate: z.string().nullable(),
     status: z.enum(["open", "in_progress", "done", "converted", "cancelled"]),
-    convertedTicketId: z.number().int().nullable(),
+    convertedTicketId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     createdBy: z.string().nullable(),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
     deletedAt: z.iso.datetime({ offset: true }).nullable(),
   }),
-  ticketId: z.number().int(),
+  ticketId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
 });
 export type ActionItemsConvertToTaskResponse = z.infer<typeof actionItemsConvertToTaskResponseSchema>;
 
 export const meetingsAddAttendeeResponseSchema = z.object({
-  meetingId: z.number().int(),
+  meetingId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   userId: z.string(),
 });
 export type MeetingsAddAttendeeResponse = z.infer<typeof meetingsAddAttendeeResponseSchema>;
@@ -4042,11 +4454,11 @@ export const meetingsAddAttendeeBodySchema = z.strictObject({
 export type MeetingsAddAttendeeBody = z.input<typeof meetingsAddAttendeeBodySchema>;
 
 export const meetingsUpsertStandupResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  meetingId: z.number().int(),
+  meetingId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   userId: z.string(),
-  membershipId: z.number().int().nullable(),
+  membershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   yesterday: z.string().nullable(),
   today: z.string().nullable(),
   blockers: z.string().nullable(),
@@ -4074,7 +4486,7 @@ export const projectResourcesListMembersResponseSchema = z.object({
     joinedAt: z.iso.datetime({ offset: true }),
   })),
   pagination: z.object({
-    limit: z.number().int(),
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
   }),
@@ -4082,13 +4494,13 @@ export const projectResourcesListMembersResponseSchema = z.object({
 export type ProjectResourcesListMembersResponse = z.infer<typeof projectResourcesListMembersResponseSchema>;
 
 export const projectResourcesAddMemberResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
-  membershipId: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  membershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   role: z.string(),
   hourlyRate: z.string(),
-  hourlyRateMinor: z.number().int(),
+  hourlyRateMinor: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   rateCurrency: z.string().nullable(),
   joinedAt: z.iso.datetime({ offset: true }),
 });
@@ -4101,8 +4513,8 @@ export const projectResourcesAddMemberBodySchema = z.strictObject({
 export type ProjectResourcesAddMemberBody = z.input<typeof projectResourcesAddMemberBodySchema>;
 
 export const projectResourcesUpdateMemberRoleResponseSchema = z.object({
-  id: z.number().int(),
-  membershipId: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  membershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   role: z.string(),
   userId: z.string(),
 });
@@ -4115,31 +4527,31 @@ export type ProjectResourcesUpdateMemberRoleBody = z.input<typeof projectResourc
 
 export const milestonesListMilestonesResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
-    projectId: z.number().int().nullable(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     orgId: z.string(),
     name: z.string(),
     description: z.string().nullable(),
     targetDate: z.string().nullable(),
     status: z.string().nullable(),
     createdBy: z.string().nullable(),
-    ownerMembershipId: z.number().int().nullable(),
+    ownerMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     owner: z.object({
-      membershipId: z.number().int(),
+      membershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       firstName: z.string().nullable(),
       lastName: z.string().nullable(),
       image: z.string().nullable(),
     }).nullable(),
-    linkedTicketCount: z.number().int(),
-    completedTicketCount: z.number().int(),
+    linkedTicketCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    completedTicketCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     clientVisible: z.boolean(),
-    version: z.number().int(),
+    version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     deletedAt: z.iso.datetime({ offset: true }).nullable(),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
   })),
   pagination: z.object({
-    limit: z.number().int(),
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
   }),
@@ -4147,25 +4559,25 @@ export const milestonesListMilestonesResponseSchema = z.object({
 export type MilestonesListMilestonesResponse = z.infer<typeof milestonesListMilestonesResponseSchema>;
 
 export const milestonesCreateMilestoneResponseSchema = z.object({
-  id: z.number().int(),
-  projectId: z.number().int().nullable(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   orgId: z.string(),
   name: z.string(),
   description: z.string().nullable(),
   targetDate: z.string().nullable(),
   status: z.string().nullable(),
   createdBy: z.string().nullable(),
-  ownerMembershipId: z.number().int().nullable(),
+  ownerMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   owner: z.object({
-    membershipId: z.number().int(),
+    membershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     firstName: z.string().nullable(),
     lastName: z.string().nullable(),
     image: z.string().nullable(),
   }).nullable(),
-  linkedTicketCount: z.number().int(),
-  completedTicketCount: z.number().int(),
+  linkedTicketCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  completedTicketCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   clientVisible: z.boolean(),
-  version: z.number().int(),
+  version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -4177,30 +4589,30 @@ export const milestonesCreateMilestoneBodySchema = z.strictObject({
   description: z.string().optional(),
   targetDate: z.string(),
   status: z.enum(["PENDING", "ACHIEVED", "MISSED"]).optional(),
-  ownerMembershipId: z.number().int().nullable().optional(),
+  ownerMembershipId: z.number().int().gte(1).lte(9007199254740991).nullable().optional(),
 });
 export type MilestonesCreateMilestoneBody = z.input<typeof milestonesCreateMilestoneBodySchema>;
 
 export const milestonesUpdateMilestoneResponseSchema = z.object({
-  id: z.number().int(),
-  projectId: z.number().int().nullable(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   orgId: z.string(),
   name: z.string(),
   description: z.string().nullable(),
   targetDate: z.string().nullable(),
   status: z.string().nullable(),
   createdBy: z.string().nullable(),
-  ownerMembershipId: z.number().int().nullable(),
+  ownerMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   owner: z.object({
-    membershipId: z.number().int(),
+    membershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     firstName: z.string().nullable(),
     lastName: z.string().nullable(),
     image: z.string().nullable(),
   }).nullable(),
-  linkedTicketCount: z.number().int(),
-  completedTicketCount: z.number().int(),
+  linkedTicketCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  completedTicketCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   clientVisible: z.boolean(),
-  version: z.number().int(),
+  version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -4208,36 +4620,36 @@ export const milestonesUpdateMilestoneResponseSchema = z.object({
 export type MilestonesUpdateMilestoneResponse = z.infer<typeof milestonesUpdateMilestoneResponseSchema>;
 
 export const milestonesUpdateMilestoneBodySchema = z.strictObject({
-  version: z.number().int(),
+  version: z.number().int().gt(0).lte(9007199254740991),
   name: z.string().optional(),
   description: z.string().optional(),
   targetDate: z.string().optional(),
   status: z.enum(["PENDING", "ACHIEVED", "MISSED"]).optional(),
-  ownerMembershipId: z.number().int().nullable().optional(),
+  ownerMembershipId: z.number().int().gte(1).lte(9007199254740991).nullable().optional(),
 });
 export type MilestonesUpdateMilestoneBody = z.input<typeof milestonesUpdateMilestoneBodySchema>;
 
 export const modulesListModulesResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     name: z.string(),
     orgId: z.string(),
     status: z.enum(["backlog", "planned", "in-progress", "completed", "paused", "cancelled"]),
     leadId: z.string().nullable(),
     endDate: z.string().nullable(),
     startDate: z.string().nullable(),
-    version: z.number().int(),
+    version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     createdBy: z.string(),
-    projectId: z.number().int(),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
     description: z.string().nullable(),
-    totalItems: z.number().int(),
-    completedItems: z.number().int(),
-    progress: z.number().int(),
+    totalItems: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    completedItems: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    progress: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   })),
   pagination: z.object({
-    limit: z.number().int(),
+    limit: z.number().int().gt(0).lte(9007199254740991),
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
   }),
@@ -4245,16 +4657,16 @@ export const modulesListModulesResponseSchema = z.object({
 export type ModulesListModulesResponse = z.infer<typeof modulesListModulesResponseSchema>;
 
 export const modulesCreateModuleResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   name: z.string(),
   description: z.string().nullable(),
   status: z.enum(["backlog", "planned", "in-progress", "completed", "paused", "cancelled"]),
   leadId: z.string().nullable(),
   startDate: z.string().nullable(),
   endDate: z.string().nullable(),
-  version: z.number().int(),
+  version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   createdBy: z.string(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -4272,16 +4684,16 @@ export const modulesCreateModuleBodySchema = z.strictObject({
 export type ModulesCreateModuleBody = z.input<typeof modulesCreateModuleBodySchema>;
 
 export const modulesUpdateModuleResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   name: z.string(),
   description: z.string().nullable(),
   status: z.enum(["backlog", "planned", "in-progress", "completed", "paused", "cancelled"]),
   leadId: z.string().nullable(),
   startDate: z.string().nullable(),
   endDate: z.string().nullable(),
-  version: z.number().int(),
+  version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   createdBy: z.string(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -4289,7 +4701,7 @@ export const modulesUpdateModuleResponseSchema = z.object({
 export type ModulesUpdateModuleResponse = z.infer<typeof modulesUpdateModuleResponseSchema>;
 
 export const modulesUpdateModuleBodySchema = z.strictObject({
-  version: z.number().int(),
+  version: z.number().int().gt(0).lte(9007199254740991),
   name: z.string().optional(),
   description: z.string().optional(),
   status: z.enum(["backlog", "planned", "in-progress", "completed", "paused", "cancelled"]).optional(),
@@ -4301,16 +4713,18 @@ export type ModulesUpdateModuleBody = z.input<typeof modulesUpdateModuleBodySche
 
 export const projectsReleasesListReleasesResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
-    projectId: z.number().int(),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     name: z.string(),
     version: z.string(),
-    rowVersion: z.number().int(),
+    rowVersion: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     description: z.string().nullable(),
     status: z.enum(["draft", "released", "archived"]),
     releaseDate: z.string().nullable(),
     publishedAt: z.iso.datetime({ offset: true }).nullable(),
+    readiness: z.enum(["not_started", "in_progress", "ready", "blocked"]).nullable(),
+    riskLevel: z.enum(["low", "medium", "high", "critical"]).nullable(),
     createdBy: z.string().nullable(),
     createdByUser: z.object({
       name: z.string().nullable(),
@@ -4320,10 +4734,10 @@ export const projectsReleasesListReleasesResponseSchema = z.object({
     }).nullable(),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
-    ticketCount: z.number().int(),
+    ticketCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   })),
   pagination: z.object({
-    limit: z.number().int(),
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
   }),
@@ -4331,21 +4745,23 @@ export const projectsReleasesListReleasesResponseSchema = z.object({
 export type ProjectsReleasesListReleasesResponse = z.infer<typeof projectsReleasesListReleasesResponseSchema>;
 
 export const projectsReleasesCreateReleaseResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   name: z.string(),
   version: z.string(),
-  rowVersion: z.number().int(),
+  rowVersion: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   description: z.string().nullable(),
   status: z.enum(["draft", "released", "archived"]),
   releaseDate: z.string().nullable(),
   publishedAt: z.iso.datetime({ offset: true }).nullable(),
+  readiness: z.enum(["not_started", "in_progress", "ready", "blocked"]).nullable(),
+  riskLevel: z.enum(["low", "medium", "high", "critical"]).nullable(),
   createdBy: z.string().nullable(),
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
-  ticketCount: z.number().int(),
+  ticketCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
 });
 export type ProjectsReleasesCreateReleaseResponse = z.infer<typeof projectsReleasesCreateReleaseResponseSchema>;
 
@@ -4355,35 +4771,42 @@ export const projectsReleasesCreateReleaseBodySchema = z.strictObject({
   description: z.string().nullable().optional(),
   status: z.enum(["draft", "released", "archived"]).optional(),
   releaseDate: z.union([z.literal(""), z.string()]).nullable().optional(),
+  readiness: z.enum(["not_started", "in_progress", "ready", "blocked"]).nullable().optional(),
+  riskLevel: z.enum(["low", "medium", "high", "critical"]).nullable().optional(),
 });
 export type ProjectsReleasesCreateReleaseBody = z.input<typeof projectsReleasesCreateReleaseBodySchema>;
 
 export const projectsReleasesUpdateReleaseResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   name: z.string(),
   version: z.string(),
-  rowVersion: z.number().int(),
+  rowVersion: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   description: z.string().nullable(),
   status: z.enum(["draft", "released", "archived"]),
   releaseDate: z.string().nullable(),
   publishedAt: z.iso.datetime({ offset: true }).nullable(),
+  readiness: z.enum(["not_started", "in_progress", "ready", "blocked"]).nullable(),
+  riskLevel: z.enum(["low", "medium", "high", "critical"]).nullable(),
   createdBy: z.string().nullable(),
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
-  ticketCount: z.number().int(),
+  ticketCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
 });
 export type ProjectsReleasesUpdateReleaseResponse = z.infer<typeof projectsReleasesUpdateReleaseResponseSchema>;
 
 export const projectsReleasesUpdateReleaseBodySchema = z.strictObject({
-  rowVersion: z.number().int(),
+  rowVersion: z.number().int().gt(0).lte(9007199254740991),
   name: z.string().optional(),
   version: z.string().optional(),
   description: z.string().nullable().optional(),
   status: z.enum(["draft", "released", "archived"]).optional(),
   releaseDate: z.union([z.literal(""), z.string()]).nullable().optional(),
+  readiness: z.enum(["not_started", "in_progress", "ready", "blocked"]).nullable().optional(),
+  riskLevel: z.enum(["low", "medium", "high", "critical"]).nullable().optional(),
+  previewConfirmed: z.boolean().optional(),
 });
 export type ProjectsReleasesUpdateReleaseBody = z.input<typeof projectsReleasesUpdateReleaseBodySchema>;
 
@@ -4410,15 +4833,15 @@ export type ProjectsReportsCfdResponse = z.infer<typeof projectsReportsCfdRespon
 
 export const projectsReportsCriticalPathResponseSchema = z.object({
   criticalPath: z.array(z.object({
-    ticketId: z.number().int(),
+    ticketId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     title: z.string(),
     estimate: z.number(),
     earliestStart: z.number(),
     earliestFinish: z.number(),
   })),
   totalDuration: z.number(),
-  nodeCount: z.number().int(),
-  edgeCount: z.number().int(),
+  nodeCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  edgeCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   hasCycle: z.boolean(),
 });
 export type ProjectsReportsCriticalPathResponse = z.infer<typeof projectsReportsCriticalPathResponseSchema>;
@@ -4426,7 +4849,7 @@ export type ProjectsReportsCriticalPathResponse = z.infer<typeof projectsReports
 export const projectsReportsGetCycleTimeResponseSchema = z.array(z.object({
   week: z.string(),
   avgDays: z.number(),
-  count: z.number().int(),
+  count: z.number().int().gte(-9007199254740991).lte(9007199254740991),
 }));
 export type ProjectsReportsGetCycleTimeResponse = z.infer<typeof projectsReportsGetCycleTimeResponseSchema>;
 
@@ -4435,28 +4858,28 @@ export const projectsReportsGetLeadTimeResponseSchema = z.array(z.object({
   avgDays: z.number(),
   p50Days: z.number(),
   p90Days: z.number(),
-  count: z.number().int(),
+  count: z.number().int().gte(-9007199254740991).lte(9007199254740991),
 }));
 export type ProjectsReportsGetLeadTimeResponse = z.infer<typeof projectsReportsGetLeadTimeResponseSchema>;
 
 export const projectsReportsSnapshotResponseSchema = z.object({
-  captured: z.number().int(),
+  captured: z.number().int().gte(-9007199254740991).lte(9007199254740991),
 });
 export type ProjectsReportsSnapshotResponse = z.infer<typeof projectsReportsSnapshotResponseSchema>;
 
 export const projectsReportsVelocityResponseSchema = z.object({
   data: z.array(z.object({
-    cycleId: z.number().int(),
+    cycleId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     name: z.string(),
     startDate: z.string(),
     endDate: z.string(),
-    committedPoints: z.number().int(),
-    completedPoints: z.number().int(),
-    committedCount: z.number().int(),
-    completedCount: z.number().int(),
+    committedPoints: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    completedPoints: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    committedCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    completedCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   })),
   pagination: z.object({
-    limit: z.number().int(),
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
   }),
@@ -4465,10 +4888,10 @@ export type ProjectsReportsVelocityResponse = z.infer<typeof projectsReportsVelo
 
 export const risksListRisksResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
-    projectId: z.number().int(),
-    riskNumber: z.number().int(),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    riskNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     title: z.string(),
     description: z.string().nullable(),
     probability: z.enum(["low", "medium", "high"]),
@@ -4476,22 +4899,22 @@ export const risksListRisksResponseSchema = z.object({
     status: z.enum(["open", "mitigating", "monitoring", "accepted", "closed"]),
     ownerId: z.string().nullable(),
     mitigation: z.string().nullable(),
-    linkedTicketId: z.number().int().nullable(),
+    linkedTicketId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     createdBy: z.string().nullable(),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
     deletedAt: z.iso.datetime({ offset: true }).nullable(),
   })),
   hasMore: z.boolean(),
-  nextCursor: z.number().int().nullable(),
+  nextCursor: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
 });
 export type RisksListRisksResponse = z.infer<typeof risksListRisksResponseSchema>;
 
 export const risksCreateRiskResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
-  riskNumber: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  riskNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   title: z.string(),
   description: z.string().nullable(),
   probability: z.enum(["low", "medium", "high"]),
@@ -4499,7 +4922,7 @@ export const risksCreateRiskResponseSchema = z.object({
   status: z.enum(["open", "mitigating", "monitoring", "accepted", "closed"]),
   ownerId: z.string().nullable(),
   mitigation: z.string().nullable(),
-  linkedTicketId: z.number().int().nullable(),
+  linkedTicketId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   createdBy: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -4515,28 +4938,28 @@ export const risksCreateRiskBodySchema = z.strictObject({
   status: z.enum(["open", "mitigating", "monitoring", "accepted", "closed"]).optional(),
   ownerId: z.string().optional(),
   mitigation: z.string().optional(),
-  linkedTicketId: z.number().int().optional(),
+  linkedTicketId: z.number().int().gt(0).lte(9007199254740991).optional(),
 });
 export type RisksCreateRiskBody = z.input<typeof risksCreateRiskBodySchema>;
 
 export const risksGetRiskStatsResponseSchema = z.object({
-  total: z.number().int(),
-  open: z.number().int(),
-  closed: z.number().int(),
-  highCritical: z.number().int(),
+  total: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  open: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  closed: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  highCritical: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   matrix: z.array(z.object({
     probability: z.enum(["low", "medium", "high"]),
     impact: z.enum(["low", "medium", "high"]),
-    openCount: z.number().int(),
+    openCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   })),
 });
 export type RisksGetRiskStatsResponse = z.infer<typeof risksGetRiskStatsResponseSchema>;
 
 export const risksUpdateRiskResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
-  riskNumber: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  riskNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   title: z.string(),
   description: z.string().nullable(),
   probability: z.enum(["low", "medium", "high"]),
@@ -4544,7 +4967,7 @@ export const risksUpdateRiskResponseSchema = z.object({
   status: z.enum(["open", "mitigating", "monitoring", "accepted", "closed"]),
   ownerId: z.string().nullable(),
   mitigation: z.string().nullable(),
-  linkedTicketId: z.number().int().nullable(),
+  linkedTicketId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   createdBy: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -4560,13 +4983,13 @@ export const risksUpdateRiskBodySchema = z.strictObject({
   status: z.enum(["open", "mitigating", "monitoring", "accepted", "closed"]).optional(),
   ownerId: z.string().nullable().optional(),
   mitigation: z.string().nullable().optional(),
-  linkedTicketId: z.number().int().nullable().optional(),
+  linkedTicketId: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
 });
 export type RisksUpdateRiskBody = z.input<typeof risksUpdateRiskBodySchema>;
 
 export const projectResourcesGetRosterResponseSchema = z.object({
   teams: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     name: z.string(),
     key: z.string(),
   })),
@@ -4582,56 +5005,56 @@ export const projectResourcesGetRosterResponseSchema = z.object({
 export type ProjectResourcesGetRosterResponse = z.infer<typeof projectResourcesGetRosterResponseSchema>;
 
 export const projectsSettingsIterationsGetSettingsResponseSchema = z.object({
-  defaultDurationWeeks: z.number().int(),
+  defaultDurationWeeks: z.number().int().gte(1).lte(4),
   namingPrefix: z.string(),
 });
 export type ProjectsSettingsIterationsGetSettingsResponse = z.infer<typeof projectsSettingsIterationsGetSettingsResponseSchema>;
 
 export const projectsSettingsIterationsUpdateSettingsResponseSchema = z.object({
-  defaultDurationWeeks: z.number().int(),
+  defaultDurationWeeks: z.number().int().gte(1).lte(4),
   namingPrefix: z.string(),
 });
 export type ProjectsSettingsIterationsUpdateSettingsResponse = z.infer<typeof projectsSettingsIterationsUpdateSettingsResponseSchema>;
 
 export const projectsSettingsIterationsUpdateSettingsBodySchema = z.strictObject({
-  defaultDurationWeeks: z.number().int().optional(),
+  defaultDurationWeeks: z.number().int().gte(1).lte(4).optional(),
   namingPrefix: z.string().optional(),
 });
 export type ProjectsSettingsIterationsUpdateSettingsBody = z.input<typeof projectsSettingsIterationsUpdateSettingsBodySchema>;
 
 export const projectsRetentionSettingsGetSettingsResponseSchema = z.object({
-  projectId: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   inheritOrgPolicy: z.boolean(),
-  closedTicketRetentionDays: z.number().int().nullable(),
-  attachmentRetentionDays: z.number().int().nullable(),
-  auditLogRetentionDays: z.number().int().nullable(),
+  closedTicketRetentionDays: z.number().int().gt(0).lte(9007199254740991).nullable(),
+  attachmentRetentionDays: z.number().int().gt(0).lte(9007199254740991).nullable(),
+  auditLogRetentionDays: z.number().int().gt(0).lte(9007199254740991).nullable(),
   legalHold: z.boolean(),
   legalHoldReason: z.string().nullable(),
   legalHoldSetAt: z.string().nullable(),
-  version: z.number().int(),
+  version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   updatedAt: z.string(),
 });
 export type ProjectsRetentionSettingsGetSettingsResponse = z.infer<typeof projectsRetentionSettingsGetSettingsResponseSchema>;
 
 export const projectsRetentionSettingsUpdatePolicyResponseSchema = z.object({
-  projectId: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   inheritOrgPolicy: z.boolean(),
-  closedTicketRetentionDays: z.number().int().nullable(),
-  attachmentRetentionDays: z.number().int().nullable(),
-  auditLogRetentionDays: z.number().int().nullable(),
+  closedTicketRetentionDays: z.number().int().gt(0).lte(9007199254740991).nullable(),
+  attachmentRetentionDays: z.number().int().gt(0).lte(9007199254740991).nullable(),
+  auditLogRetentionDays: z.number().int().gt(0).lte(9007199254740991).nullable(),
   legalHold: z.boolean(),
   legalHoldReason: z.string().nullable(),
   legalHoldSetAt: z.string().nullable(),
-  version: z.number().int(),
+  version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   updatedAt: z.string(),
 });
 export type ProjectsRetentionSettingsUpdatePolicyResponse = z.infer<typeof projectsRetentionSettingsUpdatePolicyResponseSchema>;
 
 export const projectsRetentionSettingsUpdatePolicyBodySchema = z.strictObject({
   inheritOrgPolicy: z.boolean(),
-  closedTicketRetentionDays: z.number().int().nullable(),
-  attachmentRetentionDays: z.number().int().nullable(),
-  auditLogRetentionDays: z.number().int().nullable(),
+  closedTicketRetentionDays: z.number().int().gt(0).lte(9007199254740991).nullable(),
+  attachmentRetentionDays: z.number().int().gt(0).lte(9007199254740991).nullable(),
+  auditLogRetentionDays: z.number().int().gt(0).lte(9007199254740991).nullable(),
 });
 export type ProjectsRetentionSettingsUpdatePolicyBody = z.input<typeof projectsRetentionSettingsUpdatePolicyBodySchema>;
 
@@ -4643,11 +5066,11 @@ export type ProjectsRetentionSettingsSetLegalHoldBody = z.input<typeof projectsR
 
 export const testCasesListCasesResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
-    projectId: z.number().int(),
-    suiteId: z.number().int().nullable(),
-    caseNumber: z.number().int(),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    suiteId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    caseNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     title: z.string(),
     preconditions: z.string().nullable(),
     steps: z.array(z.object({
@@ -4657,7 +5080,7 @@ export const testCasesListCasesResponseSchema = z.object({
     expectedResult: z.string().nullable(),
     priority: z.enum(["low", "medium", "high"]),
     component: z.string().nullable(),
-    linkedTicketId: z.number().int().nullable(),
+    linkedTicketId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     automationStatus: z.enum(["manual", "automated", "planned"]),
     createdBy: z.string().nullable(),
     createdAt: z.iso.datetime({ offset: true }),
@@ -4665,16 +5088,16 @@ export const testCasesListCasesResponseSchema = z.object({
     deletedAt: z.iso.datetime({ offset: true }).nullable(),
   })),
   hasMore: z.boolean(),
-  nextCursor: z.number().int().nullable(),
+  nextCursor: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
 });
 export type TestCasesListCasesResponse = z.infer<typeof testCasesListCasesResponseSchema>;
 
 export const testCasesCreateCaseResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
-  suiteId: z.number().int().nullable(),
-  caseNumber: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  suiteId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  caseNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   title: z.string(),
   preconditions: z.string().nullable(),
   steps: z.array(z.object({
@@ -4684,7 +5107,7 @@ export const testCasesCreateCaseResponseSchema = z.object({
   expectedResult: z.string().nullable(),
   priority: z.enum(["low", "medium", "high"]),
   component: z.string().nullable(),
-  linkedTicketId: z.number().int().nullable(),
+  linkedTicketId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   automationStatus: z.enum(["manual", "automated", "planned"]),
   createdBy: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
@@ -4694,7 +5117,7 @@ export const testCasesCreateCaseResponseSchema = z.object({
 export type TestCasesCreateCaseResponse = z.infer<typeof testCasesCreateCaseResponseSchema>;
 
 export const testCasesCreateCaseBodySchema = z.strictObject({
-  suiteId: z.number().int().optional(),
+  suiteId: z.number().int().gt(0).lte(9007199254740991).optional(),
   title: z.string(),
   preconditions: z.string().optional(),
   steps: z.array(z.object({
@@ -4704,17 +5127,17 @@ export const testCasesCreateCaseBodySchema = z.strictObject({
   expectedResult: z.string().optional(),
   priority: z.enum(["low", "medium", "high"]).optional(),
   component: z.string().optional(),
-  linkedTicketId: z.number().int().optional(),
+  linkedTicketId: z.number().int().gt(0).lte(9007199254740991).optional(),
   automationStatus: z.enum(["manual", "automated", "planned"]).optional(),
 });
 export type TestCasesCreateCaseBody = z.input<typeof testCasesCreateCaseBodySchema>;
 
 export const testCasesUpdateCaseResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
-  suiteId: z.number().int().nullable(),
-  caseNumber: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  suiteId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  caseNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   title: z.string(),
   preconditions: z.string().nullable(),
   steps: z.array(z.object({
@@ -4724,7 +5147,7 @@ export const testCasesUpdateCaseResponseSchema = z.object({
   expectedResult: z.string().nullable(),
   priority: z.enum(["low", "medium", "high"]),
   component: z.string().nullable(),
-  linkedTicketId: z.number().int().nullable(),
+  linkedTicketId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   automationStatus: z.enum(["manual", "automated", "planned"]),
   createdBy: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
@@ -4734,7 +5157,7 @@ export const testCasesUpdateCaseResponseSchema = z.object({
 export type TestCasesUpdateCaseResponse = z.infer<typeof testCasesUpdateCaseResponseSchema>;
 
 export const testCasesUpdateCaseBodySchema = z.strictObject({
-  suiteId: z.number().int().optional(),
+  suiteId: z.number().int().gt(0).lte(9007199254740991).optional(),
   title: z.string().optional(),
   preconditions: z.string().optional(),
   steps: z.array(z.object({
@@ -4744,24 +5167,24 @@ export const testCasesUpdateCaseBodySchema = z.strictObject({
   expectedResult: z.string().optional(),
   priority: z.enum(["low", "medium", "high"]).optional(),
   component: z.string().optional(),
-  linkedTicketId: z.number().int().optional(),
+  linkedTicketId: z.number().int().gt(0).lte(9007199254740991).optional(),
   automationStatus: z.enum(["manual", "automated", "planned"]).optional(),
 });
 export type TestCasesUpdateCaseBody = z.input<typeof testCasesUpdateCaseBodySchema>;
 
 export const testRunsListRunsResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
-    projectId: z.number().int(),
-    runNumber: z.number().int(),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    runNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     name: z.string(),
-    cycleId: z.number().int().nullable(),
-    releaseId: z.number().int().nullable(),
+    cycleId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    releaseId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     environment: z.string().nullable(),
     browserDevice: z.string().nullable(),
     testerId: z.string().nullable(),
-    testerMembershipId: z.number().int().nullable(),
+    testerMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     status: z.enum(["not_started", "in_progress", "completed", "aborted"]),
     startedAt: z.iso.datetime({ offset: true }).nullable(),
     completedAt: z.iso.datetime({ offset: true }).nullable(),
@@ -4769,29 +5192,29 @@ export const testRunsListRunsResponseSchema = z.object({
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
     deletedAt: z.iso.datetime({ offset: true }).nullable(),
-    passCount: z.number().int(),
-    failCount: z.number().int(),
-    blockedCount: z.number().int(),
-    notRunCount: z.number().int(),
-    skippedCount: z.number().int(),
+    passCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    failCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    blockedCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    notRunCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    skippedCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   })),
   hasMore: z.boolean(),
-  nextCursor: z.number().int().nullable(),
+  nextCursor: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
 });
 export type TestRunsListRunsResponse = z.infer<typeof testRunsListRunsResponseSchema>;
 
 export const testRunsCreateRunResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
-  runNumber: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  runNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   name: z.string(),
-  cycleId: z.number().int().nullable(),
-  releaseId: z.number().int().nullable(),
+  cycleId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  releaseId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   environment: z.string().nullable(),
   browserDevice: z.string().nullable(),
   testerId: z.string().nullable(),
-  testerMembershipId: z.number().int().nullable(),
+  testerMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   status: z.enum(["not_started", "in_progress", "completed", "aborted"]),
   startedAt: z.iso.datetime({ offset: true }).nullable(),
   completedAt: z.iso.datetime({ offset: true }).nullable(),
@@ -4804,28 +5227,28 @@ export type TestRunsCreateRunResponse = z.infer<typeof testRunsCreateRunResponse
 
 export const testRunsCreateRunBodySchema = z.strictObject({
   name: z.string(),
-  cycleId: z.number().int().optional(),
-  releaseId: z.number().int().optional(),
+  cycleId: z.number().int().gt(0).lte(9007199254740991).optional(),
+  releaseId: z.number().int().gt(0).lte(9007199254740991).optional(),
   environment: z.string().optional(),
   browserDevice: z.string().optional(),
   testerId: z.string().optional(),
-  caseIds: z.array(z.number().int()).optional(),
-  suiteId: z.number().int().optional(),
+  caseIds: z.array(z.number().int().gt(0).lte(9007199254740991)).optional(),
+  suiteId: z.number().int().gt(0).lte(9007199254740991).optional(),
 });
 export type TestRunsCreateRunBody = z.input<typeof testRunsCreateRunBodySchema>;
 
 export const testRunsGetRunResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
-  runNumber: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  runNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   name: z.string(),
-  cycleId: z.number().int().nullable(),
-  releaseId: z.number().int().nullable(),
+  cycleId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  releaseId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   environment: z.string().nullable(),
   browserDevice: z.string().nullable(),
   testerId: z.string().nullable(),
-  testerMembershipId: z.number().int().nullable(),
+  testerMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   status: z.enum(["not_started", "in_progress", "completed", "aborted"]),
   startedAt: z.iso.datetime({ offset: true }).nullable(),
   completedAt: z.iso.datetime({ offset: true }).nullable(),
@@ -4834,20 +5257,20 @@ export const testRunsGetRunResponseSchema = z.object({
   updatedAt: z.iso.datetime({ offset: true }),
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
   results: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
-    projectId: z.number().int(),
-    runId: z.number().int(),
-    testCaseId: z.number().int(),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    runId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    testCaseId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     status: z.enum(["not_run", "passed", "failed", "blocked", "skipped"]),
     notes: z.string().nullable(),
     executedBy: z.string().nullable(),
     executedAt: z.iso.datetime({ offset: true }).nullable(),
-    linkedWorkItemId: z.number().int().nullable(),
+    linkedWorkItemId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
     testCase: z.object({
-      caseNumber: z.number().int(),
+      caseNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       title: z.string(),
       priority: z.enum(["low", "medium", "high"]),
     }),
@@ -4856,17 +5279,17 @@ export const testRunsGetRunResponseSchema = z.object({
 export type TestRunsGetRunResponse = z.infer<typeof testRunsGetRunResponseSchema>;
 
 export const testRunsUpdateRunResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
-  runNumber: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  runNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   name: z.string(),
-  cycleId: z.number().int().nullable(),
-  releaseId: z.number().int().nullable(),
+  cycleId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  releaseId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   environment: z.string().nullable(),
   browserDevice: z.string().nullable(),
   testerId: z.string().nullable(),
-  testerMembershipId: z.number().int().nullable(),
+  testerMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   status: z.enum(["not_started", "in_progress", "completed", "aborted"]),
   startedAt: z.iso.datetime({ offset: true }).nullable(),
   completedAt: z.iso.datetime({ offset: true }).nullable(),
@@ -4883,22 +5306,23 @@ export const testRunsUpdateRunBodySchema = z.strictObject({
   environment: z.string().optional(),
   browserDevice: z.string().optional(),
   testerId: z.string().optional(),
-  cycleId: z.number().int().optional(),
-  releaseId: z.number().int().optional(),
+  cycleId: z.number().int().gt(0).lte(9007199254740991).optional(),
+  releaseId: z.number().int().gt(0).lte(9007199254740991).optional(),
+  version: z.number().int().gt(0).lte(9007199254740991).optional(),
 });
 export type TestRunsUpdateRunBody = z.input<typeof testRunsUpdateRunBodySchema>;
 
 export const testRunsUpdateResultResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
-  runId: z.number().int(),
-  testCaseId: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  runId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  testCaseId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   status: z.enum(["not_run", "passed", "failed", "blocked", "skipped"]),
   notes: z.string().nullable(),
   executedBy: z.string().nullable(),
   executedAt: z.iso.datetime({ offset: true }).nullable(),
-  linkedWorkItemId: z.number().int().nullable(),
+  linkedWorkItemId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
 });
@@ -4911,16 +5335,16 @@ export const testRunsUpdateResultBodySchema = z.strictObject({
 export type TestRunsUpdateResultBody = z.input<typeof testRunsUpdateResultBodySchema>;
 
 export const testRunsCreateBugFromResultResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
-  ticketNumber: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  ticketNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   title: z.string(),
   description: z.string().nullable(),
   type: z.literal("BUG"),
   status: z.string(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
-  assigneeMembershipId: z.number().int().nullable(),
+  assigneeMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   reporterId: z.string().nullable(),
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
@@ -4932,14 +5356,14 @@ export const testRunsCreateBugFromResultResponseSchema = z.object({
   actualResult: z.string().nullable(),
   environment: z.string().nullable(),
   browserDevice: z.string().nullable(),
-  affectedReleaseId: z.number().int().nullable(),
-  fixedReleaseId: z.number().int().nullable(),
+  affectedReleaseId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  fixedReleaseId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   qaOwnerUserId: z.string().nullable(),
-  qaOwnerMembershipId: z.number().int().nullable(),
-  linkedTestCaseId: z.number().int().nullable(),
-  reopenCount: z.number().int().nullable(),
+  qaOwnerMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  linkedTestCaseId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  reopenCount: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   createdByUserId: z.string().nullable(),
-  version: z.number().int(),
+  version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
 });
 export type TestRunsCreateBugFromResultResponse = z.infer<typeof testRunsCreateBugFromResultResponseSchema>;
 
@@ -4956,49 +5380,49 @@ export const testRunsCreateBugFromResultBodySchema = z.strictObject({
 export type TestRunsCreateBugFromResultBody = z.input<typeof testRunsCreateBugFromResultBodySchema>;
 
 export const testSuitesListSuitesResponseSchema = z.array(z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   name: z.string(),
   description: z.string().nullable(),
-  parentId: z.number().int().nullable(),
-  position: z.number().int(),
+  parentId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  position: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   createdBy: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
-  caseCount: z.number().int(),
+  caseCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
 }));
 export type TestSuitesListSuitesResponse = z.infer<typeof testSuitesListSuitesResponseSchema>;
 
 export const projectsTicketsListTicketsResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
     title: z.string(),
     type: z.enum(["EPIC", "STORY", "TASK", "BUG"]),
     status: z.string(),
     priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
-    projectId: z.number().int().nullable(),
-    ticketNumber: z.number().int(),
-    epicId: z.number().int().nullable(),
-    assigneeMembershipId: z.number().int().nullable(),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    ticketNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    epicId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    assigneeMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     reporterId: z.string().nullable(),
-    points: z.number().int().nullable(),
-    storyPoints: z.number().int().nullable(),
+    points: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    storyPoints: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     link: z.string().nullable(),
     rank: z.string(),
-    parentTicketId: z.number().int().nullable(),
+    parentTicketId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     originalEstimate: z.string().nullable(),
     timeSpent: z.string(),
     startDate: z.string().nullable(),
     dueDate: z.string().nullable(),
-    moduleId: z.number().int().nullable(),
-    cycleId: z.number().int().nullable(),
+    moduleId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    cycleId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     sequenceId: z.string().nullable(),
-    estimate: z.number().int().nullable(),
+    estimate: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     health: z.enum(["on_track", "at_risk", "off_track"]).nullable(),
-    version: z.number().int(),
+    version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
     descriptionExcerpt: z.string(),
@@ -5012,8 +5436,8 @@ export const projectsTicketsListTicketsResponseSchema = z.object({
       image: z.string().nullable(),
     }).nullable(),
     assignees: z.array(z.object({
-      id: z.number().int(),
-      ticketId: z.number().int(),
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      ticketId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       assignedAt: z.iso.datetime({ offset: true }),
       assignedBy: z.string().nullable(),
       userId: z.string(),
@@ -5027,12 +5451,12 @@ export const projectsTicketsListTicketsResponseSchema = z.object({
       }),
     })),
     labels: z.array(z.object({
-      id: z.number().int(),
-      ticketId: z.number().int(),
-      labelId: z.number().int(),
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      ticketId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      labelId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       createdAt: z.iso.datetime({ offset: true }),
       label: z.object({
-        id: z.number().int(),
+        id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
         orgId: z.string(),
         name: z.string(),
         color: z.string().nullable(),
@@ -5040,7 +5464,7 @@ export const projectsTicketsListTicketsResponseSchema = z.object({
       }),
     })),
     cycle: z.object({
-      id: z.number().int(),
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       name: z.string(),
       status: z.enum(["draft", "active", "completed"]),
       startDate: z.string(),
@@ -5048,7 +5472,7 @@ export const projectsTicketsListTicketsResponseSchema = z.object({
     }).nullable(),
   })),
   pagination: z.object({
-    limit: z.number().int(),
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
   }),
@@ -5056,41 +5480,41 @@ export const projectsTicketsListTicketsResponseSchema = z.object({
 export type ProjectsTicketsListTicketsResponse = z.infer<typeof projectsTicketsListTicketsResponseSchema>;
 
 export const projectsTicketsCreateTicketResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
   title: z.string(),
   description: z.string().nullable(),
   type: z.enum(["EPIC", "STORY", "TASK", "BUG"]),
   status: z.string(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
-  projectId: z.number().int().nullable(),
-  ticketNumber: z.number().int(),
-  epicId: z.number().int().nullable(),
-  assigneeMembershipId: z.number().int().nullable(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  ticketNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  epicId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  assigneeMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   reporterId: z.string().nullable(),
-  reporterMembershipId: z.number().int().nullable(),
-  points: z.number().int().nullable(),
-  storyPoints: z.number().int().nullable(),
+  reporterMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  points: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  storyPoints: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   link: z.string().nullable(),
   rank: z.string(),
-  parentTicketId: z.number().int().nullable(),
+  parentTicketId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   originalEstimate: z.string().nullable(),
   timeSpent: z.string(),
   startDate: z.string().nullable(),
   dueDate: z.string().nullable(),
-  moduleId: z.number().int().nullable(),
-  cycleId: z.number().int().nullable(),
+  moduleId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  cycleId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   sequenceId: z.string().nullable(),
-  estimate: z.number().int().nullable(),
-  completionPercentage: z.number().int(),
+  estimate: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  completionPercentage: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   clientVisible: z.boolean(),
   isRecurring: z.boolean(),
   recurrenceRule: z.unknown(),
-  recurrenceParentId: z.number().int().nullable(),
+  recurrenceParentId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   recurrenceNextRunAt: z.iso.datetime({ offset: true }).nullable(),
-  customerId: z.number().int().nullable(),
+  customerId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   health: z.enum(["on_track", "at_risk", "off_track"]).nullable(),
-  version: z.number().int(),
+  version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -5107,96 +5531,96 @@ export const projectsTicketsCreateTicketBodySchema = z.strictObject({
   reporterId: z.string().optional(),
   epicId: z.number().optional(),
   cycleId: z.number().optional(),
-  points: z.number().int().optional(),
+  points: z.number().int().gte(0).lte(9007199254740991).optional(),
   link: z.string().optional(),
-  originalEstimate: z.number().optional(),
+  originalEstimate: z.number().gte(0).optional(),
   parentTicketId: z.number().optional(),
   status: z.string().optional(),
   dueDate: z.iso.date().optional(),
   isRecurring: z.boolean().optional(),
   recurrenceRule: z.object({
     frequency: z.enum(["daily", "weekly", "monthly"]),
-    interval: z.number().int(),
-    daysOfWeek: z.array(z.number().int()).optional(),
+    interval: z.number().int().gte(1).lte(99),
+    daysOfWeek: z.array(z.number().int().gte(0).lte(6)).optional(),
     endDate: z.string().nullable().optional(),
   }).nullable().optional(),
 });
 export type ProjectsTicketsCreateTicketBody = z.input<typeof projectsTicketsCreateTicketBodySchema>;
 
 export const projectsTicketsBulkUpdateResponseSchema = z.object({
-  updated: z.number().int(),
-  ticketIds: z.array(z.number().int()),
+  updated: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  ticketIds: z.array(z.number().int().gte(-9007199254740991).lte(9007199254740991)),
   blocked: z.array(z.object({
-    ticketId: z.number().int(),
+    ticketId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     reason: z.string(),
-    dependencyCount: z.number().int(),
+    dependencyCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   })).optional(),
 });
 export type ProjectsTicketsBulkUpdateResponse = z.infer<typeof projectsTicketsBulkUpdateResponseSchema>;
 
 export const projectsTicketsBulkUpdateBodySchema = z.strictObject({
-  ticketIds: z.array(z.number().int()),
+  ticketIds: z.array(z.number().int().gt(0).lte(9007199254740991)),
   assigneeId: z.string().optional(),
   status: z.string().optional(),
-  cycleId: z.number().int().nullable().optional(),
+  cycleId: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
-  parentTicketId: z.number().int().nullable().optional(),
-  labelIds: z.array(z.number().int()).optional(),
+  parentTicketId: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
+  labelIds: z.array(z.number().int().gt(0).lte(9007199254740991)).optional(),
   archive: z.boolean().optional(),
-  versions: z.record(z.string(), z.number().int()).optional(),
+  versions: z.record(z.string(), z.number().int().gt(0).lte(9007199254740991)).optional(),
 });
 export type ProjectsTicketsBulkUpdateBody = z.input<typeof projectsTicketsBulkUpdateBodySchema>;
 
-export const projectsTicketsGetColumnCountsResponseSchema = z.record(z.string(), z.number().int());
+export const projectsTicketsGetColumnCountsResponseSchema = z.record(z.string(), z.number().int().gte(-9007199254740991).lte(9007199254740991));
 export type ProjectsTicketsGetColumnCountsResponse = z.infer<typeof projectsTicketsGetColumnCountsResponseSchema>;
 
 export const projectsTicketsGetTicketByKeyResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
   title: z.string(),
   description: z.string().nullable(),
   type: z.enum(["EPIC", "STORY", "TASK", "BUG"]),
   status: z.string(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
-  projectId: z.number().int().nullable(),
-  ticketNumber: z.number().int(),
-  epicId: z.number().int().nullable(),
-  assigneeMembershipId: z.number().int().nullable(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  ticketNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  epicId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  assigneeMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   reporterId: z.string().nullable(),
-  reporterMembershipId: z.number().int().nullable(),
-  points: z.number().int().nullable(),
-  storyPoints: z.number().int().nullable(),
+  reporterMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  points: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  storyPoints: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   link: z.string().nullable(),
   rank: z.string(),
-  parentTicketId: z.number().int().nullable(),
+  parentTicketId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   originalEstimate: z.string().nullable(),
   timeSpent: z.string(),
   startDate: z.string().nullable(),
   dueDate: z.string().nullable(),
-  moduleId: z.number().int().nullable(),
-  cycleId: z.number().int().nullable(),
+  moduleId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  cycleId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   sequenceId: z.string().nullable(),
-  estimate: z.number().int().nullable(),
-  completionPercentage: z.number().int(),
+  estimate: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  completionPercentage: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   clientVisible: z.boolean(),
   isRecurring: z.boolean(),
   recurrenceRule: z.unknown(),
-  recurrenceParentId: z.number().int().nullable(),
+  recurrenceParentId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   recurrenceNextRunAt: z.iso.datetime({ offset: true }).nullable(),
-  customerId: z.number().int().nullable(),
+  customerId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   health: z.enum(["on_track", "at_risk", "off_track"]).nullable(),
-  version: z.number().int(),
+  version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
   project: z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     name: z.string(),
     key: z.string(),
     orgId: z.string(),
   }).nullable(),
   epic: z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     name: z.string(),
   }).nullable(),
   assignee: z.object({
@@ -5218,8 +5642,8 @@ export const projectsTicketsGetTicketByKeyResponseSchema = z.object({
     image: z.string().nullable(),
   }).nullable(),
   assignees: z.array(z.object({
-    id: z.number().int(),
-    ticketId: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    ticketId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     assignedAt: z.iso.datetime({ offset: true }),
     assignedBy: z.string().nullable(),
     user: z.object({
@@ -5257,7 +5681,7 @@ export const projectsTicketsGetTicketByKeyResponseSchema = z.object({
     }).nullable(),
   })),
   attachments: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     filename: z.string(),
     url: z.string(),
     mimeType: z.string().nullable(),
@@ -5271,17 +5695,17 @@ export const projectsTicketsGetTicketByKeyResponseSchema = z.object({
     }).nullable(),
   })),
   labels: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     name: z.string(),
     color: z.string().nullable(),
   })),
   comments: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
-    ticketId: z.number().int(),
+    ticketId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     userId: z.string(),
     content: z.string(),
-    parentCommentId: z.number().int().nullable(),
+    parentCommentId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
     user: z.object({
@@ -5301,52 +5725,52 @@ export const projectsTicketsGetTicketByKeyResponseSchema = z.object({
 export type ProjectsTicketsGetTicketByKeyResponse = z.infer<typeof projectsTicketsGetTicketByKeyResponseSchema>;
 
 export const projectsTicketsGetTicketResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
   title: z.string(),
   description: z.string().nullable(),
   type: z.enum(["EPIC", "STORY", "TASK", "BUG"]),
   status: z.string(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
-  projectId: z.number().int().nullable(),
-  ticketNumber: z.number().int(),
-  epicId: z.number().int().nullable(),
-  assigneeMembershipId: z.number().int().nullable(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  ticketNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  epicId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  assigneeMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   reporterId: z.string().nullable(),
-  reporterMembershipId: z.number().int().nullable(),
-  points: z.number().int().nullable(),
-  storyPoints: z.number().int().nullable(),
+  reporterMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  points: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  storyPoints: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   link: z.string().nullable(),
   rank: z.string(),
-  parentTicketId: z.number().int().nullable(),
+  parentTicketId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   originalEstimate: z.string().nullable(),
   timeSpent: z.string(),
   startDate: z.string().nullable(),
   dueDate: z.string().nullable(),
-  moduleId: z.number().int().nullable(),
-  cycleId: z.number().int().nullable(),
+  moduleId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  cycleId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   sequenceId: z.string().nullable(),
-  estimate: z.number().int().nullable(),
-  completionPercentage: z.number().int(),
+  estimate: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  completionPercentage: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   clientVisible: z.boolean(),
   isRecurring: z.boolean(),
   recurrenceRule: z.unknown(),
-  recurrenceParentId: z.number().int().nullable(),
+  recurrenceParentId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   recurrenceNextRunAt: z.iso.datetime({ offset: true }).nullable(),
-  customerId: z.number().int().nullable(),
+  customerId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   health: z.enum(["on_track", "at_risk", "off_track"]).nullable(),
-  version: z.number().int(),
+  version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
   project: z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     name: z.string(),
     key: z.string(),
     orgId: z.string(),
   }).nullable(),
   epic: z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     name: z.string(),
   }).nullable(),
   assignee: z.object({
@@ -5368,8 +5792,8 @@ export const projectsTicketsGetTicketResponseSchema = z.object({
     image: z.string().nullable(),
   }).nullable(),
   assignees: z.array(z.object({
-    id: z.number().int(),
-    ticketId: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    ticketId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     assignedAt: z.iso.datetime({ offset: true }),
     assignedBy: z.string().nullable(),
     user: z.object({
@@ -5407,7 +5831,7 @@ export const projectsTicketsGetTicketResponseSchema = z.object({
     }).nullable(),
   })),
   attachments: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     filename: z.string(),
     url: z.string(),
     mimeType: z.string().nullable(),
@@ -5421,17 +5845,17 @@ export const projectsTicketsGetTicketResponseSchema = z.object({
     }).nullable(),
   })),
   labels: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     name: z.string(),
     color: z.string().nullable(),
   })),
   comments: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
-    ticketId: z.number().int(),
+    ticketId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     userId: z.string(),
     content: z.string(),
-    parentCommentId: z.number().int().nullable(),
+    parentCommentId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
     user: z.object({
@@ -5453,7 +5877,7 @@ export type ProjectsTicketsGetTicketResponse = z.infer<typeof projectsTicketsGet
 export const projectsTicketsUpdateTicketResponseSchema = z.object({
   updated: z.literal(true),
   updatedAt: z.string(),
-  version: z.number().int(),
+  version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
 });
 export type ProjectsTicketsUpdateTicketResponse = z.infer<typeof projectsTicketsUpdateTicketResponseSchema>;
 
@@ -5467,29 +5891,29 @@ export const projectsTicketsUpdateTicketBodySchema = z.strictObject({
   assigneeIds: z.array(z.string()).optional(),
   epicId: z.number().nullable().optional(),
   moduleId: z.number().nullable().optional(),
-  points: z.number().int().nullable().optional(),
-  originalEstimate: z.number().nullable().optional(),
+  points: z.number().int().gte(0).lte(9007199254740991).nullable().optional(),
+  originalEstimate: z.number().gte(0).nullable().optional(),
   startDate: z.iso.date().nullable().optional(),
   dueDate: z.iso.date().nullable().optional(),
   cycleId: z.number().nullable().optional(),
   expectedUpdatedAt: z.string().optional(),
-  version: z.number().int(),
+  version: z.number().int().gt(0).lte(9007199254740991),
   isRecurring: z.boolean().optional(),
   recurrenceRule: z.object({
     frequency: z.enum(["daily", "weekly", "monthly"]),
-    interval: z.number().int(),
-    daysOfWeek: z.array(z.number().int()).optional(),
+    interval: z.number().int().gte(1).lte(99),
+    daysOfWeek: z.array(z.number().int().gte(0).lte(6)).optional(),
     endDate: z.string().nullable().optional(),
   }).nullable().optional(),
-  customerId: z.number().int().nullable().optional(),
-  parentTicketId: z.number().int().nullable().optional(),
+  customerId: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
+  parentTicketId: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
   health: z.enum(["on_track", "at_risk", "off_track"]).nullable().optional(),
 });
 export type ProjectsTicketsUpdateTicketBody = z.input<typeof projectsTicketsUpdateTicketBodySchema>;
 
 export const projectsTicketsGetActivityResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     action: z.enum(["created", "status_changed", "priority_changed", "assignee_changed", "title_changed", "sprint_changed", "due_date_changed", "comment_added", "comment_updated", "comment_deleted", "label_changed", "estimate_changed", "cycle_changed", "type_changed"]),
     label: z.string(),
     fromValue: z.string().nullable(),
@@ -5502,7 +5926,7 @@ export const projectsTicketsGetActivityResponseSchema = z.object({
     }).nullable(),
   })),
   pagination: z.object({
-    limit: z.number().int(),
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
   }),
@@ -5510,7 +5934,7 @@ export const projectsTicketsGetActivityResponseSchema = z.object({
 export type ProjectsTicketsGetActivityResponse = z.infer<typeof projectsTicketsGetActivityResponseSchema>;
 
 export const projectsTicketAssociationsAddAttachmentResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
 });
 export type ProjectsTicketAssociationsAddAttachmentResponse = z.infer<typeof projectsTicketAssociationsAddAttachmentResponseSchema>;
 
@@ -5523,46 +5947,46 @@ export const projectsTicketAssociationsAddAttachmentBodySchema = z.strictObject(
 export type ProjectsTicketAssociationsAddAttachmentBody = z.input<typeof projectsTicketAssociationsAddAttachmentBodySchema>;
 
 export const projectsTicketChecklistsGetChecklistsResponseSchema = z.array(z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
-  ticketId: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  ticketId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   title: z.string(),
-  position: z.number().int(),
+  position: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
   items: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
-    checklistId: z.number().int(),
+    checklistId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     text: z.string(),
     isCompleted: z.boolean(),
     assigneeId: z.string().nullable(),
     dueDate: z.string().nullable(),
-    order: z.number().int(),
+    order: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     createdAt: z.iso.datetime({ offset: true }),
   })).optional(),
 }));
 export type ProjectsTicketChecklistsGetChecklistsResponse = z.infer<typeof projectsTicketChecklistsGetChecklistsResponseSchema>;
 
 export const projectsTicketChecklistsCreateChecklistResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
-  ticketId: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  ticketId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   title: z.string(),
-  position: z.number().int(),
+  position: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
   items: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
-    checklistId: z.number().int(),
+    checklistId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     text: z.string(),
     isCompleted: z.boolean(),
     assigneeId: z.string().nullable(),
     dueDate: z.string().nullable(),
-    order: z.number().int(),
+    order: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     createdAt: z.iso.datetime({ offset: true }),
   })).optional(),
 });
@@ -5574,23 +5998,23 @@ export const projectsTicketChecklistsCreateChecklistBodySchema = z.strictObject(
 export type ProjectsTicketChecklistsCreateChecklistBody = z.input<typeof projectsTicketChecklistsCreateChecklistBodySchema>;
 
 export const projectsTicketChecklistsUpdateChecklistResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
-  ticketId: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  ticketId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   title: z.string(),
-  position: z.number().int(),
+  position: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
   items: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
-    checklistId: z.number().int(),
+    checklistId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     text: z.string(),
     isCompleted: z.boolean(),
     assigneeId: z.string().nullable(),
     dueDate: z.string().nullable(),
-    order: z.number().int(),
+    order: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     createdAt: z.iso.datetime({ offset: true }),
   })).optional(),
 });
@@ -5602,14 +6026,14 @@ export const projectsTicketChecklistsUpdateChecklistBodySchema = z.strictObject(
 export type ProjectsTicketChecklistsUpdateChecklistBody = z.input<typeof projectsTicketChecklistsUpdateChecklistBodySchema>;
 
 export const projectsTicketChecklistsCreateChecklistItemResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  checklistId: z.number().int(),
+  checklistId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   text: z.string(),
   isCompleted: z.boolean(),
   assigneeId: z.string().nullable(),
   dueDate: z.string().nullable(),
-  order: z.number().int(),
+  order: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   createdAt: z.iso.datetime({ offset: true }),
 });
 export type ProjectsTicketChecklistsCreateChecklistItemResponse = z.infer<typeof projectsTicketChecklistsCreateChecklistItemResponseSchema>;
@@ -5618,19 +6042,19 @@ export const projectsTicketChecklistsCreateChecklistItemBodySchema = z.strictObj
   text: z.string(),
   assigneeId: z.string().optional(),
   dueDate: z.union([z.literal(""), z.string()]).nullable().optional(),
-  order: z.number().int().optional(),
+  order: z.number().int().gte(-9007199254740991).lte(9007199254740991).optional(),
 });
 export type ProjectsTicketChecklistsCreateChecklistItemBody = z.input<typeof projectsTicketChecklistsCreateChecklistItemBodySchema>;
 
 export const projectsTicketChecklistsUpdateChecklistItemResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  checklistId: z.number().int(),
+  checklistId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   text: z.string(),
   isCompleted: z.boolean(),
   assigneeId: z.string().nullable(),
   dueDate: z.string().nullable(),
-  order: z.number().int(),
+  order: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   createdAt: z.iso.datetime({ offset: true }),
 });
 export type ProjectsTicketChecklistsUpdateChecklistItemResponse = z.infer<typeof projectsTicketChecklistsUpdateChecklistItemResponseSchema>;
@@ -5640,14 +6064,14 @@ export const projectsTicketChecklistsUpdateChecklistItemBodySchema = z.strictObj
   isCompleted: z.boolean().optional(),
   assigneeId: z.string().nullable().optional(),
   dueDate: z.union([z.literal(""), z.string()]).nullable().optional(),
-  order: z.number().int().optional(),
+  order: z.number().int().gte(-9007199254740991).lte(9007199254740991).optional(),
 });
 export type ProjectsTicketChecklistsUpdateChecklistItemBody = z.input<typeof projectsTicketChecklistsUpdateChecklistItemBodySchema>;
 
 export const projectsTicketCommentsAddCommentResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  ticketId: z.number().int(),
+  ticketId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   body: z.string(),
   clientVisible: z.boolean(),
   isEdited: z.boolean(),
@@ -5664,14 +6088,14 @@ export type ProjectsTicketCommentsAddCommentResponse = z.infer<typeof projectsTi
 
 export const projectsTicketCommentsAddCommentBodySchema = z.strictObject({
   content: z.string(),
-  parentCommentId: z.number().int().optional(),
+  parentCommentId: z.number().int().gt(0).lte(9007199254740991).optional(),
 });
 export type ProjectsTicketCommentsAddCommentBody = z.input<typeof projectsTicketCommentsAddCommentBodySchema>;
 
 export const projectsTicketCommentsGetCommentResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  ticketId: z.number().int(),
+  ticketId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   body: z.string(),
   clientVisible: z.boolean(),
   isEdited: z.boolean(),
@@ -5697,7 +6121,7 @@ export const projectsTicketCommentsEditCommentBodySchema = z.strictObject({
 export type ProjectsTicketCommentsEditCommentBody = z.input<typeof projectsTicketCommentsEditCommentBodySchema>;
 
 export const projectsTicketCommentsAddReactionResponseSchema = z.object({
-  commentId: z.number().int(),
+  commentId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   userId: z.string(),
   emoji: z.string(),
 });
@@ -5709,22 +6133,22 @@ export const projectsTicketCommentsAddReactionBodySchema = z.strictObject({
 export type ProjectsTicketCommentsAddReactionBody = z.input<typeof projectsTicketCommentsAddReactionBodySchema>;
 
 export const projectsCustomFieldsGetTicketValuesResponseSchema = z.array(z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  ticketId: z.number().int(),
-  fieldId: z.number().int(),
+  ticketId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  fieldId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   value: z.unknown(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
   field: z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
-    projectId: z.number().int().nullable(),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     name: z.string(),
     type: z.string(),
     options: z.array(z.string()).nullable(),
     required: z.boolean().nullable(),
-    position: z.number().int().nullable(),
+    position: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     createdAt: z.iso.datetime({ offset: true }),
   }),
 }));
@@ -5737,14 +6161,14 @@ export type ProjectsCustomFieldsUpsertTicketValuesResponse = z.infer<typeof proj
 
 export const projectsCustomFieldsUpsertTicketValuesBodySchema = z.strictObject({
   values: z.array(z.object({
-    fieldId: z.number().int(),
+    fieldId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     value: z.string().nullable().optional(),
   })),
 });
 export type ProjectsCustomFieldsUpsertTicketValuesBody = z.input<typeof projectsCustomFieldsUpsertTicketValuesBodySchema>;
 
 export const projectsTicketAssociationsGetGitLinksResponseSchema = z.array(z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   provider: z.enum(["github", "gitlab", "bitbucket"]),
   refType: z.enum(["commit", "pull_request", "branch"]),
   externalId: z.string(),
@@ -5767,26 +6191,26 @@ export const projectsTicketAssociationsAddLabelBodySchema = z.strictObject({
 export type ProjectsTicketAssociationsAddLabelBody = z.input<typeof projectsTicketAssociationsAddLabelBodySchema>;
 
 export const projectsTicketsRankTicketResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   rank: z.string(),
   status: z.string(),
-  version: z.number().int(),
+  version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
 });
 export type ProjectsTicketsRankTicketResponse = z.infer<typeof projectsTicketsRankTicketResponseSchema>;
 
 export const projectsTicketsRankTicketBodySchema = z.strictObject({
-  beforeTicketId: z.number().int().nullable().optional(),
-  afterTicketId: z.number().int().nullable().optional(),
+  beforeTicketId: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
+  afterTicketId: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
   status: z.string().optional(),
-  version: z.number().int().optional(),
+  version: z.number().int().gt(0).lte(9007199254740991).optional(),
 });
 export type ProjectsTicketsRankTicketBody = z.input<typeof projectsTicketsRankTicketBodySchema>;
 
 export const projectsTicketAssociationsListRelatedLinksResponseSchema = z.array(z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
-  ticketId: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  ticketId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   url: z.string(),
   title: z.string().nullable(),
   description: z.string().nullable(),
@@ -5797,10 +6221,10 @@ export const projectsTicketAssociationsListRelatedLinksResponseSchema = z.array(
 export type ProjectsTicketAssociationsListRelatedLinksResponse = z.infer<typeof projectsTicketAssociationsListRelatedLinksResponseSchema>;
 
 export const projectsTicketAssociationsAddRelatedLinkResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
-  ticketId: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  ticketId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   url: z.string(),
   title: z.string().nullable(),
   description: z.string().nullable(),
@@ -5817,20 +6241,20 @@ export const projectsTicketAssociationsAddRelatedLinkBodySchema = z.strictObject
 export type ProjectsTicketAssociationsAddRelatedLinkBody = z.input<typeof projectsTicketAssociationsAddRelatedLinkBodySchema>;
 
 export const projectsTicketAssociationsListRelationsResponseSchema = z.array(z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   relationType: z.enum(["blocks", "blocked_by", "duplicate_of", "relates_to"]),
   direction: z.enum(["outgoing", "incoming"]),
   relatedTicket: z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     title: z.string(),
-    ticketNumber: z.number().int(),
+    ticketNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     status: z.string(),
     priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
     type: z.enum(["EPIC", "STORY", "TASK", "BUG"]),
-    points: z.number().int().nullable(),
-    version: z.number().int(),
-    assigneeMembershipId: z.number().int().nullable(),
-    projectId: z.number().int().nullable(),
+    points: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    assigneeMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     project: z.object({
       key: z.string(),
     }).nullable(),
@@ -5847,48 +6271,48 @@ export const projectsTicketAssociationsListRelationsResponseSchema = z.array(z.o
 export type ProjectsTicketAssociationsListRelationsResponse = z.infer<typeof projectsTicketAssociationsListRelationsResponseSchema>;
 
 export const projectsTicketAssociationsAddRelationResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  workItemId: z.number().int(),
-  relatedWorkItemId: z.number().int(),
+  workItemId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  relatedWorkItemId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   relationType: z.enum(["blocks", "blocked_by", "duplicate_of", "relates_to"]),
   createdAt: z.iso.datetime({ offset: true }),
 });
 export type ProjectsTicketAssociationsAddRelationResponse = z.infer<typeof projectsTicketAssociationsAddRelationResponseSchema>;
 
 export const projectsTicketAssociationsAddRelationBodySchema = z.strictObject({
-  relatedTicketId: z.number().int(),
+  relatedTicketId: z.number().int().gt(0).lte(9007199254740991),
   relationType: z.enum(["blocks", "blocked_by", "duplicate_of", "relates_to"]),
 });
 export type ProjectsTicketAssociationsAddRelationBody = z.input<typeof projectsTicketAssociationsAddRelationBodySchema>;
 
 export const projectsTicketAssociationsGetSubtasksResponseSchema = z.array(z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
   title: z.string(),
   type: z.enum(["EPIC", "STORY", "TASK", "BUG"]),
   status: z.string(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
-  projectId: z.number().int().nullable(),
-  ticketNumber: z.number().int(),
-  epicId: z.number().int().nullable(),
-  assigneeMembershipId: z.number().int().nullable(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  ticketNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  epicId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  assigneeMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   reporterId: z.string().nullable(),
-  points: z.number().int().nullable(),
-  storyPoints: z.number().int().nullable(),
+  points: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  storyPoints: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   link: z.string().nullable(),
   rank: z.string(),
-  parentTicketId: z.number().int().nullable(),
+  parentTicketId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   originalEstimate: z.string().nullable(),
   timeSpent: z.string(),
   startDate: z.string().nullable(),
   dueDate: z.string().nullable(),
-  moduleId: z.number().int().nullable(),
-  cycleId: z.number().int().nullable(),
+  moduleId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  cycleId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   sequenceId: z.string().nullable(),
-  estimate: z.number().int().nullable(),
+  estimate: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   health: z.enum(["on_track", "at_risk", "off_track"]).nullable(),
-  version: z.number().int(),
+  version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
   descriptionExcerpt: z.string(),
@@ -5902,8 +6326,8 @@ export const projectsTicketAssociationsGetSubtasksResponseSchema = z.array(z.obj
     image: z.string().nullable(),
   }).nullable(),
   assignees: z.array(z.object({
-    id: z.number().int(),
-    ticketId: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    ticketId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     assignedAt: z.iso.datetime({ offset: true }),
     assignedBy: z.string().nullable(),
     userId: z.string(),
@@ -5917,12 +6341,12 @@ export const projectsTicketAssociationsGetSubtasksResponseSchema = z.array(z.obj
     }),
   })),
   labels: z.array(z.object({
-    id: z.number().int(),
-    ticketId: z.number().int(),
-    labelId: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    ticketId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    labelId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     createdAt: z.iso.datetime({ offset: true }),
     label: z.object({
-      id: z.number().int(),
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       orgId: z.string(),
       name: z.string(),
       color: z.string().nullable(),
@@ -5930,7 +6354,7 @@ export const projectsTicketAssociationsGetSubtasksResponseSchema = z.array(z.obj
     }),
   })),
   cycle: z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     name: z.string(),
     status: z.enum(["draft", "active", "completed"]),
     startDate: z.string(),
@@ -5940,25 +6364,25 @@ export const projectsTicketAssociationsGetSubtasksResponseSchema = z.array(z.obj
 export type ProjectsTicketAssociationsGetSubtasksResponse = z.infer<typeof projectsTicketAssociationsGetSubtasksResponseSchema>;
 
 export const ticketTimeEntriesLogTicketTimeResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  userMembershipId: z.number().int().nullable(),
-  ticketId: z.number().int().nullable(),
+  userMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  ticketId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   date: z.string(),
   hours: z.string(),
   description: z.string().nullable(),
   imageUrl: z.string().nullable(),
   workLink: z.string().nullable(),
   status: z.enum(["PENDING", "APPROVED", "REJECTED"]),
-  approvedByMembershipId: z.number().int().nullable(),
+  approvedByMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   approvedAt: z.iso.datetime({ offset: true }).nullable(),
   rejectionReason: z.string().nullable(),
   isBillable: z.boolean(),
   payrollStatus: z.enum(["UNPROCESSED", "EXPORTED"]).nullable(),
-  payrollExportId: z.number().int().nullable(),
-  projectId: z.number().int().nullable(),
-  timesheetPeriodId: z.number().int().nullable(),
-  timerSessionId: z.number().int().nullable(),
+  payrollExportId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  timesheetPeriodId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  timerSessionId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   billingType: z.enum(["BILLABLE", "NON_BILLABLE", "FIXED"]).nullable(),
   billRate: z.string().nullable(),
   costRate: z.string().nullable(),
@@ -5967,7 +6391,7 @@ export const ticketTimeEntriesLogTicketTimeResponseSchema = z.object({
   invoicingStatus: z.enum(["UNINVOICED", "INVOICE_DRAFTED", "INVOICED"]).nullable(),
   submittedAt: z.iso.datetime({ offset: true }).nullable(),
   lockedAt: z.iso.datetime({ offset: true }).nullable(),
-  lockedByMembershipId: z.number().int().nullable(),
+  lockedByMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   voidedAt: z.iso.datetime({ offset: true }).nullable(),
   voidReason: z.string().nullable(),
   source: z.enum(["MANUAL", "TIMER", "API", "IMPORT"]),
@@ -5978,7 +6402,7 @@ export type TicketTimeEntriesLogTicketTimeResponse = z.infer<typeof ticketTimeEn
 
 export const ticketTimeEntriesLogTicketTimeBodySchema = z.strictObject({
   date: z.iso.date(),
-  hours: z.number(),
+  hours: z.number().gt(0),
   description: z.string().optional(),
   imageUrl: z.string().optional(),
   workLink: z.string().optional(),
@@ -5986,8 +6410,8 @@ export const ticketTimeEntriesLogTicketTimeBodySchema = z.strictObject({
 export type TicketTimeEntriesLogTicketTimeBody = z.input<typeof ticketTimeEntriesLogTicketTimeBodySchema>;
 
 export const projectsTicketAssociationsGetWatchersResponseSchema = z.array(z.object({
-  id: z.number().int(),
-  ticketId: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  ticketId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   createdAt: z.iso.datetime({ offset: true }),
   userId: z.string().nullable(),
   user: z.object({
@@ -6005,7 +6429,7 @@ export const projectsTicketAssociationsAddWatcherResponseSchema = z.object({
   userId: z.string(),
   name: z.string().nullable(),
   image: z.string().nullable(),
-  membershipId: z.number().int(),
+  membershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
 });
 export type ProjectsTicketAssociationsAddWatcherResponse = z.infer<typeof projectsTicketAssociationsAddWatcherResponseSchema>;
 
@@ -6016,10 +6440,10 @@ export type ProjectsTicketAssociationsAddWatcherBody = z.input<typeof projectsTi
 
 export const updatesListUpdatesResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
-    projectId: z.number().int(),
-    authorMembershipId: z.number().int(),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    authorMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     authorName: z.string(),
     body: z.string(),
     wins: z.string().nullable(),
@@ -6033,7 +6457,7 @@ export const updatesListUpdatesResponseSchema = z.object({
     deletedAt: z.iso.datetime({ offset: true }).nullable(),
   })),
   pagination: z.object({
-    limit: z.number().int(),
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
   }),
@@ -6041,10 +6465,10 @@ export const updatesListUpdatesResponseSchema = z.object({
 export type UpdatesListUpdatesResponse = z.infer<typeof updatesListUpdatesResponseSchema>;
 
 export const updatesCreateUpdateResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
-  authorMembershipId: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  authorMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   authorName: z.string(),
   body: z.string(),
   wins: z.string().nullable(),
@@ -6072,8 +6496,8 @@ export type UpdatesCreateUpdateBody = z.input<typeof updatesCreateUpdateBodySche
 
 export const viewsListViewsResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
-    projectId: z.number().int().nullable(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     orgId: z.string(),
     createdBy: z.string(),
     name: z.string(),
@@ -6089,7 +6513,7 @@ export const viewsListViewsResponseSchema = z.object({
     updatedAt: z.iso.datetime({ offset: true }),
   })),
   pagination: z.object({
-    limit: z.number().int(),
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
   }),
@@ -6097,8 +6521,8 @@ export const viewsListViewsResponseSchema = z.object({
 export type ViewsListViewsResponse = z.infer<typeof viewsListViewsResponseSchema>;
 
 export const viewsCreateViewResponseSchema = z.object({
-  id: z.number().int(),
-  projectId: z.number().int().nullable(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   orgId: z.string(),
   createdBy: z.string(),
   name: z.string(),
@@ -6128,8 +6552,8 @@ export const viewsCreateViewBodySchema = z.strictObject({
 export type ViewsCreateViewBody = z.input<typeof viewsCreateViewBodySchema>;
 
 export const viewsUpdateViewResponseSchema = z.object({
-  id: z.number().int(),
-  projectId: z.number().int().nullable(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   orgId: z.string(),
   createdBy: z.string(),
   name: z.string(),
@@ -6160,15 +6584,15 @@ export type ViewsUpdateViewBody = z.input<typeof viewsUpdateViewBodySchema>;
 
 export const projectsWebhooksListWebhooksResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     orgId: z.string(),
-    projectId: z.number().int(),
+    projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     url: z.string(),
     events: z.array(z.string()),
     isActive: z.boolean(),
     hasSecret: z.boolean(),
     secretSetAt: z.iso.datetime({ offset: true }).nullable(),
-    version: z.number().int(),
+    version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
     lastDeliveryAt: z.iso.datetime({ offset: true }).nullable(),
@@ -6176,20 +6600,20 @@ export const projectsWebhooksListWebhooksResponseSchema = z.object({
     failureRate: z.number().nullable(),
   })),
   hasMore: z.boolean(),
-  nextCursor: z.number().int().nullable(),
+  nextCursor: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
 });
 export type ProjectsWebhooksListWebhooksResponse = z.infer<typeof projectsWebhooksListWebhooksResponseSchema>;
 
 export const projectsWebhooksCreateWebhookResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   url: z.string(),
   events: z.array(z.string()),
   isActive: z.boolean(),
   hasSecret: z.boolean(),
   secretSetAt: z.iso.datetime({ offset: true }).nullable(),
-  version: z.number().int(),
+  version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
   lastDeliveryAt: z.iso.datetime({ offset: true }).nullable(),
@@ -6206,15 +6630,15 @@ export const projectsWebhooksCreateWebhookBodySchema = z.strictObject({
 export type ProjectsWebhooksCreateWebhookBody = z.input<typeof projectsWebhooksCreateWebhookBodySchema>;
 
 export const projectsWebhooksUpdateWebhookResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   url: z.string(),
   events: z.array(z.string()),
   isActive: z.boolean(),
   hasSecret: z.boolean(),
   secretSetAt: z.iso.datetime({ offset: true }).nullable(),
-  version: z.number().int(),
+  version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
   lastDeliveryAt: z.iso.datetime({ offset: true }).nullable(),
@@ -6224,7 +6648,7 @@ export const projectsWebhooksUpdateWebhookResponseSchema = z.object({
 export type ProjectsWebhooksUpdateWebhookResponse = z.infer<typeof projectsWebhooksUpdateWebhookResponseSchema>;
 
 export const projectsWebhooksUpdateWebhookBodySchema = z.strictObject({
-  version: z.number().int(),
+  version: z.number().int().gt(0).lte(9007199254740991),
   url: z.string().optional(),
   events: z.array(z.string()).optional(),
   isActive: z.boolean().optional(),
@@ -6232,12 +6656,12 @@ export const projectsWebhooksUpdateWebhookBodySchema = z.strictObject({
 export type ProjectsWebhooksUpdateWebhookBody = z.input<typeof projectsWebhooksUpdateWebhookBodySchema>;
 
 export const projectsWebhooksListDeliveriesResponseSchema = z.array(z.object({
-  id: z.number().int(),
-  webhookId: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  webhookId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   event: z.string(),
   status: z.enum(["pending", "success", "failed"]),
-  responseCode: z.number().int().nullable(),
-  attempts: z.number().int(),
+  responseCode: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  attempts: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   lastError: z.string().nullable(),
   deliveredAt: z.iso.datetime({ offset: true }),
 }));
@@ -6245,21 +6669,21 @@ export type ProjectsWebhooksListDeliveriesResponse = z.infer<typeof projectsWebh
 
 export const projectsWebhooksSendTestResponseSchema = z.object({
   success: z.boolean(),
-  responseCode: z.number().int().nullable(),
+  responseCode: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
 });
 export type ProjectsWebhooksSendTestResponse = z.infer<typeof projectsWebhooksSendTestResponseSchema>;
 
 export const whiteboardsListWhiteboardsResponseSchema = z.object({
   data: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     name: z.string(),
-    elementCount: z.number().int(),
+    elementCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     visibility: z.enum(["project", "private", "public"]),
     createdBy: z.string().nullable(),
     updatedAt: z.iso.datetime({ offset: true }),
   })),
   pagination: z.object({
-    limit: z.number().int(),
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
   }),
@@ -6267,8 +6691,8 @@ export const whiteboardsListWhiteboardsResponseSchema = z.object({
 export type WhiteboardsListWhiteboardsResponse = z.infer<typeof whiteboardsListWhiteboardsResponseSchema>;
 
 export const whiteboardsCreateWhiteboardResponseSchema = z.object({
-  id: z.number().int(),
-  projectId: z.number().int().nullable(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   name: z.string(),
   data: z.unknown(),
   visibility: z.enum(["project", "private", "public"]),
@@ -6298,8 +6722,8 @@ export const whiteboardsCreateWhiteboardBodySchema = z.strictObject({
 export type WhiteboardsCreateWhiteboardBody = z.input<typeof whiteboardsCreateWhiteboardBodySchema>;
 
 export const whiteboardsGetWhiteboardResponseSchema = z.object({
-  id: z.number().int(),
-  projectId: z.number().int().nullable(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   name: z.string(),
   data: z.unknown(),
   visibility: z.enum(["project", "private", "public"]),
@@ -6324,8 +6748,8 @@ export const whiteboardsGetWhiteboardResponseSchema = z.object({
 export type WhiteboardsGetWhiteboardResponse = z.infer<typeof whiteboardsGetWhiteboardResponseSchema>;
 
 export const whiteboardsUpdateWhiteboardResponseSchema = z.object({
-  id: z.number().int(),
-  projectId: z.number().int().nullable(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   name: z.string(),
   data: z.unknown(),
   visibility: z.enum(["project", "private", "public"]),
@@ -6353,7 +6777,7 @@ export const whiteboardsUpdateWhiteboardBodySchema = z.strictObject({
   name: z.string().optional(),
   data: z.object({
     type: z.string().optional(),
-    version: z.number().int().optional(),
+    version: z.number().int().gte(-9007199254740991).lte(9007199254740991).optional(),
     source: z.string().optional(),
     elements: z.array(z.record(z.string(), z.unknown())),
     appState: z.record(z.string(), z.unknown()).optional(),
@@ -6405,35 +6829,35 @@ export const whiteboardSharingRotateShareTokenResponseSchema = z.object({
 export type WhiteboardSharingRotateShareTokenResponse = z.infer<typeof whiteboardSharingRotateShareTokenResponseSchema>;
 
 export const workflowUpdateWipLimitResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   name: z.string(),
-  order: z.number().int(),
+  order: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   color: z.string().nullable(),
   type: z.enum(["backlog", "unstarted", "started", "completed", "cancelled"]),
-  wipLimit: z.number().int().nullable(),
+  wipLimit: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
 });
 export type WorkflowUpdateWipLimitResponse = z.infer<typeof workflowUpdateWipLimitResponseSchema>;
 
 export const workflowUpdateWipLimitBodySchema = z.strictObject({
-  wipLimit: z.number().int().nullable(),
+  wipLimit: z.number().int().gte(0).lte(9007199254740991).nullable(),
 });
 export type WorkflowUpdateWipLimitBody = z.input<typeof workflowUpdateWipLimitBodySchema>;
 
 export const workflowListTransitionsResponseSchema = z.array(z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
-  fromStatusId: z.number().int().nullable(),
-  toStatusId: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  fromStatusId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  toStatusId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   name: z.string().nullable(),
   requiresApproval: z.boolean(),
   requiredFields: z.array(z.string()),
   allowedRoles: z.array(z.string()),
-  createdByMembershipId: z.number().int().nullable(),
+  createdByMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
@@ -6441,16 +6865,16 @@ export const workflowListTransitionsResponseSchema = z.array(z.object({
 export type WorkflowListTransitionsResponse = z.infer<typeof workflowListTransitionsResponseSchema>;
 
 export const workflowCreateTransitionResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
-  fromStatusId: z.number().int().nullable(),
-  toStatusId: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  fromStatusId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  toStatusId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   name: z.string().nullable(),
   requiresApproval: z.boolean(),
   requiredFields: z.array(z.string()),
   allowedRoles: z.array(z.string()),
-  createdByMembershipId: z.number().int().nullable(),
+  createdByMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
@@ -6458,8 +6882,8 @@ export const workflowCreateTransitionResponseSchema = z.object({
 export type WorkflowCreateTransitionResponse = z.infer<typeof workflowCreateTransitionResponseSchema>;
 
 export const workflowCreateTransitionBodySchema = z.strictObject({
-  fromStatusId: z.number().int().nullable().optional(),
-  toStatusId: z.number().int(),
+  fromStatusId: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
+  toStatusId: z.number().int().gt(0).lte(9007199254740991),
   name: z.string().optional(),
   requiresApproval: z.boolean().optional(),
   requiredFields: z.array(z.string()).optional(),
@@ -6468,16 +6892,16 @@ export const workflowCreateTransitionBodySchema = z.strictObject({
 export type WorkflowCreateTransitionBody = z.input<typeof workflowCreateTransitionBodySchema>;
 
 export const workflowUpdateTransitionResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
-  projectId: z.number().int(),
-  fromStatusId: z.number().int().nullable(),
-  toStatusId: z.number().int(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  fromStatusId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  toStatusId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   name: z.string().nullable(),
   requiresApproval: z.boolean(),
   requiredFields: z.array(z.string()),
   allowedRoles: z.array(z.string()),
-  createdByMembershipId: z.number().int().nullable(),
+  createdByMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
@@ -6485,8 +6909,8 @@ export const workflowUpdateTransitionResponseSchema = z.object({
 export type WorkflowUpdateTransitionResponse = z.infer<typeof workflowUpdateTransitionResponseSchema>;
 
 export const workflowUpdateTransitionBodySchema = z.strictObject({
-  fromStatusId: z.number().int().nullable().optional(),
-  toStatusId: z.number().int().optional(),
+  fromStatusId: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
+  toStatusId: z.number().int().gt(0).lte(9007199254740991).optional(),
   name: z.string().nullable().optional(),
   requiresApproval: z.boolean().optional(),
   requiredFields: z.array(z.string()).optional(),
@@ -6497,9 +6921,9 @@ export type WorkflowUpdateTransitionBody = z.input<typeof workflowUpdateTransiti
 export const workloadCapacityCapacityResponseSchema = z.object({
   members: z.array(z.object({
     userId: z.string(),
-    membershipId: z.number().int(),
+    membershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     teams: z.array(z.object({
-      id: z.number().int(),
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       name: z.string(),
     })),
     workingDaysInWindow: z.number(),
@@ -6518,28 +6942,35 @@ export const workloadCapacityCapacityResponseSchema = z.object({
 });
 export type WorkloadCapacityCapacityResponse = z.infer<typeof workloadCapacityCapacityResponseSchema>;
 
+export const feedbucketRouteToIntakeResponseSchema = z.object({
+  intakeId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  created: z.boolean(),
+});
+export type FeedbucketRouteToIntakeResponse = z.infer<typeof feedbucketRouteToIntakeResponseSchema>;
+
 export const notificationsUnreadCountResponseSchema = z.object({
-  count: z.number().int(),
+  count: z.number().int().gte(0).lte(9007199254740991),
 });
 export type NotificationsUnreadCountResponse = z.infer<typeof notificationsUnreadCountResponseSchema>;
 
 export const publicGetPublicFormResponseSchema = z.object({
-  id: z.number().int(),
-  title: z.string(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  name: z.string(),
+  type: z.string(),
   description: z.string().nullable(),
   fields: z.array(z.object({
-    id: z.string(),
+    key: z.string(),
     type: z.string(),
     label: z.string(),
-    required: z.boolean().optional(),
+    required: z.boolean(),
     options: z.array(z.string()).optional(),
   })),
-  branding: z.record(z.string(), z.unknown()).nullable(),
+  publicToken: z.string().nullable(),
 });
 export type PublicGetPublicFormResponse = z.infer<typeof publicGetPublicFormResponseSchema>;
 
 export const publicSubmitPublicFormResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   message: z.string(),
 });
 export type PublicSubmitPublicFormResponse = z.infer<typeof publicSubmitPublicFormResponseSchema>;
@@ -6551,17 +6982,18 @@ export const publicSubmitPublicFormBodySchema = z.strictObject({
 export type PublicSubmitPublicFormBody = z.input<typeof publicSubmitPublicFormBodySchema>;
 
 export const publicGetProjectIntakeFormResponseSchema = z.object({
-  id: z.number().int(),
-  title: z.string(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  name: z.string(),
+  type: z.string(),
   description: z.string().nullable(),
   fields: z.array(z.object({
-    id: z.string(),
+    key: z.string(),
     type: z.string(),
     label: z.string(),
-    required: z.boolean().optional(),
+    required: z.boolean(),
     options: z.array(z.string()).optional(),
   })),
-  branding: z.record(z.string(), z.unknown()).nullable(),
+  publicToken: z.string().nullable(),
 });
 export type PublicGetProjectIntakeFormResponse = z.infer<typeof publicGetProjectIntakeFormResponseSchema>;
 
@@ -6569,43 +7001,43 @@ export const publicGetRoadmapResponseSchema = z.object({
   orgName: z.string().nullable(),
   roadmap: z.object({
     planned: z.array(z.object({
-      id: z.number().int(),
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       title: z.string(),
       description: z.string().nullable(),
       status: z.enum(["planned", "in_progress", "completed", "cancelled"]),
       category: z.string().nullable(),
       targetQuarter: z.string().nullable(),
-      votes: z.number().int(),
+      votes: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     })),
     in_progress: z.array(z.object({
-      id: z.number().int(),
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       title: z.string(),
       description: z.string().nullable(),
       status: z.enum(["planned", "in_progress", "completed", "cancelled"]),
       category: z.string().nullable(),
       targetQuarter: z.string().nullable(),
-      votes: z.number().int(),
+      votes: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     })),
     completed: z.array(z.object({
-      id: z.number().int(),
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       title: z.string(),
       description: z.string().nullable(),
       status: z.enum(["planned", "in_progress", "completed", "cancelled"]),
       category: z.string().nullable(),
       targetQuarter: z.string().nullable(),
-      votes: z.number().int(),
+      votes: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     })),
   }),
   feedback: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     title: z.string(),
     description: z.string().nullable(),
     category: z.string().nullable(),
-    votes: z.number().int(),
+    votes: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     createdAt: z.iso.datetime({ offset: true }),
   })),
   changelog: z.array(z.object({
-    id: z.number().int(),
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     title: z.string(),
     content: z.string().nullable(),
     version: z.string().nullable(),
@@ -6616,7 +7048,7 @@ export const publicGetRoadmapResponseSchema = z.object({
 export type PublicGetRoadmapResponse = z.infer<typeof publicGetRoadmapResponseSchema>;
 
 export const publicSubmitRoadmapFeedbackResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   message: z.string(),
 });
 export type PublicSubmitRoadmapFeedbackResponse = z.infer<typeof publicSubmitRoadmapFeedbackResponseSchema>;
@@ -6630,16 +7062,16 @@ export const publicSubmitRoadmapFeedbackBodySchema = z.strictObject({
 export type PublicSubmitRoadmapFeedbackBody = z.input<typeof publicSubmitRoadmapFeedbackBodySchema>;
 
 export const publicVoteRoadmapResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   type: z.enum(["roadmap", "feedback"]),
-  votes: z.number().int(),
+  votes: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   voted: z.boolean(),
 });
 export type PublicVoteRoadmapResponse = z.infer<typeof publicVoteRoadmapResponseSchema>;
 
 export const publicVoteRoadmapBodySchema = z.strictObject({
   type: z.enum(["roadmap", "feedback"]),
-  id: z.number().int(),
+  id: z.number().int().gt(0).lte(9007199254740991),
   voterKey: z.string(),
 });
 export type PublicVoteRoadmapBody = z.input<typeof publicVoteRoadmapBodySchema>;
@@ -6662,7 +7094,7 @@ export type PublicWhiteboardLinksUpdateByTokenResponse = z.infer<typeof publicWh
 export const publicWhiteboardLinksUpdateByTokenBodySchema = z.strictObject({
   data: z.object({
     type: z.string().optional(),
-    version: z.number().int().optional(),
+    version: z.number().int().gte(-9007199254740991).lte(9007199254740991).optional(),
     source: z.string().optional(),
     elements: z.array(z.record(z.string(), z.unknown())),
     appState: z.record(z.string(), z.unknown()).optional(),
@@ -6693,15 +7125,19 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "ProjectsController_createProject", method: "POST", path: "/build", response: "projectsCreateProjectResponseSchema", body: "projectsCreateProjectBodySchema" },
   { operationId: "AgentPulseController_getTopSignal", method: "GET", path: "/build/agent-pulse/top-signal", response: "agentPulseGetTopSignalResponseSchema" },
   { operationId: "ProjectsTicketsController_getAllWork", method: "GET", path: "/build/all-work", response: "projectsTicketsGetAllWorkResponseSchema" },
+  { operationId: "ProjectsTicketsController_getAllWorkIds", method: "GET", path: "/build/all-work/ids", response: "projectsTicketsGetAllWorkIdsResponseSchema" },
   { operationId: "ApprovalsInboxController_getInbox", method: "GET", path: "/build/approvals/inbox", response: "approvalsInboxGetInboxResponseSchema" },
   { operationId: "ProjectsRoadmapController_listChangelog", method: "GET", path: "/build/changelog", response: "projectsRoadmapListChangelogResponseSchema" },
   { operationId: "ProjectsRoadmapController_createChangelog", method: "POST", path: "/build/changelog", response: "projectsRoadmapCreateChangelogResponseSchema", body: "projectsRoadmapCreateChangelogBodySchema" },
   { operationId: "ProjectsRoadmapController_updateChangelog", method: "PATCH", path: "/build/changelog/{entryId}", response: "projectsRoadmapUpdateChangelogResponseSchema", body: "projectsRoadmapUpdateChangelogBodySchema" },
   { operationId: "ProjectsRoadmapController_deleteChangelog", method: "DELETE", path: "/build/changelog/{entryId}" },
+  { operationId: "DashboardLayoutController_getLayout", method: "GET", path: "/build/command-center/layout", response: "dashboardLayoutGetLayoutResponseSchema" },
+  { operationId: "DashboardLayoutController_saveLayout", method: "PUT", path: "/build/command-center/layout", response: "dashboardLayoutSaveLayoutResponseSchema", body: "dashboardLayoutSaveLayoutBodySchema" },
+  { operationId: "CommentDraftsController_readByTicket", method: "GET", path: "/build/comment-drafts/by-ticket/{ticketId}", response: "commentDraftsReadByTicketResponseSchema" },
+  { operationId: "CommentDraftsController_deleteByTicket", method: "DELETE", path: "/build/comment-drafts/by-ticket/{ticketId}", response: "commentDraftsDeleteByTicketResponseSchema" },
   { operationId: "CommentDraftsController_listMine", method: "GET", path: "/build/comment-drafts/mine", response: "commentDraftsListMineResponseSchema" },
   { operationId: "CommentDraftsController_deleteAll", method: "DELETE", path: "/build/comment-drafts/mine", response: "commentDraftsDeleteAllResponseSchema" },
   { operationId: "CommentDraftsController_upsert", method: "PUT", path: "/build/comment-drafts/tickets/{ticketId}", response: "commentDraftsUpsertResponseSchema", body: "commentDraftsUpsertBodySchema" },
-  { operationId: "CommentDraftsController_deleteByTicket", method: "DELETE", path: "/build/comment-drafts/tickets/{ticketId}", response: "commentDraftsDeleteByTicketResponseSchema" },
   { operationId: "CommentDraftsController_generateDraft", method: "POST", path: "/build/comment-drafts/tickets/{ticketId}/generate-draft", response: "commentDraftsGenerateDraftResponseSchema" },
   { operationId: "CommentDraftsController_deleteOne", method: "DELETE", path: "/build/comment-drafts/{draftId}", response: "commentDraftsDeleteOneResponseSchema" },
   { operationId: "ProjectsRoadmapController_listFeedback", method: "GET", path: "/build/feedback", response: "projectsRoadmapListFeedbackResponseSchema" },
@@ -6712,6 +7148,8 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "ProjectsController_createLabel", method: "POST", path: "/build/labels", response: "projectsCreateLabelResponseSchema", body: "projectsCreateLabelBodySchema" },
   { operationId: "ProjectsController_updateLabel", method: "PATCH", path: "/build/labels/{labelId}", response: "projectsUpdateLabelResponseSchema", body: "projectsUpdateLabelBodySchema" },
   { operationId: "ProjectsController_deleteLabel", method: "DELETE", path: "/build/labels/{labelId}" },
+  { operationId: "LandingPreferenceController_getPreference", method: "GET", path: "/build/landing-preference", response: "landingPreferenceGetPreferenceResponseSchema" },
+  { operationId: "LandingPreferenceController_setPreference", method: "PUT", path: "/build/landing-preference", response: "landingPreferenceSetPreferenceResponseSchema", body: "landingPreferenceSetPreferenceBodySchema" },
   { operationId: "ManagedProductsController_listManagedProducts", method: "GET", path: "/build/managed-products", response: "managedProductsListManagedProductsResponseSchema" },
   { operationId: "ManagedProductsController_createManagedProduct", method: "POST", path: "/build/managed-products", response: "managedProductsCreateManagedProductResponseSchema", body: "managedProductsCreateManagedProductBodySchema" },
   { operationId: "ManagedProductsController_bulkUpdateManagedProducts", method: "POST", path: "/build/managed-products/bulk", response: "managedProductsBulkUpdateManagedProductsResponseSchema", body: "managedProductsBulkUpdateManagedProductsBodySchema" },
@@ -6719,9 +7157,11 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "ManagedProductsController_updateManagedProduct", method: "PATCH", path: "/build/managed-products/{managedProductId}", response: "managedProductsUpdateManagedProductResponseSchema", body: "managedProductsUpdateManagedProductBodySchema" },
   { operationId: "ManagedProductsController_deleteManagedProduct", method: "DELETE", path: "/build/managed-products/{managedProductId}" },
   { operationId: "ManagedProductsController_getProductInsights", method: "GET", path: "/build/managed-products/{managedProductId}/insights", response: "managedProductsGetProductInsightsResponseSchema" },
+  { operationId: "ManagedProductsController_setScoreOverride", method: "PATCH", path: "/build/managed-products/{managedProductId}/insights/score-override", body: "managedProductsSetScoreOverrideBodySchema" },
   { operationId: "BuildMembersController_list", method: "GET", path: "/build/members", response: "buildMembersListResponseSchema" },
   { operationId: "BuildMembersController_add", method: "POST", path: "/build/members", response: "buildMembersAddResponseSchema", body: "buildMembersAddBodySchema" },
   { operationId: "BuildMembersController_remove", method: "DELETE", path: "/build/members/{userId}" },
+  { operationId: "BuildStandingController_getMemberStanding", method: "GET", path: "/build/members/{userId}/standing", response: "buildStandingGetMemberStandingResponseSchema" },
   { operationId: "ProjectResourcesController_listOrgCustomStates", method: "GET", path: "/build/org-custom-states", response: "projectResourcesListOrgCustomStatesResponseSchema" },
   { operationId: "ClientPortalController_listPortalProjects", method: "GET", path: "/build/portal/projects", response: "clientPortalListPortalProjectsResponseSchema" },
   { operationId: "ClientPortalController_listPortalChangeRequests", method: "GET", path: "/build/portal/projects/{projectId}/change-requests", response: "clientPortalListPortalChangeRequestsResponseSchema" },
@@ -6736,6 +7176,7 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "PortfoliosController_unlinkProject", method: "DELETE", path: "/build/portfolios/{portfolioId}/projects/{projectId}" },
   { operationId: "ProgramsController_listPrograms", method: "GET", path: "/build/programs", response: "programsListProgramsResponseSchema" },
   { operationId: "ProgramsController_createProgram", method: "POST", path: "/build/programs", response: "programsCreateProgramResponseSchema", body: "programsCreateProgramBodySchema" },
+  { operationId: "ProgramsController_getProgram", method: "GET", path: "/build/programs/{programId}", response: "programsGetProgramResponseSchema" },
   { operationId: "ProgramsController_updateProgram", method: "PATCH", path: "/build/programs/{programId}", response: "programsUpdateProgramResponseSchema", body: "programsUpdateProgramBodySchema" },
   { operationId: "ProgramsController_deleteProgram", method: "DELETE", path: "/build/programs/{programId}" },
   { operationId: "ProjectsReleasesController_listOrgReleases", method: "GET", path: "/build/releases", response: "projectsReleasesListOrgReleasesResponseSchema" },
@@ -6766,6 +7207,7 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "TeamsController_removeProject", method: "DELETE", path: "/build/teams/{teamId}/projects/{projectId}" },
   { operationId: "ProjectsTemplatesController_listTemplates", method: "GET", path: "/build/templates", response: "projectsTemplatesListTemplatesResponseSchema" },
   { operationId: "ProjectsTemplatesController_createTemplate", method: "POST", path: "/build/templates", response: "projectsTemplatesCreateTemplateResponseSchema", body: "projectsTemplatesCreateTemplateBodySchema" },
+  { operationId: "ProjectsTemplatesController_seedSystemTemplates", method: "POST", path: "/build/templates/seed-system", response: "projectsTemplatesSeedSystemTemplatesResponseSchema" },
   { operationId: "ProjectsTemplatesController_deleteTemplate", method: "DELETE", path: "/build/templates/{templateId}" },
   { operationId: "ProjectsTemplatesController_applyTemplate", method: "POST", path: "/build/templates/{templateId}/apply", response: "projectsTemplatesApplyTemplateResponseSchema", body: "projectsTemplatesApplyTemplateBodySchema" },
   { operationId: "WorkspaceViewsController_listWorkspaceViews", method: "GET", path: "/build/views", response: "workspaceViewsListWorkspaceViewsResponseSchema" },
@@ -6777,13 +7219,18 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "ProjectsByIdController_deleteProject", method: "DELETE", path: "/build/{projectId}" },
   { operationId: "ProjectsActivityFeedController_getProjectActivity", method: "GET", path: "/build/{projectId}/activity", response: "projectsActivityFeedGetProjectActivityResponseSchema" },
   { operationId: "ProjectsReportsController_getAnalytics", method: "GET", path: "/build/{projectId}/analytics", response: "projectsReportsGetAnalyticsResponseSchema" },
+  { operationId: "ProjectsReportsController_getTimeBudget", method: "GET", path: "/build/{projectId}/analytics/time-budget", response: "projectsReportsGetTimeBudgetResponseSchema" },
   { operationId: "BuildApprovalsController_listApprovals", method: "GET", path: "/build/{projectId}/approvals", response: "buildApprovalsListApprovalsResponseSchema" },
   { operationId: "BuildApprovalsController_createApproval", method: "POST", path: "/build/{projectId}/approvals", response: "buildApprovalsCreateApprovalResponseSchema", body: "buildApprovalsCreateApprovalBodySchema" },
+  { operationId: "BuildApprovalsController_getApproval", method: "GET", path: "/build/{projectId}/approvals/{approvalId}", response: "buildApprovalsGetApprovalResponseSchema" },
   { operationId: "BuildApprovalsController_updateApproval", method: "PATCH", path: "/build/{projectId}/approvals/{approvalId}", response: "buildApprovalsUpdateApprovalResponseSchema", body: "buildApprovalsUpdateApprovalBodySchema" },
-  { operationId: "BuildApprovalsController_softDeleteApproval", method: "DELETE", path: "/build/{projectId}/approvals/{approvalId}" },
+  { operationId: "BuildApprovalsController_softDeleteApproval", method: "DELETE", path: "/build/{projectId}/approvals/{approvalId}", body: "buildApprovalsSoftDeleteApprovalBodySchema" },
   { operationId: "BuildApprovalsController_decideApproval", method: "PATCH", path: "/build/{projectId}/approvals/{approvalId}/decide", response: "buildApprovalsDecideApprovalResponseSchema", body: "buildApprovalsDecideApprovalBodySchema" },
   { operationId: "ProjectsAutomationsController_list", method: "GET", path: "/build/{projectId}/automations", response: "projectsAutomationsListResponseSchema" },
   { operationId: "ProjectsAutomationsController_create", method: "POST", path: "/build/{projectId}/automations", response: "projectsAutomationsCreateResponseSchema", body: "projectsAutomationsCreateBodySchema" },
+  { operationId: "ProjectsAutomationsController_dryRun", method: "POST", path: "/build/{projectId}/automations/dry-run", response: "projectsAutomationsDryRunResponseSchema", body: "projectsAutomationsDryRunBodySchema" },
+  { operationId: "ProjectsAutomationsController_listRuns", method: "GET", path: "/build/{projectId}/automations/runs", response: "projectsAutomationsListRunsResponseSchema" },
+  { operationId: "ProjectsAutomationsController_replayRun", method: "POST", path: "/build/{projectId}/automations/runs/{runId}/replay", response: "projectsAutomationsReplayRunResponseSchema" },
   { operationId: "ProjectsAutomationsController_update", method: "PATCH", path: "/build/{projectId}/automations/{automationId}", response: "projectsAutomationsUpdateResponseSchema", body: "projectsAutomationsUpdateBodySchema" },
   { operationId: "ProjectsAutomationsController_delete", method: "DELETE", path: "/build/{projectId}/automations/{automationId}" },
   { operationId: "ProjectsBudgetController_getBudget", method: "GET", path: "/build/{projectId}/budget", response: "projectsBudgetGetBudgetResponseSchema" },
@@ -6975,6 +7422,7 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "WorkflowController_updateTransition", method: "PATCH", path: "/build/{projectId}/workflow/transitions/{transitionId}", response: "workflowUpdateTransitionResponseSchema", body: "workflowUpdateTransitionBodySchema" },
   { operationId: "WorkflowController_deleteTransition", method: "DELETE", path: "/build/{projectId}/workflow/transitions/{transitionId}" },
   { operationId: "WorkloadCapacityController_capacity", method: "GET", path: "/build/{projectId}/workload/capacity", response: "workloadCapacityCapacityResponseSchema" },
+  { operationId: "FeedbucketController_routeToIntake", method: "POST", path: "/feedbucket/submissions/{submissionId}/route-to-intake", response: "feedbucketRouteToIntakeResponseSchema" },
   { operationId: "NotificationsController_unreadCount", method: "GET", path: "/notifications/unread-count", response: "notificationsUnreadCountResponseSchema" },
   { operationId: "PublicController_getPublicForm", method: "GET", path: "/public/forms/{token}", response: "publicGetPublicFormResponseSchema" },
   { operationId: "PublicController_submitPublicForm", method: "POST", path: "/public/forms/{token}/submit", response: "publicSubmitPublicFormResponseSchema", body: "publicSubmitPublicFormBodySchema" },

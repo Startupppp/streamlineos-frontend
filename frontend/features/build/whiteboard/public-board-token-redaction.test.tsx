@@ -1,15 +1,4 @@
-/**
- * @jest-environment jsdom
- *
- * C6 (jsdom half) — token redaction: share tokens, form tokens and publication
- * tokens must never appear as visible text in the DOM when the corresponding
- * public surface renders. A token in a URL param drives data fetching; it must
- * not be echoed into headings, descriptions, breadcrumbs or any text node.
- *
- * Focus-order assertions for the public-form and intake surfaces are in the
- * companion Playwright spec (content-intake-a11y.spec.ts) because jsdom cannot
- * evaluate real focus order.
- */
+/** @jest-environment jsdom */
 import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import React from "react";

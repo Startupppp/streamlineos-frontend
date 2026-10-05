@@ -12,7 +12,8 @@ import { cn } from "@/lib/utils";
 const storageUploadContract = lazyContract(() =>
   import("@/features/hr/onboarding/onboarding-schema").then((m) => m.storageUploadContract),
 );
-import type { DocumentType, OnboardingDoc } from "./onboarding-document-checklist-row";
+import type { HrDocumentType } from "@/hooks/api/hr/document-types";
+import type { OnboardingDoc } from "./onboarding-document-checklist-row";
 
 const ACCEPTED_MIME_TYPES = new Set([
   "application/pdf",
@@ -38,7 +39,7 @@ export function validateDocumentFile(file: File): string | null {
 interface UploadSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  documentType: DocumentType | null;
+  documentType: HrDocumentType | null;
   existingDoc: OnboardingDoc | null;
   onSubmit: (fileUrl: string, fileName: string) => void;
   isPending: boolean;

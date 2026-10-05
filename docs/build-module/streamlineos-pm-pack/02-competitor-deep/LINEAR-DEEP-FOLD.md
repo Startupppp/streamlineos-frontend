@@ -1,7 +1,7 @@
 # Linear deep fold — PM lane
-**Walk:** 2026-10-01 (IST) · signed-in `tarunchintakunta` / team `TAR`  
-**Scope:** Free-only, read-only UI inspection; no create, enable, save, share, upgrade, or purchase.  
-**CI source:** `/workspace/streamlineos-ci/competitor-deep/linear/FEATURES.md`, `BUILD-GAPS.md`, `PAGE-INVENTORY.md`, `ACCOUNT.md`, `WALK-NOTES.json`
+**Walk:** 2026-10-01 (IST) · signed-in `tarunchintakunta` / team `TAR`
+**Scope:** Free-only, read-only UI inspection; no create, enable, save, share, upgrade, or purchase.
+**CI source:** `../../streamlineos-analysis-pack/01-ci/competitor-deep/linear/FEATURES.md`, `BUILD-GAPS.md`, `PAGE-INVENTORY.md`, `ACCOUNT.md`, `WALK-NOTES.json`
 
 ## UI-VERIFIED surfaces folded
 

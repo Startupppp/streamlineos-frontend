@@ -259,7 +259,7 @@ export function ProjectSettingsPage({ params }: PageProps) {
   const handleDismissConflict = useCallback(() => { setIsConflict(false); void refetch(); }, [refetch]);
 
   const handleDeleteSuccess = useCallback(() => {
-    router.push("/build");
+    router.push("/build/projects");
   }, [router]);
 
   const handleSubmit = useCallback(
@@ -316,7 +316,7 @@ export function ProjectSettingsPage({ params }: PageProps) {
               illustrationPreset="projects"
               title="Project not found"
               description="This project no longer exists, or you no longer have access to it."
-              action={{ label: "Back to projects", href: "/build" }}
+              action={{ label: "Back to projects", href: "/build/projects" }}
             />
           }
           onRetry={handleRetry}

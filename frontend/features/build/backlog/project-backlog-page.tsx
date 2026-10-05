@@ -360,7 +360,7 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
               illustrationPreset="projects"
               title="Project unavailable"
               description="This project could not be loaded. Pick another project to carry on."
-              action={{ label: "All Projects", href: "/build" }}
+              action={{ label: "All Projects", href: "/build/projects" }}
             />
           }
         >

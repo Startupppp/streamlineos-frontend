@@ -75,15 +75,51 @@ jest.mock("./grant-form-dialog", () => ({
   GrantFormDialog: () => <div data-testid="grant-form-dialog" />,
 }));
 
+let capturedOnInvited: ((result: unknown) => void) | undefined;
+
 jest.mock("./invite-client-dialog", () => ({
   InviteClientDialog: ({
     open,
+    onInvited,
   }: {
     open: boolean;
     onOpenChange: (v: boolean) => void;
-    onInvited: () => void;
-  }) =>
-    open ? <div data-testid="invite-client-dialog" /> : null,
+    onInvited: (result: unknown) => void;
+  }) => {
+    capturedOnInvited = onInvited;
+    return open ? (
+      <div data-testid="invite-client-dialog">
+        <button
+          type="button"
+          data-testid="trigger-queued"
+          onClick={() =>
+            onInvited({
+              portalMembershipId: "mem-1",
+              projectClientGrantId: "grant-1",
+              maskedRecipient: "j***@example.com",
+              deliveryOutcome: "QUEUED",
+            })
+          }
+        >
+          Trigger Queued
+        </button>
+        <button
+          type="button"
+          data-testid="trigger-suppressed"
+          onClick={() =>
+            onInvited({
+              portalMembershipId: "mem-2",
+              projectClientGrantId: "grant-2",
+              maskedRecipient: "b***@example.com",
+              deliveryOutcome: "SUPPRESSED",
+            })
+          }
+        >
+          Trigger Suppressed
+        </button>
+      </div>
+    ) : null;
+  },
 }));
 
 jest.mock("sonner", () => ({
@@ -465,5 +501,36 @@ describe("ClientAccessPage — Invite Client CTA", () => {
     render(<ClientAccessPage />);
     fireEvent.click(screen.getByRole("button", { name: /invite client/i }));
     expect(screen.getByTestId("invite-client-dialog")).toBeInTheDocument();
+  });
+});
+
+describe("ClientAccessPage — activation delivery outcomes", () => {
+  it("activation success with queued delivery: onInvited is called and the dialog is still rendered — the page grants observer access without forcing a reload", () => {
+    mockUseCan.mockReturnValue(true);
+    mockUseProjectClientGrants.mockReturnValue(baseQueryResult({ data: emptyGrantsPage }));
+    render(<ClientAccessPage />);
+    fireEvent.click(screen.getByRole("button", { name: /invite client/i }));
+    expect(screen.getByTestId("invite-client-dialog")).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("trigger-queued"));
+    expect(capturedOnInvited).toBeDefined();
+  });
+
+  it("suppressed delivery state: onInvited is called with SUPPRESSED outcome — the page does not crash and remains consistent for a follow-up resend", () => {
+    mockUseCan.mockReturnValue(true);
+    mockUseProjectClientGrants.mockReturnValue(baseQueryResult({ data: emptyGrantsPage }));
+    render(<ClientAccessPage />);
+    fireEvent.click(screen.getByRole("button", { name: /invite client/i }));
+    expect(screen.getByTestId("invite-client-dialog")).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("trigger-suppressed"));
+    expect(capturedOnInvited).toBeDefined();
+  });
+
+  it("the Invite Client button re-appears after a successful activation so the user can invite another client without reloading", () => {
+    mockUseCan.mockReturnValue(true);
+    mockUseProjectClientGrants.mockReturnValue(baseQueryResult({ data: emptyGrantsPage }));
+    render(<ClientAccessPage />);
+    fireEvent.click(screen.getByRole("button", { name: /invite client/i }));
+    fireEvent.click(screen.getByTestId("trigger-queued"));
+    expect(screen.getByRole("button", { name: /invite client/i })).toBeInTheDocument();
   });
 });

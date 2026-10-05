@@ -1,6 +1,8 @@
 "use client";
 
 import * as React from "react";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { EmptyInboxIllustration } from "@/components/illustrations";
@@ -13,7 +15,7 @@ import {
   useInfiniteNotifications,
   useMarkNotificationRead,
   useMarkAllNotificationsRead,
-} from "@/hooks/api/notifications";
+} from "@/hooks/api/notifications-inbox";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import type { Notification, NotificationSection, NotificationCategory } from "@/types/notifications";
 import { InboxNotificationItem } from "./inbox-notification-item";
@@ -30,12 +32,7 @@ import {
 } from "./inbox-render-window";
 import { useShellVariant } from "@/components/layout/shell-variant-context";
 import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
-
-const SECTION_FILTERS: { label: string; value: NotificationSection }[] = [
-  { label: "Unread", value: "UNREAD" },
-  { label: "All", value: "ALL" },
-  { label: "Mentions", value: "MENTIONS" },
-];
+import { BUILD_INBOX_TRIAGE_TABS, getBuildInboxTriageSection } from "./inbox-categories";
 
 interface InboxListProps {
   selectedId: number | null;
@@ -55,6 +52,7 @@ interface InboxListProps {
   searchInputRef: React.RefObject<HTMLInputElement | null>;
   hasActiveFilters?: boolean;
   onClearFilters?: () => void;
+  renderActions?: (notification: Notification) => React.ReactNode;
 }
 
 export function InboxList({
@@ -75,6 +73,7 @@ export function InboxList({
   searchInputRef,
   hasActiveFilters = false,
   onClearFilters,
+  renderActions,
 }: InboxListProps) {
   const isDesktopInbox = useShellVariant() === "desktop";
   const renderPageSize = isDesktopInbox ? INBOX_RENDER_PAGE_SIZE : INBOX_MOBILE_RENDER_PAGE_SIZE;
@@ -89,12 +88,12 @@ export function InboxList({
   const [pagesShown, setPagesShown] = React.useState(1);
   const [selectedIds, setSelectedIds] = React.useState<Set<number>>(new Set());
   const { mutate: markRead } = useMarkNotificationRead();
-  const { mutate: markAllRead, isPending: isMarkingAll } = useMarkAllNotificationsRead();
+  const { mutate: markAllRead, isPending: isMarkingAll } = useMarkAllNotificationsRead("build");
 
   const rawNotifications = React.useMemo(() => data?.pages.flat() ?? [], [data]);
   const total = rawNotifications.length;
 
-  React.useEffect(() => { setPagesShown(1); setSelectedIds(new Set()); }, [section, q, type]);
+  React.useEffect(() => { setPagesShown(1); setSelectedIds(new Set()); }, [section, q, type, projectId, cursor]);
 
   const pageState = usePageState({
     permission: "build:view",
@@ -110,14 +109,14 @@ export function InboxList({
   const deferredVisibleNotifications = React.useDeferredValue(visibleNotifications);
 
   function handleSelect(notification: Notification) {
-    if (!notification.isRead) markRead(notification.id);
+    if (!notification.isRead && isOnline) markRead(notification.id);
     onSelect(notification);
   }
   function handleTabChange(value: string) {
-    const next = SECTION_FILTERS.find((filter) => filter.value === value)?.value;
+    const next = BUILD_INBOX_TRIAGE_TABS.find((filter) => filter.value === value)?.value;
     if (next !== undefined) { onSectionChange?.(next); onFilterChange?.(); }
   }
-  function handleMarkAll() { markAllRead(); }
+  function handleMarkAll() { markAllRead(undefined, { onError: (err) => toast.error(getErrorMessage(err)) }); }
   function handleRetry() { void refetch(); }
   function handleLoadMore() { setPagesShown((p) => p + 1); if (heldCount === 0) fetchNextPage(); }
   function handleToggleSelect(id: number) {
@@ -134,45 +133,57 @@ export function InboxList({
 
   const hasUnread = rawNotifications.some((n) => !n.isRead);
   const firstNotification = rawNotifications[0] ?? null;
-  const selectedStillVisible = selectedId == null || rawNotifications.some((n) => n.id === selectedId);
-
   const onSelectRef = React.useRef(onSelect);
-  const onClearSelectionRef = React.useRef(onClearSelection);
   const firstNotificationRef = React.useRef(firstNotification);
-  onSelectRef.current = onSelect;
-  onClearSelectionRef.current = onClearSelection;
-  firstNotificationRef.current = firstNotification;
+  React.useLayoutEffect(() => {
+    onSelectRef.current = onSelect;
+    firstNotificationRef.current = firstNotification;
+  });
 
   React.useEffect(() => {
     if (isPending || isError) return;
-    if (selectedId != null && !selectedStillVisible) { onClearSelectionRef.current?.(); return; }
     if (!isDesktopInbox) return;
     if (selectedId != null || selectionDismissed) return;
     const first = firstNotificationRef.current;
     if (first) onSelectRef.current(first);
-  }, [isPending, isError, isDesktopInbox, selectedId, selectedStillVisible, selectionDismissed, firstNotification?.id]);
+  }, [isPending, isError, isDesktopInbox, selectedId, selectionDismissed, firstNotification?.id]);
+
+  React.useEffect(() => {
+    if (section !== "SNOOZED" || !isOnline) return;
+    const now = Date.now();
+    const deadlines = rawNotifications.map((row) => row.snoozedUntil ? new Date(row.snoozedUntil).getTime() : 0).filter((deadline) => deadline > now);
+    const nearest = Math.min(...deadlines);
+    if (!Number.isFinite(nearest)) return;
+    const timer = setTimeout(() => { void refetch(); }, Math.min(nearest - now + 1, 2_147_483_647));
+    return () => clearTimeout(timer);
+  }, [section, isOnline, rawNotifications, refetch]);
 
   useInboxKeyboardNav({ notifications: deferredVisibleNotifications, selectedId, onSelect: handleSelect, onClearSelection: () => onClearSelection?.(), searchInputRef, onShortcutHelp: handleShortcutHelp });
 
-  const emptyTitle = section === "UNREAD" ? "All caught up" : section === "MENTIONS" ? "No mentions" : "No notifications";
-  const emptyDesc = section === "UNREAD" ? "You have no unread notifications." : section === "MENTIONS" ? "You have not been mentioned in any comments yet." : "Notifications will appear here when you receive them.";
+  const emptyTitle = section === "SNOOZED" ? "Nothing for later" : section === "ARCHIVED" ? "Nothing done yet" : section === "UNREAD" ? "All caught up" : section === "MENTIONS" ? "No mentions" : "No notifications";
+  const emptyDesc = section === "SNOOZED" ? "Snoozed notifications appear here until their deadline." : section === "ARCHIVED" ? "Resolved notifications appear here." : section === "UNREAD" ? "You have no unread notifications." : section === "MENTIONS" ? "You have not been mentioned in any comments yet." : "Notifications will appear here when you receive them.";
+  function renderNotification(notification: Notification, index: number) {
+    return <div key={notification.id} role="listitem" aria-posinset={index + 1} aria-setsize={hasNextPage ? -1 : total}>
+      <InboxNotificationItem notification={notification} isSelected={selectedId === notification.id} isSelectable isChecked={selectedIds.has(notification.id)} onSelect={handleSelect} onToggleSelect={handleToggleSelect} actions={renderActions?.(notification)} />
+    </div>;
+  }
 
   return (
     <>
     <ShortcutHelpDialog open={shortcutHelpOpen} onOpenChange={setShortcutHelpOpen} />
-    <Tabs value={section} onValueChange={handleTabChange} className="flex h-full min-h-0 flex-col gap-0">
+    <Tabs value={getBuildInboxTriageSection(section)} onValueChange={handleTabChange} className="flex h-full min-h-0 flex-col gap-0">
       <div className="flex shrink-0 items-center justify-between gap-2 border border-r-0 border-border px-4 py-2">
         <TabsList>
-          {SECTION_FILTERS.map(({ label, value }) => (
-            <TabsTrigger key={value} value={value}>{label}</TabsTrigger>
+          {BUILD_INBOX_TRIAGE_TABS.map(({ label, value }) => (
+            <TabsTrigger key={value} value={value} className="data-[state=active]:bg-foreground data-[state=active]:text-background">{label}</TabsTrigger>
           ))}
         </TabsList>
-        {hasUnread ? (
+        {hasUnread && isOnline ? (
           <AnimatedIconButton icon={CheckCheckIcon} iconSize={16} variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-foreground" disabled={isMarkingAll} onClick={handleMarkAll} aria-label="Mark all read" title="Mark all read" />
         ) : null}
       </div>
-      <InboxFilterBar q={q} type={type} projectId={projectId} hasActiveFilters={hasActiveFilters} onQChange={handleQChange} onTypeChange={handleTypeChange} onProjectClear={onProjectClear} onClearFilters={handleClearFilters} searchInputRef={searchInputRef} />
-      <InboxBulkToolbar selectedIds={selectedIds} totalVisible={deferredVisibleNotifications.length} onSelectAll={handleSelectAll} onDeselectAll={handleDeselectAll} onBulkMarkRead={handleBulkMarkRead} onBulkArchive={handleBulkArchive} onBulkDelete={handleBulkDelete} isMutating={bulk.isMutating} />
+      <InboxFilterBar section={section} onSectionChange={onSectionChange} q={q} type={type} projectId={projectId} hasActiveFilters={hasActiveFilters} onQChange={handleQChange} onTypeChange={handleTypeChange} onProjectClear={onProjectClear} onClearFilters={handleClearFilters} searchInputRef={searchInputRef} />
+      <InboxBulkToolbar selectedIds={selectedIds} totalVisible={deferredVisibleNotifications.length} onSelectAll={handleSelectAll} onDeselectAll={handleDeselectAll} onBulkMarkRead={handleBulkMarkRead} onBulkArchive={handleBulkArchive} onBulkDelete={handleBulkDelete} isMutating={bulk.isMutating || !isOnline} />
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto border-l border-border scrollbar-hide">
         <PageState resolution={pageState} loading={<div className="flex min-h-full flex-col"><InboxListSkeleton /></div>} onRetry={handleRetry} compact className="min-h-full w-full flex-1"
           empty={hasNextPage || !isOnline ? <div /> : (
@@ -181,11 +192,7 @@ export function InboxList({
         >
           <div>
             <div role="list" aria-label="Notifications">
-              {deferredVisibleNotifications.map((notification, index) => (
-                <div key={notification.id} role="listitem" aria-posinset={index + 1} aria-setsize={hasNextPage ? -1 : total}>
-                  <InboxNotificationItem notification={notification} isSelected={selectedId === notification.id} isSelectable isChecked={selectedIds.has(notification.id)} onSelect={handleSelect} onToggleSelect={handleToggleSelect} />
-                </div>
-              ))}
+              {deferredVisibleNotifications.map(renderNotification)}
             </div>
             <InfiniteScrollSentinel
               hasNextPage={heldCount > 0 || hasNextPage === true}

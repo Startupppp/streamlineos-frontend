@@ -23,7 +23,10 @@ import {
   reportHeadline,
   rowsNeedingAttention,
 } from "../import-preview-model";
-import type { TicketImportPreview, TicketImportReport } from "../import-export-contract";
+import type {
+  TicketImportExportPreviewImportResponse,
+  TicketImportExportCommitImportResponse,
+} from "@/contracts/build-contracts.generated";
 
 interface OutcomeRow {
   rowNumber: number;
@@ -68,7 +71,7 @@ function OutcomeList({ caption, rows }: OutcomeListProps) {
 }
 
 interface ImportPreviewOutcomeProps {
-  preview: TicketImportPreview;
+  preview: TicketImportExportPreviewImportResponse;
 }
 
 export function ImportPreviewOutcome({ preview }: ImportPreviewOutcomeProps) {
@@ -105,7 +108,7 @@ export function ImportPreviewOutcome({ preview }: ImportPreviewOutcomeProps) {
 }
 
 interface ImportReportOutcomeProps {
-  report: TicketImportReport;
+  report: TicketImportExportCommitImportResponse;
 }
 
 export function ImportReportOutcome({ report }: ImportReportOutcomeProps) {

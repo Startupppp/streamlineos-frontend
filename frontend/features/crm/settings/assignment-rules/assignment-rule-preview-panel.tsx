@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { CrmOptionSelect } from "@/features/crm/shared/metadata/crm-option-select";
-import { usePreviewAssignmentRule } from "@/hooks/api/crm-settings";
+import { usePreviewAssignmentRule } from "@/hooks/api/crm/settings/assignment-rules";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 /**

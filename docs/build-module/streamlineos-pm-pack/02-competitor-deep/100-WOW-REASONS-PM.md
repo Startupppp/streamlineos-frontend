@@ -1,7 +1,7 @@
 # 100 WOW reasons — PM ICP overlay (CI is SoT)
-**Lane:** PM · **Updated:** 2026-10-01 (IST)  
-**Source of truth (authoritative pack):** `/workspace/streamlineos-ci/competitor-deep/100-WOW-REASONS.md`  
-**HAVE SoT:** `/workspace/streamlineos-ci/competitor-deep/HAVE-TODAY.md`  
+**Lane:** PM · **Updated:** 2026-10-01 (IST)
+**Source of truth (authoritative pack):** `../../streamlineos-analysis-pack/01-ci/competitor-deep/100-WOW-REASONS.md`
+**HAVE SoT:** `../../streamlineos-analysis-pack/01-ci/competitor-deep/HAVE-TODAY.md`
 **Do not duplicate** the 120-row master table here. This file is ICP tagging + Freeze path + shortfall pointer only.
 
 ---
@@ -46,18 +46,18 @@ Full row text, evidence, confidence: **read CI master table** — do not copy-pa
 
 See **`ICP-ROADMAP-TOP15.md`** (CI Top 15 × JTBD × Freeze/Next/Later × sellable WHEN SHIPPED).
 
-**Eng Freeze order:** PM-011 → PM-002 → PM-001.  
-**Then Completeness Next:** Labels → Active cycle → Member honesty → Release → Epic filter → saved filters → Triage → Program membership → public Form.  
+**Eng Freeze order:** PM-011 → PM-002 → PM-001.
+**Then Completeness Next:** Labels → Active cycle → Member honesty → Release → Epic filter → saved filters → Triage → Program membership → public Form.
 **Later:** Password + SSO (CI Top 15 rank 15).
 
 ---
 
 ## Alignment rules
 
-1. Cite CI `#` for every wow claim in positioning.  
-2. Filters Completeness Next top-8 are **SHIP**, never HAVE.  
-3. Reject: all-in-one · cheaper · modern UI · suite platform as wow.  
-4. Protect PARITY (chips/URL, multi-view) — not wow HAVE.  
+1. Cite CI `#` for every wow claim in positioning.
+2. Filters Completeness Next top-8 are **SHIP**, never HAVE.
+3. Reject: all-in-one · cheaper · modern UI · suite platform as wow.
+4. Protect PARITY (chips/URL, multi-view) — not wow HAVE.
 5. Fold ClickUp deep walk only via CI SHIP rows already mapped — no mega-menu feature-count.
 
 ---

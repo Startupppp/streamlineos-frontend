@@ -62,6 +62,7 @@ interface TestRunFilters {
   q?: string;
   status?: string;
   cursor?: number;
+  failuresOnly?: boolean;
 }
 
 export function useTestSuites(projectId?: number) {
@@ -146,6 +147,7 @@ export function useTestRuns(projectId?: number, filters?: TestRunFilters) {
   if (filters?.q) params["q"] = filters.q;
   if (filters?.status) params["status"] = filters.status;
   if (filters?.cursor !== undefined) params["cursor"] = String(filters.cursor);
+  if (filters?.failuresOnly) params["failuresOnly"] = "true";
 
   return useQuery<IdCursorPage<TestRunListItem>>({
     queryKey: buildWorkQueryKeys.projects.qa.runs(

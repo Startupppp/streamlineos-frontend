@@ -21,14 +21,16 @@ jest.mock("./notification-event-stream", () => ({
 }));
 
 const invalidateQueries = jest.fn();
+const backendJwt = `header.${Buffer.from(JSON.stringify({ sub: "user-1", orgId: "org-1", sessionId: "session-1", exp: 9_999_999_999 })).toString("base64url")}.signature`;
 
 jest.mock("@tanstack/react-query", () => ({
   useQueryClient: () => ({ invalidateQueries }),
 }));
 
 jest.mock("next-auth/react", () => ({
-  useSession: () => ({ data: { orgId: "org-1" }, status: "authenticated" }),
+  useSession: () => ({ data: { orgId: "org-1", user: { id: "user-1" }, sessionId: "session-1" }, status: "authenticated" }),
 }));
+jest.mock("@/lib/org-scoped-storage", () => ({ useOrgStorageScope: () => "authenticated:org-1:user-1" }));
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn() }),
@@ -43,11 +45,6 @@ const toastMock = jest.mocked(toast);
 
 const arriving: IncomingNotification = {
   id: 1,
-  title: "Deploy finished",
-  message: "main is live",
-  priority: "NORMAL",
-  category: "SYSTEM",
-  link: null,
 };
 
 type Captured = {
@@ -96,7 +93,9 @@ describe("a count_changed frame refreshes the inbox, because all eleven backend 
               headers: new Headers({ "content-type": "application/json" }),
               json: async () => ({ token: "stream-token" }),
             }
-          : { ok: true, status: 200, json: async () => ({ backendJwt: "jwt-1" }) },
+          : String(input).includes("/notifications?")
+            ? { ok: true, status: 200, headers: new Headers(), json: async () => ({ success: true, data: { data: [{ id: 1, orgId: "org-1", userId: "user-1", type: "INFO", title: "Deploy finished", message: "main is live", priority: "NORMAL", category: "SYSTEM", sourceModule: null, link: null, isRead: false, pinned: false, channel: "IN_APP", archivedAt: null, snoozedUntil: null, createdAt: "2026-10-03T00:00:00Z", ticketContext: null }], hasMore: false, nextCursor: null } }) }
+            : { ok: true, status: 200, json: async () => ({ backendJwt }) },
       ),
     );
   });
@@ -107,6 +106,7 @@ describe("a count_changed frame refreshes the inbox, because all eleven backend 
     await waitFor(() => expect(captured.handlers?.onCountChanged).toBeDefined());
 
     act(() => captured.handlers?.onCountChanged?.());
+    await waitFor(() => expect(invalidateQueries).toHaveBeenCalled());
 
     const keys = invalidatedKeys();
     expect(keys).toContain(JSON.stringify(queryKeys.notifications.lists()));
@@ -130,8 +130,7 @@ describe("a count_changed frame refreshes the inbox, because all eleven backend 
     await waitFor(() => expect(captured.onNotification).toBeDefined());
 
     act(() => captured.onNotification?.(arriving));
-
-    expect(toastMock).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(toastMock).toHaveBeenCalledTimes(1));
     expect(invalidatedKeys()).toContain(
       JSON.stringify(queryKeys.notifications.unreadCount()),
     );

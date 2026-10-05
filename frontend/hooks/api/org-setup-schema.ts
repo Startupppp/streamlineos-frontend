@@ -1,5 +1,40 @@
 import { z } from "zod";
 
+export const ORG_MODULE_KEYS = [
+  "hr",
+  "crm",
+  "build",
+  "accounting",
+  "inventory",
+  "kb",
+  "chat",
+  "support",
+  "surveys",
+  "payroll",
+  "sign",
+  "timesheets",
+] as const;
+
+export type OrgModuleKey = (typeof ORG_MODULE_KEYS)[number];
+export const MAX_INVITEE_MODULE_ACCESS = 10;
+
+export const inviteeModuleAccessSchema = z
+  .array(
+    z
+      .object({
+        moduleKey: z.enum(ORG_MODULE_KEYS),
+        standing: z.enum(["MEMBER", "ADMIN"]),
+      })
+      .strict(),
+  )
+  .max(MAX_INVITEE_MODULE_ACCESS)
+  .refine(
+    (items) => new Set(items.map((item) => item.moduleKey)).size === items.length,
+    "Each module can be assigned once per invitee.",
+  );
+
+export type InviteeModuleAccess = z.infer<typeof inviteeModuleAccessSchema>[number];
+
 export const orgSetupSessionContract = z.object({
   id: z.number().int(),
   type: z.string(),
@@ -19,16 +54,18 @@ export const orgSetupSessionContract = z.object({
   updatedAt: z.string().optional(),
 });
 
-const ORG_SETUP_INVITEE_ROLES = ["OWNER", "ORG_ADMIN", "MEMBER"] as const;
+const ORG_SETUP_INVITEE_ROLES = ["ORG_ADMIN", "MEMBER"] as const;
 
 export const MAX_ORG_SETUP_INVITEES = 50;
+export const MAX_ORG_SETUP_INVITE_BATCHES = 8;
 
 export const orgSetupInviteeRoleSchema = z.enum(ORG_SETUP_INVITEE_ROLES);
 
-const orgSetupInviteeSchema = z
+export const orgSetupInviteeSchema = z
   .object({
     email: z.string(),
     role: orgSetupInviteeRoleSchema,
+    moduleAccess: inviteeModuleAccessSchema.optional(),
   })
   .strict();
 
@@ -56,6 +93,7 @@ export const inviteeOutcomeSchema = z.enum([
 export const inviteeFailureReasonSchema = z.enum([
   "already_member",
   "invitation_revoked",
+  "email_not_sent",
   "unknown",
 ]);
 
@@ -86,11 +124,47 @@ export const orgSetupStatusContract = z.object({
 export type OrgSetupStatus = z.infer<typeof orgSetupStatusContract>;
 
 export const orgSetupCompleteContract = z.union([
-  z.object({ success: z.literal(true), orgId: z.string(), autoLoginToken: z.string() }),
-  z.object({ success: z.literal(true), orgId: z.string() }),
+  z.object({ success: z.literal(true), orgId: z.string(), autoLoginToken: z.string(), destination: z.string() }),
+  z.object({ success: z.literal(true), orgId: z.string(), destination: z.string() }),
 ]);
 
 export const orgSetupSkipContract = z.union([
   z.object({ success: z.literal(true), orgId: z.string(), autoLoginToken: z.string() }),
   z.object({ success: z.literal(true), orgId: z.string() }),
 ]);
+
+export const orgSetupDraftSaveContract = z.object({ success: z.literal(true) });
+
+export const orgSetupDraftContract = z
+  .object({
+    revision: z.number().int(),
+    stepData: z.record(z.string(), z.unknown()),
+    expiresAt: z.string(),
+  })
+  .nullable();
+
+export type OrgSetupDraft = NonNullable<z.infer<typeof orgSetupDraftContract>>;
+
+export const orgSetupPreviewContract = z.object({
+  modules: z.array(
+    z.object({
+      moduleKey: z.string(),
+      eligible: z.boolean(),
+      reason: z.string().optional(),
+    }),
+  ),
+  quotaSnapshot: z.object({
+    seats: z.number().int(),
+    usedSeats: z.number().int(),
+  }),
+  expiresAt: z.string(),
+});
+
+export type OrgSetupPreview = z.infer<typeof orgSetupPreviewContract>;
+
+export const orgSetupActivateContract = z.object({
+  runId: z.string(),
+  status: z.string(),
+  blockedAtStage: z.string().nullable(),
+  destination: z.string().optional(),
+});

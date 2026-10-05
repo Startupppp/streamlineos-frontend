@@ -1,7 +1,7 @@
 # WOW HAVE — PM overlay (CI is SoT)
-**Lane:** PM · **Updated:** 2026-10-01 (IST)  
-**Source of truth:** `/workspace/streamlineos-ci/competitor-deep/HAVE-TODAY.md` + `100-WOW-REASONS.md` #101–105  
-**Bar:** `WOW-CRITERIA.md` (aligns to CI Aditya bar)  
+**Lane:** PM · **Updated:** 2026-10-01 (IST)
+**Source of truth:** `../../streamlineos-analysis-pack/01-ci/competitor-deep/HAVE-TODAY.md` + `100-WOW-REASONS.md` #101–105
+**Bar:** `WOW-CRITERIA.md` (aligns to CI Aditya bar)
 **Rule:** Do **not** invent a parallel HAVE bank. PM adds ICP tags only.
 
 **Counts (CI):** **HAVE = 4** · **HAVE-conditional = 1** · True wow HAVE remains thin.

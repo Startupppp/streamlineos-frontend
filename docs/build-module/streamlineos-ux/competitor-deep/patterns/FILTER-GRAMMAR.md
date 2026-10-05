@@ -1,6 +1,6 @@
 # Pattern card — Filter grammar (cross-Direct)
 
-**Updated:** 2026-10-01 · **ClickUp / Linear / Jira = UI-VERIFIED** (CI FEATURES dumps)  
+**Updated:** 2026-10-01 · **ClickUp / Linear / Jira = UI-VERIFIED** (CI FEATURES dumps)
 **Build VERIFIED:** `../FILTERS-BUILD-CRAFT.md`
 
 ## Matrix
@@ -25,25 +25,25 @@
 
 ## Design ADOPT (now evidence-backed vs Directs)
 
-1. **Labels/Tags filter** (UX-026) — ClickUp Tags + Linear Labels UI-VERIFIED  
-2. **Epic/relation filter** (UX-027) — Linear Relations + Jira parent/Epic class  
-3. **Is set / Is not set** operators — ClickUp Tags/Due  
-4. **AND/OR + nested** progressive — Coherent after Min labels  
-5. **Saved named filter / Custom view** — Linear Views + Jira Save filter + ClickUp Saved filters  
-6. **Me / currentUser quick** — ClickUp Me Mode · Jira My open · Linear Current user  
-7. **Date presets** (Overdue, this week…) — Linear Due presets UI-VERIFIED  
+1. **Labels/Tags filter** (UX-026) — ClickUp Tags + Linear Labels UI-VERIFIED
+2. **Epic/relation filter** (UX-027) — Linear Relations + Jira parent/Epic class
+3. **Is set / Is not set** operators — ClickUp Tags/Due
+4. **AND/OR + nested** progressive — Coherent after Min labels
+5. **Saved named filter / Custom view** — Linear Views + Jira Save filter + ClickUp Saved filters
+6. **Me / currentUser quick** — ClickUp Me Mode · Jira My open · Linear Current user
+7. **Date presets** (Overdue, this week…) — Linear Due presets UI-VERIFIED
 
 ## ADAPT
 
-- Jira JQL power behind progressive disclosure — **not** freelancer day-1 primary UI  
-- ClickUp field sprawl (Time tracked, Sprint points…) — don’t dump 30 fields day-1; progressive picker OK  
+- Jira JQL power behind progressive disclosure — **not** freelancer day-1 primary UI
+- ClickUp field sprawl (Time tracked, Sprint points…) — don’t dump 30 fields day-1; progressive picker OK
 
 ## AVOID
 
-- Claiming monday/Asana filter UI until CI walks them  
-- Matching JQL complexity as Build Now for Freelancer ICP  
+- Claiming monday/Asana filter UI until CI walks them
+- Matching JQL complexity as Build Now for Freelancer ICP
 
 ## Sources
-- `/workspace/streamlineos-ci/competitor-deep/clickup/FEATURES.md`
-- `/workspace/streamlineos-ci/competitor-deep/linear/FEATURES.md`
-- `/workspace/streamlineos-ci/competitor-deep/jira/FEATURES.md`
+- `../../../streamlineos-analysis-pack/01-ci/competitor-deep/clickup/FEATURES.md`
+- `../../../streamlineos-analysis-pack/01-ci/competitor-deep/linear/FEATURES.md`
+- `../../../streamlineos-analysis-pack/01-ci/competitor-deep/jira/FEATURES.md`

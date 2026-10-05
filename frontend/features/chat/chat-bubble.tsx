@@ -28,7 +28,7 @@ import type { Message, TicketEntityRef, CommentEntityRef, MessageMetadata } from
 import { useCan } from "@/hooks/api/access";
 import { apiClient, isApiError } from "@/lib/api-client";
 import { useEntityAction } from "./entity-actions-context";
-import { useSubmitEntityAction } from "@/hooks/api/chat";
+import { useSubmitEntityAction } from "@/hooks/api/chat-entities";
 import { ticketPermalinkQueryOptions } from "@/hooks/api/build/comment-permalink";
 import {
   ChatInlineFallback,

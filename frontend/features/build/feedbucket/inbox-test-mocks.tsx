@@ -1,13 +1,6 @@
 import type { ChangeEvent, ReactNode } from "react";
 
-/**
- * The presentational doubles the two inbox suites share.
- *
- * Kept out of the suites themselves because each `jest.mock` factory here is
- * ~15 lines and duplicating them put one suite over the 500-line ceiling.
- * Only inert render stubs live here; every spy stays in the suite that asserts
- * on it, so no assertion can leak between files.
- */
+
 
 interface MockDataTableProps {
   data: unknown[];

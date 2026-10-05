@@ -4,11 +4,11 @@ import {
   reportFailuresCsv,
 } from "./import-error-report";
 import type {
-  TicketImportPreview,
-  TicketImportReport,
-} from "./import-export-contract";
+  TicketImportExportPreviewImportResponse,
+  TicketImportExportCommitImportResponse,
+} from "@/contracts/build-contracts.generated";
 
-const preview: TicketImportPreview = {
+const preview: TicketImportExportPreviewImportResponse = {
   format: "csv",
   projectId: 42,
   fileError: null,
@@ -32,7 +32,7 @@ const preview: TicketImportPreview = {
   confirmationToken: "token",
 };
 
-const report: TicketImportReport = {
+const report: TicketImportExportCommitImportResponse = {
   projectId: 42,
   format: "csv",
   mode: "atomic",
@@ -65,7 +65,7 @@ describe("previewIssuesCsv — a user cannot fix rows they can only read on scre
   });
 
   it("renders a null field as empty rather than the word null", () => {
-    const fieldless: TicketImportPreview = {
+    const fieldless: TicketImportExportPreviewImportResponse = {
       ...preview,
       issues: [{ rowNumber: 5, field: null, kind: "INVALID", message: "Expected an object" }],
     };
@@ -73,7 +73,7 @@ describe("previewIssuesCsv — a user cannot fix rows they can only read on scre
   });
 
   it("writes the header alone when a file had no issues, never an empty download", () => {
-    const clean: TicketImportPreview = { ...preview, issues: [] };
+    const clean: TicketImportExportPreviewImportResponse = { ...preview, issues: [] };
     expect(previewIssuesCsv(clean)).toBe("rowNumber,field,kind,message");
   });
 });
@@ -87,7 +87,7 @@ describe("reportFailuresCsv — a rolled-back commit must be downloadable too", 
   });
 
   it("omits the rows that were imported, because those need no attention", () => {
-    const partial: TicketImportReport = {
+    const partial: TicketImportExportCommitImportResponse = {
       ...report,
       rows: [
         { rowNumber: 2, outcome: "IMPORTED", ticketId: 9, message: null },

@@ -46,7 +46,7 @@ const REMOVED_ROUTES: RemovedRoute[] = [
     route: "/build/drafts",
     appDir: "drafts",
     redirectSource: "/build/drafts",
-    redirectDestination: "/build/inbox?view=drafts",
+    redirectDestination: "/build/my-work?section=drafts",
   },
   {
     route: "/build/[projectId]/workflow",
@@ -100,19 +100,19 @@ const REMOVED_ROUTES: RemovedRoute[] = [
     route: "/build/pm-workspaces",
     appDir: "pm-workspaces",
     redirectSource: "/build/pm-workspaces",
-    redirectDestination: "/build",
+    redirectDestination: "/build/projects",
   },
   {
     route: "/build/workspaces",
     appDir: "workspaces",
     redirectSource: "/build/workspaces",
-    redirectDestination: "/build",
+    redirectDestination: "/build/projects",
   },
   {
     route: "/build/workspaces/[pmWorkspaceId]",
     appDir: join("workspaces", "[pmWorkspaceId]"),
     redirectSource: "/build/workspaces/:pmWorkspaceId",
-    redirectDestination: "/build",
+    redirectDestination: "/build/projects",
   },
   {
     route: "/build/workspaces/[pmWorkspaceId]/overview",
@@ -202,8 +202,20 @@ const OTHER_BUILD_COMPATIBILITY_REDIRECTS: BuildRedirect[] = [
     destination: "/build/:projectId/milestones",
   },
   {
-    source: "/build/projects",
-    destination: "/build",
+    source: "/build/assigned",
+    destination: "/build/my-work",
+  },
+  {
+    source: "/build/freelancer",
+    destination: "/build/my-work",
+  },
+  {
+    source: "/build/budget",
+    destination: "/build/all-work?view=budgets",
+  },
+  {
+    source: "/build/reports",
+    destination: "/build/all-work?view=reports",
   },
 ];
 
@@ -212,7 +224,9 @@ function nextConfigRedirects(): {
   destination: string;
   permanent: boolean;
 }[] {
-  const source = readFileSync(resolve(ROOT, "next.config.ts"), "utf8");
+  const source = ["next.config.ts", "lib/build/build-compat-redirects.ts"]
+    .map((file) => readFileSync(resolve(ROOT, file), "utf8"))
+    .join("\n");
   return [
     ...source.matchAll(
       /source:\s*"([^"]+)",\s*(?:has:\s*\[[\s\S]*?\],\s*)?destination:\s*"([^"]+)",\s*permanent:\s*(true|false)/g,
@@ -258,7 +272,7 @@ describe("removed Build redirect routes keep their deep link in next.config.ts",
     ].sort((a, b) => a.source.localeCompare(b.source));
 
     expect(actual).toEqual(expected);
-    expect(actual).toHaveLength(31);
+    expect(actual).toHaveLength(34);
   });
 
   it("keeps every declarative Build compatibility redirect temporary", () => {
@@ -266,7 +280,7 @@ describe("removed Build redirect routes keep their deep link in next.config.ts",
       source.startsWith("/build"),
     );
 
-    expect(buildRedirects).toHaveLength(31);
+    expect(buildRedirects).toHaveLength(34);
     expect(buildRedirects.every(({ permanent }) => !permanent)).toBe(true);
   });
 

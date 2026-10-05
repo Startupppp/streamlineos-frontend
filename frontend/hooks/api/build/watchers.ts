@@ -9,7 +9,7 @@ import { lazyContract } from "@/lib/api-envelope";
 import type { TicketWatcher } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
-/** Deferred: `hooks/api/index.ts` re-exports this, and the schema pulls Zod. */
+
 const noContentLazy = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );

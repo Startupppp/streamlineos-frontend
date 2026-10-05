@@ -90,6 +90,13 @@ describe("BSN-04-001 permission matrix — every primary destination across all 
       .map((destination) => destination.id);
     expect(withoutPermission).toEqual([]);
   });
+
+  it("BT-73f88b7d630d — no Build route resolves as universal so every destination requires a permission check", () => {
+    const universalRoutes = destinations
+      .map((destination) => splitDestinationHref(destination.href).path)
+      .filter((path) => resolveRouteAccess(path).kind === "universal");
+    expect(universalRoutes).toEqual([]);
+  });
 });
 
 type CrossScopeCase = [

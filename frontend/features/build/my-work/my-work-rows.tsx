@@ -2,6 +2,7 @@
 
 import { memo, useEffect, useTransition, useState, type ComponentType } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -10,6 +11,7 @@ import {
   CheckCircle2,
   ChevronRight,
   Clock,
+  Trash2,
 } from "lucide-react";
 
 import type { MyWorkItem } from "@/types/projects/my-work";
@@ -22,13 +24,13 @@ import {
   FLEX_TITLE_SLOT,
   TEXT_ONE_LINE,
 } from "@/lib/text-overflow";
-import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
+import { getMyWorkTicketHref } from "@/features/build/ticket-details/build-ticket-detail-url";
 
 export type DueBucket = "overdue" | "today" | "upcoming" | "none";
 
 interface WorkRowShape {
   id: number;
-  projectId: number;
+  projectId: number | null;
   projectKey: string;
   projectName: string;
   ticketNumber?: number;
@@ -55,18 +57,72 @@ export const BUCKET_SYNC_LIMIT = 20;
 
 export const WorkItemRow = memo(function WorkItemRow({
   item,
+  returnHref = "/build/my-work",
+  isBlocked,
+  isOverdue,
+  density = "comfortable",
+  onDelete,
 }: {
   item: WorkRowShape;
+  returnHref?: string;
   index?: number;
+  isBlocked?: boolean;
+  isOverdue?: boolean;
+  density?: "compact" | "comfortable";
+  onDelete?: () => void;
 }) {
+  const router = useRouter();
+
+  if (item.projectId === null) {
+    function handleDeleteClick() {
+      onDelete?.();
+    }
+
+    return (
+      <div className={cn(PM_ROW, "gap-2.5 opacity-60")} data-unavailable>
+        <PriorityBadge priority={item.priority} size="sm" />
+        <div className={FLEX_TITLE_SLOT}>
+          <p className={cn(TEXT_ONE_LINE, "text-label font-medium leading-tight text-muted-foreground")} title={item.title}>
+            {item.title}
+          </p>
+          <span className="text-micro text-status-danger-ink">Unavailable — project was deleted</span>
+        </div>
+        <button
+          type="button"
+          onClick={handleDeleteClick}
+          aria-label="Delete draft"
+          className="shrink-0 rounded p-1 text-muted-foreground hover:text-status-danger-ink"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    );
+  }
+
+  function handlePrimaryClick(e: React.MouseEvent<HTMLAnchorElement>) {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+    e.preventDefault();
+    const paneUrl = `${returnHref}${returnHref.includes("?") ? "&" : "?"}pane=${item.id}&projectId=${item.projectId}`;
+    router.push(paneUrl, { scroll: false });
+  }
+
   return (
-    <div className="transition-transform duration-150 hover:translate-x-0.5">
+    <div
+      className={cn(
+        "transition-transform duration-150 hover:translate-x-0.5",
+        isBlocked && "border-l-2 border-status-danger",
+        isOverdue && "border-l-2 border-status-warning",
+      )}
+      data-blocked={isBlocked ? true : undefined}
+      data-overdue={isOverdue ? true : undefined}
+    >
       <Link
         href={
           item.ticketNumber != null
-            ? getTicketDetailHref(item.projectId, item.projectKey, item.ticketNumber)
+            ? getMyWorkTicketHref(item.projectId, item.projectKey, item.ticketNumber, returnHref)
             : `/build/${item.projectId}`
         }
+        onClick={handlePrimaryClick}
         className={cn(PM_ROW, "gap-2.5")}
       >
         <PriorityBadge priority={item.priority} size="sm" />
@@ -80,20 +136,22 @@ export const WorkItemRow = memo(function WorkItemRow({
           >
             {item.title}
           </p>
-          <div className="mt-0.5 flex min-w-0 items-center gap-1.5 overflow-hidden">
-            <span className="shrink-0 font-mono text-micro font-normal text-primary/80">
-              {item.projectKey}
-            </span>
-            <span className="shrink-0 text-micro text-muted-foreground">·</span>
-            <span
-              className={cn(TEXT_ONE_LINE, "min-w-0 flex-1 text-micro text-muted-foreground")}
-              title={item.projectName}
-            >
-              {item.projectName}
-            </span>
-            <span className="shrink-0 text-micro text-muted-foreground">·</span>
-            <span className="shrink-0 text-micro text-muted-foreground">{item.type}</span>
-          </div>
+          {density !== "compact" ? (
+            <div className="mt-0.5 flex min-w-0 items-center gap-1.5 overflow-hidden" data-optional-fields>
+              <span className="shrink-0 font-mono text-micro font-normal text-primary/80">
+                {item.projectKey}
+              </span>
+              <span className="shrink-0 text-micro text-muted-foreground">·</span>
+              <span
+                className={cn(TEXT_ONE_LINE, "min-w-0 flex-1 text-micro text-muted-foreground")}
+                title={item.projectName}
+              >
+                {item.projectName}
+              </span>
+              <span className="shrink-0 text-micro text-muted-foreground">·</span>
+              <span className="shrink-0 text-micro text-muted-foreground">{item.type}</span>
+            </div>
+          ) : null}
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
           <StatusBadge status={item.status} className="text-dense" />
@@ -107,9 +165,11 @@ export const WorkItemRow = memo(function WorkItemRow({
 export const BucketSection = memo(function BucketSection({
   bucket,
   items,
+  returnHref = "/build/my-work",
 }: {
   bucket: DueBucket;
   items: MyWorkItem[];
+  returnHref?: string;
 }) {
   const cfg = BUCKET_CONFIG[bucket];
   const [, startTransition] = useTransition();
@@ -138,7 +198,7 @@ export const BucketSection = memo(function BucketSection({
       </div>
       <div>
         {items.slice(0, visibleCount).map((item) => (
-          <WorkItemRow key={item.id} item={item} />
+          <WorkItemRow key={item.id} item={item} returnHref={returnHref} />
         ))}
       </div>
     </PmPanel>

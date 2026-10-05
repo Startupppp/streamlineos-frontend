@@ -1,6 +1,11 @@
 import { resolveRouteAccess } from "@/lib/rbac/route-access/route-access";
+import { resolveBuildEntryDestination } from "../build-entry-destination";
 import { buildOrganizationCatalog } from "./build-organization-catalog";
 import { buildProjectCatalog } from "./build-project-catalog";
+import {
+  BUILD_MY_WORK_DESTINATIONS,
+  BUILD_BROWSE_ALL_DESTINATION,
+} from "./build-stable-destinations";
 
 describe("BLD-L4-001 — org settings routes resolve to permission via nav catalog (not unknown)", () => {
   it("resolveRouteAccess returns permission for /build/settings/access once org-members destination points there", () => {
@@ -128,5 +133,38 @@ describe("three project-settings sub-routes take their own key, not the parent b
   it("settings/fields still inherits build:update, proving the parent entry is intact", () => {
     const decision = resolveRouteAccess("/build/[projectId]/settings/fields");
     expect(decision).toMatchObject({ permission: "build:update" });
+  });
+});
+
+describe("BT-0cda23e08f22 — every catalog destination has a non-empty requiredPermission (FE-54)", () => {
+  it("every org catalog primary and moreTools destination has requiredPermission", () => {
+    const catalog = buildOrganizationCatalog();
+    const all = [...catalog.primary, ...(catalog.moreTools ?? [])];
+    const ungated = all.filter((d) => !d.requiredPermission).map((d) => d.id);
+    expect(ungated).toEqual([]);
+  });
+
+  it("every project catalog primary and moreTools destination has requiredPermission", () => {
+    const catalog = buildProjectCatalog("/build/42");
+    const all = [...catalog.primary, ...(catalog.moreTools ?? [])];
+    const ungated = all.filter((d) => !d.requiredPermission).map((d) => d.id);
+    expect(ungated).toEqual([]);
+  });
+
+  it("every stable destination has requiredPermission", () => {
+    const all = [...BUILD_MY_WORK_DESTINATIONS, BUILD_BROWSE_ALL_DESTINATION];
+    const ungated = all.filter((d) => !d.requiredPermission).map((d) => d.id);
+    expect(ungated).toEqual([]);
+  });
+
+  it("org-projects destination links to a non-settings route", () => {
+    const catalog = buildOrganizationCatalog();
+    const projects = catalog.primary.find((d) => d.id === "org-projects");
+    expect(projects?.href).toBeDefined();
+    expect(projects?.href).not.toContain("/settings");
+  });
+
+  it("/build resolves via resolveBuildEntryDestination to /build/command-center when no query params provided", () => {
+    expect(resolveBuildEntryDestination({})).toBe("/build/command-center");
   });
 });

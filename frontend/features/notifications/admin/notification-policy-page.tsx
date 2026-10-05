@@ -6,7 +6,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
-import { useNotificationPolicies, useUpsertNotificationPolicy } from "@/hooks/api/notifications";
+import { useNotificationPolicies, useUpsertNotificationPolicy } from "@/hooks/api/notifications-admin";
 import { useCan } from "@/hooks/api/access";
 import { NOTIFICATION_CATEGORIES } from "@/lib/notification-types";
 import { getErrorMessage } from "@/lib/get-error-message";

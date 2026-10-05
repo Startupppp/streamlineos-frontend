@@ -22,13 +22,22 @@ const useUnsaveMessage = jest.fn();
 const useSendThreadReply = jest.fn();
 const useChatOrgUsers = jest.fn();
 
-jest.mock("@/hooks/api", () => ({
+jest.mock("@/hooks/api/chat-personal-b", () => ({
   useChannelFiles: (channelId: number) => useChannelFiles(channelId),
+}));
+
+jest.mock("@/hooks/api/chat-personal-a", () => ({
   useSavedMessages: () => useSavedMessages(),
+  useUnsaveMessage: () => useUnsaveMessage(),
+}));
+
+jest.mock("@/hooks/api/chat-search", () => ({
   useThreadReplies: (channelId: number, messageId: number) =>
     useThreadReplies(channelId, messageId),
-  useUnsaveMessage: () => useUnsaveMessage(),
   useSendThreadReply: () => useSendThreadReply(),
+}));
+
+jest.mock("@/hooks/api/chat-core-read", () => ({
   useChatOrgUsers: () => useChatOrgUsers(),
 }));
 

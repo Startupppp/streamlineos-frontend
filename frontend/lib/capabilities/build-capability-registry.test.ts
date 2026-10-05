@@ -1,0 +1,81 @@
+import {
+  BUILD_CAPABILITY_REGISTRY,
+  findBuildCapability,
+  authorizedBuildRouteIds,
+} from "./build-capability-registry";
+
+describe("BT-23009d74e88d — build capability registry", () => {
+  it("registry contains at least one entry for org catalog and stable destinations", () => {
+    expect(BUILD_CAPABILITY_REGISTRY.length).toBeGreaterThan(5);
+  });
+
+  it("every entry has a non-empty routeId", () => {
+    const empty = BUILD_CAPABILITY_REGISTRY.filter((e) => !e.routeId).map(
+      (e) => e.routeId,
+    );
+    expect(empty).toEqual([]);
+  });
+
+  it("every entry has at least one permissionKey", () => {
+    const missing = BUILD_CAPABILITY_REGISTRY.filter(
+      (e) => e.permissionKeys.length === 0,
+    ).map((e) => e.routeId);
+    expect(missing).toEqual([]);
+  });
+
+  it("no two entries have the same routeId", () => {
+    const ids = BUILD_CAPABILITY_REGISTRY.map((e) => e.routeId);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("findBuildCapability returns entry with build:view for org-overview", () => {
+    const entry = findBuildCapability("org-overview");
+    expect(entry).toBeDefined();
+    expect(entry?.permissionKeys).toContain("build:view");
+  });
+
+  it("findBuildCapability returns undefined for an unknown route", () => {
+    expect(findBuildCapability("unknown-nonexistent-route")).toBeUndefined();
+  });
+
+  it("my-work-assigned is in the registry with build:tickets:view", () => {
+    const entry = findBuildCapability("my-work-assigned");
+    expect(entry?.permissionKeys).toContain("build:tickets:view");
+  });
+});
+
+describe("BT-23009d74e88d — authorizedBuildRouteIds filters by can()", () => {
+  it("returns all routes when can returns true for everything", () => {
+    const allRoutes = authorizedBuildRouteIds(() => true);
+    expect(allRoutes.length).toBe(BUILD_CAPABILITY_REGISTRY.length);
+  });
+
+  it("returns empty array when can returns false for everything", () => {
+    const noRoutes = authorizedBuildRouteIds(() => false);
+    expect(noRoutes).toEqual([]);
+  });
+
+  it("returns only routes whose permission keys the actor has", () => {
+    const routes = authorizedBuildRouteIds((key) => key === "build:view");
+    expect(routes.length).toBeGreaterThan(0);
+    for (const routeId of routes) {
+      const entry = findBuildCapability(routeId);
+      expect(entry?.permissionKeys).toContain("build:view");
+    }
+  });
+
+  it.each(["build:members:view", "build:access:view"])(
+    "allows org-members through the %s alternative",
+    (permission) => {
+      const routes = authorizedBuildRouteIds((key) => key === permission);
+      expect(routes).toContain("org-members");
+      expect(routes).not.toContain("org-overview");
+    },
+  );
+
+  it("denies org-members when neither alternative is allowed", () => {
+    const routes = authorizedBuildRouteIds((key) => key === "build:view");
+    expect(routes).not.toContain("org-members");
+    expect(routes).toContain("org-overview");
+  });
+});

@@ -1,11 +1,4 @@
-/**
- * The Build inbox read `/notifications` once with `limit: 100`, so it mounted
- * 100 rows at a time AND made notification 101 unreachable — there was no
- * cursor and no pager. The Mentions tab filtered that same fixed page
- * client-side, so a mention older than the newest 100 notifications could not be
- * reached at all. These assert the cursor read, the render bound, and that
- * nothing sits behind the bound unreachably.
- */
+
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -16,11 +9,14 @@ import type { Notification, NotificationSection } from "@/types/notifications";
 const useInfiniteNotifications = jest.fn();
 const fetchNextPage = jest.fn();
 
-jest.mock("@/hooks/api/notifications", () => ({
+jest.mock("@/hooks/api/notifications-inbox", () => ({
   useInfiniteNotifications: (params: unknown) => useInfiniteNotifications(params),
   useMarkNotificationRead: () => ({ mutate: jest.fn() }),
   useMarkAllNotificationsRead: () => ({ mutate: jest.fn(), isPending: false }),
   useBulkMarkRead: () => ({ mutateAsync: jest.fn() }),
+}));
+
+jest.mock("@/hooks/api/notifications-inbox-actions", () => ({
   useBulkArchive: () => ({ mutateAsync: jest.fn() }),
   useBulkDelete: () => ({ mutateAsync: jest.fn() }),
 }));
@@ -175,6 +171,36 @@ describe("InboxList — changing the section prop resets the window", () => {
     expect(
       screen.getByRole("button", { name: /load older notifications/i }),
     ).toBeInTheDocument();
+  });
+});
+
+describe("InboxList — changing the cursor prop resets the window", () => {
+  it("goes back to the first page of rows when the cursor changes via prop", async () => {
+    const user = userEvent.setup();
+    mockPages([100, 100, 100], false);
+    const { rerender } = render(
+      <InboxList
+        selectedId={null}
+        onSelect={noop}
+        section="UNREAD"
+        q={null}
+        cursor={null}
+        searchInputRef={searchRef}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: /load older notifications/i }));
+    expect(screen.getAllByRole("listitem")).toHaveLength(INBOX_RENDER_PAGE_SIZE * 2);
+    rerender(
+      <InboxList
+        selectedId={null}
+        onSelect={noop}
+        section="UNREAD"
+        q={null}
+        cursor={100}
+        searchInputRef={searchRef}
+      />,
+    );
+    expect(screen.getAllByRole("listitem")).toHaveLength(INBOX_RENDER_PAGE_SIZE);
   });
 });
 

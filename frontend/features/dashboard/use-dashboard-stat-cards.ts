@@ -83,7 +83,7 @@ export function useDashboardStatCards(
         label: "Active Projects",
         ...statValue(stats.activeProjects),
         icon: Briefcase,
-        href: "/build",
+        href: "/build/projects",
       });
     }
     if (access.projectsEnabled) {

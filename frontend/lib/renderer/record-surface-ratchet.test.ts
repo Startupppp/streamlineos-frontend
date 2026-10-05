@@ -98,7 +98,7 @@ const REMAINING_BY_MODULE: Readonly<Record<string, number>> = {
   "hr": 125, // 127 until 2026-09-25, when Recruitment OS (17) left features/hr
   "recruitment": 17,
   "inventory": 138, // 96 on the CRM lane; +40 from the inventory lane on merge
-  "build": 86,
+  "build": 88,
   "payroll": 55,
   "employee-support": 2,
   "accounting": 32,

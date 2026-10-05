@@ -31,7 +31,7 @@ import {
 } from "@/hooks/api/portal-access/grants";
 import { useProjects } from "@/hooks/api/build/projects";
 import type { ProjectClientGrant } from "@/types/portal-access/grants";
-import type { PortalMembershipRow } from "@/hooks/api/portal-access/portal-access-schema";
+import type { ActivationResult } from "@/hooks/api/portal-access/portal-access-schema";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { InviteClientDialog } from "./invite-client-dialog";
 
@@ -43,6 +43,8 @@ const grantSchema = z.object({
   canViewAttachments: z.boolean(),
   canViewComments: z.boolean(),
   canSubmitChangeRequests: z.boolean(),
+  canViewApprovals: z.boolean(),
+  canViewInvoices: z.boolean(),
 });
 
 type GrantFormValues = z.infer<typeof grantSchema>;
@@ -55,6 +57,8 @@ const EMPTY_DEFAULTS: GrantFormValues = {
   canViewAttachments: false,
   canViewComments: false,
   canSubmitChangeRequests: false,
+  canViewApprovals: false,
+  canViewInvoices: false,
 };
 
 function toFormValues(grant: ProjectClientGrant): GrantFormValues {
@@ -66,6 +70,8 @@ function toFormValues(grant: ProjectClientGrant): GrantFormValues {
     canViewAttachments: grant.canViewAttachments,
     canViewComments: grant.canViewComments,
     canSubmitChangeRequests: grant.canSubmitChangeRequests,
+    canViewApprovals: grant.canViewApprovals,
+    canViewInvoices: grant.canViewInvoices,
   };
 }
 
@@ -127,6 +133,8 @@ export function GrantFormDialog({ open, onOpenChange, mode, defaultValues }: Pro
           canViewAttachments: values.canViewAttachments,
           canViewComments: values.canViewComments,
           canSubmitChangeRequests: values.canSubmitChangeRequests,
+          canViewApprovals: values.canViewApprovals,
+          canViewInvoices: values.canViewInvoices,
         },
         {
           onSuccess: () => {
@@ -144,6 +152,8 @@ export function GrantFormDialog({ open, onOpenChange, mode, defaultValues }: Pro
           canViewAttachments: values.canViewAttachments,
           canViewComments: values.canViewComments,
           canSubmitChangeRequests: values.canSubmitChangeRequests,
+          canViewApprovals: values.canViewApprovals,
+          canViewInvoices: values.canViewInvoices,
         },
         {
           onSuccess: () => {
@@ -168,8 +178,8 @@ export function GrantFormDialog({ open, onOpenChange, mode, defaultValues }: Pro
     setInviteOpen(nextOpen);
   }
 
-  function handleMembershipInvited(membership: PortalMembershipRow) {
-    form.setValue("portalMembershipId", membership.portalMembershipId);
+  function handleMembershipInvited(result: ActivationResult) {
+    form.setValue("portalMembershipId", result.portalMembershipId);
   }
 
   const showEmptyMembershipCta =
@@ -392,6 +402,42 @@ export function GrantFormDialog({ open, onOpenChange, mode, defaultValues }: Pro
                     </FormControl>
                     <FormLabel className="cursor-pointer font-normal">
                       Submit change requests
+                    </FormLabel>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="canViewApprovals"
+                render={({ field }) => (
+                  <FormItem className="flex items-center gap-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormLabel className="cursor-pointer font-normal">
+                      View approvals
+                    </FormLabel>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="canViewInvoices"
+                render={({ field }) => (
+                  <FormItem className="flex items-center gap-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormLabel className="cursor-pointer font-normal">
+                      View invoices
                     </FormLabel>
                   </FormItem>
                 )}

@@ -300,6 +300,8 @@ export const buildWorkQueryKeys = {
         : ([...base, "projects", "all-work", filters] as const),
     allWorkInfinite: (filters: QueryKeyParams) =>
       [...base, "projects", "all-work", filters, "infinite"] as const,
+    allWorkIds: (filters: QueryKeyParams) =>
+      [...base, "projects", "all-work", "ids", filters] as const,
     customStates: (projectId: number) =>
       [...base, "projects", projectId, "custom-states"] as const,
     orgCustomStates: () =>
@@ -335,7 +337,9 @@ export const buildWorkQueryKeys = {
         ? ([...base, "projects", projectId, "workload-capacity", start, end, teamId] as const)
         : ([...base, "projects", projectId, "workload-capacity", start, end] as const),
     commentDrafts: {
+      all: (): readonly (string | number)[] => [...base, "projects", "comment-drafts"],
       mine: () => [...base, "projects", "comment-drafts", "mine"] as const,
+      byTicket: (ticketId: number): readonly (string | number)[] => [...base, "projects", "comment-drafts", "ticket", ticketId],
     },
     commentPermalinkWithComment: (
       projectId: number,
@@ -417,6 +421,22 @@ export const buildWorkQueryKeys = {
       [...base, "projectReports", "cycleTime", projectId] as const,
     leadTime: (projectId: number) =>
       [...base, "projectReports", "leadTime", projectId] as const,
+    velocityFiltered: (projectId: number, encodedFilter?: string) =>
+      encodedFilter === undefined
+        ? ([...base, "projectReports", "velocity", projectId] as const)
+        : ([...base, "projectReports", "velocity", projectId, encodedFilter] as const),
+    burnupFiltered: (projectId: number, cycleId?: number, encodedFilter?: string) =>
+      cycleId === undefined
+        ? ([...base, "projectReports", "burnup", projectId] as const)
+        : encodedFilter === undefined
+          ? ([...base, "projectReports", "burnup", projectId, cycleId] as const)
+          : ([...base, "projectReports", "burnup", projectId, cycleId, { filter: encodedFilter }] as const),
+  },
+  commandCenter: {
+    layout: () => [...base, "command-center", "layout"] as const,
+  },
+  landingPreference: {
+    mine: () => [...base, "landing-preference", "mine"] as const,
   },
 
 } as const;

@@ -125,7 +125,8 @@ export function BuildScopeBrowser({
       }
       if (key === "ArrowRight" || key === "ArrowLeft") {
         const focused = document.activeElement;
-        if (!(focused instanceof HTMLElement) || !treeRef.current?.contains(focused)) return;
+        const tree = treeRef.current;
+        if (!(focused instanceof HTMLElement) || !tree?.contains(focused)) return;
         const scopeKey = focused.dataset["scopeKey"];
         if (!scopeKey) return;
         if (key === "ArrowRight") {
@@ -141,10 +142,21 @@ export function BuildScopeBrowser({
         if (key === "ArrowLeft" && expandedKeys.has(scopeKey)) {
           handleToggleExpanded(scopeKey);
           event.preventDefault();
+        } else if (key === "ArrowLeft") {
+          const parentKey = [...directory.products, ...directory.projects]
+            .find((entry) => entry.key === scopeKey)?.parentKey;
+          if (!parentKey) return;
+          const parent = [...tree.querySelectorAll<HTMLButtonElement>(
+            '[role="treeitem"][data-scope-key]',
+          )].find((item) => item.dataset["scopeKey"] === parentKey);
+          if (parent) {
+            parent.focus();
+            event.preventDefault();
+          }
         }
       }
     },
-    [moveFocus, expandedKeys, handleToggleExpanded, childrenOf],
+    [moveFocus, expandedKeys, handleToggleExpanded, childrenOf, directory.products, directory.projects],
   );
 
   const handleSearchKeyDown = useCallback(

@@ -14,7 +14,7 @@ jest.mock("@/components/ui/sheet", () => ({
 }));
 
 jest.mock("@/components/members/member-picker", () => ({
-  MemberPicker: () => <div data-testid="member-picker" />,
+  MemberPicker: ({ includeRevoked }: { includeRevoked?: boolean }) => <div data-testid="member-picker" data-include-revoked={String(includeRevoked)} />,
 }));
 
 jest.mock("@/hooks/api/module-access", () => ({
@@ -57,6 +57,7 @@ describe("MemberAssignmentSheet mutation controls", () => {
     render(<MemberAssignmentSheet {...commonProps} canManage />);
 
     expect(screen.getByTestId("member-picker")).toBeInTheDocument();
+    expect(screen.getByTestId("member-picker")).toHaveAttribute("data-include-revoked", "true");
     expect(screen.getByRole("button", { name: "Add" })).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Remove Alex Morgan" }),

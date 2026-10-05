@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { getUserDisplayName } from "@/lib/person-display";
 import { DB_ENUMS } from "@/contracts/db-enums.generated";
 
-const PRIORITY_OPTIONS = [
+export const PRIORITY_OPTIONS = [
   { value: "LOW", label: "Low" },
   { value: "MEDIUM", label: "Medium" },
   { value: "HIGH", label: "High" },
@@ -23,7 +23,7 @@ const TICKET_TYPE_LABELS: Record<string, string> = {
   EPIC: "Epic",
 };
 
-const TICKET_TYPE_OPTIONS = DB_ENUMS.ticket_type.map((value) => ({
+export const TICKET_TYPE_OPTIONS = DB_ENUMS.ticket_type.map((value) => ({
   value,
   label: TICKET_TYPE_LABELS[value] ?? value.charAt(0) + value.slice(1).toLowerCase(),
 }));
@@ -181,6 +181,15 @@ export function AutomationValueInput({
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder="Comment text…"
+            className={cn("text-sm min-h-[60px] resize-none", className)}
+          />
+        );
+      case "request_approval":
+        return (
+          <Textarea
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder="Note for the approver (optional)…"
             className={cn("text-sm min-h-[60px] resize-none", className)}
           />
         );

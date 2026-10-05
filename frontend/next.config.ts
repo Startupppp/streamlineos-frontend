@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { BUILD_COMPAT_REDIRECTS } from "./lib/build/build-compat-redirects";
 
 function isLocalOrLoopbackAppUrl(): boolean {
   for (const raw of [process.env.NEXTAUTH_URL]) {
@@ -277,7 +278,7 @@ const nextConfig: NextConfig = {
     },
     {
       source: "/build/pm-workspaces",
-      destination: "/build",
+      destination: "/build/projects",
       permanent: false,
     },
     {
@@ -300,11 +301,7 @@ const nextConfig: NextConfig = {
       destination: "/build/settings/client-access",
       permanent: false,
     },
-    {
-      source: "/build/drafts",
-      destination: "/build/inbox?view=drafts",
-      permanent: false,
-    },
+    ...BUILD_COMPAT_REDIRECTS,
     {
       source: "/build/:projectId(\\d+)/my-tickets",
       destination: "/build/my-work?projectId=:projectId",
@@ -347,17 +344,12 @@ const nextConfig: NextConfig = {
     },
     {
       source: "/build/workspaces/:pmWorkspaceId",
-      destination: "/build",
+      destination: "/build/projects",
       permanent: false,
     },
     {
       source: "/build/workspaces",
-      destination: "/build",
-      permanent: false,
-    },
-    {
-      source: "/build/projects",
-      destination: "/build",
+      destination: "/build/projects",
       permanent: false,
     },
     {
@@ -403,6 +395,31 @@ const nextConfig: NextConfig = {
     {
       source: "/settings/notifications",
       destination: "/settings/notifications/my-preferences",
+      permanent: false,
+    },
+    {
+      source: "/announcements",
+      destination: "/hr/announcements",
+      permanent: false,
+    },
+    {
+      source: "/chat/settings",
+      destination: "/chat",
+      permanent: false,
+    },
+    {
+      source: "/docs",
+      destination: "/knowledge/wiki",
+      permanent: false,
+    },
+    {
+      source: "/kb",
+      destination: "/knowledge/wiki",
+      permanent: false,
+    },
+    {
+      source: "/knowledge",
+      destination: "/knowledge/chat",
       permanent: false,
     },
     {

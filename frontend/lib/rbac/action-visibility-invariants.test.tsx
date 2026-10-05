@@ -8,6 +8,7 @@ import {
   useToggleWebhook,
   useDeleteWebhook,
   useRotateWebhookSecret,
+  useWebhookImpact,
 } from "@/hooks/api/webhooks";
 import { InlineGroupCreate } from "@/features/build/views/list-view-group-create";
 import { BulkActionBar } from "@/features/build/shared/bulk-action-bar";
@@ -65,6 +66,7 @@ jest.mock("@/hooks/api/webhooks", () => ({
   useToggleWebhook: jest.fn(),
   useDeleteWebhook: jest.fn(),
   useRotateWebhookSecret: jest.fn(),
+  useWebhookImpact: jest.fn(() => ({ data: undefined })),
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({

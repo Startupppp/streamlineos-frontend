@@ -63,10 +63,8 @@ export function usePersonalDetailsQuery() {
 
 export type BankDetailsPayload = z.infer<typeof bankDetailsContractDef>;
 
-export type BankDetails = BankDetailsPayload;
-
 export type BankDetailsQueryOptions = Omit<
-  UseQueryOptions<BankDetails, Error>,
+  UseQueryOptions<BankDetailsPayload, Error>,
   "queryKey" | "queryFn"
 >;
 
@@ -74,7 +72,7 @@ export function useBankDetailsQuery(options?: BankDetailsQueryOptions) {
   return useQuery({
     queryKey: platformCoreQueryKeys.onboardingFlow.bankDetails(),
     queryFn: ({ signal }) =>
-      apiClient.get<BankDetails>(
+      apiClient.get<BankDetailsPayload>(
         "/onboarding/bank-details",
         undefined,
         signal,

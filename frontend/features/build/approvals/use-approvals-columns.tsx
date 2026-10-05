@@ -8,6 +8,7 @@ import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { ApprovalStatusBadge, entityTypeLabel } from "./approval-status-badge";
 import { ApprovalActions } from "./approvals-toolbar";
 import { DECIDABLE } from "./approvals-constants";
+import { useAccess } from "@/hooks/api/access";
 import type { Approval, ApprovalStatus } from "@/types/projects";
 
 const APPROVAL_STATUS_VALUES: ApprovalStatus[] = [
@@ -52,7 +53,9 @@ function ApprovalsActionsCell({
 }) {
   const narrowStatus =
     APPROVAL_STATUS_VALUES.find((v) => v === row.status) ?? "pending";
-  const canDecideRow = canDecide && DECIDABLE.has(narrowStatus) && canManage;
+  const { data: access } = useAccess();
+  const assigned = access?.membershipId != null && access.membershipId === row.approverMembershipId;
+  const canDecideRow = canDecide && DECIDABLE.has(narrowStatus) && (assigned || canManage);
 
   const handleDecide = useCallback(
     () => setDecideTarget(row),

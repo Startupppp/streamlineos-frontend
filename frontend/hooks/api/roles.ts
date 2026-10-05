@@ -13,7 +13,6 @@ import type {
   RoleMember,
   RolePermissionGrant,
   SetRolePermissionsInput,
-  UnassignRoleMemberInput,
 } from "@/types/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
@@ -53,7 +52,7 @@ const assignableDepartmentsContract = lazyContract(() =>
   import("@/hooks/api/roles-schema").then((m) => m.assignableDepartmentsContract),
 );
 
-type RolesPage = {
+export type PaginatedRolesResponse = {
   data: RoleListItem[];
   pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 };
@@ -68,8 +67,6 @@ export type {
   RoleListItem as RoleListRow,
   Role as RoleRecord,
 } from "@/hooks/api/roles-schema";
-export type PaginatedRolesResponse = RolesPage;
-
 const ROLE_SELECTOR_PARAMS = { limit: 100 } as const;
 
 export const useRoles = (
@@ -264,7 +261,7 @@ export const useUnassignRoleMember = () => {
   const queryClient = useQueryClient();
   const { data: session } = useSession();
   const orgId = session?.orgId;
-  return useAuthorizedMutation<{ success: boolean }, Error, UnassignRoleMemberInput>("settings:rbac:manage", {
+  return useAuthorizedMutation<{ success: boolean }, Error, AssignRoleMemberInput>("settings:rbac:manage", {
     mutationKey: ["roles", "unassign-member"],
     mutationFn: ({ roleId, ...body }) =>
       apiClient.delete<{ success: boolean }>(`/roles/${roleId}/members`, body, undefined, roleSuccessContract),

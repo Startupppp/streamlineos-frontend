@@ -4,6 +4,7 @@ import { ApprovalsPanel } from "./command-center-approvals-panel";
 import { AgentRunsPanel } from "./command-center-agent-runs-panel";
 import { RisksPanel } from "./command-center-risks-panel";
 import { ReleasesPanel } from "./command-center-releases-panel";
+import { BlockersPanel } from "./command-center-rows";
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(),
@@ -24,6 +25,10 @@ jest.mock("@/hooks/api/build/governance", () => ({
 
 jest.mock("@/hooks/api/build/releases", () => ({
   useOrgReleases: jest.fn(),
+}));
+
+jest.mock("@/hooks/api/build/all-work", () => ({
+  useInfiniteAllWork: jest.fn(),
 }));
 
 jest.mock("@/lib/build/build-scope", () => ({
@@ -78,12 +83,14 @@ import { useApprovalInbox } from "@/hooks/api/build/approvals";
 import { useAgentPulse } from "@/hooks/api/build/agent-pulse";
 import { useOrgRisks } from "@/hooks/api/build/governance";
 import { useOrgReleases } from "@/hooks/api/build/releases";
+import { useInfiniteAllWork } from "@/hooks/api/build/all-work";
 
 const mockUseCanState = useCanState as jest.Mock;
 const mockUseApprovalInbox = useApprovalInbox as jest.Mock;
 const mockUseAgentPulse = useAgentPulse as jest.Mock;
 const mockUseOrgRisks = useOrgRisks as jest.Mock;
 const mockUseOrgReleases = useOrgReleases as jest.Mock;
+const mockUseInfiniteAllWork = useInfiniteAllWork as jest.Mock;
 
 function baseQueryResult(overrides: Record<string, unknown> = {}) {
   return {
@@ -101,6 +108,7 @@ beforeEach(() => {
   mockUseAgentPulse.mockReturnValue(baseQueryResult());
   mockUseOrgRisks.mockReturnValue(baseQueryResult());
   mockUseOrgReleases.mockReturnValue(baseQueryResult());
+  mockUseInfiniteAllWork.mockReturnValue(baseQueryResult());
 });
 
 describe("ApprovalsPanel", () => {
@@ -310,5 +318,42 @@ describe("ReleasesPanel", () => {
     render(<ReleasesPanel />);
     expect(screen.getByText("v1.0 Launch")).toBeInTheDocument();
     expect(screen.getByText("1.0.0")).toBeInTheDocument();
+  });
+});
+
+jest.mock("./command-center-rows", () => {
+  const actual = jest.requireActual("./command-center-rows") as Record<string, unknown>;
+  return { ...actual };
+});
+
+describe("BlockersPanel", () => {
+  it("renders skeletons while the blocked-tickets query is loading — paired with the loaded test", () => {
+    mockUseInfiniteAllWork.mockReturnValue(baseQueryResult({ isLoading: true }));
+    render(<BlockersPanel />);
+    expect(screen.getAllByTestId("skeleton").length).toBeGreaterThan(0);
+  });
+
+  it("renders the panel header when query completes — paired with the loading test", () => {
+    mockUseInfiniteAllWork.mockReturnValue(
+      baseQueryResult({ data: { pages: [{ data: [] }] } }),
+    );
+    render(<BlockersPanel />);
+    expect(screen.getByTestId("panel-header")).toBeInTheDocument();
+  });
+
+  it("renders the error state when the blockers query fails — paired with the success test", () => {
+    mockUseInfiniteAllWork.mockReturnValue(
+      baseQueryResult({ isError: true, error: new Error("network failure") }),
+    );
+    render(<BlockersPanel />);
+    expect(screen.getByTestId("error-state")).toBeInTheDocument();
+  });
+
+  it("renders the empty state when there are no overdue blocked tickets — paired with the populated test", () => {
+    mockUseInfiniteAllWork.mockReturnValue(
+      baseQueryResult({ data: { pages: [{ data: [] }] } }),
+    );
+    render(<BlockersPanel />);
+    expect(screen.getByTestId("empty-state")).toBeInTheDocument();
   });
 });

@@ -2,9 +2,13 @@
 
 import * as React from "react";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
+import { Slot } from "@radix-ui/react-slot";
 
 import { cn } from "../../lib/utils";
 import { OVERFLOW_EDGE_FADE_CLASS, useHorizontalOverflow } from "@/hooks/common/use-horizontal-overflow";
+
+const TAB_LIST_CLASSES = "box-border flex h-9 min-h-9 w-full min-w-0 max-w-full flex-nowrap items-center gap-1 overflow-x-auto overscroll-x-contain rounded-lg border border-input bg-card p-1 text-muted-foreground scrollbar-hide md:w-fit";
+const TAB_TRIGGER_CLASSES = "box-border inline-flex h-7 min-h-7 flex-1 min-w-fit items-center justify-center gap-1.5 whitespace-nowrap rounded-md border border-transparent px-3 text-sm font-medium leading-none transition-[color,background-color] disabled:pointer-events-none disabled:opacity-50 text-muted-foreground hover:text-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm focus-visible:outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4";
 
 function Tabs({
   className,
@@ -35,7 +39,7 @@ function TabsList({
         // Spans the row up to `md` so triggers share it equally; sizes to its
         // own tabs from `md` up. Never hardcode a width at a call site — that
         // is what crushes triggers into each other.
-        "box-border flex h-9 min-h-9 w-full min-w-0 max-w-full flex-nowrap items-center gap-1 overflow-x-auto overscroll-x-contain rounded-lg border border-input bg-card p-1 text-muted-foreground scrollbar-hide md:w-fit",
+        TAB_LIST_CLASSES,
         OVERFLOW_EDGE_FADE_CLASS,
         className,
       )}
@@ -55,13 +59,36 @@ function TabsTrigger({
         // `flex-1` splits the list evenly; `min-w-fit` floors every trigger at
         // its own label width, so a long label is never squashed — once the
         // labels outgrow the list it scrolls instead.
-        "box-border inline-flex h-7 min-h-7 flex-1 min-w-fit items-center justify-center gap-1.5 whitespace-nowrap rounded-md border border-transparent px-3 text-sm font-medium leading-none transition-[color,background-color] disabled:pointer-events-none disabled:opacity-50",
-        "text-muted-foreground hover:text-foreground",
-        "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm",
-        "focus-visible:outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring",
-        "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        TAB_TRIGGER_CLASSES,
         className,
       )}
+      {...props}
+    />
+  );
+}
+
+function TabsNavigation({ className, ...props }: React.ComponentProps<"nav">) {
+  const listRef = React.useRef<HTMLElement>(null);
+  const overflow = useHorizontalOverflow(listRef, props.children);
+  return (
+    <nav
+      ref={listRef}
+      data-slot="tabs-navigation"
+      data-hidden-left={overflow.hiddenLeft}
+      data-hidden-right={overflow.hiddenRight}
+      className={cn(TAB_LIST_CLASSES, OVERFLOW_EDGE_FADE_CLASS, className)}
+      {...props}
+    />
+  );
+}
+
+function TabsNavigationLink({ active, className, ...props }: React.ComponentProps<typeof Slot> & { active: boolean }) {
+  return (
+    <Slot
+      data-slot="tabs-navigation-link"
+      data-state={active ? "active" : "inactive"}
+      aria-current={active ? "page" : undefined}
+      className={cn(TAB_TRIGGER_CLASSES, className)}
       {...props}
     />
   );
@@ -88,4 +115,4 @@ function TabsContent({
   );
 }
 
-export { Tabs, TabsList, TabsTrigger, TabsContent };
+export { Tabs, TabsList, TabsTrigger, TabsContent, TabsNavigation, TabsNavigationLink };

@@ -131,6 +131,18 @@ export function GoalsPage() {
   const totalGoals = goalsPage?.total ?? 0;
   const { data: stats } = useGoalStats();
 
+  const ownerOptions = useMemo(() => {
+    const seen = new Set<string>();
+    const result: { value: string; label: string }[] = [];
+    for (const goal of goals ?? []) {
+      if (goal.owner && !seen.has(goal.owner.id)) {
+        seen.add(goal.owner.id);
+        result.push({ value: goal.owner.id, label: goal.owner.name ?? goal.owner.email });
+      }
+    }
+    return result;
+  }, [goals]);
+
   const grouped = useMemo(() => {
     const map = new Map<GoalLevel, GoalListItem[]>();
     for (const level of GOAL_LEVEL_ORDER) map.set(level, []);
@@ -237,7 +249,7 @@ export function GoalsPage() {
       <PageWrapper
         title="Goals & OKRs"
         subtitle="Track company, team, and individual objectives and their key results"
-        filters={<GoalsListToolbar listFilters={listFilters} searchInputRef={searchInputRef} />}
+        filters={<GoalsListToolbar listFilters={listFilters} searchInputRef={searchInputRef} ownerOptions={ownerOptions} />}
         actions={<BuildHeaderActions actions={createActions} />}
       >
         <PmPageShell>

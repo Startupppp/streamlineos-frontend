@@ -118,7 +118,6 @@ export function ProjectSettingsPortalPage({ projectId }: ProjectSettingsPortalPa
     (ticketId: number, clientVisible: boolean, version?: number) => {
       updateTicket.mutate(
         { ticketId, clientVisible, version },
-        { onError: (err) => toast.error(getErrorMessage(err)) },
       );
     },
     [updateTicket],

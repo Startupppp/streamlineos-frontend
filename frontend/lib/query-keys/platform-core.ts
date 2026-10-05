@@ -20,6 +20,8 @@ export const platformCoreQueryKeys = {
       params === undefined
         ? ([...base, "notifications", "list"] as const)
         : ([...base, "notifications", "list", params] as const),
+    selected: (notificationId: number | null, section: "ALL" | "SNOOZED" | "ARCHIVED") =>
+      [...base, "notifications", "list", "selected", { notificationId, section }] as const,
     unreadList: () => [...base, "notifications", "list", "unread"] as const,
     unreadCount: (sourceModule?: string) =>
       sourceModule === undefined
@@ -80,6 +82,7 @@ export const platformCoreQueryKeys = {
     all: [...base, "org-setup"] as const,
     session: () => [...base, "org-setup", "session"] as const,
     status: () => [...base, "org-setup", "status"] as const,
+    draft: () => [...base, "org-setup", "draft"] as const,
   },
 
   onboardingFlow: {

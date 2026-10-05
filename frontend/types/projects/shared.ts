@@ -14,7 +14,7 @@ export type ModuleStatus =
 
 export type IntakeStatus = "pending" | "accepted" | "declined" | "duplicate";
 
-export type IntakeSource = "manual" | "web_form" | "email";
+export type IntakeSource = "manual" | "web_form" | "email" | "feedbucket" | "portal_client";
 
 export type ViewLayoutType = "board" | "list" | "table" | "calendar" | "gantt";
 

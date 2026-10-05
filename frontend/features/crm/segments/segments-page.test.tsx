@@ -35,6 +35,10 @@ jest.mock("@/components/renderer/use-tenant-layout", () => ({
   useTenantLayout: <T,>(layout: T): T => layout,
 }));
 
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
+}));
+
 /**
  * The two sheets are stubbed down to what they were handed. What this page owes
  * them is the right subject — a create that carries no segment, an edit that

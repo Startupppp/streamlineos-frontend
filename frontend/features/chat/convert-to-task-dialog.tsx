@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/form";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useProjects } from "@/hooks/api/build/projects";
-import { useCreateTaskFromMessage } from "@/hooks/api/chat";
+import { useCreateTaskFromMessage } from "@/hooks/api/chat-entities";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 interface Props {

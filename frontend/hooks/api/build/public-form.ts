@@ -59,7 +59,7 @@ export function fetchPublicForm(
 
 export async function submitPublicForm(
   token: string,
-  values: Record<string, string>,
+  values: Record<string, unknown>,
   submittedByName?: string,
 ): Promise<PublicFormSubmitResponse> {
   const path = `/public/forms/${token}/submit`;
@@ -95,7 +95,7 @@ export function usePublicForm(token: string) {
 }
 
 export function useSubmitPublicForm(token: string) {
-  return useMutation<PublicFormSubmitResponse, Error, Record<string, string>>({
+  return useMutation<PublicFormSubmitResponse, Error, Record<string, unknown>>({
     mutationKey: ["projects", "public-form", token, "submit"],
     mutationFn: (payload) => submitPublicForm(token, payload),
   });

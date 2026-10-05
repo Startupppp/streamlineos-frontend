@@ -6,10 +6,13 @@ export const conditionSchema = z.object({
   value: z.string().optional(),
 });
 
-export const actionSchema = z.object({
-  type: z.enum(["set_status", "set_assignee", "set_priority", "add_label", "add_comment"]),
-  value: z.string().min(1),
-});
+export const actionSchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.enum(["set_status", "set_assignee", "set_priority", "add_label", "add_comment"]),
+    value: z.string().min(1),
+  }),
+  z.object({ type: z.literal("request_approval"), value: z.string().max(2000) }),
+]);
 
 export const formSchema = z.object({
   name: z.string().min(1, "Name is required").max(200),

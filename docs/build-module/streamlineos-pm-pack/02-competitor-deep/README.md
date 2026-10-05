@@ -1,6 +1,6 @@
 # Competitor Deep — PM lane (StreamlineOS Build)
-**Owner:** Principal Product Manager (PM lane)  
-**Mandate:** ICP framing + sellable reasons + Completeness prioritisation.  
+**Owner:** Principal Product Manager (PM lane)
+**Mandate:** ICP framing + sellable reasons + Completeness prioritisation.
 **Updated:** 2026-10-01 (IST)
 
 ## Ownership split
@@ -34,7 +34,7 @@
 2. **`ICP-ROADMAP-TOP15.md`** ← Top 15 implement path
 3. **`LINEAR-DEEP-FOLD.md`** ← Linear UI-verified surfaces, gates, and Build SHIP implications
 4. **`JIRA-DEEP-FOLD.md`** ← Jira UI-verified surfaces, free-tier honesty locks, and Build implications
-5. CI SoT: `/workspace/streamlineos-ci/competitor-deep/100-WOW-REASONS.md` + `HAVE-TODAY.md`
+5. CI SoT: `../../streamlineos-analysis-pack/01-ci/competitor-deep/100-WOW-REASONS.md` + `HAVE-TODAY.md`
 6. `WOW-CRITERIA.md` → `WOW-HAVE.md` → `SHIP-DESPERATE.md` → `100-WOW-REASONS-PM.md`
 7. `ICP-JTBD.md` · `REASON-FRAMING.md` · `UX-PATTERNS.md`
 8. `FILTERS.md` (ClickUp/Linear/Jira **UI-VERIFIED**; Build: UX `FILTERS-BUILD-CRAFT.md`)

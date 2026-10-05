@@ -168,6 +168,11 @@ import { CycleTimeSection } from "./cycle-time-section";
 import { LeadTimeSection } from "./lead-time-section";
 import { CfdSection } from "./cfd-section";
 import { CriticalPathSection } from "./critical-path-section";
+import {
+  encodeFilterEnvelope as encodeReportFilter,
+  decodeFilterEnvelope as decodeReportFilter,
+  type FilterEnvelopeV1,
+} from "@/lib/filter-envelope/filter-envelope-v1";
 
 function settled<T>(data: T) {
   return {
@@ -196,7 +201,7 @@ function settledVelocity(sprints: typeof VELOCITY_DATA) {
   };
 }
 
-function loading() {
+function _loading() {
   return {
     data: undefined,
     isLoading: true,
@@ -251,9 +256,9 @@ beforeEach(() => {
   mockUseCriticalPath.mockReturnValue({ data: undefined, isLoading: false, isError: false, error: null, refetch: jest.fn() });
 });
 
-// --------------------------------------------------------------------------
-// VelocitySection — usePageState + PageState integration
-// --------------------------------------------------------------------------
+
+
+
 
 describe("VelocitySection — page states", () => {
   it("passes build:view permission and error to usePageState so 402 errors are classified correctly", () => {
@@ -300,9 +305,9 @@ describe("VelocitySection — page states", () => {
   });
 });
 
-// --------------------------------------------------------------------------
-// BurnupSection — usePageState covers the two-query combination
-// --------------------------------------------------------------------------
+
+
+
 
 describe("BurnupSection — page states", () => {
   it("passes build:view permission to usePageState so the denial reason is shown", () => {
@@ -346,9 +351,9 @@ describe("BurnupSection — page states", () => {
   });
 });
 
-// --------------------------------------------------------------------------
-// CycleTimeSection — uses Skeleton (not LoadingState) for loading
-// --------------------------------------------------------------------------
+
+
+
 
 describe("CycleTimeSection — page states", () => {
   it("passes build:view permission and error to usePageState so 402 errors are classified correctly", () => {
@@ -395,9 +400,9 @@ describe("CycleTimeSection — page states", () => {
   });
 });
 
-// --------------------------------------------------------------------------
-// LeadTimeSection — uses Skeleton (not LoadingState) for loading
-// --------------------------------------------------------------------------
+
+
+
 
 describe("LeadTimeSection — page states", () => {
   it("passes build:view permission and error to usePageState so 402 errors are classified correctly", () => {
@@ -444,11 +449,11 @@ describe("LeadTimeSection — page states", () => {
   });
 });
 
-// --------------------------------------------------------------------------
-// CfdSection — usePageState + PageState integration; capture mutation is an
-// action affordance and is not gated by PageState (it lives in the ChartCard
-// header, not the data panel)
-// --------------------------------------------------------------------------
+
+
+
+
+
 
 describe("CfdSection — page states", () => {
   it("passes build:view permission and error to usePageState so 402 errors are classified correctly", () => {
@@ -499,9 +504,9 @@ describe("CfdSection — page states", () => {
   });
 });
 
-// --------------------------------------------------------------------------
-// CriticalPathSection — usePageState + PageState integration
-// --------------------------------------------------------------------------
+
+
+
 
 const CRITICAL_PATH_DATA = {
   criticalPath: [
@@ -513,6 +518,31 @@ const CRITICAL_PATH_DATA = {
   nodeCount: 2,
   hasCycle: false,
 };
+
+describe("ReportFilterEnvelope — encode/decode round-trip (BT-9ce12613e7f6)", () => {
+  it("round-trips an envelope with a single status clause through encode and decode without data loss", () => {
+    const envelope = {
+      version: 1 as const,
+      logic: "and" as const,
+      filters: [{ field: "status", op: "is" as const, value: "done" }],
+    };
+    const encoded = encodeReportFilter(envelope);
+    expect(typeof encoded).toBe("string");
+    expect(encoded.length).toBeGreaterThan(0);
+    const decoded = decodeReportFilter(encoded);
+    expect(decoded).toEqual(envelope);
+  });
+
+  it("round-trips an empty envelope through encode and decode — positive control for zero-clause case", () => {
+    const envelope = { version: 1 as const, logic: "and" as const, filters: [] };
+    const decoded = decodeReportFilter(encodeReportFilter(envelope));
+    expect(decoded).toEqual(envelope);
+  });
+
+  it("returns null when decoding a corrupt encoded string — positive control confirms failure is handled", () => {
+    expect(decodeReportFilter("not-valid-base64!!")).toBeNull();
+  });
+});
 
 describe("CriticalPathSection — page states", () => {
   it("passes build:view permission and error to usePageState so 402 errors are classified correctly", () => {
@@ -555,5 +585,47 @@ describe("CriticalPathSection — page states", () => {
     mockUsePageState.mockReturnValueOnce({ kind: "denied", permission: "build:view" });
     render(<CriticalPathSection projectId={1} />);
     expect(screen.getByTestId("no-permission")).toBeInTheDocument();
+  });
+});
+
+const STATUS_FILTER: FilterEnvelopeV1 = {
+  version: 1,
+  logic: "and",
+  filters: [{ field: "status", op: "is", value: "DONE" }],
+};
+
+describe("FilterEnvelope wiring — VelocitySection passes filterEnvelope to useVelocityReport (BT-185db6b8a5ca)", () => {
+  it("passes the filterEnvelope to useVelocityReport when provided — positive control confirms wiring", () => {
+    render(<VelocitySection projectId={1} filterEnvelope={STATUS_FILTER} />);
+    expect(mockUseVelocityReport).toHaveBeenCalledWith(1, STATUS_FILTER);
+  });
+
+  it("calls useVelocityReport with only projectId when no filterEnvelope provided — no-filter baseline", () => {
+    render(<VelocitySection projectId={1} />);
+    expect(mockUseVelocityReport).toHaveBeenCalledWith(1, undefined);
+  });
+});
+
+describe("FilterEnvelope wiring — BurnupSection passes filterEnvelope to hooks (BT-185db6b8a5ca)", () => {
+  it("passes filterEnvelope to useVelocityReport and useBurnupReport when provided — positive control confirms wiring", () => {
+    render(<BurnupSection projectId={2} filterEnvelope={STATUS_FILTER} />);
+    expect(mockUseVelocityReport).toHaveBeenCalledWith(2, STATUS_FILTER);
+    const burnupCall = mockUseBurnupReport.mock.calls.find(
+      (args) => args[0] === 2 && args[2] === STATUS_FILTER,
+    );
+    expect(burnupCall).toBeDefined();
+  });
+});
+
+describe("CfdSection — snapshots are project-wide, so active filters are disclosed, never sent", () => {
+  it("tells the reader filters do not apply and still requests the unfiltered report", () => {
+    render(<CfdSection projectId={3} filtersActive />);
+    expect(mockUseCfdReport).toHaveBeenCalledWith(3, expect.any(Number));
+    expect(screen.getByText(/Filters do not apply to this chart/)).toBeInTheDocument();
+  });
+
+  it("shows no filter note when no filter is active", () => {
+    render(<CfdSection projectId={3} />);
+    expect(screen.queryByText(/Filters do not apply to this chart/)).not.toBeInTheDocument();
   });
 });

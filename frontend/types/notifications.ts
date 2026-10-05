@@ -16,6 +16,7 @@ export type NotificationSection =
   | "APPROVALS"
   | "BROADCASTS"
   | "ARCHIVED"
+  | "SNOOZED"
   | "SYSTEM"
   | "PINNED";
 export type NotificationChannel =
@@ -82,6 +83,7 @@ export interface UnreadCount {
 }
 
 export interface NotificationListParams {
+  ids?: readonly number[];
   section?: NotificationSection;
   category?: NotificationCategory;
   priority?: NotificationPriority;

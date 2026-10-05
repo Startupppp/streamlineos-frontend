@@ -18,7 +18,7 @@ import {
   KbUploadIcon,
   KbUsersIcon,
 } from "@/features/wiki/lib/kb-icons";
-import type { KbIconComponent } from "@/features/wiki/lib/kb-icons";
+import type { AnimatedNavIconComponent } from "@/components/layout/sidebar/sidebar-animated-nav";
 import {
   Accordion,
   AccordionContent,
@@ -58,7 +58,7 @@ const WIKI_NAV_GROUPS_KEY = "wiki-nav-groups";
 interface WikiNavItem {
   label: string;
   href: string;
-  icon: KbIconComponent;
+  icon: AnimatedNavIconComponent;
   exact?: boolean;
 }
 

@@ -1,10 +1,4 @@
-/**
- * A board autoloads up to 500 tickets and the timeline drew one SVG group per
- * dated ticket — a hit target, a rule, a label and a bar each — to show the ~15
- * rows a viewport holds. These assert the mounted row count follows the
- * viewport, that a row far down the board is still reachable by scrolling, and
- * that the bound did not cost the chart its list semantics or its keyboard.
- */
+
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { GanttView } from "./gantt-view";

@@ -19,9 +19,9 @@ it("rejects a version token that is not an integer or not a number", () => {
   ).toBe(false);
 });
 
-it("accepts version 0 because the generated contract requires an integer but not a positive one", () => {
+it("rejects version 0 because the generated contract requires a positive integer matching the database default of 1", () => {
   expect(ticketUpdateRequestContract.safeParse({ ...versionedEdit, version: 0 }).success).toBe(
-    true,
+    false,
   );
 });
 

@@ -41,6 +41,26 @@ const ITEM = {
   owner: null,
 } as unknown as ScorableRoadmapItem;
 
+const ITEM_WITH_PROJECT = {
+  ...ITEM,
+  id: 7,
+  title: "Analytics overhaul",
+  projectId: 42,
+} as unknown as ScorableRoadmapItem;
+
+describe("RoadmapItemCard — canonical link targets", () => {
+  it("renders a View project link whose href is the canonical project path, not an ID-less copy", () => {
+    render(<RoadmapItemCard item={ITEM_WITH_PROJECT} onEdit={jest.fn()} onDelete={jest.fn()} />);
+    const link = screen.getByRole("link", { name: "View project" });
+    expect(link).toHaveAttribute("href", "/build/42");
+  });
+
+  it("renders no View project link when projectId is null", () => {
+    render(<RoadmapItemCard item={ITEM} onEdit={jest.fn()} onDelete={jest.fn()} />);
+    expect(screen.queryByRole("link", { name: "View project" })).not.toBeInTheDocument();
+  });
+});
+
 describe("RoadmapItemCard — right click opens the same authorized actions as the visible row controls", () => {
   it("opens Edit and Delete on contextmenu, which the card offers nowhere else as a menu", () => {
     render(<RoadmapItemCard item={ITEM} onEdit={jest.fn()} onDelete={jest.fn()} />);

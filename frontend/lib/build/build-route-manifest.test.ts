@@ -1,6 +1,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
 import { BUILD_ROUTE_MANIFEST, BuildRouteManifestEntrySchema } from "./build-route-manifest";
+import { BUILD_COMPAT_REDIRECTS } from "./build-compat-redirects";
 
 const APP_AUTH_DIR = resolve(__dirname, "../../app/(authenticated)");
 const APP_BUILD_DIR = join(APP_AUTH_DIR, "build");
@@ -8,6 +9,7 @@ const APP_BUILD_DIR = join(APP_AUTH_DIR, "build");
 function collectPageFilePaths(dir: string): string[] {
   const results: string[] = [];
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (entry.isDirectory() && entry.name.startsWith("@")) continue;
     const full = join(dir, entry.name);
     if (entry.isDirectory()) {
       results.push(...collectPageFilePaths(full));
@@ -29,9 +31,9 @@ const diskRoutes = new Set(
   collectPageFilePaths(APP_BUILD_DIR).map(absolutePathToRoute),
 );
 
-describe("BLD-001 — build route manifest covers all 75 authenticated build pages bidirectionally", () => {
-  it("manifest has 75 entries so the coverage check cannot pass vacuously with an empty or truncated list", () => {
-    expect(BUILD_ROUTE_MANIFEST).toHaveLength(75);
+describe("BLD-001 — build route manifest covers all 78 authenticated build pages bidirectionally", () => {
+  it("manifest has 78 entries so the coverage check cannot pass vacuously with an empty or truncated list", () => {
+    expect(BUILD_ROUTE_MANIFEST).toHaveLength(78);
   });
 
   it("no longer tracks the twenty-six routes whose next.config.ts redirect now serves the URL, because a manifest entry without a page is a phantom disposition", () => {
@@ -74,6 +76,7 @@ describe("BLD-001 — build route manifest covers all 75 authenticated build pag
       "/build/goals",
       "/build/goals/[goalId]",
       "/build/command-center",
+      "/build/projects",
       "/build/all-work",
       "/build/managed-products",
       "/build/roadmap",
@@ -101,6 +104,17 @@ describe("BLD-001 — build route manifest covers all 75 authenticated build pag
 
   it("disk route count matches manifest count so neither direction can silently absorb extra entries", () => {
     expect(diskRoutes.size).toBe(BUILD_ROUTE_MANIFEST.length);
+  });
+
+  it("BT-375a85cfc39c — /build/budget and /build/reports consolidate to all work through config redirects, not pages", () => {
+    expect(BUILD_COMPAT_REDIRECTS).toEqual(
+      expect.arrayContaining([
+        { source: "/build/budget", destination: "/build/all-work?view=budgets", permanent: false },
+        { source: "/build/reports", destination: "/build/all-work?view=reports", permanent: false },
+      ]),
+    );
+    expect(diskRoutes.has("/build/budget")).toBe(false);
+    expect(diskRoutes.has("/build/reports")).toBe(false);
   });
 
   it("every manifest route has a page.tsx on disk so no phantom disposition can exist in the manifest", () => {

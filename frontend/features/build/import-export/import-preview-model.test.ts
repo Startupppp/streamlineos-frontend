@@ -1,7 +1,7 @@
 import type {
-  TicketImportPreview,
-  TicketImportReport,
-} from "./import-export-contract";
+  TicketImportExportPreviewImportResponse,
+  TicketImportExportCommitImportResponse,
+} from "@/contracts/build-contracts.generated";
 import {
   canCommit,
   failedRows,
@@ -12,7 +12,7 @@ import {
   toPreviewRowViews,
 } from "./import-preview-model";
 
-function makePreview(overrides: Partial<TicketImportPreview> = {}): TicketImportPreview {
+function makePreview(overrides: Partial<TicketImportExportPreviewImportResponse> = {}): TicketImportExportPreviewImportResponse {
   return {
     format: "csv",
     projectId: 42,
@@ -31,7 +31,7 @@ function makePreview(overrides: Partial<TicketImportPreview> = {}): TicketImport
   };
 }
 
-function makeReport(overrides: Partial<TicketImportReport> = {}): TicketImportReport {
+function makeReport(overrides: Partial<TicketImportExportCommitImportResponse> = {}): TicketImportExportCommitImportResponse {
   return {
     projectId: 42,
     format: "csv",

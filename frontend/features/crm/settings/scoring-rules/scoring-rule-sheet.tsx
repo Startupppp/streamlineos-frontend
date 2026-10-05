@@ -16,7 +16,7 @@ import {
   useUpdateScoringRule,
   type ScoringRule,
   type UpdateScoringRuleInput,
-} from "@/hooks/api/crm-settings";
+} from "@/hooks/api/crm/settings/scoring-rules";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { SCORING_RULE_LAYOUT } from "@/lib/renderer/crm/settings/scoring-rule-layout";
 import { numberOr, numberOrOmit, requiredText, textOrOmit } from "../shared/record-payload";

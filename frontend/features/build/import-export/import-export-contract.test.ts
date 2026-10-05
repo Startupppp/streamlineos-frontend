@@ -1,9 +1,10 @@
 import { ZodError } from "zod";
 import {
-  importPreviewSchema,
-  importReportSchema,
-  ticketExportSchema,
-} from "./import-export-contract";
+  ticketImportExportPreviewImportResponseSchema,
+  ticketImportExportCommitImportResponseSchema,
+  ticketImportExportExportTicketsResponseSchema,
+} from "@/contracts/build-contracts.generated";
+
 
 const preview = {
   format: "csv",
@@ -44,13 +45,13 @@ const report = {
   issues: [],
 };
 
-describe("importPreviewSchema", () => {
+describe("ticketImportExportPreviewImportResponseSchema", () => {
   it("accepts the preview the service returns", () => {
-    expect(importPreviewSchema.parse(preview).summary.importable).toBe(1);
+    expect(ticketImportExportPreviewImportResponseSchema.parse(preview).summary.importable).toBe(1);
   });
 
   it("accepts a preview that carries a file level failure and no token", () => {
-    const parsed = importPreviewSchema.parse({
+    const parsed = ticketImportExportPreviewImportResponseSchema.parse({
       ...preview,
       fileError: "The file is empty",
       rows: [],
@@ -61,7 +62,7 @@ describe("importPreviewSchema", () => {
 
   it("rejects an issue kind the client has no branch for", () => {
     expect(() =>
-      importPreviewSchema.parse({
+      ticketImportExportPreviewImportResponseSchema.parse({
         ...preview,
         issues: [{ rowNumber: 3, field: null, kind: "SOMETHING_NEW", message: "x" }],
       }),
@@ -70,7 +71,7 @@ describe("importPreviewSchema", () => {
 
   it("rejects a ticket priority outside the database enum", () => {
     expect(() =>
-      importPreviewSchema.parse({
+      ticketImportExportPreviewImportResponseSchema.parse({
         ...preview,
         rows: [{ rowNumber: 2, values: { title: "A", status: "TODO", priority: "SOON" } }],
       }),
@@ -78,7 +79,7 @@ describe("importPreviewSchema", () => {
   });
 
   it("keeps a nullable field distinct from a missing one", () => {
-    const parsed = importPreviewSchema.parse({
+    const parsed = ticketImportExportPreviewImportResponseSchema.parse({
       ...preview,
       rows: [{ rowNumber: 2, values: { title: "A", status: "TODO", dueDate: null } }],
     });
@@ -86,14 +87,14 @@ describe("importPreviewSchema", () => {
   });
 });
 
-describe("importReportSchema", () => {
+describe("ticketImportExportCommitImportResponseSchema", () => {
   it("accepts the report the service returns", () => {
-    expect(importReportSchema.parse(report).summary.imported).toBe(1);
+    expect(ticketImportExportCommitImportResponseSchema.parse(report).summary.imported).toBe(1);
   });
 
   it("rejects an outcome the client has no branch for", () => {
     expect(() =>
-      importReportSchema.parse({
+      ticketImportExportCommitImportResponseSchema.parse({
         ...report,
         rows: [{ rowNumber: 2, outcome: "PARTIALLY", ticketId: null, message: null }],
       }),
@@ -102,13 +103,13 @@ describe("importReportSchema", () => {
 
   it("requires the replay flag, so a replay cannot be read as a fresh import", () => {
     const { replayed: _replayed, ...withoutFlag } = report;
-    expect(() => importReportSchema.parse(withoutFlag)).toThrow(ZodError);
+    expect(() => ticketImportExportCommitImportResponseSchema.parse(withoutFlag)).toThrow(ZodError);
   });
 });
 
-describe("ticketExportSchema", () => {
+describe("ticketImportExportExportTicketsResponseSchema", () => {
   it("accepts an export payload", () => {
-    const parsed = ticketExportSchema.parse({
+    const parsed = ticketImportExportExportTicketsResponseSchema.parse({
       format: "csv",
       filename: "build-project-42-tickets.csv",
       contentType: "text/csv",
@@ -120,7 +121,7 @@ describe("ticketExportSchema", () => {
 
   it("rejects a format the client cannot render", () => {
     expect(() =>
-      ticketExportSchema.parse({
+      ticketImportExportExportTicketsResponseSchema.parse({
         format: "xlsx",
         filename: "x",
         contentType: "text/csv",

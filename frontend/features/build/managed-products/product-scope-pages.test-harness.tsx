@@ -58,6 +58,10 @@ jest.mock("@/hooks/api/feedbucket", () => ({
   useFeedbucketSubmissions: jest.fn(),
 }));
 
+jest.mock("@/hooks/api/build/intake-mutations", () => ({
+  useRouteFeedbucketToIntake: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+}));
+
 jest.mock("@/hooks/api/build/managed-products", () => ({
   useManagedProductInsights: jest.fn(),
   useManagedProducts: jest.fn(),
@@ -133,7 +137,16 @@ jest.mock("@/components/ui/empty-state", () => ({
 }));
 
 jest.mock("@/components/ui/stat-card", () => ({
-  StatCard: () => null,
+  StatCard: ({ label, href, value }: { label: string; href?: string; value?: number }) =>
+    href ? (
+      <a data-testid="stat-card-link" data-label={label} href={href}>
+        {label}: {value}
+      </a>
+    ) : (
+      <div data-testid="stat-card" data-label={label}>
+        {label}: {value}
+      </div>
+    ),
   StatCardGrid: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   StatCardGridSkeleton: () => <div data-testid="stat-card-grid-skeleton" />,
 }));
@@ -198,6 +211,7 @@ jest.mock("@/features/build/goals/constants", () => ({
   LEVEL_LABEL: { company: "Company", team: "Team", individual: "Individual" },
   STATUS_OPTIONS: [],
   LEVEL_OPTIONS: [],
+  METRIC_OPTIONS: [],
 }));
 
 jest.mock("@/features/build/roadmap/roadmap-constants", () => ({

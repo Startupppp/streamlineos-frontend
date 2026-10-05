@@ -24,9 +24,9 @@ describe("mobile module nav items", () => {
   describe("getAllMobileModuleTabs", () => {
     it("returns all routes across groups with no cap", () => {
       const all = getAllMobileModuleTabs(projectsNav);
-      expect(all).toHaveLength(7);
+      expect(all).toHaveLength(6);
       expect(all[0]!.label).toBe("Home");
-      expect(all[6]!.label).toBe("Delivery Teams");
+      expect(all[5]!.label).toBe("Delivery Teams");
     });
 
     it("deduplicates routes with the same href across groups", () => {
@@ -45,8 +45,8 @@ describe("mobile module nav items", () => {
       expect(tabs.map((t) => t.label)).toEqual([
         "Home",
         "Inbox",
-        "My issues",
-        "Drafts",
+        "My Work",
+        "All issues",
       ]);
     });
 
@@ -87,9 +87,8 @@ describe("mobile module nav items", () => {
   describe("getMobileModuleOverflowTabs", () => {
     it("returns routes from index 4 onward when total > 5", () => {
       const overflow = getMobileModuleOverflowTabs(projectsNav);
-      expect(overflow).toHaveLength(3);
+      expect(overflow).toHaveLength(2);
       expect(overflow.map((r) => r.label)).toEqual([
-        "All issues",
         "Projects",
         "Delivery Teams",
       ]);
@@ -107,7 +106,6 @@ describe("mobile module nav items", () => {
       expect(groups).toHaveLength(1);
       expect(groups[0]!.label).toBe("Projects");
       expect(groups[0]!.routes.map((r) => r.label)).toEqual([
-        "All issues",
         "Projects",
         "Delivery Teams",
       ]);
@@ -152,12 +150,12 @@ describe("mobile module nav items", () => {
           label: "Projects",
           product: "build",
           routes: [
-            { label: "Projects", icon: Briefcase, href: "/build", exact: true },
+            { label: "Projects", icon: Briefcase, href: "/build/projects", exact: true },
             { label: "Inbox", icon: Inbox, href: "/build/inbox" },
           ],
         },
       ]);
-      expect(isMobileNavRouteActive("/build", tabs[0]!, tabs)).toBe(true);
+      expect(isMobileNavRouteActive("/build/projects", tabs[0]!, tabs)).toBe(true);
       expect(isMobileNavRouteActive("/build/inbox", tabs[0]!, tabs)).toBe(false);
     });
 

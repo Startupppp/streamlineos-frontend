@@ -1,6 +1,7 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { ProjectApprovalsPage } from "./project-approvals-page";
 import { ApiError } from "@/lib/api-envelope";
+import { toast } from "sonner";
 
 let mockSetDelegateTarget: ((row: unknown) => void) | undefined;
 
@@ -90,23 +91,30 @@ jest.mock("@/components/ui/data-table", () => ({
     mobileCard,
   }: {
     data: typeof approvalRow[];
-    selection?: { onChange?: (ids: Set<string>) => void };
+    selection?: { onChange?: (ids: Set<string>) => void; selected?: Set<string | number> };
     mobileCard?: (row: typeof approvalRow) => React.ReactNode;
   }) => {
-    const handleSelectFirstRow = () => {
+    function handleSelectRow() {
       selection?.onChange?.(new Set(["1"]));
       mockDataTableOnChange(new Set(["1"]));
-    };
+    }
+    function handleOpenDelegate() {
+      if (data[0]) mockSetDelegateTarget?.(data[0]);
+    }
     return (
-      <div data-testid="data-table" data-rows={data.length}>
-        <button type="button" data-testid="select-row-1" onClick={handleSelectFirstRow} />
-        <button
-          type="button"
-          data-testid="open-delegate"
-          onClick={() => data[0] && mockSetDelegateTarget?.(data[0])}
-        />
-        {data[0] && mobileCard ? mobileCard(data[0]) : null}
-      </div>
+    <div data-testid="data-table" data-rows={data.length} data-selected={selection?.selected?.size ?? 0}>
+      <button
+        type="button"
+        data-testid="select-row-1"
+        onClick={handleSelectRow}
+      />
+      <button
+        type="button"
+        data-testid="open-delegate"
+        onClick={handleOpenDelegate}
+      />
+      {data[0] && mobileCard ? mobileCard(data[0]) : null}
+    </div>
     );
   },
   DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
@@ -262,6 +270,7 @@ function defaultFilters(overrides: Record<string, unknown> = {}) {
 
 const approvalRow = {
   id: 1,
+  revision: 1,
   orgId: "org-1",
   projectId: 1,
   entityType: "task",
@@ -282,6 +291,7 @@ const approvalRow = {
 };
 
 beforeEach(() => {
+  jest.clearAllMocks();
   mockSetDelegateTarget = undefined;
   mockUseCan.mockReturnValue(false);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
@@ -290,7 +300,7 @@ beforeEach(() => {
   );
   mockUseCreateApproval.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUseDecideApproval.mockReturnValue({ mutate: jest.fn(), isPending: false });
-  mockUseUpdateApproval.mockReturnValue({ mutate: jest.fn(), isPending: false });
+  mockUseUpdateApproval.mockReturnValue({ mutate: jest.fn(), mutateAsync: jest.fn(), captureOwner: () => ({ isCurrent: () => true }), isPending: false });
   mockUseDeleteApproval.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUseOrgMembers.mockReturnValue({ data: undefined });
   mockUseBuildListFilters.mockReturnValue(defaultFilters());
@@ -459,18 +469,37 @@ describe("BUG-042 — bulk cancel fires updateApproval with a numeric ID even th
     expect(mutateMock).not.toHaveBeenCalled();
   });
 
-  it("calls updateApproval.mutate with a numeric approvalId when DataTable onChange yields a string ID (BUG-042 coercion fix)", () => {
+  it("cancels the loaded row revision when DataTable onChange yields a string ID", async () => {
     const mutateMock = jest.fn();
-    mockUseUpdateApproval.mockReturnValue({ mutate: mutateMock, isPending: false });
+    mockUseUpdateApproval.mockReturnValue({ mutateAsync: mutateMock.mockResolvedValue(approvalRow), captureOwner: () => ({ isCurrent: () => true }), isPending: false });
     mockUseCan.mockReturnValue(true);
     mockUseProjectApprovals.mockReturnValue(baseQueryResult({ data: approvalPages([approvalRow]) }));
     render(<ProjectApprovalsPage projectId={1} />);
     fireEvent.click(screen.getByTestId("select-row-1"));
     fireEvent.click(screen.getByTestId("bulk-cancel-btn"));
-    expect(mutateMock).toHaveBeenCalledTimes(1);
-    const callArg = (mutateMock.mock.calls[0] as [{ approvalId: number; status: string }])[0];
-    expect(typeof callArg.approvalId).toBe("number");
-    expect(callArg.approvalId).toBe(1);
-    expect(callArg.status).toBe("cancelled");
+    await waitFor(() => expect(mutateMock).toHaveBeenCalledWith({ approvalId: 1, expectedRevision: 1, status: "cancelled" }));
   });
+});
+
+it("retains a failed project bulk selection and only clears it after a successful retry", async () => {
+  const mutation = jest.fn().mockRejectedValueOnce(new ApiError("Revision changed", 409)).mockResolvedValue(approvalRow);
+  mockUseCan.mockReturnValue(true);
+  mockUseProjectApprovals.mockReturnValue(baseQueryResult({ data: approvalPages([approvalRow]) }));
+  mockUseUpdateApproval.mockReturnValue({ mutateAsync: mutation, captureOwner: () => ({ isCurrent: () => true }) });
+  render(<ProjectApprovalsPage projectId={1} />);
+  fireEvent.click(screen.getByTestId("select-row-1"));
+  fireEvent.click(screen.getByTestId("bulk-cancel-btn"));
+  await waitFor(() => expect(toast.error).toHaveBeenCalled());
+  expect(screen.getByTestId("data-table")).toHaveAttribute("data-selected", "1");
+  expect(toast.success).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByTestId("bulk-cancel-btn"));
+  await waitFor(() => expect(screen.getByTestId("data-table")).toHaveAttribute("data-selected", "0"));
+  expect(toast.success).toHaveBeenCalledWith("1 approval cancelled");
+});
+it("hides cancellation without management permission", () => {
+  mockUseCan.mockImplementation((key: string) => key !== "build:approvals:manage");
+  mockUseProjectApprovals.mockReturnValue(baseQueryResult({ data: approvalPages([approvalRow]) }));
+  render(<ProjectApprovalsPage projectId={1} />);
+  fireEvent.click(screen.getByTestId("select-row-1"));
+  expect(screen.queryByTestId("bulk-cancel-btn")).not.toBeInTheDocument();
 });

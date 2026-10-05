@@ -155,15 +155,19 @@ export function MemberAssignmentSheet({
 
         {canManage && (
           <div className="px-5 py-4 border-b border-border shrink-0 flex gap-2">
-            <div className="flex-1 min-w-0">
+            <div className="flex flex-col gap-1 flex-1 min-w-0">
               <MemberPicker
                 moduleKey={moduleKey}
+                includeRevoked
                 value={selectedUserId}
                 onChange={handleSelectChange}
                 enabled={open}
                 excludeAssigned={false}
                 placeholder="Select a user…"
               />
+              <p className="text-dense text-muted-foreground">
+                Adding a revoked member restores module access.
+              </p>
             </div>
             <LoadingButton
               size="sm"

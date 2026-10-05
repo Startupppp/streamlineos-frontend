@@ -44,9 +44,12 @@ import { AllWorkViewSwitcher, AllWorkSkeleton } from "./all-work-view-switcher";
 import { AllWorkListSection } from "./all-work-list-section";
 import { AllWorkTableSection } from "./all-work-table-section";
 import { AllWorkBoardSection } from "./all-work-board-section";
+import { AllWorkCalendarSection } from "./all-work-calendar-section";
+import { AllWorkTimelineSection } from "./all-work-timeline-section";
 import { AllWorkViewsMenu } from "./all-work-views-menu";
 import { useAllWorkFilters } from "./use-all-work-filters";
 import { useAllWorkBulk } from "./use-all-work-bulk";
+import { useAllWorkIds } from "@/hooks/api/build/all-work";
 import { useAllWorkKeyboard } from "./use-all-work-keyboard";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 
@@ -162,7 +165,41 @@ export function AllWorkPage() {
     handleBulkAssignee,
     handleBulkCycleNoOp,
     handleClearSelection,
+    isExpandedSelection,
+    expandedTotal,
+    expandToAllMatching,
   } = useAllWorkBulk(tickets);
+
+  const allPageSelected =
+    tickets.length > 0 && tickets.every((t) => tableSelection.has(t.id));
+  const showExpandBanner = allPageSelected && hasMore && !isExpandedSelection;
+
+  const { data: idsSnapshot } = useAllWorkIds(
+    showExpandBanner
+      ? {
+          scope: filters.scope,
+          search: filters.search,
+          status: filters.status,
+          priority: filters.priority,
+          type: filters.type,
+          assigneeId: filters.assigneeId,
+          labelIds: filters.labelIds,
+          cycleId: filters.cycleId,
+          epicId: filters.epicId,
+          dueDateFrom: filters.dueDateFrom,
+          dueDateTo: filters.dueDateTo,
+          teamId: filters.teamId,
+          managedProductId: filters.managedProductId,
+          excludeStatus: filters.excludeStatus,
+          projectIds: filters.projectIds,
+        }
+      : undefined,
+    { enabled: showExpandBanner },
+  );
+
+  const handleExpandToAll = useCallback(() => {
+    if (idsSnapshot) expandToAllMatching(idsSnapshot);
+  }, [idsSnapshot, expandToAllMatching]);
 
   const [focusedIndex, setFocusedIndex] = useState(0);
 
@@ -270,7 +307,7 @@ export function AllWorkPage() {
         }
         filtersActive={hasActiveFilters}
         onClearFilters={handleClearFilters}
-        action={!hasActiveFilters ? { label: "All Projects", href: "/build" } : undefined}
+        action={!hasActiveFilters ? { label: "All Projects", href: "/build/projects" } : undefined}
       />
     );
 
@@ -378,18 +415,39 @@ export function AllWorkPage() {
           >
             <>
               {tableSelection.size > 0 ? (
-                <BulkActionBar
-                  selectedCount={tableSelection.size}
-                  members={buildMembers}
-                  cycles={[]}
-                  statuses={orgStates}
-                  hideCycle
-                  onBulkStatus={handleBulkStatus}
-                  onBulkPriority={handleBulkPriority}
-                  onBulkAssignee={handleBulkAssignee}
-                  onBulkCycle={handleBulkCycleNoOp}
-                  onClear={handleClearSelection}
-                />
+                <>
+                  <BulkActionBar
+                    selectedCount={
+                      isExpandedSelection ? expandedTotal : tableSelection.size
+                    }
+                    members={buildMembers}
+                    cycles={[]}
+                    statuses={orgStates}
+                    hideCycle
+                    onBulkStatus={handleBulkStatus}
+                    onBulkPriority={handleBulkPriority}
+                    onBulkAssignee={handleBulkAssignee}
+                    onBulkCycle={handleBulkCycleNoOp}
+                    onClear={handleClearSelection}
+                  />
+                  {showExpandBanner && (
+                    <div className="flex items-center justify-center gap-2 rounded-md border border-dashed bg-muted/40 px-4 py-2 text-sm text-muted-foreground">
+                      <span>
+                        {loadedCount} tickets on this page selected.
+                      </span>
+                      <button
+                        type="button"
+                        className="font-medium text-primary underline-offset-2 hover:underline disabled:opacity-50"
+                        onClick={handleExpandToAll}
+                        disabled={!idsSnapshot}
+                      >
+                        {idsSnapshot
+                          ? `Select all ${idsSnapshot.capped ? `${idsSnapshot.cap}+` : idsSnapshot.total} matching tickets`
+                          : "Loading…"}
+                      </button>
+                    </div>
+                  )}
+                </>
               ) : null}
               <div className="flex min-h-0 flex-1 flex-col gap-0">
                 {view === "table" ? (
@@ -405,6 +463,42 @@ export function AllWorkPage() {
                     onNext={handleNext}
                     onPrevious={handlePrev}
                   />
+                ) : view === "calendar" ? (
+                  <>
+                    <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
+                      <AllWorkCalendarSection tickets={tickets} hasMore={hasMore} />
+                    </ScrollArea>
+                    {hasMore || hasPrevious ? (
+                      <TablePagination
+                        mode="cursor"
+                        rowCount={tickets.length}
+                        pageNumber={pageNumber}
+                        hasMore={hasMore}
+                        hasPrevious={hasPrevious}
+                        onNext={handleNext}
+                        onPrevious={handlePrev}
+                      />
+                    ) : null}
+                  </>
+                ) : view === "timeline" ? (
+                  <>
+                    <AllWorkTimelineSection
+                      tickets={tickets}
+                      hasMore={hasMore}
+                      onTicketClick={handleTicketClickForTable}
+                    />
+                    {hasMore || hasPrevious ? (
+                      <TablePagination
+                        mode="cursor"
+                        rowCount={tickets.length}
+                        pageNumber={pageNumber}
+                        hasMore={hasMore}
+                        hasPrevious={hasPrevious}
+                        onNext={handleNext}
+                        onPrevious={handlePrev}
+                      />
+                    ) : null}
+                  </>
                 ) : (
                   <>
                     <ScrollArea fill hideScrollbar className="min-h-0 flex-1">

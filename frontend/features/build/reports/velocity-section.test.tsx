@@ -164,7 +164,7 @@ describe("33 — VelocitySection infinite-query", () => {
   it("velocity hook receives projectId as its only argument", () => {
     mockUseVelocityReport.mockReturnValue(defaultResult());
     render(<VelocitySection projectId={99} />);
-    expect(mockUseVelocityReport).toHaveBeenCalledWith(99);
+    expect(mockUseVelocityReport).toHaveBeenCalledWith(99, undefined);
     expect(mockUseVelocityReport).toHaveBeenCalledTimes(1);
   });
 });

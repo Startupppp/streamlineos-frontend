@@ -64,7 +64,7 @@ import {
   useUpdateNotificationProvider,
   useDeleteNotificationProvider,
   useTestNotificationProvider,
-} from "@/hooks/api/notifications";
+} from "@/hooks/api/notifications-admin";
 import { useCan } from "@/hooks/api/access";
 import { formatRelativeTime } from "@/lib/format-relative-time";
 import { providerSchema, type ProviderFormValues } from "@/features/notifications/provider-schema";

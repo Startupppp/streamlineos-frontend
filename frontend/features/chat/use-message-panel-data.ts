@@ -4,11 +4,14 @@ import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
-  useChatChannel, useChatMessages, useMarkChannelRead,
-  useSendMessage, useDeleteMessage, useEditMessage, useChatOnlineUsers,
-  useChatOrgUsers, useToggleReaction, useChatPins, usePinMessage,
-  useUnpinMessage, useSavedMessages, useSaveMessage, useUnsaveMessage,
-} from "@/hooks/api/chat";
+  useChatChannel, useChatMessages, useChatOnlineUsers, useChatOrgUsers,
+} from "@/hooks/api/chat-core-read";
+import {
+  useSendMessage, useDeleteMessage, useEditMessage, useMarkChannelRead,
+} from "@/hooks/api/chat-core-mutations-a";
+import { useToggleReaction } from "@/hooks/api/chat-core-mutations-b";
+import { useChatPins, usePinMessage, useUnpinMessage } from "@/hooks/api/chat-search";
+import { useSavedMessages, useSaveMessage, useUnsaveMessage } from "@/hooks/api/chat-personal-a";
 import { useChatPollReconciliation } from "./use-chat-poll-reconciliation";
 import { orgScopedStorageKey, useOrgStorageScope } from "@/lib/org-scoped-storage";
 import { useChatRealtime } from "@/hooks/api/chat-realtime";

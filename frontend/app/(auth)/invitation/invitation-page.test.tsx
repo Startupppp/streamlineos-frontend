@@ -5,6 +5,7 @@ import type {
   InvitationValidation,
   MagicLinkSignInOutcome,
 } from "@/hooks/common/auth-hooks";
+import { ApiError } from "@/lib/api-envelope";
 
 interface AcceptInvitationData {
   ok: true;
@@ -218,7 +219,7 @@ beforeEach(() => {
 });
 
 describe("InvitationPage — accepting as a new joiner", () => {
-  it("signs the invited account in once and lands on employee onboarding", async () => {
+  it("signs the invited account in once and resolves its authorized landing", async () => {
     acceptResolvesWith("invite-login-1");
     signInWithMagicToken.mockResolvedValue({ status: "signed-in" });
 
@@ -226,7 +227,7 @@ describe("InvitationPage — accepting as a new joiner", () => {
     await submitNewJoinerForm();
 
     await waitFor(() =>
-      expect(navigation.href).toBe("/employee-onboarding"),
+      expect(navigation.href).toBe("/post-invite"),
     );
     expect(acceptMutate).toHaveBeenCalledTimes(1);
     expect(acceptMutate).toHaveBeenCalledWith(
@@ -314,7 +315,7 @@ describe("InvitationPage — accepting as an existing account", () => {
    * refused with a 400, so an invitee who already had an account could never
    * join, whatever the state of the OTP route.
    */
-  it("verifies the invited mailbox before joining, then lands on the dashboard once", async () => {
+  it("verifies the invited mailbox before joining, then resolves its authorized landing once", async () => {
     validation.data = { ...VALID_INVITATION, userExists: true };
     currentSession = { user: { email: "existing@acme.test" } };
     acceptResolvesWith("invite-login-existing");
@@ -332,7 +333,7 @@ describe("InvitationPage — accepting as an existing account", () => {
 
     await enterEmailCode();
 
-    await waitFor(() => expect(navigation.href).toBe("/dashboard"));
+    await waitFor(() => expect(navigation.href).toBe("/post-invite"));
     expect(acceptMutate).toHaveBeenCalledWith(
       { token: "invite-token-1", emailOtp: EMAIL_OTP },
       expect.anything(),
@@ -457,5 +458,44 @@ describe("InvitationPage — the invitation cannot be used", () => {
     expect(
       screen.queryByRole("heading", { name: /invitation unavailable/i }),
     ).toBeNull();
+  });
+});
+
+async function acceptWithError(error: unknown) {
+  validation.data = { ...VALID_INVITATION, userExists: true };
+  currentSession = { user: { email: VALID_INVITATION.email } };
+  acceptMutate.mockImplementation((_v, cb) => { cb.onError(error); });
+  render(<InvitationPage />);
+  const u = userEvent.setup();
+  await u.click(screen.getByRole("button", { name: /accept & join/i }));
+  await u.type(screen.getByRole("textbox", { name: /verification code/i }), EMAIL_OTP);
+  await u.click(screen.getByRole("button", { name: /verify & create account/i }));
+}
+
+describe("InvitationPage — specific acceptance error states (BT-618d66782f9e)", () => {
+  it("shows 'Already a member' state on ALREADY_MEMBER code without a toast (BT-618d66782f9e)", async () => {
+    await acceptWithError(new ApiError("You are already a member of this organization", 409, "ALREADY_MEMBER"));
+    await waitFor(() => expect(screen.getByRole("heading", { name: /already a member/i })).toBeVisible());
+    expect(toastError).not.toHaveBeenCalled();
+  });
+  it("shows 'Already a member' state on bare 409 status without a code — fallback (BT-618d66782f9e)", async () => {
+    await acceptWithError(new ApiError("You are already a member of this organization", 409));
+    await waitFor(() => expect(screen.getByRole("heading", { name: /already a member/i })).toBeVisible());
+    expect(toastError).not.toHaveBeenCalled();
+  });
+  it("shows 'Account suspended' state on ACCOUNT_SUSPENDED code (BT-618d66782f9e)", async () => {
+    await acceptWithError(new ApiError("This account is suspended", 403, "ACCOUNT_SUSPENDED"));
+    await waitFor(() => expect(screen.getByRole("heading", { name: /account suspended/i })).toBeVisible());
+    expect(toastError).not.toHaveBeenCalled();
+  });
+  it("shows 'Organization at capacity' state on ORG_AT_CAPACITY code (BT-618d66782f9e)", async () => {
+    await acceptWithError(new ApiError("This organization has reached its member limit", 403, "ORG_AT_CAPACITY"));
+    await waitFor(() => expect(screen.getByRole("heading", { name: /organization at capacity/i })).toBeVisible());
+    expect(toastError).not.toHaveBeenCalled();
+  });
+  it("falls back to a toast for unclassified errors — control (BT-618d66782f9e)", async () => {
+    await acceptWithError(new Error("Something went wrong"));
+    await waitFor(() => expect(toastError).toHaveBeenCalled());
+    expect(screen.queryByRole("heading", { name: /already a member/i })).toBeNull();
   });
 });

@@ -1,32 +1,4 @@
-/**
- * @jest-environment node
- *
- * A NEGATIVE test for the public-form read seam.
- *
- * The defect this pins is not hypothetical: `app/(public)/forms/[token]/page.tsx`
- * used to end `fetchPublicForm` with
- *
- *     return res.json() as Promise<PublicFormDefinition>;
- *
- * The backend's global `ResponseTransformInterceptor` wraps EVERY handler return
- * as `{ success: true, data }` unless it already carries a `success` key, and
- * `getFormByToken` returns a bare Drizzle row. So the value that actually
- * resolved was the envelope, not the form: `form.name` was undefined (the header
- * stayed on "Loading form…") and `form.fields.length` threw a TypeError. Both
- * repositories typechecked clean throughout, which is exactly why a typecheck is
- * not the proof here.
- *
- * Every assertion below is written so it FAILS if that cast comes back, rather
- * than merely restating the type:
- *
- *   1. the wire body really is a different shape from the declared type — proved
- *      by handing the raw envelope to the contract and requiring a rejection.
- *      Without this, assertion 2 could pass vacuously on a payload that happened
- *      to be shaped like the form already.
- *   2. reading through `parseApiResponse` unwraps it and yields the form.
- *   3. a renamed or dropped field is REJECTED rather than surfacing as
- *      undefined — the property the cast could never have.
- */
+/** @jest-environment node */
 import {
   intakeSubmitResponseContract,
 } from "@/features/build/intake/public-intake-schema";
@@ -42,7 +14,7 @@ import {
 import { submitIntake } from "@/features/build/intake/public-intake-api";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 
-/** Exactly what `getFormByToken` returns, before the interceptor sees it. */
+
 const FORM_ROW = {
   id: 42,
   name: "Client onboarding",
@@ -54,7 +26,7 @@ const FORM_ROW = {
   ],
 };
 
-/** Exactly what leaves the server: the interceptor's envelope around that row. */
+
 const WIRE_BODY = { success: true, data: FORM_ROW };
 
 async function contractViolationFrom(promise: Promise<unknown>): Promise<boolean> {
@@ -77,8 +49,8 @@ function response(body: unknown, status = 200) {
 
 describe("the envelope is a different shape from the declared type", () => {
   it("rejects the raw wire body against the form contract", () => {
-    // If this ever passes, the interceptor stopped wrapping and assertion 2
-    // below would no longer be evidence of anything.
+
+
     expect(publicFormDefinitionContract.safeParse(WIRE_BODY).success).toBe(false);
   });
 
@@ -212,13 +184,7 @@ describe("both submit seams unwrap the envelope, and only the authenticated one 
   });
 });
 
-/**
- * The three real call sites, driven through a stubbed `fetch` that returns
- * exactly what the server sends. These are the assertions that bite on a
- * revert: put `res.json() as Promise<T>` back into any of the three and the
- * resolved value becomes the envelope, so `form.name` is undefined and each
- * `expect` below fails.
- */
+
 describe("the real call sites resolve the payload, not the envelope", () => {
   const originalFetch = global.fetch;
 
@@ -242,7 +208,7 @@ describe("the real call sites resolve the payload, not the envelope", () => {
 
     expect(form.name).toBe("Client onboarding");
     expect(form.fields).toHaveLength(2);
-    // The page renders `form.fields.length` unguarded; on the envelope this threw.
+
     expect(() => form.fields.length).not.toThrow();
   });
 
@@ -320,19 +286,7 @@ describe("cache partitioning — form tokens produce distinct query keys", () =>
   });
 });
 
-/**
- * Pins the design decision that submitIntake is intentionally NON-idempotent.
- *
- * Background: `POST /public/intake/:projectId` creates a new intake record on
- * every call. It does not accept or honour an `Idempotency-Key` header, because
- * duplicate submissions are distinguishable and each is a genuine request. The
- * `@Idempotent()` decorator is not applied to this route in the backend.
- *
- * This is different from `submitPublicForm` (and all payment mutations) which
- * SHOULD eventually be idempotent. The C5 criterion requires this decision to be
- * pinned in a contract test so that a future addition of `Idempotency-Key`
- * handling — which would suppress duplicates — does not silently change behavior.
- */
+
 describe("intake submission idempotency — intentionally non-idempotent by design", () => {
   const originalFetch = global.fetch;
 

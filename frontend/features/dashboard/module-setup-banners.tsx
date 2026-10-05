@@ -230,7 +230,7 @@ export function ModuleSetupBanners() {
   return (
     <div className="space-y-2">
       {active.map((checklist) => (
-        <ModuleSetupBanner key={checklist.id} checklist={checklist} />
+        <ModuleSetupBanner key={checklist.moduleKey} checklist={checklist} />
       ))}
     </div>
   );

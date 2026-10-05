@@ -367,6 +367,25 @@ describe("UserInvitationsPanel — cursor pagination", () => {
 });
 
 describe("UserInvitationsPanel — per-row actions carry row-specific names", () => {
+  it("describes how to recover from a recorded email delivery failure", () => {
+    queryState = {
+      data: {
+        data: [{ ...invitation("inv-1", "alice@example.com"), deliveryFailed: true }],
+        pagination: { limit: 20, hasMore: false, nextCursor: null },
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+    };
+
+    render(<Panel />);
+
+    expect(screen.getByText("Email failed")).toHaveAttribute(
+      "title",
+      expect.stringMatching(/check provider settings or recipient suppression before resending/i),
+    );
+  });
+
   it("names each row action after the address it acts on", () => {
     queryState = {
       data: {

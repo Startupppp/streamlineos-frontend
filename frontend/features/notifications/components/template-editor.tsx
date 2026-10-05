@@ -33,7 +33,7 @@ import {
 import {
   useCreateNotificationTemplate,
   useUpdateNotificationTemplate,
-} from "@/hooks/api/notifications";
+} from "@/hooks/api/notifications-templates";
 import {
   NOTIFICATION_CATEGORIES,
   NOTIFICATION_CATEGORY_CONFIG,

@@ -22,7 +22,7 @@ import {
   useDeleteScoringRule,
   useScoringRules,
   type ScoringRule,
-} from "@/hooks/api/crm-settings";
+} from "@/hooks/api/crm/settings/scoring-rules";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { SCORING_RULE_LAYOUT } from "@/lib/renderer/crm/settings/scoring-rule-layout";
 

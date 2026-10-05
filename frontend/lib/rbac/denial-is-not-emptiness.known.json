@@ -10,6 +10,7 @@
   "features/accounting/settings/fx-rates-card.tsx",
   "features/billing/ai-credits-settings-page.tsx",
   "features/billing/components/payments-tab.tsx",
+  "features/build/automations/automation-run-history.tsx",
   "features/chat/thread-panel.tsx",
   "features/crm/analytics/rep-performance-table.tsx",
   "features/crm/leads/lead-list-view.tsx",

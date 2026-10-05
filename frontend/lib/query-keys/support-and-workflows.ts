@@ -166,6 +166,7 @@ export const supportAndWorkflowsQueryKeys = {
       params
         ? ([...base, "webhooks", "logs", endpointId, params] as const)
         : ([...base, "webhooks", "logs", endpointId] as const),
+    impact: (endpointId: number) => [...base, "webhooks", "impact", endpointId] as const,
   },
 
   workflows: {

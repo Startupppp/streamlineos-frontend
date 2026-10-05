@@ -135,8 +135,8 @@ describe("CommandPaletteDialogBody — project-scoped route catalog", () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByText("Risks")).not.toBeInTheDocument();
 
-    typeQuery("wiki");
-    expect(screen.getByText(`${PROJECT_BASE_PATH}/wiki`)).toBeInTheDocument();
+    typeQuery("releases");
+    expect(screen.getByText(`${PROJECT_BASE_PATH}/releases`)).toBeInTheDocument();
   });
 
   it("navigates to the project route the palette offered", () => {

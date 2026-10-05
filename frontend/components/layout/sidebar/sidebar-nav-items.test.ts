@@ -87,6 +87,15 @@ describe("Home employee navigation", () => {
     expect(getProductFromPathname("/directory/workers")).toBe("home");
   });
 });
+
+describe("Build route product selection", () => {
+  it("keeps Build entry and specialist project paths in Build without matching lookalikes", () => {
+    expect(getProductFromPathname("/build")).toBe("build");
+    expect(getProductFromPathname("/build/projects")).toBe("build");
+    expect(getProductFromPathname("/build/42/chat")).toBe("build");
+    expect(getProductFromPathname("/build-lookalike")).toBe("home");
+  });
+});
 describe("Administration information architecture", () => {
   it("matches the owning settings item without activating broader siblings", () => {
     const groups = getNavGroupsForProduct(

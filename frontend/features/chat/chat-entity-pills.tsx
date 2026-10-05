@@ -16,7 +16,7 @@ import type { TicketEntityRef, CommentEntityRef } from "./chat-types";
 import { useCan } from "@/hooks/api/access";
 import { isApiError } from "@/lib/api-client";
 import { useEntityAction } from "./entity-actions-context";
-import { useSubmitEntityAction } from "@/hooks/api/chat";
+import { useSubmitEntityAction } from "@/hooks/api/chat-entities";
 import { useTicketPermalink } from "@/hooks/api/chat-previews";
 import { getStatusBadgeClass } from "@/components/shared/ticket-status-badge";
 import { formatTicketKey } from "@/components/shared/format-ticket-key";

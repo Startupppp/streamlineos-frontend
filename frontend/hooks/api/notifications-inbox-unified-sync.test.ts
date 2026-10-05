@@ -124,7 +124,7 @@ describe("notification writes keep the unified inbox feed in step", () => {
     expect(unifiedIds(client)).toEqual([311]);
   });
 
-  it("a failed delete restores the unified pages, not just the notification lists", async () => {
+  it("a failed delete reconciles unified pages by authoritative invalidation without stale reinsertion", async () => {
     client.setQueryData<Notification[]>(FLAT_KEY, [makeNotif(320)]);
     client.setQueryData<InfiniteData<UnifiedInboxResponse>>(
       UNIFIED_KEY,
@@ -137,10 +137,11 @@ describe("notification writes keep the unified inbox feed in step", () => {
     });
     await settle(() => result.current.mutate(320));
 
-    expect(unifiedIds(client)).toEqual([320]);
+    expect(unifiedIds(client)).toEqual([]);
+    expect(client.getQueryState(UNIFIED_KEY)?.isInvalidated).toBe(true);
   });
 
-  it("a failed archive restores the unified pages", async () => {
+  it("a failed archive restores only its flat field and invalidates unified history", async () => {
     client.setQueryData<Notification[]>(FLAT_KEY, [makeNotif(330)]);
     client.setQueryData<InfiniteData<UnifiedInboxResponse>>(
       UNIFIED_KEY,
@@ -153,7 +154,9 @@ describe("notification writes keep the unified inbox feed in step", () => {
     });
     await settle(() => result.current.mutate(330));
 
-    expect(unifiedIds(client)).toEqual([330]);
+    expect(unifiedIds(client)).toEqual([]);
+    expect(client.getQueryData<Notification[]>(FLAT_KEY)?.[0]?.archivedAt).toBeNull();
+    expect(client.getQueryState(UNIFIED_KEY)?.isInvalidated).toBe(true);
   });
 
   it("cancels the unified inbox before patching it, so an in-flight page cannot land on top", async () => {

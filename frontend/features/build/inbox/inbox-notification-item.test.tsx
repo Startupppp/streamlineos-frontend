@@ -28,6 +28,14 @@ function makeNotification(overrides: Partial<Notification> = {}): Notification {
 const noop = () => undefined;
 
 describe("InboxNotificationItem", () => {
+  it("keeps interactive actions outside the activation button", async () => {
+    const select = jest.fn(), action = jest.fn();
+    const user = userEvent.setup();
+    render(<InboxNotificationItem notification={makeNotification()} isSelected={false} onSelect={select} actions={<button onClick={action}>Resolve</button>} />);
+    expect(screen.getByRole("button", { name: "Resolve" }).parentElement?.closest("button")).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Resolve" }));
+    expect(action).toHaveBeenCalledTimes(1); expect(select).not.toHaveBeenCalled();
+  });
   it("does not repeat a title that is already the message", () => {
     render(
       <InboxNotificationItem

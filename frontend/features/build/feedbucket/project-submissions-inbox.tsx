@@ -17,12 +17,12 @@ import {
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { FeedbucketSubmissionFilters } from "@/types/feedbucket";
 import {
-  ALL_STATUSES,
   ALL_TYPES,
-  DeleteSubmissionButton,
-  SUBMISSION_COLUMNS,
-  SubmissionMobileCard,
+  ALL_STATUSES,
   type SubmissionRow,
+  SubmissionMobileCard,
+  DeleteSubmissionButton,
+  buildSubmissionColumnsWithLinkedTicket,
 } from "./submission-inbox-columns";
 import {
   SubmissionInboxFilters,
@@ -34,7 +34,16 @@ import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 
 const PAGE_SIZE = 25;
 
-const FILTER_PARAMS = ["status", "type", "linked", "duplicate", "assigneeId", "search", "from", "to"] as const;
+const FILTER_PARAMS = [
+  "status",
+  "type",
+  "linked",
+  "duplicate",
+  "assigneeId",
+  "search",
+  "from",
+  "to",
+] as const;
 
 interface ProjectSubmissionsInboxProps {
   widgetId: number;
@@ -46,45 +55,47 @@ export function ProjectSubmissionsInbox({
   projectId,
 }: ProjectSubmissionsInboxProps) {
   const router = useRouter();
-  const requestLeave = useNavigationLeave();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const requestLeave = useNavigationLeave();
+
   const [, startTransition] = useTransition();
+
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
   const [selected, setSelected] = useState<Set<string | number>>(new Set());
   const searchInputRef = useRef<HTMLInputElement | null>(null);
+
+  const walk = useCursorPagination();
+  const deleteSubmission = useDeleteFeedbucketSubmission();
   const canDelete = useCan("feedbucket:submissions:delete");
   const canUpdate = useCan("feedbucket:submissions:update");
-  const deleteSubmission = useDeleteFeedbucketSubmission();
-  const walk = useCursorPagination();
   const { reset: resetWalk } = walk;
 
-  const filterValues = useMemo<SubmissionInboxFilterValues>(
-    () => {
-      const statusParam = searchParams.get("status");
-      const typeParam = searchParams.get("type");
-      const linkedParam = searchParams.get("linked");
-      return {
-        status: ALL_STATUSES.find((status) => status === statusParam) ?? null,
-        type: ALL_TYPES.find((type) => type === typeParam) ?? null,
-        linked:
-          linkedParam === "linked" || linkedParam === "unlinked"
-            ? linkedParam
-            : null,
-        duplicate: (() => {
-          const v = searchParams.get("duplicate");
-          return v === "true" || v === "false" ? v : null;
-        })(),
-        assigneeId: searchParams.get("assigneeId"),
-        search: searchParams.get("search"),
-        from: searchParams.get("from"),
-        to: searchParams.get("to"),
-      };
-    },
-    [searchParams],
-  );
+  const filterValues = useMemo<SubmissionInboxFilterValues>(() => {
+    const statusParam = searchParams.get("status");
+    const typeParam = searchParams.get("type");
+    const linkedParam = searchParams.get("linked");
+    return {
+      status: ALL_STATUSES.find((status) => status === statusParam) ?? null,
+      type: ALL_TYPES.find((type) => type === typeParam) ?? null,
+      linked:
+        linkedParam === "linked" || linkedParam === "unlinked"
+          ? linkedParam
+          : null,
+      duplicate: (() => {
+        const v = searchParams.get("duplicate");
+        return v === "true" || v === "false" ? v : null;
+      })(),
+      assigneeId: searchParams.get("assigneeId"),
+      search: searchParams.get("search"),
+      from: searchParams.get("from"),
+      to: searchParams.get("to"),
+    };
+  }, [searchParams]);
 
-  const hasActiveFilters = FILTER_PARAMS.some((key) => searchParams.get(key) !== null);
+  const hasActiveFilters = FILTER_PARAMS.some(
+    (key) => searchParams.get(key) !== null,
+  );
 
   const serverFilters = useMemo<FeedbucketSubmissionFilters>(
     () => ({
@@ -93,7 +104,9 @@ export function ProjectSubmissionsInbox({
       ...(filterValues.type ? { type: filterValues.type } : {}),
       ...(filterValues.linked ? { linked: filterValues.linked } : {}),
       ...(filterValues.duplicate ? { duplicate: filterValues.duplicate } : {}),
-      ...(filterValues.assigneeId ? { assigneeId: filterValues.assigneeId } : {}),
+      ...(filterValues.assigneeId
+        ? { assigneeId: filterValues.assigneeId }
+        : {}),
       ...(filterValues.search ? { search: filterValues.search } : {}),
       ...(filterValues.from ? { from: filterValues.from } : {}),
       ...(filterValues.to ? { to: filterValues.to } : {}),
@@ -131,11 +144,13 @@ export function ProjectSubmissionsInbox({
     });
   }
 
-  const { data, isLoading, isError, error, refetch } = useFeedbucketSubmissions({
-    limit: PAGE_SIZE,
-    ...(walk.cursor ? { cursor: walk.cursor } : {}),
-    ...serverFilters,
-  });
+  const { data, isLoading, isError, error, refetch } = useFeedbucketSubmissions(
+    {
+      limit: PAGE_SIZE,
+      ...(walk.cursor ? { cursor: walk.cursor } : {}),
+      ...serverFilters,
+    },
+  );
 
   const rows = useMemo(() => data?.data ?? [], [data]);
 
@@ -203,18 +218,26 @@ export function ProjectSubmissionsInbox({
     );
   }
 
+  const baseColumns = useMemo(
+    () => buildSubmissionColumnsWithLinkedTicket(projectId),
+    [projectId],
+  );
+
   const columns = useMemo<DataTableColumn<SubmissionRow>[]>(() => {
-    if (!canDelete) return SUBMISSION_COLUMNS;
+    if (!canDelete) return baseColumns;
     function renderDelete(row: SubmissionRow) {
       return (
-        <DeleteSubmissionButton submissionId={row.id} onRequestDelete={handleRequestDelete} />
+        <DeleteSubmissionButton
+          submissionId={row.id}
+          onRequestDelete={handleRequestDelete}
+        />
       );
     }
     return [
-      ...SUBMISSION_COLUMNS,
+      ...baseColumns,
       { key: "actions", header: "", cell: renderDelete, className: "w-8" },
     ];
-  }, [canDelete, handleRequestDelete]);
+  }, [canDelete, handleRequestDelete, baseColumns]);
 
   const selectedIds = useMemo(
     () => [...selected].map(Number).filter((id) => Number.isFinite(id)),
@@ -261,7 +284,11 @@ export function ProjectSubmissionsInbox({
 
   return (
     <>
-      <SubmissionInboxFilters values={filterValues} onChange={handleFilterChange} searchInputRef={searchInputRef} />
+      <SubmissionInboxFilters
+        values={filterValues}
+        onChange={handleFilterChange}
+        searchInputRef={searchInputRef}
+      />
 
       {selectedIds.length > 0 ? (
         <SubmissionBulkToolbar

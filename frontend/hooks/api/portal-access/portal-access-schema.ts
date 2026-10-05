@@ -45,6 +45,8 @@ const grantListItemContract = z.object({
   canViewAttachments: z.boolean(),
   canViewComments: z.boolean(),
   canSubmitChangeRequests: z.boolean(),
+  canViewApprovals: z.boolean(),
+  canViewInvoices: z.boolean(),
   status: z.enum(["ACTIVE", "SUSPENDED", "REVOKED", "EXPIRED"]),
   expiresAt: z.string().nullable(),
   createdAt: z.string(),
@@ -66,6 +68,8 @@ const grantRowContract = z.object({
   canViewAttachments: z.boolean(),
   canViewComments: z.boolean(),
   canSubmitChangeRequests: z.boolean(),
+  canViewApprovals: z.boolean(),
+  canViewInvoices: z.boolean(),
   status: z.enum(["ACTIVE", "SUSPENDED", "REVOKED", "EXPIRED"]),
   expiresAt: z.string().nullable(),
   createdAt: z.string(),
@@ -77,3 +81,18 @@ const grantRowContract = z.object({
 export const grantContract = grantRowContract;
 
 export type GrantItem = z.infer<typeof grantRowContract>;
+
+export const activationResultContract = z.object({
+  portalMembershipId: z.string(),
+  projectClientGrantId: z.string(),
+  maskedRecipient: z.string(),
+  deliveryOutcome: z.enum(["QUEUED", "SUPPRESSED"]),
+});
+
+export type ActivationResult = z.infer<typeof activationResultContract>;
+
+export const resendInvitationContract = z.object({
+  maskedRecipient: z.string(),
+});
+
+export type ResendInvitationResult = z.infer<typeof resendInvitationContract>;

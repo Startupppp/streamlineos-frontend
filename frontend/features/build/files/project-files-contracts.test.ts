@@ -1,19 +1,4 @@
-/**
- * @jest-environment node
- *
- * C5 — contract tests for the project files surface.
- *
- * `GET /build/projects/:projectId/files` returns a cursor page whose shape is
- * declared in `project-files-schema.ts`. These tests verify:
- *   1. The wire shape parses through filePageContract.
- *   2. Renamed or dropped fields throw CONTRACT_VIOLATION, not undefined.
- *   3. The cursor envelope is present — `data` + `pagination` with `nextCursor`
- *      and `hasMore`. An array-only payload is rejected.
- *   4. `deletedAt` is present in the projection (if omitted, soft-deleted files
- *      render as live items and the page breaks after the first page boundary).
- *   5. The cache key includes projectId so two projects never share a list.
- *   6. The signed-URL contract enforces `url` and `expiresIn`.
- */
+/** @jest-environment node */
 import { parseApiResponse, isContractViolation } from "@/lib/api-envelope";
 import {
   filePageContract,

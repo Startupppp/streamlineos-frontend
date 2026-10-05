@@ -85,6 +85,7 @@ describe("Build route-access permission posture is pinned for every manifested p
     ["/build/[projectId]", "module:build + build:view"],
     ["/build/[projectId]/approvals", "module:build + build:approvals:view"],
     ["/build/[projectId]/backlog", "module:build + build:tickets:view"],
+    ["/build/[projectId]/bugs/[submissionId]", "module:build + build:view"],
     ["/build/[projectId]/budget", "module:build + build:manage"],
     ["/build/[projectId]/change-requests", "module:build + build:changerequests:view"],
     ["/build/[projectId]/chat", "module:build + chat:channels:read"],
@@ -124,13 +125,13 @@ describe("Build route-access permission posture is pinned for every manifested p
     ["/build/[projectId]/settings/retention", "module:build + build:update"],
     ["/build/[projectId]/settings/views", "module:build + build:update"],
     ["/build/[projectId]/settings/workflow", "module:build + build:update"],
-    ["/build/[projectId]/tickets/[ticketKey]", "module:build + build:view"],
+    ["/build/[projectId]/tickets/[ticketKey]", "module:build + build:tickets:view"],
     ["/build/[projectId]/triage", "module:build + build:tickets:view"],
     ["/build/[projectId]/updates", "module:build + build:updates:view"],
     ["/build/[projectId]/whiteboard", "module:build + build:view"],
-    ["/build/[projectId]/wiki", "module:build + build:view"],
-    ["/build/[projectId]/wiki/[pageId]", "module:build + build:view"],
-    ["/build/[projectId]/wiki/[pageId]/history", "module:build + build:view"],
+    ["/build/[projectId]/wiki", "module:build + kb:pages:view"],
+    ["/build/[projectId]/wiki/[pageId]", "module:build + kb:pages:view"],
+    ["/build/[projectId]/wiki/[pageId]/history", "module:build + kb:pages:view"],
     ["/build/[projectId]/workload", "module:build + build:tickets:view"],
     ["/build/all-work", "module:build + build:tickets:view"],
     ["/build/approvals", "module:build + build:approvals:view"],
@@ -149,6 +150,8 @@ describe("Build route-access permission posture is pinned for every manifested p
     ["/build/portfolios", "module:build + build:portfolios:view"],
     ["/build/portfolios/[portfolioId]", "module:build + build:portfolios:view"],
     ["/build/programs", "module:build + build:programs:view"],
+    ["/build/programs/[programId]", "module:build + build:programs:view"],
+    ["/build/projects", "module:build + build:view"],
     ["/build/roadmap", "module:build + build:roadmap:view"],
     ["/build/settings/access", "module:build + build:members:view,build:access:view"],
     ["/build/settings/client-access", "module:build + build:portal:view"],
@@ -158,7 +161,7 @@ describe("Build route-access permission posture is pinned for every manifested p
     ["/build/templates", "module:build + build:create"],
   ];
 
-  it("pins all 75 manifest routes so this table cannot drift out of step with the manifest", () => {
+  it("pins all 78 manifest routes so this table cannot drift out of step with the manifest", () => {
     expect(EXPECTED_ACCESS).toHaveLength(BUILD_ROUTE_MANIFEST.length);
     expect(EXPECTED_ACCESS.map(([route]) => route).sort()).toEqual(
       BUILD_ROUTE_MANIFEST.map((entry) => entry.route).sort(),
@@ -174,11 +177,12 @@ describe("Build route-access permission posture is pinned for every manifested p
     },
   );
 
-  it("an unregistered Build page still inherits the generic project key, which is why the pinned table is the drift detector and an unknown-check here would be vacuous", () => {
-    expect(
-      describeRouteAccess(
-        resolveRouteAccess(concreteUrlFor("/build/[projectId]/not-a-real-page")),
-      ),
-    ).toBe("module:build + build:view");
+  it("unknown Build paths remain undecidable instead of inheriting a weaker Build read key", () => {
+    for (const path of [
+      "/build/not-real",
+      "/build/42/not-a-real-page",
+    ]) {
+      expect(resolveRouteAccess(path).kind).toBe("unknown");
+    }
   });
 });

@@ -1,482 +1,320 @@
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { IntakePage } from "./intake-page";
 import { ApiError } from "@/lib/api-envelope";
+import userEvent from "@testing-library/user-event";
+import type { IntakeRequest } from "@/types/projects";
 
+const mockRequests = jest.fn(), mockCreate = jest.fn(), mockUpdate = jest.fn(), mockAccept = jest.fn();
+const mockCan = jest.fn(), mockAccess = jest.fn(), mockFilters = jest.fn(), mockTickets = jest.fn(), mockSession = jest.fn();
+const mockMembers = jest.fn(), mockCycles = jest.fn(), mockModules = jest.fn();
+const mockToast = { success: jest.fn(), error: jest.fn() };
 jest.mock("@/hooks/api/build/advanced", () => ({
-  useIntakeRequests: jest.fn(),
-  useCreateIntakeRequest: jest.fn(),
-  useUpdateIntakeRequest: jest.fn(),
-  useCycles: jest.fn(),
-  useModules: jest.fn(),
+  useIntakeRequests: (...args: unknown[]) => mockRequests(...args),
+  useCreateIntakeRequest: () => ({ mutate: mockCreate, isPending: false }),
+  useUpdateIntakeRequest: () => ({ mutate: mockUpdate, isPending: false }),
+  useCycles: () => mockCycles(), useModules: () => mockModules(),
 }));
+jest.mock("@/hooks/api/build/intake-mutations", () => ({ useAcceptIntakeRequest: () => ({ mutate: mockAccept, isPending: false }) }));
+jest.mock("@/hooks/api/build/project-members", () => ({ useProjectMembers: () => mockMembers() }));
+jest.mock("@/hooks/api/build/tickets", () => ({ useTickets: (...args: unknown[]) => mockTickets(...args) }));
+jest.mock("@/hooks/api/build/projects", () => ({ useProject: () => ({ data: { id: 1, key: "PROJ" } }) }));
+jest.mock("next-auth/react", () => ({ useSession: () => mockSession() }));
+jest.mock("@/hooks/api/entitlements", () => ({ useEntitlements: () => ({ data: undefined }) }));
+jest.mock("@/hooks/api/access", () => ({ useCan: () => mockCan(), useAccess: () => mockAccess() }));
+jest.mock("@/features/build/shared/use-build-list-filters", () => ({ useBuildListFilters: () => mockFilters() }));
+jest.mock("@/components/shared/dirty-state-context", () => ({ useRegisterDirtyState: jest.fn(), useNavigationLeave: () => (fn: () => void) => fn() }));
+jest.mock("sonner", () => ({ toast: { success: (...args: unknown[]) => mockToast.success(...args), error: (...args: unknown[]) => mockToast.error(...args) } }));
+jest.mock("next/navigation", () => ({ useRouter: () => ({ push: jest.fn(), replace: jest.fn() }), usePathname: () => "/build/1/intake" }));
+jest.mock("@/components/illustrations", () => ({ EmptyInboxIllustration: () => <div /> }));
 
-jest.mock("@/hooks/api/build/intake-mutations", () => ({
-  useAcceptIntakeRequest: jest.fn(),
-}));
-
-jest.mock("@/hooks/api/build/project-members", () => ({
-  useProjectMembers: jest.fn(),
-}));
-
-jest.mock("@/hooks/api/entitlements", () => ({
-  useEntitlements: () => ({ data: undefined }),
-}));
-
-jest.mock("@/hooks/api/access", () => ({
-  useCan: jest.fn(),
-  useAccess: jest.fn(),
-}));
-
-jest.mock("@/features/build/shared/use-build-list-filters", () => ({
-  useBuildListFilters: jest.fn(),
-}));
-
-jest.mock("@/components/shared/dirty-state-context", () => ({
-  useRegisterDirtyState: jest.fn(),
-}));
-
-jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
-
-jest.mock("framer-motion", () => ({
-  motion: {
-    div: ({ children, ...rest }: React.HTMLAttributes<HTMLDivElement>) => (
-      <div {...rest}>{children}</div>
-    ),
-  },
-  useReducedMotion: () => false,
-  AnimatePresence: ({ children }: { children: React.ReactNode }) => (
-    <>{children}</>
-  ),
-}));
-
-jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
-  usePathname: () => "/build/1/intake",
-}));
-
-jest.mock("next/link", () => ({
-  __esModule: true,
-  default: ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  ),
-}));
-
-jest.mock("@/components/ui/page-wrapper", () => ({
-  PageWrapper: ({
-    children,
-    title,
-    actions,
-  }: {
-    children: React.ReactNode;
-    title?: string;
-    actions?: React.ReactNode;
-  }) => (
-    <div>
-      {title ? <h1>{title}</h1> : null}
-      {actions}
-      {children}
-    </div>
-  ),
-}));
-
-jest.mock("@/components/shared/no-permission-state", () => ({
-  NoPermissionState: ({ permission }: { permission?: string }) => (
-    <div data-testid="no-permission">{permission}</div>
-  ),
-}));
-
-jest.mock("@/components/shared/error-state", () => ({
-  ErrorState: ({ description }: { description?: string }) => (
-    <div data-testid="error-state">{description}</div>
-  ),
-}));
-
-jest.mock("@/components/ui/empty-state", () => ({
-  EmptyState: ({ title }: { title: string }) => (
-    <div data-testid="empty-state">{title}</div>
-  ),
-}));
-
-jest.mock("@/components/ui/skeleton", () => ({
-  Skeleton: () => <div data-testid="skeleton" />,
-}));
-
-jest.mock("@/components/illustrations", () => ({
-  EmptyInboxIllustration: () => <div />,
-}));
-
-jest.mock("@/features/build/intake/intake-item-card", () => ({
-  IntakeItemCard: ({
-    canManage,
-  }: {
-    item: unknown;
-    canManage?: boolean;
-    onAccept: (id: number) => void;
-    onDecline: (id: number) => void;
-    onDuplicate: (id: number) => void;
-  }) => (
-    <div
-      data-testid="intake-item-card"
-      data-can-manage={String(canManage)}
-    />
-  ),
-}));
-
-jest.mock("@/components/pm-chrome", () => ({
-  PmPageShell: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
-  PmSection: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
-  PmStaggerList: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
-}));
-
-jest.mock("@animateicons/react/lucide", () => ({
-  PlusIcon: ({
-    ref: _ref,
-    ...props
-  }: React.HTMLAttributes<HTMLElement> & { ref?: unknown }) => (
-    <span {...props} />
-  ),
-  CheckIcon: ({
-    ref: _ref,
-    ...props
-  }: React.HTMLAttributes<HTMLElement> & { ref?: unknown }) => (
-    <span {...props} />
-  ),
-  XIcon: ({
-    ref: _ref,
-    ...props
-  }: React.HTMLAttributes<HTMLElement> & { ref?: unknown }) => (
-    <span {...props} />
-  ),
-  CopyIcon: ({
-    ref: _ref,
-    ...props
-  }: React.HTMLAttributes<HTMLElement> & { ref?: unknown }) => (
-    <span {...props} />
-  ),
-}));
-
-jest.mock("@/hooks/common/use-animated-icon", () => ({
-  useAnimatedIcon: () => ({
-    iconRef: { current: null },
-    hoverHandlers: {},
-  }),
-}));
-
-jest.mock("@/components/ui/sheet", () => ({
-  Sheet: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
-  SheetContent: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
-  SheetHeader: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
-  SheetTitle: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
-  SheetTrigger: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
-  SheetBody: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
-}));
-
-jest.mock("@/components/ui/loading-button", () => ({
-  LoadingButton: ({
-    children,
-    isPending: _p,
-    loadingText: _l,
-    ...props
-  }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
-    isPending?: boolean;
-    loadingText?: string;
-  }) => <button {...props}>{children}</button>,
-}));
-
-jest.mock("lucide-react", () => ({
-  Plus: () => <span />,
-  ExternalLink: () => <span />,
-  TicketIcon: () => <span />,
-  Lock: () => <span />,
-  ShieldOff: () => <span />,
-  Zap: () => <span />,
-}));
-
-jest.mock("@/components/ui/tabs", () => ({
-  Tabs: ({
-    children,
-    value: _v,
-    onValueChange: _ovc,
-  }: {
-    children: React.ReactNode;
-    value?: string;
-    onValueChange?: (v: string) => void;
-  }) => <div>{children}</div>,
-  TabsList: ({ children }: { children: React.ReactNode }) => (
-    <div role="tablist">{children}</div>
-  ),
-  TabsTrigger: ({
-    children,
-    value: _v,
-  }: {
-    children: React.ReactNode;
-    value?: string;
-  }) => <button role="tab">{children}</button>,
-  TabsContent: ({
-    children,
-    value: _v,
-  }: {
-    children: React.ReactNode;
-    value?: string;
-  }) => <div role="tabpanel">{children}</div>,
-}));
-
-jest.mock("@/components/ui/badge", () => ({
-  Badge: ({ children }: { children: React.ReactNode }) => (
-    <span>{children}</span>
-  ),
-}));
-
-jest.mock("@/components/ui/select", () => ({
-  Select: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
-  SelectTrigger: ({ children }: { children: React.ReactNode }) => (
-    <button type="button">{children}</button>
-  ),
-  SelectContent: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
-  SelectItem: ({
-    children,
-    value: _v,
-  }: {
-    children: React.ReactNode;
-    value?: string;
-  }) => <div>{children}</div>,
-  SelectValue: ({ placeholder }: { placeholder?: string }) => (
-    <span>{placeholder}</span>
-  ),
-}));
-
-jest.mock("@/components/ui/input", () => ({
-  Input: (props: React.InputHTMLAttributes<HTMLInputElement>) => (
-    <input {...props} />
-  ),
-}));
-
-jest.mock("@/components/ui/textarea", () => ({
-  Textarea: (props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) => (
-    <textarea {...props} />
-  ),
-}));
-
-jest.mock("@/components/ui/label", () => ({
-  Label: ({
-    children,
-    ...props
-  }: React.LabelHTMLAttributes<HTMLLabelElement>) => (
-    <label {...props}>{children}</label>
-  ),
-}));
-
-import {
-  useIntakeRequests,
-  useCreateIntakeRequest,
-  useUpdateIntakeRequest,
-  useCycles,
-  useModules,
-} from "@/hooks/api/build/advanced";
-import { useAcceptIntakeRequest } from "@/hooks/api/build/intake-mutations";
-import { useProjectMembers } from "@/hooks/api/build/project-members";
-import { useCan, useAccess } from "@/hooks/api/access";
-import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
-
-const mockUseIntakeRequests = useIntakeRequests as jest.Mock;
-const mockUseCreateIntakeRequest = useCreateIntakeRequest as jest.Mock;
-const mockUseUpdateIntakeRequest = useUpdateIntakeRequest as jest.Mock;
-const mockUseAcceptIntakeRequest = useAcceptIntakeRequest as jest.Mock;
-const mockUseProjectMembers = useProjectMembers as jest.Mock;
-const mockUseCycles = useCycles as jest.Mock;
-const mockUseModules = useModules as jest.Mock;
-const mockUseCan = useCan as jest.Mock;
-const mockUseAccess = useAccess as jest.Mock;
-const mockUseBuildListFilters = useBuildListFilters as jest.Mock;
-
-const ACCESS_GRANTED = {
-  data: { isOrgOwner: false, scopes: { "build:view": "all" }, modules: {} },
-  isLoading: false,
-};
-const ACCESS_DENIED = {
-  data: { isOrgOwner: false, scopes: {}, modules: {} },
-  isLoading: false,
-};
-
-function baseQueryResult(overrides: Record<string, unknown> = {}) {
-  return {
-    data: undefined,
-    isLoading: false,
-    isError: false,
-    error: undefined,
-    refetch: jest.fn(),
-    ...overrides,
-  };
+const ACCESS_GRANTED = { data: { isOrgOwner: false, scopes: { "build:view": "all" }, modules: {} }, isLoading: false };
+const request = { id: 42, title: "Actual request", status: "pending" };
+type Callbacks = { onSuccess: (result: IntakeRequest) => void; onError: (error: Error) => void };
+const callbacks: Callbacks[] = [];
+function ack(status: IntakeRequest["status"], overrides: Partial<IntakeRequest> = {}): IntakeRequest {
+  return { id: 42, projectId: 1, orgId: "org-1", title: request.title, description: null, source: "manual", status, submitterEmail: null, submitterName: null, priority: null, requestType: null, linkedWorkItemId: 91, declineReason: null, createdAt: "2026-10-04T00:00:00Z", updatedAt: "2026-10-04T00:00:00Z", ...overrides };
 }
-
+function query(overrides: Record<string, unknown> = {}) {
+  return { data: undefined, isLoading: false, isError: false, error: undefined, refetch: jest.fn(), ...overrides };
+}
+function showRequest() {
+  mockCan.mockReturnValue(true);
+  mockRequests.mockReturnValue(query({ data: { data: [request] } }));
+  return render(<IntakePage projectId={1} />);
+}
 beforeEach(() => {
-  mockUseCan.mockReturnValue(false);
-  mockUseBuildListFilters.mockReturnValue({
-    value: () => "pending",
-    setValue: jest.fn(),
-  });
-  mockUseAccess.mockReturnValue(ACCESS_GRANTED);
-  mockUseIntakeRequests.mockReturnValue(
-    baseQueryResult({ data: { data: [] } }),
-  );
-  mockUseCreateIntakeRequest.mockReturnValue({
-    mutate: jest.fn(),
-    isPending: false,
-  });
-  mockUseUpdateIntakeRequest.mockReturnValue({
-    mutate: jest.fn(),
-    isPending: false,
-  });
-  mockUseAcceptIntakeRequest.mockReturnValue({
-    mutate: jest.fn(),
-    isPending: false,
-  });
-  mockUseProjectMembers.mockReturnValue(baseQueryResult({ data: [] }));
-  mockUseCycles.mockReturnValue(baseQueryResult({ data: [] }));
-  mockUseModules.mockReturnValue(baseQueryResult({ data: [] }));
+  jest.clearAllMocks();
+  callbacks.length = 0;
+  mockUpdate.mockImplementation((_body: unknown, handlers: Callbacks) => callbacks.push(handlers));
+  mockAccept.mockImplementation((_body: unknown, handlers: Callbacks) => callbacks.push(handlers));
+  mockCan.mockReturnValue(false);
+  mockAccess.mockReturnValue(ACCESS_GRANTED);
+  mockFilters.mockReturnValue({ value: () => "pending", setValue: jest.fn() });
+  mockRequests.mockReturnValue(query({ data: { data: [] } }));
+  mockTickets.mockReturnValue({ data: { data: [{ id: 91, ticketNumber: 7, title: "Canonical ticket", status: "todo" }] }, isFetching: false });
+  mockSession.mockReturnValue({ status: "authenticated", data: { orgId: "org-1", user: { id: "actor-1" } } });
+  mockMembers.mockReturnValue(query({ data: { data: [{ id: "user-123", firstName: "Jane", email: "jane@example.test" }] } }));
+  mockCycles.mockReturnValue(query({ data: [{ id: 5, name: "Cycle five" }] }));
+  mockModules.mockReturnValue(query({ data: [{ id: 2, name: "Workstream two" }] }));
 });
-
-it("renders NoPermissionState when build:view is denied instead of empty state", () => {
-  mockUseAccess.mockReturnValue(ACCESS_DENIED);
-  mockUseIntakeRequests.mockReturnValue(baseQueryResult());
+it("renders permission denial instead of an empty queue", () => {
+  mockAccess.mockReturnValue({ data: { isOrgOwner: false, scopes: {}, modules: {} }, isLoading: false });
+  mockRequests.mockReturnValue(query());
   render(<IntakePage projectId={1} />);
-  expect(screen.getByTestId("no-permission")).toBeInTheDocument();
-  expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
+  expect(screen.getByText(/permission/i)).toBeInTheDocument();
+  expect(screen.queryByText("No pending items")).not.toBeInTheDocument();
 });
-
-it("does not flash denial while the access snapshot is still in flight", () => {
-  mockUseAccess.mockReturnValue({ data: undefined, isLoading: true });
-  mockUseIntakeRequests.mockReturnValue(baseQueryResult({ isLoading: true }));
+it("does not flash denial while access is loading", () => {
+  mockAccess.mockReturnValue({ data: undefined, isLoading: true });
+  mockRequests.mockReturnValue(query({ isLoading: true }));
   render(<IntakePage projectId={1} />);
-  expect(screen.queryByTestId("no-permission")).not.toBeInTheDocument();
+  expect(screen.queryByText(/don't have permission/i)).not.toBeInTheDocument();
 });
-
-it("offers the upgrade path the backend sent with a 402 rather than a generic error state", () => {
-  mockUseIntakeRequests.mockReturnValue(
-    baseQueryResult({
-      isError: true,
-      error: new ApiError(
-        "Build is not included in your current plan.",
-        402,
-        "MODULE_NOT_ENABLED",
-        { moduleKey: "build", reason: "not-in-plan", upgradePath: "/settings/billing" },
-      ),
-    }),
-  );
+it("offers the backend 402 upgrade path", () => {
+  mockRequests.mockReturnValue(query({ isError: true, error: new ApiError("Build is not included in your current plan.", 402, "MODULE_NOT_ENABLED", { moduleKey: "build", reason: "not-in-plan", upgradePath: "/settings/billing" }) }));
   render(<IntakePage projectId={1} />);
-  expect(screen.queryByTestId("error-state")).not.toBeInTheDocument();
-  expect(
-    screen.getByRole("link", { name: /plan|billing|upgrade/i }),
-  ).toHaveAttribute("href", "/settings/billing");
+  expect(screen.getByRole("link", { name: /plan|billing|upgrade/i })).toHaveAttribute("href", "/settings/billing");
 });
-
-it("hides New Item button when build:workspace:manage is not granted", () => {
-  mockUseCan.mockReturnValue(false);
+it("hides New Item without workspace manage", () => {
   render(<IntakePage projectId={1} />);
-  expect(
-    screen.queryByRole("button", { name: /new item/i }),
-  ).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: /new item/i })).not.toBeInTheDocument();
 });
-
-it("passes canManage=false to IntakeItemCard so action buttons are hidden", () => {
-  mockUseCan.mockReturnValue(false);
-  mockUseIntakeRequests.mockReturnValue(
-    baseQueryResult({
-      data: { data: [{ id: 1, title: "Test item", status: "pending" }] },
-    }),
-  );
+it("hides every actual row decision without workspace manage", () => {
+  mockRequests.mockReturnValue(query({ data: { data: [request] } }));
   render(<IntakePage projectId={1} />);
-  const card = screen.getByTestId("intake-item-card");
-  expect(card.getAttribute("data-can-manage")).toBe("false");
+  expect(screen.getByText(request.title)).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: /accept|decline|duplicate/i })).not.toBeInTheDocument();
+  expect(mockAccept).not.toHaveBeenCalled();
+  expect(mockUpdate).not.toHaveBeenCalled();
 });
-
-it("uses the URL-backed intake tab when rendering the list", () => {
-  mockUseBuildListFilters.mockReturnValue({
-    value: () => "accepted",
-    setValue: jest.fn(),
-  });
-  mockUseIntakeRequests.mockReturnValue(
-    baseQueryResult({
-      data: {
-        data: [
-          { id: 1, title: "Pending item", status: "pending" },
-          { id: 2, title: "Accepted item", status: "accepted" },
-        ],
-      },
-    }),
-  );
-
+it("uses the URL backed intake tab to filter rows", () => {
+  mockFilters.mockReturnValue({ value: () => "accepted", setValue: jest.fn() });
+  mockRequests.mockReturnValue(query({ data: { data: [request, { id: 2, title: "Accepted item", status: "accepted" }] } }));
   render(<IntakePage projectId={1} />);
-
-  expect(screen.queryByText("No accepted items")).not.toBeInTheDocument();
-  expect(screen.getAllByTestId("intake-item-card")).toHaveLength(1);
+  expect(screen.getByText("Accepted item")).toBeInTheDocument();
+  expect(screen.queryByText(request.title)).not.toBeInTheDocument();
+});
+it("requires a ticket selection before the actual row Duplicate action mutates", async () => {
+  showRequest();
+  fireEvent.click(screen.getByRole("button", { name: "Mark as duplicate" }));
+  await screen.findByRole("dialog");
+  expect(mockUpdate).not.toHaveBeenCalled();
+  expect(screen.getByRole("dialog", { name: /duplicate/i })).toBeInTheDocument();
 });
 
-describe("BUG-038 — accept passes form data to mutation and in_review is a valid state choice", () => {
-  it("accept mutation receives state, assigneeId, cycleId, moduleId from the form instead of ignoring them", () => {
-    const acceptMutateFn = jest.fn();
-    mockUseAcceptIntakeRequest.mockReturnValue({ mutate: acceptMutateFn, isPending: false });
-    render(<IntakePage projectId={1} />);
-    acceptMutateFn.mock.calls;
-    expect(acceptMutateFn).not.toHaveBeenCalled();
-    acceptMutateFn(
-      {
-        intakeRequestId: 42,
-        projectId: 1,
-        status: "accepted",
-        state: "in_review",
-        assigneeId: "user-123",
-        cycleId: 5,
-        moduleId: 2,
-      },
-      { onSuccess: jest.fn(), onError: jest.fn() },
-    );
-    expect(acceptMutateFn).toHaveBeenCalledWith(
-      expect.objectContaining({
-        state: "in_review",
-        assigneeId: "user-123",
-        cycleId: 5,
-        moduleId: 2,
-      }),
-      expect.anything(),
-    );
-  });
+async function choose(name: string, option: string) {
+  fireEvent.keyDown(await screen.findByRole("combobox", { name }), { key: "ArrowDown" });
+  fireEvent.click(await screen.findByRole("option", { name: option }));
+}
+async function chooseTicket() {
+  fireEvent.click(await screen.findByRole("combobox", { name: "Search tickets…" }));
+  fireEvent.click(await screen.findByRole("option", { name: /Canonical ticket/ }));
+}
+function latestCallbacks() {
+  const result = callbacks.at(-1);
+  if (!result) throw new Error("Expected actual decision mutation callback");
+  return result;
+}
+it("submits every accept form field through the actual row and RHF controls", async () => {
+  showRequest();
+  fireEvent.click(screen.getByRole("button", { name: "Accept — move to work queue" }));
+  await screen.findByRole("dialog");
+  fireEvent.click(screen.getByRole("button", { name: "Accept & Create" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent("State is required");
+  expect(mockAccept).not.toHaveBeenCalled();
+  await choose("State", "In Review");
+  await choose("Assignee", "Jane");
+  await choose("Cycle", "Cycle five");
+  await choose("Workstream", "Workstream two");
+  fireEvent.click(screen.getByRole("button", { name: "Accept & Create" }));
+  await waitFor(() => expect(mockAccept).toHaveBeenCalledTimes(1));
+  expect(mockAccept).toHaveBeenCalledWith({ intakeRequestId: 42, projectId: 1, status: "accepted", state: "in_review", assigneeId: "user-123", cycleId: 5, moduleId: 2 }, expect.any(Object));
+  expect(mockUpdate).not.toHaveBeenCalled();
+  act(() => latestCallbacks().onSuccess(ack("accepted")));
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  expect(mockToast.success).toHaveBeenCalledWith("Item accepted — ticket created", expect.any(Object));
+});
+it("requires a decline reason and preserves the exact draft for retry", async () => {
+  showRequest();
+  fireEvent.click(screen.getByRole("button", { name: "Decline — remove from intake" }));
+  await screen.findByRole("dialog");
+  fireEvent.click(screen.getByRole("button", { name: "Decline Item" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent("Reason is required");
+  expect(mockUpdate).not.toHaveBeenCalled();
+  fireEvent.change(screen.getByRole("textbox", { name: "Reason" }), { target: { value: "Already handled" } });
+  fireEvent.click(screen.getByRole("button", { name: "Decline Item" }));
+  await waitFor(() => expect(mockUpdate).toHaveBeenCalledTimes(1));
+  const expected = { intakeRequestId: 42, projectId: 1, status: "declined", declineReason: "Already handled" };
+  expect(mockUpdate).toHaveBeenLastCalledWith(expected, expect.any(Object));
+  act(() => latestCallbacks().onError(new Error("Request refused")));
+  expect(screen.getByRole("textbox", { name: "Reason" })).toHaveValue("Already handled");
+  expect(mockToast.error).toHaveBeenCalledWith("Request refused");
+  fireEvent.click(screen.getByRole("button", { name: "Decline Item" }));
+  await waitFor(() => expect(mockUpdate).toHaveBeenCalledTimes(2));
+  expect(mockUpdate).toHaveBeenLastCalledWith(expected, expect.any(Object));
+  act(() => latestCallbacks().onSuccess(ack("declined")));
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+});
+it("uses the same-project canonical ticket picker and submits a selected duplicate", async () => {
+  showRequest();
+  fireEvent.click(screen.getByRole("button", { name: "Mark as duplicate" }));
+  await screen.findByRole("dialog");
+  fireEvent.click(screen.getByRole("button", { name: "Mark as Duplicate" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent("Select a valid existing ticket.");
+  expect(mockUpdate).not.toHaveBeenCalled();
+  await chooseTicket();
+  expect(mockTickets).toHaveBeenCalledWith(1, { limit: 20 });
+  fireEvent.click(screen.getByRole("button", { name: "Mark as Duplicate" }));
+  await waitFor(() => expect(mockUpdate).toHaveBeenCalledTimes(1));
+  expect(mockUpdate).toHaveBeenCalledWith({ intakeRequestId: 42, projectId: 1, status: "duplicate", linkedWorkItemId: 91 }, expect.any(Object));
+  act(() => latestCallbacks().onSuccess(ack("duplicate")));
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+});
+it.each([0, -1, 1.5, 2147483648])("refuses invalid canonical picker target %s", async (id) => {
+  mockTickets.mockReturnValue({ data: { data: [{ id, ticketNumber: 7, title: "Canonical ticket", status: "todo" }] }, isFetching: false });
+  showRequest();
+  fireEvent.click(screen.getByRole("button", { name: "Mark as duplicate" }));
+  await screen.findByRole("dialog");
+  await chooseTicket();
+  fireEvent.click(screen.getByRole("button", { name: "Mark as Duplicate" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent("Select a valid existing ticket.");
+  expect(mockUpdate).not.toHaveBeenCalled();
+});
+it("fences pending close, Escape, edit and repeated submit until matching ACK", async () => {
+  showRequest();
+  fireEvent.click(screen.getByRole("button", { name: "Decline — remove from intake" }));
+  await screen.findByRole("dialog");
+  const reason = screen.getByRole("textbox", { name: "Reason" });
+  fireEvent.change(reason, { target: { value: "Bound draft" } });
+  const submit = screen.getByRole("button", { name: "Decline Item" });
+  fireEvent.click(submit);
+  fireEvent.click(submit);
+  await waitFor(() => expect(mockUpdate).toHaveBeenCalledTimes(1));
+  expect(reason).toBeDisabled();
+  expect(submit).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
+  fireEvent.click(screen.getByRole("button", { name: "Close" }));
+  fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
+  await act(async () => { fireEvent.pointerDown(document.body, { button: 0, pointerType: "mouse" }); });
+  expect(screen.getByRole("dialog")).toBeInTheDocument();
+  await userEvent.setup().type(reason, "changed");
+  expect(reason).toHaveValue("Bound draft");
+  fireEvent.submit(screen.getByRole("dialog").querySelector("form") ?? reason);
+  await act(async () => {});
+  expect(mockUpdate).toHaveBeenCalledTimes(1);
+  act(() => latestCallbacks().onSuccess(ack("declined")));
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+});
+it.each(["accept", "duplicate"])("fences pending %s controls and repeated submissions", async (action) => {
+  showRequest();
+  fireEvent.click(screen.getByRole("button", { name: action === "accept" ? "Accept — move to work queue" : "Mark as duplicate" }));
+  await screen.findByRole("dialog");
+  if (action === "accept") await choose("State", "Todo");
+  else await chooseTicket();
+  const label = action === "accept" ? "Accept & Create" : "Mark as Duplicate";
+  const mutation = action === "accept" ? mockAccept : mockUpdate;
+  fireEvent.click(screen.getByRole("button", { name: label }));
+  await waitFor(() => expect(mutation).toHaveBeenCalledTimes(1));
+  const dialog = screen.getByRole("dialog");
+  for (const control of within(dialog).getAllByRole("combobox")) expect(control).toBeDisabled();
+  fireEvent.submit(dialog.querySelector("form") ?? dialog);
+  fireEvent.keyDown(dialog, { key: "Escape" });
+  await act(async () => {});
+  expect(mutation).toHaveBeenCalledTimes(1);
+  expect(screen.getByRole("dialog")).toBeInTheDocument();
+  act(() => latestCallbacks().onError(new Error("Retry decision")));
+  expect(screen.getByRole("button", { name: label })).toBeEnabled();
+  fireEvent.click(screen.getByRole("button", { name: label }));
+  await waitFor(() => expect(mutation).toHaveBeenCalledTimes(2));
+  expect(mutation.mock.calls[1]?.[0]).toEqual(mutation.mock.calls[0]?.[0]);
+  act(() => latestCallbacks().onSuccess(ack(action === "accept" ? "accepted" : "duplicate")));
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+});
+it("permits dismissal before submission and resets a reopened draft", async () => {
+  showRequest();
+  fireEvent.click(screen.getByRole("button", { name: "Decline — remove from intake" }));
+  await screen.findByRole("dialog");
+  fireEvent.change(screen.getByRole("textbox", { name: "Reason" }), { target: { value: "Discard me" } });
+  fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Decline — remove from intake" }));
+  await screen.findByRole("dialog");
+  expect(screen.getByRole("textbox", { name: "Reason" })).toHaveValue("");
+  expect(mockUpdate).not.toHaveBeenCalled();
+});
+it("allows a managing actor to open the existing create flow", async () => {
+  showRequest();
+  fireEvent.click(screen.getByRole("button", { name: /new item/i }));
+  expect(await screen.findByRole("dialog", { name: "Create Intake Item" })).toBeInTheDocument();
+});
+it.each<Partial<IntakeRequest>>([{ id: 43 }, { projectId: 2 }, { orgId: "org-2" }, { status: "declined" }, { linkedWorkItemId: 92 }])("preserves the duplicate draft on mismatched ACK %j and retries its exact target", async (mismatch) => {
+  showRequest();
+  fireEvent.click(screen.getByRole("button", { name: "Mark as duplicate" }));
+  await screen.findByRole("dialog");
+  await chooseTicket();
+  fireEvent.click(screen.getByRole("button", { name: "Mark as Duplicate" }));
+  await waitFor(() => expect(mockUpdate).toHaveBeenCalledTimes(1));
+  act(() => latestCallbacks().onSuccess(ack("duplicate", mismatch)));
+  expect(screen.getByRole("dialog")).toBeInTheDocument();
+  expect(screen.getByRole("combobox", { name: "Search tickets…" })).toHaveTextContent("Canonical ticket");
+  expect(mockToast.success).not.toHaveBeenCalled();
+  expect(mockToast.error).toHaveBeenCalledWith("The decision response did not match this request. Please retry.");
+  fireEvent.click(screen.getByRole("button", { name: "Mark as Duplicate" }));
+  await waitFor(() => expect(mockUpdate).toHaveBeenCalledTimes(2));
+  expect(mockUpdate.mock.calls[1]?.[0]).toEqual(mockUpdate.mock.calls[0]?.[0]);
+  act(() => latestCallbacks().onSuccess(ack("duplicate")));
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+});
+it.each(["project", "organization", "actor", "session", "permission"])("discards the pending draft on %s change and ignores its late ACK", async (change) => {
+  const view = showRequest();
+  fireEvent.click(screen.getByRole("button", { name: "Decline — remove from intake" }));
+  await screen.findByRole("dialog");
+  fireEvent.change(screen.getByRole("textbox", { name: "Reason" }), { target: { value: "Old context" } });
+  fireEvent.click(screen.getByRole("button", { name: "Decline Item" }));
+  await waitFor(() => expect(mockUpdate).toHaveBeenCalledTimes(1));
+  const previous = latestCallbacks();
+  if (change === "organization") mockSession.mockReturnValue({ status: "authenticated", data: { orgId: "org-2", user: { id: "actor-1" } } });
+  if (change === "actor") mockSession.mockReturnValue({ status: "authenticated", data: { orgId: "org-1", user: { id: "actor-2" } } });
+  if (change === "session") mockSession.mockReturnValue({ status: "unauthenticated", data: null });
+  if (change === "permission") mockCan.mockReturnValue(false);
+  view.rerender(<IntakePage projectId={change === "project" ? 2 : 1} />);
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  if (change === "session") mockSession.mockReturnValue({ status: "authenticated", data: { orgId: "org-1", user: { id: "actor-1" } } });
+  if (change === "permission") mockCan.mockReturnValue(true);
+  view.rerender(<IntakePage projectId={change === "project" ? 2 : 1} />);
+  fireEvent.click(screen.getByRole("button", { name: "Decline — remove from intake" }));
+  await screen.findByRole("dialog");
+  expect(screen.getByRole("textbox", { name: "Reason" })).toHaveValue("");
+  fireEvent.change(screen.getByRole("textbox", { name: "Reason" }), { target: { value: "New context" } });
+  act(() => { previous.onSuccess(ack("declined")); previous.onError(new Error("Stale failure")); });
+  expect(screen.getByRole("textbox", { name: "Reason" })).toHaveValue("New context");
+  expect(mockToast.success).not.toHaveBeenCalled();
+  expect(mockToast.error).not.toHaveBeenCalled();
+});
 
-  it("useAcceptIntakeRequest is used for accept, not useUpdateIntakeRequest, so form fields reach the API", () => {
-    const acceptMutateFn = jest.fn();
-    const updateMutateFn = jest.fn();
-    mockUseAcceptIntakeRequest.mockReturnValue({ mutate: acceptMutateFn, isPending: false });
-    mockUseUpdateIntakeRequest.mockReturnValue({ mutate: updateMutateFn, isPending: false });
-    render(<IntakePage projectId={1} />);
-    expect(acceptMutateFn).not.toHaveBeenCalled();
-    expect(updateMutateFn).not.toHaveBeenCalled();
-  });
+it("highlights the card whose id matches highlightId", () => {
+  mockFilters.mockReturnValue({ value: () => "all", setValue: jest.fn() });
+  mockRequests.mockReturnValue(query({ data: { data: [{ id: 77, title: "Linked item", status: "pending" }] } }));
+  render(<IntakePage projectId={1} highlightId={77} />);
+  const highlighted = document.querySelector("[data-highlighted='true']");
+  expect(highlighted).toBeInTheDocument();
+  expect(highlighted).toHaveClass("ring-2");
+  expect(screen.getByText("Linked item")).toBeInTheDocument();
+  expect(screen.queryByTestId("intake-item-not-found")).not.toBeInTheDocument();
+});
 
-  it("WORK_STATES list includes in_review so the form does not surface a raw Zod error when in_review is chosen", () => {
-    render(<IntakePage projectId={1} />);
-    const stateItems = screen.getAllByText(/in review/i);
-    expect(stateItems.length).toBeGreaterThan(0);
-  });
+it("shows the not-in-this-view banner when highlightId does not match any loaded item", () => {
+  mockFilters.mockReturnValue({ value: () => "all", setValue: jest.fn() });
+  mockRequests.mockReturnValue(query({ data: { data: [{ id: 1, title: "Other item", status: "pending" }] } }));
+  render(<IntakePage projectId={1} highlightId={99} />);
+  expect(screen.getByTestId("intake-item-not-found")).toBeInTheDocument();
+  expect(document.querySelector("[data-highlighted='true']")).not.toBeInTheDocument();
+});
+
+it("switches the active tab to 'all' when the highlighted item is on a different tab", () => {
+  const mockSetValue = jest.fn();
+  mockFilters.mockReturnValue({ value: () => "pending", setValue: mockSetValue });
+  mockRequests.mockReturnValue(query({ data: { data: [{ id: 77, title: "Accepted item", status: "accepted" }] } }));
+  render(<IntakePage projectId={1} highlightId={77} />);
+  expect(mockSetValue).toHaveBeenCalledWith("tab", "all");
 });

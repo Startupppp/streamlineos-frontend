@@ -28,6 +28,9 @@ const webhookRotateSecretContract = lazyContract(() =>
 const webhookRetryContract = lazyContract(() =>
   import("@/hooks/api/webhooks-schema").then((m) => m.webhookRetryContract),
 );
+const webhookImpactContract = lazyContract(() =>
+  import("@/hooks/api/webhooks-schema").then((m) => m.webhookImpactContract),
+);
 
 export interface WebhookEndpoint {
   id: number;
@@ -61,7 +64,17 @@ export interface WebhookLog {
   responseBody: string | null;
   attempt: number;
   success: boolean;
+  deadLetter: boolean;
   createdAt: string;
+}
+
+export interface WebhookImpact {
+  endpointId: number;
+  subscribedEvents: string[];
+  totalDeliveries: number;
+  successfulDeliveries: number;
+  lastSuccessAt: string | null;
+  lastDeadLetterAt: string | null;
 }
 
 export interface WebhooksPageResponse {
@@ -179,5 +192,16 @@ export function useRetryDelivery(endpointId: number) {
       ),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.webhooks.logs(endpointId) }),
+  });
+}
+
+export function useWebhookImpact(endpointId: number | null) {
+  const canManage = useCan("settings:webhooks:manage");
+  return useQuery({
+    queryKey: supportAndWorkflowsQueryKeys.webhooks.impact(endpointId ?? 0),
+    queryFn: ({ signal }) =>
+      apiClient.get<WebhookImpact>(`/webhooks/${endpointId}/impact`, {}, signal, webhookImpactContract),
+    staleTime: 30_000,
+    enabled: canManage && endpointId !== null,
   });
 }

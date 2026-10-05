@@ -17,7 +17,7 @@ jest.mock("@/hooks/api/entitlements", () => ({
   useEntitlements: () => ({ data: undefined }),
 }));
 
-jest.mock("@/hooks/api", () => ({
+jest.mock("@/hooks/api/chat-core-read", () => ({
   useChatOrgUsers: () => ({
     data: mockOrgUsers.current,
     isLoading: false,
@@ -25,6 +25,9 @@ jest.mock("@/hooks/api", () => ({
     error: null,
     refetch: jest.fn(),
   }),
+}));
+
+jest.mock("@/hooks/api/chat-core-mutations-b", () => ({
   useCreateDMChannel: () => ({ mutateAsync: jest.fn(), isPending: false }),
 }));
 

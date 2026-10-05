@@ -5,8 +5,8 @@ import { z } from "zod";
  * checklists, guided tours). Timestamps are ISO strings over JSON. NOT `.strict()`.
  */
 
-export const onboardingFlowSessionContract = z.object({
-  id: z.number(),
+const persistedOnboardingFlowSessionContract = z.object({
+  id: z.number().int().positive(),
   orgId: z.string(),
   userId: z.string(),
   membershipId: z.number().nullable(),
@@ -24,30 +24,81 @@ export const onboardingFlowSessionContract = z.object({
   updatedAt: z.string(),
 });
 
-const checklistItemContract = z.object({
-  id: z.number(),
+const initialOnboardingFlowSessionContract = persistedOnboardingFlowSessionContract
+  .omit({ lastSeenAt: true, createdAt: true, updatedAt: true })
+  .extend({
+    id: z.literal(0),
+    status: z.literal("not_started"),
+    currentStep: z.null(),
+    source: z.null(),
+    startedAt: z.null(),
+    completedAt: z.null(),
+  });
+
+export const onboardingFlowSessionContract = z.union([
+  persistedOnboardingFlowSessionContract,
+  initialOnboardingFlowSessionContract,
+]);
+
+const persistedChecklistItemContract = z.object({
+  id: z.number().int().positive(),
   orgId: z.string(),
-  checklistId: z.number(),
+  checklistId: z.number().int().positive(),
   itemKey: z.string(),
   title: z.string(),
   description: z.string().nullable(),
   actionHref: z.string().nullable(),
   status: z.enum(["todo", "in_progress", "done", "skipped", "blocked"]),
   required: z.boolean(),
-  sortOrder: z.number(),
+  sortOrder: z.number().int(),
+  completedAt: z.string().nullable(),
+  skippedAt: z.string().nullable(),
 });
 
-const moduleChecklistContract = z.object({
-  id: z.number(),
+const newSeedItemContract = persistedChecklistItemContract.extend({
+  id: z.null(),
+  completedAt: z.null(),
+  skippedAt: z.null(),
+});
+
+const virtualChecklistItemContract = newSeedItemContract.extend({ checklistId: z.null() });
+
+const persistedModuleChecklistContract = z.object({
+  id: z.number().int().positive(),
   orgId: z.string(),
   moduleKey: z.string(),
   status: z.enum(["not_started", "in_progress", "completed"]),
-  progress: z.number(),
+  progress: z.number().int().min(0).max(100),
   dismissedAt: z.string().nullable(),
   completedAt: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
-  items: z.array(checklistItemContract),
+  items: z.array(z.union([persistedChecklistItemContract, newSeedItemContract])),
+});
+
+const virtualModuleChecklistContract = persistedModuleChecklistContract
+  .omit({ items: true })
+  .extend({
+    id: z.null(),
+    dismissedAt: z.null(),
+    completedAt: z.null(),
+    createdAt: z.null(),
+    updatedAt: z.null(),
+    items: z.array(virtualChecklistItemContract),
+  });
+
+const moduleChecklistContract = z.union([
+  persistedModuleChecklistContract,
+  virtualModuleChecklistContract,
+]).superRefine((checklist, ctx) => {
+  checklist.items.forEach((item, index) => {
+    if (item.orgId !== checklist.orgId) {
+      ctx.addIssue({ code: "custom", path: ["items", index, "orgId"], message: "Item organization must match checklist" });
+    }
+    if (item.checklistId !== checklist.id) {
+      ctx.addIssue({ code: "custom", path: ["items", index, "checklistId"], message: "Item checklist ID must match parent" });
+    }
+  });
 });
 
 export const moduleChecklistListContract = z.array(moduleChecklistContract);
@@ -58,7 +109,7 @@ export const checklistProgressContract = z.object({
   requiredIncomplete: z.boolean(),
 });
 
-export const moduleChecklistRowContract = moduleChecklistContract.omit({ items: true });
+export const moduleChecklistRowContract = persistedModuleChecklistContract.omit({ items: true });
 
 const tourProgressContract = z.object({
   id: z.number(),

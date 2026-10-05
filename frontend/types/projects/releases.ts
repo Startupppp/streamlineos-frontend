@@ -15,6 +15,8 @@ export interface Release {
   status: "draft" | "released" | "archived";
   releaseDate: string | null;
   publishedAt: string | null;
+  readiness: "not_started" | "in_progress" | "ready" | "blocked" | null;
+  riskLevel: "low" | "medium" | "high" | "critical" | null;
   ticketCount: number;
   createdBy: string | null;
   createdByUser: ReleaseCreatedByUser | null;
@@ -38,4 +40,5 @@ export interface UpdateReleaseInput {
   description?: string | null;
   status?: "draft" | "released" | "archived";
   releaseDate?: string | null;
+  previewConfirmed?: boolean;
 }

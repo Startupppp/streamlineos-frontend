@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useCallback } from "react";
-import { useChatChannels, useChatChannel } from "@/hooks/api/chat";
+import { useChatChannels, useChatChannel } from "@/hooks/api/chat-core-read";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { Combobox } from "@/components/ui/combobox";
 import { ListTruncationNotice } from "@/components/ui/list-truncation-notice";

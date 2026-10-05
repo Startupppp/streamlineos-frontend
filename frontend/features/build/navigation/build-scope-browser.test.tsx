@@ -202,6 +202,78 @@ describe("BSN-02-030 — ARIA roles for browse tree and flat lists", () => {
     });
   });
 
+  test("ArrowLeft on a rendered child focuses its immediate parent without selecting or collapsing it", async () => {
+    setupExpandable("Product1");
+    const onSelect = jest.fn();
+    renderBrowser({ onSelect });
+    await userEvent.click(screen.getByRole("button", { name: "Expand Product1" }));
+    const parent = screen.getByRole("treeitem", { name: /Product1/ });
+    const child = screen.getByRole("treeitem", { name: /ChildProject/ });
+    child.focus();
+    fireEvent.keyDown(child, { key: "ArrowLeft" });
+    expect(parent).toHaveFocus();
+    expect(screen.getByRole("button", { name: "Collapse Product1" })).toBeInTheDocument();
+    expect(child).toBeInTheDocument();
+    expect(onSelect).not.toHaveBeenCalled();
+  });
+
+  test.each([false, true])("ArrowLeft on nested product expanded=%s preserves immediate hierarchy", async expanded => {
+    const root = makeEntry({ key: "product:root", type: "product", name: "Root", parentKey: null });
+    const middle = makeEntry({ key: "product:middle", type: "product", name: "Middle", parentKey: root.key });
+    const leaf = makeEntry({ key: "project:leaf", name: "Leaf", parentKey: middle.key });
+    setupMocks({ products: [root, middle], projects: [leaf] });
+    const onSelect = jest.fn();
+    renderBrowser({ onSelect });
+    await userEvent.click(screen.getByRole("button", { name: "Expand Root" }));
+    if (expanded) await userEvent.click(screen.getByRole("button", { name: "Expand Middle" }));
+    const middleRow = screen.getByRole("treeitem", { name: /Middle/ });
+    middleRow.focus();
+    fireEvent.keyDown(middleRow, { key: "ArrowLeft" });
+    expect(expanded ? middleRow : screen.getByRole("treeitem", { name: /Root/ })).toHaveFocus();
+    expect(screen.getByRole("button", { name: "Collapse Root" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Expand Middle" })).toBeInTheDocument();
+    expect(screen.queryByRole("treeitem", { name: /Leaf/ })).not.toBeInTheDocument();
+    expect(onSelect).not.toHaveBeenCalled();
+  });
+
+  test("root Left stays put and Right expands then enters its child without navigation", async () => {
+    setupExpandable("Product1");
+    const onSelect = jest.fn();
+    renderBrowser({ onSelect });
+    const root = screen.getByRole("treeitem", { name: /Product1/ });
+    root.focus();
+    fireEvent.keyDown(root, { key: "ArrowLeft" });
+    expect(root).toHaveFocus();
+    expect(screen.getByRole("button", { name: "Expand Product1" })).toBeInTheDocument();
+    fireEvent.keyDown(root, { key: "ArrowRight" });
+    expect(screen.getByRole("button", { name: "Collapse Product1" })).toBeInTheDocument();
+    fireEvent.keyDown(root, { key: "ArrowRight" });
+    const child = screen.getByRole("treeitem", { name: /ChildProject/ });
+    expect(child).toHaveFocus();
+    expect(onSelect).not.toHaveBeenCalled();
+    await userEvent.keyboard("{Enter}");
+    expect(onSelect).toHaveBeenCalledTimes(1);
+    expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ key: "project:1" }));
+  });
+
+  test.each(["Recent", "Search"])("ArrowLeft leaves a flat %s option focused", async mode => {
+    const parent = makeEntry({ key: "product:p1", type: "product", name: "Product1", parentKey: null });
+    const child = makeEntry({ key: "project:1", name: "ChildProject", parentKey: parent.key });
+    setupMocks({ products: [parent], projects: [child] });
+    if (mode === "Recent") {
+      mockUseReconciledBuildScopes.mockReturnValueOnce({ entries: [makeRef(child)], isReconciled: false });
+      mockUseReconciledBuildScopes.mockReturnValueOnce({ entries: [], isReconciled: false });
+    }
+    const onSelect = jest.fn();
+    renderBrowser({ onSelect });
+    if (mode === "Search") await userEvent.type(screen.getByPlaceholderText(/Search projects/), "Child");
+    const option = await screen.findByRole("option", { name: /ChildProject/ });
+    option.focus();
+    fireEvent.keyDown(option, { key: "ArrowLeft" });
+    expect(option).toHaveFocus();
+    expect(onSelect).not.toHaveBeenCalled();
+  });
+
   test("children of an expanded item are wrapped in role=group", async () => {
     setupExpandable("Product1");
     renderBrowser();

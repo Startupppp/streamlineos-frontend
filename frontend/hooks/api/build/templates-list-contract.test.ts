@@ -142,6 +142,8 @@ describe("applyTemplateResultContract — result of applying a template to a pro
       projectId: 42,
       key: "SL",
       ticketsCreated: 8,
+      customFieldsCreated: 2,
+      savedViewsCreated: 1,
     });
     expect(result.projectId).toBe(42);
     expect(result.key).toBe("SL");
@@ -150,7 +152,7 @@ describe("applyTemplateResultContract — result of applying a template to a pro
 
   it("rejects a result with a missing key field", () => {
     expect(() =>
-      applyTemplateResultContract.parse({ projectId: 1, ticketsCreated: 3 }),
+      applyTemplateResultContract.parse({ projectId: 1, ticketsCreated: 3, customFieldsCreated: 0, savedViewsCreated: 0 }),
     ).toThrow(ZodError);
   });
 });

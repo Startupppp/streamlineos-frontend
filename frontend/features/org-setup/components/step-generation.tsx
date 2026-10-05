@@ -21,13 +21,14 @@ import {
   useConfirmedSessionClaimsRefresh,
 } from "@/hooks/common/use-confirmed-session-claims-refresh";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isRecord } from "@/lib/is-record";
 import {
   clearAll,
   setCompletionMarker,
   hasCompletionMarker,
   clearCompletionMarker,
 } from "@/features/org-setup/lib/draft";
-import { useCompleteOrgSetupMutation } from "@/hooks/api/org-setup";
+import { useCompleteOrgSetupMutation, useOrgSetupActivateMutation } from "@/hooks/api/org-setup";
 import { WELCOME_POP_KEY, WELCOME_POP_NAME_KEY } from "@/lib/welcome-pop";
 import { toast } from "sonner";
 import type { WizardData } from "../lib/wizard-data-schema";
@@ -43,11 +44,21 @@ type OrgCreatedResult = {
   orgId: string;
 };
 
+function isValidRedirectPath(destination: string): boolean {
+  return (
+    typeof destination === "string" &&
+    destination.startsWith("/") &&
+    !destination.startsWith("//")
+  );
+}
+
 type StepGenerationProps = {
   data: WizardData;
+  onBackToProducts?: () => void;
+  idempotencyKey?: string;
 };
 
-export function StepGeneration({ data }: StepGenerationProps) {
+export function StepGeneration({ data, onBackToProducts, idempotencyKey }: StepGenerationProps) {
   const { data: session } = useSession();
   const beginClaimsRefresh = useConfirmedSessionClaimsRefresh();
   const [completedSteps, setCompletedSteps] = useState(0);
@@ -57,8 +68,11 @@ export function StepGeneration({ data }: StepGenerationProps) {
   const [showWelcome, setShowWelcome] = useState(false);
   const [isContinuing, setIsContinuing] = useState(false);
   const [isPollingAfterTimeout, setIsPollingAfterTimeout] = useState(false);
+  const [, setBlockedAtStage] = useState<string | null>(null);
   const dataRef = useRef(data);
   const sessionRef = useRef(session);
+  const destinationRef = useRef<string>("/dashboard");
+  const idempotencyKeyRef = useRef(idempotencyKey);
 
   const wantsInvites = data.invitees.length > 0;
   const generationSteps = GENERATION_STEPS.filter((label) => {
@@ -75,6 +89,8 @@ export function StepGeneration({ data }: StepGenerationProps) {
 
   const completeOrgSetup = useCompleteOrgSetupMutation();
   const completeOrgSetupRef = useRef(completeOrgSetup);
+  const activateMutation = useOrgSetupActivateMutation();
+  const activateMutationRef = useRef(activateMutation);
   const provisioning = useSetupProvisioning(
     orgCreatedResult !== null || isPollingAfterTimeout,
   );
@@ -92,13 +108,15 @@ export function StepGeneration({ data }: StepGenerationProps) {
     dataRef.current = data;
     sessionRef.current = session;
     completeOrgSetupRef.current = completeOrgSetup;
+    activateMutationRef.current = activateMutation;
+    idempotencyKeyRef.current = idempotencyKey;
   });
 
   const goToWorkspace = useCallback(() => {
     if (isContinuing) return;
     setIsContinuing(true);
     clearAll(session?.user?.id ?? "");
-    window.location.replace("/dashboard");
+    window.location.replace(destinationRef.current);
   }, [isContinuing, session?.user?.id]);
 
   function stopAnimation() {
@@ -189,6 +207,7 @@ export function StepGeneration({ data }: StepGenerationProps) {
   }
 
   async function navigateToPostSetup(destination: string) {
+    if (!isValidRedirectPath(destination)) return;
     if (!effectiveOrgId || isContinuing || apiDoneRef.current) return;
     setIsContinuing(true);
     apiDoneRef.current = true;
@@ -217,7 +236,7 @@ export function StepGeneration({ data }: StepGenerationProps) {
   }
 
   function openOrganization() {
-    void navigateToPostSetup("/dashboard");
+    void navigateToPostSetup(destinationRef.current);
   }
 
   function goToInvitations() {
@@ -244,11 +263,63 @@ export function StepGeneration({ data }: StepGenerationProps) {
       const res = await completeOrgSetupRef.current.mutateAsync(
         buildOrgSetupPayload(dataRef.current),
       );
+      destinationRef.current = res.destination;
       clearBackendTokenCache();
       setOrgCreatedResult({
         autoLoginToken: res.autoLoginToken ?? null,
         orgId: res.orgId,
       });
+    } catch (err) {
+      if (isApiError(err) && err.code === "TIMEOUT") {
+        setIsPollingAfterTimeout(true);
+      } else {
+        const isPlanLock =
+          isApiError(err) &&
+          (
+            (err.status === 402 && err.code === "MODULE_NOT_ENABLED" && isRecord(err.details) && err.details.reason === "not-in-plan") ||
+            (err.status === 409 && err.code === "MODULE_ELIGIBILITY_CHANGED")
+          );
+        handleSetupError({
+          kind: isPlanLock ? "module-not-in-plan" : "setup-failed",
+          message: getErrorMessage(err),
+        });
+      }
+    }
+  }
+
+  async function runActivate(key: string) {
+    if (hasRunRef.current) return;
+    hasRunRef.current = true;
+    setCompletedSteps(0);
+    setSetupError(null);
+    startAnimation();
+
+    try {
+      const payload = buildOrgSetupPayload(dataRef.current);
+      const res = await activateMutationRef.current.mutateAsync({
+        idempotencyKey: key,
+        modules: payload.enabledModules,
+      });
+      destinationRef.current = res.destination ?? "/dashboard";
+      clearBackendTokenCache();
+
+      if (res.status === "blocked_at") {
+        setBlockedAtStage(res.blockedAtStage);
+        setIsPollingAfterTimeout(true);
+        handleSetupError({
+          kind: "optional-stage-blocked",
+          message: `Setup completed with warnings. Stage: ${res.blockedAtStage ?? "unknown"}`,
+          blockedAtStage: res.blockedAtStage ?? undefined,
+        });
+      } else if (res.status === "failed") {
+        handleSetupError({
+          kind: "required-stage-failed",
+          message: `Setup failed at stage: ${res.blockedAtStage ?? "unknown"}`,
+          blockedAtStage: res.blockedAtStage ?? undefined,
+        });
+      } else {
+        setIsPollingAfterTimeout(true);
+      }
     } catch (err) {
       if (isApiError(err) && err.code === "TIMEOUT") {
         setIsPollingAfterTimeout(true);
@@ -262,19 +333,26 @@ export function StepGeneration({ data }: StepGenerationProps) {
   }
 
   const runSetupRef = useRef(runSetup);
+  const runActivateRef = useRef(runActivate);
   const finishSetupRef = useRef(finishSetup);
   useEffect(() => {
     runSetupRef.current = runSetup;
+    runActivateRef.current = runActivate;
     finishSetupRef.current = finishSetup;
   });
 
   useEffect(() => {
     const s = sessionRef.current;
     if (hasCompletionMarker(s?.user?.id ?? "", s?.orgId ?? "")) {
-      window.location.replace("/dashboard");
+      window.location.replace(destinationRef.current);
       return;
     }
-    runSetupRef.current();
+    const key = idempotencyKeyRef.current;
+    if (key) {
+      runActivateRef.current(key);
+    } else {
+      runSetupRef.current();
+    }
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
@@ -301,6 +379,7 @@ export function StepGeneration({ data }: StepGenerationProps) {
         isRecheckingProvisioning={provisioning.isRechecking}
         showWelcome={showWelcome}
         onRetry={runSetup}
+        onBackToProducts={onBackToProducts}
         onRecheckProvisioning={handleRecheckProvisioning}
         onContinueAnyway={handleContinueAnyway}
         onOpenOrganization={effectiveOrgId ? openOrganization : undefined}

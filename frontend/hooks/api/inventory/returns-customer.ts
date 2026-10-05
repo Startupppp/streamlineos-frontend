@@ -11,7 +11,7 @@ import {
   type ApproveReturnInput,
   type CancelReturnInput,
   type CustomerReturnDisposition,
-  type CustomerReturnStatus,
+  type ReturnStatus,
   type ListOptions,
   type PaginatedResponse,
   type PostReturnInput,
@@ -42,7 +42,7 @@ export interface CustomerReturnSummary {
   clientId: number | null;
   /** Nested, for the same reason `vendor` is. `customerName` never existed. */
   client: { id: number; name: string } | null;
-  status: CustomerReturnStatus;
+  status: ReturnStatus;
   createdAt: string;
   approvedAt: string | null;
   postedAt: string | null;

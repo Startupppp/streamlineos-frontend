@@ -62,6 +62,8 @@ export const notificationCountContract = z
   .object({ count: z.number().int().nonnegative() })
   .strict();
 
+export const notificationStreamTokenContract = z.object({ token: z.string().min(1) }).strict();
+
 /** Generic mutation ack — `notificationSuccessResponseSchema`. */
 export const notificationAckContract = z.object({ success: z.literal(true) }).strict();
 

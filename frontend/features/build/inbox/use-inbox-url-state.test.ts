@@ -16,6 +16,13 @@ beforeEach(() => {
 });
 
 describe("useInboxUrlState — param round-trips", () => {
+  it.each(["SNOOZED", "ARCHIVED"])("preserves %s and unrelated facets while dropping the cursor", (section) => {
+    mockSearchParams = new URLSearchParams(`section=${section}&q=bug&type=PROJECTS&projectId=54&cursor=42&panel=preview`);
+    const { result } = renderHook(() => useInboxUrlState());
+    expect(result.current.section).toBe(section);
+    act(() => { result.current.setParams({ section: "ALL" }); });
+    expect(replace.mock.calls[0][0]).toBe("/build/inbox?section=ALL&q=bug&type=PROJECTS&projectId=54&panel=preview");
+  });
   it("defaults to section=UNREAD when no params are present", () => {
     const { result } = renderHook(() => useInboxUrlState());
     expect(result.current.section).toBe("UNREAD");
@@ -25,17 +32,6 @@ describe("useInboxUrlState — param round-trips", () => {
     mockSearchParams = new URLSearchParams("section=MENTIONS");
     const { result } = renderHook(() => useInboxUrlState());
     expect(result.current.section).toBe("MENTIONS");
-  });
-
-  it("reads view=drafts from the URL", () => {
-    mockSearchParams = new URLSearchParams("view=drafts");
-    const { result } = renderHook(() => useInboxUrlState());
-    expect(result.current.view).toBe("drafts");
-  });
-
-  it("defaults view to notifications when absent", () => {
-    const { result } = renderHook(() => useInboxUrlState());
-    expect(result.current.view).toBe("notifications");
   });
 
   it("reads q from the URL", () => {
@@ -80,19 +76,8 @@ describe("useInboxUrlState — param round-trips", () => {
     expect(url).toContain("q=ticket");
   });
 
-  it("setParams with view clears cursor because a notifications cursor cannot address the drafts list", () => {
-    mockSearchParams = new URLSearchParams("view=notifications&cursor=77");
-    const { result } = renderHook(() => useInboxUrlState());
-    act(() => {
-      result.current.setParams({ view: "drafts" });
-    });
-    const url = replace.mock.calls[0][0];
-    expect(url).not.toContain("cursor=");
-    expect(url).toContain("view=drafts");
-  });
-
   it("setParams with only cursor keeps the cursor so pagination can advance", () => {
-    mockSearchParams = new URLSearchParams("view=drafts");
+    mockSearchParams = new URLSearchParams("section=ALL");
     const { result } = renderHook(() => useInboxUrlState());
     act(() => {
       result.current.setParams({ cursor: "88" });
@@ -101,14 +86,14 @@ describe("useInboxUrlState — param round-trips", () => {
     expect(url).toContain("cursor=88");
   });
 
-  it("clearFilters removes q, type, and cursor but keeps view", () => {
-    mockSearchParams = new URLSearchParams("view=drafts&q=foo&type=PROJECTS&cursor=5");
+  it("clearFilters removes q, type, and cursor but keeps section", () => {
+    mockSearchParams = new URLSearchParams("section=ALL&q=foo&type=PROJECTS&cursor=5");
     const { result } = renderHook(() => useInboxUrlState());
     act(() => {
       result.current.clearFilters();
     });
     const url = replace.mock.calls[0][0];
-    expect(url).toContain("view=drafts");
+    expect(url).toContain("section=ALL");
     expect(url).not.toContain("q=");
     expect(url).not.toContain("type=");
     expect(url).not.toContain("cursor=");
@@ -120,8 +105,8 @@ describe("useInboxUrlState — param round-trips", () => {
     expect(result.current.hasActiveFilters).toBe(true);
   });
 
-  it("hasActiveFilters is false when only view and section are set", () => {
-    mockSearchParams = new URLSearchParams("view=drafts&section=ALL");
+  it("hasActiveFilters is false when only section is set", () => {
+    mockSearchParams = new URLSearchParams("section=ALL");
     const { result } = renderHook(() => useInboxUrlState());
     expect(result.current.hasActiveFilters).toBe(false);
   });
@@ -210,26 +195,34 @@ describe("useInboxUrlState — type param validation", () => {
     expect(result.current.type).toBeNull();
   });
 
-  it("a different valid category also round-trips", () => {
-    mockSearchParams = new URLSearchParams("type=BILLING");
+  it("Build workflow approvals also round-trip", () => {
+    mockSearchParams = new URLSearchParams("type=WORKFLOW");
     const { result } = renderHook(() => useInboxUrlState());
-    expect(result.current.type).toBe("BILLING");
+    expect(result.current.type).toBe("WORKFLOW");
   });
 
-  it("type=SECURITY is a valid category and round-trips", () => {
-    mockSearchParams = new URLSearchParams("type=SECURITY");
+  it.each(["SECURITY", "BILLING", "HRMS", "CRM", "AI"])("ignores the unrelated global category %s in an old shared link", (category) => {
+    mockSearchParams = new URLSearchParams(`type=${category}`);
     const { result } = renderHook(() => useInboxUrlState());
-    expect(result.current.type).toBe("SECURITY");
+    expect(result.current.type).toBeNull();
+    expect(result.current.hasActiveFilters).toBe(false);
   });
 
   it("setParams with a category value writes it to the URL", () => {
     mockSearchParams = new URLSearchParams();
     const { result } = renderHook(() => useInboxUrlState());
     act(() => {
-      result.current.setParams({ type: "HRMS" });
+      result.current.setParams({ type: "WORKFLOW" });
     });
     const url = replace.mock.calls[0][0];
-    expect(url).toContain("type=HRMS");
+    expect(url).toContain("type=WORKFLOW");
+  });
+
+  it("removes unsupported category parameters when writing the next URL", () => {
+    mockSearchParams = new URLSearchParams("type=CRM&section=ALL&cursor=5");
+    const { result } = renderHook(() => useInboxUrlState());
+    act(() => { result.current.setParams({ q: "release" }); });
+    expect(replace).toHaveBeenCalledWith("/build/inbox?section=ALL&q=release", { scroll: false });
   });
 
   it("setParams with null for type removes the param (All types selection)", () => {
@@ -254,7 +247,7 @@ describe("useInboxUrlState — type param validation", () => {
   });
 
   it("hasActiveFilters is true when a valid type is set", () => {
-    mockSearchParams = new URLSearchParams("type=AI");
+    mockSearchParams = new URLSearchParams("type=WORKFLOW");
     const { result } = renderHook(() => useInboxUrlState());
     expect(result.current.hasActiveFilters).toBe(true);
   });

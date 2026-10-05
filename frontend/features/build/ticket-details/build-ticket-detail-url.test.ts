@@ -1,6 +1,11 @@
 import {
+  buildMyWorkReturnHref,
   buildTicketCollectionReturnHref,
   buildTicketDetailUrl,
+  buildEpicDetailUrl,
+  buildPersonDetailUrl,
+  buildClientDetailUrl,
+  getMyWorkTicketHref,
   resolveTicketBackHref,
 } from "./build-ticket-detail-url";
 
@@ -57,5 +62,62 @@ describe("ticket detail return navigation", () => {
 
   it("falls back to Issues for a direct ticket deep link", () => {
     expect(resolveTicketBackHref(12, null)).toBe("/build/12/issues");
+  });
+
+  it("preserves allowlisted My Work state in canonical ticket links", () => {
+    const source = new URLSearchParams(
+      "section=drafts&relation=created&q=review&projectId=12&sort=updated&dir=desc&cursor=c5&returnTo=//outside.example",
+    );
+    const returnHref = buildMyWorkReturnHref(source);
+
+    expect(returnHref).toBe(
+      "/build/my-work?q=review&cursor=c5&section=drafts&relation=created&sort=updated&dir=desc&projectId=12",
+    );
+    expect(getMyWorkTicketHref(12, "WEB", 81, returnHref)).toBe(
+      `/build/12/tickets/WEB-81?returnTo=${encodeURIComponent(returnHref)}`,
+    );
+    expect(getMyWorkTicketHref(12, null, 81, returnHref)).toBe(
+      `/build/12/tickets/81?returnTo=${encodeURIComponent(returnHref)}`,
+    );
+    expect(resolveTicketBackHref(12, returnHref)).toBe(returnHref);
+  });
+
+  it("rejects unsafe My Work returns and bounds long filter state", () => {
+    expect(resolveTicketBackHref(12, "/build/my-work?redirect=//outside.example")).toBe(
+      "/build/12/issues",
+    );
+    expect(resolveTicketBackHref(12, "//outside.example/build/my-work")).toBe(
+      "/build/12/issues",
+    );
+    expect(buildMyWorkReturnHref(new URLSearchParams({ q: "x".repeat(2100) }))).toBe(
+      "/build/my-work",
+    );
+    expect(getMyWorkTicketHref(12, "WEB", 81, "//outside.example")).toBe(
+      "/build/12/tickets/WEB-81?returnTo=%2Fbuild%2F12%2Fissues",
+    );
+  });
+});
+
+describe("canonical record URLs — non-ticket record types use their own canonical paths", () => {
+  it("buildEpicDetailUrl returns the canonical epic path with projectId and epicId", () => {
+    expect(buildEpicDetailUrl(12, 55)).toBe("/build/12/epics/55");
+  });
+
+  it("buildEpicDetailUrl appends returnTo when provided so the user can navigate back", () => {
+    expect(buildEpicDetailUrl(12, 55, "/build/12/issues")).toBe(
+      "/build/12/epics/55?returnTo=%2Fbuild%2F12%2Fissues",
+    );
+  });
+
+  it("buildEpicDetailUrl omits returnTo when not provided, keeping the URL clean", () => {
+    expect(buildEpicDetailUrl(12, 55, null)).toBe("/build/12/epics/55");
+  });
+
+  it("buildPersonDetailUrl returns the canonical HR employee path", () => {
+    expect(buildPersonDetailUrl("emp-abc-123")).toBe("/hr/employees/emp-abc-123");
+  });
+
+  it("buildClientDetailUrl returns the canonical CRM client path", () => {
+    expect(buildClientDetailUrl(99)).toBe("/crm/clients/99");
   });
 });

@@ -206,6 +206,7 @@ function CreateTicketDialogContent({
   const handleOpenTrigger = useCallback(() => setOpen(true), [setOpen]);
   const handleOpenChange = useCallback(
     (v: boolean) => {
+      if (!v && (isPending || isUploading)) return;
       if (!v) {
         titleInlineSession?.reject();
         descriptionInlineSession?.reject();
@@ -227,13 +228,16 @@ function CreateTicketDialogContent({
       titleInlineSession,
       descriptionInlineSession,
       fieldsInlineSession,
+      isPending,
+      isUploading,
     ],
   );
 
   const handleProjectChange = useCallback((value: string) => {
+    if (isPending || isUploading) return;
     const parsed = Number(value);
     setSelectedProjectId(Number.isFinite(parsed) ? parsed : null);
-  }, []);
+  }, [isPending, isUploading]);
 
   const handleShowLinksEditor = useCallback(() => setShowLinksEditor(true), []);
   const handleCreateMoreChange = useCallback(
@@ -354,7 +358,7 @@ function CreateTicketDialogContent({
               <Select
                 value={projectSelectValue}
                 onValueChange={handleProjectChange}
-                disabled={projectLocked || projectsLoading}
+                disabled={projectLocked || projectsLoading || isPending || isUploading}
               >
                 <SelectTrigger
                   aria-label="Select project"

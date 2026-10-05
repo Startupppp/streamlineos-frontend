@@ -5,6 +5,8 @@ import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import {
   buildFromDisk,
+  generateContent,
+  normaliseGeneratedContent,
   normaliseRequestPath,
   resolveHookOperations,
   responseDataSchema,
@@ -19,17 +21,13 @@ const GENERATED_PATH = join(FRONTEND_ROOT, "contracts", "build-contracts.generat
 
 const MIN_SCHEMAS = 300;
 
-function normalise(text) {
-  return text.replace(/\r\n/g, "\n");
-}
-
 export function extractOpenapiHash(source) {
-  const match = source.match(/OPENAPI_HASH = "sha256:([0-9a-f]{64})" as const/);
+  const match = source.match(/^\s*export\s+const\s+OPENAPI_HASH\s*=\s*"sha256:([0-9a-f]{64})"\s+as\s+const\b/m);
   return match ? match[1] : null;
 }
 
 export function countGeneratedSchemas(source) {
-  return [...source.matchAll(/^export const \w+(?:Response|Body)Schema = /gm)].length;
+  return [...source.matchAll(/^export\s+const\s+\w+(?:Response|Body)Schema\s*=/gm)].length;
 }
 
 export function checkWellFormed(source, minSchemas = MIN_SCHEMAS) {
@@ -68,6 +66,9 @@ function runSelfTest() {
     extractOpenapiHash(`export const OPENAPI_HASH = "sha256:${validHash}" as const;`) === validHash,
   );
   assert("returns null when no OPENAPI_HASH constant is present", extractOpenapiHash("no hash here") === null);
+  assert("accepts a formatted multiline exported hash", extractOpenapiHash(`export const OPENAPI_HASH =\r\n  "sha256:${validHash}" as const;`) === validHash);
+  assert("rejects a non-exported hash", extractOpenapiHash(`const OPENAPI_HASH = "sha256:${validHash}" as const;`) === null);
+  assert("rejects an oversized hash", extractOpenapiHash(`export const OPENAPI_HASH = "sha256:${validHash}a" as const;`) === null);
   assert(
     "rejects a hash shorter than 64 hex characters so a truncated write cannot pass",
     extractOpenapiHash(`export const OPENAPI_HASH = "sha256:abc" as const;`) === null,
@@ -77,6 +78,21 @@ function runSelfTest() {
     countGeneratedSchemas("export const aResponseSchema = x;\nexport const bBodySchema = y;\nexport const genXSchema = a;\nexport type AResponse = z.infer<typeof a>;\n") === 2,
   );
   assert("counts zero schemas in an empty file so a blank file cannot pass", countGeneratedSchemas("") === 0);
+  assert("counts multiline response and body declarations", countGeneratedSchemas("export const aResponseSchema =\n  x;\nexport const bBodySchema =\n  y;\n") === 2);
+  const compactSyntax = 'import { z } from "zod"; export const valueResponseSchema = z.object({"title": z.string(), "items": z.array(z.number())}); export type Value = { readonly title: string };';
+  const formattedSyntax = "import { z } from 'zod';\nexport const valueResponseSchema = z.object({\n  title: z.string(),\n  items: z.array(z.number()),\n});\nexport type Value = { readonly title: string; };\n";
+  assert("syntax comparison accepts layout, quotes and trailing commas", normaliseGeneratedContent(compactSyntax) === normaliseGeneratedContent(formattedSyntax));
+  assert("syntax comparison preserves schema changes", normaliseGeneratedContent(compactSyntax) !== normaliseGeneratedContent(compactSyntax.replace("z.string()", "z.string().nullable()")));
+  assert("syntax comparison preserves literal changes", normaliseGeneratedContent("export const value = z.literal('a');") !== normaliseGeneratedContent("export const value = z.literal('b');"));
+  assert("syntax comparison preserves declaration mutability", normaliseGeneratedContent("export const value = z.number();") !== normaliseGeneratedContent("export let value = z.number();"));
+  assert("syntax comparison preserves readonly types", normaliseGeneratedContent(compactSyntax) !== normaliseGeneratedContent(compactSyntax.replace("readonly title", "title")));
+  assert("syntax comparison preserves numeric versus string type keys", normaliseGeneratedContent('export type Value = { "1": string };') !== normaliseGeneratedContent("export type Value = { 1: string };"));
+  const numericDocument = { paths: { "/build/numeric": { get: { operationId: "Numeric_read", responses: { "200": { content: { "application/json": { schema: { type: "object", properties: { "1": { type: "string" } }, required: ["1"] } } } } } } } } };
+  const numericGenerated = generateContent(numericDocument, validHash, [{ method: "get", path: "/build/numeric", operationId: "Numeric_read" }]);
+  const numericChanged = numericGenerated.replace('"1":', "1:");
+  assert("syntax comparison detects numeric key drift in real generated schema inference", numericChanged !== numericGenerated && normaliseGeneratedContent(numericGenerated) !== normaliseGeneratedContent(numericChanged));
+  assert("syntax comparison preserves line-sensitive return behavior", normaliseGeneratedContent("export const value = () => { return 1; };") !== normaliseGeneratedContent("export const value = () => { return\n1; };"));
+  assert("syntax comparison rejects malformed TypeScript", throws(() => normaliseGeneratedContent("export const value = z.object({);")));
   assert("a file at the schema floor with a hash is well-formed", checkWellFormed(makeSource()).ok);
   assert(
     "a file below the schema floor is malformed so a truncated generate cannot pass",
@@ -102,7 +118,135 @@ function runSelfTest() {
   );
   assert("OpenAPI 3.0 nullable:true is honoured", zodFor({ type: "string", nullable: true }, ctx()) === "z.string().nullable()");
   assert("a const becomes a literal", zodFor({ type: "boolean", const: true }, ctx()) === "z.literal(true)");
-  assert("an integer becomes z.number().int()", zodFor({ type: "integer", minimum: -9, maximum: 9 }, ctx()) === "z.number().int()");
+  const boundedInteger = evaluate(zodFor({ type: "integer", minimum: -9, maximum: 9 }, ctx()));
+  assert(
+    "integer bounds accept both endpoints and reject outside values, fractions and numeric strings",
+    [-9, 0, 9].every((value) => boundedInteger.safeParse(value).success) &&
+      [-10, 10, 0.5, "1"].every((value) => !boundedInteger.safeParse(value).success),
+  );
+  for (const type of ["integer", "number"]) {
+    const exclusiveBoolean = evaluate(zodFor({ type, minimum: -1, maximum: 2, exclusiveMinimum: true, exclusiveMaximum: true }, ctx()));
+    assert(
+      `${type} honours OpenAPI 3.0 boolean exclusive bounds`,
+      exclusiveBoolean.safeParse(0).success && [-1, 2, -2, 3].every((value) => !exclusiveBoolean.safeParse(value).success),
+    );
+    const inclusiveBoolean = evaluate(zodFor({ type, minimum: -1, maximum: 2, exclusiveMinimum: false, exclusiveMaximum: false }, ctx()));
+    assert(
+      `${type} keeps endpoints with false boolean exclusivity`,
+      [-1, 2].every((value) => inclusiveBoolean.safeParse(value).success) &&
+        [-2, 3].every((value) => !inclusiveBoolean.safeParse(value).success),
+    );
+    const exclusiveNumeric = evaluate(zodFor({ type, exclusiveMinimum: -1, exclusiveMaximum: 2 }, ctx()));
+    assert(
+      `${type} honours OpenAPI 3.1 numeric exclusive bounds`,
+      exclusiveNumeric.safeParse(0).success && [-1, 2, -2, 3].every((value) => !exclusiveNumeric.safeParse(value).success),
+    );
+    for (const key of ["minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum"]) {
+      assert(
+        `${type} rejects malformed or nonfinite ${key} constraints`,
+        ["0", null, undefined, {}, [], NaN, Infinity, -Infinity].every((value) =>
+          throws(() => zodFor({ type, [key]: value }, ctx())),
+        ),
+      );
+      if (key === "minimum" || key === "maximum") {
+        assert(
+          `${type} refuses boolean ${key} values instead of coercing them`,
+          [true, false].every((value) => throws(() => zodFor({ type, [key]: value }, ctx()))),
+        );
+      }
+    }
+    for (const key of ["exclusiveMinimum", "exclusiveMaximum"]) {
+      assert(
+        `${type} refuses boolean ${key} without its companion bound`,
+        [true, false].every((value) => throws(() => zodFor({ type, [key]: value }, ctx()))),
+      );
+    }
+  }
+  const decimalRange = evaluate(zodFor({ type: "number", minimum: 0.25, maximum: 0.75 }, ctx()));
+  assert(
+    "number bounds preserve fractional endpoints without integer coercion",
+    [0.25, 0.5, 0.75].every((value) => decimalRange.safeParse(value).success) &&
+      [0.24, 0.76, "0.5", NaN, Infinity].every((value) => !decimalRange.safeParse(value).success),
+  );
+  const fractionalIntegerRange = evaluate(zodFor({ type: "integer", minimum: 1.2, maximum: 2.8 }, ctx()));
+  assert(
+    "integer constraints preserve fractional bounds and still reject fractions",
+    fractionalIntegerRange.safeParse(2).success && [1, 3, 2.5].every((value) => !fractionalIntegerRange.safeParse(value).success),
+  );
+  const intersectedBounds = evaluate(zodFor({ type: "number", minimum: 2, exclusiveMinimum: 1, maximum: 5, exclusiveMaximum: 4 }, ctx()));
+  assert(
+    "coexisting inclusive and numeric exclusive bounds are both enforced",
+    [2, 3.5].every((value) => intersectedBounds.safeParse(value).success) &&
+      [1.5, 4, 5].every((value) => !intersectedBounds.safeParse(value).success),
+  );
+  const positiveId = { type: "integer", exclusiveMinimum: 0, maximum: 2147483647 };
+  for (const nullableId of [{ ...positiveId, nullable: true }, { ...positiveId, type: ["integer", "null"] }, { anyOf: [positiveId, { type: "null" }] }]) {
+    const schema = evaluate(zodFor(nullableId, ctx()));
+    assert(
+      "bounded numeric nullability preserves null, endpoints and rejection of invalid IDs",
+      [null, 1, 2147483647].every((value) => schema.safeParse(value).success) &&
+        [undefined, 0, -1, 1.5, 2147483648, "1"].every((value) => !schema.safeParse(value).success),
+    );
+  }
+  for (const mode of ["body", "response"]) {
+    const schema = evaluate(zodFor({ type: "object", properties: { linkedWorkItemId: positiveId }, additionalProperties: false }, { ...ctx(), mode }));
+    assert(
+      `${mode} numeric fields retain optionality and positive int32 boundaries`,
+      [{}, { linkedWorkItemId: 1 }, { linkedWorkItemId: 2147483647 }].every((value) => schema.safeParse(value).success) &&
+        [null, 0, -1, 1.5, 2147483648].every((value) => !schema.safeParse({ linkedWorkItemId: value }).success),
+    );
+  }
+  const emptyNumericRange = evaluate(zodFor({ type: "number", minimum: 1, maximum: 0 }, ctx()));
+  const emptyExclusiveRange = evaluate(zodFor({ type: "number", minimum: 1, exclusiveMaximum: 1 }, ctx()));
+  assert(
+    "well-formed empty numeric ranges reject every tested value without loosening the constraints",
+    [-1, 0, 0.5, 1, 2].every((value) => !emptyNumericRange.safeParse(value).success && !emptyExclusiveRange.safeParse(value).success),
+  );
+  const numericEnum = evaluate(zodFor({ type: "integer", enum: [0, 1, 2, null], minimum: 1, maximum: 1 }, ctx()));
+  assert(
+    "numeric enum constraints preserve existing nullable members and enforce bounds",
+    numericEnum.safeParse(null).success && numericEnum.safeParse(1).success &&
+      [0, 2, 3].every((value) => !numericEnum.safeParse(value).success),
+  );
+  const boundedConst = evaluate(zodFor({ type: "number", const: 0, exclusiveMinimum: 0 }, ctx()));
+  assert("numeric const values still obey exclusive bounds", !boundedConst.safeParse(0).success);
+  const boundedUnion = evaluate(zodFor({ type: "number", anyOf: [{ const: -1 }, { const: 1 }], minimum: 0 }, ctx()));
+  assert("numeric composition retains its own bounds", boundedUnion.safeParse(1).success && !boundedUnion.safeParse(-1).success);
+  for (const nullableComposite of [
+    { type: ["number", "null"], const: null, minimum: 0 },
+    { type: ["number", "null"], enum: [null], minimum: 0 },
+    { type: ["number", "null"], allOf: [{ type: ["number", "null"] }], minimum: 0 },
+  ]) {
+    const schema = evaluate(zodFor(nullableComposite, ctx()));
+    assert("numeric composite bounds retain null-only and nested nullable branches", schema.safeParse(null).success && !schema.safeParse(-1).success);
+  }
+  for (const nonnullableComposite of [
+    { type: ["number", "null"], const: 1, minimum: 0 },
+    { type: ["number", "null"], anyOf: [{ const: 1 }], minimum: 0 },
+  ]) {
+    const schema = evaluate(zodFor(nonnullableComposite, ctx()));
+    assert("adding numeric bounds cannot add null to a composite that refuses it", schema.safeParse(1).success && !schema.safeParse(null).success);
+  }
+  assert(
+    "unsupported untyped composite numeric bounds fail loudly instead of being discarded",
+    throws(() => zodFor({ anyOf: [{ type: "number" }], minimum: 0 }, ctx())) &&
+      throws(() => zodFor({ $ref: "#/components/value", minimum: 0 }, ctx({ components: { value: { type: "number" } } }))),
+  );
+  assert("untyped numeric bounds fail loudly instead of becoming z.unknown", throws(() => zodFor({ minimum: 0 }, ctx())));
+  assert(
+    "malformed bounds on numeric enum schemas cannot bypass validation",
+    throws(() => zodFor({ type: "integer", enum: [1], maximum: "2" }, ctx())),
+  );
+  const numericReferenceRoot = { components: { schemas: { Numeric: { type: "number" } } } };
+  for (const schema of [
+    { allOf: [{ $ref: "#/components/schemas/Numeric", minimum: 0 }] },
+    { type: "number", allOf: [{ $ref: "#/components/schemas/Numeric", minimum: 0 }] },
+    { allOf: [{ $ref: "#/components/schemas/Numeric", maximum: "bad" }] },
+  ]) {
+    assert("allOf cannot discard unsupported or malformed bound siblings on references", throws(() => zodFor(schema, ctx(numericReferenceRoot))));
+  }
+  const separateReferenceBounds = evaluate(zodFor({ allOf: [{ $ref: "#/components/schemas/Numeric" }, { type: "number", minimum: 0 }] }, ctx(numericReferenceRoot)));
+  assert("explicit allOf constraint branches preserve reference bounds", separateReferenceBounds.safeParse(0).success && !separateReferenceBounds.safeParse(-1).success);
   assert(
     "a date-time string is declared as an ISO datetime",
     zodFor({ type: "string", format: "date-time" }, ctx()) === "z.iso.datetime({ offset: true })",
@@ -276,7 +420,7 @@ if (currentHash !== wellFormed.hash) {
 console.log(`rule 2 OK — OPENAPI_HASH matches contracts/openapi.json (${currentHash.slice(0, 12)}...)`);
 
 const fresh = buildFromDisk();
-if (normalise(fresh.content) !== normalise(generatedSource)) {
+if (normaliseGeneratedContent(fresh.content) !== normaliseGeneratedContent(generatedSource)) {
   console.error("check:build-contracts FAILED — the generated file does not match a fresh generation.");
   console.error("  A Build hook now calls a different set of operations, or the file was edited by hand.");
   console.error("  Run: pnpm generate:build-contracts");

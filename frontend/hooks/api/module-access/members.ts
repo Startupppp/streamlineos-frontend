@@ -153,23 +153,26 @@ export function useModuleMemberCandidates(
   moduleKey: string,
   pageSize: number,
   search: string,
-  options?: { enabled?: boolean; userId?: string; excludeAssigned?: boolean },
+  options?: { enabled?: boolean; userId?: string; excludeAssigned?: boolean; includeRevoked?: boolean },
 ) {
   const canManage = useCan(manageKey(moduleKey));
   const userId = options?.userId;
   const excludeAssigned = options?.excludeAssigned ?? true;
+  const includeRevoked = options?.includeRevoked ?? false;
   return useQuery<CursorPaginatedResult<ModuleMemberCandidate>, Error>({
     queryKey: directoryAndOwnershipQueryKeys.moduleAccess.memberCandidates(moduleKey, {
       pageSize,
       search,
       userId,
       excludeAssigned,
+      includeRevoked,
     }),
     queryFn: ({ signal }) => {
       const params = new URLSearchParams({ pageSize: String(pageSize) });
       if (search) params.set("search", search);
       if (userId) params.set("userId", userId);
       params.set("excludeAssigned", String(excludeAssigned));
+      if (includeRevoked) params.set("includeRevoked", "true");
       return apiClient.get(
         `/module-access/${moduleKey}/member-candidates?${params.toString()}`,
         undefined,
@@ -179,7 +182,13 @@ export function useModuleMemberCandidates(
     },
     enabled: canManage && (options?.enabled ?? true),
     staleTime: 5 * 60_000,
-    placeholderData: (previous) => previous,
+    placeholderData: (previous, previousQuery) => {
+      const previousParams = previousQuery?.queryKey.at(-1);
+      if (typeof previousParams !== "object" || previousParams === null) return undefined;
+      return "includeRevoked" in previousParams && previousParams.includeRevoked === includeRevoked
+        ? previous
+        : undefined;
+    },
   });
 }
 

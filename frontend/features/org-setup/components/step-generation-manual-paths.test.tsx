@@ -48,6 +48,10 @@ jest.mock("@/hooks/api/org-setup", () => ({
     mutateAsync: mockMutateAsync,
     isPending: false,
   })),
+  useOrgSetupActivateMutation: jest.fn(() => ({
+    mutateAsync: jest.fn(),
+    isPending: false,
+  })),
 }));
 
 jest.mock("@/hooks/common/auth-hooks", () => ({
@@ -111,18 +115,21 @@ const TEST_DATA = {
   goals: [],
   industry: "IT Services",
   companyName: "Test Corp",
+  displayName: "Test Corp",
   fullName: "QA Owner",
   teamSize: "1-10",
   phone: "",
   installedApps: [],
   modules: [],
   invitees: [],
+  moduleAnswers: {},
 };
 
 const SETUP_RESPONSE = {
   success: true as const,
   orgId: "org-new",
   autoLoginToken: "magic-token-abc",
+  destination: "/dashboard",
 };
 
 const FAKE_SESSION = {

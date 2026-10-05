@@ -11,6 +11,7 @@ import {
 } from "@/lib/api-envelope";
 import { newCorrelationId, noteCorrelationId } from "./observability";
 import { IDEMPOTENCY_HEADER, newIdempotencyKey } from "@/lib/idempotency-key";
+import { assertRequestIdentity, type ExpectedRequestIdentity } from "./api-request-identity";
 
 if (!process.env.NEXT_PUBLIC_API_URL)
   throw new Error("NEXT_PUBLIC_API_URL is not set");
@@ -54,6 +55,7 @@ export interface AuthedFetchOptions {
    */
   timeoutMs?: number;
   asRealUser?: boolean;
+  expectedIdentity?: ExpectedRequestIdentity;
 }
 
 const PUBLIC_AUTH_PATHS = new Set([
@@ -368,23 +370,23 @@ export async function authedFetch(
     if (sentToken) headers.set("Authorization", `Bearer ${sentToken}`);
   }
 
+  assertRequestIdentity(sentToken, options?.expectedIdentity, combinedSignal, isImpersonating());
   let res = await fetchOrThrowTransportError(url, requestInit, headers, combinedSignal, path);
 
+  let finalToken = sentToken;
   if (!isPublic && res.status === 401) {
     const token = await refreshAfterUnauthorized(sentToken, tokenOptions);
+    assertRequestIdentity(token, options?.expectedIdentity, combinedSignal, isImpersonating());
     if (token) {
+      finalToken = token;
       headers.set("Authorization", `Bearer ${token}`);
       res = await fetchOrThrowTransportError(url, requestInit, headers, combinedSignal, path);
     }
-    if (
-      res.status === 401 &&
-      typeof window !== "undefined" &&
-      !autoSignOutSuppressed
-    ) {
-      endSession();
-    }
   }
-  if (!isPublic) await redirectForOrganizationAccessError(res);
+  if (options?.expectedIdentity !== undefined)
+    assertRequestIdentity(finalToken, options.expectedIdentity, combinedSignal, isImpersonating());
+  if (!isPublic && options?.expectedIdentity === undefined && res.status === 401 && typeof window !== "undefined" && !autoSignOutSuppressed) endSession();
+  if (!isPublic && options?.expectedIdentity === undefined) await redirectForOrganizationAccessError(res);
   return res;
 }
 
@@ -545,6 +547,7 @@ export interface RequestConfig {
   signal?: AbortSignal;
   timeoutMs?: number;
   asRealUser?: boolean;
+  expectedIdentity?: ExpectedRequestIdentity;
 }
 
 /**
@@ -566,12 +569,13 @@ export async function request(
     { ...init, headers },
     url,
     config?.signal,
-    config?.timeoutMs !== undefined || config?.asRealUser === true
+    config?.timeoutMs !== undefined || config?.asRealUser === true || config?.expectedIdentity !== undefined
       ? {
           ...(config.timeoutMs !== undefined
             ? { timeoutMs: config.timeoutMs }
             : {}),
           ...(config.asRealUser === true ? { asRealUser: true } : {}),
+          ...(config.expectedIdentity !== undefined ? { expectedIdentity: config.expectedIdentity } : {}),
         }
       : undefined,
   );
@@ -596,7 +600,9 @@ async function post<T>(
     },
     url,
     config?.signal,
-    config?.timeoutMs !== undefined ? { timeoutMs: config.timeoutMs } : undefined,
+    config?.timeoutMs !== undefined || config?.expectedIdentity !== undefined
+      ? { ...(config.timeoutMs !== undefined ? { timeoutMs: config.timeoutMs } : {}), ...(config.expectedIdentity !== undefined ? { expectedIdentity: config.expectedIdentity } : {}) }
+      : undefined,
   );
   return parseApiResponse<T>(res, await pendingContract, url);
 }
@@ -627,7 +633,9 @@ async function mutate<T>(
     },
     url,
     resolved.signal,
-    resolved.asRealUser === true ? { asRealUser: true } : undefined,
+    resolved.asRealUser === true || resolved.expectedIdentity !== undefined
+      ? { ...(resolved.asRealUser === true ? { asRealUser: true } : {}), ...(resolved.expectedIdentity !== undefined ? { expectedIdentity: resolved.expectedIdentity } : {}) }
+      : undefined,
   );
   return parseApiResponse<T>(res, await pendingContract, url);
 }

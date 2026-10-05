@@ -54,7 +54,7 @@ jest.mock("@/hooks/api/inbox", () => ({
   }),
 }));
 
-jest.mock("@/hooks/api/notifications", () => ({
+jest.mock("@/hooks/api/notifications-inbox", () => ({
   useUnreadNotificationCount: () => ({ data: { count: mockUnreadCount } }),
   useUnreadNotifications: () => ({
     data: [],

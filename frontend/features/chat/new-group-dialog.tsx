@@ -20,7 +20,7 @@ import {
   useCreateGroupChannel,
   useCreatePublicChannel,
   useCreatePrivateChannel,
-} from "@/hooks/api";
+} from "@/hooks/api/chat-core-mutations-b";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";

@@ -1,13 +1,13 @@
 # Competitor deep — Filters comparison (StreamlineOS Build)
-**Lane:** PM · **Updated:** 2026-10-01 (IST) — **UI-VERIFIED fold-in** (ClickUp · Linear · Jira CI dumps)  
-**Ask:** What filter capabilities do Directs offer vs Build today?  
-**Directs (primary):** Linear · ClickUp · Jira Cloud · monday.com · Asana  
+**Lane:** PM · **Updated:** 2026-10-01 (IST) — **UI-VERIFIED fold-in** (ClickUp · Linear · Jira CI dumps)
+**Ask:** What filter capabilities do Directs offer vs Build today?
+**Directs (primary):** Linear · ClickUp · Jira Cloud · monday.com · Asana
 **Secondary:** Zoho Projects (suite useful notes only)
 
 ### Evidence rules
 | Tier | Meaning |
 | --- | --- |
-| **Build VERIFIED** | Cite `/workspace/streamlineos-ux/competitor-deep/FILTERS-BUILD-CRAFT.md` (+ Owner evidence) |
+| **Build VERIFIED** | Cite `../../streamlineos-ux/competitor-deep/FILTERS-BUILD-CRAFT.md` (+ Owner evidence) |
 | **CI walk-confirmed / UI-VERIFIED** | Per-product `FEATURES.md` / `BUILD-GAPS.md` / `ACCOUNT.md` signed-in dumps |
 | **PUBLIC / Hypothesis** | Help-centre URL · Confidence = Hypothesis pending walk |
 | **NEED SIGNED-IN** | CI attempted; surface not reached — do **not** invent grammar |
@@ -32,7 +32,7 @@
 
 ## StreamlineOS Build today
 
-**Source of truth:** [`FILTERS-BUILD-CRAFT.md`](/workspace/streamlineos-ux/competitor-deep/FILTERS-BUILD-CRAFT.md) (Design census; backed by `FILTERS-PORTFOLIOS-OWNER.md` Account A `/build/47`).
+**Source of truth:** [`FILTERS-BUILD-CRAFT.md`](../../streamlineos-ux/competitor-deep/FILTERS-BUILD-CRAFT.md) (Design census; backed by `FILTERS-PORTFOLIOS-OWNER.md` Account A `/build/47`).
 
 ### Issues FilterBar — VERIFIED present
 
@@ -81,7 +81,7 @@
 
 ### 1. ClickUp — **UI-VERIFIED**
 
-**Evidence:** `/workspace/streamlineos-ci/competitor-deep/clickup/FEATURES.md` · `BUILD-GAPS.md` · `ACCOUNT.md` · `evidence/filters-*.png`  
+**Evidence:** `../../streamlineos-analysis-pack/01-ci/competitor-deep/clickup/FEATURES.md` · `BUILD-GAPS.md` · `ACCOUNT.md` · `evidence/filters-*.png`
 **Scope:** Signed-in Vaivammcapital · Project 1 · List/Board/Table · Free-only.
 
 | Dimension | UI-VERIFIED | Notes |
@@ -100,7 +100,7 @@
 
 ### 2. Linear — **UI-VERIFIED**
 
-**Evidence:** `/workspace/streamlineos-ci/competitor-deep/linear/FEATURES.md` · `BUILD-GAPS.md` (F-01…F-07, V-01…V-02) · `ACCOUNT.md` · `evidence/filters-*.png` / `custom-view*.png`  
+**Evidence:** `../../streamlineos-analysis-pack/01-ci/competitor-deep/linear/FEATURES.md` · `BUILD-GAPS.md` (F-01…F-07, V-01…V-02) · `ACCOUNT.md` · `evidence/filters-*.png` / `custom-view*.png`
 **Scope:** Signed-in Tarunchintakunta / team TAR · 2026-10-01 IST · Free-only UI inspection.
 
 | Dimension | UI-VERIFIED | Notes |
@@ -122,7 +122,7 @@
 
 ### 3. Jira Cloud — **UI-VERIFIED**
 
-**Evidence:** `/workspace/streamlineos-ci/competitor-deep/jira/FEATURES.md` · `BUILD-GAPS.md` · `ACCOUNT.md` · `evidence/filters-basic-more-options.png` / `filters-jql-*.png`  
+**Evidence:** `../../streamlineos-analysis-pack/01-ci/competitor-deep/jira/FEATURES.md` · `BUILD-GAPS.md` · `ACCOUNT.md` · `evidence/filters-basic-more-options.png` / `filters-jql-*.png`
 **Scope:** `https://pxc-cijira2026100.atlassian.net/issues/?jql=` · 13 seeded work items · Free signup path.
 
 | Dimension | UI-VERIFIED | Notes |
@@ -179,7 +179,7 @@
 
 ## Cross-Direct comparison matrix
 
-**Build column** = FILTERS-BUILD-CRAFT. ClickUp / Linear / Jira = **UI-VERIFIED**. monday / Asana / Zoho = PUBLIC Hypothesis.  
+**Build column** = FILTERS-BUILD-CRAFT. ClickUp / Linear / Jira = **UI-VERIFIED**. monday / Asana / Zoho = PUBLIC Hypothesis.
 Legend: **Y** present · **P** partial · **N** missing/not observed · **?** not in walk dump / pending walk.
 
 | Capability | Linear | ClickUp | Jira | monday | Asana | Zoho | **Build** |
@@ -242,16 +242,16 @@ Legend vs each Direct: **Present** (Build has it) · **Partial** · **Missing** 
 
 ## Blockers / next CI (residual)
 
-1. monday / Asana — first signed-in walks (still PUBLIC Hypothesis).  
-2. Jira — open remaining More-filters pages to confirm Labels / Parent / Fix Version if needed (Affects versions already UI-VERIFIED).  
-3. Linear — keyboard `F` not observed this walk; do not market as walk-verified.  
+1. monday / Asana — first signed-in walks (still PUBLIC Hypothesis).
+2. Jira — open remaining More-filters pages to confirm Labels / Parent / Fix Version if needed (Affects versions already UI-VERIFIED).
+3. Linear — keyboard `F` not observed this walk; do not market as walk-verified.
 4. ClickUp — custom-field filters not visible in small free workspace; re-check on richer workspace Later.
 
 ---
 
 ## Linked artifacts
 
-- Build craft: `/workspace/streamlineos-ux/competitor-deep/FILTERS-BUILD-CRAFT.md`  
-- Reasons: `PM-OWNED-REASONS.md` #12, #37, #72 + **#101–115** (filter wave + walk adds)  
-- Patterns: `UX-PATTERNS.md` §2, §6, §7 + walk-confirmed filter rows  
+- Build craft: `../../streamlineos-ux/competitor-deep/FILTERS-BUILD-CRAFT.md`
+- Reasons: `PM-OWNED-REASONS.md` #12, #37, #72 + **#101–115** (filter wave + walk adds)
+- Patterns: `UX-PATTERNS.md` §2, §6, §7 + walk-confirmed filter rows
 - CI: `clickup|linear|jira` → `FEATURES.md` · `BUILD-GAPS.md` · `ACCOUNT.md`

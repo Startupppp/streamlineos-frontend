@@ -8,6 +8,7 @@ import {
 
 const KNOWN_GOOD_INBOX_ITEM = {
   id: 1,
+  revision: 1,
   projectId: 42,
   projectName: "Deploy Platform",
   projectKey: "DP",

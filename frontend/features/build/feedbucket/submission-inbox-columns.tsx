@@ -101,7 +101,11 @@ function TypeCell(row: SubmissionRow) {
 
 function MessageCell(row: SubmissionRow) {
   return (
-    <TruncatedText text={row.message} lines={2} className="max-w-xs text-sm text-foreground" />
+    <TruncatedText
+      text={row.message}
+      lines={2}
+      className="max-w-xs text-sm text-foreground"
+    />
   );
 }
 
@@ -122,7 +126,12 @@ function AgeCell(row: SubmissionRow) {
 }
 
 export const SUBMISSION_COLUMNS: DataTableColumn<SubmissionRow>[] = [
-  { key: "screenshot", header: "", cell: ScreenshotCell, className: "w-[72px] pr-0" },
+  {
+    key: "screenshot",
+    header: "",
+    cell: ScreenshotCell,
+    className: "w-[72px] pr-0",
+  },
   { key: "type", header: "Type", cell: TypeCell, className: "w-[90px]" },
   { key: "message", header: "Message", cell: MessageCell },
   {
@@ -138,6 +147,36 @@ export const SUBMISSION_COLUMNS: DataTableColumn<SubmissionRow>[] = [
     className: "hidden sm:table-cell w-[120px] text-right",
   },
 ];
+
+function LinkedTicketCell(projectId: number) {
+  return function LinkedTicket(row: SubmissionRow) {
+    if (!row.linkedTicketKey) return null;
+    return (
+      <a
+        href={`/build/${projectId}/tickets/${encodeURIComponent(row.linkedTicketKey)}`}
+        onClick={(e) => e.stopPropagation()}
+        className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-mono bg-muted text-foreground hover:bg-accent transition-colors"
+        aria-label={`Open ticket ${row.linkedTicketKey}`}
+      >
+        {row.linkedTicketKey}
+      </a>
+    );
+  };
+}
+
+export function buildSubmissionColumnsWithLinkedTicket(
+  projectId: number,
+): DataTableColumn<SubmissionRow>[] {
+  return [
+    ...SUBMISSION_COLUMNS,
+    {
+      key: "linkedTicket",
+      header: "Ticket",
+      cell: LinkedTicketCell(projectId),
+      className: "w-[130px] hidden sm:table-cell",
+    },
+  ];
+}
 
 export function SubmissionMobileCard({
   row,

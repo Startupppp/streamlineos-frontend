@@ -19,6 +19,7 @@ import {
 import { useSubmitIntake } from "@/hooks/api/build/public-intake";
 import { useProjectIntakeForm, useSubmitPublicForm } from "@/hooks/api/build/public-form";
 import { FieldInput } from "@/features/build/forms/field-input";
+import { buildDynamicSchema, type FormField } from "@/features/build/forms/form-submission-schema";
 
 const PRIORITY_OPTIONS = [
   { value: "low", label: "Low" },
@@ -202,20 +203,98 @@ function LegacyIntakeForm({ projectId }: { projectId: string }) {
   );
 }
 
+interface DynamicIntakeFormInnerProps {
+  fields: FormField[];
+  token: string;
+}
+
+function DynamicIntakeFormInner({ fields, token }: DynamicIntakeFormInnerProps) {
+  const mutation = useSubmitPublicForm(token);
+  const { handleSubmit, control, formState: { errors } } = useForm<Record<string, unknown>>({
+    resolver: zodResolver(buildDynamicSchema(fields)),
+  });
+
+  function handleFormSubmit(values: Record<string, unknown>) {
+    mutation.mutate(values);
+  }
+
+  if (mutation.isSuccess) {
+    return (
+      <div className="text-center py-6 space-y-3">
+        <div className="w-16 h-16 rounded-full bg-status-success-surface mx-auto flex items-center justify-center">
+          <CheckCircle2 className="w-8 h-8 text-status-success-ink" />
+        </div>
+        <p className="text-lg font-medium text-foreground">Submission received</p>
+        <p className="text-sm text-muted-foreground">
+          Your response has been recorded. Thank you for taking the time to fill this out.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-5" noValidate>
+      {fields.length === 0 && (
+        <p className="text-sm text-muted-foreground text-center py-4">
+          This form has no fields configured.
+        </p>
+      )}
+      {fields.map((field) => {
+        const error = errors[field.key];
+        const errorMessage = typeof error?.message === "string" ? error.message : undefined;
+        return (
+          <Controller
+            key={field.key}
+            control={control}
+            name={field.key}
+            defaultValue={
+              field.type === "checkbox" ? false : field.type === "multiselect" ? [] : ""
+            }
+            render={({ field: controllerField }) => {
+              function handleFieldChange(v: unknown) {
+                controllerField.onChange(v);
+              }
+              return (
+                <FieldInput
+                  field={field}
+                  value={typeof controllerField.value === "string" ? controllerField.value : ""}
+                  onChange={handleFieldChange}
+                  errorMessage={errorMessage}
+                />
+              );
+            }}
+          />
+        );
+      })}
+      {mutation.isError && (
+        <p className="text-sm text-destructive" role="alert">
+          {mutation.error instanceof Error
+            ? mutation.error.message
+            : "Failed to submit. Please try again."}
+        </p>
+      )}
+      {fields.length > 0 && (
+        <Button type="submit" className="w-full h-11" disabled={mutation.isPending}>
+          {mutation.isPending ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Submitting…
+            </>
+          ) : (
+            <>
+              <Send className="h-4 w-4" />
+              Submit
+            </>
+          )}
+        </Button>
+      )}
+    </form>
+  );
+}
+
 function DynamicIntakeForm({ projectId }: { projectId: string }) {
   const formQuery = useProjectIntakeForm(projectId);
   const form = formQuery.data;
-  const token = form?.publicToken ?? "";
-  const mutation = useSubmitPublicForm(token);
-
-  const { handleSubmit, control, formState: { errors } } = useForm<Record<string, string>>({});
-
-  const handleFormSubmit = useCallback(
-    (values: Record<string, string>) => {
-      mutation.mutate(values);
-    },
-    [mutation],
-  );
 
   if (formQuery.isPending) {
     return (
@@ -235,70 +314,11 @@ function DynamicIntakeForm({ projectId }: { projectId: string }) {
     return null;
   }
 
-  if (mutation.isSuccess) {
-    return (
-      <div className="text-center py-6 space-y-3">
-        <div className="w-16 h-16 rounded-full bg-status-success-surface mx-auto flex items-center justify-center">
-          <CheckCircle2 className="w-8 h-8 text-status-success-ink" />
-        </div>
-        <p className="text-lg font-medium text-foreground">Submission received</p>
-        <p className="text-sm text-muted-foreground">
-          Your response has been recorded. Thank you for taking the time to fill this out.
-        </p>
-      </div>
-    );
-  }
-
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-5" noValidate>
-      {form.fields.length === 0 && (
-        <p className="text-sm text-muted-foreground text-center py-4">
-          This form has no fields configured.
-        </p>
-      )}
-      {form.fields.map((field) => {
-        const error = errors[field.key];
-        const errorMessage = typeof error?.message === "string" ? error.message : undefined;
-        return (
-          <Controller
-            key={field.key}
-            control={control}
-            name={field.key}
-            defaultValue=""
-            render={({ field: controllerField }) => (
-              <FieldInput
-                field={field}
-                value={controllerField.value ?? ""}
-                onChange={controllerField.onChange}
-                errorMessage={errorMessage}
-              />
-            )}
-          />
-        );
-      })}
-      {mutation.isError && (
-        <p className="text-sm text-destructive" role="alert">
-          {mutation.error instanceof Error
-            ? mutation.error.message
-            : "Failed to submit. Please try again."}
-        </p>
-      )}
-      {form.fields.length > 0 && (
-        <Button type="submit" className="w-full h-11" disabled={mutation.isPending}>
-          {mutation.isPending ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Submitting…
-            </>
-          ) : (
-            <>
-              <Send className="h-4 w-4" />
-              Submit
-            </>
-          )}
-        </Button>
-      )}
-    </form>
+    <DynamicIntakeFormInner
+      fields={form.fields}
+      token={form.publicToken ?? ""}
+    />
   );
 }
 

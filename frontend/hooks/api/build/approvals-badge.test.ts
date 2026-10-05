@@ -7,10 +7,12 @@ import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 
 jest.mock("@/lib/api-client", () => ({
+  isImpersonating: () => false,
   apiClient: {
     get: jest.fn().mockResolvedValue({ count: 3 }),
     patch: jest.fn().mockResolvedValue({
       id: 1,
+      revision: 2,
       orgId: "org-1",
       projectId: 42,
       entityType: "task",
@@ -32,6 +34,7 @@ jest.mock("@/lib/api-client", () => ({
     delete: jest.fn().mockResolvedValue(undefined),
   },
 }));
+jest.mock("next-auth/react", () => ({ useSession: () => ({ status: "authenticated", data: { orgId: "org-1", sessionId: "session-1", user: { id: "user-1" } } }) }));
 
 const mockUseCan = jest.fn<boolean, [string]>().mockReturnValue(true);
 
@@ -63,13 +66,8 @@ jest.mock("@/hooks/api/access", () => ({
 }));
 
 jest.mock("@/lib/api-envelope", () => ({
+  ...jest.requireActual("@/lib/api-envelope"),
   lazyContract: (fn: () => unknown) => fn,
-}));
-
-jest.mock("@/hooks/api/build/approvals-schema", () => ({
-  approvalInboxPageContract: { parse: (v: unknown) => v },
-  approvalPageContract: { parse: (v: unknown) => v },
-  approvalRowContract: { parse: (v: unknown) => v },
 }));
 
 jest.mock("@/hooks/api/notifications-schema", () => ({
@@ -126,7 +124,7 @@ describe("useBuildNotificationUnreadCount — badge permission gate", () => {
   });
 });
 
-describe("useDecideApproval — BSN-03-024 cache-patch approach", () => {
+describe("useDecideApproval — authoritative queue reconciliation", () => {
   let client: QueryClient;
 
   beforeEach(() => {
@@ -142,39 +140,42 @@ describe("useDecideApproval — BSN-03-024 cache-patch approach", () => {
     ]);
   });
 
-  it("decrements the inbox count in cache without a network round-trip on the count key", async () => {
+  it("invalidates the count without assuming the decision removes exactly one eligible item", async () => {
     const { result } = renderHook(() => useDecideApproval(42), {
       wrapper: wrap(client),
     });
     await act(async () => {
       await result.current.mutateAsync({
         approvalId: 1,
+        expectedRevision: 1,
         decision: "approved",
       });
     });
     const count = client.getQueryData<{ count: number }>(
       buildWorkQueryKeys.projects.approvals.inboxCount(),
     );
-    expect(count).toEqual({ count: 2 });
+    expect(count).toEqual({ count: 3 });
+    expect(client.getQueryState(buildWorkQueryKeys.projects.approvals.inboxCount())?.isInvalidated).toBe(true);
   });
 
-  it("removes the decided approval from the inbox list cache", async () => {
+  it("retains rows until the current filtered list is reconciled", async () => {
     const { result } = renderHook(() => useDecideApproval(42), {
       wrapper: wrap(client),
     });
     await act(async () => {
       await result.current.mutateAsync({
         approvalId: 1,
+        expectedRevision: 1,
         decision: "approved",
       });
     });
     const list = client.getQueryData<{ id: number }[]>(
       buildWorkQueryKeys.projects.approvals.inbox(),
     );
-    expect(list?.map((i) => i.id)).toEqual([2]);
+    expect(list?.map((i) => i.id)).toEqual([1, 2]);
   });
 
-  it("does not invalidate the inbox prefix — acting on last item patches, not refetches", async () => {
+  it("invalidates every filtered approval inbox through its canonical prefix", async () => {
     const invalidateSpy = jest.spyOn(client, "invalidateQueries");
     const { result } = renderHook(() => useDecideApproval(42), {
       wrapper: wrap(client),
@@ -182,21 +183,14 @@ describe("useDecideApproval — BSN-03-024 cache-patch approach", () => {
     await act(async () => {
       await result.current.mutateAsync({
         approvalId: 1,
+        expectedRevision: 1,
         decision: "approved",
       });
     });
-    const calledWithInboxPrefix = invalidateSpy.mock.calls.some((call) => {
-      const key = (call[0] as { queryKey?: unknown[] }).queryKey;
-      return (
-        Array.isArray(key) &&
-        key.join(",") ===
-          buildWorkQueryKeys.projects.approvals.inbox().join(",")
-      );
-    });
-    expect(calledWithInboxPrefix).toBe(false);
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: buildWorkQueryKeys.projects.approvals.inbox() });
   });
 
-  it("clamps inbox count to zero when acting on the last pending item", async () => {
+  it("preserves a cached last-item count until an authoritative read", async () => {
     client.setQueryData(buildWorkQueryKeys.projects.approvals.inboxCount(), {
       count: 1,
     });
@@ -206,13 +200,14 @@ describe("useDecideApproval — BSN-03-024 cache-patch approach", () => {
     await act(async () => {
       await result.current.mutateAsync({
         approvalId: 1,
+        expectedRevision: 1,
         decision: "approved",
       });
     });
     const count = client.getQueryData<{ count: number }>(
       buildWorkQueryKeys.projects.approvals.inboxCount(),
     );
-    expect(count).toEqual({ count: 0 });
+    expect(count).toEqual({ count: 1 });
   });
 });
 
@@ -266,7 +261,7 @@ describe("BSN-03 — badge query error safety", () => {
   });
 });
 
-describe("useDeleteApproval — BSN-03-024 cache-patch on delete", () => {
+describe("useDeleteApproval — authoritative queue reconciliation", () => {
   let client: QueryClient;
 
   beforeEach(() => {
@@ -282,12 +277,12 @@ describe("useDeleteApproval — BSN-03-024 cache-patch on delete", () => {
     ]);
   });
 
-  it("decrements inbox count and removes the deleted approval from the inbox list", async () => {
+  it("invalidates list and count without writing an assumed count or a stale row snapshot", async () => {
     const { result } = renderHook(() => useDeleteApproval(42), {
       wrapper: wrap(client),
     });
     await act(async () => {
-      await result.current.mutateAsync(10);
+      await result.current.mutateAsync({ approvalId: 10, expectedRevision: 1 });
     });
     const count = client.getQueryData<{ count: number }>(
       buildWorkQueryKeys.projects.approvals.inboxCount(),
@@ -295,7 +290,8 @@ describe("useDeleteApproval — BSN-03-024 cache-patch on delete", () => {
     const list = client.getQueryData<{ id: number }[]>(
       buildWorkQueryKeys.projects.approvals.inbox(),
     );
-    expect(count).toEqual({ count: 1 });
-    expect(list?.map((i) => i.id)).toEqual([11]);
+    expect(count).toEqual({ count: 2 });
+    expect(list?.map((i) => i.id)).toEqual([10, 11]);
+    expect(client.getQueryState(buildWorkQueryKeys.projects.approvals.inbox())?.isInvalidated).toBe(true);
   });
 });

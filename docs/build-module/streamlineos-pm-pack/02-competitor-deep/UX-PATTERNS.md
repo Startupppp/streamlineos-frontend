@@ -1,6 +1,6 @@
 # UX patterns — extract for Build (ADOPT / ADAPT / AVOID)
-**Lane:** PM (+ Design consult) · **Updated:** 2026-10-01 (IST) — **UI-VERIFIED filters fold** (ClickUp · Linear · Jira)  
-**Sources:** UX Completeness notes, `FILTERS-BUILD-CRAFT.md`, CI `clickup|linear|jira/FEATURES.md`, Freeze PRDs, public Direct help centres (monday/Asana/Zoho).  
+**Lane:** PM (+ Design consult) · **Updated:** 2026-10-01 (IST) — **UI-VERIFIED filters fold** (ClickUp · Linear · Jira)
+**Sources:** UX Completeness notes, `FILTERS-BUILD-CRAFT.md`, CI `clickup|linear|jira/FEATURES.md`, Freeze PRDs, public Direct help centres (monday/Asana/Zoho).
 **Method:** Build Completeness + CI walk-confirmed ADOPT/ADAPT/AVOID for filters. **Do not invent signed-in UI** beyond FEATURES dumps. monday/Asana remain PUBLIC Hypothesis.
 
 ---
@@ -102,7 +102,7 @@
 
 ## 7. Filters
 
-**Build SoT:** `/workspace/streamlineos-ux/competitor-deep/FILTERS-BUILD-CRAFT.md` · PM matrix: `FILTERS.md`  
+**Build SoT:** `../../streamlineos-ux/competitor-deep/FILTERS-BUILD-CRAFT.md` · PM matrix: `FILTERS.md`
 **CI walks (2026-10-01 IST):** ClickUp / Linear / Jira Filters = **UI-VERIFIED** (`FEATURES.md` + `BUILD-GAPS.md`).
 
 | Pattern | Build evidence | Tag | Guidance |

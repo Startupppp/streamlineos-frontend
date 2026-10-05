@@ -16,7 +16,7 @@ export function BackendUnavailableView() {
           <code className="rounded bg-muted px-1 text-xs">NEXT_PUBLIC_API_URL</code> matches its address.
         </p>
         <Link
-          href="/build"
+          href="/build/projects"
           className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground"
         >
           Back to Projects

@@ -13,6 +13,9 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { useIsMobile } from "@/hooks/common/use-mobile";
+import { useCan } from "@/hooks/api/access";
+import { useUpdateTicketVisibility } from "@/hooks/api/build/client-portal";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { PriorityBadge } from "../shared/priority-badge";
 import { StatusBadge } from "@/components/shared/ticket-status-badge";
@@ -44,6 +47,7 @@ interface TicketDetailRightPanelProps {
     timeSpent?: string | null;
     originalEstimate?: string | null;
     link?: string | null;
+    clientVisible?: boolean | null;
     labels?: Array<{
       label?: { id: number; name: string; color: string | null } | null;
     }>;
@@ -108,6 +112,9 @@ function TicketDetailRightPanelBody({
   canUpdate: boolean;
   canAssign: boolean;
 }) {
+  const canViewTimesheets = useCan("build:timesheets:view");
+  const canManageClientVisibility = useCan("build:clientvisibility:manage");
+  const updateVisibility = useUpdateTicketVisibility(projectId);
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
       <div className="shrink-0 border-b border-border bg-card px-4 py-3 md:border md:border-l-0">
@@ -153,11 +160,26 @@ function TicketDetailRightPanelBody({
         <div className="space-y-4 bg-card px-4 py-3">
           <TicketGitLinks projectId={projectId} ticketId={ticketId} />
           <TicketRelatedLinks projectId={projectId} ticketId={ticketId} />
-          <TicketTimeTracker
-            ticketId={ticketId}
-            projectId={projectId}
-            timeSpent={ticket.timeSpent ?? null}
-          />
+          {canViewTimesheets ? (
+            <TicketTimeTracker
+              ticketId={ticketId}
+              projectId={projectId}
+              timeSpent={ticket.timeSpent ?? null}
+            />
+          ) : null}
+          {canManageClientVisibility ? (
+            <div className="flex items-center justify-between gap-3 py-1">
+              <span className="text-sm text-muted-foreground">Share with client</span>
+              <Switch
+                checked={ticket.clientVisible ?? false}
+                disabled={updateVisibility.isPending}
+                aria-label="Share this ticket with the client portal"
+                onCheckedChange={(checked) => {
+                  updateVisibility.mutate({ ticketId, clientVisible: checked, version: ticket.version });
+                }}
+              />
+            </div>
+          ) : null}
           <WatcherList projectId={projectId} ticketId={ticketId} />
         </div>
       </div>

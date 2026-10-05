@@ -1,8 +1,8 @@
 # Build filter craft — Design census (handoff for PM FILTERS.md)
 
-**Owner:** Principal Product Designer  
-**Source of truth:** `/workspace/streamlineos-ux/FILTERS-PORTFOLIOS-OWNER.md` (Account A `/build/47`)  
-**Updated:** 2026-10-01  
+**Owner:** Principal Product Designer
+**Source of truth:** `../FILTERS-PORTFOLIOS-OWNER.md` (Account A `/build/47`)
+**Updated:** 2026-10-01
 **Purpose:** Exact Build grammar so PM/CI compare Directs without inventing Build capabilities.
 
 ## Issues FilterBar — VERIFIED present
@@ -34,19 +34,19 @@ Projects / Products / Portfolios / Programs / Goals / Roadmap repeat Status / Ow
 
 ## Design ADOPT targets (for PM sellable framing)
 
-1. **Labels** filter (UX-026) — Freelancer tags + PM feature slices  
-2. **Epic relation** filter (UX-027) — PM “work in this epic”  
-3. **Release** filter once membership works (UX-025) — PM/PjM ship set  
-4. Keep chip + URL shareability (PARITY strength)  
-5. Saved views / Set as default — Linear Display docs Hypothesis until walk  
+1. **Labels** filter (UX-026) — Freelancer tags + PM feature slices
+2. **Epic relation** filter (UX-027) — PM “work in this epic”
+3. **Release** filter once membership works (UX-025) — PM/PjM ship set
+4. Keep chip + URL shareability (PARITY strength)
+5. Saved views / Set as default — Linear Display docs Hypothesis until walk
 
 ## Evidence
 `/workspace/streamlineos-ux/evidence/` — `issues-*-filter*.webp` / labels-missing (see FILTERS-PORTFOLIOS-OWNER.md list)
 
 ## CI / PM sync
-- CI: put Direct filter grammar in FEATURES Filters section (ClickUp next; Linear blocked anti-bot)  
-- PM: `FILTERS.md` matrix should cite this file for Build column  
-- Design: fold walk-confirmed Direct operators into `patterns/FILTER-GRAMMAR.md` as dumps land  
+- CI: put Direct filter grammar in FEATURES Filters section (ClickUp next; Linear blocked anti-bot)
+- PM: `FILTERS.md` matrix should cite this file for Build column
+- Design: fold walk-confirmed Direct operators into `patterns/FILTER-GRAMMAR.md` as dumps land
 
 ---
 

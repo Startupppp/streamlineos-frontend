@@ -1,7 +1,7 @@
 # Jira deep fold — PM lane
 **Walk:** 2026-10-01 (IST) · signed-in Jira Cloud free-signup path
 **Scope:** Free-only, read-only UI inspection; no issue creation, plan creation, app installation, settings change, payment, or upgrade action.
-**CI source:** `/workspace/streamlineos-ci/competitor-deep/jira/FEATURES.md`, `BUILD-GAPS.md`, `PAGE-INVENTORY.md`, `ACCOUNT.md`, `WALK-NOTES.json`
+**CI source:** `../../streamlineos-analysis-pack/01-ci/competitor-deep/jira/FEATURES.md`, `BUILD-GAPS.md`, `PAGE-INVENTORY.md`, `ACCOUNT.md`, `WALK-NOTES.json`
 **Site:** `https://pxc-cijira2026100.atlassian.net` · space/project: **CI Jira**
 
 ## Surfaces UI-VERIFIED

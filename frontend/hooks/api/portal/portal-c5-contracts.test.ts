@@ -21,43 +21,61 @@ const VALID_OVERVIEW = {
     canViewAttachments: false,
     canViewComments: false,
     canSubmitChangeRequests: true,
+    canViewApprovals: false,
+    canViewInvoices: false,
+    canViewRequests: false,
   },
   milestones: [],
+  requests: [],
   tasks: [],
   attachments: [],
   comments: [],
+  deliverables: [],
+  approvals: [],
+  invoices: [],
 };
 
-describe("SPEC 7 — portal project list schema (Requirement C5)", () => {
-  it("accepts a valid array of portal projects", () => {
+describe("SPEC 7 — portal project list schema (Requirement C5, BE-24/BE-25 keyset cursor)", () => {
+  const VALID_PAGE = { data: [VALID_PROJECT], hasMore: false, nextCursor: null };
+
+  it("accepts a valid cursor page object with data, hasMore and nextCursor", () => {
+    const result = backendPortalProjectListSchema.safeParse(VALID_PAGE);
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts an empty data array when no projects are granted — hasMore is false and nextCursor is null", () => {
+    const result = backendPortalProjectListSchema.safeParse({ data: [], hasMore: false, nextCursor: null });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts hasMore=true with a numeric nextCursor so the client knows to fetch the next page", () => {
+    const result = backendPortalProjectListSchema.safeParse({ data: [VALID_PROJECT], hasMore: true, nextCursor: 42 });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects a bare array — the backend now returns a cursor page envelope not a raw array", () => {
     const result = backendPortalProjectListSchema.safeParse([VALID_PROJECT]);
-    expect(result.success).toBe(true);
-  });
-
-  it("accepts an empty array (no granted projects)", () => {
-    const result = backendPortalProjectListSchema.safeParse([]);
-    expect(result.success).toBe(true);
-  });
-
-  it("rejects a non-array response — the backend wraps it in an envelope so a bare object is a contract violation", () => {
-    const result = backendPortalProjectListSchema.safeParse(VALID_PROJECT);
     expect(result.success).toBe(false);
   });
 
-  it("rejects a project row missing the required 'id' field", () => {
-    const { id: _id, ...withoutId } = VALID_PROJECT;
-    const result = backendPortalProjectListSchema.safeParse([withoutId]);
+  it("rejects a page object missing the required 'data' field", () => {
+    const { data: _d, ...withoutData } = VALID_PAGE;
+    const result = backendPortalProjectListSchema.safeParse(withoutData);
     expect(result.success).toBe(false);
   });
 
-  it("rejects a project row where 'id' is a string instead of integer", () => {
-    const result = backendPortalProjectListSchema.safeParse([{ ...VALID_PROJECT, id: "not-an-int" }]);
+  it("rejects a page object missing the required 'hasMore' field", () => {
+    const { hasMore: _h, ...withoutHasMore } = VALID_PAGE;
+    const result = backendPortalProjectListSchema.safeParse(withoutHasMore);
     expect(result.success).toBe(false);
   });
 
-  it("rejects a project row where 'name' is absent", () => {
-    const { name: _n, ...withoutName } = VALID_PROJECT;
-    const result = backendPortalProjectListSchema.safeParse([withoutName]);
+  it("rejects a project row inside data where 'id' is a string instead of integer", () => {
+    const result = backendPortalProjectListSchema.safeParse({
+      data: [{ ...VALID_PROJECT, id: "not-an-int" }],
+      hasMore: false,
+      nextCursor: null,
+    });
     expect(result.success).toBe(false);
   });
 });
@@ -99,6 +117,9 @@ describe("SPEC 8 — portal project overview schema (Requirement C5)", () => {
         canViewAttachments: false,
         canViewComments: false,
         canSubmitChangeRequests: false,
+        canViewApprovals: false,
+        canViewInvoices: false,
+        canViewRequests: false,
       },
     };
     const result = backendPortalProjectOverviewSchema.safeParse(noCapOverview);

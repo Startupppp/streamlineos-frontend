@@ -84,10 +84,6 @@ export function useBoardUrlState(
     hasActiveFilters,
   } = useBoardFilterParams();
 
-  // `isError` travels with the rows: the ticket list flattens `query.data?.pages`
-  // into `[]`, so a 500 on GET /build/:id/tickets is indistinguishable
-  // downstream from a project that genuinely has no tickets — and the board then
-  // renders "No tickets yet" over a project with 1,850 of them.
   const {
     data: boardTickets,
     isLoading: ticketsLoading,

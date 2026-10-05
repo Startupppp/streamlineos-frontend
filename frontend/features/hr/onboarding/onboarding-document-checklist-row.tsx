@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import {
   AlertCircle,
   CheckCircle2,
@@ -23,8 +23,6 @@ import {
   docStatusLabel,
   type DocStatus,
 } from "./onboarding-doc-status";
-
-export type DocumentType = HrDocumentType;
 
 export interface OnboardingDoc {
   id: number;
@@ -50,31 +48,24 @@ function docStatusIcon(status: DocStatus) {
 }
 
 function useBlobPreviewUrl(file: File | null): string | null {
-  const [url, setUrl] = useState<string | null>(null);
-
+  const url = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
+  const prevUrl = useRef<string | null>(null);
   useEffect(() => {
-    if (!file) {
-      setUrl(null);
-      return;
-    }
-    const objectUrl = URL.createObjectURL(file);
-    setUrl(objectUrl);
-    return () => {
-      URL.revokeObjectURL(objectUrl);
-    };
-  }, [file]);
-
+    const prev = prevUrl.current;
+    prevUrl.current = url;
+    return () => { if (prev) URL.revokeObjectURL(prev); };
+  }, [url]);
   return url;
 }
 
 export type DocumentChecklistRowProps = {
-  docType: DocumentType;
+  docType: HrDocumentType;
   submission: OnboardingDoc | null;
   pendingFile: File | null;
   isWizard: boolean;
-  onPickFile: (docType: DocumentType) => void;
+  onPickFile: (docType: HrDocumentType) => void;
   onRemovePending: (documentTypeId: number) => void;
-  onOpenUpload: (docType: DocumentType, existing: OnboardingDoc | null) => void;
+  onOpenUpload: (docType: HrDocumentType, existing: OnboardingDoc | null) => void;
 };
 
 export function DocumentChecklistRow({

@@ -2,6 +2,7 @@ import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { Notification } from "@/types/notifications";
+import { ApiError } from "@/lib/api-envelope";
 import { InboxPage } from "./inbox-page";
 
 jest.mock("next/dynamic", () => (loader: () => Promise<{ default: React.ComponentType }>) => {
@@ -16,9 +17,11 @@ jest.mock("next/dynamic", () => (loader: () => Promise<{ default: React.Componen
 });
 
 let mockSearchParams = new URLSearchParams();
+let mockReadState: "ready" | "pending" | "error" = "ready";
+const mockReplace = jest.fn();
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: jest.fn() }),
+  useRouter: () => ({ replace: mockReplace }),
   usePathname: () => "/build/inbox",
   useSearchParams: () => mockSearchParams,
 }));
@@ -37,13 +40,30 @@ jest.mock("./inbox-list", () => ({
   InboxList: jest.fn(),
 }));
 
-jest.mock("./inbox-drafts-panel", () => ({
-  InboxDraftsPanel: () => <div data-testid="inbox-drafts-panel" />,
-}));
-
 jest.mock("./inbox-preview-pane", () => ({
   InboxPreviewPane: () => <div data-testid="inbox-preview-pane" />,
 }));
+jest.mock("@/hooks/api/notifications-shared", () => {
+  const owner = { identity: { orgId: "org-1", userId: "user-1", sessionId: "session-1" }, isCurrent: () => true };
+  return { useNotificationInboxInvalidation: () => ({ captureOwner: () => owner }) };
+});
+jest.mock("@/hooks/api/notifications-inbox", () => ({
+  useInboxSelectedNotification: (id: number | null) => ({ notification: id === null || mockReadState !== "ready" ? null : makeNotification(id),
+    isPending: id !== null && mockReadState === "pending", isMissing: false,
+    error: id !== null && mockReadState === "error" ? new ApiError("Unavailable", 503) : null, retry: jest.fn() }),
+  useMarkNotificationRead: () => ({ mutateAsync: jest.fn() }),
+}));
+
+jest.mock("@/hooks/api/notifications-inbox-actions", () => ({
+  useArchiveNotification: () => ({ mutateAsync: jest.fn() }),
+  useUnarchiveNotification: () => ({ mutateAsync: jest.fn() }),
+  useSnoozeNotification: () => ({ mutateAsync: jest.fn() }),
+  useUnsnoozeNotification: () => ({ mutateAsync: jest.fn() }),
+  useBulkArchive: () => ({ mutateAsync: jest.fn() }),
+  useBulkDelete: () => ({ mutateAsync: jest.fn() }),
+}));
+jest.mock("@/hooks/api/use-page-state", () => ({ usePageState: ({ isLoading, isError, error }: { isLoading: boolean; isError: boolean; error: unknown }) =>
+  isLoading ? { kind: "loading" } : isError ? { kind: "error", error } : { kind: "ready" } }));
 
 import { InboxList } from "./inbox-list";
 import { useShellVariant } from "@/components/layout/shell-variant-context";
@@ -73,17 +93,20 @@ function makeNotification(id = 42): Notification {
 beforeEach(() => {
   jest.clearAllMocks();
   mockSearchParams = new URLSearchParams();
+  mockReadState = "ready";
   (useShellVariant as jest.Mock).mockReturnValue("desktop");
   (InboxList as jest.Mock).mockImplementation(
     ({
       onSelect,
       selectedId,
       onClearSelection,
+      searchInputRef,
     }: {
       onSelect: (n: Notification) => void;
       selectedId: number | null;
       onClearSelection?: () => void;
       selectionDismissed?: boolean;
+      searchInputRef: React.RefObject<HTMLInputElement | null>;
     }) => {
       function handleSelectNotification() {
         onSelect(makeNotification(42));
@@ -93,6 +116,7 @@ beforeEach(() => {
       }
       return (
         <div data-testid="inbox-list" data-selected-id={String(selectedId ?? "null")}>
+          <input ref={searchInputRef} aria-label="Search notifications" />
           <button data-testid="select-notification" onClick={handleSelectNotification} />
           <button data-testid="auto-clear" onClick={handleAutoClear} />
         </div>
@@ -102,6 +126,23 @@ beforeEach(() => {
 });
 
 describe("InboxPage", () => {
+  it.each(["pending", "error"])("returns to the mobile list and focus during %s selected reads", async (state) => {
+    if (state !== "pending" && state !== "error") throw new Error("Unexpected read state");
+    mockReadState = state;
+    mockSearchParams = new URLSearchParams("section=SNOOZED&q=release&type=PROJECTS&projectId=54&panel=preview");
+    jest.mocked(useShellVariant).mockReturnValue("mobile");
+    const user = userEvent.setup();
+    render(<InboxPage />);
+    await user.click(await screen.findByTestId("select-notification"));
+    expect(screen.queryByTestId("inbox-preview-pane")).toBeNull();
+    const back = screen.getByRole("button", { name: "Back to inbox" });
+    await user.click(back);
+    expect(screen.getByTestId("inbox-list")).toHaveAttribute("data-selected-id", "null");
+    expect(screen.getByTestId("inbox-list").closest("div[class]")).not.toHaveClass("hidden");
+    expect(screen.getByRole("textbox", { name: "Search notifications" })).toHaveFocus();
+    expect(mockReplace).not.toHaveBeenCalled();
+    expect(mockSearchParams.toString()).toBe("section=SNOOZED&q=release&type=PROJECTS&projectId=54&panel=preview");
+  });
   it("renders the inbox list panel", async () => {
     render(<InboxPage />);
     await waitFor(() => expect(screen.getByTestId("inbox-list")).toBeInTheDocument());
@@ -156,16 +197,128 @@ describe("InboxPage", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
-  it("renders the drafts panel when view=drafts is in the URL", async () => {
-    mockSearchParams = new URLSearchParams("view=drafts");
-    render(<InboxPage />);
-    await waitFor(() => expect(screen.getByTestId("inbox-drafts-panel")).toBeInTheDocument());
-    expect(screen.queryByTestId("inbox-list")).not.toBeInTheDocument();
-  });
-
-  it("renders the inbox list when no view param is present", async () => {
+  it("renders only the notification list", async () => {
     render(<InboxPage />);
     await waitFor(() => expect(screen.getByTestId("inbox-list")).toBeInTheDocument());
-    expect(screen.queryByTestId("inbox-drafts-panel")).not.toBeInTheDocument();
+  });
+});
+
+describe("InboxPage — notification source filtering and approval click", () => {
+  it("does not select a notification from a non-Build sourceModule — selection stays null", async () => {
+    const user = userEvent.setup();
+    const nonBuildNotification: Notification = {
+      ...makeNotification(55),
+      sourceModule: "hr",
+    };
+    (InboxList as jest.Mock).mockImplementation(
+      ({
+        onSelect,
+        selectedId,
+      }: {
+        onSelect: (n: Notification) => void;
+        selectedId: number | null;
+        onClearSelection?: () => void;
+        searchInputRef: React.RefObject<HTMLInputElement | null>;
+      }) => (
+        <div
+          data-testid="inbox-list"
+          data-selected-id={String(selectedId ?? "null")}
+        >
+          <button
+            data-testid="select-non-build"
+            onClick={() => onSelect(nonBuildNotification)}
+          />
+        </div>
+      ),
+    );
+    render(<InboxPage />);
+    await waitFor(() =>
+      expect(screen.getByTestId("select-non-build")).toBeInTheDocument(),
+    );
+    await user.click(screen.getByTestId("select-non-build"));
+    await waitFor(() =>
+      expect(screen.getByTestId("inbox-list")).toHaveAttribute(
+        "data-selected-id",
+        "null",
+      ),
+    );
+  });
+
+  it("does not select a notification whose orgId does not match the session owner", async () => {
+    const user = userEvent.setup();
+    const wrongOrgNotification: Notification = {
+      ...makeNotification(66),
+      orgId: "org-other",
+    };
+    (InboxList as jest.Mock).mockImplementation(
+      ({
+        onSelect,
+        selectedId,
+      }: {
+        onSelect: (n: Notification) => void;
+        selectedId: number | null;
+        onClearSelection?: () => void;
+        searchInputRef: React.RefObject<HTMLInputElement | null>;
+      }) => (
+        <div
+          data-testid="inbox-list"
+          data-selected-id={String(selectedId ?? "null")}
+        >
+          <button
+            data-testid="select-wrong-org"
+            onClick={() => onSelect(wrongOrgNotification)}
+          />
+        </div>
+      ),
+    );
+    render(<InboxPage />);
+    await waitFor(() =>
+      expect(screen.getByTestId("select-wrong-org")).toBeInTheDocument(),
+    );
+    await user.click(screen.getByTestId("select-wrong-org"));
+    await waitFor(() =>
+      expect(screen.getByTestId("inbox-list")).toHaveAttribute(
+        "data-selected-id",
+        "null",
+      ),
+    );
+  });
+
+  it("approval notification click (sourceModule=build, category=APPROVALS) selects the notification", async () => {
+    const user = userEvent.setup();
+    const approvalNotification: Notification = {
+      ...makeNotification(77),
+      sourceModule: "build",
+      category: "PROJECTS",
+    };
+    (InboxList as jest.Mock).mockImplementation(
+      ({
+        onSelect,
+        selectedId,
+      }: {
+        onSelect: (n: Notification) => void;
+        selectedId: number | null;
+        onClearSelection?: () => void;
+        searchInputRef: React.RefObject<HTMLInputElement | null>;
+      }) => (
+        <div data-testid="inbox-list" data-selected-id={String(selectedId ?? "null")}>
+          <button
+            data-testid="select-approval"
+            onClick={() => onSelect(approvalNotification)}
+          />
+        </div>
+      ),
+    );
+    render(<InboxPage />);
+    await waitFor(() =>
+      expect(screen.getByTestId("select-approval")).toBeInTheDocument(),
+    );
+    await user.click(screen.getByTestId("select-approval"));
+    await waitFor(() =>
+      expect(screen.getByTestId("inbox-list")).toHaveAttribute(
+        "data-selected-id",
+        "77",
+      ),
+    );
   });
 });

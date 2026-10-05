@@ -82,6 +82,11 @@ const STUB_INSIGHTS_DATA: ManagedProductInsights = {
   roadmapItemsByStatus: { planned: 4, in_progress: 3, completed: 1, cancelled: 1 },
   feedbackByStatus: { open: 11, planned: 3, in_progress: 4, completed: 6, declined: 2 },
   linkedFeedbackVoteCount: 38,
+  ageDays: 120,
+  confidenceScore: null,
+  overrideReason: null,
+  overriddenBy: null,
+  overriddenAt: null,
 };
 
 function InsightsReadyFrame() {

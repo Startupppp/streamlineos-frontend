@@ -89,7 +89,7 @@ describe("useVelocityReport returns cursor envelope; consumers read pages.flatMa
   it("requests burnup for the last cycle in the flattened data, not for undefined", () => {
     render(<BurnupSection projectId={1} />);
 
-    expect(mockUseBurnupReport).toHaveBeenCalledWith(1, 3);
+    expect(mockUseBurnupReport).toHaveBeenCalledWith(1, 3, undefined);
   });
 
   it("exports one CSV row per cycle across all pages", async () => {

@@ -1,0 +1,64 @@
+# Signup and onboarding current source gap
+
+Status: Current unverified in a running application; source audit recorded 2026-10-03. Canonical target: [Signup and multi-module onboarding](../onboarding/01-signup-and-multi-module-onboarding.md). Requirement: [BLD-001–003](../implementation/REQUIREMENT-LEDGER.md). Package: `ARCH-14-ACTIVATION`.
+
+## Source-to-target matrix
+
+| Customer journey | Current source observation | Planned contract and acceptance |
+|---|---|---|
+| Step count and language | `frontend/features/org-setup/lib/constants.ts` and `frontend/app/org-setup/page.tsx` present Welcome → Basics → Invite. People is optional by content but still shown as a screen. | Workspace → Products → optional People; inline launch summary. A Build-only owner can finish with at most five visible required inputs and can skip People without an empty step. |
+| Workspace fields | `frontend/features/org-setup/lib/basics-schema.ts` requires full name, goals, industry, company name, team size, and phone; country is also visible. | Collect only what activation needs, infer reversible defaults, put profession, region, and advanced controls behind disclosure. Exact five-input count is browser-tested at desktop and mobile. |
+| Product selection | Goal chips derive a restricted set of product keys and force Chat plus Knowledge in `features/org-setup/lib/constants.ts` and `setup-payload.ts`. | One or many explicit catalog modules, including Build alone and Build with CRM/HRMS, with plan eligibility, adaptive questions, and a preview of the enabled scope and quota impact. Module answers remain owned by their adapters. |
+| Template and custom fields | `wizard-data-schema.ts` and setup payload do not carry an immutable template version or module-owned custom-field draft. | Preview template before launch; save draft field definitions and reconcile them into the owning module only after activation. Reject unknown or stale template versions. |
+| Internal people | `step-invite-launch.tsx` supports multiple invitations, Member/Admin selection, and selected module grants. | Keep this source path. Show quota and grantability using actual organization usage and selected modules, not only trial catalog headroom. Client invitations use their own portal grant flow. |
+| Draft and resume | `lib/draft.ts` stores step/data in local storage. The page reads a setup session but does not persist edits through a revisioned server draft. GET can return an ephemeral pre-organization session. | Server-owned identity-scoped draft, revision conflict behavior, cross-device resume, double-submit idempotency, and explicit retry after partial effects. Local storage may be an offline convenience, not the durable authority. |
+| Activation and destination | Backend has GET session/status and POST complete/skip with a durable outbox consumer. Frontend launch and skip still target `/dashboard`. Existing member resolution reuses an active organization membership before creating another. | Resolve valid invitation first, unfinished setup next, required module onboarding next, authorized callback next, then allowed landing. Distinct paths for new owner, existing user creating an organization, invited member, returning user, and external client. New organization creation requires an explicit intent, not silent reuse. |
+| First Build value | `WorkspaceOnboardingService` provisions department/team structure; it does not create a versioned Build project/template or first ticket. | Deliver one useful project/template and a guided first ticket or intake action, with idempotent project provisioning and a clear recovery path. |
+| Plan eligibility | Before backend `9fd0b94d2`, `OrgSetupService.completeSetup` provisioned selected modules without the `PLAN_LOCKED_MODULES` check used by ordinary entitlement changes. The source now reads the current tier inside the setup transaction and rejects locked selections before module writes; target database and concurrent subscription-transition behavior remain unverified. | Use the same eligibility policy in preview; prove mixed-selection rollback and server outcome on a target database. Coordinate billing transitions with setup if the subscription race is confirmed. |
+
+The source observations do not prove browser behavior, database persistence, mail delivery, or deployment. The [client portal audit](./client-portal-activation-gap.md) owns external client activation; an internal organization invitation cannot substitute for a portal grant.
+
+## Setup eligibility preview contract
+
+The existing `/billing/entitlements` read is scoped to the current session organization. A new owner's organization does not exist until `POST /org/setup/complete`, and an existing user's current organization need not be the selected setup target. The plan catalog is not an effective entitlement. The planned `POST /org/setup/selection/preview` must therefore accept selected module keys and explicit target intent. The server resolves an existing target from authenticated membership or derives the prospective new-organization trial from its own plan policy; it never trusts a client-supplied tier. The response includes contract version, target kind, effective/prospective plan source, selected module eligibility with stable reason codes, current quota or prospective limits, policy revision/as-of time, and expiry. Do not use a shared HTTP cache. An optional private Redis projection must key actor, session, draft and plan versions, expire within 60 seconds, and invalidate on plan or access changes. Completion repeats the fresh authoritative guard, since a preview cannot reserve a subscription state. Frontend `3aba4c3c8` already preserves the draft and returns to Products on an authoritative `MODULE_NOT_ENABLED` plan refusal; the preview and deployed browser proof remain open.
+
+## Setup invitation outcome provenance
+
+Before backend `e1001a934`, `org-setup-query.service.ts` selected invitation status by organization and email. Since `invitations` and `invitation_events` did not carry a setup producer event ID, a preexisting pending invitation could mask a failed attempt in the current setup event. Timestamps and inviter identity are not reliable correlations; resends reuse invitation IDs and manual invites may race. Do not overload `inbox_records.last_error` with successful recipient data.
+
+Add an organization-scoped receipt keyed by `(organization_id, producer_event_id, canonical_email)` with a nullable invitation ID, bounded result (`SKIPPED_SELF`, `REFUSED`, `QUEUED`, `DELIVERY_FAILED`), allowlisted reason code, and creation time. The producer event and invitation references must remain in the same organization; require a unique event/email key, event lookup index, tenant RLS, and retention tied to outbox cleanup. The setup consumer writes one deduplicated recipient receipt in its existing transaction, including whole-batch savepoint failures. Setup status pairs the latest setup outbox event to its exact inbox record and reads only that event's receipts. A queued receipt may be upgraded to accepted/revoked by its own invitation ID; a legacy event without receipts returns no per-recipient breakdown rather than a guessed status. Migrate schema first, deploy writer then reader, and test replay, rollback, duplicate email, old pending invitation, resend, suppression, cross-tenant access, and event cleanup on a target database.
+
+Backend `e1001a934` implements the additive receipt table, same-org event and invitation foreign keys, tenant RLS, consumer write, exact-event query, and legacy null fallback in source. Its migration `1728` is journalled; 104 setup tests, 38 migration-integrity tests, production typecheck, and scoped lint pass. Database application, rollback, RLS catalog proof, and browser refresh remain Current unverified.
+
+The additive `1728` receipt migration is not a repair for historical cold-build ordering. Migration `0965_ar02_canonical_tenant_fks_3.sql` references `invitations(org_id,id)` before any matching unique index appears in the checked-in earlier SQL. Treat [BLD-MIGRATION-CHAIN-01](./migration-chain-gap.md) as a separate open deployment gate until a disposable database proves the full chain.
+
+## Resend worker outcome correlation
+
+`invitation-lifecycle.service.ts` records immediate queue refusal, while the retry worker later changes only `email_outbox`. The invitation list currently derives `deliveryFailed` from invitation events after the latest resend timestamp. Appending a delayed failure from an older email would mislabel a newer resend. The planned seam is an opaque, same-organization resend-generation correlation: use the new `RESENT` event ID to label its email outbox row in the same transaction, then project the terminal status of only that exact row in the owner invitation read. Keep old uncorrelated rows on a conservative historical fallback. Do not match email address, subject, or timestamps; do not let the generic Email worker mutate invitations. Queue acceptance, retrying, sent, and terminal failure must remain distinct states. An Email-owned claim/CAS follow-up must prevent competing workers or manual handoff from overwriting terminal transport state.
+
+## Sequenced implementation
+
+1. Close the no-migration plan eligibility guard and test Free, trial, mixed, stale preview, Build-only, and retry paths.
+2. Define a strict versioned Workspace/Products/People draft and preview contract. Preserve existing invitation grant payloads and permission keys.
+3. Add identity-scoped pre-organization draft/session and activation-run tables with additive migration, bounded backfill if needed, idempotency key, revision, expiry, privacy limits, and rollback.
+4. Build the five-input responsive shell and explicit module catalog/adaptive adapters. Place template and custom-field editors behind optional disclosure.
+5. Replace local-only persistence with server draft save/resume and conflict handling. Route launch through the activation coordinator and fresh effective-access landing resolver.
+6. Add first-use Build project/template provisioning through the canonical project command, then cross-module adapters one at a time.
+7. Verify six journeys, roles, tenant boundaries, plan quotas, worker crash/replay, browser history, refresh, mobile, keyboard, and funnel metrics on a named deployment before release verification.
+
+## Delivery checklist
+
+- [x] Reconcile the current wizard, backend endpoints, draft storage, invitation payload, and launch destination against the three-step target without claiming runtime verification.
+- [x] Add the transaction-bound fresh-tier plan guard at backend `9fd0b94d2`; five focused suites/109 tests, production typecheck, and scoped lint pass for Free, trial, Build-only, mixed selection, and replay. Target database rollback and concurrent subscription transition proof remain open.
+- [x] Add source recovery for an authoritative plan-lock 402 at frontend `3aba4c3c8`: Back to Products preserves draft/invitees and suppresses a false ready state; three focused suites/23 tests and scoped lint pass. Browser proof remains open.
+- [x] Identify the exact setup invitation status provenance gap and choose event-scoped receipts over organization/email or inbox error text; implementation and target database proof remain open.
+- [ ] Implement authenticated, setup-target-aware eligibility preview and prove 402 recovery on a deployed browser with owner, existing-user, and wrong-organization paths.
+- [x] Write and read one event-scoped receipt per deduplicated setup invitee in source at backend `e1001a934`, with same-org FKs, additive migration `1728`, and legacy null fallback; focused source checks pass.
+- [ ] Apply migration `1728` to a disposable target database; prove tenant RLS/FKs, rollback, replay, older pending invite, and owner/member browser refresh before closing the recipient-status defect.
+- [ ] Correlate each resent invitation generation with its own email outbox row and derive later terminal failure from that row; separately prove worker claim/CAS safety against duplicate or stale transport writes.
+- [ ] Define and migrate a revisioned, identity-scoped pre-organization draft and activation run with idempotent recovery and privacy bounds.
+- [ ] Replace the current required Basics form and inferred goal modules with at most five Build-only inputs and explicit single/multi-product selection.
+- [ ] Add adaptive module questions, immutable template previews, custom-field drafts, and accurate plan/quota previews without extra mandatory steps.
+- [ ] Preserve internal multi-invite selected-module grants while adding separate external client grant activation.
+- [ ] Implement six destination journeys and first useful Build project/ticket through canonical owners.
+- [ ] Prove cross-device resume, retry, tenant/role negatives, database/outbox, and responsive browser acceptance before BLD-001 is verified.

@@ -2,6 +2,7 @@ import {
   normalizeBuildDeepLink,
   toBuildPath,
 } from "@/lib/build/normalize-build-deep-link";
+import { parseTicketKey } from "@/components/shared/format-ticket-key";
 
 export interface InboxTicketLinkTarget {
   projectId: number;
@@ -21,10 +22,10 @@ function toAbsoluteUrl(raw: string): URL | null {
   }
 }
 
-function parseCommentId(value: string | null): number | null {
-  if (!value) return null;
-  const n = Number.parseInt(value, 10);
-  return Number.isFinite(n) ? n : null;
+function parsePositiveId(value: string | null | undefined): number | null {
+  if (!value || !/^[1-9]\d*$/.test(value)) return null;
+  const id = Number(value);
+  return Number.isSafeInteger(id) && id <= 2147483647 ? id : null;
 }
 
 function parseTicketSegment(
@@ -32,11 +33,16 @@ function parseTicketSegment(
   ticketKeyRaw: string,
   search: string,
   commentId: number | null,
-): InboxTicketLinkTarget {
-  const ticketKey = decodeURIComponent(ticketKeyRaw);
-  const numericId = Number.parseInt(ticketKey, 10);
-  const ticketId =
-    Number.isFinite(numericId) && String(numericId) === ticketKey ? numericId : null;
+): InboxTicketLinkTarget | null {
+  let ticketKey: string;
+  try {
+    ticketKey = decodeURIComponent(ticketKeyRaw);
+  } catch {
+    return null;
+  }
+  const parsed = parseTicketKey(ticketKey);
+  if (!parsed) return null;
+  const ticketId = parsed.projectKey === undefined ? parsed.ticketNumber : null;
   return {
     projectId,
     ticketId,
@@ -51,10 +57,8 @@ export function extractBuildProjectId(link: string | null | undefined): number |
   const url = toAbsoluteUrl(link);
   if (!url) return null;
   const pathname = toBuildPath(url.pathname);
-  const match = pathname.match(/^\/build\/(\d+)/);
-  if (!match?.[1]) return null;
-  const id = Number.parseInt(match[1], 10);
-  return Number.isFinite(id) ? id : null;
+  const match = pathname.match(/^\/build\/(\d+)(?:\/|$)/);
+  return parsePositiveId(match?.[1]);
 }
 
 export function parseInboxTicketLink(link: string | null | undefined): InboxTicketLinkTarget | null {
@@ -63,24 +67,24 @@ export function parseInboxTicketLink(link: string | null | undefined): InboxTick
   if (!url) return null;
 
   const pathname = toBuildPath(url.pathname);
-  const commentId = parseCommentId(url.searchParams.get("comment"));
+  const commentParam = url.searchParams.get("comment");
+  const commentId = parsePositiveId(commentParam);
+  if (commentParam !== null && commentId === null) return null;
   const search = url.search;
 
   const ticketPath = pathname.match(/^\/build\/(\d+)\/tickets\/([^/]+)\/?$/);
   if (ticketPath) {
-    const projectId = Number.parseInt(ticketPath[1] ?? "", 10);
+    const projectId = parsePositiveId(ticketPath[1]);
     const ticketKeyRaw = ticketPath[2];
-    if (!Number.isFinite(projectId) || !ticketKeyRaw) return null;
+    if (projectId === null || !ticketKeyRaw) return null;
     return parseTicketSegment(projectId, ticketKeyRaw, search, commentId);
   }
 
   const projectPath = pathname.match(/^\/build\/(\d+)(?:\/issues)?\/?$/);
   if (projectPath) {
-    const projectId = Number.parseInt(projectPath[1] ?? "", 10);
-    const ticketParam = url.searchParams.get("ticket");
-    if (!Number.isFinite(projectId) || !ticketParam) return null;
-    const ticketId = Number.parseInt(ticketParam, 10);
-    if (!Number.isFinite(ticketId)) return null;
+    const projectId = parsePositiveId(projectPath[1]);
+    const ticketId = parsePositiveId(url.searchParams.get("ticket"));
+    if (projectId === null || ticketId === null) return null;
     return {
       projectId,
       ticketId,

@@ -28,6 +28,7 @@ type GenerationProgressStageProps = {
   isRecheckingProvisioning: boolean;
   showWelcome: boolean;
   onRetry: () => void;
+  onBackToProducts?: () => void;
   onRecheckProvisioning: () => void;
   onContinueAnyway: () => void;
   onOpenOrganization?: () => void;
@@ -46,6 +47,7 @@ export function GenerationProgressStage({
   isRecheckingProvisioning,
   showWelcome,
   onRetry,
+  onBackToProducts,
   onRecheckProvisioning,
   onContinueAnyway,
   onOpenOrganization,
@@ -68,8 +70,10 @@ export function GenerationProgressStage({
         workspaceLabel={workspaceLabel}
         setupError={setupError}
         onRetry={onRetry}
+        onBackToProducts={onBackToProducts}
         onOpenOrganization={onOpenOrganization}
         onGoToInvitations={onGoToInvitations}
+        onContinueAnyway={onContinueAnyway}
         isNavigating={isNavigating}
       />
     );
@@ -322,6 +326,7 @@ const OUTCOME_LABEL: Record<string, string> = {
 const OUTCOME_REASON_LABEL: Record<string, string> = {
   already_member: "already a member",
   invitation_revoked: "declined or revoked",
+  email_not_sent: "email not sent",
   unknown: "not sent",
 };
 

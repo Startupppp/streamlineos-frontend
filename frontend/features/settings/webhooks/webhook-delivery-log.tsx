@@ -79,7 +79,15 @@ function LogRow({ log, endpointId, canManage }: LogRowProps) {
           <span className="text-sm font-mono font-medium truncate">
             {log.event}
           </span>
-          {isBlocked && (
+          {log.deadLetter && (
+            <Badge
+              variant="outline"
+              className="text-micro shrink-0 border-destructive text-destructive"
+            >
+              Dead letter
+            </Badge>
+          )}
+          {isBlocked && !log.deadLetter && (
             <Badge
               variant="outline"
               className="text-micro shrink-0 border-status-warning-rule text-status-warning-ink bg-status-warning-surface"
@@ -87,7 +95,7 @@ function LogRow({ log, endpointId, canManage }: LogRowProps) {
               Blocked
             </Badge>
           )}
-          {!isBlocked && log.statusCode !== null && (
+          {!isBlocked && !log.deadLetter && log.statusCode !== null && (
             <Badge
               variant={log.success ? "outline" : "destructive"}
               className="text-micro shrink-0"

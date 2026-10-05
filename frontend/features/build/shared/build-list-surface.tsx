@@ -12,7 +12,7 @@ import type { PermissionKey } from "@/lib/rbac/permissions";
 interface BuildListSurfaceCursorPaginationBase {
   mode: "cursor";
   pageSize: number;
-  /** One-based cursor-walk or loaded-batch position. */
+
   pageNumber: number;
   hasMore: boolean;
   onNext: () => void;

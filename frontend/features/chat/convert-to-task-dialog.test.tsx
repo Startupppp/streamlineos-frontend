@@ -7,7 +7,7 @@ jest.mock("@/hooks/api/build/projects", () => ({
 }));
 
 const mockMutateAsync = jest.fn();
-jest.mock("@/hooks/api/chat", () => ({
+jest.mock("@/hooks/api/chat-entities", () => ({
   useCreateTaskFromMessage: jest.fn(() => ({
     mutateAsync: mockMutateAsync,
     isPending: false,

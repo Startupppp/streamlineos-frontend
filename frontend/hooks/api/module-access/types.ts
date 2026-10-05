@@ -40,6 +40,7 @@ export interface ModuleMemberCandidate {
   displayName: string;
   email: string;
   avatarUrl?: string | null;
+  moduleAccessRevoked: boolean;
 }
 
 export interface ModuleOwnership {

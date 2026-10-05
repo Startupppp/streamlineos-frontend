@@ -1,8 +1,8 @@
 # SHIP desperate — PM overlay (CI is SoT)
-**Lane:** PM · **Updated:** 2026-10-01 (IST)  
-**Source of truth:** `/workspace/streamlineos-ci/competitor-deep/100-WOW-REASONS.md` (115 SHIP + Top 15)  
-**ICP map:** `ICP-ROADMAP-TOP15.md`  
-**Freeze v1 unchanged:** **PM-011 → PM-002 → PM-001**  
+**Lane:** PM · **Updated:** 2026-10-01 (IST)
+**Source of truth:** `../../streamlineos-analysis-pack/01-ci/competitor-deep/100-WOW-REASONS.md` (115 SHIP + Top 15)
+**ICP map:** `ICP-ROADMAP-TOP15.md`
+**Freeze v1 unchanged:** **PM-011 → PM-002 → PM-001**
 **Rule:** Do **not** maintain a parallel SHIP bank. This file is a thin desperation index + implement path for Aditya.
 
 ---
@@ -37,14 +37,14 @@ CI ranks client grant as desperation #1; **eng still ships Freeze invite → rol
 
 From CI `100-WOW-REASONS.md` — Build **lacks** these; never HAVE:
 
-1. Labels / Tags (UX-026) — in Top 15  
-2. Epic relation (UX-027) — in Top 15  
-3. Release / version filter (CI #27) — after UX-025; Jira **Affects versions** filter UI-VERIFIED, not a Releases page  
-4. Named saved filters (CI #31) — in Top 15  
-5. Operators is / is not / empty (CI #28)  
-6. AND / OR + nest (CI #29)  
-7. Relative due presets (CI #30)  
-8. Me / Me Mode (CI #32)  
+1. Labels / Tags (UX-026) — in Top 15
+2. Epic relation (UX-027) — in Top 15
+3. Release / version filter (CI #27) — after UX-025; Jira **Affects versions** filter UI-VERIFIED, not a Releases page
+4. Named saved filters (CI #31) — in Top 15
+5. Operators is / is not / empty (CI #28)
+6. AND / OR + nest (CI #29)
+7. Relative due presets (CI #30)
+8. Me / Me Mode (CI #32)
 
 Competitor proof: ClickUp / Linear / Jira **UI-VERIFIED** FEATURES dumps (2026-10-01 IST). ClickUp deep walk also UI-VERIFIED Views / Automations / Templates / Forms / Timesheets / Inbox — see CI SHIP rows #14–20, #46, #51–52, #58–59, #77; do not restate as fluff.
 
@@ -102,15 +102,15 @@ Linear deep walk is now folded in `LINEAR-DEEP-FOLD.md`; it adds **8** non-Freez
 
 ## Top 10 for Aditya (Freeze-first)
 
-1. PM-011 (CI #1)  
-2. PM-002 (CI #2)  
-3. PM-001 + BUG-006/004 (CI #3, #6, #4)  
-4. UX-026 Labels (CI #12)  
-5. UX-024 Active cycle (CI #7)  
-6. CW-002 / UX-023 Member create (CI #23)  
-7. CW-001 / UX-022 Projects list (CI #24)  
-8. UX-025 Release membership (CI #9)  
-9. UX-027 Epic relation filter (CI #13)  
-10. Named saved filters (CI #31)  
+1. PM-011 (CI #1)
+2. PM-002 (CI #2)
+3. PM-001 + BUG-006/004 (CI #3, #6, #4)
+4. UX-026 Labels (CI #12)
+5. UX-024 Active cycle (CI #7)
+6. CW-002 / UX-023 Member create (CI #23)
+7. CW-001 / UX-022 Projects list (CI #24)
+8. UX-025 Release membership (CI #9)
+9. UX-027 Epic relation filter (CI #13)
+10. Named saved filters (CI #31)
 
 Full Top 15 + sellable copy: `ICP-ROADMAP-TOP15.md`.

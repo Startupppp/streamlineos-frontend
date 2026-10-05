@@ -1,8 +1,12 @@
+import { apiClient } from "@/lib/api-client";
+import { orgSetupDraftSaveContract, orgSetupDraftContract } from "@/hooks/api/org-setup-schema";
 import { DEFAULT_DATA, DRAFT_KEY } from "./constants";
 import { parseWizardDraft, type WizardData } from "./wizard-data-schema";
 
 const STEP_KEY = "org-setup-step";
 const COMPLETION_BASE = "org-setup-complete";
+
+export type SyncStatus = "synced" | "saving" | "unsynced" | "error";
 
 function draftKey(scopeId: string): string {
   return `${DRAFT_KEY}--${scopeId}`;
@@ -57,6 +61,7 @@ export function saveDraft(data: WizardData, scopeId: string): void {
 export function hasDraftProgress(data: WizardData): boolean {
   return (
     data.goals.length > 0 ||
+    data.displayName.trim() !== "" ||
     data.companyName.trim() !== "" ||
     data.industry.trim() !== "" ||
     data.teamSize.trim() !== "" ||
@@ -96,4 +101,59 @@ export function clearAll(scopeId: string): void {
     localStorage.removeItem(DRAFT_KEY);
     localStorage.removeItem(STEP_KEY);
   } catch {}
+}
+
+export function mergeServerDraft(
+  local: WizardData,
+  localRevision: number,
+  server: { revision: number; data: WizardData },
+): WizardData {
+  if (server.revision >= localRevision) return server.data;
+  return local;
+}
+
+const DRAFT_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
+
+function draftExpiresAt(): string {
+  return new Date(Date.now() + DRAFT_EXPIRY_MS).toISOString();
+}
+
+export async function syncDraftToServer(
+  revision: number,
+  data: WizardData,
+  onStatusChange: (status: SyncStatus) => void,
+): Promise<void> {
+  onStatusChange("saving");
+  try {
+    await apiClient.put(
+      "/org/setup/draft",
+      { revision, stepData: data, expiresAt: draftExpiresAt() },
+      undefined,
+      orgSetupDraftSaveContract,
+    );
+    onStatusChange("synced");
+  } catch {
+    onStatusChange("error");
+  }
+}
+
+export async function loadServerDraft(): Promise<{
+  revision: number;
+  data: WizardData;
+} | null> {
+  try {
+    const result = await apiClient.get(
+      "/org/setup/draft",
+      undefined,
+      undefined,
+      orgSetupDraftContract,
+    );
+    if (!result) return null;
+    return {
+      revision: result.revision,
+      data: parseWizardDraft(result.stepData),
+    };
+  } catch {
+    return null;
+  }
 }

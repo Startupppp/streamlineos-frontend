@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { Button } from "@/components/ui/button";
+import { ErrorReference } from "@/components/shared/error-reference";
 import { MessageSquare, AlertTriangle } from "lucide-react";
 import { SendIcon, XIcon } from "@animateicons/react/lucide";
 import { useAddComment } from "@/hooks/api/build/ticket-sub-resources";
@@ -13,12 +15,10 @@ import {
   useUpdateComment,
   useDeleteComment,
 } from "@/hooks/api/build/comment-mutations";
-import {
-  useUpsertCommentDraft,
-  useDeleteCommentDraftByTicket,
-} from "@/hooks/api/build/comment-drafts";
+import { useDeleteCommentDraftByTicket } from "@/hooks/api/build/comment-draft-commands";
 import { AiActionsMenu } from "@/components/ai/ai-actions-menu";
 import { useDraftCommentAction } from "./use-draft-comment-action";
+import { useTicketCommentComposer } from "./use-ticket-comment-composer";
 import {
   useAddReaction,
   useRemoveReaction,
@@ -61,7 +61,6 @@ export function ActivityFeed({
   highlightCommentId,
   activityAiActions,
 }: ActivityFeedProps) {
-  const [newComment, setNewComment] = useState("");
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
   const [replyText, setReplyText] = useState("");
   const [editingSaveId, setEditingSaveId] = useState<number | null>(null);
@@ -71,19 +70,17 @@ export function ActivityFeed({
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
   const commentRefs = useRef<Map<number, HTMLDivElement>>(new Map());
-  const draftTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const upsertDraft = useUpsertCommentDraft();
   const deleteDraftByTicket = useDeleteCommentDraftByTicket();
-  const upsertDraftMutateRef = useRef(upsertDraft.mutate);
   const canUpdate = useCan("build:tickets:update");
+  const {
+    body: newComment, change: setNewComment, clear: clearNewComment,
+    ready: composerReady, loading: draftLoading, loadError: draftLoadError, retry: retryDraft,
+    persistenceStatus: draftPersistenceStatus, persistenceError: draftPersistenceError, retryPersistence,
+  } = useTicketCommentComposer(ticketId, canUpdate);
   const canCreate = useCan("build:tickets:create");
   const canAi = useCan("build:ai:use");
   const router = useRouter();
   const queryClient = useQueryClient();
-
-  useEffect(() => {
-    upsertDraftMutateRef.current = upsertDraft.mutate;
-  }, [upsertDraft.mutate]);
 
   const commentPermalink = useCallback(
     (commentId: number) => {
@@ -110,20 +107,9 @@ export function ActivityFeed({
     if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [highlightCommentId, comments]);
 
-  useEffect(() => {
-    if (draftTimerRef.current) clearTimeout(draftTimerRef.current);
-    if (!canUpdate || !newComment.trim()) return;
-    draftTimerRef.current = setTimeout(() => {
-      upsertDraftMutateRef.current({ ticketId, body: newComment });
-    }, 1200);
-    return () => {
-      if (draftTimerRef.current) clearTimeout(draftTimerRef.current);
-    };
-  }, [canUpdate, newComment, ticketId]);
-
   const addComment = useAddComment({
     onSuccess: () => {
-      setNewComment("");
+      clearNewComment();
       deleteDraftByTicket.mutate(ticketId);
     },
     onError: (error) => toast.error(getErrorMessage(error)),
@@ -287,8 +273,10 @@ export function ActivityFeed({
     [createTicket, projectId, ticketId, ticketNumber, projectKey],
   );
 
-  const handleApplyDraft = useCallback((text: string) => setNewComment(text), []);
+  const handleApplyDraft = useCallback((text: string) => setNewComment(text), [setNewComment]);
   const draftAction = useDraftCommentAction(ticketId, handleApplyDraft);
+  const handleRetryDraft = useCallback(() => { void retryDraft(); }, [retryDraft]);
+  const handleRetryPersistence = useCallback(() => { void retryPersistence(); }, [retryPersistence]);
 
   const { repliesMap, sortedTopLevel } = useMemo(() => {
     const topLevel = comments.filter((c) => !c.parentCommentId);
@@ -307,8 +295,6 @@ export function ActivityFeed({
     return { repliesMap: built, sortedTopLevel };
   }, [comments]);
 
-  // Comments ride the ticket payload with no cursor. Page them newest-first,
-  // but never hide the thread a deep link points at.
   const [visibleCount, setVisibleCount] = useState(COMMENT_RENDER_PAGE_SIZE);
   const handleShowOlderComments = useCallback(
     () => setVisibleCount((count) => count + COMMENT_RENDER_PAGE_SIZE),
@@ -345,7 +331,7 @@ export function ActivityFeed({
           {canAi ? <AiActionsMenu actions={[draftAction]} triggerLabel="Draft comment" align="end" /> : null}
         </h4>
 
-        {canUpdate ? <div className="flex w-full min-w-0 flex-row items-end gap-2">
+        {canUpdate && composerReady ? <div className="flex w-full min-w-0 flex-row items-end gap-2">
           <MentionTextarea
             value={newComment}
             onChange={setNewComment}
@@ -365,6 +351,18 @@ export function ActivityFeed({
             disabled={!newComment.trim() || addComment.isPending}
             aria-label="Post comment"
           />
+        </div> : null}
+        {canUpdate && draftLoading ? <p role="status" className="text-xs text-muted-foreground">Loading saved draft…</p> : null}
+        {canUpdate && draftPersistenceStatus ? <p role="status" className="text-xs text-muted-foreground">{draftPersistenceStatus}</p> : null}
+        {canUpdate && draftPersistenceError ? <div role="alert" className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          <span>{getErrorMessage(draftPersistenceError)}</span>
+          <ErrorReference error={draftPersistenceError} />
+          <Button type="button" variant="outline" size="sm" onClick={handleRetryPersistence}>Retry saving draft</Button>
+        </div> : null}
+        {canUpdate && draftLoadError ? <div role="alert" className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          <span>{getErrorMessage(draftLoadError)}</span>
+          <ErrorReference error={draftLoadError} />
+          <Button type="button" variant="outline" size="sm" onClick={handleRetryDraft}>Retry draft</Button>
         </div> : null}
       </div>
 

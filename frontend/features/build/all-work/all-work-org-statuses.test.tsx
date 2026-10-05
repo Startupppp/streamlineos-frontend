@@ -36,6 +36,7 @@ jest.mock("@/hooks/api/build/all-work", () => ({
     error: null,
     refetch: jest.fn(),
   }),
+  useAllWorkIds: () => ({ data: undefined }),
 }));
 jest.mock("@/hooks/api/build/projects", () => ({
   useProjects: () => ({ data: undefined }),
@@ -103,6 +104,9 @@ jest.mock("./use-all-work-bulk", () => ({
     handleBulkAssignee: jest.fn(),
     handleBulkCycleNoOp: jest.fn(),
     handleClearSelection: jest.fn(),
+    isExpandedSelection: false,
+    expandedTotal: 0,
+    expandToAllMatching: jest.fn(),
   }),
 }));
 jest.mock("./use-all-work-keyboard", () => ({

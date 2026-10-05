@@ -41,6 +41,8 @@ const BASE_CONNECTION = {
   isActive: true,
   maskedSecret: "whsec_••••abcd",
   webhookUrl: "https://api.example.com/integrations/git/webhook?connectionId=1",
+  lastEventAt: null,
+  lastErrorAt: null,
   createdAt: "2026-01-01T00:00:00.000Z",
   updatedAt: "2026-01-01T00:00:00.000Z",
 };

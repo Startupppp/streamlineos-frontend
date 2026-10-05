@@ -1,8 +1,15 @@
 "use client";
 
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { ApiError } from "@/lib/api-envelope";
+import { apiClient } from "@/lib/api-client";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { ClientVisibilityPage } from "./client-visibility-page";
+
+jest.mock("@/lib/api-client", () => ({ apiClient: { patch: jest.fn() } }));
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: jest.fn() }),
@@ -82,6 +89,7 @@ jest.mock("@/components/shared/page-state", () => ({
 const mockUseCan = jest.fn<boolean, [string]>(() => false);
 jest.mock("@/hooks/api/access", () => ({
   useCan: (permission: string) => mockUseCan(permission),
+  useAccess: () => ({ data: { permissions: ["build:clientvisibility:manage"] }, refetch: jest.fn() }),
 }));
 
 jest.mock("@/hooks/api/entitlements", () => ({
@@ -137,6 +145,35 @@ beforeEach(() => {
 });
 
 describe("AP-9: ClientVisibilityPage must resolve through usePageState not a bare boolean useCan gate", () => {
+  it("reports a failed Ticket toggle once through the real mutation hook and retains the prior visibility", async () => {
+    mockUseCan.mockReturnValue(true);
+    mockUsePageState.mockReturnValue({ kind: "ready" });
+    const ticket = { id: 7, ticketNumber: 7, title: "T7", type: "bug", clientVisible: false, version: 3 };
+    mockUseTicketsInfinite.mockReturnValue({ ...emptyInfiniteQuery(), items: [ticket] });
+    mockUseUpdateTicketVisibility.mockImplementation(
+      jest.requireActual<typeof import("@/hooks/api/build/client-portal")>("@/hooks/api/build/client-portal").useUpdateTicketVisibility,
+    );
+    jest.mocked(apiClient.patch).mockRejectedValueOnce(new ApiError("Conflict", 409));
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+    const ticketKey = buildWorkQueryKeys.projects.ticket(1, 7);
+    qc.setQueryData(ticketKey, ticket);
+    const invalidateSpy = jest.spyOn(qc, "invalidateQueries");
+    render(<QueryClientProvider client={qc}><ClientVisibilityPage projectId={1} /></QueryClientProvider>);
+    const toggle = screen.getByRole("switch", { name: "Toggle client visibility for ticket #7" });
+    fireEvent.click(toggle);
+    await waitFor(() => expect(apiClient.patch).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(toggle).toBeEnabled());
+    expect(apiClient.patch).toHaveBeenCalledWith(
+      "/build/1/client-visibility/tickets/7", { clientVisible: true, version: 3 }, undefined, expect.anything(),
+    );
+    expect(toggle).toHaveAttribute("aria-checked", "false");
+    expect(qc.getQueryData(ticketKey)).toEqual(ticket);
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ticketKey });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: buildWorkQueryKeys.projects.clientPortal.visibility(1) });
+    expect(toast.error).toHaveBeenCalledWith("This action conflicts with existing data.");
+    expect(toast.error).toHaveBeenCalledTimes(1);
+  });
+
   it("does not show access-denied state while the access snapshot is still loading — useCan returns false during this window so a page gated on !useCan wrongly denies permitted users", () => {
     mockUseCan.mockReturnValue(false);
     mockUsePageState.mockReturnValue({ kind: "loading" });

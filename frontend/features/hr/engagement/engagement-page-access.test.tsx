@@ -124,7 +124,7 @@ jest.mock("@/features/hr/engagement/campaigns-tab", () => ({
 jest.mock("@/lib/api-envelope", () => ({
   ...jest.requireActual("@/lib/api-envelope"),
   lazyContract: () => undefined,
-  // The shared error state renders a copyable request reference, which reads the id through this.
+  isApiError: () => false,
   getCorrelationId: () => undefined,
 }));
 

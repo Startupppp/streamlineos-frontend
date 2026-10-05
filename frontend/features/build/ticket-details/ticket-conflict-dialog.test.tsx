@@ -62,3 +62,32 @@ it("treats dismissing the comparison as discarding the pending edit", () => {
 
   expect(onDiscard).toHaveBeenCalledTimes(1);
 });
+
+it("preserves the draft body in the dialog fields after a 409 conflict so the user does not lose their edit", () => {
+  const pendingValue = "My draft description";
+  render(
+    <TicketConflictDialog
+      open
+      fields={[{ key: "description", label: "Description", serverValue: "Server text", pendingValue }]}
+      onKeepMine={jest.fn()}
+      onDiscard={jest.fn()}
+    />,
+  );
+
+  expect(screen.getByText(pendingValue)).toBeInTheDocument();
+  expect(screen.getByText("Server text")).toBeInTheDocument();
+});
+
+it("shows the Keep my changes and Discard buttons together so the user can choose which version to keep", () => {
+  render(
+    <TicketConflictDialog
+      open
+      fields={fields}
+      onKeepMine={jest.fn()}
+      onDiscard={jest.fn()}
+    />,
+  );
+
+  expect(screen.getByRole("button", { name: "Keep my changes" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Discard my changes" })).toBeInTheDocument();
+});

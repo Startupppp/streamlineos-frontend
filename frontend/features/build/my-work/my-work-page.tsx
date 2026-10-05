@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useMemo, useState, useRef } from "react";
+import { useCallback, useMemo, useState, useRef, type MouseEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import dynamic from "next/dynamic";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsNavigation, TabsNavigationLink } from "@/components/ui/tabs";
 import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PmPageShell, PmSection, PM_FILL_SECTION } from "@/components/pm-chrome";
@@ -22,6 +23,10 @@ import { MyWorkSortControl } from "./my-work-sort-control";
 import { useMyWorkBulk } from "./use-my-work-bulk";
 import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
+import {
+  buildMyWorkReturnHref,
+  getMyWorkTicketHref,
+} from "@/features/build/ticket-details/build-ticket-detail-url";
 import {
   useMyWorkData,
   parseWorkTab,
@@ -51,13 +56,96 @@ const MyWorkContent = dynamic(
   () => import("./my-work-content").then((m) => ({ default: m.MyWorkContent })),
   { loading: () => null },
 );
+const InboxDraftsPanel = dynamic(
+  () =>
+    import("@/features/build/inbox/inbox-drafts-panel").then((m) => ({
+      default: m.InboxDraftsPanel,
+    })),
+  { ssr: false },
+);
 
 const DISPLAY_STORAGE_ID = -1;
 
 export function MyWorkPage() {
+  const searchParams = useSearchParams();
+  return searchParams.get("section") === "drafts" ? (
+    <MyWorkDraftsPage />
+  ) : (
+    <MyWorkTicketsPage />
+  );
+}
+
+function MyWorkSectionNavigation({
+  activeSection,
+}: {
+  activeSection: "tickets" | "drafts";
+}) {
   const router = useRouter();
   const requestLeave = useNavigationLeave();
   const searchParams = useSearchParams();
+  const ticketsParams = new URLSearchParams(searchParams.toString());
+  ticketsParams.delete("section");
+  const draftsParams = new URLSearchParams(searchParams.toString());
+  draftsParams.set("section", "drafts");
+  const ticketQuery = ticketsParams.toString();
+  const ticketsHref = ticketQuery ? `/build/my-work?${ticketQuery}` : "/build/my-work";
+  const draftsHref = `/build/my-work?${draftsParams}`;
+
+  function handleNavigate(event: MouseEvent<HTMLAnchorElement>, href: string) {
+    if (
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    )
+      return;
+    event.preventDefault();
+    requestLeave(() => router.push(href, { scroll: false }));
+  }
+
+  function handleTicketsNavigate(event: MouseEvent<HTMLAnchorElement>) {
+    handleNavigate(event, ticketsHref);
+  }
+
+  function handleDraftsNavigate(event: MouseEvent<HTMLAnchorElement>) {
+    handleNavigate(event, draftsHref);
+  }
+
+  return (
+    <TabsNavigation aria-label="My Work sections">
+      <TabsNavigationLink active={activeSection === "tickets"}>
+        <Link href={ticketsHref} onClick={handleTicketsNavigate}>Tickets</Link>
+      </TabsNavigationLink>
+      <TabsNavigationLink active={activeSection === "drafts"}>
+        <Link href={draftsHref} onClick={handleDraftsNavigate}>Drafts</Link>
+      </TabsNavigationLink>
+    </TabsNavigation>
+  );
+}
+
+function MyWorkDraftsPage() {
+  return (
+    <PageWrapper
+      title="My Work"
+      subtitle="Your tickets and saved comment drafts"
+      noInternalScroll
+      filters={<MyWorkSectionNavigation activeSection="drafts" />}
+    >
+      <PmPageShell>
+        <PmSection index={0} className={cn(PM_FILL_SECTION, "overflow-hidden")}>
+          <InboxDraftsPanel />
+        </PmSection>
+      </PmPageShell>
+    </PageWrapper>
+  );
+}
+
+function MyWorkTicketsPage() {
+  const router = useRouter();
+  const requestLeave = useNavigationLeave();
+  const searchParams = useSearchParams();
+  const returnHref = buildMyWorkReturnHref(searchParams);
 
   const activeTab = parseWorkTab(
     searchParams.get("relation") ?? searchParams.get("tab"),
@@ -129,7 +217,14 @@ export function MyWorkPage() {
         const meta = ticketMeta.get(ticket.id);
         if (meta) {
           requestLeave(() =>
-            router.push(`/build/${meta.projectId}/${meta.projectKey}-${meta.ticketNumber}`),
+            router.push(
+              getMyWorkTicketHref(
+                meta.projectId,
+                meta.projectKey,
+                meta.ticketNumber,
+                returnHref,
+              ),
+            ),
           );
         }
       }
@@ -212,68 +307,71 @@ export function MyWorkPage() {
         noInternalScroll
         filtersClassName="flex-col items-stretch gap-0 overflow-visible pb-2 [&>*]:w-full [&>*]:min-w-0 [&>*]:shrink"
         filters={
-          <PageTabsToolbar
-            collapseBelow="xl"
-            tabs={
-              <TabsList>
-                {WORK_TABS.map((tab) => (
-                  <TabsTrigger key={tab} value={tab}>
-                    {TAB_CONFIG[tab].label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            }
-            search={
-              filterBarReady ? (
-                <TicketFilterBar
-                  className="w-full"
-                  showAssigneeFilter={false}
-                  statuses={orgStates}
-                />
-              ) : (
-                <div className={cn("flex w-full flex-col gap-1.5", hasActiveFilters && "pb-1")}>
-                  <Skeleton className="h-9 w-full" />
-                  {hasActiveFilters && <Skeleton className="h-6 w-2/3" />}
-                </div>
-              )
-            }
-            actions={
-              showViewSwitcher ? (
-                <>
-                  <MyWorkSortControl
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSortChange={handleSortChange}
+          <div className="flex min-w-0 flex-col gap-2">
+            <MyWorkSectionNavigation activeSection="tickets" />
+            <PageTabsToolbar
+              collapseBelow="xl"
+              tabs={
+                <TabsList>
+                  {WORK_TABS.map((tab) => (
+                    <TabsTrigger key={tab} value={tab}>
+                      {TAB_CONFIG[tab].label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              }
+              search={
+                filterBarReady ? (
+                  <TicketFilterBar
+                    className="w-full"
+                    showAssigneeFilter={false}
+                    statuses={orgStates}
                   />
-                  <ViewSwitcher
-                    activeView={activeView}
-                    onViewChange={handleViewChange}
-                    allowedViews={MY_WORK_VIEWS}
-                    className="shrink-0"
-                  />
-                  <DisplayOptionsPanel
-                    viewType={activeView}
-                    options={displayOptions}
-                    onChange={setDisplayOptions}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    className={cn(
-                      "size-9 shrink-0",
-                      showGroupingSidebar && "border-primary bg-primary/10 text-primary",
-                    )}
-                    aria-label="Toggle grouping sidebar"
-                    aria-pressed={showGroupingSidebar}
-                    onClick={handleToggleSidebar}
-                  >
-                    <PanelRight className="h-3.5 w-3.5" />
-                  </Button>
-                </>
-              ) : null
-            }
-          />
+                ) : (
+                  <div className={cn("flex w-full flex-col gap-1.5", hasActiveFilters && "pb-1")}>
+                    <Skeleton className="h-9 w-full" />
+                    {hasActiveFilters && <Skeleton className="h-6 w-2/3" />}
+                  </div>
+                )
+              }
+              actions={
+                showViewSwitcher ? (
+                  <>
+                    <MyWorkSortControl
+                      sortField={sortField}
+                      sortDirection={sortDirection}
+                      onSortChange={handleSortChange}
+                    />
+                    <ViewSwitcher
+                      activeView={activeView}
+                      onViewChange={handleViewChange}
+                      allowedViews={MY_WORK_VIEWS}
+                      className="shrink-0"
+                    />
+                    <DisplayOptionsPanel
+                      viewType={activeView}
+                      options={displayOptions}
+                      onChange={setDisplayOptions}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className={cn(
+                        "size-9 shrink-0",
+                        showGroupingSidebar && "border-primary bg-primary/10 text-primary",
+                      )}
+                      aria-label="Toggle grouping sidebar"
+                      aria-pressed={showGroupingSidebar}
+                      onClick={handleToggleSidebar}
+                    >
+                      <PanelRight className="h-3.5 w-3.5" />
+                    </Button>
+                  </>
+                ) : null
+              }
+            />
+          </div>
         }
       >
         <PmPageShell>

@@ -28,7 +28,7 @@ const CfdChart = dynamic(
   { ssr: false, loading: () => <Skeleton className="h-72 w-full rounded-lg" /> },
 );
 
-export function CfdSection({ projectId }: { projectId: number }) {
+export function CfdSection({ projectId, filtersActive = false }: { projectId: number; filtersActive?: boolean }) {
   const [days, setDays] = useState(30);
   const { data, isLoading, isError, error, refetch } = useCfdReport(projectId, days);
   const capture = useCaptureSnapshot(projectId);
@@ -97,6 +97,9 @@ export function CfdSection({ projectId }: { projectId: number }) {
 
   return (
     <ChartCard title="Cumulative Flow" icon={Layers} actions={actions}>
+      {filtersActive ? (
+        <p className="mb-2 text-xs text-muted-foreground">Filters do not apply to this chart. It shows project-wide daily snapshots.</p>
+      ) : null}
       <PageState
         resolution={resolution}
         loading={<LoadingState variant="cards" rows={2} />}

@@ -2,6 +2,7 @@ import type { ReactNode, HTMLAttributes } from "react";
 import { render, screen } from "@testing-library/react";
 import type { ProjectListItem } from "@/types/projects";
 import { ProjectCard, projectHealthClasses } from "./command-center-rows";
+import { WIDGET_CATALOG, getWidgetEntry } from "./widget-catalog";
 
 jest.mock("next/link", () => ({
   __esModule: true,
@@ -105,6 +106,36 @@ describe("ProjectCard — project health is the Command Center core field, not p
   it("draws every health tone from the design-token helper rather than a raw colour literal", () => {
     for (const health of ["on_track", "at_risk", "off_track"] as const) {
       expect(projectHealthClasses(health)).toMatch(/^bg-status-[a-z]+-surface /);
+    }
+  });
+});
+
+describe("widget-catalog drill-down hrefs — each widget routes to the correct surface", () => {
+  it("my-issues routes to /build/my-work so keyboard drill-down lands on the tickets list", () => {
+    expect(getWidgetEntry("my-issues").drillDownHref).toBe("/build/my-work");
+  });
+
+  it("projects routes to /build/projects so the drill-down reaches the project list", () => {
+    expect(getWidgetEntry("projects").drillDownHref).toBe("/build/projects");
+  });
+
+  it("approvals routes to /build/approvals so the drill-down lands on the approvals queue", () => {
+    expect(getWidgetEntry("approvals").drillDownHref).toBe("/build/approvals");
+  });
+
+  it("blockers drill-down appends a filter so the destination pre-filters to blocked tickets", () => {
+    expect(getWidgetEntry("blockers").drillDownHref).toContain("filter=blocked");
+  });
+
+  it("every catalog entry has a non-empty title so widgets are never unlabelled", () => {
+    for (const [, entry] of Object.entries(WIDGET_CATALOG)) {
+      expect(entry.title.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("every catalog entry has a non-empty drillDownHref so navigation always has a destination", () => {
+    for (const [, entry] of Object.entries(WIDGET_CATALOG)) {
+      expect(entry.drillDownHref.length).toBeGreaterThan(0);
     }
   });
 });

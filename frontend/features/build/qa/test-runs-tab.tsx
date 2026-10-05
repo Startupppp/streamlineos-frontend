@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { useTestRuns, useDeleteTestRun } from "@/hooks/api/build/qa";
 import { useCan } from "@/hooks/api/access";
@@ -21,6 +21,7 @@ import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import { Switch } from "@/components/ui/switch";
 import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
 import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
@@ -147,6 +148,8 @@ interface TestRunsTabProps {
 
 export function TestRunsTab({ projectId, createNonce = 0 }: TestRunsTabProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const canManage = useCan("build:qa:manage");
   const listFilters = useBuildListFilters({
     filters: FILTER_DEFINITIONS,
@@ -158,6 +161,8 @@ export function TestRunsTab({ projectId, createNonce = 0 }: TestRunsTabProps) {
     null,
   );
 
+  const showFailuresOnly = searchParams.get("failuresOnly") === "true";
+
   const { cursor, pageNumber, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
     listFilters.resetKey,
   );
@@ -167,6 +172,7 @@ export function TestRunsTab({ projectId, createNonce = 0 }: TestRunsTabProps) {
     q: listFilters.debouncedSearch || undefined,
     status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
     cursor: cursor !== undefined ? Number(cursor) : undefined,
+    failuresOnly: showFailuresOnly || undefined,
   };
   const {
     data: runsPage,
@@ -176,6 +182,7 @@ export function TestRunsTab({ projectId, createNonce = 0 }: TestRunsTabProps) {
     refetch,
   } = useTestRuns(projectId, queryFilters);
   const runs = runsPage?.data ?? [];
+  const displayedRuns = runs;
   const deleteRun = useDeleteTestRun();
 
   const handleDeleteRow = useCallback(
@@ -223,6 +230,19 @@ export function TestRunsTab({ projectId, createNonce = 0 }: TestRunsTabProps) {
   const handleStatusChange = useCallback(
     (value: string) => listFilters.setValue("status", value),
     [listFilters],
+  );
+
+  const handleToggleRegressionFilter = useCallback(
+    (checked: boolean) => {
+      const next = new URLSearchParams(searchParams.toString());
+      if (checked) {
+        next.set("failuresOnly", "true");
+      } else {
+        next.delete("failuresOnly");
+      }
+      router.replace(`${pathname}?${next.toString()}`, { scroll: false });
+    },
+    [searchParams, router, pathname],
   );
 
   const handleOpenFocused = useCallback(
@@ -344,13 +364,25 @@ export function TestRunsTab({ projectId, createNonce = 0 }: TestRunsTabProps) {
               />
             ),
           },
+          {
+            id: "regression",
+            label: "Failures only",
+            active: showFailuresOnly,
+            control: (
+              <Switch
+                aria-label="Failures only"
+                checked={showFailuresOnly}
+                onCheckedChange={handleToggleRegressionFilter}
+              />
+            ),
+          },
         ]}
         onClearAll={listFilters.clearAll}
       />
 
       <BuildListSurface<TestRunListItem>
         permission="build:qa:view"
-        rows={runs}
+        rows={displayedRuns}
         columns={columns}
         isLoading={isLoading}
         isError={isError}

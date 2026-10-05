@@ -7,7 +7,7 @@ import { CheckCheck } from "lucide-react";
 import {
   useInfiniteNotifications,
   useUnreadNotificationCount,
-} from "@/hooks/api/notifications";
+} from "@/hooks/api/notifications-inbox";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";

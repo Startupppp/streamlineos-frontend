@@ -10,15 +10,7 @@ export const formFieldContract = z.object({
 
 export type FormField = z.infer<typeof formFieldContract>;
 
-/**
- * The public form read, validated rather than asserted. The cast this replaces
- * (`res.json() as Promise<PublicFormDefinition>`) skipped the `{ success, data }`
- * envelope that the backend's global ResponseTransformInterceptor adds to every
- * handler return, so `form.fields` was always undefined: the header stayed on
- * "Loading form…" and `form.fields.length` threw. Reading through
- * `parseApiResponse` unwraps the envelope; the contract is what makes the next
- * shape change an error instead of a blank page.
- */
+
 export const publicFormDefinitionContract = z.object({
   id: z.number(),
   name: z.string(),
@@ -39,33 +31,103 @@ export type PublicFormSubmitResponse = z.infer<
   typeof publicFormSubmitResponseContract
 >;
 
-type StringSchema = z.ZodString;
+const NUMERIC_RE = /^-?\d+(\.\d+)?$/;
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
-export function buildFieldSchema(field: FormField): StringSchema {
-  if (field.type === "email") {
-    return field.required
-      ? z.string().trim().min(1, `${field.label} is required`).email(`${field.label} must be a valid email`)
-      : z.string().trim().refine((v) => v === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), {
-          message: `${field.label} must be a valid email`,
-        });
+function isHttpsUrl(v: string): boolean {
+  try {
+    const u = new URL(v);
+    return u.protocol === "http:" || u.protocol === "https:";
+  } catch {
+    return false;
   }
-  if (field.type === "number") {
-    return field.required
-      ? z.string().trim().min(1, `${field.label} is required`).refine((v) => /^-?\d+(\.\d+)?$/.test(v), {
-          message: `${field.label} must be a number`,
-        })
-      : z.string().trim().refine((v) => v === "" || /^-?\d+(\.\d+)?$/.test(v), {
-          message: `${field.label} must be a number`,
-        });
-  }
-  if (field.required) {
-    return z.string().trim().min(1, `${field.label} is required`);
-  }
-  return z.string();
 }
 
-export function buildDynamicSchema(fields: FormField[]): z.ZodObject<Record<string, StringSchema>> {
-  const shape: Record<string, StringSchema> = {};
+export function buildFieldSchema(field: FormField): z.ZodTypeAny {
+  const { label, type, required, options } = field;
+
+  if (type === "checkbox") {
+    return required
+      ? z.boolean().refine((v) => v === true, { message: `${label} must be checked` })
+      : z.boolean();
+  }
+
+  if (type === "multiselect") {
+    const base = z.array(z.string());
+    if (!required) return base;
+    return base.refine((v) => v.length > 0, { message: `${label} is required` });
+  }
+
+  if (type === "number" || type === "currency" || type === "rating") {
+    return required
+      ? z.string().trim().min(1, `${label} is required`).refine(
+          (v) => NUMERIC_RE.test(v),
+          { message: `${label} must be a number` },
+        )
+      : z.string().trim().refine(
+          (v) => v === "" || NUMERIC_RE.test(v),
+          { message: `${label} must be a number` },
+        );
+  }
+
+  if (type === "url") {
+    return required
+      ? z.string().trim().min(1, `${label} is required`).refine(
+          isHttpsUrl,
+          { message: `${label} must be an http(s) URL` },
+        )
+      : z.string().trim().refine(
+          (v) => v === "" || isHttpsUrl(v),
+          { message: `${label} must be an http(s) URL` },
+        );
+  }
+
+  if (type === "date") {
+    return required
+      ? z.string().trim().min(1, `${label} is required`).refine(
+          (v) => ISO_DATE_RE.test(v),
+          { message: `${label} must be a date (YYYY-MM-DD)` },
+        )
+      : z.string().trim().refine(
+          (v) => v === "" || ISO_DATE_RE.test(v),
+          { message: `${label} must be a date (YYYY-MM-DD)` },
+        );
+  }
+
+  if (type === "dropdown") {
+    if (options && options.length > 0) {
+      const allowed = options;
+      return required
+        ? z.string().trim().min(1, `${label} is required`).refine(
+            (v) => allowed.includes(v),
+            { message: `${label} must be one of the allowed options` },
+          )
+        : z.string().trim().refine(
+            (v) => v === "" || allowed.includes(v),
+            { message: `${label} must be one of the allowed options` },
+          );
+    }
+    return required ? z.string().trim().min(1, `${label} is required`) : z.string();
+  }
+
+  if (type === "email") {
+    return required
+      ? z.string().trim().min(1, `${label} is required`).email(`${label} must be a valid email`)
+      : z.string().trim().refine(
+          (v) => v === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
+          { message: `${label} must be a valid email` },
+        );
+  }
+
+  return required
+    ? z.string().trim().min(1, `${label} is required`)
+    : z.string();
+}
+
+export function buildDynamicSchema(
+  fields: FormField[],
+): z.ZodObject<Record<string, z.ZodTypeAny>> {
+  const shape: Record<string, z.ZodTypeAny> = {};
   for (const field of fields) {
     shape[field.key] = buildFieldSchema(field);
   }

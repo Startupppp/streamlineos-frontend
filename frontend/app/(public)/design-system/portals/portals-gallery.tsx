@@ -48,6 +48,9 @@ const STUB_PROJECT: PortalProject = {
     canViewAttachments: false,
     canViewComments: true,
     canSubmitChangeRequests: true,
+    canViewApprovals: false,
+    canViewInvoices: false,
+    canViewRequests: false,
   },
 };
 
@@ -86,6 +89,10 @@ const STUB_OVERVIEW: PortalProjectOverview = {
       createdAt: "2026-05-10T09:00:00Z",
     },
   ],
+  deliverables: [],
+  approvals: [],
+  invoices: [],
+  requests: [],
 };
 
 const STUB_ACCESS: {

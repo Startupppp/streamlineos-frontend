@@ -126,6 +126,7 @@ const feedbucketSubmissionRowContract = z.object({
   accountValueSnapshot: z.string().nullable(),
   assigneeMembershipId: z.number().nullable(),
   linkedTicketId: z.number().nullable(),
+  linkedTicketKey: z.string().nullable(),
   aiType: z.string().nullable(),
   aiConfidence: z.number().nullable(),
   aiAnalysis: feedbucketAiAnalysisContract.nullable(),

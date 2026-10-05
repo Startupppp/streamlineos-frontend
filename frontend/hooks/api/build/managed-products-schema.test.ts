@@ -86,6 +86,11 @@ it("parses roadmap and feedback outcome aggregates from managed-product insights
     roadmapItemsByStatus: { planned: 1, in_progress: 1, completed: 1, cancelled: 0 },
     feedbackByStatus: { open: 2, planned: 0, in_progress: 0, completed: 1, declined: 0 },
     linkedFeedbackVoteCount: 7,
+    ageDays: 42,
+    confidenceScore: null,
+    overrideReason: null,
+    overriddenBy: null,
+    overriddenAt: null,
   });
   expect(insights.roadmapItemsByStatus.completed).toBe(1);
   expect(insights.linkedFeedbackVoteCount).toBe(7);

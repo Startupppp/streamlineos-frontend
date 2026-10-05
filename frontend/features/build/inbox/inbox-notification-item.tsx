@@ -24,6 +24,7 @@ interface InboxNotificationItemProps {
   isChecked?: boolean;
   onSelect: (notification: Notification) => void;
   onToggleSelect?: (id: number) => void;
+  actions?: React.ReactNode;
 }
 
 const PRIORITY_ICONS = {
@@ -62,6 +63,7 @@ export const InboxNotificationItem = React.memo(function InboxNotificationItem({
   isChecked = false,
   onSelect,
   onToggleSelect,
+  actions,
 }: InboxNotificationItemProps) {
   const rowRef = React.useRef<HTMLButtonElement>(null);
   const ticket = notification.ticketContext ?? null;
@@ -107,7 +109,7 @@ export const InboxNotificationItem = React.memo(function InboxNotificationItem({
       aria-pressed={isSelected}
       onClick={handleClick}
       className={cn(
-        "relative flex w-full items-start gap-3 border-b border-border px-4 py-3 text-left last:border-b-0",
+        "relative flex w-full min-w-0 flex-1 items-start gap-3 border-b border-border px-4 py-3 text-left last:border-b-0",
         "cursor-pointer transition-colors",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
         isSelected
@@ -228,18 +230,22 @@ export const InboxNotificationItem = React.memo(function InboxNotificationItem({
     </button>
   );
 
-  if (!isSelectable) return buttonNode;
+  if (!isSelectable && !actions) return buttonNode;
 
   return (
     <div className="flex items-stretch">
-      <div className="flex items-start pl-4 pt-3.5" {...propagationShield}>
+      {isSelectable ? <div
+        className="flex items-start pl-4 pt-3.5"
+        {...propagationShield}
+      >
         <Checkbox
           checked={isChecked}
           onCheckedChange={handleCheckboxChange}
           aria-label={`Select notification: ${notification.title}`}
         />
-      </div>
+      </div> : null}
       {buttonNode}
+      {actions ? <div className="flex shrink-0 items-center border-b border-border pr-2">{actions}</div> : null}
     </div>
   );
 });

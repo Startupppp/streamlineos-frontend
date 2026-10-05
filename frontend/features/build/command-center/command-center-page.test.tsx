@@ -30,6 +30,19 @@ jest.mock("./command-center-toolbar", () => ({
   CommandCenterToolbar: () => <div data-testid="command-center-toolbar" />,
 }));
 
+jest.mock("./use-dashboard-layout", () => ({
+  useDashboardLayoutEditor: jest.fn(),
+}));
+
+jest.mock("./command-center-layout-manager", () => ({
+  CommandCenterLayoutPanel: ({ children }: { children: ReactNode }) => <>{children}</>,
+  LayoutResetButton: () => <button type="button">Reset layout</button>,
+}));
+
+jest.mock("sonner", () => ({
+  toast: { error: jest.fn(), success: jest.fn() },
+}));
+
 jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
   useBuildListKeyboard: jest.fn(() => ({ focusedIndex: null, setFocusedIndex: jest.fn() })),
 }));
@@ -94,6 +107,14 @@ jest.mock("./command-center-risks-panel", () => ({
 
 jest.mock("./command-center-releases-panel", () => ({
   ReleasesPanel: () => <div data-testid="releases-panel" />,
+}));
+
+jest.mock("./command-center-rows", () => ({
+  BlockersPanel: () => <div data-testid="blockers-panel" />,
+  MyWorkRow: () => null,
+  CommandCenterRow: () => null,
+  ProjectCard: () => null,
+  projectHealthClasses: () => "",
 }));
 
 jest.mock("@/components/pm-chrome", () => ({
@@ -165,12 +186,34 @@ jest.mock("@/components/ui/skeleton", () => ({
 import { useCan, useAccess } from "@/hooks/api/access";
 import { useProjects } from "@/hooks/api/build/projects";
 import { useInfiniteAllWork, useAllWork } from "@/hooks/api/build/all-work";
+import { useDashboardLayoutEditor } from "./use-dashboard-layout";
 
 const mockUseCan = useCan as jest.Mock;
 const mockUseAccess = useAccess as jest.Mock;
 const mockUseProjects = useProjects as jest.Mock;
 const mockUseInfiniteAllWork = useInfiniteAllWork as jest.Mock;
 const mockUseAllWork = useAllWork as jest.Mock;
+const mockUseDashboardLayoutEditor = useDashboardLayoutEditor as jest.Mock;
+
+const DEFAULT_LAYOUT_MOCK = {
+  config: {
+    widgets: [
+      { type: "my-issues", position: { col: 0, row: 0, w: 3, h: 4 } },
+      { type: "projects", position: { col: 3, row: 0, w: 2, h: 4 } },
+      { type: "approvals", position: { col: 0, row: 4, w: 2, h: 3 } },
+      { type: "agent-runs", position: { col: 2, row: 4, w: 2, h: 3 } },
+      { type: "risks", position: { col: 4, row: 4, w: 1, h: 3 } },
+      { type: "releases", position: { col: 0, row: 7, w: 3, h: 3 } },
+      { type: "blockers", position: { col: 3, row: 7, w: 2, h: 3 } },
+    ],
+  },
+  layoutVersion: 1,
+  isPending: false,
+  reorder: jest.fn(),
+  removeWidget: jest.fn(),
+  addWidget: jest.fn(),
+  resetToDefault: jest.fn(),
+};
 
 const ACCESS_GRANTED = {
   data: { isOrgOwner: false, scopes: { "build:view": "all" }, modules: {} },
@@ -211,6 +254,7 @@ beforeEach(() => {
   mockUseOnlineStatus.mockReturnValue(true);
   mockUseKeyboardShortcuts.mockReset();
   mockRouterPush.mockClear();
+  mockUseDashboardLayoutEditor.mockReturnValue({ ...DEFAULT_LAYOUT_MOCK, reorder: jest.fn(), removeWidget: jest.fn(), addWidget: jest.fn(), resetToDefault: jest.fn() });
   mockSearchParams = new URLSearchParams();
 });
 
@@ -550,5 +594,46 @@ describe("CommandCenterPage — Enter opens the focused personal-queue row", () 
       keyboardOptions().onOpen(9);
     });
     expect(mockRouterPush).not.toHaveBeenCalled();
+  });
+});
+
+describe("CommandCenterPage — persona-based panel gating", () => {
+  it("hides ApprovalsPanel when the actor lacks build:approvals:view — paired with the granted test below", () => {
+    mockUseCan.mockImplementation((key: string) => key !== "build:approvals:view");
+    render(<CommandCenterPage />);
+    expect(screen.queryByTestId("approvals-panel")).not.toBeInTheDocument();
+    expect(screen.getByTestId("agent-runs-panel")).toBeInTheDocument();
+  });
+
+  it("shows ApprovalsPanel when the actor has build:approvals:view — paired with the denied test above", () => {
+    mockUseCan.mockReturnValue(true);
+    render(<CommandCenterPage />);
+    expect(screen.getByTestId("approvals-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("agent-runs-panel")).toBeInTheDocument();
+  });
+
+  it("hides RisksPanel when the actor lacks build:risks:view — paired with the granted test below", () => {
+    mockUseCan.mockImplementation((key: string) => key !== "build:risks:view");
+    render(<CommandCenterPage />);
+    expect(screen.queryByTestId("risks-panel")).not.toBeInTheDocument();
+  });
+
+  it("shows RisksPanel when the actor has build:risks:view — paired with the denied test above", () => {
+    mockUseCan.mockReturnValue(true);
+    render(<CommandCenterPage />);
+    expect(screen.getByTestId("risks-panel")).toBeInTheDocument();
+  });
+
+  it("shows BlockersPanel when the actor has build:tickets:view — paired with the hidden test below", () => {
+    mockUseCan.mockReturnValue(true);
+    render(<CommandCenterPage />);
+    expect(screen.getByTestId("blockers-panel")).toBeInTheDocument();
+  });
+
+  it("hides BlockersPanel and AgentRunsPanel when the actor lacks build:tickets:view — paired with the shown test above", () => {
+    mockUseCan.mockImplementation((key: string) => key !== "build:tickets:view");
+    render(<CommandCenterPage />);
+    expect(screen.queryByTestId("blockers-panel")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("agent-runs-panel")).not.toBeInTheDocument();
   });
 });

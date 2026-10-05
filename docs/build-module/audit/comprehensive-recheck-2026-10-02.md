@@ -1,0 +1,66 @@
+# Comprehensive Build specification recheck — 2026-10-02
+
+Status: documentation checks Current verified on source revision `a5b8347fb`; application behavior Current unverified unless a linked gate says otherwise. Planned, Conditional, and Deferred retain their meanings in the [architecture vocabulary](../architecture/08-deep-module-reconciliation.md).
+
+## Cross-check ledger
+
+| Scope checked | Authority and reconciliation | Result and remaining proof |
+|---|---|---|
+| Approved architecture HTML | The 16 recommendations in the local `architecture-review-20261002-184500.html` map to [ARC-01–16](../architecture/08-deep-module-reconciliation.md), [17 work packages](../implementation/18-architecture-work-package-registry.md), and six access layers. The report's 26 product areas map to the package registry. | Documentation covered. Recommendation strength and source findings are not deployment proof. Each package requires its own migration and operational evidence. |
+| Horizontal behavior | [Complete behavior matrix](../implementation/19-complete-surface-behavior-matrix.md) covers 17 universal behaviors, 15 Ticket capabilities, and Intake, activation, and portal journeys. | Documentation covered. For every record family an implementation claim must adopt, reject with reason, or defer each behavior; route rendering cannot close it. |
+| Current Build routes | The source has 75 `frontend/app/(authenticated)/build/**/page.tsx` pages. [Route decisions](../experience/routes-and-screen-decisions.md) list all 75 once, including `/build`. | Documentation covered. Six proposed/compatibility destinations require implementation and route tests. Program detail was added because the list had no stable direct detail route. |
+| External portal routes | The source has `/client-portal` and `/client-portal/[projectId]` under `frontend/app/(portal)`. [External portal screens](../experience/screens/external-client-portal.md) specify both plus conditional client views and negative access. | Current unverified source anchors. The project route uses partial numeric parsing and the detail component renders an attachment URL directly; strict full-ID validation and Files-mediated signed access must be proven before release. |
+| Persona screens and UX | [Persona sidebar authority](../experience/02-personas-navigation-and-sidebars.md), [14 screen documents](../experience/screens/README.md), [shared behavior](../experience/screens/shared-screen-contract.md), and [field/filter catalog](../experience/06-ui-component-and-filter-system.md) cover freelancers, agencies, PM/PjM, engineering, content, client and executive work. | Planned contracts include fields, filters, actions, pane/page/dialog, return, mobile, states, permission and cache. Persona aliases are configured views, not duplicate records. |
+| Signup and multi-module onboarding | [Onboarding](../onboarding/01-signup-and-multi-module-onboarding.md) and [activation screens](../experience/screens/activation.md) reconcile Workspace → Products → optional People, five default Build-only inputs, multiple selections, adaptive questions, custom field drafts, invitations, preview, resume and deterministic destination. | Planned. Cold invite → module standing → client grant remains the research priority. Six identity journeys require browser and persisted-state proof. |
+| RBAC and external access | [RBAC authority](../governance/rbac/01-role-model-and-open-risks.md) and ARC-01 require Org Owner/Admin access to enabled modules; Org Member requires explicit module assignment; project/record/field policy still narrows access. Client requests and grants are separate. | Planned target and Current unverified source. Test each actor against module, project, record, query, command, file, cache, event, AI and portal seams. Preserve permission keys. |
+| APIs, schemas, cache and architecture | [Architecture](../architecture/07-architecture-data-api-cache-ai.md), [screen data contracts](../architecture/screen-data-contracts.md), [deep modules](../architecture/08-deep-module-reconciliation.md), and [work packages](../implementation/18-architecture-work-package-registry.md) name owners, wire/Zod and database changes, indexes, cursor queries, outbox, revisions, idempotency, invalidation and migrations. | Planned contract, not a blanket assertion that every proposed HTTP path exists. Generated wire contract and source/controller parity must be checked at implementation time. |
+| Research packs, bugs and WOW | [Research traceability](./research-traceability.md), [bug ledger](./bugs-and-verification.md), [original WOW crosswalk](./original-wow-research-crosswalk.md), and [100 prioritized customer-value themes](../product/customer-value-and-differentiation.md) keep the original 120 IDs separate from the new 100. | All 120 original rows mapped. Historical HAVE/VERIFIED is Current unverified for this revision. Three representative screenshots were visually inspected in this recheck; retained screenshot paths are inventoried, not all visually reverified. |
+| Cross-module handoffs | [Ownership contract](../integrations/08-cross-module-client-content-commercial.md) assigns CRM, Accounting, Timesheets, Home and Files their records; Build owns contextual actions and safe return. | Planned. Invoice/payment, time approval, meeting calendar, customer account and file access need owner-module integration proof. |
+| Agent coordination and cleanup | [Work claims](../implementation/WORK-CLAIMS.md), [coordination rules](../implementation/17-agent-coordination-and-work-ownership.md), and [cleanup manifest](./cleanup-manifest.md) prevent overlapping primary seams and preserve unique research/evidence. | 39 byte-identical research copies and seven redundant generated summaries were removed in the prior pass. This recheck added three canonical documents and deleted no additional research. |
+
+## Corrections made in this recheck
+
+1. Separated browser routes from API interfaces on specialized screens; `/build` is a landing redirect, Inbox is a Home notification projection, and Feedbucket URLs are read/redirect compatibility until migration.
+2. Added external client portal page contracts and a stable Program detail destination. Added organization Budget and Reports compatibility destinations without inventing second data owners.
+3. Filled the original WOW crosswalk including item 105, which was missed by the first pass. The 120 source items and 100 new value themes use different numbering.
+4. Added a typed filter field/operator catalog and specified filtered-empty, saved-view, URL, export, dashboard and AI consistency.
+5. Explicitly separated Member client-access requests from grants, protected Form New/Cancel from implicit server draft creation, and required portal publish preview and confirmation.
+6. Corrected schema validation to reject unknown nested mutation keys, kept Ticket assignee canonicalization contingent on actual cardinality evidence, and required non-vacuous outbox/runtime registration checks.
+
+## Remaining implementation and evidence risks
+
+- No browser, database, network/console, real identity, client grant, mobile device, load, provider, payment, or deployment test was performed in this documentation recheck. The application cannot be called bug free from this result.
+- Proposed routes, interfaces, schemas, and migrations are implementation work; an agent must inspect current controllers and existing permission keys before modifying code. Unsupported illustrative screen GET paths must never be generated mechanically from UI routes.
+- The external portal's partial ID parsing and direct attachment URL are source-level audit findings, not a demonstrated exploit. File access and parameter validation need implementation and negative tenant/grant tests.
+- `frontend/CLAUDE.md` and `backend/CLAUDE.md` both refer to a root `CLAUDE.md`, but no root file exists in this checkout. Agents must use the existing scoped files, accepted ADRs, `CONTEXT.md`, and Build authorities; do not assume missing root rules. Repair those references or establish a root instruction file as an explicit separate documentation decision before using it as a precedence source.
+- 162 retained images are preserved in the research packs; only three representative images received visual inspection here. Do not present the rest as newly reviewed visual evidence.
+- Full release remains gated by [delivery and release criteria](../delivery/09-delivery-roadmap-release-gates-and-positioning.md) and [RBAC evidence](../governance/rbac/01-role-model-and-open-risks.md), with the original priority order: invite acceptance, module assignment, client grant activation.
+
+## Final start-readiness gate sample
+
+On the current documentation checkout, the following bounded checks were run before recommending implementation. A passing self-test proves that a gate's own negative fixtures work; it does not make the normal gate pass.
+
+| Check | Result | Start action |
+|---|---|---|
+| `pnpm check:build-execution-plan:self-test` | 5/5 passed | Keep the anti-vacuity fixtures. |
+| `pnpm check:build-execution-plan` | Failed: requires seven files under removed `docs/specs/build` / `architecture-refactor` paths | Migrate the gate to canonical `docs/build-module` authorities and assert real route, requirement, package, claim, and screen coverage. Do not recreate obsolete summaries merely to satisfy text checks. |
+| `pnpm check:route-census:self-test` | Passed | Retain its drift fixtures. |
+| `pnpm check:route-census` | Failed: expected `docs/specs/build/generated/routes.snapshot.json` is absent; actual census reports 84 route patterns | Move the snapshot owner to the canonical Build audit/generated location, generate and review the snapshot, then rerun. This 84-pattern census is not the 75-page count; document the distinct units. |
+| `pnpm -C frontend check:build-contracts:self-test` | 34/34 passed | Retain generated-schema anti-truncation and matching checks. |
+| `pnpm -C frontend check:build-contracts` | Failed: `contracts/build-contracts.generated.ts` hash is stale against vendored OpenAPI | Under `ARCH-06-WIRE-CONTRACTS`, compare OpenAPI operations with current backend, regenerate through the prescribed generator, review the diff, and rerun parity checks. Do not hand-edit generated output. |
+| `pnpm -C backend check:build-core-surface:self-test` and normal check | Both passed; normal check scanned 378 sibling files and 1,186 Build core-targeting specifiers with no reported boundary violations | Preserve this source boundary while implementing packages. Runtime registration and behavior require separate proof. |
+
+The first implementation packet is therefore **contract/gate baseline**, followed by Module Access authority as a technical dependency and the three user-visible release priorities: invite acceptance, automatic Build assignment, and usable client grant. Gate repair and current-source inventory can run in separate non-overlapping claims; schema/migration ownership remains serialized.
+
+## Repeatable documentation acceptance
+
+Compare actual page files against the 75 existing route rows; count both external portal pages; require a contract for each proposed destination; compare all 120 original WOW IDs and 100 canonical value rows; validate every relative Markdown/image link; check 16 architecture IDs and 26 product areas; and run staged/unstaged whitespace checks. A green documentation check does not change the status of the application.
+
+## Delivery checklist
+
+Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
+
+- [x] Record the source-revision `a5b8347fb` documentation cross-check for 16 architecture decisions, 26 areas, 75 Build pages, two portal pages, 120 original WOW IDs, and 100 value themes in [Cross-check ledger](#cross-check-ledger) and the [validation report](./validation-report.md#checks-performed).
+- [ ] Refresh the [start-readiness gate sample](#final-start-readiness-gate-sample) on the implementation revision; retain the dated failures as historical results and cite replacement command output.
+- [ ] Verify six onboarding journeys and the invite → module standing → client grant priority path through browser, persisted state, role/tenant, and worker evidence.
+- [ ] Resolve the documented portal ID/file-access, root instruction reference, and unsampled screenshot limitations with separate evidence before asserting release readiness.

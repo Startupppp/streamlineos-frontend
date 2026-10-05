@@ -109,12 +109,6 @@ describe("GET /build — the frontend must send what the backend accepts", () =>
     expect(projectFiltersKeys().size).toBeGreaterThanOrEqual(4);
   });
 
-  /**
-   * `page` lived on `ProjectFilters` and `projects-page.tsx` sent it, and
-   * `useProjects` spreads the filter object straight into the query string —
-   * so Zod answered `Unrecognized key: "page"` and `/build`
-   * rendered "Failed to load projects" at every viewport width.
-   */
   it("every ProjectFilters field exists in listProjectsSchema", () => {
     const { keys } = backendListQueryKeys();
     const unknown = [...projectFiltersKeys()].filter((k) => !keys.has(k));

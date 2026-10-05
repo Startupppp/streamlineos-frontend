@@ -1,7 +1,12 @@
+import { redirect } from "next/navigation";
 import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
-import { ProjectsPage } from "@/features/build/project-list/projects-page";
+import { resolveBuildEntryDestination } from "@/lib/build/build-entry-destination";
 
-export default async function BuildRoute() {
+export default async function BuildRoute({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   await enforceRouteAccess("/build");
-  return <ProjectsPage />;
+  redirect(resolveBuildEntryDestination(await searchParams));
 }

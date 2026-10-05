@@ -15,6 +15,7 @@ export const BUILD_SCOPE_STARS_LIMIT = 20;
 const PINS_STORAGE_NAME = "build-nav-pins";
 const STARS_STORAGE_NAME = "build-scope-stars";
 const RECENTS_STORAGE_NAME = "build-scope-recents";
+const COLLAPSED_STORAGE_NAME = "build-nav-collapsed";
 
 const EMPTY_IDS: readonly string[] = [];
 const EMPTY_SCOPES: readonly BuildScopeRef[] = [];
@@ -142,6 +143,10 @@ function useStoredJson<TValue>(
   return { value, write };
 }
 
+function parseBoolean(raw: unknown): boolean {
+  return raw === true;
+}
+
 function parseIds(raw: unknown): readonly string[] {
   if (!Array.isArray(raw)) return EMPTY_IDS;
   if (
@@ -225,6 +230,7 @@ export function useBuildNavPins(
   isPinned: (toolId: string) => boolean;
   canPinMore: boolean;
   togglePin: (toolId: string) => void;
+  reorderPins: (next: readonly string[]) => void;
 } {
   const { value: pinnedIds, write } = useStoredJson(
     PINS_STORAGE_NAME,
@@ -262,12 +268,39 @@ export function useBuildNavPins(
     write(pruned);
   }, [isAccessResolved, authorizedToolIds, pinnedIds, write]);
 
+  const reorderPins = useCallback(
+    (next: readonly string[]) => {
+      const authorized = new Set(authorizedToolIds);
+      write(next.filter((id) => authorized.has(id)).slice(0, BUILD_NAV_MAX_PINS));
+    },
+    [authorizedToolIds, write],
+  );
+
   return {
     pinnedIds,
     isPinned,
     canPinMore: scopePinCount < BUILD_NAV_MAX_PINS,
     togglePin,
+    reorderPins,
   };
+}
+
+export function useBuildNavCollapsed(): {
+  isCollapsed: boolean;
+  setCollapsed: (next: boolean) => void;
+} {
+  const { value: isCollapsed, write } = useStoredJson(
+    COLLAPSED_STORAGE_NAME,
+    parseBoolean,
+    false,
+  );
+
+  const setCollapsed = useCallback(
+    (next: boolean) => write(next),
+    [write],
+  );
+
+  return { isCollapsed, setCollapsed };
 }
 
 export function useBuildScopeStars(): {

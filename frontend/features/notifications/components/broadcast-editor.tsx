@@ -20,7 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   useCreateBroadcast,
   useUpdateBroadcast,
-} from "@/hooks/api/notifications";
+} from "@/hooks/api/notifications-broadcasts";
 import {
   NOTIFICATION_CATEGORIES,
   NOTIFICATION_CATEGORY_CONFIG,

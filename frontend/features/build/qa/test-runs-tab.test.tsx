@@ -230,3 +230,33 @@ it("pressing c opens the new run sheet when build:qa:manage is granted", () => {
   const lastCall = calls[calls.length - 1][0] as { open: boolean };
   expect(lastCall.open).toBe(true);
 });
+
+describe("regression filter — server-side (BT-9ea775d73705)", () => {
+  it("renders the Failures only filter toggle in the toolbar", () => {
+    render(<TestRunsTab projectId={1} />);
+    expect(screen.getByRole("switch", { name: /failures only/i })).toBeInTheDocument();
+  });
+
+  it("calls useTestRuns without failuresOnly when toggle is off", () => {
+    render(<TestRunsTab projectId={1} />);
+    const lastCall = mockUseTestRuns.mock.calls[mockUseTestRuns.mock.calls.length - 1] as [number, Record<string, unknown>];
+    expect(lastCall[1]).not.toHaveProperty("failuresOnly", true);
+  });
+
+  it("calls router.replace with failuresOnly=true in URL when toggle is clicked", () => {
+    render(<TestRunsTab projectId={1} />);
+    const toggle = screen.getByRole("switch");
+    fireEvent.click(toggle);
+    expect(mockReplace).toHaveBeenCalledWith(
+      expect.stringContaining("failuresOnly=true"),
+      expect.objectContaining({ scroll: false }),
+    );
+  });
+
+  it("calls useTestRuns with failuresOnly=true when URL param is set — server filters the page", () => {
+    mockSearchParams = new URLSearchParams("failuresOnly=true");
+    render(<TestRunsTab projectId={1} />);
+    const lastCall = mockUseTestRuns.mock.calls[mockUseTestRuns.mock.calls.length - 1] as [number, Record<string, unknown>];
+    expect(lastCall[1]).toMatchObject({ failuresOnly: true });
+  });
+});

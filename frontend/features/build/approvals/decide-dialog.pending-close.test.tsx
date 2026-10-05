@@ -2,6 +2,12 @@ import React from "react";
 import { render, act } from "@testing-library/react";
 
 let capturedDialogOnOpenChange: ((v: boolean) => void) | undefined;
+let pending = false;
+jest.mock("@/hooks/api/build/approvals", () => ({
+  useApproval: () => ({ data: undefined, error: null, ownerStamp: null, refetch: jest.fn() }),
+  useDecideApproval: () => ({ isPending: pending, mutateAsync: jest.fn() }),
+}));
+jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
 
 jest.mock("@hookform/resolvers/zod", () => ({
   zodResolver: () => () => ({ values: { decision: "approved", decisionComment: "" } }),
@@ -37,9 +43,9 @@ jest.mock("@/components/ui/dialog", () => ({
   },
   DialogContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   DialogHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  DialogTitle: ({ children }: { children: React.ReactNode }) => <span />,
+  DialogTitle: () => <span />,
   DialogFooter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  DialogDescription: ({ children }: { children: React.ReactNode }) => <span />,
+  DialogDescription: () => <span />,
 }));
 
 jest.mock("@/components/ui/form", () => ({
@@ -81,18 +87,20 @@ import { DecideDialog } from "./decide-dialog";
 describe("DecideDialog — pending-close guard", () => {
   beforeEach(() => {
     capturedDialogOnOpenChange = undefined;
+    pending = false;
     jest.clearAllMocks();
   });
 
   it("blocks dialog close via backdrop/Escape while isPending=true", () => {
+    pending = true;
     const onOpenChange = jest.fn();
     render(
       <DecideDialog
         open
-        isPending
+        projectId={1}
+        approvalId={1}
+        revision={1}
         onOpenChange={onOpenChange}
-        onConfirm={jest.fn()}
-        approvalTitle="Deploy v2.0"
       />,
     );
 
@@ -108,10 +116,10 @@ describe("DecideDialog — pending-close guard", () => {
     render(
       <DecideDialog
         open
-        isPending={false}
+        projectId={1}
+        approvalId={1}
+        revision={1}
         onOpenChange={onOpenChange}
-        onConfirm={jest.fn()}
-        approvalTitle="Deploy v2.0"
       />,
     );
 

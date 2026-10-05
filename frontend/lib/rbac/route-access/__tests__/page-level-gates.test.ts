@@ -24,7 +24,6 @@ const SESSION_ONLY_BY_DESIGN: readonly SessionOnlySurface[] = [
   { path: "/chat", reason: "Platform core communication surface." },
   { path: "/chat/channels", subtree: true, reason: "Channel membership is enforced per channel, not per route." },
   { path: "/chat/invite", subtree: true, reason: "Accepting a chat invite is a member self-service action." },
-  { path: "/chat/settings", reason: "Alias that redirects to /chat and renders nothing. The destination carries its own gate." },
   { path: "/me", subtree: true, reason: "Employee self-service. The whole /me/* subtree derives its subject from the session." },
   { path: "/settings", reason: "The personal account landing page. Everything beneath it is organization administration." },
   { path: "/settings/notifications/my-preferences", subtree: true, reason: "A member's own notification preferences under Settings." },
@@ -34,11 +33,8 @@ const SESSION_ONLY_BY_DESIGN: readonly SessionOnlySurface[] = [
   { path: "/knowledge/wiki/private", subtree: true, reason: "A member's own private Knowledge Base pages." },
   { path: "/knowledge/wiki/doc", subtree: true, reason: "Knowledge Base page reading is platform core; per-record ACLs gate the content." },
   { path: "/knowledge/wiki/spaces", childrenOnly: true, reason: "An individual Knowledge Base space is a reading surface; the space list itself stays gated on kb:spaces:view." },
+  { path: "/post-invite", reason: "The invitation landing router. It only reads the session and access result to redirect the new member to the surface they were granted." },
   { path: "/hr/announcements", reason: "Company-wide announcement reading that happens to sit under the HR prefix." },
-  { path: "/announcements", reason: "Alias that redirects to /hr/announcements and renders nothing. The destination carries its own gate." },
-  { path: "/kb", reason: "Alias that redirects to /knowledge/wiki and renders nothing. The destination carries its own gate." },
-  { path: "/docs", reason: "Alias that redirects to /knowledge/wiki and renders nothing. The destination carries its own gate." },
-  { path: "/knowledge", reason: "Module root that redirects to /knowledge/chat and renders nothing. The destination carries its own gate." },
 ];
 
 const GATED_MODULE_PREFIXES = ["/accounting", "/billing", "/blog", "/build", "/crm",

@@ -1,11 +1,11 @@
 import { render, screen } from "@testing-library/react";
 import { EntityActionDialog } from "./entity-action-dialog";
-import type { EntityAction } from "@/hooks/api/chat";
+import type { EntityAction } from "@/hooks/api/chat-entities";
 
 const mutateAsync = jest.fn().mockResolvedValue({});
 const optionsResult = { data: [{ value: "u1", label: "Priya", imageUrl: null }] };
 
-jest.mock("@/hooks/api/chat", () => ({
+jest.mock("@/hooks/api/chat-entities", () => ({
   useSubmitEntityAction: () => ({ mutateAsync, isPending: false }),
   useEntityActionOptions: () => optionsResult,
 }));

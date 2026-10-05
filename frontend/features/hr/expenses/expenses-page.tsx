@@ -23,7 +23,7 @@ import {
 import type { Employee } from "@/types/hr";
 import { CreateExpenseDialog } from "@/features/hr/expenses/components/create-expense-dialog";
 import { ImportExpenseSheet } from "@/features/hr/expenses/components/import-expense-sheet";
-import { ExpenseExportDialog } from "@/components/expenses/expense-export-dialog";
+import { ExpenseExportDialog } from "@/components/expenses/expense-export/expense-export-dialog";
 import { useExpenseFilters } from "@/hooks/common/use-expense-filters";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useSession } from "next-auth/react";

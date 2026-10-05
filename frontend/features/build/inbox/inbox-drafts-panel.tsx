@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { TrashIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import {
@@ -9,7 +9,6 @@ import {
   useDeleteCommentDraft,
   useDeleteAllCommentDrafts,
 } from "@/hooks/api/build/comment-drafts";
-import type { CommentDraftListItem } from "@/hooks/api/build/comment-drafts";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -17,11 +16,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
+import { buildMyWorkReturnHref, getMyWorkTicketHref } from "@/features/build/ticket-details/build-ticket-detail-url";
 import { CommentDraftRow } from "@/features/build/drafts/comment-draft-row";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
-
-const DRAFTS_RENDER_LIMIT = 100;
 
 function DraftsPanelSkeleton() {
   return (
@@ -45,14 +42,28 @@ function DraftsPanelSkeleton() {
 
 export function InboxDraftsPanel() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnHref = buildMyWorkReturnHref(searchParams);
   const requestLeave = useNavigationLeave();
-  const { data, isLoading, isError, error, refetch } = useMyCommentDrafts();
+  const { data, isLoading, isError, error, refetch, fetchNextPage, hasNextPage } = useMyCommentDrafts();
   const deleteDraft = useDeleteCommentDraft();
   const deleteAll = useDeleteAllCommentDrafts();
   const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
-  const allDrafts = useMemo(() => data ?? [], [data]);
-  const drafts = useMemo(() => allDrafts.slice(0, DRAFTS_RENDER_LIMIT), [allDrafts]);
+  const allDrafts = useMemo(() => data?.pages.flatMap((p) => p.data) ?? [], [data]);
+
+  useEffect(() => {
+    const node = sentinelRef.current;
+    if (!node || !hasNextPage) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        void fetchNextPage();
+      }
+    });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasNextPage, fetchNextPage]);
 
   const pageState = usePageState({
     permission: "build:tickets:view",
@@ -62,14 +73,8 @@ export function InboxDraftsPanel() {
     isEmpty: allDrafts.length === 0,
   });
 
-  const handleOpenDraft = useCallback(
-    (draft: CommentDraftListItem) => {
-      const { projectId, projectKey, ticketNumber } = draft.ticket;
-      if (!projectId) return;
-      requestLeave(() =>
-        router.push(getTicketDetailHref(projectId, projectKey, ticketNumber)),
-      );
-    },
+  const handleNavigateDraft = useCallback(
+    (href: string) => requestLeave(() => router.push(href)),
     [requestLeave, router],
   );
 
@@ -139,14 +144,22 @@ export function InboxDraftsPanel() {
           }
         >
           <div>
-            {drafts.map((draft) => (
-              <CommentDraftRow
-                key={draft.id}
-                draft={draft}
-                onOpen={handleOpenDraft}
-                onDelete={handleDelete}
-              />
-            ))}
+            {allDrafts.map((draft) => {
+              const { projectId, projectKey, ticketNumber } = draft.ticket;
+              const href = projectId && projectId > 0
+                ? getMyWorkTicketHref(projectId, projectKey, ticketNumber, returnHref)
+                : null;
+              return (
+                <CommentDraftRow
+                  key={draft.id}
+                  draft={draft}
+                  href={href}
+                  onNavigate={handleNavigateDraft}
+                  onDelete={handleDelete}
+                />
+              );
+            })}
+            <div ref={sentinelRef} aria-hidden="true" />
           </div>
         </PageState>
       </div>
@@ -155,7 +168,7 @@ export function InboxDraftsPanel() {
         open={confirmDeleteAll}
         onOpenChange={handleCloseDeleteAll}
         title="Clear all drafts?"
-        description={`Permanently delete all ${allDrafts.length} saved comment draft${allDrafts.length !== 1 ? "s" : ""}. This cannot be undone.`}
+        description="Permanently delete all your saved comment drafts. This cannot be undone."
         confirmLabel="Clear all"
         destructive
         isPending={deleteAll.isPending}

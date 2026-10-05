@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import dynamic from "next/dynamic";
+import type { AnimatedNavIconComponent } from "@/components/layout/sidebar/sidebar-animated-nav";
 import {
   KbBuilding2Icon,
   KbCheckIcon,
@@ -10,7 +11,6 @@ import {
   KbLockIcon,
   KbShare2Icon,
   KbUsersIcon,
-  type KbIconComponent,
 } from "@/features/wiki/lib/kb-icons";
 import { Button } from "@/components/ui/button";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -30,7 +30,7 @@ type Visibility = "private" | "org" | "public";
 
 const VISIBILITY_OPTIONS: Array<{
   value: Visibility;
-  icon: KbIconComponent;
+  icon: AnimatedNavIconComponent;
   label: string;
   description: string;
 }> = [

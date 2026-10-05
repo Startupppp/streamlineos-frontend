@@ -4,10 +4,11 @@ import userEvent from "@testing-library/user-event";
 let mockSearchParams = new URLSearchParams();
 const mockReplace = jest.fn();
 const mockUseInfiniteProjects = jest.fn();
+const mockAccess = jest.fn();
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: mockReplace, push: jest.fn() }),
-  usePathname: () => "/build",
+  usePathname: () => "/build/projects",
   useSearchParams: () => mockSearchParams,
 }));
 
@@ -18,10 +19,7 @@ jest.mock("@/hooks/api/entitlements", () => ({
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => false,
   useModuleEnabled: () => true,
-  useAccess: () => ({
-    data: { isOrgOwner: false, scopes: { "build:view": "all" }, modules: {} },
-    isLoading: false,
-  }),
+  useAccess: () => mockAccess(),
 }));
 
 jest.mock("@/components/auth/require-module", () => ({
@@ -57,6 +55,10 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockSearchParams = new URLSearchParams();
   mockUseInfiniteProjects.mockReturnValue(emptyProjectsResult());
+  mockAccess.mockReturnValue({
+    data: { isOrgOwner: false, scopes: { "build:view": "all" }, modules: {} },
+    isLoading: false,
+  });
   mockReplace.mockReset();
 });
 
@@ -99,12 +101,14 @@ describe("ProjectsPage — productId URL param", () => {
 });
 
 describe("ProjectsPage — managerId URL param", () => {
-  it("reads managerId from the URL so the manager filter can be deep-linked", () => {
+  it("passes managerId to the server so the filter applies across all keyset pages", () => {
     mockSearchParams = new URLSearchParams("managerId=user-abc");
 
     render(<ProjectsPage />);
 
-    expect(mockUseInfiniteProjects).toHaveBeenCalled();
+    expect(mockUseInfiniteProjects).toHaveBeenCalledWith(
+      expect.objectContaining({ managerId: "user-abc" }),
+    );
   });
 
   it("falls back to filterLead for backward-compatible deep links from existing bookmarks", () => {
@@ -112,7 +116,55 @@ describe("ProjectsPage — managerId URL param", () => {
 
     render(<ProjectsPage />);
 
-    expect(mockUseInfiniteProjects).toHaveBeenCalled();
+    expect(mockUseInfiniteProjects).toHaveBeenCalledWith(
+      expect.objectContaining({ managerId: "user-abc" }),
+    );
+  });
+
+  it("omits managerId when neither URL parameter is present", () => {
+    render(<ProjectsPage />);
+
+    const [filters] = mockUseInfiniteProjects.mock.calls.at(-1) as [Record<string, unknown>];
+    expect(filters).not.toHaveProperty("managerId");
+  });
+});
+
+describe("ProjectsPage — access-scoped heading", () => {
+  it("calls the member-reachable result My Projects", () => {
+    render(<ProjectsPage />);
+
+    expect(screen.getByRole("heading", { name: "My Projects" })).toBeInTheDocument();
+    expect(screen.getByText("Projects you belong to, manage, or reach through your teams")).toBeInTheDocument();
+  });
+
+  it("calls an org owner's unrestricted result All Projects", () => {
+    mockAccess.mockReturnValue({
+      data: { isOrgOwner: true, scopes: {}, modules: {} },
+      isLoading: false,
+    });
+
+    render(<ProjectsPage />);
+
+    expect(screen.getByRole("heading", { name: "All Projects" })).toBeInTheDocument();
+  });
+
+  it("calls an unrestricted Build manager's result All Projects", () => {
+    mockAccess.mockReturnValue({
+      data: { isOrgOwner: false, scopes: { "build:view": "all", "build:manage": "all" }, modules: {} },
+      isLoading: false,
+    });
+
+    render(<ProjectsPage />);
+
+    expect(screen.getByRole("heading", { name: "All Projects" })).toBeInTheDocument();
+  });
+
+  it("uses a neutral heading while access is loading", () => {
+    mockAccess.mockReturnValue({ data: undefined, isLoading: true });
+
+    render(<ProjectsPage />);
+
+    expect(screen.getByRole("heading", { name: "Projects" })).toBeInTheDocument();
   });
 });
 

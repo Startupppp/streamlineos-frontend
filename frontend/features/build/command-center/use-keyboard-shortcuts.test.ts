@@ -48,13 +48,13 @@ describe("c+p and c+t shortcuts fire the correct create callback", () => {
 });
 
 describe("g+p shortcut navigates to the projects list", () => {
-  it("g then p navigates to /build", () => {
+  it("g then p navigates to /build/projects", () => {
     renderHook(() =>
       useKeyboardShortcuts(mockOnCreateProject, mockOnCreateIssue),
     );
     act(() => press("g"));
     act(() => press("p"));
-    expect(mockPush).toHaveBeenCalledWith("/build");
+    expect(mockPush).toHaveBeenCalledWith("/build/projects");
   });
 });
 

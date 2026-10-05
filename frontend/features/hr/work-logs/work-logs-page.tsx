@@ -9,11 +9,9 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 
-import {
-  WorkLogFilterActions,
-  WorkLogFiltersPanel,
-  type WorkLogFilters,
-} from "@/features/hr/work-logs/work-log-filters";
+import { WorkLogFilterActions } from "@/features/hr/work-logs/work-log-filter-actions";
+import { WorkLogFiltersPanel } from "@/features/hr/work-logs/work-log-filters-panel";
+import type { WorkLogFilters } from "@/features/hr/work-logs/work-log-filter-types";
 import { WorkLogMonthGroup } from "@/features/hr/work-logs/work-log-month-group";
 import {
   WorkLogDeptPromptCard,

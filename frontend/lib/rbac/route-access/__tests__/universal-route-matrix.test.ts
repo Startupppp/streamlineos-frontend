@@ -80,10 +80,11 @@ const MATRIX: readonly MatrixRow[] = [
   // ── /dashboard and /home ────────────────────────────────────────────────────
   // root read allowed — only the root itself is universal; exact-by-default so any new sub-route fails closed
   { path: "/dashboard", universalMatch: true, decisionKind: "universal", label: "dashboard root" },
+  { path: "/post-invite", universalMatch: true, decisionKind: "universal", label: "authenticated invitation landing" },
+  { path: "/post-invite/unknown", universalMatch: false, decisionKind: "unknown", label: "invitation landing descendants stay closed" },
 
   // ── /announcements and /hr/announcements ────────────────────────────────────
   // root read allowed — only the root itself is universal; exact-by-default so any new sub-route fails closed
-  { path: "/announcements", universalMatch: true, decisionKind: "universal", label: "announcements root" },
   { path: "/hr/announcements", universalMatch: true, decisionKind: "universal", label: "announcements under HR prefix — universal reading" },
 
   // ── /settings ───────────────────────────────────────────────────────────────

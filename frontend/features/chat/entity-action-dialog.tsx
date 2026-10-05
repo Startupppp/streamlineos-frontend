@@ -34,7 +34,7 @@ import {
   type EntityAction,
   type EntityActionInputSpec,
   type EntityReferenceInput,
-} from "@/hooks/api/chat";
+} from "@/hooks/api/chat-entities";
 
 /**
  * One dialog for every action on every referenced record. It renders from the

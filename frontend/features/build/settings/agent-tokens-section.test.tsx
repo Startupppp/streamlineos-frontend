@@ -233,3 +233,28 @@ describe("AgentTokensSection — token controls follow settings:api-tokens:write
     expect(screen.getByRole("button", { name: /revoke/i })).toBeInTheDocument();
   });
 });
+
+describe("AgentTokensSection — cleartext token never appears in the list view (BLD-X-FE-SETTINGS-AGENTS-S005)", () => {
+  const PLAUSIBLE_TOKEN_CHARS = /^slos_[A-Za-z0-9]{20,}/;
+
+  it("rendered token item does not contain a plausible full-length token string — prefix only", () => {
+    mockData = [ACTIVE_TOKEN];
+    const { container } = render(<AgentTokensSection />);
+    expect(container.textContent).not.toMatch(PLAUSIBLE_TOKEN_CHARS);
+  });
+
+  it("tokenPrefix shown in list is shorter than a real token — masked display confirmed", () => {
+    mockData = [ACTIVE_TOKEN];
+    render(<AgentTokensSection />);
+    const prefixEl = screen.getByText(/slos_00/);
+    const displayedText = prefixEl.textContent ?? "";
+    expect(displayedText.length).toBeLessThan(20);
+  });
+
+  it("list view still renders correctly with no cleartext suppression needed — negative control passes when prefix is the only value available", () => {
+    mockData = [{ ...ACTIVE_TOKEN, tokenPrefix: "slos_ff" }];
+    render(<AgentTokensSection />);
+    expect(screen.getByText(/slos_ff/)).toBeInTheDocument();
+    expect(screen.queryByText(/slos_ff[A-Za-z0-9]{10,}/)).not.toBeInTheDocument();
+  });
+});

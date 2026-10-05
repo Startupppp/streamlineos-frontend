@@ -13,10 +13,11 @@ jest.mock("./notification-event-stream", () => ({
   consumeNotificationStream: (...args: unknown[]) => mockConsumeStream(...args),
 }));
 
-const useSessionMock = jest.fn();
+const mockUseSession = jest.fn();
 jest.mock("next-auth/react", () => ({
-  useSession: () => useSessionMock(),
+  useSession: () => mockUseSession(),
 }));
+jest.mock("@/lib/org-scoped-storage", () => ({ useOrgStorageScope: () => `authenticated:${mockUseSession().data?.orgId ?? ""}:${mockUseSession().data?.user?.id ?? ""}` }));
 
 const useRouterMock = jest.fn();
 jest.mock("next/navigation", () => ({
@@ -41,7 +42,9 @@ describe("useNotificationEvents — effect dependency array stability", () => {
     global.fetch = jest.fn().mockImplementation((url: string) => {
       if (String(url).includes("/notifications/events/token"))
         return Promise.resolve({ ok: true, json: () => Promise.resolve({ token: "tok" }) });
-      return Promise.resolve({ ok: true, json: () => Promise.resolve({ backendJwt: "jwt" }) });
+      const data = mockUseSession().data;
+      const backendJwt = `header.${Buffer.from(JSON.stringify({ sub: data?.user?.id, orgId: data?.orgId, sessionId: data?.sessionId, exp: 9_999_999_999 })).toString("base64url")}.signature`;
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({ backendJwt }) });
     }) as typeof global.fetch;
 
     mockConsumeStream.mockImplementation(
@@ -51,7 +54,7 @@ describe("useNotificationEvents — effect dependency array stability", () => {
         }),
     );
 
-    useSessionMock.mockReturnValue({ data: { orgId: "org-1" }, status: "authenticated" });
+    mockUseSession.mockReturnValue({ data: { orgId: "org-1", user: { id: "user-1" }, sessionId: "session-1" }, status: "authenticated" });
     useRouterMock.mockReturnValue({ push: jest.fn() });
   });
 
@@ -60,7 +63,7 @@ describe("useNotificationEvents — effect dependency array stability", () => {
     jest.useRealTimers();
     global.fetch = savedFetch;
     mockConsumeStream.mockClear();
-    useSessionMock.mockClear();
+    mockUseSession.mockClear();
     useRouterMock.mockClear();
   });
 
@@ -93,7 +96,7 @@ describe("useNotificationEvents — effect dependency array stability", () => {
     const firstSignal = (mockConsumeStream.mock.calls[0] as [string, string, AbortSignal])[2];
 
     act(() => {
-      useSessionMock.mockReturnValue({ data: { orgId: "org-1" }, status: "loading" });
+      mockUseSession.mockReturnValue({ data: { orgId: "org-1", user: { id: "user-1" }, sessionId: "session-1" }, status: "loading" });
       rerender();
     });
 
@@ -112,7 +115,7 @@ describe("useNotificationEvents — effect dependency array stability", () => {
     expect(firstSignal.aborted).toBe(false);
 
     act(() => {
-      useSessionMock.mockReturnValue({ data: { orgId: "org-2" }, status: "authenticated" });
+      mockUseSession.mockReturnValue({ data: { orgId: "org-2", user: { id: "user-1" }, sessionId: "session-1" }, status: "authenticated" });
       rerender();
     });
 

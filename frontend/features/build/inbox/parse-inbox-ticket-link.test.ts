@@ -1,7 +1,9 @@
 import {
+  extractBuildProjectId,
   normalizeBuildDeepLink,
   parseInboxTicketLink,
 } from "./parse-inbox-ticket-link";
+import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 
 describe("parseInboxTicketLink", () => {
   it("parses a canonical /build ticket-key href", () => {
@@ -60,10 +62,131 @@ describe("parseInboxTicketLink", () => {
     expect(parseInboxTicketLink("/dashboard")).toBeNull();
     expect(parseInboxTicketLink(null)).toBeNull();
   });
+
+  it.each([
+    "/build/1/tickets/%",
+    "/build/1/tickets/%E0%A4%A",
+    "/build/1/tickets/%C0%AF",
+    "/build/1/tickets/STRE%2F29",
+    "/build/1/tickets/not-a-ticket",
+    "/build/0/tickets/STRE-29",
+    "/build/2147483648/tickets/STRE-29",
+    "/build/1/tickets/0",
+    "/build/1/tickets/2147483648",
+    "/build/1/tickets/STRE-0",
+    "/build/1/tickets/STRE-2147483648",
+    "/build/1?ticket=7junk",
+    "/build/1?ticket=7e2",
+    "/build/1?ticket=0",
+    "/build/1?ticket=-7",
+    "/build/1?ticket=2147483648",
+    "/build/0?ticket=7",
+    "/build/2147483648?ticket=7",
+    "/build/1/tickets/STRE-29?comment=7junk",
+    "/build/1/tickets/STRE-29?comment=0",
+    "/build/1/tickets/STRE-29?comment=-7",
+    "/build/1/tickets/STRE-29?comment=2147483648",
+    "/build/1?ticket=7&comment=7junk",
+    "/build/1?ticket=7&comment=",
+  ])("refuses malformed or invalid identifiers without throwing: %s", (link) => {
+    expect(parseInboxTicketLink(link)).toBeNull();
+  });
+
+  it.each([
+    "/build/2147483647/tickets/STRE-2147483647?comment=2147483647",
+    "/projects/2147483647/tickets/2147483647?comment=2147483647",
+  ])("retains valid maximum int32 ticket and comment identifiers: %s", (link) => {
+    expect(parseInboxTicketLink(link)).toEqual({
+      projectId: 2147483647,
+      ticketId: link.includes("STRE-") ? null : 2147483647,
+      ticketKey: link.includes("STRE-") ? "STRE-2147483647" : null,
+      commentId: 2147483647,
+      href: link.replace("/projects/", "/build/"),
+    });
+  });
+
+  it("retains a valid numeric ticket, encoded key and board query", () => {
+    expect(parseInboxTicketLink("/build/1/tickets/29")?.ticketId).toBe(29);
+    expect(parseInboxTicketLink("/build/1/tickets/STRE%2D29")?.ticketKey).toBe("STRE-29");
+    expect(parseInboxTicketLink("/build/2147483647/issues?ticket=2147483647&comment=2147483647")?.href)
+      .toBe("/build/2147483647/issues?ticket=2147483647&comment=2147483647");
+  });
+
+  it.each([false, true])("round-trips a produced generated-project key and comment in a legacy=%s link", (legacy) => {
+    const href = getTicketDetailHref(12, "WEB-123", 29, 9);
+    const link = legacy ? href.replace("/build/", "/projects/") : href;
+    expect(parseInboxTicketLink(link)).toEqual({
+      projectId: 12, ticketId: null, ticketKey: "WEB-123-29", commentId: 9, href,
+    });
+  });
+});
+
+describe("extractBuildProjectId", () => {
+  it.each([
+    "/build/0/tickets/STRE-29",
+    "/build/2147483648/tickets/STRE-29",
+    "/build/1junk/tickets/STRE-29",
+    "/build/01/tickets/STRE-29",
+    "/dashboard",
+  ])("refuses an invalid or non-project path: %s", (link) => {
+    expect(extractBuildProjectId(link)).toBeNull();
+  });
+
+  it("retains canonical and legacy project context", () => {
+    expect(extractBuildProjectId("/build/1/tickets/STRE-29")).toBe(1);
+    expect(extractBuildProjectId("/projects/2147483647/feedbucket/9")).toBe(2147483647);
+    expect(extractBuildProjectId("/build/29")).toBe(29);
+  });
 });
 
 describe("normalizeBuildDeepLink", () => {
+  it.each([
+    "javascript:alert(1)",
+    "javascript:javascript:alert(1)",
+    "data:text/html,<script>alert(1)</script>",
+    "mailto:person@example.com",
+    "file:///build/1",
+    "ftp://example.com/build/1",
+    "https://",
+    "http://[invalid",
+    "https:/example.com/build/1",
+    "http:example.com/build/1",
+    "//example.com/build/1",
+    "  //example.com/build/1  ",
+    "https://example.com//other.example/build/1",
+    "/build/..//other.example/path",
+    "/build/1\\tickets/29",
+    "\\\\example.com\\build\\1",
+    "/build/1\n/tickets/29",
+    "/build/1\r/tickets/29",
+    "/build/1\t/tickets/29",
+    "/build/1\u0000/tickets/29",
+    "/build/1\u007f/tickets/29",
+    "/build/1\u0085/tickets/29",
+    "",
+    "   ",
+  ])("resolves unsafe or malformed targets to the universal Inbox: %s", (link) => {
+    expect(normalizeBuildDeepLink(link)).toBe("/inbox");
+  });
+
+  it.each([
+    ["https://old.example/projects/54/tickets/STRE-29?comment=8#activity", "/build/54/tickets/STRE-29?comment=8"],
+    ["http://old.example/build/54/issues?ticket=29#activity", "/build/54/issues?ticket=29"],
+    ["/crm/leads?view=active&search=some%20client#details", "/crm/leads?view=active&search=some%20client"],
+    ["/projects?view=active&return=%2Fbuild%2F54", "/build/projects?view=active&return=%2Fbuild%2F54"],
+    ["build/54/tickets/STRE-29?comment=8", "/build/54/tickets/STRE-29?comment=8"],
+    ["/", "/"],
+  ])("keeps valid app navigation and existing fragment handling for %s", (link, expected) => {
+    const normalized = normalizeBuildDeepLink(link);
+    expect(normalized).toBe(expected);
+    expect(new URL(normalized, "https://app.example").origin).toBe("https://app.example");
+    expect(normalizeBuildDeepLink(normalized)).toBe(normalized);
+  });
+
   it("rewrites /projects paths to /build for client-side navigation", () => {
+    expect(normalizeBuildDeepLink("/projects?view=active")).toBe(
+      "/build/projects?view=active",
+    );
     expect(normalizeBuildDeepLink("/projects/1")).toBe("/build/1");
     expect(normalizeBuildDeepLink("/projects/1/feedbucket/9")).toBe(
       "/build/1/feedbucket/9",

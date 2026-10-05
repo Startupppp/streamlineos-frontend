@@ -74,9 +74,9 @@ const STUB_TEMPLATES: ProjectTemplate[] = [
 ];
 
 const STUB_APPROVALS: ApprovalInboxItem[] = [
-  { id: 1, projectId: 1, projectName: "StreamlineOS", projectKey: "SL", entityType: "task", entityId: 101, title: "Approve quarterly budget allocation", status: "pending", level: 1, dueAt: "2026-12-31", requestedById: "user_1", decidedAt: null },
-  { id: 2, projectId: 1, projectName: "StreamlineOS", projectKey: "SL", entityType: "milestone", entityId: 202, title: "Sign off on release 2.0 scope", status: "requested", level: 1, dueAt: null, requestedById: "user_2", decidedAt: null },
-  { id: 3, projectId: 2, projectName: "Platform", projectKey: "PL", entityType: "change_request", entityId: 303, title: "Authorise database schema change", status: "escalated", level: 2, dueAt: "2026-11-15", requestedById: "user_3", decidedAt: null },
+  { id: 1, revision: 1, projectId: 1, projectName: "StreamlineOS", projectKey: "SL", entityType: "task", entityId: 101, title: "Approve quarterly budget allocation", status: "pending", level: 1, dueAt: "2026-12-31", requestedById: "user_1", decidedAt: null },
+  { id: 2, revision: 1, projectId: 1, projectName: "StreamlineOS", projectKey: "SL", entityType: "milestone", entityId: 202, title: "Sign off on release 2.0 scope", status: "requested", level: 1, dueAt: null, requestedById: "user_2", decidedAt: null },
+  { id: 3, revision: 1, projectId: 2, projectName: "Platform", projectKey: "PL", entityType: "change_request", entityId: 303, title: "Authorise database schema change", status: "escalated", level: 2, dueAt: "2026-11-15", requestedById: "user_3", decidedAt: null },
 ];
 
 const STUB_MY_WORK: MyWorkItem[] = [

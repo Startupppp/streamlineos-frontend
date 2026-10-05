@@ -31,6 +31,7 @@ import { useOrgDisplay } from "@/hooks/api/org-display";
 import { formatMoneyCompact } from "@/lib/format-utils";
 import { useMemberCostColumns, type MemberBreakdownRow } from "./use-member-cost-columns";
 import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
+import { ProjectTimeBudgetSection } from "./project-time-budget-section";
 
 interface ProjectBudgetPageProps {
   projectId: string;
@@ -158,9 +159,6 @@ export function ProjectBudgetPage({ projectId: projectIdStr }: ProjectBudgetPage
   );
 
   const overBudget = (budget?.remaining ?? 0) < 0;
-  // Hours the API could not put a price on: no rate was stamped on the entry, or
-  // the entry was rated in a currency other than the budget's. Actual Cost omits
-  // them, so saying only "under budget" beside them would understate the spend.
   const uncostedHours =
     (budget?.unratedHours ?? 0) + (budget?.excludedCurrencyHours ?? 0);
   const billableHoursLabel = `${(budget?.totalHours ?? 0).toFixed(1)} billable hours`;
@@ -273,6 +271,8 @@ export function ProjectBudgetPage({ projectId: projectIdStr }: ProjectBudgetPage
             />
         ) : null}
         </PageState>
+
+        <ProjectTimeBudgetSection projectId={projectId} />
       </PmPageShell>
     </PageWrapper>
   );

@@ -1,16 +1,13 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Clock, ListChecks } from "lucide-react";
 import { toast } from "sonner";
-import { isWriteConflict, lazyContract } from "@/lib/api-envelope";
-import { useApprovalInbox, useDecideApproval } from "@/hooks/api/build/approvals";
+import { useApprovalInbox, useUpdateApproval } from "@/hooks/api/build/approvals";
 import { useCan } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
-import { useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api-client";
-import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
   StatCard,
@@ -30,8 +27,7 @@ import {
 } from "@/features/build/shared/use-build-list-filters";
 import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { ENTITY_OPTIONS, STATUS_OPTIONS } from "./approvals-constants";
-import type { ApprovalInboxItem, DecideApprovalInput } from "@/types/projects";
-import { getErrorMessage } from "@/lib/get-error-message";
+import type { ApprovalInboxItem } from "@/types/projects";
 import { PmPageShell, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 import {
   INBOX_TABLE_HEADERS,
@@ -39,10 +35,6 @@ import {
   buildApprovalsInboxColumns,
   ApprovalsInboxMobileCard,
 } from "./approvals-inbox-columns";
-
-const approvalDecideContract = lazyContract(() =>
-  import("@/hooks/api/build/approvals-schema").then((m) => m.approvalRowContract),
-);
 
 const FILTER_DEFINITIONS = [
   { param: "status", options: STATUS_OPTIONS.map((o) => o.value) },
@@ -52,9 +44,12 @@ const FILTER_DEFINITIONS = [
 ] as const;
 
 export function ApprovalsInboxPage() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const canDecide = useCan("build:approvals:decide");
+  const canManage = useCan("build:approvals:manage");
   const searchInputRef = useRef<HTMLInputElement | null>(null);
-  const queryClient = useQueryClient();
   const isOnline = useOnlineStatus();
 
   const listFilters = useBuildListFilters({
@@ -92,8 +87,17 @@ export function ApprovalsInboxPage() {
   const { data: membersRes } = useOrgMembers(1, 100);
   const members = useMemo(() => membersRes?.data ?? [], [membersRes]);
 
-  const [decideTarget, setDecideTarget] = useState<DecideTarget | null>(null);
-  const decideApproval = useDecideApproval(decideTarget?.projectId ?? 0);
+  const [queueTarget, setQueueTarget] = useState<DecideTarget | null>(null);
+  const [returnFocus, setReturnFocus] = useState<HTMLElement | null>(null);
+  const selectionIds = ["projectId", "approvalId"].map((key) => {
+    const raw = searchParams.get(key);
+    if (!raw || searchParams.getAll(key).length !== 1 || !/^[1-9]\d{0,9}$/.test(raw)) return null;
+    const id = Number(raw);
+    return id <= 2_147_483_647 ? id : null;
+  });
+  const [projectId, approvalId] = selectionIds;
+  const decideTarget = projectId && approvalId ? { projectId, approvalId } : null;
+  const updateApproval = useUpdateApproval();
   const [selection, setSelection] = useState<Set<string | number>>(new Set());
   const [isBulkPending, setIsBulkPending] = useState(false);
 
@@ -139,44 +143,36 @@ export function ApprovalsInboxPage() {
   );
 
   const handleDecideClick = useCallback((item: ApprovalInboxItem) => {
-    setDecideTarget({
+    if (item.projectId === null) return;
+    setReturnFocus(document.activeElement instanceof HTMLElement ? document.activeElement : null);
+    setQueueTarget({
       approvalId: item.id,
-      projectId: item.projectId ?? 0,
+      projectId: item.projectId,
       title: item.title,
+      revision: item.revision,
     });
-  }, []);
-
-  const handleDecideConfirm = useCallback(
-    (input: DecideApprovalInput) => {
-      if (!decideTarget) return;
-      decideApproval.mutate(
-        { approvalId: decideTarget.approvalId, ...input },
-        {
-          onSuccess: () => {
-            toast.success("Decision submitted");
-            setDecideTarget(null);
-          },
-          onError: (e) => {
-            if (isWriteConflict(e)) {
-              toast.error("This approval was already decided. Refresh to see the latest state.");
-              void refetch();
-            } else {
-              toast.error(getErrorMessage(e));
-            }
-          },
-        },
-      );
-    },
-    [decideTarget, decideApproval],
-  );
+    const next = new URLSearchParams(searchParams.toString());
+    next.set("projectId", String(item.projectId));
+    next.set("approvalId", String(item.id));
+    router.push(`${pathname}?${next}`, { scroll: false });
+  }, [pathname, router, searchParams]);
 
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
 
   const handleDecideDialogChange = useCallback((open: boolean) => {
-    if (!open) setDecideTarget(null);
-  }, []);
+    if (open) return;
+    setQueueTarget(null);
+    const next = new URLSearchParams(searchParams.toString());
+    next.delete("approvalId");
+    const query = next.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  }, [pathname, router, searchParams]);
+  const handleReturnFocus = useCallback(() => {
+    const target = returnFocus?.isConnected ? returnFocus : searchInputRef.current;
+    target?.focus({ preventScroll: true });
+  }, [returnFocus]);
 
   const handleStatusChange = useCallback(
     (value: string) => listFilters.setValue("status", value),
@@ -197,35 +193,39 @@ export function ApprovalsInboxPage() {
   );
 
   const handleClearSelection = useCallback(() => setSelection(new Set()), []);
+  const isRowSelectable = useCallback(() => canManage, [canManage]);
 
   const handleNextPage = useCallback(() => void fetchNextPage(), [fetchNextPage]);
 
   const handleBulkCancel = useCallback(() => {
+    if (isBulkPending || !canManage) return;
+    const owner = updateApproval.captureOwner();
+    if (!owner) return;
     const selectedItems = items.filter((item) =>
-      selection.has(`${item.projectId}-${item.id}`),
+      item.projectId !== null && selection.has(`${item.projectId}-${item.id}`),
     );
     if (selectedItems.length === 0) return;
     setIsBulkPending(true);
-    Promise.allSettled(
+    void Promise.allSettled(
       selectedItems.map((item) =>
-        apiClient.patch(
-          `/build/${item.projectId}/approvals/${item.id}/decide`,
-          { status: "cancelled" },
-          undefined,
-          approvalDecideContract,
-        ),
+        updateApproval.mutateAsync({ projectId: item.projectId ?? 0, approvalId: item.id,
+          expectedRevision: item.revision, status: "cancelled" }),
       ),
     ).then((results) => {
+      if (!owner.isCurrent()) return;
       const succeeded = results.filter((r) => r.status === "fulfilled").length;
       const failed = results.length - succeeded;
       if (succeeded > 0) {
         toast.success(`${succeeded} approval${succeeded === 1 ? "" : "s"} cancelled`);
-        setSelection(new Set());
-        queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.approvals.inbox() });
+        setSelection((current) => {
+          const next = new Set(current);
+          selectedItems.forEach((item, index) => { if (results[index]?.status === "fulfilled") next.delete(`${item.projectId}-${item.id}`); });
+          return next;
+        });
       }
       if (failed > 0) toast.error(`${failed} could not be cancelled — try again`);
     }).finally(() => setIsBulkPending(false));
-  }, [items, selection, queryClient]);
+  }, [items, selection, updateApproval, isBulkPending, canManage]);
 
   const columns = useMemo(
     () =>
@@ -253,15 +253,15 @@ export function ApprovalsInboxPage() {
   );
 
   const handleKeyboardClear = useCallback(() => {
-    setDecideTarget(null);
-  }, []);
+    handleDecideDialogChange(false);
+  }, [handleDecideDialogChange]);
 
   useBuildListKeyboard({
     itemCount: filteredItems.length,
     onOpen: handleKeyboardOpen,
     onClearSelection: handleKeyboardClear,
     searchInputRef,
-    enabled: !isLoading,
+    enabled: !isLoading && !decideTarget,
   });
 
   return (
@@ -345,12 +345,12 @@ export function ApprovalsInboxPage() {
               You&apos;re offline — results may not be up to date
             </p>
           )}
-          <ApprovalBulkActionBar
+          {canManage && <ApprovalBulkActionBar
             selectedCount={selection.size}
             isPending={isBulkPending}
             onCancelSelected={handleBulkCancel}
             onClear={handleClearSelection}
-          />
+          />}
           <BuildListSurface<ApprovalInboxItem>
             permission="build:approvals:view"
             rows={filteredItems}
@@ -367,6 +367,7 @@ export function ApprovalsInboxPage() {
             selection={{
               selected: selection,
               onChange: setSelection,
+              isRowSelectable,
               getRowLabel: (row) => row.title,
             }}
             pagination={{
@@ -403,9 +404,10 @@ export function ApprovalsInboxPage() {
       <DecideDialog
         open={!!decideTarget}
         onOpenChange={handleDecideDialogChange}
-        onConfirm={handleDecideConfirm}
-        isPending={decideApproval.isPending}
-        approvalTitle={decideTarget?.title}
+        projectId={decideTarget?.projectId ?? 0}
+        approvalId={decideTarget?.approvalId ?? 0}
+        revision={queueTarget?.projectId === decideTarget?.projectId && queueTarget?.approvalId === decideTarget?.approvalId ? queueTarget?.revision : undefined}
+        onCloseAutoFocus={handleReturnFocus}
       />
     </PageWrapper>
   );

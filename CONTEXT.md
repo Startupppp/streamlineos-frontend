@@ -332,7 +332,7 @@ The **Build** module is the project-and-ticket delivery surface: it owns
 projects, tickets, cycles, automations, client portal projections, and the
 integrations that connect delivery work to external systems.
 
-Full architecture contract: [`docs/specs/build/module/07-architecture-integrations-prd.md`](docs/specs/build/module/07-architecture-integrations-prd.md).
+Full architecture contract: [`docs/build-module/architecture/07-architecture-data-api-cache-ai.md`](docs/build-module/architecture/07-architecture-data-api-cache-ai.md), with source-aware implementation contracts under [`docs/build-module/implementation/`](docs/build-module/implementation/README.md).
 
 ### Ticket
 

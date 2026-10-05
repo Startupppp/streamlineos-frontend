@@ -1,6 +1,7 @@
 ﻿"use client";
 
-import { useCallback } from "react";
+import type { MouseEvent } from "react";
+import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { AlertTriangle, ArrowDown, ArrowUp, Minus } from "lucide-react";
 import { Trash2Icon } from "@animateicons/react/lucide";
@@ -8,7 +9,7 @@ import { cn, resolveImageUrl } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import type { CommentDraftListItem } from "@/hooks/api/build/comment-drafts";
+import type { CommentDraftListItem } from "@/hooks/api/build/comment-draft-command-cache";
 import { formatTicketKey } from "@/components/shared/format-ticket-key";
 import {
   getUserDisplayName,
@@ -20,8 +21,9 @@ import { priorityConfig, statusConfig } from "@/features/build/shared/types";
 
 interface CommentDraftRowProps {
   draft: CommentDraftListItem;
+  href: string | null;
   onDelete: (id: number) => void;
-  onOpen: (draft: CommentDraftListItem) => void;
+  onNavigate: (href: string) => void;
 }
 
 const PRIORITY_ICONS = {
@@ -49,7 +51,7 @@ function formatStatusLabel(status: string): string {
   return statusConfig[status]?.label ?? status.replace(/_/g, " ");
 }
 
-export function CommentDraftRow({ draft, onOpen, onDelete }: CommentDraftRowProps) {
+export function CommentDraftRow({ draft, href, onNavigate, onDelete }: CommentDraftRowProps) {
   const ticket = draft.ticket;
   const ticketKey = formatTicketKey(
     ticket.projectKey,
@@ -71,136 +73,144 @@ export function CommentDraftRow({ draft, onOpen, onDelete }: CommentDraftRowProp
     ? (priorityConfig[priorityKey] ?? priorityConfig.MEDIUM)
     : null;
 
-  const handleOpen = useCallback(() => {
-    onOpen(draft);
-  }, [draft, onOpen]);
+  function handleNavigate(event: MouseEvent<HTMLAnchorElement>) {
+    if (
+      !href ||
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) return;
+    event.preventDefault();
+    onNavigate(href);
+  }
 
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLDivElement>) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        onOpen(draft);
-      }
-    },
-    [draft, onOpen],
-  );
+  function handleDelete() {
+    onDelete(draft.id);
+  }
 
-  const handleDelete = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      onDelete(draft.id);
-    },
-    [draft.id, onDelete],
+  const details = (
+    <>
+      <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+        <span className="inline-flex w-fit max-w-[9rem] shrink-0 items-center rounded-md border border-border bg-muted/50 px-1.5 py-0.5 font-mono text-micro font-normal text-muted-foreground">
+          <TruncatedText text={ticketKey} className="min-w-0" />
+        </span>
+        <TruncatedText
+          text={ticket.title}
+          className="min-w-0 text-label font-medium leading-snug text-foreground"
+        />
+      </div>
+
+      {projectName ? (
+        <TruncatedText
+          text={projectName}
+          className="mt-0.5 min-w-0 text-dense text-muted-foreground"
+        />
+      ) : null}
+
+      {snippet ? (
+        <TruncatedText
+          text={snippet}
+          lines={3}
+          className="mt-1 min-w-0 text-xs leading-relaxed text-muted-foreground"
+        />
+      ) : null}
+
+      {hasMeta ? (
+        <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+          {ticketType ? (
+            <span className="inline-flex items-center gap-1 text-micro font-normal text-muted-foreground">
+              <TicketTypeIcon type={ticketType} size="sm" />
+              <span className="capitalize">{ticketType.toLowerCase()}</span>
+            </span>
+          ) : null}
+
+          {priority && PriorityIcon && priorityCfg ? (
+            <span
+              className={cn(
+                "inline-flex items-center gap-0.5 text-micro font-medium",
+                priorityCfg.color,
+              )}
+            >
+              <PriorityIcon className="h-3 w-3 shrink-0" />
+              {priorityCfg.label}
+            </span>
+          ) : null}
+
+          {status ? (
+            <span
+              className={cn(
+                "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-micro font-medium",
+                getStatusBadgeClass(status),
+              )}
+            >
+              <span
+                className={cn("h-1.5 w-1.5 shrink-0 rounded-full", getStatusDotClass(status))}
+                aria-hidden="true"
+              />
+              {formatStatusLabel(status)}
+            </span>
+          ) : null}
+
+          {assignee ? (
+            <span className="inline-flex min-w-0 max-w-[8.5rem] items-center gap-1 text-micro text-muted-foreground">
+              <Avatar className="h-3.5 w-3.5 shrink-0">
+                <AvatarImage src={resolveImageUrl(assignee.image)} />
+                <AvatarFallback className="bg-primary/10 text-micro font-medium text-primary">
+                  {getUserInitials(assignee)}
+                </AvatarFallback>
+              </Avatar>
+              <TruncatedText
+                text={getUserDisplayName(assignee)}
+                className="min-w-0 font-medium"
+              />
+            </span>
+          ) : null}
+        </div>
+      ) : null}
+    </>
   );
 
   return (
     <div
-      role="button"
-      tabIndex={0}
-      onClick={handleOpen}
-      onKeyDown={handleKeyDown}
       className={cn(
-        "group flex w-full min-w-0 cursor-pointer items-start gap-2 border-b border-border/70 px-3 py-2.5 text-left last:border-b-0",
+        "group flex w-full min-w-0 items-start gap-2 border-b border-border/70 px-3 py-2.5 text-left last:border-b-0",
         "transition-colors duration-150",
-        "hover:bg-primary/5",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
+        href && "hover:bg-primary/5",
       )}
     >
-      <div className="min-w-0 flex-1 overflow-hidden">
-        <div className="flex min-w-0 items-start justify-between gap-2">
-          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="inline-flex w-fit max-w-[9rem] shrink-0 items-center rounded-md border border-border bg-muted/50 px-1.5 py-0.5 font-mono text-micro font-normal text-muted-foreground">
-              <TruncatedText text={ticketKey} className="min-w-0" />
-            </span>
-            <TruncatedText
-              text={ticket.title}
-              className="min-w-0 text-label font-medium leading-snug text-foreground"
-            />
-          </div>
-
-          <div className="flex shrink-0 items-center gap-1">
-            <span className="text-micro tabular-nums text-muted-foreground sm:text-dense">
-              {age}
-            </span>
-            <AnimatedIconButton
-              icon={Trash2Icon}
-              size="icon-sm"
-              variant="ghost"
-              iconSize={13}
-              className="shrink-0 text-muted-foreground opacity-70 hover:text-destructive group-hover:opacity-100"
-              onClick={handleDelete}
-              aria-label={`Delete draft for ${ticketKey}`}
-            />
-          </div>
+      {href ? (
+        <Link
+          href={href}
+          onClick={handleNavigate}
+          aria-label={`Open draft for ${ticketKey} ${ticket.title}`}
+          className="min-w-0 flex-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          {details}
+        </Link>
+      ) : (
+        <div className="min-w-0 flex-1">
+          {details}
+          <span className="mt-1 block text-dense text-muted-foreground">
+            Ticket unavailable. You can still delete this draft.
+          </span>
         </div>
-
-        {projectName ? (
-          <TruncatedText
-            text={projectName}
-            className="mt-0.5 min-w-0 text-dense text-muted-foreground"
-          />
-        ) : null}
-
-        {snippet ? (
-          <TruncatedText
-            text={snippet}
-            lines={3}
-            className="mt-1 min-w-0 text-xs leading-relaxed text-muted-foreground"
-          />
-        ) : null}
-
-        {hasMeta ? (
-          <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-            {ticketType ? (
-              <span className="inline-flex items-center gap-1 text-micro font-normal text-muted-foreground">
-                <TicketTypeIcon type={ticketType} size="sm" />
-                <span className="capitalize">{ticketType.toLowerCase()}</span>
-              </span>
-            ) : null}
-
-            {priority && PriorityIcon && priorityCfg ? (
-              <span
-                className={cn(
-                  "inline-flex items-center gap-0.5 text-micro font-medium",
-                  priorityCfg.color,
-                )}
-              >
-                <PriorityIcon className="h-3 w-3 shrink-0" />
-                {priorityCfg.label}
-              </span>
-            ) : null}
-
-            {status ? (
-              <span
-                className={cn(
-                  "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-micro font-medium",
-                  getStatusBadgeClass(status),
-                )}
-              >
-                <span
-                  className={cn("h-1.5 w-1.5 shrink-0 rounded-full", getStatusDotClass(status))}
-                  aria-hidden="true"
-                />
-                {formatStatusLabel(status)}
-              </span>
-            ) : null}
-
-            {assignee ? (
-              <span className="inline-flex min-w-0 max-w-[8.5rem] items-center gap-1 text-micro text-muted-foreground">
-                <Avatar className="h-3.5 w-3.5 shrink-0">
-                  <AvatarImage src={resolveImageUrl(assignee.image)} />
-                  <AvatarFallback className="bg-primary/10 text-micro font-medium text-primary">
-                    {getUserInitials(assignee)}
-                  </AvatarFallback>
-                </Avatar>
-                <TruncatedText
-                  text={getUserDisplayName(assignee)}
-                  className="min-w-0 font-medium"
-                />
-              </span>
-            ) : null}
-          </div>
-        ) : null}
+      )}
+      <div className="flex shrink-0 items-center gap-1">
+        <span className="text-micro tabular-nums text-muted-foreground sm:text-dense">
+          {age}
+        </span>
+        <AnimatedIconButton
+          icon={Trash2Icon}
+          size="icon-sm"
+          variant="ghost"
+          iconSize={13}
+          className="shrink-0 text-muted-foreground opacity-70 hover:text-destructive group-hover:opacity-100"
+          onClick={handleDelete}
+          aria-label={`Delete draft for ${ticketKey}`}
+        />
       </div>
     </div>
   );

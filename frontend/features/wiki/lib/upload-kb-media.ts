@@ -9,8 +9,6 @@ const kbMediaUploadContract = lazyContract(() =>
 );
 import type { UploadedEditorMedia } from '@/components/editor/plate/upload-media';
 
-export type UploadedKbMedia = UploadedEditorMedia;
-
 const IMAGE_MAX = 10 * 1024 * 1024;
 const VIDEO_MAX = 100 * 1024 * 1024;
 const AUDIO_MAX = 25 * 1024 * 1024;
@@ -78,7 +76,7 @@ function idempotencyKeyFor(signature: string): string {
   return minted;
 }
 
-export async function uploadKbMedia(file: File, pageId?: number): Promise<UploadedKbMedia> {
+export async function uploadKbMedia(file: File, pageId?: number): Promise<UploadedEditorMedia> {
   const error = getValidationError(file);
   if (error) throw new Error(error);
   const fd = new FormData();
@@ -86,7 +84,7 @@ export async function uploadKbMedia(file: File, pageId?: number): Promise<Upload
   if (pageId != null) fd.append('pageId', String(pageId));
 
   const signature = uploadSignature(file, pageId);
-  const uploaded = await apiClient.upload<UploadedKbMedia>('/kb/media', fd, kbMediaUploadContract, {
+  const uploaded = await apiClient.upload<UploadedEditorMedia>('/kb/media', fd, kbMediaUploadContract, {
     headers: { [IDEMPOTENCY_HEADER]: idempotencyKeyFor(signature) },
   });
   mediaUploadKeys.delete(signature);

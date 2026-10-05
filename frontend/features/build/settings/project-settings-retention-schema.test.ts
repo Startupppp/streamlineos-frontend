@@ -1,5 +1,5 @@
+import { projectsRetentionSettingsGetSettingsResponseSchema } from "@/contracts/build-contracts.generated";
 import {
-  projectRetentionSettingsContract,
   updateRetentionPolicySchema,
   setLegalHoldSchema,
   parseRetentionSection,
@@ -20,9 +20,9 @@ const VALID_SETTINGS = {
   updatedAt: "2026-01-01T00:00:00Z",
 };
 
-describe("projectRetentionSettingsContract (BLD-RETENTION-C5-001)", () => {
+describe("projectsRetentionSettingsGetSettingsResponseSchema (BLD-RETENTION-C5-001)", () => {
   it("accepts a fully populated retention settings response with null retention days (inherit mode)", () => {
-    expect(projectRetentionSettingsContract.safeParse(VALID_SETTINGS).success).toBe(true);
+    expect(projectsRetentionSettingsGetSettingsResponseSchema.safeParse(VALID_SETTINGS).success).toBe(true);
   });
 
   it("accepts a response with preset retention days set on every field", () => {
@@ -33,7 +33,7 @@ describe("projectRetentionSettingsContract (BLD-RETENTION-C5-001)", () => {
       attachmentRetentionDays: 180,
       auditLogRetentionDays: 365,
     };
-    expect(projectRetentionSettingsContract.safeParse(withDays).success).toBe(true);
+    expect(projectsRetentionSettingsGetSettingsResponseSchema.safeParse(withDays).success).toBe(true);
   });
 
   it("accepts a response where legal hold is active with a reason and timestamp", () => {
@@ -43,25 +43,25 @@ describe("projectRetentionSettingsContract (BLD-RETENTION-C5-001)", () => {
       legalHoldReason: "Litigation hold #2026-001",
       legalHoldSetAt: "2026-06-01T10:00:00Z",
     };
-    expect(projectRetentionSettingsContract.safeParse(withHold).success).toBe(true);
+    expect(projectsRetentionSettingsGetSettingsResponseSchema.safeParse(withHold).success).toBe(true);
   });
 
-  it("rejects a response where closedTicketRetentionDays is a non-preset value (e.g. 45) so a days mismatch is caught at parse time", () => {
-    const bad = { ...VALID_SETTINGS, inheritOrgPolicy: false, closedTicketRetentionDays: 45 };
-    expect(projectRetentionSettingsContract.safeParse(bad).success).toBe(false);
+  it("accepts a response where closedTicketRetentionDays is any positive integer — the backend stores arbitrary days, preset enforcement is a UI concern only", () => {
+    const withArbitraryDays = { ...VALID_SETTINGS, inheritOrgPolicy: false, closedTicketRetentionDays: 45 };
+    expect(projectsRetentionSettingsGetSettingsResponseSchema.safeParse(withArbitraryDays).success).toBe(true);
   });
 
   it("rejects a response where legalHold is sent as the string \"false\" because boolean fields must be actual booleans", () => {
-    expect(projectRetentionSettingsContract.safeParse({ ...VALID_SETTINGS, legalHold: "false" }).success).toBe(false);
+    expect(projectsRetentionSettingsGetSettingsResponseSchema.safeParse({ ...VALID_SETTINGS, legalHold: "false" }).success).toBe(false);
   });
 
   it("rejects a response missing updatedAt so a stripped projection is detected before it reaches the UI", () => {
     const { updatedAt: _dropped, ...without } = VALID_SETTINGS;
-    expect(projectRetentionSettingsContract.safeParse(without).success).toBe(false);
+    expect(projectsRetentionSettingsGetSettingsResponseSchema.safeParse(without).success).toBe(false);
   });
 
   it("rejects a response where projectId is a string instead of an integer", () => {
-    expect(projectRetentionSettingsContract.safeParse({ ...VALID_SETTINGS, projectId: "1" }).success).toBe(false);
+    expect(projectsRetentionSettingsGetSettingsResponseSchema.safeParse({ ...VALID_SETTINGS, projectId: "1" }).success).toBe(false);
   });
 });
 

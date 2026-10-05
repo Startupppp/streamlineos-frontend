@@ -108,6 +108,7 @@ const PROTECTED_ROUTES = [
   "/settings",
   "/onboarding",
   "/employee-onboarding",
+  "/post-invite",
   "/org-setup",
   "/access-suspended",
   "/owner",

@@ -1,0 +1,1072 @@
+{
+  "version": 3,
+  "source": "frontend/app",
+  "count": 87,
+  "buildPageCount": 78,
+  "relatedRouteCount": 9,
+  "routes": [
+    {
+      "path": "/accept-invitation",
+      "file": "frontend/app/(portal)/accept-invitation/page.tsx"
+    },
+    {
+      "path": "/board/{shareToken}",
+      "file": "frontend/app/(public)/board/[shareToken]/page.tsx"
+    },
+    {
+      "path": "/build",
+      "file": "frontend/app/(authenticated)/build/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}",
+      "file": "frontend/app/(authenticated)/build/[projectId]/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/approvals",
+      "file": "frontend/app/(authenticated)/build/[projectId]/approvals/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/backlog",
+      "file": "frontend/app/(authenticated)/build/[projectId]/backlog/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/budget",
+      "file": "frontend/app/(authenticated)/build/[projectId]/budget/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/bugs/{submissionId}",
+      "file": "frontend/app/(authenticated)/build/[projectId]/bugs/[submissionId]/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/change-requests",
+      "file": "frontend/app/(authenticated)/build/[projectId]/change-requests/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/chat",
+      "file": "frontend/app/(authenticated)/build/[projectId]/chat/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/client-portal",
+      "file": "frontend/app/(authenticated)/build/[projectId]/client-portal/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/cycles",
+      "file": "frontend/app/(authenticated)/build/[projectId]/cycles/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/cycles/{cycleId}",
+      "file": "frontend/app/(authenticated)/build/[projectId]/cycles/[cycleId]/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/decisions",
+      "file": "frontend/app/(authenticated)/build/[projectId]/decisions/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/epics",
+      "file": "frontend/app/(authenticated)/build/[projectId]/epics/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/feedbucket",
+      "file": "frontend/app/(authenticated)/build/[projectId]/feedbucket/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/feedbucket/{submissionId}",
+      "file": "frontend/app/(authenticated)/build/[projectId]/feedbucket/[submissionId]/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/files",
+      "file": "frontend/app/(authenticated)/build/[projectId]/files/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/forms",
+      "file": "frontend/app/(authenticated)/build/[projectId]/forms/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/forms/{formId}",
+      "file": "frontend/app/(authenticated)/build/[projectId]/forms/[formId]/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/incidents",
+      "file": "frontend/app/(authenticated)/build/[projectId]/incidents/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/incidents/{incidentId}",
+      "file": "frontend/app/(authenticated)/build/[projectId]/incidents/[incidentId]/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/intake",
+      "file": "frontend/app/(authenticated)/build/[projectId]/intake/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/issues",
+      "file": "frontend/app/(authenticated)/build/[projectId]/issues/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/meetings",
+      "file": "frontend/app/(authenticated)/build/[projectId]/meetings/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/meetings/{meetingId}",
+      "file": "frontend/app/(authenticated)/build/[projectId]/meetings/[meetingId]/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/milestones",
+      "file": "frontend/app/(authenticated)/build/[projectId]/milestones/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/modules",
+      "file": "frontend/app/(authenticated)/build/[projectId]/modules/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/qa",
+      "file": "frontend/app/(authenticated)/build/[projectId]/qa/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/qa/runs/{runId}",
+      "file": "frontend/app/(authenticated)/build/[projectId]/qa/runs/[runId]/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/releases",
+      "file": "frontend/app/(authenticated)/build/[projectId]/releases/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/reports",
+      "file": "frontend/app/(authenticated)/build/[projectId]/reports/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/risks",
+      "file": "frontend/app/(authenticated)/build/[projectId]/risks/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/settings",
+      "file": "frontend/app/(authenticated)/build/[projectId]/settings/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/settings/access",
+      "file": "frontend/app/(authenticated)/build/[projectId]/settings/access/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/settings/agents",
+      "file": "frontend/app/(authenticated)/build/[projectId]/settings/agents/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/settings/agents/credentials",
+      "file": "frontend/app/(authenticated)/build/[projectId]/settings/agents/credentials/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/settings/automations",
+      "file": "frontend/app/(authenticated)/build/[projectId]/settings/automations/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/settings/fields",
+      "file": "frontend/app/(authenticated)/build/[projectId]/settings/fields/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/settings/integrations",
+      "file": "frontend/app/(authenticated)/build/[projectId]/settings/integrations/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/settings/integrations/webhooks",
+      "file": "frontend/app/(authenticated)/build/[projectId]/settings/integrations/webhooks/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/settings/iterations",
+      "file": "frontend/app/(authenticated)/build/[projectId]/settings/iterations/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/settings/portal",
+      "file": "frontend/app/(authenticated)/build/[projectId]/settings/portal/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/settings/retention",
+      "file": "frontend/app/(authenticated)/build/[projectId]/settings/retention/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/settings/views",
+      "file": "frontend/app/(authenticated)/build/[projectId]/settings/views/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/settings/workflow",
+      "file": "frontend/app/(authenticated)/build/[projectId]/settings/workflow/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/tickets/{ticketKey}",
+      "file": "frontend/app/(authenticated)/build/[projectId]/tickets/[ticketKey]/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/triage",
+      "file": "frontend/app/(authenticated)/build/[projectId]/triage/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/updates",
+      "file": "frontend/app/(authenticated)/build/[projectId]/updates/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/whiteboard",
+      "file": "frontend/app/(authenticated)/build/[projectId]/whiteboard/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/wiki",
+      "file": "frontend/app/(authenticated)/build/[projectId]/wiki/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/wiki/{pageId}",
+      "file": "frontend/app/(authenticated)/build/[projectId]/wiki/[pageId]/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/wiki/{pageId}/history",
+      "file": "frontend/app/(authenticated)/build/[projectId]/wiki/[pageId]/history/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/workload",
+      "file": "frontend/app/(authenticated)/build/[projectId]/workload/page.tsx"
+    },
+    {
+      "path": "/build/all-work",
+      "file": "frontend/app/(authenticated)/build/all-work/page.tsx"
+    },
+    {
+      "path": "/build/approvals",
+      "file": "frontend/app/(authenticated)/build/approvals/page.tsx"
+    },
+    {
+      "path": "/build/command-center",
+      "file": "frontend/app/(authenticated)/build/command-center/page.tsx"
+    },
+    {
+      "path": "/build/goals",
+      "file": "frontend/app/(authenticated)/build/goals/page.tsx"
+    },
+    {
+      "path": "/build/goals/{goalId}",
+      "file": "frontend/app/(authenticated)/build/goals/[goalId]/page.tsx"
+    },
+    {
+      "path": "/build/inbox",
+      "file": "frontend/app/(authenticated)/build/inbox/page.tsx"
+    },
+    {
+      "path": "/build/managed-products",
+      "file": "frontend/app/(authenticated)/build/managed-products/page.tsx"
+    },
+    {
+      "path": "/build/managed-products/{managedProductId}",
+      "file": "frontend/app/(authenticated)/build/managed-products/[managedProductId]/page.tsx"
+    },
+    {
+      "path": "/build/managed-products/{managedProductId}/feedback",
+      "file": "frontend/app/(authenticated)/build/managed-products/[managedProductId]/feedback/page.tsx"
+    },
+    {
+      "path": "/build/managed-products/{managedProductId}/goals",
+      "file": "frontend/app/(authenticated)/build/managed-products/[managedProductId]/goals/page.tsx"
+    },
+    {
+      "path": "/build/managed-products/{managedProductId}/insights",
+      "file": "frontend/app/(authenticated)/build/managed-products/[managedProductId]/insights/page.tsx"
+    },
+    {
+      "path": "/build/managed-products/{managedProductId}/projects",
+      "file": "frontend/app/(authenticated)/build/managed-products/[managedProductId]/projects/page.tsx"
+    },
+    {
+      "path": "/build/managed-products/{managedProductId}/roadmap",
+      "file": "frontend/app/(authenticated)/build/managed-products/[managedProductId]/roadmap/page.tsx"
+    },
+    {
+      "path": "/build/my-work",
+      "file": "frontend/app/(authenticated)/build/my-work/page.tsx"
+    },
+    {
+      "path": "/build/portfolios",
+      "file": "frontend/app/(authenticated)/build/portfolios/page.tsx"
+    },
+    {
+      "path": "/build/portfolios/{portfolioId}",
+      "file": "frontend/app/(authenticated)/build/portfolios/[portfolioId]/page.tsx"
+    },
+    {
+      "path": "/build/programs",
+      "file": "frontend/app/(authenticated)/build/programs/page.tsx"
+    },
+    {
+      "path": "/build/programs/{programId}",
+      "file": "frontend/app/(authenticated)/build/programs/[programId]/page.tsx"
+    },
+    {
+      "path": "/build/projects",
+      "file": "frontend/app/(authenticated)/build/projects/page.tsx"
+    },
+    {
+      "path": "/build/roadmap",
+      "file": "frontend/app/(authenticated)/build/roadmap/page.tsx"
+    },
+    {
+      "path": "/build/settings/access",
+      "file": "frontend/app/(authenticated)/build/settings/access/page.tsx"
+    },
+    {
+      "path": "/build/settings/client-access",
+      "file": "frontend/app/(authenticated)/build/settings/client-access/page.tsx"
+    },
+    {
+      "path": "/build/settings/integrations",
+      "file": "frontend/app/(authenticated)/build/settings/integrations/page.tsx"
+    },
+    {
+      "path": "/build/teams",
+      "file": "frontend/app/(authenticated)/build/teams/page.tsx"
+    },
+    {
+      "path": "/build/teams/{teamId}",
+      "file": "frontend/app/(authenticated)/build/teams/[teamId]/page.tsx"
+    },
+    {
+      "path": "/build/templates",
+      "file": "frontend/app/(authenticated)/build/templates/page.tsx"
+    },
+    {
+      "path": "/client-portal",
+      "file": "frontend/app/(portal)/client-portal/page.tsx"
+    },
+    {
+      "path": "/client-portal/{projectId}",
+      "file": "frontend/app/(portal)/client-portal/[projectId]/page.tsx"
+    },
+    {
+      "path": "/forms/{formToken}",
+      "file": "frontend/app/(public)/forms/[formToken]/page.tsx"
+    },
+    {
+      "path": "/intake/{projectId}",
+      "file": "frontend/app/(public)/intake/[projectId]/page.tsx"
+    },
+    {
+      "path": "/portal",
+      "file": "frontend/app/(authenticated)/portal/page.tsx"
+    },
+    {
+      "path": "/portal/{projectId}",
+      "file": "frontend/app/(authenticated)/portal/[projectId]/page.tsx"
+    },
+    {
+      "path": "/roadmap/{orgId}",
+      "file": "frontend/app/(public)/roadmap/[orgId]/page.tsx"
+    }
+  ],
+  "duplicates": [],
+  "bareDynamic": [],
+  "manifest": {
+    "codeSource": "frontend/lib/build/build-route-manifest.ts",
+    "decisionsSource": "docs/build-module/experience/routes-and-screen-decisions.md",
+    "codePresent": true,
+    "decisionsPresent": true,
+    "declaredCount": 78,
+    "code": [
+      {
+        "route": "/build",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/approvals",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/backlog",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/bugs/[submissionId]",
+        "decision": "CONSOLIDATE"
+      },
+      {
+        "route": "/build/[projectId]/budget",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/change-requests",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/chat",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/client-portal",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/cycles",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/cycles/[cycleId]",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/decisions",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/epics",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/feedbucket",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/feedbucket/[submissionId]",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/files",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/forms",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/forms/[formId]",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/incidents",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/incidents/[incidentId]",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/intake",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/issues",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/meetings",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/meetings/[meetingId]",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/milestones",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/modules",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/qa",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/qa/runs/[runId]",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/releases",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/reports",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/risks",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/settings",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/settings/access",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/settings/agents",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/settings/agents/credentials",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/settings/automations",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/settings/fields",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/settings/integrations",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/settings/integrations/webhooks",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/settings/iterations",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/settings/portal",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/settings/retention",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/settings/views",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/settings/workflow",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/tickets/[ticketKey]",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/triage",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/updates",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/whiteboard",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/wiki",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/wiki/[pageId]",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/wiki/[pageId]/history",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/[projectId]/workload",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/all-work",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/approvals",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/command-center",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/goals",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/goals/[goalId]",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/inbox",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/managed-products",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/managed-products/[managedProductId]",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/managed-products/[managedProductId]/feedback",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/managed-products/[managedProductId]/goals",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/managed-products/[managedProductId]/insights",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/managed-products/[managedProductId]/projects",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/managed-products/[managedProductId]/roadmap",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/my-work",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/portfolios",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/portfolios/[portfolioId]",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/programs",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/programs/[programId]",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/projects",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/roadmap",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/settings/access",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/settings/client-access",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/settings/integrations",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/teams",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/teams/[teamId]",
+        "decision": "KEEP"
+      },
+      {
+        "route": "/build/templates",
+        "decision": "KEEP"
+      }
+    ],
+    "decisions": [
+      {
+        "route": "/build",
+        "decision": "Authorized redirect; saved preference Planned",
+        "destination": "`/build/command-center` by default; legacy Projects query to `/build/projects`"
+      },
+      {
+        "route": "/build/[projectId]",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]`"
+      },
+      {
+        "route": "/build/[projectId]/approvals",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/approvals`"
+      },
+      {
+        "route": "/build/[projectId]/backlog",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/backlog`"
+      },
+      {
+        "route": "/build/[projectId]/bugs/[submissionId]",
+        "decision": "Consolidate",
+        "destination": "`/build/[projectId]/intake?item={intakeId}`"
+      },
+      {
+        "route": "/build/[projectId]/budget",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/budget`"
+      },
+      {
+        "route": "/build/[projectId]/change-requests",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/change-requests`"
+      },
+      {
+        "route": "/build/[projectId]/chat",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/chat`"
+      },
+      {
+        "route": "/build/[projectId]/client-portal",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/client-portal`"
+      },
+      {
+        "route": "/build/[projectId]/cycles",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/cycles`"
+      },
+      {
+        "route": "/build/[projectId]/cycles/[cycleId]",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/cycles/[cycleId]`"
+      },
+      {
+        "route": "/build/[projectId]/decisions",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/decisions`"
+      },
+      {
+        "route": "/build/[projectId]/epics",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/epics`"
+      },
+      {
+        "route": "/build/[projectId]/feedbucket",
+        "decision": "Consolidate",
+        "destination": "`/build/[projectId]/intake?view=bug-reports`"
+      },
+      {
+        "route": "/build/[projectId]/feedbucket/[submissionId]",
+        "decision": "Consolidate",
+        "destination": "`/build/[projectId]/intake/[requestId]`"
+      },
+      {
+        "route": "/build/[projectId]/files",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/files`"
+      },
+      {
+        "route": "/build/[projectId]/forms",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/forms`"
+      },
+      {
+        "route": "/build/[projectId]/forms/[formId]",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/forms/[formId]`"
+      },
+      {
+        "route": "/build/[projectId]/incidents",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/incidents`"
+      },
+      {
+        "route": "/build/[projectId]/incidents/[incidentId]",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/incidents/[incidentId]`"
+      },
+      {
+        "route": "/build/[projectId]/intake",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/intake`"
+      },
+      {
+        "route": "/build/[projectId]/issues",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/issues`"
+      },
+      {
+        "route": "/build/[projectId]/meetings",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/meetings`"
+      },
+      {
+        "route": "/build/[projectId]/meetings/[meetingId]",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/meetings/[meetingId]`"
+      },
+      {
+        "route": "/build/[projectId]/milestones",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/milestones`"
+      },
+      {
+        "route": "/build/[projectId]/modules",
+        "decision": "Rename UI: Workstreams",
+        "destination": "`/build/[projectId]/modules`"
+      },
+      {
+        "route": "/build/[projectId]/qa",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/qa`"
+      },
+      {
+        "route": "/build/[projectId]/qa/runs/[runId]",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/qa/runs/[runId]`"
+      },
+      {
+        "route": "/build/[projectId]/releases",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/releases`"
+      },
+      {
+        "route": "/build/[projectId]/reports",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/reports`"
+      },
+      {
+        "route": "/build/[projectId]/risks",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/risks`"
+      },
+      {
+        "route": "/build/[projectId]/settings",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/settings`"
+      },
+      {
+        "route": "/build/[projectId]/settings/access",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/settings/access`"
+      },
+      {
+        "route": "/build/[projectId]/settings/agents",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/settings/agents`"
+      },
+      {
+        "route": "/build/[projectId]/settings/agents/credentials",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/settings/agents/credentials`"
+      },
+      {
+        "route": "/build/[projectId]/settings/automations",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/settings/automations`"
+      },
+      {
+        "route": "/build/[projectId]/settings/fields",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/settings/fields`"
+      },
+      {
+        "route": "/build/[projectId]/settings/integrations",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/settings/integrations`"
+      },
+      {
+        "route": "/build/[projectId]/settings/integrations/webhooks",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/settings/integrations/webhooks`"
+      },
+      {
+        "route": "/build/[projectId]/settings/iterations",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/settings/iterations`"
+      },
+      {
+        "route": "/build/[projectId]/settings/portal",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/settings/portal`"
+      },
+      {
+        "route": "/build/[projectId]/settings/retention",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/settings/retention`"
+      },
+      {
+        "route": "/build/[projectId]/settings/views",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/settings/views`"
+      },
+      {
+        "route": "/build/[projectId]/settings/workflow",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/settings/workflow`"
+      },
+      {
+        "route": "/build/[projectId]/tickets/[ticketKey]",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/tickets/[ticketKey]`"
+      },
+      {
+        "route": "/build/[projectId]/triage",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/triage`"
+      },
+      {
+        "route": "/build/[projectId]/updates",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/updates`"
+      },
+      {
+        "route": "/build/[projectId]/whiteboard",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/whiteboard`"
+      },
+      {
+        "route": "/build/[projectId]/wiki",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/wiki`"
+      },
+      {
+        "route": "/build/[projectId]/wiki/[pageId]",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/wiki/[pageId]`"
+      },
+      {
+        "route": "/build/[projectId]/wiki/[pageId]/history",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/wiki/[pageId]/history`"
+      },
+      {
+        "route": "/build/[projectId]/workload",
+        "decision": "Keep",
+        "destination": "`/build/[projectId]/workload`"
+      },
+      {
+        "route": "/build/all-work",
+        "decision": "Keep",
+        "destination": "`/build/all-work`"
+      },
+      {
+        "route": "/build/approvals",
+        "decision": "Keep",
+        "destination": "`/build/approvals`"
+      },
+      {
+        "route": "/build/command-center",
+        "decision": "Keep",
+        "destination": "`/build/command-center`"
+      },
+      {
+        "route": "/build/goals",
+        "decision": "Keep",
+        "destination": "`/build/goals`"
+      },
+      {
+        "route": "/build/goals/[goalId]",
+        "decision": "Keep",
+        "destination": "`/build/goals/[goalId]`"
+      },
+      {
+        "route": "/build/inbox",
+        "decision": "Keep",
+        "destination": "`/build/inbox`"
+      },
+      {
+        "route": "/build/managed-products",
+        "decision": "Keep",
+        "destination": "`/build/managed-products`"
+      },
+      {
+        "route": "/build/managed-products/[managedProductId]",
+        "decision": "Keep",
+        "destination": "`/build/managed-products/[managedProductId]`"
+      },
+      {
+        "route": "/build/managed-products/[managedProductId]/feedback",
+        "decision": "Keep",
+        "destination": "`/build/managed-products/[managedProductId]/feedback`"
+      },
+      {
+        "route": "/build/managed-products/[managedProductId]/goals",
+        "decision": "Keep",
+        "destination": "`/build/managed-products/[managedProductId]/goals`"
+      },
+      {
+        "route": "/build/managed-products/[managedProductId]/insights",
+        "decision": "Keep",
+        "destination": "`/build/managed-products/[managedProductId]/insights`"
+      },
+      {
+        "route": "/build/managed-products/[managedProductId]/projects",
+        "decision": "Keep",
+        "destination": "`/build/managed-products/[managedProductId]/projects`"
+      },
+      {
+        "route": "/build/managed-products/[managedProductId]/roadmap",
+        "decision": "Keep",
+        "destination": "`/build/managed-products/[managedProductId]/roadmap`"
+      },
+      {
+        "route": "/build/my-work",
+        "decision": "Keep",
+        "destination": "`/build/my-work`"
+      },
+      {
+        "route": "/build/portfolios",
+        "decision": "Keep",
+        "destination": "`/build/portfolios`"
+      },
+      {
+        "route": "/build/portfolios/[portfolioId]",
+        "decision": "Keep",
+        "destination": "`/build/portfolios/[portfolioId]`"
+      },
+      {
+        "route": "/build/programs",
+        "decision": "Keep",
+        "destination": "`/build/programs`"
+      },
+      {
+        "route": "/build/programs/[programId]",
+        "decision": "Keep",
+        "destination": "`/build/programs/[programId]`"
+      },
+      {
+        "route": "/build/projects",
+        "decision": "Keep; dedicated Projects destination",
+        "destination": "`/build/projects`"
+      },
+      {
+        "route": "/build/roadmap",
+        "decision": "Keep",
+        "destination": "`/build/roadmap`"
+      },
+      {
+        "route": "/build/settings/access",
+        "decision": "Keep",
+        "destination": "`/build/settings/access`"
+      },
+      {
+        "route": "/build/settings/client-access",
+        "decision": "Keep",
+        "destination": "`/build/settings/client-access`"
+      },
+      {
+        "route": "/build/settings/integrations",
+        "decision": "Keep",
+        "destination": "`/build/settings/integrations`"
+      },
+      {
+        "route": "/build/teams",
+        "decision": "Keep",
+        "destination": "`/build/teams`"
+      },
+      {
+        "route": "/build/teams/[teamId]",
+        "decision": "Keep",
+        "destination": "`/build/teams/[teamId]`"
+      },
+      {
+        "route": "/build/templates",
+        "decision": "Keep",
+        "destination": "`/build/templates`"
+      }
+    ]
+  }
+}
