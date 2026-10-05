@@ -17,7 +17,7 @@ import {
   INBOX_TABLE_HEADERS,
 } from "@/features/build/approvals/approvals-inbox-columns";
 import type { ApprovalInboxItem } from "@/types/projects";
-import { MyWorkRow } from "@/features/build/command-center/command-center-rows";
+import { MyWorkRow } from "@/features/build/command-center/command-center-my-work-row";
 import type { MyWorkItem } from "@/types/projects/my-work";
 import { InboxListSkeleton } from "@/features/build/inbox/inbox-list-skeleton";
 import { InboxNotificationItem } from "@/features/build/inbox/inbox-notification-item";

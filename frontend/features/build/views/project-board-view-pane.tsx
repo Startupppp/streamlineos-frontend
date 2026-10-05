@@ -15,7 +15,7 @@ import type { BoardFilters } from "@/hooks/api/build/ticket-queries";
 import type { FilterState as WorkloadFilterState, MemberCapacityData } from "./workload-types";
 import type { Cycle } from "@/types/projects";
 import { pmSnappy, viewSwap, viewSwapReduced } from "@/lib/motion-presets";
-import type { ProjectStatus, BoardMember } from "./use-board-url-state";
+import type { ProjectStatus, BoardMember } from "./board-types";
 
 const KanbanBoard = dynamic(
   () => import("./kanban-board").then((m) => m.KanbanBoard),

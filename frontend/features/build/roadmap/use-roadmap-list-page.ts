@@ -30,9 +30,6 @@ export function useRoadmapListPage(listFilters: UseBuildListFiltersReturn) {
     const v = listFilters.value("horizon");
     return v !== BUILD_FILTER_ALL ? v : "";
   });
-  const roadmapItemsRef = useRef<ScorableRoadmapItem[]>([]);
-  roadmapItemsRef.current = roadmapItems;
-
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const tabValue = listFilters.value("tab");
@@ -73,9 +70,9 @@ export function useRoadmapListPage(listFilters: UseBuildListFiltersReturn) {
   const handleChangelogCreateOpenChange = useCallback((open: boolean) => { setChangelogCreateOpen(open); }, []);
 
   const handleRoadmapEditByIndex = useCallback((index: number) => {
-    const item = roadmapItemsRef.current[index];
+    const item = roadmapItems[index];
     if (item) setExternalEditTarget(item);
-  }, []);
+  }, [roadmapItems]);
 
   const handleExternalEditClose = useCallback(() => { setExternalEditTarget(null); }, []);
   const handleRoadmapItemsChange = useCallback((items: ScorableRoadmapItem[]) => { setRoadmapItems(items); }, []);

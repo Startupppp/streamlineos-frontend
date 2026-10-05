@@ -1,7 +1,8 @@
 import type { ReactNode, HTMLAttributes } from "react";
 import { render, screen } from "@testing-library/react";
 import type { ProjectListItem } from "@/types/projects";
-import { ProjectCard, projectHealthClasses } from "./command-center-rows";
+import { ProjectCard } from "./command-center-rows";
+import { projectHealthClasses } from "./command-center-rows-model";
 import { WIDGET_CATALOG, getWidgetEntry } from "./widget-catalog";
 
 jest.mock("next/link", () => ({

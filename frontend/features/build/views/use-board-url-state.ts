@@ -1,40 +1,30 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useProject } from "@/hooks/api/build/projects";
 import { useViews } from "@/hooks/api/build/views";
 import { useProjectBoardTickets } from "@/hooks/api/build/tickets";
 import { useBugs } from "@/hooks/api/build/bugs";
 import { useBoardSavedViews } from "./use-board-saved-views";
-import { applyDisplayOptionParams, hydrateDisplayOptions, useDisplayOptions, writeDisplayOptionParams } from "./use-display-options";
+import { applyDisplayOptionParams, useDisplayOptions, writeDisplayOptionParams } from "./use-display-options";
 import type { DisplayOptions } from "@/features/build/shared/types";
 import { parseViewType, type ViewType } from "./view-switcher";
 import { INITIAL_FILTERS, type FilterState as WorkloadFilterState } from "./workload-types";
 import type { KanbanTicket } from "@/features/build/shared/types";
 import { mapBoardTicketToKanban } from "@/features/build/my-tickets/map-board-ticket";
-import { filterHiddenCompletedTickets, getCompletedStatusNames } from "@/features/build/shared/completed-status";
 import { buildTicketCollectionReturnHref } from "@/features/build/ticket-details/build-ticket-detail-url";
 import { currentSearchParams } from "@/lib/current-search-params";
 import { useBoardNavigationActions } from "./use-board-navigation-actions";
 import { useBoardFilterParams } from "./board-filter-params";
-
-export type ProjectStatus = {
-  id: number;
-  name: string;
-  color: string | null;
-  order: number;
-  wipLimit?: number | null;
-  type?: string | null;
-};
-
-export type BoardMember = {
-  id: string;
-  name: string | null;
-  firstName: string | null;
-  lastName: string | null;
-  image: string | null;
-};
+import {
+  parseCreateCycleParam,
+  filterBoardTickets,
+  computeBoardMembers,
+  computeWipLimits,
+  computeDoneCount,
+} from "./board-filter-model";
+import { useBoardViewApply } from "./use-board-view-apply";
 
 export function useBoardUrlState(
   projectId: number,
@@ -57,14 +47,7 @@ export function useBoardUrlState(
   const viewId = searchParams.get("viewId");
   const createParamOpen = searchParams.get("create") === "1";
   const createCycleParam = searchParams.get("cycleId");
-  const createDefaultCycleId =
-    createCycleParam === null
-      ? undefined
-      : createCycleParam === "none" || createCycleParam === ""
-        ? null
-        : Number.isFinite(Number(createCycleParam))
-          ? Number(createCycleParam)
-          : undefined;
+  const createDefaultCycleId = parseCreateCycleParam(createCycleParam);
 
   const {
     q,
@@ -96,7 +79,6 @@ export function useBoardUrlState(
   } = useProjectBoardTickets(projectId, boardFilters);
   const { data } = useProject(projectId);
   const { data: views } = useViews(projectId);
-  const appliedViewIdRef = useRef<string | null>(null);
 
   const [storedDisplayOptions, setStoredDisplayOptions] =
     useDisplayOptions(projectId);
@@ -124,43 +106,15 @@ export function useBoardUrlState(
     new Set(),
   );
 
-  useEffect(() => {
-    if (!isCalendarDeepLink) return;
-    router.replace(calendarHref);
-  }, [calendarHref, isCalendarDeepLink, router]);
-
-  useEffect(() => {
-    if (isCalendarDeepLink || !viewId || !views) return;
-    if (appliedViewIdRef.current === viewId) return;
-    const savedView = views.data.find((v) => v.id.toString() === viewId);
-    if (!savedView) return;
-    appliedViewIdRef.current = viewId;
-    const next = currentSearchParams(searchParams);
-    if (savedView.filters && typeof savedView.filters === "object") {
-      for (const [k, val] of Object.entries(savedView.filters)) {
-        if (typeof val === "string" && val) next.set(k, val);
-        else next.delete(k);
-      }
-    }
-    if (savedView.layoutType)
-      next.set("view", parseViewType(savedView.layoutType));
-    if (
-      savedView.displayOptions &&
-      Object.keys(savedView.displayOptions).length > 0
-    ) {
-      const hydrated = hydrateDisplayOptions(savedView.displayOptions);
-      setStoredDisplayOptions(hydrated);
-      writeDisplayOptionParams(next, hydrated);
-    }
-    router.replace(`?${next.toString()}`, { scroll: false });
-  }, [
-    isCalendarDeepLink,
+  useBoardViewApply({
     viewId,
     views,
+    isCalendarDeepLink,
+    calendarHref,
     searchParams,
     router,
     setStoredDisplayOptions,
-  ]);
+  });
 
   const activeView = viewId
     ? views?.data.find((v) => v.id.toString() === viewId)
@@ -190,72 +144,20 @@ export function useBoardUrlState(
     return new Set(qaMatches.map((bug) => bug.id));
   }, [qaFilterActive, qaMatches]);
 
-  const filteredTickets = useMemo(() => {
-    let tickets = filterHiddenCompletedTickets(
+  const filteredTickets = useMemo(
+    () => filterBoardTickets({
       allTickets,
       hideCompleted,
+      completedIssues: displayOptions.completedIssues,
       statuses,
-    );
-    tickets = tickets.filter((t) => t.type !== "EPIC");
-    if (qaMatchIds) {
-      tickets = tickets.filter((ticket) => qaMatchIds.has(Number(ticket.id)));
-    }
-    if (displayOptions.completedIssues !== "all") {
-      if (displayOptions.completedIssues === "none") {
-        tickets = filterHiddenCompletedTickets(tickets, true, statuses);
-      } else {
-        const cutoff = new Date();
-        if (displayOptions.completedIssues === "last-day")
-          cutoff.setDate(cutoff.getDate() - 1);
-        else if (displayOptions.completedIssues === "last-week")
-          cutoff.setDate(cutoff.getDate() - 7);
-        else if (displayOptions.completedIssues === "last-month")
-          cutoff.setMonth(cutoff.getMonth() - 1);
-        const completedStatuses = getCompletedStatusNames(statuses);
-        tickets = tickets.filter(
-          (t) =>
-            !completedStatuses.has(t.status) ||
-            !t.updatedAt ||
-            new Date(t.updatedAt) >= cutoff,
-        );
-      }
-    }
-    return tickets;
-  }, [
-    allTickets,
-    hideCompleted,
-    displayOptions.completedIssues,
-    statuses,
-    qaMatchIds,
-  ]);
+      qaMatchIds,
+    }),
+    [allTickets, hideCompleted, displayOptions.completedIssues, statuses, qaMatchIds],
+  );
 
-  const members: BoardMember[] = useMemo(() => {
-    if (!data?.members) return [];
-    return data.members.flatMap((member) => {
-      if (!member.user) return [];
-      return [{
-        id: member.user.id,
-        name: member.user.name ?? null,
-        firstName: member.user.firstName ?? null,
-        lastName: member.user.lastName ?? null,
-        image: member.user.image ?? null,
-      }];
-    });
-  }, [data?.members]);
-
-  const wipLimits = useMemo<Record<string, number>>(() => {
-    if (!statuses) return {};
-    const result: Record<string, number> = {};
-    for (const s of statuses) {
-      if (s.wipLimit != null) result[s.name] = s.wipLimit;
-    }
-    return result;
-  }, [statuses]);
-
-  const doneCount = useMemo(() => {
-    const completedStatuses = getCompletedStatusNames(statuses);
-    return allTickets.filter((t) => t.type !== "EPIC" && completedStatuses.has(t.status)).length;
-  }, [allTickets, statuses]);
+  const members = useMemo(() => computeBoardMembers(data?.members), [data?.members]);
+  const wipLimits = useMemo(() => computeWipLimits(statuses), [statuses]);
+  const doneCount = useMemo(() => computeDoneCount(allTickets, statuses), [allTickets, statuses]);
 
   const showEmptyFilterState =
     !ticketsLoading &&
@@ -276,7 +178,6 @@ export function useBoardUrlState(
   const handleClearView = useCallback(() => {
     const next = new URLSearchParams(searchParams.toString());
     next.delete("viewId");
-    appliedViewIdRef.current = null;
     router.replace(`?${next.toString()}`, { scroll: false });
   }, [router, searchParams]);
 

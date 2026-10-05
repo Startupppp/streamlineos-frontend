@@ -47,7 +47,7 @@ interface KanbanDragParams {
   setOptimisticTickets: Dispatch<SetStateAction<KanbanTicket[]>>;
   setOptimisticStatuses: Dispatch<SetStateAction<StatusEntry[] | undefined>>;
   setOptimisticColumnOrder: Dispatch<SetStateAction<KanbanColumn[] | null>>;
-  isDraggingRef: MutableRefObject<boolean>;
+  setIsDragging: Dispatch<SetStateAction<boolean>>;
   dragStartRef: MutableRefObject<{ x: number; y: number } | null>;
 }
 
@@ -64,7 +64,7 @@ export function useKanbanDrag({
   setOptimisticTickets,
   setOptimisticStatuses,
   setOptimisticColumnOrder,
-  isDraggingRef,
+  setIsDragging,
   dragStartRef,
 }: KanbanDragParams) {
   const queryClient = useQueryClient();
@@ -172,17 +172,17 @@ export function useKanbanDrag({
         },
       );
     },
-    [canManage, visibleColumns, orderedColumns, reorderStates, statuses],
+    [canManage, visibleColumns, orderedColumns, reorderStates, statuses, setOptimisticColumnOrder, setOptimisticStatuses],
   );
 
   const onDragStart = useCallback(() => {
-    isDraggingRef.current = true;
+    setIsDragging(true);
     dragStartRef.current = null;
-  }, []);
+  }, [setIsDragging, dragStartRef]);
 
   const onDragEnd = useCallback(
     (result: DropResult) => {
-      isDraggingRef.current = false;
+      setIsDragging(false);
       dragStartRef.current = null;
       if (result.type === COLUMN_DND_TYPE) {
         handleColumnDragEnd(result);
@@ -254,6 +254,8 @@ export function useKanbanDrag({
       hideCompleted,
       optimisticStatuses,
       handleColumnDragEnd,
+      setIsDragging,
+      dragStartRef,
     ],
   );
 

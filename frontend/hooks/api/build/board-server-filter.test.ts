@@ -274,6 +274,6 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
     );
 
     expect(source).not.toContain("useProjectMembers");
-    expect(source).toContain("data.members.flatMap");
+    expect(source).toContain("data?.members");
   });
 });

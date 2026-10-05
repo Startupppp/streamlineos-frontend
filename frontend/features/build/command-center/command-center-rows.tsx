@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { memo, useCallback, type MouseEvent } from "react";
 import Link from "next/link";
@@ -10,162 +10,27 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { AlertCircle, ListPlus } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { PmSection, PmPanel } from "@/components/pm-chrome";
-import { PanelHeader } from "./panel-header";
+import { ListPlus } from "lucide-react";
 import {
-  COMMAND_CENTER_LIST_PANEL,
-  COMMAND_CENTER_PANEL_BODY_SCROLL,
-} from "./command-center-constants";
-import { useInfiniteAllWork } from "@/hooks/api/build/all-work";
-import { mapAllWorkTicketToMyWorkItem } from "./command-center-utils";
-import {
-  ChevronRightIcon,
   LayoutGridIcon,
   LayoutListIcon,
   SettingsIcon,
 } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import type { MyWorkItem } from "@/types/projects/my-work";
 import type { ProjectListItem } from "@/types/projects";
-import { statusToneClasses, type StatusTone } from "@/lib/design-tokens";
-import { PriorityBadge } from "@/features/build/shared/priority-badge";
-import { StatusBadge } from "@/components/shared/ticket-status-badge";
-import { isPast, isToday, parseISO } from "date-fns";
-import { cn } from "@/lib/utils";
 import {
   listItem,
   listItemReduced,
   pmSnappy,
-  pmSpring,
 } from "@/lib/motion-presets";
-import { PM_ROW } from "@/components/pm-chrome";
 import { FLEX_TITLE_SLOT } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
-
-export const PROJECT_HEALTH_LABEL: Record<ProjectListItem["health"], string> = {
-  on_track: "On track",
-  at_risk: "At risk",
-  off_track: "Off track",
-};
-
-const PROJECT_HEALTH_TONE: Record<ProjectListItem["health"], StatusTone> = {
-  on_track: "success",
-  at_risk: "warning",
-  off_track: "danger",
-};
-
-export function projectHealthClasses(
-  health: ProjectListItem["health"],
-): string {
-  const tone = statusToneClasses(PROJECT_HEALTH_TONE[health]);
-  return cn(tone.surface, tone.ink, tone.rule);
-}
-
-export const STATUS_COLOR: Record<string, string> = {
-  ACTIVE:
-    "text-status-success-ink-strong border-status-success-rule bg-status-success-surface",
-  PLANNING:
-    "text-status-info-ink-strong border-status-info-rule bg-status-info-surface",
-  ON_HOLD:
-    "text-status-warning-ink-strong border-status-warning-rule bg-status-warning-surface",
-  COMPLETED: "text-muted-foreground border-border bg-muted",
-  ARCHIVED: "text-muted-foreground border-border bg-muted",
-};
-
-export function isOverdue(item: MyWorkItem): boolean {
-  if (!item.dueDate) return false;
-  try {
-    const d = parseISO(item.dueDate);
-    return isPast(d) && !isToday(d) && item.status !== "DONE";
-  } catch {
-    return false;
-  }
-}
-
-export const MyWorkRow = memo(function MyWorkRow({
-  item,
-  isFocused = false,
-}: {
-  item: MyWorkItem;
-  isFocused?: boolean;
-}) {
-  const shouldReduceMotion = useReducedMotion();
-  const overdue = isOverdue(item);
-  const { iconRef: chevronRef, hoverHandlers: chevronHoverHandlers } =
-    useAnimatedIcon();
-
-  return (
-    <motion.div
-      variants={shouldReduceMotion ? listItemReduced : listItem}
-      transition={pmSnappy}
-      whileHover={shouldReduceMotion ? undefined : { x: 2 }}
-      className="min-w-0"
-    >
-      <Link
-        href={getTicketDetailHref(
-          item.projectId,
-          item.projectKey,
-          item.ticketNumber,
-        )}
-        className={cn(PM_ROW, isFocused && "ring-1 ring-primary/40")}
-        aria-current={isFocused ? "true" : undefined}
-        {...chevronHoverHandlers}
-      >
-        <motion.div
-          className="shrink-0"
-          whileHover={
-            shouldReduceMotion ? undefined : { scale: 1.08, rotate: -4 }
-          }
-          transition={pmSpring}
-        >
-          <PriorityBadge priority={item.priority} size="sm" />
-        </motion.div>
-        <div className={FLEX_TITLE_SLOT}>
-          <TruncatedText
-            text={item.title}
-            className="text-label font-medium leading-tight text-foreground transition-colors group-hover:text-primary"
-          />
-          <div className="mt-0.5 flex min-w-0 items-center gap-1.5 overflow-hidden">
-            <span className="shrink-0 font-mono text-micro font-normal text-primary/80">
-              {item.projectKey}
-            </span>
-            <span className="shrink-0 text-micro text-muted-foreground">·</span>
-            <TruncatedText
-              text={item.projectName}
-              className="min-w-0 flex-1 text-micro text-muted-foreground"
-            />
-          </div>
-        </div>
-        <div className="flex shrink-0 items-center gap-1.5">
-          {overdue ? (
-            <motion.span
-              initial={shouldReduceMotion ? false : { scale: 0.6, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={pmSpring}
-            >
-              <AlertCircle
-                className="h-3.5 w-3.5 text-status-danger-ink"
-                aria-label="Overdue"
-              />
-            </motion.span>
-          ) : null}
-          <StatusBadge status={item.status} className="text-dense" />
-          <ChevronRightIcon
-            ref={chevronRef}
-            size={12}
-            className="-translate-x-1 text-muted-foreground opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100"
-          />
-        </div>
-      </Link>
-    </motion.div>
-  );
-});
+import { cn } from "@/lib/utils";
+import {
+  PROJECT_HEALTH_LABEL,
+  projectHealthClasses,
+  STATUS_COLOR,
+} from "./command-center-rows-model";
 
 export const ProjectCard = memo(function ProjectCard({
   project,
@@ -354,55 +219,3 @@ export const ProjectCard = memo(function ProjectCard({
     </motion.div>
   );
 });
-
-const OVERDUE_BLOCKERS_FILTERS = {
-  scope: "mine" as const,
-  hasBlocker: true,
-  excludeStatus: "DONE,CANCELLED",
-  limit: 10,
-} as const;
-
-export function BlockersPanel() {
-  const { data, isLoading, isError, error } = useInfiniteAllWork(
-    OVERDUE_BLOCKERS_FILTERS,
-    { throwOnError: false },
-  );
-
-  const items = data?.pages.flatMap((p) => p.data) ?? [];
-
-  return (
-    <PmSection
-      index={6}
-      className="flex min-h-0 min-w-0 w-full max-w-full flex-col lg:col-span-2"
-    >
-      <PmPanel className={COMMAND_CENTER_LIST_PANEL}>
-        <PanelHeader
-          title="Blockers"
-        />
-        <div className={COMMAND_CENTER_PANEL_BODY_SCROLL}>
-          {isLoading ? (
-            <div className="flex flex-col gap-1 p-3">
-              {[0, 1, 2].map((i) => (
-                <Skeleton key={i} className="h-8 w-full rounded" />
-              ))}
-            </div>
-          ) : isError ? (
-            <div className="flex h-full items-center justify-center p-4">
-              <ErrorState description={getErrorMessage(error)} compact />
-            </div>
-          ) : items.length === 0 ? (
-            <div className="flex h-full items-center justify-center p-4">
-              <EmptyState title="No blockers" description="No overdue blocked tickets" compact />
-            </div>
-          ) : (
-            <div className="overflow-y-auto">
-              {items.map((item) => (
-                <MyWorkRow key={item.id} item={mapAllWorkTicketToMyWorkItem(item)} />
-              ))}
-            </div>
-          )}
-        </div>
-      </PmPanel>
-    </PmSection>
-  );
-}

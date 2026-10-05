@@ -4,7 +4,7 @@ import { ApprovalsPanel } from "./command-center-approvals-panel";
 import { AgentRunsPanel } from "./command-center-agent-runs-panel";
 import { RisksPanel } from "./command-center-risks-panel";
 import { ReleasesPanel } from "./command-center-releases-panel";
-import { BlockersPanel } from "./command-center-rows";
+import { BlockersPanel } from "./command-center-blockers-panel";
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(),

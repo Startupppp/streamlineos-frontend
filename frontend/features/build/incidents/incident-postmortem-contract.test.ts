@@ -4,7 +4,7 @@ import {
   incidentsAddFollowUpActionResponseSchema,
   incidentsAddDecisionResponseSchema,
 } from "@/contracts/build-contracts.generated";
-import { unresolvedFollowUpCount } from "./incident-follow-ups";
+import { unresolvedFollowUpCount } from "./incident-follow-ups-model";
 
 const ROW = {
   id: 1,

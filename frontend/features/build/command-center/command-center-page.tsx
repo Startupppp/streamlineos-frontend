@@ -13,7 +13,8 @@ import { PageState } from "@/components/shared/page-state";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { useCommandPalette } from "@/components/command-palette/hooks/use-command-palette";
 import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
-import { QuickCreateMenu, PinnedNav } from "./command-center-actions";
+import { QuickCreateMenu } from "./command-center-actions";
+import { PinnedNav } from "./command-center-pinned-nav";
 import {
   PmPageShell,
   PmSection,

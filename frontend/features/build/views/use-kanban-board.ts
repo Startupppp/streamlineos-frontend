@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
+import { useHydrated } from "@/hooks/common/use-hydrated";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { useCan } from "@/hooks/api/access";
 import { useTicketColumnCounts, type BoardFilters } from "@/hooks/api/build/ticket-queries";
 import {
@@ -14,58 +16,38 @@ import { filterHiddenCompletedTickets } from "../shared/completed-status";
 import { getTicketRowKey } from "./kanban-swimlane";
 import { useKanbanDrag } from "./use-kanban-drag";
 import type { KanbanTicket, KanbanColumn, DisplayOptions } from "../shared/types";
-import type { ListSelection } from "./list-view-shared";
 
 interface UseKanbanBoardOptions {
   tickets: KanbanTicket[];
   projectId: number;
-  projectKey?: string;
   statuses?: StatusEntry[];
   onTicketSelect?: (ticketId: number) => void;
-  wipLimits?: Record<string, number>;
   displayOptions?: DisplayOptions;
   hideCompleted?: boolean;
-  hasActiveFilters?: boolean;
   filters?: BoardFilters;
-  selection?: ListSelection;
 }
 
 export function useKanbanBoard({
   tickets,
   projectId,
-  projectKey,
   statuses,
   onTicketSelect,
-  wipLimits,
   displayOptions,
   hideCompleted = false,
-  hasActiveFilters = false,
   filters,
-  selection,
 }: UseKanbanBoardOptions) {
   const canManage = useCan("build:manage");
   const canUpdateTickets = useCan("build:tickets:update");
   const { data: columnCountsData } = useTicketColumnCounts(projectId, filters);
-  const [optimisticTickets, setOptimisticTickets] = useState(tickets);
-  const [optimisticStatuses, setOptimisticStatuses] = useState(statuses);
-  const [optimisticColumnOrder, setOptimisticColumnOrder] = useState<KanbanColumn[] | null>(null);
-  const [isMounted, setIsMounted] = useState(false);
-  const isDraggingRef = useRef(false);
+  const isMounted = useHydrated();
+  const [isDragging, setIsDragging] = useState(false);
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
-  const prevTicketsRef = useRef(tickets);
-  const prevStatusesRef = useRef(statuses);
-
-  if (prevTicketsRef.current !== tickets) {
-    prevTicketsRef.current = tickets;
-    if (!isDraggingRef.current) setOptimisticTickets(tickets);
-  }
-  if (prevStatusesRef.current !== statuses) {
-    prevStatusesRef.current = statuses;
-    if (!isDraggingRef.current) {
-      setOptimisticStatuses(statuses);
-      setOptimisticColumnOrder(null);
-    }
-  }
+  const [optimisticTickets, setOptimisticTickets] = useSourceOverride(tickets, tickets, isDragging);
+  const [optimisticStatuses, setOptimisticStatuses] = useSourceOverride(statuses, statuses, isDragging);
+  const [optimisticColumnOrder, setOptimisticColumnOrder] = useSourceOverride<
+    StatusEntry[] | undefined,
+    KanbanColumn[] | null
+  >(statuses, null, isDragging);
 
   const rowBy = displayOptions?.rowBy ?? "none";
   const showEmptyColumns = displayOptions?.showEmptyColumns ?? true;
@@ -90,6 +72,22 @@ export function useKanbanBoard({
     if (rowBy === "none") return [];
     return [...new Set(displayTickets.map((t) => getTicketRowKey(t, rowBy)))];
   }, [displayTickets, rowBy]);
+
+  const swimlaneGroups = useMemo(
+    () =>
+      swimlaneRows
+        .map((rowKey) => {
+          const rowTickets = displayTickets.filter((t) => getTicketRowKey(t, rowBy) === rowKey);
+          return { rowKey, tickets: rowTickets, byStatus: groupTicketsByStatus(rowTickets) };
+        })
+        .filter((group) => showEmptyRows || group.tickets.length > 0),
+    [swimlaneRows, displayTickets, rowBy, showEmptyRows],
+  );
+
+  const visibleSwimlaneRows = useMemo(
+    () => swimlaneGroups.map((group) => group.rowKey),
+    [swimlaneGroups],
+  );
 
   const ticketsByStatus = useMemo(
     () => groupTicketsByStatus(displayTickets),
@@ -117,10 +115,6 @@ export function useKanbanBoard({
     [optimisticStatuses],
   );
 
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
   const { onDragStart, onDragEnd } = useKanbanDrag({
     projectId,
     statuses,
@@ -134,7 +128,7 @@ export function useKanbanBoard({
     setOptimisticTickets,
     setOptimisticStatuses,
     setOptimisticColumnOrder,
-    isDraggingRef,
+    setIsDragging,
     dragStartRef,
   });
 
@@ -159,7 +153,7 @@ export function useKanbanBoard({
           : col,
       ) ?? null,
     );
-  }, []);
+  }, [setOptimisticStatuses, setOptimisticTickets, setOptimisticColumnOrder]);
 
   const handleColumnColorChange = useCallback(
     (statusId: number, color: string) => {
@@ -172,7 +166,7 @@ export function useKanbanBoard({
         ) ?? null,
       );
     },
-    [],
+    [setOptimisticStatuses, setOptimisticColumnOrder],
   );
 
   return {
@@ -183,10 +177,8 @@ export function useKanbanBoard({
     optimisticStatuses,
     dragStartRef,
     rowBy,
-    showEmptyRows,
-    displayTickets,
-    orderedColumns,
-    swimlaneRows,
+    swimlaneGroups,
+    visibleSwimlaneRows,
     ticketsByStatus,
     visibleColumns,
     existingNames,
@@ -195,12 +187,5 @@ export function useKanbanBoard({
     handleColumnColorChange,
     onDragStart,
     onDragEnd,
-    hideCompleted,
-    hasActiveFilters,
-    wipLimits,
-    displayOptions,
-    projectId,
-    projectKey,
-    selection,
   };
 }

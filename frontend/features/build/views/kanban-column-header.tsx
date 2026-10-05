@@ -4,7 +4,6 @@ import { useState, useRef, useCallback } from "react";
 import { GripVertical, Pencil, Trash2 } from "lucide-react";
 import type { DraggableProvidedDragHandleProps } from "@hello-pangea/dnd";
 import { EllipsisIcon } from "@animateicons/react/lucide";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -19,7 +18,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -31,19 +29,8 @@ import type { KanbanColumn } from "../shared/types";
 import { ColumnColorPicker } from "../shared/column-color-picker";
 import { resolveColumnColor } from "@/lib/column-colors";
 import { KanbanColumnWip } from "./kanban-column-wip";
-
-const MAX_COLUMN_NAME = 50;
-
-function validateRename(name: string, currentName: string, existingNames: string[]): string | null {
-  if (!name) return "Name is required";
-  if (!/[a-zA-Z0-9]/.test(name)) return "Name must contain at least one letter or number";
-  if (name.length > MAX_COLUMN_NAME) return `Name must be ${MAX_COLUMN_NAME} characters or fewer`;
-  if (name.toLowerCase() === currentName.toLowerCase()) return null;
-  if (existingNames.some((n) => n.toLowerCase() === name.toLowerCase())) {
-    return "A column with this name already exists";
-  }
-  return null;
-}
+import { MAX_COLUMN_NAME, validateRename } from "./kanban-column-header-model";
+import { KanbanColumnRenameInput } from "./kanban-column-rename";
 
 interface KanbanColumnHeaderProps {
   column: KanbanColumn;
@@ -246,42 +233,19 @@ export function KanbanColumnHeader({
             style={{ backgroundColor: columnColor }}
           />
         )}
-        {isRenaming ? (
-          <div className="flex flex-col flex-1 min-w-0">
-            <Input
-              ref={inputRef}
-              value={renameValue}
-              onChange={handleRenameChange}
-              onKeyDown={handleRenameKeyDown}
-              onBlur={handleRenameBlur}
-              className={cn("h-6 text-label px-1.5 min-w-0", renameError && "border-destructive focus-visible:ring-destructive")}
-              disabled={updateState.isPending}
-              maxLength={MAX_COLUMN_NAME}
-              aria-invalid={!!renameError}
-              title={renameError ?? undefined}
-            />
-            {renameError && (
-              <p className="text-micro text-destructive leading-tight mt-0.5 truncate">{renameError}</p>
-            )}
-          </div>
-        ) : (
-          <h3 className="min-w-0 truncate text-dense font-medium uppercase tracking-wider text-foreground">
-            {isEditable ? (
-              <button
-                type="button"
-                className="max-w-full cursor-text truncate transition-colors hover:text-muted-foreground"
-                onClick={handleStartRename}
-                title="Click to rename"
-              >
-                {column.name}
-              </button>
-            ) : (
-              <span className="truncate" title={column.name}>
-                {column.name}
-              </span>
-            )}
-          </h3>
-        )}
+        <KanbanColumnRenameInput
+          isRenaming={isRenaming}
+          renameValue={renameValue}
+          renameError={renameError}
+          inputRef={inputRef}
+          isPending={updateState.isPending}
+          columnName={column.name}
+          isEditable={isEditable}
+          onStartRename={handleStartRename}
+          onChange={handleRenameChange}
+          onKeyDown={handleRenameKeyDown}
+          onBlur={handleRenameBlur}
+        />
         <KanbanColumnWip count={displayCount} wipLimit={wipLimit} />
       </div>
 

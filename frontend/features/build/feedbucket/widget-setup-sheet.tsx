@@ -1,7 +1,5 @@
 ﻿"use client";
 
-import { useState, useMemo } from "react";
-import { toast } from "sonner";
 import { RefreshCcw } from "lucide-react";
 import { CopyIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -9,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Combobox } from "@/components/ui/combobox";
-import type { ComboboxOption } from "@/components/ui/combobox";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import {
   Sheet,
@@ -24,16 +21,9 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { TEXT_BODY, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { buildFeedbucketEmbedSnippet } from "@/lib/feedbucket";
-import {
-  useRotateFeedbucketWidgetKey,
-  useUpdateFeedbucketWidget,
-} from "@/hooks/api/feedbucket";
-import { useProjects } from "@/hooks/api/build/projects";
-import { useOrgMembers } from "@/hooks/api/organization";
 import type { FeedbucketWidget } from "@/types/feedbucket";
 import { WidgetAssigneeRules } from "./widget-assignee-rules";
+import { useWidgetSetup } from "./use-widget-setup";
 
 interface WidgetSetupSheetProps {
   open: boolean;
@@ -42,116 +32,27 @@ interface WidgetSetupSheetProps {
 }
 
 export function WidgetSetupSheet({ open, widget, onClose }: WidgetSetupSheetProps) {
-  const [confirmRotate, setConfirmRotate] = useState(false);
-  const rotateKey = useRotateFeedbucketWidgetKey();
-  const updateWidget = useUpdateFeedbucketWidget();
-
-  const projectsQuery = useProjects(undefined, { enabled: open && !widget.projectId });
-  const membersQuery = useOrgMembers(1, 100, undefined, { enabled: open });
-
-  const projectOptions = useMemo<ComboboxOption[]>(() => {
-    if (!projectsQuery.data) return [];
-    return projectsQuery.data.data.map((p) => ({ value: String(p.id), label: p.name }));
-  }, [projectsQuery.data]);
-
-  const members = useMemo(() => membersQuery.data?.data ?? [], [membersQuery.data]);
-
-  const membershipIdToUserId = useMemo(() => {
-    const map = new Map<number, string>();
-    for (const m of members) map.set(m.membershipId, m.userId);
-    return map;
-  }, [members]);
-
-  const defaultAssigneeUserId = useMemo(() => {
-    if (!widget.defaultAssigneeMembershipId) return "";
-    return membershipIdToUserId.get(widget.defaultAssigneeMembershipId) ?? "";
-  }, [widget.defaultAssigneeMembershipId, membershipIdToUserId]);
-
-  const snippet = buildFeedbucketEmbedSnippet({ publicKey: widget.publicKey });
+  const {
+    confirmRotate,
+    setConfirmRotate,
+    projectOptions,
+    members,
+    defaultAssigneeUserId,
+    snippet,
+    rotateKey,
+    updateWidget,
+    handleCopySnippet,
+    handleCopyPublicKey,
+    handleOpenRotate,
+    handleConfirmRotate,
+    handleToggleAiAssist,
+    handleToggleAutoCreate,
+    handleDefaultProjectChange,
+    handleDefaultAssigneeChange,
+  } = useWidgetSetup(widget, open);
 
   function handleOpenChange(v: boolean) {
     if (!v) onClose();
-  }
-
-  async function handleCopySnippet() {
-    try {
-      await navigator.clipboard.writeText(snippet);
-      toast.success("Embed snippet copied");
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-    }
-  }
-
-  async function handleCopyPublicKey() {
-    try {
-      await navigator.clipboard.writeText(widget.publicKey);
-      toast.success("Public key copied");
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-    }
-  }
-
-  function handleOpenRotate() {
-    setConfirmRotate(true);
-  }
-
-  async function handleConfirmRotate() {
-    try {
-      await rotateKey.mutateAsync(widget.id);
-      toast.success("Widget key rotated");
-      setConfirmRotate(false);
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-    }
-  }
-
-  async function handleToggleAiAssist(enabled: boolean) {
-    try {
-      await updateWidget.mutateAsync({
-        widgetId: widget.id,
-        input: { aiAssistEnabled: enabled },
-      });
-      toast.success(enabled ? "AI assist enabled" : "AI assist disabled");
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-    }
-  }
-
-  async function handleToggleAutoCreate(enabled: boolean) {
-    try {
-      await updateWidget.mutateAsync({
-        widgetId: widget.id,
-        input: { autoCreateTicket: enabled },
-      });
-      toast.success(enabled ? "Auto-create ticket enabled" : "Auto-create ticket disabled");
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-    }
-  }
-
-  async function handleDefaultProjectChange(value: string) {
-    const defaultProjectId = value ? Number(value) : null;
-    try {
-      await updateWidget.mutateAsync({
-        widgetId: widget.id,
-        input: { defaultProjectId },
-      });
-      toast.success(defaultProjectId ? "Default project updated" : "Default project cleared");
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-    }
-  }
-
-  async function handleDefaultAssigneeChange(userId: string) {
-    try {
-      await updateWidget.mutateAsync({
-        widgetId: widget.id,
-        input: { defaultAssigneeId: userId || null },
-      });
-      toast.success(userId ? "Default assignee updated" : "Default assignee cleared");
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-    }
   }
 
   return (

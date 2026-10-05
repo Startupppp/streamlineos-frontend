@@ -11,7 +11,7 @@ import type { FilterState as WorkloadFilterState, MemberCapacityData } from "./w
 import type { Cycle } from "@/types/projects";
 import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
-import type { ProjectStatus, BoardMember } from "./use-board-url-state";
+import type { ProjectStatus, BoardMember } from "./board-types";
 import { useCan } from "@/hooks/api/access";
 import { useModules } from "@/hooks/api/build/modules";
 import { ModuleNamesProvider } from "./module-names-context";

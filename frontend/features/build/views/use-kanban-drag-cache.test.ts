@@ -25,7 +25,7 @@ it("failed drag restores only its fields without removing newer local edits", as
       projectId: 42, statuses: [], rowBy: "none", hideCompleted: false, canManage: true,
       visibleColumns: [], orderedColumns: [], optimisticTickets: current, optimisticStatuses: [],
       setOptimisticTickets: setCurrent, setOptimisticStatuses: jest.fn(), setOptimisticColumnOrder: jest.fn(),
-      isDraggingRef: { current: false }, dragStartRef: { current: null },
+      setIsDragging: jest.fn(), dragStartRef: { current: null },
     });
     return { drag, current, setCurrent };
   }, { wrapper });
@@ -59,7 +59,7 @@ it.each([false, true])("persists drag on an infinite board and restores its page
     projectId: 42, statuses: [], rowBy: "none", hideCompleted: false, canManage: true,
     visibleColumns: [], orderedColumns: [], optimisticTickets: [ticket], optimisticStatuses: [],
     setOptimisticTickets: jest.fn(), setOptimisticStatuses: jest.fn(), setOptimisticColumnOrder: jest.fn(),
-    isDraggingRef: { current: false }, dragStartRef: { current: null },
+    setIsDragging: jest.fn(), dragStartRef: { current: null },
   }), { wrapper });
   await act(async () => result.current.onDragEnd({ draggableId: "1", type: "DEFAULT", reason: "DROP", mode: "FLUID", source: { droppableId: "OPEN", index: 0 }, destination: { droppableId: "DONE", index: 0 }, combine: null }));
   await waitFor(() => expect(apiClient.patch).toHaveBeenCalledTimes(1));
@@ -80,7 +80,7 @@ it("threads the dragged ticket's own version into the rank request instead of a 
     projectId: 42, statuses: [], rowBy: "none", hideCompleted: false, canManage: true,
     visibleColumns: [], orderedColumns: [], optimisticTickets: [dragged, other], optimisticStatuses: [],
     setOptimisticTickets: jest.fn(), setOptimisticStatuses: jest.fn(), setOptimisticColumnOrder: jest.fn(),
-    isDraggingRef: { current: false }, dragStartRef: { current: null },
+    setIsDragging: jest.fn(), dragStartRef: { current: null },
   }), { wrapper });
   await act(async () => result.current.onDragEnd({ draggableId: "3", type: "DEFAULT", reason: "DROP", mode: "FLUID", source: { droppableId: "OPEN", index: 0 }, destination: { droppableId: "DONE", index: 0 }, combine: null }));
   await waitFor(() => expect(apiClient.patch).toHaveBeenCalledTimes(1));
@@ -104,7 +104,7 @@ it("omits status from the rank payload when the drag is within the same column, 
     projectId: 1, statuses: [], rowBy: "none", hideCompleted: false, canManage: true,
     visibleColumns: [], orderedColumns: [], optimisticTickets: [a, b], optimisticStatuses: [],
     setOptimisticTickets: jest.fn(), setOptimisticStatuses: jest.fn(), setOptimisticColumnOrder: jest.fn(),
-    isDraggingRef: { current: false }, dragStartRef: { current: null },
+    setIsDragging: jest.fn(), dragStartRef: { current: null },
   }), { wrapper });
   await act(async () => result.current.onDragEnd({
     draggableId: "1", type: "TICKET", reason: "DROP", mode: "FLUID",
@@ -128,7 +128,7 @@ it("fires rankTicket with the correct status when a cross-column drag completes 
     projectId: 1, statuses: [], rowBy: "none", hideCompleted: false, canManage: true,
     visibleColumns: [], orderedColumns: [], optimisticTickets: [ticket], optimisticStatuses: [],
     setOptimisticTickets: jest.fn(), setOptimisticStatuses: jest.fn(), setOptimisticColumnOrder: jest.fn(),
-    isDraggingRef: { current: false }, dragStartRef: { current: null },
+    setIsDragging: jest.fn(), dragStartRef: { current: null },
   }), { wrapper });
   await act(async () => result.current.onDragEnd({
     draggableId: "7",
@@ -159,7 +159,7 @@ it("does not call rankTicket when dropping onto the exact same position in the s
     projectId: 1, statuses: [], rowBy: "none", hideCompleted: false, canManage: true,
     visibleColumns: [], orderedColumns: [], optimisticTickets: [ticket], optimisticStatuses: [],
     setOptimisticTickets: jest.fn(), setOptimisticStatuses: jest.fn(), setOptimisticColumnOrder: jest.fn(),
-    isDraggingRef: { current: false }, dragStartRef: { current: null },
+    setIsDragging: jest.fn(), dragStartRef: { current: null },
   }), { wrapper });
   await act(async () => result.current.onDragEnd({
     draggableId: "1", type: "TICKET", reason: "DROP", mode: "FLUID",

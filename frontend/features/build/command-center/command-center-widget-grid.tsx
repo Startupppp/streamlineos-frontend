@@ -8,7 +8,7 @@ import { ApprovalsPanel } from "./command-center-approvals-panel";
 import { AgentRunsPanel } from "./command-center-agent-runs-panel";
 import { RisksPanel } from "./command-center-risks-panel";
 import { ReleasesPanel } from "./command-center-releases-panel";
-import { BlockersPanel } from "./command-center-rows";
+import { BlockersPanel } from "./command-center-blockers-panel";
 import { COMMAND_CENTER_PANELS_GRID } from "./command-center-constants";
 import type { WidgetType } from "./dashboard-layout";
 import type { MyWorkItem } from "@/types/projects/my-work";

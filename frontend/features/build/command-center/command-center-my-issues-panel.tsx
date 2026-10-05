@@ -12,7 +12,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import type { MyWorkItem } from "@/types/projects/my-work";
 import type { ProjectListItem } from "@/types/projects";
 import { PmSection, PmPanel, PmStaggerList } from "@/components/pm-chrome";
-import { MyWorkRow } from "./command-center-rows";
+import { MyWorkRow } from "./command-center-my-work-row";
 import { CreateIssueButton } from "./command-center-actions";
 import { PanelHeader } from "./panel-header";
 import type { EmptyAction } from "./command-center-utils";

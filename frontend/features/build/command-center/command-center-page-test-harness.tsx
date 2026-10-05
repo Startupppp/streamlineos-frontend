@@ -78,8 +78,11 @@ jest.mock("./use-keyboard-shortcuts", () => ({
 
 jest.mock("./command-center-actions", () => ({
   QuickCreateMenu: () => null,
-  PinnedNav: () => <div data-testid="pinned-nav" />,
   CreateIssueButton: () => null,
+}));
+
+jest.mock("./command-center-pinned-nav", () => ({
+  PinnedNav: () => <div data-testid="pinned-nav" />,
 }));
 
 jest.mock("./command-center-my-issues-panel", () => ({

@@ -182,9 +182,6 @@ import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import { useEpicPage } from "@/hooks/api/build/epics";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
-import type { Cycle, ProjectWithDetails } from "@/types/projects";
-
-import type { EpicPage, EpicItem } from "@/hooks/api/build/execution-schema";
 
 export const mockUseProject = jest.mocked(useProject);
 export const mockUseProjectBoardTickets = jest.mocked(useProjectBoardTickets);
