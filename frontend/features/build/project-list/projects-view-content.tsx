@@ -52,7 +52,7 @@ export function ProjectsViewContent({
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <div className="min-h-0 flex-1 overflow-y-auto">
           <PmStaggerList
-            className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+            className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
             role="list"
             aria-label="Projects grid"
           >
@@ -83,7 +83,7 @@ export function ProjectsViewContent({
   }
 
   return (
-    <div className="flex min-h-0 flex-1 gap-3">
+    <div className="flex min-h-0 flex-1 gap-3 motion-reduce:transition-none">
       <div className="flex min-w-0 flex-1 flex-col">
         <ProjectTable
           projects={visibleProjects}
