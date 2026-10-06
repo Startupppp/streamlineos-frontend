@@ -166,7 +166,6 @@ describe("Intake return navigation", () => {
     expect(resolveTicketBackHref(12, "/build/12/intake?redirect=//evil.example")).toBe(
       "/build/12/issues",
     );
-    // Without returnTo, Close historically fell back to Issues — keep that for deep links
     expect(resolveTicketBackHref(12, null)).toBe("/build/12/issues");
   });
 
