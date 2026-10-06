@@ -31,14 +31,14 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useInviteUser } from "@/hooks/api/users";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { describeInviteFailure } from "@/features/directory/users/invite-error-message";
 import { CheckCircle2, Mail } from "lucide-react";
 import { USER_INVITE_ROLES } from "@/lib/constants/user-invite-roles";
 import { InviteSeatNotice } from "./invite-seat-notice";
-import { ModuleAccessSection } from "./invite-module-access";
+import { INVITE_ACCESS_PRESETS, ModuleAccessSection } from "./invite-module-access";
 import {
   inviteUserSchema,
   type InviteUserFormValues,
@@ -71,20 +71,28 @@ export function UserInviteDialog({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const { mutate: inviteUser, isPending } = useInviteUser();
   const canManageRbac = useCan("settings:rbac:manage");
+  const buildEnabled = useModuleEnabled("build");
+  const defaultModuleAccess = buildEnabled
+    ? (INVITE_ACCESS_PRESETS.find((p) => p.id === "build-member")?.access ?? [])
+    : [];
 
   const form = useForm<InviteUserFormValues>({
     resolver: zodResolver(inviteUserSchema),
     defaultValues: {
       email: defaultEmail ?? "",
       role: undefined,
-      moduleAccess: [],
+      moduleAccess: defaultModuleAccess,
     },
   });
 
   const handleOpenChange = useCallback(
     (isOpen: boolean) => {
       if (!isOpen) {
-        form.reset();
+        form.reset({
+          email: defaultEmail ?? "",
+          role: undefined,
+          moduleAccess: defaultModuleAccess,
+        });
         setInvited(false);
         setWasResent(false);
         setSubmitError(null);
@@ -128,7 +136,11 @@ export function UserInviteDialog({
   }
 
   const handleResetInvite = useCallback(() => {
-    form.reset();
+    form.reset({
+          email: defaultEmail ?? "",
+          role: undefined,
+          moduleAccess: defaultModuleAccess,
+        });
     setInvited(false);
     setWasResent(false);
     setSubmitError(null);
