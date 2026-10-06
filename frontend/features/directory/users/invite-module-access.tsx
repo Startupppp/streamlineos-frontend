@@ -27,6 +27,8 @@ type ModuleAccess = NonNullable<InviteUserFormValues["moduleAccess"]>;
  * it shows — and every row stays editable after it is applied.
  */
 export const INVITE_ACCESS_PRESETS: readonly { id: string; label: string; access: ModuleAccess }[] = [
+  { id: "build-member", label: "Build Member", access: [{ moduleKey: "build", standing: "MEMBER" }] },
+  { id: "build-admin", label: "Build Admin", access: [{ moduleKey: "build", standing: "ADMIN" }] },
   { id: "hr-admin", label: "HR Admin", access: [{ moduleKey: "hr", standing: "ADMIN" }] },
   { id: "manager", label: "Manager", access: [{ moduleKey: "hr", standing: "MEMBER" }] },
   {

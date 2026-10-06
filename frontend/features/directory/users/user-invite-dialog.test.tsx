@@ -8,6 +8,7 @@ jest.mock("@/hooks/api/users", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => false),
+  useModuleEnabled: jest.fn(() => false),
 }));
 
 // The seat notice reads billing; with no seat data it renders nothing.
@@ -15,7 +16,7 @@ jest.mock("@/hooks/api/subscription", () => ({
   useSeatInfo: jest.fn(() => ({ data: undefined })),
 }));
 
-import { useCan } from "@/hooks/api/access";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useInviteUser } from "@/hooks/api/users";
 
 describe("UserInviteDialog — module access section visibility", () => {
@@ -238,5 +239,139 @@ describe("UserInviteDialog — CHAT-002 a refusal stays on screen", () => {
 
     expect(screen.queryByRole("alert")).toBeNull();
     expect(screen.getByText("Invitation sent!")).toBeInTheDocument();
+  });
+});
+
+
+describe("UserInviteDialog — Build Member default and Cancel reset", () => {
+  beforeEach(() => {
+    (useModuleEnabled as jest.Mock).mockReturnValue(true);
+    (useCan as jest.Mock).mockReturnValue(true);
+    (useInviteUser as jest.Mock).mockReturnValue({
+      mutate: jest.fn(),
+      isPending: false,
+    });
+  });
+
+  afterEach(() => {
+    (useModuleEnabled as jest.Mock).mockReturnValue(false);
+  });
+
+  beforeAll(() => {
+    Object.defineProperty(HTMLElement.prototype, "hasPointerCapture", {
+      value: jest.fn().mockReturnValue(false),
+      configurable: true,
+      writable: true,
+    });
+    Object.defineProperty(HTMLElement.prototype, "setPointerCapture", {
+      value: jest.fn(),
+      configurable: true,
+      writable: true,
+    });
+    Object.defineProperty(HTMLElement.prototype, "releasePointerCapture", {
+      value: jest.fn(),
+      configurable: true,
+      writable: true,
+    });
+  });
+
+  it("submits Build Member moduleAccess by default when Build is enabled without clicking a preset", async () => {
+    const mutateMock = jest.fn();
+    (useInviteUser as jest.Mock).mockReturnValue({
+      mutate: mutateMock,
+      isPending: false,
+    });
+
+    const user = userEvent.setup();
+    render(<UserInviteDialog open onOpenChange={jest.fn()} />);
+
+    await user.type(
+      screen.getByLabelText(/email address/i),
+      "build-default@example.com",
+    );
+    const [roleSelect] = screen.getAllByRole("combobox");
+    await user.click(roleSelect);
+    await user.click(screen.getByRole("option", { name: /^Member$/ }));
+    await user.click(screen.getByText("Send invitation"));
+
+    expect(mutateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        email: "build-default@example.com",
+        role: "MEMBER",
+        moduleAccess: [{ moduleKey: "build", standing: "MEMBER" }],
+      }),
+      expect.anything(),
+    );
+  });
+
+  it("Cancel clears typed email and restores Build Member default module access", async () => {
+    const onOpenChange = jest.fn();
+    const user = userEvent.setup();
+    const { rerender } = render(
+      <UserInviteDialog open onOpenChange={onOpenChange} />,
+    );
+
+    await user.type(
+      screen.getByLabelText(/email address/i),
+      "stale@example.com",
+    );
+    await user.click(screen.getByRole("button", { name: "Viewer" }));
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+
+    rerender(<UserInviteDialog open onOpenChange={onOpenChange} />);
+
+    expect(screen.getByLabelText(/email address/i)).toHaveValue("");
+
+    const mutateMock = jest.fn();
+    (useInviteUser as jest.Mock).mockReturnValue({
+      mutate: mutateMock,
+      isPending: false,
+    });
+    rerender(<UserInviteDialog open onOpenChange={onOpenChange} />);
+
+    await user.type(
+      screen.getByLabelText(/email address/i),
+      "fresh@example.com",
+    );
+    const [roleSelect] = screen.getAllByRole("combobox");
+    await user.click(roleSelect);
+    await user.click(screen.getByRole("option", { name: /^Member$/ }));
+    await user.click(screen.getByText("Send invitation"));
+
+    expect(mutateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        email: "fresh@example.com",
+        moduleAccess: [{ moduleKey: "build", standing: "MEMBER" }],
+      }),
+      expect.anything(),
+    );
+  });
+
+  it("does not default Build Member when the Build module is disabled", async () => {
+    (useModuleEnabled as jest.Mock).mockReturnValue(false);
+    const mutateMock = jest.fn();
+    (useInviteUser as jest.Mock).mockReturnValue({
+      mutate: mutateMock,
+      isPending: false,
+    });
+
+    const user = userEvent.setup();
+    render(<UserInviteDialog open onOpenChange={jest.fn()} />);
+
+    await user.type(
+      screen.getByLabelText(/email address/i),
+      "no-build@example.com",
+    );
+    const [roleSelect] = screen.getAllByRole("combobox");
+    await user.click(roleSelect);
+    await user.click(screen.getByRole("option", { name: /^Member$/ }));
+    await user.click(screen.getByText("Send invitation"));
+
+    expect(mutateMock).toHaveBeenCalledWith(
+      expect.not.objectContaining({ moduleAccess: expect.anything() }),
+      expect.anything(),
+    );
   });
 });

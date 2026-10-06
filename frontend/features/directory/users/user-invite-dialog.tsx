@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -31,14 +31,14 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useInviteUser } from "@/hooks/api/users";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { describeInviteFailure } from "@/features/directory/users/invite-error-message";
 import { CheckCircle2, Mail } from "lucide-react";
 import { USER_INVITE_ROLES } from "@/lib/constants/user-invite-roles";
 import { InviteSeatNotice } from "./invite-seat-notice";
-import { ModuleAccessSection } from "./invite-module-access";
+import { INVITE_ACCESS_PRESETS, ModuleAccessSection } from "./invite-module-access";
 import {
   inviteUserSchema,
   type InviteUserFormValues,
@@ -71,27 +71,39 @@ export function UserInviteDialog({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const { mutate: inviteUser, isPending } = useInviteUser();
   const canManageRbac = useCan("settings:rbac:manage");
+  const buildEnabled = useModuleEnabled("build");
+  const defaultModuleAccess = useMemo(
+    () =>
+      buildEnabled
+        ? (INVITE_ACCESS_PRESETS.find((p) => p.id === "build-member")?.access ?? [])
+        : [],
+    [buildEnabled],
+  );
 
   const form = useForm<InviteUserFormValues>({
     resolver: zodResolver(inviteUserSchema),
     defaultValues: {
       email: defaultEmail ?? "",
       role: undefined,
-      moduleAccess: [],
+      moduleAccess: defaultModuleAccess,
     },
   });
 
   const handleOpenChange = useCallback(
     (isOpen: boolean) => {
       if (!isOpen) {
-        form.reset();
+        form.reset({
+          email: defaultEmail ?? "",
+          role: undefined,
+          moduleAccess: defaultModuleAccess,
+        });
         setInvited(false);
         setWasResent(false);
         setSubmitError(null);
       }
       onOpenChange(isOpen);
     },
-    [form, onOpenChange],
+    [form, onOpenChange, defaultEmail, defaultModuleAccess],
   );
 
   const handleCloseDialog = useCallback(
@@ -128,11 +140,15 @@ export function UserInviteDialog({
   }
 
   const handleResetInvite = useCallback(() => {
-    form.reset();
+    form.reset({
+          email: defaultEmail ?? "",
+          role: undefined,
+          moduleAccess: defaultModuleAccess,
+        });
     setInvited(false);
     setWasResent(false);
     setSubmitError(null);
-  }, [form]);
+  }, [form, defaultEmail, defaultModuleAccess]);
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
