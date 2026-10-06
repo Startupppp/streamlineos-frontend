@@ -256,7 +256,7 @@ export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
   const { missingCount } = useMissingOnboardingDocsCount({
     enabled: hrOnboardingEnabled,
   });
-  const { count: pendingUploadCount } = useMyPendingDocuments();
+  const { count: _pendingUploadCount } = useMyPendingDocuments();
 
   const showSignatureChip = signEnabled && canViewSignEnvelopes;
   const showSummaryStrip =

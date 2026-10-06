@@ -118,6 +118,7 @@ describe("retained ticket panel", () => {
       id: 365,
       ticketNumber: 211,
       projectId: 1,
+      project: { id: 1, name: "Stream", key: "STRE" },
       title: "Reserved navigation verification",
       description: "",
       status: "IN_REVIEW",

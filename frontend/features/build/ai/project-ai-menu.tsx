@@ -51,7 +51,9 @@ export function ProjectAiMenu({
   });
 
   const summaryRef = useRef(summary);
-  summaryRef.current = summary;
+  useEffect(() => {
+    summaryRef.current = summary;
+  });
 
   const handleSummarizeClick = useCallback(() => {
     if (summaryRef.current.isPending) return;

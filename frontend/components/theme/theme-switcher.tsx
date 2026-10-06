@@ -134,8 +134,6 @@ export function ThemeMenuSubmenu() {
         Interface theme
       </DropdownMenuSubTrigger>
       <DropdownMenuSubContent
-        side="left"
-        align="end"
         sideOffset={-4}
         alignOffset={-4}
         collisionPadding={16}

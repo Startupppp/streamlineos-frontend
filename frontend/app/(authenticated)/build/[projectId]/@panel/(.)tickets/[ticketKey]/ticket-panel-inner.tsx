@@ -3,7 +3,6 @@
 import { useCallback, useMemo } from "react";
 import { usePathname } from "next/navigation";
 import { parseTicketKey, ticketKeyMatchesProject } from "@/components/shared/format-ticket-key";
-import { useProject } from "@/hooks/api/build/projects";
 import { notFound } from "next/navigation";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -31,15 +30,16 @@ export function TicketPanelInner({
     [pathname, projectId, ticketKey],
   );
   const parsed = useMemo(() => parseTicketKey(ticketKey), [ticketKey]);
-  const { data: projectData, isLoading: projectLoading } = useProject(projectId);
-  const routeKeyMismatch =
-    !projectLoading && !ticketKeyMatchesProject(parsed, projectData?.key);
   const lookup = useTicketByKey(
     projectId,
-    isCurrentTicketRoute && !routeKeyMismatch
-      ? (parsed?.ticketNumber ?? null)
-      : null,
+    isCurrentTicketRoute ? (parsed?.ticketNumber ?? null) : null,
   );
+  const resolvedProjectKey =
+    lookup.data?.project?.key ?? null;
+  const routeKeyMismatch =
+    Boolean(parsed?.projectKey) &&
+    resolvedProjectKey != null &&
+    !ticketKeyMatchesProject(parsed, resolvedProjectKey);
   const originHref = useMemo(
     () => resolveTicketBackHref(projectId, returnTo),
     [projectId, returnTo],

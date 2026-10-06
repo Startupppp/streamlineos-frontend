@@ -51,6 +51,8 @@ export function ProjectBoardHeaderActions({
     setImportOpen(open);
   }, []);
 
+  /* Summarize onSelect reads summarizeFnRef only on click, never during render. */
+  /* eslint-disable react-hooks/refs */
   const actions = useMemo(() => {
     const next: BuildHeaderAction[] = [
       {
@@ -96,6 +98,7 @@ export function ProjectBoardHeaderActions({
     handleImportExport,
     handleCreate,
   ]);
+  /* eslint-enable react-hooks/refs */
 
   return (
     <>

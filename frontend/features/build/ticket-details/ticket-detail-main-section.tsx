@@ -151,19 +151,9 @@ export function TicketDetailMainSection({
           </Button>
         </div>
       ) : null}
-      {canUpdate && !editingTitle ? (
-        <button
-          type="button"
-          className="sr-only"
-          aria-expanded={false}
-          onClick={() => setEditingTitle(true)}
-        >
-          Edit title
-        </button>
-      ) : null}
       {editingTitle && canUpdate ? (
         <div className="flex min-w-0 flex-col gap-2">
-          <label htmlFor={`ticket-title-${ticketId}`} className="text-xs font-semibold text-muted-foreground">
+          <label htmlFor={`ticket-title-${ticketId}`} className="sr-only">
             Title
           </label>
           <Textarea
@@ -174,9 +164,25 @@ export function TicketDetailMainSection({
             autoFocus
             className="h-auto min-h-12 w-full max-w-full resize-none break-words rounded-md border-border bg-card px-3 py-2 text-base font-medium leading-snug shadow-none transition-colors duration-200 [overflow-wrap:anywhere] [word-break:break-word] hover:border-foreground/30 focus-visible:ring-1"
             placeholder="Ticket title"
+            onBlur={() => setEditingTitle(false)}
           />
         </div>
-      ) : null}
+      ) : canUpdate ? (
+        <button
+          type="button"
+          className="group min-w-0 text-left"
+          aria-label="Edit title"
+          onClick={() => setEditingTitle(true)}
+        >
+          <h2 className="break-words text-xl font-semibold leading-snug text-foreground [overflow-wrap:anywhere] group-hover:text-foreground/90">
+            {localTitle || "Untitled"}
+          </h2>
+        </button>
+      ) : (
+        <h2 className="break-words text-xl font-semibold leading-snug text-foreground [overflow-wrap:anywhere]">
+          {localTitle || "Untitled"}
+        </h2>
+      )}
 
       <div className="min-w-0 border-b border-border pb-6">
         {isPreview || !canUpdate ? (

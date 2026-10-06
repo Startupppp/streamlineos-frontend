@@ -61,20 +61,20 @@ export function TicketDetailPage({
 
   const parsed = useMemo(() => parseTicketKey(ticketKey), [ticketKey]);
   const { data: projectData, isLoading: projectLoading } = useProject(projectId);
-  const routeKeyMismatch =
-    !projectLoading &&
-    !ticketKeyMatchesProject(parsed, projectData?.key);
   const {
     data: byKeyTicket,
     isLoading: byKeyLoading,
     isPending: byKeyPending,
     error: byKeyError,
     refetch: refetchByKey,
-  } = useTicketByKey(
-    projectId,
-    routeKeyMismatch ? null : (parsed?.ticketNumber ?? null),
-    INLINE_READ_ERROR,
-  );
+  } = useTicketByKey(projectId, parsed?.ticketNumber ?? null, INLINE_READ_ERROR);
+  const resolvedProjectKey =
+    projectData?.key ??
+    byKeyTicket?.project?.key ?? null;
+  const routeKeyMismatch =
+    Boolean(parsed?.projectKey) &&
+    resolvedProjectKey != null &&
+    !ticketKeyMatchesProject(parsed, resolvedProjectKey);
   const ticketId = routeKeyMismatch ? null : (byKeyTicket?.id ?? null);
 
   const sidebarWarmProjectId = isMobile ? 0 : projectId;
