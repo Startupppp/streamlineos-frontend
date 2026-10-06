@@ -104,10 +104,8 @@ export function InviteClientDialog({ open, onOpenChange, onInvited, defaultProje
 
   const handleOpenChange = useCallback(
     (next: boolean) => {
-      if (next) {
-        form.reset(makeDefaults(defaultProjectId));
-        setActivationResult(null);
-      }
+      form.reset(makeDefaults(defaultProjectId));
+      setActivationResult(null);
       onOpenChange(next);
     },
     [defaultProjectId, form, onOpenChange],
@@ -140,7 +138,7 @@ export function InviteClientDialog({ open, onOpenChange, onInvited, defaultProje
   }
 
   function handleClose() {
-    onOpenChange(false);
+    handleOpenChange(false);
   }
 
   const showForm = !activationResult;
@@ -282,15 +280,23 @@ export function InviteClientDialog({ open, onOpenChange, onInvited, defaultProje
                   )}
                 />
               ))}
-              <FormField
-                control={form.control}
-                name="canViewTasks"
-                render={() => (
-                  <FormItem>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {(
+                form.formState.errors as Record<
+                  string,
+                  { message?: string } | undefined
+                >
+              ).capabilityGroup?.message ? (
+                <p className="text-xs text-destructive" role="alert">
+                  {
+                    (
+                      form.formState.errors as Record<
+                        string,
+                        { message?: string } | undefined
+                      >
+                    ).capabilityGroup?.message
+                  }
+                </p>
+              ) : null}
             </div>
           </form>
         </Form>

@@ -23,7 +23,7 @@ export const activateClientFormSchema = z
       ctx.addIssue({
         code: "custom",
         message: "Select at least one visibility permission",
-        path: ["canViewTasks"],
+        path: ["capabilityGroup"],
       });
     }
   });

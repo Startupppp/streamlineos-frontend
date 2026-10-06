@@ -54,6 +54,9 @@ export function usePublishPortal(projectId: number) {
         buildWorkQueryKeys.projects.clientPortal.settings(projectId),
         updated,
       );
+      void qc.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.clientPortal.preview(projectId),
+      });
     },
   });
 }
@@ -74,6 +77,9 @@ export function useUnpublishPortal(projectId: number) {
         buildWorkQueryKeys.projects.clientPortal.settings(projectId),
         updated,
       );
+      void qc.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.clientPortal.preview(projectId),
+      });
     },
   });
 }

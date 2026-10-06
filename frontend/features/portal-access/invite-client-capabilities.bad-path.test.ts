@@ -24,4 +24,13 @@ describe("Activate client capabilities (portal grant)", () => {
     });
     expect(result.success).toBe(true);
   });
+
+  it("puts the capability error on capabilityGroup, not canViewTasks (P2)", () => {
+    const result = activateClientFormSchema.safeParse(base);
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    const paths = result.error.issues.map((i) => i.path.join("."));
+    expect(paths).toContain("capabilityGroup");
+    expect(paths).not.toContain("canViewTasks");
+  });
 });
