@@ -97,7 +97,11 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
   const showPlanningRow =
     projectId !== undefined &&
     canUpdate &&
-    (showEstimate || showCycle || Boolean(ticket.startDate));
+    (
+      (showEstimate && points != null) ||
+      (showCycle && ticket.cycleId != null) ||
+      Boolean(ticket.startDate)
+    );
 
   return (
     <div
@@ -195,6 +199,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
             projectId={projectId}
             version={version}
             currentModuleId={ticket.moduleId}
+            hideEmpty
           />
         ) : moduleName !== null ? (
           <Badge variant="secondary" className="max-w-full shrink truncate text-micro font-medium">
@@ -211,6 +216,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
               projectId={projectId}
               version={version}
               currentPoints={points}
+              hideEmpty
             />
           ) : null}
 
@@ -220,6 +226,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
               projectId={projectId}
               version={version}
               currentCycleId={ticket.cycleId}
+              hideEmpty
             />
           ) : null}
 
@@ -241,6 +248,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
             projectId={projectId}
             version={version}
             currentDueDate={ticket.dueDate}
+            hideEmpty
           />
         ) : createdDate ? (
           <span className="inline-flex items-center gap-1 text-dense tabular-nums text-muted-foreground">

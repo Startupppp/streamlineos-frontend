@@ -221,7 +221,7 @@ export const ProjectCard = React.memo(function ProjectCard({
                 href={`/build/${project.id}`}
                 onClick={handleProjectLinkClick}
                 aria-label={`Open ${project.name}`}
-                className="font-mono text-micro font-normal tracking-wide text-muted-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="max-w-full shrink truncate whitespace-nowrap font-mono text-micro font-normal tracking-wide text-muted-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 {project.key}
               </Link>

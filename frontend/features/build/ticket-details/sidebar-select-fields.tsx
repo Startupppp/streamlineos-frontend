@@ -21,6 +21,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { parseTicketPointsInput } from "../shared/ticket-points";
+import { statusConfig } from "@/features/build/shared/types";
 
 interface Epic {
   id: number;
@@ -128,7 +129,7 @@ export function SidebarSelectFields({
             <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
               {statuses?.map((s) => (
                 <SelectItem key={s.id} value={s.name}>
-                  {s.name.replace(/_/g, " ")}
+                  {statusConfig[s.name]?.label ?? s.name.replace(/_/g, " ")}
                 </SelectItem>
               )) || (
                 <>

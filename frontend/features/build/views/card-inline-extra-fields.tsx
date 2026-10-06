@@ -122,6 +122,7 @@ interface InlineModuleProps {
   projectId: number;
   version: number;
   currentModuleId?: number | null;
+  hideEmpty?: boolean;
 }
 
 export const InlineModule = memo(function InlineModule({
@@ -129,6 +130,7 @@ export const InlineModule = memo(function InlineModule({
   projectId,
   version,
   currentModuleId,
+  hideEmpty = false,
 }: InlineModuleProps) {
   const [open, setOpen] = useState(false);
   const { data: modules = [] } = useModules(projectId);
@@ -137,6 +139,10 @@ export const InlineModule = memo(function InlineModule({
   });
 
   const currentModule = modules.find((module) => module.id === currentModuleId);
+
+  if (hideEmpty && currentModuleId == null) {
+    return null;
+  }
 
   function makeModuleHandler(moduleId: number | null) {
     return function selectModule() {

@@ -45,8 +45,18 @@ function CursorFooter({
       <div className="flex min-w-0 flex-1 items-center gap-1.5">
         <span className="min-w-0 truncate text-left text-xs text-muted-foreground tabular-nums">
           {rowCount === 1
-            ? "1 result shown"
-            : `${rowCount} results shown`}
+            ? (
+                <>
+                  <span className="sm:hidden">1</span>
+                  <span className="hidden sm:inline">1 result shown</span>
+                </>
+              )
+            : (
+                <>
+                  <span className="sm:hidden">{rowCount}</span>
+                  <span className="hidden sm:inline">{`${rowCount} results shown`}</span>
+                </>
+              )}
         </span>
         <PageSizeSelect
           pageSize={pageSize}
@@ -97,7 +107,7 @@ function CursorFooter({
           onClick={onNext}
           aria-label={isLoadMore ? (hasMore ? "Load more" : "All results loaded") : "Next page"}
         >
-          {isLoadMore ? (hasMore ? "Load more" : "All results loaded") : showLabels ? "Next" : null}
+          {isLoadMore ? (hasMore ? "Load more" : (<><span className="sm:hidden">All loaded</span><span className="hidden sm:inline">All results loaded</span></>)) : showLabels ? "Next" : null}
           {isLoadMore && !hasMore ? null : <ChevronRight className="h-3.5 w-3.5" />}
         </Button>
       </div>

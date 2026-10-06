@@ -136,20 +136,30 @@ export function TicketDetailMainSection({
       animate={reduceMotion ? undefined : "visible"}
       variants={reduceMotion ? undefined : fadeIn}
     >
-      {canUpdate ? (
+      {canUpdate && editingTitle ? (
         <div className="flex justify-start">
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            className="px-0 text-xs text-muted-foreground hover:bg-transparent hover:text-foreground"
+            className="h-8 px-2 text-xs text-muted-foreground hover:bg-transparent hover:text-foreground"
             aria-expanded={editingTitle}
-            aria-controls={editingTitle ? `ticket-title-${ticketId}` : undefined}
-            onClick={() => setEditingTitle((current) => !current)}
+            aria-controls={`ticket-title-${ticketId}`}
+            onClick={() => setEditingTitle(false)}
           >
-            {editingTitle ? "Done editing" : "Edit title"}
+            Done editing
           </Button>
         </div>
+      ) : null}
+      {canUpdate && !editingTitle ? (
+        <button
+          type="button"
+          className="sr-only"
+          aria-expanded={false}
+          onClick={() => setEditingTitle(true)}
+        >
+          Edit title
+        </button>
       ) : null}
       {editingTitle && canUpdate ? (
         <div className="flex min-w-0 flex-col gap-2">

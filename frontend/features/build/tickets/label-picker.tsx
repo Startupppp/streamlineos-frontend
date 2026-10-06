@@ -116,13 +116,14 @@ export function LabelPicker({
         <ResponsivePopover open={open} onOpenChange={setOpen}>
           <ResponsivePopoverTrigger asChild>
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
               aria-label="Add label"
-              className="h-9 w-9 touch-manipulation rounded-full p-0 sm:h-7 sm:w-7"
+              className="h-8 gap-1 rounded-md px-2 text-xs text-muted-foreground"
               {...plusHoverHandlers}
             >
               <PlusIcon ref={plusIconRef} size={14} />
+              Add label
             </Button>
           </ResponsivePopoverTrigger>
           <ResponsivePopoverContent

@@ -12,7 +12,8 @@ import {
   projectStatusColors,
   projectStatusDisplayLabels,
 } from "@/lib/theme-constants";
-import type { ProjectListItem, ProjectHealth } from "@/types/projects/projects";
+import type { ProjectListItem } from "@/types/projects/projects";
+import { projectHealthLabel } from "@/lib/project-health";
 import {
   StatusDot,
   resolveTargetDate,
@@ -37,12 +38,6 @@ export function ProjectStatusCell({ p }: { p: ProjectListItem }) {
   );
 }
 
-const healthLabels: Record<ProjectHealth, string> = {
-  on_track: "On Track",
-  at_risk: "At Risk",
-  off_track: "Off Track",
-};
-
 export function ProjectHealthCell({ p }: { p: ProjectListItem }) {
   const dotColor = getColorSafe(healthDotColors, p.health);
   const badgeColor = getColorSafe(healthStatusColors, p.health);
@@ -58,7 +53,7 @@ export function ProjectHealthCell({ p }: { p: ProjectListItem }) {
         className={cn("inline-block h-1.5 w-1.5 shrink-0 rounded-full", dotColor)}
         aria-hidden="true"
       />
-      {healthLabels[p.health]}
+      {projectHealthLabel(p.health)}
     </Badge>
   );
 }

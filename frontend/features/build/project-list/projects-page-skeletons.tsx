@@ -6,6 +6,13 @@ import { cn } from "@/lib/utils";
 
 export function GridSkeleton() {
   return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        <Skeleton className="h-3 w-16" />
+        <Skeleton className="h-3 w-3" />
+        <Skeleton className="h-3 w-20" />
+      </div>
+      <Skeleton className="h-8 w-full rounded-md" />
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: 6 }).map((_, i) => (
         <div
@@ -36,6 +43,7 @@ export function GridSkeleton() {
           </div>
         </div>
       ))}
+    </div>
     </div>
   );
 }

@@ -92,7 +92,7 @@ export const ViewSwitcher = memo(function ViewSwitcher({
               "inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium leading-none transition-colors press-scale outline-none motion-reduce:transition-none",
               "focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background",
               isActive
-                ? "bg-foreground text-background shadow-sm"
+                ? "bg-foreground text-background shadow-sm [&_svg]:text-background"
                 : "bg-transparent text-muted-foreground hover:text-foreground",
             )}
           >

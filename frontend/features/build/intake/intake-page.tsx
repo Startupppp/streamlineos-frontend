@@ -337,7 +337,7 @@ export function IntakePage({
               <TabsContent value={activeTab} className="mt-4 flex min-h-0 flex-1 flex-col">
                 {filteredItems.length === 0 ? (
                   <EmptyState
-                    illustration={<EmptyInboxIllustration />}
+                    illustration={<EmptyInboxIllustration className="mx-auto h-28 w-28 opacity-90 dark:opacity-80 dark:brightness-125" />}
                     title={
                       activeTab === "pending"
                         ? "No pending items"

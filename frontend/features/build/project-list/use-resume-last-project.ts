@@ -48,7 +48,7 @@ export function useResumeLastProject(): BuildHeaderAction | null {
   const resumeName = `Resume ${project.name}`;
   return {
     id: "resume",
-    label: "Resume",
+    label: resumeName,
     ariaLabel: resumeName,
     title: resumeName,
     href: `/build/${project.id}`,
