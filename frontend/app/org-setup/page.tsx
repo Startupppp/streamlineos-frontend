@@ -36,6 +36,7 @@ import {
   clampStep,
   hasDraftProgress,
   hasCompletionMarker,
+  getCompletionDestination,
 } from "@/features/org-setup/lib/draft";
 import {
   parseWizardDraft,
@@ -185,7 +186,9 @@ export default function OrgSetupPage() {
   useEffect(() => {
     if (!userId) return;
     if (!hasCompletionMarker(userId, session?.orgId ?? "")) return;
-    window.location.replace("/dashboard");
+    window.location.replace(
+      getCompletionDestination(userId, session?.orgId ?? ""),
+    );
   }, [userId, session?.orgId]);
 
   useEffect(() => {

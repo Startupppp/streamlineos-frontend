@@ -11,6 +11,7 @@ const mockRefreshSessionClaims = jest.fn();
 const mockClearAll = jest.fn();
 const mockSetCompletionMarker = jest.fn();
 const mockHasCompletionMarker = jest.fn();
+const mockGetCompletionDestination = jest.fn(() => "/dashboard");
 const mockClearCompletionMarker = jest.fn();
 const mockClearBackendTokenCache = jest.fn();
 const mockLocationReplace = jest.fn();
@@ -82,6 +83,7 @@ jest.mock("@/features/org-setup/lib/draft", () => ({
   clearAll: jest.fn((...args: unknown[]) => mockClearAll(...args)),
   setCompletionMarker: jest.fn((...args: unknown[]) => mockSetCompletionMarker(...args)),
   hasCompletionMarker: jest.fn((...args: unknown[]) => mockHasCompletionMarker(...args)),
+  getCompletionDestination: jest.fn((...args: unknown[]) => mockGetCompletionDestination(...args)),
   clearCompletionMarker: jest.fn((...args: unknown[]) => mockClearCompletionMarker(...args)),
 }));
 
@@ -314,7 +316,7 @@ describe("StepGeneration — the claims refresh never confirms the new org", () 
     expect(mockRefreshSessionClaims).toHaveBeenCalledWith({ orgId: "org-new" });
     expect(mockSignIn).not.toHaveBeenCalled();
     expect(mockClearAll).toHaveBeenCalledWith("user-1");
-    expect(mockSetCompletionMarker).toHaveBeenCalledWith("user-1", "org-new");
+    expect(mockSetCompletionMarker).toHaveBeenCalledWith("user-1", "org-new", "/dashboard");
     expect(capturedProgressProps.setupError).toBeNull();
     expect(document.cookie).toContain(
       gateCookieName("org-setup-done", "org-new"),
@@ -390,7 +392,7 @@ describe("StepGeneration — both auth steps succeed", () => {
     expect(mockRefreshSessionClaims).toHaveBeenCalledTimes(1);
     expect(mockSignIn).not.toHaveBeenCalled();
     expect(mockClearAll).toHaveBeenCalledWith("user-1");
-    expect(mockSetCompletionMarker).toHaveBeenCalledWith("user-1", "org-new");
+    expect(mockSetCompletionMarker).toHaveBeenCalledWith("user-1", "org-new", "/dashboard");
     expect(capturedProgressProps.setupError).toBeNull();
   });
 });
@@ -535,10 +537,16 @@ describe("StepGeneration — server destination replaces hardcoded /dashboard", 
     onContinue();
 
     expect(mockLocationReplace).toHaveBeenCalledWith("/build/projects/my-proj");
+    expect(mockSetCompletionMarker).toHaveBeenCalledWith(
+      "user-1",
+      "org-new",
+      "/build/projects/my-proj",
+    );
   });
 
   it("falls back to /dashboard when server destination is not available at marker redirect time", () => {
     mockHasCompletionMarker.mockReturnValue(true);
+    mockGetCompletionDestination.mockReturnValue("/dashboard");
 
     render(<StepGeneration data={TEST_DATA} />);
 
