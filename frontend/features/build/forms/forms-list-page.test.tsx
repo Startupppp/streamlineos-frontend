@@ -1,5 +1,6 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { FormsListPage } from "./forms-list-page";
 import { ApiError } from "@/lib/api-envelope";
 
@@ -47,12 +48,6 @@ jest.mock("@/components/ui/data-table", () => ({
     <div data-testid="data-table" data-rows={data.length} />
   ),
   DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
-}));
-
-jest.mock("@/components/ui/empty-state", () => ({
-  EmptyState: ({ title }: { title: string }) => (
-    <div data-testid="empty-state">{title}</div>
-  ),
 }));
 
 jest.mock("@/components/shared/no-permission-state", () => ({
@@ -218,18 +213,35 @@ it("renders the data table when rows are present and not the empty state", () =>
   );
   render(<FormsListPage projectId={1} />);
   expect(screen.getByTestId("data-table")).toBeInTheDocument();
-  expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
+  expect(screen.queryByRole("status")).not.toBeInTheDocument();
 });
 
 it("shows 'No forms yet' empty state when there are no rows and no active filter", () => {
   render(<FormsListPage projectId={1} />);
-  expect(screen.getByTestId("empty-state")).toHaveTextContent("No forms yet");
+  expect(screen.getByRole("heading", { name: "No forms yet" })).toBeVisible();
+  expect(screen.queryByRole("button", { name: "Clear filters" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "New Form" })).not.toBeInTheDocument();
   expect(screen.queryByTestId("data-table")).not.toBeInTheDocument();
 });
 
-it("shows 'No forms match your filters' when filters are active and no rows match", () => {
-  mockUseBuildListFilters.mockReturnValue(defaultFilters({ isFiltered: true }));
+it("clears active filters from the real filtered-empty body and preserves its heading", async () => {
+  const clearAll = jest.fn();
+  mockUseCan.mockReturnValue(true);
+  mockUseBuildListFilters.mockReturnValue(defaultFilters({ isFiltered: true, clearAll }));
   render(<FormsListPage projectId={1} />);
-  expect(screen.getByTestId("empty-state")).toHaveTextContent("No forms match your filters");
+  const body = within(screen.getByRole("status"));
+  expect(body.getByRole("heading", { name: "No forms match your filters" })).toBeVisible();
+  expect(body.queryByRole("button", { name: "New Form" })).not.toBeInTheDocument();
+  await userEvent.setup().click(body.getByRole("button", { name: "Clear filters" }));
+  expect(clearAll).toHaveBeenCalledTimes(1);
   expect(screen.queryByText("No forms yet")).not.toBeInTheDocument();
+});
+
+it("offers the existing creation action for a manageable genuine empty result", () => {
+  mockUseCan.mockReturnValue(true);
+  render(<FormsListPage projectId={1} />);
+  const body = within(screen.getByRole("status"));
+  expect(body.getByRole("heading", { name: "No forms yet" })).toBeVisible();
+  expect(body.getByRole("button", { name: "New Form" })).toBeEnabled();
+  expect(body.queryByRole("button", { name: "Clear filters" })).not.toBeInTheDocument();
 });

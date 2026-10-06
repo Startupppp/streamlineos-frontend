@@ -224,9 +224,10 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
             }
             filteredEmpty={
               <EmptyState
+                filtersActive
                 className={CONTENT_FILL_PANEL}
                 illustrationPreset="documents"
-                title="No forms match your filters"
+                filteredTitle="No forms match your filters"
                 description="Try adjusting the filters to see more forms."
                 onClearFilters={listFilters.clearAll}
               />
