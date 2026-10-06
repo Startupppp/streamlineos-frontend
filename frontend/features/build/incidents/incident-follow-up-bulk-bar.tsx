@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 import { useCan } from "@/hooks/api/access";
-import { useUpdateIncidentFollowUpAction } from "@/hooks/api/build/incidents";
+import { useUpdateIncidentFollowUpAction } from "@/hooks/api/build/incident-mutations";
 import {
   Select,
   SelectContent,

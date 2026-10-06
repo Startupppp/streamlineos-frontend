@@ -4,10 +4,9 @@ import { Fragment, useState, useMemo, memo, useCallback } from "react";
 import { useReducedMotion } from "framer-motion";
 import { format, addDays, isSameDay } from "date-fns";
 import { cn } from "@/lib/utils";
-import type { KanbanTicket } from "../shared/types";
 import { WorkloadMemberRow } from "./workload-member-row";
 import { WorkloadUnassignedRow } from "./workload-unassigned-row";
-import type { FilterState, StatFilter } from "./workload-types";
+import type { StatFilter } from "./workload-types";
 import { hasActiveWorkloadFilters, isMemberOverCapacity } from "./workload-types";
 import { EmptyState } from "@/components/ui/empty-state";
 import type {

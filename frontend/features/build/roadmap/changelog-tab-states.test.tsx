@@ -1,10 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { ChangelogTab } from "./changelog-tab";
-import {
-  useChangelog,
-  useUpdateChangelogEntry,
-  useDeleteChangelogEntry,
-} from "@/hooks/api/build/changelog";
+import { useChangelog } from "@/hooks/api/build/changelog";
 import { usePageState } from "@/hooks/api/use-page-state";
 
 jest.mock("@/hooks/api/build/changelog", () => ({

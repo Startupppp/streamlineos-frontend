@@ -29,7 +29,7 @@ import {
 import {
   useAddIncidentFollowUpAction,
   useUpdateIncidentFollowUpAction,
-} from "@/hooks/api/build/incidents";
+} from "@/hooks/api/build/incident-mutations";
 import {
   incidentFollowUpSchema,
   type IncidentFollowUpValues,

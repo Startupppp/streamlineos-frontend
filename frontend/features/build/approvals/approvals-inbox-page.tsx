@@ -51,7 +51,6 @@ export function ApprovalsInboxPage() {
     overdue,
     ownerOf,
     columns,
-    handleDecideClick,
     handleRetry,
     handleDecideDialogChange,
     handleReturnFocus,

@@ -64,8 +64,6 @@ const targetRef: BuildScopeRef = {
   href: "/build/99",
 };
 
-let capturedOnSelect: ((ref: BuildScopeRef) => void) | null = null;
-
 jest.mock("./build-scope-browser", () => ({
   BuildScopeBrowser: ({
     onSelect,
@@ -74,7 +72,6 @@ jest.mock("./build-scope-browser", () => ({
     currentScopeKey: string;
     settingsHrefFor: (ref: BuildScopeRef) => string | null;
   }) => {
-    capturedOnSelect = onSelect;
     return (
       <button type="button" onClick={() => onSelect(targetRef)}>
         Select target project
@@ -130,7 +127,6 @@ function renderSelector(isDirty: boolean, isCollapsed = false) {
 
 beforeEach(() => {
   push.mockReset();
-  capturedOnSelect = null;
   jest.mocked(useRouter).mockReturnValue({
     push,
   } as unknown as ReturnType<typeof useRouter>);

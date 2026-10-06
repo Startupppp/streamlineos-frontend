@@ -16,7 +16,7 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import { useAddIncidentDecision } from "@/hooks/api/build/incidents";
+import { useAddIncidentDecision } from "@/hooks/api/build/incident-mutations";
 import {
   incidentDecisionSchema,
   type IncidentDecisionValues,

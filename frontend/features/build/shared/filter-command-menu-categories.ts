@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import {
   type StatusFilterOption,
-  type Member,
   type Label,
   type Cycle,
   type ProjectOption,

@@ -4,7 +4,6 @@ import { mockRouterPush } from "./command-center-page-test-harness";
 import {
   installCommandCenterMocks,
   mockUseCan,
-  mockUseAccess,
   mockUseProjects,
   mockUseInfiniteAllWork,
   baseProjectsResult,

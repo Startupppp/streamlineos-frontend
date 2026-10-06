@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
-import { PmPageShell, PmPanel, PM_PANEL } from "@/components/pm-chrome";
+import { PmPageShell, PM_PANEL } from "@/components/pm-chrome";
 import { COMMAND_CENTER_PAGE_SHELL } from "./command-center-constants";
 
 export function CommandCenterLoading() {

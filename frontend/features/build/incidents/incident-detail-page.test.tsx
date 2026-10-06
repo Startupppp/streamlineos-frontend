@@ -14,6 +14,8 @@ const mockUseAccess = jest.fn();
 
 jest.mock("@/hooks/api/build/incidents", () => ({
   useIncident: (...args: unknown[]) => mockUseIncident(...args),
+}));
+jest.mock("@/hooks/api/build/incident-mutations", () => ({
   useDeleteIncident: () => mockUseDeleteIncident(),
 }));
 

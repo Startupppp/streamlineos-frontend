@@ -1,5 +1,5 @@
 import { generateAgenda } from "./generate-agenda";
-import type { GenerateAgendaOptions, AgendaSource } from "./generate-agenda";
+import type { AgendaSource } from "./generate-agenda";
 import type { Ticket, Cycle } from "@/types/projects";
 
 function makeCycle(id: number, name: string): Cycle {

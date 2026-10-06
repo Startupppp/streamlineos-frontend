@@ -29,7 +29,7 @@ import type { KanbanColumn } from "../shared/types";
 import { ColumnColorPicker } from "../shared/column-color-picker";
 import { resolveColumnColor } from "@/lib/column-colors";
 import { KanbanColumnWip } from "./kanban-column-wip";
-import { MAX_COLUMN_NAME, validateRename } from "./kanban-column-header-model";
+import { validateRename } from "./kanban-column-header-model";
 import { KanbanColumnRenameInput } from "./kanban-column-rename";
 
 interface KanbanColumnHeaderProps {

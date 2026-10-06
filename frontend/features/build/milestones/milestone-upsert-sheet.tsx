@@ -9,6 +9,10 @@ import {
   type MilestoneFormValues,
 } from "@/features/build/milestones/milestone-schema";
 import { toMilestoneStatus } from "@/features/build/milestones/milestone-status";
+import {
+  CONFLICT_EMPTY,
+  buildMilestoneConflictDiffs,
+} from "@/features/build/milestones/milestone-conflict-model";
 import { AppDialog } from "@/components/shared/app-dialog";
 import { Form } from "@/components/ui/form";
 import { MilestoneFormFields } from "./milestone-form-fields";
@@ -26,68 +30,6 @@ import {
 } from "@/hooks/api/build/milestones";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { getUserDisplayName } from "@/lib/person-display";
-
-const CONFLICT_EMPTY = "Not set";
-
-function displayConflictValue(value: unknown): string {
-  if (value === null || value === undefined || value === "")
-    return CONFLICT_EMPTY;
-  return String(value);
-}
-
-function buildMilestoneConflictDiffs(
-  values: MilestoneFormValues,
-  baseline: ProjectMilestone,
-  ownerLabel: (membershipId: number | null) => string,
-): TicketConflictFieldDiff[] {
-  const pairs: Array<{
-    key: string;
-    label: string;
-    server: unknown;
-    pending: unknown;
-  }> = [
-    {
-      key: "name",
-      label: "Name",
-      server: baseline.name,
-      pending: values.name.trim(),
-    },
-    {
-      key: "description",
-      label: "Description",
-      server: baseline.description ?? null,
-      pending: values.description?.trim() || null,
-    },
-    {
-      key: "targetDate",
-      label: "Target date",
-      server: baseline.targetDate ?? null,
-      pending: values.targetDate || null,
-    },
-    {
-      key: "status",
-      label: "Status",
-      server: toMilestoneStatus(baseline.status),
-      pending: values.status,
-    },
-    {
-      key: "ownerMembershipId",
-      label: "Owner",
-      server: ownerLabel(baseline.ownerMembershipId ?? null),
-      pending: ownerLabel(values.ownerMembershipId ?? null),
-    },
-  ];
-  return pairs
-    .filter(
-      ({ server, pending }) => String(server ?? "") !== String(pending ?? ""),
-    )
-    .map(({ key, label, server, pending }) => ({
-      key,
-      label,
-      serverValue: displayConflictValue(server),
-      pendingValue: displayConflictValue(pending),
-    }));
-}
 
 interface MilestoneUpsertSheetProps {
   projectId: number;

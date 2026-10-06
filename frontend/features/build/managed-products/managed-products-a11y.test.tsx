@@ -18,7 +18,7 @@ jest.mock("@/components/shared/submission-bulk-toolbar", () => ({
     selectedIds.length > 0 ? <div>{selectedIds.length} selected</div> : null,
   BULK_SELECTION_CAP: 100,
 }));
-import { render as plainRender, fireEvent } from "@testing-library/react";
+import { render as plainRender } from "@testing-library/react";
 import { ManagedProductsPage } from "./managed-products-page";
 import { ProductGoalsPage } from "./product-goals-page";
 import { ProductFeedbackPage } from "./product-feedback-page";

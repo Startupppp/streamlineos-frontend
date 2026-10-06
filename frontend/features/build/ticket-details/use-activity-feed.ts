@@ -37,7 +37,6 @@ export function useActivityFeed({
   projectKey,
   ticketNumber,
   comments,
-  members = [],
   highlightCommentId,
 }: UseActivityFeedInput) {
   const [replyingTo, setReplyingTo] = useState<number | null>(null);

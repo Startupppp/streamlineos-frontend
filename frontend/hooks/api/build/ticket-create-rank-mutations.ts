@@ -7,7 +7,6 @@ import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type {
   Ticket,
   CreateTicketInput,
-  RankTicketInput,
   ProjectWithDetails,
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -21,10 +20,7 @@ import {
   type RawCollectionSnapshot,
   type TicketSnapshots,
 } from "./ticket-cache";
-import {
-  invalidateBuildViews,
-  invalidateTicketUpdateViews,
-} from "./ticket-cache-invalidation";
+import { invalidateBuildViews } from "./ticket-cache-invalidation";
 
 const ticketRowLazy = lazyContract(() =>
   import("@/hooks/api/build/build-tickets-core-schema").then(
@@ -34,12 +30,6 @@ const ticketRowLazy = lazyContract(() =>
 
 const noContentLazy = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
-);
-
-const rankTicketResultLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-tickets-subresource-schema").then(
-    (m) => m.rankTicketResultContract,
-  ),
 );
 
 interface CreateTicketContext {
@@ -297,55 +287,3 @@ export function useDeleteTicket(
   );
 }
 
-export interface RankTicketResponse {
-  id: number;
-  rank: string;
-  status: string;
-  version: number;
-}
-
-export function useRankTicket<TContext = unknown>(
-  options?: Omit<
-    UseMutationOptions<RankTicketResponse, Error, RankTicketInput, TContext>,
-    "mutationFn" | "mutationKey"
-  >,
-) {
-  const queryClient = useQueryClient();
-  return useAuthorizedMutation<
-    RankTicketResponse,
-    Error,
-    RankTicketInput,
-    TContext
-  >("build:tickets:update", {
-    ...options,
-    mutationKey: ["projects", "tickets", "rank"],
-    mutationFn: ({ projectId, ticketId, ...data }) =>
-      apiClient.patch<RankTicketResponse>(
-        `/build/${projectId}/tickets/${ticketId}/rank`,
-        data,
-        undefined,
-        rankTicketResultLazy,
-      ),
-    onSuccess: (data, variables, context, mutationContext) => {
-      const applyServerRank = (ticket: Ticket) =>
-        ticket.id === data.id
-          ? { ...ticket, rank: data.rank, status: data.status, version: data.version }
-          : ticket;
-      patchTicketCollections(queryClient, variables.projectId, applyServerRank);
-      queryClient.setQueryData<Ticket | null>(
-        buildWorkQueryKeys.projects.ticket(variables.projectId, data.id),
-        (current) => (current ? applyServerRank(current) : current),
-      );
-      options?.onSuccess?.(data, variables, context, mutationContext);
-    },
-    onSettled: (data, error, variables, context, mutationContext) => {
-      invalidateTicketUpdateViews(
-        queryClient,
-        variables.projectId,
-        variables.ticketId,
-        { status: variables.status },
-      );
-      options?.onSettled?.(data, error, variables, context, mutationContext);
-    },
-  });
-}

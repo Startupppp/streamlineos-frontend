@@ -263,7 +263,6 @@ export function useMyWorkData({
     return toDueBucketMap(activeData.data);
   }, [activeTab, activeView, activeData]);
 
-  const showBucketList = activeTab === "assigned" && activeView === "list";
   const isEmpty =
     !isLoading &&
     !isError &&

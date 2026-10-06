@@ -91,7 +91,6 @@ export function ProjectBoardViewPane({
   onBulkArchive,
   onBulkExport,
   onClearSelection,
-  onSelectionChange,
   workloadFilters,
   onWorkloadFilterChange,
   onClearWorkloadFilters,

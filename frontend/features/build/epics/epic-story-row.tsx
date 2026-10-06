@@ -22,7 +22,6 @@ import {
 } from "../views/card-inline-date-fields";
 import type { ProjectStatusRecord, Ticket } from "@/types/projects";
 import { PM_ROW } from "@/components/pm-chrome";
-import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 

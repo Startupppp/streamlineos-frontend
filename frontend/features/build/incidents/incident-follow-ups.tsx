@@ -15,9 +15,8 @@ import {
 } from "@/components/ui/select";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
-import { useUpdateIncidentFollowUpAction } from "@/hooks/api/build/incidents";
+import { useUpdateIncidentFollowUpAction } from "@/hooks/api/build/incident-mutations";
 import type { IncidentsAddFollowUpActionResponse } from "@/contracts/build-contracts.generated";
-import type { IncidentFollowUpStatus } from "@/hooks/api/build/incidents-schema";
 import type { ProjectMemberRecord } from "@/types/projects";
 import { formatShortDate } from "@/lib/date-utils";
 import {

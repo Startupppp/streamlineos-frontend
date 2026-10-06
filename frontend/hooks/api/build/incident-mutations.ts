@@ -15,6 +15,7 @@ import type {
   IncidentsAddUpdateBody,
   IncidentsAddDecisionBody,
   IncidentsAddFollowUpActionBody,
+  IncidentsUpdateFollowUpActionBody,
 } from "@/contracts/build-contracts.generated";
 
 const incidentRowContract = lazyContract(() =>
@@ -186,6 +187,37 @@ export function useAddIncidentFollowUpAction() {
     }) =>
       apiClient.post<IncidentsAddFollowUpActionResponse>(
         `/build/${projectId}/incidents/${incidentId}/follow-ups`,
+        data,
+        undefined,
+        incidentFollowUpActionRowContract,
+      ),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.incidents.detail(
+          vars.projectId,
+          vars.incidentId,
+        ),
+      });
+    },
+  });
+}
+
+export function useUpdateIncidentFollowUpAction() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("build:incidents:manage", {
+    mutationKey: ["projects", "incidents", "updateFollowUpAction"],
+    mutationFn: ({
+      projectId,
+      incidentId,
+      followUpActionId,
+      ...data
+    }: IncidentsUpdateFollowUpActionBody & {
+      projectId: number;
+      incidentId: number;
+      followUpActionId: number;
+    }) =>
+      apiClient.patch<IncidentsAddFollowUpActionResponse>(
+        `/build/${projectId}/incidents/${incidentId}/follow-ups/${followUpActionId}`,
         data,
         undefined,
         incidentFollowUpActionRowContract,

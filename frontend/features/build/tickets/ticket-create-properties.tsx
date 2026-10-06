@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, forwardRef } from "react";
+import { memo } from "react";
 import { Check, User, Zap } from "lucide-react";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -24,7 +24,7 @@ import { getStatusEntry } from "@/lib/status-config";
 import { getPriorityColor } from "../shared/priority-badge";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import type { ProjectStatusRecord, ProjectMemberRecord, Cycle, TicketLabel } from "@/types/projects";
-import { PRIORITIES } from "./ticket-create-properties-parts";
+import { PillButton, PRIORITIES } from "./ticket-create-properties-parts";
 import { useTicketCreateProperties } from "./use-ticket-create-properties";
 import { TicketCycleLabelPickers } from "./ticket-create-cycle-label-pickers";
 
@@ -45,26 +45,6 @@ interface TicketCreatePropertiesProps {
   labels: TicketLabel[];
   cycles: Cycle[];
 }
-
-const PillButton = forwardRef<
-  HTMLButtonElement,
-  React.ComponentPropsWithoutRef<"button"> & { label: string }
->(function PillButton({ children, className, label, ...props }, ref) {
-  return (
-    <button
-      ref={ref}
-      type="button"
-      aria-label={label}
-      className={cn(
-        "inline-flex shrink-0 items-center gap-1.5 rounded-md border border-border bg-card px-2 py-1 text-xs font-medium text-foreground shadow-sm transition-colors hover:bg-muted/80",
-        className,
-      )}
-      {...props}
-    >
-      {children}
-    </button>
-  );
-});
 
 export const TicketCreateProperties = memo(function TicketCreateProperties({
   value,

@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { WifiOff } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { useProject } from "@/hooks/api/build/projects";
 import { useTicketByKey } from "@/hooks/api/build/tickets";
 import { useEpics } from "@/hooks/api/build/epics";

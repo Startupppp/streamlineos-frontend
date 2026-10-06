@@ -298,4 +298,3 @@ export const ListViewItem = memo(function ListViewItem({
   );
 });
 
-export type { ListViewItemProps };

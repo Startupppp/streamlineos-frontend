@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, forwardRef } from "react";
+import { useState } from "react";
 import { Check, Tag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -14,26 +14,7 @@ import { LabelsSearchCommand } from "../shared/labels-search-command";
 import type { Cycle, TicketLabel } from "@/types/projects";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { XIcon } from "@animateicons/react/lucide";
-
-const PillButton = forwardRef<
-  HTMLButtonElement,
-  React.ComponentPropsWithoutRef<"button"> & { label: string }
->(function PillButton({ children, className, label, ...props }, ref) {
-  return (
-    <button
-      ref={ref}
-      type="button"
-      aria-label={label}
-      className={cn(
-        "inline-flex shrink-0 items-center gap-1.5 rounded-md border border-border bg-card px-2 py-1 text-xs font-medium text-foreground shadow-sm transition-colors hover:bg-muted/80",
-        className,
-      )}
-      {...props}
-    >
-      {children}
-    </button>
-  );
-});
+import { PillButton } from "./ticket-create-properties-parts";
 
 function RemoveLabelChipButton({
   labelId,

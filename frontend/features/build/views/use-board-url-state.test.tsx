@@ -6,12 +6,10 @@ import {
   mockPush,
   mockReplace,
   mockUpdateViewMutate,
-  mockUseBugs,
   nameEvent,
   setParams,
 } from "./use-board-url-state-test-harness";
 import { useBoardUrlState } from "./use-board-url-state";
-import { DEFAULT_DISPLAY_OPTIONS } from "./display-options-model";
 
 beforeEach(installBoardUrlStateMocks);
 

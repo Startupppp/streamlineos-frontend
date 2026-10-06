@@ -7,7 +7,6 @@ import type { DataTableColumn } from "@/components/ui/data-table";
 import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,

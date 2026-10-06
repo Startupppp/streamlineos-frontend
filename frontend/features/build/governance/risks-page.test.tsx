@@ -191,18 +191,6 @@ function defaultFilters(overrides: Record<string, unknown> = {}) {
   };
 }
 
-const riskRow = {
-  id: 1,
-  projectId: 1,
-  riskNumber: 1,
-  title: "Integration failure",
-  status: "open",
-  probability: "high",
-  impact: "high",
-  ownerId: null,
-  createdAt: "2026-09-01T00:00:00Z",
-  updatedAt: "2026-09-01T00:00:00Z",
-};
 
 beforeEach(() => {
   mockUseCan.mockReturnValue(false);

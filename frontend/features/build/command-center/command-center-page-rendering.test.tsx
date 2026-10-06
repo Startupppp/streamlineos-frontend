@@ -4,7 +4,6 @@ import "./command-center-page-test-harness";
 import {
   mockUseOnlineStatus,
   mockUseKeyboardShortcuts,
-  mockRouterPush,
   mockSearchParamsRef,
 } from "./command-center-page-test-harness";
 import {

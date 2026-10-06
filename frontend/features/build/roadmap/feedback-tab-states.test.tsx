@@ -1,10 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { FeedbackTab } from "./feedback-tab";
-import {
-  useFeedbackPosts,
-  useDeleteFeedbackPost,
-} from "@/hooks/api/build/feedback-posts";
-import { useRoadmapItems } from "@/hooks/api/build/roadmap";
+import { useFeedbackPosts } from "@/hooks/api/build/feedback-posts";
 import { usePageState } from "@/hooks/api/use-page-state";
 
 jest.mock("@/hooks/api/build/feedback-posts", () => ({

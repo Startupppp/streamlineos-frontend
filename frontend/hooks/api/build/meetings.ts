@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";

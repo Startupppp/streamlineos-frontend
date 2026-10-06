@@ -3,7 +3,7 @@ import { UpdatesPage } from "./updates-page";
 import { ApiError } from "@/lib/api-envelope";
 
 const mockReplace = jest.fn();
-const mockSearchParamsGet = jest.fn((key: string): string | null => null);
+const mockSearchParamsGet = jest.fn((): string | null => null);
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: mockReplace }),
@@ -59,7 +59,7 @@ jest.mock("@/components/ui/empty-state", () => ({
   EmptyState: ({ title }: { title: string }) => <div data-testid="empty-state">{title}</div>,
 }));
 jest.mock("@/components/shared", () => ({
-  EntityFormDialog: ({ children }: { children: unknown }) => null,
+  EntityFormDialog: () => null,
 }));
 jest.mock("@/hooks/common/use-animated-icon", () => ({
   useAnimatedIcon: () => ({ iconRef: { current: null }, hoverHandlers: {} }),

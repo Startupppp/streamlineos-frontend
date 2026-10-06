@@ -562,8 +562,6 @@ describe("CyclesPage — the c and e shortcuts have a real target", () => {
 });
 
 describe("CyclesPage — the empty state tells a first run apart from a filtered no-result", () => {
-  const DRAFT = { id: 7, name: "Draft sprint", version: 1, status: "draft" as const, startDate: "2026-09-01", endDate: "2026-09-14", progress: 0, completedItems: 0, totalItems: 0 };
-
   it("offers first-run copy when nothing is filtered and the project has no cycles", () => {
     mockUseCyclePage.mockReturnValue(baseQueryResult({ data: [] }));
     render(<CyclesPage projectId={1} />);

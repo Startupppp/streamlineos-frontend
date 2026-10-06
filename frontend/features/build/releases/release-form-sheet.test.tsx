@@ -102,10 +102,6 @@ jest.mock("sonner", () => ({
   toast: { success: jest.fn(), error: jest.fn(), warning: jest.fn() },
 }));
 
-let capturedConfirmOpen = false;
-let capturedOnConfirm: (() => void) | null = null;
-let capturedOnOpenChange: ((open: boolean) => void) | null = null;
-
 jest.mock("@/components/ui/confirm-dialog", () => ({
   ConfirmDialog: ({
     open,
@@ -116,9 +112,6 @@ jest.mock("@/components/ui/confirm-dialog", () => ({
     onConfirm: () => void;
     onOpenChange: (open: boolean) => void;
   }) => {
-    capturedConfirmOpen = open;
-    capturedOnConfirm = onConfirm;
-    capturedOnOpenChange = onOpenChange;
     if (!open) return null;
     return (
       <div data-testid="publish-confirm-dialog">
@@ -163,9 +156,6 @@ const RELEASED_RELEASE: Release = {
 };
 
 beforeEach(() => {
-  capturedConfirmOpen = false;
-  capturedOnConfirm = null;
-  capturedOnOpenChange = null;
   mockUpdateMutate.mockClear();
   mockCreateMutate.mockClear();
   (useUpdateRelease as jest.Mock).mockReturnValue({ mutate: mockUpdateMutate, isPending: false });

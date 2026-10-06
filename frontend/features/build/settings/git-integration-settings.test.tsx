@@ -1,6 +1,6 @@
 import { gitConnectionCreateContract, gitConnectionListContract } from "@/hooks/api/git-integration-schema";
 import { ZodError } from "zod";
-import { render, screen, fireEvent, act } from "@testing-library/react";
+import { render, screen, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ProjectsGitIntegrationSettings } from "./git-integration-settings";
 import type { CreatedGitConnection } from "@/hooks/api/git-integration";

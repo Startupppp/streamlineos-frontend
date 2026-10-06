@@ -58,7 +58,6 @@ export function RoadmapListPage() {
     handleOpenChangelogCreate,
     handleRoadmapCreateOpenChange,
     handleChangelogCreateOpenChange,
-    handleRoadmapEditByIndex,
     handleExternalEditClose,
     handleRoadmapItemsChange,
     handleStatusFilterChange,

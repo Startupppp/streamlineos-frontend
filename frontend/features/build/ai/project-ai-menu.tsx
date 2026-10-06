@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useCallback, useEffect, type MutableRefObject } from "react";
+import { useCallback, useEffect } from "react";
 import { SparklesIcon } from "@animateicons/react/lucide";
 import { useCan } from "@/hooks/api/access";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -20,7 +20,7 @@ import type { ProjectSummaryResult } from "@/types/projects/ai";
 interface ProjectAiMenuProps {
   projectId: number;
   hideTrigger?: boolean;
-  runRef?: MutableRefObject<(() => void) | null>;
+  onRunRegister?: (run: (() => void) | null) => void;
 }
 
 function formatSummary(data: ProjectSummaryResult): AiActionResult {
@@ -36,7 +36,7 @@ function formatSummary(data: ProjectSummaryResult): AiActionResult {
 export function ProjectAiMenu({
   projectId,
   hideTrigger = false,
-  runRef,
+  onRunRegister,
 }: ProjectAiMenuProps) {
   const canUseAI = useCan("build:ai:use");
   const summaryMutation = useProjectAiSummary(projectId);
@@ -56,12 +56,12 @@ export function ProjectAiMenu({
   }, [summary]);
 
   useEffect(() => {
-    if (!runRef) return;
-    runRef.current = handleSummarizeClick;
+    if (!onRunRegister) return;
+    onRunRegister(handleSummarizeClick);
     return () => {
-      runRef.current = null;
+      onRunRegister(null);
     };
-  }, [runRef, handleSummarizeClick]);
+  }, [onRunRegister, handleSummarizeClick]);
 
   if (!canUseAI) return null;
 

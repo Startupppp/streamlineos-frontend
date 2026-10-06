@@ -14,7 +14,6 @@ import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { GalleryCase as SharedGalleryCase } from "@/features/build/shared/build-list-gallery-cases";
 import { MANAGED_PRODUCT_GALLERY_ROWS, GALLERY_STUB_ACCESS } from "@/features/build/shared/build-list-fixtures";
 import {
-  MANAGED_PRODUCT_TABLE_HEADERS,
   buildManagedProductColumns,
   ManagedProductMobileCard,
 } from "./managed-product-table-columns";
@@ -26,7 +25,6 @@ import {
   stubOwnerOf,
   STUB_EDIT,
   STUB_DELETE,
-  STUB_CHANGE,
   STATUS_OPTIONS,
   SORT_OPTIONS,
   STUB_INSIGHTS_ID,

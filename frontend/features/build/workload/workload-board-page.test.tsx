@@ -1,18 +1,12 @@
-import { screen, act, fireEvent } from "@testing-library/react";
+import { act } from "@testing-library/react";
 import {
   captured,
   installWorkloadMocks,
   mockReplace,
-  mockUse,
-  mockUseBuildListKeyboard,
-  mockUseOnlineStatus,
-  mockUsePageState,
-  mockUseProject,
   mockUseProjectBoardTickets,
   mockUseWorkloadCapacity,
   renderPage,
   setSearchParams,
-  READY_PROJECT,
 } from "./workload-board-page-test-harness";
 
 beforeEach(installWorkloadMocks);

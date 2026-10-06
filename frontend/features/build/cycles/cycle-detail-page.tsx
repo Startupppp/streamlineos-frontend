@@ -3,10 +3,7 @@
 import { notFound } from "next/navigation";
 import { KanbanBoard } from "@/features/build/views/kanban-board";
 import { ListView } from "@/features/build/views/list-view";
-import {
-  ViewSwitcher,
-  type ViewType,
-} from "@/features/build/views/view-switcher";
+import { ViewSwitcher } from "@/features/build/views/view-switcher";
 import { DisplayOptionsPanel } from "@/features/build/views/display-options-panel";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";

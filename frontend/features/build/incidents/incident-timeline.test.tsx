@@ -2,7 +2,7 @@ import type { ComponentProps } from "react";
 import { render, screen } from "@testing-library/react";
 import { IncidentTimeline } from "./incident-timeline";
 
-jest.mock("@/hooks/api/build/incidents", () => ({
+jest.mock("@/hooks/api/build/incident-mutations", () => ({
   useAddIncidentUpdate: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 

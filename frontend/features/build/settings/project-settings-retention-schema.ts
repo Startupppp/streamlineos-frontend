@@ -1,8 +1,5 @@
 import { z } from "zod";
-import {
-  projectsRetentionSettingsGetSettingsResponseSchema,
-  type ProjectsRetentionSettingsGetSettingsResponse,
-} from "@/contracts/build-contracts.generated";
+import { projectsRetentionSettingsGetSettingsResponseSchema } from "@/contracts/build-contracts.generated";
 
 export const RETENTION_SECTION_VALUES = ["policy", "holds"] as const;
 export type RetentionSection = (typeof RETENTION_SECTION_VALUES)[number];

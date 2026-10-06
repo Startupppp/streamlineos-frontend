@@ -22,7 +22,6 @@ import type {
   ColumnByOption,
   GroupByOption,
   SwimlaneBy,
-  OrderByOption,
   CompletedIssuesFilter,
 } from "../shared/types";
 import {

@@ -277,29 +277,7 @@ export const { useManagedProductInsights }: { useManagedProductInsights: jest.Mo
 export const { useRoadmapItems }: { useRoadmapItems: jest.Mock } = jest.requireMock("@/hooks/api/build/roadmap");
 export const { useManagedProducts }: { useManagedProducts: jest.Mock } = jest.requireMock("@/hooks/api/build/managed-products");
 
-export const EMPTY_GOALS_PAGE_RESULT = {
-  data: { items: [], page: 1, pageSize: 20, total: 0 },
-  isLoading: false,
-  isError: false,
-  error: null,
-  refetch: jest.fn(),
-};
-
-export const EMPTY_FEEDBUCKET_RESULT = {
-  data: { data: [], total: 0 },
-  isLoading: false,
-  isError: false,
-  error: null,
-  refetch: jest.fn(),
-};
-
-export const EMPTY_MANAGED_PRODUCTS_RESULT = {
-  data: { data: [], pagination: { hasMore: false, nextCursor: null, limit: 20 } },
-  isLoading: false,
-  isError: false,
-  error: null,
-  refetch: jest.fn(),
-};
+export { EMPTY_GOALS_PAGE_RESULT, EMPTY_FEEDBUCKET_RESULT, EMPTY_MANAGED_PRODUCTS_RESULT } from "./product-scope-pages.fixtures";
 
 beforeEach(() => {
   jest.clearAllMocks();

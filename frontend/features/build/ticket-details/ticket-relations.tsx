@@ -26,8 +26,8 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Link2, ArrowRight, ArrowLeft, Copy, Minus } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { PlusIcon, XIcon } from "@animateicons/react/lucide";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { RemoveRelationButton } from "./remove-relation-button";
 import { cn } from "@/lib/utils";
 import { SubtaskRow } from "./subtask-row";
 import type { ProjectStatusRecord } from "@/types/projects";
@@ -70,32 +70,6 @@ const RELATION_LABELS: Record<WorkItemRelationType, { label: string; icon: React
   },
 };
 
-function stopProp(e: React.MouseEvent | React.KeyboardEvent) {
-  e.preventDefault();
-  e.stopPropagation();
-}
-
-function RemoveRelationButton({ onClick }: { onClick: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-
-  function handleClick(e: React.MouseEvent) {
-    stopProp(e);
-    onClick();
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={handleClick}
-      onKeyDown={stopProp}
-      aria-label="Remove relation"
-      className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive shrink-0 rounded p-0.5 hover:bg-muted/60"
-      {...hoverHandlers}
-    >
-      <XIcon ref={iconRef} size={12} />
-    </button>
-  );
-}
 
 export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
   const canUpdate = useCan("build:tickets:update");

@@ -11,16 +11,14 @@ import {
 import { useProjectMembers } from "@/hooks/api/build/project-members";
 import { useTicketColumnCounts } from "@/hooks/api/build/ticket-queries";
 import { usePageState } from "@/hooks/api/use-page-state";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { formatShortDate } from "@/lib/date-utils";
 import { buildTicketDetailUrl } from "@/features/build/ticket-details/build-ticket-detail-url";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
-import { toBulkPriority } from "@/features/build/shared/bulk-priority";
+import { useCycleBulk } from "@/features/build/cycles/use-cycle-bulk";
 import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { useCan } from "@/hooks/api/access";
 import type { ListSelection } from "@/features/build/views/list-view-shared";
-import { toast } from "sonner";
 import {
   parseViewType,
   type ViewType,
@@ -63,74 +61,8 @@ export function useCycleDetail(projectId: number, cycleId: number) {
     onChange: handleSelectionChange,
   };
 
-  const handleBulkStatus = useCallback(
-    (v: string) => {
-      bulkUpdate.mutate(
-        { ticketIds: [...selectedIds].map(Number), status: v },
-        {
-          onSuccess: () => {
-            setSelectedIds(new Set());
-            toast.success("Updated");
-          },
-          onError: (e) => toast.error(getErrorMessage(e)),
-        },
-      );
-    },
-    [bulkUpdate, selectedIds],
-  );
-
-  const handleBulkPriority = useCallback(
-    (v: string) => {
-      const priority = toBulkPriority(v);
-      if (!priority) return;
-      bulkUpdate.mutate(
-        { ticketIds: [...selectedIds].map(Number), priority },
-        {
-          onSuccess: () => {
-            setSelectedIds(new Set());
-            toast.success("Updated");
-          },
-          onError: (e) => toast.error(getErrorMessage(e)),
-        },
-      );
-    },
-    [bulkUpdate, selectedIds],
-  );
-
-  const handleBulkAssignee = useCallback(
-    (v: string) => {
-      bulkUpdate.mutate(
-        { ticketIds: [...selectedIds].map(Number), assigneeId: v || undefined },
-        {
-          onSuccess: () => {
-            setSelectedIds(new Set());
-            toast.success("Updated");
-          },
-          onError: (e) => toast.error(getErrorMessage(e)),
-        },
-      );
-    },
-    [bulkUpdate, selectedIds],
-  );
-
-  const handleBulkCycle = useCallback(
-    (v: string) => {
-      bulkUpdate.mutate(
-        {
-          ticketIds: [...selectedIds].map(Number),
-          cycleId: parseInt(v) || null,
-        },
-        {
-          onSuccess: () => {
-            setSelectedIds(new Set());
-            toast.success("Updated");
-          },
-          onError: (e) => toast.error(getErrorMessage(e)),
-        },
-      );
-    },
-    [bulkUpdate, selectedIds],
-  );
+  const { handleBulkStatus, handleBulkPriority, handleBulkAssignee, handleBulkCycle } =
+    useCycleBulk(bulkUpdate, selectedIds, setSelectedIds);
 
   const {
     data: projectData,

@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useCreateIncident, useUpdateIncident } from "@/hooks/api/build/incidents";
+import { useCreateIncident, useUpdateIncident } from "@/hooks/api/build/incident-mutations";
 import { useProject } from "@/hooks/api/build/projects";
 import { useReleases } from "@/hooks/api/build/releases";
 import type {

@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { RoadmapTab } from "./roadmap-tab";
-import { useRoadmapItems, useDeleteRoadmapItem } from "@/hooks/api/build/roadmap";
+import { useRoadmapItems } from "@/hooks/api/build/roadmap";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 

@@ -2,17 +2,13 @@ import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import {
   ACCESS_DENIED,
-  ReleaseMobileCard,
   baseQueryResult,
-  buildReleasesColumns,
   cursorPage,
   installReleasesMocks,
   mockPreventDefault,
   mockUseAccess,
   mockUseCan,
   mockUseReleases,
-  OWNER,
-  OWNER_USER_ID,
   releaseColumnCell,
   releaseRow,
   releaseState,

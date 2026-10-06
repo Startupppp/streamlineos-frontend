@@ -22,7 +22,7 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import { useAddIncidentUpdate } from "@/hooks/api/build/incidents";
+import { useAddIncidentUpdate } from "@/hooks/api/build/incident-mutations";
 import type { IncidentsGetIncidentResponse } from "@/contracts/build-contracts.generated";
 import type { IncidentStatus } from "@/hooks/api/build/incidents-schema";
 import { formatDateTime } from "@/lib/date-utils";

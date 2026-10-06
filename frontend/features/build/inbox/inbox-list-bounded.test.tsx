@@ -4,7 +4,6 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { InboxList } from "./inbox-list";
 import { INBOX_FETCH_PAGE_SIZE, INBOX_RENDER_PAGE_SIZE } from "./inbox-render-window";
-import type { Notification, NotificationSection } from "@/types/notifications";
 
 const useInfiniteNotifications = jest.fn();
 const fetchNextPage = jest.fn();

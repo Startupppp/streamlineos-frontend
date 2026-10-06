@@ -5,7 +5,6 @@ import type { suggestDraftFieldsContract as suggestDraftFieldsContractDef } from
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import type { TicketHandoffResult } from "@/types/projects/ai";
-import type { TicketPriority } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { AiAbortInput } from "@/hooks/api/ai-abort";
 

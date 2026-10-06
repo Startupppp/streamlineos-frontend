@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
 import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -10,31 +10,17 @@ import {
   useDeleteTicket,
   useSubtasks,
 } from "@/hooks/api/build/tickets";
-import { useProject } from "@/hooks/api/build/projects";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { isApiError, getApiErrorCode } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
-import type { ProjectMember } from "./types";
 import { useCan } from "@/hooks/api/access";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import {
   diffTicketConflictFields,
   type TicketConflictFieldDiff,
 } from "./ticket-conflict-diff";
-
-interface ProjectManager {
-  id: string;
-  name?: string | null;
-  firstName?: string | null;
-  lastName?: string | null;
-  image?: string | null;
-  email?: string | null;
-}
-
-function isProjectWithManager(data: unknown): data is { manager?: ProjectManager } {
-  return typeof data === "object" && data !== null && "manager" in data;
-}
+import { useTicketDetailProjectData } from "./use-ticket-detail-project-data";
 
 interface UseTicketDetailOptions {
   projectId: number;
@@ -73,46 +59,8 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
     refetch: refetchTicket,
     dataUpdatedAt: ticketUpdatedAt,
   } = useTicket(projectId, ticketId ?? 0, INLINE_READ_ERROR);
-  const { data: projectData } = useProject(projectId);
+  const { projectData, members, statuses } = useTicketDetailProjectData(projectId);
   const { data: subtasks } = useSubtasks(ticketId ?? 0, projectId);
-
-  const members = useMemo<ProjectMember[]>(() => {
-    if (!projectData?.members) return [];
-    const list = projectData.members.flatMap((m) => {
-      const user = m.user;
-      if (!user) return [];
-      return [
-        {
-          id: user.id,
-          name: user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim(),
-          firstName: user.firstName || undefined,
-          lastName: user.lastName || undefined,
-          image: user.image || null,
-          email: user.email || "",
-        },
-      ];
-    });
-    const mgr = isProjectWithManager(projectData) ? projectData.manager : undefined;
-    if (mgr && !list.some((m) => m.id === mgr.id)) {
-      list.unshift({
-        id: mgr.id,
-        name: mgr.name || `${mgr.firstName || ""} ${mgr.lastName || ""}`.trim(),
-        firstName: mgr.firstName || undefined,
-        lastName: mgr.lastName || undefined,
-        image: mgr.image || null,
-        email: mgr.email || "",
-      });
-    }
-    return list;
-  }, [projectData]);
-
-  const statuses = useMemo(() => {
-    if (!projectData?.statuses) return undefined;
-    return projectData.statuses.map((s) => ({
-      id: s.id,
-      name: s.name,
-    }));
-  }, [projectData]);
 
   const titleVersion = ticket ? `${ticket.id}:${ticket.updatedAt}:${ticket.title}` : null;
   const [localTitle, setLocalTitle] = useSourceOverride(titleVersion, ticket?.title ?? "");
