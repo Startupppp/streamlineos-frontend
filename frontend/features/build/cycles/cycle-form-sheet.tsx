@@ -208,7 +208,7 @@ export function CycleFormSheet({
         },
       );
     },
-    [createCycle, cycle, isOnline, onOpenChange, projectId, queryClient, updateCycle],
+    [createCycle, cycle, form, isOnline, onOpenChange, projectId, queryClient, updateCycle],
   );
 
   const isPending = createCycle.isPending || updateCycle.isPending;

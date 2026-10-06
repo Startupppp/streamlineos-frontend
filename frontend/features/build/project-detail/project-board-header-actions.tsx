@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Clock3, Download, Plus, Sparkles } from "lucide-react";
 import {
   BuildHeaderActions,
@@ -28,7 +28,7 @@ export function ProjectBoardHeaderActions({
   const canUseAI = useCan("build:ai:use");
   const canImport = useCan("build:tickets:create");
   const canExport = useCan("build:tickets:view");
-  const summarizeRef = useRef<(() => void) | null>(null);
+  const [summarizeFn, setSummarizeFn] = useState<(() => void) | null>(null);
   const [importOpen, setImportOpen] = useState(false);
 
   const handleCreate = useCallback(() => {
@@ -36,8 +36,8 @@ export function ProjectBoardHeaderActions({
   }, [onCreateOpenChange]);
 
   const handleSummarize = useCallback(() => {
-    summarizeRef.current?.();
-  }, []);
+    summarizeFn?.();
+  }, [summarizeFn]);
 
   const handleImportExport = useCallback(() => {
     setImportOpen(true);
@@ -109,7 +109,7 @@ export function ProjectBoardHeaderActions({
         <ProjectAiMenu
           projectId={projectId}
           hideTrigger
-          runRef={summarizeRef}
+          onRunRegister={setSummarizeFn}
         />
       ) : null}
       {canImport || canExport ? (

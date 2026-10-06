@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Download, FileText, Trash2 } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
@@ -67,10 +67,14 @@ function FileDownloadButton({ projectId, file }: { projectId: number; file: Proj
     enabled ? file.id : null,
   );
 
+  const afterDownload = useEffectEvent(() => {
+    setEnabled(false);
+  });
+
   useEffect(() => {
     if (data?.url) {
       window.open(data.url, "_blank", "noopener,noreferrer");
-      setEnabled(false);
+      afterDownload();
     }
   }, [data?.url]);
 

@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { buildStatusConfig } from "../shared/types";
 import { getStatusEntry } from "@/lib/status-config";
 import { getPriorityColor } from "../shared/priority-badge";
@@ -25,13 +26,10 @@ export function useTicketCreateProperties({
   const [statusOpen, setStatusOpen] = useState(false);
   const [priorityOpen, setPriorityOpen] = useState(false);
   const [assigneeOpen, setAssigneeOpen] = useState(false);
-  const [estimateInput, setEstimateInput] = useState(
+  const [estimateInput, setEstimateInput] = useSourceOverride(
+    value.points,
     value.points !== null ? String(value.points) : "",
   );
-
-  useEffect(() => {
-    if (value.points === null) setEstimateInput("");
-  }, [value.points]);
 
   const statusConfig = buildStatusConfig(projectStatuses);
   const statusList =

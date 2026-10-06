@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { BUILD_CURSOR_STACK_PARAM } from "@/features/build/shared/use-build-cursor-pager";
 
@@ -36,6 +36,12 @@ export function useWebhookPageUrlState(): WebhookPageUrlState {
 
   const [qInput, setQInput] = useState(qParam ?? "");
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
 
   const updateUrl = useCallback(
     (next: Record<string, string | undefined>) => {

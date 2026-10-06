@@ -1,6 +1,7 @@
 ﻿"use client";
 
-import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
+import { useMemo, type KeyboardEvent } from "react";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { Check, Loader2, Plus } from "lucide-react";
 import {
   Command,
@@ -33,7 +34,7 @@ export function LabelsSearchCommand({
   onCreated,
   open = true,
 }: LabelsSearchCommandProps) {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useSourceOverride(open, "");
   const canCreate = useCan("build:manage");
   const queryClient = useQueryClient();
   const trimmed = query.trim();
@@ -74,10 +75,6 @@ export function LabelsSearchCommand({
     },
     onError: (error) => toast.error(getErrorMessage(error)),
   });
-
-  useEffect(() => {
-    if (!open) setQuery("");
-  }, [open]);
 
   function handleCreate() {
     if (!showCreate || createLabel.isPending) return;

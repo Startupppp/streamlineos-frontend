@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback, useEffect, useId } from "react";
+import { useState, useCallback, useId } from "react";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -76,20 +77,19 @@ function AiPolicySection({ projectId, automationId, canManage }: AutomationSetti
   const temperatureId = useId();
   const { data: aiPolicy, isLoading } = useAutomationAiPolicy(projectId, automationId);
   const updateAiPolicy = useUpdateAutomationAiPolicy(projectId, automationId);
-  const [model, setModel] = useState("");
-  const [maxTokens, setMaxTokens] = useState("");
-  const [temperature, setTemperature] = useState("");
+  const [model, setModel] = useSourceOverride(aiPolicy, aiPolicy?.model ?? "");
+  const [maxTokens, setMaxTokens] = useSourceOverride(
+    aiPolicy,
+    aiPolicy?.maxTokensPerRun == null ? "" : String(aiPolicy.maxTokensPerRun),
+  );
+  const [temperature, setTemperature] = useSourceOverride(
+    aiPolicy,
+    aiPolicy?.temperature == null ? "" : String(aiPolicy.temperature),
+  );
 
-  useEffect(() => {
-    if (!aiPolicy) return;
-    setModel(aiPolicy.model ?? "");
-    setMaxTokens(aiPolicy.maxTokensPerRun === null ? "" : String(aiPolicy.maxTokensPerRun));
-    setTemperature(aiPolicy.temperature === null ? "" : String(aiPolicy.temperature));
-  }, [aiPolicy]);
-
-  const handleModelChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setModel(e.target.value), []);
-  const handleMaxTokensChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setMaxTokens(e.target.value), []);
-  const handleTemperatureChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setTemperature(e.target.value), []);
+  const handleModelChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setModel(e.target.value), [setModel]);
+  const handleMaxTokensChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setMaxTokens(e.target.value), [setMaxTokens]);
+  const handleTemperatureChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setTemperature(e.target.value), [setTemperature]);
 
   const handleSave = useCallback(() => {
     const body: AutomationAiPolicyInput = {};
@@ -137,13 +137,12 @@ function AiPolicySection({ projectId, automationId, canManage }: AutomationSetti
 function ToolPermissionsSection({ projectId, automationId, canManage }: AutomationSettingsTabProps & { canManage: boolean }) {
   const { data: toolPerms, isLoading } = useAutomationToolPermissions(projectId, automationId);
   const updateToolPerms = useUpdateAutomationToolPermissions(projectId, automationId);
-  const [selected, setSelected] = useState<ReadonlySet<ToolName>>(new Set());
+  const [selected, setSelected] = useSourceOverride<typeof toolPerms, ReadonlySet<ToolName>>(
+    toolPerms,
+    toolPerms ? new Set(toolPerms.allowedTools) : new Set(),
+  );
 
-  useEffect(() => {
-    if (toolPerms) setSelected(new Set(toolPerms.allowedTools));
-  }, [toolPerms]);
-
-  const handleToggle = useCallback((tool: ToolName) => setSelected((prev) => toggled(prev, tool)), []);
+  const handleToggle = useCallback((tool: ToolName) => setSelected((prev) => toggled(prev, tool)), [setSelected]);
 
   const handleSave = useCallback(() => {
     updateToolPerms.mutate(
@@ -207,17 +206,17 @@ function HumanConfirmationSection({ projectId, automationId, canManage }: Automa
   const requireId = useId();
   const { data: stored, isLoading } = useAutomationHumanConfirmation(projectId, automationId);
   const updateHumanConf = useUpdateAutomationHumanConfirmation(projectId, automationId);
-  const [requireConfirmation, setRequireConfirmation] = useState(false);
-  const [actionTypes, setActionTypes] = useState<ReadonlySet<ConfirmableAction>>(new Set());
+  const [requireConfirmation, setRequireConfirmation] = useSourceOverride(
+    stored,
+    stored?.requireConfirmation ?? false,
+  );
+  const [actionTypes, setActionTypes] = useSourceOverride<typeof stored, ReadonlySet<ConfirmableAction>>(
+    stored,
+    stored ? new Set(stored.actionTypes) : new Set(),
+  );
 
-  useEffect(() => {
-    if (!stored) return;
-    setRequireConfirmation(stored.requireConfirmation);
-    setActionTypes(new Set(stored.actionTypes));
-  }, [stored]);
-
-  const handleRequireChange = useCallback((checked: boolean | "indeterminate") => setRequireConfirmation(checked === true), []);
-  const handleToggle = useCallback((type: ConfirmableAction) => setActionTypes((prev) => toggled(prev, type)), []);
+  const handleRequireChange = useCallback((checked: boolean | "indeterminate") => setRequireConfirmation(checked === true), [setRequireConfirmation]);
+  const handleToggle = useCallback((type: ConfirmableAction) => setActionTypes((prev) => toggled(prev, type)), [setActionTypes]);
 
   const handleSave = useCallback(() => {
     updateHumanConf.mutate(

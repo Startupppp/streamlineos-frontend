@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect, useTransition, useState, type ComponentType } from "react";
+import { memo, useDeferredValue, type ComponentType } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -173,18 +173,7 @@ export const BucketSection = memo(function BucketSection({
   returnHref?: string;
 }) {
   const cfg = BUCKET_CONFIG[bucket];
-  const [, startTransition] = useTransition();
-  const [visibleCount, setVisibleCount] = useState(() =>
-    Math.min(items.length, BUCKET_SYNC_LIMIT),
-  );
-
-  useEffect(() => {
-    if (items.length > BUCKET_SYNC_LIMIT) {
-      startTransition(() => setVisibleCount(items.length));
-    } else {
-      setVisibleCount(items.length);
-    }
-  }, [items.length]);
+  const deferredItems = useDeferredValue(items);
 
   return (
     <PmPanel>
@@ -198,7 +187,7 @@ export const BucketSection = memo(function BucketSection({
         </span>
       </div>
       <div>
-        {items.slice(0, visibleCount).map((item) => (
+        {deferredItems.map((item) => (
           <WorkItemRow key={item.id} item={item} returnHref={returnHref} />
         ))}
       </div>

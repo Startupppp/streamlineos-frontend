@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { isApiError } from "@/lib/api-envelope";
 import { useDashboardLayout, useSaveDashboardLayout } from "@/hooks/api/build/dashboard-layout";
 import type { DashboardLayoutConfig, PersonaKey, WidgetSlot, WidgetType } from "./dashboard-layout";
@@ -22,19 +23,22 @@ export function useDashboardLayoutEditor(onConflict?: () => void): UseDashboardL
   const { data, refetch } = useDashboardLayout();
   const { mutate: save, isPending } = useSaveDashboardLayout();
 
-  const [localConfig, setLocalConfig] = useState<DashboardLayoutConfig>(
-    () => data?.config ?? { widgets: [] },
+  const [localConfig, setLocalConfig] = useSourceOverride<typeof data, DashboardLayoutConfig>(
+    data,
+    data?.config ?? { widgets: [] },
   );
-  const [localVersion, setLocalVersion] = useState<number>(data?.layoutVersion ?? 0);
+  const [localVersion, setLocalVersion] = useSourceOverride<typeof data, number>(
+    data,
+    data?.layoutVersion ?? 0,
+  );
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (data) {
-      setLocalConfig(data.config);
-      setLocalVersion(data.layoutVersion);
-    }
-  }, [data]);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
 
   const persist = useCallback(
     (config: DashboardLayoutConfig, version: number) => {
@@ -56,7 +60,7 @@ export function useDashboardLayoutEditor(onConflict?: () => void): UseDashboardL
         );
       }, DEBOUNCE_MS);
     },
-    [save, refetch, onConflict],
+    [save, refetch, onConflict, setLocalVersion],
   );
 
   const reorder = useCallback(
@@ -70,7 +74,7 @@ export function useDashboardLayoutEditor(onConflict?: () => void): UseDashboardL
         return updated;
       });
     },
-    [persist, localVersion],
+    [persist, localVersion, setLocalConfig],
   );
 
   const removeWidget = useCallback(
@@ -81,7 +85,7 @@ export function useDashboardLayoutEditor(onConflict?: () => void): UseDashboardL
         return updated;
       });
     },
-    [persist, localVersion],
+    [persist, localVersion, setLocalConfig],
   );
 
   const addWidget = useCallback(
@@ -92,7 +96,7 @@ export function useDashboardLayoutEditor(onConflict?: () => void): UseDashboardL
         return updated;
       });
     },
-    [persist, localVersion],
+    [persist, localVersion, setLocalConfig],
   );
 
   const resetToDefault = useCallback(
@@ -101,7 +105,7 @@ export function useDashboardLayoutEditor(onConflict?: () => void): UseDashboardL
       setLocalConfig(defaults);
       persist(defaults, localVersion);
     },
-    [persist, localVersion],
+    [persist, localVersion, setLocalConfig],
   );
 
   return {

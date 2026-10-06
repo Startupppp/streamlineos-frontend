@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { useSession } from "next-auth/react";
 
 export const TOTAL_STEPS = 7;
@@ -80,16 +81,9 @@ function buildInitialDraft(creatorId: string | undefined): WizardDraft {
 export function useProjectCreate() {
   const { data: session } = useSession();
   const creatorId = session?.user?.id;
-  const seededRef = useRef(false);
   const [step, setStep] = useState(1);
   const [direction, setDirection] = useState(1);
-  const [draft, setDraft] = useState<WizardDraft>(() => buildInitialDraft(undefined));
-
-  useEffect(() => {
-    if (seededRef.current || !creatorId) return;
-    seededRef.current = true;
-    setDraft(buildInitialDraft(creatorId));
-  }, [creatorId]);
+  const [draft, setDraft] = useSourceOverride(creatorId, buildInitialDraft(creatorId), true);
 
   function updateDraft(partial: Partial<WizardDraft>) {
     setDraft((prev) => ({ ...prev, ...partial }));
@@ -108,9 +102,7 @@ export function useProjectCreate() {
   function reset() {
     setStep(1);
     setDirection(1);
-    seededRef.current = false;
     setDraft(buildInitialDraft(creatorId));
-    if (creatorId) seededRef.current = true;
   }
 
   return { step, direction, draft, updateDraft, goNext, goBack, reset };

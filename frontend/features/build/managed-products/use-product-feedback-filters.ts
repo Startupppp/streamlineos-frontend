@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
 import {
   useBuildListFilters,
   BUILD_FILTER_ALL,
@@ -93,14 +94,8 @@ export function useProductFeedbackFilters(
   const typedFrom = listFilters.isActive("from") ? fromValue : undefined;
   const typedTo = listFilters.isActive("to") ? toValue : undefined;
 
-  const [appliedFilterKey, setAppliedFilterKey] = useState(listFilters.resetKey);
-  const [page, setPage] = useState(1);
-  const [selected, setSelected] = useState<Set<string | number>>(new Set());
-  if (appliedFilterKey !== listFilters.resetKey) {
-    setAppliedFilterKey(listFilters.resetKey);
-    setPage(1);
-    setSelected(new Set());
-  }
+  const [page, setPage] = useSourceOverride(listFilters.resetKey, 1);
+  const [selected, setSelected] = useSourceOverride(listFilters.resetKey, new Set<string | number>());
 
   const queryParams = useMemo(
     (): ListFeedbucketSubmissionsQuery => ({
@@ -195,9 +190,9 @@ export function useProductFeedbackFilters(
 
   const handlePageChange = useCallback((next: number) => {
     setPage(next);
-  }, []);
+  }, [setPage]);
 
-  const handleClearSelection = useCallback(() => setSelected(new Set()), []);
+  const handleClearSelection = useCallback(() => setSelected(new Set()), [setSelected]);
 
   return {
     listFilters,

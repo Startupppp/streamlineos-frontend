@@ -76,7 +76,7 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
-  const rows = data?.data ?? [];
+  const rows = useMemo(() => data?.data ?? [], [data]);
 
   const selectedIds = useMemo(
     () => [...selected].map(Number).filter((id) => Number.isFinite(id)),

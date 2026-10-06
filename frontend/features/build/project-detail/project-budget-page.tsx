@@ -55,7 +55,7 @@ export function ProjectBudgetPage({ projectId: projectIdStr }: ProjectBudgetPage
     isEmpty: !budget,
   });
   const { data: membersPage } = useProjectMembers(projectId);
-  const members = membersPage?.data ?? [];
+  const members = useMemo(() => membersPage?.data ?? [], [membersPage]);
   const { data: orgMembersData } = useOrgMembers(1, 200);
   const updateBudget = useUpdateProjectBudget(projectId);
 

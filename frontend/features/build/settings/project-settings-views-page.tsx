@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
@@ -48,7 +48,7 @@ export function ProjectSettingsViewsPage({ projectId }: ProjectSettingsViewsPage
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
 
-  const pagedViews = viewPage?.data ?? [];
+  const pagedViews = useMemo(() => viewPage?.data ?? [], [viewPage]);
   const pagination = viewPage?.pagination;
   const { debouncedSearch } = listFilters;
 

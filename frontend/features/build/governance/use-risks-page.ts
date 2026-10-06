@@ -47,7 +47,7 @@ export function useRisksPage(projectId: number) {
   const { data: stats, isLoading: isStatsLoading } = useProjectRiskStats(projectId);
 
   const { data: membersPage } = useProjectMembers(projectId);
-  const members = membersPage?.data ?? [];
+  const members = useMemo(() => membersPage?.data ?? [], [membersPage]);
 
   const {
     sheetOpen,

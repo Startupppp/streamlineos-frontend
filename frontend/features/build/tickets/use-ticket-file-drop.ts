@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useCallback, useEffect, useState } from "react";
+import { useRef, useCallback, useEffect, useEffectEvent, useState } from "react";
 import {
   MAX_FILES,
   MAX_TOTAL_BYTES,
@@ -19,12 +19,16 @@ export function useTicketFileDrop({ files, addFiles, handleRemoveFile }: UseTick
   const [fileError, setFileError] = useState<string | null>(null);
   const dragCounterRef = useRef(0);
 
+  const commitUrls = useEffectEvent((urls: (string | null)[]) => {
+    setPreviewUrls(urls);
+  });
+
   useEffect(() => {
     const urls = files.map((f) => {
       if (isImageMime(f.type)) return URL.createObjectURL(f);
       return null;
     });
-    setPreviewUrls(urls);
+    commitUrls(urls);
     return () => {
       urls.forEach((u) => {
         if (u) URL.revokeObjectURL(u);

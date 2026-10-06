@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useCallback, useState, useEffect } from "react";
+import { useMemo, useCallback, useState } from "react";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { toBulkPriority } from "@/features/build/shared/bulk-priority";
 import type { BulkPriority } from "@/features/build/shared/bulk-priority";
 import { useQueryClient } from "@tanstack/react-query";
@@ -104,14 +105,12 @@ export function useMyWorkBulk(
   sortDirection: BuildListSortDirection,
 ): UseMyWorkBulkReturn {
   const queryClient = useQueryClient();
-  const [tableSelection, setTableSelection] = useState<Set<string | number>>(
+  const sortKey = `${sortField}:${sortDirection}`;
+  const [tableSelection, setTableSelection] = useSourceOverride<string, Set<string | number>>(
+    sortKey,
     new Set(),
   );
   const [isPendingBulk, setIsPendingBulk] = useState(false);
-
-  useEffect(() => {
-    setTableSelection(new Set());
-  }, [sortField, sortDirection]);
 
   const selectedTicketIds = useMemo(
     () => [...tableSelection].map((id) => Number(id)),
@@ -159,7 +158,7 @@ export function useMyWorkBulk(
         })
         .finally(() => setIsPendingBulk(false));
     },
-    [ticketsByProject, queryClient],
+    [ticketsByProject, queryClient, setTableSelection],
   );
 
   const handleBulkStatus = useCallback(
@@ -184,7 +183,7 @@ export function useMyWorkBulk(
 
   const handleClearSelection = useCallback(
     () => setTableSelection(new Set()),
-    [],
+    [setTableSelection],
   );
 
   return {

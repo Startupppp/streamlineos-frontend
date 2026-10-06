@@ -128,7 +128,7 @@ export function ProjectBacklogPage({
     });
   }, [data]);
 
-  const tickets = boardTickets ?? [];
+  const tickets = useMemo(() => boardTickets ?? [], [boardTickets]);
 
   const handleTicketSelect = useCallback(
     (id: number) => {

@@ -72,10 +72,13 @@ export function EditEpicDialog({
   const queryClient = useQueryClient();
   const isOnline = useOnlineStatus();
 
-  const setOpen = (next: boolean) => {
-    if (!controlled) setUncontrolledOpen(next);
-    onOpenChange?.(next);
-  };
+  const setOpen = useCallback(
+    (next: boolean) => {
+      if (!controlled) setUncontrolledOpen(next);
+      onOpenChange?.(next);
+    },
+    [controlled, onOpenChange],
+  );
 
   const handleOpen = () => setOpen(true);
   const [conflictFields, setConflictFields] = useState<

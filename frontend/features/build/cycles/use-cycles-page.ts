@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -84,10 +84,6 @@ export function useCyclesPage(projectId: number) {
   const [visitedCursors, setVisitedCursors] = useState<(string | null)[]>([]);
   const urlCursor = listFilters.cursor;
 
-  useEffect(() => {
-    if (urlCursor === null) setVisitedCursors([]);
-  }, [urlCursor]);
-
   const handleNextPage = useCallback(() => {
     if (!nextCycleCursor) return;
     setVisitedCursors((current) => [...current, urlCursor]);
@@ -100,18 +96,22 @@ export function useCyclesPage(projectId: number) {
     listFilters.setCursor(previous);
   }, [listFilters, visitedCursors]);
 
-  const { data: tickets = [] } = useProjectBoardTickets(projectId);
+  const { data: ticketsData } = useProjectBoardTickets(projectId);
+  const tickets = useMemo(() => ticketsData ?? [], [ticketsData]);
   const { data: projectData } = useProject(projectId);
-  const projectStatuses = projectData?.statuses ?? [];
+  const projectStatuses = useMemo(() => projectData?.statuses ?? [], [projectData]);
   const updateCycle = useUpdateCycle();
   const bulkUpdateTickets = useBulkUpdateTickets(projectId);
   const deleteCycle = useDeleteCycle();
   const pageState = usePageState({ error, isError, isLoading, permission: "build:cycles:view" });
 
-  const activeCycles = (cycles ?? []).filter((c) => c.status === "active");
-  const upcomingCycles = (cycles ?? []).filter((c) => c.status === "draft");
-  const completedCycles = (cycles ?? []).filter((c) => c.status === "completed");
-  const displayedCycles = [...activeCycles, ...upcomingCycles, ...completedCycles];
+  const activeCycles = useMemo(() => (cycles ?? []).filter((c) => c.status === "active"), [cycles]);
+  const upcomingCycles = useMemo(() => (cycles ?? []).filter((c) => c.status === "draft"), [cycles]);
+  const completedCycles = useMemo(() => (cycles ?? []).filter((c) => c.status === "completed"), [cycles]);
+  const displayedCycles = useMemo(
+    () => [...activeCycles, ...upcomingCycles, ...completedCycles],
+    [activeCycles, upcomingCycles, completedCycles],
+  );
 
   const handleOpenCreate = useCallback(() => { setEditTarget(null); setFormOpen(true); }, []);
   const handleEditByIndex = useCallback((index: number) => {
@@ -122,8 +122,12 @@ export function useCyclesPage(projectId: number) {
   }, [displayedCycles]);
   const handleNoSelection = useCallback(() => {}, []);
   const handleShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
-  const handleStatusFilterChange = useCallback((value: string) => listFilters.setValue("status", value), [listFilters]);
+  const handleStatusFilterChange = useCallback((value: string) => {
+    setVisitedCursors([]);
+    listFilters.setValue("status", value);
+  }, [listFilters]);
   const handleDateRangeChange = useCallback((range: { from: string; to: string }) => {
+    setVisitedCursors([]);
     listFilters.setValue("from", range.from);
     listFilters.setValue("to", range.to);
   }, [listFilters]);

@@ -1,12 +1,12 @@
 "use client";
 
 import {
-  useState,
   useCallback,
-  useRef,
   useEffect,
+  useRef,
   type KeyboardEvent,
 } from "react";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { resolveColumnColor } from "@/lib/column-colors";
 import { getStatusEntry, type StatusConfigEntry } from "@/lib/status-config";
 import {
@@ -99,7 +99,7 @@ export function FilterCategorySubmenu({
   className,
   listClassName = "max-h-[min(50dvh,320px)] overflow-y-auto scrollbar-hide p-1",
 }: FilterCategorySubmenuProps) {
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useSourceOverride(category, "");
   const containerRef = useRef<HTMLDivElement>(null);
 
   const handleKeyDown = useCallback(
@@ -115,10 +115,6 @@ export function FilterCategorySubmenu({
 
   useEffect(() => {
     containerRef.current?.focus();
-  }, [category]);
-
-  useEffect(() => {
-    setSearch("");
   }, [category]);
 
   const q = search.toLowerCase();
