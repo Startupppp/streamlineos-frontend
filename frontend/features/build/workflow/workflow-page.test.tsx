@@ -96,7 +96,6 @@ jest.mock("@/components/shared/page-state", () => ({
 jest.mock("@/components/ui/data-table-skeleton", () => ({ DataTableSkeleton: () => <div data-testid="skeleton" /> }));
 jest.mock("@/components/ui/empty-state", () => ({ EmptyState: ({ title }: { title: string }) => <div>{title}</div> }));
 jest.mock("@/features/build/workflow/transitions-table", () => ({
-  TRANSITION_TABLE_HEADERS: [],
   TransitionsTable: ({ transitions }: { transitions?: unknown[] }) => (
     <div data-testid="transitions" data-count={transitions?.length ?? 0} />
   ),

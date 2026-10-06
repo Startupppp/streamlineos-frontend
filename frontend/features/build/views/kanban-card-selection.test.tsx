@@ -14,10 +14,13 @@ jest.mock("./card-field-priority", () => ({ InlinePriority: () => null }));
 jest.mock("./card-field-assignee", () => ({ InlineAssignee: () => null }));
 jest.mock("./card-field-estimate", () => ({ InlineEstimate: () => null }));
 
-jest.mock("./card-inline-extra-fields", () => ({
+jest.mock("./card-inline-type-cycle", () => ({
   InlineType: () => null,
-  InlineLabels: () => null,
   InlineCycle: () => null,
+}));
+
+jest.mock("./card-inline-extra-fields", () => ({
+  InlineLabels: () => null,
   InlineModule: ({ currentModuleId }: { currentModuleId?: number | null }) => (
     <span>module-editor-{currentModuleId ?? "none"}</span>
   ),

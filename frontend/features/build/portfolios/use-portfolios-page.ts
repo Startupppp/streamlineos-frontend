@@ -26,7 +26,7 @@ import type {
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { NamedUser } from "@/lib/person-display";
 
-const PAGE_SIZE = 20;
+export const PAGE_SIZE = 20;
 
 export function usePortfoliosPage() {
   const canManage = useCan("build:portfolios:manage");

@@ -1,12 +1,13 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { Download } from "lucide-react";
+import { Download, Plus, Upload } from "lucide-react";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import type { BuildToolbarFilter } from "./build-list-toolbar-layout";
 import { BuildFilterSelect } from "./build-filter-select";
 import { BuildMobileCard } from "./build-mobile-card";
+import type { BuildHeaderAction } from "./build-header-actions-plan";
 
 export interface GalleryRow {
   id: number;
@@ -150,3 +151,40 @@ export function useGalleryFilters(count: number): BuildToolbarFilter[] {
   ];
   return all.slice(0, count);
 }
+
+export const GALLERY_HEADERS = [
+  "Key",
+  "Name",
+  "Status",
+  "Owner",
+  "Progress",
+  "Target",
+] as const;
+
+export function noop() {
+  return undefined;
+}
+
+export const GALLERY_STATIC_PAGINATION = {
+  mode: "cursor",
+  pageSize: 50,
+  pageNumber: 2,
+  hasMore: true,
+  hasPrevious: true,
+  onNext: noop,
+  onPrevious: noop,
+} as const;
+
+export const ONE_ACTION: BuildHeaderAction[] = [
+  { id: "create", label: "New project", icon: Plus, primary: true },
+];
+export const TWO_ACTIONS: BuildHeaderAction[] = [
+  { id: "resume", label: "Resume project", href: "#resume" },
+  ...ONE_ACTION,
+];
+export const FOUR_ACTIONS: BuildHeaderAction[] = [
+  { id: "import", label: "Import", icon: Upload },
+  { id: "export", label: "Export", icon: Download },
+  { id: "archive", label: "Archive" },
+  ...ONE_ACTION,
+];

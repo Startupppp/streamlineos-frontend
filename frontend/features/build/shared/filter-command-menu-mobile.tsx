@@ -35,7 +35,7 @@ interface FilterCommandMenuMobileProps {
   activeCategory: string | null;
   isSearching: boolean;
   drillTitle: string;
-  shouldReduceMotion: boolean;
+  shouldReduceMotion: boolean | null;
   navDirection: number;
   mobilePanelKey: string;
   swipeHandlers: MenuState["swipeHandlers"];

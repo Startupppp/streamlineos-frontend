@@ -40,10 +40,7 @@ interface UseRoadmapTabParams {
   projectId?: number;
   horizon?: string;
   ownerId?: number;
-  onClearFilters?: () => void;
   onItemsChange?: (items: ScorableRoadmapItem[]) => void;
-  externalEditTarget?: ScorableRoadmapItem | null;
-  onExternalEditClose?: () => void;
 }
 
 export function useRoadmapTab({

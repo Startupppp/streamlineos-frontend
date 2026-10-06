@@ -17,116 +17,20 @@ import { IntakePage } from "@/features/build/intake/intake-page";
 import { MeetingsListPage } from "@/features/build/meetings/meetings-list-page";
 import { MeetingDetailPage } from "@/features/build/meetings/meeting-detail-page";
 import { WhiteboardPage } from "@/features/build/whiteboard/whiteboard-page";
-
-const VIEW_TOKEN = "gallery-view-stub";
-const EDIT_TOKEN = "gallery-edit-stub";
-const FORM_TOKEN = "gallery-form-stub";
-const INTAKE_PROJECT_ID = "gallery-intake-stub";
-const BOARD_LOADING_TOKEN = "gallery-board-loading-stub";
-
-const GALLERY_PROJECT_ID = 1;
-const GALLERY_FORM_ID = 1;
-const GALLERY_MEETING_ID = 1;
-
-const STUB_ROADMAP_BOARD = {
-  orgName: "Gallery Org",
-  roadmap: {
-    planned: [
-      {
-        id: 1,
-        title: "Dark mode support",
-        description: null,
-        status: "planned" as const,
-        category: null,
-        targetQuarter: "Q4 2026",
-        votes: 24,
-      },
-    ],
-    in_progress: [],
-    completed: [],
-  },
-  feedback: [],
-  changelog: [],
-};
-
-const STUB_VIEW_BOARD = {
-  name: "Sprint planning board",
-  data: {
-    type: "excalidraw" as const,
-    version: 2,
-    source: "https://excalidraw.com",
-    elements: [
-      {
-        id: "el-1",
-        type: "rectangle",
-        x: 50,
-        y: 60,
-        width: 200,
-        height: 80,
-        strokeColor: "#1e1e1e",
-        backgroundColor: "#a5d8ff",
-        fillStyle: "solid",
-        strokeWidth: 2,
-        roughness: 1,
-        opacity: 100,
-        angle: 0,
-        seed: 12345,
-        version: 1,
-        versionNonce: 1,
-        isDeleted: false,
-        groupIds: [],
-        frameId: null,
-        boundElements: null,
-        link: null,
-        locked: false,
-        updated: 1,
-        index: "a0",
-      },
-    ],
-    appState: { viewBackgroundColor: "#ffffff" },
-  },
-  access: "view" as const,
-  allowExport: false,
-  updatedAt: "2026-09-01T10:00:00Z",
-};
-
-const STUB_EDIT_BOARD = {
-  ...STUB_VIEW_BOARD,
-  name: "Architecture overview",
-  access: "edit" as const,
-  allowExport: true,
-};
-
-const STUB_FORM = {
-  name: "Feedback form",
-  description: "Share your thoughts about our product.",
-  publicToken: FORM_TOKEN,
-  isPublic: true,
-  isActive: true,
-  fields: [
-    {
-      key: "name",
-      label: "Your name",
-      type: "text" as const,
-      required: false,
-      placeholder: "Jane Smith",
-    },
-    {
-      key: "email",
-      label: "Email address",
-      type: "email" as const,
-      required: true,
-      placeholder: "you@example.com",
-    },
-    {
-      key: "message",
-      label: "Message",
-      type: "textarea" as const,
-      required: true,
-      placeholder: "Your feedback…",
-    },
-  ],
-};
+import {
+  VIEW_TOKEN,
+  EDIT_TOKEN,
+  FORM_TOKEN,
+  INTAKE_PROJECT_ID,
+  BOARD_LOADING_TOKEN,
+  GALLERY_PROJECT_ID,
+  GALLERY_FORM_ID,
+  GALLERY_MEETING_ID,
+  STUB_ROADMAP_BOARD,
+  STUB_VIEW_BOARD,
+  STUB_EDIT_BOARD,
+  STUB_FORM,
+} from "./content-intake-gallery-stubs";
 
 function useGalleryQueryClient() {
   const [queryClient] = useState(() => {

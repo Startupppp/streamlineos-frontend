@@ -48,8 +48,11 @@ jest.mock("./card-field-priority", () => ({ InlinePriority: () => null }));
 jest.mock("./card-field-assignee", () => ({ InlineAssignee: () => null }));
 jest.mock("./card-field-estimate", () => ({ InlineEstimate: () => null }));
 
-jest.mock("./card-inline-extra-fields", () => ({
+jest.mock("./card-inline-type-cycle", () => ({
   InlineType: () => null,
+}));
+
+jest.mock("./card-inline-extra-fields", () => ({
   InlineLabels: () => null,
   InlineModule: () => null,
 }));

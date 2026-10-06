@@ -153,8 +153,7 @@ export function snapshotTicketCollections(
     .getQueriesData<TicketCollection>({
       queryKey: buildWorkQueryKeys.projects.tickets({ projectId }),
     })
-    .filter(([, data]) => data != null)
-    .map(([key, data]) => ({ key, data: data as TicketCollection }));
+    .flatMap(([key, data]) => (data ? [{ key, data }] : []));
 }
 
 export function restoreRawCollections(

@@ -11,6 +11,9 @@ jest.mock("next/navigation", () => ({
 
 jest.mock("@/hooks/api/build/incidents", () => ({
   useIncidents: jest.fn(),
+}));
+
+jest.mock("@/hooks/api/build/incident-mutations", () => ({
   useDeleteIncident: jest.fn(),
 }));
 
@@ -109,7 +112,8 @@ jest.mock("./incidents-table-columns", () => ({
   IncidentMobileCard: () => null,
 }));
 
-import { useIncidents, useDeleteIncident } from "@/hooks/api/build/incidents";
+import { useIncidents } from "@/hooks/api/build/incidents";
+import { useDeleteIncident } from "@/hooks/api/build/incident-mutations";
 import { useCan, useAccess } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";

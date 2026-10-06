@@ -37,10 +37,13 @@ jest.mock("@/features/build/views/card-field-priority", () => ({ InlinePriority:
 jest.mock("@/features/build/views/card-field-assignee", () => ({ InlineAssignee: () => <span>AB</span> }));
 jest.mock("@/features/build/views/card-field-estimate", () => ({ InlineEstimate: () => <span>3</span> }));
 
-jest.mock("@/features/build/views/card-inline-extra-fields", () => ({
+jest.mock("@/features/build/views/card-inline-type-cycle", () => ({
   InlineType: () => <span>Task</span>,
-  InlineLabels: () => <span>label</span>,
   InlineCycle: () => <span>Cycle 1</span>,
+}));
+
+jest.mock("@/features/build/views/card-inline-extra-fields", () => ({
+  InlineLabels: () => <span>label</span>,
   InlineModule: () => <span>Module</span>,
 }));
 

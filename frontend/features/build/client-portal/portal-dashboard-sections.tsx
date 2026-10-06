@@ -4,9 +4,8 @@ import { type ComponentType, type ReactNode } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DownloadIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { PmPageShell } from "@/components/pm-chrome";
+import { PmPageShell, PM_PANEL } from "@/components/pm-chrome";
 import { cn } from "@/lib/utils";
-import { PM_PANEL } from "@/components/pm-chrome";
 
 export const CR_STATUS_LABELS: Record<string, string> = {
   submitted: "Submitted",

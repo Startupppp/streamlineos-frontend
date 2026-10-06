@@ -9,6 +9,7 @@ import { useProjectMilestones } from "@/hooks/api/build/milestones";
 import { useReleases } from "@/hooks/api/build/releases";
 import { useProjectActivity } from "@/hooks/api/build/project-activity";
 import { usePageState } from "@/hooks/api/use-page-state";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 
 function isAnalyticsRange(v: string | null): v is "7d" | "30d" | "90d" {
   return v === "7d" || v === "30d" || v === "90d";
@@ -16,6 +17,7 @@ function isAnalyticsRange(v: string | null): v is "7d" | "30d" | "90d" {
 
 export function useProjectOverviewPage(projectId: number) {
   const searchParams = useSearchParams();
+  const isOnline = useOnlineStatus();
   const rawRange = searchParams.get("range");
   const rawTeamId = searchParams.get("teamId");
   const rawOwnerId = searchParams.get("ownerId");
@@ -118,6 +120,7 @@ export function useProjectOverviewPage(projectId: number) {
     activityData: activityQuery.data,
     isAnalyticsLoading: analyticsQuery.isLoading,
     isCyclesLoading: cyclesQuery.isLoading,
+    isOnline,
     handleRetry,
   };
 }

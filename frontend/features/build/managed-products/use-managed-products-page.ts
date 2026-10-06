@@ -23,15 +23,15 @@ import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import type { NamedUser } from "@/lib/person-display";
 import { buildManagedProductColumns } from "./managed-product-table-columns";
 
-const PAGE_SIZE = 20;
+export const PAGE_SIZE = 20;
 
-export const STATUS_OPTIONS_MP = [
+export const STATUS_OPTIONS = [
   { value: BUILD_FILTER_ALL, label: "All statuses" },
   { value: "active", label: "Active" },
   { value: "archived", label: "Archived" },
 ];
 
-export const SORT_OPTIONS_MP = [
+export const SORT_OPTIONS = [
   { value: BUILD_FILTER_ALL, label: "Default order" },
   { value: "name", label: "Name" },
   { value: "updated", label: "Last updated" },
@@ -41,11 +41,11 @@ export const SORT_OPTIONS_MP = [
 const FILTER_DEFINITIONS = [
   {
     param: "status",
-    options: STATUS_OPTIONS_MP.map((option) => option.value),
+    options: STATUS_OPTIONS.map((option) => option.value),
   },
   {
     param: "sort",
-    options: SORT_OPTIONS_MP.map((option) => option.value),
+    options: SORT_OPTIONS.map((option) => option.value),
   },
   { param: "ownerId" },
 ] as const;
@@ -246,10 +246,8 @@ export function useManagedProductsPage() {
     isError,
     error,
     createProductIsPending: createProduct.isPending,
-    deleteProductIsPending: deleteProduct.isPending,
     ownerOf,
     selectedIds,
-    members,
     searchInputRef,
     handleCreate,
     handleDeleteConfirm,

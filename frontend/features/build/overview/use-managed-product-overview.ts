@@ -25,7 +25,7 @@ const OVERVIEW_FILTER_DEFINITIONS = [
   { param: "sort", options: PROJECT_SORT_VALUES },
 ] as const;
 
-const PROJECT_SORT_OPTIONS = [
+export const PROJECT_SORT_OPTIONS = [
   { value: BUILD_FILTER_ALL, label: "Newest first" },
   { value: "name_asc", label: "Name A–Z" },
   { value: "priority_desc", label: "Priority high to low" },
@@ -33,7 +33,7 @@ const PROJECT_SORT_OPTIONS = [
   { value: "due_desc", label: "Due latest" },
 ];
 
-const PROJECT_STATUS_OPTIONS = [
+export const PROJECT_STATUS_OPTIONS = [
   { value: BUILD_FILTER_ALL, label: "All statuses" },
   { value: "ACTIVE", label: "Active" },
   { value: "COMPLETED", label: "Completed" },
@@ -41,8 +41,6 @@ const PROJECT_STATUS_OPTIONS = [
 ];
 
 const EDIT_ACTION_BASE = { id: "edit", label: "Edit product", icon: Pencil, primary: true as const };
-
-export { PROJECT_SORT_OPTIONS, PROJECT_STATUS_OPTIONS };
 
 export function useManagedProductOverview(managedProductId: number) {
   const router = useRouter();

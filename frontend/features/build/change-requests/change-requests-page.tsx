@@ -1,22 +1,13 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback } from "react";
 import { Plus, X } from "lucide-react";
-import {
-  useChangeRequests,
-  useDeleteChangeRequest,
-  useUpdateChangeRequest,
-} from "@/hooks/api/build/change-requests";
-import { useCan } from "@/hooks/api/access";
-import { useOrgMembers } from "@/hooks/api/organization";
 import type { ChangeRequest } from "@/types/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { SearchInput } from "@/components/ui/search-input";
-import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,7 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import {
   PmPageShell,
   PmSection,
@@ -36,18 +26,14 @@ import {
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
-import {
-  BUILD_FILTER_ALL,
-  useBuildListFilters,
-} from "@/features/build/shared/use-build-list-filters";
-import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
+import { BUILD_FILTER_ALL } from "@/features/build/shared/use-build-list-filters";
 import { ChangeRequestSheet } from "./change-request-sheet";
 import { CR_STATUSES, CR_STATUS_LABELS } from "./change-request-schema";
 import {
   CHANGE_REQUESTS_TABLE_HEADERS,
   ChangeRequestMobileCard,
-  buildChangeRequestsColumns,
 } from "./change-requests-table-columns";
+import { useChangeRequestsPage } from "./use-change-requests-page";
 
 const STATUS_OPTIONS = [
   { value: BUILD_FILTER_ALL, label: "All statuses" },
@@ -60,15 +46,6 @@ const CLIENT_VISIBLE_OPTIONS = [
   { value: "false", label: "Internal only" },
 ];
 
-const FILTER_DEFINITIONS = [
-  { param: "status", options: CR_STATUSES },
-  { param: "clientVisible", options: ["true", "false"] as const },
-  { param: "impact" },
-  { param: "requesterId" },
-  { param: "approverId" },
-  { param: "releaseId" },
-] as const;
-
 const PAGE_SIZE = 25;
 
 interface ChangeRequestsPageProps {
@@ -76,156 +53,43 @@ interface ChangeRequestsPageProps {
 }
 
 export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
-  const canCreate = useCan("build:changerequests:create");
-  const canManage = useCan("build:changerequests:manage");
-
-  const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
-  const { cursor, pageNumber, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
-    listFilters.resetKey,
-  );
-
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [editCr, setEditCr] = useState<ChangeRequest | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<ChangeRequest | null>(null);
-  const [selectedCrIds, setSelectedCrIds] = useState<Set<string | number>>(
-    new Set(),
-  );
-
-  const statusValue = listFilters.value("status");
-  const clientVisibleValue = listFilters.value("clientVisible");
-  const impactValue = listFilters.value("impact");
-  const requesterIdValue = listFilters.value("requesterId");
-  const approverIdValue = listFilters.value("approverId");
-  const releaseIdValue = listFilters.value("releaseId");
-
   const {
-    data: crPage,
+    canCreate,
+    canManage,
+    listFilters,
+    pageNumber,
+    hasPrevious,
+    goPrevious,
+    sheetOpen,
+    setSheetOpen,
+    editCr,
+    deleteTarget,
+    setDeleteTarget,
+    selectedCrIds,
+    setSelectedCrIds,
+    statusValue,
+    clientVisibleValue,
+    impactValue,
+    crs,
+    pagination,
     isLoading,
     isError,
     error,
-    refetch,
-  } = useChangeRequests(projectId, {
-    status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
-    clientVisible:
-      clientVisibleValue !== BUILD_FILTER_ALL
-        ? clientVisibleValue === "true"
-        : undefined,
-    impact:
-      impactValue !== BUILD_FILTER_ALL && impactValue ? impactValue : undefined,
-    requesterId:
-      requesterIdValue !== BUILD_FILTER_ALL ? requesterIdValue : undefined,
-    approverId:
-      approverIdValue !== BUILD_FILTER_ALL ? approverIdValue : undefined,
-    releaseId:
-      releaseIdValue !== BUILD_FILTER_ALL && releaseIdValue
-        ? Number(releaseIdValue)
-        : undefined,
-    q: listFilters.debouncedSearch || undefined,
-    cursor: cursor ?? undefined,
-    limit: PAGE_SIZE,
-  });
-
-  const { data: membersData } = useOrgMembers(1, 100);
-  const deleteCr = useDeleteChangeRequest(projectId);
-  const members = useMemo(() => membersData?.data ?? [], [membersData]);
-  const updateCr = useUpdateChangeRequest(projectId);
-
-  const crs = crPage?.data ?? [];
-  const pagination = crPage?.pagination;
-
-  const handleNew = useCallback(() => {
-    setEditCr(null);
-    setSheetOpen(true);
-  }, []);
-
-  const handleEdit = useCallback((cr: ChangeRequest) => {
-    setEditCr(cr);
-    setSheetOpen(true);
-  }, []);
-
-  const handleAlertOpenChange = useCallback((open: boolean) => {
-    if (!open) setDeleteTarget(null);
-  }, []);
-
-  const handleDelete = useCallback(() => {
-    if (!deleteTarget) return;
-    deleteCr.mutate(deleteTarget.id, {
-      onSuccess: () => {
-        toast.success("Change request deleted");
-        setDeleteTarget(null);
-      },
-      onError: (e) => toast.error(getErrorMessage(e)),
-    });
-  }, [deleteTarget, deleteCr]);
-
-  const handleRetry = useCallback(() => {
-    void refetch();
-  }, [refetch]);
-
-  const handleKeyboardOpen = useCallback(
-    (index: number) => {
-      const cr = crs[index];
-      if (cr) handleEdit(cr);
-    },
-    [crs, handleEdit],
-  );
-
-  const handleKeyboardClear = useCallback(
-    () => setSelectedCrIds(new Set()),
-    [],
-  );
-
-  useBuildListKeyboard({
-    itemCount: crs.length,
-    onOpen: handleKeyboardOpen,
-    onCreate: canCreate ? handleNew : undefined,
-    onEdit: handleKeyboardOpen,
-    onClearSelection: handleKeyboardClear,
-    enabled: !isLoading && !isError && crs.length > 0,
-  });
-
-  const handleBulkStatusChange = useCallback(
-    (newStatus: string) => {
-      const status = CR_STATUSES.find((s) => s === newStatus);
-      if (!status) return;
-      selectedCrIds.forEach((idStr) => {
-        updateCr.mutate({ changeRequestId: Number(idStr), status });
-      });
-      setSelectedCrIds(new Set());
-    },
-    [selectedCrIds, updateCr],
-  );
-
-  const handleStatusChange = useCallback(
-    (value: string) => listFilters.setValue("status", value),
-    [listFilters],
-  );
-
-  const handleClientVisibleChange = useCallback(
-    (value: string) => listFilters.setValue("clientVisible", value),
-    [listFilters],
-  );
-
-  const handleImpactChange = useCallback(
-    (value: string) =>
-      listFilters.setValue("impact", value || BUILD_FILTER_ALL),
-    [listFilters],
-  );
-
-  const handleNextPage = useCallback(() => {
-    goNext(pagination?.nextCursor);
-  }, [pagination, goNext]);
-
-  const columns = useMemo(
-    () =>
-      buildChangeRequestsColumns({
-        canManage,
-        members,
-        onEdit: handleEdit,
-        onDelete: setDeleteTarget,
-      }),
-    [canManage, members, handleEdit],
-  );
+    deleteCrIsPending,
+    members,
+    handleNew,
+    handleEdit,
+    handleAlertOpenChange,
+    handleDelete,
+    handleRetry,
+    handleKeyboardClear,
+    handleBulkStatusChange,
+    handleStatusChange,
+    handleClientVisibleChange,
+    handleImpactChange,
+    handleNextPage,
+    columns,
+  } = useChangeRequestsPage(projectId);
 
   const renderMobileCard = useCallback(
     (row: ChangeRequest) => (
@@ -237,7 +101,7 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
         onDelete={setDeleteTarget}
       />
     ),
-    [canManage, members, handleEdit],
+    [canManage, members, handleEdit, setDeleteTarget],
   );
 
   return (
@@ -416,7 +280,7 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
         description={`CR-${deleteTarget?.crNumber ?? ""} will be permanently deleted.`}
         confirmLabel="Delete"
         destructive
-        isPending={deleteCr.isPending}
+        isPending={deleteCrIsPending}
         onConfirm={handleDelete}
       />
     </PageWrapper>

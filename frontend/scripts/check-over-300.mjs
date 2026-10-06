@@ -57,7 +57,7 @@ const LIMIT = 300;
 // types/accounting.ts and hooks/api/accounting.ts made it 520. Neither number
 // describes the merged tree. The lower one is kept because this baseline may
 // only move down; re-measure the merged tree before trusting a red or a green.
-const BASELINE = 692;
+const BASELINE = 623;
 // Main's vacuity floor, the stricter of the two (this lane had 100). The merged
 // tree only adds files to main's, so it cannot fall under it.
 const MIN_FILES = 4900;

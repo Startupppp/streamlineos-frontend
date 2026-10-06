@@ -114,7 +114,7 @@ export function useIncidentsPage({ projectId }: UseIncidentsPageProps) {
       { projectId, incidentId: deleteTarget.id },
       {
         onSuccess: () => {
-          toast.success("IncidentsCreateIncidentResponse deleted");
+          toast.success("Incident deleted");
           setDeleteTarget(null);
         },
         onError: (e) => toast.error(getErrorMessage(e)),
@@ -194,6 +194,5 @@ export function useIncidentsPage({ projectId }: UseIncidentsPageProps) {
     handleStatusChange,
     handleSeverityChange,
     handleNextPage,
-    deleteIncident,
   };
 }

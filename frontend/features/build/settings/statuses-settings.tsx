@@ -24,12 +24,12 @@ import { ColumnColorPicker } from "@/features/build/shared/column-color-picker";
 import { DEFAULT_COLUMN_COLOR } from "@/lib/column-colors";
 import { TEXT_ONE_LINE, TEXT_BODY } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
+import { StatusRow } from "./status-row";
 import {
-  StatusRow,
   STATE_TYPE_KEYS,
   TYPE_CONFIG,
   type StateType,
-} from "./status-row";
+} from "./status-row-constants";
 
 const MAX_NAME = 50;
 

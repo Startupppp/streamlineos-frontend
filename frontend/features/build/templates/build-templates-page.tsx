@@ -1,7 +1,5 @@
 "use client";
 
-import { useRef, useState, useCallback, useMemo } from "react";
-import { toast } from "sonner";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Button } from "@/components/ui/button";
@@ -12,26 +10,12 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { RequireModule } from "@/components/auth/require-module";
-import {
-  useProjectTemplates,
-  useDeleteProjectTemplate,
-  type ProjectTemplate,
-} from "@/hooks/api/build/templates";
-import { useCan } from "@/hooks/api/access";
-import { usePageState } from "@/hooks/api/use-page-state";
 import { TemplateCard } from "@/features/build/templates/template-card";
 import { CreateTemplateSheet } from "@/features/build/templates/create-template-sheet";
 import { ApplyTemplateDialog } from "@/features/build/templates/apply-template-dialog";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { isApiError } from "@/lib/api-envelope";
-import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
-import {
-  useBuildListFilters,
-  BUILD_FILTER_ALL,
-} from "@/features/build/shared/use-build-list-filters";
+import { BUILD_FILTER_ALL } from "@/features/build/shared/use-build-list-filters";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
-import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { TemplatesGridSkeleton } from "./templates-grid-skeleton";
 import {
   PmPageShell,
@@ -39,6 +23,7 @@ import {
   PmStaggerList,
   CONTENT_FILL_PANEL,
 } from "@/components/pm-chrome";
+import { useBuildTemplatesPage } from "./use-build-templates-page";
 
 const CATEGORY_OPTIONS = [
   { value: "GENERAL", label: "General" },
@@ -52,16 +37,6 @@ const CATEGORY_OPTIONS = [
   { value: "SOFTWARE_PRODUCT", label: "Software Product" },
 ] as const;
 
-const SORT_OPTIONS = [
-  { value: "newest", label: "Newest first" },
-  { value: "name", label: "A – Z" },
-] as const;
-
-const FILTER_DEFINITIONS = [
-  { param: "category", options: CATEGORY_OPTIONS.map((o) => o.value) },
-  { param: "sort", options: SORT_OPTIONS.map((o) => o.value) },
-] as const;
-
 function NewTemplateButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
@@ -72,104 +47,33 @@ function NewTemplateButton({ onClick }: { onClick: () => void }) {
 }
 
 export function BuildTemplatesPage() {
-  const canManage = useCan("build:manage");
-  const isOnline = useOnlineStatus();
-  const searchRef = useRef<HTMLInputElement>(null);
-
-  const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS, withSearch: true });
-  const categoryFilter = listFilters.value("category");
-  const sortFilter = listFilters.value("sort");
-  const searchDisplay = listFilters.search;
-  const debouncedSearch = listFilters.debouncedSearch;
-
   const {
-    data: templatePages,
-    isLoading,
-    isError,
-    error,
-    refetch,
+    canManage,
+    isOnline,
+    searchRef,
+    listFilters,
+    categoryFilter,
+    sortFilter,
+    searchDisplay,
     hasNextPage,
-    fetchNextPage,
     isFetchingNextPage,
-  } = useProjectTemplates({
-    q: debouncedSearch || undefined,
-    category: categoryFilter !== BUILD_FILTER_ALL ? categoryFilter : undefined,
-    sort: sortFilter !== BUILD_FILTER_ALL ? sortFilter : undefined,
-  });
-  const deleteTemplate = useDeleteProjectTemplate();
-  const [createOpen, setCreateOpen] = useState(false);
-  const [applyTarget, setApplyTarget] = useState<ProjectTemplate | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<ProjectTemplate | null>(null);
-
-  const templates = useMemo(
-    () => templatePages?.pages.flatMap((p) => p.data) ?? [],
-    [templatePages],
-  );
-
-  const pageState = usePageState({
-    permission: "build:view",
-    isLoading,
-    isError,
-    error,
-  });
-
-  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
-  const handleCloseCreate = useCallback(() => setCreateOpen(false), []);
-  const handleApplyTarget = useCallback((t: ProjectTemplate) => setApplyTarget(t), []);
-  const handleCloseApply = useCallback(() => setApplyTarget(null), []);
-  const handleDeleteTarget = useCallback((t: ProjectTemplate) => setDeleteTarget(t), []);
-  const handleCategoryChange = useCallback(
-    (value: string) => listFilters.setValue("category", value),
-    [listFilters],
-  );
-  const handleSortChange = useCallback(
-    (value: string) => listFilters.setValue("sort", value),
-    [listFilters],
-  );
-  const handleLoadMore = useCallback(() => {
-    if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
-  const handleKeyboardOpen = useCallback((index: number) => {
-    const t = templates[index];
-    if (t) setApplyTarget(t);
-  }, [templates]);
-  const handleKeyboardClear = useCallback(() => setApplyTarget(null), []);
-
-  useBuildListKeyboard({
-    itemCount: templates.length,
-    onOpen: handleKeyboardOpen,
-    onCreate: canManage ? handleOpenCreate : undefined,
-    onClearSelection: handleKeyboardClear,
-    searchInputRef: searchRef,
-    enabled: pageState.kind === "ready",
-  });
-
-  function handleDeleteDialogChange(open: boolean) {
-    if (!open) setDeleteTarget(null);
-  }
-
-  const handleDelete = useCallback(() => {
-    if (!deleteTarget) return;
-    deleteTemplate.mutate(deleteTarget.id, {
-      onSuccess: () => {
-        toast.success("Template deleted");
-        setDeleteTarget(null);
-      },
-      onError: (e) => {
-        if (isApiError(e) && e.status === 409) {
-          toast.info("Template was already modified. Refreshing…");
-          void refetch();
-          setDeleteTarget(null);
-          return;
-        }
-        toast.error(getErrorMessage(e));
-      },
-    });
-  }, [deleteTarget, deleteTemplate, refetch]);
-
-  function handleRetry() {
-    void refetch();
-  }
+    templates,
+    pageState,
+    createOpen,
+    applyTarget,
+    deleteTarget,
+    handleOpenCreate,
+    handleCloseCreate,
+    handleApplyTarget,
+    handleCloseApply,
+    handleDeleteTarget,
+    handleCategoryChange,
+    handleSortChange,
+    handleLoadMore,
+    handleDeleteDialogChange,
+    handleDelete,
+    handleRetry,
+  } = useBuildTemplatesPage();
 
   if (pageState.kind === "loading") {
     return (

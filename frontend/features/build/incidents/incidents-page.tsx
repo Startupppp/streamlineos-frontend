@@ -1,35 +1,24 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback } from "react";
 import { Plus, Siren } from "lucide-react";
-import { toast } from "sonner";
-import { useIncidents, useDeleteIncident } from "@/hooks/api/build/incidents";
-import { useCan } from "@/hooks/api/access";
-import { useOrgMembers } from "@/hooks/api/organization";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { IncidentSheet } from "./incident-sheet";
-import { getSlaState } from "./sla";
 import type { IncidentsCreateIncidentResponse } from "@/contracts/build-contracts.generated";
 import { PmPageShell, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
-import {
-  BUILD_FILTER_ALL,
-  useBuildListFilters,
-} from "@/features/build/shared/use-build-list-filters";
-import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
+import { BUILD_FILTER_ALL } from "@/features/build/shared/use-build-list-filters";
 import {
   INCIDENTS_TABLE_HEADERS,
   IncidentMobileCard,
-  buildIncidentsColumns,
 } from "./incidents-table-columns";
+import { useIncidentsPage } from "./use-incidents-page";
 
 const SEVERITY_OPTIONS = [
   { value: BUILD_FILTER_ALL, label: "All severities" },
@@ -49,24 +38,6 @@ const STATUS_OPTIONS = [
   { value: "closed", label: "Closed" },
 ];
 
-const FILTER_DEFINITIONS = [
-  {
-    param: "status",
-    options: [
-      "detected",
-      "investigating",
-      "mitigating",
-      "resolved",
-      "postmortem",
-      "closed",
-    ] as const,
-  },
-  {
-    param: "severity",
-    options: ["critical", "high", "medium", "low"] as const,
-  },
-] as const;
-
 const INCIDENTS_LIST_CAP = 100;
 
 interface IncidentsPageProps {
@@ -74,129 +45,37 @@ interface IncidentsPageProps {
 }
 
 export function IncidentsPage({ projectId }: IncidentsPageProps) {
-  const router = useRouter();
-  const canManage = useCan("build:incidents:manage");
-
-  const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
-
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [editIncident, setEditIncident] = useState<IncidentsCreateIncidentResponse | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<IncidentsCreateIncidentResponse | null>(null);
-
-  const statusValue = listFilters.value("status");
-  const severityValue = listFilters.value("severity");
-
   const {
+    canManage,
+    listFilters,
+    sheetOpen,
+    setSheetOpen,
+    editIncident,
+    deleteTarget,
+    setDeleteTarget,
+    statusValue,
+    severityValue,
     data,
     isLoading,
     isError,
     error,
-    refetch,
     hasNextPage,
-    fetchNextPage,
     isFetchingNextPage,
-  } = useIncidents(projectId, {
-    status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
-    severity: severityValue !== BUILD_FILTER_ALL ? severityValue : undefined,
-    q: listFilters.debouncedSearch.trim() || undefined,
-  });
-
-  const { data: membersData } = useOrgMembers(1, 100);
-  const deleteIncident = useDeleteIncident();
-  const members = useMemo(() => membersData?.data ?? [], [membersData]);
-
-  const all = useMemo(
-    () =>
-      Array.isArray(data)
-        ? data
-        : (data?.pages.flatMap((page) => page.data) ?? []),
-    [data],
-  );
-
-  const openCount = all.filter(
-    (i) => i.status !== "resolved" && i.status !== "closed",
-  ).length;
-  const slaBreachedCount = all.filter((i) => {
-    const s = getSlaState(i);
-    return s.responseBreached || s.resolutionBreached;
-  }).length;
-  const resolvedCount = all.filter(
-    (i) => i.status === "resolved" || i.status === "closed",
-  ).length;
-
-  const handleRetry = useCallback(() => {
-    void refetch();
-  }, [refetch]);
-
-  const handleEdit = useCallback((inc: IncidentsCreateIncidentResponse) => {
-    setEditIncident(inc);
-    setSheetOpen(true);
-  }, []);
-
-  const handleNew = useCallback(() => {
-    setEditIncident(null);
-    setSheetOpen(true);
-  }, []);
-
-  const handleAlertOpenChange = useCallback((open: boolean) => {
-    if (!open) setDeleteTarget(null);
-  }, []);
-
-  const handleDeleteConfirm = useCallback(() => {
-    if (!deleteTarget) return;
-    deleteIncident.mutate(
-      { projectId, incidentId: deleteTarget.id },
-      {
-        onSuccess: () => {
-          toast.success("IncidentsCreateIncidentResponse deleted");
-          setDeleteTarget(null);
-        },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      },
-    );
-  }, [deleteTarget, deleteIncident, projectId]);
-
-  const handleStatusChange = useCallback(
-    (value: string) => listFilters.setValue("status", value),
-    [listFilters],
-  );
-
-  const handleSeverityChange = useCallback(
-    (value: string) => listFilters.setValue("severity", value),
-    [listFilters],
-  );
-
-  const handleNextPage = useCallback(() => void fetchNextPage(), [fetchNextPage]);
-
-  const handleOpenFocused = useCallback(
-    (index: number) => { router.push(`/build/${projectId}/incidents/${all[index].id}`); },
-    [all, projectId, router],
-  );
-  const handleEditByIndex = useCallback(
-    (index: number) => { if (all[index]) handleEdit(all[index]); },
-    [all, handleEdit],
-  );
-  const handleClearKeyboardSelection = useCallback(() => {}, []);
-  useBuildListKeyboard({
-    itemCount: all.length,
-    onOpen: handleOpenFocused,
-    onEdit: canManage ? handleEditByIndex : undefined,
-    onCreate: canManage ? handleNew : undefined,
-    onClearSelection: handleClearKeyboardSelection,
-    enabled: !sheetOpen && !deleteTarget,
-  });
-
-  const columns = useMemo(
-    () =>
-      buildIncidentsColumns({
-        canManage,
-        members,
-        projectId,
-        onEdit: handleEdit,
-        onDelete: setDeleteTarget,
-      }),
-    [canManage, members, projectId, handleEdit],
-  );
+    members,
+    all,
+    openCount,
+    slaBreachedCount,
+    resolvedCount,
+    columns,
+    handleRetry,
+    handleEdit,
+    handleNew,
+    handleAlertOpenChange,
+    handleDeleteConfirm,
+    handleStatusChange,
+    handleSeverityChange,
+    handleNextPage,
+  } = useIncidentsPage({ projectId });
 
   const renderMobileCard = useCallback(
     (row: IncidentsCreateIncidentResponse) => (
@@ -208,7 +87,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
         onDelete={setDeleteTarget}
       />
     ),
-    [canManage, members, handleEdit],
+    [canManage, members, handleEdit, setDeleteTarget],
   );
 
   return (
@@ -261,7 +140,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
               ? [
                   {
                     id: "new-incident",
-                    label: "New IncidentsCreateIncidentResponse",
+                    label: "New Incident",
                     icon: Plus,
                     primary: true,
                     onSelect: handleNew,
@@ -333,7 +212,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
                 description="Create an incident to start tracking."
                 action={
                   canManage
-                    ? { label: "New IncidentsCreateIncidentResponse", onClick: handleNew }
+                    ? { label: "New Incident", onClick: handleNew }
                     : undefined
                 }
               />

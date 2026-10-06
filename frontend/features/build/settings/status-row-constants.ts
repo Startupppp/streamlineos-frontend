@@ -29,7 +29,7 @@ export const TYPE_CONFIG: Record<StateType, { label: string; color: string }> = 
 
 export const MAX_STATUS_NAME = 50;
 
-function isStateType(value: string | null | undefined): value is StateType {
+export function isStateType(value: string | null | undefined): value is StateType {
   return STATE_TYPE_KEYS.some((t) => t === value);
 }
 

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useRef, useCallback, memo } from "react";
 import { motion } from "framer-motion";
@@ -29,64 +29,14 @@ import {
 import { ColumnColorPicker } from "@/features/build/shared/column-color-picker";
 import { resolveColumnColor } from "@/lib/column-colors";
 import { cn } from "@/lib/utils";
-
-export type StateType = "unstarted" | "started" | "completed" | "cancelled";
-
-export const STATE_TYPE_KEYS: readonly StateType[] = [
-  "unstarted",
-  "started",
-  "completed",
-  "cancelled",
-];
-
-export const TYPE_CONFIG: Record<StateType, { label: string; color: string }> = {
-  unstarted: {
-    label: "Unstarted",
-    color: "bg-muted text-muted-foreground",
-  },
-  started: {
-    label: "Started",
-    color: "bg-status-info-surface text-status-info-ink-strong",
-  },
-  completed: {
-    label: "Completed",
-    color:
-      "bg-status-success-surface text-status-success-ink-strong",
-  },
-  cancelled: {
-    label: "Cancelled",
-    color: "bg-status-danger-surface text-status-danger-ink-strong",
-  },
-};
-
-const MAX_NAME = 50;
-
-function isStateType(value: string | null | undefined): value is StateType {
-  return STATE_TYPE_KEYS.some((t) => t === value);
-}
-
-export function resolveStateType(type: string | null | undefined): StateType {
-  return isStateType(type) ? type : "unstarted";
-}
-
-function validateName(
-  name: string,
-  currentName: string,
-  existingNames: string[],
-): string | null {
-  if (!name) return "Name is required";
-  if (!/[a-zA-Z0-9]/.test(name)) {
-    return "Name must contain at least one letter or number";
-  }
-  if (name.length > MAX_NAME) {
-    return `Name must be ${MAX_NAME} characters or fewer`;
-  }
-  if (name.toLowerCase() === currentName.toLowerCase()) return null;
-  if (existingNames.some((n) => n.toLowerCase() === name.toLowerCase())) {
-    return "A status with this name already exists";
-  }
-  return null;
-}
+import {
+  isStateType,
+  resolveStateType,
+  validateStatusName,
+  STATE_TYPE_KEYS,
+  TYPE_CONFIG,
+  MAX_STATUS_NAME,
+} from "./status-row-constants";
 
 interface StatusRowProps {
   state: CustomState;
@@ -133,7 +83,7 @@ export const StatusRow = memo(function StatusRow({
       setRenameError(null);
       return;
     }
-    const error = validateName(trimmed, state.name, existingNames);
+    const error = validateStatusName(trimmed, state.name, existingNames);
     if (error) {
       setRenameError(error);
       return;
@@ -269,7 +219,7 @@ export const StatusRow = memo(function StatusRow({
               renameError && "border-destructive focus-visible:ring-destructive",
             )}
             disabled={updateState.isPending}
-            maxLength={MAX_NAME}
+            maxLength={MAX_STATUS_NAME}
             aria-invalid={!!renameError}
             aria-label="Status name"
           />

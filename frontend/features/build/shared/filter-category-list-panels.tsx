@@ -24,7 +24,7 @@ interface AssigneePanelProps {
   onSearchChange: (v: string) => void;
   q: string;
   containerRef: RefObject<HTMLDivElement | null>;
-  onKeyDown: (e: KeyboardEvent<HTMLDivElement>) => void;
+  onKeyDown: (e: KeyboardEvent) => void;
   showTitle: boolean;
   className?: string;
   listClassName: string;
@@ -94,7 +94,7 @@ interface LabelPanelProps {
   onSearchChange: (v: string) => void;
   q: string;
   containerRef: RefObject<HTMLDivElement | null>;
-  onKeyDown: (e: KeyboardEvent<HTMLDivElement>) => void;
+  onKeyDown: (e: KeyboardEvent) => void;
   showTitle: boolean;
   className?: string;
   listClassName: string;
@@ -160,7 +160,7 @@ interface ProjectPanelProps {
   onSearchChange: (v: string) => void;
   q: string;
   containerRef: RefObject<HTMLDivElement | null>;
-  onKeyDown: (e: KeyboardEvent<HTMLDivElement>) => void;
+  onKeyDown: (e: KeyboardEvent) => void;
   showTitle: boolean;
   className?: string;
   listClassName: string;

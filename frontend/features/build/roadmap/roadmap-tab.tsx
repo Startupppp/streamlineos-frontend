@@ -1,33 +1,10 @@
 "use client";
 
-import { useMemo, useState, useCallback, useEffect } from "react";
 import { WifiOff } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
-import { toast } from "sonner";
-import {
-  useRoadmapItems,
-  useDeleteRoadmapItem,
-  ROADMAP_SORTS,
-  type RoadmapSort,
-} from "@/hooks/api/build/roadmap";
-import type { RoadmapStatus } from "@/types/projects/roadmap";
-
-const ROADMAP_STATUSES: readonly RoadmapStatus[] = [
-  "planned",
-  "in_progress",
-  "completed",
-  "cancelled",
-];
-function toRoadmapStatus(s: string): RoadmapStatus | undefined {
-  return ROADMAP_STATUSES.find((v) => v === s);
-}
-function toRoadmapSort(s: string): RoadmapSort | undefined {
-  return ROADMAP_SORTS.find((v) => v === s);
-}
-import { getErrorMessage } from "@/lib/get-error-message";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { cn } from "@/lib/utils";
 import {
   PmPanel,
@@ -35,12 +12,11 @@ import {
   CONTENT_FILL_PANEL,
   PM_PANEL,
 } from "@/components/pm-chrome";
-import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
-import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { ROADMAP_COLUMNS } from "./roadmap-constants";
 import { RoadmapItemCard, type ScorableRoadmapItem } from "./roadmap-item-card";
 import { RoadmapItemSheet } from "./roadmap-item-sheet";
+import { useRoadmapTab } from "./use-roadmap-tab";
 
 interface RoadmapTabProps {
   search: string;
@@ -91,49 +67,41 @@ export function RoadmapTab({
   externalEditTarget,
   onExternalEditClose,
 }: RoadmapTabProps) {
-  const isOnline = useOnlineStatus();
-  const sortValue = sort ? toRoadmapSort(sort) : undefined;
-  const cursorResetKey = JSON.stringify([
-    search.trim(),
+  const {
+    isOnline,
+    resolution,
+    grouped,
+    data,
+    sheetOpen,
+    editTarget,
+    deleteTarget,
+    pager,
+    hasNext,
+    isFiltered,
+    handleRetry,
+    handleOpenSheet,
+    handleCloseSheet,
+    handleCloseEdit,
+    handleDeleteDialogChange,
+    handleEditItem,
+    handleDeleteItem,
+    handleDelete,
+    handleNext,
+    handlePrev,
+  } = useRoadmapTab({
+    search,
+    cursor,
+    onCursorChange,
+    createOpen,
+    onCreateOpenChange,
     status,
     managedProductId,
-    sortValue,
+    sort,
     projectId,
     horizon,
     ownerId,
-  ]);
-  const pager = useCursorPager(cursorResetKey, {
-    initialCursor: cursor ?? undefined,
-    onCursorChange: (nextCursor) => onCursorChange(nextCursor ?? null),
+    onItemsChange,
   });
-  const { data, isLoading, isError, error, refetch } = useRoadmapItems({
-    ...(search.trim() ? { search: search.trim() } : {}),
-    cursor: pager.cursor,
-    ...(status ? { status: toRoadmapStatus(status) } : {}),
-    ...(managedProductId !== undefined ? { managedProductId } : {}),
-    ...(sortValue ? { sort: sortValue } : {}),
-    ...(projectId !== undefined ? { projectId } : {}),
-    ...(horizon ? { horizon } : {}),
-    ...(ownerId !== undefined ? { ownerId } : {}),
-  });
-  const deleteItem = useDeleteRoadmapItem();
-  const [internalCreateOpen, setInternalCreateOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<ScorableRoadmapItem | null>(
-    null,
-  );
-  const [deleteTarget, setDeleteTarget] = useState<ScorableRoadmapItem | null>(
-    null,
-  );
-
-  const isEmpty = (data?.data ?? []).length === 0 && !pager.hasPrevious;
-  const isFiltered = Boolean(
-    search.trim() ||
-    status ||
-    managedProductId !== undefined ||
-    projectId !== undefined ||
-    horizon ||
-    ownerId !== undefined,
-  );
 
   const offlineEmptyState = (
     <div className="relative flex h-full flex-1 flex-col items-center justify-center py-12">
@@ -158,85 +126,6 @@ export function RoadmapTab({
       </div>
     </div>
   );
-
-  const resolution = usePageState({
-    permission: "build:roadmap:view",
-    isLoading,
-    isError,
-    error,
-    isEmpty,
-  });
-
-  const isCreateControlled = onCreateOpenChange !== undefined;
-  const sheetOpen = isCreateControlled
-    ? (createOpen ?? false)
-    : internalCreateOpen;
-
-  const grouped = useMemo(() => {
-    const map: Record<string, ScorableRoadmapItem[]> = {
-      planned: [],
-      in_progress: [],
-      completed: [],
-      cancelled: [],
-    };
-    for (const item of data?.data ?? []) map[item.status].push(item);
-    return map;
-  }, [data]);
-
-  function handleRetry() {
-    void refetch();
-  }
-
-  function handleOpenSheet() {
-    if (isCreateControlled) onCreateOpenChange(true);
-    else setInternalCreateOpen(true);
-  }
-
-  function handleCloseSheet() {
-    if (isCreateControlled) onCreateOpenChange(false);
-    else setInternalCreateOpen(false);
-  }
-
-  function handleCloseEdit() {
-    setEditTarget(null);
-  }
-
-  function handleDeleteDialogChange(open: boolean) {
-    if (!open) setDeleteTarget(null);
-  }
-
-  const handleEditItem = useCallback((item: ScorableRoadmapItem) => {
-    setEditTarget(item);
-  }, []);
-
-  const handleDeleteItem = useCallback((item: ScorableRoadmapItem) => {
-    setDeleteTarget(item);
-  }, []);
-
-  function handleDelete() {
-    if (!deleteTarget) return;
-    deleteItem.mutate(deleteTarget.id, {
-      onSuccess: () => {
-        toast.success("Roadmap item deleted");
-        setDeleteTarget(null);
-      },
-      onError: (e) => toast.error(getErrorMessage(e)),
-    });
-  }
-
-  const handleNext = useCallback(() => {
-    pager.goNext(data?.pagination.nextCursor);
-  }, [data?.pagination.nextCursor, pager]);
-
-  const handlePrev = useCallback(() => {
-    pager.goPrevious();
-  }, [pager]);
-
-  const hasNext = data?.pagination.hasMore ?? false;
-
-  useEffect(() => {
-    onItemsChange?.(data?.data ?? []);
-  }, [data?.data, onItemsChange]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
