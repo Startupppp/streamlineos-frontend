@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -72,9 +72,13 @@ export function UserInviteDialog({
   const { mutate: inviteUser, isPending } = useInviteUser();
   const canManageRbac = useCan("settings:rbac:manage");
   const buildEnabled = useModuleEnabled("build");
-  const defaultModuleAccess = buildEnabled
-    ? (INVITE_ACCESS_PRESETS.find((p) => p.id === "build-member")?.access ?? [])
-    : [];
+  const defaultModuleAccess = useMemo(
+    () =>
+      buildEnabled
+        ? (INVITE_ACCESS_PRESETS.find((p) => p.id === "build-member")?.access ?? [])
+        : [],
+    [buildEnabled],
+  );
 
   const form = useForm<InviteUserFormValues>({
     resolver: zodResolver(inviteUserSchema),
@@ -99,7 +103,7 @@ export function UserInviteDialog({
       }
       onOpenChange(isOpen);
     },
-    [form, onOpenChange],
+    [form, onOpenChange, defaultEmail, defaultModuleAccess],
   );
 
   const handleCloseDialog = useCallback(
@@ -144,7 +148,7 @@ export function UserInviteDialog({
     setInvited(false);
     setWasResent(false);
     setSubmitError(null);
-  }, [form]);
+  }, [form, defaultEmail, defaultModuleAccess]);
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
