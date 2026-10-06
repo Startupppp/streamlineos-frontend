@@ -170,3 +170,41 @@ describe("/ shortcut — global palette handler", () => {
     input.remove();
   });
 });
+
+describe("c shortcut — input/textarea guard", () => {
+  it("does not fire c shortcut when focus is in an input", () => {
+    const input = document.createElement("input");
+    document.body.appendChild(input);
+    input.focus();
+    renderHook(() => useKeyboardShortcuts());
+    input.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "c", bubbles: true, cancelable: true }),
+    );
+    expect(mockOpenCreateTicket).not.toHaveBeenCalled();
+    document.body.removeChild(input);
+  });
+
+  it("does not fire c shortcut when focus is in a textarea", () => {
+    const textarea = document.createElement("textarea");
+    document.body.appendChild(textarea);
+    textarea.focus();
+    renderHook(() => useKeyboardShortcuts());
+    textarea.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "c", bubbles: true, cancelable: true }),
+    );
+    expect(mockOpenCreateTicket).not.toHaveBeenCalled();
+    document.body.removeChild(textarea);
+  });
+
+  it("does not open the palette with / when document.activeElement is an input even if event target is document", () => {
+    const input = document.createElement("input");
+    document.body.appendChild(input);
+    input.focus();
+    renderHook(() => useKeyboardShortcuts());
+    document.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "/", bubbles: true, cancelable: true }),
+    );
+    expect(mockSetPaletteOpen).not.toHaveBeenCalled();
+    document.body.removeChild(input);
+  });
+});

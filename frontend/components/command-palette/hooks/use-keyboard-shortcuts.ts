@@ -6,17 +6,19 @@ import { useCommandPalette } from "./use-command-palette";
 import { extractBuildProjectId } from "@/lib/build/extract-build-project-id";
 import { tryHandleBuildListSearchShortcut } from "@/lib/build/build-list-search-target";
 
+function isEditableElement(el: EventTarget | null): boolean {
+  if (!(el instanceof HTMLElement)) return false;
+  const tag = el.tagName;
+  if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return true;
+  if (el.isContentEditable) return true;
+  if (el.getAttribute("role") === "textbox") return true;
+  if (el.closest('[contenteditable="true"]') !== null) return true;
+  if (el.closest("[role='textbox']") !== null) return true;
+  return false;
+}
+
 function isInputTarget(e: KeyboardEvent): boolean {
-  const target = e.target;
-  if (!(target instanceof HTMLElement)) return false;
-  const tag = target.tagName.toLowerCase();
-  return (
-    tag === "input" ||
-    tag === "textarea" ||
-    tag === "select" ||
-    target.isContentEditable ||
-    target.closest('[contenteditable="true"]') !== null
-  );
+  return isEditableElement(e.target) || isEditableElement(document.activeElement);
 }
 
 export function useKeyboardShortcuts() {
