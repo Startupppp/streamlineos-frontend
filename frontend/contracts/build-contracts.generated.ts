@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const OPENAPI_HASH = "sha256:4bc8534603a74b6ce9776a0861b53b58c580a746b33112bb16ab4609e636fddb" as const;
+export const OPENAPI_HASH = "sha256:98bdb5860faae0bc18b7614ca23070cf6f6d79d6da840da9d96a496b666eae8e" as const;
 
 export const agentTokensListResponseSchema = z.array(z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -406,7 +406,7 @@ export const dashboardLayoutGetLayoutResponseSchema = z.object({
   layoutVersion: z.number().int().gte(0).lte(9007199254740991),
   config: z.object({
     widgets: z.array(z.object({
-      type: z.enum(["my-issues", "projects", "approvals", "agent-runs", "risks", "releases", "blockers"]),
+      type: z.enum(["my-issues", "projects", "approvals", "agent-runs", "risks", "releases", "blockers", "overview", "jump-to"]),
       position: z.object({
         col: z.number().int().gte(0).lte(9007199254740991),
         row: z.number().int().gte(0).lte(9007199254740991),
@@ -424,7 +424,7 @@ export const dashboardLayoutSaveLayoutResponseSchema = z.object({
   layoutVersion: z.number().int().gte(0).lte(9007199254740991),
   config: z.object({
     widgets: z.array(z.object({
-      type: z.enum(["my-issues", "projects", "approvals", "agent-runs", "risks", "releases", "blockers"]),
+      type: z.enum(["my-issues", "projects", "approvals", "agent-runs", "risks", "releases", "blockers", "overview", "jump-to"]),
       position: z.object({
         col: z.number().int().gte(0).lte(9007199254740991),
         row: z.number().int().gte(0).lte(9007199254740991),
@@ -442,7 +442,7 @@ export const dashboardLayoutSaveLayoutBodySchema = z.strictObject({
   layoutVersion: z.number().int().gte(0).lte(9007199254740991),
   config: z.strictObject({
     widgets: z.array(z.strictObject({
-      type: z.enum(["my-issues", "projects", "approvals", "agent-runs", "risks", "releases", "blockers"]),
+      type: z.enum(["my-issues", "projects", "approvals", "agent-runs", "risks", "releases", "blockers", "overview", "jump-to"]),
       position: z.strictObject({
         col: z.number().int().gte(0).lte(9007199254740991),
         row: z.number().int().gte(0).lte(9007199254740991),

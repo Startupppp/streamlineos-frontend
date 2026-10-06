@@ -1,12 +1,12 @@
 import { useCan, useAccess } from "@/hooks/api/access";
 import { useProjects } from "@/hooks/api/build/projects";
 import { useInfiniteAllWork, useAllWork } from "@/hooks/api/build/all-work";
-import { useDashboardLayoutEditor } from "./use-dashboard-layout";
 import {
   mockUseOnlineStatus,
   mockRouterPush,
   mockSearchParamsRef,
   mockUseKeyboardShortcuts,
+  mockUseDashboardLayout,
 } from "./command-center-page-test-harness";
 
 export const mockUseCan: jest.Mock = jest.mocked(useCan);
@@ -14,30 +14,17 @@ export const mockUseAccess: jest.Mock = jest.mocked(useAccess);
 export const mockUseProjects: jest.Mock = jest.mocked(useProjects);
 export const mockUseInfiniteAllWork: jest.Mock = jest.mocked(useInfiniteAllWork);
 export const mockUseAllWork: jest.Mock = jest.mocked(useAllWork);
-const mockUseDashboardLayoutEditor: jest.Mock = jest.mocked(useDashboardLayoutEditor);
-
-const DEFAULT_LAYOUT_MOCK = {
-  config: {
-    widgets: [
-      { type: "my-issues", position: { col: 0, row: 0, w: 3, h: 4 } },
-      { type: "projects", position: { col: 3, row: 0, w: 2, h: 4 } },
-      { type: "approvals", position: { col: 0, row: 4, w: 2, h: 3 } },
-      { type: "agent-runs", position: { col: 2, row: 4, w: 2, h: 3 } },
-      { type: "risks", position: { col: 4, row: 4, w: 1, h: 3 } },
-      { type: "releases", position: { col: 0, row: 7, w: 3, h: 3 } },
-      { type: "blockers", position: { col: 3, row: 7, w: 2, h: 3 } },
-    ],
-  },
-  layoutVersion: 1,
-  isPending: false,
-  reorder: jest.fn(),
-  removeWidget: jest.fn(),
-  addWidget: jest.fn(),
-  resetToDefault: jest.fn(),
-};
-
 export const ACCESS_GRANTED = {
-  data: { isOrgOwner: false, scopes: { "build:view": "all" }, modules: {} },
+  data: {
+    isOrgOwner: false,
+    scopes: {
+      "build:view": "all",
+      "build:tickets:view": "all",
+      "build:approvals:view": "all",
+      "build:risks:view": "all",
+    },
+    modules: {},
+  },
   isLoading: false,
 };
 
@@ -75,12 +62,6 @@ export function installCommandCenterMocks() {
   mockUseOnlineStatus.mockReturnValue(true);
   mockUseKeyboardShortcuts.mockReset();
   mockRouterPush.mockClear();
-  mockUseDashboardLayoutEditor.mockReturnValue({
-    ...DEFAULT_LAYOUT_MOCK,
-    reorder: jest.fn(),
-    removeWidget: jest.fn(),
-    addWidget: jest.fn(),
-    resetToDefault: jest.fn(),
-  });
+  mockUseDashboardLayout.mockReturnValue({ data: undefined, isLoading: false });
   mockSearchParamsRef.current = new URLSearchParams();
 }

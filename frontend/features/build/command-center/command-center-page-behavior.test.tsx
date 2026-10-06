@@ -1,9 +1,11 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import "./command-center-page-test-harness";
-import { mockRouterPush } from "./command-center-page-test-harness";
+import { mockRouterPush, mockUseDashboardLayout } from "./command-center-page-test-harness";
 import {
   installCommandCenterMocks,
   mockUseCan,
+  mockUseAccess,
+  ACCESS_GRANTED,
   mockUseProjects,
   mockUseInfiniteAllWork,
   baseProjectsResult,
@@ -100,43 +102,96 @@ describe("CommandCenterPage — Enter opens the focused personal-queue row", () 
   });
 });
 
-describe("CommandCenterPage — persona-based panel gating", () => {
-  it("hides ApprovalsPanel when the actor lacks build:approvals:view — paired with the granted test below", () => {
-    mockUseCan.mockImplementation((key: string) => key !== "build:approvals:view");
+function withoutScope(key: string) {
+  const scopes: Record<string, string> = { ...ACCESS_GRANTED.data.scopes };
+  delete scopes[key];
+  mockUseAccess.mockReturnValue({ ...ACCESS_GRANTED, data: { ...ACCESS_GRANTED.data, scopes } });
+}
+
+describe("CommandCenterPage — permission-gated widgets", () => {
+  it("hides the approvals and agent-runs widgets when the actor lacks build:approvals:view — paired with the granted test below", () => {
+    withoutScope("build:approvals:view");
     render(<CommandCenterPage />);
     expect(screen.queryByTestId("approvals-panel")).not.toBeInTheDocument();
-    expect(screen.getByTestId("agent-runs-panel")).toBeInTheDocument();
+    expect(screen.queryByTestId("agent-runs-panel")).not.toBeInTheDocument();
+    expect(screen.getByTestId("releases-panel")).toBeInTheDocument();
   });
 
-  it("shows ApprovalsPanel when the actor has build:approvals:view — paired with the denied test above", () => {
-    mockUseCan.mockReturnValue(true);
+  it("shows the approvals and agent-runs widgets when the actor has build:approvals:view — paired with the denied test above", () => {
     render(<CommandCenterPage />);
     expect(screen.getByTestId("approvals-panel")).toBeInTheDocument();
     expect(screen.getByTestId("agent-runs-panel")).toBeInTheDocument();
   });
 
-  it("hides RisksPanel when the actor lacks build:risks:view — paired with the granted test below", () => {
-    mockUseCan.mockImplementation((key: string) => key !== "build:risks:view");
+  it("hides the risks widget when the actor lacks build:risks:view — paired with the granted test below", () => {
+    withoutScope("build:risks:view");
     render(<CommandCenterPage />);
     expect(screen.queryByTestId("risks-panel")).not.toBeInTheDocument();
   });
 
-  it("shows RisksPanel when the actor has build:risks:view — paired with the denied test above", () => {
-    mockUseCan.mockReturnValue(true);
+  it("shows the risks widget when the actor has build:risks:view — paired with the denied test above", () => {
     render(<CommandCenterPage />);
     expect(screen.getByTestId("risks-panel")).toBeInTheDocument();
   });
 
-  it("shows BlockersPanel when the actor has build:tickets:view — paired with the hidden test below", () => {
-    mockUseCan.mockReturnValue(true);
+  it("shows the blockers and my-issues widgets when the actor has build:tickets:view — paired with the hidden test below", () => {
     render(<CommandCenterPage />);
     expect(screen.getByTestId("blockers-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("my-issues-panel")).toBeInTheDocument();
   });
 
-  it("hides BlockersPanel and AgentRunsPanel when the actor lacks build:tickets:view — paired with the shown test above", () => {
-    mockUseCan.mockImplementation((key: string) => key !== "build:tickets:view");
+  it("hides the blockers and my-issues widgets when the actor lacks build:tickets:view — paired with the shown test above", () => {
+    withoutScope("build:tickets:view");
     render(<CommandCenterPage />);
     expect(screen.queryByTestId("blockers-panel")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("agent-runs-panel")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("my-issues-panel")).not.toBeInTheDocument();
+    expect(screen.getByTestId("projects-panel")).toBeInTheDocument();
+  });
+});
+
+describe("CommandCenterPage — customize controls", () => {
+  const savedLayout = { layoutVersion: 0, config: { widgets: [] }, updatedAt: "2026-10-06T00:00:00Z" };
+
+  it("shows the Customize control once the saved layout has loaded and the actor can manage the dashboard — paired with the denied test below", () => {
+    mockUseDashboardLayout.mockReturnValue({ data: savedLayout, isLoading: false });
+    render(<CommandCenterPage />);
+    expect(screen.getByRole("button", { name: /customize/i })).toBeInTheDocument();
+  });
+
+  it("hides the Customize control when the actor cannot manage the dashboard even with the layout loaded", () => {
+    mockUseDashboardLayout.mockReturnValue({ data: savedLayout, isLoading: false });
+    mockUseCan.mockImplementation((key: string) => key !== "build:dashboard:manage");
+    render(<CommandCenterPage />);
+    expect(screen.queryByRole("button", { name: /customize/i })).not.toBeInTheDocument();
+  });
+
+  it("enters edit mode with Add widget, Reset and Done when Customize is pressed", () => {
+    mockUseDashboardLayout.mockReturnValue({ data: savedLayout, isLoading: false });
+    render(<CommandCenterPage />);
+    fireEvent.click(screen.getByRole("button", { name: /customize/i }));
+    expect(screen.getByRole("button", { name: /add widget/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^reset$/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /done/i }));
+    expect(screen.getByRole("button", { name: /customize/i })).toBeInTheDocument();
+  });
+
+  it("shows an empty state instead of the grid when the saved layout has no widgets", () => {
+    mockUseDashboardLayout.mockReturnValue({ data: { ...savedLayout, layoutVersion: 3 }, isLoading: false });
+    render(<CommandCenterPage />);
+    expect(screen.getByText("Your Command Center is empty")).toBeInTheDocument();
+    expect(screen.queryByTestId("widget-grid")).not.toBeInTheDocument();
+  });
+
+  it("shows a skeleton instead of the default widgets while the saved layout is loading", () => {
+    mockUseDashboardLayout.mockReturnValue({ data: undefined, isLoading: true });
+    render(<CommandCenterPage />);
+    expect(screen.queryByTestId("widget-grid")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("my-issues-panel")).not.toBeInTheDocument();
+  });
+
+  it("renders the overview and jump-to widgets from the default layout", () => {
+    render(<CommandCenterPage />);
+    expect(screen.getAllByTestId("stat-card")).toHaveLength(3);
+    expect(screen.getByTestId("pinned-nav")).toBeInTheDocument();
   });
 });

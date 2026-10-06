@@ -1,195 +1,177 @@
-import { renderHook, act } from "@testing-library/react";
-import { useDashboardLayoutEditor } from "./use-dashboard-layout";
+import { act, renderHook } from "@testing-library/react";
+import { toast } from "sonner";
+import { useAccess, useCan } from "@/hooks/api/access";
+import { useDashboardLayout, useSaveDashboardLayout } from "@/hooks/api/build/dashboard-layout";
 import { ApiError } from "@/lib/api-envelope";
+import { useDashboardLayoutEditor } from "./use-dashboard-layout";
+import type { WidgetSlot } from "./dashboard-layout";
 
+jest.mock("@/hooks/api/access", () => ({ useAccess: jest.fn(), useCan: jest.fn() }));
 jest.mock("@/hooks/api/build/dashboard-layout", () => ({
   useDashboardLayout: jest.fn(),
   useSaveDashboardLayout: jest.fn(),
 }));
+jest.mock("sonner", () => ({ toast: { error: jest.fn() } }));
 
-import { useDashboardLayout, useSaveDashboardLayout } from "@/hooks/api/build/dashboard-layout";
-import type { DashboardLayoutGetLayoutResponse } from "@/contracts/build-contracts.generated";
+const mockSave = jest.fn();
+const ALL_SCOPES = {
+  "build:tickets:view": "all",
+  "build:approvals:view": "all",
+  "build:risks:view": "all",
+};
 
-const mockUseDashboardLayout = useDashboardLayout as jest.Mock;
-const mockUseSaveDashboardLayout = useSaveDashboardLayout as jest.Mock;
+function stored(widgets: WidgetSlot[], layoutVersion = 2) {
+  return { layoutVersion, config: { widgets }, updatedAt: "2026-10-06T00:00:00Z" };
+}
 
-const mockMutate = jest.fn();
-const mockRefetch = jest.fn();
+function setup({
+  data = stored([]),
+  loaded = true,
+  scopes = ALL_SCOPES,
+  canManage = true,
+}: {
+  data?: ReturnType<typeof stored>;
+  loaded?: boolean;
+  scopes?: Record<string, string>;
+  canManage?: boolean;
+} = {}) {
+  jest.mocked(useAccess).mockReturnValue({ data: { isOrgOwner: false, scopes, modules: {} } } as never);
+  jest.mocked(useCan).mockImplementation((key) => key !== "build:dashboard:manage" || canManage);
+  jest.mocked(useDashboardLayout).mockReturnValue({ data: loaded ? data : undefined, isLoading: false } as never);
+  jest.mocked(useSaveDashboardLayout).mockReturnValue({ mutate: mockSave } as never);
+  return renderHook(() => useDashboardLayoutEditor());
+}
 
-function setupHooks(
-  serverLayout: DashboardLayoutGetLayoutResponse = { layoutVersion: 0, config: { widgets: [] }, updatedAt: "2026-01-01T00:00:00.000Z" },
-) {
-  mockUseDashboardLayout.mockReturnValue({ data: serverLayout, refetch: mockRefetch });
-  mockUseSaveDashboardLayout.mockReturnValue({ mutate: mockMutate, isPending: false });
+function savedWidgets(): WidgetSlot[] {
+  return mockSave.mock.calls.at(-1)?.[0].widgets ?? [];
 }
 
 beforeEach(() => {
-  jest.clearAllMocks();
-  jest.useFakeTimers();
-  setupHooks();
+  mockSave.mockReset();
+  jest.mocked(toast.error).mockReset();
 });
 
-afterEach(() => {
-  jest.useRealTimers();
-});
-
-describe("useDashboardLayoutEditor — optimistic update", () => {
-  it("updates local config immediately on reorder before the save round-trip completes so the UI does not lag", () => {
-    setupHooks({
-      layoutVersion: 1,
-      config: {
-        widgets: [
-          { type: "my-issues", position: { col: 0, row: 0, w: 3, h: 4 } },
-          { type: "projects", position: { col: 3, row: 0, w: 2, h: 4 } },
-        ],
-      },
-      updatedAt: "2026-01-01T00:00:00.000Z",
-    });
-    const { result } = renderHook(() => useDashboardLayoutEditor());
-    act(() => {
-      result.current.reorder(0, 1);
-    });
-    expect(result.current.config.widgets[0]?.type).toBe("projects");
-    expect(result.current.config.widgets[1]?.type).toBe("my-issues");
+describe("useDashboardLayoutEditor — which widgets render", () => {
+  it("falls back to the default arrangement when the member has never saved a layout", () => {
+    const { result } = setup({ data: stored([], 0) });
+    expect(result.current.widgets.map((slot) => slot.type)).toEqual([
+      "overview",
+      "jump-to",
+      "my-issues",
+      "projects",
+      "approvals",
+      "agent-runs",
+      "releases",
+      "risks",
+      "blockers",
+    ]);
   });
 
-  it("removes the widget from local config immediately on removeWidget so the panel disappears without waiting for the server", () => {
-    setupHooks({
-      layoutVersion: 1,
-      config: {
-        widgets: [
-          { type: "my-issues", position: { col: 0, row: 0, w: 3, h: 4 } },
-          { type: "projects", position: { col: 3, row: 0, w: 2, h: 4 } },
-        ],
-      },
-      updatedAt: "2026-01-01T00:00:00.000Z",
-    });
-    const { result } = renderHook(() => useDashboardLayoutEditor());
-    act(() => {
-      result.current.removeWidget("my-issues");
-    });
-    expect(result.current.config.widgets).toHaveLength(1);
-    expect(result.current.config.widgets[0]?.type).toBe("projects");
-  });
-});
-
-describe("useDashboardLayoutEditor — reset to default", () => {
-  it("replaces the config with the freelancer default when resetToDefault is called with freelancer", () => {
-    const { result } = renderHook(() => useDashboardLayoutEditor());
-    act(() => {
-      result.current.resetToDefault("freelancer");
-    });
-    expect(result.current.config.widgets.every((w) => w.type === "my-issues")).toBe(true);
-    expect(result.current.config.widgets.length).toBeGreaterThan(0);
+  it("keeps an intentionally emptied layout empty instead of restoring the defaults", () => {
+    const { result } = setup({ data: stored([], 4) });
+    expect(result.current.widgets).toEqual([]);
   });
 
-  it("replaces the config with the manager default which includes approvals so the persona gets their full panel set", () => {
-    const { result } = renderHook(() => useDashboardLayoutEditor());
-    act(() => {
-      result.current.resetToDefault("manager");
-    });
-    const types = result.current.config.widgets.map((w) => w.type);
-    expect(types).toContain("approvals");
+  it("drops widgets the member cannot view and lists only permitted widgets in the picker", () => {
+    const { result } = setup({ data: stored([], 0), scopes: { "build:tickets:view": "all" } });
+    const types = result.current.widgets.map((slot) => slot.type);
+    expect(types).not.toContain("approvals");
+    expect(types).not.toContain("agent-runs");
+    expect(types).not.toContain("risks");
     expect(types).toContain("my-issues");
+    expect(result.current.availableTypes).not.toContain("risks");
+  });
+
+  it("renders a duplicated widget once so a hand-edited layout cannot mount a panel twice", () => {
+    const { result } = setup({
+      data: stored([
+        { type: "projects", position: { col: 0, row: 0, w: 6, h: 5 } },
+        { type: "projects", position: { col: 6, row: 0, w: 6, h: 5 } },
+      ]),
+    });
+    expect(result.current.widgets).toHaveLength(1);
+  });
+
+  it("only offers customization once the saved layout has loaded and the member can manage it", () => {
+    expect(setup({ loaded: false }).result.current.canCustomize).toBe(false);
+    expect(setup({ canManage: false }).result.current.canCustomize).toBe(false);
+    expect(setup().result.current.canCustomize).toBe(true);
   });
 });
 
-describe("useDashboardLayoutEditor — keyboard reorder", () => {
-  it("moves a widget from position 2 to position 0 so keyboard-up-arrow reorder puts it at the top", () => {
-    setupHooks({
-      layoutVersion: 1,
-      config: {
-        widgets: [
-          { type: "my-issues", position: { col: 0, row: 0, w: 1, h: 1 } },
-          { type: "projects", position: { col: 1, row: 0, w: 1, h: 1 } },
-          { type: "approvals", position: { col: 2, row: 0, w: 1, h: 1 } },
-        ],
-      },
-      updatedAt: "2026-01-01T00:00:00.000Z",
-    });
-    const { result } = renderHook(() => useDashboardLayoutEditor());
-    act(() => {
-      result.current.reorder(2, 0);
-    });
-    expect(result.current.config.widgets[0]?.type).toBe("approvals");
-    expect(result.current.config.widgets[1]?.type).toBe("my-issues");
-    expect(result.current.config.widgets[2]?.type).toBe("projects");
-  });
-});
+describe("useDashboardLayoutEditor — edits save immediately", () => {
+  const twoWidgets: WidgetSlot[] = [
+    { type: "my-issues", position: { col: 0, row: 0, w: 6, h: 6 } },
+    { type: "projects", position: { col: 6, row: 0, w: 6, h: 6 } },
+  ];
 
-describe("useDashboardLayoutEditor — debounced save", () => {
-  it("does not call save immediately after a change so rapid edits are batched into one request", () => {
-    setupHooks({ layoutVersion: 1, config: { widgets: [] }, updatedAt: "2026-01-01T00:00:00.000Z" });
-    const { result } = renderHook(() => useDashboardLayoutEditor());
-    act(() => {
-      result.current.addWidget({ type: "blockers", position: { col: 0, row: 0, w: 1, h: 1 } });
-    });
-    expect(mockMutate).not.toHaveBeenCalled();
+  it("adds a widget below the existing ones at its catalog size", () => {
+    const { result } = setup({ data: stored(twoWidgets) });
+    act(() => result.current.addWidget("risks"));
+    expect(savedWidgets().find((slot) => slot.type === "risks")?.position).toEqual({ col: 0, row: 6, w: 6, h: 5 });
   });
 
-  it("calls save once after the debounce delay so the server gets at most one write per editing session", () => {
-    setupHooks({ layoutVersion: 1, config: { widgets: [] }, updatedAt: "2026-01-01T00:00:00.000Z" });
-    const { result } = renderHook(() => useDashboardLayoutEditor());
-    act(() => {
-      result.current.addWidget({ type: "blockers", position: { col: 0, row: 0, w: 1, h: 1 } });
-    });
-    act(() => {
-      jest.runAllTimers();
-    });
-    expect(mockMutate).toHaveBeenCalledTimes(1);
-  });
-});
-
-describe("useDashboardLayoutEditor — 409 conflict handling", () => {
-  it("calls refetch when the save mutation returns a 409 so the editor rehydrates with the server version", () => {
-    const conflict409 = new ApiError("Conflict", 409, "VERSION_CONFLICT");
-    mockMutate.mockImplementation((_vars: unknown, { onError }: { onError: (e: unknown) => void }) => {
-      onError(conflict409);
-    });
-    setupHooks({ layoutVersion: 1, config: { widgets: [] }, updatedAt: "2026-01-01T00:00:00.000Z" });
-    mockUseSaveDashboardLayout.mockReturnValue({ mutate: mockMutate, isPending: false });
-    const { result } = renderHook(() => useDashboardLayoutEditor());
-    act(() => {
-      result.current.addWidget({ type: "blockers", position: { col: 0, row: 0, w: 1, h: 1 } });
-    });
-    act(() => {
-      jest.runAllTimers();
-    });
-    expect(mockRefetch).toHaveBeenCalledTimes(1);
+  it("removes a widget and saves the rest", () => {
+    const { result } = setup({ data: stored(twoWidgets) });
+    act(() => result.current.removeWidget("projects"));
+    expect(savedWidgets().map((slot) => slot.type)).toEqual(["my-issues"]);
   });
 
-  it("calls the onConflict callback when the save mutation returns a 409 so the caller can show a toast", () => {
-    const conflict409 = new ApiError("Conflict", 409, "VERSION_CONFLICT");
-    mockMutate.mockImplementation((_vars: unknown, { onError }: { onError: (e: unknown) => void }) => {
-      onError(conflict409);
+  it("keeps widgets the member can no longer view in the saved layout so a restored permission brings them back", () => {
+    const { result } = setup({
+      data: stored([...twoWidgets, { type: "risks", position: { col: 0, row: 6, w: 6, h: 5 } }]),
+      scopes: { "build:tickets:view": "all" },
     });
-    setupHooks({ layoutVersion: 1, config: { widgets: [] }, updatedAt: "2026-01-01T00:00:00.000Z" });
-    mockUseSaveDashboardLayout.mockReturnValue({ mutate: mockMutate, isPending: false });
-    const onConflict = jest.fn();
-    const { result } = renderHook(() => useDashboardLayoutEditor(onConflict));
-    act(() => {
-      result.current.addWidget({ type: "blockers", position: { col: 0, row: 0, w: 1, h: 1 } });
-    });
-    act(() => {
-      jest.runAllTimers();
-    });
-    expect(onConflict).toHaveBeenCalledTimes(1);
+    act(() => result.current.removeWidget("projects"));
+    expect(savedWidgets().map((slot) => slot.type)).toEqual(["my-issues", "risks"]);
   });
 
-  it("does not call refetch for a non-409 error so network errors do not trigger layout rehydration", () => {
-    const networkError = new ApiError("Server error", 500, "INTERNAL_ERROR");
-    mockMutate.mockImplementation((_vars: unknown, { onError }: { onError: (e: unknown) => void }) => {
-      onError(networkError);
-    });
-    setupHooks({ layoutVersion: 1, config: { widgets: [] }, updatedAt: "2026-01-01T00:00:00.000Z" });
-    mockUseSaveDashboardLayout.mockReturnValue({ mutate: mockMutate, isPending: false });
-    const { result } = renderHook(() => useDashboardLayoutEditor());
-    act(() => {
-      result.current.addWidget({ type: "blockers", position: { col: 0, row: 0, w: 1, h: 1 } });
-    });
-    act(() => {
-      jest.runAllTimers();
-    });
-    expect(mockRefetch).not.toHaveBeenCalled();
+  it("does not save when a drag ends where it started", () => {
+    const { result } = setup({ data: stored(twoWidgets) });
+    act(() =>
+      result.current.applyLayout([
+        { i: "my-issues", x: 0, y: 0, w: 6, h: 6 },
+        { i: "projects", x: 6, y: 0, w: 6, h: 6 },
+      ]),
+    );
+    expect(mockSave).not.toHaveBeenCalled();
+  });
+
+  it("saves the dropped position when a drag moves a widget", () => {
+    const { result } = setup({ data: stored(twoWidgets) });
+    act(() =>
+      result.current.applyLayout([
+        { i: "my-issues", x: 6, y: 0, w: 6, h: 6 },
+        { i: "projects", x: 0, y: 0, w: 6, h: 6 },
+      ]),
+    );
+    expect(savedWidgets().find((slot) => slot.type === "projects")?.position.col).toBe(0);
+  });
+
+  it("swaps a widget with the one before it when moved earlier", () => {
+    const { result } = setup({ data: stored(twoWidgets) });
+    act(() => result.current.moveWidget("projects", -1));
+    expect(savedWidgets().find((slot) => slot.type === "projects")?.position).toMatchObject({ col: 0, row: 0 });
+  });
+
+  it("resizes a widget to a preset width", () => {
+    const { result } = setup({ data: stored(twoWidgets) });
+    act(() => result.current.resizeWidget("my-issues", 12));
+    expect(savedWidgets().find((slot) => slot.type === "my-issues")?.position.w).toBe(12);
+    expect(savedWidgets().find((slot) => slot.type === "projects")?.position.row).toBe(6);
+  });
+
+  it("resets to the permitted default arrangement", () => {
+    const { result } = setup({ data: stored(twoWidgets) });
+    act(() => result.current.resetLayout());
+    expect(savedWidgets()).toHaveLength(9);
+  });
+
+  it("explains a conflict from another tab instead of showing a raw error", () => {
+    const { result } = setup({ data: stored(twoWidgets) });
+    act(() => result.current.removeWidget("projects"));
+    const options = mockSave.mock.calls[0]?.[1];
+    act(() => options.onError(new ApiError("Layout version mismatch", 409, "CONFLICT")));
+    expect(toast.error).toHaveBeenCalledWith(expect.stringContaining("another tab"));
   });
 });

@@ -201,11 +201,12 @@ describe("dashboard and landing public hook contracts", () => {
     expect(apiClient.put).not.toHaveBeenCalled();
     harness.client.clear();
   });
-  it("saves the exact dashboard version and caches its decoded acknowledgment", async () => {
+  it("saves against the cached dashboard version and caches its decoded acknowledgment", async () => {
     mockResponse = { layoutVersion: 4, config: { widgets: [] }, updatedAt: "2026-10-04T10:00:00Z" };
     const harness = hookClient();
+    harness.client.setQueryData(buildWorkQueryKeys.commandCenter.layout(), { layoutVersion: 3, config: { widgets: [] }, updatedAt: "2026-10-03T10:00:00Z" });
     const { result } = renderHook(useSaveDashboardLayout, { wrapper: harness.wrapper });
-    await act(async () => { await result.current.mutateAsync({ layoutVersion: 3, config: { widgets: [] } }); });
+    await act(async () => { await result.current.mutateAsync({ widgets: [] }); });
     expect(apiClient.put).toHaveBeenCalledWith("/build/command-center/layout", { layoutVersion: 3, config: { widgets: [] } }, undefined, expect.anything());
     expect(harness.client.getQueryData(buildWorkQueryKeys.commandCenter.layout())).toEqual({ layoutVersion: 4, config: { widgets: [] }, updatedAt: "2026-10-04T10:00:00Z" });
     expect(useCan).toHaveBeenCalledWith("build:dashboard:manage");
@@ -216,7 +217,7 @@ describe("dashboard and landing public hook contracts", () => {
     const harness = hookClient();
     harness.client.setQueryData(buildWorkQueryKeys.commandCenter.layout(), { layoutVersion: 3, config: { widgets: [] }, updatedAt: "2026-10-03T10:00:00Z" });
     const { result } = renderHook(useSaveDashboardLayout, { wrapper: harness.wrapper });
-    await act(async () => { await expect(result.current.mutateAsync({ layoutVersion: 3, config: { widgets: [] } })).rejects.toThrow(); });
+    await act(async () => { await expect(result.current.mutateAsync({ widgets: [] })).rejects.toThrow(); });
     expect(harness.client.getQueryData(buildWorkQueryKeys.commandCenter.layout())).toEqual({ layoutVersion: 3, config: { widgets: [] }, updatedAt: "2026-10-03T10:00:00Z" });
     harness.client.clear();
   });
@@ -224,7 +225,7 @@ describe("dashboard and landing public hook contracts", () => {
     jest.mocked(useCan).mockImplementation((permission) => permission !== "build:dashboard:manage");
     const harness = hookClient();
     const { result } = renderHook(useSaveDashboardLayout, { wrapper: harness.wrapper });
-    await act(async () => { await expect(result.current.mutateAsync({ layoutVersion: 3, config: { widgets: [] } })).rejects.toThrow("Missing permission: build:dashboard:manage"); });
+    await act(async () => { await expect(result.current.mutateAsync({ widgets: [] })).rejects.toThrow("Missing permission: build:dashboard:manage"); });
     expect(apiClient.put).not.toHaveBeenCalled();
     harness.client.clear();
   });
@@ -234,10 +235,39 @@ describe("dashboard and landing public hook contracts", () => {
     const harness = hookClient();
     harness.client.setQueryData(buildWorkQueryKeys.commandCenter.layout(), { layoutVersion: 3, config: { widgets: [] }, updatedAt: "2026-10-03T10:00:00Z" });
     const { result } = renderHook(useSaveDashboardLayout, { wrapper: harness.wrapper });
-    await act(async () => { await expect(result.current.mutateAsync({ layoutVersion: 3, config: { widgets: [] } })).rejects.toThrow("Network unavailable"); });
+    await act(async () => { await expect(result.current.mutateAsync({ widgets: [] })).rejects.toThrow("Network unavailable"); });
     expect(harness.client.getQueryData(buildWorkQueryKeys.commandCenter.layout())).toEqual({ layoutVersion: 3, config: { widgets: [] }, updatedAt: "2026-10-03T10:00:00Z" });
-    await act(async () => { await result.current.mutateAsync({ layoutVersion: 3, config: { widgets: [] } }); });
+    await act(async () => { await result.current.mutateAsync({ widgets: [] }); });
     expect(harness.client.getQueryData(buildWorkQueryKeys.commandCenter.layout())).toEqual({ layoutVersion: 4, config: { widgets: [] }, updatedAt: "2026-10-04T10:00:00Z" });
+    harness.client.clear();
+  });
+  it("shows the new arrangement before the save resolves and restores the previous one when it fails", async () => {
+    const moved = { widgets: [{ type: "projects" as const, position: { col: 0, row: 0, w: 6, h: 5 } }] };
+    let rejectSave: (error: Error) => void = () => undefined;
+    jest.mocked(apiClient.put).mockImplementationOnce(() => new Promise((_resolve, reject) => { rejectSave = reject; }));
+    const harness = hookClient();
+    const previous = { layoutVersion: 3, config: { widgets: [] }, updatedAt: "2026-10-03T10:00:00Z" };
+    harness.client.setQueryData(buildWorkQueryKeys.commandCenter.layout(), previous);
+    const { result } = renderHook(useSaveDashboardLayout, { wrapper: harness.wrapper });
+    act(() => { result.current.mutate(moved); });
+    await waitFor(() => expect(harness.client.getQueryData(buildWorkQueryKeys.commandCenter.layout())).toEqual({ ...previous, config: moved }));
+    await act(async () => { rejectSave(new Error("Network unavailable")); });
+    await waitFor(() => expect(harness.client.getQueryData(buildWorkQueryKeys.commandCenter.layout())).toEqual(previous));
+    harness.client.clear();
+  });
+  it("sends each queued save with the version the previous save returned so back-to-back edits never conflict", async () => {
+    const harness = hookClient();
+    harness.client.setQueryData(buildWorkQueryKeys.commandCenter.layout(), { layoutVersion: 3, config: { widgets: [] }, updatedAt: "2026-10-03T10:00:00Z" });
+    const first = { widgets: [{ type: "projects" as const, position: { col: 0, row: 0, w: 6, h: 5 } }] };
+    const second = { widgets: [{ type: "projects" as const, position: { col: 6, row: 0, w: 6, h: 5 } }] };
+    jest.mocked(apiClient.put)
+      .mockResolvedValueOnce({ layoutVersion: 4, config: first, updatedAt: "2026-10-04T10:00:00Z" })
+      .mockResolvedValueOnce({ layoutVersion: 5, config: second, updatedAt: "2026-10-04T10:00:01Z" });
+    const { result } = renderHook(useSaveDashboardLayout, { wrapper: harness.wrapper });
+    await act(async () => { await Promise.all([result.current.mutateAsync(first), result.current.mutateAsync(second)]); });
+    expect(apiClient.put).toHaveBeenNthCalledWith(1, "/build/command-center/layout", { layoutVersion: 3, config: first }, undefined, expect.anything());
+    expect(apiClient.put).toHaveBeenNthCalledWith(2, "/build/command-center/layout", { layoutVersion: 4, config: second }, undefined, expect.anything());
+    expect(harness.client.getQueryData(buildWorkQueryKeys.commandCenter.layout())).toEqual({ layoutVersion: 5, config: second, updatedAt: "2026-10-04T10:00:01Z" });
     harness.client.clear();
   });
 });

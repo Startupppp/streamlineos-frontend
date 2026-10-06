@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useMemo, useCallback, useState } from "react";
+import { useMemo, useCallback, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
-import { Briefcase, CheckSquare, AlertCircle } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
@@ -14,28 +14,19 @@ import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { useCommandPalette } from "@/components/command-palette/hooks/use-command-palette";
 import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
 import { QuickCreateMenu } from "./command-center-actions";
-import { PinnedNav } from "./command-center-pinned-nav";
-import {
-  PmPageShell,
-  PmSection,
-  PmPanel,
-} from "@/components/pm-chrome";
+import { PmPageShell, PmSection } from "@/components/pm-chrome";
 import { pmSnappy } from "@/lib/motion-presets";
 import { useKeyboardShortcuts } from "./use-keyboard-shortcuts";
 import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { CommandCenterToolbar } from "./command-center-toolbar";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 import { resolveMyIssuesEmptyActions } from "./command-center-utils";
-import {
-  COMMAND_CENTER_PAGE_SHELL,
-  COMMAND_CENTER_JUMP_PANEL,
-} from "./command-center-constants";
+import { COMMAND_CENTER_PAGE_SHELL } from "./command-center-constants";
 import { useDashboardLayoutEditor } from "./use-dashboard-layout";
-import { LayoutResetButton } from "./command-center-layout-manager";
-import { toast } from "sonner";
-import type { WidgetType } from "./dashboard-layout";
+import { CommandCenterLayoutControls } from "./command-center-layout-controls";
 import { CommandCenterLoading } from "./command-center-loading";
 import { useCommandCenterData } from "./use-command-center-data";
+import { useCommandCenterWidgets } from "./use-command-center-widgets";
 import { CommandCenterWidgetGrid } from "./command-center-widget-grid";
 
 const ProjectCreateWizard = dynamic(
@@ -51,12 +42,11 @@ export function CommandCenterPage() {
 
   const [wizardOpen, setWizardOpen] = useState(false);
   const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
   const { openCreateTicket } = useCommandPalette();
   const canCreateIssue = useCan("build:tickets:create");
   const canCreateProject = useCan("build:create");
   const canViewTickets = useCan("build:tickets:view");
-  const canViewApprovals = useCan("build:approvals:view");
-  const canViewRisks = useCan("build:risks:view");
   const shouldReduceMotion = useReducedMotion();
   const isOnline = useOnlineStatus();
 
@@ -136,21 +126,31 @@ export function CommandCenterPage() {
 
   const isReady = pageState.kind === "ready";
 
-  const handleLayoutConflict = useCallback(() => {
-    toast.error("Layout conflict — refreshed to latest version.");
-  }, []);
+  const layout = useDashboardLayoutEditor();
+  const isEditing = editing && layout.canCustomize;
+  const placedTypes = useMemo(() => new Set(layout.widgets.map((slot) => slot.type)), [layout.widgets]);
 
-  const { config, reorder: reorderWidget, removeWidget, resetToDefault } =
-    useDashboardLayoutEditor(handleLayoutConflict);
-
-  const handleResetLayout = useCallback(() => { resetToDefault("member"); }, [resetToDefault]);
-
-  const orderedWidgetTypes = useMemo((): WidgetType[] => {
-    if (config.widgets.length === 0) {
-      return ["my-issues", "projects", "approvals", "agent-runs", "risks", "releases", "blockers"];
-    }
-    return config.widgets.map((w) => w.type);
-  }, [config.widgets]);
+  const widgetContent = useCommandCenterWidgets({
+    stats,
+    myWorkItems,
+    projects,
+    myIssuesLoading,
+    myIssuesError,
+    myIssuesRawError,
+    isFetchingNextPage,
+    myIssuesEmpty,
+    focusedIndex,
+    canCreateIssue,
+    canCreateProject,
+    projectsError,
+    projectsRawError,
+    onMyIssuesRetry: handleMyIssuesRetry,
+    onMyIssuesScroll: handleMyIssuesScroll,
+    onCreateIssue: handleCreateIssueShortcut,
+    onCreateForProject: handleCreateForProject,
+    onCreateProject: handleOpenWizard,
+    onRetryProjects: refetchProjects,
+  });
 
   return (
     <>
@@ -182,66 +182,45 @@ export function CommandCenterPage() {
               </p>
             )}
             <PmSection index={0} className="min-w-0 w-full max-w-full">
-              <StatCardGrid cols={3}>
-                <motion.div whileHover={shouldReduceMotion ? undefined : { y: -2 }} transition={pmSnappy}>
-                  <StatCard label="Projects" value={stats.activeProjects} icon={Briefcase} tone="default" index={0} href="/build/projects" />
-                </motion.div>
-                <motion.div whileHover={shouldReduceMotion ? undefined : { y: -2 }} transition={pmSnappy}>
-                  <StatCard label="Open issues" value={stats.openIssues} icon={CheckSquare} tone="default" index={1} href="/build/my-work" />
-                </motion.div>
-                <motion.div
-                  whileHover={shouldReduceMotion ? undefined : { y: -2 }}
-                  transition={pmSnappy}
-                  animate={stats.overdueIssues > 0 && !shouldReduceMotion ? { scale: [1, 1.015, 1] } : undefined}
-                >
-                  <StatCard label="Overdue" value={stats.overdueIssues} icon={AlertCircle} tone={stats.overdueIssues > 0 ? "red" : "default"} index={2} href="/build/my-work" />
-                </motion.div>
-              </StatCardGrid>
-            </PmSection>
-
-            <PmSection index={1} className="min-w-0 w-full max-w-full overflow-hidden">
-              <PmPanel className={COMMAND_CENTER_JUMP_PANEL}>
-                <p className="mb-1.5 px-0.5 text-micro font-medium uppercase tracking-wider text-muted-foreground">
-                  Jump to
-                </p>
-                <PinnedNav defaultProjectId={projects[0]?.id ?? null} />
-              </PmPanel>
-            </PmSection>
-
-            <PmSection index={2} className="min-w-0 w-full max-w-full">
               <CommandCenterToolbar />
             </PmSection>
 
-            <div className="flex min-w-0 w-full max-w-full items-center justify-end">
-              <LayoutResetButton onReset={handleResetLayout} />
-            </div>
+            {layout.canCustomize ? (
+              <div className="flex min-w-0 w-full max-w-full items-center justify-end">
+                <CommandCenterLayoutControls
+                  editing={isEditing}
+                  onEditingChange={setEditing}
+                  onReset={layout.resetLayout}
+                  availableTypes={layout.availableTypes}
+                  placedTypes={placedTypes}
+                  onAdd={layout.addWidget}
+                />
+              </div>
+            ) : null}
 
-            <CommandCenterWidgetGrid
-              orderedWidgetTypes={orderedWidgetTypes}
-              myWorkItems={myWorkItems}
-              projects={projects}
-              myIssuesLoading={myIssuesLoading}
-              myIssuesError={myIssuesError}
-              myIssuesRawError={myIssuesRawError}
-              isFetchingNextPage={isFetchingNextPage}
-              myIssuesEmpty={myIssuesEmpty}
-              focusedIndex={focusedIndex}
-              canCreateIssue={canCreateIssue}
-              canCreateProject={canCreateProject}
-              canViewApprovals={canViewApprovals}
-              canViewRisks={canViewRisks}
-              canViewTickets={canViewTickets}
-              projectsError={projectsError}
-              projectsRawError={projectsRawError}
-              onMyIssuesRetry={handleMyIssuesRetry}
-              onMyIssuesScroll={handleMyIssuesScroll}
-              onCreateIssue={handleCreateIssueShortcut}
-              onCreateForProject={handleCreateForProject}
-              onCreateProject={handleOpenWizard}
-              onRetryProjects={() => void refetchProjects()}
-              onReorderWidget={reorderWidget}
-              onRemoveWidget={removeWidget}
-            />
+            {layout.isLoading ? (
+              <Skeleton className="h-96 w-full rounded-xl" />
+            ) : layout.widgets.length === 0 ? (
+              <EmptyState
+                title="Your Command Center is empty"
+                description={
+                  layout.canCustomize
+                    ? "Add widgets to see your issues, projects and approvals here."
+                    : "There are no widgets you can view yet."
+                }
+                action={layout.canCustomize ? { label: "Customize", onClick: () => setEditing(true) } : undefined}
+              />
+            ) : (
+              <CommandCenterWidgetGrid
+                widgets={layout.widgets}
+                content={widgetContent}
+                editing={isEditing}
+                onLayoutChange={layout.applyLayout}
+                onRemove={layout.removeWidget}
+                onResize={layout.resizeWidget}
+                onMove={layout.moveWidget}
+              />
+            )}
 
             <motion.p
               className="hidden min-w-0 w-full max-w-full text-center text-micro text-muted-foreground md:block"

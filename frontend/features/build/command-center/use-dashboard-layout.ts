@@ -1,120 +1,121 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
-import { useSourceOverride } from "@/hooks/common/use-source-override";
-import { isApiError } from "@/lib/api-envelope";
+import { useCallback, useMemo } from "react";
+import { toast } from "sonner";
+import type { Layout } from "react-grid-layout";
+import { useAccess, useCan } from "@/hooks/api/access";
 import { useDashboardLayout, useSaveDashboardLayout } from "@/hooks/api/build/dashboard-layout";
-import type { DashboardLayoutConfig, PersonaKey, WidgetSlot, WidgetType } from "./dashboard-layout";
-import { PERSONA_DEFAULTS } from "./dashboard-layout";
+import { isApiError } from "@/lib/api-envelope";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { grantsPermission } from "@/lib/rbac/permission-gate";
+import {
+  DEFAULT_WIDGETS,
+  normalizeSlots,
+  slotsFromLayout,
+  withoutWidget,
+  withWidget,
+  withWidgetMoved,
+  withWidgetWidth,
+  type WidgetSlot,
+  type WidgetType,
+} from "./dashboard-layout";
+import { WIDGET_CATALOG } from "./widget-catalog";
 
-const DEBOUNCE_MS = 800;
+const CONFLICT_MESSAGE = "Your layout was changed in another tab. Showing the latest version.";
 
-interface UseDashboardLayoutReturn {
-  config: DashboardLayoutConfig;
-  layoutVersion: number;
-  isPending: boolean;
-  reorder: (fromIndex: number, toIndex: number) => void;
-  removeWidget: (type: WidgetType) => void;
-  addWidget: (slot: WidgetSlot) => void;
-  resetToDefault: (persona: PersonaKey) => void;
+function samePositions(a: readonly WidgetSlot[], b: readonly WidgetSlot[]): boolean {
+  if (a.length !== b.length) return false;
+  const byType = new Map(b.map((slot) => [slot.type, slot.position]));
+  return a.every((slot) => {
+    const other = byType.get(slot.type);
+    return (
+      other !== undefined &&
+      other.col === slot.position.col &&
+      other.row === slot.position.row &&
+      other.w === slot.position.w &&
+      other.h === slot.position.h
+    );
+  });
 }
 
-export function useDashboardLayoutEditor(onConflict?: () => void): UseDashboardLayoutReturn {
-  const { data, refetch } = useDashboardLayout();
-  const { mutate: save, isPending } = useSaveDashboardLayout();
+export function useDashboardLayoutEditor() {
+  const { data: access } = useAccess();
+  const canManage = useCan("build:dashboard:manage");
+  const { data: stored, isLoading } = useDashboardLayout();
+  const { mutate: save } = useSaveDashboardLayout();
 
-  const [localConfig, setLocalConfig] = useSourceOverride<typeof data, DashboardLayoutConfig>(
-    data,
-    data?.config ?? { widgets: [] },
-  );
-  const [localVersion, setLocalVersion] = useSourceOverride<typeof data, number>(
-    data,
-    data?.layoutVersion ?? 0,
-  );
-
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, []);
-
-  const persist = useCallback(
-    (config: DashboardLayoutConfig, version: number) => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(() => {
-        save(
-          { layoutVersion: version, config },
-          {
-            onSuccess: (saved) => {
-              setLocalVersion(saved.layoutVersion);
-            },
-            onError: (error) => {
-              if (isApiError(error) && error.status === 409) {
-                void refetch();
-                onConflict?.();
-              }
-            },
-          },
-        );
-      }, DEBOUNCE_MS);
-    },
-    [save, refetch, onConflict, setLocalVersion],
-  );
-
-  const reorder = useCallback(
-    (fromIndex: number, toIndex: number) => {
-      setLocalConfig((prev) => {
-        const next = [...prev.widgets];
-        const [moved] = next.splice(fromIndex, 1);
-        if (moved) next.splice(toIndex, 0, moved);
-        const updated = { widgets: next };
-        persist(updated, localVersion);
-        return updated;
-      });
-    },
-    [persist, localVersion, setLocalConfig],
-  );
-
-  const removeWidget = useCallback(
+  const isAllowed = useCallback(
     (type: WidgetType) => {
-      setLocalConfig((prev) => {
-        const updated = { widgets: prev.widgets.filter((w) => w.type !== type) };
-        persist(updated, localVersion);
-        return updated;
-      });
+      const permissionKey = WIDGET_CATALOG[type].permissionKey;
+      return permissionKey === null || grantsPermission(access, permissionKey);
     },
-    [persist, localVersion, setLocalConfig],
+    [access],
   );
 
-  const addWidget = useCallback(
-    (slot: WidgetSlot) => {
-      setLocalConfig((prev) => {
-        const updated = { widgets: [...prev.widgets, slot] };
-        persist(updated, localVersion);
-        return updated;
-      });
-    },
-    [persist, localVersion, setLocalConfig],
+  const savedSlots = useMemo<readonly WidgetSlot[]>(
+    () =>
+      !stored || (stored.layoutVersion === 0 && stored.config.widgets.length === 0)
+        ? DEFAULT_WIDGETS
+        : stored.config.widgets,
+    [stored],
   );
 
-  const resetToDefault = useCallback(
-    (persona: PersonaKey) => {
-      const defaults = PERSONA_DEFAULTS[persona];
-      setLocalConfig(defaults);
-      persist(defaults, localVersion);
+  const widgets = useMemo(() => normalizeSlots(savedSlots, isAllowed), [savedSlots, isAllowed]);
+
+  const hiddenSlots = useMemo(
+    () => savedSlots.filter((slot) => !isAllowed(slot.type)),
+    [savedSlots, isAllowed],
+  );
+
+  const availableTypes = useMemo(
+    () => DEFAULT_WIDGETS.map((slot) => slot.type).filter(isAllowed),
+    [isAllowed],
+  );
+
+  const commit = useCallback(
+    (next: WidgetSlot[]) => {
+      if (samePositions(next, widgets)) return;
+      save(
+        { widgets: [...next, ...hiddenSlots] },
+        {
+          onError: (error) => {
+            toast.error(isApiError(error) && error.status === 409 ? CONFLICT_MESSAGE : getErrorMessage(error));
+          },
+        },
+      );
     },
-    [persist, localVersion, setLocalConfig],
+    [save, widgets, hiddenSlots],
+  );
+
+  const applyLayout = useCallback(
+    (layout: Layout) => commit(slotsFromLayout(layout, widgets)),
+    [commit, widgets],
+  );
+  const addWidget = useCallback((type: WidgetType) => commit(withWidget(widgets, type)), [commit, widgets]);
+  const removeWidget = useCallback((type: WidgetType) => commit(withoutWidget(widgets, type)), [commit, widgets]);
+  const resizeWidget = useCallback(
+    (type: WidgetType, w: number) => commit(withWidgetWidth(widgets, type, w)),
+    [commit, widgets],
+  );
+  const moveWidget = useCallback(
+    (type: WidgetType, offset: -1 | 1) => commit(withWidgetMoved(widgets, type, offset)),
+    [commit, widgets],
+  );
+  const resetLayout = useCallback(
+    () => commit(normalizeSlots(DEFAULT_WIDGETS, isAllowed)),
+    [commit, isAllowed],
   );
 
   return {
-    config: localConfig,
-    layoutVersion: localVersion,
-    isPending,
-    reorder,
-    removeWidget,
+    widgets,
+    availableTypes,
+    isLoading,
+    canCustomize: canManage && stored !== undefined,
+    applyLayout,
     addWidget,
-    resetToDefault,
+    removeWidget,
+    resizeWidget,
+    moveWidget,
+    resetLayout,
   };
 }

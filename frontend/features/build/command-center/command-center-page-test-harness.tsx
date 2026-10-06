@@ -4,6 +4,7 @@ export const mockUseOnlineStatus = jest.fn(() => true);
 export const mockRouterPush = jest.fn();
 export const mockSearchParamsRef = { current: new URLSearchParams() };
 export const mockUseKeyboardShortcuts = jest.fn();
+export const mockUseDashboardLayout = jest.fn();
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(),
@@ -28,13 +29,27 @@ jest.mock("./command-center-toolbar", () => ({
   CommandCenterToolbar: () => <div data-testid="command-center-toolbar" />,
 }));
 
-jest.mock("./use-dashboard-layout", () => ({
-  useDashboardLayoutEditor: jest.fn(),
+jest.mock("@/hooks/api/build/dashboard-layout", () => ({
+  useDashboardLayout: () => mockUseDashboardLayout(),
+  useSaveDashboardLayout: () => ({ mutate: jest.fn() }),
 }));
 
-jest.mock("./command-center-layout-manager", () => ({
-  CommandCenterLayoutPanel: ({ children }: { children: ReactNode }) => <>{children}</>,
-  LayoutResetButton: () => <button type="button">Reset layout</button>,
+jest.mock("./command-center-widget-grid", () => ({
+  CommandCenterWidgetGrid: ({
+    widgets,
+    content,
+  }: {
+    widgets: readonly { type: string }[];
+    content: Record<string, ReactNode>;
+  }) => (
+    <div data-testid="widget-grid">
+      {widgets.map((slot) => (
+        <div key={slot.type} data-widget-type={slot.type}>
+          {content[slot.type]}
+        </div>
+      ))}
+    </div>
+  ),
 }));
 
 jest.mock("sonner", () => ({

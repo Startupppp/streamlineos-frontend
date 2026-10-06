@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import type { ProjectListItem } from "@/types/projects";
 import { ProjectCard } from "./command-center-rows";
 import { projectHealthClasses } from "./command-center-rows-model";
-import { WIDGET_CATALOG, getWidgetEntry } from "./widget-catalog";
+import { WIDGET_CATALOG } from "./widget-catalog";
 
 jest.mock("next/link", () => ({
   __esModule: true,
@@ -111,32 +111,28 @@ describe("ProjectCard — project health is the Command Center core field, not p
   });
 });
 
-describe("widget-catalog drill-down hrefs — each widget routes to the correct surface", () => {
-  it("my-issues routes to /build/my-work so keyboard drill-down lands on the tickets list", () => {
-    expect(getWidgetEntry("my-issues").drillDownHref).toBe("/build/my-work");
-  });
-
-  it("projects routes to /build/projects so the drill-down reaches the project list", () => {
-    expect(getWidgetEntry("projects").drillDownHref).toBe("/build/projects");
-  });
-
-  it("approvals routes to /build/approvals so the drill-down lands on the approvals queue", () => {
-    expect(getWidgetEntry("approvals").drillDownHref).toBe("/build/approvals");
-  });
-
-  it("blockers drill-down appends a filter so the destination pre-filters to blocked tickets", () => {
-    expect(getWidgetEntry("blockers").drillDownHref).toContain("filter=blocked");
-  });
-
-  it("every catalog entry has a non-empty title so widgets are never unlabelled", () => {
-    for (const [, entry] of Object.entries(WIDGET_CATALOG)) {
+describe("widget-catalog — every widget can be offered in the picker and placed on the grid", () => {
+  it("every catalog entry has a title and a description so the picker never shows an unlabelled option", () => {
+    for (const entry of Object.values(WIDGET_CATALOG)) {
       expect(entry.title.length).toBeGreaterThan(0);
+      expect(entry.description.length).toBeGreaterThan(0);
     }
   });
 
-  it("every catalog entry has a non-empty drillDownHref so navigation always has a destination", () => {
-    for (const [, entry] of Object.entries(WIDGET_CATALOG)) {
-      expect(entry.drillDownHref.length).toBeGreaterThan(0);
+  it("every default size fits the twelve-column grid and respects the widget's own minimum", () => {
+    for (const entry of Object.values(WIDGET_CATALOG)) {
+      expect(entry.size.w).toBeLessThanOrEqual(12);
+      expect(entry.size.w).toBeGreaterThanOrEqual(entry.minW);
+      expect(entry.size.h).toBeGreaterThanOrEqual(entry.minH);
     }
+  });
+
+  it("gates each data widget on the permission its panel reads with", () => {
+    expect(WIDGET_CATALOG["my-issues"].permissionKey).toBe("build:tickets:view");
+    expect(WIDGET_CATALOG.approvals.permissionKey).toBe("build:approvals:view");
+    expect(WIDGET_CATALOG["agent-runs"].permissionKey).toBe("build:approvals:view");
+    expect(WIDGET_CATALOG.risks.permissionKey).toBe("build:risks:view");
+    expect(WIDGET_CATALOG.blockers.permissionKey).toBe("build:tickets:view");
+    expect(WIDGET_CATALOG.overview.permissionKey).toBeNull();
   });
 });

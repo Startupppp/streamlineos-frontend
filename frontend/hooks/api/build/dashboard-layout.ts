@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { lazyContract } from "@/lib/api-envelope";
+import { isApiError, lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import { INLINE_READ_ERROR, optionalSignalRead } from "@/lib/query-error-policy";
@@ -16,7 +16,13 @@ const dashboardLayoutSaveLazy = lazyContract(() =>
   import("@/contracts/build-contracts.generated").then((m) => m.dashboardLayoutSaveLayoutResponseSchema),
 );
 
-type SaveDashboardLayoutInput = Pick<DashboardLayoutGetLayoutResponse, "layoutVersion" | "config">;
+const SAVE_LAYOUT_MUTATION_KEY = ["build", "command-center", "save-layout"] as const;
+
+type DashboardLayoutConfig = DashboardLayoutGetLayoutResponse["config"];
+
+interface SaveDashboardLayoutContext {
+  previous: DashboardLayoutGetLayoutResponse | undefined;
+}
 
 export function useDashboardLayout() {
   const canView = useCan("build:dashboard:view");
@@ -41,17 +47,43 @@ export function useDashboardLayout() {
 export function useSaveDashboardLayout() {
   const qc = useQueryClient();
   const qk = buildWorkQueryKeys.commandCenter.layout();
-  return useAuthorizedMutation("build:dashboard:manage", {
-    mutationKey: ["build", "command-center", "save-layout"],
-    mutationFn: (input: SaveDashboardLayoutInput) =>
-      apiClient.put<DashboardLayoutGetLayoutResponse>(
-        "/build/command-center/layout",
-        input,
-        undefined,
-        dashboardLayoutSaveLazy,
-      ),
-    onSuccess: (saved) => {
-      qc.setQueryData(qk, saved);
+  const isLastPendingSave = () => qc.isMutating({ mutationKey: SAVE_LAYOUT_MUTATION_KEY }) <= 1;
+  return useAuthorizedMutation<DashboardLayoutGetLayoutResponse, Error, DashboardLayoutConfig, SaveDashboardLayoutContext>(
+    "build:dashboard:manage",
+    {
+      mutationKey: SAVE_LAYOUT_MUTATION_KEY,
+      scope: { id: "build-command-center-layout" },
+      mutationFn: (config) =>
+        apiClient.put<DashboardLayoutGetLayoutResponse>(
+          "/build/command-center/layout",
+          {
+            layoutVersion: qc.getQueryData<DashboardLayoutGetLayoutResponse>(qk)?.layoutVersion ?? 0,
+            config,
+          },
+          undefined,
+          dashboardLayoutSaveLazy,
+        ),
+      onMutate: async (config) => {
+        await qc.cancelQueries({ queryKey: qk, exact: true });
+        const previous = qc.getQueryData<DashboardLayoutGetLayoutResponse>(qk);
+        if (previous) qc.setQueryData<DashboardLayoutGetLayoutResponse>(qk, { ...previous, config });
+        return { previous };
+      },
+      onSuccess: (saved) => {
+        const isLatest = isLastPendingSave();
+        qc.setQueryData<DashboardLayoutGetLayoutResponse>(qk, (current) =>
+          isLatest || !current
+            ? saved
+            : { ...current, layoutVersion: saved.layoutVersion, updatedAt: saved.updatedAt },
+        );
+      },
+      onError: (error, _config, context) => {
+        if (isApiError(error) && error.status === 409) {
+          void qc.invalidateQueries({ queryKey: qk, exact: true });
+          return;
+        }
+        if (isLastPendingSave() && context?.previous) qc.setQueryData(qk, context.previous);
+      },
     },
-  });
+  );
 }

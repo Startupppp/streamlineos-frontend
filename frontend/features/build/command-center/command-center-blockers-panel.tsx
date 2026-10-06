@@ -8,6 +8,7 @@ import { PmSection, PmPanel } from "@/components/pm-chrome";
 import { PanelHeader } from "./panel-header";
 import {
   COMMAND_CENTER_LIST_PANEL,
+  COMMAND_CENTER_PANEL_SECTION,
   COMMAND_CENTER_PANEL_BODY_SCROLL,
 } from "./command-center-constants";
 import { useInfiniteAllWork } from "@/hooks/api/build/all-work";
@@ -32,7 +33,7 @@ export function BlockersPanel() {
   return (
     <PmSection
       index={6}
-      className="flex min-h-0 min-w-0 w-full max-w-full flex-col lg:col-span-2"
+      className={COMMAND_CENTER_PANEL_SECTION}
     >
       <PmPanel className={COMMAND_CENTER_LIST_PANEL}>
         <PanelHeader
