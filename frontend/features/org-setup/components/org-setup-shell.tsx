@@ -89,7 +89,7 @@ export function OrgSetupShell({
                     initial={{ opacity: 0, y: reduceMotion ? 0 : -6 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: reduceMotion ? 0 : 6 }}
-                    transition={{ duration: 0.15 }}
+                    transition={{ duration: reduceMotion ? 0 : 0.15 }}
                     className="font-display text-xl font-extrabold tracking-[-0.02em] text-foreground text-balance sm:text-2xl"
                   >
                     {title}
@@ -108,7 +108,7 @@ export function OrgSetupShell({
                   </span>
                 )}
               </div>
-              <p className="text-label text-muted-foreground">
+              <p className="text-sm leading-5 text-muted-foreground text-pretty">
                 {STEP_SUBTITLES[currentStepId]}
               </p>
             </div>
