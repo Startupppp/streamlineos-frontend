@@ -306,6 +306,8 @@ Entry points: persona sidebar or More, scoped parent record, command search, not
 
 ### Decisions register
 
+Current verified bounded134: backend35df4d274403d985832b27bbcc28557b532357aa refuses an update when the initially live Decision was deleted before its scoped write. The [canonical receipt](../../audit/bugs-and-verification.md#decision-live-update134-and-qa-browser-reconciliation--2026-10-06) records actual predicate fixtures,99 focused tests, strict/scoped/full TypeScript checks and independent review. Source checks do not prove physical concurrency, six-role/tenant access, audit atomicity, persisted UI edits, supersession/CAS or deployed behavior; those remain Current unverified and the full acceptance below stays open.
+
 Route: `/build/[projectId]/decisions`
 Audience: PMs, PjMs, contributors
 Entry points: persona sidebar or More, scoped parent record, command search, notification and authorized deep link.
