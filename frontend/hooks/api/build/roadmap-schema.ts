@@ -16,16 +16,6 @@ import {
   publicSubmitRoadmapFeedbackResponseSchema,
 } from "@/contracts/build-contracts.generated";
 
-export const RICE_INPUT_NAMES = ["reach", "impact", "confidence", "effort"] as const;
-export const RICE_SCORE_UNAVAILABLE_REASONS = ["missing_inputs", "non_positive_effort"] as const;
-export const ROADMAP_DELIVERY_SOURCES = ["epic_ticket", "project", "none"] as const;
-export const ROADMAP_TIER_UNWEIGHTED_REASONS = [
-  "no_linked_feedback",
-  "no_linked_account",
-  "account_tier_unset",
-  "score_unavailable",
-] as const;
-
 export const roadmapPrioritizationContract =
   projectsRoadmapGetRoadmapSignalsResponseSchema.shape.prioritization;
 

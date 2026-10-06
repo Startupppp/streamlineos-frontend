@@ -121,7 +121,7 @@ export function EditFollowUpDialog({
   );
 }
 
-export function FollowUpFields({
+function FollowUpFields({
   form,
   projectId,
   includeTitle = true,

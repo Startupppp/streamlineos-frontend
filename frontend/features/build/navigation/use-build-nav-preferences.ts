@@ -11,8 +11,8 @@ import {
   type BuildScopeRef,
 } from "./build-nav-storage";
 
-export const BUILD_SCOPE_RECENTS_LIMIT = 6;
-export const BUILD_SCOPE_STARS_LIMIT = 20;
+const BUILD_SCOPE_RECENTS_LIMIT = 6;
+const BUILD_SCOPE_STARS_LIMIT = 20;
 
 const PINS_STORAGE_NAME = "build-nav-pins";
 const STARS_STORAGE_NAME = "build-scope-stars";

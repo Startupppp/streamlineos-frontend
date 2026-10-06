@@ -6,7 +6,7 @@ import type {
 } from "@/types/projects";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 
-export type TicketCollection =
+type TicketCollection =
   | CursorPageResponse<Ticket>
   | InfiniteData<CursorPageResponse<Ticket>>;
 export type TicketSnapshots = {
@@ -19,7 +19,7 @@ export type RawCollectionSnapshot = {
   data: TicketCollection;
 };
 
-export function collectionTickets(collection: TicketCollection): Ticket[] {
+function collectionTickets(collection: TicketCollection): Ticket[] {
   return "pages" in collection
     ? collection.pages.flatMap((page) => page.data)
     : collection.data;

@@ -19,7 +19,7 @@ import { useBuildNavPins } from "./use-build-nav-preferences";
 
 const FEEDBACK_ORG_MODULE = "feedbucket";
 
-export function useBuildScope(): BuildScope {
+function useBuildScope(): BuildScope {
   const pathname = usePathname() ?? "";
   return useMemo(() => resolveBuildScope(pathname), [pathname]);
 }

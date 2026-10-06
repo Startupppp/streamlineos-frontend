@@ -155,7 +155,7 @@ export function useManagedProduct(
   });
 }
 
-export interface ManagedProductInsightsParams {
+interface ManagedProductInsightsParams {
   range?: "7d" | "30d" | "90d";
 }
 

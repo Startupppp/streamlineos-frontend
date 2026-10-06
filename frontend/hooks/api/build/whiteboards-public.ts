@@ -13,7 +13,7 @@ const publicWhiteboardUpdateContract = lazyContract(() =>
   import("@/hooks/api/build/workspace-schema").then((m) => m.publicWhiteboardUpdateContract),
 );
 
-export interface PublicWhiteboard {
+interface PublicWhiteboard {
   name: string;
   data: unknown;
   access: "view" | "edit";

@@ -20,6 +20,5 @@ export const programPageContract = programsListProgramsResponseSchema;
 
 export const programDetailContract = programsGetProgramResponseSchema;
 
-export const programListItemContract = programsListProgramsResponseSchema.shape.data.element;
 
 export const portfoliosSuccessContract = portfoliosLinkProjectResponseSchema;

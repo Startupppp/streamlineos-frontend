@@ -15,7 +15,7 @@ const noContentLazy = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 
-export interface CommentReactionInput {
+interface CommentReactionInput {
   commentId: number;
   emoji: string;
   userId: string;

@@ -26,7 +26,7 @@ export const avatarTints: Record<string, string> = {
 
 type DateTone = "muted" | "soon" | "overdue";
 
-export interface DateMeta {
+interface DateMeta {
   label: string;
   tone: DateTone;
 }

@@ -13,7 +13,7 @@ interface NameEntry {
   name: string;
 }
 
-export interface TicketConflictNameLookups {
+interface TicketConflictNameLookups {
   members: { id: string; name: string }[];
   epics: NameEntry[];
   modules: NameEntry[];
@@ -211,7 +211,7 @@ function toNameEntries(value: unknown): NameEntry[] {
   return entries;
 }
 
-export interface TicketConflictNameSources {
+interface TicketConflictNameSources {
   members?: { id: string; name: string }[];
   epics?: unknown;
   modules?: unknown;

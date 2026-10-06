@@ -1,7 +1,6 @@
 import { z } from "zod";
-import { projectsRetentionSettingsGetSettingsResponseSchema } from "@/contracts/build-contracts.generated";
 
-export const RETENTION_SECTION_VALUES = ["policy", "holds"] as const;
+const RETENTION_SECTION_VALUES = ["policy", "holds"] as const;
 export type RetentionSection = (typeof RETENTION_SECTION_VALUES)[number];
 
 function isRetentionSection(v: string): v is RetentionSection {
@@ -36,13 +35,6 @@ export const retentionDaysOptionSchema = z
     message: "Must be one of 30, 60, 90, 180, or 365",
   })
   .nullable();
-
-export const projectRetentionSettingsContract =
-  projectsRetentionSettingsGetSettingsResponseSchema.extend({
-    closedTicketRetentionDays: retentionDaysOptionSchema,
-    attachmentRetentionDays: retentionDaysOptionSchema,
-    auditLogRetentionDays: retentionDaysOptionSchema,
-  });
 
 export const updateRetentionPolicySchema = z
   .object({

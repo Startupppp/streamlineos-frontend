@@ -1,6 +1,6 @@
 import type { ModuleStatus } from "@/types/projects/shared";
 
-export interface ModuleStatusStyle {
+interface ModuleStatusStyle {
   label: string;
   stripe: string;
   accentBar: string;

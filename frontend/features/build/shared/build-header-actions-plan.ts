@@ -18,9 +18,9 @@ export interface BuildHeaderAction {
 export const BUILD_HEADER_OVERFLOW_LABEL = "More actions";
 
 export const BUILD_HEADER_DESKTOP_VISIBLE = 3;
-export const BUILD_HEADER_MOBILE_VISIBLE = 2;
+const BUILD_HEADER_MOBILE_VISIBLE = 2;
 
-export interface BuildHeaderActionsPlan {
+interface BuildHeaderActionsPlan {
   isEmpty: boolean;
   desktopInline: BuildHeaderAction[];
   desktopOverflow: BuildHeaderAction[];

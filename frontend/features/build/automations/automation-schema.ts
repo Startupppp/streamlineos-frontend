@@ -6,7 +6,7 @@ export const conditionSchema = z.object({
   value: z.string().optional(),
 });
 
-export const actionSchema = z.discriminatedUnion("type", [
+const actionSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.enum(["set_status", "set_assignee", "set_priority", "add_label", "add_comment"]),
     value: z.string().min(1),

@@ -122,7 +122,7 @@ export function isReorderContext(v: unknown): v is ReorderContext {
   return typeof v === "object" && v !== null && "previousTickets" in v;
 }
 
-export type GroupFieldPatch = Pick<UpdateTicketInput, "status" | "priority" | "assigneeId" | "assigneeIds">;
+type GroupFieldPatch = Pick<UpdateTicketInput, "status" | "priority" | "assigneeId" | "assigneeIds">;
 
 const VALID_PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
 type ValidPriority = typeof VALID_PRIORITIES[number];

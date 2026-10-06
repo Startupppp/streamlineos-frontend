@@ -31,10 +31,10 @@ import type {
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
-export type ProgramListSort = "createdAt" | "updatedAt" | "name";
-export type ProgramListOrder = "asc" | "desc";
+type ProgramListSort = "createdAt" | "updatedAt" | "name";
+type ProgramListOrder = "asc" | "desc";
 
-export interface ProgramListFilters {
+interface ProgramListFilters {
   cursor?: string;
   limit?: number;
   q?: string;

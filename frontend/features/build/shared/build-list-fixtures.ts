@@ -12,7 +12,7 @@ import type { IncidentsCreateIncidentResponse } from "@/contracts/build-contract
 import type { OrgMember } from "@/hooks/api/organization";
 import type { AccessResponse } from "@/hooks/api/access-schema";
 
-export interface FixtureRow {
+interface FixtureRow {
   id: number;
   name: string;
 }

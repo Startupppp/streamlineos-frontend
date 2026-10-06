@@ -53,7 +53,7 @@ interface ApplyProjectTemplateInput {
   endDate?: string;
 }
 
-export interface TemplateFilters {
+interface TemplateFilters {
   q?: string;
   category?: string;
   sort?: string;

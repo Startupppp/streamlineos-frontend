@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState, useMemo } from "react";
+import { useCallback, useState, useMemo } from "react";
 import { useProjects } from "@/hooks/api/build/projects";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
 import {
   useCreateTicketAi,
   type CreateTicketAiFieldPatch,
@@ -28,7 +29,8 @@ export function useCreateTicketDialogState({
   onExternalOpenChange,
 }: UseCreateTicketDialogStateProps) {
   const projectLocked = lockedProjectId != null;
-  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(
+  const [selectedProjectId, setSelectedProjectId] = useSourceOverride(
+    lockedProjectId ?? null,
     lockedProjectId ?? null,
   );
 
@@ -36,9 +38,24 @@ export function useCreateTicketDialogState({
     onExternalOpenChange?.(false);
   }, [onExternalOpenChange]);
 
+  const [internalOpen, setOpen] = useState(false);
+  const resolvedOpen =
+    externalOpen !== undefined ? externalOpen || internalOpen : internalOpen;
+
+  const { data: projectsData, isLoading: projectsLoading } = useProjects(
+    { status: "ACTIVE", limit: 100 },
+    { enabled: resolvedOpen },
+  );
+  const projects = useMemo(() => projectsData?.data ?? [], [projectsData]);
+
+  const effectiveProjectId =
+    selectedProjectId !== null
+      ? selectedProjectId
+      : resolvedOpen && projects.length === 1
+        ? (projects[0]?.id ?? null)
+        : null;
+
   const {
-    open: internalOpen,
-    setOpen,
     form,
     files,
     relatedLinks,
@@ -59,22 +76,15 @@ export function useCreateTicketDialogState({
     cycles,
     project,
   } = useCreateTicketForm({
-    projectId: selectedProjectId,
+    projectId: effectiveProjectId,
     defaultStatus,
     defaultCycleId,
+    open: internalOpen,
+    setOpen,
     onClose: handleExternalClose,
   });
 
-  const resolvedOpen =
-    externalOpen !== undefined ? externalOpen || internalOpen : internalOpen;
-
   useRegisterDirtyState(resolvedOpen && form.formState.isDirty);
-
-  const { data: projectsData, isLoading: projectsLoading } = useProjects(
-    { status: "ACTIVE", limit: 100 },
-    { enabled: resolvedOpen },
-  );
-  const projects = useMemo(() => projectsData?.data ?? [], [projectsData]);
 
   const [showLinksEditor, setShowLinksEditor] = useState(false);
   const [descriptionEditorKey, setDescriptionEditorKey] = useState(0);
@@ -84,7 +94,7 @@ export function useCreateTicketDialogState({
 
   const watchedTitle = form.watch("title") ?? "";
   const watchedDescription = form.watch("description") ?? "";
-  const duplicates = useDuplicateTitleWarning(watchedTitle, selectedProjectId);
+  const duplicates = useDuplicateTitleWarning(watchedTitle, effectiveProjectId);
 
   const handleApplyAiTitle = useCallback(
     (nextTitle: string) => {
@@ -113,7 +123,7 @@ export function useCreateTicketDialogState({
   );
 
   const createTicketAi = useCreateTicketAi({
-    projectId: selectedProjectId,
+    projectId: effectiveProjectId,
     title: watchedTitle,
     description: watchedDescription,
     onApplyTitle: handleApplyAiTitle,
@@ -124,28 +134,6 @@ export function useCreateTicketDialogState({
     onFieldsInlineChange: setFieldsInlineSession,
     disabled: isPending || isUploading,
   });
-
-  useEffect(() => {
-    if (lockedProjectId != null) {
-      setSelectedProjectId(lockedProjectId);
-    }
-  }, [lockedProjectId]);
-
-  useEffect(() => {
-    if (externalOpen === true) setOpen(true);
-  }, [externalOpen, setOpen]);
-
-  useEffect(() => {
-    if (!resolvedOpen) return;
-    if (lockedProjectId != null) {
-      setSelectedProjectId(lockedProjectId);
-      return;
-    }
-    if (selectedProjectId == null && projects.length === 1) {
-      const only = projects[0];
-      if (only) setSelectedProjectId(only.id);
-    }
-  }, [resolvedOpen, lockedProjectId, projects, selectedProjectId]);
 
   const {
     previewUrls,
@@ -158,7 +146,7 @@ export function useCreateTicketDialogState({
     handleDrop,
   } = useTicketFileDrop({ files, addFiles, handleRemoveFile });
 
-  const handleOpenTrigger = useCallback(() => setOpen(true), [setOpen]);
+  const handleOpenTrigger = useCallback(() => setOpen(true), []);
 
   const handleOpenChange = useCallback(
     (v: boolean) => {
@@ -181,6 +169,7 @@ export function useCreateTicketDialogState({
       setOpen,
       onExternalOpenChange,
       projectLocked,
+      setSelectedProjectId,
       titleInlineSession,
       descriptionInlineSession,
       fieldsInlineSession,
@@ -193,7 +182,7 @@ export function useCreateTicketDialogState({
     if (isPending || isUploading) return;
     const parsed = Number(value);
     setSelectedProjectId(Number.isFinite(parsed) ? parsed : null);
-  }, [isPending, isUploading]);
+  }, [isPending, isUploading, setSelectedProjectId]);
 
   const handleShowLinksEditor = useCallback(() => setShowLinksEditor(true), []);
 
@@ -212,19 +201,19 @@ export function useCreateTicketDialogState({
     [form, handleSubmit],
   );
 
-  const canSubmit = selectedProjectId != null;
+  const canSubmit = effectiveProjectId != null;
   const projectSelectValue =
-    selectedProjectId != null ? String(selectedProjectId) : undefined;
+    effectiveProjectId != null ? String(effectiveProjectId) : undefined;
   const projectTriggerLabel =
     project?.key ??
-    projects.find((p) => p.id === selectedProjectId)?.key ??
+    projects.find((p) => p.id === effectiveProjectId)?.key ??
     (projectsLoading ? "Loading…" : "Select project");
   const currentProjectKey =
-    project?.key ?? projects.find((p) => p.id === selectedProjectId)?.key;
+    project?.key ?? projects.find((p) => p.id === effectiveProjectId)?.key;
 
   return {
     projectLocked,
-    selectedProjectId,
+    selectedProjectId: effectiveProjectId,
     resolvedOpen,
     form,
     files,

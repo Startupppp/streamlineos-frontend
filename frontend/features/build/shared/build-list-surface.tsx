@@ -18,7 +18,7 @@ interface BuildListSurfaceCursorPaginationBase {
   onNext: () => void;
 }
 
-export type BuildListSurfaceCursorPagination =
+type BuildListSurfaceCursorPagination =
   BuildListSurfaceCursorPaginationBase &
     (
       | {
@@ -33,7 +33,7 @@ export type BuildListSurfaceCursorPagination =
         }
     );
 
-export interface BuildListSurfaceServerPagination {
+interface BuildListSurfaceServerPagination {
   mode: "server";
   page: number;
   pageSize: number;
@@ -43,7 +43,7 @@ export interface BuildListSurfaceServerPagination {
   pageSizeOptions?: readonly number[];
 }
 
-export type BuildListSurfacePagination =
+type BuildListSurfacePagination =
   | BuildListSurfaceCursorPagination
   | BuildListSurfaceServerPagination;
 

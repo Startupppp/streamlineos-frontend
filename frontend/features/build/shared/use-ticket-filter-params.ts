@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { useListFilterParams, type ListFilterSpec } from "@/components/list-view";
+import { BUILD_LIST_CURSOR_PARAM } from "./use-build-list-url-state";
 
 const VALID_PRIORITIES = new Set(["LOW", "MEDIUM", "HIGH", "URGENT"]);
 const VALID_TICKET_TYPES = new Set(["TASK", "BUG", "STORY", "EPIC", "SUBTASK"]);
@@ -23,6 +24,7 @@ export const TICKET_FILTER_SPEC: ListFilterSpec = {
       params: ["dueDateFrom", "dueDateTo"],
     },
   ],
+  cursorParam: BUILD_LIST_CURSOR_PARAM,
 };
 
 export function useTicketFilterParams() {

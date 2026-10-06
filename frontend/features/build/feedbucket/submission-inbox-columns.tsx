@@ -67,7 +67,7 @@ function AgeCell(row: SubmissionRow) {
   );
 }
 
-export const SUBMISSION_COLUMNS: DataTableColumn<SubmissionRow>[] = [
+const SUBMISSION_COLUMNS: DataTableColumn<SubmissionRow>[] = [
   {
     key: "screenshot",
     header: "",

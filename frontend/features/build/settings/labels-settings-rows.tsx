@@ -11,7 +11,7 @@ import type { TicketLabel } from "@/types/projects";
 import { TEXT_BODY, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 
-export function DeleteLabelButton({
+function DeleteLabelButton({
   labelName,
   onConfirm,
 }: {
@@ -46,7 +46,7 @@ export function DeleteLabelButton({
   );
 }
 
-export function AddLabelButton({ onClick }: { onClick: () => void }) {
+function AddLabelButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
 
   return (

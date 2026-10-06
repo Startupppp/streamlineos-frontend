@@ -11,7 +11,7 @@ import type { BuildScopeType } from "@/lib/build/build-scope";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 export const BUILD_SCOPE_RESOLVE_LIMIT = 26;
-export const BUILD_SCOPE_SEARCH_LIMIT = 100;
+const BUILD_SCOPE_SEARCH_LIMIT = 100;
 
 export interface BuildScopeResolvedRef {
   key: string;

@@ -34,7 +34,7 @@ export interface ProjectFileRow {
   deletedAt: string | null;
 }
 
-export interface ProjectFilePage {
+interface ProjectFilePage {
   data: ProjectFileRow[];
   pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 }
@@ -57,7 +57,7 @@ function readFileAsBase64(file: File): Promise<string> {
   });
 }
 
-export interface ProjectFileSignedUrl {
+interface ProjectFileSignedUrl {
   url: string;
   expiresIn: number;
 }

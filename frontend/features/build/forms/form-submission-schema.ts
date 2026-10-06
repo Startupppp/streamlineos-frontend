@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const formFieldContract = z.object({
+const formFieldContract = z.object({
   key: z.string(),
   label: z.string(),
   type: z.string(),
@@ -43,7 +43,7 @@ function isHttpsUrl(v: string): boolean {
   }
 }
 
-export function buildFieldSchema(field: FormField): z.ZodTypeAny {
+function buildFieldSchema(field: FormField): z.ZodTypeAny {
   const { label, type, required, options } = field;
 
   if (type === "checkbox") {

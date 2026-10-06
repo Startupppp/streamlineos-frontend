@@ -34,7 +34,7 @@ import {
 
 export const PAGE_SIZE = 20;
 const PAGE_PARAM = "page";
-export const CREATE_ACTION = { id: "create", label: "New Goal", icon: Plus, primary: true as const };
+const CREATE_ACTION = { id: "create", label: "New Goal", icon: Plus, primary: true as const };
 
 function parsePageParam(raw: string | null): number {
   const parsed = Number(raw);

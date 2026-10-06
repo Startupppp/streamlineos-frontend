@@ -6,14 +6,11 @@ import {
   managedProductsBulkUpdateManagedProductsResponseSchema,
   type ManagedProductsGetManagedProductResponse,
   type ManagedProductsGetProductInsightsResponse,
-  type ManagedProductsBulkUpdateManagedProductsResponse,
 } from "@/contracts/build-contracts.generated";
 import { lazyContract } from "@/lib/api-envelope";
 import { apiClient } from "@/lib/api-client";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-
-export const managedProductOwnerContract = managedProductsGetManagedProductResponseSchema.shape.owner.unwrap();
 
 export const managedProductRowContract = managedProductsGetManagedProductResponseSchema;
 export const managedProductPageContract = managedProductsListManagedProductsResponseSchema;
@@ -22,9 +19,8 @@ export const managedProductBulkResultContract = managedProductsBulkUpdateManaged
 
 export type ManagedProductOwner = NonNullable<ManagedProductsGetManagedProductResponse["owner"]>;
 export type ManagedProductInsights = ManagedProductsGetProductInsightsResponse;
-export type ManagedProductBulkResult = ManagedProductsBulkUpdateManagedProductsResponse;
 
-export interface BulkUpdateManagedProductsInput {
+interface BulkUpdateManagedProductsInput {
   ids: number[];
   action: "update_status";
   status: "active" | "archived";

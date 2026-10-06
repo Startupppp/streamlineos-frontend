@@ -69,7 +69,7 @@ export function tabToDefaultSort(tab: WorkTab): {
   return { field: "rank", dir: "desc" };
 }
 
-export function getDueBucket(dueDate: string | null): DueBucket {
+function getDueBucket(dueDate: string | null): DueBucket {
   if (!dueDate) return "none";
   try {
     const d = parseISO(dueDate);

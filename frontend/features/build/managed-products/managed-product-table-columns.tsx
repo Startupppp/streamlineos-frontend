@@ -30,7 +30,7 @@ export const MANAGED_PRODUCT_TABLE_HEADERS = [
   "Actions",
 ] as const;
 
-export type ManagedProductOwnerLookup = (ownerId: string | null) => NamedUser | null;
+type ManagedProductOwnerLookup = (ownerId: string | null) => NamedUser | null;
 
 interface ManagedProductRowHandlers {
   canManage: boolean;

@@ -79,17 +79,20 @@ export function useListFilterParams(spec: ListFilterSpec): ListFilterParams {
     [spec, values],
   );
 
+  const cursorParamName = spec.cursorParam;
+
   const navigate = useCallback(
     (apply: (params: URLSearchParams) => void, keepPage = false) => {
       startTransition(() => {
         const params = currentSearchParams(searchParams);
         apply(params);
         if (!keepPage) params.delete(pageParamName);
+        if (!keepPage && cursorParamName) params.delete(cursorParamName);
         const qs = params.toString();
         router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
       });
     },
-    [router, pathname, searchParams, pageParamName],
+    [router, pathname, searchParams, pageParamName, cursorParamName],
   );
 
   const page = Math.max(1, Number(searchParams.get(pageParamName) ?? "1") || 1);

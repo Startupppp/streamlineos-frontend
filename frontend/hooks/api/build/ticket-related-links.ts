@@ -14,7 +14,7 @@ const relatedLinkListLazy = lazyContract(() =>
   import("@/hooks/api/build/build-tickets-subresource-schema").then((m) => m.relatedLinkListContract),
 );
 
-export interface TicketRelatedLink {
+interface TicketRelatedLink {
   id: number;
   orgId: string;
   projectId: number;

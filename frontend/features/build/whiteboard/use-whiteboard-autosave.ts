@@ -31,7 +31,7 @@ interface PendingScene {
   files: Files;
 }
 
-export interface AutosaveOptions {
+interface AutosaveOptions {
   boardId: number | null;
   access: WhiteboardAccess;
   initialVersion: number;

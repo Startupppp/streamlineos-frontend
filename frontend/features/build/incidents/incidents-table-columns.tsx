@@ -39,7 +39,7 @@ const STATUS_STYLES: Record<string, string> = {
   closed: "text-muted-foreground border-border",
 };
 
-export const INCIDENT_STATUS_LABELS: Record<string, string> = {
+const INCIDENT_STATUS_LABELS: Record<string, string> = {
   detected: "Detected",
   investigating: "Investigating",
   mitigating: "Mitigating",
@@ -108,7 +108,7 @@ interface IncidentRowHandlers {
   onDelete: (i: IncidentsCreateIncidentResponse) => void;
 }
 
-export function IncidentRowActions({
+function IncidentRowActions({
   incident,
   onEdit,
   onDelete,

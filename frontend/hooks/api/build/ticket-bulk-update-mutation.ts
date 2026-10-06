@@ -39,15 +39,15 @@ export interface BulkUpdateTicketsInput {
   versions: Record<string, number>;
 }
 
-export type BulkUpdateTicketsVariables = Omit<BulkUpdateTicketsInput, "versions">;
+type BulkUpdateTicketsVariables = Omit<BulkUpdateTicketsInput, "versions">;
 
-export interface BulkUpdateBlockedTicket {
+interface BulkUpdateBlockedTicket {
   ticketId: number;
   reason: string;
   dependencyCount: number;
 }
 
-export interface BulkUpdateTicketsResult {
+interface BulkUpdateTicketsResult {
   updated: number;
   ticketIds: number[];
   blocked?: BulkUpdateBlockedTicket[];

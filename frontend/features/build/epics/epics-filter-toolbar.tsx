@@ -9,7 +9,7 @@ import {
 } from "@/features/build/shared/use-build-list-filters";
 import { getUserDisplayName } from "@/lib/person-display";
 
-export const EPIC_HEALTH_OPTIONS = [
+const EPIC_HEALTH_OPTIONS = [
   { value: BUILD_FILTER_ALL, label: "Any health" },
   { value: "on_track", label: "On track" },
   { value: "at_risk", label: "At risk" },

@@ -6,7 +6,6 @@ import {
 
 export const fileRowContract = filesUploadFileResponseSchema;
 
-export const fileCursorPaginationContract = filesListFilesResponseSchema.shape.pagination;
 
 export const filePageContract = filesListFilesResponseSchema;
 

@@ -43,7 +43,7 @@ interface Status {
   id: number;
 }
 
-export interface SidebarSelectFieldsProps {
+interface SidebarSelectFieldsProps {
   ticket: {
     id: number;
     status?: string | null;

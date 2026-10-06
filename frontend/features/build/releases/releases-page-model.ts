@@ -13,7 +13,7 @@ export const RELEASE_FILTER_DEFINITIONS = [
   { param: "to" },
 ] as const;
 
-export type ReleaseStatus = "draft" | "released" | "archived";
+type ReleaseStatus = "draft" | "released" | "archived";
 
 export function isReleaseStatus(value: string): value is ReleaseStatus {
   return value === "draft" || value === "released" || value === "archived";

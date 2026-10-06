@@ -16,7 +16,7 @@ import { TEXT_TWO_LINES } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { CHANGELOG_TYPE_OPTIONS, CHANGELOG_TYPE_VARIANT } from "./roadmap-constants";
 
-export interface ChangelogEntryCardProps {
+interface ChangelogEntryCardProps {
   entry: ChangelogEntry;
   isUpdating: boolean;
   canManage: boolean;

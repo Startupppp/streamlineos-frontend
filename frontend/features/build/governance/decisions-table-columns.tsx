@@ -37,8 +37,8 @@ const DEC_STATUS_STYLE: Record<string, string> = {
 import { DECISION_TABLE_HEADERS } from "./decisions-table-headers";
 export { DECISION_TABLE_HEADERS };
 
-export type DecisionOwnerLookup = (userId: string | null) => NamedUser | null;
-export type DecisionMemberNameLookup = (userId: string | null) => string;
+type DecisionOwnerLookup = (userId: string | null) => NamedUser | null;
+type DecisionMemberNameLookup = (userId: string | null) => string;
 
 interface DecisionRowHandlers {
   canManage: boolean;
@@ -59,7 +59,7 @@ function DecisionStatusBadge({ status }: { status: string }) {
   );
 }
 
-export function DecisionRowActions({
+function DecisionRowActions({
   decision,
   onEdit,
   onDelete,

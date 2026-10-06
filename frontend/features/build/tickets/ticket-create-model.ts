@@ -34,6 +34,8 @@ export interface UseCreateTicketFormOptions {
   projectId: number | null;
   defaultStatus?: string;
   defaultCycleId?: number | null;
+  open: boolean;
+  setOpen: (value: boolean) => void;
   onCreated?: () => void;
   onClose?: () => void;
 }

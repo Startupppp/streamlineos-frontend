@@ -95,7 +95,7 @@ interface UpdateRoadmapItemInput {
   ownerMembershipId?: number | null;
 }
 
-export interface ScoredRoadmapItem extends RoadmapItem {
+interface ScoredRoadmapItem extends RoadmapItem {
   reach: number | null;
   impact: number | null;
   confidence: number | null;

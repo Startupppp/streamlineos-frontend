@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -10,9 +10,6 @@ import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 const whiteboardResponseContract = lazyContract(() =>
   import("@/hooks/api/build/workspace-schema").then((m) => m.whiteboardResponseContract),
-);
-const whiteboardListContract = lazyContract(() =>
-  import("@/hooks/api/build/workspace-schema").then((m) => m.whiteboardListContract),
 );
 const whiteboardDetailContract = lazyContract(() =>
   import("@/hooks/api/build/workspace-schema").then((m) => m.whiteboardDetailContract),
@@ -49,14 +46,14 @@ export interface WhiteboardSummary {
   updatedAt: string | null;
 }
 
-export interface WhiteboardShareEntry {
+interface WhiteboardShareEntry {
   userId: string;
   role: WhiteboardShareRole;
   name: string | null;
   email: string | null;
 }
 
-export interface WhiteboardSharing {
+interface WhiteboardSharing {
   visibility: WhiteboardVisibility;
   publicAccess: WhiteboardShareRole | null;
   shareToken: string | null;
@@ -84,7 +81,7 @@ interface UpdateWhiteboardInput {
   data?: ExcalidrawSceneData;
 }
 
-export interface UpdateWhiteboardSharingInput {
+interface UpdateWhiteboardSharingInput {
   whiteboardId: number;
   visibility?: WhiteboardVisibility;
   publicAccess?: WhiteboardShareRole;
@@ -92,7 +89,7 @@ export interface UpdateWhiteboardSharingInput {
   allowExport?: boolean;
 }
 
-export interface SetWhiteboardSharesInput {
+interface SetWhiteboardSharesInput {
   whiteboardId: number;
   shares: Array<{ userId: string; role: WhiteboardShareRole }>;
 }

@@ -15,6 +15,7 @@ import type { KanbanTicket } from "@/features/build/shared/types";
 import { mapBoardTicketToKanban } from "@/features/build/my-tickets/map-board-ticket";
 import { buildTicketCollectionReturnHref } from "@/features/build/ticket-details/build-ticket-detail-url";
 import { currentSearchParams } from "@/lib/current-search-params";
+import { BUILD_LIST_CURSOR_PARAM } from "../shared/use-build-list-url-state";
 import { useBoardNavigationActions } from "./use-board-navigation-actions";
 import { useBoardFilterParams } from "./board-filter-params";
 import {
@@ -95,6 +96,12 @@ export function useBoardUrlState(
         currentSearchParams(searchParams),
         next,
       );
+      if (
+        params.get("orderBy") !== searchParams.get("orderBy") ||
+        params.get("orderDir") !== searchParams.get("orderDir")
+      ) {
+        params.delete(BUILD_LIST_CURSOR_PARAM);
+      }
       router.replace(`?${params.toString()}`, { scroll: false });
     },
     [setStoredDisplayOptions, searchParams, router],

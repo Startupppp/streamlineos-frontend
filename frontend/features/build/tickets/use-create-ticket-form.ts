@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 
-import { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCreateTicket, useAddAttachment } from "@/hooks/api/build/tickets";
@@ -11,6 +11,7 @@ import { useProjectMembers } from "@/hooks/api/build/projects";
 import { useAddLabelToTicket } from "@/hooks/api/build/tickets";
 import { useAddRelatedLink } from "@/hooks/api/build/ticket-related-links";
 import { useUploadProjectFile, MAX_PROJECT_FILE_BYTES } from "@/hooks/api/build/project-files";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -37,17 +38,17 @@ export function useCreateTicketForm({
   projectId,
   defaultStatus,
   defaultCycleId,
+  open,
+  setOpen,
   onCreated,
   onClose,
 }: UseCreateTicketFormOptions) {
-  const [open, setOpen] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [relatedLinks, setRelatedLinks] = useState<RelatedLinkDraft[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [createMore, setCreateMore] = useState(false);
   const titleRef = useRef<HTMLInputElement | null>(null);
   const queryClient = useQueryClient();
-  const pendingCycleDefaultRef = useRef(defaultCycleId === undefined);
   const queryProjectId = projectId ?? 0;
 
   const { data: projectData } = useProject(queryProjectId);
@@ -85,14 +86,19 @@ export function useCreateTicketForm({
   const activeCycle = useMemo(() => findActiveCycle(cycles), [cycles]);
   const activeCycleId = activeCycle?.id ?? null;
 
-  const [properties, setProperties] = useState<CreateTicketPropertiesValue>({
-    status: defaultStatusValue,
-    priority: null,
-    assigneeId: null,
-    points: null,
-    labelIds: [],
-    cycleId: resolveDefaultCycleId(defaultCycleId, activeCycleId),
-  });
+  const sourceKey = `${projectId ?? ""}-${defaultCycleId ?? ""}`;
+  const defaultProperties = useMemo<CreateTicketPropertiesValue>(
+    () => ({
+      status: defaultStatusValue,
+      priority: null,
+      assigneeId: null,
+      points: null,
+      labelIds: [],
+      cycleId: resolveDefaultCycleId(defaultCycleId, activeCycleId),
+    }),
+    [defaultStatusValue, defaultCycleId, activeCycleId],
+  );
+  const [properties, setProperties] = useSourceOverride(sourceKey, defaultProperties);
 
   const form = useForm<CreateTicketFormValues>({
     resolver: zodResolver(formSchema),
@@ -112,38 +118,8 @@ export function useCreateTicketForm({
     (patch: Partial<CreateTicketPropertiesValue>) => {
       setProperties((prev) => ({ ...prev, ...patch }));
     },
-    [],
+    [setProperties],
   );
-
-  useEffect(() => {
-    pendingCycleDefaultRef.current = defaultCycleId === undefined;
-    setProperties((prev) => ({
-      status: prev.status,
-      priority: null,
-      assigneeId: null,
-      points: null,
-      labelIds: [],
-      cycleId: resolveDefaultCycleId(defaultCycleId, null),
-    }));
-  }, [projectId, defaultCycleId]);
-
-  useEffect(() => {
-    setProperties((prev) => ({ ...prev, status: defaultStatusValue }));
-  }, [defaultStatusValue]);
-
-  useEffect(() => {
-    if (defaultCycleId !== undefined) {
-      setProperties((prev) => ({ ...prev, cycleId: defaultCycleId }));
-      pendingCycleDefaultRef.current = false;
-      return;
-    }
-    if (pendingCycleDefaultRef.current && activeCycleId != null) {
-      setProperties((prev) =>
-        prev.cycleId === null ? { ...prev, cycleId: activeCycleId } : prev,
-      );
-      pendingCycleDefaultRef.current = false;
-    }
-  }, [activeCycleId, defaultCycleId]);
 
   const resetForm = useCallback(
     (preserveContext: boolean) => {
@@ -151,7 +127,6 @@ export function useCreateTicketForm({
       setFiles([]);
       setRelatedLinks([]);
       if (!preserveContext) {
-        pendingCycleDefaultRef.current = defaultCycleId === undefined;
         setProperties({
           status: defaultStatusValue,
           priority: null,
@@ -171,7 +146,7 @@ export function useCreateTicketForm({
       }
       setTimeout(() => titleRef.current?.focus(), 50);
     },
-    [form, defaultStatusValue, activeCycleId, defaultCycleId],
+    [form, defaultStatusValue, activeCycleId, defaultCycleId, setProperties],
   );
 
   const finishCreation = useCallback(() => {
@@ -197,7 +172,7 @@ export function useCreateTicketForm({
       onClose?.();
       resetForm(false);
     }
-  }, [queryClient, projectId, createMore, resetForm, onCreated, onClose]);
+  }, [queryClient, projectId, createMore, resetForm, onCreated, onClose, setOpen]);
 
   const createTicketMutation = useCreateTicket({
     onSuccess: (data) => {

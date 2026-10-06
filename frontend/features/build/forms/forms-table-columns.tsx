@@ -23,7 +23,7 @@ interface FormRowHandlers {
   projectId: number;
 }
 
-export function FormStatusBadge({ isActive }: { isActive: boolean }) {
+function FormStatusBadge({ isActive }: { isActive: boolean }) {
   return (
     <Badge variant={isActive ? "default" : "secondary"} className="text-micro px-1.5">
       {isActive ? "Active" : "Inactive"}

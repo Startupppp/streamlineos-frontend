@@ -14,9 +14,9 @@ export const mockUseAccess: jest.Mock = jest.mocked(useAccess);
 export const mockUseProjects: jest.Mock = jest.mocked(useProjects);
 export const mockUseInfiniteAllWork: jest.Mock = jest.mocked(useInfiniteAllWork);
 export const mockUseAllWork: jest.Mock = jest.mocked(useAllWork);
-export const mockUseDashboardLayoutEditor: jest.Mock = jest.mocked(useDashboardLayoutEditor);
+const mockUseDashboardLayoutEditor: jest.Mock = jest.mocked(useDashboardLayoutEditor);
 
-export const DEFAULT_LAYOUT_MOCK = {
+const DEFAULT_LAYOUT_MOCK = {
   config: {
     widgets: [
       { type: "my-issues", position: { col: 0, row: 0, w: 3, h: 4 } },

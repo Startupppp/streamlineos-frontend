@@ -71,7 +71,7 @@ function releaseNotesText(description: string) {
   return description.replace(MARKUP_TAG, " ").replace(COLLAPSIBLE_WHITESPACE, " ").trim();
 }
 
-export function ReleaseStatusBadge({ status }: { status: Release["status"] }) {
+function ReleaseStatusBadge({ status }: { status: Release["status"] }) {
   const cfg = STATUS_CONFIG[status];
   return (
     <Badge variant="outline" className={cn("h-5 py-0 text-micro", cfg.className)}>

@@ -40,7 +40,7 @@ interface BaseProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export type ModuleFormSheetProps =
+type ModuleFormSheetProps =
   | (BaseProps & { mode: "create" })
   | (BaseProps & { mode: "edit"; module: Module });
 

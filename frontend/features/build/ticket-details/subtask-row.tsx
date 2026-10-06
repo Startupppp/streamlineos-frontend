@@ -11,7 +11,7 @@ import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 import type { ProjectStatusRecord } from "@/types/projects";
 import { isCompletedTicketStatus } from "@/features/build/shared/completed-status";
 
-export interface CompactTicketRowData {
+interface CompactTicketRowData {
   id: number;
   title: string;
   status: string;

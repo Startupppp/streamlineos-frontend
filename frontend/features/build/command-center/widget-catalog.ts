@@ -1,7 +1,7 @@
 import type { PermissionKey } from "@/lib/rbac/permissions";
 import type { WidgetType } from "./dashboard-layout";
 
-export interface WidgetCatalogEntry {
+interface WidgetCatalogEntry {
   title: string;
   drillDownHref: string;
   permissionKey: PermissionKey | null;

@@ -57,7 +57,6 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
     typeValue,
     statusValue,
     linkedValue,
-    assigneeIdValue,
     duplicateValue,
     typedFrom,
     typedTo,

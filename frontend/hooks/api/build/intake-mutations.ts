@@ -12,7 +12,7 @@ const routeIntakeContract = lazyContract(() =>
   Promise.resolve(z.object({ intakeId: z.number().int(), created: z.boolean() }).strict()),
 );
 
-export interface RouteFeedbucketToIntakeInput {
+interface RouteFeedbucketToIntakeInput {
   submissionId: number;
   projectId: number;
 }
@@ -40,7 +40,7 @@ const intakeItemContract = lazyContract(() =>
   import("@/hooks/api/build/workspace-schema").then((m) => m.intakeItemContract),
 );
 
-export interface AcceptIntakeRequestInput {
+interface AcceptIntakeRequestInput {
   intakeRequestId: number;
   projectId: number;
   status: "accepted";

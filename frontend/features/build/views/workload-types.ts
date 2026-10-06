@@ -1,6 +1,6 @@
 export type StatFilter = "all" | "assigned" | "unassigned" | "over-capacity";
 
-export const WORKLOAD_GROUPS = ["none", "team"] as const;
+const WORKLOAD_GROUPS = ["none", "team"] as const;
 export type WorkloadGroup = (typeof WORKLOAD_GROUPS)[number];
 
 export function isWorkloadGroup(value: string): value is WorkloadGroup {

@@ -46,7 +46,7 @@ async function executeBulk(
   }
 }
 
-export interface InboxBulkActions {
+interface InboxBulkActions {
   isMutating: boolean;
   runBulkMarkRead: (ids: number[]) => void;
   runBulkArchive: (ids: number[]) => void;

@@ -31,7 +31,7 @@ function matchesStoredScopes(
   });
 }
 
-export interface ReconciledBuildScopes {
+interface ReconciledBuildScopes {
   entries: readonly BuildScopeRef[];
   isReconciled: boolean;
 }

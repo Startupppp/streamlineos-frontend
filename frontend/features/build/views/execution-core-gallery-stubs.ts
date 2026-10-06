@@ -24,7 +24,7 @@ export const STUB_CYCLES = [
   { id: 2, name: "Sprint 43", status: "planned" },
 ];
 
-export const STUB_TICKET: KanbanTicket & { id: number } = {
+const STUB_TICKET: KanbanTicket & { id: number } = {
   id: 42,
   title: "Implement token-refresh flow for idle sessions",
   type: "STORY",
@@ -47,7 +47,7 @@ export const STUB_TICKET: KanbanTicket & { id: number } = {
   assignees: [],
 };
 
-export const STUB_TICKET_B: KanbanTicket & { id: number } = {
+const STUB_TICKET_B: KanbanTicket & { id: number } = {
   ...STUB_TICKET,
   id: 43,
   title: "Add rate-limit error state to the onboarding wizard",
@@ -57,7 +57,7 @@ export const STUB_TICKET_B: KanbanTicket & { id: number } = {
   priority: "MEDIUM",
 };
 
-export const STUB_TICKET_C: KanbanTicket & { id: number } = {
+const STUB_TICKET_C: KanbanTicket & { id: number } = {
   ...STUB_TICKET,
   id: 44,
   title: "Expose cursor-based pagination for /api/tickets",

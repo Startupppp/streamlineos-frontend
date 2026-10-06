@@ -7,7 +7,7 @@ import type {
 
 export type CommentDraftListItem =
   CommentDraftsListMineResponse["data"][number];
-export type CommentDraftTicket = CommentDraftListItem["ticket"];
+type CommentDraftTicket = CommentDraftListItem["ticket"];
 export type CommentDraft = CommentDraftsUpsertResponse & {
   ticket?: CommentDraftTicket;
 };

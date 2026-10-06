@@ -41,7 +41,7 @@ export interface DecideTarget {
   revision: number;
 }
 
-export function ProjectLinkCell({ row }: { row: ApprovalInboxItem }) {
+function ProjectLinkCell({ row }: { row: ApprovalInboxItem }) {
   const handleClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
   }, []);

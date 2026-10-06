@@ -3,7 +3,7 @@
 const PROB_IDX: Record<string, number> = { low: 1, medium: 2, high: 3 };
 const IMPACT_IDX: Record<string, number> = { low: 1, medium: 2, high: 3 };
 
-export interface RiskSeverityResult {
+interface RiskSeverityResult {
   label: "Low" | "Medium" | "High" | "Critical";
   className: string;
   score: number;

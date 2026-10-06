@@ -65,7 +65,7 @@ export const HEALTH_OPTIONS = [
   { value: "all", label: "All health" },
   { value: "at_risk", label: "At risk" },
 ];
-export const LEAD_OPTIONS = [
+const LEAD_OPTIONS = [
   { value: "all", label: "All leads" },
   { value: "priya", label: "Priya Nair" },
 ];

@@ -1,7 +1,5 @@
 "use client";
 
-import React from "react";
-
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
 }));

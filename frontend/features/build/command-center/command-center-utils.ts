@@ -3,9 +3,9 @@ import type { MyWorkItem } from "@/types/projects/my-work";
 
 export const COMMAND_CENTER_DUE_VALUES = ["overdue", "today", "week"] as const;
 
-export type CommandCenterDue = (typeof COMMAND_CENTER_DUE_VALUES)[number];
+type CommandCenterDue = (typeof COMMAND_CENTER_DUE_VALUES)[number];
 
-export interface CommandCenterDueWindow {
+interface CommandCenterDueWindow {
   dueDateFrom?: string;
   dueDateTo?: string;
 }

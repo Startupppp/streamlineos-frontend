@@ -28,7 +28,7 @@ const ticketUpdateResultLazy = lazyContract(() =>
   ),
 );
 
-export interface UpdateTicketResponse {
+interface UpdateTicketResponse {
   updated: boolean;
   updatedAt: string;
   version: number;

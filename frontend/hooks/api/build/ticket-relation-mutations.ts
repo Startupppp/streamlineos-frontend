@@ -25,7 +25,7 @@ const ticketRelationListLazy = lazyContract(() =>
   ),
 );
 
-export type TicketRelation = z.infer<
+type TicketRelation = z.infer<
   typeof ticketRelationListContractDef
 >[number];
 export type WorkItemRelationType = TicketRelation["relationType"];

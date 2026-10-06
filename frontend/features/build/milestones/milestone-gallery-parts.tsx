@@ -13,7 +13,7 @@ import { PmPageShell, PmSection } from "@/components/pm-chrome";
 import { MilestoneCard } from "./milestone-card";
 import { MILESTONE_STATUS_OPTIONS, STUB_MILESTONES, STUB_NOOP } from "./planning-surfaces-fixtures";
 
-export function MilestoneListToolbar() {
+function MilestoneListToolbar() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const [dateRange, setDateRange] = useState<{ from: string; to: string }>({ from: "", to: "" });

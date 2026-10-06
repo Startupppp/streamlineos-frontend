@@ -99,7 +99,7 @@ export function useCreateCycle(options?: Parameters<typeof useMutation>[0]) {
   });
 }
 
-export interface UpdateCycleInput {
+interface UpdateCycleInput {
   projectId: number;
   cycleId: number;
   version: number;

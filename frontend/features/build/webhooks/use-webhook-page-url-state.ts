@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { BUILD_CURSOR_STACK_PARAM } from "@/features/build/shared/use-build-cursor-pager";
 
-export interface WebhookPageUrlState {
+interface WebhookPageUrlState {
   stateParam: "active" | "inactive" | null;
   eventParam: string | undefined;
   qParam: string | undefined;

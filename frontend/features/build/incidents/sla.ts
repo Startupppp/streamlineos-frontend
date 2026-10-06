@@ -1,6 +1,6 @@
 import type { IncidentsCreateIncidentResponse } from "@/contracts/build-contracts.generated";
 
-export interface SlaState {
+interface SlaState {
   responseBreached: boolean;
   resolutionBreached: boolean;
   label: "On track" | "Response breached" | "Resolution breached" | "Met";

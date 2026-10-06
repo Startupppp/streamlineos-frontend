@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { ProjectHealth } from "@/types/projects/projects";
 
-export type ProjectStatusFilter = "ACTIVE" | "COMPLETED" | "ARCHIVED";
+type ProjectStatusFilter = "ACTIVE" | "COMPLETED" | "ARCHIVED";
 
 export interface ProjectActiveFilters {
   status?: ProjectStatusFilter;

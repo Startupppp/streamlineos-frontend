@@ -14,12 +14,12 @@ import {
 } from "@/features/build/shared/use-build-list-filters";
 import { LEVEL_OPTIONS, METRIC_OPTIONS, STATUS_OPTIONS } from "./constants";
 
-export const GOAL_LEVEL_FILTER_OPTIONS = [
+const GOAL_LEVEL_FILTER_OPTIONS = [
   { value: BUILD_FILTER_ALL, label: "All levels" },
   ...LEVEL_OPTIONS,
 ];
 
-export const GOAL_STATUS_FILTER_OPTIONS = [
+const GOAL_STATUS_FILTER_OPTIONS = [
   { value: BUILD_FILTER_ALL, label: "All statuses" },
   ...STATUS_OPTIONS,
 ];
@@ -34,35 +34,34 @@ export const GOAL_FILTER_DEFINITIONS = [
   { param: "metricType" },
 ] as const;
 
-export const GOAL_SCOPE_VALUES = ["own", "all"] as const;
-export const GOAL_HEALTH_VALUES = ["on_track", "at_risk", "off_track"] as const;
-export const GOAL_DUE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const GOAL_HEALTH_VALUES = ["on_track", "at_risk", "off_track"] as const;
+const GOAL_DUE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 function isGoalHealth(v: string): v is (typeof GOAL_HEALTH_VALUES)[number] {
   return GOAL_HEALTH_VALUES.some((h) => h === v);
 }
-export const GOAL_DUE_FILTER_LABEL = "Due on or before";
+const GOAL_DUE_FILTER_LABEL = "Due on or before";
 
-export const GOAL_SCOPE_FILTER_OPTIONS: readonly BuildFilterOption[] = [
+const GOAL_SCOPE_FILTER_OPTIONS: readonly BuildFilterOption[] = [
   { value: BUILD_FILTER_ALL, label: "All goals" },
   { value: "own", label: "My goals" },
 ];
 
-export const GOAL_HEALTH_FILTER_OPTIONS: readonly BuildFilterOption[] = [
+const GOAL_HEALTH_FILTER_OPTIONS: readonly BuildFilterOption[] = [
   { value: BUILD_FILTER_ALL, label: "Any health" },
   { value: "on_track", label: "On track" },
   { value: "at_risk", label: "At risk" },
   { value: "off_track", label: "Off track" },
 ];
 
-export const GOAL_METRIC_FILTER_OPTIONS: readonly BuildFilterOption[] = [
+const GOAL_METRIC_FILTER_OPTIONS: readonly BuildFilterOption[] = [
   { value: BUILD_FILTER_ALL, label: "All types" },
   ...METRIC_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
 ];
 
-export interface GoalOutcomeParams {
+interface GoalOutcomeParams {
   health?: (typeof GOAL_HEALTH_VALUES)[number];
-  scope?: (typeof GOAL_SCOPE_VALUES)[number];
+  scope?: "own" | "all";
   due?: string;
 }
 

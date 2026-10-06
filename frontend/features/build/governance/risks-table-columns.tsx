@@ -52,8 +52,8 @@ const STATUS_STYLE: Record<string, string> = {
 import { RISK_TABLE_HEADERS } from "./risks-table-headers";
 export { RISK_TABLE_HEADERS };
 
-export type RiskOwnerLookup = (userId: string | null) => NamedUser | null;
-export type RiskMemberNameLookup = (userId: string | null) => string;
+type RiskOwnerLookup = (userId: string | null) => NamedUser | null;
+type RiskMemberNameLookup = (userId: string | null) => string;
 
 interface RiskRowHandlers {
   canManage: boolean;
@@ -74,7 +74,7 @@ function RiskStatusBadge({ status }: { status: string }) {
   );
 }
 
-export function RiskRowActions({
+function RiskRowActions({
   risk,
   onEdit,
   onDelete,

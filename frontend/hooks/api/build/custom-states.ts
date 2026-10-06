@@ -28,7 +28,7 @@ const noContentContract = lazyContract(() =>
 );
 export type CustomState = z.infer<typeof projectCustomStateContractDef>;
 
-export type OrgCustomStateItem = ProjectResourcesListOrgCustomStatesResponse[number];
+type OrgCustomStateItem = ProjectResourcesListOrgCustomStatesResponse[number];
 
 const orgCustomStateListContract = lazyContract(() =>
   import("@/contracts/build-contracts.generated").then((m) => m.projectResourcesListOrgCustomStatesResponseSchema),

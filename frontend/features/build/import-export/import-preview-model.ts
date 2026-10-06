@@ -8,9 +8,9 @@ import type {
   ImportRowResult,
 } from "./import-export-contract";
 
-export type PreviewRowState = "IMPORTABLE" | ImportIssueKind;
+type PreviewRowState = "IMPORTABLE" | ImportIssueKind;
 
-export interface PreviewRowView {
+interface PreviewRowView {
   rowNumber: number;
   title: string | null;
   state: PreviewRowState;
@@ -28,7 +28,7 @@ function pluralize(count: number, noun: string): string {
   return `${count} ${noun}${count === 1 ? "" : "s"}`;
 }
 
-export function issuesByRow(preview: TicketImportExportPreviewImportResponse): Map<number, ImportRowIssue[]> {
+function issuesByRow(preview: TicketImportExportPreviewImportResponse): Map<number, ImportRowIssue[]> {
   const grouped = new Map<number, ImportRowIssue[]>();
   for (const issue of preview.issues) {
     const existing = grouped.get(issue.rowNumber);

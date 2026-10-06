@@ -43,17 +43,17 @@ interface WorkloadMemberRowProps {
   capacityData?: MemberCapacityData;
 }
 
-export function formatEstimateHours(capacityData: MemberCapacityData | undefined): string {
+function formatEstimateHours(capacityData: MemberCapacityData | undefined): string {
   if (capacityData == null || capacityData.estimateHours === null) return "—";
   return `${capacityData.estimateHours}h`;
 }
 
-export function formatAllocationPercent(capacityData: MemberCapacityData | undefined): string {
+function formatAllocationPercent(capacityData: MemberCapacityData | undefined): string {
   if (capacityData == null || capacityData.allocationPercent === null) return "—";
   return `${capacityData.allocationPercent}%`;
 }
 
-export function formatVarianceHours(capacityData: MemberCapacityData | undefined): string {
+function formatVarianceHours(capacityData: MemberCapacityData | undefined): string {
   if (capacityData == null || capacityData.varianceHours === null) return "—";
   const variance = capacityData.varianceHours;
   return variance > 0 ? `+${variance}h` : `${variance}h`;

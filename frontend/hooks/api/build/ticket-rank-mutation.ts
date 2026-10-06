@@ -16,7 +16,7 @@ const rankTicketResultLazy = lazyContract(() =>
   ),
 );
 
-export interface RankTicketResponse {
+interface RankTicketResponse {
   id: number;
   rank: string;
   status: string;

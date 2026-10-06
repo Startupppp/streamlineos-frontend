@@ -28,7 +28,7 @@ import {
 } from "@/contracts/build-contracts.generated";
 import { z } from "zod";
 
-export const projectDetailMemberContract =
+const projectDetailMemberContract =
   projectsByIdGetProjectResponseSchema.shape.members.element.transform((m) => ({
     id: m.id,
     projectId: m.projectId,
@@ -45,8 +45,7 @@ export const projectDetailMemberContract =
     },
   }));
 
-export const projectMemberSchema =
-  projectResourcesListMembersResponseSchema.shape.data.element;
+
 export const ticketLabelListContract = projectsListLabelsResponseSchema;
 export const ticketLabelContract = projectsCreateLabelResponseSchema;
 export const projectListPageContract = projectsListProjectsResponseSchema;
@@ -74,8 +73,7 @@ export const ticketFieldValueCreateContract =
   projectsCustomFieldsUpsertTicketValuesResponseSchema;
 export const projectReleaseListContract =
   projectsReleasesListReleasesResponseSchema;
-export const projectReleaseListItemContract =
-  projectsReleasesListReleasesResponseSchema.shape.data.element;
+
 export const projectReleaseRowContract = projectsReleasesCreateReleaseResponseSchema;
 export const projectWebhookPageContract =
   projectsWebhooksListWebhooksResponseSchema;

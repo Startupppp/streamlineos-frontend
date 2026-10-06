@@ -12,7 +12,7 @@ import {
 } from "@/lib/filter-envelope/filter-envelope-v1";
 import { Button } from "@/components/ui/button";
 
-export interface FilterGroupProps {
+interface FilterGroupProps {
   envelope: FilterEnvelopeV1;
   onChange: (next: FilterEnvelopeV1) => void;
   onClear?: () => void;

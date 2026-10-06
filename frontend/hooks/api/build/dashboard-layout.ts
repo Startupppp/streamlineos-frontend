@@ -16,7 +16,7 @@ const dashboardLayoutSaveLazy = lazyContract(() =>
   import("@/contracts/build-contracts.generated").then((m) => m.dashboardLayoutSaveLayoutResponseSchema),
 );
 
-export type SaveDashboardLayoutInput = Pick<DashboardLayoutGetLayoutResponse, "layoutVersion" | "config">;
+type SaveDashboardLayoutInput = Pick<DashboardLayoutGetLayoutResponse, "layoutVersion" | "config">;
 
 export function useDashboardLayout() {
   const canView = useCan("build:dashboard:view");

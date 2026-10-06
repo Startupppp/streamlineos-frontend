@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { hydrateDisplayOptions, writeDisplayOptionParams } from "./use-display-options";
 import { parseViewType } from "./view-switcher";
 import { currentSearchParams } from "@/lib/current-search-params";
+import { BUILD_LIST_CURSOR_PARAM } from "../shared/use-build-list-url-state";
 import type { DisplayOptions } from "@/features/build/shared/types";
 import type { ProjectView } from "@/types/projects";
 import type { useRouter, useSearchParams } from "next/navigation";
@@ -58,6 +59,7 @@ export function useBoardViewApply({
       setStoredDisplayOptions(hydrated);
       writeDisplayOptionParams(next, hydrated);
     }
+    next.delete(BUILD_LIST_CURSOR_PARAM);
     router.replace(`?${next.toString()}`, { scroll: false });
   }, [
     isCalendarDeepLink,

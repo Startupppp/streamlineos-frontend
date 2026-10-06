@@ -9,7 +9,7 @@ import { PERSONA_DEFAULTS } from "./dashboard-layout";
 
 const DEBOUNCE_MS = 800;
 
-export interface UseDashboardLayoutReturn {
+interface UseDashboardLayoutReturn {
   config: DashboardLayoutConfig;
   layoutVersion: number;
   isPending: boolean;

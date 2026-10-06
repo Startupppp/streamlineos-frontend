@@ -38,7 +38,7 @@ function parseCursor(raw: string | null): number | null {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
-export interface InboxUrlState {
+interface InboxUrlState {
   section: NotificationSection;
   q: string | null;
   type: NotificationCategory | null;

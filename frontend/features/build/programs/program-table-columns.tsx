@@ -32,8 +32,8 @@ export const PROGRAM_TABLE_HEADERS = [
   "Actions",
 ] as const;
 
-export type ProgramOwnerLookup = (ownerId: string | null) => NamedUser | null;
-export type ProgramPortfolioLookup = (portfolioId: number | null) => string;
+type ProgramOwnerLookup = (ownerId: string | null) => NamedUser | null;
+type ProgramPortfolioLookup = (portfolioId: number | null) => string;
 
 interface ProgramRowHandlers {
   canManage: boolean;
@@ -47,7 +47,7 @@ function ownerLabel(user: NamedUser | null): string {
   return user?.name ?? user?.email ?? "Unassigned";
 }
 
-export function ProgramRowActions({
+function ProgramRowActions({
   program,
   onEdit,
   onDelete,

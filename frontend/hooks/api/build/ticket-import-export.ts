@@ -21,20 +21,20 @@ import type {
 } from "@/contracts/build-contracts.generated";
 import type { ImportFormat, ImportMode } from "@/features/build/import-export/import-export-contract";
 
-export interface PreviewTicketImportVariables {
+interface PreviewTicketImportVariables {
   format: ImportFormat;
   content: string;
   signal?: AbortSignal;
 }
 
-export interface CommitTicketImportVariables {
+interface CommitTicketImportVariables {
   format: ImportFormat;
   content: string;
   confirmationToken: string;
   mode?: ImportMode;
 }
 
-export interface ExportTicketsVariables {
+interface ExportTicketsVariables {
   format: ImportFormat;
   limit?: number;
   ticketIds?: number[];
@@ -113,7 +113,7 @@ export function useExportTicketsPreview(projectId: number) {
   });
 }
 
-export interface TicketSelectionExportGroup {
+interface TicketSelectionExportGroup {
   projectId: number;
   ticketIds: number[];
 }

@@ -1,7 +1,7 @@
 import type { NamedUser } from "@/lib/person-display";
 import type { ApprovalStatus } from "@/types/projects";
 
-export const OWNERS: Record<string, NamedUser> = {
+const OWNERS: Record<string, NamedUser> = {
   user_priya: { firstName: "Priya", lastName: "Nair" },
   user_daniel: { firstName: "Daniel", lastName: "Okafor" },
 };

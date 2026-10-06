@@ -5,7 +5,7 @@ import type { TicketConflictFieldDiff } from "@/features/build/ticket-details/ti
 
 const DESCRIPTION_MAX = 500;
 const GOAL_MAX = 500;
-export const CAPACITY_MAX = 100_000;
+const CAPACITY_MAX = 100_000;
 
 const cycleFormSchema = z
   .object({

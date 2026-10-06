@@ -94,7 +94,7 @@ export function getWorkspaceUsersFromCache(queryClient: QueryClient): WorkspaceU
   return merged;
 }
 
-export type ProjectPatch = Omit<UpdateProjectInput, "projectId">;
+type ProjectPatch = Omit<UpdateProjectInput, "projectId">;
 
 
 export type ProjectListCache = ProjectListResponse | InfiniteData<ProjectListResponse>;

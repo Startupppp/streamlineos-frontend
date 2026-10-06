@@ -27,7 +27,7 @@ function isRiskStatus(v: string): v is RiskStatus {
   return RISK_STATUS_SET.has(v);
 }
 
-export interface RiskBulkActionBarProps {
+interface RiskBulkActionBarProps {
   selectedCount: number;
   onBulkStatus: (status: RiskStatus) => void;
   onBulkOwner: (ownerId: string) => void;

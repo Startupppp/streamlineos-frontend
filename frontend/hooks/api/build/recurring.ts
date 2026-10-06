@@ -18,7 +18,7 @@ export interface RecurrenceRule {
   endDate?: string | null;
 }
 
-export interface SetRecurrenceInput {
+interface SetRecurrenceInput {
   version: number;
   rule: RecurrenceRule | null;
 }

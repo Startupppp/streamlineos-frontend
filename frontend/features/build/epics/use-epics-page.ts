@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useProject, useProjectLabels } from "@/hooks/api/build/projects";
 import { useUpdateTicket } from "@/hooks/api/build/ticket-update-mutation";
 import {
@@ -30,6 +30,7 @@ import {
 } from "./epics-filter-toolbar";
 
 const EPIC_PAGE_SIZE = 25;
+const EMPTY_CURSORS: readonly (string | null)[] = [];
 
 export function useEpicsPage(projectIdStr: string) {
   const projectId = parseInt(projectIdStr);
@@ -105,32 +106,30 @@ export function useEpicsPage(projectIdStr: string) {
   const createTicket = useCreateTicket();
   const bulkUpdate = useBulkUpdateTickets(projectId);
 
-  const tickets = boardTickets ?? [];
-  const epics = epicPage?.data ?? [];
+  const tickets = useMemo(() => boardTickets ?? [], [boardTickets]);
+  const epics = useMemo(() => epicPage?.data ?? [], [epicPage]);
   const hasMoreEpics = epicPage?.pagination.hasMore ?? false;
   const nextEpicCursor = epicPage?.pagination.nextCursor ?? null;
   const [visitedCursors, setVisitedCursors] = useState<(string | null)[]>([]);
   const urlCursor = listFilters.cursor;
 
-  useEffect(() => {
-    if (urlCursor === null) setVisitedCursors([]);
-  }, [urlCursor]);
+  const history = urlCursor === null ? EMPTY_CURSORS : visitedCursors;
 
   const handleNextPage = useCallback(() => {
     if (!nextEpicCursor) return;
-    setVisitedCursors((current) => [...current, urlCursor]);
+    setVisitedCursors([...history, urlCursor]);
     listFilters.setCursor(nextEpicCursor);
-  }, [listFilters, nextEpicCursor, urlCursor]);
+  }, [listFilters, nextEpicCursor, urlCursor, history]);
 
   const handlePreviousPage = useCallback(() => {
-    const previous = visitedCursors[visitedCursors.length - 1] ?? null;
-    setVisitedCursors((current) => current.slice(0, -1));
+    const previous = history[history.length - 1] ?? null;
+    setVisitedCursors([...history.slice(0, -1)]);
     listFilters.setCursor(previous);
-  }, [listFilters, visitedCursors]);
+  }, [listFilters, history]);
 
-  const allEpics = tickets.filter((t) => t.type === "EPIC");
-  const stories = tickets.filter((t) => t.type === "STORY");
-  const tasks = tickets.filter((t) => t.type === "TASK");
+  const allEpics = useMemo(() => tickets.filter((t) => t.type === "EPIC"), [tickets]);
+  const stories = useMemo(() => tickets.filter((t) => t.type === "STORY"), [tickets]);
+  const tasks = useMemo(() => tickets.filter((t) => t.type === "TASK"), [tickets]);
 
   const handleDeleteEpic = useCallback(
     (epicId: number) =>
@@ -228,7 +227,7 @@ export function useEpicsPage(projectIdStr: string) {
     stories,
     tasks,
     hasMoreEpics,
-    visitedCursors,
+    visitedCursors: history,
     cycles,
     orgLabels,
     members,

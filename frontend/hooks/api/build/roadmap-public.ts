@@ -21,7 +21,7 @@ const roadmapPublicationLazy = lazyContract(() =>
   import("@/hooks/api/build/roadmap-schema").then((m) => m.roadmapPublicationContract),
 );
 
-export interface RoadmapPublication {
+interface RoadmapPublication {
   token: string | null;
   path: string | null;
 }

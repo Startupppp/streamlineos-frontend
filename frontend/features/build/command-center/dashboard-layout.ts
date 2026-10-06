@@ -1,16 +1,13 @@
-export const WIDGET_TYPES = [
-  "my-issues",
-  "projects",
-  "approvals",
-  "agent-runs",
-  "risks",
-  "releases",
-  "blockers",
-] as const;
+export type WidgetType =
+  | "my-issues"
+  | "projects"
+  | "approvals"
+  | "agent-runs"
+  | "risks"
+  | "releases"
+  | "blockers";
 
-export type WidgetType = (typeof WIDGET_TYPES)[number];
-
-export interface WidgetPosition {
+interface WidgetPosition {
   col: number;
   row: number;
   w: number;
@@ -27,20 +24,20 @@ export interface DashboardLayoutConfig {
   widgets: WidgetSlot[];
 }
 
-export const DEFAULT_LAYOUT_FREELANCER: DashboardLayoutConfig = {
+const DEFAULT_LAYOUT_FREELANCER: DashboardLayoutConfig = {
   widgets: [
     { type: "my-issues", position: { col: 0, row: 0, w: 5, h: 4 } },
   ],
 };
 
-export const DEFAULT_LAYOUT_MEMBER: DashboardLayoutConfig = {
+const DEFAULT_LAYOUT_MEMBER: DashboardLayoutConfig = {
   widgets: [
     { type: "my-issues", position: { col: 0, row: 0, w: 3, h: 4 } },
     { type: "projects", position: { col: 3, row: 0, w: 2, h: 4 } },
   ],
 };
 
-export const DEFAULT_LAYOUT_MANAGER: DashboardLayoutConfig = {
+const DEFAULT_LAYOUT_MANAGER: DashboardLayoutConfig = {
   widgets: [
     { type: "my-issues", position: { col: 0, row: 0, w: 3, h: 4 } },
     { type: "projects", position: { col: 3, row: 0, w: 2, h: 4 } },
@@ -50,7 +47,7 @@ export const DEFAULT_LAYOUT_MANAGER: DashboardLayoutConfig = {
   ],
 };
 
-export const DEFAULT_LAYOUT_OWNER: DashboardLayoutConfig = {
+const DEFAULT_LAYOUT_OWNER: DashboardLayoutConfig = {
   widgets: [
     { type: "my-issues", position: { col: 0, row: 0, w: 3, h: 4 } },
     { type: "projects", position: { col: 3, row: 0, w: 2, h: 4 } },

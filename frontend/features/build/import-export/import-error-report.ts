@@ -4,7 +4,7 @@ import type {
 } from "@/contracts/build-contracts.generated";
 import { failedRows } from "./import-preview-model";
 
-export type ImportErrorStage = "preview" | "commit";
+type ImportErrorStage = "preview" | "commit";
 
 function cell(value: string | number | null): string {
   if (value === null) return "";

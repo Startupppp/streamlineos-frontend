@@ -16,6 +16,7 @@ import {
   type ProjectActiveFilters,
 } from "@/features/build/project-list/add-filter-popover";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { buildListSearchParams } from "@/features/build/shared/use-build-list-url-state";
 
 type ViewMode = "grid" | "list";
@@ -24,7 +25,7 @@ const VIEW_MODES: readonly ViewMode[] = ["grid", "list"];
 export type { ViewMode };
 export { VIEW_MODES };
 
-export interface ProjectsPageUrlState {
+interface ProjectsPageUrlState {
   createOpen: boolean;
   handleCreateOpenChange: (open: boolean) => void;
   handleOpenCreate: () => void;
@@ -73,7 +74,7 @@ export function useProjectsPage(): ProjectsPageUrlState {
     setManualCreateOpen(true);
   }, []);
 
-  const updateParams = useCallback(
+  const writeParams = useCallback(
     (updates: Record<string, string | null>) => {
       const params = buildListSearchParams(searchParams, updates, {
         resetCursor: true,
@@ -89,32 +90,41 @@ export function useProjectsPage(): ProjectsPageUrlState {
   );
 
   const urlSearch = searchParams.get("q") || "";
-  const [localSearch, setLocalSearch] = useState(() => urlSearch);
-  const lastPushedSearchRef = useRef<string>(urlSearch);
-
-  useEffect(() => {
-    if (urlSearch !== lastPushedSearchRef.current) {
-      setLocalSearch(urlSearch);
-      lastPushedSearchRef.current = urlSearch;
-    }
-  }, [urlSearch]);
-
+  const [ownQueries, setOwnQueries] = useState<readonly string[]>(() => [urlSearch]);
+  const searchSource = ownQueries.includes(urlSearch) ? "own" : `external:${urlSearch}`;
+  const [localSearch, setLocalSearch] = useSourceOverride(searchSource, urlSearch);
   const debouncedSearch = useDebouncedValue(localSearch, 300);
 
-  const updateParamsRef = useRef(updateParams);
-  useLayoutEffect(() => {
-    updateParamsRef.current = updateParams;
-  });
+  const rememberOwnQuery = useCallback((query: string) => {
+    setOwnQueries((previous) =>
+      previous.includes(query) ? previous : [...previous.slice(-19), query],
+    );
+  }, []);
 
-  const isMountedRef = useRef(false);
-  useEffect(() => {
-    if (!isMountedRef.current) {
-      isMountedRef.current = true;
-      return;
-    }
-    lastPushedSearchRef.current = debouncedSearch;
-    updateParamsRef.current({ q: debouncedSearch || null });
-  }, [debouncedSearch]);
+  const updateParams = useCallback(
+    (updates: Record<string, string | null>) => {
+      const nextQuery = updates["q"];
+      if (nextQuery !== undefined) {
+        rememberOwnQuery(nextQuery ?? "");
+        setLocalSearch(nextQuery ?? "");
+      }
+      writeParams(updates);
+    },
+    [rememberOwnQuery, setLocalSearch, writeParams],
+  );
+
+  const writeParamsRef = useRef(writeParams);
+  useLayoutEffect(() => {
+    writeParamsRef.current = writeParams;
+  }, [writeParams]);
+
+  const pushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (pushTimerRef.current) clearTimeout(pushTimerRef.current);
+    },
+    [],
+  );
 
   const viewMode =
     VIEW_MODES.find((v) => v === searchParams.get("view")) ?? "list";
@@ -139,8 +149,16 @@ export function useProjectsPage(): ProjectsPageUrlState {
   );
 
   const handleSearchChange = useCallback(
-    (value: string) => setLocalSearch(value),
-    [],
+    (value: string) => {
+      setLocalSearch(value);
+      if (pushTimerRef.current) clearTimeout(pushTimerRef.current);
+      pushTimerRef.current = setTimeout(() => {
+        pushTimerRef.current = null;
+        rememberOwnQuery(value);
+        writeParamsRef.current({ q: value || null });
+      }, 300);
+    },
+    [setLocalSearch, rememberOwnQuery],
   );
 
   const handleViewModeChange = useCallback(

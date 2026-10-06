@@ -10,7 +10,7 @@ import type { AgentToken } from "@/hooks/api/build/agent-tokens-schema";
 import { PM_ROW } from "@/components/pm-chrome";
 import { cn } from "@/lib/utils";
 
-export function tokenStatus(token: AgentToken): "active" | "revoked" | "expired" {
+function tokenStatus(token: AgentToken): "active" | "revoked" | "expired" {
   if (token.revokedAt) return "revoked";
   if (token.expiresAt && new Date(token.expiresAt) < new Date()) return "expired";
   return "active";

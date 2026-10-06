@@ -11,7 +11,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { PM_ROW } from "@/components/pm-chrome";
 import { cn } from "@/lib/utils";
 
-export interface GrantRowGrant {
+interface GrantRowGrant {
   projectClientGrantId: string;
   status: string;
   contactFirstName: string | null;

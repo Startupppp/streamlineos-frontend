@@ -20,7 +20,7 @@ export type SectionId =
   | "teams"
   | "danger";
 
-export interface NavSection {
+interface NavSection {
   id: SectionId;
   label: string;
   description: string;

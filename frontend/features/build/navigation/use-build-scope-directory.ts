@@ -16,8 +16,8 @@ import {
 } from "./build-scope-tree";
 import type { BuildScopeRef } from "./build-nav-storage";
 
-export const BUILD_SCOPE_SEARCH_DEBOUNCE_MS = 300;
-export const BUILD_SCOPE_PAGE_LIMIT = 100;
+const BUILD_SCOPE_SEARCH_DEBOUNCE_MS = 300;
+const BUILD_SCOPE_PAGE_LIMIT = 100;
 
 export const ORGANIZATION_SCOPE_REF: BuildScopeRef = {
   key: "organization",

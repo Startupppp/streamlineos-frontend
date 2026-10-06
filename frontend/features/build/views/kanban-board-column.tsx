@@ -19,7 +19,7 @@ import {
 } from "./kanban-virtual-ticket-list";
 import type { KanbanTicket, KanbanColumn, DisplayOptions } from "../shared/types";
 
-export interface KanbanBoardColumnProps {
+interface KanbanBoardColumnProps {
   column: KanbanColumn;
   tickets: KanbanTicket[];
   projectId: number;

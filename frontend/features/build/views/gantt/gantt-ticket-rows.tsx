@@ -5,7 +5,7 @@ import { getStatusHexColor } from "@/components/shared/ticket-status-badge";
 import type { BarGeometry } from "./gantt-geometry";
 import type { GanttRowBand } from "./gantt-row-window";
 
-export interface GanttRowTicket {
+interface GanttRowTicket {
   id: number;
   title: string;
   status: string;

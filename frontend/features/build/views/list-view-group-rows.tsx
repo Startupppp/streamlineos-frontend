@@ -51,7 +51,7 @@ export function ShowMoreRowsButton({
   );
 }
 
-export interface GroupRowsProps {
+interface GroupRowsProps {
   items: Ticket[];
   projectKey: ListViewItemProps["projectKey"];
   projectId: ListViewItemProps["projectId"];

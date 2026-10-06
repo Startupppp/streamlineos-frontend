@@ -6,13 +6,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getUserDisplayName, getUserInitials, type NamedUser } from "@/lib/person-display";
 import { cn, resolveImageUrl } from "@/lib/utils";
 
-export interface BuildMobileCardPerson {
+interface BuildMobileCardPerson {
   user: NamedUser | null | undefined;
   avatarUrl?: string | null;
   role: string;
 }
 
-export interface BuildMobileCardMeta {
+interface BuildMobileCardMeta {
   label: string;
   value: ReactNode;
 }

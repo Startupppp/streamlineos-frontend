@@ -9,8 +9,6 @@ import {
   bugsListBugsResponseSchema,
 } from "@/contracts/build-contracts.generated";
 
-export const testSuiteRowContract = testSuitesListSuitesResponseSchema.element;
-
 export const testSuiteListContract = testSuitesListSuitesResponseSchema;
 
 export const testCaseRowContract = testCasesCreateCaseResponseSchema;
@@ -22,8 +20,6 @@ export const testRunListItemContract = testRunsListRunsResponseSchema.shape.data
 export const testRunListPageContract = testRunsListRunsResponseSchema;
 
 export const testRunRowContract = testRunsCreateRunResponseSchema;
-
-export const testRunDetailResultContract = testRunsGetRunResponseSchema.shape.results.element;
 
 export const testRunDetailContract = testRunsGetRunResponseSchema;
 

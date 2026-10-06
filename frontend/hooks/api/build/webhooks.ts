@@ -13,7 +13,7 @@ import type {
   ProjectsWebhooksGetImpactResponse,
 } from "@/contracts/build-contracts.generated";
 
-export interface WebhookListFilters extends Record<string, unknown> {
+interface WebhookListFilters extends Record<string, unknown> {
   state?: "active" | "inactive";
   event?: string;
   q?: string;
@@ -154,7 +154,7 @@ export function useCreateWebhook(projectId: number) {
   });
 }
 
-export interface UpdateWebhookVariables {
+interface UpdateWebhookVariables {
   webhookId: number;
   version: number;
   url?: string;

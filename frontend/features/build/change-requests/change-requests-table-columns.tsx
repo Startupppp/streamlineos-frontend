@@ -41,7 +41,7 @@ const CR_STATUS_STYLES: Record<string, string> = {
   completed: "text-status-success-ink-strong border-status-success-rule",
 };
 
-export function CrStatusBadge({ status }: { status: ChangeRequestStatus }) {
+function CrStatusBadge({ status }: { status: ChangeRequestStatus }) {
   return (
     <Badge
       variant="outline"
@@ -59,7 +59,7 @@ interface CrRowHandlers {
   onDelete: (cr: ChangeRequest) => void;
 }
 
-export function CrRowActions({
+function CrRowActions({
   cr,
   onEdit,
   onDelete,

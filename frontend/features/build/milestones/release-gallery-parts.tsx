@@ -18,7 +18,7 @@ import {
 import type { Release } from "@/types/projects";
 import { RELEASE_STATUS_OPTIONS, STUB_RELEASES, STUB_NOOP } from "./planning-surfaces-fixtures";
 
-export function ReleaseListToolbar() {
+function ReleaseListToolbar() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const [dateRange, setDateRange] = useState<{ from: string; to: string }>({ from: "", to: "" });

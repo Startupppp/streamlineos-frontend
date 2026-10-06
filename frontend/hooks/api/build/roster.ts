@@ -11,13 +11,13 @@ const projectRosterContract = lazyContract(() =>
   import("@/hooks/api/build/build-project-schema").then((m) => m.projectRosterContract),
 );
 
-export interface RosterTeam {
+interface RosterTeam {
   id: number;
   name: string;
   key: string;
 }
 
-export interface RosterMember {
+interface RosterMember {
   id: string;
   name: string | null;
   firstName: string | null;
@@ -26,7 +26,7 @@ export interface RosterMember {
   image: string | null;
 }
 
-export interface ProjectRoster {
+interface ProjectRoster {
   teams: RosterTeam[];
   members: RosterMember[];
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { orgScopedStorageKey, useOrgStorageScope } from "@/lib/org-scoped-storage";
 import { DEFAULT_DISPLAY_OPTIONS } from "./display-options-model";
 import type {
@@ -192,15 +192,9 @@ export function useDisplayOptions(
   projectId: number,
 ): [DisplayOptions, (next: DisplayOptions) => void] {
   const scope = useOrgStorageScope();
-  const [options, setOptions] = useState<DisplayOptions>(DEFAULT_DISPLAY_OPTIONS);
-  const loadedRef = useRef(false);
-
-  useEffect(() => {
-    if (loadedRef.current) return;
-    loadedRef.current = true;
-    const stored = loadStored(projectId, scope);
-    if (stored) setOptions(stored);
-  }, [projectId, scope]);
+  const [options, setOptions] = useState<DisplayOptions>(
+    () => loadStored(projectId, scope) ?? DEFAULT_DISPLAY_OPTIONS,
+  );
 
   const update = useCallback(
     (next: DisplayOptions) => {

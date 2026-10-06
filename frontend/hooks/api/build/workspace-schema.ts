@@ -35,13 +35,11 @@ export const milestoneUpdateRequestContract = z
   .strict();
 export const intakeItemContract = intakeCreateIntakeResponseSchema;
 export const intakeListContract = intakeListIntakeResponseSchema;
-export const viewRowSchema = viewsCreateViewResponseSchema;
 export const viewRowContract = viewsCreateViewResponseSchema;
 export const viewPageContract = viewsListViewsResponseSchema;
 export const viewListContract = workspaceViewsListWorkspaceViewsResponseSchema;
 export const whiteboardListContract =
   whiteboardsListWhiteboardsResponseSchema.shape.data;
-export const whiteboardPageContract = whiteboardsListWhiteboardsResponseSchema;
 export const whiteboardResponseContract =
   whiteboardsListWhiteboardsResponseSchema;
 export const whiteboardDetailContract = whiteboardsGetWhiteboardResponseSchema;

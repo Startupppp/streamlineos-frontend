@@ -26,14 +26,14 @@ const exportContract = lazyContract(() =>
   ),
 );
 
-export interface PreviewTicketImportInput {
+interface PreviewTicketImportInput {
   projectId: number;
   format: ImportFormat;
   content: string;
   signal?: AbortSignal;
 }
 
-export interface CommitTicketImportInput {
+interface CommitTicketImportInput {
   projectId: number;
   format: ImportFormat;
   content: string;
@@ -43,7 +43,7 @@ export interface CommitTicketImportInput {
   signal?: AbortSignal;
 }
 
-export interface ExportTicketsInput {
+interface ExportTicketsInput {
   projectId: number;
   format: ImportFormat;
   limit?: number;

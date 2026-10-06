@@ -5,13 +5,9 @@ import {
   projectsTicketsGetActivityResponseSchema,
 } from "@/contracts/build-contracts.generated";
 
-export const ticketTypeContract = projectsTicketsCreateTicketResponseSchema.shape.type;
-
 export const ticketPriorityContract = projectsTicketsCreateTicketResponseSchema.shape.priority;
 
 export const ticketRowContract = projectsTicketsCreateTicketResponseSchema;
-
-export const ticketListRowContract = projectsTicketsListTicketsResponseSchema.shape.data.element;
 
 export const ticketListPageContract = projectsTicketsListTicketsResponseSchema;
 

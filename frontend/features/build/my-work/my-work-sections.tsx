@@ -42,7 +42,7 @@ const InboxDraftsPanel = dynamic(
   { ssr: false },
 );
 
-export function MyWorkSectionNavigation({
+function MyWorkSectionNavigation({
   activeSection,
 }: {
   activeSection: "tickets" | "drafts";

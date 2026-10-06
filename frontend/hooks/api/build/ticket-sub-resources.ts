@@ -52,7 +52,7 @@ interface AddCommentContext {
   previousComments: TicketComment[];
 }
 
-export interface AddCommentInput {
+interface AddCommentInput {
   ticketId: number;
   projectId: number;
   content: string;

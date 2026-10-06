@@ -20,7 +20,7 @@ const PAGE_SIZE = 25;
 
 export { PAGE_SIZE };
 
-export interface ProductFeedbackFiltersResult {
+interface ProductFeedbackFiltersResult {
   listFilters: ReturnType<typeof useBuildListFilters>;
   searchInputRef: React.RefObject<HTMLInputElement | null>;
   page: number;

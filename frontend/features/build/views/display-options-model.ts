@@ -76,7 +76,7 @@ export type PropertyKey = keyof Pick<
   | "showPRs"
 >;
 
-export const PROPERTY_CHIPS: { key: PropertyKey; label: string }[] = [
+const PROPERTY_CHIPS: { key: PropertyKey; label: string }[] = [
   { key: "showId", label: "ID" },
   { key: "showStatus", label: "Status" },
   { key: "showAssignee", label: "Assignee" },
@@ -95,7 +95,7 @@ export const PROPERTY_CHIPS: { key: PropertyKey; label: string }[] = [
   { key: "showPRs", label: "PRs" },
 ];
 
-export const BOARD_PROPERTIES: PropertyKey[] = [
+const BOARD_PROPERTIES: PropertyKey[] = [
   "showId",
   "showPriority",
   "showAssignee",
@@ -106,7 +106,7 @@ export const BOARD_PROPERTIES: PropertyKey[] = [
   "showDueDate",
 ];
 
-export const LIST_PROPERTIES: PropertyKey[] = [
+const LIST_PROPERTIES: PropertyKey[] = [
   "showId",
   "showPriority",
   "showAssignee",
@@ -115,7 +115,7 @@ export const LIST_PROPERTIES: PropertyKey[] = [
   "showDueDate",
 ];
 
-export const TABLE_PROPERTIES: PropertyKey[] = [
+const TABLE_PROPERTIES: PropertyKey[] = [
   "showId",
   "showStatus",
   "showPriority",

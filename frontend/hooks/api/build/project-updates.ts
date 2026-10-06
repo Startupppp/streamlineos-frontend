@@ -41,12 +41,12 @@ export interface ProjectUpdateRow {
   deletedAt: string | null;
 }
 
-export interface ProjectUpdatePage {
+interface ProjectUpdatePage {
   data: ProjectUpdateRow[];
   pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 }
 
-export interface CreateProjectUpdateInput {
+interface CreateProjectUpdateInput {
   body: string;
   wins?: string | null;
   risks?: string | null;
@@ -54,7 +54,7 @@ export interface CreateProjectUpdateInput {
   citations?: string | null;
 }
 
-export interface ProjectUpdatesFilters {
+interface ProjectUpdatesFilters {
   authorId?: string;
   from?: string;
   to?: string;

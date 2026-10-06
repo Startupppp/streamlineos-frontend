@@ -1,6 +1,6 @@
 import type { ReactNode, RefObject } from "react";
 
-export type BuildToolbarFilterPresentation = "field" | "trigger";
+type BuildToolbarFilterPresentation = "field" | "trigger";
 
 export interface BuildToolbarFilter {
   id: string;
@@ -29,15 +29,15 @@ export const BUILD_TOOLBAR_ROOT_CLASS =
 export const BUILD_TOOLBAR_TRAILING_CLASS =
   "flex min-w-0 shrink-0 items-center gap-2 md:ml-auto";
 
-export const BUILD_TOOLBAR_MOBILE_SLOTS = 2;
+const BUILD_TOOLBAR_MOBILE_SLOTS = 2;
 
-export interface BuildToolbarLayoutEntry {
+interface BuildToolbarLayoutEntry {
   filter: BuildToolbarFilter;
   collapsed: boolean;
   fieldIndex: number | null;
 }
 
-export interface BuildToolbarLayout {
+interface BuildToolbarLayout {
   collapse: boolean;
   filters: BuildToolbarLayoutEntry[];
   fieldFilterCount: number;

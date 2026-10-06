@@ -14,9 +14,9 @@ import type {
 } from "@/contracts/build-contracts.generated";
 import type { ImportFormat, ImportMode } from "./import-export-contract";
 
-export const IMPORT_MAX_CONTENT_BYTES = 2_000_000;
+const IMPORT_MAX_CONTENT_BYTES = 2_000_000;
 
-export interface TicketImportFlow {
+interface TicketImportFlow {
   fileName: string | null;
   format: ImportFormat;
   content: string;

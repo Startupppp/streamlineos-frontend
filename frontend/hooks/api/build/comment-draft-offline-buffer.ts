@@ -13,10 +13,10 @@ const entrySchema = z.object({
 }).strict();
 const envelopeSchema = z.object({ version: z.literal(2), scope: scopeSchema, entries: z.array(entrySchema).max(BUFFER_LIMIT) }).strict()
   .refine((envelope) => new Set(envelope.entries.map((entry) => entry.ticketId)).size === envelope.entries.length);
-export type BufferedCommentDraft = z.infer<typeof entrySchema>;
-export const commentDraftInputSchema = entrySchema.omit({ revision: true }).strict();
+type BufferedCommentDraft = z.infer<typeof entrySchema>;
+const commentDraftInputSchema = entrySchema.omit({ revision: true }).strict();
 export const draftEditInputSchema = commentDraftInputSchema.extend({ body: z.string().max(10000) }).strict();
-export const draftIntentSchema = z.discriminatedUnion("kind", [
+const draftIntentSchema = z.discriminatedUnion("kind", [
   entrySchema.extend({ kind: z.literal("upsert") }).strict(),
   entrySchema.omit({ body: true }).extend({ kind: z.literal("delete") }).strict(),
 ]);

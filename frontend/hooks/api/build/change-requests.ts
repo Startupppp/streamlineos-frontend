@@ -24,7 +24,7 @@ const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 
-export interface CrFilters {
+interface CrFilters {
   status?: string;
   impact?: string;
   requesterId?: string;

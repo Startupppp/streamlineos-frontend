@@ -18,7 +18,7 @@ import type { PermissionKey } from "@/lib/rbac/permissions";
 
 type IconRef = RefObject<IconHandle | null>;
 
-export type JumpLinkScope = "workspace" | "project";
+type JumpLinkScope = "workspace" | "project";
 
 export interface CommandCenterJumpLink {
   id: string;

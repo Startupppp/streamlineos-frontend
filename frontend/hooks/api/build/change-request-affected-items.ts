@@ -23,7 +23,7 @@ const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 
-export interface AffectedTicketsFilters {
+interface AffectedTicketsFilters {
   cursor?: string;
   limit?: number;
 }

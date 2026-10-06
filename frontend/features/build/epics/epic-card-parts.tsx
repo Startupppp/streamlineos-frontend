@@ -18,12 +18,12 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import type { ProjectStatusRecord, Ticket } from "@/types/projects";
 
-export interface LinkStoryItemProps {
+interface LinkStoryItemProps {
   story: { id: number; title: string };
   onSelect: (id: number) => void;
 }
 
-export const LinkStoryItem = memo(function LinkStoryItem({ story, onSelect }: LinkStoryItemProps) {
+const LinkStoryItem = memo(function LinkStoryItem({ story, onSelect }: LinkStoryItemProps) {
   const handleClick = useCallback(() => onSelect(story.id), [onSelect, story.id]);
   return (
     <button
@@ -35,7 +35,7 @@ export const LinkStoryItem = memo(function LinkStoryItem({ story, onSelect }: Li
   );
 });
 
-export interface EpicProgressBarProps {
+interface EpicProgressBarProps {
   completedItems: number;
   inProgressItems: number;
   todoItems: number;
@@ -105,7 +105,7 @@ export function EpicProgressBar({
   );
 }
 
-export interface EpicStoriesPanelProps {
+interface EpicStoriesPanelProps {
   epicId: number;
   epicTitle: string;
   epicCardId: string;
