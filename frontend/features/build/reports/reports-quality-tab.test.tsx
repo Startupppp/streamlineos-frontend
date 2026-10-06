@@ -144,12 +144,25 @@ it("preserves successful zero counts and absent optional environment", async () 
 });
 
 it.each([false, true])("distinguishes empty and filtered-empty (filtered=%s)", async (filtered) => {
-  if (filtered) mockSearch += "&failuresOnly=true";
+  if (filtered) mockSearch += "&q=regression&status=completed&failuresOnly=true";
   mockGet.mockResolvedValue({ data: [], hasMore: false, nextCursor: null });
-  mount();
+  const view = mount();
   expect(await screen.findByText(filtered ? "No test runs match your filters" : "No test runs")).toBeVisible();
   expect(screen.queryByText("Displayed page")).not.toBeInTheDocument();
-  if (!filtered) expect(screen.getByRole("link", { name: "Open QA" })).toHaveAttribute("href", "/build/1/qa");
+  if (!filtered) {
+    expect(screen.getByRole("link", { name: "Open QA" })).toHaveAttribute("href", "/build/1/qa");
+    expect(screen.queryByRole("button", { name: "Clear filters" })).not.toBeInTheDocument();
+    return;
+  }
+  expect(screen.getAllByRole("button", { name: "Clear filters" })).toHaveLength(2);
+  await userEvent.setup().click(within(screen.getByRole("status")).getByRole("button", { name: "Clear filters" }));
+  for (const param of ["q", "status", "failuresOnly", "cursor", "cursors"]) expect(lastParams().has(param)).toBe(false);
+  expect(lastParams().get("tab")).toBe("quality");
+  mockSearch = lastParams().toString();
+  view.rerender(<QueryClientProvider client={view.client}><ReportsQualityTab projectId={1} /></QueryClientProvider>);
+  expect(await screen.findByRole("link", { name: "Open QA" })).toBeVisible();
+  expect(screen.queryByRole("button", { name: "Clear filters" })).not.toBeInTheDocument();
+  await waitFor(() => expect(mockGet).toHaveBeenLastCalledWith("/build/1/test-runs", {}, expect.any(AbortSignal), expect.anything()));
 });
 
 it.each([403, 404, 503])("renders HTTP %s as failure rather than successful empty", async (status) => {
