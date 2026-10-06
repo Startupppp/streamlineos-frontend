@@ -8,7 +8,7 @@ import {
   type OrgSetupInvitee,
 } from "@/hooks/api/org-setup-schema";
 import type { OrgSetupPayload } from "@/hooks/api/org-setup";
-import { DEFAULT_APPS } from "./constants";
+import { ALWAYS_ENABLED_MODULES } from "./constants";
 import {
   type Invitee,
   type InviteeModuleAccess,
@@ -16,13 +16,16 @@ import {
   type WizardData,
 } from "./wizard-data-schema";
 
+const ALWAYS_ENABLED_SET = new Set<string>(ALWAYS_ENABLED_MODULES);
+
 export function defaultInviteModuleAccess(
   role: string,
   enabledModules: readonly OrgModuleKey[],
 ): InviteeModuleAccess[] {
-  return role === "MEMBER" && enabledModules.includes("build")
-    ? [{ moduleKey: "build", standing: "MEMBER" }]
-    : [];
+  if (role !== "MEMBER") return [];
+  return enabledModules
+    .filter((key) => !ALWAYS_ENABLED_SET.has(key))
+    .map((moduleKey) => ({ moduleKey, standing: "MEMBER" as const }));
 }
 
 export function effectiveInviteModuleAccess(
@@ -33,7 +36,7 @@ export function effectiveInviteModuleAccess(
 }
 
 function enabledModulesFor(data: WizardData): OrgModuleKey[] {
-  return data.modules.length > 0 ? data.modules : [...DEFAULT_APPS];
+  return data.modules;
 }
 
 export function getInviteAccessError(data: WizardData): string | null {
@@ -88,6 +91,25 @@ function toSetupInvitee(
   });
 }
 
+function buildModuleAnswers(
+  data: WizardData,
+  enabledModules: readonly OrgModuleKey[],
+): Record<string, Record<string, string>> | undefined {
+  const enabledSet = new Set(enabledModules);
+  const result: Record<string, Record<string, string>> = {};
+  for (const [moduleKey, answers] of Object.entries(data.moduleAnswers ?? {})) {
+    if (!enabledSet.has(moduleKey as OrgModuleKey)) continue;
+    if (!answers || typeof answers !== "object") continue;
+    const filtered: Record<string, string> = {};
+    for (const [qKey, qVal] of Object.entries(answers)) {
+      const trimmed = typeof qVal === "string" ? qVal.trim() : "";
+      if (trimmed.length > 0) filtered[qKey] = trimmed;
+    }
+    if (Object.keys(filtered).length > 0) result[moduleKey] = filtered;
+  }
+  return Object.keys(result).length > 0 ? result : undefined;
+}
+
 export function buildOrgSetupPayload(data: WizardData): OrgSetupPayload {
   const inviteError = getInviteAccessError(data);
   if (inviteError) throw new Error(inviteError);
@@ -95,6 +117,7 @@ export function buildOrgSetupPayload(data: WizardData): OrgSetupPayload {
   const invitees = data.invitees.map((invitee) =>
     toSetupInvitee(invitee, enabledModules),
   );
+  const moduleAnswers = buildModuleAnswers(data, enabledModules);
   return {
     industry: data.industry,
     companyName: data.companyName,
@@ -105,5 +128,6 @@ export function buildOrgSetupPayload(data: WizardData): OrgSetupPayload {
     phone: data.phone,
     enabledModules,
     ...(invitees.length > 0 ? { invitees } : {}),
+    ...(moduleAnswers ? { moduleAnswers } : {}),
   };
 }

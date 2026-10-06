@@ -1,29 +1,19 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import type { WizardData } from "../lib/wizard-data-schema";
-import { DEFAULT_DATA, MODULE_CATALOG, ALWAYS_ENABLED_MODULES } from "../lib/constants";
+import { DEFAULT_DATA, MODULE_CATALOG, MODULE_QUESTIONS, ALWAYS_ENABLED_MODULES, MODULE_GROUPS } from "../lib/constants";
 import { StepProducts } from "./step-products";
-
-const mockPreviewMutateAsync = jest.fn();
-
-jest.mock("@/hooks/api/org-setup", () => ({
-  useOrgSetupPreviewMutation: () => ({
-    mutateAsync: mockPreviewMutateAsync,
-    isPending: false,
-  }),
-}));
 
 function wizard(overrides: Partial<WizardData> = {}): WizardData {
   return {
     ...DEFAULT_DATA,
-    modules: ["build", "crm", "hr", "chat", "kb"],
-    installedApps: ["build", "crm", "hr", "chat", "kb"],
+    modules: [...ALWAYS_ENABLED_MODULES],
+    installedApps: [],
     ...overrides,
   };
 }
 
 describe("StepProducts — module card grid", () => {
-  it("renders a card for every MODULE_CATALOG key", () => {
-    const keys = Object.keys(MODULE_CATALOG);
+  it("renders a card for every non-always module in the catalog", () => {
     render(
       <StepProducts
         data={wizard()}
@@ -32,15 +22,16 @@ describe("StepProducts — module card grid", () => {
         onNext={jest.fn()}
       />,
     );
-    for (const key of keys) {
-      const meta = MODULE_CATALOG[key as keyof typeof MODULE_CATALOG];
-      if (!meta) continue;
-      const matches = screen.getAllByText(meta.label, { exact: false });
-      expect(matches.length).toBeGreaterThanOrEqual(1);
+    for (const group of MODULE_GROUPS) {
+      for (const key of group.keys) {
+        const meta = MODULE_CATALOG[key];
+        const matches = screen.getAllByText(meta.label, { exact: false });
+        expect(matches.length).toBeGreaterThanOrEqual(1);
+      }
     }
   });
 
-  it("ALWAYS_ENABLED_MODULES are checked and have disabled buttons", () => {
+  it("shows the always-included Home and Knowledge base cards", () => {
     render(
       <StepProducts
         data={wizard()}
@@ -49,11 +40,23 @@ describe("StepProducts — module card grid", () => {
         onNext={jest.fn()}
       />,
     );
-    for (const key of ALWAYS_ENABLED_MODULES) {
-      const meta = MODULE_CATALOG[key];
-      if (!meta) continue;
-      const btn = screen.getByRole("button", { name: new RegExp(meta.label, "i") });
-      expect(btn).toBeDisabled();
+    expect(screen.getByText("Home")).toBeInTheDocument();
+    expect(screen.getByText("Knowledge base")).toBeInTheDocument();
+  });
+
+  it("always-included cards have no interactive toggle button", () => {
+    render(
+      <StepProducts
+        data={wizard()}
+        patch={jest.fn()}
+        onBack={jest.fn()}
+        onNext={jest.fn()}
+      />,
+    );
+    const homeTexts = screen.getAllByText("Home");
+    for (const el of homeTexts) {
+      const btn = el.closest("button");
+      expect(btn).toBeNull();
     }
   });
 
@@ -68,7 +71,6 @@ describe("StepProducts — module card grid", () => {
       />,
     );
     const crmMeta = MODULE_CATALOG.crm;
-    if (!crmMeta) return;
     const btn = screen.getByRole("button", { name: new RegExp(crmMeta.label, "i") });
     fireEvent.click(btn);
     expect(patch).toHaveBeenCalledWith(
@@ -89,7 +91,6 @@ describe("StepProducts — module card grid", () => {
       />,
     );
     const buildMeta = MODULE_CATALOG.build;
-    if (!buildMeta) return;
     const btn = screen.getByRole("button", { name: new RegExp(buildMeta.label, "i") });
     fireEvent.click(btn);
     expect(patch).toHaveBeenCalledWith(
@@ -99,24 +100,20 @@ describe("StepProducts — module card grid", () => {
     );
   });
 
-  it("chat always-enabled card is checked even with minimal modules", () => {
+  it("Continue is enabled with no selectable module chosen (only Home+kb)", () => {
     render(
       <StepProducts
-        data={wizard({ modules: ["chat", "kb"] })}
+        data={wizard({ modules: [...ALWAYS_ENABLED_MODULES] })}
         patch={jest.fn()}
         onBack={jest.fn()}
         onNext={jest.fn()}
       />,
     );
-    const chatMeta = MODULE_CATALOG.chat;
-    if (!chatMeta) return;
-    const btn = screen.getByRole("button", { name: new RegExp(chatMeta.label, "i") });
-    expect(btn).toHaveAttribute("aria-pressed", "true");
+    const continueBtn = screen.getByRole("button", { name: /continue/i });
+    expect(continueBtn).not.toBeDisabled();
   });
-});
 
-describe("StepProducts — adaptive questions", () => {
-  it("shows adaptive question fields when Build module is checked", () => {
+  it("Continue is enabled after selecting one module", () => {
     render(
       <StepProducts
         data={wizard({ modules: ["build", "chat", "kb"] })}
@@ -125,12 +122,52 @@ describe("StepProducts — adaptive questions", () => {
         onNext={jest.fn()}
       />,
     );
-    expect(
-      screen.getByText(/How large is your development team/i),
-    ).toBeInTheDocument();
+    const continueBtn = screen.getByRole("button", { name: /continue/i });
+    expect(continueBtn).not.toBeDisabled();
   });
 
-  it("does NOT show Build adaptive questions when Build is unchecked", () => {
+  it("shows selected count when extra modules are chosen", () => {
+    render(
+      <StepProducts
+        data={wizard({ modules: ["build", "crm", "chat", "kb"] })}
+        patch={jest.fn()}
+        onBack={jest.fn()}
+        onNext={jest.fn()}
+      />,
+    );
+    expect(screen.getByText(/2 extra modules selected/i)).toBeInTheDocument();
+  });
+
+  it("shows singular count for one extra module", () => {
+    render(
+      <StepProducts
+        data={wizard({ modules: ["build", "chat", "kb"] })}
+        patch={jest.fn()}
+        onBack={jest.fn()}
+        onNext={jest.fn()}
+      />,
+    );
+    expect(screen.getByText(/1 extra module selected/i)).toBeInTheDocument();
+  });
+});
+
+describe("StepProducts — module questions", () => {
+  it("shows questions when Build module is selected", () => {
+    render(
+      <StepProducts
+        data={wizard({ modules: ["build", "chat", "kb"] })}
+        patch={jest.fn()}
+        onBack={jest.fn()}
+        onNext={jest.fn()}
+      />,
+    );
+    const buildQuestions = MODULE_QUESTIONS.build ?? [];
+    for (const q of buildQuestions) {
+      expect(screen.getByText(new RegExp(q.label, "i"))).toBeInTheDocument();
+    }
+  });
+
+  it("does not show Build questions when Build is unchecked", () => {
     render(
       <StepProducts
         data={wizard({ modules: ["chat", "kb"] })}
@@ -139,59 +176,44 @@ describe("StepProducts — adaptive questions", () => {
         onNext={jest.fn()}
       />,
     );
-    expect(
-      screen.queryByText(/How large is your development team/i),
-    ).not.toBeInTheDocument();
+    const buildQuestions = MODULE_QUESTIONS.build ?? [];
+    for (const q of buildQuestions) {
+      expect(screen.queryByText(new RegExp(q.label, "i"))).not.toBeInTheDocument();
+    }
   });
-});
 
-describe("StepProducts — quota preview", () => {
-  beforeEach(() => mockPreviewMutateAsync.mockReset());
-
-  it("shows quota banner after a successful preview call", async () => {
-    mockPreviewMutateAsync.mockResolvedValue({
-      modules: [],
-      quotaSnapshot: { seats: 20, usedSeats: 3 },
-      expiresAt: "2026-01-01T00:00:00.000Z",
-    });
-
+  it("selecting a chip answer calls patch with moduleAnswers", () => {
+    const patch = jest.fn();
     render(
       <StepProducts
-        data={wizard()}
+        data={wizard({ modules: ["build", "chat", "kb"] })}
+        patch={patch}
+        onBack={jest.fn()}
+        onNext={jest.fn()}
+      />,
+    );
+    const softwareChip = screen.getByRole("radio", { name: "Software" });
+    fireEvent.click(softwareChip);
+    expect(patch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        moduleAnswers: expect.objectContaining({
+          build: expect.objectContaining({ workType: "Software" }),
+        }),
+      }),
+    );
+  });
+
+  it("shows HR questions when HR module is selected", () => {
+    render(
+      <StepProducts
+        data={wizard({ modules: ["hr", "chat", "kb"] })}
         patch={jest.fn()}
         onBack={jest.fn()}
         onNext={jest.fn()}
       />,
     );
-
-    const btn = screen.getByRole("button", { name: /preview seat usage/i });
-    fireEvent.click(btn);
-
-    await waitFor(() => {
-      expect(screen.getByText(/Seat quota/i)).toBeInTheDocument();
-    });
-    expect(screen.getByText(/3 used of 20/)).toBeInTheDocument();
-  });
-
-  it("hides the quota banner when preview call fails", async () => {
-    mockPreviewMutateAsync.mockRejectedValue(new Error("Network error"));
-
-    render(
-      <StepProducts
-        data={wizard()}
-        patch={jest.fn()}
-        onBack={jest.fn()}
-        onNext={jest.fn()}
-      />,
-    );
-
-    const btn = screen.getByRole("button", { name: /preview seat usage/i });
-    fireEvent.click(btn);
-
-    await waitFor(() => {
-      expect(mockPreviewMutateAsync).toHaveBeenCalled();
-    });
-    expect(screen.queryByText(/Seat quota/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/How many people will you manage/i)).toBeInTheDocument();
+    expect(screen.getByText(/What should we set up first/i)).toBeInTheDocument();
   });
 });
 

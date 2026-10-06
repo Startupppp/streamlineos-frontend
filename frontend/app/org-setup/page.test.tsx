@@ -35,10 +35,6 @@ jest.mock("@/features/org-setup/components/step-welcome", () => ({
   },
 }));
 
-jest.mock("@/features/org-setup/components/step-basics", () => ({
-  StepBasics: () => null,
-}));
-
 jest.mock("@/features/org-setup/components/step-invite-launch", () => ({
   StepInviteLaunch: () => null,
 }));
@@ -48,7 +44,7 @@ jest.mock("@/components/organization/archived-orgs-restore", () => ({
 }));
 
 jest.mock("@/hooks/common/auth-hooks", () => ({
-  signInWithMagicToken: jest.fn((...args: any[]) => mockSignIn(...args)),
+  signInWithMagicToken: jest.fn((...args: unknown[]) => mockSignIn(...args)),
   useSessionClaimsRefresh: jest.fn(() => mockRefreshSessionClaims),
 }));
 
@@ -81,24 +77,24 @@ jest.mock("@/features/org-setup/lib/draft", () => ({
   clampStep: jest.fn(() => 1),
   hasDraftProgress: jest.fn(() => false),
   hasCompletionMarker: jest.fn(() => false),
-  clearAll: jest.fn((...args: any[]) => mockClearAll(...args)),
+  clearAll: jest.fn((...args: unknown[]) => mockClearAll(...args)),
 }));
 
 jest.mock("@/lib/api-client", () => ({
   clearBackendTokenCache: jest.fn(),
 }));
 
-const mockUseSession = jest.fn(() => ({
+const mockUseSession = jest.fn<unknown, unknown[]>(() => ({
   data: { user: { id: "user-1", name: "Ada" }, orgId: null },
 }));
 
 jest.mock("next-auth/react", () => ({
-  useSession: (...args: any[]) => mockUseSession(...args),
+  useSession: (...args: unknown[]) => mockUseSession(...args),
 }));
 
 jest.mock("sonner", () => ({
   toast: {
-    error: jest.fn((...args: any[]) => mockToastError(...args)),
+    error: jest.fn((...args: unknown[]) => mockToastError(...args)),
     success: jest.fn(),
   },
 }));
