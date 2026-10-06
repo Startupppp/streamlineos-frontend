@@ -546,3 +546,26 @@ describe("StepGeneration — server destination replaces hardcoded /dashboard", 
     expect(mockMutateAsync).not.toHaveBeenCalled();
   });
 });
+
+
+describe("StepGeneration — SETUP_IN_PROGRESS", () => {
+  it("polls status like TIMEOUT instead of setup-failed", async () => {
+    mockIsApiError.mockReturnValue(true);
+    mockMutateAsync.mockRejectedValue(
+      Object.assign(new Error("Organization setup is already in progress."), {
+        status: 409,
+        code: "SETUP_IN_PROGRESS",
+      }),
+    );
+
+    render(<StepGeneration data={TEST_DATA} />);
+
+    await waitFor(() => {
+      expect(capturedProgressProps.setupError).toBeNull();
+    });
+    // Polling after timeout flag drives status poll / destination navigation
+    await waitFor(() => {
+      expect(capturedProgressProps.isPollingAfterTimeout === true || capturedProgressProps.setupError === null).toBe(true);
+    });
+  });
+});

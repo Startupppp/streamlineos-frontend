@@ -270,7 +270,10 @@ export function StepGeneration({ data, onBackToProducts, idempotencyKey }: StepG
         orgId: res.orgId,
       });
     } catch (err) {
-      if (isApiError(err) && err.code === "TIMEOUT") {
+      if (
+        isApiError(err) &&
+        (err.code === "TIMEOUT" || err.code === "SETUP_IN_PROGRESS")
+      ) {
         setIsPollingAfterTimeout(true);
       } else {
         const isPlanLock =
@@ -321,7 +324,10 @@ export function StepGeneration({ data, onBackToProducts, idempotencyKey }: StepG
         setIsPollingAfterTimeout(true);
       }
     } catch (err) {
-      if (isApiError(err) && err.code === "TIMEOUT") {
+      if (
+        isApiError(err) &&
+        (err.code === "TIMEOUT" || err.code === "SETUP_IN_PROGRESS")
+      ) {
         setIsPollingAfterTimeout(true);
       } else {
         handleSetupError({

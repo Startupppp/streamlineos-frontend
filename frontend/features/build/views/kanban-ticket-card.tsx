@@ -101,7 +101,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
         "group relative rounded-xl border border-border/70 bg-card p-3 shadow-sm",
         "cursor-grab active:cursor-grabbing will-change-transform",
         "motion-safe:transition-[border-color,box-shadow,transform,background-color] motion-safe:duration-200 motion-reduce:transform-none",
-        isSelected && "border-foreground/40 bg-foreground/[0.03] ring-1 ring-foreground/15",
+        isSelected && "border-foreground/40 bg-accent ring-1 ring-foreground/15",
         isDragging
           ? "z-20 rotate-1 scale-[1.02] border-foreground/30 bg-card opacity-95 shadow-xl ring-1 ring-foreground/25 motion-reduce:rotate-0 motion-reduce:scale-100"
           : "hover:-translate-y-0.5 hover:border-foreground/20 hover:shadow-md focus-within:border-foreground/30 focus-within:shadow-md focus-within:ring-2 focus-within:ring-ring motion-reduce:hover:translate-y-0",

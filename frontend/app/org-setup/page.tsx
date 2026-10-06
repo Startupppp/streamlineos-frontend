@@ -65,13 +65,17 @@ export default function OrgSetupPage() {
   const [direction, setDirection] = useState(1);
   const [data, setData] = useState<WizardData>({ ...DEFAULT_DATA });
 
+  // Seed fullName once from the session display name when the wizard field is
+  // still empty. Never overwrite a user/draft value; empty session leaves it
+  // empty so the backend can derive from the authenticated profile.
   useEffect(() => {
+    if (!mounted) return;
     const sessionName = session?.user?.name?.trim();
     if (!sessionName) return;
     setData((current) =>
       current.fullName.trim() ? current : { ...current, fullName: sessionName },
     );
-  }, [session?.user?.name]);
+  }, [mounted, session?.user?.name]);
   const [saveState, setSaveState] = useState<"idle" | "saved">("idle");
   const [shouldLoadServerSession, setShouldLoadServerSession] = useState(false);
   const hydratedFromServerRef = useRef(false);
@@ -189,15 +193,20 @@ export default function OrgSetupPage() {
     mountedOnceRef.current = true;
     if (hasCompletionMarker(userId, session?.orgId ?? "")) return;
     const savedDraft = syncAppsFromGoals(loadDraft(userId));
+    const sessionName = session?.user?.name?.trim();
+    const hydrated =
+      sessionName && !savedDraft.fullName.trim()
+        ? { ...savedDraft, fullName: sessionName }
+        : savedDraft;
     const savedSequence = getStepSequence();
     const restoredStep = clampStep(loadStep(userId), savedSequence.length);
-    setData(savedDraft);
-    saveDraft(savedDraft, userId);
+    setData(hydrated);
+    saveDraft(hydrated, userId);
     setStep(restoredStep);
     saveStep(restoredStep, userId);
-    setShouldLoadServerSession(!hasDraftProgress(savedDraft));
+    setShouldLoadServerSession(!hasDraftProgress(hydrated));
     setMounted(true);
-  }, [userId, session?.orgId]);
+  }, [userId, session?.orgId, session?.user?.name]);
 
   useEffect(() => {
     if (!mounted || hydratedFromServerRef.current || !serverSession) return;
