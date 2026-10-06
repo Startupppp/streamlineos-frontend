@@ -9,6 +9,7 @@ const mockRefreshSessionClaims = jest.fn();
 const mockClearAll = jest.fn();
 const mockSetCompletionMarker = jest.fn();
 const mockHasCompletionMarker = jest.fn();
+const mockGetCompletionDestination = jest.fn(() => "/dashboard");
 const mockClearCompletionMarker = jest.fn();
 const mockClearBackendTokenCache = jest.fn();
 const mockLocationReplace = jest.fn();
@@ -55,7 +56,7 @@ jest.mock("@/hooks/api/org-setup", () => ({
 }));
 
 jest.mock("@/hooks/common/auth-hooks", () => ({
-  signInWithMagicToken: jest.fn((...args: unknown[]) => mockSignIn(...args)),
+  signInWithMagicToken: jest.fn((...args: any[]) => mockSignIn(...args)),
   useSessionClaimsRefresh: jest.fn(() => mockRefreshSessionClaims),
 }));
 
@@ -74,16 +75,17 @@ jest.mock("@/hooks/common/use-confirmed-session-claims-refresh", () => ({
 }));
 
 jest.mock("@/features/org-setup/lib/draft", () => ({
-  clearAll: jest.fn((...args: unknown[]) => mockClearAll(...args)),
-  setCompletionMarker: jest.fn((...args: unknown[]) => mockSetCompletionMarker(...args)),
-  hasCompletionMarker: jest.fn((...args: unknown[]) => mockHasCompletionMarker(...args)),
-  clearCompletionMarker: jest.fn((...args: unknown[]) =>
+  clearAll: jest.fn((...args: any[]) => mockClearAll(...args)),
+  setCompletionMarker: jest.fn((...args: any[]) => mockSetCompletionMarker(...args)),
+  hasCompletionMarker: jest.fn((...args: any[]) => mockHasCompletionMarker(...args)),
+  getCompletionDestination: jest.fn((...args: any[]) => mockGetCompletionDestination(...args)),
+  clearCompletionMarker: jest.fn((...args: any[]) =>
     mockClearCompletionMarker(...args),
   ),
 }));
 
 jest.mock("@/lib/api-client", () => ({
-  clearBackendTokenCache: jest.fn((...args: unknown[]) =>
+  clearBackendTokenCache: jest.fn((...args: any[]) =>
     mockClearBackendTokenCache(...args),
   ),
   setAutoSignOutSuppressed: jest.fn(),
@@ -106,7 +108,7 @@ jest.mock("next-auth/react", () => ({
 
 jest.mock("sonner", () => ({
   toast: {
-    error: jest.fn((...args: unknown[]) => mockToastError(...args)),
+    error: jest.fn((...args: any[]) => mockToastError(...args)),
     success: jest.fn(),
   },
 }));
@@ -241,7 +243,15 @@ describe("StepGeneration — manual continue paths honour the discriminated sign
       });
       expect(mockRefreshSessionClaims).toHaveBeenCalledWith({ orgId: "org-new" });
       expect(mockToastError).not.toHaveBeenCalled();
-      expect(mockSetCompletionMarker).toHaveBeenCalledWith("user-1", "org-new");
+      const expectedDestination =
+        prop === "onGoToInvitations"
+          ? "/settings/users?view=invitations"
+          : "/dashboard";
+      expect(mockSetCompletionMarker).toHaveBeenCalledWith(
+        "user-1",
+        "org-new",
+        expectedDestination,
+      );
     },
   );
 
@@ -255,7 +265,7 @@ describe("StepGeneration — manual continue paths honour the discriminated sign
       expect(mockLocationReplace).toHaveBeenCalledWith("/dashboard");
     });
     expect(mockRefreshSessionClaims).toHaveBeenCalledWith({ orgId: "org-new" });
-    expect(mockSetCompletionMarker).toHaveBeenCalledWith("user-1", "org-new");
+    expect(mockSetCompletionMarker).toHaveBeenCalledWith("user-1", "org-new", "/dashboard");
   });
 
   it("onGoToInvitations: fallback sign-in opens invitations", async () => {

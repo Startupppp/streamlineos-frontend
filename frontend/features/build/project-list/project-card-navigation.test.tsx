@@ -71,7 +71,7 @@ describe("ProjectCard navigation", () => {
   it("does not hijack modified clicks on card background", () => {
     render(<ProjectCard project={project} />);
 
-    fireEvent.click(screen.getByRole("listitem"), { metaKey: true });
+    fireEvent.click(screen.getByRole("article"), { metaKey: true });
 
     expect(mockPush).not.toHaveBeenCalled();
   });
@@ -79,7 +79,7 @@ describe("ProjectCard navigation", () => {
   it("retains normal background click navigation", () => {
     render(<ProjectCard project={project} />);
 
-    fireEvent.click(screen.getByRole("listitem"));
+    fireEvent.click(screen.getByRole("article"));
 
     expect(mockPush).toHaveBeenCalledWith("/build/42");
   });
