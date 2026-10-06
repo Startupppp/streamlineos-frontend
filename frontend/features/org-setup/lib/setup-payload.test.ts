@@ -13,7 +13,6 @@ function wizard(
 ): WizardData {
   return {
     ...DEFAULT_DATA,
-    goals: ["build"],
     modules,
     installedApps: modules,
     invitees,
@@ -21,17 +20,32 @@ function wizard(
 }
 
 describe("org setup invitation access", () => {
-  it("defaults a Build member to Build only, even when CRM and HR are enabled", () => {
-    const data = wizard([{ email: "member@example.com", role: "MEMBER" }]);
-
-    expect(defaultInviteModuleAccess("MEMBER", data.modules)).toEqual([
+  it("defaults a MEMBER to MEMBER on every selected module except chat and kb", () => {
+    const modules: OrgModuleKey[] = ["build", "crm", "hr", "chat", "kb"];
+    expect(defaultInviteModuleAccess("MEMBER", modules)).toEqual([
       { moduleKey: "build", standing: "MEMBER" },
+      { moduleKey: "crm", standing: "MEMBER" },
+      { moduleKey: "hr", standing: "MEMBER" },
     ]);
+  });
+
+  it("gives no access when only always-on modules are selected", () => {
+    expect(defaultInviteModuleAccess("MEMBER", ["chat", "kb"])).toEqual([]);
+  });
+
+  it("builds payload with per-module MEMBER access for an hr+crm org", () => {
+    const data = wizard(
+      [{ email: "member@example.com", role: "MEMBER" }],
+      ["hr", "crm", "chat", "kb"],
+    );
     expect(buildOrgSetupPayload(data).invitees).toEqual([
       {
         email: "member@example.com",
         role: "MEMBER",
-        moduleAccess: [{ moduleKey: "build", standing: "MEMBER" }],
+        moduleAccess: [
+          { moduleKey: "hr", standing: "MEMBER" },
+          { moduleKey: "crm", standing: "MEMBER" },
+        ],
       },
     ]);
   });
@@ -151,5 +165,52 @@ describe("org setup invitation access", () => {
 
     expect(getInviteAccessError(data)).toMatch(/at most 50 people/i);
     expect(() => buildOrgSetupPayload(data)).toThrow(/at most 50 people/i);
+  });
+});
+
+describe("buildOrgSetupPayload — moduleAnswers", () => {
+  it("includes non-empty answers for selected modules in the payload", () => {
+    const data: WizardData = {
+      ...DEFAULT_DATA,
+      modules: ["build", "hr", "chat", "kb"],
+      installedApps: ["build", "hr", "chat", "kb"],
+      invitees: [],
+      moduleAnswers: {
+        build: { workType: "Software", firstProjectName: "Alpha" },
+        hr: { employeeCount: "11-50", firstFocus: "" },
+      },
+    };
+    const payload = buildOrgSetupPayload(data);
+    expect(payload.moduleAnswers).toEqual({
+      build: { workType: "Software", firstProjectName: "Alpha" },
+      hr: { employeeCount: "11-50" },
+    });
+  });
+
+  it("omits moduleAnswers from payload when all answers are empty", () => {
+    const data: WizardData = {
+      ...DEFAULT_DATA,
+      modules: ["build", "chat", "kb"],
+      installedApps: ["build", "chat", "kb"],
+      invitees: [],
+      moduleAnswers: { build: { workType: "", firstProjectName: "" } },
+    };
+    const payload = buildOrgSetupPayload(data);
+    expect(payload.moduleAnswers).toBeUndefined();
+  });
+
+  it("omits answers for modules not in enabledModules", () => {
+    const data: WizardData = {
+      ...DEFAULT_DATA,
+      modules: ["crm", "chat", "kb"],
+      installedApps: ["crm", "chat", "kb"],
+      invitees: [],
+      moduleAnswers: {
+        build: { workType: "Software" },
+        crm: { salesModel: "B2B" },
+      },
+    };
+    const payload = buildOrgSetupPayload(data);
+    expect(payload.moduleAnswers).toEqual({ crm: { salesModel: "B2B" } });
   });
 });

@@ -183,7 +183,7 @@ export function GenerationFailureStage({
     ? `${workspaceLabel} is ready`
     : `We couldn't finish setting up ${workspaceLabel}`;
   const subtitle = planLocked
-    ? "Return to your product choices and remove the unavailable product. Your answers and invitations are saved."
+    ? "Return to your module choices and remove the unavailable module. Your answers and invitations are saved."
     : orgExists
     ? "Your organization was created — some invitations didn't go through. Jump in now or invite teammates later from People."
     : "Nothing was lost — your answers are saved. Retry to pick up where you left off.";
@@ -264,7 +264,7 @@ export function GenerationFailureStage({
               disabled={isNavigating}
               className="h-11 min-h-11 w-full sm:h-10 sm:min-h-10"
             >
-              Back to Products
+              Back to Modules
             </Button>
           ) : (
             <LoadingButton

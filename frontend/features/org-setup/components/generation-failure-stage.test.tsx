@@ -20,7 +20,7 @@ describe("GenerationFailureStage product plan recovery", () => {
     expect(screen.getByRole("alert")).toHaveTextContent("Inventory is not available on your plan.");
     expect(screen.getByText(/your answers and invitations are saved/i)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Try again" })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Back to Products" }));
+    fireEvent.click(screen.getByRole("button", { name: "Back to Modules" }));
     expect(onBackToProducts).toHaveBeenCalledTimes(1);
     expect(onRetry).not.toHaveBeenCalled();
   });
@@ -36,7 +36,7 @@ describe("GenerationFailureStage product plan recovery", () => {
       />,
     );
 
-    expect(screen.queryByRole("button", { name: "Back to Products" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Back to Modules" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Try again" }));
     expect(onRetry).toHaveBeenCalledTimes(1);
   });

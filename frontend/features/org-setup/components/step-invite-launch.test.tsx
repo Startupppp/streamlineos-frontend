@@ -47,7 +47,7 @@ describe("People step product access", () => {
     });
   });
 
-  it("adds a Member with only Build access and shows the per-person summary", () => {
+  it("adds a Member with access to every selected module and shows the per-person summary", () => {
     const onChangeInvitees = jest.fn<void, [Invitee[]]>();
     const onBack = jest.fn();
     const { rerender } = render(
@@ -67,7 +67,11 @@ describe("People step product access", () => {
       {
         email: "editor@example.com",
         role: "MEMBER",
-        moduleAccess: [{ moduleKey: "build", standing: "MEMBER" }],
+        moduleAccess: [
+          { moduleKey: "build", standing: "MEMBER" },
+          { moduleKey: "crm", standing: "MEMBER" },
+          { moduleKey: "hr", standing: "MEMBER" },
+        ],
       },
     ]);
 
@@ -79,9 +83,9 @@ describe("People step product access", () => {
         onChangeInvitees={onChangeInvitees}
       />,
     );
-    expect(screen.getByText("Access: Build Member")).toBeInTheDocument();
-    expect(screen.queryByText(/Access:.*CRM/)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Access:.*HR/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Access:.*Build Member/)).toBeInTheDocument();
+    expect(screen.getByText(/CRM Member/)).toBeInTheDocument();
+    expect(screen.getByText(/HR Member/)).toBeInTheDocument();
     expect(screen.getByText("Edit product access for editor@example.com")).toBeInTheDocument();
   });
 

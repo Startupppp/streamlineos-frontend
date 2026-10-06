@@ -1,6 +1,6 @@
 import { apiClient } from "@/lib/api-client";
 import { orgSetupDraftSaveContract, orgSetupDraftContract } from "@/hooks/api/org-setup-schema";
-import { DEFAULT_DATA, DRAFT_KEY } from "./constants";
+import { ALWAYS_ENABLED_MODULES, DEFAULT_DATA, DRAFT_KEY } from "./constants";
 import { parseWizardDraft, type WizardData } from "./wizard-data-schema";
 
 const STEP_KEY = "org-setup-step";
@@ -84,7 +84,7 @@ export function saveDraft(data: WizardData, scopeId: string): void {
 
 export function hasDraftProgress(data: WizardData): boolean {
   return (
-    data.goals.length > 0 ||
+    data.modules.length > ALWAYS_ENABLED_MODULES.length ||
     data.displayName.trim() !== "" ||
     data.companyName.trim() !== "" ||
     data.industry.trim() !== "" ||
