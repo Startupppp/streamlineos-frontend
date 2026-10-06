@@ -53,7 +53,6 @@ type Actions = {
 type Props = { projectId: number; children: (actions: Actions) => ReactNode };
 
 const WORK_STATES = [
-  "backlog",
   "todo",
   "in_progress",
   "in_review",
