@@ -163,7 +163,8 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
               <EmptyState
                 className={CONTENT_FILL_PANEL}
                 illustrationPreset="documents"
-                title="No decisions match your filters"
+                filtersActive
+                filteredTitle="No decisions match your filters"
                 description="Try adjusting the filters to see more decisions."
                 onClearFilters={listFilters.clearAll}
               />

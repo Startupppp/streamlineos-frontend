@@ -1,5 +1,6 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { DecisionsPage } from "./decisions-page";
 import { ApiError } from "@/lib/api-envelope";
 
@@ -65,12 +66,6 @@ jest.mock("@/components/ui/data-table", () => ({
     <div data-testid="data-table" data-rows={data.length} />
   ),
   DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
-}));
-
-jest.mock("@/components/ui/empty-state", () => ({
-  EmptyState: ({ title }: { title: string }) => (
-    <div data-testid="empty-state">{title}</div>
-  ),
 }));
 
 jest.mock("@/components/shared/no-permission-state", () => ({
@@ -246,32 +241,38 @@ it("renders the data table when rows are present and not the empty state", () =>
   );
   render(<DecisionsPage projectId={1} />);
   expect(screen.getByTestId("data-table")).toBeInTheDocument();
-  expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
+  expect(screen.queryByRole("status")).not.toBeInTheDocument();
 });
 
 it("shows 'No decisions recorded' empty state when there are no rows and no active filter", () => {
   render(<DecisionsPage projectId={1} />);
-  expect(screen.getByTestId("empty-state")).toHaveTextContent("No decisions recorded");
+  expect(screen.getByRole("heading", { name: "No decisions recorded" })).toBeVisible();
+  expect(screen.queryByRole("button", { name: "Clear filters" })).not.toBeInTheDocument();
   expect(screen.queryByTestId("data-table")).not.toBeInTheDocument();
 });
 
-it("shows 'No decisions match your filters' when filters are active and no rows match", () => {
-  mockUseBuildListFilters.mockReturnValue(defaultFilters({ isFiltered: true }));
+it("shows 'No decisions match your filters' with a body Clear action when no rows match", async () => {
+  const clearAll = jest.fn();
+  mockUseBuildListFilters.mockReturnValue(defaultFilters({ isFiltered: true, clearAll }));
   render(<DecisionsPage projectId={1} />);
-  expect(screen.getByTestId("empty-state")).toHaveTextContent("No decisions match your filters");
+  expect(screen.getByRole("heading", { name: "No decisions match your filters" })).toBeVisible();
   expect(screen.queryByText("No decisions recorded")).not.toBeInTheDocument();
+  await userEvent.setup().click(within(screen.getByRole("status")).getByRole("button", { name: "Clear filters" }));
+  expect(clearAll).toHaveBeenCalledTimes(1);
 });
 
 it("hides the New Decision button when build:decisions:manage is denied", () => {
   mockUseCan.mockReturnValue(false);
   render(<DecisionsPage projectId={1} />);
   expect(screen.queryByRole("button", { name: /new decision/i })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Log Decision" })).not.toBeInTheDocument();
 });
 
 it("shows the New Decision button when build:decisions:manage is granted", () => {
   mockUseCan.mockReturnValue(true);
   render(<DecisionsPage projectId={1} />);
   expect(screen.getAllByRole("button", { name: /new decision/i }).length).toBeGreaterThan(0);
+  expect(screen.getByRole("button", { name: "Log Decision" })).toBeVisible();
 });
 
 it("passes the URL-backed status filter to the decisions query so back-navigation restores the active filter without the component resetting it", () => {
