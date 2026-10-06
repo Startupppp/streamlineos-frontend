@@ -144,11 +144,19 @@ export function IntakeTriageMode({
       const target = e.target;
       if (helpOpen || e.metaKey || e.ctrlKey || e.altKey) return;
       if (
-        target instanceof HTMLElement &&
-        (target.tagName === "INPUT" ||
-          target.tagName === "TEXTAREA" ||
-          target.tagName === "SELECT" ||
-          target.isContentEditable)
+        (target instanceof HTMLElement &&
+          (target.tagName === "INPUT" ||
+            target.tagName === "TEXTAREA" ||
+            target.tagName === "SELECT" ||
+            target.isContentEditable ||
+            target.getAttribute("role") === "textbox" ||
+            target.closest('[contenteditable="true"]') !== null)) ||
+        (document.activeElement instanceof HTMLElement &&
+          (document.activeElement.tagName === "INPUT" ||
+            document.activeElement.tagName === "TEXTAREA" ||
+            document.activeElement.tagName === "SELECT" ||
+            document.activeElement.isContentEditable ||
+            document.activeElement.closest('[contenteditable="true"]') !== null))
       )
         return;
       if (e.key === "ArrowUp" || e.key === "k") {

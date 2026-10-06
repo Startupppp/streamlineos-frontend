@@ -12,7 +12,7 @@ import {
 } from "react";
 import { useSession } from "next-auth/react";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { Controller, useFormContext } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -29,7 +29,7 @@ import {
   useNavigationLeave,
   useRegisterDirtyState,
 } from "@/components/shared/dirty-state-context";
-import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
+import { getIntakeTicketHref, buildIntakeReturnHref } from "@/features/build/ticket-details/build-ticket-detail-url";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -53,13 +53,13 @@ type Actions = {
 type Props = { projectId: number; children: (actions: Actions) => ReactNode };
 
 const WORK_STATES = [
-  "backlog",
   "todo",
   "in_progress",
   "in_review",
   "done",
   "cancelled",
 ];
+const ACCEPT_TOAST_DURATION_MS = 20_000;
 const TITLES = {
   accept: "Accept Intake Item",
   decline: "Decline Intake Item",
@@ -128,6 +128,7 @@ function DecisionOwner({
   const acceptMutation = useAcceptIntakeRequest();
   const updateMutation = useUpdateIntakeRequest();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const requestLeave = useNavigationLeave();
   const canViewTicket = useCan("build:tickets:view");
   const [acceptedTicket, setAcceptedTicket] = useState<{ id: number; ticketNumber?: number; toastId: string | number } | null>(null);
@@ -142,7 +143,12 @@ function DecisionOwner({
       ? ticket.ticketNumber : 0
   );
   const ticketHref = enabled && canViewTicket && ticketNumber > 0
-      ? getTicketDetailHref(projectId, null, ticketNumber)
+      ? getIntakeTicketHref(
+          projectId,
+          null,
+          ticketNumber,
+          buildIntakeReturnHref(projectId, searchParams),
+        )
       : null;
   const currentTicketNavigation = useRef<{ href: string; requestLeave: typeof requestLeave } | null>(null);
   const offeredTicket = useRef<typeof acceptedTicket>(null);
@@ -167,6 +173,7 @@ function DecisionOwner({
     }
     toast.success("Item accepted — ticket created", {
       id: acceptedTicket.toastId,
+      duration: ACCEPT_TOAST_DURATION_MS,
       action: { label: "View ticket", onClick: handleViewTicket },
     });
   }, [acceptedTicket, ticketHref, requestLeave, router]);
@@ -240,7 +247,9 @@ function DecisionOwner({
         setPending(false);
         setDecision(null);
         if (submitted.action === "accept" && result.linkedWorkItemId) {
-          const toastId = toast.success("Item accepted — ticket created", {});
+          const toastId = toast.success("Item accepted — ticket created", {
+            duration: ACCEPT_TOAST_DURATION_MS,
+          });
           const summary = result.linkedTicket;
           const ticketNumber = summary?.id === result.linkedWorkItemId &&
             summary.projectId === projectId && Number.isSafeInteger(summary.ticketNumber) &&

@@ -40,12 +40,16 @@ const TICKET_COLLECTION_QUERY_KEYS = [
   "cycleId",
   "dueDateFrom",
   "dueDateTo",
+  "item",
+  "mode",
 ] as const;
 
 function ticketCollectionPaths(projectId: number): readonly string[] {
   return [
     `/build/${projectId}/issues`,
     `/build/${projectId}/workload`,
+    `/build/${projectId}/intake`,
+    `/build/${projectId}/triage`,
     "/build/my-work",
   ];
 }
@@ -69,6 +73,30 @@ export function getMyWorkTicketHref(
 ): string {
   const href = getTicketDetailHref(projectId, projectKey, ticketNumber);
   const query = new URLSearchParams({ returnTo: resolveTicketBackHref(projectId, returnHref) });
+  return `${href}?${query}`;
+}
+
+export function buildIntakeReturnHref(
+  projectId: number,
+  searchParams: SearchParamsSource,
+): string {
+  return buildTicketCollectionReturnHref(
+    projectId,
+    `/build/${projectId}/intake`,
+    searchParams,
+  );
+}
+
+export function getIntakeTicketHref(
+  projectId: number,
+  projectKey: string | null | undefined,
+  ticketNumber: number,
+  returnHref: string,
+): string {
+  const href = getTicketDetailHref(projectId, projectKey, ticketNumber);
+  const query = new URLSearchParams({
+    returnTo: resolveTicketBackHref(projectId, returnHref),
+  });
   return `${href}?${query}`;
 }
 
