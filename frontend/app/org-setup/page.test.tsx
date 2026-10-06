@@ -16,8 +16,16 @@ const mockUseOrgSetupSessionQuery = jest.fn((_enabled: boolean) => ({
 
 let capturedWelcomeProps: Record<string, unknown> = {};
 
+let capturedShellData: { fullName?: string } | null = null;
+
 jest.mock("@/features/org-setup/components/org-setup-shell", () => ({
-  OrgSetupShell: ({ children }: PropsWithChildren) => <div>{children}</div>,
+  OrgSetupShell: ({
+    children,
+    data,
+  }: PropsWithChildren & { data?: { fullName?: string } }) => {
+    capturedShellData = data ?? null;
+    return <div>{children}</div>;
+  },
 }));
 
 jest.mock("@/features/org-setup/components/step-welcome", () => ({
@@ -40,7 +48,7 @@ jest.mock("@/components/organization/archived-orgs-restore", () => ({
 }));
 
 jest.mock("@/hooks/common/auth-hooks", () => ({
-  signInWithMagicToken: jest.fn((...args: unknown[]) => mockSignIn(...args)),
+  signInWithMagicToken: jest.fn((...args: any[]) => mockSignIn(...args)),
   useSessionClaimsRefresh: jest.fn(() => mockRefreshSessionClaims),
 }));
 
@@ -73,22 +81,24 @@ jest.mock("@/features/org-setup/lib/draft", () => ({
   clampStep: jest.fn(() => 1),
   hasDraftProgress: jest.fn(() => false),
   hasCompletionMarker: jest.fn(() => false),
-  clearAll: jest.fn((...args: unknown[]) => mockClearAll(...args)),
+  clearAll: jest.fn((...args: any[]) => mockClearAll(...args)),
 }));
 
 jest.mock("@/lib/api-client", () => ({
   clearBackendTokenCache: jest.fn(),
 }));
 
+const mockUseSession = jest.fn(() => ({
+  data: { user: { id: "user-1", name: "Ada" }, orgId: null },
+}));
+
 jest.mock("next-auth/react", () => ({
-  useSession: jest.fn(() => ({
-    data: { user: { id: "user-1", name: "Ada" }, orgId: null },
-  })),
+  useSession: (...args: any[]) => mockUseSession(...args),
 }));
 
 jest.mock("sonner", () => ({
   toast: {
-    error: jest.fn((...args: unknown[]) => mockToastError(...args)),
+    error: jest.fn((...args: any[]) => mockToastError(...args)),
     success: jest.fn(),
   },
 }));
@@ -122,6 +132,10 @@ beforeEach(() => {
   mockLocationReplace.mockReset();
   mockUseOrgSetupSessionQuery.mockClear();
   capturedWelcomeProps = {};
+  capturedShellData = null;
+  mockUseSession.mockReset().mockReturnValue({
+    data: { user: { id: "user-1", name: "Ada" }, orgId: null },
+  });
 });
 
 import OrgSetupPage from "@/app/org-setup/page";
@@ -241,5 +255,56 @@ describe("OrgSetupPage — skipping the wizard releases the dashboard only on a 
     });
     expect(mockLocationReplace).toHaveBeenCalledTimes(1);
     expect(mockToastError).not.toHaveBeenCalled();
+  });
+});
+
+
+describe("OrgSetupPage — session name seeds fullName once", () => {
+  it("seeds fullName from session name when draft fullName is empty", async () => {
+    const { loadDraft } = jest.requireMock("@/features/org-setup/lib/draft") as {
+      loadDraft: jest.Mock;
+    };
+    loadDraft.mockReturnValue({ ...DEFAULT_DATA, fullName: "" });
+    mockUseSession.mockReturnValue({
+      data: { user: { id: "user-1", name: "Ada Lovelace" }, orgId: null },
+    });
+
+    await renderWizard();
+
+    await waitFor(() => {
+      expect(capturedShellData?.fullName).toBe("Ada Lovelace");
+    });
+  });
+
+  it("does not overwrite an existing user/draft fullName", async () => {
+    const { loadDraft } = jest.requireMock("@/features/org-setup/lib/draft") as {
+      loadDraft: jest.Mock;
+    };
+    loadDraft.mockReturnValue({ ...DEFAULT_DATA, fullName: "Draft Owner" });
+    mockUseSession.mockReturnValue({
+      data: { user: { id: "user-1", name: "Ada Lovelace" }, orgId: null },
+    });
+
+    await renderWizard();
+
+    await waitFor(() => {
+      expect(capturedShellData?.fullName).toBe("Draft Owner");
+    });
+  });
+
+  it("leaves fullName empty when session has no name so BE can derive", async () => {
+    const { loadDraft } = jest.requireMock("@/features/org-setup/lib/draft") as {
+      loadDraft: jest.Mock;
+    };
+    loadDraft.mockReturnValue({ ...DEFAULT_DATA, fullName: "" });
+    mockUseSession.mockReturnValue({
+      data: { user: { id: "user-1", name: "" }, orgId: null },
+    });
+
+    await renderWizard();
+
+    await waitFor(() => {
+      expect(capturedShellData?.fullName).toBe("");
+    });
   });
 });
