@@ -1,6 +1,6 @@
 import { fireEvent, render, renderHook, screen } from "@testing-library/react";
 import { Command, CommandList } from "@/components/ui/command";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import {
   useHrAttendanceStatus,
   useHrCheckIn,
@@ -12,6 +12,7 @@ import { CommandPaletteActionsGroup } from "./command-palette-actions-group";
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(),
+  useModuleEnabled: jest.fn(() => true),
 }));
 jest.mock("@/hooks/api/hr/attendance", () => ({
   useHrAttendanceStatus: jest.fn(),
@@ -23,6 +24,7 @@ jest.mock("@/hooks/api/payroll/runs", () => ({
 }));
 
 const mockedCan = useCan as jest.Mock;
+const mockedModuleEnabled = useModuleEnabled as jest.Mock;
 const checkInMutate = jest.fn();
 const checkOutMutate = jest.fn();
 
@@ -37,6 +39,7 @@ function availableLabels(keys: string[], onSelect = jest.fn()) {
 }
 
 beforeEach(() => {
+  mockedModuleEnabled.mockReturnValue(true);
   (useHrAttendanceStatus as jest.Mock).mockReturnValue({ data: { status: "NOT_CHECKED_IN" } });
   (useHrCheckIn as jest.Mock).mockReturnValue({ mutate: checkInMutate });
   (useHrCheckOut as jest.Mock).mockReturnValue({ mutate: checkOutMutate });
@@ -136,5 +139,19 @@ describe("P2-003 — check-in needs an explicit confirm inside the palette", () 
     const { result } = renderHook(() => useHrmsCommands(jest.fn()));
     const leave = result.current.find((c) => c.id === "hrms-request-leave");
     expect(leave?.keywords).toEqual(expect.arrayContaining(["छुट्टी", "time off", "leave"]));
+  });
+});
+
+describe("P2-003 — palette actions respect module enablement", () => {
+  it("hides every HRMS action when the HR module is off", () => {
+    mockedModuleEnabled.mockReturnValue(false);
+    expect(
+      availableLabels([
+        "self:leaves",
+        "self:attendance",
+        "payroll:salaries:update",
+        "hr:employees:create",
+      ]),
+    ).toEqual([]);
   });
 });

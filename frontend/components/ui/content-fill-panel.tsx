@@ -37,10 +37,10 @@ export const CONTENT_PANEL_SOLID =
 
 /** Page-body loading shell matching list/card surfaces. */
 export const PAGE_BODY_SKELETON_CLASS =
-  "flex min-h-0 h-full w-full flex-1 flex-col gap-3 overflow-hidden rounded-xl border border-border bg-card p-4";
+  "flex min-h-0 h-full w-full flex-1 flex-col gap-3 overflow-hidden rounded-xl border border-border/80 bg-card p-4 min-h-[max(20rem,calc(100dvh-14rem))]";
 
-/** Page-body empty: full width + height; keeps EmptyState default `bg-card` surface. */
-export const PAGE_BODY_EMPTY_CLASS = "min-h-0 h-full w-full flex-1";
+export const PAGE_BODY_EMPTY_CLASS =
+  "min-h-0 h-full w-full flex-1 min-h-[max(20rem,calc(100dvh-14rem))]";
 
 interface ContentFillPanelProps {
   children: ReactNode;

@@ -83,6 +83,7 @@ function applyThemeClass(theme: AppThemeId): void {
 function applyDarkClass(isDark: boolean): void {
   const root = document.documentElement;
   root.classList.toggle("dark", isDark);
+  root.classList.toggle("light", !isDark);
   root.style.colorScheme = isDark ? "dark" : "light";
 }
 

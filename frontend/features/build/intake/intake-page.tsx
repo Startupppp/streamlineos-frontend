@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
@@ -13,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyInboxIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
-import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
+import { CONTENT_FILL_PANEL, PAGE_BODY_EMPTY_CLASS } from "@/components/ui/content-fill-panel";
 import {
   Sheet,
   SheetContent,
@@ -312,6 +313,7 @@ export function IntakePage({
             <Tabs
               value={activeTab}
               onValueChange={(value) => listFilters.setValue("tab", value)}
+              className="flex min-h-0 flex-1 flex-col"
             >
               <PmSection index={0}>
                 <TabsList>
@@ -332,7 +334,7 @@ export function IntakePage({
                 </TabsList>
               </PmSection>
 
-              <TabsContent value={activeTab} className="mt-4">
+              <TabsContent value={activeTab} className="mt-4 flex min-h-0 flex-1 flex-col">
                 {filteredItems.length === 0 ? (
                   <EmptyState
                     illustration={<EmptyInboxIllustration />}
@@ -354,7 +356,7 @@ export function IntakePage({
                           }
                         : undefined
                     }
-                    className={CONTENT_FILL_PANEL}
+                    className={cn(CONTENT_FILL_PANEL, PAGE_BODY_EMPTY_CLASS)}
                   />
                 ) : (
                   <PmSection index={1}>

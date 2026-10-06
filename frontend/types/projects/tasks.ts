@@ -227,7 +227,7 @@ export interface TicketFilters {
 export interface AllWorkFilters extends TicketFilters {
   projectIds?: string;
   excludeStatus?: string;
-  scope?: "all" | "mine" | "created" | "subscribed";
+  scope?: "all" | "mine" | "created" | "subscribed" | "mentioned" | "blocked" | "recently-completed";
   teamId?: number;
   managedProductId?: number;
 }

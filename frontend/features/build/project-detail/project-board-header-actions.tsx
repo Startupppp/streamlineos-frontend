@@ -31,6 +31,10 @@ export function ProjectBoardHeaderActions({
   const [summarizeFn, setSummarizeFn] = useState<(() => void) | null>(null);
   const [importOpen, setImportOpen] = useState(false);
 
+  const registerSummarize = useCallback((run: (() => void) | null) => {
+    setSummarizeFn(() => run);
+  }, []);
+
   const handleCreate = useCallback(() => {
     onCreateOpenChange(true);
   }, [onCreateOpenChange]);
@@ -109,7 +113,7 @@ export function ProjectBoardHeaderActions({
         <ProjectAiMenu
           projectId={projectId}
           hideTrigger
-          onRunRegister={setSummarizeFn}
+          onRunRegister={registerSummarize}
         />
       ) : null}
       {canImport || canExport ? (

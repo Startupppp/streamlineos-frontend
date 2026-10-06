@@ -96,6 +96,7 @@ export function useHrAttendanceStatus(
   const { data: session } = useSession();
   const orgId = session?.orgId;
   const canAttendance = useCan("self:attendance");
+  const hrEnabled = useModuleEnabled("hr");
   const { enabled: optEnabled, ...restOptions } = options ?? {};
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.attendanceStatus(),
@@ -105,7 +106,7 @@ export function useHrAttendanceStatus(
     refetchInterval: (query) => activeAttendancePollInterval(query.state.data),
     refetchIntervalInBackground: false,
     ...restOptions,
-    enabled: !!orgId && canAttendance && (optEnabled ?? true),
+    enabled: !!orgId && hrEnabled && canAttendance && (optEnabled ?? true),
   });
 }
 

@@ -81,7 +81,7 @@ function ThemeOption({ theme }: { theme: AppTheme }) {
     >
       <span
         aria-hidden
-        className="h-3.5 w-3.5 shrink-0 rounded-full border border-black/10"
+        className="h-3.5 w-3.5 shrink-0 rounded-full border border-foreground/25"
         style={{ backgroundColor: theme.swatch }}
       />
       <span className="flex-1 truncate text-left">{theme.label}</span>
@@ -120,7 +120,13 @@ export function ThemeMenuSubmenu() {
         <Palette className="h-3.5 w-3.5" />
         Interface theme
       </DropdownMenuSubTrigger>
-      <DropdownMenuSubContent className="w-64 p-2">
+      <DropdownMenuSubContent
+        side="left"
+        align="start"
+        sideOffset={6}
+        collisionPadding={12}
+        className="w-64 max-h-[min(24rem,var(--radix-dropdown-menu-content-available-height))] overflow-y-auto p-2"
+      >
         <ModeOptionsRow />
         <DropdownMenuSeparator className="my-2" />
         <ThemeOptionsGrid />
