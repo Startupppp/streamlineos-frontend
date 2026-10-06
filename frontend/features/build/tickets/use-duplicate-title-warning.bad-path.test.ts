@@ -4,7 +4,7 @@ import {
   useDuplicateTitleWarning,
 } from "./use-duplicate-title-warning";
 
-const mockUseTicketSearch = jest.fn(() => ({ data: [] }));
+const mockUseTicketSearch = jest.fn<unknown, unknown[]>(() => ({ data: [] }));
 const mockUseDebouncedValue = jest.fn((value: string) => value);
 
 jest.mock("@/hooks/api/build/ticket-search", () => ({

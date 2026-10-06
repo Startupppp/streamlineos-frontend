@@ -9,7 +9,7 @@ const mockRefreshSessionClaims = jest.fn();
 const mockClearAll = jest.fn();
 const mockSetCompletionMarker = jest.fn();
 const mockHasCompletionMarker = jest.fn();
-const mockGetCompletionDestination = jest.fn(() => "/dashboard");
+const mockGetCompletionDestination = jest.fn<string, unknown[]>(() => "/dashboard");
 const mockClearCompletionMarker = jest.fn();
 const mockClearBackendTokenCache = jest.fn();
 const mockLocationReplace = jest.fn();
@@ -56,7 +56,7 @@ jest.mock("@/hooks/api/org-setup", () => ({
 }));
 
 jest.mock("@/hooks/common/auth-hooks", () => ({
-  signInWithMagicToken: jest.fn((...args: any[]) => mockSignIn(...args)),
+  signInWithMagicToken: jest.fn((...args: unknown[]) => mockSignIn(...args)),
   useSessionClaimsRefresh: jest.fn(() => mockRefreshSessionClaims),
 }));
 
@@ -75,15 +75,15 @@ jest.mock("@/hooks/common/use-confirmed-session-claims-refresh", () => ({
 }));
 
 jest.mock("@/features/org-setup/lib/draft", () => ({
-  clearAll: jest.fn((...args: any[]) => mockClearAll(...args)),
-  setCompletionMarker: jest.fn((...args: any[]) => mockSetCompletionMarker(...args)),
-  hasCompletionMarker: jest.fn((...args: any[]) => mockHasCompletionMarker(...args)),
-  getCompletionDestination: jest.fn((...args: any[]) => mockGetCompletionDestination(...args)),
-  clearCompletionMarker: jest.fn((...args: any[]) => mockClearCompletionMarker(...args)),
+  clearAll: jest.fn((...args: unknown[]) => mockClearAll(...args)),
+  setCompletionMarker: jest.fn((...args: unknown[]) => mockSetCompletionMarker(...args)),
+  hasCompletionMarker: jest.fn((...args: unknown[]) => mockHasCompletionMarker(...args)),
+  getCompletionDestination: jest.fn((...args: unknown[]) => mockGetCompletionDestination(...args)),
+  clearCompletionMarker: jest.fn((...args: unknown[]) => mockClearCompletionMarker(...args)),
 }));
 
 jest.mock("@/lib/api-client", () => ({
-  clearBackendTokenCache: jest.fn((...args: any[]) => mockClearBackendTokenCache(...args)),
+  clearBackendTokenCache: jest.fn((...args: unknown[]) => mockClearBackendTokenCache(...args)),
   setAutoSignOutSuppressed: jest.fn(),
   isApiError: jest.fn().mockReturnValue(false),
 }));
@@ -104,7 +104,7 @@ jest.mock("next-auth/react", () => ({
 
 jest.mock("sonner", () => ({
   toast: {
-    error: jest.fn((...args: any[]) => mockToastError(...args)),
+    error: jest.fn((...args: unknown[]) => mockToastError(...args)),
     success: jest.fn(),
   },
 }));

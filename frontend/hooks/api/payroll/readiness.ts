@@ -33,6 +33,7 @@ export function usePayrollReadiness(month: string) {
 
 export function usePayrollRunBlockers(month: string, runId: number | null) {
   const canView = useCan("payroll:runs:view");
+  const payrollOn = useModuleEnabled("payroll");
   return useQuery({
     queryKey: [...payrollQueryKeys.payroll.readiness(month), "run-blockers", runId] as const,
     queryFn: ({ signal }) =>
@@ -43,6 +44,6 @@ export function usePayrollRunBlockers(month: string, runId: number | null) {
         runBlockerPageC,
       ),
     staleTime: 30_000,
-    enabled: canView && runId !== null && runId > 0,
+    enabled: canView && payrollOn && runId !== null && runId > 0,
   });
 }

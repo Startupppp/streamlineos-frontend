@@ -26,4 +26,4 @@ export const SURFACE_CLOSE_BUTTON =
   "absolute right-3 top-3 flex size-8 items-center justify-center rounded-md text-muted-foreground opacity-70 outline-none transition-[opacity,background-color,color] duration-200 hover:bg-accent hover:text-accent-foreground hover:opacity-100 focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none motion-reduce:transition-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4";
 
 export const SURFACE_EMPTY =
-  "min-h-0 h-full w-full flex-1 rounded-xl border border-dashed border-border/80 bg-card px-6 py-12 min-h-[max(20rem,calc(100dvh-14rem))]";
+  "h-full min-h-80 w-full flex-1 rounded-xl border border-dashed border-border/80 bg-card px-6 py-12";

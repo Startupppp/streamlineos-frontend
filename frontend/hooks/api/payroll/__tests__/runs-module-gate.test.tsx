@@ -23,7 +23,7 @@ function wrapper({ children }: { children: ReactNode }) {
   return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
 }
 
-describe("payroll runs with Payroll module off", () => {
+describe("P4: payroll runs with Payroll module off", () => {
   beforeEach(() => {
     mockedGet.mockReset().mockResolvedValue({ data: [], pageInfo: { hasNextPage: false } });
   });

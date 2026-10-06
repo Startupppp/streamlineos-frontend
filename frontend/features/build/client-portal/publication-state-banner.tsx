@@ -22,11 +22,12 @@ export function PublicationStateBanner({
   onUnpublish,
 }: PublicationStateBannerProps) {
   const [confirmUnpublish, setConfirmUnpublish] = useState(false);
+  const [confirmPublish, setConfirmPublish] = useState(false);
   const isPublished = portalPublishedAt !== null;
 
   function handleToggle(checked: boolean) {
     if (checked) {
-      onPublish();
+      setConfirmPublish(true);
     } else {
       setConfirmUnpublish(true);
     }
@@ -52,6 +53,14 @@ export function PublicationStateBanner({
           aria-label={isPublished ? "Unpublish client portal" : "Publish client portal"}
         />
       </div>
+      <ConfirmDialog
+        open={confirmPublish}
+        onOpenChange={setConfirmPublish}
+        title="Publish portal?"
+        description="Clients with an active grant will be able to see published project content. You can unpublish later without removing grants."
+        confirmLabel="Publish"
+        onConfirm={onPublish}
+      />
       <ConfirmDialog
         open={confirmUnpublish}
         onOpenChange={setConfirmUnpublish}

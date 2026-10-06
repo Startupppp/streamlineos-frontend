@@ -19,7 +19,7 @@ import {
 interface UseBoardNavigationActionsOptions {
   projectId: number;
   pathname: string;
-  searchParams: ReturnType<typeof import("next/navigation").useSearchParams>;
+  searchParams: URLSearchParams;
   projectKey: string | undefined;
   projectLoaded: boolean;
   selectedTicketId: number | null;

@@ -7,14 +7,14 @@ import { currentSearchParams } from "@/lib/current-search-params";
 import { BUILD_LIST_CURSOR_PARAM } from "../shared/use-build-list-url-state";
 import type { DisplayOptions } from "@/features/build/shared/types";
 import type { ProjectView } from "@/types/projects";
-import type { useRouter, useSearchParams } from "next/navigation";
+import type { useRouter } from "next/navigation";
 
 interface UseBoardViewApplyParams {
   viewId: string | null;
   views: { data: ProjectView[] } | undefined;
   isCalendarDeepLink: boolean;
   calendarHref: string;
-  searchParams: ReturnType<typeof useSearchParams>;
+  searchParams: URLSearchParams;
   router: ReturnType<typeof useRouter>;
   setStoredDisplayOptions: (next: DisplayOptions) => void;
 }

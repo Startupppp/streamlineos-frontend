@@ -102,14 +102,23 @@ export function ProjectCreateWizard({
     onOpenChange(true);
   }
 
-  function handleClose() {
-    requestClose();
-  }
-
   function handleDiscardConfirm() {
     setDiscardConfirmOpen(false);
     reset();
     onOpenChange(false);
+  }
+
+  function handleOpenAutoFocus(event: Event) {
+    event.preventDefault();
+    const input = document.querySelector<HTMLInputElement>(
+      '[data-project-create-name="true"]',
+    );
+    input?.focus({ preventScroll: true });
+  }
+
+  function handleDismissRequest(event: { preventDefault(): void }) {
+    event.preventDefault();
+    requestClose();
   }
 
   function handleNextFromBasics(): void {
@@ -130,25 +139,10 @@ export function ProjectCreateWizard({
       <SheetContent
         side="right"
         className="w-full sm:max-w-[600px] p-0 flex flex-col overflow-hidden"
-        onOpenAutoFocus={(event) => {
-          event.preventDefault();
-          const input = document.querySelector<HTMLInputElement>(
-            '[data-project-create-name="true"]',
-          );
-          input?.focus({ preventScroll: true });
-        }}
-        onEscapeKeyDown={(event) => {
-          event.preventDefault();
-          requestClose();
-        }}
-        onPointerDownOutside={(event) => {
-          event.preventDefault();
-          requestClose();
-        }}
-        onInteractOutside={(event) => {
-          event.preventDefault();
-          requestClose();
-        }}
+        onOpenAutoFocus={handleOpenAutoFocus}
+        onEscapeKeyDown={handleDismissRequest}
+        onPointerDownOutside={handleDismissRequest}
+        onInteractOutside={handleDismissRequest}
       >
         <SheetHeader className="shrink-0 px-6 pt-5 pb-4 border-b text-left">
           <div className="flex gap-1 mb-3">
@@ -210,7 +204,7 @@ export function ProjectCreateWizard({
                 type="button"
                 variant="outline"
                 className="flex-1"
-                onClick={handleClose}
+                onClick={requestClose}
               >
                 Cancel
               </Button>
@@ -290,9 +284,7 @@ export function ProjectCreateWizard({
     </Sheet>
       <ConfirmDialog
         open={discardConfirmOpen}
-        onOpenChange={(next) => {
-          if (!next) setDiscardConfirmOpen(false);
-        }}
+        onOpenChange={setDiscardConfirmOpen}
         title="Discard draft?"
         description="You have unsaved changes in this project wizard. Closing will discard them."
         confirmLabel="Discard"

@@ -78,6 +78,7 @@ const BUILD_ROUTE_MANIFEST: readonly BuildRouteManifestEntry[] = [
   { route: "/build/[projectId]/settings/workflow", decision: "KEEP", target: null },
   { route: "/build/[projectId]/tickets/[ticketKey]", decision: "KEEP", target: null },
   { route: "/build/[projectId]/triage", decision: "KEEP", target: null },
+  { route: "/build/[projectId]/[...slug]", decision: "KEEP", target: null },
   { route: "/build/[projectId]/updates", decision: "KEEP", target: null },
   { route: "/build/[projectId]/whiteboard", decision: "KEEP", target: null },
   { route: "/build/[projectId]/wiki", decision: "KEEP", target: null },

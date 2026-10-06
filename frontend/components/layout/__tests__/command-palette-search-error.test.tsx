@@ -45,6 +45,10 @@ jest.mock("@/components/command-palette/hooks/use-global-search", () => ({
   useGlobalSearch: jest.fn(),
 }));
 
+jest.mock("@/components/theme/app-theme-provider", () => ({
+  useAppTheme: () => ({ setMode: jest.fn(), theme: "light", mode: "system", isDark: false }),
+}));
+
 jest.mock("@/components/layout/command-palette-hrms-commands", () => ({
   useHrmsCommands: () => [],
 }));
@@ -116,7 +120,7 @@ describe("CommandPaletteDialogBody — global search failure", () => {
     });
 
     render(<CommandPaletteDialogBody />);
-    typeQuery("acme");
+    typeQuery("xyzqwerty");
 
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     expect(screen.getByText(/No results for/)).toBeInTheDocument();

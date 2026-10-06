@@ -94,8 +94,8 @@ it("shows the failed read and the existing default retry button without clearing
   mockError = new Error("Saved draft unavailable");
   render(<ActivityFeed ticketId={7} projectId={1} comments={[]} />);
   fireEvent.change(screen.getByRole("textbox"), { target: { value: "my text" } });
-  expect(screen.getByRole("alert")).toHaveTextContent("Saved draft unavailable");
-  fireEvent.click(screen.getByRole("button", { name: "Retry draft" }));
+  expect(screen.getByRole("alert")).toHaveTextContent("Couldn't load the saved draft. Try again, or start a new comment.");
+  fireEvent.click(screen.getByRole("button", { name: "Retry" }));
   expect(mockRetry).toHaveBeenCalledTimes(1);
   expect(screen.getByRole("textbox")).toHaveValue("my text");
   expect(mockPost).not.toHaveBeenCalled();

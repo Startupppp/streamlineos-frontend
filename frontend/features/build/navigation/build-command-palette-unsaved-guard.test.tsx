@@ -47,6 +47,10 @@ jest.mock(
   }),
 );
 
+jest.mock("@/components/theme/app-theme-provider", () => ({
+  useAppTheme: () => ({ setMode: jest.fn(), theme: "light", mode: "system", isDark: false }),
+}));
+
 jest.mock("@/components/layout/command-palette-hrms-commands", () => ({
   useHrmsCommands: () => [],
 }));
@@ -90,6 +94,9 @@ jest.mock("lucide-react", () => {
     RefreshCw: Icon,
     BarChart2: Icon,
     Star: Icon,
+    Moon: Icon,
+    Sun: Icon,
+    Monitor: Icon,
   };
 });
 

@@ -60,14 +60,6 @@ export function buildProjectCatalog(basePath: string): BuildScopeCatalog {
         mobilePriority: 10,
       },
       {
-        id: "project-intake",
-        label: "Intake",
-        href: `${basePath}/intake`,
-        icon: ClipboardCheck,
-        requiredPermission: "build:view",
-        mobilePriority: 20,
-      },
-      {
         id: "project-backlog",
         label: "Backlog",
         href: `${basePath}/backlog`,
@@ -176,6 +168,13 @@ export function buildProjectCatalog(basePath: string): BuildScopeCatalog {
         href: `${basePath}/change-requests`,
         icon: FilePen,
         requiredPermission: "build:changerequests:view",
+      },
+      {
+        id: "project-intake",
+        label: "Intake",
+        href: `${basePath}/intake`,
+        icon: ClipboardCheck,
+        requiredPermission: "build:view",
       },
       {
         id: "project-feedback",

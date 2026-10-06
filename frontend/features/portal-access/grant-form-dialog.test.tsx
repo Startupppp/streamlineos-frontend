@@ -126,7 +126,7 @@ jest.mock("@/hooks/api/portal-access/grants", () => ({
 }));
 
 jest.mock("@/hooks/api/build/projects", () => ({
-  useProjects: () => mockUseProjects(),
+  useProjects: (...args: unknown[]) => mockUseProjects(...args),
 }));
 
 jest.mock("./invite-client-dialog", () => ({
@@ -239,6 +239,35 @@ describe("GrantFormDialog — membership query filter", () => {
     );
     expect(mockUsePortalMemberships).toHaveBeenCalledWith(
       expect.objectContaining({ status: "ACTIVE" }),
+      expect.objectContaining({ enabled: true }),
     );
+  });
+});
+
+describe("GrantFormDialog — projects load failure (BUG-006)", () => {
+  it("shows Projects Error with Try Again and does not leave the project field silent", () => {
+    const refetch = jest.fn();
+    mockUseProjects.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      refetch,
+    });
+    mockUsePortalMemberships.mockReturnValue(POPULATED_MEMBERSHIPS);
+    render(
+      <GrantFormDialog open onOpenChange={jest.fn()} mode="create" />,
+    );
+    expect(screen.getByRole("alert")).toHaveTextContent(/Projects Error/i);
+    expect(screen.getByText(/Failed to load projects/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Try Again/i }));
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("NEGATIVE — success path does not show Projects Error", () => {
+    render(
+      <GrantFormDialog open onOpenChange={jest.fn()} mode="create" />,
+    );
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(screen.queryByText(/Projects Error/i)).toBeNull();
   });
 });

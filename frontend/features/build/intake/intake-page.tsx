@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { cn } from "@/lib/utils";
 import {
   useIntakeRequests,
   useCreateIntakeRequest,
@@ -14,7 +13,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyInboxIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
-import { CONTENT_FILL_PANEL, PAGE_BODY_EMPTY_CLASS } from "@/components/ui/content-fill-panel";
+import {
+  CONTENT_FILL_PANEL,
+  PAGE_BODY_EMPTY_CLASS,
+} from "@/components/ui/content-fill-panel";
 import {
   Sheet,
   SheetContent,
@@ -28,7 +30,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger, TABS_CONTENT_PAGE_BODY_CLASS } from "@/components/ui/tabs";
 import { Plus, ExternalLink, ListChecks } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
@@ -56,9 +58,11 @@ const INTAKE_FILTER_DEFINITIONS = [
 export function IntakePage({
   projectId,
   highlightId,
+  highlightRequested = highlightId !== undefined,
 }: {
   projectId: number;
   highlightId?: number;
+  highlightRequested?: boolean;
 }) {
   const [createOpen, setCreateOpen] = useState(false);
   const highlightRef = useRef<HTMLDivElement>(null);
@@ -136,14 +140,10 @@ export function IntakePage({
     highlightId !== undefined
       ? (allItems.find((i) => i.id === highlightId) ?? null)
       : null;
-  const highlightFound =
-    highlightId !== undefined &&
-    allItems.length > 0 &&
-    highlightedItem !== null;
+  const highlightFound = highlightedItem !== null;
+  const listSettled = !isLoading && intakeData !== undefined;
   const highlightNotFound =
-    highlightId !== undefined &&
-    allItems.length > 0 &&
-    highlightedItem === null;
+    highlightRequested && listSettled && highlightedItem === null;
 
   useEffect(() => {
     if (
@@ -216,19 +216,21 @@ export function IntakePage({
           title="Intake"
           subtitle="Collect and triage incoming requests from your team or clients"
           actions={
-            <div className="flex items-center gap-2">
+            <div className="flex w-full flex-wrap items-center gap-2">
               {canManage && !triageMode ? (
                 <Button variant="outline" size="sm" onClick={handleEnterTriage}>
                   <ListChecks className="h-4 w-4 mr-1" /> Triage
                 </Button>
               ) : null}
               <Button variant="outline" size="sm" onClick={handleCopyFormUrl}>
-                <ExternalLink className="h-4 w-4 mr-1" /> Copy Form URL
+                <ExternalLink className="h-4 w-4 mr-1" />
+                <span className="max-[380px]:hidden">Copy Form URL</span>
+                <span className="min-[381px]:hidden">Form URL</span>
               </Button>
               {canManage && !triageMode ? (
                 <Sheet open={createOpen} onOpenChange={setCreateOpen}>
                   <SheetTrigger asChild>
-                    <Button size="sm">
+                    <Button size="sm" aria-label="New Item" className="shrink-0">
                       <Plus className="h-4 w-4 mr-1" /> New Item
                     </Button>
                   </SheetTrigger>
@@ -313,9 +315,9 @@ export function IntakePage({
             <Tabs
               value={activeTab}
               onValueChange={(value) => listFilters.setValue("tab", value)}
-              className="flex min-h-0 flex-1 flex-col"
+              className="flex min-h-0 flex-1 flex-col gap-0"
             >
-              <PmSection index={0}>
+              <PmSection index={0} className="shrink-0">
                 <TabsList>
                   <TabsTrigger value="pending">
                     Pending
@@ -334,43 +336,51 @@ export function IntakePage({
                 </TabsList>
               </PmSection>
 
-              <TabsContent value={activeTab} className="mt-4 flex min-h-0 flex-1 flex-col">
+              <TabsContent
+                value={activeTab}
+                className={`${TABS_CONTENT_PAGE_BODY_CLASS} mt-4 min-h-0 flex-1 max-md:pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))]`}
+              >
+                {highlightNotFound ? (
+                  <p
+                    className="mb-3 shrink-0 rounded-lg border border-warning/40 bg-warning/10 px-4 py-2.5 text-sm text-warning-foreground"
+                    role="status"
+                    data-testid="intake-item-not-found"
+                  >
+                    The linked item is not in this view. It may have been
+                    deleted or moved to a different status.
+                  </p>
+                ) : null}
                 {filteredItems.length === 0 ? (
-                  <EmptyState
-                    illustration={<EmptyInboxIllustration className="mx-auto h-28 w-28 opacity-90 dark:opacity-80 dark:brightness-125" />}
-                    title={
-                      activeTab === "pending"
-                        ? "No pending items"
-                        : `No ${activeTab} items`
-                    }
-                    description={
-                      activeTab === "pending"
-                        ? "Share the form URL to start receiving submissions."
-                        : "Items will appear here once triaged."
-                    }
-                    action={
-                      activeTab === "pending"
-                        ? {
-                            label: "Create First Item",
-                            onClick: handleOpenCreate,
-                          }
-                        : undefined
-                    }
-                    className={cn(CONTENT_FILL_PANEL, PAGE_BODY_EMPTY_CLASS)}
-                  />
+                  <div
+                    data-testid="intake-empty-panel"
+                    className={`${CONTENT_FILL_PANEL} ${PAGE_BODY_EMPTY_CLASS}`}
+                  >
+                    <EmptyState
+                      illustration={<EmptyInboxIllustration />}
+                      title={
+                        activeTab === "pending"
+                          ? "No pending items"
+                          : `No ${activeTab} items`
+                      }
+                      description={
+                        activeTab === "pending"
+                          ? "Share the form URL to start receiving submissions."
+                          : "Items will appear here once triaged."
+                      }
+                      action={
+                        activeTab === "pending"
+                          ? {
+                              label: "Create First Item",
+                              onClick: handleOpenCreate,
+                            }
+                          : undefined
+                      }
+                      className={`${CONTENT_FILL_PANEL} ${PAGE_BODY_EMPTY_CLASS}`}
+                    />
+                  </div>
                 ) : (
-                  <PmSection index={1}>
-                    {highlightNotFound ? (
-                      <p
-                        className="mb-3 rounded-lg border border-warning/40 bg-warning/10 px-4 py-2.5 text-sm text-warning-foreground"
-                        role="status"
-                        data-testid="intake-item-not-found"
-                      >
-                        The linked item is not in this view. It may have been
-                        deleted or moved to a different status.
-                      </p>
-                    ) : null}
-                    <PmStaggerList className="space-y-2.5">
+                  <PmSection index={1} className="min-h-0 flex-1">
+                    <PmStaggerList className="space-y-2.5 pb-2">
                       {filteredItems.map((item) => {
                         const isHighlighted = item.id === highlightId;
                         return (

@@ -29,7 +29,7 @@ describe("ui-surface-chrome", () => {
     expect(SURFACE_TOAST).toContain("rounded-lg");
     expect(SURFACE_CLOSE_BUTTON).toContain("focus-visible:ring-2");
     expect(SURFACE_EMPTY).toContain("border-dashed");
-    expect(SURFACE_EMPTY).toContain("100dvh");
     expect(SURFACE_EMPTY).toContain("flex-1");
+    expect(SURFACE_EMPTY).toContain("min-h-80");
   });
 });

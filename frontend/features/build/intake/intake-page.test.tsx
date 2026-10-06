@@ -11,8 +11,8 @@ const mockCan = jest.fn(), mockAccess = jest.fn(), mockFilters = jest.fn(), mock
 const mockMembers = jest.fn(), mockCycles = jest.fn(), mockModules = jest.fn();
 const mockTicket = jest.fn(), mockPush = jest.fn(), mockLeave = jest.fn();
 let mockRealDirtyBoundary = false, mockOtherDirty = false;
-type ToastOptions = { action?: { label: string; onClick: () => void }; id?: string | number };
-const mockToast = { success: jest.fn((message: string, options?: ToastOptions) => { void message; void options; }), error: jest.fn() };
+type ToastOptions = { action?: { label: string; onClick: () => void }; id?: string | number; duration?: number };
+const mockToast = { success: jest.fn((message: string, options?: ToastOptions) => { void message; void options; return options?.id ?? "toast-1"; }), error: jest.fn() };
 jest.mock("@/hooks/api/build/intake", () => ({
   useIntakeRequests: (...args: unknown[]) => mockRequests(...args),
   useCreateIntakeRequest: () => ({ mutate: mockCreate, isPending: false }),
@@ -33,7 +33,7 @@ jest.mock("@/components/shared/dirty-state-context", () => {
   return { ...actual, useNavigationLeave() { const leave = actual.useNavigationLeave(); return mockRealDirtyBoundary ? leave : mockLeave; } };
 });
 jest.mock("sonner", () => ({ toast: { success: (message: string, options?: ToastOptions) => mockToast.success(message, options), error: (...args: unknown[]) => mockToast.error(...args) } }));
-jest.mock("next/navigation", () => ({ useRouter: () => ({ push: mockPush, replace: jest.fn() }), usePathname: () => "/build/1/intake" }));
+jest.mock("next/navigation", () => ({ useRouter: () => ({ push: mockPush, replace: jest.fn() }), usePathname: () => "/build/1/intake", useSearchParams: () => new URLSearchParams("tab=pending") }));
 jest.mock("@/components/illustrations", () => ({ EmptyInboxIllustration: () => <div /> }));
 
 const ACCESS_GRANTED = { data: { isOrgOwner: false, scopes: { "build:view": "all" }, modules: {} }, isLoading: false };
@@ -342,7 +342,7 @@ it("opens the accepted ticket using its authorized number rather than its databa
   const action = ticketAction();
   expect(action.label).toBe("View ticket");
   act(() => action.onClick());
-  expect(mockPush).toHaveBeenCalledWith("/build/1/tickets/7");
+  expect(mockPush).toHaveBeenCalledWith("/build/1/tickets/7?returnTo=%2Fbuild%2F1%2Fintake%3Ftab%3Dpending");
   expect(mockLeave).toHaveBeenCalledTimes(1);
   expect(window.open).not.toHaveBeenCalled();
   expect(mockTicket).toHaveBeenLastCalledWith(1, 91, INLINE_READ_ERROR);
@@ -396,7 +396,7 @@ it.each([false, true])("uses current real dirty work after acceptance, unrelated
     expect(mockPush).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("button", { name: "Discard" }));
   }
-  expect(mockPush).toHaveBeenCalledWith("/build/1/tickets/7");
+  expect(mockPush).toHaveBeenCalledWith("/build/1/tickets/7?returnTo=%2Fbuild%2F1%2Fintake%3Ftab%3Dpending");
   expect(mockAccept).toHaveBeenCalledTimes(1);
   expect(window.open).not.toHaveBeenCalled();
 });
@@ -441,6 +441,45 @@ it("shows the not-in-this-view banner when highlightId does not match any loaded
   expect(document.querySelector("[data-highlighted='true']")).not.toBeInTheDocument();
 });
 
+it("shows the not-in-this-view banner for a gone highlight token that never resolves to an id", () => {
+  mockFilters.mockReturnValue({ value: () => "all", setValue: jest.fn() });
+  mockRequests.mockReturnValue(query({ data: { data: [{ id: 1, title: "Other item", status: "pending" }] } }));
+  render(<IntakePage projectId={1} highlightRequested />);
+  expect(screen.getByTestId("intake-item-not-found")).toHaveTextContent(/linked item is not in this view/i);
+  expect(document.querySelector("[data-highlighted='true']")).not.toBeInTheDocument();
+});
+
+it("shows the not-in-this-view banner on an empty tab when highlight is requested", () => {
+  mockFilters.mockReturnValue({ value: () => "declined", setValue: jest.fn() });
+  mockRequests.mockReturnValue(query({ data: { data: [{ id: 1, title: "Pending only", status: "pending" }] } }));
+  render(<IntakePage projectId={1} highlightId={999} highlightRequested />);
+  expect(screen.getByTestId("intake-item-not-found")).toBeInTheDocument();
+  expect(screen.getByText("No declined items")).toBeInTheDocument();
+});
+
+it("fills the empty Declined panel with CONTENT_FILL_PANEL classes", () => {
+  mockFilters.mockReturnValue({ value: () => "declined", setValue: jest.fn() });
+  mockRequests.mockReturnValue(query({ data: { data: [{ id: 1, title: "Pending only", status: "pending" }] } }));
+  render(<IntakePage projectId={1} />);
+  const panel = screen.getByTestId("intake-empty-panel");
+  expect(panel.className).toMatch(/flex-1/);
+  expect(panel.className).toMatch(/min-h/);
+});
+
+it("keeps returnTo on the View ticket toast href after accept", async () => {
+  await acceptRequest({ ...ack("accepted"), linkedTicket: { id: 91, projectId: 1, ticketNumber: 7 } });
+  await waitFor(() => expect(ticketActions()).toHaveLength(1));
+  const updateCall = mockToast.success.mock.calls.find(([, options]) => options?.action?.label === "View ticket");
+  expect(updateCall?.[1]?.duration).toBeGreaterThanOrEqual(15_000);
+  act(() => ticketAction().onClick());
+  expect(mockPush).toHaveBeenCalledWith(
+    expect.stringMatching(/\/build\/1\/tickets\/7\?returnTo=/),
+  );
+  const href = String(mockPush.mock.calls.at(-1)?.[0] ?? "");
+  const returnTo = new URL(href, "http://localhost").searchParams.get("returnTo");
+  expect(returnTo).toBe("/build/1/intake?tab=pending");
+});
+
 it("switches the active tab to 'all' when the highlighted item is on a different tab", () => {
   const mockSetValue = jest.fn();
   mockFilters.mockReturnValue({ value: () => "pending", setValue: mockSetValue });
@@ -456,7 +495,7 @@ it("offers View ticket immediately from the accepted summary while the fallback 
   expect(mockTicket).toHaveBeenLastCalledWith(22, 0, INLINE_READ_ERROR);
   const action = ticketAction();
   act(() => action.onClick());
-  expect(mockPush).toHaveBeenCalledWith("/build/22/tickets/7");
+  expect(mockPush).toHaveBeenCalledWith("/build/22/tickets/7?returnTo=%2Fbuild%2F22%2Fintake%3Ftab%3Dpending");
   expect(mockLeave).toHaveBeenCalledTimes(1);
   mockTicket.mockReturnValue(query({ isError: true, error: new TypeError("Disabled fallback failure") }));
   view.rerender(<IntakePage projectId={22} />);
@@ -496,5 +535,5 @@ it("retains the authorized legacy lookup when an accepted summary does not match
   expect(mockTicket).toHaveBeenLastCalledWith(1, 91, INLINE_READ_ERROR);
   const action = ticketAction();
   act(() => action.onClick());
-  expect(mockPush).toHaveBeenCalledWith("/build/1/tickets/7");
+  expect(mockPush).toHaveBeenCalledWith("/build/1/tickets/7?returnTo=%2Fbuild%2F1%2Fintake%3Ftab%3Dpending");
 });

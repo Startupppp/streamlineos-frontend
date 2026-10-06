@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { usePathname, useRouter, useSearchParams, type ReadonlyURLSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useProject } from "@/hooks/api/build/projects";
 import { useViews } from "@/hooks/api/build/views";
 import { useProjectBoardTickets } from "@/hooks/api/build/tickets";
@@ -37,13 +37,8 @@ export function useBoardUrlState(
   const rawSearchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useMemo(
-    () =>
-      boardCollectionSearchParams(
-        projectId,
-        pathname,
-        rawSearchParams,
-      ) as unknown as ReadonlyURLSearchParams,
+  const searchParams = useMemo<URLSearchParams>(
+    () => boardCollectionSearchParams(projectId, pathname, rawSearchParams),
     [projectId, pathname, rawSearchParams],
   );
 

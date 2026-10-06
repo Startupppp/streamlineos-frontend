@@ -82,6 +82,19 @@ describe("ClientPortalManagementPage — preview section 404 vs generic error (F
     expect(screen.getByText("No portal published yet")).toBeInTheDocument();
   });
 
+
+  it("404 empty copy tells the owner to publish the portal, not a grant (CLIENT-PORTAL-CHROME Preview honesty)", () => {
+    const err = { status: 404 };
+    mockIsApiError.mockImplementation((e) => e === err);
+    mockUsePortalPreview.mockReturnValue(baseQuery({ isError: true, error: err }));
+    render(<ClientPortalManagementPage projectId={1} />);
+    expect(screen.getByText("No portal published yet")).toBeInTheDocument();
+    expect(
+      screen.getByText(/Publish the client portal to preview what clients see/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/Publish a grant/i)).toBeNull();
+  });
+
   it("NEGATIVE — shows 'Preview unavailable' for a non-404 API error, not the no-grant message", () => {
     const err = { status: 500 };
     mockIsApiError.mockImplementation((e) => e === err);
