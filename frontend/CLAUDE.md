@@ -48,7 +48,8 @@ Cite rules by ID in review (`FE-22`). `(gate: x)` names the `pnpm` check that fa
 **FE-34.** Invalidate by true key prefix — no trailing `undefined`, `exact: true` only when meant — and always re-call `options?.onSuccess`.
 **FE-35.** Patch the cache with `setQueryData` when the response already carries the new state. *Why:* invalidating a paginated query refetches every loaded page.
 **FE-36.** Make inline edits on board, list and card surfaces optimistic. Quotes and revenue figures never are.
-**FE-37.** Optimistic recipe (`useUpdateTicket`, `hooks/api/build/ticket-update-mutation.ts:93`): cancel and snapshot every key you patch → patch every cache the view renders → resolve related display objects from cached data → restore every snapshot `onError` → invalidate `onSettled`, gating expensive aggregates behind the fields that move them.
+**FE-37.** Optimistic recipe (`useUpdateTicket`, `hooks/api/build/ticket-update-mutation.ts`): cancel and snapshot every key you patch → patch every cache the view renders → resolve related display objects from cached data → reconcile `onSuccess` by writing the server response (new `version`/`updatedAt`, the created row in place of its negative temp id) into every patched cache → restore every snapshot `onError`. Never invalidate in `onSettled` what you just patched.
+**FE-133.** **Update the cache; never refetch after a mutation you can patch.** The mutation still calls the API; the UI updates from `setQueryData`, not from a refetch. Only data the client cannot compute (server-generated activity, report and dashboard aggregates) may be marked stale, and only with `invalidateQueries({ queryKey, exact: true, refetchType: "none" })`. Never invalidate a broad prefix (`projects.tickets()`, `projects.list()`, `allWorkAll`, the project detail) after a ticket-level edit, and never hand-roll cache work in a component — it belongs in the mutation hook. *Why:* every ticket edit refetched the whole board, project and all-work lists, and users waited seconds for their own change.
 **FE-38.** Never show `AppLoadingScreen` on a background refetch or ordinary mutation. Preserve stale data; show pending state only on the affected control.
 **FE-39.** Never refresh the NextAuth session to reconcile state Query already owns.
 
@@ -80,7 +81,7 @@ const pageState = usePageState({ permission: "build:view", isLoading, isError, e
 ## 4. Components & Structure
 
 **FE-56.** Pages compose; they don't implement. A route `page.tsx` fetches and composes — UI lives in `features/<feature>/components/`. (gate: check:route-thinness)
-**FE-57.** Keep files under 500 lines; 300+ is ratcheted. 428 files exceed 300 and 7 exceed 500 today; both counts may only shrink. (gate: check:file-sizes, check:over-300)
+**FE-57.** Keep files under 500 lines; 300+ is ratcheted. The baseline lives in `scripts/check-over-300.mjs` and may only shrink; `features/build/**` outside intake, QA and reports has no file over 300. (gate: check:file-sizes, check:over-300)
 **FE-58.** Check the inventory before writing anything: [UI-KIT.md](./UI-KIT.md#import-index) → the feature barrel → `components/shared` → `components/ui`.
 **FE-59.** Extend the existing primitive. A component duplicating one is a defect — there is exactly one `DataTable`, one `TablePagination`, one `LoadingButton`, one `AiActionsMenu`, one editor per class of surface.
 **FE-60.** Promote a component to `components/shared` (or `components/ui` for a primitive) on its second consumer, and update every importer.
@@ -104,8 +105,14 @@ Feature `index.ts` barrels sanctioned by FE-65 are the only exception. **The exe
 **FE-70.** Accept and merge `className` with `cn()`; `forwardRef` whenever wrapping a focusable or measurable element, and always for DataTable-cell sub-components.
 **FE-71.** Spread `{...field}` for react-hook-form controls; never fork a field's state into local `useState`.
 **FE-72.** Keep the import graph acyclic. (gate: check:cycles, check:feature-cycles)
+**FE-137.** **Never update state or refs during render.** Forbidden in a component or hook body: `if (prev !== next) setX(...)`, the `const [prev, setPrev] = useState(x); if (prev !== x) setPrev(x)` form (even though the React docs show it), and any `ref.current` read or write. Instead: derive with `useMemo`; reset by identity with a `key` at the call site; or hold user overrides with `useSourceOverride(source, fallback, hold?)` (`hooks/common/use-source-override.ts`), whose value falls back automatically when `source` changes. To keep the first loaded value until the user acts, remount a keyed child (`features/build/approvals/decide-dialog.tsx`). Refs are written only in effects and handlers. (gate: eslint `react-hooks/refs` is an error in Build)
+**FE-138.** **Never mirror props, query data or URL values into state in an effect** — derive them (FE-137), or move the update into the event handler that causes it. Do not disguise it: calling the setter through `useEffectEvent` or a ref (`setterRef.current(v)`) to silence `react-hooks/set-state-in-effect` is the same defect. `useEffectEvent` is only for non-reactive logic inside an effect that synchronises with an external system (connectivity, a socket, an object URL). Browser stores (localStorage, `matchMedia`, online status) are read with `useSyncExternalStore`; a client-only flag is `useHydrated()`. (gate: eslint `react-hooks/set-state-in-effect` is an error in Build)
+**FE-139.** **Every effect cleans up what it starts.** Listeners are removed, `setTimeout`/`setInterval`/debounce timers cleared, observers disconnected, `requestAnimationFrame` cancelled, object URLs revoked, subscriptions closed — in the effect's return. Async work in an effect is cancelled with an `AbortController` or guarded so it never sets state after unmount, and a pending debounced save or navigation never fires after unmount. Prefer TanStack Query to hand-rolled async effects.
 **FE-128.** A type re-exported through a hook module (`export type { X } from "@/types/projects"`) is an FE-126 pass-through. Point the importers at the source and delete the re-export. It is never "uncertain: retain". *Why:* on 2026-10-05 an agent left five of these in place because fixing them needed import-line edits in other files, and that is exactly the work FE-126 requires.
 **FE-129.** When you consolidate label, option or status constants, compare the visible text first. If the casing or wording differs, you are changing what the user sees: choose one deliberately, update the tests that assert it, and report it as a behaviour change. *Why:* reusing a shared status list changed a roadmap filter from "In progress" to "In Progress" and broke a keyboard test.
+**FE-134.** **Export only what another file imports.** A symbol used only inside its own file is not exported; a symbol used nowhere is deleted, with the imports only it needed. Before adding `export`, name the importer. Unused exports, functions, variables, parameters, types and files are deleted in the same change that orphans them — never left for later. (gate: eslint `no-unused-vars` is an error in Build)
+**FE-135.** **A file split is finished only when the original imports the extracted file and the moved code is gone from the original.** Never commit an extracted file nothing imports, and never leave two definitions of one thing (hooks, helpers, constants, fixtures) — after a split, grep each moved name and confirm it is defined once. No plan or notes files, no redirect-only pages, no re-export files (FE-126). *Why:* a split created 50 extracted files nothing imported while every original kept its full code, and two incident-hook files carried six identical mutations.
+**FE-136.** **Never weaken a gate to make it pass.** Do not raise a ratchet count, add an allowlist, `CRAFTED_BY_DESIGN`, ledger or `*.known.json` entry, add `eslint-disable`, or rewrite a test's intent to get green. Fix the code; if a gate is genuinely wrong, stop and say so. A file moved in a split keeps its original's exemption; a new surface never inherits one. *Why:* agents raised the record-surface ratchet 88→93 and exempted a live webhook surface instead of fixing it.
 
 ## 5. Forms, Errors & Toasts
 
@@ -125,7 +132,7 @@ Feature `index.ts` barrels sanctioned by FE-65 are the only exception. **The exe
 ## 6. Content & URL State
 
 **FE-85.** Show names, never raw IDs. Resolve display names at the display boundary via `getUserDisplayName`/`getUserInitials`. A visible UUID is a bug.
-**FE-86.** Keep tab, filter, sort and pagination state in the URL via `router.replace(…, { scroll: false })`, and always reset pagination on filter change.
+**FE-86.** Keep tab, filter, sort and pagination state in the URL via `router.replace(…, { scroll: false })`, and reset pagination **in the same URL write** that changes a filter or sort — the handler deletes `cursor`/`page` (`buildListSearchParams(…, { resetCursor: true })`). Never detect a stale cursor during render.
 **FE-87.** Debounce search ≥300ms and reset to page 1. `SearchInput` does not debounce for you.
 **FE-88.** Edit fields in place on cards and rows via a compact popover, with the optimistic mutation.
 **FE-89.** Offer inline AI only where it reduces effort — `AiActionsMenu`, draft-first (the user applies), credit-metered, `useCan`-gated, rendering `AiUsageChip`.
@@ -160,8 +167,8 @@ Feature `index.ts` barrels sanctioned by FE-65 are the only exception. **The exe
 **FE-112.** Never render an unbounded collection. Use server pagination or `react-window` v2. An `items.map(...)` with no pagination, `slice` or windowing is a hang-risk bug.
 **FE-125.** **Never ship a "Load more" / "Show more" button.** A paginated surface takes exactly one of two forms: **numbered pagination** via `TablePagination` / `DataTable`'s `pagination` prop when the read has a total, or **infinite scroll** (an `IntersectionObserver` sentinel calling `fetchNextPage`) when it does not. *Why:* a manual reveal button hides how much is left, makes position unrecoverable on reload, gives no route to page 7, and grows the mounted DOM without bound — it is the failure mode FE-112 exists to prevent, wearing a button. A keyset list has no total, so it gets infinite scroll or `TablePagination mode="cursor"` (prev/next) — never a faked page count (FE-105, BE-25). 45 surfaces still carry a reveal button; that count may only shrink.
 **FE-113.** Lazy-load heavy client components with `next/dynamic` — editors, charts, maps, kanban, anything inside a dialog or sheet.
-**FE-114.** Memoize only what you measured. `React.memo` for components rendered many times per screen with stable props; `useMemo` only for genuinely expensive derivations; `useCallback` only for a memoized child or a dependency.
-**FE-115.** Never `useMemo` an object or array literal, or anything Query already caches. Reach for `staleTime`/`select`.
+**FE-114.** Memoize every derived array, object or function that is passed as a prop, returned from a hook, or used in a dependency array: `useMemo` for derived values (`data?.items ?? []`, `.filter(...)`, lookup maps), `useCallback` for handlers. Never recompute a derived collection inline in JSX or a hook return. `React.memo` for components rendered many times per screen with stable props.
+**FE-115.** Don't memoize primitives or values used once in the same render, and never copy Query data into state — read it, or shape it with `select`.
 **FE-116.** Keep route bundles within budget. (gate: check:route-bundle-budget, check:web-vitals-budget)
 **FE-117.** Give every icon-only control an `aria-label`. (gate: `streamline/no-unlabelled-icon-button` — eslint error; check:icon-labels)
 **FE-118.** Disable a confirmed icon-label false positive with `// eslint-disable-next-line streamline/no-unlabelled-icon-button -- <reason>`, never a bare disable.
@@ -194,6 +201,11 @@ Feature `index.ts` barrels sanctioned by FE-65 are the only exception. **The exe
 10. No `any`, no `as X`, no `@ts-ignore`. (gate: check:type-assertions — hard zero)
 11. **FE-125** — no "Load more" button. Numbered pagination when there is a total, infinite scroll when there is not.
 12. **FE-126** — no pass-through wrapper. A function that only forwards to another exported function is deleted, not reviewed.
+13. **FE-137 / FE-138** — no state or ref update during render, no props/query/URL mirrored into state in an effect, and no `useEffectEvent` or ref trick to hide one.
+14. **FE-133** — mutations patch the cache from the response; no broad invalidation or refetch of data the mutation already knows.
+15. **FE-134 / FE-135** — no export without an importer, no unused code, no orphaned or duplicated file after a split.
+16. **FE-136** — no gate weakened to pass.
+17. **FE-139** — every effect cleans up its listeners, timers, observers and async work.
 
 ## Definition of Done — frontend task
 
@@ -201,6 +213,9 @@ Feature `index.ts` barrels sanctioned by FE-65 are the only exception. **The exe
 - [ ] Page state resolves through `usePageState` + `<PageState>` **with `error` passed**; controls gate on `useCan`; destructive prompts are `ConfirmDialog destructive`.
 - [ ] `pnpm type-check` **and** `pnpm type-check:specs` pass (FE-121).
 - [ ] `pnpm lint` passes with no new `^_` escapes and no bare eslint disables.
+- [ ] No state/ref update during render, no prop mirrored into state in an effect, every effect cleans up (FE-137–FE-139).
+- [ ] Mutations patch the cache from the response; nothing refetches what the mutation already knows (FE-133).
+- [ ] Every new or changed export has an importer outside its file; every extracted file is imported and the original no longer holds its code; no duplicate definitions remain (FE-134, FE-135).
 - [ ] Every gate named by a rule you touched passes, `:self-test` first.
 - [ ] Filters update the URL; pagination resets on filter change; pagination is server-side.
 - [ ] Field controls left at `h-9`; numeric cells `font-mono tabular-nums`; colored tints carry `dark:` pairings.
