@@ -43,6 +43,7 @@ export function useHrmsCommands(
   const canPublishPayslips = useCan("payroll:payslips:manage");
   const canStartExit = useCan("hr:exit:create");
   const hrEnabled = useModuleEnabled("hr");
+  const payrollEnabled = useModuleEnabled("payroll");
 
   const { data: attendance } = useHrAttendanceStatus({ enabled: hrEnabled });
   const checkIn = useHrCheckIn({ onSuccess: handleClockedIn, onError: handlePunchError });
@@ -106,7 +107,7 @@ export function useHrmsCommands(
         group: "actions",
         keywords: ["salary", "pay", "ctc", "compensation", "वेतन", "జీతం"],
         icon: IndianRupee,
-        isAvailable: hrEnabled && (canUpdateSalaries),
+        isAvailable: payrollEnabled && (canUpdateSalaries),
         execute: () => handleSelect("/payroll/employees"),
       },
       {
@@ -115,7 +116,7 @@ export function useHrmsCommands(
         group: "actions",
         keywords: ["payroll", "readiness", "cutoff", "run"],
         icon: Wallet,
-        isAvailable: hrEnabled && (canViewPayrollRuns),
+        isAvailable: payrollEnabled && (canViewPayrollRuns),
         execute: () => handleSelect("/payroll/readiness"),
       },
       {
@@ -124,7 +125,7 @@ export function useHrmsCommands(
         group: "actions",
         keywords: ["release", "publish", "payslips", "payslip", "पेस्लिप", "పేస్లిప్"],
         icon: Send,
-        isAvailable: hrEnabled && (canPublishPayslips && latestPaidRun !== null),
+        isAvailable: payrollEnabled && (canPublishPayslips && latestPaidRun !== null),
         execute: () => {
           if (latestPaidRun) handleSelect(`/payroll/runs/${latestPaidRun.id}`);
         },
@@ -150,6 +151,7 @@ export function useHrmsCommands(
       canPublishPayslips,
       canStartExit,
       hrEnabled,
+      payrollEnabled,
       attendance,
       clockedIn,
       latestPaidRun,

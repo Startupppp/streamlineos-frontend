@@ -88,6 +88,22 @@ describe("Create Issue never auto-creates (E1)", () => {
     expect(mockCreateTicket).not.toHaveBeenCalled();
   });
 
+  it("shows the 200-char FormMessage while typing, before Create is clicked", async () => {
+    renderDialog();
+    fireEvent.click(screen.getByRole("button", { name: /create issue/i }));
+    const title = await screen.findByPlaceholderText("Issue title");
+    const long = `LONGTITLE-${"x".repeat(260)}`;
+    fireEvent.change(title, { target: { value: long } });
+    await waitFor(() => {
+      expect(screen.getByText(/200 characters or fewer/i)).toBeInTheDocument();
+    });
+    expect(mockCreateTicket).not.toHaveBeenCalled();
+    fireEvent.change(title, { target: { value: "Short enough title" } });
+    await waitFor(() => {
+      expect(screen.queryByText(/200 characters or fewer/i)).not.toBeInTheDocument();
+    });
+  });
+
   it("blocks create for titles over 200 chars even if submit is attempted", async () => {
     renderDialog();
     fireEvent.click(screen.getByRole("button", { name: /create issue/i }));

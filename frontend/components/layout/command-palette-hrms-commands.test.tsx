@@ -155,3 +155,17 @@ describe("P2-003 — palette actions respect module enablement", () => {
     ).toEqual([]);
   });
 });
+
+describe("payroll palette actions respect payroll module enablement", () => {
+  it("hides payroll actions when payroll is off even if HR is on", () => {
+    mockedModuleEnabled.mockImplementation((key: string) => key === "hr");
+    expect(
+      availableLabels([
+        "payroll:salaries:update",
+        "payroll:runs:view",
+        "payroll:payslips:manage",
+        "self:leaves",
+      ]),
+    ).toEqual(["Request leave"]);
+  });
+});

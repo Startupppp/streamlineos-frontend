@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { payrollQueryKeys } from "@/lib/query-keys/payroll";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import {
   payrollRunDetailContract,
@@ -26,22 +26,24 @@ export function usePayrollRuns(params?: {
   entityId?: number;
 }) {
   const canView = useCan("payroll:runs:view");
+  const payrollOn = useModuleEnabled("payroll");
   return useQuery<RunsPage, Error>({
     queryKey: payrollQueryKeys.payroll.runs(params),
     queryFn: ({ signal }) =>
       apiClient.get("/payroll/runs", params, signal, payrollRunsPageContract),
     staleTime: 60_000,
-    enabled: canView,
+    enabled: canView && payrollOn,
   });
 }
 
 export function usePayrollRun(runId: number) {
   const canView = useCan("payroll:runs:view");
+  const payrollOn = useModuleEnabled("payroll");
   return useQuery<RunDetail, Error>({
     queryKey: payrollQueryKeys.payroll.run(runId),
     queryFn: ({ signal }) => apiClient.get(`/payroll/runs/${runId}`, undefined, signal, payrollRunDetailContract),
     staleTime: 30_000,
-    enabled: canView && runId > 0,
+    enabled: canView && payrollOn && runId > 0,
   });
 }
 
