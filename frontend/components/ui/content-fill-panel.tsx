@@ -11,12 +11,12 @@ export const PAGE_CHROME_X = "px-4 sm:px-6 lg:px-8";
 /** No bottom inset — page bodies meet the shell edge; Ask OS / FABs float above. */
 export const PAGE_CHROME_BOTTOM = "pb-0";
 
-/** Clears the module bottom nav when `main` has `mobile-nav-active` (both scroll modes). */
+/** Clears module bottom nav + mobile shell FAB when `main` has `mobile-nav-active`. */
 export const PAGE_CHROME_MOBILE_NAV_PAD =
-  "max-md:[.mobile-nav-active_&]:pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))]";
+  "max-md:[.mobile-nav-active_&]:pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))]";
 
 export const STICKY_FOOTER_ABOVE_MOBILE_NAV =
-  "sticky bottom-0 max-md:[.mobile-nav-active_&]:bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))]";
+  "sticky bottom-0 max-md:[.mobile-nav-active_&]:bottom-[calc(7.5rem+env(safe-area-inset-bottom,0px))]";
 
 export const FILTER_SELECT_TRIGGER =
   "min-w-0 border-input bg-card text-foreground font-normal data-[placeholder]:font-normal *:data-[slot=select-value]:font-normal [&_svg]:text-muted-foreground [&_[data-slot=select-value]]:min-w-0 [&_[data-slot=select-value]]:truncate";

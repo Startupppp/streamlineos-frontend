@@ -221,7 +221,7 @@ test.describe("Build list responsive contract", () => {
 
     test("a mounted bottom nav reserves room under the content", async ({ page }) => {
       const padded = await frame(page, "mobile-nav-clearance")
-        .locator(".max-md\\:\\[\\.mobile-nav-active_\\&\\]\\:pb-\\[calc\\(4\\.5rem\\+env\\(safe-area-inset-bottom\\2c 0px\\)\\)\\]")
+        .locator(".max-md\\:\\[\\.mobile-nav-active_\\&\\]\\:pb-\\[calc\\(7\\.5rem\\+env\\(safe-area-inset-bottom\\2c 0px\\)\\)\\]")
         .first()
         .evaluate((node: HTMLElement) =>
           Number.parseFloat(getComputedStyle(node).paddingBottom),
