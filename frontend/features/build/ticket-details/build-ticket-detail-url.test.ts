@@ -6,6 +6,8 @@ import {
   buildPersonDetailUrl,
   buildClientDetailUrl,
   getMyWorkTicketHref,
+  getIntakeTicketHref,
+  buildIntakeReturnHref,
   isTicketDetailPath,
   resolveTicketBackHref,
 } from "./build-ticket-detail-url";
@@ -142,5 +144,35 @@ describe("isTicketDetailPath", () => {
 
   it("returns false instead of throwing on malformed percent-encoding", () => {
     expect(isTicketDetailPath("/build/7/tickets/%E0%A4%A", 7, "ABC-12")).toBe(false);
+  });
+});
+
+describe("Intake return navigation", () => {
+  it("accepts same-project Intake paths and preserves allowlisted tab/mode/item", () => {
+    const returnHref = buildIntakeReturnHref(
+      12,
+      new URLSearchParams("tab=accepted&mode=list&item=44&unsafe=drop"),
+    );
+    expect(returnHref).toBe("/build/12/intake?tab=accepted&item=44&mode=list");
+    expect(resolveTicketBackHref(12, returnHref)).toBe(returnHref);
+    expect(getIntakeTicketHref(12, "WEB", 81, returnHref)).toBe(
+      `/build/12/tickets/WEB-81?returnTo=${encodeURIComponent(returnHref)}`,
+    );
+  });
+
+  it("rejects cross-project or foreign Intake returns (customer Close-to-Issues bug)", () => {
+    expect(resolveTicketBackHref(12, "/build/12/intake")).toBe("/build/12/intake");
+    expect(resolveTicketBackHref(12, "/build/99/intake")).toBe("/build/12/issues");
+    expect(resolveTicketBackHref(12, "/build/12/intake?redirect=//evil.example")).toBe(
+      "/build/12/issues",
+    );
+    // Without returnTo, Close historically fell back to Issues — keep that for deep links
+    expect(resolveTicketBackHref(12, null)).toBe("/build/12/issues");
+  });
+
+  it("accepts triage collection as a sibling Intake surface", () => {
+    expect(resolveTicketBackHref(12, "/build/12/triage?tab=pending")).toBe(
+      "/build/12/triage?tab=pending",
+    );
   });
 });

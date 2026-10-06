@@ -33,7 +33,7 @@ jest.mock("@/components/shared/dirty-state-context", () => {
   return { ...actual, useNavigationLeave() { const leave = actual.useNavigationLeave(); return mockRealDirtyBoundary ? leave : mockLeave; } };
 });
 jest.mock("sonner", () => ({ toast: { success: (message: string, options?: ToastOptions) => mockToast.success(message, options), error: (...args: unknown[]) => mockToast.error(...args) } }));
-jest.mock("next/navigation", () => ({ useRouter: () => ({ push: mockPush, replace: jest.fn() }), usePathname: () => "/build/1/intake" }));
+jest.mock("next/navigation", () => ({ useRouter: () => ({ push: mockPush, replace: jest.fn() }), usePathname: () => "/build/1/intake", useSearchParams: () => new URLSearchParams("tab=pending") }));
 jest.mock("@/components/illustrations", () => ({ EmptyInboxIllustration: () => <div /> }));
 
 const ACCESS_GRANTED = { data: { isOrgOwner: false, scopes: { "build:view": "all" }, modules: {} }, isLoading: false };
@@ -342,7 +342,7 @@ it("opens the accepted ticket using its authorized number rather than its databa
   const action = ticketAction();
   expect(action.label).toBe("View ticket");
   act(() => action.onClick());
-  expect(mockPush).toHaveBeenCalledWith("/build/1/tickets/7");
+  expect(mockPush).toHaveBeenCalledWith("/build/1/tickets/7?returnTo=%2Fbuild%2F1%2Fintake%3Ftab%3Dpending");
   expect(mockLeave).toHaveBeenCalledTimes(1);
   expect(window.open).not.toHaveBeenCalled();
   expect(mockTicket).toHaveBeenLastCalledWith(1, 91, INLINE_READ_ERROR);
@@ -396,7 +396,7 @@ it.each([false, true])("uses current real dirty work after acceptance, unrelated
     expect(mockPush).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("button", { name: "Discard" }));
   }
-  expect(mockPush).toHaveBeenCalledWith("/build/1/tickets/7");
+  expect(mockPush).toHaveBeenCalledWith("/build/1/tickets/7?returnTo=%2Fbuild%2F1%2Fintake%3Ftab%3Dpending");
   expect(mockAccept).toHaveBeenCalledTimes(1);
   expect(window.open).not.toHaveBeenCalled();
 });
@@ -456,7 +456,7 @@ it("offers View ticket immediately from the accepted summary while the fallback 
   expect(mockTicket).toHaveBeenLastCalledWith(22, 0, INLINE_READ_ERROR);
   const action = ticketAction();
   act(() => action.onClick());
-  expect(mockPush).toHaveBeenCalledWith("/build/22/tickets/7");
+  expect(mockPush).toHaveBeenCalledWith("/build/22/tickets/7?returnTo=%2Fbuild%2F22%2Fintake%3Ftab%3Dpending");
   expect(mockLeave).toHaveBeenCalledTimes(1);
   mockTicket.mockReturnValue(query({ isError: true, error: new TypeError("Disabled fallback failure") }));
   view.rerender(<IntakePage projectId={22} />);
@@ -496,5 +496,5 @@ it("retains the authorized legacy lookup when an accepted summary does not match
   expect(mockTicket).toHaveBeenLastCalledWith(1, 91, INLINE_READ_ERROR);
   const action = ticketAction();
   act(() => action.onClick());
-  expect(mockPush).toHaveBeenCalledWith("/build/1/tickets/7");
+  expect(mockPush).toHaveBeenCalledWith("/build/1/tickets/7?returnTo=%2Fbuild%2F1%2Fintake%3Ftab%3Dpending");
 });
