@@ -1,6 +1,6 @@
 "use client";
 
-import type { PointerEvent } from "react";
+import type { MouseEvent as ReactMouseEvent, PointerEvent } from "react";
 import { Check, Monitor, Moon, Palette, Sun, type LucideIcon } from "lucide-react";
 import {
   DropdownMenuSeparator,
@@ -28,20 +28,17 @@ function ModeOption({ mode }: { mode: AppThemeModeOption }) {
   const isActive = activeMode === mode.id;
   const Icon = MODE_ICONS[mode.id];
 
-  function handleSelect() {
-    setMode(mode.id);
-  }
-
-  function handlePointerDown(event: PointerEvent<HTMLButtonElement>) {
+  function applyMode(event: PointerEvent<HTMLButtonElement> | ReactMouseEvent<HTMLButtonElement>) {
     event.preventDefault();
+    event.stopPropagation();
     setMode(mode.id);
   }
 
   return (
     <button
       type="button"
-      onPointerDown={handlePointerDown}
-      onClick={handleSelect}
+      onPointerDownCapture={applyMode}
+      onClick={applyMode}
       aria-pressed={isActive}
       className={cn(
         "flex flex-1 flex-col items-center gap-1 rounded-lg border px-2 py-1.5 text-dense font-medium transition-colors",

@@ -234,7 +234,7 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
           </div>
 
           {activityData && activityData.data.length > 0 && (
-            <Card>
+            <Card className="max-md:mb-20">
               <CardHeader className="pb-2">
                 <h2 className="text-sm font-medium flex items-center gap-2">
                   <Activity className="h-4 w-4" aria-hidden="true" />

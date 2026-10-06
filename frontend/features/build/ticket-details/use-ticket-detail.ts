@@ -62,7 +62,7 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
   const { projectData, members, statuses } = useTicketDetailProjectData(projectId);
   const { data: subtasks } = useSubtasks(ticketId ?? 0, projectId);
 
-  const titleVersion = ticket ? `${ticket.id}:${ticket.updatedAt}:${ticket.title}` : null;
+  const titleVersion = ticket ? `${ticket.id}:${ticket.title}` : null;
   const [localTitle, setLocalTitle] = useSourceOverride(titleVersion, ticket?.title ?? "");
 
   const updateTicketMutation = useUpdateTicket(projectId, {

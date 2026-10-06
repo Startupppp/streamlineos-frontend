@@ -97,6 +97,7 @@ function CreateTicketDialogContent({
     handleDragOver,
     handleDrop,
     handleFormSubmit,
+    handleExplicitSubmit,
     canSubmit,
     projectSelectValue,
     projectTriggerLabel,
@@ -250,6 +251,7 @@ function CreateTicketDialogContent({
                 isPending={isPending}
                 isUploading={isUploading}
                 canSubmit={canSubmit}
+                onExplicitSubmit={handleExplicitSubmit}
               />
             </form>
           </Form>

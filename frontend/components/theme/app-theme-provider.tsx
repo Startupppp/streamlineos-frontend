@@ -136,15 +136,24 @@ export function AppThemeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const setMode = useCallback((next: AppThemeMode) => {
-    setModeState(next);
-    if (typeof window !== "undefined") {
-      const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      applyDarkClass(resolveIsDark(next, systemDark));
-    }
     try {
       window.localStorage.setItem(APP_THEME_MODE_STORAGE_KEY, next);
     } catch {
-      return;
+      /* still apply DOM + state */
+    }
+    setModeState(next);
+    if (typeof window !== "undefined") {
+      const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const dark = resolveIsDark(next, systemDark);
+      const root = document.documentElement;
+      root.classList.remove(dark ? "light" : "dark");
+      root.classList.add(dark ? "dark" : "light");
+      root.style.colorScheme = dark ? "dark" : "light";
+      requestAnimationFrame(() => {
+        root.classList.toggle("dark", dark);
+        root.classList.toggle("light", !dark);
+        root.style.colorScheme = dark ? "dark" : "light";
+      });
     }
   }, []);
 

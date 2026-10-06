@@ -250,10 +250,13 @@ export function useCreateTicketDialogState({
   const handleFormSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
-      form.handleSubmit(handleSubmit)();
     },
-    [form, handleSubmit],
+    [],
   );
+
+  const handleExplicitSubmit = useCallback(() => {
+    void form.handleSubmit(handleSubmit)();
+  }, [form, handleSubmit]);
 
   const canSubmit = effectiveProjectId != null;
   const projectSelectValue =
@@ -309,6 +312,7 @@ export function useCreateTicketDialogState({
     handleDragOver,
     handleDrop,
     handleFormSubmit,
+    handleExplicitSubmit,
     canSubmit,
     projectSelectValue,
     projectTriggerLabel,

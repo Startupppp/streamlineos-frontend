@@ -48,12 +48,19 @@ export function TicketDialogTitleField({
             <div className="flex items-start gap-1.5">
               <FormControl>
                 <input
-                  {...field}
+                  name={field.name}
+                  value={field.value ?? ""}
+                  onBlur={field.onBlur}
+                  onChange={(event) => field.onChange(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                    }
+                  }}
                   ref={(el) => {
                     field.ref(el);
                     titleRef.current = el;
                   }}
-                  autoFocus
                   autoCapitalize="off"
                   autoCorrect="off"
                   spellCheck={false}

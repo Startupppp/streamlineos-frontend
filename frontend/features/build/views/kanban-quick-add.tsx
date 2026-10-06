@@ -58,6 +58,10 @@ function QuickAddInputContent({ columnId, projectId }: QuickAddInputProps) {
 
   const handleSubmit = useCallback(() => {
     if (!value.trim()) return;
+    if (value.trim().length > 200) {
+      toast.error("Title must be 200 characters or fewer");
+      return;
+    }
     createTicket.mutate({
       projectId,
       title: value.trim(),
