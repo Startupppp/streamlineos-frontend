@@ -278,6 +278,8 @@ Entry points: persona sidebar or More, scoped parent record, command search, not
 
 ### Change requests
 
+Current verified bounded141: backend a326332b5 replaces arbitrary-string-to-false clientVisible parsing with the existing strict canonical queryBoolean; official frontend artifact integration is567911332. The [canonical receipt](../../audit/bugs-and-verification.md#meetings140-and-change-request-query141--2026-10-06) records meaningful RED/GREEN,239 focused checks, parsed SQL predicate controls, scoped/full TypeScript and matching-hash source/artifact reviews. Only one optional query input changes; mutation schemas, trusted authority and org/project/live predicates are preserved. Actual HTTP validation, physical tenant/role/persistence/cache/events, deployed behavior and the full register acceptance remain Current unverified.
+
 Route: `/build/[projectId]/change-requests`
 Audience: freelancers, PjMs, clients via portal
 Entry points: persona sidebar or More, scoped parent record, command search, notification and authorized deep link.

@@ -86,6 +86,8 @@ Entry points: persona sidebar or More, scoped parent record, command search, not
 
 ### Meetings list
 
+Current verified bounded140: root d0f95c67f enables the real canonical body Clear while retaining No meetings found, existing styles and genuine-empty action permissions. The [canonical receipt](../../audit/bugs-and-verification.md#meetings140-and-change-request-query141--2026-10-06) records meaningful RED/GREEN,46 focused tests, scoped/full TypeScript and matching-hash reviews. Actual1000 fresh-tab375 keyboard Clear removes q/type/status, refresh reconstructs genuine empty, and768 keyboard Clear removes q. Initial tab actions fail and the custom-positioned Feedback toolbar still covers heading/action; no pointer or full browser acceptance is claimed. Complete participant/action filters, notes/decision/action links, Home scheduling, populated detail/return, physical authority/persistence/effects and operations remain Current unverified; the delivery checklist stays open.
+
 Route: `/build/[projectId]/meetings`
 Audience: project collaborators
 Entry points: persona sidebar or More, scoped parent record, command search, notification and authorized deep link.
