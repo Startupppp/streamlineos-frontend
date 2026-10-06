@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { MeetingsListPage } from "./meetings-list-page";
 import { ApiError } from "@/lib/api-envelope";
 
@@ -59,12 +59,6 @@ jest.mock("@/components/ui/data-table", () => ({
   DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
 }));
 
-jest.mock("@/components/ui/empty-state", () => ({
-  EmptyState: ({ title }: { title: string }) => (
-    <div data-testid="empty-state">{title}</div>
-  ),
-}));
-
 jest.mock("@/components/shared/no-permission-state", () => ({
   NoPermissionState: () => <div data-testid="no-permission" />,
 }));
@@ -91,7 +85,10 @@ jest.mock("@/components/ui/combobox", () => ({
   Combobox: () => null,
 }));
 
-jest.mock("./meeting-form-sheet", () => ({ MeetingFormSheet: () => null }));
+jest.mock("./meeting-form-sheet", () => ({
+  MeetingFormSheet: ({ open, selectedTemplate }: { open: boolean; selectedTemplate: { id: string } | null }) =>
+    open ? <div role="dialog">{selectedTemplate?.id}</div> : null,
+}));
 jest.mock("./new-meeting-button", () => ({
   NewMeetingButton: ({ onBlank }: { onBlank: () => void }) => (
     <button onClick={onBlank}>Schedule Meeting</button>
@@ -242,18 +239,42 @@ it("renders the data table when rows are present and not the empty state", () =>
   );
   render(<MeetingsListPage projectId={1} />);
   expect(screen.getByTestId("data-table")).toBeInTheDocument();
-  expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
+  expect(screen.queryByRole("status")).not.toBeInTheDocument();
 });
 
 it("shows 'No meetings yet' empty state when there are no rows and no active filter", () => {
   render(<MeetingsListPage projectId={1} />);
-  expect(screen.getByTestId("empty-state")).toHaveTextContent("No meetings yet");
+  const body = within(screen.getByRole("status"));
+  expect(body.getByRole("heading", { name: "No meetings yet" })).toBeInTheDocument();
+  expect(body.queryByRole("button", { name: "Clear filters" })).not.toBeInTheDocument();
+  expect(body.queryByRole("button", { name: "Schedule Standup" })).not.toBeInTheDocument();
+  expect(body.queryByRole("button", { name: "Cycle Planning" })).not.toBeInTheDocument();
   expect(screen.queryByTestId("data-table")).not.toBeInTheDocument();
 });
 
-it("shows 'No meetings found' when filters are active and no rows match", () => {
-  mockUseBuildListFilters.mockReturnValue(defaultFilters({ isFiltered: true }));
+it.each([false, true])("shows 'No meetings found' with body Clear when manage is %s", (canManage) => {
+  const clearAll = jest.fn();
+  mockUseCan.mockReturnValue(canManage);
+  mockUseBuildListFilters.mockReturnValue(defaultFilters({ isFiltered: true, clearAll }));
   render(<MeetingsListPage projectId={1} />);
-  expect(screen.getByTestId("empty-state")).toHaveTextContent("No meetings found");
+  const body = within(screen.getByRole("status"));
+  expect(body.getByRole("heading", { name: "No meetings found" })).toBeInTheDocument();
+  fireEvent.click(body.getByRole("button", { name: "Clear filters" }));
+  expect(clearAll).toHaveBeenCalledTimes(1);
+  expect(body.queryByRole("button", { name: "Schedule Standup" })).not.toBeInTheDocument();
+  expect(body.queryByRole("button", { name: "Cycle Planning" })).not.toBeInTheDocument();
   expect(screen.queryByText("No meetings yet")).not.toBeInTheDocument();
+});
+
+it.each([
+  ["Schedule Standup", "standup"],
+  ["Cycle Planning", "planning"],
+])("opens the %s template from the genuine empty body for managers", (label, template) => {
+  mockUseCan.mockReturnValue(true);
+  render(<MeetingsListPage projectId={1} />);
+  const body = within(screen.getByRole("status"));
+  expect(body.getByRole("heading", { name: "No meetings yet" })).toBeInTheDocument();
+  expect(body.queryByRole("button", { name: "Clear filters" })).not.toBeInTheDocument();
+  fireEvent.click(body.getByRole("button", { name: label }));
+  expect(screen.getByRole("dialog")).toHaveTextContent(template);
 });

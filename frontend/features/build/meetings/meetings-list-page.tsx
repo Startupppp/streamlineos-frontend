@@ -228,7 +228,8 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
             filteredEmpty={
               <EmptyState
                 illustrationPreset="search"
-                title="No meetings found"
+                filtersActive
+                filteredTitle="No meetings found"
                 onClearFilters={listFilters.clearAll}
                 className={CONTENT_FILL_PANEL}
               />
