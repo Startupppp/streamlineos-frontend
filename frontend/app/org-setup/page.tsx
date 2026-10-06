@@ -64,6 +64,14 @@ export default function OrgSetupPage() {
   const [isSkipping, setIsSkipping] = useState(false);
   const [direction, setDirection] = useState(1);
   const [data, setData] = useState<WizardData>({ ...DEFAULT_DATA });
+
+  useEffect(() => {
+    const sessionName = session?.user?.name?.trim();
+    if (!sessionName) return;
+    setData((current) =>
+      current.fullName.trim() ? current : { ...current, fullName: sessionName },
+    );
+  }, [session?.user?.name]);
   const [saveState, setSaveState] = useState<"idle" | "saved">("idle");
   const [shouldLoadServerSession, setShouldLoadServerSession] = useState(false);
   const hydratedFromServerRef = useRef(false);

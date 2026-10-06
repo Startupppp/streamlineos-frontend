@@ -1,5 +1,5 @@
 export const FIELD_CONTROL_CLASS =
-  "box-border h-9 rounded-md border border-input bg-card text-sm text-foreground shadow-xs outline-none transition-[color,background-color,box-shadow,border-color] focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring";
+  "box-border h-9 rounded-md border border-input bg-card text-sm text-foreground shadow-xs outline-none transition-[color,background-color,box-shadow,border-color] focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background";
 
 export const FIELD_CONTROL_INVALID_CLASS =
   "aria-invalid:border-destructive aria-invalid:ring-1 aria-invalid:ring-destructive";

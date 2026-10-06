@@ -34,15 +34,15 @@ function StepRailInner({ sequence, currentIndex, saveState, onStepSelect }: Step
                     type="button"
                     onClick={() => onStepSelect(i)}
                     className={cn(
-                      "flex shrink-0 items-center gap-1.5 rounded-lg px-1.5 py-1 text-left press-scale transition-colors",
-                      "hover:bg-muted",
+                      "flex shrink-0 items-center gap-1.5 rounded-lg px-1.5 py-1 text-left press-scale transition-colors motion-reduce:transition-none",
+                      "hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background",
                     )}
                   >
                     <StepMarker done={done} active={active} index={i} />
                     <span
                       className={cn(
                         "whitespace-nowrap text-xs font-medium",
-                        active ? "text-brand-deep" : "text-foreground",
+                        active ? "text-foreground font-semibold" : "text-foreground",
                       )}
                     >
                       {STEP_TITLES[stepId]}
@@ -58,7 +58,7 @@ function StepRailInner({ sequence, currentIndex, saveState, onStepSelect }: Step
                       className={cn(
                         "whitespace-nowrap text-xs font-medium",
                         active
-                          ? "text-brand-deep"
+                          ? "text-foreground font-semibold"
                           : done
                             ? "text-foreground"
                             : "text-muted-foreground",
@@ -73,7 +73,7 @@ function StepRailInner({ sequence, currentIndex, saveState, onStepSelect }: Step
                 <li className="flex min-w-2 flex-1 items-center" aria-hidden>
                   <div
                     className={cn(
-                      "mx-0.5 h-px w-full transition-colors duration-300",
+                      "mx-0.5 h-px w-full transition-colors duration-300 motion-reduce:transition-none",
                       done ? "bg-foreground" : "bg-border",
                     )}
                   />
@@ -123,7 +123,7 @@ function StepMarker({
         done
           ? "border-foreground bg-foreground text-background"
           : active
-            ? "border-brand-core bg-brand-core/10 text-brand-core"
+            ? "border-foreground bg-foreground text-background"
             : "border-border text-muted-foreground",
       )}
     >

@@ -85,6 +85,15 @@ export const ProjectCard = React.memo(function ProjectCard({
     [requestLeave, router, project.id],
   );
 
+  const handleCardKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+      requestLeave(() => router.push(`/build/${project.id}`));
+    },
+    [requestLeave, router, project.id],
+  );
+
   const handleProjectLinkClick = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement>) => {
       e.stopPropagation();
@@ -129,11 +138,14 @@ export const ProjectCard = React.memo(function ProjectCard({
         className={cn(
           "group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-xl border border-border/60 border-l-[3px] bg-card p-3 shadow-sm",
           "transition-[border-color,box-shadow] duration-200 ease-out motion-reduce:transition-none",
-          "hover:border-primary/25 hover:shadow-md",
+          "hover:border-foreground/20 hover:shadow-md",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background",
           stripe,
         )}
         role="listitem"
+        tabIndex={0}
         onClick={handleCardClick}
+        onKeyDown={handleCardKeyDown}
       >
         {showActions ? (
           <div className="absolute right-2 top-2 z-10">
