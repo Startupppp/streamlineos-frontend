@@ -30,7 +30,7 @@ export function PortalPreviewSection({ projectId }: PortalPreviewSectionProps) {
         <EmptyState
           illustrationPreset="projects"
           title="No portal published yet"
-          description="Publish a grant to preview the client view."
+          description="Publish the client portal to preview what clients see. Grants alone do not open the client view until the portal is published."
           compact
           className={CONTENT_FILL_PANEL}
         />

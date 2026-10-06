@@ -178,8 +178,17 @@ jest.mock("@/components/ui/badge", () => ({
 }));
 
 jest.mock("@/components/ui/empty-state", () => ({
-  EmptyState: ({ title }: { title: string }) => (
-    <div data-testid="empty-state">{title}</div>
+  EmptyState: ({
+    title,
+    description,
+  }: {
+    title: string;
+    description?: string;
+  }) => (
+    <div data-testid="empty-state">
+      <span>{title}</span>
+      {description ? <p>{description}</p> : null}
+    </div>
   ),
 }));
 

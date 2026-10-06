@@ -2,7 +2,8 @@
 
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
+import { SemanticBadge } from "@/components/ui/semantic-badge";
+import type { BadgeTone } from "@/components/ui/semantic-badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useCan } from "@/hooks/api/access";
@@ -10,6 +11,21 @@ import { useRevokeGrant } from "@/hooks/api/portal-access/grants";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PM_ROW } from "@/components/pm-chrome";
 import { cn } from "@/lib/utils";
+
+
+const GRANT_STATUS_LABELS: Record<string, string> = {
+  ACTIVE: "Active",
+  SUSPENDED: "Suspended",
+  REVOKED: "Revoked",
+  EXPIRED: "Expired",
+};
+
+const GRANT_STATUS_TONES: Record<string, BadgeTone> = {
+  ACTIVE: "success",
+  SUSPENDED: "warning",
+  REVOKED: "danger",
+  EXPIRED: "neutral",
+};
 
 interface GrantRowGrant {
   projectClientGrantId: string;
@@ -65,12 +81,10 @@ export function GrantRow({ grant }: GrantRowProps) {
         <div className="flex w-full items-center justify-between gap-2">
           <span className="text-sm font-medium">{name}</span>
           <div className="flex items-center gap-2">
-            <Badge
-              variant={grant.status === "ACTIVE" ? "default" : "secondary"}
-              className="text-micro"
-            >
-              {grant.status.toLowerCase()}
-            </Badge>
+            <SemanticBadge
+              tone={GRANT_STATUS_TONES[grant.status] ?? "neutral"}
+              label={GRANT_STATUS_LABELS[grant.status] ?? grant.status}
+            />
             {canManage && !isRevoked ? (
               <Button
                 type="button"

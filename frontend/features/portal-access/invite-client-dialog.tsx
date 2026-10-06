@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -102,12 +102,16 @@ export function InviteClientDialog({ open, onOpenChange, onInvited, defaultProje
     defaultValues: makeDefaults(defaultProjectId),
   });
 
-  useEffect(() => {
-    if (open) {
-      form.reset(makeDefaults(defaultProjectId));
-      setActivationResult(null);
-    }
-  }, [open, defaultProjectId, form]);
+  const handleOpenChange = useCallback(
+    (next: boolean) => {
+      if (next) {
+        form.reset(makeDefaults(defaultProjectId));
+        setActivationResult(null);
+      }
+      onOpenChange(next);
+    },
+    [defaultProjectId, form, onOpenChange],
+  );
 
   function handleSubmit(values: ActivateClientFormValues) {
     activate.mutate(
@@ -170,7 +174,7 @@ export function InviteClientDialog({ open, onOpenChange, onInvited, defaultProje
   return (
     <AppDialog
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={handleOpenChange}
       title="Invite Client"
       description="Activate portal access and send the client their invitation link."
       footer={footer}
@@ -278,6 +282,15 @@ export function InviteClientDialog({ open, onOpenChange, onInvited, defaultProje
                   )}
                 />
               ))}
+              <FormField
+                control={form.control}
+                name="canViewTasks"
+                render={() => (
+                  <FormItem>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
           </form>
         </Form>
