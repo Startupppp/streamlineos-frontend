@@ -71,7 +71,7 @@ export type TablePaginationProps =
   | TablePaginationCursorProps;
 
 export const SHELL_CLASS =
-  "flex shrink-0 flex-row flex-nowrap items-center justify-between gap-2 border-t border-border/60 bg-card px-2 py-1.5";
+  "flex shrink-0 flex-row flex-nowrap items-center justify-between gap-2 border-t border-border/60 bg-card px-2 py-1.5 max-md:[.mobile-nav-active_&]:pr-14";
 
 export function getVisiblePageItems(
   totalPages: number,
