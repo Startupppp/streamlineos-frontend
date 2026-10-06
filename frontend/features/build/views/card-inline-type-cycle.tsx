@@ -105,6 +105,7 @@ interface InlineCycleProps {
   projectId: number;
   version: number;
   currentCycleId?: number | null;
+  hideEmpty?: boolean;
 }
 
 export const InlineCycle = memo(function InlineCycle({
@@ -112,6 +113,7 @@ export const InlineCycle = memo(function InlineCycle({
   projectId,
   version,
   currentCycleId,
+  hideEmpty = false,
 }: InlineCycleProps) {
   const [open, setOpen] = useState(false);
   const { data: cycles = [] } = useCycles(projectId);
@@ -120,6 +122,10 @@ export const InlineCycle = memo(function InlineCycle({
   });
 
   const currentCycle = cycles.find((c) => c.id === currentCycleId);
+
+  if (hideEmpty && currentCycleId == null) {
+    return null;
+  }
 
   function makeCycleHandler(cycleId: number | null) {
     return function selectCycle() {

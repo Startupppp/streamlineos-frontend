@@ -182,9 +182,9 @@ describe("ProjectOverviewPage", () => {
 
     render(<ProjectOverviewPage projectId={101} />);
 
-    expect(screen.getByRole("link", { name: "Issues" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Cycles" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Milestones" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Issues" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Cycles" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Milestones" })).toBeInTheDocument();
   });
 
   it("points the Cycles quick-nav link at the canonical /cycles route, not the REMOVE-disposition /sprints duplicate", () => {
@@ -192,7 +192,7 @@ describe("ProjectOverviewPage", () => {
 
     render(<ProjectOverviewPage projectId={101} />);
 
-    expect(screen.getByRole("link", { name: "Cycles" })).toHaveAttribute(
+    expect(screen.getByRole("tab", { name: "Cycles" })).toHaveAttribute(
       "href",
       "/build/101/cycles",
     );

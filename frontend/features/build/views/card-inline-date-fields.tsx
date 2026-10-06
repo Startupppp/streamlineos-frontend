@@ -23,6 +23,7 @@ interface InlineDueDateProps {
   version: number;
   currentDueDate?: string | null;
   fallbackDate?: string | null;
+  hideEmpty?: boolean;
 }
 
 export const InlineDueDate = memo(function InlineDueDate({
@@ -31,11 +32,16 @@ export const InlineDueDate = memo(function InlineDueDate({
   version,
   currentDueDate,
   fallbackDate,
+  hideEmpty = false,
 }: InlineDueDateProps) {
   const [open, setOpen] = useState(false);
   const updateTicket = useUpdateTicket(projectId, {
     onError: (e) => toast.error(getErrorMessage(e)),
   });
+  if (hideEmpty && !currentDueDate) {
+    return null;
+  }
+
 
   const parsedDate = currentDueDate
     ? (() => {
@@ -216,3 +222,4 @@ export const InlineStartDate = memo(function InlineStartDate({
     </InlineFieldWrapper>
   );
 });
+

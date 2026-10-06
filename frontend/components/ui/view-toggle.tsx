@@ -53,7 +53,7 @@ export function ViewToggle<T extends string = string>({
               "focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background",
               showLabel && "gap-1.5 px-3 text-sm font-medium",
               isActive
-                ? "bg-foreground text-background shadow-sm"
+                ? "bg-foreground text-background shadow-sm [&_svg]:text-background"
                 : "bg-transparent text-muted-foreground hover:text-foreground",
             )}
           >

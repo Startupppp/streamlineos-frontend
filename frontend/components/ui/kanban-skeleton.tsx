@@ -4,13 +4,6 @@ const CARD_WIDTHS = [
   "w-full",
   "w-11/12",
   "w-4/5",
-  "w-full",
-  "w-3/4",
-  "w-11/12",
-  "w-full",
-  "w-4/5",
-  "w-5/6",
-  "w-full",
 ] as const;
 
 export function KanbanColumnSkeleton() {

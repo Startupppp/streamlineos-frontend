@@ -15,6 +15,7 @@ interface InlineEstimateProps {
   projectId: number;
   version: number;
   currentPoints?: number | null;
+  hideEmpty?: boolean;
 }
 
 export const InlineEstimate = memo(function InlineEstimate({
@@ -22,6 +23,7 @@ export const InlineEstimate = memo(function InlineEstimate({
   projectId,
   version,
   currentPoints,
+  hideEmpty = false,
 }: InlineEstimateProps) {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(
@@ -75,6 +77,10 @@ export const InlineEstimate = memo(function InlineEstimate({
   }
 
   const display = currentPoints ?? null;
+
+  if (hideEmpty && display == null && !editing) {
+    return null;
+  }
 
   if (editing) {
     return (

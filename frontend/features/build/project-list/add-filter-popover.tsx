@@ -48,16 +48,16 @@ type FilterKey = (typeof FILTER_CATEGORIES)[number]["key"];
 
 export const STATUS_OPTIONS: ProjectStatusFilter[] = ["ACTIVE", "COMPLETED", "ARCHIVED"];
 export const STATUS_LABELS: Record<ProjectStatusFilter, string> = {
-  ACTIVE: "In Progress",
+  ACTIVE: "In progress",
   COMPLETED: "Completed",
   ARCHIVED: "Archived",
 };
 
 export const HEALTH_OPTIONS: ProjectHealth[] = ["on_track", "at_risk", "off_track"];
 export const HEALTH_LABELS: Record<ProjectHealth, string> = {
-  on_track: "On Track",
-  at_risk: "At Risk",
-  off_track: "Off Track",
+  on_track: "On track",
+  at_risk: "At risk",
+  off_track: "Off track",
 };
 
 function FilterOption<T extends string>({ value, label, active, onSelect }: FilterOptionProps<T>) {
@@ -70,7 +70,7 @@ function FilterOption<T extends string>({ value, label, active, onSelect }: Filt
       type="button"
       onClick={handleClick}
       className={cn(
-        "flex w-full items-center rounded-md px-2 py-1.5 text-left text-label transition-colors",
+        "flex w-full items-center whitespace-nowrap rounded-md px-2 py-1.5 text-left text-label transition-colors",
         active
           ? "bg-primary/10 text-primary font-normal"
           : "text-foreground hover:bg-muted",
@@ -187,7 +187,7 @@ export function AddFilterPopover({ filters, onFiltersChange }: AddFilterPopoverP
       <ResponsivePopoverContent
         align="start"
         title="Add filter"
-        className="w-72 p-3"
+        className="w-[min(24rem,calc(100vw-2rem))] p-3"
       >
         <div className="mb-3 flex items-center justify-between">
           <p className="text-label font-medium text-foreground">Add filter</p>

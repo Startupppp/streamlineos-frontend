@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { PageState } from "@/components/shared/page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
@@ -15,6 +16,7 @@ import { formatShortDate } from "@/lib/date-utils";
 import { EmptyState } from "@/components/ui/empty-state";
 import { AlertTriangle, Activity, LayoutGrid, Target, TrendingUp, Zap } from "lucide-react";
 import { useProjectOverviewPage } from "./use-project-overview-page";
+import { projectHealthLabel } from "@/lib/project-health";
 
 function formatOverviewLabel(value: string): string {
   const words = value.toLowerCase().split(/[_\s]+/).filter(Boolean);
@@ -32,18 +34,26 @@ interface ProjectOverviewPageProps {
 
 function ProjectOverviewSkeleton() {
   return (
-    <div className="flex flex-1 min-h-0 flex-col gap-6">
+    <div className="flex min-h-0 flex-1 flex-col gap-6">
       <StatCardGridSkeleton cols={5} count={5} />
-      <div className="grid gap-4 md:grid-cols-3">
-        <Skeleton className="h-32 rounded-xl" />
-        <Skeleton className="h-32 rounded-xl" />
-        <Skeleton className="h-32 rounded-xl" />
+      <Skeleton className="h-28 w-full max-w-md rounded-xl" />
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-10 w-full rounded-md" />
+        <Skeleton className="h-10 w-full rounded-md" />
+        <Skeleton className="h-10 w-4/5 rounded-md" />
+      </div>
+      <div className="inline-flex h-9 w-fit items-center gap-1 rounded-lg border border-input p-1">
+        <Skeleton className="h-7 w-16 rounded-md" />
+        <Skeleton className="h-7 w-16 rounded-md" />
+        <Skeleton className="h-7 w-20 rounded-md" />
       </div>
     </div>
   );
 }
 
 export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
+  const pathname = usePathname();
   const {
     resolution,
     project,
@@ -133,7 +143,7 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
               label="Health"
               value={
                 analytics?.healthStatus
-                  ? formatOverviewLabel(analytics.healthStatus)
+                  ? projectHealthLabel(analytics.healthStatus)
                   : "No data"
               }
               icon={Target}
@@ -256,25 +266,34 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
             </Card>
           )}
 
-          <div className="flex items-center gap-3 text-sm">
-            <Link
-              href={`${basePath}/issues`}
-              className="text-primary hover:underline"
-            >
-              Issues
-            </Link>
-            <Link
-              href={`${basePath}/cycles`}
-              className="text-primary hover:underline"
-            >
-              Cycles
-            </Link>
-            <Link
-              href={`${basePath}/milestones`}
-              className="text-primary hover:underline"
-            >
-              Milestones
-            </Link>
+          <div
+            role="tablist"
+            aria-label="Project areas"
+            className="inline-flex h-9 items-center gap-1 rounded-lg border border-input bg-card p-1"
+          >
+            {[
+              { href: `${basePath}/issues`, label: "Issues" },
+              { href: `${basePath}/cycles`, label: "Cycles" },
+              { href: `${basePath}/milestones`, label: "Milestones" },
+            ].map((tab) => {
+              const selected =
+                pathname === tab.href || pathname.startsWith(`${tab.href}/`);
+              return (
+                <Link
+                  key={tab.href}
+                  href={tab.href}
+                  role="tab"
+                  aria-selected={selected}
+                  className={
+                    selected
+                      ? "inline-flex items-center rounded-md bg-foreground px-3 py-1.5 text-sm font-medium text-background shadow-sm"
+                      : "inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+                  }
+                >
+                  {tab.label}
+                </Link>
+              );
+            })}
           </div>
         </div>
       </PageState>

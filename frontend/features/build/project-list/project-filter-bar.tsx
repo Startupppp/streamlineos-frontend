@@ -84,7 +84,7 @@ export function ProjectFilterBar({
             onSet={onSetPrefs}
           />
           <ViewToggle value={viewMode} options={VIEW_OPTIONS} onChange={handleViewChange} />
-          {viewMode === "list" && onToggleGroupingSidebar ? (
+          {onToggleGroupingSidebar ? (
             <Button
               type="button"
               variant="outline"
