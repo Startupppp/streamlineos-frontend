@@ -79,11 +79,15 @@ jest.mock("@/features/org-setup/lib/draft", () => ({
   setCompletionMarker: jest.fn((...args: unknown[]) => mockSetCompletionMarker(...args)),
   hasCompletionMarker: jest.fn((...args: unknown[]) => mockHasCompletionMarker(...args)),
   getCompletionDestination: jest.fn((...args: unknown[]) => mockGetCompletionDestination(...args)),
-  clearCompletionMarker: jest.fn((...args: unknown[]) => mockClearCompletionMarker(...args)),
+  clearCompletionMarker: jest.fn((...args: unknown[]) =>
+    mockClearCompletionMarker(...args),
+  ),
 }));
 
 jest.mock("@/lib/api-client", () => ({
-  clearBackendTokenCache: jest.fn((...args: unknown[]) => mockClearBackendTokenCache(...args)),
+  clearBackendTokenCache: jest.fn((...args: unknown[]) =>
+    mockClearBackendTokenCache(...args),
+  ),
   setAutoSignOutSuppressed: jest.fn(),
   isApiError: jest.fn().mockReturnValue(false),
 }));

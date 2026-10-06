@@ -31,6 +31,7 @@ export type OrgSetupPayload = {
   phone?: string;
   enabledModules: string[];
   invitees?: OrgSetupInvitee[];
+  moduleAnswers?: Partial<Record<string, Record<string, string>>>;
 };
 
 export type OrgSetupResponse = { success: boolean; orgId: string; autoLoginToken?: string };

@@ -63,9 +63,7 @@ export function StepInviteLaunch({
       ? MAX_ORG_SETUP_INVITEES
       : Math.min(Math.max(seatLimit - 1, 0), MAX_ORG_SETUP_INVITEES);
   const atLimit = data.invitees.length >= inviteLimit;
-  const selectedModules = [...new Set(data.modules)].sort((a, b) =>
-    a === "build" ? -1 : b === "build" ? 1 : 0,
-  );
+  const selectedModules = [...new Set(data.modules)].sort();
   const enabledModuleKeys = new Set(selectedModules);
   const currentAccessError = getInviteAccessError(data);
 
@@ -241,9 +239,9 @@ export function StepInviteLaunch({
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Members receive Build access when Build is selected. Choose any other
-        product access per person below. Org Admins can access all enabled
-        products and manage organization settings, so select that role deliberately.
+        Members get access to every module you selected. Org Admins can access all
+        enabled modules and manage organization settings — assign that role deliberately.
+        You can adjust per-person access below.
       </p>
 
       {inviteError && (

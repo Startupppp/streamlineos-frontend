@@ -21,10 +21,8 @@ import {
 import {
   STEP_TITLES,
   DEFAULT_DATA,
-  deriveAppsFromGoals,
   getStepSequence,
   resolveStepIndex,
-  toggleGoalSelection,
   type StepId,
 } from "@/features/org-setup/lib/constants";
 import {
@@ -44,16 +42,10 @@ import {
 } from "@/features/org-setup/lib/wizard-data-schema";
 import { OrgSetupShell } from "@/features/org-setup/components/org-setup-shell";
 import { StepWelcome } from "@/features/org-setup/components/step-welcome";
-import { StepBasics } from "@/features/org-setup/components/step-basics";
 import { StepWorkspace } from "@/features/org-setup/components/step-workspace";
 import { StepProducts } from "@/features/org-setup/components/step-products";
 import { StepInviteLaunch } from "@/features/org-setup/components/step-invite-launch";
 import { ArchivedOrgsRestore } from "@/components/organization/archived-orgs-restore";
-
-function syncAppsFromGoals(data: WizardData): WizardData {
-  const derived = deriveAppsFromGoals(data.goals);
-  return { ...data, installedApps: derived, modules: derived };
-}
 
 export default function OrgSetupPage() {
   const { data: session } = useSession();
@@ -66,9 +58,6 @@ export default function OrgSetupPage() {
   const [direction, setDirection] = useState(1);
   const [data, setData] = useState<WizardData>({ ...DEFAULT_DATA });
 
-  // Seed fullName once from the session display name when the wizard field is
-  // still empty. Never overwrite a user/draft value; empty session leaves it
-  // empty so the backend can derive from the authenticated profile.
   useEffect(() => {
     if (!mounted) return;
     const sessionName = session?.user?.name?.trim();
@@ -129,19 +118,6 @@ export default function OrgSetupPage() {
     setStep(index + 1);
   }, []);
 
-  const handleToggleGoal = useCallback(
-    (id: string) => {
-      setData((prev) => {
-        const newGoals = toggleGoalSelection(prev.goals, id);
-        const next = syncAppsFromGoals({ ...prev, goals: newGoals });
-        saveDraft(next, userId);
-        return next;
-      });
-      markDraftSaved();
-    },
-    [markDraftSaved, userId],
-  );
-
   const handleSkipToDashboard = useCallback(async () => {
     if (skipPendingRef.current) return;
     skipPendingRef.current = true;
@@ -195,7 +171,7 @@ export default function OrgSetupPage() {
     if (!userId || mountedOnceRef.current) return;
     mountedOnceRef.current = true;
     if (hasCompletionMarker(userId, session?.orgId ?? "")) return;
-    const savedDraft = syncAppsFromGoals(loadDraft(userId));
+    const savedDraft = loadDraft(userId);
     const sessionName = session?.user?.name?.trim();
     const hydrated =
       sessionName && !savedDraft.fullName.trim()
@@ -219,7 +195,7 @@ export default function OrgSetupPage() {
     if (hasDraftProgress(localDraft)) return;
     if (serverSession.status !== "in_progress" || !serverSession.data) return;
 
-    const merged = syncAppsFromGoals(parseWizardDraft(serverSession.data));
+    const merged = parseWizardDraft(serverSession.data);
     if (!hasDraftProgress(merged)) return;
 
     const mergedSequence = getStepSequence();
@@ -290,15 +266,6 @@ export default function OrgSetupPage() {
           isSkipping={isSkipping}
           firstName={firstName}
           restoreSlot={<ArchivedOrgsRestore />}
-        />
-      )}
-      {currentStepId === "basics" && (
-        <StepBasics
-          data={data}
-          patch={patch}
-          onToggleGoal={handleToggleGoal}
-          onBack={goBack}
-          onNext={goNext}
         />
       )}
       {currentStepId === "workspace" && (

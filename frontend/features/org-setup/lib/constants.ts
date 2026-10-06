@@ -32,57 +32,7 @@ export const GOALS = [
   { id: "everything", label: "Build Everything", outcome: "Enable the full StreamlineOS suite" },
 ] as const;
 
-export const EVERYTHING_GOAL_ID = "everything";
-
-export const ALL_GOAL_IDS: readonly string[] = GOALS.map((g) => g.id);
-
-export const GOAL_TO_APPS: Record<string, OrgModuleKey[]> = {
-  sales: ["crm"],
-  hr: ["hr"],
-  inventory: ["inventory"],
-  finance: ["accounting"],
-  support: ["support"],
-  build: ["build"],
-  ai: ["crm", "hr", "build"],
-  everything: ["crm", "hr", "build", "accounting", "inventory", "support"],
-};
-
 export const ALWAYS_ENABLED_MODULES = ["chat", "kb"] as const satisfies readonly OrgModuleKey[];
-
-export const DEFAULT_APPS: OrgModuleKey[] = ["crm", "hr", "build", ...ALWAYS_ENABLED_MODULES];
-
-export function deriveAppsFromGoals(goals: string[]): OrgModuleKey[] {
-  if (goals.length === 0) return [...DEFAULT_APPS];
-  const apps = new Set<OrgModuleKey>(ALWAYS_ENABLED_MODULES);
-  for (const g of goals) {
-    for (const app of GOAL_TO_APPS[g] ?? []) {
-      apps.add(app);
-    }
-  }
-  if (apps.size === ALWAYS_ENABLED_MODULES.length) return [...DEFAULT_APPS];
-  return Array.from(apps);
-}
-
-export function toggleGoalSelection(current: readonly string[], id: string): string[] {
-  if (id === EVERYTHING_GOAL_ID) {
-    const allSelected = ALL_GOAL_IDS.every((goalId) => current.includes(goalId));
-    return allSelected ? [] : [...ALL_GOAL_IDS];
-  }
-
-  const has = current.includes(id);
-  let next = has ? current.filter((goalId) => goalId !== id) : [...current, id];
-
-  if (has) {
-    next = next.filter((goalId) => goalId !== EVERYTHING_GOAL_ID);
-  } else {
-    const others = ALL_GOAL_IDS.filter((goalId) => goalId !== EVERYTHING_GOAL_ID);
-    if (others.every((goalId) => next.includes(goalId)) && !next.includes(EVERYTHING_GOAL_ID)) {
-      next = [...next, EVERYTHING_GOAL_ID];
-    }
-  }
-
-  return next;
-}
 
 export const INDUSTRIES: readonly string[] = [
   "IT Services",
@@ -131,7 +81,7 @@ export const STEP_TITLES: Record<StepId, string> = {
   welcome: "Welcome",
   basics: "Basics",
   workspace: "Workspace",
-  products: "Products",
+  products: "Modules",
   invite: "People",
 };
 
@@ -139,7 +89,7 @@ export const STEP_SUBTITLES: Record<StepId, string> = {
   welcome: "Let's get your organization ready to run your business.",
   basics: "Goals unlock modules. Add industry and company, then launch.",
   workspace: "Name your workspace and set your preferences.",
-  products: "Choose the products you want to start with.",
+  products: "Pick the modules your team will use.",
   invite: "Invite your team — or skip and do it later.",
 };
 
@@ -151,16 +101,66 @@ export const ESTIMATED_MINUTES_REMAINING: Record<StepId, number> = {
   invite: 1,
 };
 
-export const MODULE_CATALOG: Partial<Record<OrgModuleKey, { label: string; description: string; setupTasks: string[] }>> = {
+export const MODULE_CATALOG: Record<OrgModuleKey, { label: string; description: string; setupTasks: string[] }> = {
   crm: { label: "CRM", description: "Pipeline, leads, and deals", setupTasks: ["Create first pipeline", "Import contacts"] },
-  hr: { label: "HR", description: "Employees, leave, and payroll", setupTasks: ["Add departments", "Invite employees"] },
+  hr: { label: "HR", description: "Employees, leave, and attendance", setupTasks: ["Add departments", "Invite employees"] },
   inventory: { label: "Inventory", description: "Stock, warehouses, and products", setupTasks: ["Create warehouse", "Import products"] },
   accounting: { label: "Accounting", description: "Invoices, taxes, and reports", setupTasks: ["Set fiscal year", "Configure taxes"] },
   build: { label: "Build", description: "Tasks and delivery tracking", setupTasks: ["Create first project", "Invite team"] },
   support: { label: "Support", description: "Tickets and customer SLAs", setupTasks: ["Configure SLA policy"] },
   kb: { label: "Knowledge", description: "SOPs and team docs", setupTasks: ["Create team space"] },
   chat: { label: "Chat", description: "Team messaging", setupTasks: ["Create first channel"] },
+  payroll: { label: "Payroll", description: "Pay runs and payslips", setupTasks: ["Configure pay schedule"] },
+  timesheets: { label: "Timesheets", description: "Time tracking by project or client", setupTasks: ["Set up projects for tracking"] },
+  surveys: { label: "Surveys", description: "Employee and customer feedback", setupTasks: ["Create first survey"] },
+  sign: { label: "Sign", description: "e-Signatures for documents", setupTasks: ["Upload first document template"] },
 };
+
+export type ModuleQuestion =
+  | { key: string; label: string; type: "select"; options: readonly string[] }
+  | { key: string; label: string; type: "text"; maxLength: number };
+
+export const MODULE_QUESTIONS: Partial<Record<OrgModuleKey, ModuleQuestion[]>> = {
+  hr: [
+    { key: "employeeCount", label: "How many people will you manage?", type: "select", options: ["1-10", "11-50", "51-200", "200+"] as const },
+    { key: "firstFocus", label: "What should we set up first?", type: "select", options: ["Employee records", "Leave & attendance", "Hiring & onboarding"] as const },
+  ],
+  payroll: [
+    { key: "payFrequency", label: "How often do you run payroll?", type: "select", options: ["Monthly", "Semi-monthly", "Bi-weekly", "Weekly"] as const },
+  ],
+  timesheets: [
+    { key: "trackingMode", label: "How do you track time?", type: "select", options: ["By project", "By client", "Attendance only"] as const },
+  ],
+  crm: [
+    { key: "salesModel", label: "Who do you sell to?", type: "select", options: ["B2B", "B2C", "Both"] as const },
+    { key: "leadSource", label: "Where do most leads come from?", type: "select", options: ["Website", "Referrals", "Outbound", "Events"] as const },
+  ],
+  support: [
+    { key: "supportChannel", label: "Where do customers reach you?", type: "select", options: ["Email", "Live chat", "Customer portal"] as const },
+  ],
+  accounting: [
+    { key: "fiscalYearStart", label: "When does your fiscal year start?", type: "select", options: ["January", "April", "July", "October"] as const },
+  ],
+  inventory: [
+    { key: "stockLocations", label: "How many locations hold stock?", type: "select", options: ["1", "2-5", "6+"] as const },
+  ],
+  build: [
+    { key: "workType", label: "What will your team deliver?", type: "select", options: ["Software", "Client projects", "Internal operations", "Marketing"] as const },
+    { key: "firstProjectName", label: "Name your first project", type: "text", maxLength: 80 },
+  ],
+  surveys: [
+    { key: "audience", label: "Who will you survey?", type: "select", options: ["Employees", "Customers", "Both"] as const },
+  ],
+  sign: [
+    { key: "documentType", label: "What will you send for signature?", type: "select", options: ["Offer letters", "Contracts", "NDAs", "Other"] as const },
+  ],
+};
+
+export const MODULE_GROUPS: { heading: string; keys: OrgModuleKey[] }[] = [
+  { heading: "People", keys: ["hr", "payroll", "timesheets"] },
+  { heading: "Customers & money", keys: ["crm", "support", "accounting", "inventory"] },
+  { heading: "Work", keys: ["build", "sign", "surveys"] },
+];
 
 export const DEFAULT_DATA: WizardData = {
   goals: [],
@@ -170,8 +170,8 @@ export const DEFAULT_DATA: WizardData = {
   fullName: "",
   teamSize: "",
   phone: "",
-  installedApps: DEFAULT_APPS,
-  modules: DEFAULT_APPS,
+  installedApps: [],
+  modules: [...ALWAYS_ENABLED_MODULES],
   invitees: [],
   moduleAnswers: {},
 };

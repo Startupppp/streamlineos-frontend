@@ -35,10 +35,6 @@ jest.mock("@/features/org-setup/components/step-welcome", () => ({
   },
 }));
 
-jest.mock("@/features/org-setup/components/step-basics", () => ({
-  StepBasics: () => null,
-}));
-
 jest.mock("@/features/org-setup/components/step-invite-launch", () => ({
   StepInviteLaunch: () => null,
 }));
