@@ -3,7 +3,10 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { useApprovalInbox, useUpdateApproval } from "@/hooks/api/build/approvals";
+import {
+  useApprovalInbox,
+  useUpdateApproval,
+} from "@/hooks/api/build/approvals";
 import { useCan } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
@@ -75,12 +78,18 @@ export function useApprovalsInboxPage() {
   const [returnFocus, setReturnFocus] = useState<HTMLElement | null>(null);
   const selectionIds = ["projectId", "approvalId"].map((key) => {
     const raw = searchParams.get(key);
-    if (!raw || searchParams.getAll(key).length !== 1 || !/^[1-9]\d{0,9}$/.test(raw)) return null;
+    if (
+      !raw ||
+      searchParams.getAll(key).length !== 1 ||
+      !/^[1-9]\d{0,9}$/.test(raw)
+    )
+      return null;
     const id = Number(raw);
     return id <= 2_147_483_647 ? id : null;
   });
   const [projectId, approvalId] = selectionIds;
-  const decideTarget = projectId && approvalId ? { projectId, approvalId } : null;
+  const decideTarget =
+    projectId && approvalId ? { projectId, approvalId } : null;
   const updateApproval = useUpdateApproval();
   const [selection, setSelection] = useState<Set<string | number>>(new Set());
   const [isBulkPending, setIsBulkPending] = useState(false);
@@ -126,36 +135,50 @@ export function useApprovalsInboxPage() {
     [members],
   );
 
-  const handleDecideClick = useCallback((item: ApprovalInboxItem) => {
-    if (item.projectId === null) return;
-    setReturnFocus(document.activeElement instanceof HTMLElement ? document.activeElement : null);
-    setQueueTarget({
-      approvalId: item.id,
-      projectId: item.projectId,
-      title: item.title,
-      revision: item.revision,
-    });
-    const next = new URLSearchParams(searchParams.toString());
-    next.set("projectId", String(item.projectId));
-    next.set("approvalId", String(item.id));
-    router.push(`${pathname}?${next}`, { scroll: false });
-  }, [pathname, router, searchParams]);
+  const handleDecideClick = useCallback(
+    (item: ApprovalInboxItem) => {
+      if (item.projectId === null) return;
+      setReturnFocus(
+        document.activeElement instanceof HTMLElement
+          ? document.activeElement
+          : null,
+      );
+      setQueueTarget({
+        approvalId: item.id,
+        projectId: item.projectId,
+        title: item.title,
+        revision: item.revision,
+      });
+      const next = new URLSearchParams(searchParams.toString());
+      next.set("projectId", String(item.projectId));
+      next.set("approvalId", String(item.id));
+      router.push(`${pathname}?${next}`, { scroll: false });
+    },
+    [pathname, router, searchParams],
+  );
 
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
 
-  const handleDecideDialogChange = useCallback((open: boolean) => {
-    if (open) return;
-    setQueueTarget(null);
-    const next = new URLSearchParams(searchParams.toString());
-    next.delete("approvalId");
-    const query = next.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
-  }, [pathname, router, searchParams]);
+  const handleDecideDialogChange = useCallback(
+    (open: boolean) => {
+      if (open) return;
+      setQueueTarget(null);
+      const next = new URLSearchParams(searchParams.toString());
+      next.delete("approvalId");
+      const query = next.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, {
+        scroll: false,
+      });
+    },
+    [pathname, router, searchParams],
+  );
 
   const handleReturnFocus = useCallback(() => {
-    const target = returnFocus?.isConnected ? returnFocus : searchInputRef.current;
+    const target = returnFocus?.isConnected
+      ? returnFocus
+      : searchInputRef.current;
     target?.focus({ preventScroll: true });
   }, [returnFocus]);
 
@@ -169,46 +192,62 @@ export function useApprovalsInboxPage() {
   );
   const handleDateRangeChange = useCallback(
     (range: { from: string; to: string }) => {
-      listFilters.setValue("from", range.from);
-      listFilters.setValue("to", range.to);
+      listFilters.setValues(range);
     },
     [listFilters],
   );
 
   const handleClearSelection = useCallback(() => setSelection(new Set()), []);
   const isRowSelectable = useCallback(() => canManage, [canManage]);
-  const handleNextPage = useCallback(() => void fetchNextPage(), [fetchNextPage]);
+  const handleNextPage = useCallback(
+    () => void fetchNextPage(),
+    [fetchNextPage],
+  );
 
   const handleBulkCancel = useCallback(() => {
     if (isBulkPending || !canManage) return;
     const owner = updateApproval.captureOwner();
     if (!owner) return;
-    const selectedItems = items.filter((item) =>
-      item.projectId !== null && selection.has(`${item.projectId}-${item.id}`),
+    const selectedItems = items.filter(
+      (item) =>
+        item.projectId !== null &&
+        selection.has(`${item.projectId}-${item.id}`),
     );
     if (selectedItems.length === 0) return;
     setIsBulkPending(true);
     void Promise.allSettled(
       selectedItems.map((item) =>
-        updateApproval.mutateAsync({ projectId: item.projectId ?? 0, approvalId: item.id,
-          expectedRevision: item.revision, status: "cancelled" }),
+        updateApproval.mutateAsync({
+          projectId: item.projectId ?? 0,
+          approvalId: item.id,
+          expectedRevision: item.revision,
+          status: "cancelled",
+        }),
       ),
-    ).then((results) => {
-      if (!owner.isCurrent()) return;
-      const succeeded = results.filter((r) => r.status === "fulfilled").length;
-      const failed = results.length - succeeded;
-      if (succeeded > 0) {
-        toast.success(`${succeeded} approval${succeeded === 1 ? "" : "s"} cancelled`);
-        setSelection((current) => {
-          const next = new Set(current);
-          selectedItems.forEach((item, index) => {
-            if (results[index]?.status === "fulfilled") next.delete(`${item.projectId}-${item.id}`);
+    )
+      .then((results) => {
+        if (!owner.isCurrent()) return;
+        const succeeded = results.filter(
+          (r) => r.status === "fulfilled",
+        ).length;
+        const failed = results.length - succeeded;
+        if (succeeded > 0) {
+          toast.success(
+            `${succeeded} approval${succeeded === 1 ? "" : "s"} cancelled`,
+          );
+          setSelection((current) => {
+            const next = new Set(current);
+            selectedItems.forEach((item, index) => {
+              if (results[index]?.status === "fulfilled")
+                next.delete(`${item.projectId}-${item.id}`);
+            });
+            return next;
           });
-          return next;
-        });
-      }
-      if (failed > 0) toast.error(`${failed} could not be cancelled — try again`);
-    }).finally(() => setIsBulkPending(false));
+        }
+        if (failed > 0)
+          toast.error(`${failed} could not be cancelled — try again`);
+      })
+      .finally(() => setIsBulkPending(false));
   }, [items, selection, updateApproval, isBulkPending, canManage]);
 
   const columns = useMemo(
