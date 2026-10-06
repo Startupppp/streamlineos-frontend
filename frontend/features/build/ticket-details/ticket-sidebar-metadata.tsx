@@ -53,7 +53,7 @@ export function TicketSidebarMetadata({
     originalEstimate > 0 ? Math.min((timeSpent / originalEstimate) * 100, 100) : 0;
 
   return (
-    <div className="flex flex-col gap-1 pb-[max(6rem,calc(env(safe-area-inset-bottom)+5rem))] md:pb-2">
+    <div className="flex flex-col gap-1 pb-[max(8rem,calc(env(safe-area-inset-bottom)+7rem))] md:pb-2">
       <h3 className="mb-2 text-xs font-semibold text-muted-foreground">History</h3>
       {(timeSpent > 0 || originalEstimate > 0) && (
           <PropertyRow label="Time">

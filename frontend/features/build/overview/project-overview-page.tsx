@@ -234,7 +234,7 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
           </div>
 
           {activityData && activityData.data.length > 0 && (
-            <Card className="max-md:mb-20">
+            <Card className="max-md:mb-28">
               <CardHeader className="pb-2">
                 <h2 className="text-sm font-medium flex items-center gap-2">
                   <Activity className="h-4 w-4" aria-hidden="true" />
@@ -269,7 +269,7 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
           <div
             role="tablist"
             aria-label="Project areas"
-            className="mb-[max(0.5rem,env(safe-area-inset-bottom))] inline-flex h-9 max-w-full flex-wrap items-center gap-1 rounded-lg border border-input bg-card p-1 max-md:mb-16 max-md:pr-14"
+            className="mb-[max(0.5rem,env(safe-area-inset-bottom))] inline-flex h-9 max-w-full flex-wrap items-center gap-1 rounded-lg border border-input bg-card p-1 max-md:mb-28 max-md:pr-16"
           >
             {[
               { href: `${basePath}/issues`, label: "Issues" },

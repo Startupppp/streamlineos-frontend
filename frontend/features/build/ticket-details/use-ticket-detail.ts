@@ -269,6 +269,11 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
   );
 
   const revertTitle = useCallback(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+      setSaving(false);
+    }
     setLocalTitle(ticket?.title ?? "");
   }, [setLocalTitle, ticket?.title]);
 

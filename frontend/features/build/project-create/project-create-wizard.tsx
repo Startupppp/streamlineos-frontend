@@ -190,7 +190,9 @@ export function ProjectCreateWizard({
               transition={{ duration: 0.22, ease: "easeOut" }}
               className={cn(step === 4 && "flex min-h-0 flex-1 flex-col")}
             >
-              {step === 1 && <StepBasics ref={basicsRef} {...sharedProps} />}
+              {step === 1 && (
+                <StepBasics ref={basicsRef} {...sharedProps} onCancel={requestClose} />
+              )}
               {step === 2 && <StepType {...sharedProps} />}
               {step === 3 && <StepTemplate {...sharedProps} />}
               {step === 4 && <StepToggles {...sharedProps} />}

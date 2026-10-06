@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef , useEffect} from "react";
 import dynamic from "next/dynamic";
 import { motion, useReducedMotion } from "framer-motion";
 import { Textarea } from "@/components/ui/textarea";
@@ -126,6 +126,20 @@ export function TicketDetailMainSection({
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleError, setTitleError] = useState<string | null>(null);
   const skipTitleBlurRef = useRef(false);
+  const titleInputRef = useRef<HTMLTextAreaElement | null>(null);
+  const titleAtEditStartRef = useRef(localTitle);
+
+  useEffect(() => {
+    if (!editingTitle) return;
+    const id = requestAnimationFrame(() => {
+      const el = titleInputRef.current;
+      if (!el) return;
+      el.focus({ preventScroll: true });
+      const end = el.value.length;
+      el.setSelectionRange(end, end);
+    });
+    return () => cancelAnimationFrame(id);
+  }, [editingTitle]);
 
   const finishTitleEdit = useCallback(
     (commit: boolean) => {
@@ -170,7 +184,7 @@ export function TicketDetailMainSection({
 
   return (
     <motion.div
-      className="mx-auto flex w-full max-w-4xl min-w-0 flex-col gap-5 pb-6"
+      className="mx-auto flex w-full max-w-4xl min-w-0 flex-col gap-5 pb-6 max-md:pb-24"
       initial={reduceMotion ? false : "hidden"}
       animate={reduceMotion ? undefined : "visible"}
       variants={reduceMotion ? undefined : fadeIn}
@@ -184,6 +198,9 @@ export function TicketDetailMainSection({
             className="h-8 px-2 text-xs text-muted-foreground hover:bg-transparent hover:text-foreground"
             aria-expanded={editingTitle}
             aria-controls={`ticket-title-${ticketId}`}
+            onMouseDown={() => {
+              skipTitleBlurRef.current = true;
+            }}
             onClick={() => finishTitleEdit(true)}
           >
             Done editing
@@ -197,21 +214,30 @@ export function TicketDetailMainSection({
           </label>
           <Textarea
             id={`ticket-title-${ticketId}`}
+            ref={titleInputRef}
             value={localTitle}
             onChange={(event) => {
               setTitleError(null);
               onTitleChange(event);
             }}
             rows={2}
-            autoFocus
             aria-invalid={titleError ? true : undefined}
             aria-describedby={titleError ? `ticket-title-error-${ticketId}` : undefined}
             className="h-auto min-h-12 w-full max-w-full resize-none break-words rounded-md border-border bg-card px-3 py-2 text-base font-medium leading-snug shadow-none transition-colors duration-200 [overflow-wrap:anywhere] [word-break:break-word] hover:border-foreground/30 focus-visible:ring-1"
             placeholder="Ticket title"
             onKeyDown={handleTitleKeyDown}
-            onBlur={() => {
+            onBlur={(event) => {
               if (skipTitleBlurRef.current) {
                 skipTitleBlurRef.current = false;
+                return;
+              }
+              const next = event.relatedTarget;
+              if (next instanceof Node && event.currentTarget.parentElement?.contains(next)) {
+                return;
+              }
+              if (localTitle === titleAtEditStartRef.current) {
+                setEditingTitle(false);
+                setTitleError(null);
                 return;
               }
               finishTitleEdit(true);
@@ -232,7 +258,10 @@ export function TicketDetailMainSection({
           type="button"
           className="group min-w-0 text-left"
           aria-label="Edit title"
-          onClick={() => setEditingTitle(true)}
+          onClick={() => {
+            titleAtEditStartRef.current = localTitle;
+            setEditingTitle(true);
+          }}
         >
           <h2 className="break-words text-xl font-semibold leading-snug text-foreground [overflow-wrap:anywhere] group-hover:text-foreground/90">
             {localTitle || "Untitled"}

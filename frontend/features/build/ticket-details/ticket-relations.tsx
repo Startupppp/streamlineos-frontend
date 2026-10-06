@@ -221,7 +221,7 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
         </div>
 
         {(relations ?? []).length === 0 ? (
-          <p className="text-xs text-muted-foreground py-1">No relations yet.</p>
+          <p className="text-xs text-muted-foreground py-1 max-md:pb-16">No relations yet.</p>
         ) : (
           <div className="space-y-2">
             {RELATION_TYPES.map((type) => {

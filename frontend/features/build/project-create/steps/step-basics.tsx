@@ -36,8 +36,10 @@ import {
 
 export type BasicsHandle = { validate: () => Promise<boolean> };
 
-export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
-  function StepBasicsRender({ draft, updateDraft }, ref) {
+export const StepBasics = forwardRef<
+  BasicsHandle,
+  StepSharedProps & { onCancel?: () => void }
+>(function StepBasicsRender({ draft, updateDraft, onCancel }, ref) {
     const form = useForm<BasicsValues>({
       resolver: zodResolver(basicsSchema),
       defaultValues: {
@@ -143,14 +145,23 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
                 </div>
                 <FormControl>
                   <Input
-                  data-project-create-name="true"
-                  autoFocus
+                    data-project-create-name="true"
+                    name={field.name}
+                    value={field.value ?? ""}
+                    onBlur={field.onBlur}
+                    ref={field.ref}
                     placeholder="e.g. Website Redesign"
                     maxLength={PROJECT_NAME_MAX}
-                    {...field}
                     onChange={(e) =>
                       handleNameChange(e.target.value, field.onChange)
                     }
+                    onKeyDown={(e) => {
+                      if (e.key === "Escape") {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onCancel?.();
+                      }
+                    }}
                   />
                 </FormControl>
                 <FormMessage />

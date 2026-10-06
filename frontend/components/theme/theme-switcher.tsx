@@ -3,6 +3,7 @@
 import type { MouseEvent as ReactMouseEvent, PointerEvent } from "react";
 import { Check, Monitor, Moon, Palette, Sun, type LucideIcon } from "lucide-react";
 import {
+  DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
@@ -13,6 +14,7 @@ import {
   APP_THEMES,
   APP_THEME_MODES,
   type AppTheme,
+  type AppThemeMode,
   type AppThemeModeOption,
 } from "@/lib/theme/app-themes";
 import { useAppTheme } from "./app-theme-provider";
@@ -120,6 +122,39 @@ export function ThemeMenuPanel({ className }: { className?: string }) {
       <ModeOptionsRow />
       <ThemeOptionsGrid />
     </div>
+  );
+}
+
+export function ThemeModeMenuItems() {
+  const { mode: activeMode, setMode } = useAppTheme();
+
+  function apply(mode: AppThemeMode) {
+    setMode(mode);
+  }
+
+  return (
+    <>
+      {APP_THEME_MODES.map((mode) => {
+        const Icon = MODE_ICONS[mode.id];
+        const isActive = activeMode === mode.id;
+        return (
+          <DropdownMenuItem
+            key={mode.id}
+            className="gap-2 cursor-pointer"
+            onPointerDownCapture={() => {
+              apply(mode.id);
+            }}
+            onSelect={() => {
+              apply(mode.id);
+            }}
+          >
+            <Icon className="h-3.5 w-3.5" />
+            {mode.label}
+            {isActive ? <Check className="ml-auto h-3.5 w-3.5" /> : null}
+          </DropdownMenuItem>
+        );
+      })}
+    </>
   );
 }
 
