@@ -2,6 +2,7 @@
 
 import { memo, useCallback } from "react";
 import { cn } from "@/lib/utils";
+import { SURFACE_CARD_INTERACTIVE } from "@/lib/ui-surface-chrome";
 import { formatShortDate } from "@/lib/date-utils";
 import { Badge } from "@/components/ui/badge";
 import { CheckIcon, XIcon, CopyIcon } from "@animateicons/react/lucide";
@@ -62,7 +63,7 @@ export const IntakeItemCard = memo(function IntakeItemCard({ item, canManage, on
   const submitterDisplay = item.submitterName ?? item.submitterEmail ?? null;
 
   return (
-    <div className={cn(PM_PANEL, "flex overflow-hidden transition-[border-color,box-shadow] duration-200 hover:border-primary/35 hover:shadow-md")}>
+    <div className={cn(PM_PANEL, "flex overflow-hidden", SURFACE_CARD_INTERACTIVE)}>
       <div className={cn("w-1 shrink-0", STATUS_LEFT_COLOR[item.status] ?? "bg-border")} />
       <div className="min-w-0 flex-1 px-4 py-3">
         <div className="mb-1 flex flex-wrap items-center gap-2">

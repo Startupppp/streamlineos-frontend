@@ -15,7 +15,7 @@ const CARD_WIDTHS = [
 
 export function KanbanColumnSkeleton() {
   return (
-    <div className="flex min-h-0 w-72 min-w-[280px] shrink-0 flex-col self-stretch rounded-xl border border-border bg-muted/30">
+    <div className="flex min-h-0 w-72 min-w-[280px] shrink-0 flex-col self-stretch rounded-xl border border-border/80 bg-muted/30">
       <div className="flex shrink-0 items-center justify-between gap-1 border-b border-border/60 px-3 py-2">
         <div className="flex min-w-0 flex-1 items-center gap-1.5">
           <Skeleton className="h-2.5 w-2.5 shrink-0 rounded-full" />
@@ -28,7 +28,7 @@ export function KanbanColumnSkeleton() {
         {CARD_WIDTHS.map((width, index) => (
           <div
             key={width + String(index)}
-            className="rounded-xl border border-border/70 bg-card px-3 py-2.5 shadow-sm"
+            className="rounded-xl border border-border/80 bg-card p-3 shadow-sm"
           >
             <Skeleton className={`h-4 ${width}`} />
             <div className="mt-2 flex items-center gap-1.5">
