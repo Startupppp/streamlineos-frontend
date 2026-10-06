@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState } from "react";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
@@ -45,12 +46,7 @@ export function useGoalsPageData() {
   const { data: editGoalDetail } = useGoal(editGoalId ?? 0);
   const deleteGoalMutation = useDeleteGoal();
 
-  const [page, setPage] = useState(1);
-  const [prevResetKey, setPrevResetKey] = useState(listFilters.resetKey);
-  if (prevResetKey !== listFilters.resetKey) {
-    setPrevResetKey(listFilters.resetKey);
-    setPage(1);
-  }
+  const [page, setPage] = useSourceOverride(listFilters.resetKey, 1);
 
   const levelValue = listFilters.value("level");
   const statusValue = listFilters.value("status");

@@ -84,16 +84,18 @@ function CommentItemComponent({
   const canDelete = canInteract && isAuthor;
   const reactionGroups = groupReactions(comment.reactions ?? [], currentUserId);
 
-  const [showHighlight, setShowHighlight] = useState(isHighlighted);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editText, setEditText] = useState(comment.content);
-
+  const [highlightExpired, setHighlightExpired] = useState(false);
   useEffect(() => {
     if (!isHighlighted) return;
-    setShowHighlight(true);
-    const timer = setTimeout(() => setShowHighlight(false), 2500);
-    return () => clearTimeout(timer);
+    const timer = setTimeout(() => setHighlightExpired(true), 2500);
+    return () => {
+      clearTimeout(timer);
+      setHighlightExpired(false);
+    };
   }, [isHighlighted]);
+  const showHighlight = isHighlighted && !highlightExpired;
+  const [isEditing, setIsEditing] = useState(false);
+  const [editText, setEditText] = useState(comment.content);
 
   const handleStartEdit = useCallback(() => {
     setEditText(comment.content);

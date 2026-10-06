@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -11,7 +12,7 @@ import {
 } from "@/hooks/api/build/tickets";
 import { useProject } from "@/hooks/api/build/projects";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
-import { isApiError, getApiErrorCode } from "@/lib/api-client";
+import { isApiError, getApiErrorCode } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type { ProjectMember } from "./types";
@@ -56,8 +57,6 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
   const [offlineDraftFields, setOfflineDraftFields] = useState<string[]>([]);
   const offlineDraftRef = useRef<Record<string, unknown>>({});
   const [conflict, setConflict] = useState<TicketConflictState | null>(null);
-  const [localTitle, setLocalTitle] = useState("");
-  const [syncedTitleVersion, setSyncedTitleVersion] = useState<string | null>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSavedAtRef = useRef<string | undefined>(undefined);
   const lastSavedVersionRef = useRef<number | undefined>(undefined);
@@ -108,12 +107,15 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
   }, [projectData]);
 
   const statuses = useMemo(() => {
-    if (!projectData || !("statuses" in projectData)) return undefined;
-    return (projectData.statuses as { id: number; name: string }[]).map((s) => ({
+    if (!projectData?.statuses) return undefined;
+    return projectData.statuses.map((s) => ({
       id: s.id,
       name: s.name,
     }));
   }, [projectData]);
+
+  const titleVersion = ticket ? `${ticket.id}:${ticket.updatedAt}:${ticket.title}` : null;
+  const [localTitle, setLocalTitle] = useSourceOverride(titleVersion, ticket?.title ?? "");
 
   const updateTicketMutation = useUpdateTicket(projectId, {
     onSuccess: (data) => {
@@ -242,13 +244,16 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
     enqueueSaveRef.current = enqueueSave;
   }, [enqueueSave]);
 
-  useEffect(() => {
-    if (!isOnline) return;
+  const flushOfflineDrafts = useEffectEvent(() => {
     const pending = offlineDraftRef.current;
     if (Object.keys(pending).length === 0) return;
     offlineDraftRef.current = {};
     setOfflineDraftFields([]);
-    enqueueSaveRef.current?.(pending);
+    enqueueSave(pending);
+  });
+
+  useEffect(() => {
+    if (isOnline) flushOfflineDrafts();
   }, [isOnline]);
 
   const autoSave = useCallback(
@@ -268,12 +273,6 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
     },
     [enqueueSave],
   );
-
-  const titleVersion = ticket ? `${ticket.id}:${ticket.updatedAt}:${ticket.title}` : null;
-  if (ticket && syncedTitleVersion !== titleVersion) {
-    setSyncedTitleVersion(titleVersion);
-    setLocalTitle(ticket.title);
-  }
 
   useEffect(() => {
     return () => {
@@ -304,7 +303,7 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
       setLocalTitle(e.target.value);
       debouncedSave({ title: e.target.value });
     },
-    [debouncedSave],
+    [debouncedSave, setLocalTitle],
   );
 
   const handleDescriptionEditorChange = useCallback(

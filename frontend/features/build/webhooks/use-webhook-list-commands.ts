@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { toast } from "sonner";
 import { isWriteConflict } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -14,6 +15,8 @@ import {
   type WebhookConflictField,
   type WebhookConflictPatch,
 } from "@/features/build/webhooks/webhook-conflict-dialog";
+
+const EMPTY_WEBHOOK_SELECTION: ReadonlySet<number> = new Set<number>();
 
 interface UseWebhookListCommandsOptions {
   projectId: number;
@@ -31,21 +34,15 @@ export function useWebhookListCommands({
   const updateWebhook = useUpdateWebhook(projectId);
   const deleteWebhook = useDeleteWebhook(projectId);
 
-  const [selectedIds, setSelectedIds] = useState<ReadonlySet<number>>(
-    () => new Set<number>(),
+  const [selectedIds, setSelectedIds] = useSourceOverride<string, ReadonlySet<number>>(
+    resetKey,
+    EMPTY_WEBHOOK_SELECTION,
   );
   const [bulkPending, setBulkPending] = useState(false);
   const [conflict, setConflict] = useState<{
     webhookId: number;
     patch: WebhookConflictPatch;
   } | null>(null);
-
-  const [appliedResetKey, setAppliedResetKey] = useState(resetKey);
-
-  if (appliedResetKey !== resetKey) {
-    setAppliedResetKey(resetKey);
-    if (selectedIds.size > 0) setSelectedIds(new Set<number>());
-  }
 
   const handleMutationError = useCallback(
     (error: unknown, webhookId: number, patch: WebhookConflictPatch) => {
@@ -85,7 +82,7 @@ export function useWebhookListCommands({
 
   const clearSelection = useCallback(() => {
     setSelectedIds(new Set<number>());
-  }, []);
+  }, [setSelectedIds]);
 
   const handleSelectedChange = useCallback(
     (webhookId: number, selected: boolean) => {
@@ -99,7 +96,7 @@ export function useWebhookListCommands({
         return next;
       });
     },
-    [],
+    [setSelectedIds],
   );
 
   const selectedWebhooks = useMemo(
@@ -147,7 +144,7 @@ export function useWebhookListCommands({
         reportBulkOutcome(isActive ? "enabled" : "disabled", results, rows);
       });
     },
-    [selectedWebhooks, updateWebhook, reportBulkOutcome],
+    [selectedWebhooks, updateWebhook, reportBulkOutcome, setSelectedIds],
   );
 
   const handleBulkEnable = useCallback(
@@ -171,7 +168,7 @@ export function useWebhookListCommands({
       setSelectedIds(new Set<number>());
       reportBulkOutcome("deleted", results, rows);
     });
-  }, [selectedWebhooks, deleteWebhook, reportBulkOutcome]);
+  }, [selectedWebhooks, deleteWebhook, reportBulkOutcome, setSelectedIds]);
 
   const conflictServerWebhook =
     conflict === null

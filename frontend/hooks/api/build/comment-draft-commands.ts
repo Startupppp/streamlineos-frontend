@@ -132,7 +132,7 @@ function useDraftCommands(autoReplay: boolean) {
       acknowledgeDraftIntent(command.scope, command.entry);
       setReceipt({ ownerKey: command.key, revision: command.entry.revision });
       setRecovery(null);
-      applyCommentDraftReceipt(qc, command.entry.ticketId, draft);
+      applyCommentDraftReceipt(qc, command.entry.ticketId, draft, command.key);
     },
   });
   const { mutateAsync: authorizedCommand } = mutation;

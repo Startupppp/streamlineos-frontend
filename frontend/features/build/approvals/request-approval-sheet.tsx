@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { isApiError } from "@/lib/api-envelope";
 import { createApprovalInputSchema } from "@/hooks/api/build/approvals-schema";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
@@ -24,6 +25,7 @@ import type { ApprovalEntityType } from "@/types/projects";
 import { useEntityItems, type SelectionState } from "./use-entity-items";
 import { RequestApprovalFormBody } from "./request-approval-form-body";
 import { entityTypeTitlePrefix } from "./approvals-constants";
+const EMPTY_SELECTION: SelectionState = { task: null, error: null, blocked: false };
 
 interface RequestApprovalSheetProps {
   open: boolean;
@@ -68,14 +70,10 @@ export function RequestApprovalSheet({
     entityType,
   ]);
   const committed = useRef<object | null>(null);
-  const [selection, setSelection] = useState<SelectionState>({
+  const [selection, setSelection] = useSourceOverride<string, SelectionState>(
     context,
-    task: null,
-    error: null,
-    blocked: false,
-  });
-  if (selection.context !== context)
-    setSelection({ context, task: null, error: null, blocked: false });
+    EMPTY_SELECTION,
+  );
   useLayoutEffect(() => {
     committed.current = {};
     return () => {
@@ -128,8 +126,7 @@ export function RequestApprovalSheet({
       !open ||
       !owner ||
       isPending ||
-      selection.blocked ||
-      selection.context !== context
+      selection.blocked
     )
       return;
     if (
@@ -163,7 +160,7 @@ export function RequestApprovalSheet({
     } catch (error: unknown) {
       if (committed.current === owner)
         setSelection((current) =>
-          current.context === context && current.task === selection.task
+          current.task === selection.task
             ? {
                 ...current,
                 error,
@@ -208,7 +205,6 @@ export function RequestApprovalSheet({
                 entityFetching={entityFetching}
                 selection={selection}
                 setSelection={setSelection}
-                context={context}
                 currentUserId={currentUserId}
                 projectId={projectId}
               />

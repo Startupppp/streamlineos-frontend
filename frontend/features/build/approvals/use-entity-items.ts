@@ -15,7 +15,6 @@ export interface EntityItem extends ComboboxOption {
 }
 
 export type SelectionState = {
-  context: string;
   task: { id: string; version?: number } | null;
   error: unknown;
   blocked: boolean;

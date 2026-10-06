@@ -81,11 +81,12 @@ export function applyCommentDraftReceipt(
   client: QueryClient,
   ticketId: number,
   draft: CommentDraft | null,
+  ownerKey?: string,
 ) {
-  void client.invalidateQueries({
-    queryKey: buildWorkQueryKeys.projects.commentDrafts.byTicket(ticketId),
-    exact: true,
-  });
+  const ticketDraftKey = buildWorkQueryKeys.projects.commentDrafts.byTicket(ticketId);
+  if (ownerKey === undefined)
+    void client.invalidateQueries({ queryKey: ticketDraftKey, exact: true });
+  else client.setQueryData(ticketDraftKey, { draft, ownerKey });
   void client.invalidateQueries({
     queryKey: buildWorkQueryKeys.projects.agentPulseAll(),
   });

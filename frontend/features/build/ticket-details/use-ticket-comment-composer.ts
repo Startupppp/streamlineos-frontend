@@ -4,6 +4,7 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -53,6 +54,12 @@ function restoreComposer(
   };
 }
 
+function isComposerUpdater(
+  action: ComposerState | ((value: ComposerState) => ComposerState),
+): action is (value: ComposerState) => ComposerState {
+  return typeof action === "function";
+}
+
 export function useTicketCommentComposer(ticketId: number, editable: boolean) {
   const saved = useTicketCommentDraft(ticketId, editable);
   const upsert = useUpsertCommentDraft();
@@ -63,32 +70,33 @@ export function useTicketCommentComposer(ticketId: number, editable: boolean) {
     currentContext.current = context;
   }, [context]);
   const draftBody = saved.fresh ? (saved.data?.draft?.body ?? "") : undefined;
-  const [state, setState] = useState(() =>
+  const [record, setRecord] = useState(() =>
     restoreComposer(context, saved.owner, ticketId),
   );
-  if (state.context !== context) {
-    const changedSession =
+  const fallback = useMemo(() => {
+    const changedSession = Boolean(
+      draftBody === undefined &&
       saved.owner &&
-      state.context?.startsWith(`${saved.owner.scope}:`) &&
-      !state.context.startsWith(`${saved.owner.key}:`);
-    setState(
-      restoreComposer(
-        context,
-        saved.owner,
-        ticketId,
-        undefined,
-        !changedSession,
-      ),
+      record.context !== context &&
+      record.context?.startsWith(`${saved.owner.scope}:`) &&
+      !record.context.startsWith(`${saved.owner.key}:`),
     );
-  } else if (!state.touched && !state.hydrated && draftBody !== undefined)
-    setState(
-      restoreComposer(
-        context,
-        saved.owner,
-        ticketId,
-        draftBody,
-      ),
-    );
+    return restoreComposer(context, saved.owner, ticketId, draftBody, !changedSession);
+  }, [record.context, context, saved.owner, ticketId, draftBody]);
+  const resolve = useCallback(
+    (value: ComposerState) =>
+      value.context === context && (value.touched || value.hydrated) ? value : fallback,
+    [context, fallback],
+  );
+  const state = resolve(record);
+  const setState = useCallback(
+    (action: ComposerState | ((value: ComposerState) => ComposerState)) =>
+      setRecord((value) => {
+        const base = resolve(value);
+        return isComposerUpdater(action) ? action(base) : action;
+      }),
+    [resolve],
+  );
   const body = context !== null && state.context === context ? state.body : "";
   const flush = useRef(upsert.flushStaged);
   useLayoutEffect(() => {
@@ -112,7 +120,7 @@ export function useTicketCommentComposer(ticketId: number, editable: boolean) {
           );
       }
     },
-    [context],
+    [context, setState],
   );
 
   useEffect(() => {
@@ -157,7 +165,7 @@ export function useTicketCommentComposer(ticketId: number, editable: boolean) {
         });
       }
     },
-    [context, ticketId, stageEdit],
+    [context, ticketId, stageEdit, setState],
   );
   const clear = useCallback(() => {
     if (context && currentContext.current === context)
@@ -170,7 +178,7 @@ export function useTicketCommentComposer(ticketId: number, editable: boolean) {
         volatile: false,
         error: null,
       });
-  }, [context]);
+  }, [context, setState]);
   const { refetch } = saved;
   const retry = useCallback(() => refetch(), [refetch]);
   const retryPersistence = useCallback(async () => {
@@ -196,6 +204,7 @@ export function useTicketCommentComposer(ticketId: number, editable: boolean) {
     body,
     stageEdit,
     persist,
+    setState,
   ]);
   const persistenceError =
     state.context === context && !(state.staged && upsert.receipt?.revision === state.staged.entry.revision)

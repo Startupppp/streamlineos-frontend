@@ -272,7 +272,7 @@ const CEILING_LEDGER_PATH = fileURLToPath(new URL("./assertion-ceiling-ledger.js
 // `as "view"|"comment"|"edit"` in page-grants-sheet narrowed via ACCESS_OPTIONS.find;
 // 7 `jest.requireMock() as {}` in product-scope-pages.test-harness replaced with
 // `: {}` declaration-style annotations.
-const CEILING_FLOOR_TOTAL = 404;
+const CEILING_FLOOR_TOTAL = 403;
 
 function loadCeilingLedger() {
   try {

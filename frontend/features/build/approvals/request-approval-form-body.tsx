@@ -42,7 +42,6 @@ interface RequestApprovalFormBodyProps {
   entityFetching: boolean;
   selection: SelectionState;
   setSelection: Dispatch<SetStateAction<SelectionState>>;
-  context: string;
   currentUserId?: string;
   projectId: number;
 }
@@ -54,7 +53,6 @@ export function RequestApprovalFormBody({
   entityFetching,
   selection,
   setSelection,
-  context,
   currentUserId,
   projectId,
 }: RequestApprovalFormBodyProps) {
@@ -70,7 +68,6 @@ export function RequestApprovalFormBody({
     function handleEntityChange(value: string) {
       field.onChange(value);
       setSelection({
-        context,
         task:
           entityType === "task" && value
             ? {

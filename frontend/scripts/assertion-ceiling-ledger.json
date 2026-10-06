@@ -241,10 +241,6 @@
       "as": 1,
       "nonNull": 0
     },
-    "features/build/ticket-details/use-ticket-detail.ts": {
-      "as": 1,
-      "nonNull": 0
-    },
     "features/build/views/kanban-board-utils.ts": {
       "as": 1,
       "nonNull": 0

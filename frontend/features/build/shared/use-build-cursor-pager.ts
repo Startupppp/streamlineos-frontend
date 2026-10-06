@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { CursorPager } from "@/components/ui/table-pagination";
 
@@ -48,11 +48,13 @@ export function useBuildCursorPager(resetKey?: string): CursorPager {
     [pathname, router, searchParams],
   );
 
-  const [appliedKey, setAppliedKey] = useState(resetKey);
-  if (appliedKey !== resetKey) {
-    setAppliedKey(resetKey);
-    if (stack.length > 1) write([undefined]);
-  }
+  const prevKeyRef = useRef(resetKey);
+  useEffect(() => {
+    if (prevKeyRef.current !== resetKey) {
+      prevKeyRef.current = resetKey;
+      if (stack.length > 1) write([undefined]);
+    }
+  }, [resetKey, stack, write]);
 
   const goNext = useCallback(
     (nextCursor: string | null | undefined) => {
