@@ -13,6 +13,9 @@ const BASE_CYCLE: Cycle = {
   status: "active",
   startDate: "2026-10-01",
   endDate: "2026-10-14",
+  createdBy: "user-1",
+  createdAt: null,
+  updatedAt: null,
 };
 
 const BASE_FORM: CycleFormValues = {

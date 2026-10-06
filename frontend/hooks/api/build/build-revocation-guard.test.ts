@@ -4,7 +4,7 @@ import { useReconciledBuildScopes } from "@/features/build/navigation/use-reconc
 import { useBuildScopeResolve } from "@/hooks/api/build/scope-directory";
 import { useBuildScopeStars } from "@/features/build/navigation/use-build-nav-preferences";
 import type { BuildScopeResolvedRef } from "@/hooks/api/build/scope-directory";
-import type { BuildScopeRef } from "@/features/build/navigation/use-build-nav-preferences";
+import type { BuildScopeRef } from "@/features/build/navigation/build-nav-storage";
 
 jest.mock("@/hooks/api/build/scope-directory", () => ({
   useBuildScopeResolve: jest.fn(),

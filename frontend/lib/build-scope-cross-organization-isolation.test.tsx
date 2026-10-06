@@ -6,7 +6,7 @@ import {
   useBuildScopeRecents,
   useBuildNavPins,
 } from "@/features/build/navigation/use-build-nav-preferences";
-import type { BuildScopeRef } from "@/features/build/navigation/use-build-nav-preferences";
+import type { BuildScopeRef } from "@/features/build/navigation/build-nav-storage";
 import { QueryClient } from "@tanstack/react-query";
 import { scopedQueryKeyHashFn, authenticatedScope } from "@/lib/query-scope";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";

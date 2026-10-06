@@ -3,7 +3,7 @@ import { UpdatesPage } from "./updates-page";
 import { ApiError } from "@/lib/api-envelope";
 
 const mockReplace = jest.fn();
-const mockSearchParamsGet = jest.fn((): string | null => null);
+const mockSearchParamsGet = jest.fn<string | null, [string]>(() => null);
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: mockReplace }),
