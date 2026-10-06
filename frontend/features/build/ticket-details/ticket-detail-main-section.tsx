@@ -215,7 +215,7 @@ export function TicketDetailMainSection({
                       <AttachmentContextMenu key={att.id} attachment={att}>
                         <button
                           type="button"
-                          className="group relative aspect-video rounded-md overflow-hidden bg-muted border hover:border-primary/50 transition-all text-left"
+                          className="group relative aspect-video rounded-md overflow-hidden bg-muted border hover:border-foreground/40 transition-all text-left"
                         >
                           <AttachmentImage fileUrl={att.fileUrl} fileName={att.fileName} />
                           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none" />
@@ -228,7 +228,7 @@ export function TicketDetailMainSection({
                       key={att.id}
                       type="button"
                       onClick={() => void viewFile(att.fileUrl)}
-                      className="group relative aspect-video rounded-md overflow-hidden bg-muted border hover:border-primary/50 transition-all text-left"
+                      className="group relative aspect-video rounded-md overflow-hidden bg-muted border hover:border-foreground/40 transition-all text-left"
                     >
                       <div className="flex items-center justify-center h-full text-muted-foreground text-micro p-1 text-center">
                         {att.fileName}

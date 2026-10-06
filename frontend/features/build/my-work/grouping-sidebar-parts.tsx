@@ -35,7 +35,7 @@ export const SidebarRow = memo(function SidebarRow({
       className={cn(
         "flex w-full min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors",
         isActive
-          ? "bg-primary/10 text-primary"
+          ? "bg-foreground text-background shadow-sm"
           : "text-foreground hover:bg-muted/60",
       )}
     >
@@ -51,7 +51,7 @@ export const SidebarRow = memo(function SidebarRow({
       <span
         className={cn(
           "shrink-0 rounded px-1 py-0.5 text-micro font-normal tabular-nums",
-          isActive ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground",
+          isActive ? "bg-background/20 text-background" : "bg-muted text-muted-foreground",
         )}
       >
         {row.count}

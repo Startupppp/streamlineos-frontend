@@ -10,15 +10,7 @@ import {
 } from "@animateicons/react/lucide";
 import type { IconHandle } from "@animateicons/react";
 import { cn } from "@/lib/utils";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
-import { VIEW_TYPES, isViewType, type ViewType } from "@/lib/build/view-types";
+import { VIEW_TYPES, type ViewType } from "@/lib/build/view-types";
 
 export type { ViewType } from "@/lib/build/view-types";
 export { parseViewType } from "@/lib/build/view-types";
@@ -65,64 +57,54 @@ export const ViewSwitcher = memo(function ViewSwitcher({
     ? ALL_VIEWS.filter((v) => allowedViews.includes(v.value))
     : ALL_VIEWS;
 
-  const handleSelectChange = useCallback(
-    (value: string) => {
-      if (isViewType(value)) {
-        if (allowedViews && !allowedViews.includes(value)) return;
-        onViewChange(value);
-      }
+  const handleSelect = useCallback(
+    (value: ViewType) => {
+      if (allowedViews && !allowedViews.includes(value)) return;
+      onViewChange(value);
     },
     [allowedViews, onViewChange],
   );
 
-  const activeMeta = views.find((v) => v.value === activeView) ?? views[0];
-  const ActiveAnimatedIcon = activeMeta?.animatedIcon;
-  const ActiveStaticIcon = activeMeta?.staticIcon;
-
   return (
-    <div className={cn("flex min-w-0 items-center", className)}>
-      <Select value={activeView} onValueChange={handleSelectChange}>
-        <SelectTrigger
-          className={cn(
-            FILTER_SELECT_TRIGGER,
-            "size-9 shrink-0 justify-center gap-0 px-0 sm:h-9 sm:w-fit sm:min-w-[7.5rem] sm:justify-between sm:gap-1 sm:px-2",
-          )}
-          aria-label="Select view"
-        >
-          <span className="inline-flex items-center gap-1.5 sm:hidden">
-            {ActiveAnimatedIcon ? (
-              <ActiveAnimatedIcon size={14} className="h-3.5 w-3.5" />
-            ) : ActiveStaticIcon ? (
-              <ActiveStaticIcon className="h-3.5 w-3.5" />
+    <div
+      role="group"
+      aria-label="Select view"
+      className={cn(
+        "inline-flex h-9 max-w-full items-center gap-1 overflow-x-auto overscroll-x-contain rounded-lg border border-input bg-card p-1 scrollbar-hide",
+        className,
+      )}
+    >
+      {views.map((v) => {
+        const AnimatedIcon = v.animatedIcon;
+        const StaticIcon = v.staticIcon;
+        const isActive = v.value === activeView;
+        function onClick() {
+          handleSelect(v.value);
+        }
+        return (
+          <button
+            key={v.value}
+            type="button"
+            onClick={onClick}
+            aria-label={v.label}
+            aria-pressed={isActive}
+            className={cn(
+              "inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium leading-none transition-colors press-scale outline-none motion-reduce:transition-none",
+              "focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background",
+              isActive
+                ? "bg-foreground text-background shadow-sm"
+                : "bg-transparent text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {AnimatedIcon ? (
+              <AnimatedIcon size={14} className="h-3.5 w-3.5" />
+            ) : StaticIcon ? (
+              <StaticIcon className="h-3.5 w-3.5" />
             ) : null}
-            <span className="sr-only">{activeMeta?.label ?? "View"}</span>
-          </span>
-          <span className="hidden min-w-0 sm:inline-flex">
-            <SelectValue
-              placeholder={activeMeta?.label ?? "View"}
-              className="font-normal"
-            />
-          </span>
-        </SelectTrigger>
-        <SelectContent className="min-w-[10rem]">
-          {views.map((v) => {
-            const AnimatedIcon = v.animatedIcon;
-            const StaticIcon = v.staticIcon;
-            return (
-              <SelectItem key={v.value} value={v.value} className="font-normal">
-                <span className="flex items-center gap-1.5">
-                  {AnimatedIcon ? (
-                    <AnimatedIcon size={14} className="h-3.5 w-3.5 text-muted-foreground" />
-                  ) : StaticIcon ? (
-                    <StaticIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                  ) : null}
-                  {v.label}
-                </span>
-              </SelectItem>
-            );
-          })}
-        </SelectContent>
-      </Select>
+            <span className="hidden sm:inline">{v.label}</span>
+          </button>
+        );
+      })}
     </div>
   );
 });

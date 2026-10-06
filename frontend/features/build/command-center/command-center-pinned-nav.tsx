@@ -28,7 +28,7 @@ const shellClass = cn(
   "inline-flex max-w-full items-center gap-1.5 rounded-md border border-border/60 bg-card/60 px-2.5 py-1",
   "text-xs text-muted-foreground shadow-sm backdrop-blur-sm supports-[backdrop-filter]:bg-card/40",
   "transition-[border-color,background-color,box-shadow,color] duration-150",
-  "hover:border-primary/30 hover:bg-primary/[0.05] hover:text-foreground hover:shadow-md",
+  "hover:border-foreground/30 hover:bg-foreground/[0.04] hover:text-foreground hover:shadow-md",
 );
 
 function PinnedChip({
