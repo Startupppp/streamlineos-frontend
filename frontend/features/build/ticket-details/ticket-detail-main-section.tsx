@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState } from "react";
+import { useState, useCallback, useRef } from "react";
 import dynamic from "next/dynamic";
 import { motion, useReducedMotion } from "framer-motion";
 import { Textarea } from "@/components/ui/textarea";
@@ -52,6 +52,8 @@ interface TicketDetailMainSectionProps {
   variant?: "full" | "preview";
   onApplyDescription: (html: string) => void;
   onTitleChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  onCommitTitle: (nextTitle: string) => string | null;
+  onRevertTitle: () => void;
   onDescriptionChange: (html: string) => void;
   canUpdate: boolean;
 }
@@ -114,12 +116,49 @@ export function TicketDetailMainSection({
   variant = "full",
   onApplyDescription,
   onTitleChange,
+  onCommitTitle,
+  onRevertTitle,
   onDescriptionChange,
   canUpdate,
 }: TicketDetailMainSectionProps) {
   const isPreview = variant === "preview";
   const reduceMotion = useReducedMotion();
   const [editingTitle, setEditingTitle] = useState(false);
+  const [titleError, setTitleError] = useState<string | null>(null);
+  const skipTitleBlurRef = useRef(false);
+
+  const finishTitleEdit = useCallback(
+    (commit: boolean) => {
+      if (commit) {
+        const error = onCommitTitle(localTitle);
+        if (error) {
+          setTitleError(error);
+          return;
+        }
+      } else {
+        skipTitleBlurRef.current = true;
+        onRevertTitle();
+      }
+      setTitleError(null);
+      setEditingTitle(false);
+    },
+    [localTitle, onCommitTitle, onRevertTitle],
+  );
+
+  const handleTitleKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        finishTitleEdit(false);
+        return;
+      }
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        finishTitleEdit(true);
+      }
+    },
+    [finishTitleEdit],
+  );
   const ticketDetailAi = useTicketDetailAi({
     projectId,
     ticketId,
@@ -145,7 +184,7 @@ export function TicketDetailMainSection({
             className="h-8 px-2 text-xs text-muted-foreground hover:bg-transparent hover:text-foreground"
             aria-expanded={editingTitle}
             aria-controls={`ticket-title-${ticketId}`}
-            onClick={() => setEditingTitle(false)}
+            onClick={() => finishTitleEdit(true)}
           >
             Done editing
           </Button>
@@ -159,13 +198,34 @@ export function TicketDetailMainSection({
           <Textarea
             id={`ticket-title-${ticketId}`}
             value={localTitle}
-            onChange={onTitleChange}
+            onChange={(event) => {
+              setTitleError(null);
+              onTitleChange(event);
+            }}
             rows={2}
             autoFocus
+            aria-invalid={titleError ? true : undefined}
+            aria-describedby={titleError ? `ticket-title-error-${ticketId}` : undefined}
             className="h-auto min-h-12 w-full max-w-full resize-none break-words rounded-md border-border bg-card px-3 py-2 text-base font-medium leading-snug shadow-none transition-colors duration-200 [overflow-wrap:anywhere] [word-break:break-word] hover:border-foreground/30 focus-visible:ring-1"
             placeholder="Ticket title"
-            onBlur={() => setEditingTitle(false)}
+            onKeyDown={handleTitleKeyDown}
+            onBlur={() => {
+              if (skipTitleBlurRef.current) {
+                skipTitleBlurRef.current = false;
+                return;
+              }
+              finishTitleEdit(true);
+            }}
           />
+          {titleError ? (
+            <p
+              id={`ticket-title-error-${ticketId}`}
+              className="text-xs text-status-danger-ink"
+              role="alert"
+            >
+              {titleError}
+            </p>
+          ) : null}
         </div>
       ) : canUpdate ? (
         <button

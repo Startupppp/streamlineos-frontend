@@ -58,7 +58,7 @@ export function ActivityFeed({
   return (
     <div className="w-full space-y-4">
       <div className="flex w-full flex-1 min-w-0 flex-col gap-2">
-        <h4 className="flex min-w-0 flex-1 items-center gap-1.5 text-dense font-medium uppercase tracking-wide text-muted-foreground">
+        <h4 className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5 pr-2 text-dense font-medium uppercase tracking-wide text-muted-foreground max-md:pr-14">
           <MessageSquare className="h-3.5 w-3.5 shrink-0" />
           <span className="truncate">Activity</span>
           {comments.length > 0 && (

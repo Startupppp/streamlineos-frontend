@@ -23,7 +23,7 @@ import {
   useGroupRenderLimit,
 } from "./list-view-group-rows";
 
-function formatGroupLabel(groupKey: string): string {
+export function formatGroupLabel(groupKey: string): string {
   return statusConfig[groupKey]?.label ?? groupKey.replaceAll("_", " ");
 }
 

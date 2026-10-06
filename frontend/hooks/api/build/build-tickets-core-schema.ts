@@ -7,7 +7,10 @@ import {
 
 export const ticketPriorityContract = projectsTicketsCreateTicketResponseSchema.shape.priority;
 
-export const ticketRowContract = projectsTicketsCreateTicketResponseSchema;
+export const ticketRowContract = projectsTicketsCreateTicketResponseSchema.extend({
+  storyPoints: projectsTicketsCreateTicketResponseSchema.shape.storyPoints.optional().default(null),
+  estimate: projectsTicketsCreateTicketResponseSchema.shape.estimate.optional().default(null),
+});
 
 export const ticketListPageContract = projectsTicketsListTicketsResponseSchema;
 

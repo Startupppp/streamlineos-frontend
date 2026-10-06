@@ -24,6 +24,7 @@ import { TicketDialogDescriptionSection } from "./ticket-dialog-description-sect
 import { TicketDialogFooter } from "./ticket-dialog-footer";
 import { useCan } from "@/hooks/api/access";
 import { useCreateTicketDialogState } from "./use-create-ticket-dialog-state";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface CreateTicketDialogProps {
   projectId?: number;
@@ -83,6 +84,9 @@ function CreateTicketDialogContent({
     createTicketAi,
     handleOpenTrigger,
     handleOpenChange,
+    discardConfirmOpen,
+    handleDiscardConfirm,
+    handleDiscardCancel,
     handleProjectChange,
     handleShowLinksEditor,
     handleCreateMoreChange,
@@ -124,7 +128,15 @@ function CreateTicketDialogContent({
         ))}
 
       <Dialog open={resolvedOpen} onOpenChange={handleOpenChange}>
-        <DialogContent className="flex h-auto max-h-[min(720px,calc(100dvh-100px))] flex-col gap-0 overflow-hidden p-0 md:flex md:h-auto md:max-h-[min(720px,calc(100dvh-100px))] md:max-w-2xl md:overflow-hidden md:sm:max-w-2xl">
+        <DialogContent
+          className="flex h-auto max-h-[min(720px,calc(100dvh-100px))] flex-col gap-0 overflow-hidden p-0 md:flex md:h-auto md:max-h-[min(720px,calc(100dvh-100px))] md:max-w-2xl md:overflow-hidden md:sm:max-w-2xl"
+          onOpenAutoFocus={(event) => {
+            event.preventDefault();
+            requestAnimationFrame(() => {
+              titleRef.current?.focus();
+            });
+          }}
+        >
           <DialogHeader className="shrink-0 border-b border-border/60 px-5 pb-3 pt-4">
             <div className="flex min-w-0 items-center gap-2 pr-8">
               <Select
@@ -237,6 +249,18 @@ function CreateTicketDialogContent({
           </Form>
         </DialogContent>
       </Dialog>
+      <ConfirmDialog
+        open={discardConfirmOpen}
+        onOpenChange={(open) => {
+          if (!open) handleDiscardCancel();
+        }}
+        title="Discard draft?"
+        description="You have unsaved changes on this issue. Closing will discard them."
+        confirmLabel="Discard"
+        cancelLabel="Keep editing"
+        destructive
+        onConfirm={handleDiscardConfirm}
+      />
     </>
   );
 }

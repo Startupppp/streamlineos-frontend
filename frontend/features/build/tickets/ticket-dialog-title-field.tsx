@@ -54,6 +54,7 @@ export function TicketDialogTitleField({
                     titleRef.current = el;
                   }}
                   autoFocus
+                  maxLength={200}
                   autoCapitalize="off"
                   autoCorrect="off"
                   spellCheck={false}

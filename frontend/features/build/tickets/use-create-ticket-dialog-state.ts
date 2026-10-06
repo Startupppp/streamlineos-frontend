@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useMemo } from "react";
+import { useCallback, useState, useMemo, useRef } from "react";
 import { useProjects } from "@/hooks/api/build/projects";
 import { useSourceOverride } from "@/hooks/common/use-source-override";
 import {
@@ -39,8 +39,10 @@ export function useCreateTicketDialogState({
   }, [onExternalOpenChange]);
 
   const [internalOpen, setOpen] = useState(false);
-  const resolvedOpen =
-    externalOpen !== undefined ? externalOpen || internalOpen : internalOpen;
+  const isExternallyControlled = externalOpen !== undefined;
+  const resolvedOpen = isExternallyControlled
+    ? Boolean(externalOpen)
+    : internalOpen;
 
   const { data: projectsData, isLoading: projectsLoading } = useProjects(
     { status: "ACTIVE", limit: 100 },
@@ -79,12 +81,20 @@ export function useCreateTicketDialogState({
     projectId: effectiveProjectId,
     defaultStatus,
     defaultCycleId,
-    open: internalOpen,
-    setOpen,
+    open: resolvedOpen,
+    setOpen: (value: boolean) => {
+      if (isExternallyControlled) {
+        onExternalOpenChange?.(value);
+        return;
+      }
+      setOpen(value);
+    },
     onClose: handleExternalClose,
   });
 
   useRegisterDirtyState(resolvedOpen && form.formState.isDirty);
+  const [discardConfirmOpen, setDiscardConfirmOpen] = useState(false);
+  const pendingCloseRef = useRef(false);
 
   const [showLinksEditor, setShowLinksEditor] = useState(false);
   const [descriptionEditorKey, setDescriptionEditorKey] = useState(0);
@@ -146,37 +156,77 @@ export function useCreateTicketDialogState({
     handleDrop,
   } = useTicketFileDrop({ files, addFiles, handleRemoveFile });
 
-  const handleOpenTrigger = useCallback(() => setOpen(true), []);
+  const handleOpenTrigger = useCallback(() => {
+    if (isExternallyControlled) {
+      onExternalOpenChange?.(true);
+      return;
+    }
+    setOpen(true);
+  }, [isExternallyControlled, onExternalOpenChange]);
+
+  const finalizeClose = useCallback(() => {
+    titleInlineSession?.reject();
+    descriptionInlineSession?.reject();
+    fieldsInlineSession?.reject();
+    setTitleInlineSession(null);
+    setDescriptionInlineSession(null);
+    setFieldsInlineSession(null);
+    setDiscardConfirmOpen(false);
+    pendingCloseRef.current = false;
+    if (isExternallyControlled) {
+      onExternalOpenChange?.(false);
+    } else {
+      setOpen(false);
+    }
+    if (!projectLocked) {
+      setSelectedProjectId(null);
+    }
+  }, [
+    titleInlineSession,
+    descriptionInlineSession,
+    fieldsInlineSession,
+    isExternallyControlled,
+    onExternalOpenChange,
+    projectLocked,
+    setSelectedProjectId,
+  ]);
 
   const handleOpenChange = useCallback(
     (v: boolean) => {
       if (!v && (isPending || isUploading)) return;
-      if (!v) {
-        titleInlineSession?.reject();
-        descriptionInlineSession?.reject();
-        fieldsInlineSession?.reject();
-        setTitleInlineSession(null);
-        setDescriptionInlineSession(null);
-        setFieldsInlineSession(null);
+      if (!v && form.formState.isDirty) {
+        pendingCloseRef.current = true;
+        setDiscardConfirmOpen(true);
+        return;
       }
-      setOpen(v);
-      onExternalOpenChange?.(v);
-      if (!v && !projectLocked) {
-        setSelectedProjectId(null);
+      if (!v) {
+        finalizeClose();
+        return;
+      }
+      if (isExternallyControlled) {
+        onExternalOpenChange?.(true);
+      } else {
+        setOpen(true);
       }
     },
     [
-      setOpen,
-      onExternalOpenChange,
-      projectLocked,
-      setSelectedProjectId,
-      titleInlineSession,
-      descriptionInlineSession,
-      fieldsInlineSession,
       isPending,
       isUploading,
+      form.formState.isDirty,
+      finalizeClose,
+      isExternallyControlled,
+      onExternalOpenChange,
     ],
   );
+
+  const handleDiscardConfirm = useCallback(() => {
+    finalizeClose();
+  }, [finalizeClose]);
+
+  const handleDiscardCancel = useCallback(() => {
+    pendingCloseRef.current = false;
+    setDiscardConfirmOpen(false);
+  }, []);
 
   const handleProjectChange = useCallback((value: string) => {
     if (isPending || isUploading) return;
@@ -242,6 +292,9 @@ export function useCreateTicketDialogState({
     createTicketAi,
     handleOpenTrigger,
     handleOpenChange,
+    discardConfirmOpen,
+    handleDiscardConfirm,
+    handleDiscardCancel,
     handleProjectChange,
     handleShowLinksEditor,
     handleCreateMoreChange,

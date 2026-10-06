@@ -1,5 +1,6 @@
 "use client";
 
+import { useModuleEnabled } from "@/hooks/api/access";
 import { useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -71,10 +72,12 @@ export function useClientTimeline(clientId: number) {
 }
 
 export function useSimpleClientsList() {
+  const crmEnabled = useModuleEnabled("crm");
   return useGatedQuery("crm:clients:read", {
     queryKey: queryKeys.clients.simpleList(),
     queryFn: ({ signal }) => apiClient.get<SimpleClient[]>("/clients/list", undefined, signal, simpleClientsLazy),
     staleTime: 2 * 60_000,
+    enabled: crmEnabled,
   });
 }
 

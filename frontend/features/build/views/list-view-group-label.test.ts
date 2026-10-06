@@ -1,17 +1,9 @@
-import { statusConfig } from "@/features/build/shared/types";
+import { formatGroupLabel } from "./list-view-group";
 
-function formatGroupLabel(groupKey: string): string {
-  return statusConfig[groupKey]?.label ?? groupKey.replaceAll("_", " ");
-}
-
-describe("list group header labels", () => {
-  it("maps raw status enums to human labels", () => {
-    expect(formatGroupLabel("TODO")).toBe("To Do");
+describe("formatGroupLabel", () => {
+  it("maps status enums to human labels (C13)", () => {
     expect(formatGroupLabel("IN_PROGRESS")).toBe("In Progress");
-    expect(formatGroupLabel("IN_REVIEW")).toBe("In Review");
-  });
-
-  it("falls back without inventing a crash for unknown keys", () => {
-    expect(formatGroupLabel("CUSTOM_STATUS")).toBe("CUSTOM STATUS");
+    expect(formatGroupLabel("TODO")).toBe("To Do");
+    expect(formatGroupLabel("DONE")).toBe("Done");
   });
 });

@@ -114,6 +114,7 @@ export function useHrAttendanceHistory(cursor: string | undefined, limit: number
   const { data: session } = useSession();
   const orgId = session?.orgId;
   const canAttendance = useCan("self:attendance");
+  const hrEnabled = useModuleEnabled("hr");
   const params = cursor ? { cursor, limit } : { limit };
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.attendanceHistory(params),
@@ -136,7 +137,7 @@ export function useHrAttendanceHistory(cursor: string | undefined, limit: number
     },
     staleTime: 60_000,
     placeholderData: keepPreviousData,
-    enabled: !!orgId && canAttendance,
+    enabled: !!orgId && hrEnabled && canAttendance,
   });
 }
 

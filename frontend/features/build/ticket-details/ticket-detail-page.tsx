@@ -100,6 +100,8 @@ export function TicketDetailPage({
     discardConflictingEdit,
     localTitle,
     handleTitleChange,
+    commitTitle,
+    revertTitle,
     handleDescriptionEditorChange,
     autoSave,
     handleDelete,
@@ -222,7 +224,7 @@ export function TicketDetailPage({
               </p>
             </div>
           ) : null}
-          <div className="min-h-0 min-w-0 flex-1 basis-0 overflow-y-auto bg-gradient-to-b from-card/80 to-background/40 px-4 pb-4 pt-2 scrollbar-hide md:px-6 md:pb-5">
+          <div className="min-h-0 min-w-0 flex-1 basis-0 overflow-y-auto bg-gradient-to-b from-card/80 to-background/40 px-4 pb-[max(5rem,calc(env(safe-area-inset-bottom)+4rem))] pt-2 scrollbar-hide max-md:pr-16 md:px-6 md:pb-5 md:pr-6">
             {ready ? (
             <TicketDetailMainSection
               ticket={ready.ticket}
@@ -235,6 +237,8 @@ export function TicketDetailPage({
               highlightCommentId={highlightCommentId}
               onApplyDescription={handleApplyAiDescription}
               onTitleChange={handleTitleChange}
+              onCommitTitle={commitTitle}
+              onRevertTitle={revertTitle}
               onDescriptionChange={handleDescriptionEditorChange}
               canUpdate={canUpdate}
             />

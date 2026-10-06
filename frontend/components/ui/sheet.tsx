@@ -96,6 +96,12 @@ function SheetContent({
         )}
         {...props}
       >
+        <SheetPrimitive.Description
+          data-slot="sheet-default-description"
+          className="sr-only"
+        >
+          Panel
+        </SheetPrimitive.Description>
         {children}
         {showCloseButton && (
           <SheetPrimitive.Close className={SURFACE_CLOSE_BUTTON}>

@@ -138,6 +138,8 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
                 </div>
                 <FormControl>
                   <Input
+                  data-project-create-name="true"
+                  autoFocus
                     placeholder="e.g. Website Redesign"
                     maxLength={PROJECT_NAME_MAX}
                     {...field}

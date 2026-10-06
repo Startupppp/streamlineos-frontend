@@ -157,7 +157,7 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
   return (
     <PageState resolution={resolution} loading={loadingSkeleton} onRetry={handleRetryRelations} compact>
       <div>
-        <div className="flex items-center justify-between mb-2">
+        <div className="mb-2 flex items-center justify-between gap-2 max-md:pr-14">
           <h4 className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
             <Link2 className="h-3.5 w-3.5" />
             Relations

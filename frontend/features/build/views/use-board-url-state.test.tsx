@@ -8,6 +8,7 @@ import {
   mockUpdateViewMutate,
   nameEvent,
   setParams,
+  setPathname,
 } from "./use-board-url-state-test-harness";
 import { useBoardUrlState } from "./use-board-url-state";
 
@@ -146,6 +147,18 @@ describe("useBoardUrlState — ticket round trips preserve issue collection stat
     expect(mockReplace).toHaveBeenCalledWith(
       "/build/1/tickets/TEST-81?comment=8&returnTo=%2Fbuild%2F1%2Fissues%3FviewId%3D9%26view%3Dlist%26q%3Dlogin%26status%3DTODO%26cycle%3D7",
     );
+  });
+
+  it("preserves list view while a ticket panel URL is open (C12)", () => {
+    setPathname("/build/1/tickets/TEST-81");
+    setParams({
+      returnTo: "/build/1/issues?view=list&status=TODO",
+    });
+
+    const { result } = renderHook(() => useBoardUrlState(1));
+
+    expect(result.current.view).toBe("list");
+    expect(result.current.filterStatus).toBe("TODO");
   });
 });
 

@@ -99,6 +99,8 @@ jest.mock("./use-ticket-detail", () => ({
     saving: false,
     localTitle: mockResolvedTicket?.title ?? "",
     handleTitleChange: jest.fn(),
+    commitTitle: jest.fn(() => null),
+    revertTitle: jest.fn(),
     handleDescriptionEditorChange: jest.fn(),
     autoSave: jest.fn(),
     handleDelete: jest.fn(),

@@ -249,10 +249,28 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
   const handleTitleChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       setLocalTitle(e.target.value);
-      debouncedSave({ title: e.target.value });
     },
-    [debouncedSave, setLocalTitle],
+    [setLocalTitle],
   );
+
+  const commitTitle = useCallback(
+    (nextTitle: string): string | null => {
+      const trimmed = nextTitle.trim();
+      if (!trimmed) {
+        return "Title is required";
+      }
+      setLocalTitle(trimmed);
+      if (trimmed !== (ticket?.title ?? "")) {
+        debouncedSave({ title: trimmed });
+      }
+      return null;
+    },
+    [debouncedSave, setLocalTitle, ticket?.title],
+  );
+
+  const revertTitle = useCallback(() => {
+    setLocalTitle(ticket?.title ?? "");
+  }, [setLocalTitle, ticket?.title]);
 
   const handleDescriptionEditorChange = useCallback(
     (html: string) => {
@@ -279,6 +297,8 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
     discardConflictingEdit,
     localTitle,
     handleTitleChange,
+    commitTitle,
+    revertTitle,
     handleDescriptionEditorChange,
     autoSave,
     handleDelete,

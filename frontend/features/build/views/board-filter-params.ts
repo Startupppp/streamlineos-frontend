@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { boardCollectionSearchParams } from "@/features/build/ticket-details/build-ticket-detail-url";
 import {
   BUILD_LIST_CURSOR_PARAM,
   buildListSearchParams,
@@ -35,10 +36,20 @@ export function parseBoardOrderDir(v: string | null): TicketOrderDir | undefined
   return isTicketOrderDir(v) ? v : undefined;
 }
 
+function projectIdFromPath(pathname: string): number {
+  const match = pathname.match(/^\/build\/(\d+)(?:\/|$)/);
+  return match ? Number(match[1]) : 0;
+}
+
 export function useBoardFilterParams() {
-  const searchParams = useSearchParams();
+  const rawSearchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
+  const projectId = projectIdFromPath(pathname);
+  const searchParams = useMemo(
+    () => boardCollectionSearchParams(projectId, pathname, rawSearchParams),
+    [projectId, pathname, rawSearchParams],
+  );
 
   const q = searchParams.get("q") ?? "";
   const filterStatus = searchParams.get("status") ?? "";
@@ -92,6 +103,7 @@ export function useBoardFilterParams() {
   );
 
   useEffect(() => {
+    if (/\/tickets\//.test(pathname)) return;
     const updates: Record<string, string | null> = {};
     let changed = false;
     if (rawPriority && !filterPriority) {

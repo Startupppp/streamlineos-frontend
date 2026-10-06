@@ -101,7 +101,7 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
             </p>
           )}
 
-          <StatCardGrid cols={5}>
+          <StatCardGrid cols={5} stackOnMobile={2} className="max-md:pr-2">
             <StatCard
               label="Open issues"
               value={totalOpen !== null ? totalOpen : "—"}
@@ -269,7 +269,7 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
           <div
             role="tablist"
             aria-label="Project areas"
-            className="inline-flex h-9 items-center gap-1 rounded-lg border border-input bg-card p-1"
+            className="mb-[max(0.5rem,env(safe-area-inset-bottom))] inline-flex h-9 max-w-full flex-wrap items-center gap-1 rounded-lg border border-input bg-card p-1 max-md:mb-16 max-md:pr-14"
           >
             {[
               { href: `${basePath}/issues`, label: "Issues" },

@@ -16,12 +16,20 @@ describe("create ticket validation — bad paths first", () => {
     expect(result.success).toBe(false);
   });
 
-  it("rejects titles that exceed 500 characters", () => {
+  it("rejects titles that exceed 200 characters", () => {
     const result = formSchema.safeParse({
-      title: "a".repeat(501),
+      title: "a".repeat(201),
       type: "TASK",
     });
     expect(result.success).toBe(false);
+  });
+
+  it("accepts a title at the 200-character search/API limit", () => {
+    const result = formSchema.safeParse({
+      title: "a".repeat(200),
+      type: "TASK",
+    });
+    expect(result.success).toBe(true);
   });
 
   it("rejects titles with no alphanumeric characters", () => {
