@@ -52,3 +52,13 @@ export function getTicketDetailHref(
   if (commentId != null && commentId !== "") return `${base}?comment=${commentId}`;
   return base;
 }
+
+export function ticketKeyMatchesProject(
+  parsed: ParsedTicketKey | null,
+  projectKey: string | null | undefined,
+): boolean {
+  if (!parsed) return false;
+  if (parsed.projectKey == null || parsed.projectKey === "") return true;
+  if (projectKey == null || projectKey === "") return false;
+  return parsed.projectKey.toUpperCase() === projectKey.toUpperCase();
+}

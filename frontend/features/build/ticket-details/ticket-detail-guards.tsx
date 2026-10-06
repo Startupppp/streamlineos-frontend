@@ -25,6 +25,7 @@ interface TicketDetailGuardsProps {
   byKeyError: Error | null;
   byKeyPending: boolean;
   byKeyTicketExists: boolean;
+  routeKeyMismatch: boolean;
   isLoading: boolean;
   ticketError: Error | null;
   ticketExists: boolean;
@@ -60,6 +61,7 @@ export function TicketDetailGuards({
   byKeyError,
   byKeyPending,
   byKeyTicketExists,
+  routeKeyMismatch,
   isLoading,
   ticketError,
   ticketExists,
@@ -79,6 +81,8 @@ export function TicketDetailGuards({
       </PageWrapper>
     );
   }
+
+  if (routeKeyMismatch) return notFound();
 
   if (byKeyError) {
     if (isApiError(byKeyError) && getApiErrorCode(byKeyError) === "PROJECTS_FORBIDDEN_TICKET") {

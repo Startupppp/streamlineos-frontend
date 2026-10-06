@@ -243,23 +243,26 @@ function MyPendingUploadsSection() {
 }
 
 export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
+  const hrEnabled = useModuleEnabled("hr");
   const canViewDocStats = useCan("hr:documents:view");
   const canViewSignEnvelopes = useCan("sign:envelope:view");
   const signEnabled = useModuleEnabled("SIGN");
   const canViewOnboardingDocsSummary = useCan("hr:onboarding:manage");
-  const { data: documents, isLoading, error: documentsError, refetch: refetchDocuments } = usePublicDocuments(6, canViewDocStats);
+  const hrDocsEnabled = hrEnabled && canViewDocStats;
+  const hrOnboardingEnabled = hrEnabled && canViewOnboardingDocsSummary;
+  const { data: documents, isLoading, error: documentsError, refetch: refetchDocuments } = usePublicDocuments(6, hrDocsEnabled);
 
-  const { data: docStats } = useHrDocumentStats({ enabled: canViewDocStats });
+  const { data: docStats } = useHrDocumentStats({ enabled: hrDocsEnabled });
   const { missingCount } = useMissingOnboardingDocsCount({
-    enabled: canViewOnboardingDocsSummary,
+    enabled: hrOnboardingEnabled,
   });
   const { count: pendingUploadCount } = useMyPendingDocuments();
 
   const showSignatureChip = signEnabled && canViewSignEnvelopes;
   const showSummaryStrip =
-    (canViewDocStats && !!docStats?.expiringIn30Days) ||
+    (hrDocsEnabled && !!docStats?.expiringIn30Days) ||
     showSignatureChip ||
-    (canViewOnboardingDocsSummary && !!missingCount);
+    (hrOnboardingEnabled && !!missingCount);
 
   return (
     <Card className="bg-card border-border shadow-noir">
@@ -282,7 +285,7 @@ export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
         <MyPendingUploadsSection />
         {showSummaryStrip && (
           <div className="flex flex-wrap gap-1.5 mb-3">
-            {canViewDocStats && (
+            {hrDocsEnabled && (
               <SummaryChip
                 icon={AlertTriangle}
                 label="expiring soon"
@@ -292,7 +295,7 @@ export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
               />
             )}
             {showSignatureChip && <AwaitingSignatureChip />}
-            {canViewOnboardingDocsSummary && (
+            {hrOnboardingEnabled && (
               <SummaryChip
                 icon={UserX}
                 label="missing docs"
@@ -303,7 +306,7 @@ export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
             )}
           </div>
         )}
-        {canViewDocStats &&
+        {hrDocsEnabled &&
           (isLoading ? (
             <div className="space-y-3">
               {Array.from({ length: 3 }).map((_, i) => (

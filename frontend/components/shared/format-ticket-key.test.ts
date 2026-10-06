@@ -2,6 +2,7 @@ import {
   formatTicketKey,
   getTicketDetailHref,
   parseTicketKey,
+  ticketKeyMatchesProject,
 } from "./format-ticket-key";
 
 describe("ticket key links", () => {
@@ -62,4 +63,23 @@ describe("ticket key links", () => {
       });
     },
   );
+});
+
+describe("ticketKeyMatchesProject", () => {
+  it("404s a wrong project-key prefix while preserving the ticket number", () => {
+    const parsed = parseTicketKey("NOPE-1");
+    expect(parsed).toEqual({ projectKey: "NOPE", ticketNumber: 1 });
+    expect(ticketKeyMatchesProject(parsed, "SETUP-6FC6A9")).toBe(false);
+    expect(ticketKeyMatchesProject(parsed, "NOPE")).toBe(true);
+  });
+
+  it("allows numeric-only keys and rejects a prefixed key when the project has none", () => {
+    expect(ticketKeyMatchesProject(parseTicketKey("1"), "SETUP-6FC6A9")).toBe(true);
+    expect(ticketKeyMatchesProject(parseTicketKey("NOPE-1"), null)).toBe(false);
+    expect(ticketKeyMatchesProject(null, "SETUP")).toBe(false);
+  });
+
+  it("matches project keys case-insensitively", () => {
+    expect(ticketKeyMatchesProject(parseTicketKey("setup-6fc6a9-1"), "SETUP-6FC6A9")).toBe(true);
+  });
 });

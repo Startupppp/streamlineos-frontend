@@ -2,7 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 const execute = jest.fn();
-const handleOpenChange = jest.fn();
+let registerCalls = 0;
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: (key: string) =>
@@ -47,6 +47,7 @@ jest.mock("@/features/build/ai/project-ai-menu", () => ({
   }) => {
     const React = require("react") as typeof import("react");
     React.useEffect(() => {
+      registerCalls += 1;
       onRunRegister?.(() => {
         execute();
       });
@@ -59,6 +60,11 @@ jest.mock("@/features/build/ai/project-ai-menu", () => ({
 import { ProjectBoardHeaderActions } from "./project-board-header-actions";
 
 describe("ProjectBoardHeaderActions — AI summarize registration", () => {
+  beforeEach(() => {
+    execute.mockClear();
+    registerCalls = 0;
+  });
+
   it("does not open or run summarize while registering the callback during mount", async () => {
     render(
       <ProjectBoardHeaderActions
@@ -73,6 +79,22 @@ describe("ProjectBoardHeaderActions — AI summarize registration", () => {
     });
 
     expect(execute).not.toHaveBeenCalled();
+  });
+
+  it("registers the summarize callback a bounded number of times (no update loop)", async () => {
+    render(
+      <ProjectBoardHeaderActions
+        projectId={29}
+        createOpen={false}
+        onCreateOpenChange={jest.fn()}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("project-ai-menu")).toBeInTheDocument();
+    });
+
+    expect(registerCalls).toBeLessThanOrEqual(2);
   });
 
   it("runs summarize only when the Summarize action is chosen", async () => {

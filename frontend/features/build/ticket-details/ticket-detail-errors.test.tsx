@@ -368,3 +368,10 @@ it("shows no unsent-change count while offline with nothing held back, so the no
   expect(screen.getByText(/you're offline/i)).toBeInTheDocument();
   expect(screen.queryByTestId("offline-draft-count")).not.toBeInTheDocument();
 });
+
+it("404s when the URL project-key prefix does not match the project", () => {
+  mockByKeyTicket = { id: 1 };
+  mockResolvedTicket = { id: 1, ticketNumber: 1, title: "Wrong key ticket", version: 3 };
+  expect(() => render(<TicketDetailPage projectId={9} ticketKey="NOPE-1" />)).toThrow("NEXT_NOT_FOUND");
+  expect(mockNotFound).toHaveBeenCalled();
+});

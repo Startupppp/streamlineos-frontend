@@ -1,5 +1,6 @@
 "use client";
 
+import type { PointerEvent } from "react";
 import { Check, Monitor, Moon, Palette, Sun, type LucideIcon } from "lucide-react";
 import {
   DropdownMenuSeparator,
@@ -31,9 +32,15 @@ function ModeOption({ mode }: { mode: AppThemeModeOption }) {
     setMode(mode.id);
   }
 
+  function handlePointerDown(event: PointerEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    setMode(mode.id);
+  }
+
   return (
     <button
       type="button"
+      onPointerDown={handlePointerDown}
       onClick={handleSelect}
       aria-pressed={isActive}
       className={cn(
@@ -67,9 +74,15 @@ function ThemeOption({ theme }: { theme: AppTheme }) {
     setTheme(theme.id);
   }
 
+  function handlePointerDown(event: PointerEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    setTheme(theme.id);
+  }
+
   return (
     <button
       type="button"
+      onPointerDown={handlePointerDown}
       onClick={handleSelect}
       aria-pressed={isActive}
       className={cn(
@@ -122,10 +135,11 @@ export function ThemeMenuSubmenu() {
       </DropdownMenuSubTrigger>
       <DropdownMenuSubContent
         side="left"
-        align="start"
-        sideOffset={6}
-        collisionPadding={12}
-        className="w-64 max-h-[min(24rem,var(--radix-dropdown-menu-content-available-height))] overflow-y-auto p-2"
+        align="end"
+        sideOffset={-4}
+        alignOffset={-4}
+        collisionPadding={16}
+        className="w-64 max-h-[min(28rem,var(--radix-dropdown-menu-content-available-height))] overflow-y-auto p-2"
       >
         <ModeOptionsRow />
         <DropdownMenuSeparator className="my-2" />

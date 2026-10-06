@@ -13,6 +13,7 @@ import { useCycles } from "@/hooks/api/build/cycles";
 import {
   formatTicketKey,
   parseTicketKey,
+  ticketKeyMatchesProject,
 } from "@/components/shared/format-ticket-key";
 import { TicketDetailMainSection } from "./ticket-detail-main-section";
 import { TicketDetailRightPanel } from "./ticket-detail-right-panel";
@@ -60,14 +61,21 @@ export function TicketDetailPage({
 
   const parsed = useMemo(() => parseTicketKey(ticketKey), [ticketKey]);
   const { data: projectData, isLoading: projectLoading } = useProject(projectId);
+  const routeKeyMismatch =
+    !projectLoading &&
+    !ticketKeyMatchesProject(parsed, projectData?.key);
   const {
     data: byKeyTicket,
     isLoading: byKeyLoading,
     isPending: byKeyPending,
     error: byKeyError,
     refetch: refetchByKey,
-  } = useTicketByKey(projectId, parsed?.ticketNumber ?? null, INLINE_READ_ERROR);
-  const ticketId = byKeyTicket?.id ?? null;
+  } = useTicketByKey(
+    projectId,
+    routeKeyMismatch ? null : (parsed?.ticketNumber ?? null),
+    INLINE_READ_ERROR,
+  );
+  const ticketId = routeKeyMismatch ? null : (byKeyTicket?.id ?? null);
 
   const sidebarWarmProjectId = isMobile ? 0 : projectId;
   useEpics(sidebarWarmProjectId);
@@ -142,6 +150,7 @@ export function TicketDetailPage({
       byKeyError={byKeyError ?? null}
       byKeyPending={byKeyPending}
       byKeyTicketExists={byKeyTicket != null}
+      routeKeyMismatch={routeKeyMismatch}
       isLoading={isLoading}
       ticketError={ticketError ?? null}
       ticketExists={ticket != null}

@@ -2,7 +2,9 @@
 
 import { useCallback, useMemo } from "react";
 import { usePathname } from "next/navigation";
-import { parseTicketKey } from "@/components/shared/format-ticket-key";
+import { parseTicketKey, ticketKeyMatchesProject } from "@/components/shared/format-ticket-key";
+import { useProject } from "@/hooks/api/build/projects";
+import { notFound } from "next/navigation";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { TicketDetailPane } from "@/features/build/ticket-details/ticket-detail-pane";
@@ -29,9 +31,14 @@ export function TicketPanelInner({
     [pathname, projectId, ticketKey],
   );
   const parsed = useMemo(() => parseTicketKey(ticketKey), [ticketKey]);
+  const { data: projectData, isLoading: projectLoading } = useProject(projectId);
+  const routeKeyMismatch =
+    !projectLoading && !ticketKeyMatchesProject(parsed, projectData?.key);
   const lookup = useTicketByKey(
     projectId,
-    isCurrentTicketRoute ? (parsed?.ticketNumber ?? null) : null,
+    isCurrentTicketRoute && !routeKeyMismatch
+      ? (parsed?.ticketNumber ?? null)
+      : null,
   );
   const originHref = useMemo(
     () => resolveTicketBackHref(projectId, returnTo),
@@ -40,7 +47,7 @@ export function TicketPanelInner({
   const pageState = usePageState({
     permission: "build:tickets:view",
     isLoading: lookup.isLoading,
-    isError: lookup.isError || !parsed,
+    isError: lookup.isError || !parsed || routeKeyMismatch,
     error: lookup.error,
   });
   const { refetch } = lookup;
@@ -49,6 +56,7 @@ export function TicketPanelInner({
   }, [refetch]);
 
   if (!isCurrentTicketRoute) return null;
+  if (routeKeyMismatch) return notFound();
 
   return (
     <PageState resolution={pageState} loading={null} onRetry={handleRetry}>
