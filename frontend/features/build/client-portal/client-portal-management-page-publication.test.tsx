@@ -62,22 +62,44 @@ describe("ClientPortalManagementPage — Switch state reflects publication", () 
   });
 });
 
-describe("ClientPortalManagementPage — publish flow", () => {
-  it("clicking the Switch on an unpublished portal calls publishMutation.mutate immediately (no confirm)", () => {
+describe("ClientPortalManagementPage — publish confirms (UX-031)", () => {
+  it("clicking the Switch on an unpublished portal opens ConfirmDialog and does not publish yet", () => {
     const publishMutate = jest.fn();
     mockUsePublishPortal.mockReturnValue(baseMutation({ mutate: publishMutate }));
     mockUsePortalSettings.mockReturnValue(baseQuery({ data: UNPUBLISHED_SETTINGS }));
     render(<ClientPortalManagementPage projectId={1} />);
     fireEvent.click(screen.getByRole("switch"));
+    expect(screen.getByRole("dialog", { name: "Publish portal?" })).toBeInTheDocument();
+    expect(publishMutate).not.toHaveBeenCalled();
+  });
+
+  it("confirming publish calls publishMutation.mutate", () => {
+    const publishMutate = jest.fn();
+    mockUsePublishPortal.mockReturnValue(baseMutation({ mutate: publishMutate }));
+    mockUsePortalSettings.mockReturnValue(baseQuery({ data: UNPUBLISHED_SETTINGS }));
+    render(<ClientPortalManagementPage projectId={1} />);
+    fireEvent.click(screen.getByRole("switch"));
+    fireEvent.click(screen.getByText("Confirm"));
     expect(publishMutate).toHaveBeenCalledTimes(1);
   });
 
-  it("NEGATIVE — unpublishMutation.mutate is not called when publishing (no confirm dialog appears)", () => {
+  it("NEGATIVE — cancelling publish confirm does not call publishMutation.mutate", () => {
+    const publishMutate = jest.fn();
+    mockUsePublishPortal.mockReturnValue(baseMutation({ mutate: publishMutate }));
+    mockUsePortalSettings.mockReturnValue(baseQuery({ data: UNPUBLISHED_SETTINGS }));
+    render(<ClientPortalManagementPage projectId={1} />);
+    fireEvent.click(screen.getByRole("switch"));
+    fireEvent.click(screen.getByText("Cancel"));
+    expect(publishMutate).not.toHaveBeenCalled();
+  });
+
+  it("NEGATIVE — unpublishMutation.mutate is not called when publishing", () => {
     const unpublishMutate = jest.fn();
     mockUseUnpublishPortal.mockReturnValue(baseMutation({ mutate: unpublishMutate }));
     mockUsePortalSettings.mockReturnValue(baseQuery({ data: UNPUBLISHED_SETTINGS }));
     render(<ClientPortalManagementPage projectId={1} />);
     fireEvent.click(screen.getByRole("switch"));
+    fireEvent.click(screen.getByText("Confirm"));
     expect(unpublishMutate).not.toHaveBeenCalled();
   });
 });

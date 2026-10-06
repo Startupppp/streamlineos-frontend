@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -102,12 +102,14 @@ export function InviteClientDialog({ open, onOpenChange, onInvited, defaultProje
     defaultValues: makeDefaults(defaultProjectId),
   });
 
-  useEffect(() => {
-    if (open) {
+  const handleOpenChange = useCallback(
+    (next: boolean) => {
       form.reset(makeDefaults(defaultProjectId));
       setActivationResult(null);
-    }
-  }, [open, defaultProjectId, form]);
+      onOpenChange(next);
+    },
+    [defaultProjectId, form, onOpenChange],
+  );
 
   function handleSubmit(values: ActivateClientFormValues) {
     activate.mutate(
@@ -136,7 +138,7 @@ export function InviteClientDialog({ open, onOpenChange, onInvited, defaultProje
   }
 
   function handleClose() {
-    onOpenChange(false);
+    handleOpenChange(false);
   }
 
   const showForm = !activationResult;
@@ -170,7 +172,7 @@ export function InviteClientDialog({ open, onOpenChange, onInvited, defaultProje
   return (
     <AppDialog
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={handleOpenChange}
       title="Invite Client"
       description="Activate portal access and send the client their invitation link."
       footer={footer}
@@ -278,6 +280,23 @@ export function InviteClientDialog({ open, onOpenChange, onInvited, defaultProje
                   )}
                 />
               ))}
+              {(
+                form.formState.errors as Record<
+                  string,
+                  { message?: string } | undefined
+                >
+              ).capabilityGroup?.message ? (
+                <p className="text-xs text-destructive" role="alert">
+                  {
+                    (
+                      form.formState.errors as Record<
+                        string,
+                        { message?: string } | undefined
+                      >
+                    ).capabilityGroup?.message
+                  }
+                </p>
+              ) : null}
             </div>
           </form>
         </Form>

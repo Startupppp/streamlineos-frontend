@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, type UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import { useCan } from "@/hooks/api/access";
@@ -34,13 +34,17 @@ const resendInvitationContract_ = lazyContract(() =>
   import("@/hooks/api/portal-access/portal-access-schema").then((m) => m.resendInvitationContract),
 );
 
-export function usePortalMemberships(params?: { cursor?: string; limit?: number; status?: string }) {
+export function usePortalMemberships(
+  params?: { cursor?: string; limit?: number; status?: string },
+  options?: Omit<UseQueryOptions<PortalMembershipsPage>, "queryKey" | "queryFn">,
+) {
   const canView = useCan("build:portal:view");
   return useQuery<PortalMembershipsPage>({
     queryKey: directoryAndOwnershipQueryKeys.portalAccess.memberships(params),
     queryFn: ({ signal }) => apiClient.get<PortalMembershipsPage>("/portal-access/memberships", params, signal, membershipListContract),
-    enabled: canView,
     staleTime: 30_000,
+    ...options,
+    enabled: canView && (options?.enabled ?? true),
   });
 }
 
