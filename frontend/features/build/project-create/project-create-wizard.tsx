@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
@@ -50,6 +50,10 @@ export function ProjectCreateWizard({
 
   const isDirty = open && (step > 1 || draft.name.trim() !== "");
   useRegisterDirtyState(isDirty);
+  const isDirtyRef = useRef(false);
+  useLayoutEffect(() => {
+    isDirtyRef.current = isDirty;
+  }, [isDirty]);
   const [discardConfirmOpen, setDiscardConfirmOpen] = useState(false);
 
   const basicsRef = useRef<BasicsHandle>(null);
@@ -75,16 +79,20 @@ export function ProjectCreateWizard({
     handleSuccess,
     scope,
   );
+  const isBusyRef = useRef(false);
+  useLayoutEffect(() => {
+    isBusyRef.current = isProvisioning;
+  }, [isProvisioning]);
 
   const requestClose = useCallback(() => {
-    if (isProvisioning) return;
-    if (isDirty) {
+    if (isBusyRef.current) return;
+    if (isDirtyRef.current) {
       setDiscardConfirmOpen(true);
       return;
     }
     reset();
     onOpenChange(false);
-  }, [isProvisioning, isDirty, reset, onOpenChange]);
+  }, [reset, onOpenChange]);
 
   function handleOpenChange(value: boolean) {
     if (!value) {
@@ -124,12 +132,22 @@ export function ProjectCreateWizard({
         className="w-full sm:max-w-[600px] p-0 flex flex-col overflow-hidden"
         onOpenAutoFocus={(event) => {
           event.preventDefault();
-          requestAnimationFrame(() => {
-            const input = document.querySelector<HTMLInputElement>(
-              '[data-project-create-name="true"]',
-            );
-            input?.focus();
-          });
+          const input = document.querySelector<HTMLInputElement>(
+            '[data-project-create-name="true"]',
+          );
+          input?.focus({ preventScroll: true });
+        }}
+        onEscapeKeyDown={(event) => {
+          event.preventDefault();
+          requestClose();
+        }}
+        onPointerDownOutside={(event) => {
+          event.preventDefault();
+          requestClose();
+        }}
+        onInteractOutside={(event) => {
+          event.preventDefault();
+          requestClose();
         }}
       >
         <SheetHeader className="shrink-0 px-6 pt-5 pb-4 border-b text-left">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useMemo, useRef } from "react";
+import { useCallback, useLayoutEffect, useState, useMemo, useRef } from "react";
 import { useProjects } from "@/hooks/api/build/projects";
 import { useSourceOverride } from "@/hooks/common/use-source-override";
 import {
@@ -71,6 +71,7 @@ export function useCreateTicketDialogState({
     handleRemoveFile,
     createMore,
     handleToggleCreateMore,
+    resetForm,
     titleRef,
     projectStatuses,
     members,
@@ -95,6 +96,14 @@ export function useCreateTicketDialogState({
   useRegisterDirtyState(resolvedOpen && form.formState.isDirty);
   const [discardConfirmOpen, setDiscardConfirmOpen] = useState(false);
   const pendingCloseRef = useRef(false);
+  const isBusyRef = useRef(false);
+  const isDirtyRef = useRef(false);
+  useLayoutEffect(() => {
+    isBusyRef.current = isPending || isUploading;
+  }, [isPending, isUploading]);
+  useLayoutEffect(() => {
+    isDirtyRef.current = form.formState.isDirty;
+  }, [form.formState.isDirty]);
 
   const [showLinksEditor, setShowLinksEditor] = useState(false);
   const [descriptionEditorKey, setDescriptionEditorKey] = useState(0);
@@ -173,6 +182,7 @@ export function useCreateTicketDialogState({
     setFieldsInlineSession(null);
     setDiscardConfirmOpen(false);
     pendingCloseRef.current = false;
+    resetForm(false);
     if (isExternallyControlled) {
       onExternalOpenChange?.(false);
     } else {
@@ -185,6 +195,7 @@ export function useCreateTicketDialogState({
     titleInlineSession,
     descriptionInlineSession,
     fieldsInlineSession,
+    resetForm,
     isExternallyControlled,
     onExternalOpenChange,
     projectLocked,
@@ -193,8 +204,8 @@ export function useCreateTicketDialogState({
 
   const handleOpenChange = useCallback(
     (v: boolean) => {
-      if (!v && (isPending || isUploading)) return;
-      if (!v && form.formState.isDirty) {
+      if (!v && isBusyRef.current) return;
+      if (!v && isDirtyRef.current) {
         pendingCloseRef.current = true;
         setDiscardConfirmOpen(true);
         return;
@@ -209,14 +220,7 @@ export function useCreateTicketDialogState({
         setOpen(true);
       }
     },
-    [
-      isPending,
-      isUploading,
-      form.formState.isDirty,
-      finalizeClose,
-      isExternallyControlled,
-      onExternalOpenChange,
-    ],
+    [finalizeClose, isExternallyControlled, onExternalOpenChange],
   );
 
   const handleDiscardConfirm = useCallback(() => {

@@ -65,7 +65,7 @@ describe("Issue detail sidebar — the core fields the page contract lists are o
     expect(triggers).toHaveLength(6);
     expect(screen.getByRole("spinbutton")).toHaveValue(8);
     expect(triggers.map((trigger) => trigger.textContent)).toEqual([
-      "IN REVIEW",
+      "In Review",
       "Urgent",
       "Bug",
       "Checkout rewrite",

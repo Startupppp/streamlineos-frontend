@@ -137,6 +137,10 @@ export function AppThemeProvider({ children }: { children: React.ReactNode }) {
 
   const setMode = useCallback((next: AppThemeMode) => {
     setModeState(next);
+    if (typeof window !== "undefined") {
+      const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      applyDarkClass(resolveIsDark(next, systemDark));
+    }
     try {
       window.localStorage.setItem(APP_THEME_MODE_STORAGE_KEY, next);
     } catch {

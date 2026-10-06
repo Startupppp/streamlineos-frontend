@@ -87,10 +87,15 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
     ) {
       const capped = name.slice(0, PROJECT_NAME_MAX);
       onChange(capped);
-      if (keyManuallyEditedRef.current) return;
-      form.setValue("key", generateProjectKey(capped), {
+      if (keyManuallyEditedRef.current) {
+        updateDraft({ name: capped });
+        return;
+      }
+      const nextKey = generateProjectKey(capped);
+      form.setValue("key", nextKey, {
         shouldValidate: false,
       });
+      updateDraft({ name: capped, key: nextKey });
     }
 
     function handleKeyChange(

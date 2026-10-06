@@ -144,7 +144,9 @@ export function useCreateTicketForm({
           labelIds: [],
         }));
       }
-      setTimeout(() => titleRef.current?.focus(), 50);
+      if (preserveContext) {
+        queueMicrotask(() => titleRef.current?.focus({ preventScroll: true }));
+      }
     },
     [form, defaultStatusValue, activeCycleId, defaultCycleId, setProperties],
   );
@@ -263,6 +265,7 @@ export function useCreateTicketForm({
     handleRemoveFile,
     createMore,
     handleToggleCreateMore,
+    resetForm,
     titleRef,
     projectStatuses,
     members,
