@@ -26,6 +26,7 @@ import {
   clearAll,
   setCompletionMarker,
   hasCompletionMarker,
+  getCompletionDestination,
   clearCompletionMarker,
 } from "@/features/org-setup/lib/draft";
 import { useCompleteOrgSetupMutation, useOrgSetupActivateMutation } from "@/hooks/api/org-setup";
@@ -182,7 +183,7 @@ export function StepGeneration({ data, onBackToProducts, idempotencyKey }: StepG
 
     const userId = sessionRef.current?.user?.id ?? "";
     clearAll(userId);
-    setCompletionMarker(userId, orgId);
+    setCompletionMarker(userId, orgId, destinationRef.current);
     try {
       sessionStorage.setItem(WELCOME_POP_KEY, "1");
       const name = dataRef.current.companyName?.trim();
@@ -225,7 +226,7 @@ export function StepGeneration({ data, onBackToProducts, idempotencyKey }: StepG
       );
       if (sessionOutcome === "superseded") return;
       clearAll(userId);
-      setCompletionMarker(userId, orgResult.orgId);
+      setCompletionMarker(userId, orgResult.orgId, destination);
       window.location.replace(destination);
     } catch (err) {
       clearGateCookie("org-setup-done", orgResult.orgId);
@@ -270,7 +271,10 @@ export function StepGeneration({ data, onBackToProducts, idempotencyKey }: StepG
         orgId: res.orgId,
       });
     } catch (err) {
-      if (isApiError(err) && err.code === "TIMEOUT") {
+      if (
+        isApiError(err) &&
+        (err.code === "TIMEOUT" || err.code === "SETUP_IN_PROGRESS")
+      ) {
         setIsPollingAfterTimeout(true);
       } else {
         const isPlanLock =
@@ -321,7 +325,10 @@ export function StepGeneration({ data, onBackToProducts, idempotencyKey }: StepG
         setIsPollingAfterTimeout(true);
       }
     } catch (err) {
-      if (isApiError(err) && err.code === "TIMEOUT") {
+      if (
+        isApiError(err) &&
+        (err.code === "TIMEOUT" || err.code === "SETUP_IN_PROGRESS")
+      ) {
         setIsPollingAfterTimeout(true);
       } else {
         handleSetupError({
@@ -344,7 +351,9 @@ export function StepGeneration({ data, onBackToProducts, idempotencyKey }: StepG
   useEffect(() => {
     const s = sessionRef.current;
     if (hasCompletionMarker(s?.user?.id ?? "", s?.orgId ?? "")) {
-      window.location.replace(destinationRef.current);
+      window.location.replace(
+        getCompletionDestination(s?.user?.id ?? "", s?.orgId ?? ""),
+      );
       return;
     }
     const key = idempotencyKeyRef.current;

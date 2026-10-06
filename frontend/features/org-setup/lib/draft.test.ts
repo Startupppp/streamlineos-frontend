@@ -1,6 +1,7 @@
 import {
   setCompletionMarker,
   hasCompletionMarker,
+  getCompletionDestination,
   clearCompletionMarker,
   clearAll,
   saveDraft,
@@ -222,5 +223,23 @@ describe("syncDraftToServer — syncStatus transitions", () => {
     const statuses: SyncStatus[] = [];
     await syncDraftToServer(1, LOCAL_DRAFT_DATA, (s) => statuses.push(s));
     expect(statuses).toEqual(["saving", "error"]);
+  });
+});
+
+
+describe("getCompletionDestination", () => {
+  beforeEach(() => {
+    sessionStorage.clear();
+  });
+
+  it("returns the stored destination path", () => {
+    setCompletionMarker(USER_A, ORG_X, "/build");
+    expect(getCompletionDestination(USER_A, ORG_X)).toBe("/build");
+  });
+
+  it("maps legacy marker value 1 to /dashboard", () => {
+    sessionStorage.setItem(`org-setup-complete--${USER_A}--${ORG_X}`, "1");
+    expect(hasCompletionMarker(USER_A, ORG_X)).toBe(true);
+    expect(getCompletionDestination(USER_A, ORG_X)).toBe("/dashboard");
   });
 });

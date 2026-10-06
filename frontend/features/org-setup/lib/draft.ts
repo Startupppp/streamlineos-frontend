@@ -20,18 +20,42 @@ function completionKey(userId: string, orgId: string): string {
   return `${COMPLETION_BASE}--${userId}--${orgId}`;
 }
 
-export function setCompletionMarker(userId: string, orgId: string): void {
+export function setCompletionMarker(
+  userId: string,
+  orgId: string,
+  destination = "/dashboard",
+): void {
   try {
-    sessionStorage.setItem(completionKey(userId, orgId), "1");
+    const value =
+      typeof destination === "string" &&
+      destination.startsWith("/") &&
+      !destination.startsWith("//")
+        ? destination
+        : "/dashboard";
+    sessionStorage.setItem(completionKey(userId, orgId), value);
   } catch {}
 }
 
 export function hasCompletionMarker(userId: string, orgId: string): boolean {
   try {
     if (!userId || !orgId) return false;
-    return sessionStorage.getItem(completionKey(userId, orgId)) === "1";
+    const value = sessionStorage.getItem(completionKey(userId, orgId));
+    return value !== null && value.length > 0;
   } catch {
     return false;
+  }
+}
+
+/** Destination stored with the completion marker; legacy `"1"` maps to `/dashboard`. */
+export function getCompletionDestination(userId: string, orgId: string): string {
+  try {
+    if (!userId || !orgId) return "/dashboard";
+    const value = sessionStorage.getItem(completionKey(userId, orgId));
+    if (!value || value === "1") return "/dashboard";
+    if (value.startsWith("/") && !value.startsWith("//")) return value;
+    return "/dashboard";
+  } catch {
+    return "/dashboard";
   }
 }
 
