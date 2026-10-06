@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Check, LayoutGrid, Plus, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -19,9 +19,52 @@ interface WidgetPickerProps {
   onAdd: (type: WidgetType) => void;
 }
 
+interface WidgetPickerItemProps {
+  type: WidgetType;
+  placed: boolean;
+  onAdd: (type: WidgetType) => void;
+  onClose: () => void;
+}
+
+function WidgetPickerItem({ type, placed, onAdd, onClose }: WidgetPickerItemProps) {
+  const { title, description, icon: Icon } = WIDGET_CATALOG[type];
+  const handleClick = useCallback(() => {
+    onAdd(type);
+    onClose();
+  }, [onAdd, onClose, type]);
+  return (
+    <li>
+      <button
+        type="button"
+        disabled={placed}
+        onClick={handleClick}
+        className={cn(
+          "flex w-full items-start gap-3 rounded-md px-2.5 py-2 text-left transition-colors",
+          "hover:bg-accent focus-visible:bg-accent focus-visible:outline-none disabled:cursor-default disabled:hover:bg-transparent",
+        )}
+      >
+        <Icon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-medium text-foreground">{title}</span>
+          <span className="block text-xs text-muted-foreground">{description}</span>
+        </span>
+        {placed ? (
+          <span className="mt-0.5 inline-flex shrink-0 items-center gap-1 text-micro text-muted-foreground">
+            <Check className="h-3 w-3" aria-hidden="true" />
+            Added
+          </span>
+        ) : (
+          <Plus className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+        )}
+      </button>
+    </li>
+  );
+}
+
 function WidgetPicker({ availableTypes, placedTypes, onAdd }: WidgetPickerProps) {
   const [open, setOpen] = useState(false);
   const remaining = availableTypes.filter((type) => !placedTypes.has(type)).length;
+  const handleClose = useCallback(() => setOpen(false), []);
 
   return (
     <ResponsivePopover open={open} onOpenChange={setOpen}>
@@ -41,40 +84,15 @@ function WidgetPicker({ availableTypes, placedTypes, onAdd }: WidgetPickerProps)
         description="Choose a widget to add to your Command Center."
       >
         <ul className="flex flex-col" aria-label="Available widgets">
-          {availableTypes.map((type) => {
-            const { title, description, icon: Icon } = WIDGET_CATALOG[type];
-            const placed = placedTypes.has(type);
-            return (
-              <li key={type}>
-                <button
-                  type="button"
-                  disabled={placed}
-                  onClick={() => {
-                    onAdd(type);
-                    setOpen(false);
-                  }}
-                  className={cn(
-                    "flex w-full items-start gap-3 rounded-md px-2.5 py-2 text-left transition-colors",
-                    "hover:bg-accent focus-visible:bg-accent focus-visible:outline-none disabled:cursor-default disabled:hover:bg-transparent",
-                  )}
-                >
-                  <Icon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-medium text-foreground">{title}</span>
-                    <span className="block text-xs text-muted-foreground">{description}</span>
-                  </span>
-                  {placed ? (
-                    <span className="mt-0.5 inline-flex shrink-0 items-center gap-1 text-micro text-muted-foreground">
-                      <Check className="h-3 w-3" aria-hidden="true" />
-                      Added
-                    </span>
-                  ) : (
-                    <Plus className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-                  )}
-                </button>
-              </li>
-            );
-          })}
+          {availableTypes.map((type) => (
+            <WidgetPickerItem
+              key={type}
+              type={type}
+              placed={placedTypes.has(type)}
+              onAdd={onAdd}
+              onClose={handleClose}
+            />
+          ))}
         </ul>
       </ResponsivePopoverContent>
     </ResponsivePopover>
@@ -96,6 +114,9 @@ export function CommandCenterLayoutControls({
   onAdd,
 }: CommandCenterLayoutControlsProps) {
   const [confirmResetOpen, setConfirmResetOpen] = useState(false);
+  const handleStartEditing = useCallback(() => onEditingChange(true), [onEditingChange]);
+  const handleDoneEditing = useCallback(() => onEditingChange(false), [onEditingChange]);
+  const handleOpenConfirmReset = useCallback(() => setConfirmResetOpen(true), []);
 
   if (!editing) {
     return (
@@ -104,7 +125,7 @@ export function CommandCenterLayoutControls({
         variant="ghost"
         size="sm"
         className="gap-1.5 text-muted-foreground"
-        onClick={() => onEditingChange(true)}
+        onClick={handleStartEditing}
       >
         <LayoutGrid className="h-3.5 w-3.5" />
         Customize
@@ -123,12 +144,12 @@ export function CommandCenterLayoutControls({
         variant="ghost"
         size="sm"
         className="gap-1.5 text-muted-foreground"
-        onClick={() => setConfirmResetOpen(true)}
+        onClick={handleOpenConfirmReset}
       >
         <RotateCcw className="h-3.5 w-3.5" />
         Reset
       </Button>
-      <Button type="button" size="sm" className="gap-1.5" onClick={() => onEditingChange(false)}>
+      <Button type="button" size="sm" className="gap-1.5" onClick={handleDoneEditing}>
         <Check className="h-3.5 w-3.5" />
         Done
       </Button>

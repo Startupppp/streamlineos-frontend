@@ -65,6 +65,17 @@ describe("dashboard layout model", () => {
     expect(hasOverlap(moved)).toBe(false);
   });
 
+  it("swaps side-by-side widgets of different widths without changing either width", () => {
+    const slots = normalizeSlots(DEFAULT_WIDGETS, allowAll);
+    const moved = withWidgetMoved(slots, "projects", -1);
+    expect(moved.find((slot) => slot.type === "projects")?.position).toMatchObject({ col: 0, w: 5 });
+    expect(moved.find((slot) => slot.type === "my-issues")?.position).toMatchObject({ col: 5, w: 7 });
+    expect(moved.find((slot) => slot.type === "projects")?.position.row).toBe(
+      moved.find((slot) => slot.type === "my-issues")?.position.row,
+    );
+    expect(hasOverlap(moved)).toBe(false);
+  });
+
   it("leaves the first widget in place when asked to move earlier", () => {
     const slots = normalizeSlots(DEFAULT_WIDGETS, allowAll);
     expect(withWidgetMoved(slots, "overview", -1)).toEqual(slots);

@@ -255,6 +255,20 @@ describe("dashboard and landing public hook contracts", () => {
     await waitFor(() => expect(harness.client.getQueryData(buildWorkQueryKeys.commandCenter.layout())).toEqual(previous));
     harness.client.clear();
   });
+  it("restores the last saved layout, not an unsaved intermediate one, when back-to-back saves both fail", async () => {
+    const harness = hookClient();
+    const saved = { layoutVersion: 3, config: { widgets: [] }, updatedAt: "2026-10-03T10:00:00Z" };
+    harness.client.setQueryData(buildWorkQueryKeys.commandCenter.layout(), saved);
+    const first = { widgets: [{ type: "projects" as const, position: { col: 0, row: 0, w: 6, h: 5 } }] };
+    const second = { widgets: [{ type: "projects" as const, position: { col: 6, row: 0, w: 6, h: 5 } }] };
+    jest.mocked(apiClient.put).mockRejectedValueOnce(new Error("Network unavailable")).mockRejectedValueOnce(new Error("Network unavailable"));
+    const { result } = renderHook(useSaveDashboardLayout, { wrapper: harness.wrapper });
+    await act(async () => {
+      await Promise.allSettled([result.current.mutateAsync(first), result.current.mutateAsync(second)]);
+    });
+    expect(harness.client.getQueryData(buildWorkQueryKeys.commandCenter.layout())).toEqual(saved);
+    harness.client.clear();
+  });
   it("sends each queued save with the version the previous save returned so back-to-back edits never conflict", async () => {
     const harness = hookClient();
     harness.client.setQueryData(buildWorkQueryKeys.commandCenter.layout(), { layoutVersion: 3, config: { widgets: [] }, updatedAt: "2026-10-03T10:00:00Z" });

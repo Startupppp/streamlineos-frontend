@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { isApiError, lazyContract } from "@/lib/api-envelope";
@@ -47,7 +48,8 @@ export function useDashboardLayout() {
 export function useSaveDashboardLayout() {
   const qc = useQueryClient();
   const qk = buildWorkQueryKeys.commandCenter.layout();
-  const isLastPendingSave = () => qc.isMutating({ mutationKey: SAVE_LAYOUT_MUTATION_KEY }) <= 1;
+  const confirmed = useRef<DashboardLayoutGetLayoutResponse | undefined>(undefined);
+  const pendingSaves = useRef(0);
   return useAuthorizedMutation<DashboardLayoutGetLayoutResponse, Error, DashboardLayoutConfig, SaveDashboardLayoutContext>(
     "build:dashboard:manage",
     {
@@ -64,13 +66,16 @@ export function useSaveDashboardLayout() {
           dashboardLayoutSaveLazy,
         ),
       onMutate: async (config) => {
+        if (pendingSaves.current === 0) confirmed.current = qc.getQueryData<DashboardLayoutGetLayoutResponse>(qk);
+        pendingSaves.current += 1;
         await qc.cancelQueries({ queryKey: qk, exact: true });
         const previous = qc.getQueryData<DashboardLayoutGetLayoutResponse>(qk);
         if (previous) qc.setQueryData<DashboardLayoutGetLayoutResponse>(qk, { ...previous, config });
         return { previous };
       },
       onSuccess: (saved) => {
-        const isLatest = isLastPendingSave();
+        confirmed.current = saved;
+        const isLatest = pendingSaves.current === 1;
         qc.setQueryData<DashboardLayoutGetLayoutResponse>(qk, (current) =>
           isLatest || !current
             ? saved
@@ -82,7 +87,11 @@ export function useSaveDashboardLayout() {
           void qc.invalidateQueries({ queryKey: qk, exact: true });
           return;
         }
-        if (isLastPendingSave() && context?.previous) qc.setQueryData(qk, context.previous);
+        const restore = confirmed.current ?? context?.previous;
+        if (pendingSaves.current === 1 && restore) qc.setQueryData(qk, restore);
+      },
+      onSettled: () => {
+        pendingSaves.current = Math.max(pendingSaves.current - 1, 0);
       },
     },
   );

@@ -129,6 +129,11 @@ export function CommandCenterPage() {
   const layout = useDashboardLayoutEditor();
   const isEditing = editing && layout.canCustomize;
   const placedTypes = useMemo(() => new Set(layout.widgets.map((slot) => slot.type)), [layout.widgets]);
+  const handleStartCustomizing = useCallback(() => setEditing(true), []);
+  const customizeAction = useMemo(
+    () => (layout.canCustomize ? { label: "Customize", onClick: handleStartCustomizing } : undefined),
+    [layout.canCustomize, handleStartCustomizing],
+  );
 
   const widgetContent = useCommandCenterWidgets({
     stats,
@@ -208,7 +213,7 @@ export function CommandCenterPage() {
                     ? "Add widgets to see your issues, projects and approvals here."
                     : "There are no widgets you can view yet."
                 }
-                action={layout.canCustomize ? { label: "Customize", onClick: () => setEditing(true) } : undefined}
+                action={customizeAction}
               />
             ) : (
               <CommandCenterWidgetGrid

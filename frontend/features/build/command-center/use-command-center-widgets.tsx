@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, type ReactNode, type UIEvent } from "react";
+import { useCallback, useMemo, type ReactNode, type UIEvent } from "react";
 import type { MyWorkItem } from "@/types/projects/my-work";
 import type { ProjectListItem } from "@/types/projects";
 import { MyIssuesPanel } from "./command-center-my-issues-panel";
@@ -58,6 +58,7 @@ export function useCommandCenterWidgets({
   onRetryProjects,
 }: CommandCenterWidgetInputs): Record<WidgetType, ReactNode> {
   const defaultProjectId = projects[0]?.id ?? null;
+  const handleRetryProjects = useCallback(() => void onRetryProjects(), [onRetryProjects]);
 
   const myIssues = useMemo(
     () => (
@@ -102,10 +103,10 @@ export function useCommandCenterWidgets({
         error={projectsRawError}
         onCreateProject={onCreateProject}
         onCreateForProject={onCreateForProject}
-        onRetry={() => void onRetryProjects()}
+        onRetry={handleRetryProjects}
       />
     ),
-    [projects, canCreateProject, canCreateIssue, projectsError, projectsRawError, onCreateProject, onCreateForProject, onRetryProjects],
+    [projects, canCreateProject, canCreateIssue, projectsError, projectsRawError, onCreateProject, onCreateForProject, handleRetryProjects],
   );
 
   return useMemo(

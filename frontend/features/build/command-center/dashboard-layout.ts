@@ -113,17 +113,21 @@ export function withWidgetWidth(slots: readonly WidgetSlot[], type: WidgetType, 
 export function withWidgetMoved(slots: readonly WidgetSlot[], type: WidgetType, offset: -1 | 1): WidgetSlot[] {
   const ordered = readingOrder(slots);
   const index = ordered.findIndex((slot) => slot.type === type);
-  const current = ordered[index];
-  const neighbour = ordered[index + offset];
-  if (!current || !neighbour) return [...slots];
-  const swapped = ordered.map((slot) => {
-    if (slot.type === current.type) {
-      return { ...slot, position: { ...slot.position, col: neighbour.position.col, row: neighbour.position.row } };
+  const neighbourIndex = index + offset;
+  const earlier = ordered[Math.min(index, neighbourIndex)];
+  const later = ordered[Math.max(index, neighbourIndex)];
+  if (index < 0 || !earlier || !later) return [...slots];
+  const laterCol = earlier.position.col;
+  const earlierCol =
+    earlier.position.row === later.position.row ? earlier.position.col + later.position.w : later.position.col;
+  const moved = ordered.map((slot) => {
+    if (slot.type === later.type) {
+      return { ...slot, position: { ...slot.position, col: laterCol, row: earlier.position.row } };
     }
-    if (slot.type === neighbour.type) {
-      return { ...slot, position: { ...slot.position, col: current.position.col, row: current.position.row } };
+    if (slot.type === earlier.type) {
+      return { ...slot, position: { ...slot.position, col: earlierCol, row: later.position.row } };
     }
     return slot;
   });
-  return compactSlots(swapped);
+  return compactSlots(moved);
 }

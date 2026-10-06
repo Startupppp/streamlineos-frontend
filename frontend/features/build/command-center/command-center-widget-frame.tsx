@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useCallback, type ReactNode } from "react";
 import { ArrowDown, ArrowUp, Check, GripVertical, Settings2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,6 +29,23 @@ interface CommandCenterWidgetFrameProps {
   children: ReactNode;
 }
 
+interface WidgetSizeItemProps {
+  preset: (typeof WIDGET_SIZE_PRESETS)[number];
+  active: boolean;
+  type: WidgetType;
+  onResize: (type: WidgetType, w: number) => void;
+}
+
+function WidgetSizeItem({ preset, active, type, onResize }: WidgetSizeItemProps) {
+  const handleResize = useCallback(() => onResize(type, preset.w), [onResize, type, preset.w]);
+  return (
+    <DropdownMenuItem onSelect={handleResize}>
+      <Check className={cn("h-3.5 w-3.5", active ? "opacity-100" : "opacity-0")} />
+      {preset.label}
+    </DropdownMenuItem>
+  );
+}
+
 export function CommandCenterWidgetFrame({
   slot,
   editing,
@@ -41,6 +58,10 @@ export function CommandCenterWidgetFrame({
 }: CommandCenterWidgetFrameProps) {
   const { title, minW } = WIDGET_CATALOG[slot.type];
   const sizes = WIDGET_SIZE_PRESETS.filter((preset) => preset.w >= minW);
+
+  const handleMoveUp = useCallback(() => onMove(slot.type, -1), [onMove, slot.type]);
+  const handleMoveDown = useCallback(() => onMove(slot.type, 1), [onMove, slot.type]);
+  const handleRemove = useCallback(() => onRemove(slot.type), [onRemove, slot.type]);
 
   return (
     <div
@@ -66,11 +87,11 @@ export function CommandCenterWidgetFrame({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
-              <DropdownMenuItem disabled={isFirst} onSelect={() => onMove(slot.type, -1)}>
+              <DropdownMenuItem disabled={isFirst} onSelect={handleMoveUp}>
                 <ArrowUp className="h-3.5 w-3.5" />
                 Move earlier
               </DropdownMenuItem>
-              <DropdownMenuItem disabled={isLast} onSelect={() => onMove(slot.type, 1)}>
+              <DropdownMenuItem disabled={isLast} onSelect={handleMoveDown}>
                 <ArrowDown className="h-3.5 w-3.5" />
                 Move later
               </DropdownMenuItem>
@@ -79,10 +100,13 @@ export function CommandCenterWidgetFrame({
                 Width
               </DropdownMenuLabel>
               {sizes.map((preset) => (
-                <DropdownMenuItem key={preset.w} onSelect={() => onResize(slot.type, preset.w)}>
-                  <Check className={cn("h-3.5 w-3.5", slot.position.w === preset.w ? "opacity-100" : "opacity-0")} />
-                  {preset.label}
-                </DropdownMenuItem>
+                <WidgetSizeItem
+                  key={preset.w}
+                  preset={preset}
+                  active={slot.position.w === preset.w}
+                  type={slot.type}
+                  onResize={onResize}
+                />
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
@@ -91,7 +115,7 @@ export function CommandCenterWidgetFrame({
             variant="ghost"
             size="sm"
             className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
-            onClick={() => onRemove(slot.type)}
+            onClick={handleRemove}
             aria-label={`Remove ${title}`}
           >
             <X className="h-3.5 w-3.5" />
