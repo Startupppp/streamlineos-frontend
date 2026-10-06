@@ -12,13 +12,13 @@ import type {
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
 import {
-  invalidateBuildViews,
   patchTicketCollections,
   restoreTicketCollections,
   resolveTicketVersions,
   rollbackTicketFields,
   type TicketSnapshots,
 } from "./ticket-cache";
+import { invalidateBuildViews } from "./ticket-cache-invalidation";
 import { applyTicketPatch } from "./ticket-update-mutation";
 
 const bulkUpdateResultLazy = lazyContract(() =>

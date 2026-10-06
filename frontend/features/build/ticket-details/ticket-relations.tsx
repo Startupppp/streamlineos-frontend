@@ -114,15 +114,24 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
   const projectKey = projectData?.key ?? null;
   const projectStatuses: ProjectStatusRecord[] = projectData?.statuses ?? [];
 
-  const allTickets = (boardTickets ?? []).filter((t) => t.id !== ticketId);
-  const existingRelatedIds = new Set(
-    (relations ?? []).map((r) => r.relatedTicket?.id).filter(Boolean)
+  const allTickets = useMemo(
+    () => (boardTickets ?? []).filter((t) => t.id !== ticketId),
+    [boardTickets, ticketId],
+  );
+  const existingRelatedIds = useMemo(
+    () => new Set((relations ?? []).map((r) => r.relatedTicket.id)),
+    [relations],
   );
 
   const handleAdd = useCallback(() => {
     if (!selectedTicketId) { toast.error("Select a ticket first"); return; }
     addRelation.mutate(
-      { relatedTicketId: selectedTicketId, relationType: selectedType },
+      {
+        relatedTicketId: selectedTicketId,
+        relationType: selectedType,
+        relatedTicket: allTickets.find((t) => t.id === selectedTicketId),
+        projectKey,
+      },
       {
         onSuccess: () => {
           toast.success("Relation added");
@@ -132,7 +141,7 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
         onError: (e) => toast.error(getErrorMessage(e)),
       }
     );
-  }, [selectedTicketId, selectedType, addRelation]);
+  }, [selectedTicketId, selectedType, addRelation, allTickets, projectKey]);
 
   const handleRemoveRelation = useCallback(
     (relatedTicketId: number) => {
@@ -143,10 +152,10 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
     [removeRelation]
   );
 
-  const handleTypeChange = (v: string) => {
+  const handleTypeChange = useCallback((v: string) => {
     const match = RELATION_TYPES.find((t) => t === v);
     if (match) setSelectedType(match);
-  };
+  }, []);
 
   const handleRetryRelations = useCallback(() => {
     void refetch();

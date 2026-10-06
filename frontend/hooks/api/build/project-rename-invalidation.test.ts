@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { createAppQueryClient } from "@/components/providers/query-provider";
 import { useUpdateProject } from "./projects";
-import { invalidateBuildViews } from "./ticket-cache";
+import { invalidateBuildViews } from "./ticket-cache-invalidation";
 import type { ProjectWithDetails, ProjectListResponse } from "@/types/projects";
 
 jest.mock("@/lib/dom-mutation-guard", () => ({}));
@@ -260,7 +260,28 @@ describe("useUpdateProject — ticket queryFn refetch guard (ticket 20)", () => 
     unmountMutation();
   });
 
-  it("invalidateBuildViews DOES call the board ticket queryFn — positive control proving the counter works", async () => {
+  it("a direct invalidateQueries without refetchType:none DOES call the board ticket queryFn — positive control proving the counter works", async () => {
+    const client = createAppQueryClient();
+    const counter = { count: 0 };
+    const Wrap = makeWrapper(client);
+
+    const { unmount } = renderHook(
+      () => useQuery({ queryKey: TICKETS_KEY, queryFn: ticketQueryFn(counter), staleTime: Infinity }),
+      { wrapper: Wrap },
+    );
+
+    await waitFor(() => expect(counter.count).toBe(1));
+
+    await act(async () => {
+      void client.invalidateQueries({ queryKey: TICKETS_KEY });
+    });
+
+    await waitFor(() => expect(counter.count).toBe(2));
+
+    unmount();
+  });
+
+  it("invalidateBuildViews marks the board ticket query stale without triggering an immediate refetch", async () => {
     const client = createAppQueryClient();
     const counter = { count: 0 };
     const Wrap = makeWrapper(client);
@@ -276,7 +297,10 @@ describe("useUpdateProject — ticket queryFn refetch guard (ticket 20)", () => 
       invalidateBuildViews(client, 42);
     });
 
-    await waitFor(() => expect(counter.count).toBe(2));
+    await act(async () => new Promise<void>((r) => setTimeout(r, 50)));
+
+    expect(counter.count).toBe(1);
+    expect(client.getQueryState(TICKETS_KEY)?.isInvalidated).toBe(true);
 
     unmount();
   });

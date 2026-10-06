@@ -5,9 +5,10 @@ import { createAppQueryClient } from "@/components/providers/query-provider";
 import { queryKeys } from "@/lib/query-keys";
 import { apiClient } from "@/lib/api-client";
 import { useUpdateTicket } from "./ticket-update-mutation";
-import { useRankTicket, useDeleteTicket } from "./ticket-create-rank-mutations";
+import { useRankTicket, useDeleteTicket, useCreateTicket } from "./ticket-create-rank-mutations";
 import { useBulkUpdateTickets } from "./ticket-bulk-update-mutation";
 import { useAddTicketRelation, useRemoveTicketRelation } from "./ticket-relation-mutations";
+import { useAddLabelToTicket, useRemoveLabelFromTicket } from "./ticket-sub-resources";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 
 jest.mock("@/lib/api-client", () => ({ apiClient: { patch: jest.fn(), post: jest.fn(), delete: jest.fn() } }));
@@ -288,20 +289,140 @@ it("rank does not touch other tickets version tokens when patching the moved tic
   client.clear();
 });
 
-it("deleting a ticket invalidates the lists and reports it fed rather than patching them out", async () => {
+it("deleting a ticket removes it from list collections immediately and marks reports stale without issuing a refetch", async () => {
   const client = createAppQueryClient();
   const board = queryKeys.projects.tickets({ projectId: 42, view: "board" });
   const criticalPath = buildWorkQueryKeys.projectReports.criticalPath(42);
   const velocity = buildWorkQueryKeys.projectReports.velocity(42);
+  const queryFn = jest.fn(async () => ({ pages: [{ data: [{ id: 1, title: "Doomed" }], pagination: { nextCursor: null } }], pageParams: [undefined] }));
   client.setQueryData(board, { pages: [{ data: [{ id: 1, title: "Doomed" }], pagination: { nextCursor: null } }], pageParams: [undefined] });
   client.setQueryData(criticalPath, { criticalPath: [], totalDuration: 0 });
   client.setQueryData(velocity, { pages: [], pageParams: [] });
   jest.mocked(apiClient.delete).mockResolvedValue(undefined);
+  const observer = new QueryObserver(client, { queryKey: board, queryFn, staleTime: Infinity });
+  const unsubscribe = observer.subscribe(() => {});
   const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
   const { result } = renderHook(() => useDeleteTicket(42), { wrapper });
   await act(async () => { await result.current.mutateAsync({ ticketId: 1 }); });
+  const boardData = client.getQueryData(board) as { pages: Array<{ data: unknown[] }> };
+  expect(boardData.pages[0].data).toHaveLength(0);
   expect(client.getQueryState(board)?.isInvalidated).toBe(true);
   expect(client.getQueryState(criticalPath)?.isInvalidated).toBe(true);
   expect(client.getQueryState(velocity)?.isInvalidated).toBe(true);
+  expect(queryFn).not.toHaveBeenCalled();
+  unsubscribe();
+  client.clear();
+});
+
+it("deleting a ticket restores its collection entry when the API call fails", async () => {
+  const client = createAppQueryClient();
+  client.setDefaultOptions({ mutations: { retry: false } });
+  const board = queryKeys.projects.tickets({ projectId: 42, view: "board" });
+  const ticket = { id: 1, title: "Doomed", version: 1 };
+  client.setQueryData(board, { data: [ticket], pagination: { nextCursor: null } });
+  jest.mocked(apiClient.delete).mockRejectedValue(new Error("forbidden"));
+  const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
+  const { result } = renderHook(() => useDeleteTicket(42), { wrapper });
+  await act(async () => { await expect(result.current.mutateAsync({ ticketId: 1 })).rejects.toThrow("forbidden"); });
+  expect(client.getQueryData(board)).toEqual({ data: [ticket], pagination: { nextCursor: null } });
+  client.clear();
+});
+
+it("an update writes the server version back to list and detail caches without triggering a board refetch", async () => {
+  const client = createAppQueryClient();
+  const board = queryKeys.projects.tickets({ projectId: 42, view: "board" });
+  const detail = queryKeys.projects.detail(42);
+  const single = queryKeys.projects.ticket(42, 1);
+  const ticket = { id: 1, title: "Before", version: 2 };
+  const page = { data: [ticket], pagination: { nextCursor: null } };
+  client.setQueryData(board, page);
+  client.setQueryData(detail, { name: "Proj", tickets: [ticket] });
+  client.setQueryData(single, ticket);
+  const queryFn = jest.fn(async () => page);
+  const observer = new QueryObserver(client, { queryKey: board, queryFn, staleTime: Infinity });
+  const unsubscribe = observer.subscribe(() => {});
+  jest.mocked(apiClient.patch).mockResolvedValue({ updated: true, updatedAt: "2026-10-06T00:00:00Z", version: 3 });
+  const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
+  const { result } = renderHook(() => useUpdateTicket(42), { wrapper });
+  await act(async () => { await result.current.mutateAsync({ ticketId: 1, version: 2, title: "After" }); });
+  const boardData = client.getQueryData(board) as typeof page;
+  expect(boardData.data[0]).toMatchObject({ id: 1, title: "After", version: 3 });
+  const detailData = client.getQueryData(detail) as { tickets: typeof ticket[] };
+  expect(detailData.tickets[0]).toMatchObject({ id: 1, title: "After", version: 3 });
+  expect((client.getQueryData(single) as typeof ticket)?.version).toBe(3);
+  expect(queryFn).not.toHaveBeenCalled();
+  unsubscribe();
+  client.clear();
+});
+
+it("adding a label optimistically patches the ticket detail and does not refetch the board list", async () => {
+  const client = createAppQueryClient();
+  const ticketKey = queryKeys.projects.ticket(42, 7);
+  const board = queryKeys.projects.tickets({ projectId: 42, view: "board" });
+  const boardPage = { data: [{ id: 7, title: "T", version: 1 }], pagination: { nextCursor: null } };
+  client.setQueryData(ticketKey, { id: 7, title: "T", version: 1, labels: [] });
+  client.setQueryData(board, boardPage);
+  const queryFn = jest.fn(async () => boardPage);
+  const observer = new QueryObserver(client, { queryKey: board, queryFn, staleTime: Infinity });
+  const unsubscribe = observer.subscribe(() => {});
+  jest.mocked(apiClient.post).mockResolvedValue({ success: true });
+  const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
+  const { result } = renderHook(() => useAddLabelToTicket(), { wrapper });
+  await act(async () => { await result.current.mutateAsync({ ticketId: 7, projectId: 42, labelId: 3 }); });
+  const cached = client.getQueryData(ticketKey) as { labels: Array<{ labelId: number }> };
+  expect(cached.labels?.some((m) => m.labelId === 3)).toBe(true);
+  expect(queryFn).not.toHaveBeenCalled();
+  unsubscribe();
+  client.clear();
+});
+
+it("removing a label optimistically removes it from the ticket detail and does not refetch the board list", async () => {
+  const client = createAppQueryClient();
+  const ticketKey = queryKeys.projects.ticket(42, 7);
+  const board = queryKeys.projects.tickets({ projectId: 42, view: "board" });
+  const boardPage = { data: [{ id: 7, title: "T", version: 1 }], pagination: { nextCursor: null } };
+  client.setQueryData(ticketKey, { id: 7, title: "T", version: 1, labels: [{ id: 10, ticketId: 7, labelId: 3, createdAt: null }] });
+  client.setQueryData(board, boardPage);
+  const queryFn = jest.fn(async () => boardPage);
+  const observer = new QueryObserver(client, { queryKey: board, queryFn, staleTime: Infinity });
+  const unsubscribe = observer.subscribe(() => {});
+  jest.mocked(apiClient.delete).mockResolvedValue(undefined);
+  const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
+  const { result } = renderHook(() => useRemoveLabelFromTicket(), { wrapper });
+  await act(async () => { await result.current.mutateAsync({ ticketId: 7, projectId: 42, labelId: 3 }); });
+  const cached = client.getQueryData(ticketKey) as { labels: Array<{ labelId: number }> };
+  expect(cached.labels?.some((m) => m.labelId === 3)).toBe(false);
+  expect(queryFn).not.toHaveBeenCalled();
+  unsubscribe();
+  client.clear();
+});
+
+it("removing a label restores it when the API call fails", async () => {
+  const client = createAppQueryClient();
+  client.setDefaultOptions({ mutations: { retry: false } });
+  const ticketKey = queryKeys.projects.ticket(42, 7);
+  const label = { id: 10, ticketId: 7, labelId: 3, createdAt: null };
+  client.setQueryData(ticketKey, { id: 7, title: "T", version: 1, labels: [label] });
+  jest.mocked(apiClient.delete).mockRejectedValue(new Error("conflict"));
+  const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
+  const { result } = renderHook(() => useRemoveLabelFromTicket(), { wrapper });
+  await act(async () => { await expect(result.current.mutateAsync({ ticketId: 7, projectId: 42, labelId: 3 })).rejects.toThrow("conflict"); });
+  const cached = client.getQueryData(ticketKey) as { labels: typeof label[] };
+  expect(cached.labels).toEqual([label]);
+  client.clear();
+});
+
+it("creating a ticket patches the project detail cache then replaces the temp with the server row", async () => {
+  const client = createAppQueryClient();
+  const detail = queryKeys.projects.detail(42);
+  client.setQueryData(detail, { name: "Proj", tickets: [{ id: 99, title: "Existing", version: 1 }] });
+  const serverTicket = { id: 55, title: "New ticket", version: 1, status: "TODO", projectId: 42, priority: null, type: "TASK", orgId: "", ticketNumber: 1, epicId: null, assigneeId: null, reporterId: null, points: null, storyPoints: null, link: null, rank: "", parentTicketId: null, originalEstimate: null, timeSpent: null, startDate: null, dueDate: null, moduleId: null, cycleId: null, sequenceId: null, estimate: null, createdAt: null, updatedAt: null, assignee: null };
+  jest.mocked(apiClient.post).mockResolvedValue(serverTicket);
+  const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
+  const { result } = renderHook(() => useCreateTicket(), { wrapper });
+  await act(async () => { await result.current.mutateAsync({ projectId: 42, title: "New ticket", type: "TASK" }); });
+  const cached = client.getQueryData(detail) as { tickets: Array<{ id: number }> };
+  expect(cached.tickets.some((t) => t.id === 55)).toBe(true);
+  expect(cached.tickets.some((t) => t.id < 0)).toBe(false);
   client.clear();
 });

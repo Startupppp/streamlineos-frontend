@@ -178,12 +178,15 @@ export function useCreateTicketForm({
     if (projectId != null) {
       queryClient.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.tickets({ projectId }),
+        refetchType: "none",
       });
       queryClient.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.detail(projectId),
+        refetchType: "none",
       });
       queryClient.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.cycles(projectId),
+        refetchType: "none",
       });
     }
     onCreated?.();

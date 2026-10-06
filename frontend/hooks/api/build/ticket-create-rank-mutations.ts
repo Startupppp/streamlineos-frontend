@@ -8,17 +8,23 @@ import type {
   Ticket,
   CreateTicketInput,
   RankTicketInput,
+  ProjectWithDetails,
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
 import {
   addTicketToCollections,
-  invalidateBuildViews,
-  invalidateTicketUpdateViews,
   patchTicketCollections,
   removeTicketFromCollections,
+  restoreRawCollections,
+  snapshotTicketCollections,
+  type RawCollectionSnapshot,
   type TicketSnapshots,
 } from "./ticket-cache";
+import {
+  invalidateBuildViews,
+  invalidateTicketUpdateViews,
+} from "./ticket-cache-invalidation";
 
 const ticketRowLazy = lazyContract(() =>
   import("@/hooks/api/build/build-tickets-core-schema").then(
@@ -41,6 +47,8 @@ interface CreateTicketContext {
   listSnapshots: TicketSnapshots;
   subtasksKey: readonly unknown[] | null;
   previousSubtasks: Ticket[] | null;
+  detailKey: readonly unknown[];
+  previousDetail: ProjectWithDetails | null | undefined;
 }
 
 export function useCreateTicket(
@@ -67,6 +75,7 @@ export function useCreateTicket(
       ),
     onMutate: async (variables) => {
       const tempId = -Date.now();
+      const detailKey = buildWorkQueryKeys.projects.detail(variables.projectId);
       const subtasksKey =
         variables.parentTicketId !== undefined
           ? buildWorkQueryKeys.projects.subtasks(
@@ -74,13 +83,19 @@ export function useCreateTicket(
               variables.projectId,
             )
           : null;
-      await queryClient.cancelQueries({
-        queryKey: buildWorkQueryKeys.projects.tickets({
-          projectId: variables.projectId,
+      await Promise.all([
+        queryClient.cancelQueries({
+          queryKey: buildWorkQueryKeys.projects.tickets({
+            projectId: variables.projectId,
+          }),
         }),
-      });
-      if (subtasksKey !== null)
-        await queryClient.cancelQueries({ queryKey: subtasksKey });
+        queryClient.cancelQueries({ queryKey: detailKey }),
+        ...(subtasksKey !== null
+          ? [queryClient.cancelQueries({ queryKey: subtasksKey })]
+          : []),
+      ]);
+      const previousDetail =
+        queryClient.getQueryData<ProjectWithDetails | null>(detailKey);
       const previousSubtasks =
         subtasksKey !== null
           ? (queryClient.getQueryData<Ticket[]>(subtasksKey) ?? null)
@@ -125,7 +140,21 @@ export function useCreateTicket(
         queryClient.setQueryData<Ticket[]>(subtasksKey, (old) =>
           old ? [tempTicket, ...old] : [tempTicket],
         );
-      return { tempId, listSnapshots, subtasksKey, previousSubtasks };
+      if (previousDetail?.tickets !== undefined) {
+        queryClient.setQueryData<ProjectWithDetails | null>(detailKey, (old) =>
+          old?.tickets
+            ? { ...old, tickets: [tempTicket, ...old.tickets] }
+            : old,
+        );
+      }
+      return {
+        tempId,
+        listSnapshots,
+        subtasksKey,
+        previousSubtasks,
+        detailKey,
+        previousDetail,
+      };
     },
     onSuccess: (data, variables, context, mutFnCtx) => {
       if (context) {
@@ -136,6 +165,16 @@ export function useCreateTicket(
           queryClient.setQueryData<Ticket[]>(context.subtasksKey, (old) =>
             old ? old.map((t) => (t.id === context.tempId ? data : t)) : [data],
           );
+        queryClient.setQueryData<ProjectWithDetails | null>(
+          context.detailKey,
+          (old) => {
+            if (!old?.tickets) return old;
+            return {
+              ...old,
+              tickets: old.tickets.map((t) => (t.id === context.tempId ? data : t)),
+            };
+          },
+        );
       }
       options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
@@ -153,6 +192,12 @@ export function useCreateTicket(
               ? context.previousSubtasks
               : (old) => old?.filter((t) => t.id !== context.tempId),
           );
+        if (context.previousDetail !== undefined) {
+          queryClient.setQueryData<ProjectWithDetails | null>(
+            context.detailKey,
+            context.previousDetail,
+          );
+        }
       }
       options?.onError?.(error, variables, context, mutFnCtx);
     },
@@ -163,15 +208,21 @@ export function useCreateTicket(
   });
 }
 
+interface DeleteTicketContext {
+  collectionSnapshots: RawCollectionSnapshot[];
+  previousDetail: ProjectWithDetails | null | undefined;
+  previousTicket: Ticket | null | undefined;
+}
+
 export function useDeleteTicket(
   projectId: number,
   options?: Omit<
-    UseMutationOptions<void, Error, { ticketId: number }>,
+    UseMutationOptions<void, Error, { ticketId: number }, DeleteTicketContext>,
     "mutationFn"
   >,
 ) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<void, Error, { ticketId: number }>(
+  return useAuthorizedMutation<void, Error, { ticketId: number }, DeleteTicketContext>(
     "build:tickets:delete",
     {
       ...options,
@@ -183,9 +234,64 @@ export function useDeleteTicket(
           undefined,
           noContentLazy,
         ),
+      onMutate: async (variables) => {
+        const detailKey = buildWorkQueryKeys.projects.detail(projectId);
+        const ticketKey = buildWorkQueryKeys.projects.ticket(
+          projectId,
+          variables.ticketId,
+        );
+        await Promise.all([
+          queryClient.cancelQueries({
+            queryKey: buildWorkQueryKeys.projects.tickets({ projectId }),
+          }),
+          queryClient.cancelQueries({ queryKey: detailKey }),
+          queryClient.cancelQueries({ queryKey: ticketKey }),
+        ]);
+        const collectionSnapshots = snapshotTicketCollections(
+          queryClient,
+          projectId,
+        );
+        const previousDetail =
+          queryClient.getQueryData<ProjectWithDetails | null>(detailKey);
+        const previousTicket =
+          queryClient.getQueryData<Ticket | null>(ticketKey);
+        removeTicketFromCollections(queryClient, projectId, variables.ticketId);
+        queryClient.setQueryData<ProjectWithDetails | null>(
+          detailKey,
+          (old) =>
+            old?.tickets
+              ? {
+                  ...old,
+                  tickets: old.tickets.filter((t) => t.id !== variables.ticketId),
+                }
+              : old,
+        );
+        queryClient.removeQueries({ queryKey: ticketKey, exact: true });
+        return { collectionSnapshots, previousDetail, previousTicket };
+      },
       onSuccess: (data, variables, context, mutFnCtx) => {
         invalidateBuildViews(queryClient, projectId, [variables.ticketId]);
         options?.onSuccess?.(data, variables, context, mutFnCtx);
+      },
+      onError: (error, variables, context, mutFnCtx) => {
+        if (context) {
+          restoreRawCollections(queryClient, context.collectionSnapshots);
+          const detailKey = buildWorkQueryKeys.projects.detail(projectId);
+          if (context.previousDetail !== undefined) {
+            queryClient.setQueryData<ProjectWithDetails | null>(
+              detailKey,
+              context.previousDetail,
+            );
+          }
+          const ticketKey = buildWorkQueryKeys.projects.ticket(
+            projectId,
+            variables.ticketId,
+          );
+          if (context.previousTicket !== undefined) {
+            queryClient.setQueryData<Ticket | null>(ticketKey, context.previousTicket);
+          }
+        }
+        options?.onError?.(error, variables, context, mutFnCtx);
       },
     },
   );

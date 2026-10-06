@@ -1,5 +1,5 @@
 import { QueryClient } from "@tanstack/react-query";
-import { invalidateTicketUpdateViews } from "./ticket-cache";
+import { invalidateTicketUpdateViews } from "./ticket-cache-invalidation";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 
 const PROJECT_ID = 42;

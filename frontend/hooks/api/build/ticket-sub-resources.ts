@@ -159,34 +159,63 @@ export function useAddComment(
   });
 }
 
+type TicketLabelContext = { ticketKey: readonly unknown[]; previousLabels: Ticket["labels"] };
+
 export function useAddLabelToTicket(
-  options?: Omit<UseMutationOptions<{ success: boolean }, Error, { ticketId: number; projectId: number; labelId: number }>, "mutationFn">
+  options?: Omit<UseMutationOptions<{ success: boolean }, Error, { ticketId: number; projectId: number; labelId: number }, TicketLabelContext>, "mutationFn">
 ) {
   const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, { ticketId: number; projectId: number; labelId: number }>({
+  return useMutation<{ success: boolean }, Error, { ticketId: number; projectId: number; labelId: number }, TicketLabelContext>({
     ...options,
     mutationKey: ["projects", "tickets", "labels", "add"],
     mutationFn: ({ ticketId, projectId, labelId }) =>
       apiClient.post<{ success: boolean }>(`/build/${projectId}/tickets/${ticketId}/labels`, { labelId }, undefined, successLazy),
-    onSuccess: (data, variables, context, mutFnCtx) => {
-      queryClient.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.ticket(variables.projectId, variables.ticketId),
+    onMutate: async (variables) => {
+      const ticketKey = buildWorkQueryKeys.projects.ticket(variables.projectId, variables.ticketId);
+      await queryClient.cancelQueries({ queryKey: ticketKey });
+      const ticket = queryClient.getQueryData<Ticket | null>(ticketKey);
+      const previousLabels = ticket?.labels;
+      const cachedLabels = queryClient.getQueryData<TicketLabel[]>(
+        buildWorkQueryKeys.projects.labels(),
+      );
+      const labelData = cachedLabels?.find((l) => l.id === variables.labelId);
+      const tempMapping = {
+        id: -Date.now(),
+        ticketId: variables.ticketId,
+        labelId: variables.labelId,
+        createdAt: new Date().toISOString(),
+        label: labelData,
+      };
+      queryClient.setQueryData<Ticket | null>(ticketKey, (current) => {
+        if (!current) return current;
+        return { ...current, labels: [...(current.labels ?? []), tempMapping] };
       });
-      if (variables.projectId) {
-        queryClient.invalidateQueries({
-          queryKey: buildWorkQueryKeys.projects.tickets({ projectId: variables.projectId }),
+      return { ticketKey, previousLabels };
+    },
+    onSuccess: (data, variables, context, mutFnCtx) => {
+      void queryClient.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.ticket(variables.projectId, variables.ticketId),
+        exact: true,
+      });
+      options?.onSuccess?.(data, variables, context, mutFnCtx);
+    },
+    onError: (error, variables, context, mutFnCtx) => {
+      if (context) {
+        queryClient.setQueryData<Ticket | null>(context.ticketKey, (current) => {
+          if (!current) return current;
+          return { ...current, labels: context.previousLabels };
         });
       }
-      options?.onSuccess?.(data, variables, context, mutFnCtx);
+      options?.onError?.(error, variables, context, mutFnCtx);
     },
   });
 }
 
 export function useRemoveLabelFromTicket(
-  options?: Omit<UseMutationOptions<void, Error, { ticketId: number; projectId: number; labelId: number }>, "mutationFn">
+  options?: Omit<UseMutationOptions<void, Error, { ticketId: number; projectId: number; labelId: number }, TicketLabelContext>, "mutationFn">
 ) {
   const queryClient = useQueryClient();
-  return useMutation<void, Error, { ticketId: number; projectId: number; labelId: number }>({
+  return useMutation<void, Error, { ticketId: number; projectId: number; labelId: number }, TicketLabelContext>({
     ...options,
     mutationKey: ["projects", "tickets", "labels", "remove"],
     mutationFn: ({ ticketId, projectId, labelId }) =>
@@ -196,16 +225,28 @@ export function useRemoveLabelFromTicket(
         undefined,
         noContentLazy,
       ),
-    onSuccess: (data, variables, context, mutFnCtx) => {
-      queryClient.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.ticket(variables.projectId, variables.ticketId),
+    onMutate: async (variables) => {
+      const ticketKey = buildWorkQueryKeys.projects.ticket(variables.projectId, variables.ticketId);
+      await queryClient.cancelQueries({ queryKey: ticketKey });
+      const ticket = queryClient.getQueryData<Ticket | null>(ticketKey);
+      const previousLabels = ticket?.labels;
+      queryClient.setQueryData<Ticket | null>(ticketKey, (current) => {
+        if (!current) return current;
+        return {
+          ...current,
+          labels: current.labels?.filter((m) => m.labelId !== variables.labelId),
+        };
       });
-      if (variables.projectId) {
-        queryClient.invalidateQueries({
-          queryKey: buildWorkQueryKeys.projects.tickets({ projectId: variables.projectId }),
+      return { ticketKey, previousLabels };
+    },
+    onError: (error, variables, context, mutFnCtx) => {
+      if (context) {
+        queryClient.setQueryData<Ticket | null>(context.ticketKey, (current) => {
+          if (!current) return current;
+          return { ...current, labels: context.previousLabels };
         });
       }
-      options?.onSuccess?.(data, variables, context, mutFnCtx);
+      options?.onError?.(error, variables, context, mutFnCtx);
     },
   });
 }
@@ -244,11 +285,12 @@ export function useAddAttachment(
         fileId,
       }, undefined, attachmentCreateResultLazy),
     onSuccess: (data, variables, context, mutFnCtx) => {
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.ticket(variables.projectId, variables.ticketId),
+        exact: true,
+        refetchType: "active",
       });
       options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
   });
 }
-

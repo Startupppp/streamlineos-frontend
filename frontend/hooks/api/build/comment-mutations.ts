@@ -77,8 +77,10 @@ export function useUpdateComment() {
         );
       },
       onSuccess: (_data, variables) => {
-        queryClient.invalidateQueries({
+        void queryClient.invalidateQueries({
           queryKey: accountingAndSupportQueryKeys.ticketActivity.list(variables.ticketId),
+          exact: true,
+          refetchType: "none",
         });
       },
     },
@@ -119,8 +121,10 @@ export function useDeleteComment() {
         );
       },
       onSuccess: (_data, variables) => {
-        queryClient.invalidateQueries({
+        void queryClient.invalidateQueries({
           queryKey: accountingAndSupportQueryKeys.ticketActivity.list(variables.ticketId),
+          exact: true,
+          refetchType: "none",
         });
       },
     },

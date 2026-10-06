@@ -1,6 +1,6 @@
 "use client";
 ﻿
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import type { UseMutationOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -59,7 +59,10 @@ export function useAddRelatedLink(
     mutationFn: ({ projectId, ticketId, url, label }) =>
       apiClient.post<TicketRelatedLink>(`/build/${projectId}/tickets/${ticketId}/related-links`, { url, label }, undefined, relatedLinkCreateLazy),
     onSuccess: (data, variables, onMutateResult, context) => {
-      queryClient.invalidateQueries({ queryKey: relatedLinksKey(variables.projectId, variables.ticketId) });
+      queryClient.setQueryData<TicketRelatedLink[]>(
+        relatedLinksKey(variables.projectId, variables.ticketId),
+        (old) => (old ? [...old, data] : [data]),
+      );
       options?.onSuccess?.(data, variables, onMutateResult, context);
     },
   });

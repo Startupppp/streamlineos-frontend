@@ -17,11 +17,14 @@ jest.mock("@/lib/rbac/permission-gate", () => ({
 }));
 
 jest.mock("@/hooks/api/build/ticket-cache", () => ({
-  invalidateTicketUpdateViews: jest.fn(),
   patchTicketCollections: jest.fn(() => ({})),
   restoreTicketCollections: jest.fn(),
   rollbackTicketFields: jest.fn((current: unknown) => current),
   ticketRollback: jest.fn(() => (t: unknown) => t),
+}));
+
+jest.mock("@/hooks/api/build/ticket-cache-invalidation", () => ({
+  invalidateTicketUpdateViews: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/build/build-tickets-subresource-schema", () => ({

@@ -174,7 +174,7 @@ export function useActivityFeed({
 
   const createTicket = useCreateTicket({
     onSuccess: (ticket) => {
-      queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.ticketActivity.list(ticketId) });
+      void queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.ticketActivity.list(ticketId), exact: true, refetchType: "none" });
       toast.success("Issue created");
       if (ticket.projectId != null && ticket.ticketNumber != null) {
         router.push(getTicketDetailHref(ticket.projectId, ticket.project?.key ?? projectKey, ticket.ticketNumber));

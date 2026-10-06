@@ -40,8 +40,8 @@ export function WatcherList({ projectId, ticketId }: WatcherListProps) {
   const isWatching = watchers.some((w) => w.userId === currentUserId);
 
   const handleToggleWatch = useCallback(() => {
-    toggleWatch.mutate({ ticketId, watching: isWatching });
-  }, [toggleWatch, ticketId, isWatching]);
+    toggleWatch.mutate({ ticketId, watching: isWatching, userId: currentUserId });
+  }, [toggleWatch, ticketId, isWatching, currentUserId]);
 
   const handleAddWatcher = useCallback(
     (userId: string | null) => {

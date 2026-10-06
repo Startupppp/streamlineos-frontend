@@ -16,20 +16,45 @@ const noContentContract = lazyContract(() =>
 
 export function useUpdateLabel() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("build:manage", {
+  return useAuthorizedMutation<TicketLabel, Error, { labelId: number; name?: string; color?: string }, TicketLabel[] | undefined>("build:manage", {
     mutationKey: ["projects", "labels", "update"],
-    mutationFn: ({ labelId, ...data }: { labelId: number; name?: string; color?: string }) =>
+    mutationFn: ({ labelId, ...data }) =>
       apiClient.patch<TicketLabel>(`/build/labels/${labelId}`, data, undefined, ticketLabelContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.labels() }),
+    onMutate: async ({ labelId, name, color }) => {
+      const key = buildWorkQueryKeys.projects.labels();
+      await qc.cancelQueries({ queryKey: key });
+      const previous = qc.getQueryData<TicketLabel[]>(key);
+      qc.setQueryData<TicketLabel[]>(key, (old) =>
+        old ? old.map((l) => (l.id === labelId ? { ...l, ...(name !== undefined && { name }), ...(color !== undefined && { color }) } : l)) : old,
+      );
+      return previous;
+    },
+    onSuccess: (data) => {
+      qc.setQueryData<TicketLabel[]>(buildWorkQueryKeys.projects.labels(), (old) =>
+        old ? old.map((l) => (l.id === data.id ? data : l)) : old,
+      );
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx !== undefined) qc.setQueryData(buildWorkQueryKeys.projects.labels(), ctx);
+    },
   });
 }
 
 export function useDeleteLabel() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("build:manage", {
+  return useAuthorizedMutation<void, Error, number, TicketLabel[] | undefined>("build:manage", {
     mutationKey: ["projects", "labels", "delete"],
     mutationFn: (labelId: number) =>
       apiClient.delete<void>(`/build/labels/${labelId}`, undefined, undefined, noContentContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.labels() }),
+    onMutate: async (labelId) => {
+      const key = buildWorkQueryKeys.projects.labels();
+      await qc.cancelQueries({ queryKey: key });
+      const previous = qc.getQueryData<TicketLabel[]>(key);
+      qc.setQueryData<TicketLabel[]>(key, (old) => old ? old.filter((l) => l.id !== labelId) : old);
+      return previous;
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx !== undefined) qc.setQueryData(buildWorkQueryKeys.projects.labels(), ctx);
+    },
   });
 }

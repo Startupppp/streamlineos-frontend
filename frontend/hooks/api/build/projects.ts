@@ -16,7 +16,7 @@ import { apiClient } from "@/lib/api-client";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-import { invalidateBuildViews } from "./ticket-cache";
+import { invalidateBuildViews } from "./ticket-cache-invalidation";
 import {
   applyProjectDetailPatch,
   getWorkspaceUsersFromCache,

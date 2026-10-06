@@ -20,8 +20,6 @@ import {
   useAddLabelToTicket,
   useRemoveLabelFromTicket,
 } from "@/hooks/api/build/tickets";
-import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
-import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -56,14 +54,12 @@ export function LabelPicker({
   const [open, setOpen] = useState(false);
   const [newLabelName, setNewLabelName] = useState("");
   const [selectedColor, setSelectedColor] = useState<string>(DEFAULT_LABEL_COLOR);
-  const queryClient = useQueryClient();
 
   const { data: allLabels } = useProjectLabels(undefined, { enabled: open });
 
   const createLabel = useCreateOrgLabel({
     onSuccess: (newLabel) => {
       setNewLabelName("");
-      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.labels() });
       if (projectId !== undefined) {
         addLabel.mutate({ ticketId, projectId, labelId: newLabel.id });
       }
@@ -72,22 +68,10 @@ export function LabelPicker({
   });
 
   const addLabel = useAddLabelToTicket({
-    onSuccess: () => {
-      if (projectId !== undefined)
-        queryClient.invalidateQueries({
-          queryKey: buildWorkQueryKeys.projects.ticket(projectId, ticketId),
-        });
-    },
     onError: (error) => toast.error(getErrorMessage(error)),
   });
 
   const removeLabel = useRemoveLabelFromTicket({
-    onSuccess: () => {
-      if (projectId !== undefined)
-        queryClient.invalidateQueries({
-          queryKey: buildWorkQueryKeys.projects.ticket(projectId, ticketId),
-        });
-    },
     onError: (error) => toast.error(getErrorMessage(error)),
   });
 

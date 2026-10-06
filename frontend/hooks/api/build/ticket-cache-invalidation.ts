@@ -11,47 +11,60 @@ export function invalidateBuildViews(
 ) {
   void client.invalidateQueries({
     queryKey: buildWorkQueryKeys.projects.tickets({ projectId }),
+    refetchType: "none",
   });
   void client.invalidateQueries({
     queryKey: buildWorkQueryKeys.projects.detail(projectId),
+    refetchType: "none",
   });
   void client.invalidateQueries({
     queryKey: buildWorkQueryKeys.projects.analytics(projectId),
+    refetchType: "none",
   });
   void client.invalidateQueries({
     queryKey: buildWorkQueryKeys.projects.list(),
+    refetchType: "none",
   });
   void client.invalidateQueries({
     queryKey: buildWorkQueryKeys.projects.allWorkAll,
+    refetchType: "none",
   });
   void client.invalidateQueries({
     queryKey: collaborationQueryKeys.dashboard.myIssues(),
+    refetchType: "none",
   });
   void client.invalidateQueries({
     queryKey: collaborationQueryKeys.dashboard.recentProjects(),
+    refetchType: "none",
   });
   for (const ticketId of ticketIds) {
     void client.invalidateQueries({
       queryKey: buildWorkQueryKeys.projects.ticket(projectId, ticketId),
+      refetchType: "none",
     });
     void client.invalidateQueries({
       queryKey: accountingAndSupportQueryKeys.ticketActivity.list(ticketId),
+      exact: true,
     });
   }
   void client.invalidateQueries({
     queryKey: buildWorkQueryKeys.projects.tickets(),
+    refetchType: "none",
     predicate: (query) =>
       query.queryKey.includes("by-key") && query.queryKey.includes(projectId),
   });
   if (!aggregates) return;
   void client.invalidateQueries({
     queryKey: buildWorkQueryKeys.projects.cycles(projectId),
+    refetchType: "none",
   });
   void client.invalidateQueries({
     queryKey: buildWorkQueryKeys.projects.columnCounts(projectId),
+    refetchType: "none",
   });
   void client.invalidateQueries({
     queryKey: buildWorkQueryKeys.projectReports.all,
+    refetchType: "none",
     predicate: (query) =>
       query.queryKey[
         buildWorkQueryKeys.projectReports.all.length + 1
@@ -59,6 +72,7 @@ export function invalidateBuildViews(
   });
   void client.invalidateQueries({
     queryKey: collaborationQueryKeys.dashboard.activeSprintSummary(),
+    refetchType: "none",
   });
 }
 

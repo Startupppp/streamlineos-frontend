@@ -14,13 +14,13 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
 import { ticketUpdateRequestContract } from "./build-tickets-subresource-schema";
 import {
-  invalidateTicketUpdateViews,
   patchTicketCollections,
   restoreTicketCollections,
   rollbackTicketFields,
   ticketRollback,
   type TicketSnapshots,
 } from "./ticket-cache";
+import { invalidateTicketUpdateViews } from "./ticket-cache-invalidation";
 
 const ticketUpdateResultLazy = lazyContract(() =>
   import("@/hooks/api/build/build-tickets-subresource-schema").then(
@@ -34,6 +34,8 @@ export interface UpdateTicketResponse {
   version: number;
 }
 
+type ColCountSnap = { key: readonly unknown[]; data: Record<string, number> };
+
 interface UpdateTicketContext {
   detailKey: readonly unknown[];
   ticketKey: readonly unknown[];
@@ -42,6 +44,7 @@ interface UpdateTicketContext {
   optimisticDetail: ProjectWithDetails | null | undefined;
   optimisticTicket: Ticket | null | undefined;
   listSnapshots: TicketSnapshots;
+  colCountSnapshots: ColCountSnap[];
 }
 
 function resolveAssigneeId(
@@ -165,6 +168,20 @@ export function useUpdateTicket(
           old ? applyTicketPatch(old, variables, members) : old,
         );
       }
+      const colCountSnapshots: ColCountSnap[] = [];
+      if (variables.status !== undefined && previousTicket?.status !== undefined && previousTicket.status !== variables.status) {
+        const oldStatus = previousTicket.status;
+        const newStatus = variables.status;
+        for (const [key, counts] of queryClient.getQueriesData<Record<string, number>>({ queryKey: buildWorkQueryKeys.projects.columnCounts(projectId) })) {
+          if (!counts) continue;
+          colCountSnapshots.push({ key, data: counts });
+          queryClient.setQueryData<Record<string, number>>(key, {
+            ...counts,
+            [oldStatus]: Math.max(0, (counts[oldStatus] ?? 0) - 1),
+            [newStatus]: (counts[newStatus] ?? 0) + 1,
+          });
+        }
+      }
       return {
         detailKey,
         ticketKey,
@@ -175,6 +192,7 @@ export function useUpdateTicket(
         ),
         optimisticTicket: queryClient.getQueryData<Ticket | null>(ticketKey),
         listSnapshots,
+        colCountSnapshots,
       };
     },
     onError: (error, variables, context, mutFnCtx) => {
@@ -200,6 +218,9 @@ export function useUpdateTicket(
             : current,
         );
         restoreTicketCollections(queryClient, context.listSnapshots);
+        for (const { key, data } of context.colCountSnapshots) {
+          queryClient.setQueryData(key, data);
+        }
       }
       options?.onError?.(error, variables, context, mutFnCtx);
     },

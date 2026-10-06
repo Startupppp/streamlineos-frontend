@@ -124,7 +124,7 @@ describe("useDeleteView — invalidation contract (BLD-X-BE-SETTINGS-VIEWS-INV-0
   });
 });
 
-describe("useCreateProjectCustomField — invalidation contract (BLD-X-BE-SETTINGS-CF-INV-001)", () => {
+describe("useCreateProjectCustomField — cache contract (BLD-X-BE-SETTINGS-CF-INV-001)", () => {
   let client: QueryClient;
   let invalidateSpy: jest.SpyInstance;
 
@@ -145,7 +145,9 @@ describe("useCreateProjectCustomField — invalidation contract (BLD-X-BE-SETTIN
     invalidateSpy = jest.spyOn(client, "invalidateQueries");
   });
 
-  it("invalidates the custom-fields list for the correct project after create", async () => {
+  it("writes the created field into the project's custom-field list without refetching it", async () => {
+    const cfKey = buildWorkQueryKeys.projects.customFields(10);
+    client.setQueryData(cfKey, []);
     const { result } = renderHook(
       () => useCreateProjectCustomField(10),
       { wrapper: wrap(client) },
@@ -156,18 +158,13 @@ describe("useCreateProjectCustomField — invalidation contract (BLD-X-BE-SETTIN
     });
 
     await waitFor(() => {
-      expect(invalidateSpy).toHaveBeenCalled();
+      expect(client.getQueryData<Array<{ id: number }>>(cfKey)?.map((field) => field.id)).toEqual([5]);
     });
-
-    const keys = invalidateSpy.mock.calls.map(
-      (call) => JSON.stringify((call[0] as { queryKey?: unknown }).queryKey ?? call[0]),
-    );
-    const cfKey = JSON.stringify(buildWorkQueryKeys.projects.customFields(10));
-    expect(keys.some((k) => k === cfKey)).toBe(true);
+    expect(invalidateSpy).not.toHaveBeenCalled();
   });
 });
 
-describe("useDeleteProjectCustomField — invalidation contract (BLD-X-BE-SETTINGS-CF-INV-002)", () => {
+describe("useDeleteProjectCustomField — cache contract (BLD-X-BE-SETTINGS-CF-INV-002)", () => {
   let client: QueryClient;
   let invalidateSpy: jest.SpyInstance;
 
@@ -177,7 +174,9 @@ describe("useDeleteProjectCustomField — invalidation contract (BLD-X-BE-SETTIN
     invalidateSpy = jest.spyOn(client, "invalidateQueries");
   });
 
-  it("invalidates the custom-fields list for the correct project after delete", async () => {
+  it("removes the deleted field from the project's custom-field list without refetching it", async () => {
+    const cfKey = buildWorkQueryKeys.projects.customFields(10);
+    client.setQueryData(cfKey, [{ id: 7 }, { id: 8 }]);
     const { result } = renderHook(
       () => useDeleteProjectCustomField(10),
       { wrapper: wrap(client) },
@@ -188,14 +187,9 @@ describe("useDeleteProjectCustomField — invalidation contract (BLD-X-BE-SETTIN
     });
 
     await waitFor(() => {
-      expect(invalidateSpy).toHaveBeenCalled();
+      expect(client.getQueryData<Array<{ id: number }>>(cfKey)?.map((field) => field.id)).toEqual([8]);
     });
-
-    const keys = invalidateSpy.mock.calls.map(
-      (call) => JSON.stringify((call[0] as { queryKey?: unknown }).queryKey ?? call[0]),
-    );
-    const cfKey = JSON.stringify(buildWorkQueryKeys.projects.customFields(10));
-    expect(keys.some((k) => k === cfKey)).toBe(true);
+    expect(invalidateSpy).not.toHaveBeenCalled();
   });
 });
 
