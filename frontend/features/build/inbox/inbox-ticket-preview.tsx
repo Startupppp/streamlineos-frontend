@@ -77,6 +77,8 @@ export function InboxTicketPreview({
     localTitle,
     ticketError,
     handleTitleChange,
+    commitTitle,
+    revertTitle,
     isLoading: ticketLoading,
     projectData: detailProject,
     handleDescriptionEditorChange,
@@ -238,6 +240,8 @@ export function InboxTicketPreview({
             variant="preview"
             onApplyDescription={handleApplyAiDescription}
             onTitleChange={handleTitleChange}
+            onCommitTitle={commitTitle}
+            onRevertTitle={revertTitle}
             onDescriptionChange={handleDescriptionEditorChange}
             canUpdate={canUpdate}
           />

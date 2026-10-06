@@ -1,7 +1,9 @@
 "use client";
 
+import type { MouseEvent as ReactMouseEvent, PointerEvent } from "react";
 import { Check, Monitor, Moon, Palette, Sun, type LucideIcon } from "lucide-react";
 import {
+  DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
@@ -12,6 +14,7 @@ import {
   APP_THEMES,
   APP_THEME_MODES,
   type AppTheme,
+  type AppThemeMode,
   type AppThemeModeOption,
 } from "@/lib/theme/app-themes";
 import { useAppTheme } from "./app-theme-provider";
@@ -27,14 +30,17 @@ function ModeOption({ mode }: { mode: AppThemeModeOption }) {
   const isActive = activeMode === mode.id;
   const Icon = MODE_ICONS[mode.id];
 
-  function handleSelect() {
+  function applyMode(event: PointerEvent<HTMLButtonElement> | ReactMouseEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    event.stopPropagation();
     setMode(mode.id);
   }
 
   return (
     <button
       type="button"
-      onClick={handleSelect}
+      onPointerDownCapture={applyMode}
+      onClick={applyMode}
       aria-pressed={isActive}
       className={cn(
         "flex flex-1 flex-col items-center gap-1 rounded-lg border px-2 py-1.5 text-dense font-medium transition-colors",
@@ -67,9 +73,15 @@ function ThemeOption({ theme }: { theme: AppTheme }) {
     setTheme(theme.id);
   }
 
+  function handlePointerDown(event: PointerEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    setTheme(theme.id);
+  }
+
   return (
     <button
       type="button"
+      onPointerDown={handlePointerDown}
       onClick={handleSelect}
       aria-pressed={isActive}
       className={cn(
@@ -81,7 +93,7 @@ function ThemeOption({ theme }: { theme: AppTheme }) {
     >
       <span
         aria-hidden
-        className="h-3.5 w-3.5 shrink-0 rounded-full border border-black/10"
+        className="h-3.5 w-3.5 shrink-0 rounded-full border border-foreground/25"
         style={{ backgroundColor: theme.swatch }}
       />
       <span className="flex-1 truncate text-left">{theme.label}</span>
@@ -113,6 +125,39 @@ export function ThemeMenuPanel({ className }: { className?: string }) {
   );
 }
 
+export function ThemeModeMenuItems() {
+  const { mode: activeMode, setMode } = useAppTheme();
+
+  function apply(mode: AppThemeMode) {
+    setMode(mode);
+  }
+
+  return (
+    <>
+      {APP_THEME_MODES.map((mode) => {
+        const Icon = MODE_ICONS[mode.id];
+        const isActive = activeMode === mode.id;
+        return (
+          <DropdownMenuItem
+            key={mode.id}
+            className="gap-2 cursor-pointer"
+            onPointerDownCapture={() => {
+              apply(mode.id);
+            }}
+            onSelect={() => {
+              apply(mode.id);
+            }}
+          >
+            <Icon className="h-3.5 w-3.5" />
+            {mode.label}
+            {isActive ? <Check className="ml-auto h-3.5 w-3.5" /> : null}
+          </DropdownMenuItem>
+        );
+      })}
+    </>
+  );
+}
+
 export function ThemeMenuSubmenu() {
   return (
     <DropdownMenuSub>
@@ -120,7 +165,12 @@ export function ThemeMenuSubmenu() {
         <Palette className="h-3.5 w-3.5" />
         Interface theme
       </DropdownMenuSubTrigger>
-      <DropdownMenuSubContent className="w-64 p-2">
+      <DropdownMenuSubContent
+        sideOffset={-4}
+        alignOffset={-4}
+        collisionPadding={16}
+        className="w-64 max-h-[min(28rem,var(--radix-dropdown-menu-content-available-height))] overflow-y-auto p-2"
+      >
         <ModeOptionsRow />
         <DropdownMenuSeparator className="my-2" />
         <ThemeOptionsGrid />

@@ -154,9 +154,13 @@ export function buildStatusConfig(
 ): Record<string, StatusConfigEntry> {
   const merged: Record<string, StatusConfigEntry> = { ...statusConfig };
   for (const s of projectStatuses) {
+    const known = statusConfig[s.name];
     merged[s.name] = {
-      label: s.name.replace(/_/g, " "),
-      dotColor: TYPE_TO_DOT_COLOR[s.type ?? "unstarted"] ?? "bg-muted-foreground",
+      label: known?.label ?? s.name.replaceAll("_", " "),
+      dotColor:
+        known?.dotColor ??
+        TYPE_TO_DOT_COLOR[s.type ?? "unstarted"] ??
+        "bg-muted-foreground",
       color: s.color,
     };
   }

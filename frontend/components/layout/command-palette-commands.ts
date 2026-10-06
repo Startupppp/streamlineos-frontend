@@ -9,8 +9,12 @@ import {
   Star,
   BarChart2,
   LayoutDashboard,
+  Moon,
+  Sun,
+  Monitor,
 } from "lucide-react";
 import { useCan } from "@/hooks/api/access";
+import { useAppTheme } from "@/components/theme/app-theme-provider";
 import { useHrmsCommands } from "./command-palette-hrms-commands";
 import type { CommandPaletteCommand } from "./command-palette-command-types";
 
@@ -27,10 +31,38 @@ export function useCommandRegistry({
 }): CommandPaletteCommand[] {
   const canCreateTicket = useCan("build:tickets:create");
   const hrmsCommands = useHrmsCommands(handleSelect);
+  const { setMode } = useAppTheme();
 
   return useMemo<CommandPaletteCommand[]>(
     () => [
       ...hrmsCommands,
+      {
+        id: "theme-light",
+        label: "Theme: Light",
+        group: "actions",
+        keywords: ["theme", "light", "appearance", "mode"],
+        icon: Sun,
+        isAvailable: true,
+        execute: () => setMode("light"),
+      },
+      {
+        id: "theme-dark",
+        label: "Theme: Dark",
+        group: "actions",
+        keywords: ["theme", "dark", "appearance", "mode"],
+        icon: Moon,
+        isAvailable: true,
+        execute: () => setMode("dark"),
+      },
+      {
+        id: "theme-system",
+        label: "Theme: System",
+        group: "actions",
+        keywords: ["theme", "system", "appearance", "mode"],
+        icon: Monitor,
+        isAvailable: true,
+        execute: () => setMode("system"),
+      },
       {
         id: "create-ticket",
         label: "Create ticket",
@@ -121,6 +153,6 @@ export function useCommandRegistry({
         execute: () => handleSelect("/build/my-work"),
       },
     ],
-    [canCreateTicket, hrmsCommands, projectId, handleSelect, handleCreateTicket],
+    [canCreateTicket, hrmsCommands, projectId, handleSelect, handleCreateTicket, setMode],
   );
 }

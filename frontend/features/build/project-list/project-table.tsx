@@ -201,11 +201,14 @@ export const ProjectTable = React.memo(function ProjectTable({
         onRowClick={handleRowClick}
         minWidth="content"
         mobileCard={renderMobileCard}
-        rowClassName={() => "group hover:bg-primary/[0.035]"}
+        rowClassName={() => "group hover:bg-foreground/[0.035] focus-visible:bg-foreground/[0.05]"}
         className="min-h-0 min-w-0 flex-1 overflow-hidden rounded-none border-0 bg-transparent shadow-none"
         emptyState={
-          <div className="py-4 text-center text-sm text-muted-foreground">
-            No projects found
+          <div className="py-8 text-center">
+            <p className="text-sm font-medium text-foreground">No projects found</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Try clearing filters or search.
+            </p>
           </div>
         }
         pagination={

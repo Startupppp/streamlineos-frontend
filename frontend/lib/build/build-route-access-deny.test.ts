@@ -127,6 +127,7 @@ describe("Build route-access permission posture is pinned for every manifested p
     ["/build/[projectId]/settings/workflow", "module:build + build:update"],
     ["/build/[projectId]/tickets/[ticketKey]", "module:build + build:tickets:view"],
     ["/build/[projectId]/triage", "module:build + build:tickets:view"],
+    ["/build/[projectId]/[...slug]", "module:build + build:view"],
     ["/build/[projectId]/updates", "module:build + build:updates:view"],
     ["/build/[projectId]/whiteboard", "module:build + build:view"],
     ["/build/[projectId]/wiki", "module:build + kb:pages:view"],
@@ -161,7 +162,7 @@ describe("Build route-access permission posture is pinned for every manifested p
     ["/build/templates", "module:build + build:create"],
   ];
 
-  it("pins all 78 manifest routes so this table cannot drift out of step with the manifest", () => {
+  it("pins all 79 manifest routes so this table cannot drift out of step with the manifest", () => {
     expect(EXPECTED_ACCESS).toHaveLength(BUILD_ROUTE_MANIFEST.length);
     expect(EXPECTED_ACCESS.map(([route]) => route).sort()).toEqual(
       BUILD_ROUTE_MANIFEST.map((entry) => entry.route).sort(),
@@ -180,7 +181,6 @@ describe("Build route-access permission posture is pinned for every manifested p
   it("unknown Build paths remain undecidable instead of inheriting a weaker Build read key", () => {
     for (const path of [
       "/build/not-real",
-      "/build/42/not-a-real-page",
     ]) {
       expect(resolveRouteAccess(path).kind).toBe("unknown");
     }

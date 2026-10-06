@@ -38,6 +38,8 @@ function renderSection(canUpdate: boolean) {
       subtasks={[]}
       members={[]}
       onApplyDescription={jest.fn()}
+      onCommitTitle={(value) => (value.trim() ? null : "Title is required")}
+      onRevertTitle={() => {}}
       onTitleChange={jest.fn()}
       onDescriptionChange={jest.fn()}
       canUpdate={canUpdate}
@@ -58,6 +60,67 @@ describe("Issue detail title — editing follows the update gate", () => {
   it("does not offer the editor to a viewer who may not update", () => {
     renderSection(false);
     expect(screen.queryByRole("button", { name: "Edit title" })).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText("Ticket title")).not.toBeInTheDocument();
+  });
+});
+
+describe("Issue detail title — empty commit and Escape (C7)", () => {
+  it("shows an inline error and keeps editing when Enter is pressed on an empty title", () => {
+    const onCommitTitle = jest.fn((value: string) =>
+      value.trim() ? null : "Title is required",
+    );
+    const onRevertTitle = jest.fn();
+    render(
+      <TicketDetailMainSection
+        ticket={TICKET}
+        ticketId={1}
+        projectId={3}
+        projectKey="TEST"
+        localTitle=""
+        subtasks={[]}
+        members={[]}
+        onApplyDescription={jest.fn()}
+        onCommitTitle={onCommitTitle}
+        onRevertTitle={onRevertTitle}
+        onTitleChange={jest.fn()}
+        onDescriptionChange={jest.fn()}
+        canUpdate
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Edit title" }));
+    const title = screen.getByPlaceholderText("Ticket title");
+    fireEvent.keyDown(title, { key: "Enter" });
+    expect(onCommitTitle).toHaveBeenCalledWith("");
+    expect(screen.getByRole("alert")).toHaveTextContent("Title is required");
+    expect(screen.getByPlaceholderText("Ticket title")).toBeInTheDocument();
+    expect(onRevertTitle).not.toHaveBeenCalled();
+  });
+
+  it("reverts the draft title when Escape is pressed", () => {
+    const onCommitTitle = jest.fn(() => null);
+    const onRevertTitle = jest.fn();
+    render(
+      <TicketDetailMainSection
+        ticket={TICKET}
+        ticketId={1}
+        projectId={3}
+        projectKey="TEST"
+        localTitle="Draft title"
+        subtasks={[]}
+        members={[]}
+        onApplyDescription={jest.fn()}
+        onCommitTitle={onCommitTitle}
+        onRevertTitle={onRevertTitle}
+        onTitleChange={jest.fn()}
+        onDescriptionChange={jest.fn()}
+        canUpdate
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Edit title" }));
+    const title = screen.getByPlaceholderText("Ticket title");
+    fireEvent.keyDown(title, { key: "Escape" });
+    expect(onRevertTitle).toHaveBeenCalled();
+    expect(onCommitTitle).not.toHaveBeenCalled();
     expect(screen.queryByPlaceholderText("Ticket title")).not.toBeInTheDocument();
   });
 });

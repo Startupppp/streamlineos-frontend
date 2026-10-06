@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
@@ -24,6 +24,7 @@ import {
   type ProjectCreateScope,
 } from "./use-project-provisioning";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { StepBasics } from "./steps/step-basics";
 import type { BasicsHandle } from "./steps/step-basics";
 import { StepType } from "./steps/step-type";
@@ -47,7 +48,13 @@ export function ProjectCreateWizard({
   const { step, direction, draft, updateDraft, goNext, goBack, reset } =
     useProjectCreate();
 
-  useRegisterDirtyState(open && (step > 1 || draft.name.trim() !== ""));
+  const isDirty = open && (step > 1 || draft.name.trim() !== "");
+  useRegisterDirtyState(isDirty);
+  const isDirtyRef = useRef(false);
+  useLayoutEffect(() => {
+    isDirtyRef.current = isDirty;
+  }, [isDirty]);
+  const [discardConfirmOpen, setDiscardConfirmOpen] = useState(false);
 
   const basicsRef = useRef<BasicsHandle>(null);
   const shouldReduceMotion = useReducedMotion();
@@ -63,16 +70,6 @@ export function ProjectCreateWizard({
     exit: (d: number) => ({ opacity: 0, x: shouldReduceMotion ? 0 : d * -24 }),
   };
 
-  function handleOpenChange(value: boolean) {
-    if (!value && isProvisioning) return;
-    if (!value) reset();
-    onOpenChange(value);
-  }
-
-  function handleClose() {
-    handleOpenChange(false);
-  }
-
   function handleSuccess() {
     reset();
     onOpenChange(false);
@@ -82,6 +79,47 @@ export function ProjectCreateWizard({
     handleSuccess,
     scope,
   );
+  const isBusyRef = useRef(false);
+  useLayoutEffect(() => {
+    isBusyRef.current = isProvisioning;
+  }, [isProvisioning]);
+
+  const requestClose = useCallback(() => {
+    if (isBusyRef.current) return;
+    if (isDirtyRef.current) {
+      setDiscardConfirmOpen(true);
+      return;
+    }
+    reset();
+    onOpenChange(false);
+  }, [reset, onOpenChange]);
+
+  function handleOpenChange(value: boolean) {
+    if (!value) {
+      requestClose();
+      return;
+    }
+    onOpenChange(true);
+  }
+
+  function handleDiscardConfirm() {
+    setDiscardConfirmOpen(false);
+    reset();
+    onOpenChange(false);
+  }
+
+  function handleOpenAutoFocus(event: Event) {
+    event.preventDefault();
+    const input = document.querySelector<HTMLInputElement>(
+      '[data-project-create-name="true"]',
+    );
+    input?.focus({ preventScroll: true });
+  }
+
+  function handleDismissRequest(event: { preventDefault(): void }) {
+    event.preventDefault();
+    requestClose();
+  }
 
   function handleNextFromBasics(): void {
     void basicsRef.current?.validate()?.then((ok) => {
@@ -96,10 +134,15 @@ export function ProjectCreateWizard({
   const currentLabel = STEP_LABELS[step - 1] ?? "";
 
   return (
+    <>
     <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent
         side="right"
         className="w-full sm:max-w-[600px] p-0 flex flex-col overflow-hidden"
+        onOpenAutoFocus={handleOpenAutoFocus}
+        onEscapeKeyDown={handleDismissRequest}
+        onPointerDownOutside={handleDismissRequest}
+        onInteractOutside={handleDismissRequest}
       >
         <SheetHeader className="shrink-0 px-6 pt-5 pb-4 border-b text-left">
           <div className="flex gap-1 mb-3">
@@ -141,7 +184,9 @@ export function ProjectCreateWizard({
               transition={{ duration: 0.22, ease: "easeOut" }}
               className={cn(step === 4 && "flex min-h-0 flex-1 flex-col")}
             >
-              {step === 1 && <StepBasics ref={basicsRef} {...sharedProps} />}
+              {step === 1 && (
+                <StepBasics ref={basicsRef} {...sharedProps} onCancel={requestClose} />
+              )}
               {step === 2 && <StepType {...sharedProps} />}
               {step === 3 && <StepTemplate {...sharedProps} />}
               {step === 4 && <StepToggles {...sharedProps} />}
@@ -159,7 +204,7 @@ export function ProjectCreateWizard({
                 type="button"
                 variant="outline"
                 className="flex-1"
-                onClick={handleClose}
+                onClick={requestClose}
               >
                 Cancel
               </Button>
@@ -237,5 +282,16 @@ export function ProjectCreateWizard({
         </div>
       </SheetContent>
     </Sheet>
+      <ConfirmDialog
+        open={discardConfirmOpen}
+        onOpenChange={setDiscardConfirmOpen}
+        title="Discard draft?"
+        description="You have unsaved changes in this project wizard. Closing will discard them."
+        confirmLabel="Discard"
+        cancelLabel="Keep editing"
+        destructive
+        onConfirm={handleDiscardConfirm}
+      />
+    </>
   );
 }

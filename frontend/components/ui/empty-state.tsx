@@ -7,6 +7,7 @@ import Link from "next/link";
 import { StateIllustration, type StateIllustrationPreset } from "@/components/illustrations/state-illustration";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
 import type { PermissionGate } from "@/lib/rbac/permission-gate";
+import { SURFACE_EMPTY } from "@/lib/ui-surface-chrome";
 
 interface ActionProps {
   label: string;
@@ -144,7 +145,7 @@ export function EmptyState({
           ? "py-4 px-2"
           : bare
             ? ""
-            : "h-full min-h-80 w-full flex-1 rounded-xl border border-dashed border-border bg-card px-6 py-12",
+            : SURFACE_EMPTY,
         className
       )}
       style={bare && height !== undefined ? { height } : undefined}

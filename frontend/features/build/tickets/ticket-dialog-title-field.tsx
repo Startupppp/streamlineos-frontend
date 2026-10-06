@@ -2,6 +2,7 @@
 
 import type { MutableRefObject } from "react";
 import type { Control } from "react-hook-form";
+import { useFormContext } from "react-hook-form";
 import { AlertTriangle } from "lucide-react";
 import {
   FormControl,
@@ -38,6 +39,7 @@ export function TicketDialogTitleField({
   titleInlineSession,
   duplicates,
 }: TicketDialogTitleFieldProps) {
+  const { setError, clearErrors, getFieldState } = useFormContext<CreateTicketFormValues>();
   return (
     <div className="shrink-0 space-y-2 border-b border-border/60 px-5 pb-3 pt-4">
       <FormField
@@ -48,12 +50,30 @@ export function TicketDialogTitleField({
             <div className="flex items-start gap-1.5">
               <FormControl>
                 <input
-                  {...field}
+                  name={field.name}
+                  value={field.value ?? ""}
+                  onBlur={field.onBlur}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    field.onChange(value);
+                    if (value.length > 200) {
+                      setError("title", {
+                        type: "max",
+                        message: "Title must be 200 characters or fewer",
+                      });
+                    } else if (getFieldState("title").error?.type === "max") {
+                      clearErrors("title");
+                    }
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                    }
+                  }}
                   ref={(el) => {
                     field.ref(el);
                     titleRef.current = el;
                   }}
-                  autoFocus
                   autoCapitalize="off"
                   autoCorrect="off"
                   spellCheck={false}

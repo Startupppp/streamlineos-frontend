@@ -1,7 +1,6 @@
 import type { RouteAccessExtension } from "./route-access-extension-types";
 
 const BUILD_PROJECT_VIEW_ROUTES: readonly string[] = [
-  "/build/[projectId]",
   "/build/[projectId]/intake",
   "/build/[projectId]/milestones",
   "/build/[projectId]/modules",
@@ -21,6 +20,13 @@ function projectViewEntry(prefix: string): RouteAccessExtension {
 }
 
 export const BUILD_PROJECT_VIEW_EXTENSIONS: readonly RouteAccessExtension[] = [
+  {
+    prefix: "/build/[projectId]",
+    product: "build",
+    permission: "build:view",
+    reason:
+      "Project overview and unknown project URL segments require Build access so the catch-all can render Page Not Found inside the Build shell.",
+  },
   ...BUILD_PROJECT_VIEW_ROUTES.map(projectViewEntry),
   {
     prefix: "/build/[projectId]/tickets/[ticketKey]",
@@ -70,4 +76,5 @@ export const BUILD_PROJECT_VIEW_EXTENSIONS: readonly RouteAccessExtension[] = [
     reason: "Legacy bug-submission deep-link resolves a feedbucket submission to its intake item and redirects. Requires the same project read access as the intake index.",
     backendRoute: { method: "get", path: "/build/{projectId}/intake/by-feedbucket/{submissionId}" },
   },
+
 ];

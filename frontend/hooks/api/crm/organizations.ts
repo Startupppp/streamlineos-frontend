@@ -1,10 +1,10 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import type {
   CrmOrganization,
   CrmOrganizationFilters,
@@ -49,6 +49,7 @@ export function useCrmOrganizations(filters?: CrmOrganizationFilters) {
 
 export function useCrmOrganizationsForPicker(search?: string) {
   const canView = useCan("crm:organizations:view");
+  const crmEnabled = useModuleEnabled("crm");
   return useQuery({
     queryKey: queryKeys.crmOrganizations.list({ picker: true, search: search ?? "" }),
     queryFn: ({ signal }) =>
@@ -58,7 +59,7 @@ export function useCrmOrganizationsForPicker(search?: string) {
       }, signal, crmOrgsListLazy),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
-    enabled: canView,
+    enabled: crmEnabled && canView,
   });
 }
 

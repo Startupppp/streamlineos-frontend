@@ -84,14 +84,14 @@ export function ProjectFilterBar({
             onSet={onSetPrefs}
           />
           <ViewToggle value={viewMode} options={VIEW_OPTIONS} onChange={handleViewChange} />
-          {viewMode === "list" && onToggleGroupingSidebar ? (
+          {onToggleGroupingSidebar ? (
             <Button
               type="button"
               variant="outline"
               size="icon"
               className={cn(
-                "size-9 shrink-0",
-                showGroupingSidebar && "border-primary bg-primary/10 text-primary",
+                "size-9 shrink-0 motion-reduce:transition-none",
+                showGroupingSidebar && "border-foreground bg-foreground text-background",
               )}
               aria-label="Toggle grouping sidebar"
               aria-pressed={showGroupingSidebar}

@@ -71,22 +71,26 @@ export const HOME_NAV_GROUPS: NavGroup[] = [
       {
         label: "Time Off",
         href: "/me/time-off",
+        modulesAny: ["hrms"],
         icon: CalendarCheck,
         badge: "leaves" as const,
       },
       {
         label: "Attendance",
         href: "/me/attendance",
+        modulesAny: ["hrms"],
         icon: Clock,
       },
       {
         label: "Expenses",
         href: "/me/expenses",
+        modulesAny: ["hrms"],
         icon: Receipt,
       },
       {
         label: "Pay",
         href: "/me/pay",
+        modulesAny: ["payroll"],
         icon: Wallet,
       },
       {
@@ -97,21 +101,25 @@ export const HOME_NAV_GROUPS: NavGroup[] = [
       {
         label: "Onboarding Tasks",
         href: "/me/onboarding",
+        modulesAny: ["hrms"],
         icon: ListChecks,
       },
       {
         label: "Recruitment",
         href: "/me/recruitment",
+        modulesAny: ["hrms"],
         icon: Video,
       },
       {
         label: "Job Openings",
         href: "/me/job-openings",
+        modulesAny: ["hrms"],
         icon: Briefcase,
       },
       {
         label: "My Referrals",
         href: "/me/referrals",
+        modulesAny: ["hrms"],
         icon: Contact2,
       },
       {
@@ -128,6 +136,7 @@ export const HOME_NAV_GROUPS: NavGroup[] = [
       {
         label: "Announcements",
         href: "/hr/announcements",
+        modulesAny: ["hrms"],
         icon: Megaphone,
       },
       {

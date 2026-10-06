@@ -12,7 +12,7 @@ import {
   UserPlus,
   Wallet,
 } from "lucide-react";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useHrAttendanceStatus, useHrCheckIn, useHrCheckOut } from "@/hooks/api/hr/attendance";
 import { usePayrollRuns } from "@/hooks/api/payroll/runs";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -42,8 +42,10 @@ export function useHrmsCommands(
   const canUpdateSalaries = useCan("payroll:salaries:update");
   const canPublishPayslips = useCan("payroll:payslips:manage");
   const canStartExit = useCan("hr:exit:create");
+  const hrEnabled = useModuleEnabled("hr");
+  const payrollEnabled = useModuleEnabled("payroll");
 
-  const { data: attendance } = useHrAttendanceStatus();
+  const { data: attendance } = useHrAttendanceStatus({ enabled: hrEnabled });
   const checkIn = useHrCheckIn({ onSuccess: handleClockedIn, onError: handlePunchError });
   const checkOut = useHrCheckOut({ onSuccess: handleClockedOut, onError: handlePunchError });
   const { data: runsPage } = usePayrollRuns({ limit: 20 });
@@ -66,7 +68,7 @@ export function useHrmsCommands(
         group: "actions",
         keywords: ["leave", "time off", "vacation", "holiday", "wfh", "छुट्टी", "अवकाश", "సెలవు"],
         icon: CalendarPlus,
-        isAvailable: canRequestLeave,
+        isAvailable: hrEnabled && (canRequestLeave),
         execute: () => handleSelect("/me/time-off?create=1"),
       },
       {
@@ -77,7 +79,7 @@ export function useHrmsCommands(
           ? ["check out", "clock out", "punch out", "attendance", "चेक आउट", "హాజరు"]
           : ["check in", "clock in", "punch in", "attendance", "हाज़िरी", "उपस्थिति", "హాజరు"],
         icon: Clock,
-        isAvailable: canClockIn && attendance !== undefined,
+        isAvailable: hrEnabled && (canClockIn && attendance !== undefined),
         confirm: true,
         execute: handlePunch,
       },
@@ -87,7 +89,7 @@ export function useHrmsCommands(
         group: "actions",
         keywords: ["approvals", "action center", "queue", "pending"],
         icon: ClipboardCheck,
-        isAvailable: canApproveWorkflows || canApproveLeaves,
+        isAvailable: hrEnabled && (canApproveWorkflows || canApproveLeaves),
         execute: () => handleSelect("/hr/approvals"),
       },
       {
@@ -96,7 +98,7 @@ export function useHrmsCommands(
         group: "actions",
         keywords: ["add", "employee", "hire", "onboard", "invite"],
         icon: UserPlus,
-        isAvailable: canCreateEmployee,
+        isAvailable: hrEnabled && (canCreateEmployee),
         execute: () => handleSelect("/hr/onboarding"),
       },
       {
@@ -105,7 +107,7 @@ export function useHrmsCommands(
         group: "actions",
         keywords: ["salary", "pay", "ctc", "compensation", "वेतन", "జీతం"],
         icon: IndianRupee,
-        isAvailable: canUpdateSalaries,
+        isAvailable: payrollEnabled && (canUpdateSalaries),
         execute: () => handleSelect("/payroll/employees"),
       },
       {
@@ -114,7 +116,7 @@ export function useHrmsCommands(
         group: "actions",
         keywords: ["payroll", "readiness", "cutoff", "run"],
         icon: Wallet,
-        isAvailable: canViewPayrollRuns,
+        isAvailable: payrollEnabled && (canViewPayrollRuns),
         execute: () => handleSelect("/payroll/readiness"),
       },
       {
@@ -123,7 +125,7 @@ export function useHrmsCommands(
         group: "actions",
         keywords: ["release", "publish", "payslips", "payslip", "पेस्लिप", "పేస్లిప్"],
         icon: Send,
-        isAvailable: canPublishPayslips && latestPaidRun !== null,
+        isAvailable: payrollEnabled && (canPublishPayslips && latestPaidRun !== null),
         execute: () => {
           if (latestPaidRun) handleSelect(`/payroll/runs/${latestPaidRun.id}`);
         },
@@ -134,7 +136,7 @@ export function useHrmsCommands(
         group: "actions",
         keywords: ["exit", "resignation", "offboard", "separation", "terminate", "इस्तीफ़ा"],
         icon: DoorOpen,
-        isAvailable: canStartExit,
+        isAvailable: hrEnabled && (canStartExit),
         execute: () => handleSelect("/hr/exit"),
       },
     ],
@@ -148,6 +150,8 @@ export function useHrmsCommands(
       canUpdateSalaries,
       canPublishPayslips,
       canStartExit,
+      hrEnabled,
+      payrollEnabled,
       attendance,
       clockedIn,
       latestPaidRun,

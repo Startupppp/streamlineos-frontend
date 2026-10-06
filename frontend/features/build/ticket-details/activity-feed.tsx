@@ -58,7 +58,7 @@ export function ActivityFeed({
   return (
     <div className="w-full space-y-4">
       <div className="flex w-full flex-1 min-w-0 flex-col gap-2">
-        <h4 className="flex min-w-0 flex-1 items-center gap-1.5 text-dense font-medium uppercase tracking-wide text-muted-foreground">
+        <h4 className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5 pr-2 text-dense font-medium uppercase tracking-wide text-muted-foreground max-md:pr-14">
           <MessageSquare className="h-3.5 w-3.5 shrink-0" />
           <span className="truncate">Activity</span>
           {comments.length > 0 && (
@@ -101,10 +101,9 @@ export function ActivityFeed({
           </div>
         ) : null}
         {canUpdate && draftLoadError ? (
-          <div role="alert" className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-            <span>{getErrorMessage(draftLoadError)}</span>
-            <ErrorReference error={draftLoadError} />
-            <Button type="button" variant="outline" size="sm" onClick={handleRetryDraft}>Retry draft</Button>
+          <div className="flex flex-wrap items-center gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive" role="alert">
+            <span>{"Couldn't load the saved draft. Try again, or start a new comment."}</span>
+            <Button type="button" variant="outline" size="sm" onClick={handleRetryDraft}>Retry</Button>
           </div>
         ) : null}
       </div>

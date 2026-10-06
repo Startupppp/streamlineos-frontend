@@ -169,6 +169,8 @@ describe("project create wizard dirty guard (BSN-04-010, BSN-04-013)", () => {
     renderHarness(true, close);
     await act(async () => { await new Promise<void>(resolve => setTimeout(resolve, 0)); });
     dismiss(action);
+    await waitFor(() => expect(screen.getByRole("alertdialog", { name: /discard/i })).toBeVisible());
+    fireEvent.click(screen.getByRole("button", { name: "Discard" }));
     await waitFor(() => expect(close).toHaveBeenCalledWith(false));
     expect(mockReset).toHaveBeenCalledTimes(1);
     expect(mockCreateProject).not.toHaveBeenCalled();

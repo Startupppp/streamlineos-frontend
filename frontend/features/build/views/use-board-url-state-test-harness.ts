@@ -1,11 +1,12 @@
 let mockSearchParams = new URLSearchParams();
+let mockPathname = "/build/1/issues";
 export const mockReplace = jest.fn();
 export const mockPush = jest.fn();
 
 jest.mock("next/navigation", () => ({
   useSearchParams: () => mockSearchParams,
   useRouter: () => ({ replace: mockReplace, push: mockPush }),
-  usePathname: () => "/build/1/issues",
+  usePathname: () => mockPathname,
 }));
 
 export const mockCreateViewMutate = jest.fn();
@@ -74,6 +75,10 @@ export function setParams(init: Record<string, string>) {
   window.history.replaceState({}, "", qs ? `/?${qs}` : "/");
 }
 
+export function setPathname(pathname: string) {
+  mockPathname = pathname;
+}
+
 export function installBoardUrlStateMocks() {
   boardState.views = [];
   boardState.boardTickets = [];
@@ -81,6 +86,7 @@ export function installBoardUrlStateMocks() {
   boardState.qaMatches = undefined;
   mockUseBugs.mockClear();
   setParams({});
+  mockPathname = "/build/1/issues";
   mockReplace.mockClear();
   mockPush.mockClear();
   mockCreateViewMutate.mockClear();

@@ -35,6 +35,10 @@ function InlineGroupCreateContent({ groupKey, projectId, status }: InlineGroupCr
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter" && title.trim()) {
+      if (title.trim().length > 200) {
+        toast.error("Title must be 200 characters or fewer");
+        return;
+      }
       createTicket.mutate({ projectId, title: title.trim(), status, type: "TASK" });
     }
     if (e.key === "Escape") handleCancel();

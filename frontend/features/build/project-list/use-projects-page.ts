@@ -16,6 +16,7 @@ import {
   type ProjectActiveFilters,
 } from "@/features/build/project-list/add-filter-popover";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { normalizeListSearch } from "@/lib/build/normalize-list-search";
 import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { buildListSearchParams } from "@/features/build/shared/use-build-list-url-state";
 
@@ -150,12 +151,13 @@ export function useProjectsPage(): ProjectsPageUrlState {
 
   const handleSearchChange = useCallback(
     (value: string) => {
-      setLocalSearch(value);
+      const next = normalizeListSearch(value);
+      setLocalSearch(next);
       if (pushTimerRef.current) clearTimeout(pushTimerRef.current);
       pushTimerRef.current = setTimeout(() => {
         pushTimerRef.current = null;
-        rememberOwnQuery(value);
-        writeParamsRef.current({ q: value || null });
+        rememberOwnQuery(next);
+        writeParamsRef.current({ q: next || null });
       }, 300);
     },
     [setLocalSearch, rememberOwnQuery],

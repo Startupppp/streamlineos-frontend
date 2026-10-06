@@ -25,7 +25,7 @@ export function OverviewWidget({ activeProjects, openIssues, overdueIssues }: Ov
           <StatCard label="Projects" value={activeProjects} icon={Briefcase} tone="default" index={0} href="/build/projects" />
         </motion.div>
         <motion.div whileHover={hover} transition={pmSnappy}>
-          <StatCard label="Open issues" value={openIssues} icon={CheckSquare} tone="default" index={1} href="/build/my-work" />
+          <StatCard label="My open issues" value={openIssues} icon={CheckSquare} tone="default" index={1} href="/build/my-work" />
         </motion.div>
         <motion.div
           whileHover={hover}
@@ -52,7 +52,7 @@ interface JumpToWidgetProps {
 
 export function JumpToWidget({ defaultProjectId }: JumpToWidgetProps) {
   return (
-    <PmPanel className={cn(COMMAND_CENTER_JUMP_PANEL, "h-full overflow-y-auto")}>
+    <PmPanel className={cn(COMMAND_CENTER_JUMP_PANEL, "h-auto overflow-y-auto")}>
       <p className="mb-1.5 px-0.5 text-micro font-medium uppercase tracking-wider text-muted-foreground">
         Jump to
       </p>

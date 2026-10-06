@@ -20,7 +20,7 @@ import {
 import { ListViewItem } from "./list-view-item";
 import { InlineGroupCreate } from "./list-view-group-create";
 import { GroupRows } from "./list-view-group-rows";
-import { OuterGroupHeader, NestedGroup, DroppableGroup } from "./list-view-group";
+import { OuterGroupHeader, NestedGroup, DroppableGroup, formatGroupLabel } from "./list-view-group";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useListView } from "./use-list-view";
 
@@ -136,7 +136,7 @@ export const ListView = memo(function ListView({
               <AccordionItem key={group} value={group} className="border-b-0">
                 <div className="mb-1.5 flex items-center gap-2">
                   <AccordionTrigger className="flex flex-1 items-center gap-2 py-0 hover:no-underline font-normal [&>svg]:ml-auto">
-                    <span className="text-sm font-medium text-foreground">{group}</span>
+                    <span className="text-sm font-medium text-foreground">{formatGroupLabel(group)}</span>
                     <span className="text-xs text-muted-foreground tabular-nums">({items.length})</span>
                   </AccordionTrigger>
                   {projectId && (
@@ -189,7 +189,7 @@ export const ListView = memo(function ListView({
             <AccordionItem key={group} value={group} className="border-b-0">
               <div className="mb-1.5 flex items-center gap-2">
                 <AccordionTrigger className="flex flex-1 items-center gap-2 py-0 hover:no-underline font-normal [&>svg]:ml-auto">
-                  <span className="text-sm font-medium text-foreground">{group}</span>
+                  <span className="text-sm font-medium text-foreground">{formatGroupLabel(group)}</span>
                   <span className="text-xs text-muted-foreground tabular-nums">({items.length})</span>
                 </AccordionTrigger>
                 {projectId && (

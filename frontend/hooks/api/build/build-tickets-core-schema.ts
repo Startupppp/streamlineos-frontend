@@ -7,7 +7,10 @@ import {
 
 export const ticketPriorityContract = projectsTicketsCreateTicketResponseSchema.shape.priority;
 
-export const ticketRowContract = projectsTicketsCreateTicketResponseSchema;
+export const ticketRowContract = projectsTicketsCreateTicketResponseSchema.extend({
+  storyPoints: projectsTicketsCreateTicketResponseSchema.shape.storyPoints.optional().default(null),
+  estimate: projectsTicketsCreateTicketResponseSchema.shape.estimate.optional().default(null),
+});
 
 export const ticketListPageContract = projectsTicketsListTicketsResponseSchema;
 
@@ -19,6 +22,8 @@ export type KnownTicketActivityAction = import("zod").infer<typeof ticketActivit
 export const ticketActivityPageContract = projectsTicketsGetActivityResponseSchema;
 
 export const ticketDetailContract = projectsTicketsGetTicketResponseSchema.extend({
+  storyPoints: projectsTicketsGetTicketResponseSchema.shape.storyPoints.optional().default(null),
+  estimate: projectsTicketsGetTicketResponseSchema.shape.estimate.optional().default(null),
   comments: projectsTicketsGetTicketResponseSchema.shape.comments
     .unwrap()
     .default([])

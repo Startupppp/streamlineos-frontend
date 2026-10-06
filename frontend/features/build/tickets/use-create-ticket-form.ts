@@ -144,7 +144,9 @@ export function useCreateTicketForm({
           labelIds: [],
         }));
       }
-      setTimeout(() => titleRef.current?.focus(), 50);
+      if (preserveContext) {
+        queueMicrotask(() => titleRef.current?.focus({ preventScroll: true }));
+      }
     },
     [form, defaultStatusValue, activeCycleId, defaultCycleId, setProperties],
   );
@@ -201,6 +203,14 @@ export function useCreateTicketForm({
         toast.error("Select a project");
         return;
       }
+      if (createTicketMutation.isPending) return;
+      if (values.title.length > 200) {
+        form.setError("title", {
+          type: "max",
+          message: "Title must be 200 characters or fewer",
+        });
+        return;
+      }
       createTicketMutation.mutate({
         ...values,
         projectId,
@@ -215,7 +225,7 @@ export function useCreateTicketForm({
         link: values.link || undefined,
       });
     },
-    [createTicketMutation, properties, projectId],
+    [createTicketMutation, form, properties, projectId],
   );
 
   const addFiles = useCallback((incoming: File[]) => {
@@ -262,6 +272,7 @@ export function useCreateTicketForm({
     handleRemoveFile,
     createMore,
     handleToggleCreateMore,
+    resetForm,
     titleRef,
     projectStatuses,
     members,

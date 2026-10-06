@@ -99,6 +99,8 @@ jest.mock("./use-ticket-detail", () => ({
     saving: false,
     localTitle: mockResolvedTicket?.title ?? "",
     handleTitleChange: jest.fn(),
+    commitTitle: jest.fn(() => null),
+    revertTitle: jest.fn(),
     handleDescriptionEditorChange: jest.fn(),
     autoSave: jest.fn(),
     handleDelete: jest.fn(),
@@ -367,4 +369,11 @@ it("shows no unsent-change count while offline with nothing held back, so the no
   render(<TicketDetailPage projectId={9} ticketKey="TEST-1" />);
   expect(screen.getByText(/you're offline/i)).toBeInTheDocument();
   expect(screen.queryByTestId("offline-draft-count")).not.toBeInTheDocument();
+});
+
+it("404s when the URL project-key prefix does not match the project", () => {
+  mockByKeyTicket = { id: 1 };
+  mockResolvedTicket = { id: 1, ticketNumber: 1, title: "Wrong key ticket", version: 3 };
+  expect(() => render(<TicketDetailPage projectId={9} ticketKey="NOPE-1" />)).toThrow("NEXT_NOT_FOUND");
+  expect(mockNotFound).toHaveBeenCalled();
 });

@@ -185,6 +185,39 @@ export function isTicketDetailPath(
   );
 }
 
+
+export function boardCollectionSearchParams(
+  projectId: number,
+  pathname: string,
+  searchParams: SearchParamsSource,
+): URLSearchParams {
+  const match = pathname.match(TICKET_ROUTE_PATTERN);
+  if (!match) {
+    if (typeof (searchParams as URLSearchParams).toString === "function") {
+      return new URLSearchParams((searchParams as URLSearchParams).toString());
+    }
+    const next = new URLSearchParams();
+    for (const key of [
+      ...TICKET_COLLECTION_QUERY_KEYS,
+      "ticket",
+      "comment",
+      "create",
+      "cycleId",
+      "returnTo",
+    ] as const) {
+      const value = searchParams.get(key);
+      if (value) next.set(key, value);
+    }
+    return next;
+  }
+  const back = resolveTicketBackHref(projectId, searchParams.get("returnTo"));
+  try {
+    return new URL(back, "https://streamline.invalid").searchParams;
+  } catch {
+    return new URLSearchParams();
+  }
+}
+
 export function buildEpicDetailUrl(
   projectId: number,
   epicId: number,

@@ -53,6 +53,7 @@ export const InlineStatus = memo(function InlineStatus({
 
   function makeStatusHandler(status: string) {
     return function selectStatus() {
+      if (updateTicket.isPending) return;
       updateTicket.mutate({ ticketId, version, status });
       setOpen(false);
     };
@@ -66,8 +67,10 @@ export const InlineStatus = memo(function InlineStatus({
         <ResponsivePopoverTrigger asChild>
           <button
             type="button"
-            className="inline-flex items-center gap-1 rounded px-1 py-0.5 hover:bg-muted/60 transition-colors"
+            className="inline-flex items-center gap-1 rounded px-1 py-0.5 hover:bg-muted/60 transition-colors disabled:pointer-events-none disabled:opacity-50"
             aria-label="Change status"
+            disabled={updateTicket.isPending}
+            aria-busy={updateTicket.isPending || undefined}
           >
             <StatusConfigDot
               entry={currentEntry}

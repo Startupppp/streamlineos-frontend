@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { SparklesIcon } from "@animateicons/react/lucide";
 import { useCan } from "@/hooks/api/access";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -50,10 +50,15 @@ export function ProjectAiMenu({
     ),
   });
 
+  const summaryRef = useRef(summary);
+  useEffect(() => {
+    summaryRef.current = summary;
+  });
+
   const handleSummarizeClick = useCallback(() => {
-    if (summary.isPending) return;
-    void summary.execute();
-  }, [summary]);
+    if (summaryRef.current.isPending) return;
+    void summaryRef.current.execute();
+  }, []);
 
   useEffect(() => {
     if (!onRunRegister) return;

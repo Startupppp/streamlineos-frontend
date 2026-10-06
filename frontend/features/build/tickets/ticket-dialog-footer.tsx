@@ -16,6 +16,7 @@ interface TicketDialogFooterProps {
   isPending: boolean;
   isUploading: boolean;
   canSubmit: boolean;
+  onExplicitSubmit: () => void;
 }
 
 export function TicketDialogFooter({
@@ -27,6 +28,7 @@ export function TicketDialogFooter({
   isPending,
   isUploading,
   canSubmit,
+  onExplicitSubmit,
 }: TicketDialogFooterProps) {
   const { iconRef: attachIconRef, hoverHandlers: attachHoverHandlers } = useAnimatedIcon();
   const { iconRef: linksIconRef, hoverHandlers: linksHoverHandlers } = useAnimatedIcon();
@@ -90,12 +92,13 @@ export function TicketDialogFooter({
         </label>
 
         <LoadingButton
-          type="submit"
+          type="button"
           isPending={isPending || isUploading}
           loadingText="Creating…"
           className="w-full px-4 text-xs [grid-area:submit] md:w-auto"
           size="sm"
           disabled={!canSubmit}
+          onClick={onExplicitSubmit}
         >
           Create issue
         </LoadingButton>

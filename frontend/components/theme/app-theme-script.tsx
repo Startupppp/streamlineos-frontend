@@ -17,7 +17,7 @@ export function AppThemeScript({ nonce }: { nonce?: string }) {
     getSelectableThemeIds(),
   )}.indexOf(t)>-1){d.classList.add("theme-"+t)}var m=localStorage.getItem(${JSON.stringify(
     APP_THEME_MODE_STORAGE_KEY,
-  )});if(m==="dark"||(m==="system"&&window.matchMedia("(prefers-color-scheme: dark)").matches)){d.classList.add("dark");d.style.colorScheme="dark"}}catch(e){}`;
+  )});var dark=m==="dark"||(m==="system"&&window.matchMedia("(prefers-color-scheme: dark)").matches);d.classList.toggle("dark",dark);d.classList.toggle("light",!dark);d.style.colorScheme=dark?"dark":"light"}catch(e){}`;
 
   return (
     <script

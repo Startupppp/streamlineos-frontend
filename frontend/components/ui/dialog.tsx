@@ -6,6 +6,10 @@ import { XIcon } from "lucide-react";
 
 import { cn } from "../../lib/utils";
 import { useRestoreFocusOnClose } from "../../lib/restore-focus-on-close";
+import {
+  SURFACE_CLOSE_BUTTON,
+  SURFACE_OVERLAY,
+} from "@/lib/ui-surface-chrome";
 
 function Dialog({
   ...props
@@ -39,7 +43,7 @@ function DialogOverlay({
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-[100] bg-black/50 motion-reduce:data-[state=open]:animate-none motion-reduce:data-[state=closed]:animate-none",
+        SURFACE_OVERLAY,
         className
       )}
       {...props}
@@ -78,10 +82,12 @@ function DialogContent({
         onOpenAutoFocus={handleOpenAutoFocus}
         onCloseAutoFocus={handleCloseAutoFocus}
         className={cn(
-          "bg-background fixed z-[100] shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out motion-reduce:data-[state=open]:animate-none motion-reduce:data-[state=closed]:animate-none",
-          "inset-x-0 bottom-0 flex w-full flex-col gap-4 overflow-hidden rounded-t-2xl border border-b-0 p-6 max-h-[92dvh] max-md:pb-[max(1.5rem,env(safe-area-inset-bottom))]",
+          "fixed z-[100] flex w-full flex-col gap-4 overflow-hidden bg-background p-6 text-foreground shadow-lg duration-200 outline-none",
+          "data-[state=open]:animate-in data-[state=closed]:animate-out motion-reduce:data-[state=open]:animate-none motion-reduce:data-[state=closed]:animate-none",
+          "inset-x-0 bottom-0 max-h-[92dvh] rounded-t-2xl border border-border/80 border-b-0 max-md:pb-[max(1.5rem,env(safe-area-inset-bottom))]",
           "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
-          "md:inset-auto md:top-[50%] md:left-[50%] md:translate-x-[-50%] md:translate-y-[-50%] md:w-full md:max-w-[calc(100%-2rem)] md:rounded-lg md:border-b md:max-h-[90dvh] md:sm:max-w-lg",
+          "md:inset-auto md:top-[50%] md:left-[50%] md:translate-x-[-50%] md:translate-y-[-50%] md:max-w-[calc(100%-2rem)] md:max-h-[90dvh] md:sm:max-w-lg",
+          "md:rounded-xl md:border md:border-border/80",
           "md:data-[state=closed]:slide-out-to-bottom-0 md:data-[state=open]:slide-in-from-bottom-0 md:data-[state=closed]:fade-out-0 md:data-[state=open]:fade-in-0 md:data-[state=closed]:zoom-out-95 md:data-[state=open]:zoom-in-95",
           className
         )}
@@ -95,7 +101,7 @@ function DialogContent({
         {showCloseButton && (
           <DialogPrimitive.Close
             data-slot="dialog-close"
-            className="absolute right-3 top-3 flex size-8 items-center justify-center rounded-md text-muted-foreground opacity-70 outline-none transition-[opacity,transform,background-color,color] duration-200 hover:bg-accent hover:text-accent-foreground hover:opacity-100 focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none motion-reduce:transition-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+            className={SURFACE_CLOSE_BUTTON}
           >
             <XIcon />
             <span className="sr-only">Close</span>
@@ -111,7 +117,7 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="dialog-header"
       className={cn(
-        "flex shrink-0 flex-col gap-1 text-center sm:text-left",
+        "flex shrink-0 flex-col gap-1.5 pr-8 text-center sm:text-left",
         className
       )}
       {...props}

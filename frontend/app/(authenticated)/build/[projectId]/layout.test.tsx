@@ -118,6 +118,7 @@ describe("retained ticket panel", () => {
       id: 365,
       ticketNumber: 211,
       projectId: 1,
+      project: { id: 1, name: "Stream", key: "STRE" },
       title: "Reserved navigation verification",
       description: "",
       status: "IN_REVIEW",
@@ -135,7 +136,7 @@ describe("retained ticket panel", () => {
       if (path === "/build/1/tickets/key/211" || path === "/build/1/tickets/365")
         return Promise.resolve(ticket);
       if (path === "/build/1/tickets/365/subtasks") return Promise.resolve([]);
-      if (path === "/build/1") return Promise.resolve({ id: 1, members: [], statuses: [] });
+      if (path === "/build/1") return Promise.resolve({ id: 1, key: "STRE", members: [], statuses: [] });
       return Promise.reject(new Error(`Unexpected API read: ${path}`));
     });
     const client = createAppQueryClient("authenticated:reserved-org:reserved-user");

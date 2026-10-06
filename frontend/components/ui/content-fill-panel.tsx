@@ -5,18 +5,15 @@ import { cn } from "@/lib/utils";
 
 export const CONTENT_FILL_PANEL = "flex min-h-0 w-full flex-1 flex-col";
 
-/** Horizontal page inset used by PageWrapper headers, filters, and content. */
 export const PAGE_CHROME_X = "px-4 sm:px-6 lg:px-8";
 
-/** No bottom inset — page bodies meet the shell edge; Ask OS / FABs float above. */
 export const PAGE_CHROME_BOTTOM = "pb-0";
 
-/** Clears the module bottom nav when `main` has `mobile-nav-active` (both scroll modes). */
 export const PAGE_CHROME_MOBILE_NAV_PAD =
-  "max-md:[.mobile-nav-active_&]:pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))]";
+  "max-md:[.mobile-nav-active_&]:pb-[calc(9rem+env(safe-area-inset-bottom,0px))]";
 
 export const STICKY_FOOTER_ABOVE_MOBILE_NAV =
-  "sticky bottom-0 max-md:[.mobile-nav-active_&]:bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))]";
+  "sticky bottom-0 max-md:[.mobile-nav-active_&]:bottom-[calc(9rem+env(safe-area-inset-bottom,0px))]";
 
 export const FILTER_SELECT_TRIGGER =
   "min-w-0 border-input bg-card text-foreground font-normal data-[placeholder]:font-normal *:data-[slot=select-value]:font-normal [&_svg]:text-muted-foreground [&_[data-slot=select-value]]:min-w-0 [&_[data-slot=select-value]]:truncate";
@@ -24,22 +21,15 @@ export const FILTER_SELECT_TRIGGER =
 export const FILTER_TOOLBAR_ROW =
   "flex w-full min-w-0 max-w-full flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain scrollbar-hide touch-pan-x [&>[data-slot=search-input]]:min-w-[12rem] [&>[data-slot=search-input]]:flex-1 [&>[data-slot=search-input]]:basis-[12rem] [&>[data-slot=select-trigger]]:shrink-0 [&>*:not([data-slot=search-input])]:shrink-0";
 
-/**
- * `PageWrapper filtersClassName` for a filter row that must stack below md
- * instead of scrolling sideways. The base row grows the search input and pins
- * every select to its own width, which clips the trailing filters at 390px.
- */
 export const FILTER_ROW_STACKS_ON_MOBILE =
   "max-md:flex-col max-md:items-stretch max-md:gap-2 max-md:overflow-x-visible max-md:[&>[data-slot=search-input]]:min-w-0 max-md:[&>[data-slot=search-input]]:basis-auto max-md:[&>[data-slot=search-input]]:w-full max-md:[&>*:not([data-slot=search-input])]:w-full";
 
 export const CONTENT_PANEL_SOLID =
   "rounded-xl border border-border bg-card shadow-sm";
 
-/** Page-body loading shell matching list/card surfaces. */
 export const PAGE_BODY_SKELETON_CLASS =
-  "flex min-h-0 h-full w-full flex-1 flex-col gap-3 overflow-hidden rounded-xl border border-border bg-card p-4";
+  "flex min-h-0 h-full w-full flex-1 flex-col gap-3 overflow-hidden rounded-xl border border-border/80 bg-card p-4";
 
-/** Page-body empty: full width + height; keeps EmptyState default `bg-card` surface. */
 export const PAGE_BODY_EMPTY_CLASS = "min-h-0 h-full w-full flex-1";
 
 interface ContentFillPanelProps {

@@ -20,7 +20,7 @@ export function OfflineEmptyState({ dataUpdatedAt }: OfflineEmptyStateProps) {
           "relative flex w-full max-w-sm flex-col items-center gap-3 px-6 py-8 text-center",
         )}
       >
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-border/60 bg-primary/[0.06] shadow-sm">
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-border/60 bg-muted/60 shadow-sm">
           <WifiOff className="h-5 w-5 text-muted-foreground" />
         </div>
         <div className="space-y-1">
@@ -47,7 +47,7 @@ export function FirstRunEmptyState() {
       illustration={<ListPlus className="h-5 w-5 text-muted-foreground" />}
       illustrationSize="xs"
       title="No tickets yet"
-      description="Create the first ticket to start tracking work on this project."
+      description="Create the first ticket to organize work, track status on the board, and start delivery."
     />
   );
 }
@@ -61,7 +61,7 @@ export function FilteredEmptyState({ onClearSearch }: FilteredEmptyStateProps) {
     <div className="relative flex h-full flex-1 flex-col items-center justify-center py-12">
       <div
         aria-hidden
-        className="pointer-events-none absolute -top-6 right-1/4 h-36 w-36 rounded-full bg-primary/[0.06] blur-3xl"
+        className="pointer-events-none absolute -top-6 right-1/4 h-36 w-36 rounded-full bg-foreground/[0.04] blur-3xl"
       />
       <div
         className={cn(
@@ -69,7 +69,7 @@ export function FilteredEmptyState({ onClearSearch }: FilteredEmptyStateProps) {
           "relative flex w-full max-w-sm flex-col items-center gap-3 px-6 py-8 text-center",
         )}
       >
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-border/60 bg-primary/[0.06] shadow-sm">
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-border/60 bg-muted/60 shadow-sm">
           <SearchX className="h-5 w-5 text-muted-foreground" />
         </div>
         <div className="space-y-1">

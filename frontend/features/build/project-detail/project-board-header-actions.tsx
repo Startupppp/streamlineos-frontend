@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { Clock3, Download, Plus, Sparkles } from "lucide-react";
 import {
   BuildHeaderActions,
@@ -28,16 +28,20 @@ export function ProjectBoardHeaderActions({
   const canUseAI = useCan("build:ai:use");
   const canImport = useCan("build:tickets:create");
   const canExport = useCan("build:tickets:view");
-  const [summarizeFn, setSummarizeFn] = useState<(() => void) | null>(null);
+  const summarizeFnRef = useRef<(() => void) | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+
+  const registerSummarize = useCallback((run: (() => void) | null) => {
+    summarizeFnRef.current = run;
+  }, []);
 
   const handleCreate = useCallback(() => {
     onCreateOpenChange(true);
   }, [onCreateOpenChange]);
 
   const handleSummarize = useCallback(() => {
-    summarizeFn?.();
-  }, [summarizeFn]);
+    summarizeFnRef.current?.();
+  }, []);
 
   const handleImportExport = useCallback(() => {
     setImportOpen(true);
@@ -47,6 +51,8 @@ export function ProjectBoardHeaderActions({
     setImportOpen(open);
   }, []);
 
+  /* Summarize onSelect reads summarizeFnRef only on click, never during render. */
+  /* eslint-disable react-hooks/refs */
   const actions = useMemo(() => {
     const next: BuildHeaderAction[] = [
       {
@@ -92,6 +98,7 @@ export function ProjectBoardHeaderActions({
     handleImportExport,
     handleCreate,
   ]);
+  /* eslint-enable react-hooks/refs */
 
   return (
     <>
@@ -109,7 +116,7 @@ export function ProjectBoardHeaderActions({
         <ProjectAiMenu
           projectId={projectId}
           hideTrigger
-          onRunRegister={setSummarizeFn}
+          onRunRegister={registerSummarize}
         />
       ) : null}
       {canImport || canExport ? (

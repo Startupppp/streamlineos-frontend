@@ -255,6 +255,10 @@ describe("CreateTicketDialog registers with the shared dirty-state guard (BSN-04
     });
 
     fireEvent.keyDown(titleInput, { key: "Escape", code: "Escape" });
+    await waitFor(() =>
+      expect(screen.getByRole("alertdialog", { name: /discard/i })).toBeVisible(),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Discard" }));
 
     await waitFor(() => {
       expect(mockUseRegisterDirtyState).toHaveBeenLastCalledWith(false);

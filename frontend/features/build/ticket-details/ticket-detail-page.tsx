@@ -13,6 +13,7 @@ import { useCycles } from "@/hooks/api/build/cycles";
 import {
   formatTicketKey,
   parseTicketKey,
+  ticketKeyMatchesProject,
 } from "@/components/shared/format-ticket-key";
 import { TicketDetailMainSection } from "./ticket-detail-main-section";
 import { TicketDetailRightPanel } from "./ticket-detail-right-panel";
@@ -67,7 +68,14 @@ export function TicketDetailPage({
     error: byKeyError,
     refetch: refetchByKey,
   } = useTicketByKey(projectId, parsed?.ticketNumber ?? null, INLINE_READ_ERROR);
-  const ticketId = byKeyTicket?.id ?? null;
+  const resolvedProjectKey =
+    projectData?.key ??
+    byKeyTicket?.project?.key ?? null;
+  const routeKeyMismatch =
+    Boolean(parsed?.projectKey) &&
+    resolvedProjectKey != null &&
+    !ticketKeyMatchesProject(parsed, resolvedProjectKey);
+  const ticketId = routeKeyMismatch ? null : (byKeyTicket?.id ?? null);
 
   const sidebarWarmProjectId = isMobile ? 0 : projectId;
   useEpics(sidebarWarmProjectId);
@@ -92,6 +100,8 @@ export function TicketDetailPage({
     discardConflictingEdit,
     localTitle,
     handleTitleChange,
+    commitTitle,
+    revertTitle,
     handleDescriptionEditorChange,
     autoSave,
     handleDelete,
@@ -142,6 +152,7 @@ export function TicketDetailPage({
       byKeyError={byKeyError ?? null}
       byKeyPending={byKeyPending}
       byKeyTicketExists={byKeyTicket != null}
+      routeKeyMismatch={routeKeyMismatch}
       isLoading={isLoading}
       ticketError={ticketError ?? null}
       ticketExists={ticket != null}
@@ -213,7 +224,7 @@ export function TicketDetailPage({
               </p>
             </div>
           ) : null}
-          <div className="min-h-0 min-w-0 flex-1 basis-0 overflow-y-auto bg-gradient-to-b from-card/80 to-background/40 px-4 pb-4 pt-2 scrollbar-hide md:px-6 md:pb-5">
+          <div className="min-h-0 min-w-0 flex-1 basis-0 overflow-y-auto bg-gradient-to-b from-card/80 to-background/40 px-4 pb-[max(8rem,calc(env(safe-area-inset-bottom)+7rem))] pt-2 scrollbar-hide max-md:pr-20 md:px-6 md:pb-5 md:pr-6">
             {ready ? (
             <TicketDetailMainSection
               ticket={ready.ticket}
@@ -226,6 +237,8 @@ export function TicketDetailPage({
               highlightCommentId={highlightCommentId}
               onApplyDescription={handleApplyAiDescription}
               onTitleChange={handleTitleChange}
+              onCommitTitle={commitTitle}
+              onRevertTitle={revertTitle}
               onDescriptionChange={handleDescriptionEditorChange}
               canUpdate={canUpdate}
             />

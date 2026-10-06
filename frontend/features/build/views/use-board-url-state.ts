@@ -13,7 +13,10 @@ import { parseViewType, type ViewType } from "./view-switcher";
 import { INITIAL_FILTERS, type FilterState as WorkloadFilterState } from "./workload-types";
 import type { KanbanTicket } from "@/features/build/shared/types";
 import { mapBoardTicketToKanban } from "@/features/build/my-tickets/map-board-ticket";
-import { buildTicketCollectionReturnHref } from "@/features/build/ticket-details/build-ticket-detail-url";
+import {
+  boardCollectionSearchParams,
+  buildTicketCollectionReturnHref,
+} from "@/features/build/ticket-details/build-ticket-detail-url";
 import { currentSearchParams } from "@/lib/current-search-params";
 import { BUILD_LIST_CURSOR_PARAM } from "../shared/use-build-list-url-state";
 import { useBoardNavigationActions } from "./use-board-navigation-actions";
@@ -31,9 +34,13 @@ export function useBoardUrlState(
   projectId: number,
   defaultView: ViewType = "board",
 ) {
-  const searchParams = useSearchParams();
+  const rawSearchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useMemo<URLSearchParams>(
+    () => boardCollectionSearchParams(projectId, pathname, rawSearchParams),
+    [projectId, pathname, rawSearchParams],
+  );
 
   const viewParam = searchParams.get("view");
   const calendarHref = `/calendar?source=build&projectId=${projectId}`;
@@ -177,10 +184,13 @@ export function useBoardUrlState(
     !hasActiveFilters &&
     allTickets.length === 0;
 
-  const ticketCollectionReturnHref = useMemo(
-    () => buildTicketCollectionReturnHref(projectId, pathname, searchParams),
-    [projectId, pathname, searchParams],
-  );
+  const ticketCollectionReturnHref = useMemo(() => {
+    const collectionPath =
+      pathname === `/build/${projectId}/workload`
+        ? pathname
+        : `/build/${projectId}/issues`;
+    return buildTicketCollectionReturnHref(projectId, collectionPath, searchParams);
+  }, [projectId, pathname, searchParams]);
 
   const handleClearView = useCallback(() => {
     const next = new URLSearchParams(searchParams.toString());

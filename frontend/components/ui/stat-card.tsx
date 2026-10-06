@@ -341,7 +341,7 @@ export const StatCard = memo(function StatCard({
   const body = (
     <div
       className={cn(
-        "flex h-full items-start gap-3 rounded-xl border border-border/80 bg-card px-3.5 py-3 shadow-sm transition-colors",
+        "flex h-full items-start gap-3 rounded-xl border border-border/80 bg-card px-3.5 py-3 shadow-sm transition-[border-color,box-shadow,background-color] duration-200 motion-reduce:transition-none hover:border-foreground/20 hover:shadow-md",
         featured && "border-primary bg-primary text-primary-foreground",
         href && "hover:bg-muted/30 cursor-pointer",
         featured && href && "hover:bg-primary/90",

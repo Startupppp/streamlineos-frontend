@@ -20,6 +20,10 @@ import {
   projectStatusDisplayLabels,
 } from "@/lib/theme-constants";
 import { cn } from "@/lib/utils";
+import {
+  SURFACE_CARD,
+  SURFACE_CARD_INTERACTIVE,
+} from "@/lib/ui-surface-chrome";
 import { useCan } from "@/hooks/api/access";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { TEXT_FLEX_CHILD, TEXT_ONE_LINE } from "@/lib/text-overflow";
@@ -128,9 +132,10 @@ export const ProjectCard = React.memo(function ProjectCard({
     <>
       <article
         className={cn(
-          "group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-xl border border-border/60 border-l-[3px] bg-card p-3 shadow-sm",
-          "transition-[border-color,box-shadow] duration-200 ease-out motion-reduce:transition-none",
-          "hover:border-foreground/20 hover:shadow-md",
+          "group relative flex h-full cursor-pointer flex-col overflow-hidden border-l-[3px] p-3",
+          SURFACE_CARD,
+          SURFACE_CARD_INTERACTIVE,
+          "focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background",
           stripe,
         )}
         onClick={handleCardClick}
@@ -142,7 +147,7 @@ export const ProjectCard = React.memo(function ProjectCard({
                 <Button
                   variant="ghost"
                   size="icon-sm"
-                  className="h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100"
+                  className="h-7 w-7 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 sm:focus:opacity-100"
                   aria-label={`Actions for ${project.name}`}
                   onClick={handleStopPropagation}
                   {...ellipsisHover}
@@ -216,7 +221,7 @@ export const ProjectCard = React.memo(function ProjectCard({
                 href={`/build/${project.id}`}
                 onClick={handleProjectLinkClick}
                 aria-label={`Open ${project.name}`}
-                className="font-mono text-micro font-normal tracking-wide text-muted-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="max-w-full shrink truncate whitespace-nowrap font-mono text-micro font-normal tracking-wide text-muted-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 {project.key}
               </Link>

@@ -21,7 +21,7 @@ export function ProjectsEmptyState({ onCreate }: ProjectsEmptyStateProps) {
       className={CONTENT_FILL_PANEL}
       illustrationPreset="projects"
       title="No projects yet"
-      description="Create your first project to start organizing work."
+      description="Create your first project to organize work, track tickets, and launch delivery."
       action={
         canCreate && onCreate
           ? { label: "Create your first project", onClick: handleCreate }

@@ -83,6 +83,7 @@ function applyThemeClass(theme: AppThemeId): void {
 function applyDarkClass(isDark: boolean): void {
   const root = document.documentElement;
   root.classList.toggle("dark", isDark);
+  root.classList.toggle("light", !isDark);
   root.style.colorScheme = isDark ? "dark" : "light";
 }
 
@@ -135,11 +136,24 @@ export function AppThemeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const setMode = useCallback((next: AppThemeMode) => {
-    setModeState(next);
     try {
       window.localStorage.setItem(APP_THEME_MODE_STORAGE_KEY, next);
     } catch {
-      return;
+      /* still apply DOM + state */
+    }
+    setModeState(next);
+    if (typeof window !== "undefined") {
+      const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const dark = resolveIsDark(next, systemDark);
+      const root = document.documentElement;
+      root.classList.remove(dark ? "light" : "dark");
+      root.classList.add(dark ? "dark" : "light");
+      root.style.colorScheme = dark ? "dark" : "light";
+      requestAnimationFrame(() => {
+        root.classList.toggle("dark", dark);
+        root.classList.toggle("light", !dark);
+        root.style.colorScheme = dark ? "dark" : "light";
+      });
     }
   }, []);
 

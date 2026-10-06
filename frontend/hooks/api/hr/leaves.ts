@@ -67,12 +67,13 @@ export function useLeaveTypesAdmin(options?: { enabled?: boolean }) {
 
 export function useHrLeaveContext() {
   const canSelf = useCan("self:leaves");
+  const hrEnabled = useModuleEnabled("hr");
   const identity = useLeaveQueryIdentity();
   return useQuery({
     queryKey: leaveContextKey(identity),
     queryFn: ({ signal }) => apiClient.get<LeaveContextResult>("/me/time-off", undefined, signal, leaveContextC),
     staleTime: 2 * 60_000,
-    enabled: Boolean(identity.orgId && identity.userId) && canSelf,
+    enabled: Boolean(identity.orgId && identity.userId) && hrEnabled && canSelf,
   });
 }
 
@@ -104,6 +105,7 @@ export function useHrLeaveApprovals(
 
 export function useHrLeavesThisWeek(options?: { enabled?: boolean }) {
   const canSelf = useCan("self:leaves");
+  const hrEnabled = useModuleEnabled("hr");
   const identity = useLeaveQueryIdentity();
   return useQuery({
     queryKey: leaveThisWeekKey(identity),
@@ -111,6 +113,7 @@ export function useHrLeavesThisWeek(options?: { enabled?: boolean }) {
     staleTime: 2 * 60_000,
     enabled:
       Boolean(identity.orgId && identity.userId) &&
+      hrEnabled &&
       canSelf &&
       (options?.enabled ?? true),
   });
@@ -118,6 +121,7 @@ export function useHrLeavesThisWeek(options?: { enabled?: boolean }) {
 
 export function useHrMyLeaveRequests(enabled = true) {
   const canSelf = useCan("self:leaves");
+  const hrEnabled = useModuleEnabled("hr");
   const identity = useLeaveQueryIdentity();
   return useQuery({
     queryKey: leaveMyRequestsKey(identity),
@@ -128,12 +132,13 @@ export function useHrMyLeaveRequests(enabled = true) {
       ),
     select: (response) => ({ requests: response.data }),
     staleTime: 2 * 60_000,
-    enabled: Boolean(identity.orgId && identity.userId) && canSelf && enabled,
+    enabled: Boolean(identity.orgId && identity.userId) && hrEnabled && canSelf && enabled,
   });
 }
 
 export function useHrMyLeaveRequestsInfinite(enabled = true) {
   const canSelf = useCan("self:leaves");
+  const hrEnabled = useModuleEnabled("hr");
   const identity = useLeaveQueryIdentity();
   return useInfiniteQuery({
     queryKey: leaveMyRequestsPagesKey(identity),
@@ -145,7 +150,7 @@ export function useHrMyLeaveRequestsInfinite(enabled = true) {
     initialPageParam: NULL_ID_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.pageInfo.nextCursor ?? undefined,
     staleTime: 2 * 60_000,
-    enabled: Boolean(identity.orgId && identity.userId) && canSelf && enabled,
+    enabled: Boolean(identity.orgId && identity.userId) && hrEnabled && canSelf && enabled,
   });
 }
 

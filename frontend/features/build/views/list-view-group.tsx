@@ -15,12 +15,17 @@ import { pmSnappy } from "@/lib/motion-presets";
 import { getGroupStatus, useItemSelectHandler } from "./list-view-shared";
 import type { OuterGroupHeaderProps, NestedGroupProps, DroppableGroupProps } from "./list-view-shared";
 import { ListViewItem } from "./list-view-item";
+import { statusConfig } from "@/features/build/shared/types";
 import { InlineGroupCreate } from "./list-view-group-create";
 import {
   GroupRows,
   ShowMoreRowsButton,
   useGroupRenderLimit,
 } from "./list-view-group-rows";
+
+export function formatGroupLabel(groupKey: string): string {
+  return statusConfig[groupKey]?.label ?? groupKey.replaceAll("_", " ");
+}
 
 export function OuterGroupHeader({ groupKey, rowBy, tickets, count }: OuterGroupHeaderProps) {
   if (rowBy === "assignee") {
@@ -38,7 +43,7 @@ export function OuterGroupHeader({ groupKey, rowBy, tickets, count }: OuterGroup
             <User className="h-3.5 w-3.5 text-muted-foreground" />
           </div>
         )}
-        <span className="text-sm font-medium text-foreground">{groupKey}</span>
+        <span className="text-sm font-medium text-foreground">{formatGroupLabel(groupKey)}</span>
         <span className="text-xs text-muted-foreground tabular-nums">({count})</span>
       </div>
     );
@@ -46,7 +51,7 @@ export function OuterGroupHeader({ groupKey, rowBy, tickets, count }: OuterGroup
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-sm font-medium text-foreground">{groupKey}</span>
+      <span className="text-sm font-medium text-foreground">{formatGroupLabel(groupKey)}</span>
       <span className="text-xs text-muted-foreground tabular-nums">({count})</span>
     </div>
   );
@@ -71,7 +76,7 @@ export function NestedGroup({
     <AccordionItem value={accordionValue} className="mb-3 border-b-0">
       <div className="mb-1.5 flex items-center gap-2 pl-1">
         <AccordionTrigger className="flex flex-1 items-center gap-2 py-0 hover:no-underline font-normal [&>svg]:ml-auto [&>svg]:size-3.5">
-          <span className="text-xs font-normal text-muted-foreground">{groupKey}</span>
+          <span className="text-xs font-normal text-muted-foreground">{formatGroupLabel(groupKey)}</span>
           <span className="text-xs text-muted-foreground tabular-nums">({items.length})</span>
         </AccordionTrigger>
         {projectId && (

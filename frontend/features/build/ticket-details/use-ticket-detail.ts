@@ -62,7 +62,7 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
   const { projectData, members, statuses } = useTicketDetailProjectData(projectId);
   const { data: subtasks } = useSubtasks(ticketId ?? 0, projectId);
 
-  const titleVersion = ticket ? `${ticket.id}:${ticket.updatedAt}:${ticket.title}` : null;
+  const titleVersion = ticket ? `${ticket.id}:${ticket.title}` : null;
   const [localTitle, setLocalTitle] = useSourceOverride(titleVersion, ticket?.title ?? "");
 
   const updateTicketMutation = useUpdateTicket(projectId, {
@@ -249,10 +249,33 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
   const handleTitleChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       setLocalTitle(e.target.value);
-      debouncedSave({ title: e.target.value });
     },
-    [debouncedSave, setLocalTitle],
+    [setLocalTitle],
   );
+
+  const commitTitle = useCallback(
+    (nextTitle: string): string | null => {
+      const trimmed = nextTitle.trim();
+      if (!trimmed) {
+        return "Title is required";
+      }
+      setLocalTitle(trimmed);
+      if (trimmed !== (ticket?.title ?? "")) {
+        debouncedSave({ title: trimmed });
+      }
+      return null;
+    },
+    [debouncedSave, setLocalTitle, ticket?.title],
+  );
+
+  const revertTitle = useCallback(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+      setSaving(false);
+    }
+    setLocalTitle(ticket?.title ?? "");
+  }, [setLocalTitle, ticket?.title]);
 
   const handleDescriptionEditorChange = useCallback(
     (html: string) => {
@@ -279,6 +302,8 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
     discardConflictingEdit,
     localTitle,
     handleTitleChange,
+    commitTitle,
+    revertTitle,
     handleDescriptionEditorChange,
     autoSave,
     handleDelete,

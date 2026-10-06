@@ -17,7 +17,7 @@ import { useSignOut } from "@/hooks/common/auth-hooks";
 import { useCan } from "@/hooks/api/access";
 import {
   ThemeMenuPanel,
-  ThemeMenuSubmenu,
+  ThemeModeMenuItems,
 } from "@/components/theme/theme-switcher";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -189,7 +189,14 @@ export function UserAvatarMenuBody({
           return <DropdownMenuSeparator key={`sep-${index}`} />;
         }
         if (entry.kind === "theme") {
-          return <ThemeMenuSubmenu key="theme" />;
+          return (
+            <div key="theme">
+              <p className="px-2 py-1.5 text-micro font-medium uppercase tracking-wider text-muted-foreground">
+                Appearance
+              </p>
+              <ThemeModeMenuItems />
+            </div>
+          );
         }
         if (entry.kind === "signout") {
           return (

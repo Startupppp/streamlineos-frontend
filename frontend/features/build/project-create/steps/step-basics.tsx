@@ -36,8 +36,10 @@ import {
 
 export type BasicsHandle = { validate: () => Promise<boolean> };
 
-export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
-  function StepBasicsRender({ draft, updateDraft }, ref) {
+export const StepBasics = forwardRef<
+  BasicsHandle,
+  StepSharedProps & { onCancel?: () => void }
+>(function StepBasicsRender({ draft, updateDraft, onCancel }, ref) {
     const form = useForm<BasicsValues>({
       resolver: zodResolver(basicsSchema),
       defaultValues: {
@@ -87,10 +89,15 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
     ) {
       const capped = name.slice(0, PROJECT_NAME_MAX);
       onChange(capped);
-      if (keyManuallyEditedRef.current) return;
-      form.setValue("key", generateProjectKey(capped), {
+      if (keyManuallyEditedRef.current) {
+        updateDraft({ name: capped });
+        return;
+      }
+      const nextKey = generateProjectKey(capped);
+      form.setValue("key", nextKey, {
         shouldValidate: false,
       });
+      updateDraft({ name: capped, key: nextKey });
     }
 
     function handleKeyChange(
@@ -138,12 +145,23 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
                 </div>
                 <FormControl>
                   <Input
+                    data-project-create-name="true"
+                    name={field.name}
+                    value={field.value ?? ""}
+                    onBlur={field.onBlur}
+                    ref={field.ref}
                     placeholder="e.g. Website Redesign"
                     maxLength={PROJECT_NAME_MAX}
-                    {...field}
                     onChange={(e) =>
                       handleNameChange(e.target.value, field.onChange)
                     }
+                    onKeyDown={(e) => {
+                      if (e.key === "Escape") {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onCancel?.();
+                      }
+                    }}
                   />
                 </FormControl>
                 <FormMessage />

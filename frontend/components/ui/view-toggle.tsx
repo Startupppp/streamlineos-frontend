@@ -49,10 +49,11 @@ export function ViewToggle<T extends string = string>({
             aria-label={opt.label}
             aria-pressed={isActive}
             className={cn(
-              "inline-flex items-center justify-center rounded-md px-2.5 py-1.5 leading-none transition-colors press-scale outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring",
+              "inline-flex items-center justify-center rounded-md px-2.5 py-1.5 leading-none transition-colors press-scale outline-none motion-reduce:transition-none",
+              "focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background",
               showLabel && "gap-1.5 px-3 text-sm font-medium",
               isActive
-                ? "bg-primary text-primary-foreground"
+                ? "bg-foreground text-background shadow-sm [&_svg]:text-background"
                 : "bg-transparent text-muted-foreground hover:text-foreground",
             )}
           >

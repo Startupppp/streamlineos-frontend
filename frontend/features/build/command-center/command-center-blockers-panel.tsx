@@ -16,8 +16,7 @@ import { mapAllWorkTicketToMyWorkItem } from "./command-center-utils";
 import { MyWorkRow } from "./command-center-my-work-row";
 
 const OVERDUE_BLOCKERS_FILTERS = {
-  scope: "mine" as const,
-  hasBlocker: true,
+  scope: "blocked" as const,
   excludeStatus: "DONE,CANCELLED",
   limit: 10,
 } as const;
