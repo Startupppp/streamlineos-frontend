@@ -61,7 +61,7 @@ jest.mock("@/hooks/api/org-setup", () => ({
 }));
 
 jest.mock("@/hooks/common/auth-hooks", () => ({
-  signInWithMagicToken: jest.fn((...args: unknown[]) => mockSignIn(...args)),
+  signInWithMagicToken: jest.fn((...args: any[]) => mockSignIn(...args)),
   useSessionClaimsRefresh: jest.fn(() => mockRefreshSessionClaims),
 }));
 
@@ -80,15 +80,15 @@ jest.mock("@/hooks/common/use-confirmed-session-claims-refresh", () => ({
 }));
 
 jest.mock("@/features/org-setup/lib/draft", () => ({
-  clearAll: jest.fn((...args: unknown[]) => mockClearAll(...args)),
-  setCompletionMarker: jest.fn((...args: unknown[]) => mockSetCompletionMarker(...args)),
-  hasCompletionMarker: jest.fn((...args: unknown[]) => mockHasCompletionMarker(...args)),
-  getCompletionDestination: jest.fn((...args: unknown[]) => mockGetCompletionDestination(...args)),
-  clearCompletionMarker: jest.fn((...args: unknown[]) => mockClearCompletionMarker(...args)),
+  clearAll: jest.fn((...args: any[]) => mockClearAll(...args)),
+  setCompletionMarker: jest.fn((...args: any[]) => mockSetCompletionMarker(...args)),
+  hasCompletionMarker: jest.fn((...args: any[]) => mockHasCompletionMarker(...args)),
+  getCompletionDestination: jest.fn((...args: any[]) => mockGetCompletionDestination(...args)),
+  clearCompletionMarker: jest.fn((...args: any[]) => mockClearCompletionMarker(...args)),
 }));
 
 jest.mock("@/lib/api-client", () => ({
-  clearBackendTokenCache: jest.fn((...args: unknown[]) => mockClearBackendTokenCache(...args)),
+  clearBackendTokenCache: jest.fn((...args: any[]) => mockClearBackendTokenCache(...args)),
   setAutoSignOutSuppressed: jest.fn(),
   isApiError: jest.fn((error: unknown) => mockIsApiError(error)),
 }));
