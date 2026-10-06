@@ -125,14 +125,6 @@ export function useReleasesPage(projectId: number) {
     [listFilters],
   );
 
-  const handleDateRangeChange = useCallback(
-    (range: { from: string; to: string }) => {
-      listFilters.setValue("from", range.from);
-      listFilters.setValue("to", range.to);
-    },
-    [listFilters],
-  );
-
   const handleClearSelection = useCallback(() => {
     setContextTarget(null);
   }, []);
@@ -194,6 +186,6 @@ export function useReleasesPage(projectId: number) {
     handleContextEdit,
     handleContextDelete,
     handleStatusFilterChange,
-    handleDateRangeChange,
+    handleDateRangeChange: listFilters.setValues,
   };
 }

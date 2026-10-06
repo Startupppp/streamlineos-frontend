@@ -128,8 +128,7 @@ export function useCyclesPage(projectId: number) {
   }, [listFilters]);
   const handleDateRangeChange = useCallback((range: { from: string; to: string }) => {
     setVisitedCursors([]);
-    listFilters.setValue("from", range.from);
-    listFilters.setValue("to", range.to);
+    listFilters.setValues(range);
   }, [listFilters]);
 
   useBuildListKeyboard({

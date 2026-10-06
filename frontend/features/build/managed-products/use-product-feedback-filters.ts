@@ -180,14 +180,6 @@ export function useProductFeedbackFilters(
     [listFilters],
   );
 
-  const handleDateRangeChange = useCallback(
-    (range: { from: string; to: string }) => {
-      listFilters.setValue("from", range.from);
-      listFilters.setValue("to", range.to);
-    },
-    [listFilters],
-  );
-
   const handlePageChange = useCallback((next: number) => {
     setPage(next);
   }, [setPage]);
@@ -215,7 +207,7 @@ export function useProductFeedbackFilters(
     handleLinkedChange,
     handleAssigneeChange,
     handleDuplicateChange,
-    handleDateRangeChange,
+    handleDateRangeChange: listFilters.setValues,
     handlePageChange,
     handleClearSelection,
   };

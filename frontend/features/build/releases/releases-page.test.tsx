@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, fireEvent, within } from "@testing-library/react";
+import { render, renderHook, act, screen, fireEvent, within } from "@testing-library/react";
 import {
   ACCESS_DENIED,
   baseQueryResult,
@@ -16,8 +16,39 @@ import {
   releaseState,
 } from "./releases-page-test-harness";
 import { ReleasesPage } from "./releases-page";
+import { useReleasesPage } from "./use-releases-page";
 
 beforeEach(installReleasesMocks);
+
+it.each([
+  { search: "", range: { from: "2026-10-01", to: "2026-10-06" } },
+  { search: "&from=2026-10-01&to=2026-10-06", range: { from: "", to: "" } },
+])("acknowledges one complete date range write for $range", ({ search, range }) => {
+  installReleasesNavigationMocks(`tab=releases&q=release&status=draft${search}`);
+  const { result, rerender } = renderHook(() => useReleasesPage(1));
+  expect(mockUseReleases).toHaveBeenLastCalledWith(1, expect.objectContaining({
+    from: search ? "2026-10-01" : undefined, to: search ? "2026-10-06" : undefined,
+  }));
+  expect(mockReplace).not.toHaveBeenCalled();
+  act(() => result.current.handleDateRangeChange(range));
+  const writtenUrl = mockReplace.mock.lastCall?.[0];
+  if (typeof writtenUrl !== "string") throw new Error("The date range did not write a URL");
+  const params = new URL(writtenUrl, "https://streamline.test").searchParams;
+  expect(params.get("from")).toBe(range.from || null);
+  expect(params.get("to")).toBe(range.to || null);
+  expect(params.get("status")).toBe("draft");
+  expect(params.get("q")).toBe("release");
+  expect(params.get("tab")).toBe("releases");
+  expect(mockReplace).toHaveBeenCalledTimes(1);
+  expect(mockReplace).toHaveBeenCalledWith(writtenUrl, { scroll: false });
+  installReleasesNavigationMocks(params.toString());
+  rerender();
+  expect(mockUseReleases).toHaveBeenLastCalledWith(1, expect.objectContaining({
+    q: "release", status: "draft", from: range.from || undefined, to: range.to || undefined,
+  }));
+  expect(result.current.sheetOpen).toBe(false);
+  expect(result.current.deleteRelease.mutate).not.toHaveBeenCalled();
+});
 
 it("renders NoPermissionState when build:view is denied instead of empty releases table", () => {
   mockUseAccess.mockReturnValue(ACCESS_DENIED);

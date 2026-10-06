@@ -310,7 +310,7 @@ describe("EpicsPage — the empty state tells a first run apart from a filtered 
     mockUseBuildListFilters.mockReturnValue({
       search: "", debouncedSearch: "zzz", setSearch: jest.fn(),
       value: jest.fn(() => "all"), isActive: jest.fn(() => false),
-      setValue: jest.fn(), clearAll: jest.fn(), activeCount: 0, isFiltered: true,
+      setValue: jest.fn(), setValues: jest.fn(), clearAll: jest.fn(), activeCount: 0, isFiltered: true,
       cursor: null, setCursor: jest.fn(), resetKey: "", isPending: false,
     });
 

@@ -39,14 +39,6 @@ export function MilestonesFilterToolbar({
     [listFilters],
   );
 
-  const handleDateRangeChange = useCallback(
-    (range: { from: string; to: string }) => {
-      listFilters.setValue("from", range.from);
-      listFilters.setValue("to", range.to);
-    },
-    [listFilters],
-  );
-
   const handleOwnerFilterChange = useCallback(
     (value: string) => listFilters.setValue("ownerId", value === BUILD_FILTER_ALL ? "" : value),
     [listFilters],
@@ -96,7 +88,7 @@ export function MilestonesFilterToolbar({
             <DateRangePicker
               from={fromValue}
               to={toValue}
-              onChange={handleDateRangeChange}
+              onChange={listFilters.setValues}
               placeholder="Filter by target date…"
             />
           ),

@@ -153,26 +153,32 @@ describe("useBuildListFilters", () => {
     expect(result.current.isActive("status")).toBe(false);
   });
 
-  it("removes the param instead of writing the all sentinel", () => {
-    setUrl("status=open");
-    const { result } = renderHook(() => useBuildListFilters({ filters: FILTERS }));
-    act(() => result.current.setValue("status", BUILD_FILTER_ALL));
+  it.each([false, true])("removes the param instead of writing the all sentinel (batch=%s)", (batch) => {
+    setUrl("status=open&from=2026-10-01&to=2026-10-31");
+    const { result } = renderHook(() => useBuildListFilters({ filters: [...FILTERS, { param: "from", all: "any" }, { param: "to" }] }));
+    act(() => batch ? result.current.setValues({ status: BUILD_FILTER_ALL, from: "any", to: "" }) : result.current.setValue("status", BUILD_FILTER_ALL));
     expect(lastParams().has("status")).toBe(false);
+    if (batch) expect([lastParams().has("from"), lastParams().has("to")]).toEqual([false, false]);
+    expect(replace).toHaveBeenCalledTimes(1);
   });
 
-  it("writes a real value to the URL", () => {
+  it.each([false, true])("writes a real value to the URL (batch=%s)", (batch) => {
     const { result } = renderHook(() => useBuildListFilters({ filters: FILTERS }));
-    act(() => result.current.setValue("status", "closed"));
+    act(() => batch ? result.current.setValues({ status: "closed", from: "2026-10-01", to: "2026-10-31" }) : result.current.setValue("status", "closed"));
     expect(lastParams().get("status")).toBe("closed");
+    if (batch) expect([lastParams().get("from"), lastParams().get("to")]).toEqual(["2026-10-01", "2026-10-31"]);
+    expect(replace).toHaveBeenCalledTimes(1);
   });
 
-  it("drops the cursor and page when a filter changes", () => {
-    setUrl("cursor=abc&page=4&status=open");
+  it.each([false, true])("drops the cursor and page when a filter changes (batch=%s)", (batch) => {
+    setUrl("cursor=abc&page=4&status=open&severity=high&q=login");
     const { result } = renderHook(() => useBuildListFilters({ filters: FILTERS }));
-    act(() => result.current.setValue("status", "closed"));
+    act(() => batch ? result.current.setValues({ from: "2026-10-01", to: "2026-10-31" }) : result.current.setValue("status", "closed"));
     const params = lastParams();
     expect(params.has("cursor")).toBe(false);
     expect(params.has("page")).toBe(false);
+    expect([params.get("q"), params.get("status"), params.get("severity")]).toEqual(["login", batch ? "open" : "closed", "high"]);
+    expect(replace).toHaveBeenCalledTimes(1);
   });
 
   it("writes and clears a keyset cursor without disturbing active filters", () => {

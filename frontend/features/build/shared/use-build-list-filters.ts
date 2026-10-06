@@ -39,6 +39,7 @@ export interface BuildListFiltersStateBase {
   value: (param: string) => string;
   isActive: (param: string) => boolean;
   setValue: (param: string, value: string) => void;
+  setValues: (values: Readonly<Record<string, string>>) => void;
   clearAll: () => void;
   activeCount: number;
   isFiltered: boolean;
@@ -153,13 +154,21 @@ export function useBuildListFilters(
     setSearchState(value);
   }, []);
 
-  const setValue = useCallback(
-    (param: string, value: string) => {
-      const entry = values.get(param);
-      const sentinel = entry?.sentinel ?? BUILD_FILTER_ALL;
-      writeParams({ [param]: value === sentinel ? null : value });
+  const setValues = useCallback(
+    (updates: Readonly<Record<string, string>>) => {
+      const normalized: Record<string, string | null> = {};
+      for (const [param, value] of Object.entries(updates)) {
+        const sentinel = values.get(param)?.sentinel ?? BUILD_FILTER_ALL;
+        normalized[param] = value === sentinel ? null : value;
+      }
+      writeParams(normalized);
     },
     [values, writeParams],
+  );
+
+  const setValue = useCallback(
+    (param: string, value: string) => setValues({ [param]: value }),
+    [setValues],
   );
 
   const setCursor = useCallback(
@@ -225,6 +234,7 @@ export function useBuildListFilters(
     value,
     isActive,
     setValue,
+    setValues,
     clearAll,
     activeCount,
     isFiltered: activeCount > 0 || (withSearch ? debouncedSearch.length > 0 : false),

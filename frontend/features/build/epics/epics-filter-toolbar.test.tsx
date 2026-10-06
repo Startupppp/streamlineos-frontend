@@ -1,6 +1,7 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { EpicsFilterToolbar } from "./epics-filter-toolbar";
+import type { BuildListFiltersState } from "@/features/build/shared/use-build-list-filters";
 
 jest.mock("@/features/build/shared/build-list-toolbar", () => ({
   BuildListToolbar: ({
@@ -48,7 +49,7 @@ jest.mock("@/features/build/shared/build-filter-select", () => ({
   ),
 }));
 
-function makeListFilters(overrides: Record<string, unknown> = {}) {
+function makeListFilters(overrides: Partial<BuildListFiltersState> = {}) {
   return {
     search: "",
     debouncedSearch: "",
@@ -56,6 +57,7 @@ function makeListFilters(overrides: Record<string, unknown> = {}) {
     value: jest.fn(() => "all"),
     isActive: jest.fn(() => false),
     setValue: jest.fn(),
+    setValues: jest.fn(),
     clearAll: jest.fn(),
     activeCount: 0,
     isFiltered: false,
@@ -64,14 +66,14 @@ function makeListFilters(overrides: Record<string, unknown> = {}) {
     resetKey: "",
     isPending: false,
     ...overrides,
-  };
+  } satisfies BuildListFiltersState;
 }
 
 it("calls setValue with status and the chosen value when a status option is selected, which routes the update through the URL", () => {
   const listFilters = makeListFilters();
   render(
     <EpicsFilterToolbar
-      listFilters={listFilters as ReturnType<typeof import("@/features/build/shared/use-build-list-filters").useBuildListFilters>}
+      listFilters={listFilters}
       searchInputRef={{ current: null }}
       projectStatuses={[{ name: "IN_PROGRESS" }, { name: "DONE" }]}
       members={[]}
@@ -85,7 +87,7 @@ it("calls setValue with ownerId and the member id when an owner option is select
   const listFilters = makeListFilters();
   render(
     <EpicsFilterToolbar
-      listFilters={listFilters as ReturnType<typeof import("@/features/build/shared/use-build-list-filters").useBuildListFilters>}
+      listFilters={listFilters}
       searchInputRef={{ current: null }}
       projectStatuses={[]}
       members={[
@@ -101,7 +103,7 @@ it("calls setValue with health and the chosen value when a health option is sele
   const listFilters = makeListFilters();
   render(
     <EpicsFilterToolbar
-      listFilters={listFilters as ReturnType<typeof import("@/features/build/shared/use-build-list-filters").useBuildListFilters>}
+      listFilters={listFilters}
       searchInputRef={{ current: null }}
       projectStatuses={[]}
       members={[]}
@@ -115,7 +117,7 @@ it("calls clearAll when the clear-all control is activated", () => {
   const listFilters = makeListFilters();
   render(
     <EpicsFilterToolbar
-      listFilters={listFilters as ReturnType<typeof import("@/features/build/shared/use-build-list-filters").useBuildListFilters>}
+      listFilters={listFilters}
       searchInputRef={{ current: null }}
       projectStatuses={[]}
       members={[]}
@@ -129,7 +131,7 @@ it("renders a control for each of the three declared filter ids so every param i
   const listFilters = makeListFilters();
   render(
     <EpicsFilterToolbar
-      listFilters={listFilters as ReturnType<typeof import("@/features/build/shared/use-build-list-filters").useBuildListFilters>}
+      listFilters={listFilters}
       searchInputRef={{ current: null }}
       projectStatuses={[]}
       members={[]}
