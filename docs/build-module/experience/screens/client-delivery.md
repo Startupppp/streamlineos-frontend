@@ -306,6 +306,8 @@ Entry points: persona sidebar or More, scoped parent record, command search, not
 
 ### Decisions register
 
+Current verified bounded138: root34fdcaffc exposes the real shared body Clear while retaining the filtered heading and genuine-empty permission controls. The [canonical receipt](../../audit/bugs-and-verification.md#forms-decisions-and-query-contract136139--2026-10-06) records meaningful RED/GREEN, matching-hash reviews, actual1000 desktop/mobile/tablet Clear/refresh, expired waits/selector mistakes and one immutable crop. No Decision is created or edited. Complete populated/supersession/concurrency/role/tenant/persistence/effect/release proof remains Current unverified; the existing acceptance checklist stays open.
+
 Current verified bounded134: backend35df4d274403d985832b27bbcc28557b532357aa refuses an update when the initially live Decision was deleted before its scoped write. The [canonical receipt](../../audit/bugs-and-verification.md#decision-live-update134-and-qa-browser-reconciliation--2026-10-06) records actual predicate fixtures,99 focused tests, strict/scoped/full TypeScript checks and independent review. Source checks do not prove physical concurrency, six-role/tenant access, audit atomicity, persisted UI edits, supersession/CAS or deployed behavior; those remain Current unverified and the full acceptance below stays open.
 
 Route: `/build/[projectId]/decisions`

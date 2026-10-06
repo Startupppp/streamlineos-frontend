@@ -282,6 +282,8 @@ Entry points: persona sidebar or More, scoped parent record, command search, not
 
 ### Forms list
 
+Current verified bounded136/139: root fc28bf1d8 supplies the canonical filtered-empty body Clear with the existing heading; backend e3a948601 rejects invalid/repeated isActive through existing queryBoolean, with official artifacts at root ff747e155. The [canonical receipt](../../audit/bugs-and-verification.md#forms-decisions-and-query-contract136139--2026-10-06) records tests/reviews and actual1000 q/type/status Clear/refresh/responsive recovery. Desktop pointer remains obstructed by the floating Feedback widget; keyboard recovery is observed.139 is undeployed. Full builder/version/publish/answers/conversion, populated actions, physical actors/tenants/persistence/effects and operations remain Current unverified; the full delivery checklist stays open.
+
 Route: `/build/[projectId]/forms`
 Audience: triagers, freelancers, admins
 Entry points: persona sidebar or More, scoped parent record, command search, notification and authorized deep link.

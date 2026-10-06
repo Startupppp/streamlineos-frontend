@@ -1,5 +1,64 @@
 # Bugs and verification ledger
 
+## Forms, Decisions and query-contract136–139 — 2026-10-06
+
+Current verified bounded changes: root commits fixture137 `c7eadd2a1`, Forms136 `fc28bf1d8`, Decisions138 `34fdcaffc` and official frontend contract integration `ff747e155` separately. Backend139 is `e3a948601`. Existing owners/components are reused; no source comment, API, helper, schema, test file, Markdown file or deletion is added. The new JPEG below is immutable evidence. External Command Center/Overview and six contested QA/filter/pager paths remain excluded.
+
+| Package | Existing files | Bounded proof |
+|---|---|---|
+| 136 | frontend/features/build/forms/forms-list-page.tsx and its existing test | Canonical EmptyState gets filtersActive and identical filteredTitle. Real body Clear, retained seven controls and an added genuine-empty manage-positive case. RED one failure/seven controls,2.372s; Forms regression44 tests/three suites PASS4.940s; actual-config scoped TypeScript0 diagnostics/4.319s. |
+| 137 | frontend/features/build/cycles/cycle-form-schema.test.ts; frontend/features/build/updates/updates-page.test.tsx; frontend/hooks/api/build/build-revocation-guard.test.ts; frontend/lib/build-scope-cross-organization-isolation.test.tsx; frontend/lib/build-scope-cross-tab-reconciliation.test.tsx | Add canonical Cycle audit scalars, type existing Next searchParams.get mock and import BuildScopeRef from its existing owner. No behavioral assertion or production byte changes. Scoped RED9 diagnostics/8.706s; GREEN0/5.995s; final79 tests/five suites PASS3.716s. |
+| 138 | frontend/features/build/governance/decisions-page.tsx and its existing test | Same EmptyState correction with heading/controls retained. All ten cases remain, with genuine-empty action permission positives/negatives. RED one failure/nine controls,2.415s; Decisions/shared EmptyState39 tests/two suites PASS2.340s; actual-config scoped TypeScript0/5.556s. |
+| 139 | backend/src/modules/build/forms/dto/forms.schemas.ts; backend/src/modules/build/forms/build-forms-params-schema.spec.ts | Reuse queryBoolean.optional only for listFormsQuerySchema.isActive. Invalid strings/repeated values/null/numbers/objects reject rather than silently become omission. Canonical true/false/aliases/bare flag/omission remain. RED20 failures/14 controls,2.510s; GREEN231 tests/six suites PASS8.618s; actual-config scoped TypeScript0/15.149s. Three prior parameter tests/strict query boundaries remain. |
+
+Final frozen hashes and line counts:
+
+| Existing path | SHA256 | Lines |
+|---|---|---|
+| frontend/features/build/forms/forms-list-page.tsx | dd69fdc5c911e04ade006a8424285399db83b784c1337235d1c4da8d2f253c81 | 241 |
+| frontend/features/build/forms/forms-list-page.test.tsx | b1053406b84e1c4deaf7b755e6553b65ccfee984eec8ca9e7f10d24e37f3c31e | 247 |
+| frontend/features/build/cycles/cycle-form-schema.test.ts | 1377c5f1dfcc701be2c3903993ac3dfc393a0aff69a11729a440fa4cc2c9c3d7 | 72 |
+| frontend/features/build/updates/updates-page.test.tsx | 919472a9b9251c44c054ed94b95a3ec238dd67e3f9d7f232975d71b557e5e290 | 498 |
+| frontend/hooks/api/build/build-revocation-guard.test.ts | e56ea3feb7ccd20b8b117200cbf66ad696a6bf4b4ac66b56be9d02948801f480 | 278 |
+| frontend/lib/build-scope-cross-organization-isolation.test.tsx | a18b77636d8c7d062d37bf7d758024aff0cc6921a92aa282b99d95d187e76b7c | 295 |
+| frontend/lib/build-scope-cross-tab-reconciliation.test.tsx | 23b5f3b8af2124da04747307709eee6ffe8e9d997f2a60e9a8de3a9e2a97dd6b | 225 |
+| frontend/features/build/governance/decisions-page.tsx | 24ece624688dd7c8544db7f71d8405a20bbd372bc19a33c2c9b5a9e9f29b5802 | 200 |
+| frontend/features/build/governance/decisions-page.test.tsx | 029e579cec946ab442db17727e136138b9208b4ce0ad07589ce4bce798c4ae95 | 289 |
+| backend/src/modules/build/forms/dto/forms.schemas.ts | af775b707ea8de7534cbf0c94398416ddcbf6687154414c3fa0bf31cc4f280e2 | 199 |
+| backend/src/modules/build/forms/build-forms-params-schema.spec.ts | 1356fa3fd1b928b795980e2ffbd23b34dacd9e528af7442da31c6d31c0d890f1 | 57 |
+
+Exact strict lint/diff pass for all owned paths. Independent matching-hash final reviews are CLEAR: backend_review107/qa_security118 for137; frontend_review101/qa_security118 for136; frontend_review101/backend_review107 for138; backend_review107/qa_security118 for139 source and frontend_review101/backend_review107 for artifacts. Review136 catches a weakened populated-empty negative; root restores absence of any role=status, refreezes and obtains both final reviews. Final Forms/Decisions18 tests/two suites PASS2.399s plus exact strict/diff cover the strengthened assertion. Initial scoped136 proof predates only that assertion strengthening.
+
+Frontend production/full-spec gates pass after137 before the last136 assertion and hash-only139 integration. Fresh sequential postintegration production and full-spec retries at root ff747e155 both exit0; production retains the existing Edge Runtime warning. All eleven current source/test hashes are checked against this receipt before documentary review. Earlier135 full-spec failures remain historical failures, not rewritten. Fresh stable backend production10GB/full-test12GB TypeScript both exit0. Supplemental139 noUnusedLocals/noUnusedParameters still fails five outside-owned dependencies in common pagination, Accounting books, common auth, notification digests and HR hiring. Earlier lifecycle self-test/full-scan failures are not repaired. No compiler option, baseline, safety guard, assertion or size threshold is relaxed.
+
+Official backend OpenAPI generation/freshness self-test/scan pass:4,178 operations/4,163 Zod contracts/zero undeclared/4,178 exposure contracts. Byte vendor and frontend generator/freshness pass:417 schemas/331 hook-called operations. Backend JSON is copied byte-for-byte to the existing frontend vendor path; TypeScript uses only the official generator. Both JSONs are70,200,377 bytes/SHA256 `4fc5d2e43b5caa8ad0ca2f1f01e309b3f85b0da1736313e6979d6f4c62f06ee0`; generated TypeScript395,095 bytes/SHA256 `a9f6dec200ffc04cca9d0fb1a4b7fb963cfbb9e1666ed8cf0dd332eb4c3e4315`. Full comparison against backend058b79a7f finds only GET /build/{projectId}/forms isActive boolean→boolean/string input, with no path/component changes. Generated TypeScript changes only OPENAPI_HASH. Two initial Git buffer overflows are comparison setup failures; measured70MB input/128MB buffer yield actual comparison. Artifact parity does not verify excluded widget behavior.
+
+```text
+pnpm -C frontend exec jest --runInBand --runTestsByPath features/build/forms/forms-list-page.test.tsx features/build/forms/form-detail-page.test.tsx features/build/forms/public-form-envelope.test.ts
+pnpm -C frontend exec jest --runInBand --runTestsByPath features/build/governance/decisions-page.test.tsx components/ui/empty-state.test.tsx
+pnpm -C frontend exec jest --runInBand --runTestsByPath features/build/cycles/cycle-form-schema.test.ts features/build/updates/updates-page.test.tsx hooks/api/build/build-revocation-guard.test.ts lib/build-scope-cross-organization-isolation.test.tsx lib/build-scope-cross-tab-reconciliation.test.tsx
+pnpm -C frontend type-check
+pnpm -C frontend type-check:specs
+pnpm -C backend exec jest --runInBand --runTestsByPath src/modules/build/forms/build-forms-params-schema.spec.ts src/common/validation/query-boolean.spec.ts src/common/validation/zod-validation.interceptor.spec.ts src/common/pagination/list-query.schema.spec.ts src/modules/build/qa/build-qa-schema-validation.spec.ts src/modules/build/governance/build-governance-schema-validation.spec.ts
+pnpm -C backend openapi:generate
+pnpm -C backend openapi:check:self-test
+pnpm -C backend openapi:check
+pnpm -C frontend generate:build-contracts
+pnpm -C frontend check:contract-vendor
+pnpm -C frontend check:build-contracts
+```
+
+Current verified actual read-only port1000 Forms browser: a new background tab preserves the user's Command Center. Before136, nonmatching search has filtered guidance without body Clear. After136, desktop1280 search/type Bug report/status Inactive acknowledge q/type/status. Pointer body Clear opens Feedback instead: the floating widget obstructs it. Close without submission; keyboard Enter clears all three. Reload restores No forms yet. At375, keyboard Filters opens the drawer; an option Enter fails its selector deadline, then actual option click applies Inactive and Done closes. Body Enter clears; that first final observation occurs after768 resize, not separately at375. A later dedicated375 check applies q, visibly acknowledges body Clear, activates Enter and observes /build/1/forms, No forms yet/New Form at375. At768, actual Enter also clears q/restores genuine empty. Complete pointer-overlay/populated mobile acceptance is not claimed.
+
+Current verified actual Decisions browser: desktop1280 search/status Accepted/owner acknowledge q/status/ownerId. Pointer body Clear removes all; refresh reconstructs No decisions recorded/All statuses/All owners. At375, focused search intentionally hides toolbar actions; an initial Filters locator cannot match. Actual component and existing tests confirm this existing policy. After Clear/blurring, Filters returns; drawer clicks select Accepted/Done. Keyboard body Clear eventually restores genuine empty. One visibility wait expires before a later successful actual state; no timing guarantee is inferred. At768, corrected heading/body action is captured, then actual pointer Clear removes q/restores No decisions recorded/Log Decision. A final wait mistakenly requests No decisions yet and fails; following actual snapshot confirms the exact real heading/unfiltered URL. Record that selector mistake, not a product defect or passing command.
+
+After final Forms375 recovery, the sampled current-tab error log returns zero entries at limit20; this is not complete console/network proof. Viewport override is reset and only the agent-created tab is retained for continuation. No Create/Save/Log Decision/Submit/live comment/grant/fixture/DDL/deploy occurs.139 is undeployed; these UI reads do not prove its HTTP validation or physical authority/persistence.
+
+One immutable [actual Decisions body-action crop](./evidence/2026-10-05-browser/decisions138-clear-tablet-768-crop.jpg) is archived/visually inspected: viewport768x800, clip x204/y530/360x140,5,995 JPEG bytes/SHA256 `34a76a5772abf75b1eb5e1c87a17d44ceff5a91c4d65f1a45bcf50b559a55095`. Length/all80 base64 segments are checked before exclusive write. An empty-state crop is not full responsive/physical proof; other session screenshots and unarchived134 stay separate.
+
+Current unverified: Forms builder/version/publish/answers/conversion, populated records/actions, full mobile/pointer/search/cursor races, real six-role/project/tenant/PAT/HTTP/RLS/cache/event/persistence,139 deployment and operations. No approved isolated writable target exists; production remains read-only. Supports open BT-1334e7840230/BT-3e9ebfaad21e/BT-05e68784a2c2 with bounded evidence only. All535 task texts/statuses/D-I-T-R-B-L stages remain298 checked/237 open; no whole task or stage closes.
+
+
 ## Quality empty-state135 reconciliation — 2026-10-06
 
 Current verified bounded source/test commit a031725adc4299b2d8f7d374f3465a9960cf8d06: exactly two existing files,208 insertions/51 deletions including the user's inherited formatting handoff. The existing Quality report filtered-empty message now uses canonical EmptyState filtersActive mode, preserving its exact heading through filteredTitle. Users can clear filters from the body as well as the toolbar. Genuine-empty Open QA, existing permissions, contracts, server queries, rows/counts, components and black/white selected tabs are unchanged. Both source paths are clean/released at the reviewed hashes. No new mutation, API, schema, helper, component, test file, comment or Markdown file is added.
