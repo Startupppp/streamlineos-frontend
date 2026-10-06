@@ -125,7 +125,8 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
             {
               id: "date-range",
               label: "Date range",
-              active: listFilters.isActive("from") || listFilters.isActive("to"),
+              active:
+                listFilters.isActive("from") || listFilters.isActive("to"),
               control: (
                 <DateRangePicker
                   from={fromValue}
@@ -202,7 +203,11 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
                 illustrationPreset="projects"
                 title="No releases yet"
                 description="Create your first release to track shipped features and versions."
-                action={{ label: "New Release", onClick: handleOpenCreate }}
+                action={
+                  canManage
+                    ? { label: "New Release", onClick: handleOpenCreate }
+                    : undefined
+                }
                 className={CONTENT_FILL_PANEL}
               />
             }
@@ -210,6 +215,8 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
               <EmptyState
                 illustrationPreset="projects"
                 title="No releases match your filters"
+                filtersActive
+                filteredTitle="No releases match your filters"
                 description="Try adjusting the filters to see more releases."
                 onClearFilters={listFilters.clearAll}
                 className={CONTENT_FILL_PANEL}
@@ -229,7 +236,10 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
           />
         ) : null}
 
-        <DropdownMenu open={contextTarget !== null} onOpenChange={handleContextMenuOpenChange}>
+        <DropdownMenu
+          open={contextTarget !== null}
+          onOpenChange={handleContextMenuOpenChange}
+        >
           <DropdownMenuTrigger asChild>
             <span
               aria-hidden
@@ -243,8 +253,13 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
             />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            <DropdownMenuItem onSelect={handleContextEdit}>Edit</DropdownMenuItem>
-            <DropdownMenuItem variant="destructive" onSelect={handleContextDelete}>
+            <DropdownMenuItem onSelect={handleContextEdit}>
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              variant="destructive"
+              onSelect={handleContextDelete}
+            >
               Delete
             </DropdownMenuItem>
           </DropdownMenuContent>

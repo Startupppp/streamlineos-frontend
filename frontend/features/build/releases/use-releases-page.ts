@@ -59,9 +59,10 @@ export function useReleasesPage(projectId: number) {
   );
 
   const handleOpenCreate = useCallback(() => {
+    if (!canManage) return;
     setEditTarget(null);
     setSheetOpen(true);
-  }, []);
+  }, [canManage]);
 
   const handleOpenEdit = useCallback((r: Release) => {
     setEditTarget(r);

@@ -1,10 +1,12 @@
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, within } from "@testing-library/react";
 import {
   ACCESS_DENIED,
   baseQueryResult,
   cursorPage,
   installReleasesMocks,
+  installReleasesNavigationMocks,
+  mockReplace,
   mockPreventDefault,
   mockUseAccess,
   mockUseCan,
@@ -22,7 +24,7 @@ it("renders NoPermissionState when build:view is denied instead of empty release
   mockUseReleases.mockReturnValue(baseQueryResult());
   render(<ReleasesPage projectId={1} />);
   expect(screen.getByTestId("no-permission")).toBeInTheDocument();
-  expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
+  expect(screen.queryByRole("status")).not.toBeInTheDocument();
 });
 
 it("shows actual query error message on failure instead of hardcoded text", () => {
@@ -45,13 +47,19 @@ it("omits the all sentinel from the API date filters", () => {
 it("hides New Release button when build:manage is denied", () => {
   mockUseCan.mockReturnValue(false);
   render(<ReleasesPage projectId={1} />);
+  expect(screen.getByRole("heading", { name: "No releases yet" })).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: /new release/i })).not.toBeInTheDocument();
 });
 
 it("shows New Release button when build:manage is granted", () => {
   mockUseCan.mockReturnValue(true);
   render(<ReleasesPage projectId={1} />);
-  expect(screen.getByRole("button", { name: /new release/i })).toBeInTheDocument();
+  expect(within(screen.getByTestId("page-actions")).getByRole("button", { name: /new release/i })).toBeInTheDocument();
+  const body = within(screen.getByRole("status"));
+  expect(body.getByRole("heading", { name: "No releases yet" })).toBeInTheDocument();
+  expect(body.getByRole("button", { name: /new release/i })).toBeInTheDocument();
+  fireEvent.click(body.getByRole("button", { name: /new release/i }));
+  expect(screen.getByTestId("release-form-sheet")).toBeInTheDocument();
 });
 
 it("keyboard c shortcut opens the release form sheet", () => {
@@ -59,6 +67,56 @@ it("keyboard c shortcut opens the release form sheet", () => {
   render(<ReleasesPage projectId={1} />);
   fireEvent.keyDown(document, { key: "c" });
   expect(screen.getByTestId("release-form-sheet")).toBeInTheDocument();
+});
+
+it("denied keyboard c shortcut does not open the release form sheet", () => {
+  mockUseCan.mockReturnValue(false);
+  render(<ReleasesPage projectId={1} />);
+  fireEvent.keyDown(document, { key: "c" });
+  expect(screen.queryByTestId("release-form-sheet")).not.toBeInTheDocument();
+});
+
+it.each([true, false])("genuine empty has no Clear filters when canManage is %s", (canManage) => {
+  mockUseCan.mockReturnValue(canManage);
+  render(<ReleasesPage projectId={1} />);
+  expect(screen.getByRole("heading", { name: "No releases yet" })).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Clear filters" })).not.toBeInTheDocument();
+});
+
+it.each([true, false])("filtered body clears supported URL filters when canManage is %s", (canManage) => {
+  mockUseCan.mockReturnValue(canManage);
+  installReleasesNavigationMocks("tab=releases&q=missing&status=draft&from=2026-10-01&to=2026-10-06&cursor=older&page=2&cursors=%5B%22older%22%5D");
+  const view = render(<ReleasesPage projectId={1} />);
+  const body = within(screen.getByRole("status"));
+  expect(body.getByRole("heading", { name: "No releases match your filters" })).toBeInTheDocument();
+  expect(body.queryByRole("button", { name: /new release/i })).not.toBeInTheDocument();
+  expect(mockUseReleases).toHaveBeenLastCalledWith(1, expect.objectContaining({
+    cursor: "older", q: "missing", status: "draft", from: "2026-10-01", to: "2026-10-06",
+  }));
+  fireEvent.click(body.getByRole("button", { name: "Clear filters" }));
+  expect(mockReplace).toHaveBeenLastCalledWith("/build?tab=releases&cursors=%5B%22older%22%5D", { scroll: false });
+  const clearUrl = mockReplace.mock.lastCall?.[0];
+  if (typeof clearUrl !== "string") throw new Error("Clear filters did not write a URL");
+  installReleasesNavigationMocks(new URL(clearUrl, "https://streamline.test").search);
+  view.rerender(<ReleasesPage projectId={1} />);
+  expect(mockReplace).toHaveBeenLastCalledWith("/build?tab=releases", { scroll: false });
+  const resetUrl = mockReplace.mock.lastCall?.[0];
+  if (typeof resetUrl !== "string") throw new Error("The pager did not reset its cursor stack");
+  installReleasesNavigationMocks(new URL(resetUrl, "https://streamline.test").search);
+  view.rerender(<ReleasesPage projectId={1} />);
+  expect(screen.getByRole("heading", { name: "No releases yet" })).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Clear filters" })).not.toBeInTheDocument();
+  expect(mockUseReleases).toHaveBeenLastCalledWith(1, expect.objectContaining({
+    cursor: undefined, q: undefined, status: undefined, from: undefined, to: undefined,
+  }));
+});
+
+it.each([true, false])("populated releases have no empty status when canManage is %s", (canManage) => {
+  mockUseCan.mockReturnValue(canManage);
+  mockUseReleases.mockReturnValue(baseQueryResult({ data: cursorPage([releaseRow]) }));
+  render(<ReleasesPage projectId={1} />);
+  expect(screen.getByTestId("table-rows")).toBeInTheDocument();
+  expect(screen.queryByRole("status")).not.toBeInTheDocument();
 });
 
 it("shows the offline notice when the user loses connectivity", () => {

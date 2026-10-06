@@ -68,10 +68,6 @@ jest.mock("@/components/shared/error-state", () => ({
   ),
 }));
 
-jest.mock("@/components/ui/empty-state", () => ({
-  EmptyState: ({ title }: { title: string }) => <div data-testid="empty-state">{title}</div>,
-}));
-
 jest.mock("@/components/ui/data-table", () => ({
   DataTable: ({
     isLoading,
@@ -191,9 +187,9 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => mockSearchParams,
 }));
 
-export function installReleasesNavigationMocks() {
+export function installReleasesNavigationMocks(search = "") {
   mockReplace.mockClear();
-  mockSearchParams = new URLSearchParams();
+  mockSearchParams = new URLSearchParams(search);
 }
 
 
