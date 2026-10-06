@@ -59,6 +59,7 @@ const WORK_STATES = [
   "done",
   "cancelled",
 ];
+const ACCEPT_TOAST_DURATION_MS = 20_000;
 const TITLES = {
   accept: "Accept Intake Item",
   decline: "Decline Intake Item",
@@ -172,6 +173,7 @@ function DecisionOwner({
     }
     toast.success("Item accepted — ticket created", {
       id: acceptedTicket.toastId,
+      duration: ACCEPT_TOAST_DURATION_MS,
       action: { label: "View ticket", onClick: handleViewTicket },
     });
   }, [acceptedTicket, ticketHref, requestLeave, router]);
@@ -245,7 +247,9 @@ function DecisionOwner({
         setPending(false);
         setDecision(null);
         if (submitted.action === "accept" && result.linkedWorkItemId) {
-          const toastId = toast.success("Item accepted — ticket created", {});
+          const toastId = toast.success("Item accepted — ticket created", {
+            duration: ACCEPT_TOAST_DURATION_MS,
+          });
           const summary = result.linkedTicket;
           const ticketNumber = summary?.id === result.linkedWorkItemId &&
             summary.projectId === projectId && Number.isSafeInteger(summary.ticketNumber) &&

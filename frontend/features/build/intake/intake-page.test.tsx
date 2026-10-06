@@ -11,8 +11,8 @@ const mockCan = jest.fn(), mockAccess = jest.fn(), mockFilters = jest.fn(), mock
 const mockMembers = jest.fn(), mockCycles = jest.fn(), mockModules = jest.fn();
 const mockTicket = jest.fn(), mockPush = jest.fn(), mockLeave = jest.fn();
 let mockRealDirtyBoundary = false, mockOtherDirty = false;
-type ToastOptions = { action?: { label: string; onClick: () => void }; id?: string | number };
-const mockToast = { success: jest.fn((message: string, options?: ToastOptions) => { void message; void options; }), error: jest.fn() };
+type ToastOptions = { action?: { label: string; onClick: () => void }; id?: string | number; duration?: number };
+const mockToast = { success: jest.fn((message: string, options?: ToastOptions) => { void message; void options; return options?.id ?? "toast-1"; }), error: jest.fn() };
 jest.mock("@/hooks/api/build/intake", () => ({
   useIntakeRequests: (...args: unknown[]) => mockRequests(...args),
   useCreateIntakeRequest: () => ({ mutate: mockCreate, isPending: false }),
@@ -439,6 +439,45 @@ it("shows the not-in-this-view banner when highlightId does not match any loaded
   render(<IntakePage projectId={1} highlightId={99} />);
   expect(screen.getByTestId("intake-item-not-found")).toBeInTheDocument();
   expect(document.querySelector("[data-highlighted='true']")).not.toBeInTheDocument();
+});
+
+it("shows the not-in-this-view banner for a gone highlight token that never resolves to an id", () => {
+  mockFilters.mockReturnValue({ value: () => "all", setValue: jest.fn() });
+  mockRequests.mockReturnValue(query({ data: { data: [{ id: 1, title: "Other item", status: "pending" }] } }));
+  render(<IntakePage projectId={1} highlightRequested />);
+  expect(screen.getByTestId("intake-item-not-found")).toHaveTextContent(/linked item is not in this view/i);
+  expect(document.querySelector("[data-highlighted='true']")).not.toBeInTheDocument();
+});
+
+it("shows the not-in-this-view banner on an empty tab when highlight is requested", () => {
+  mockFilters.mockReturnValue({ value: () => "declined", setValue: jest.fn() });
+  mockRequests.mockReturnValue(query({ data: { data: [{ id: 1, title: "Pending only", status: "pending" }] } }));
+  render(<IntakePage projectId={1} highlightId={999} highlightRequested />);
+  expect(screen.getByTestId("intake-item-not-found")).toBeInTheDocument();
+  expect(screen.getByText("No declined items")).toBeInTheDocument();
+});
+
+it("fills the empty Declined panel with CONTENT_FILL_PANEL classes", () => {
+  mockFilters.mockReturnValue({ value: () => "declined", setValue: jest.fn() });
+  mockRequests.mockReturnValue(query({ data: { data: [{ id: 1, title: "Pending only", status: "pending" }] } }));
+  render(<IntakePage projectId={1} />);
+  const panel = screen.getByTestId("intake-empty-panel");
+  expect(panel.className).toMatch(/flex-1/);
+  expect(panel.className).toMatch(/min-h/);
+});
+
+it("keeps returnTo on the View ticket toast href after accept", async () => {
+  await acceptRequest({ ...ack("accepted"), linkedTicket: { id: 91, projectId: 1, ticketNumber: 7 } });
+  await waitFor(() => expect(ticketActions()).toHaveLength(1));
+  const updateCall = mockToast.success.mock.calls.find(([, options]) => options?.action?.label === "View ticket");
+  expect(updateCall?.[1]?.duration).toBeGreaterThanOrEqual(15_000);
+  act(() => ticketAction().onClick());
+  expect(mockPush).toHaveBeenCalledWith(
+    expect.stringMatching(/\/build\/1\/tickets\/7\?returnTo=/),
+  );
+  const href = String(mockPush.mock.calls.at(-1)?.[0] ?? "");
+  const returnTo = new URL(href, "http://localhost").searchParams.get("returnTo");
+  expect(returnTo).toBe("/build/1/intake?tab=pending");
 });
 
 it("switches the active tab to 'all' when the highlighted item is on a different tab", () => {
