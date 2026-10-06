@@ -223,3 +223,20 @@ describe("getErrorMessage on a coded Build refusal", () => {
     expect(getErrorMessage(error)).toBe("Build is not enabled for your organization.");
   });
 });
+
+describe("getErrorMessage strips correlation and raw IDs", () => {
+  it("does not surface a bare UUID from the server message", () => {
+    const uuid = "7eca7bad-1234-4abc-9def-0123456789ab";
+    expect(getErrorMessage(new Error(`Request failed ${uuid}`))).not.toContain(uuid);
+  });
+
+  it("maps 401 to a session-expired prompt", () => {
+    expect(getErrorMessage({ status: 401, message: "Unauthorized" })).toBe(
+      "Your session expired. Please sign in again.",
+    );
+  });
+
+  it("maps network failures to a connection prompt", () => {
+    expect(getErrorMessage(new Error("Failed to fetch"))).toMatch(/network/i);
+  });
+});

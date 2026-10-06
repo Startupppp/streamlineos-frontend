@@ -201,6 +201,7 @@ export function useCreateTicketForm({
         toast.error("Select a project");
         return;
       }
+      if (createTicketMutation.isPending) return;
       createTicketMutation.mutate({
         ...values,
         projectId,

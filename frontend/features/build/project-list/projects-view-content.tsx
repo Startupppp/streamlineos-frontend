@@ -5,6 +5,8 @@ import { motion } from "framer-motion";
 import { ProjectCard } from "./project-card";
 import { ProjectTable } from "./project-table";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { STICKY_FOOTER_ABOVE_MOBILE_NAV } from "@/components/ui/content-fill-panel";
+import { cn } from "@/lib/utils";
 import { PmStaggerList } from "@/components/pm-chrome";
 import { fadeUp, fadeUpReduced } from "@/lib/motion-presets";
 import type { DisplayPrefs } from "./use-display-prefs";
@@ -50,7 +52,7 @@ export function ProjectsViewContent({
   if (viewMode === "grid") {
     return (
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="min-h-0 flex-1 overflow-y-auto max-md:[.mobile-nav-active_&]:pb-4">
           <PmStaggerList
             className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
             role="list"
@@ -76,6 +78,7 @@ export function ProjectsViewContent({
             hasMore={Boolean(hasNextPage)}
             onNext={onLoadMore}
             disabled={isFetchingNextPage}
+            className={cn(STICKY_FOOTER_ABOVE_MOBILE_NAV, "z-10 mt-auto")}
           />
         ) : null}
       </div>
