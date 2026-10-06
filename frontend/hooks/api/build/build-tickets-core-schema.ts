@@ -19,6 +19,9 @@ export type KnownTicketActivityAction = import("zod").infer<typeof ticketActivit
 export const ticketActivityPageContract = projectsTicketsGetActivityResponseSchema;
 
 export const ticketDetailContract = projectsTicketsGetTicketResponseSchema.extend({
+  // Live GET /tickets/key/:n omits these aliases; list rows send them. Accept either shape.
+  storyPoints: projectsTicketsGetTicketResponseSchema.shape.storyPoints.optional().default(null),
+  estimate: projectsTicketsGetTicketResponseSchema.shape.estimate.optional().default(null),
   comments: projectsTicketsGetTicketResponseSchema.shape.comments
     .unwrap()
     .default([])
