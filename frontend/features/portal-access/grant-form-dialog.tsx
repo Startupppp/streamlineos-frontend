@@ -96,9 +96,19 @@ export function GrantFormDialog({ open, onOpenChange, mode, defaultValues }: Pro
   const updateGrant = useUpdateGrant(
     mode === "edit" ? defaultValues.projectClientGrantId : "",
   );
-  const { data: membershipsPage, isLoading: membershipsLoading } =
-    usePortalMemberships({ limit: 100, status: "ACTIVE" });
-  const { data: projectsPage, isLoading: projectsLoading } = useProjects();
+  const {
+    data: membershipsPage,
+    isLoading: membershipsLoading,
+  } = usePortalMemberships(
+    { limit: 100, status: "ACTIVE" },
+    { enabled: open },
+  );
+  const {
+    data: projectsPage,
+    isLoading: projectsLoading,
+    isError: projectsError,
+    refetch: refetchProjects,
+  } = useProjects({ limit: 100 }, { enabled: open });
 
   const [inviteOpen, setInviteOpen] = useState(false);
 
@@ -307,6 +317,26 @@ export function GrantFormDialog({ open, onOpenChange, mode, defaultValues }: Pro
                       ))}
                     </SelectContent>
                   </Select>
+                  {projectsError ? (
+                    <div
+                      role="alert"
+                      className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-destructive"
+                    >
+                      <p className="font-medium">Projects Error</p>
+                      <p className="mt-0.5 text-destructive/90">
+                        Failed to load projects. Please try again.
+                      </p>
+                      <button
+                        type="button"
+                        className="mt-1.5 underline underline-offset-2"
+                        onClick={() => {
+                          void refetchProjects();
+                        }}
+                      >
+                        Try Again
+                      </button>
+                    </div>
+                  ) : null}
                   <FormMessage />
                 </FormItem>
               )}
