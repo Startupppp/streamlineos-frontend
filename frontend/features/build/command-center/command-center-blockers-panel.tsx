@@ -15,6 +15,7 @@ import { useInfiniteAllWork } from "@/hooks/api/build/all-work";
 import { mapAllWorkTicketToMyWorkItem } from "./command-center-utils";
 import { MyWorkRow } from "./command-center-my-work-row";
 
+/** BE allWorkQuerySchema is .strict() — use scope "blocked", never hasBlocker. */
 const OVERDUE_BLOCKERS_FILTERS = {
   scope: "blocked" as const,
   excludeStatus: "DONE,CANCELLED",

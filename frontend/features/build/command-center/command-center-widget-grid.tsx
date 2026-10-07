@@ -32,6 +32,8 @@ export function CommandCenterWidgetGrid({
   onMove,
 }: CommandCenterWidgetGridProps) {
   const { width, containerRef, mounted } = useContainerWidth({ measureBeforeMount: true });
+  /** Width 0 after mount paints a blank GridLayout — keep the skeleton until measured. */
+  const ready = mounted && width > 0;
   const isWide = width >= WIDE_GRID_MIN_WIDTH;
   const canArrange = editing && isWide;
 
@@ -62,7 +64,7 @@ export function CommandCenterWidgetGrid({
       )}
       data-editing={editing ? "true" : undefined}
     >
-      {mounted ? (
+      {ready ? (
         <GridLayout
           width={width}
           layout={layout}

@@ -327,6 +327,18 @@ jest.mock("./command-center-rows", () => {
 });
 
 describe("BlockersPanel", () => {
+  it("queries all-work with scope blocked and never sends unknown hasBlocker (strict BE schema)", () => {
+    mockUseInfiniteAllWork.mockReturnValue(baseQueryResult({ data: { pages: [{ data: [] }] } }));
+    render(<BlockersPanel />);
+    expect(mockUseInfiniteAllWork).toHaveBeenCalled();
+    const filters = mockUseInfiniteAllWork.mock.calls[0]?.[0] as Record<string, unknown>;
+    expect(filters).toMatchObject({
+      scope: "blocked",
+      excludeStatus: "DONE,CANCELLED",
+    });
+    expect(filters).not.toHaveProperty("hasBlocker");
+  });
+
   it("renders skeletons while the blocked-tickets query is loading — paired with the loaded test", () => {
     mockUseInfiniteAllWork.mockReturnValue(baseQueryResult({ isLoading: true }));
     render(<BlockersPanel />);

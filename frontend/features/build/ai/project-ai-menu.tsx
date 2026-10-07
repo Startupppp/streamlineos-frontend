@@ -1,6 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import {
+  useCallback,
+  useLayoutEffect,
+  useRef,
+  type MutableRefObject,
+} from "react";
 import { SparklesIcon } from "@animateicons/react/lucide";
 import { useCan } from "@/hooks/api/access";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -21,10 +26,16 @@ import type { ProjectSummaryResult } from "@/types/projects/ai";
 const NO_DATA_SUMMARY =
   "This project has no tickets yet. Add tasks to unlock AI features.";
 
+export type ProjectAiRunRef = MutableRefObject<(() => void) | null>;
+
 interface ProjectAiMenuProps {
   projectId: number;
   hideTrigger?: boolean;
-  onRunRegister?: (run: (() => void) | null) => void;
+  /**
+   * Parent-owned ref. Assigned only in useLayoutEffect — never call execute
+   * during registration, and never notify the parent via setState.
+   */
+  runRef?: ProjectAiRunRef;
 }
 
 function isEmptySummary(data: ProjectSummaryResult): boolean {
@@ -59,7 +70,7 @@ function formatSummary(data: ProjectSummaryResult): AiActionResult {
 export function ProjectAiMenu({
   projectId,
   hideTrigger = false,
-  onRunRegister,
+  runRef,
 }: ProjectAiMenuProps) {
   const canUseAI = useCan("build:ai:use");
   const summaryMutation = useProjectAiSummary(projectId);
@@ -84,17 +95,13 @@ export function ProjectAiMenu({
     void executeRef.current();
   }, []);
 
-  const onRunRegisterRef = useRef(onRunRegister);
-  onRunRegisterRef.current = onRunRegister;
-
-  useEffect(() => {
-    const register = onRunRegisterRef.current;
-    if (!register) return;
-    register(handleSummarizeClick);
+  useLayoutEffect(() => {
+    if (!runRef) return;
+    runRef.current = handleSummarizeClick;
     return () => {
-      onRunRegisterRef.current?.(null);
+      runRef.current = null;
     };
-  }, [handleSummarizeClick]);
+  }, [runRef, handleSummarizeClick]);
 
   if (!canUseAI) return null;
 

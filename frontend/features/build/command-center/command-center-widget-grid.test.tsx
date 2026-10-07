@@ -56,6 +56,13 @@ describe("CommandCenterWidgetGrid", () => {
     expect(screen.getByLabelText(/loading widgets/i)).toBeInTheDocument();
   });
 
+  it("keeps the skeleton when mounted at width 0 so GridLayout never paints a blank body", () => {
+    mockContainerWidth.mockReturnValue({ width: 0, mounted: true, containerRef: { current: null }, measureWidth: jest.fn() });
+    renderGrid();
+    expect(screen.queryByTestId("my-issues-content")).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/loading widgets/i)).toBeInTheDocument();
+  });
+
   it("shows no edit controls outside edit mode — paired with the editing test below", () => {
     renderGrid();
     expect(screen.queryByRole("button", { name: /remove/i })).not.toBeInTheDocument();
