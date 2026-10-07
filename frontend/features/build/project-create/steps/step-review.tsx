@@ -2,10 +2,10 @@
 
 import { useMemo } from "react";
 import { useProjectTemplates } from "@/hooks/api/build/templates";
-import { useOrgMembers } from "@/hooks/api/organization";
 import { useSimpleClientsList } from "@/hooks/api/crm/clients";
 import { getUserDisplayName } from "@/lib/person-display";
 import type { WizardDraft } from "../use-project-create";
+import { useWizardMembers } from "../use-wizard-members";
 
 interface StepReviewProps {
   draft: WizardDraft;
@@ -42,9 +42,8 @@ const FEATURE_LABELS: Record<string, string> = {
 
 export function StepReview({ draft }: StepReviewProps) {
   const { data: templatePages } = useProjectTemplates();
-  const { data: membersData } = useOrgMembers(1, 100);
+  const members = useWizardMembers(100);
   const { data: clientsList } = useSimpleClientsList();
-  const members = useMemo(() => membersData?.data ?? [], [membersData]);
 
   const selectedLabels = useMemo(
     () =>

@@ -118,7 +118,10 @@ export function useApplyProjectTemplate() {
         applyTemplateResultContract,
       ),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.all });
+      void qc.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.list(),
+        refetchType: "all",
+      });
     },
   });
 }

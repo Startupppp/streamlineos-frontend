@@ -26,9 +26,9 @@ import { Button } from "@/components/ui/button";
 import { FormControl } from "@/components/ui/form";
 import { Check, ChevronDown, User } from "lucide-react";
 import { cn, resolveImageUrl } from "@/lib/utils";
-import { useOrgMembers } from "@/hooks/api/organization";
 import { useSimpleClientsList } from "@/hooks/api/crm/clients";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
+import { useWizardMembers } from "../use-wizard-members";
 
 const NONE_SENTINEL = "__none__";
 
@@ -53,8 +53,7 @@ export function BasicsManagerField({
   value,
   onChange,
 }: BasicsManagerFieldProps) {
-  const { data: membersData } = useOrgMembers(1, 100);
-  const members = useMemo(() => membersData?.data ?? [], [membersData]);
+  const members = useWizardMembers(100);
 
   const [managerOpen, setManagerOpen] = useState(false);
   const [managerSearch, setManagerSearch] = useState("");

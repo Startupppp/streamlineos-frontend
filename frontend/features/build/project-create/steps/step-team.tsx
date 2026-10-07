@@ -9,16 +9,15 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useCan } from "@/hooks/api/access";
-import { useOrgMembers } from "@/hooks/api/organization";
 import { getUserDisplayName } from "@/lib/person-display";
 import type { StepSharedProps } from "../use-project-create";
+import { useWizardMembers } from "../use-wizard-members";
 
 export function StepTeam({ draft, updateDraft }: StepSharedProps) {
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
   const canManage = useCan("build:manage");
-  const { data: membersData } = useOrgMembers(1, 100);
-  const members = useMemo(() => membersData?.data ?? [], [membersData]);
+  const members = useWizardMembers(100);
   const [search, setSearch] = useState("");
 
   function handleSearch(value: string) {
