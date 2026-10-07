@@ -5,14 +5,22 @@ import { useCallback, useMemo, type ReactNode } from "react";
 import { GridLayout, useContainerWidth, type Layout } from "react-grid-layout";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
-import { GRID_COLUMNS, toGridLayout, toStackedLayout, type WidgetSlot, type WidgetType } from "./dashboard-layout";
-import { CommandCenterWidgetFrame, WIDGET_CONTROL_CLASS, WIDGET_DRAG_CLASS } from "./command-center-widget-frame";
+import {
+  GRID_COLUMNS,
+  toGridLayout,
+  toStackedLayout,
+  type WidgetSlot,
+  type WidgetType,
+} from "./dashboard-layout";
+import {
+  CommandCenterWidgetFrame,
+  WIDGET_CONTROL_CLASS,
+  WIDGET_DRAG_CLASS,
+} from "./command-center-widget-frame";
 
 const ROW_HEIGHT = 64;
 const GRID_GAP = 16;
 const WIDE_GRID_MIN_WIDTH = 768;
-const SINGLE_COLUMN_SUMMARY_MAX_WIDTH = 327;
-const TWO_COLUMN_SUMMARY_MAX_WIDTH = 639;
 
 interface CommandCenterWidgetGridProps {
   widgets: readonly WidgetSlot[];
@@ -33,21 +41,16 @@ export function CommandCenterWidgetGrid({
   onRemove,
   onMove,
 }: CommandCenterWidgetGridProps) {
-  const { width, containerRef, mounted } = useContainerWidth({ measureBeforeMount: true });
-  /** Width 0 after mount paints a blank GridLayout — keep the skeleton until measured. */
+  const { width, containerRef, mounted } = useContainerWidth({
+    measureBeforeMount: true,
+  });
   const ready = mounted && width > 0;
   const isWide = width >= WIDE_GRID_MIN_WIDTH;
   const canResize = editing && isWide;
 
   const layout = useMemo(
-    () =>
-      isWide
-        ? toGridLayout(widgets)
-        : toStackedLayout(
-            widgets,
-            width <= SINGLE_COLUMN_SUMMARY_MAX_WIDTH ? 3 : width <= TWO_COLUMN_SUMMARY_MAX_WIDTH ? 2 : 1,
-          ),
-    [isWide, widgets, width],
+    () => (isWide ? toGridLayout(widgets) : toStackedLayout(widgets, 1)),
+    [isWide, widgets],
   );
   const gridConfig = useMemo(
     () => ({
@@ -59,12 +62,20 @@ export function CommandCenterWidgetGrid({
     [isWide],
   );
   const dragConfig = useMemo(
-    () => ({ enabled: editing, handle: `.${WIDGET_DRAG_CLASS}`, cancel: `.${WIDGET_CONTROL_CLASS}` }),
+    () => ({
+      enabled: editing,
+      handle: `.${WIDGET_DRAG_CLASS}`,
+      cancel: `.${WIDGET_CONTROL_CLASS}`,
+    }),
     [editing],
   );
-  const resizeConfig = useMemo(() => ({ enabled: canResize, handles: ["se", "e", "s"] as const }), [canResize]);
+  const resizeConfig = useMemo(
+    () => ({ enabled: canResize, handles: ["se", "e", "s"] as const }),
+    [canResize],
+  );
   const handleLayoutChange = useCallback(
-    (next: Layout) => (isWide ? onLayoutChange(next) : onStackedLayoutChange(next)),
+    (next: Layout) =>
+      isWide ? onLayoutChange(next) : onStackedLayoutChange(next),
     [isWide, onLayoutChange, onStackedLayoutChange],
   );
 

@@ -91,7 +91,7 @@ describe("CommandCenterWidgetGrid", () => {
     expect(document.querySelector(".react-grid-item")).toHaveClass("react-draggable");
   });
 
-  it("reserves enough height for a single-column summary on compact phones", () => {
+  it("keeps the summary in one row on compact phones so its cards scroll horizontally", () => {
     mockContainerWidth.mockReturnValue({ width: 288, mounted: true, containerRef: { current: null }, measureWidth: jest.fn() });
     renderGrid({
       widgets: [
@@ -100,8 +100,8 @@ describe("CommandCenterWidgetGrid", () => {
       ],
     });
     const [overview, issues] = document.querySelectorAll<HTMLElement>(".react-grid-item");
-    expect(overview?.style.height).toBe("224px");
-    expect(issues?.style.transform).toContain("240px");
+    expect(overview?.style.height).toBe("64px");
+    expect(issues?.style.transform).toContain("80px");
   });
 
   it("does not reserve an empty summary row when three cards fit on a tablet", () => {

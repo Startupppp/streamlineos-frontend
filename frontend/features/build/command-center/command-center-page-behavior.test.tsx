@@ -171,9 +171,11 @@ describe("CommandCenterPage — customize controls", () => {
     render(<CommandCenterPage />);
     fireEvent.click(screen.getByRole("button", { name: /customize/i }));
     expect(screen.getByRole("button", { name: /add widget/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /^reset$/i })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /done/i }));
+    expect(screen.getByRole("button", { name: /reset command center/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^new$/i })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /finish customizing/i }));
     expect(screen.getByRole("button", { name: /customize/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^new$/i })).toBeInTheDocument();
   });
 
   it("shows an empty state instead of the grid when the saved layout has no widgets", () => {

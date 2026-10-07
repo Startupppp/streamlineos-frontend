@@ -86,13 +86,19 @@ export function CommandCenterPage() {
 
   const handleShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
 
-  useKeyboardShortcuts(handleOpenWizard, handleCreateIssueShortcut, handleShortcutHelp);
+  useKeyboardShortcuts(
+    handleOpenWizard,
+    handleCreateIssueShortcut,
+    handleShortcutHelp,
+  );
 
   const handleOpenItem = useCallback(
     (index: number) => {
       const item = myWorkItems[index];
       if (!item) return;
-      router.push(getTicketDetailHref(item.projectId, item.projectKey, item.ticketNumber));
+      router.push(
+        getTicketDetailHref(item.projectId, item.projectKey, item.ticketNumber),
+      );
     },
     [myWorkItems, router],
   );
@@ -115,7 +121,13 @@ export function CommandCenterPage() {
         onCreateIssue: handleCreateIssueShortcut,
         onCreateProject: handleOpenWizard,
       }),
-    [canCreateIssue, canCreateProject, projects.length, handleCreateIssueShortcut, handleOpenWizard],
+    [
+      canCreateIssue,
+      canCreateProject,
+      projects.length,
+      handleCreateIssueShortcut,
+      handleOpenWizard,
+    ],
   );
 
   const pageState = usePageState({
@@ -129,11 +141,21 @@ export function CommandCenterPage() {
 
   const layout = useDashboardLayoutEditor();
   const isEditing = editing && layout.canCustomize;
-  const placedTypes = useMemo(() => new Set(layout.widgets.map((slot) => slot.type)), [layout.widgets]);
+  const placedTypes = useMemo(
+    () => new Set(layout.widgets.map((slot) => slot.type)),
+    [layout.widgets],
+  );
   const handleStartCustomizing = useCallback(() => setEditing(true), []);
-  const handleDoneCustomizing = useCallback(() => setEditing(false), []);
+  const handleFinishedSaving = useCallback(() => setEditing(false), []);
+  const handleDoneCustomizing = useCallback(
+    () => layout.saveLayout(handleFinishedSaving),
+    [handleFinishedSaving, layout],
+  );
   const customizeAction = useMemo(
-    () => (layout.canCustomize ? { label: "Customize", onClick: handleStartCustomizing } : undefined),
+    () =>
+      layout.canCustomize
+        ? { label: "Customize", onClick: handleStartCustomizing }
+        : undefined,
     [layout.canCustomize, handleStartCustomizing],
   );
 
@@ -163,32 +185,43 @@ export function CommandCenterPage() {
     <>
       <PageWrapper
         title="Command Center"
-        subtitle={isReady ? "Your work, decisions, and delivery signals" : undefined}
+        subtitle={
+          isReady ? "Your work, decisions, and delivery signals" : undefined
+        }
         contentClassName="pb-0 sm:pb-0"
         actions={
           isReady ? (
-            <div className="flex items-center gap-2">
-              {layout.canCustomize && !isEditing ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon-sm"
-                  onClick={handleStartCustomizing}
-                  aria-label="Customize Command Center"
-                  title="Customize Command Center"
-                >
-                  <LayoutGrid aria-hidden="true" />
-                </Button>
-              ) : null}
-              {!isEditing ? (
+            isEditing ? (
+              <CommandCenterLayoutControls
+                onDone={handleDoneCustomizing}
+                onReset={layout.resetLayout}
+                availableTypes={layout.availableTypes}
+                placedTypes={placedTypes}
+                onAdd={layout.addWidget}
+                isSaving={layout.isSaving}
+              />
+            ) : (
+              <div className="flex items-center gap-2">
+                {layout.canCustomize ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon-sm"
+                    onClick={handleStartCustomizing}
+                    aria-label="Customize Command Center"
+                    title="Customize Command Center"
+                  >
+                    <LayoutGrid aria-hidden="true" />
+                  </Button>
+                ) : null}
                 <QuickCreateMenu
                   projects={projects}
                   onCreateProject={handleOpenWizard}
                   onCreateForProject={handleCreateForProject}
                   onCreateIssue={handleCreateIssueShortcut}
                 />
-              ) : null}
-            </div>
+              </div>
+            )
           ) : undefined
         }
       >
@@ -204,18 +237,6 @@ export function CommandCenterPage() {
                 You are offline — content may not be up to date
               </p>
             )}
-            {isEditing ? (
-              <div className="sticky top-2 z-20 flex min-w-0 w-full max-w-full justify-end">
-                <CommandCenterLayoutControls
-                  onDone={handleDoneCustomizing}
-                  onReset={layout.resetLayout}
-                  availableTypes={layout.availableTypes}
-                  placedTypes={placedTypes}
-                  onAdd={layout.addWidget}
-                />
-              </div>
-            ) : null}
-
             {layout.widgets.length === 0 ? (
               layout.isLoading ? (
                 <Skeleton className="h-96 w-full rounded-xl" />
@@ -234,7 +255,7 @@ export function CommandCenterPage() {
               <CommandCenterWidgetGrid
                 widgets={layout.widgets}
                 content={widgetContent}
-                editing={isEditing}
+                editing={isEditing && !layout.isSaving}
                 onLayoutChange={layout.applyLayout}
                 onStackedLayoutChange={layout.applyStackedLayout}
                 onRemove={layout.removeWidget}
@@ -249,17 +270,33 @@ export function CommandCenterPage() {
               transition={{ ...pmSnappy, delay: 0.28 }}
             >
               Shortcuts ·{" "}
-              <kbd className="rounded border border-border bg-muted/80 px-1">C</kbd>
-              <kbd className="ml-0.5 rounded border border-border bg-muted/80 px-1">P</kbd>{" "}
+              <kbd className="rounded border border-border bg-muted/80 px-1">
+                C
+              </kbd>
+              <kbd className="ml-0.5 rounded border border-border bg-muted/80 px-1">
+                P
+              </kbd>{" "}
               project ·{" "}
-              <kbd className="rounded border border-border bg-muted/80 px-1">C</kbd>
-              <kbd className="ml-0.5 rounded border border-border bg-muted/80 px-1">T</kbd>{" "}
+              <kbd className="rounded border border-border bg-muted/80 px-1">
+                C
+              </kbd>
+              <kbd className="ml-0.5 rounded border border-border bg-muted/80 px-1">
+                T
+              </kbd>{" "}
               issue ·{" "}
-              <kbd className="rounded border border-border bg-muted/80 px-1">G</kbd>
-              <kbd className="ml-0.5 rounded border border-border bg-muted/80 px-1">M</kbd>{" "}
+              <kbd className="rounded border border-border bg-muted/80 px-1">
+                G
+              </kbd>
+              <kbd className="ml-0.5 rounded border border-border bg-muted/80 px-1">
+                M
+              </kbd>{" "}
               my issues ·{" "}
-              <kbd className="rounded border border-border bg-muted/80 px-1">G</kbd>
-              <kbd className="ml-0.5 rounded border border-border bg-muted/80 px-1">P</kbd>{" "}
+              <kbd className="rounded border border-border bg-muted/80 px-1">
+                G
+              </kbd>
+              <kbd className="ml-0.5 rounded border border-border bg-muted/80 px-1">
+                P
+              </kbd>{" "}
               projects
             </motion.p>
           </PmPageShell>
@@ -269,7 +306,10 @@ export function CommandCenterPage() {
       {isReady && (
         <ProjectCreateWizard open={wizardOpen} onOpenChange={setWizardOpen} />
       )}
-      <ShortcutHelpDialog open={shortcutHelpOpen} onOpenChange={setShortcutHelpOpen} />
+      <ShortcutHelpDialog
+        open={shortcutHelpOpen}
+        onOpenChange={setShortcutHelpOpen}
+      />
     </>
   );
 }

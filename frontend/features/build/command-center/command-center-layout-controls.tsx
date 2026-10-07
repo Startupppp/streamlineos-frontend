@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { Check, CircleHelp, Plus, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   ResponsivePopover,
@@ -23,6 +24,7 @@ interface WidgetPickerProps {
   availableTypes: readonly WidgetType[];
   placedTypes: ReadonlySet<WidgetType>;
   onAdd: (type: WidgetType) => void;
+  disabled?: boolean;
 }
 
 interface WidgetPickerItemProps {
@@ -32,7 +34,12 @@ interface WidgetPickerItemProps {
   onClose: () => void;
 }
 
-function WidgetPickerItem({ type, placed, onAdd, onClose }: WidgetPickerItemProps) {
+function WidgetPickerItem({
+  type,
+  placed,
+  onAdd,
+  onClose,
+}: WidgetPickerItemProps) {
   const { title, description, icon: Icon } = WIDGET_CATALOG[type];
   const handleClick = useCallback(() => {
     onAdd(type);
@@ -49,10 +56,17 @@ function WidgetPickerItem({ type, placed, onAdd, onClose }: WidgetPickerItemProp
           "hover:bg-accent focus-visible:bg-accent focus-visible:outline-none disabled:cursor-default disabled:hover:bg-transparent",
         )}
       >
-        <Icon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+        <Icon
+          className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground"
+          aria-hidden="true"
+        />
         <span className="min-w-0 flex-1">
-          <span className="block text-sm font-medium text-foreground">{title}</span>
-          <span className="block text-xs text-muted-foreground">{description}</span>
+          <span className="block text-sm font-medium text-foreground">
+            {title}
+          </span>
+          <span className="block text-xs text-muted-foreground">
+            {description}
+          </span>
         </span>
         {placed ? (
           <span className="mt-0.5 inline-flex shrink-0 items-center gap-1 text-micro text-muted-foreground">
@@ -60,16 +74,26 @@ function WidgetPickerItem({ type, placed, onAdd, onClose }: WidgetPickerItemProp
             Added
           </span>
         ) : (
-          <Plus className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+          <Plus
+            className="mt-0.5 h-4 w-4 shrink-0 text-primary"
+            aria-hidden="true"
+          />
         )}
       </button>
     </li>
   );
 }
 
-function WidgetPicker({ availableTypes, placedTypes, onAdd }: WidgetPickerProps) {
+function WidgetPicker({
+  availableTypes,
+  placedTypes,
+  onAdd,
+  disabled = false,
+}: WidgetPickerProps) {
   const [open, setOpen] = useState(false);
-  const remaining = availableTypes.filter((type) => !placedTypes.has(type)).length;
+  const remaining = availableTypes.filter(
+    (type) => !placedTypes.has(type),
+  ).length;
   const handleClose = useCallback(() => setOpen(false), []);
 
   return (
@@ -79,13 +103,16 @@ function WidgetPicker({ availableTypes, placedTypes, onAdd }: WidgetPickerProps)
           type="button"
           variant="outline"
           size="sm"
+          disabled={disabled}
           className="h-9 w-9 shrink-0 gap-1.5 p-0 sm:w-auto sm:px-3"
           aria-label="Add widget"
         >
           <Plus className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">Add widget</span>
           {remaining > 0 ? (
-            <span className="hidden rounded bg-muted px-1.5 text-micro text-muted-foreground sm:inline">{remaining}</span>
+            <span className="hidden rounded bg-muted px-1.5 text-micro text-muted-foreground sm:inline">
+              {remaining}
+            </span>
           ) : null}
         </Button>
       </ResponsivePopoverTrigger>
@@ -114,6 +141,7 @@ function WidgetPicker({ availableTypes, placedTypes, onAdd }: WidgetPickerProps)
 interface CommandCenterLayoutControlsProps extends WidgetPickerProps {
   onDone: () => void;
   onReset: () => void;
+  isSaving?: boolean;
 }
 
 export function CommandCenterLayoutControls({
@@ -122,9 +150,13 @@ export function CommandCenterLayoutControls({
   availableTypes,
   placedTypes,
   onAdd,
+  isSaving = false,
 }: CommandCenterLayoutControlsProps) {
   const [confirmResetOpen, setConfirmResetOpen] = useState(false);
-  const handleOpenConfirmReset = useCallback(() => setConfirmResetOpen(true), []);
+  const handleOpenConfirmReset = useCallback(
+    () => setConfirmResetOpen(true),
+    [],
+  );
 
   return (
     <TooltipProvider delayDuration={250}>
@@ -140,32 +172,44 @@ export function CommandCenterLayoutControls({
               <CircleHelp className="h-4 w-4" aria-hidden="true" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="bottom" align="end" className="max-w-64 text-xs">
-            Drag a widget by its handle. On larger screens, pull an edge to resize. Use the arrow keys on a handle to reorder.
+          <TooltipContent
+            side="bottom"
+            align="end"
+            className="max-w-64 text-xs"
+          >
+            Drag a widget by its handle. On larger screens, pull an edge to
+            resize. Use the arrow keys on a handle to reorder.
           </TooltipContent>
         </Tooltip>
-        <WidgetPicker availableTypes={availableTypes} placedTypes={placedTypes} onAdd={onAdd} />
+        <WidgetPicker
+          availableTypes={availableTypes}
+          placedTypes={placedTypes}
+          onAdd={onAdd}
+          disabled={isSaving}
+        />
         <Button
           type="button"
           variant="ghost"
           size="sm"
           className="h-9 w-9 shrink-0 gap-1.5 p-0 text-muted-foreground sm:w-auto sm:px-3"
           onClick={handleOpenConfirmReset}
+          disabled={isSaving}
           aria-label="Reset Command Center"
         >
           <RotateCcw className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">Reset</span>
         </Button>
-        <Button
+        <LoadingButton
           type="button"
           size="sm"
           className="h-9 w-9 shrink-0 gap-1.5 p-0 sm:w-auto sm:px-3"
           onClick={onDone}
+          isPending={isSaving}
           aria-label="Finish customizing"
         >
           <Check className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">Done</span>
-        </Button>
+        </LoadingButton>
         <ConfirmDialog
           open={confirmResetOpen}
           onOpenChange={setConfirmResetOpen}

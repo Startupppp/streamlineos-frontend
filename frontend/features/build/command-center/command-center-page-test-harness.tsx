@@ -32,7 +32,7 @@ jest.mock("next/navigation", () => ({
 
 jest.mock("@/hooks/api/build/dashboard-layout", () => ({
   useDashboardLayout: () => mockUseDashboardLayout(),
-  useSaveDashboardLayout: () => ({ mutate: jest.fn() }),
+  useSaveDashboardLayout: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
 jest.mock("./command-center-widget-grid", () => ({

@@ -29,21 +29,19 @@ function setup({
   loaded = true,
   scopes = ALL_SCOPES,
   canManage = true,
+  isSaving = false,
 }: {
   data?: ReturnType<typeof stored>;
   loaded?: boolean;
   scopes?: Record<string, string>;
   canManage?: boolean;
+  isSaving?: boolean;
 } = {}) {
   jest.mocked(useAccess).mockReturnValue({ data: { isOrgOwner: false, scopes, modules: {} } } as never);
   jest.mocked(useCan).mockImplementation((key) => key !== "build:dashboard:manage" || canManage);
   jest.mocked(useDashboardLayout).mockReturnValue({ data: loaded ? data : undefined, isLoading: false } as never);
-  jest.mocked(useSaveDashboardLayout).mockReturnValue({ mutate: mockSave } as never);
+  jest.mocked(useSaveDashboardLayout).mockReturnValue({ mutate: mockSave, isPending: isSaving } as never);
   return renderHook(() => useDashboardLayoutEditor());
-}
-
-function savedWidgets(): WidgetSlot[] {
-  return mockSave.mock.calls.at(-1)?.[0].widgets ?? [];
 }
 
 beforeEach(() => {
@@ -98,7 +96,7 @@ describe("useDashboardLayoutEditor — which widgets render", () => {
   });
 });
 
-describe("useDashboardLayoutEditor — edits save immediately", () => {
+describe("useDashboardLayoutEditor — drafts before saving", () => {
   const twoWidgets: WidgetSlot[] = [
     { type: "my-issues", position: { col: 0, row: 0, w: 6, h: 6 } },
     { type: "projects", position: { col: 6, row: 0, w: 6, h: 6 } },
@@ -107,22 +105,25 @@ describe("useDashboardLayoutEditor — edits save immediately", () => {
   it("adds a widget below the existing ones at its catalog size", () => {
     const { result } = setup({ data: stored(twoWidgets) });
     act(() => result.current.addWidget("risks"));
-    expect(savedWidgets().find((slot) => slot.type === "risks")?.position).toEqual({ col: 0, row: 6, w: 6, h: 5 });
+    expect(result.current.widgets.find((slot) => slot.type === "risks")?.position).toEqual({ col: 0, row: 6, w: 6, h: 5 });
+    expect(mockSave).not.toHaveBeenCalled();
   });
 
-  it("removes a widget and saves the rest", () => {
+  it("removes a widget from the draft without issuing a request", () => {
     const { result } = setup({ data: stored(twoWidgets) });
     act(() => result.current.removeWidget("projects"));
-    expect(savedWidgets().map((slot) => slot.type)).toEqual(["my-issues"]);
+    expect(result.current.widgets.map((slot) => slot.type)).toEqual(["my-issues"]);
+    expect(mockSave).not.toHaveBeenCalled();
   });
 
-  it("keeps widgets the member can no longer view in the saved layout so a restored permission brings them back", () => {
+  it("keeps hidden widgets when Done commits the draft", () => {
     const { result } = setup({
       data: stored([...twoWidgets, { type: "risks", position: { col: 0, row: 6, w: 6, h: 5 } }]),
       scopes: { "build:tickets:view": "all" },
     });
     act(() => result.current.removeWidget("projects"));
-    expect(savedWidgets().map((slot) => slot.type)).toEqual(["my-issues", "risks"]);
+    act(() => result.current.saveLayout());
+    expect(mockSave.mock.calls[0]?.[0].config.widgets.map((slot: WidgetSlot) => slot.type)).toEqual(["my-issues", "risks"]);
   });
 
   it("does not save when a drag ends where it started", () => {
@@ -136,7 +137,7 @@ describe("useDashboardLayoutEditor — edits save immediately", () => {
     expect(mockSave).not.toHaveBeenCalled();
   });
 
-  it("saves the dropped position when a drag moves a widget", () => {
+  it("keeps a dropped position in the draft until Done saves it once", () => {
     const { result } = setup({ data: stored(twoWidgets) });
     act(() =>
       result.current.applyLayout([
@@ -144,7 +145,12 @@ describe("useDashboardLayoutEditor — edits save immediately", () => {
         { i: "projects", x: 0, y: 0, w: 6, h: 6 },
       ]),
     );
-    expect(savedWidgets().find((slot) => slot.type === "projects")?.position.col).toBe(0);
+    expect(result.current.widgets.find((slot) => slot.type === "projects")?.position.col).toBe(0);
+    expect(mockSave).not.toHaveBeenCalled();
+    act(() => result.current.saveLayout());
+    expect(mockSave.mock.calls[0]?.[0].config.widgets.find((slot: WidgetSlot) => slot.type === "projects")?.position.col).toBe(0);
+    expect(mockSave.mock.calls[0]?.[0].layoutVersion).toBe(2);
+    expect(mockSave).toHaveBeenCalledTimes(1);
   });
 
   it("saves narrow-screen ordering without replacing desktop widget widths", () => {
@@ -155,20 +161,23 @@ describe("useDashboardLayoutEditor — edits save immediately", () => {
         { i: "my-issues", x: 0, y: 6, w: 1, h: 6 },
       ]),
     );
-    expect(savedWidgets().map((slot) => slot.type)).toEqual(["projects", "my-issues"]);
-    expect(savedWidgets().map((slot) => slot.position.w)).toEqual([6, 6]);
+    expect(result.current.widgets.map((slot) => slot.type)).toEqual(["projects", "my-issues"]);
+    expect(result.current.widgets.map((slot) => slot.position.w)).toEqual([6, 6]);
+    expect(mockSave).not.toHaveBeenCalled();
   });
 
   it("supports keyboard reordering through the same saved layout contract", () => {
     const { result } = setup({ data: stored(twoWidgets) });
     act(() => result.current.moveWidget("my-issues", 1));
-    expect(savedWidgets().map((slot) => slot.type)).toEqual(["projects", "my-issues"]);
+    expect(result.current.widgets.map((slot) => slot.type)).toEqual(["projects", "my-issues"]);
+    expect(mockSave).not.toHaveBeenCalled();
   });
 
   it("resets to the permitted default arrangement", () => {
     const { result } = setup({ data: stored(twoWidgets) });
     act(() => result.current.resetLayout());
-    expect(savedWidgets()).toHaveLength(8);
+    expect(result.current.widgets).toHaveLength(8);
+    expect(mockSave).not.toHaveBeenCalled();
   });
 
   it("does not carry a retired jump-to slot into the next saved layout", () => {
@@ -179,14 +188,54 @@ describe("useDashboardLayoutEditor — edits save immediately", () => {
       ]),
     });
     act(() => result.current.removeWidget("projects"));
-    expect(savedWidgets().some((slot) => slot.type === "jump-to")).toBe(false);
+    act(() => result.current.saveLayout());
+    expect(mockSave.mock.calls[0]?.[0].config.widgets.some((slot: WidgetSlot) => slot.type === "jump-to")).toBe(false);
   });
 
-  it("explains a conflict from another tab instead of showing a raw error", () => {
-    const { result } = setup({ data: stored(twoWidgets) });
-    act(() => result.current.removeWidget("projects"));
+  it("keeps the draft and explains a conflict when Done cannot save", () => {
+    const view = setup({ data: stored(twoWidgets, 2) });
+    act(() => view.result.current.removeWidget("projects"));
+    act(() => view.result.current.saveLayout());
     const options = mockSave.mock.calls[0]?.[1];
     act(() => options.onError(new ApiError("Layout version mismatch", 409, "CONFLICT")));
-    expect(toast.error).toHaveBeenCalledWith(expect.stringContaining("another tab"));
+    jest.mocked(useDashboardLayout).mockReturnValue({ data: stored([...twoWidgets].reverse(), 3), isLoading: false } as never);
+    view.rerender();
+    expect(view.result.current.widgets.map((slot) => slot.type)).toEqual(["my-issues"]);
+    expect(toast.error).toHaveBeenCalledWith(expect.stringContaining("draft is still here"));
+    act(() => view.result.current.saveLayout());
+    expect(mockSave.mock.calls[1]?.[0].layoutVersion).toBe(3);
+  });
+
+  it("keeps a dirty draft when a conflict refreshes the stored version", () => {
+    const view = setup({ data: stored(twoWidgets, 2) });
+    act(() => view.result.current.removeWidget("projects"));
+    jest.mocked(useDashboardLayout).mockReturnValue({
+      data: stored([...twoWidgets].reverse(), 3),
+      isLoading: false,
+    } as never);
+    view.rerender();
+    expect(view.result.current.widgets.map((slot) => slot.type)).toEqual(["my-issues"]);
+    act(() => view.result.current.saveLayout());
+    expect(mockSave.mock.calls[0]?.[0]).toEqual({
+      layoutVersion: 2,
+      config: { widgets: [twoWidgets[0]] },
+    });
+  });
+
+  it("ignores editor mutations while a save is pending", () => {
+    const { result } = setup({ data: stored(twoWidgets), isSaving: true });
+    act(() => {
+      result.current.removeWidget("projects");
+      result.current.moveWidget("my-issues", 1);
+      result.current.resetLayout();
+    });
+    expect(result.current.widgets).toEqual(twoWidgets);
+    expect(mockSave).not.toHaveBeenCalled();
+  });
+
+  it("does not send an unchanged layout when Done is clicked", () => {
+    const { result } = setup({ data: stored(twoWidgets) });
+    act(() => result.current.saveLayout());
+    expect(mockSave).not.toHaveBeenCalled();
   });
 });
