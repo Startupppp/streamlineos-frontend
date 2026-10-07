@@ -31,13 +31,13 @@ export function ProjectBoardHeaderActions({
   const summarizeFnRef = useRef<(() => void) | null>(null);
   const [importOpen, setImportOpen] = useState(false);
 
-  const registerSummarize = useCallback((run: (() => void) | null) => {
-    summarizeFnRef.current = run;
-  }, []);
-
   const handleCreate = useCallback(() => {
     onCreateOpenChange(true);
   }, [onCreateOpenChange]);
+
+  const handleRunRegister = useCallback((run: (() => void) | null) => {
+    summarizeFnRef.current = run;
+  }, []);
 
   const handleSummarize = useCallback(() => {
     summarizeFnRef.current?.();
@@ -116,7 +116,7 @@ export function ProjectBoardHeaderActions({
         <ProjectAiMenu
           projectId={projectId}
           hideTrigger
-          onRunRegister={registerSummarize}
+          onRunRegister={handleRunRegister}
         />
       ) : null}
       {canImport || canExport ? (

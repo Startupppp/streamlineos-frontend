@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useRef } from "react";
 import { SparklesIcon } from "@animateicons/react/lucide";
@@ -17,13 +17,36 @@ import { useAiPopoverAction } from "@/components/ai/use-ai-popover-action";
 import { useProjectAiSummary } from "@/hooks/api/build/ai";
 import type { ProjectSummaryResult } from "@/types/projects/ai";
 
+/** Backend NO_DATA short-circuit copy from projects-ai.service. */
+const NO_DATA_SUMMARY =
+  "This project has no tickets yet. Add tasks to unlock AI features.";
+
 interface ProjectAiMenuProps {
   projectId: number;
   hideTrigger?: boolean;
   onRunRegister?: (run: (() => void) | null) => void;
 }
 
+function isEmptySummary(data: ProjectSummaryResult): boolean {
+  return (
+    data.evidence.totalTasks === 0 ||
+    data.summary === NO_DATA_SUMMARY ||
+    /no tickets yet/i.test(data.summary)
+  );
+}
+
 function formatSummary(data: ProjectSummaryResult): AiActionResult {
+  if (isEmptySummary(data)) {
+    return {
+      text: data.summary,
+      empty: {
+        title: "No issues to summarize",
+        description:
+          "This project has no tickets yet. Create an issue to generate a health summary.",
+      },
+    };
+  }
+
   const lines: string[] = [data.summary];
   if (data.highlights.length > 0) {
     lines.push("", "Highlights:");
@@ -41,32 +64,37 @@ export function ProjectAiMenu({
   const canUseAI = useCan("build:ai:use");
   const summaryMutation = useProjectAiSummary(projectId);
   const { iconRef, hoverHandlers } = useAnimatedIcon();
+  const mutateAsync = summaryMutation.mutateAsync;
 
   const summary = useAiPopoverAction({
     run: useCallback(
       async (signal?: AbortSignal): Promise<AiActionResult> =>
-        formatSummary(await summaryMutation.mutateAsync({ signal })),
-      [summaryMutation],
+        formatSummary(await mutateAsync({ signal })),
+      [mutateAsync],
     ),
   });
 
-  const summaryRef = useRef(summary);
-  useEffect(() => {
-    summaryRef.current = summary;
-  });
+  const executeRef = useRef(summary.execute);
+  const isPendingRef = useRef(summary.isPending);
+  executeRef.current = summary.execute;
+  isPendingRef.current = summary.isPending;
 
   const handleSummarizeClick = useCallback(() => {
-    if (summaryRef.current.isPending) return;
-    void summaryRef.current.execute();
+    if (isPendingRef.current) return;
+    void executeRef.current();
   }, []);
 
+  const onRunRegisterRef = useRef(onRunRegister);
+  onRunRegisterRef.current = onRunRegister;
+
   useEffect(() => {
-    if (!onRunRegister) return;
-    onRunRegister(handleSummarizeClick);
+    const register = onRunRegisterRef.current;
+    if (!register) return;
+    register(handleSummarizeClick);
     return () => {
-      onRunRegister(null);
+      onRunRegisterRef.current?.(null);
     };
-  }, [onRunRegister, handleSummarizeClick]);
+  }, [handleSummarizeClick]);
 
   if (!canUseAI) return null;
 

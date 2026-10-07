@@ -49,10 +49,11 @@ describe("CommandCenterWidgetGrid", () => {
     expect(document.querySelectorAll(".react-grid-item")).toHaveLength(2);
   });
 
-  it("renders nothing until the container has been measured so widgets never flash at the wrong width", () => {
+  it("shows a skeleton grid until the container has been measured so the body is never blank", () => {
     mockContainerWidth.mockReturnValue({ width: 1280, mounted: false, containerRef: { current: null }, measureWidth: jest.fn() });
     renderGrid();
     expect(screen.queryByTestId("my-issues-content")).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/loading widgets/i)).toBeInTheDocument();
   });
 
   it("shows no edit controls outside edit mode — paired with the editing test below", () => {
