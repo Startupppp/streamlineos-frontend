@@ -2,23 +2,22 @@
 
 import { useMemo, useState } from "react";
 import { User } from "lucide-react";
-import { useSession } from "next-auth/react";
 import { SearchInput } from "@/components/ui/search-input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useCan } from "@/hooks/api/access";
-import { useOrgMembers } from "@/hooks/api/organization";
 import { getUserDisplayName } from "@/lib/person-display";
 import type { StepSharedProps } from "../use-project-create";
+import { useWizardMembers, useWizardSessionUser } from "../use-wizard-members";
+import { resolveWizardMemberLabel } from "../resolve-wizard-member-label";
 
 export function StepTeam({ draft, updateDraft }: StepSharedProps) {
-  const { data: session } = useSession();
-  const currentUserId = session?.user?.id;
+  const sessionUser = useWizardSessionUser();
+  const currentUserId = sessionUser?.id;
   const canManage = useCan("build:manage");
-  const { data: membersData } = useOrgMembers(1, 100);
-  const members = useMemo(() => membersData?.data ?? [], [membersData]);
+  const members = useWizardMembers(100);
   const [search, setSearch] = useState("");
 
   function handleSearch(value: string) {
@@ -45,12 +44,15 @@ export function StepTeam({ draft, updateDraft }: StepSharedProps) {
 
   const selectedLabels = useMemo(
     () =>
-      draft.memberIds.map((id) => {
-        const m = members.find((x) => x.userId === id);
-        if (!m) return "Unknown member";
-        return getUserDisplayName({ name: m.name, email: m.email });
-      }),
-    [draft.memberIds, members],
+      draft.memberIds.map((id) =>
+        resolveWizardMemberLabel(
+          id,
+          members,
+          sessionUser,
+          "No members added",
+        ),
+      ),
+    [draft.memberIds, members, sessionUser],
   );
 
   if (!canManage) {

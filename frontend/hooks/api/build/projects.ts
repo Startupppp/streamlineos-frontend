@@ -45,19 +45,27 @@ export {
 } from "@/hooks/api/build/project-members";
 
 const projectListPageLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-project-schema").then((m) => m.projectListPageContract),
+  import("@/hooks/api/build/build-project-schema").then(
+    (m) => m.projectListPageContract,
+  ),
 );
 const projectRowLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-project-schema").then((m) => m.projectRowContract),
+  import("@/hooks/api/build/build-project-schema").then(
+    (m) => m.projectRowContract,
+  ),
 );
 const projectDetailLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-project-schema").then((m) => m.projectDetailContract),
+  import("@/hooks/api/build/build-project-schema").then(
+    (m) => m.projectDetailContract,
+  ),
 );
 const projectDeleteNoContentLazy = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 const labelListLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-project-schema").then((m) => m.ticketLabelListContract),
+  import("@/hooks/api/build/build-project-schema").then(
+    (m) => m.ticketLabelListContract,
+  ),
 );
 
 export function useProjects(
@@ -66,7 +74,9 @@ export function useProjects(
 ) {
   const canView = useCan("build:view");
   return useQuery<ProjectListResponse>({
-    queryKey: buildWorkQueryKeys.projects.list(filters ? { ...filters } : undefined),
+    queryKey: buildWorkQueryKeys.projects.list(
+      filters ? { ...filters } : undefined,
+    ),
     queryFn: ({ signal }) =>
       apiClient.get<ProjectListResponse>(
         "/build",
@@ -79,7 +89,6 @@ export function useProjects(
     enabled: canView && (options?.enabled ?? true),
   });
 }
-
 
 export function useInfiniteProjects(
   filters: ProjectFilters,
@@ -101,7 +110,10 @@ export function useInfiniteProjects(
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<ProjectListResponse>(
         "/build",
-        { ...filters, ...(pageParam === undefined ? {} : { afterId: pageParam }) },
+        {
+          ...filters,
+          ...(pageParam === undefined ? {} : { afterId: pageParam }),
+        },
         signal,
         projectListPageLazy,
       ),
@@ -125,7 +137,13 @@ export function useProject(
   const hydratedProject = useHydratedProject(projectId);
   return useQuery<ProjectWithDetails | null>({
     queryKey: buildWorkQueryKeys.projects.detail(projectId),
-    queryFn: ({ signal }) => apiClient.get<ProjectWithDetails | null>(`/build/${projectId}`, undefined, signal, projectDetailLazy),
+    queryFn: ({ signal }) =>
+      apiClient.get<ProjectWithDetails | null>(
+        `/build/${projectId}`,
+        undefined,
+        signal,
+        projectDetailLazy,
+      ),
     enabled: canView && !!projectId,
     staleTime: 30_000,
     initialData: hydratedProject,
@@ -141,15 +159,22 @@ export function useCreateProject(
   >,
 ) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<Project, Error, CreateProjectInput>("build:create", {
-    ...options,
-    mutationKey: ["projects", "create"],
-    mutationFn: (data: CreateProjectInput) =>
-      apiClient.post<Project>("/build", data, undefined, projectRowLazy),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.all });
+  return useAuthorizedMutation<Project, Error, CreateProjectInput>(
+    "build:create",
+    {
+      ...options,
+      mutationKey: ["projects", "create"],
+      mutationFn: (data: CreateProjectInput) =>
+        apiClient.post<Project>("/build", data, undefined, projectRowLazy),
+      onSuccess: (data, variables, context, mutationContext) => {
+        void queryClient.invalidateQueries({
+          queryKey: buildWorkQueryKeys.projects.list(),
+          refetchType: "all",
+        });
+        options?.onSuccess?.(data, variables, context, mutationContext);
+      },
     },
-  });
+  );
 }
 
 export function useUpdateProject(
@@ -173,11 +198,20 @@ export function useUpdateProject(
     ...options,
     mutationKey: ["projects", "update"],
     mutationFn: ({ projectId, ...data }: UpdateProjectInput) =>
-      apiClient.patch<ProjectWithDetails>(`/build/${projectId}`, data, undefined, projectDetailLazy),
+      apiClient.patch<ProjectWithDetails>(
+        `/build/${projectId}`,
+        data,
+        undefined,
+        projectDetailLazy,
+      ),
     onMutate: async (variables) => {
       const { projectId, ...patch } = variables;
-      await queryClient.cancelQueries({ queryKey: buildWorkQueryKeys.projects.list() });
-      await queryClient.cancelQueries({ queryKey: buildWorkQueryKeys.projects.detail(projectId) });
+      await queryClient.cancelQueries({
+        queryKey: buildWorkQueryKeys.projects.list(),
+      });
+      await queryClient.cancelQueries({
+        queryKey: buildWorkQueryKeys.projects.detail(projectId),
+      });
       const workspaceUsers = getWorkspaceUsersFromCache(queryClient);
       const listSnapshots = queryClient.getQueriesData<ProjectListCache>({
         queryKey: buildWorkQueryKeys.projects.list(),
@@ -227,17 +261,27 @@ export function useDeleteProject(
   >,
 ) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<void, Error, { projectId: number }>("build:delete", {
-    ...options,
-    mutationKey: ["projects", "delete"],
-    mutationFn: ({ projectId }) =>
-      apiClient.delete<void>(`/build/${projectId}`, undefined, undefined, projectDeleteNoContentLazy),
-    onSuccess: (data, variables, context, mutationContext) => {
-      invalidateBuildViews(queryClient, variables.projectId);
-      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.all });
-      options?.onSuccess?.(data, variables, context, mutationContext);
+  return useAuthorizedMutation<void, Error, { projectId: number }>(
+    "build:delete",
+    {
+      ...options,
+      mutationKey: ["projects", "delete"],
+      mutationFn: ({ projectId }) =>
+        apiClient.delete<void>(
+          `/build/${projectId}`,
+          undefined,
+          undefined,
+          projectDeleteNoContentLazy,
+        ),
+      onSuccess: (data, variables, context, mutationContext) => {
+        invalidateBuildViews(queryClient, variables.projectId);
+        queryClient.invalidateQueries({
+          queryKey: buildWorkQueryKeys.projects.all,
+        });
+        options?.onSuccess?.(data, variables, context, mutationContext);
+      },
     },
-  });
+  );
 }
 
 export function useArchiveProject(
@@ -259,15 +303,22 @@ export function useArchiveProject(
     ...options,
     mutationKey: ["projects", "archive"],
     mutationFn: ({ projectId, restore }) =>
-      apiClient.patch<ProjectWithDetails>(`/build/${projectId}`, {
-        status: restore ? "ACTIVE" : "ARCHIVED",
-      }, undefined, projectDetailLazy),
+      apiClient.patch<ProjectWithDetails>(
+        `/build/${projectId}`,
+        {
+          status: restore ? "ACTIVE" : "ARCHIVED",
+        },
+        undefined,
+        projectDetailLazy,
+      ),
     onSuccess: (data, variables, context, mutationContext) => {
       invalidateBuildViews(queryClient, variables.projectId);
       queryClient.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.detail(variables.projectId),
       });
-      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.all });
+      queryClient.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.all,
+      });
       options?.onSuccess?.(data, variables, context, mutationContext);
     },
   });
@@ -282,8 +333,18 @@ export function useProjectLabels(
     queryKey: buildWorkQueryKeys.projects.labels(projectId),
     queryFn: ({ signal }) =>
       projectId
-        ? apiClient.get<TicketLabel[]>(`/build/${projectId}/labels`, undefined, signal, labelListLazy)
-        : apiClient.get<TicketLabel[]>("/build/labels", undefined, signal, labelListLazy),
+        ? apiClient.get<TicketLabel[]>(
+            `/build/${projectId}/labels`,
+            undefined,
+            signal,
+            labelListLazy,
+          )
+        : apiClient.get<TicketLabel[]>(
+            "/build/labels",
+            undefined,
+            signal,
+            labelListLazy,
+          ),
     staleTime: 60_000,
     ...options,
     enabled: canView && (options?.enabled ?? true),

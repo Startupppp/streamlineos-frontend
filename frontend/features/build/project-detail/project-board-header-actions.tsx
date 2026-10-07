@@ -28,19 +28,16 @@ export function ProjectBoardHeaderActions({
   const canUseAI = useCan("build:ai:use");
   const canImport = useCan("build:tickets:create");
   const canExport = useCan("build:tickets:view");
-  const summarizeFnRef = useRef<(() => void) | null>(null);
+  /** Child assigns in useLayoutEffect; click handler only reads. No setState. */
+  const summarizeRunRef = useRef<(() => void) | null>(null);
   const [importOpen, setImportOpen] = useState(false);
-
-  const registerSummarize = useCallback((run: (() => void) | null) => {
-    summarizeFnRef.current = run;
-  }, []);
 
   const handleCreate = useCallback(() => {
     onCreateOpenChange(true);
   }, [onCreateOpenChange]);
 
   const handleSummarize = useCallback(() => {
-    summarizeFnRef.current?.();
+    summarizeRunRef.current?.();
   }, []);
 
   const handleImportExport = useCallback(() => {
@@ -116,7 +113,7 @@ export function ProjectBoardHeaderActions({
         <ProjectAiMenu
           projectId={projectId}
           hideTrigger
-          onRunRegister={registerSummarize}
+          runRef={summarizeRunRef}
         />
       ) : null}
       {canImport || canExport ? (

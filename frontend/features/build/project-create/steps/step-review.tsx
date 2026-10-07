@@ -2,10 +2,10 @@
 
 import { useMemo } from "react";
 import { useProjectTemplates } from "@/hooks/api/build/templates";
-import { useOrgMembers } from "@/hooks/api/organization";
 import { useSimpleClientsList } from "@/hooks/api/crm/clients";
-import { getUserDisplayName } from "@/lib/person-display";
 import type { WizardDraft } from "../use-project-create";
+import { useWizardMembers, useWizardSessionUser } from "../use-wizard-members";
+import { resolveWizardMemberLabel } from "../resolve-wizard-member-label";
 
 interface StepReviewProps {
   draft: WizardDraft;
@@ -41,19 +41,17 @@ const FEATURE_LABELS: Record<string, string> = {
 };
 
 export function StepReview({ draft }: StepReviewProps) {
+  const sessionUser = useWizardSessionUser();
   const { data: templatePages } = useProjectTemplates();
-  const { data: membersData } = useOrgMembers(1, 100);
+  const members = useWizardMembers(100);
   const { data: clientsList } = useSimpleClientsList();
-  const members = useMemo(() => membersData?.data ?? [], [membersData]);
 
   const selectedLabels = useMemo(
     () =>
-      draft.memberIds.map((id) => {
-        const m = members.find((x) => x.userId === id);
-        if (!m) return "Unknown member";
-        return getUserDisplayName({ name: m.name, email: m.email });
-      }),
-    [draft.memberIds, members],
+      draft.memberIds.map((id) =>
+        resolveWizardMemberLabel(id, members, sessionUser, "No members added"),
+      ),
+    [draft.memberIds, members, sessionUser],
   );
 
   const teamLabel =
@@ -73,12 +71,10 @@ export function StepReview({ draft }: StepReviewProps) {
         )?.name ?? "Unknown template")
       : "Blank";
 
-  const managerLabel = useMemo(() => {
-    if (!draft.managerId) return "Not assigned";
-    const m = members.find((x) => x.userId === draft.managerId);
-    if (!m) return "Unknown member";
-    return getUserDisplayName({ name: m.name, email: m.email });
-  }, [draft.managerId, members]);
+  const managerLabel = useMemo(
+    () => resolveWizardMemberLabel(draft.managerId, members, sessionUser, "No manager"),
+    [draft.managerId, members, sessionUser],
+  );
 
   const clientLabel = useMemo(() => {
     if (!draft.clientId) return null;

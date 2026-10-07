@@ -8,6 +8,7 @@ import { AiAdvisoryNotice } from "./ai-advisory-notice";
 import { AiDraftText } from "./ai-draft-text";
 import { AiQuotaEmptyState } from "./ai-quota-empty-state";
 import { AiPermissionDenied } from "./ai-permission-denied";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   AiCancelledNotice,
   AiOfflineNotice,
@@ -31,6 +32,7 @@ export interface AiActionResult {
   citations?: Citation[];
   confidence?: number;
   aiUsage?: AiUsageMeta | null;
+  empty?: { title: string; description: string };
 }
 
 export type AiActionResultState =
@@ -68,11 +70,9 @@ export function AiActionResultBody({
   if (state.status === "loading") {
     return (
       <div className="space-y-2" role="status" aria-live="polite" aria-busy>
-        {isRetryAttempt(state.attempt) ? (
-          <p className="text-dense text-muted-foreground">
-            {retryingLabel(state.attempt)}
-          </p>
-        ) : null}
+        <p className="text-dense text-muted-foreground">
+          {isRetryAttempt(state.attempt) ? retryingLabel(state.attempt) : "Working…"}
+        </p>
         <Skeleton className={compact ? "h-3 w-3/4" : "h-4 w-3/4"} />
         <Skeleton className={compact ? "h-3 w-full" : "h-4 w-full"} />
         <Skeleton className={compact ? "h-3 w-5/6" : "h-4 w-5/6"} />
@@ -174,6 +174,16 @@ export function AiActionResultBody({
           </Button>
         ) : null}
       </div>
+    );
+  }
+
+  if (state.result.empty) {
+    const panel = state.result.empty;
+    return (
+      <EmptyState
+        bare compact={compact} illustrationSize="xs"
+        title={panel.title} description={panel.description} className={compact ? undefined : "min-h-full flex-1 py-8"}
+      />
     );
   }
 
