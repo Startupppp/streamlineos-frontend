@@ -210,7 +210,8 @@ export function InboxTicketPreview({
       ) : null}
 
       <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden lg:flex-row">
-        <div className="min-h-0 min-w-0 flex-1 basis-0 overflow-y-auto bg-gradient-to-b from-card/80 to-background/40 px-4 pb-4 pt-2 scrollbar-hide lg:px-5 lg:pb-5">
+        {rightPanelCollapsed ? (
+        <div className="flex min-h-0 min-w-0 flex-1 basis-0 overflow-y-auto bg-gradient-to-b from-card/80 to-background/40 px-4 pb-4 pt-2 scrollbar-hide lg:px-5 lg:pb-5">
           <TicketDetailMainSection
             ticket={ticket}
             ticketId={resolvedTicketId}
@@ -229,6 +230,7 @@ export function InboxTicketPreview({
             canUpdate={canUpdate}
           />
         </div>
+        ) : null}
 
         <TicketDetailRightPanel
           open={!rightPanelCollapsed}
@@ -241,7 +243,7 @@ export function InboxTicketPreview({
           projectKey={detailProject?.key ?? projectData?.key}
           statuses={statuses}
           onAutoSave={autoSave}
-          asideClassName="lg:w-72 lg:min-w-72 xl:w-80 xl:min-w-80"
+          asideClassName={rightPanelCollapsed ? "lg:w-72 lg:min-w-72 xl:w-80 xl:min-w-80" : "flex-1 min-w-0"}
           canUpdate={canUpdate}
           canAssign={canAssign}
         />

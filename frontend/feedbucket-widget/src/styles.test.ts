@@ -30,6 +30,15 @@ describe("feedbucket widget styles — pointer-events isolation", () => {
     expect(css).toContain(".launcher:not(:focus-within):not(.expanded) .launcher-btn");
   });
 
+  it("keeps the desktop launcher compact before the feedback marker is added", () => {
+    const css = getStyles();
+    const launcher = css.match(/\.launcher\s*\{[^}]*\}/)?.[0] ?? "";
+    const logo = css.match(/\.launcher-logo\s*\{[^}]*\}/)?.[0] ?? "";
+    expect(launcher).toContain("padding: 4px");
+    expect(logo).toContain("width: 32px");
+    expect(logo).toContain("height: 32px");
+  });
+
   it("panel restores pointer-events when open so feedback form receives events", () => {
     const css = getStyles();
     const openPanel = css.match(/\.panel\[aria-hidden="false"\]\s*\{[^}]*\}/)?.[0] ?? "";

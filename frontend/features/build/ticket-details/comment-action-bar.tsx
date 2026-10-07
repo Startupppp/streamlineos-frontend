@@ -64,7 +64,7 @@ export function CommentActionBar({
   }, [permalinkUrl]);
 
   return (
-    <div className="flex items-center gap-3 mt-1.5">
+    <div className="flex min-h-0 items-center gap-3 mt-0.5">
       {canInteract ? (
         <EmojiReactionBar
           reactions={reactionGroups}

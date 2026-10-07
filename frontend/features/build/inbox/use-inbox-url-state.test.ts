@@ -23,9 +23,9 @@ describe("useInboxUrlState — param round-trips", () => {
     act(() => { result.current.setParams({ section: "ALL" }); });
     expect(replace.mock.calls[0][0]).toBe("/build/inbox?section=ALL&q=bug&type=PROJECTS&projectId=54&panel=preview");
   });
-  it("defaults to section=UNREAD when no params are present", () => {
+  it("defaults to the active section when no params are present", () => {
     const { result } = renderHook(() => useInboxUrlState());
-    expect(result.current.section).toBe("UNREAD");
+    expect(result.current.section).toBe("ALL");
   });
 
   it("reads section=MENTIONS from the URL", () => {

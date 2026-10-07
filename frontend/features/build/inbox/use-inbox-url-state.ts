@@ -18,7 +18,7 @@ const FILTER_PARAMS = ["q", "type", "projectId"] as const;
 
 function parseSection(raw: string | null): NotificationSection {
   const match = VALID_SECTIONS.find((section) => section === raw);
-  return match ?? "UNREAD";
+  return match ?? "ALL";
 }
 
 function parseType(raw: string | null): NotificationCategory | null {

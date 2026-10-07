@@ -141,38 +141,38 @@ export function ActivityFeed({
               className="min-h-[80px] border-border/70 text-sm shadow-none focus-visible:ring-1 focus-visible:ring-offset-0"
               users={members}
             />
-            {canAttachFiles ? (
-              <>
-                <input
-                  ref={attachmentInputRef}
-                  type="file"
-                  multiple
-                  className="hidden"
-                  onChange={handleAttachmentChange}
-                />
-                <AnimatedIconButton
-                  type="button"
-                  size="icon-sm"
-                  variant="ghost"
-                  icon={PaperclipIcon}
-                  iconSize={14}
-                  className="shrink-0"
-                  onClick={handleChooseFiles}
-                  disabled={isAttachingFiles}
-                  aria-label="Attach files to ticket"
-                />
-              </>
-            ) : null}
-            <AnimatedIconButton
-              type="button"
-              size="icon-sm"
-              icon={SendIcon}
-              iconSize={14}
-              className="shrink-0"
-              onClick={handleSubmit}
-              disabled={!newComment.trim() || addComment.isPending}
-              aria-label="Post comment"
-            />
+            <div className="flex shrink-0 flex-col items-center gap-1">
+              {canAttachFiles ? (
+                <>
+                  <input
+                    ref={attachmentInputRef}
+                    type="file"
+                    multiple
+                    className="hidden"
+                    onChange={handleAttachmentChange}
+                  />
+                  <AnimatedIconButton
+                    type="button"
+                    size="icon-sm"
+                    variant="ghost"
+                    icon={PaperclipIcon}
+                    iconSize={14}
+                    onClick={handleChooseFiles}
+                    disabled={isAttachingFiles}
+                    aria-label="Attach files to ticket"
+                  />
+                </>
+              ) : null}
+              <AnimatedIconButton
+                type="button"
+                size="icon-sm"
+                icon={SendIcon}
+                iconSize={14}
+                onClick={handleSubmit}
+                disabled={!newComment.trim() || addComment.isPending}
+                aria-label="Post comment"
+              />
+            </div>
           </div>
         ) : null}
         {canUpdate && draftLoading ? (

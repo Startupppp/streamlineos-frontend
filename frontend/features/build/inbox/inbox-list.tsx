@@ -311,7 +311,7 @@ export function InboxList({
         className="flex h-full min-h-0 flex-col gap-0"
       >
         <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border bg-card px-2 py-1.5">
-          <TabsList className="h-8 min-h-8 border-0 bg-muted/60 p-0.5 [&_[data-slot=tabs-trigger]]:h-7 [&_[data-slot=tabs-trigger]]:min-h-7 [&_[data-slot=tabs-trigger]]:px-3">
+          <TabsList className="flex h-8 min-h-8 flex-1 border-0 bg-muted/60 p-0.5 [&_[data-slot=tabs-trigger]]:h-7 [&_[data-slot=tabs-trigger]]:min-h-7 [&_[data-slot=tabs-trigger]]:min-w-0 [&_[data-slot=tabs-trigger]]:flex-1 [&_[data-slot=tabs-trigger]]:px-3">
             {BUILD_INBOX_TRIAGE_TABS.map(({ label, value }) => (
               <TabsTrigger
                 key={value}

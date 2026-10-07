@@ -46,10 +46,10 @@ export function getStyles(): string {
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  padding: 6px;
+  padding: 4px;
   background: #ffffff;
   border: 1px solid #e6eaf0;
-  border-radius: 16px;
+  border-radius: 13px;
   box-shadow: 0 6px 24px rgba(11,18,32,0.16);
   transition: opacity 160ms ease;
   pointer-events: auto;
@@ -58,8 +58,8 @@ export function getStyles(): string {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
+  width: 32px;
+  height: 32px;
   background: none;
   border: none;
   border-radius: 11px;
@@ -69,7 +69,7 @@ export function getStyles(): string {
 }
 .launcher-btn:hover { background: #f1f5f9; color: #0b1220; }
 .launcher-btn:active { transform: scale(0.92); }
-.launcher-btn svg { width: 19px; height: 19px; }
+.launcher-btn svg { width: 17px; height: 17px; }
 .launcher-divider { width: 22px; height: 1px; background: #eef1f5; margin: 2px 0; }
 @media (min-width: 1024px) {
   .launcher:not(:hover):not(:focus-within):not(.expanded) .launcher-btn,
@@ -82,16 +82,16 @@ export function getStyles(): string {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 11px;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
   color: #6366f1;
   cursor: grab;
   touch-action: none;
 }
 .launcher-logo:hover { background: #f1f5f9; }
 .launcher-logo:active { cursor: grabbing; }
-.launcher-logo svg { width: 20px; height: 20px; transition: opacity 120ms ease; }
+.launcher-logo svg { width: 17px; height: 17px; transition: opacity 120ms ease; }
 .launcher-logo .grip-overlay {
   position: absolute;
   width: 16px;

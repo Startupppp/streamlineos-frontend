@@ -27,7 +27,6 @@ import type {
   NotificationCategory,
 } from "@/types/notifications";
 import dynamic from "next/dynamic";
-import { PreviewSkeleton } from "./inbox-ticket-preview-states";
 import {
   normalizeBuildDeepLink,
   parseInboxTicketLink,
@@ -35,10 +34,13 @@ import {
 } from "./parse-inbox-ticket-link";
 
 const InboxTicketPreview = dynamic(
-  () => import("./inbox-ticket-preview").then((m) => ({ default: m.InboxTicketPreview })),
+  () =>
+    import("./inbox-ticket-preview").then((m) => ({
+      default: m.InboxTicketPreview,
+    })),
   {
     ssr: false,
-    loading: () => <PreviewSkeleton />,
+    loading: () => null,
   },
 );
 
@@ -177,12 +179,7 @@ function NotificationFallbackPreview({
 
         {notification.link && (
           <div className="mt-5">
-            <Button
-              asChild
-              variant="outline"
-              size="sm"
-              className="gap-1.5"
-            >
+            <Button asChild variant="outline" size="sm" className="gap-1.5">
               <Link href={normalizeBuildDeepLink(notification.link)}>
                 <ExternalLink className="h-3.5 w-3.5" />
                 View in app
@@ -203,8 +200,14 @@ function resolveTicketTarget(
   const ctx = notification.ticketContext;
   if (!ctx?.ticketId) return null;
   const metadataProjectId = notification.metadata?.projectId;
-  const projectId = ctx.projectId ?? extractBuildProjectId(notification.link)
-    ?? (typeof metadataProjectId === "number" && Number.isSafeInteger(metadataProjectId) && metadataProjectId > 0 ? metadataProjectId : null);
+  const projectId =
+    ctx.projectId ??
+    extractBuildProjectId(notification.link) ??
+    (typeof metadataProjectId === "number" &&
+    Number.isSafeInteger(metadataProjectId) &&
+    metadataProjectId > 0
+      ? metadataProjectId
+      : null);
   if (!projectId) return null;
   const href = notification.link
     ? normalizeBuildDeepLink(notification.link)
@@ -229,6 +232,7 @@ export function InboxPreviewPane({
           illustrationPreset="mail"
           title="Select a notification"
           description="Choose a notification from the list to view its details here."
+          descriptionClassName="text-foreground"
           compact={false}
         />
       </div>

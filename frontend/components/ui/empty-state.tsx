@@ -4,7 +4,10 @@ import * as React from "react";
 import { cn } from "../../lib/utils";
 import { Button } from "./button";
 import Link from "next/link";
-import { StateIllustration, type StateIllustrationPreset } from "@/components/illustrations/state-illustration";
+import {
+  StateIllustration,
+  type StateIllustrationPreset,
+} from "@/components/illustrations/state-illustration";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
 import type { PermissionGate } from "@/lib/rbac/permission-gate";
 import { SURFACE_EMPTY } from "@/lib/ui-surface-chrome";
@@ -18,10 +21,10 @@ interface ActionProps {
 interface EmptyStateProps {
   illustration?: React.ReactNode;
   illustrationPreset?: StateIllustrationPreset;
-  /** Fixed illustration box size. Defaults to `sm` when compact, otherwise `md`. */
   illustrationSize?: "xs" | "sm" | "md";
   title?: string;
   description?: string;
+  descriptionClassName?: string;
   action?: ActionProps;
   secondaryAction?: ActionProps;
   tertiaryAction?: ActionProps;
@@ -30,29 +33,12 @@ interface EmptyStateProps {
   compact?: boolean;
   bare?: boolean;
   height?: number;
-  /**
-   * When true, one or more active filters are responsible for the empty result.
-   * Renders "No results match your filters." and a "Clear filters" button
-   * instead of the create action, suppressing the normal `action` prop.
-   */
+
   filtersActive?: boolean;
-  /**
-   * Overrides the filtered-empty heading. Only used when `filtersActive` is true;
-   * defaults to "No results match your filters."
-   */
+
   filteredTitle?: string;
-  /** Called when the user clicks "Clear filters". Required when `filtersActive` is true. */
   onClearFilters?: () => void;
-  /**
-   * The gate on the read this emptiness is claimed from.
-   *
-   * A refused read holds no rows for the same reason a finished one can hold
-   * none, and a disabled TanStack query reports `isLoading: false` — so a
-   * screen reaches its empty branch either way and asserts the stronger of the
-   * two facts. Given the gate, an empty state refuses to make a claim it cannot
-   * evidence and states the refusal instead. The four meanings are unchanged;
-   * denial simply preempts them.
-   */
+
   access?: PermissionGate;
 }
 
@@ -100,6 +86,7 @@ export function EmptyState({
   illustrationSize,
   title,
   description,
+  descriptionClassName,
   action,
   secondaryAction,
   tertiaryAction,
@@ -126,27 +113,24 @@ export function EmptyState({
   const size = illustrationSize ?? (compact ? "sm" : "md");
 
   // Always show an illustration — use explicit prop, preset, or a sensible default SVG
-  const visual =
-    illustration ?? (
-      <StateIllustration
-        preset={illustrationPreset ?? "default"}
-        className="h-full w-full"
-      />
-    );
+  const visual = illustration ?? (
+    <StateIllustration
+      preset={illustrationPreset ?? "default"}
+      className="h-full w-full"
+    />
+  );
 
-  const headingText = filtersActive ? (filteredTitle ?? FILTERED_EMPTY_TITLE) : title;
+  const headingText = filtersActive
+    ? (filteredTitle ?? FILTERED_EMPTY_TITLE)
+    : title;
 
   return (
     <div
       role="status"
       className={cn(
         "flex flex-col items-center justify-center text-center",
-        compact
-          ? "py-4 px-2"
-          : bare
-            ? ""
-            : SURFACE_EMPTY,
-        className
+        compact ? "py-4 px-2" : bare ? "" : SURFACE_EMPTY,
+        className,
       )}
       style={bare && height !== undefined ? { height } : undefined}
     >
@@ -155,7 +139,7 @@ export function EmptyState({
           className={cn(
             "flex items-center justify-center shrink-0",
             ILLUSTRATION_BOX_CLASS[size],
-            "[&_img]:h-full [&_img]:w-full [&_img]:object-contain"
+            "[&_img]:h-full [&_img]:w-full [&_img]:object-contain",
           )}
         >
           {visual}
@@ -166,7 +150,7 @@ export function EmptyState({
         <h2
           className={cn(
             "font-medium text-foreground",
-            compact ? "text-label leading-tight" : "text-sm"
+            compact ? "text-label leading-tight" : "text-sm",
           )}
         >
           {headingText}
@@ -177,6 +161,7 @@ export function EmptyState({
         <p
           className={cn(
             "text-muted-foreground mt-0.5 leading-snug break-words",
+            descriptionClassName,
             compact ? "text-dense max-w-xs" : "text-sm mt-1 max-w-md",
           )}
         >
@@ -185,7 +170,9 @@ export function EmptyState({
       )}
 
       {filtersActive ? (
-        <div className={cn("flex items-center gap-2", compact ? "mt-2" : "mt-5")}>
+        <div
+          className={cn("flex items-center gap-2", compact ? "mt-2" : "mt-5")}
+        >
           <Button
             type="button"
             size={compact ? "sm" : "default"}
@@ -195,8 +182,10 @@ export function EmptyState({
             Clear filters
           </Button>
         </div>
-      ) : (action || secondaryAction || tertiaryAction) ? (
-        <div className={cn("flex items-center gap-2", compact ? "mt-2" : "mt-5")}>
+      ) : action || secondaryAction || tertiaryAction ? (
+        <div
+          className={cn("flex items-center gap-2", compact ? "mt-2" : "mt-5")}
+        >
           {action && (
             <ActionButton
               action={action}
