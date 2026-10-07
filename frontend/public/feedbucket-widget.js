@@ -340,6 +340,8 @@ ${m}
 }
 
 @media (max-width: 480px) {
+  .launcher { padding: 4px; }
+  .launcher-logo, .launcher-btn { width: 34px; height: 34px; }
   .panel.is-sheet .panel-header { padding: 12px 14px; }
   .panel.is-sheet .panel-body { padding: 14px; }
   .panel.is-sheet .result-view { padding: 28px 16px; }

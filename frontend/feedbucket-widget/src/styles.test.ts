@@ -52,4 +52,11 @@ describe("feedbucket widget styles — narrow-viewport docking (SETTINGS-012)", 
     const block = css.match(/@media \(max-width: 1023px\)\s*\{[\s\S]*?\n\}/)?.[0] ?? "";
     expect(block).not.toMatch(/\.widget\s*\{/);
   });
+
+  it("keeps the compact launcher smaller on phone widths", () => {
+    const css = getStyles();
+    const block = css.match(/@media \(max-width: 480px\)\s*\{[\s\S]*?\n\}/)?.[0] ?? "";
+    expect(block).toContain(".launcher { padding: 4px; }");
+    expect(block).toContain(".launcher-logo, .launcher-btn { width: 34px; height: 34px; }");
+  });
 });

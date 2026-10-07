@@ -71,6 +71,7 @@ export function CreateIssueButton({
 }
 
 interface QuickCreateMenuProps {
+  className?: string;
   projects: ProjectListItem[];
   onCreateProject: () => void;
   onCreateForProject: (projectId: number) => void;
@@ -100,6 +101,7 @@ function QuickCreateDrawerLink({
 }
 
 export function QuickCreateMenu({
+  className,
   projects,
   onCreateProject,
   onCreateForProject,
@@ -147,7 +149,11 @@ export function QuickCreateMenu({
   }
 
   const triggerButton = (
-    <Button size="sm" className="min-h-9 min-w-0 gap-1.5" {...hoverHandlers}>
+    <Button
+      size="sm"
+      className={cn("min-h-9 min-w-0 gap-1.5", className)}
+      {...hoverHandlers}
+    >
       <PlusIcon ref={iconRef} size={14} />
       New
     </Button>

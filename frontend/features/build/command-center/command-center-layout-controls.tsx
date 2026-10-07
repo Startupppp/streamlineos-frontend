@@ -104,7 +104,7 @@ function WidgetPicker({
           variant="outline"
           size="sm"
           disabled={disabled}
-          className="h-9 w-9 shrink-0 gap-1.5 p-0 sm:w-auto sm:px-3"
+          className="h-9 w-9 shrink-0 gap-1.5 p-0 sm:w-auto sm:flex-none sm:px-3"
           aria-label="Add widget"
         >
           <Plus className="h-3.5 w-3.5" />
@@ -160,7 +160,7 @@ export function CommandCenterLayoutControls({
 
   return (
     <TooltipProvider delayDuration={250}>
-      <div className="flex min-w-0 items-center gap-1 rounded-xl border border-border bg-background/95 p-1 shadow-sm backdrop-blur-sm">
+      <div className="flex w-full min-w-0 items-center gap-1 rounded-xl border border-border bg-background/95 p-1 shadow-sm backdrop-blur-sm sm:w-auto">
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
@@ -191,24 +191,24 @@ export function CommandCenterLayoutControls({
           type="button"
           variant="ghost"
           size="sm"
-          className="h-9 w-9 shrink-0 gap-1.5 p-0 text-muted-foreground sm:w-auto sm:px-3"
+          className="h-9 min-w-0 flex-1 gap-1.5 px-2 text-muted-foreground sm:w-auto sm:flex-none sm:px-3"
           onClick={handleOpenConfirmReset}
           disabled={isSaving}
           aria-label="Reset Command Center"
         >
           <RotateCcw className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">Reset</span>
+          <span>Reset</span>
         </Button>
         <LoadingButton
           type="button"
           size="sm"
-          className="h-9 w-9 shrink-0 gap-1.5 p-0 sm:w-auto sm:px-3"
+          className="h-9 min-w-0 flex-1 gap-1.5 px-2 sm:w-auto sm:flex-none sm:px-3"
           onClick={onDone}
           isPending={isSaving}
           aria-label="Finish customizing"
         >
           <Check className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">Done</span>
+          <span>Done</span>
         </LoadingButton>
         <ConfirmDialog
           open={confirmResetOpen}

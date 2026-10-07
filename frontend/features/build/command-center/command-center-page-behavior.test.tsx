@@ -156,7 +156,7 @@ describe("CommandCenterPage — customize controls", () => {
     mockUseDashboardLayout.mockReturnValue({ data: savedLayout, isLoading: false });
     render(<CommandCenterPage />);
     expect(screen.getByRole("button", { name: /customize/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /customize/i })).toHaveTextContent("");
+    expect(screen.getByRole("button", { name: /customize/i })).toHaveTextContent("Customize");
   });
 
   it("hides the Customize control when the actor cannot manage the dashboard even with the layout loaded", () => {
@@ -170,7 +170,10 @@ describe("CommandCenterPage — customize controls", () => {
     mockUseDashboardLayout.mockReturnValue({ data: savedLayout, isLoading: false });
     render(<CommandCenterPage />);
     fireEvent.click(screen.getByRole("button", { name: /customize/i }));
-    expect(screen.getByRole("button", { name: /add widget/i })).toBeInTheDocument();
+    const addWidget = screen.getByRole("button", { name: /add widget/i });
+    expect(addWidget).toBeInTheDocument();
+    expect(addWidget).toHaveClass("w-9");
+    expect(addWidget.querySelector("span")).toHaveClass("hidden");
     expect(screen.getByRole("button", { name: /reset command center/i })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /^new$/i })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /finish customizing/i }));

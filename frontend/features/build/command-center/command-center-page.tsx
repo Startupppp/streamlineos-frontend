@@ -188,7 +188,7 @@ export function CommandCenterPage() {
         subtitle={
           isReady ? "Your work, decisions, and delivery signals" : undefined
         }
-        contentClassName="pb-0 sm:pb-0"
+        contentClassName="pb-0 sm:pb-0 max-md:[.mobile-nav-active_&]:!pb-[calc(5rem+env(safe-area-inset-bottom,0px))]"
         actions={
           isReady ? (
             isEditing ? (
@@ -201,20 +201,23 @@ export function CommandCenterPage() {
                 isSaving={layout.isSaving}
               />
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex w-full items-center gap-2 sm:w-auto">
                 {layout.canCustomize ? (
                   <Button
                     type="button"
                     variant="outline"
-                    size="icon-sm"
+                    size="sm"
+                    className="min-w-0 flex-1 gap-1.5 sm:flex-none"
                     onClick={handleStartCustomizing}
                     aria-label="Customize Command Center"
                     title="Customize Command Center"
                   >
                     <LayoutGrid aria-hidden="true" />
+                    <span>Customize</span>
                   </Button>
                 ) : null}
                 <QuickCreateMenu
+                  className="flex-1 sm:flex-none"
                   projects={projects}
                   onCreateProject={handleOpenWizard}
                   onCreateForProject={handleCreateForProject}
