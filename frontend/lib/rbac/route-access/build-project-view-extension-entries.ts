@@ -25,7 +25,7 @@ export const BUILD_PROJECT_VIEW_EXTENSIONS: readonly RouteAccessExtension[] = [
     product: "build",
     permission: "build:view",
     reason:
-      "Project overview and unknown project URL segments require Build access so the catch-all can render Page Not Found inside the Build shell.",
+      "Project overview requires Build access to load project context before rendering the project-scoped not-found boundary.",
   },
   ...BUILD_PROJECT_VIEW_ROUTES.map(projectViewEntry),
   {

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
-import { TicketPanelInner } from "./ticket-panel-inner";
+import { TicketPanelInner } from "@/features/build/ticket-details/ticket-panel-inner";
 import { decodeRouteSegment } from "@/features/build/ticket-details/build-ticket-detail-url";
 
 interface PageProps {

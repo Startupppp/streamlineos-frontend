@@ -35,7 +35,7 @@ jest.mock("@/features/build/project-detail/project-hydration-context", () => ({
 }));
 
 import ProjectLayout from "./layout";
-import { TicketPanelInner } from "./@panel/(.)tickets/[ticketKey]/ticket-panel-inner";
+import { TicketPanelInner } from "@/features/build/ticket-details/ticket-panel-inner";
 
 const { notFound } = jest.requireMock("next/navigation") as {
   notFound: jest.Mock;

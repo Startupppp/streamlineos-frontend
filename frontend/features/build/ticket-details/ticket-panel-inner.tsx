@@ -1,9 +1,11 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { usePathname } from "next/navigation";
-import { parseTicketKey, ticketKeyMatchesProject } from "@/components/shared/format-ticket-key";
-import { notFound } from "next/navigation";
+import { notFound, usePathname } from "next/navigation";
+import {
+  parseTicketKey,
+  ticketKeyMatchesProject,
+} from "@/components/shared/format-ticket-key";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { TicketDetailPane } from "@/features/build/ticket-details/ticket-detail-pane";
@@ -34,8 +36,7 @@ export function TicketPanelInner({
     projectId,
     isCurrentTicketRoute ? (parsed?.ticketNumber ?? null) : null,
   );
-  const resolvedProjectKey =
-    lookup.data?.project?.key ?? null;
+  const resolvedProjectKey = lookup.data?.project?.key ?? null;
   const routeKeyMismatch =
     Boolean(parsed?.projectKey) &&
     resolvedProjectKey != null &&
@@ -47,7 +48,7 @@ export function TicketPanelInner({
   const pageState = usePageState({
     permission: "build:tickets:view",
     isLoading: lookup.isLoading,
-    isError: lookup.isError || !parsed || routeKeyMismatch,
+    isError: lookup.isError || !parsed,
     error: lookup.error,
   });
   const { refetch } = lookup;
@@ -59,7 +60,7 @@ export function TicketPanelInner({
   if (routeKeyMismatch) return notFound();
 
   return (
-    <PageState resolution={pageState} loading={null} onRetry={handleRetry}>
+    <PageState resolution={pageState} loading={null} onRetry={parsed ? handleRetry : undefined}>
       {lookup.data ? (
         <TicketDetailPane
           ticketId={lookup.data.id}
