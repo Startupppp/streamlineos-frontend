@@ -32,10 +32,6 @@ export interface AiActionResult {
   citations?: Citation[];
   confidence?: number;
   aiUsage?: AiUsageMeta | null;
-  /**
-   * When set, the ready state shows an empty panel instead of draft-card framing
-   * (e.g. project health summary with zero tickets / backend NO_DATA).
-   */
   empty?: { title: string; description: string };
 }
 
@@ -182,14 +178,11 @@ export function AiActionResultBody({
   }
 
   if (state.result.empty) {
+    const panel = state.result.empty;
     return (
       <EmptyState
-        bare
-        compact={compact}
-        illustrationSize="xs"
-        title={state.result.empty.title}
-        description={state.result.empty.description}
-        className={compact ? undefined : "min-h-full flex-1 py-8"}
+        bare compact={compact} illustrationSize="xs"
+        title={panel.title} description={panel.description} className={compact ? undefined : "min-h-full flex-1 py-8"}
       />
     );
   }

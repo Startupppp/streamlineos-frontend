@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import { StepReview } from "./step-review";
 import type { WizardDraft } from "../use-project-create";
 
