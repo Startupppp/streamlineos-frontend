@@ -184,9 +184,9 @@ export function TicketDetailMainSection({
 
   return (
     <motion.div
-      className="mx-auto flex w-full max-w-4xl min-w-0 flex-col gap-5 pb-6 max-md:pb-24"
-      initial={reduceMotion ? false : "hidden"}
-      animate={reduceMotion ? undefined : "visible"}
+      className="mx-auto flex min-h-full w-full max-w-4xl min-w-0 flex-col gap-5 pb-6 max-md:pb-24"
+      initial={isPreview || reduceMotion ? false : "hidden"}
+      animate={isPreview || reduceMotion ? undefined : "visible"}
       variants={reduceMotion ? undefined : fadeIn}
     >
       {canUpdate && editingTitle ? (

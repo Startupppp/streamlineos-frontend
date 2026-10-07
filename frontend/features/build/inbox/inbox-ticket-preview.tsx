@@ -1,7 +1,7 @@
 ﻿"use client";
 
-import { useCallback, useMemo, useState } from "react";
-import { ArrowLeft, PanelRightOpen } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { PanelRightOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PreviewSkeleton, PreviewError } from "./inbox-ticket-preview-states";
 import { isApiError, getApiErrorCode } from "@/lib/api-client";
@@ -20,7 +20,7 @@ import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 
 const RIGHT_PANEL_COLLAPSED_KEY =
-  "streamlineos:ticket-detail:right-panel:collapsed";
+  "streamlineos:inbox-ticket-preview:right-panel:collapsed";
 
 interface InboxTicketPreviewProps {
   target: InboxTicketLinkTarget;
@@ -31,6 +31,7 @@ export function InboxTicketPreview({
   target,
   onClose,
 }: InboxTicketPreviewProps) {
+  const mainScrollRef = useRef<HTMLDivElement | null>(null);
   const canUpdate = useCan("build:tickets:update");
   const canAssign = useCan("build:tickets:assign");
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState<boolean>(
@@ -67,6 +68,10 @@ export function InboxTicketPreview({
     if (target.ticketId != null) return target.ticketId;
     return byKeyTicket?.id ?? null;
   }, [target.ticketId, byKeyTicket?.id]);
+
+  useEffect(() => {
+    mainScrollRef.current?.scrollTo({ top: 0, behavior: "auto" });
+  }, [resolvedTicketId]);
 
   const {
     ticket,
@@ -184,18 +189,6 @@ export function InboxTicketPreview({
 
   return (
     <div className="relative flex h-full min-h-0 min-w-0 w-full flex-col overflow-hidden">
-      {onClose ? (
-        <Button
-          type="button"
-          size="icon"
-          variant="ghost"
-          className="absolute left-2 top-2 z-20 shrink-0 bg-card/90 text-muted-foreground shadow-sm hover:text-foreground lg:hidden"
-          onClick={onClose}
-          aria-label="Back to inbox"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-        </Button>
-      ) : null}
       {rightPanelCollapsed ? (
         <Button
           type="button"
@@ -209,9 +202,9 @@ export function InboxTicketPreview({
         </Button>
       ) : null}
 
-      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden lg:flex-row">
+      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden md:flex-row">
         {rightPanelCollapsed ? (
-        <div className="flex min-h-0 min-w-0 flex-1 basis-0 overflow-y-auto bg-gradient-to-b from-card/80 to-background/40 px-4 pb-4 pt-2 scrollbar-hide lg:px-5 lg:pb-5">
+        <div ref={mainScrollRef} className="flex min-h-0 min-w-0 flex-1 basis-0 overflow-y-auto bg-gradient-to-b from-card/80 to-background/40 px-4 pb-4 pt-10 scrollbar-hide max-md:pr-20 md:px-6 md:pb-5 md:pr-6">
           <TicketDetailMainSection
             ticket={ticket}
             ticketId={resolvedTicketId}
