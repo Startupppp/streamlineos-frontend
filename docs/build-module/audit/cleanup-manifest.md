@@ -1,5 +1,16 @@
 # Cleanup manifest
 
+## Redundant packaging Markdown cleanup147 — 2026-10-07
+
+Current verified content/reference audit over497 tracked/nonignored Markdown files across both repositories. Retain unique research, active specs, screenshots, failures, runtime receipts and separate Cursor/GitHub integration references. Two obsolete archive download summaries have no unique product observation; all unique packaging dates, roles, reading order, historical four-HAVE/115-SHIP claims, blocked walks, safety limits and archive composition are migrated to [archive packaging provenance](./research-traceability.md#archive-packaging-provenance). Historical claims remain Current unverified. No source, task completion or evidence classification changes.
+
+| Deleted path | SHA256 before deletion | Reason and replacement section | Updated references | Reviewer and validation |
+|---|---|---|---|---|
+| docs/build-module/streamlineos-analysis-pack/README-DOWNLOAD.md | f40b43707f3d77f8af970a2eff4bee7ebcda35beb8b4b33034cb22ce2da2db33 | Superseded packaging/navigation summary; research-traceability.md, Archive packaging provenance, CI package bullet and retained indexes. | Source row in research-traceability.md; generated TODO research inventory. | Coordinator content/hash/reference audit; official tracker/execution-plan/link checks and exact diff. No independent review claimed. |
+| docs/build-module/streamlineos-pm-pack/README-PM-DOWNLOAD.md | df221bb5836d8baaaa8c343cd3259aa5cecb78ef8e2fc4cf45f519f5ab9fc420 | Superseded packaging/navigation summary; research-traceability.md, Archive packaging provenance, PM package bullet and retained indexes. | Source row and PM-001/PM-002/PM-011 links in research-traceability.md; generated TODO research inventory. | Coordinator content/hash/reference audit; official tracker/execution-plan/link checks and exact diff. No independent review claimed. |
+
+Validation commands: rg for both old filenames throughout active docs/source/scripts; `node scripts/build-doc-todo-tracker.mjs --apply` then `--check`; `node scripts/check-build-execution-plan.mjs`; `git diff --check`. Compare all535 BT IDs, checkbox states, stages, evidence cells and task texts with HEAD after normalizing line endings and excluding generated source-line anchors. Only research inventory changes116→114; all298 checked/237 open requirement statuses remain unchanged. Historical inventories in dated receipts remain historical.
+
 ## Project artifact cleanup145 — 2026-10-06
 
 Status: Current verified for the inventory, managed archive, seven exact disposable-file removals and all nine clean merged nonmanaged checkout removals. This section supersedes earlier instructions to leave the accidental repository-local Windows copies untouched. The user now explicitly requests unnecessary project files/worktrees removed. No active product source, test, schema, API, contract, permission, canonical Markdown, screenshot, unresolved research or historical verification record is deleted.
