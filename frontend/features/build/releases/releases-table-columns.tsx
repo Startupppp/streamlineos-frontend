@@ -12,9 +12,9 @@ import { TABLE_TITLE_CELL, TEXT_FLEX_CHILD } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { getUserDisplayName } from "@/lib/person-display";
+import { RELEASE_STATUS_PRESENTATION } from "@/lib/build/release-status";
 import type { Release } from "@/types/projects";
 import { format } from "date-fns";
-import { STATUS_CONFIG } from "./releases-page-parts";
 import { statusToneClasses } from "@/lib/design-tokens";
 import type { StatusTone } from "@/lib/design-tokens";
 
@@ -72,7 +72,7 @@ function releaseNotesText(description: string) {
 }
 
 function ReleaseStatusBadge({ status }: { status: Release["status"] }) {
-  const cfg = STATUS_CONFIG[status];
+  const cfg = RELEASE_STATUS_PRESENTATION[status];
   return (
     <Badge variant="outline" className={cn("h-5 py-0 text-micro", cfg.className)}>
       {cfg.label}

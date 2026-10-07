@@ -6,6 +6,11 @@ export const mockSearchParamsRef = { current: new URLSearchParams() };
 export const mockUseKeyboardShortcuts = jest.fn();
 export const mockUseDashboardLayout = jest.fn();
 
+jest.mock("next/dynamic", () => ({
+  __esModule: true,
+  default: () => () => null,
+}));
+
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(),
   useAccess: jest.fn(),
@@ -23,10 +28,6 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => mockSearchParamsRef.current,
   useRouter: () => ({ push: mockRouterPush, replace: jest.fn() }),
   usePathname: () => "/build/command-center",
-}));
-
-jest.mock("./command-center-toolbar", () => ({
-  CommandCenterToolbar: () => <div data-testid="command-center-toolbar" />,
 }));
 
 jest.mock("@/hooks/api/build/dashboard-layout", () => ({
@@ -92,12 +93,8 @@ jest.mock("./use-keyboard-shortcuts", () => ({
 }));
 
 jest.mock("./command-center-actions", () => ({
-  QuickCreateMenu: () => null,
+  QuickCreateMenu: () => <button type="button">New</button>,
   CreateIssueButton: () => null,
-}));
-
-jest.mock("./command-center-pinned-nav", () => ({
-  PinnedNav: () => <div data-testid="pinned-nav" />,
 }));
 
 jest.mock("./command-center-my-issues-panel", () => ({
@@ -157,8 +154,8 @@ jest.mock("@/lib/motion-presets", () => ({
 
 jest.mock("framer-motion", () => ({
   motion: {
-    div: ({ children, ...rest }: HTMLAttributes<HTMLDivElement>) => <div {...rest}>{children}</div>,
-    p: ({ children, ...rest }: HTMLAttributes<HTMLParagraphElement>) => <p {...rest}>{children}</p>,
+    div: ({ children }: HTMLAttributes<HTMLDivElement>) => <div>{children}</div>,
+    p: ({ children }: HTMLAttributes<HTMLParagraphElement>) => <p>{children}</p>,
   },
   useReducedMotion: () => false,
   AnimatePresence: ({ children }: { children: ReactNode }) => <>{children}</>,
@@ -175,6 +172,7 @@ jest.mock("@/components/ui/page-wrapper", () => ({
   PageWrapper: ({
     children,
     title,
+    actions,
   }: {
     children: ReactNode;
     title?: string;
@@ -184,6 +182,7 @@ jest.mock("@/components/ui/page-wrapper", () => ({
   }) => (
     <div>
       {title ? <h1>{title}</h1> : null}
+      {actions}
       {children}
     </div>
   ),

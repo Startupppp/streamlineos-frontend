@@ -1,6 +1,8 @@
 "use client";
 
+import { Bot, Sparkles } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -61,24 +63,42 @@ export function AgentRunsPanel() {
               />
             </div>
           ) : (
-            <div className="flex flex-col gap-2 p-3">
-              <div className="flex min-w-0 items-start justify-between gap-2">
-                <p className="min-w-0 truncate text-sm font-medium text-foreground">{signal.title}</p>
-                {signal.confidence !== null && signal.confidence !== undefined && (
-                  <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-micro font-normal text-muted-foreground">
-                    {signal.confidence}% confidence
+            <div className="p-3">
+              <article className="overflow-hidden rounded-lg border border-border/80 bg-card shadow-xs">
+                <div className="flex min-w-0 items-center gap-2.5 border-b border-border/70 bg-muted/40 px-3 py-2.5">
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-background shadow-xs">
+                    <Bot className="size-4 text-foreground" aria-hidden="true" />
                   </span>
-                )}
-              </div>
-              <span className="w-fit rounded bg-muted px-1.5 py-0.5 text-micro font-normal text-muted-foreground">
-                {SIGNAL_TYPE_LABELS[signal.type] ?? signal.type}
-              </span>
-              {signal.evidence && (
-                <p className="text-xs text-muted-foreground line-clamp-3">{signal.evidence}</p>
-              )}
-              {signal.proposedChange && (
-                <p className="text-xs text-foreground/80 line-clamp-2">{signal.proposedChange}</p>
-              )}
+                  <p className="min-w-0 flex-1 line-clamp-2 text-sm font-semibold leading-snug text-foreground">{signal.title}</p>
+                </div>
+                <div className="space-y-3 p-3">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <Badge variant="secondary">
+                      {SIGNAL_TYPE_LABELS[signal.type] ?? signal.type}
+                    </Badge>
+                    {signal.confidence !== null && signal.confidence !== undefined ? (
+                      <Badge variant="outline" className="bg-background font-medium tabular-nums text-muted-foreground">
+                        {signal.confidence}% confidence
+                      </Badge>
+                    ) : null}
+                  </div>
+                  {signal.evidence ? (
+                    <div className="space-y-1">
+                      <p className="text-micro font-medium uppercase tracking-wider text-muted-foreground">Why it matters</p>
+                      <p className="line-clamp-3 text-xs leading-relaxed text-foreground/80">{signal.evidence}</p>
+                    </div>
+                  ) : null}
+                  {signal.proposedChange ? (
+                    <div className="rounded-md border border-status-info-rule bg-status-info-surface p-2.5">
+                      <p className="mb-1 flex items-center gap-1.5 text-micro font-semibold uppercase tracking-wider text-status-info-ink-strong">
+                        <Sparkles className="size-3" aria-hidden="true" />
+                        Recommended next step
+                      </p>
+                      <p className="line-clamp-2 text-xs leading-relaxed text-status-info-ink">{signal.proposedChange}</p>
+                    </div>
+                  ) : null}
+                </div>
+              </article>
             </div>
           )}
         </div>

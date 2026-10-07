@@ -12,10 +12,10 @@ import {
   DEFAULT_WIDGETS,
   normalizeSlots,
   slotsFromLayout,
+  slotsFromStackedLayout,
   withoutWidget,
   withWidget,
   withWidgetMoved,
-  withWidgetWidth,
   type WidgetSlot,
   type WidgetType,
 } from "./dashboard-layout";
@@ -91,12 +91,12 @@ export function useDashboardLayoutEditor() {
     (layout: Layout) => commit(slotsFromLayout(layout, widgets)),
     [commit, widgets],
   );
-  const addWidget = useCallback((type: WidgetType) => commit(withWidget(widgets, type)), [commit, widgets]);
-  const removeWidget = useCallback((type: WidgetType) => commit(withoutWidget(widgets, type)), [commit, widgets]);
-  const resizeWidget = useCallback(
-    (type: WidgetType, w: number) => commit(withWidgetWidth(widgets, type, w)),
+  const applyStackedLayout = useCallback(
+    (layout: Layout) => commit(slotsFromStackedLayout(layout, widgets)),
     [commit, widgets],
   );
+  const addWidget = useCallback((type: WidgetType) => commit(withWidget(widgets, type)), [commit, widgets]);
+  const removeWidget = useCallback((type: WidgetType) => commit(withoutWidget(widgets, type)), [commit, widgets]);
   const moveWidget = useCallback(
     (type: WidgetType, offset: -1 | 1) => commit(withWidgetMoved(widgets, type, offset)),
     [commit, widgets],
@@ -112,9 +112,9 @@ export function useDashboardLayoutEditor() {
     isLoading,
     canCustomize: canManage && stored !== undefined,
     applyLayout,
+    applyStackedLayout,
     addWidget,
     removeWidget,
-    resizeWidget,
     moveWidget,
     resetLayout,
   };

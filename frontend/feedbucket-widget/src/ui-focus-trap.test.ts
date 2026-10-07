@@ -46,6 +46,7 @@ describe("feedbucket widget focus trap", () => {
   let shadow: ShadowRoot;
 
   beforeEach(() => {
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: 375 });
     host = document.createElement("div");
     document.body.appendChild(host);
     new FeedbucketWidget(host, "http://api", "key", false);
@@ -77,6 +78,16 @@ describe("feedbucket widget focus trap", () => {
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
 
     expect(shadow.activeElement).toBe(commentBtn);
+  });
+
+  it("expands the launcher from its logo without opening the feedback panel", () => {
+    const logo = shadow.querySelector<HTMLElement>(".launcher-logo");
+    const launcher = shadow.querySelector<HTMLElement>(".launcher");
+    logo!.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+
+    expect(launcher).toHaveClass("expanded");
+    expect(launcher).toHaveAttribute("aria-expanded", "true");
+    expect(shadow.querySelector<HTMLElement>(".panel")?.getAttribute("aria-hidden")).toBe("true");
   });
 
   it("wraps Tab forward from last focusable to first — remove Tab handler and this fails", () => {

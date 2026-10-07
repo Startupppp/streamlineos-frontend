@@ -2094,3 +2094,54 @@ User requests gpt-6.1-sol with medium effort for implementation/verification, lo
 Bounded64 review by old B is CLEAR for failed-completed resend recovery and later-row preservation. The prior delivered row survives pending resend, but the existing newest-row verifier can reject its code while the new send awaits ACK. Continuous prior-code usability is therefore Current unverified/open, not proved by row preservation. Ambiguous ACK, retirement failure/revocation races, physical concurrency/provider/browser/release remain open. The earlier64 wording about preserving delivered codes applies to non-retirement and failed-completed recovery only; no full activation/resend checkbox or stage closes.
 
 Typing handoff64: root's scoped TypeScript fails TS2322 at OTP gate spec297 because a model row infers usedAt as null and later receives Date. Transfer only C's existing `backend/src/modules/organization/core/invitation-acceptance-otp-gate.spec.ts` to new `build_verification_65`, before its Intake work. Correct the model's declared inferred/Pick type without cast, assertion loss or production relaxation; preserve the initial failure, refreeze hashes and rerun focused tests. High security review waits for this final test freeze. No second agent may edit this spec, and root owns subsequent heavy gates.
+## 2026-10-07 — Command Center focused UX repair
+
+Owner: Codex coordinator
+
+Scope: browser feedback on `/build/command-center` only.
+
+Owned files:
+
+- `frontend/features/build/command-center/command-center-page.tsx`
+- `frontend/features/build/command-center/command-center-layout-controls.tsx`
+- `frontend/features/build/command-center/command-center-widget-frame.tsx`
+- `frontend/features/build/command-center/command-center-widget-grid.tsx`
+- `frontend/features/build/command-center/dashboard-layout.ts`
+- `frontend/features/build/command-center/use-dashboard-layout.ts`
+- `frontend/features/build/command-center/use-dashboard-layout.test.ts`
+- `frontend/features/build/command-center/widget-catalog.ts`
+- `frontend/features/build/command-center/command-center-pinned-nav.tsx`
+- `frontend/features/build/command-center/command-center-jump-links.tsx`
+- `frontend/features/build/command-center/use-command-center-widgets.tsx`
+- `frontend/features/build/command-center/command-center-summary-widgets.tsx`
+- `frontend/features/build/command-center/command-center-agent-runs-panel.tsx`
+- `frontend/features/build/command-center/command-center-releases-panel.tsx`
+- `frontend/features/build/command-center/command-center-constants.ts`
+- `frontend/features/build/command-center/command-center-toolbar.tsx`
+- `frontend/features/build/command-center/command-center-toolbar.test.tsx`
+- `frontend/features/build/command-center/command-center-page-test-harness.tsx`
+- `frontend/features/build/command-center/command-center-page-behavior.test.tsx`
+- `frontend/features/build/command-center/command-center-page-rendering.test.tsx`
+- `frontend/features/build/command-center/command-center-widget-grid.test.tsx`
+- `frontend/features/build/command-center/dashboard-layout.test.ts`
+- `frontend/features/build/command-center/command-center-panels.test.tsx`
+- `frontend/lib/build/release-status.ts`
+- `frontend/features/build/releases/releases-page-parts.tsx`
+- `frontend/features/build/releases/releases-table-columns.tsx`
+- `frontend/features/build/releases/releases-page-test-harness.tsx`
+
+Excluded files: generated contracts, hooks/API files, backend source, routes, and all unrelated documentation.
+
+Acceptance: remove the visible global filter toolbar and Jump To widget; retire old saved Jump To slots safely; put an accessible icon-only Customize action beside New; expose only drag and remove controls on widget headers while retaining edge resize; make Agent Signal and Release rows compact, clearly separated, and readable with existing design tokens; preserve authorization, data contracts, deep-link filter behavior, saved-layout persistence, and responsive behavior.
+
+Verification: focused Jest for Command Center behavior, layout, grid, and panels; exact-path ESLint; changed-path TypeScript plus production TypeScript if the focused slice is stable; browser verification at `http://localhost:1000/build/command-center` in view/edit modes and at narrow width. Database, deployment, and operational proof are outside this presentation-only slice.
+
+Review expansion: remove the two newly orphaned Jump To component files while retaining only the generated-contract compatibility catalog entry; correct stale picker copy; restore keyboard reordering through the visible drag grip; support narrow drag ordering without changing saved widget sizes; move the release status presentation map from its single-feature file into one shared typed Build owner and update both consumers. This expansion supersedes the earlier exclusion of the two Jump To files. No route, API, generated contract, permission, or backend behavior is changed.
+
+Verification receipt: 145 focused Jest assertions passed across Command Center layout, editor, grid, behavior, rendering, panels, and Releases; exact-path ESLint passed; frontend production typecheck passed; `git diff --check` passed. Browser proof on port 1000 confirmed that the global filter toolbar and Jump To are absent, Customize is an icon beside New, all eight widgets expose only drag and remove controls in edit mode, keyboard ArrowDown/ArrowUp reorders and restores the layout, Agent Signal and Release rows expose the revised information hierarchy, and a 375×812 viewport has no horizontal overflow with all three summary cards visible. Independent review findings covering ownership, stale Jump To sources, keyboard/mobile ordering, and duplicate release status presentation were resolved in this slice. A transient local API transport error was observed during one reload; both frontend and backend health returned 200 and the clean reload passed.
+
+Responsive follow-up: browser checks at 1006×715, 375×812, and 320×568 confirmed compact desktop, tablet, and phone stacking with no horizontal overflow. The personalized summary label was shortened to `Open issues` without changing its destination or metric. At 320 pixels the summary uses three full-width rows and reserves 224 pixels before My Issues; at 375 pixels it uses two columns over two rows and reserves 144 pixels. Both layouts maintain a 16-pixel gap before My Issues, preventing clipping and overlap.
+
+Launcher follow-up: this same owner additionally claims `frontend/feedbucket-widget/src/ui-launcher-builder.ts`, `frontend/feedbucket-widget/src/ui.ts`, `frontend/feedbucket-widget/src/ui-drag.ts`, `frontend/feedbucket-widget/src/styles.ts`, `frontend/feedbucket-widget/src/ui-focus-trap.test.ts`, `frontend/feedbucket-widget/src/styles.test.ts`, `frontend/next.config.ts`, and `frontend/lib/feedbucket.ts`. The generated `frontend/public/feedbucket-widget.js` is excluded from hand edits and will only be regenerated by `pnpm -C frontend build:widget`. Acceptance: the launcher is a compact single logo when inactive, exposes its existing screenshot, recording, and feedback actions on desktop hover or keyboard focus, and exposes the same actions through a touch/keyboard expansion on narrow viewports without losing drag repositioning, panel focus restoration, or safe-area placement. The fixed widget URL must revalidate so deployed embed consumers receive the current built widget. Validation: focused Command Center and Feedbucket Jest suites, exact-path ESLint, widget build, frontend typecheck, header check, and browser checks on desktop/tablet/phone. No backend, API, permissions, or generated source contracts are changed.
+
+Verification receipt: `pnpm -C frontend exec jest --runInBand --runTestsByPath features/build/command-center/command-center-widget-grid.test.tsx feedbucket-widget/src/styles.test.ts feedbucket-widget/src/ui-focus-trap.test.ts` passed with 23 assertions; exact-path ESLint, `pnpm -C frontend build:widget`, `pnpm -C frontend type-check`, and `git diff --check` passed. The rebuilt static widget now serves `Cache-Control: must-revalidate, no-cache` from port 1000. Browser checks at 790×568 confirmed the overview uses one grid row when all three summary cards fit and My Issues follows immediately. Browser checks at 320×568 confirmed the compact feedback logo is 52px high while inactive; keyboard expansion exposed Screenshot, Record, and Feedback controls in a 179×52 horizontal row at `[133,381]-[312,433]`, above the bottom navigation. The mobile launcher is clamped inside the viewport after expansion. Desktop hover and keyboard focus share the same existing three actions. This is presentation-only evidence; database, RBAC, tenant, deployment, and operations evidence are not applicable.

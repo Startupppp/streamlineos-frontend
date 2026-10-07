@@ -3,6 +3,7 @@ import { POSITION_KEY } from "./ui-icon-util";
 interface DragCallbacks {
   onDragStart?(): void;
   onPositionChange(): void;
+  onTap?(): void;
 }
 
 export class DragManager {
@@ -48,6 +49,17 @@ export class DragManager {
     this.container.style.right = "auto";
     this.container.style.bottom = "auto";
     this.container.style.transform = "";
+  }
+
+  constrainToViewport(): void {
+    if (!this.container.classList.contains("positioned")) return;
+    const rect = this.container.getBoundingClientRect();
+    const bottomInset = window.innerWidth <= 1023 ? 76 : 8;
+    const left = Math.max(8, Math.min(rect.left, window.innerWidth - rect.width - 8));
+    const top = Math.max(8, Math.min(rect.top, window.innerHeight - rect.height - bottomInset));
+    if (left === rect.left && top === rect.top) return;
+    this.setPosition(left, top);
+    this.persistPosition();
   }
 
   restorePosition(): void {
@@ -179,5 +191,6 @@ export class DragManager {
     this.setPosition(this.dragCurrentLeft, this.dragCurrentTop);
     this.callbacks.onPositionChange();
     if (this.dragMoved) this.persistPosition();
+    if (!this.dragMoved) this.callbacks.onTap?.();
   };
 }

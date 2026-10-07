@@ -24,6 +24,12 @@ describe("feedbucket widget styles — pointer-events isolation", () => {
     expect(launcherBlock).toContain("pointer-events: auto");
   });
 
+  it("keeps feedback actions hidden until the compact launcher is expanded", () => {
+    const css = getStyles();
+    expect(css).toContain(".launcher:not(:hover):not(:focus-within):not(.expanded) .launcher-btn");
+    expect(css).toContain(".launcher:not(:focus-within):not(.expanded) .launcher-btn");
+  });
+
   it("panel restores pointer-events when open so feedback form receives events", () => {
     const css = getStyles();
     const openPanel = css.match(/\.panel\[aria-hidden="false"\]\s*\{[^}]*\}/)?.[0] ?? "";

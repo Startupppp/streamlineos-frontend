@@ -10,7 +10,7 @@ import { AgentRunsPanel } from "./command-center-agent-runs-panel";
 import { RisksPanel } from "./command-center-risks-panel";
 import { ReleasesPanel } from "./command-center-releases-panel";
 import { BlockersPanel } from "./command-center-blockers-panel";
-import { JumpToWidget, OverviewWidget } from "./command-center-summary-widgets";
+import { OverviewWidget } from "./command-center-summary-widgets";
 import type { WidgetType } from "./dashboard-layout";
 import type { EmptyAction } from "./command-center-utils";
 
@@ -56,8 +56,7 @@ export function useCommandCenterWidgets({
   onCreateForProject,
   onCreateProject,
   onRetryProjects,
-}: CommandCenterWidgetInputs): Record<WidgetType, ReactNode> {
-  const defaultProjectId = projects[0]?.id ?? null;
+}: CommandCenterWidgetInputs): Partial<Record<WidgetType, ReactNode>> {
   const handleRetryProjects = useCallback(() => void onRetryProjects(), [onRetryProjects]);
 
   const myIssues = useMemo(
@@ -118,7 +117,6 @@ export function useCommandCenterWidgets({
           overdueIssues={stats.overdueIssues}
         />
       ),
-      "jump-to": <JumpToWidget defaultProjectId={defaultProjectId} />,
       "my-issues": myIssues,
       projects: projectList,
       approvals: <ApprovalsPanel />,
@@ -127,6 +125,6 @@ export function useCommandCenterWidgets({
       releases: <ReleasesPanel />,
       blockers: <BlockersPanel />,
     }),
-    [stats.activeProjects, stats.openIssues, stats.overdueIssues, defaultProjectId, myIssues, projectList],
+    [stats.activeProjects, stats.openIssues, stats.overdueIssues, myIssues, projectList],
   );
 }

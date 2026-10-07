@@ -204,13 +204,15 @@ describe("AgentRunsPanel", () => {
           type: "blocked_milestone",
           confidence: 87,
           evidence: "Three dependencies are overdue",
-          proposedChange: null,
+          proposedChange: "Move the milestone into recovery planning",
         },
       }),
     );
     render(<AgentRunsPanel />);
     expect(screen.getByText("Milestone blocked")).toBeInTheDocument();
     expect(screen.getByText(/87% confidence/)).toBeInTheDocument();
+    expect(screen.getByText("Why it matters")).toBeInTheDocument();
+    expect(screen.getByText("Recommended next step")).toBeInTheDocument();
   });
 });
 
@@ -317,7 +319,9 @@ describe("ReleasesPanel", () => {
     );
     render(<ReleasesPanel />);
     expect(screen.getByText("v1.0 Launch")).toBeInTheDocument();
-    expect(screen.getByText("1.0.0")).toBeInTheDocument();
+    expect(screen.getByText("Version 1.0.0")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /v1\.0 Launch/i })).toHaveAttribute("href", "/build/2/releases");
+    expect(screen.getByText("Draft")).toHaveClass("bg-status-warning-surface");
   });
 });
 

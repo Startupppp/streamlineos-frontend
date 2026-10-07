@@ -7,6 +7,7 @@ export interface LauncherCallbacks {
   onComment(): void;
   onHoverEnter(): void;
   onHoverLeave(): void;
+  onToggle(): void;
 }
 
 export interface LauncherRefs {
@@ -46,12 +47,19 @@ export function buildLauncher(callbacks: LauncherCallbacks): LauncherRefs {
   launcher.className = "launcher";
   launcher.setAttribute("role", "toolbar");
   launcher.setAttribute("aria-label", "Feedback");
+  launcher.setAttribute("aria-expanded", "false");
 
   const logo = document.createElement("div");
   logo.className = "launcher-logo";
-  logo.title = "Drag to move";
-  logo.setAttribute("role", "img");
-  logo.setAttribute("aria-label", "Feedbucket");
+  logo.title = "Drag to move. Press Enter to show feedback options.";
+  logo.setAttribute("role", "button");
+  logo.setAttribute("aria-label", "Show feedback options");
+  logo.tabIndex = 0;
+  logo.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    callbacks.onToggle();
+  });
   logo.appendChild(buildLogoMark());
   const gripOverlay = svgIcon({
     size: 16,

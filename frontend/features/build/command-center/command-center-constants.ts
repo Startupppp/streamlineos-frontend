@@ -11,6 +11,3 @@ export const COMMAND_CENTER_PANEL_BODY_SCROLL = "min-h-0 min-w-0 max-w-full flex
 export const COMMAND_CENTER_PAGE_SHELL =
   "flex-none min-h-min min-w-0 w-full max-w-full overflow-x-hidden overflow-y-visible";
 
-export const COMMAND_CENTER_JUMP_PANEL =
-  "flex min-w-0 w-full max-w-full flex-col overflow-hidden p-2.5";
-

@@ -149,8 +149,8 @@ jest.mock("@/components/ui/confirm-dialog", () => ({
     open ? <div data-testid="confirm-delete">{description}</div> : null,
 }));
 
-jest.mock("./releases-page-parts", () => ({
-  STATUS_CONFIG: {
+jest.mock("@/lib/build/release-status", () => ({
+  RELEASE_STATUS_PRESENTATION: {
     draft: { label: "Draft", className: "" },
     released: { label: "Released", className: "" },
     archived: { label: "Archived", className: "" },

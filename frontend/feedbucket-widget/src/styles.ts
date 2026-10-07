@@ -71,6 +71,12 @@ export function getStyles(): string {
 .launcher-btn:active { transform: scale(0.92); }
 .launcher-btn svg { width: 19px; height: 19px; }
 .launcher-divider { width: 22px; height: 1px; background: #eef1f5; margin: 2px 0; }
+@media (min-width: 1024px) {
+  .launcher:not(:hover):not(:focus-within):not(.expanded) .launcher-btn,
+  .launcher:not(:hover):not(:focus-within):not(.expanded) .launcher-divider {
+    display: none;
+  }
+}
 .launcher-logo {
   position: relative;
   display: flex;
@@ -319,6 +325,10 @@ export function getStyles(): string {
 
 /* SETTINGS-012/013: dock clear of the app's right-hand controls below the desktop shell. */
 @media (max-width: 1023px) {
+  .launcher:not(:focus-within):not(.expanded) .launcher-btn,
+  .launcher:not(:focus-within):not(.expanded) .launcher-divider {
+    display: none;
+  }
   .widget:not(.positioned) {
     top: auto;
     right: auto;
@@ -326,8 +336,8 @@ export function getStyles(): string {
     left: 12px;
     transform: none;
   }
-  .widget:not(.positioned) .launcher { flex-direction: row; }
-  .widget:not(.positioned) .launcher-divider {
+  .launcher { flex-direction: row; }
+  .launcher-divider {
     width: 1px;
     height: 22px;
     margin: 0 2px;

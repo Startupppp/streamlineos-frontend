@@ -44,7 +44,7 @@ export const WIDGET_CATALOG: Record<WidgetType, WidgetCatalogEntry> = {
   },
   "my-issues": {
     title: "My issues",
-    description: "Issues assigned to you, filtered by the toolbar above.",
+    description: "Issues assigned to you across your Build projects.",
     icon: ListTodo,
     permissionKey: "build:tickets:view",
     size: { w: 7, h: 6 },

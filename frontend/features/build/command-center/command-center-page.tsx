@@ -4,7 +4,9 @@ import { useMemo, useCallback, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
+import { LayoutGrid } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useCan } from "@/hooks/api/access";
@@ -14,11 +16,10 @@ import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { useCommandPalette } from "@/components/command-palette/hooks/use-command-palette";
 import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
 import { QuickCreateMenu } from "./command-center-actions";
-import { PmPageShell, PmSection } from "@/components/pm-chrome";
+import { PmPageShell } from "@/components/pm-chrome";
 import { pmSnappy } from "@/lib/motion-presets";
 import { useKeyboardShortcuts } from "./use-keyboard-shortcuts";
 import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
-import { CommandCenterToolbar } from "./command-center-toolbar";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 import { resolveMyIssuesEmptyActions } from "./command-center-utils";
 import { COMMAND_CENTER_PAGE_SHELL } from "./command-center-constants";
@@ -130,6 +131,7 @@ export function CommandCenterPage() {
   const isEditing = editing && layout.canCustomize;
   const placedTypes = useMemo(() => new Set(layout.widgets.map((slot) => slot.type)), [layout.widgets]);
   const handleStartCustomizing = useCallback(() => setEditing(true), []);
+  const handleDoneCustomizing = useCallback(() => setEditing(false), []);
   const customizeAction = useMemo(
     () => (layout.canCustomize ? { label: "Customize", onClick: handleStartCustomizing } : undefined),
     [layout.canCustomize, handleStartCustomizing],
@@ -161,16 +163,32 @@ export function CommandCenterPage() {
     <>
       <PageWrapper
         title="Command Center"
-        subtitle={isReady ? "Your issues, projects, and shortcuts" : undefined}
+        subtitle={isReady ? "Your work, decisions, and delivery signals" : undefined}
         contentClassName="pb-0 sm:pb-0"
         actions={
           isReady ? (
-            <QuickCreateMenu
-              projects={projects}
-              onCreateProject={handleOpenWizard}
-              onCreateForProject={handleCreateForProject}
-              onCreateIssue={handleCreateIssueShortcut}
-            />
+            <div className="flex items-center gap-2">
+              {layout.canCustomize && !isEditing ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon-sm"
+                  onClick={handleStartCustomizing}
+                  aria-label="Customize Command Center"
+                  title="Customize Command Center"
+                >
+                  <LayoutGrid aria-hidden="true" />
+                </Button>
+              ) : null}
+              {!isEditing ? (
+                <QuickCreateMenu
+                  projects={projects}
+                  onCreateProject={handleOpenWizard}
+                  onCreateForProject={handleCreateForProject}
+                  onCreateIssue={handleCreateIssueShortcut}
+                />
+              ) : null}
+            </div>
           ) : undefined
         }
       >
@@ -186,15 +204,10 @@ export function CommandCenterPage() {
                 You are offline — content may not be up to date
               </p>
             )}
-            <PmSection index={0} className="min-w-0 w-full max-w-full">
-              <CommandCenterToolbar />
-            </PmSection>
-
-            {layout.canCustomize ? (
-              <div className="flex min-w-0 w-full max-w-full items-center justify-end">
+            {isEditing ? (
+              <div className="sticky top-2 z-20 flex min-w-0 w-full max-w-full justify-end">
                 <CommandCenterLayoutControls
-                  editing={isEditing}
-                  onEditingChange={setEditing}
+                  onDone={handleDoneCustomizing}
                   onReset={layout.resetLayout}
                   availableTypes={layout.availableTypes}
                   placedTypes={placedTypes}
@@ -223,8 +236,8 @@ export function CommandCenterPage() {
                 content={widgetContent}
                 editing={isEditing}
                 onLayoutChange={layout.applyLayout}
+                onStackedLayoutChange={layout.applyStackedLayout}
                 onRemove={layout.removeWidget}
-                onResize={layout.resizeWidget}
                 onMove={layout.moveWidget}
               />
             )}

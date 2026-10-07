@@ -156,6 +156,7 @@ describe("CommandCenterPage — customize controls", () => {
     mockUseDashboardLayout.mockReturnValue({ data: savedLayout, isLoading: false });
     render(<CommandCenterPage />);
     expect(screen.getByRole("button", { name: /customize/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /customize/i })).toHaveTextContent("");
   });
 
   it("hides the Customize control when the actor cannot manage the dashboard even with the layout loaded", () => {
@@ -189,9 +190,9 @@ describe("CommandCenterPage — customize controls", () => {
     expect(screen.getByTestId("my-issues-panel")).toBeInTheDocument();
   });
 
-  it("renders the overview and jump-to widgets from the default layout", () => {
+  it("renders overview without the redundant jump-to widget in the default layout", () => {
     render(<CommandCenterPage />);
     expect(screen.getAllByTestId("stat-card")).toHaveLength(3);
-    expect(screen.getByTestId("pinned-nav")).toBeInTheDocument();
+    expect(screen.queryByTestId("pinned-nav")).not.toBeInTheDocument();
   });
 });

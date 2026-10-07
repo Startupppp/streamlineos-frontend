@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { Check, LayoutGrid, Plus, RotateCcw } from "lucide-react";
+import { Check, CircleHelp, Plus, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
@@ -9,6 +9,12 @@ import {
   ResponsivePopoverContent,
   ResponsivePopoverTrigger,
 } from "@/components/ui/responsive-popover";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { WidgetType } from "./dashboard-layout";
 import { WIDGET_CATALOG } from "./widget-catalog";
@@ -69,11 +75,17 @@ function WidgetPicker({ availableTypes, placedTypes, onAdd }: WidgetPickerProps)
   return (
     <ResponsivePopover open={open} onOpenChange={setOpen}>
       <ResponsivePopoverTrigger asChild>
-        <Button type="button" variant="outline" size="sm" className="gap-1.5">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-9 w-9 shrink-0 gap-1.5 p-0 sm:w-auto sm:px-3"
+          aria-label="Add widget"
+        >
           <Plus className="h-3.5 w-3.5" />
-          Add widget
+          <span className="hidden sm:inline">Add widget</span>
           {remaining > 0 ? (
-            <span className="rounded bg-muted px-1.5 text-micro text-muted-foreground">{remaining}</span>
+            <span className="hidden rounded bg-muted px-1.5 text-micro text-muted-foreground sm:inline">{remaining}</span>
           ) : null}
         </Button>
       </ResponsivePopoverTrigger>
@@ -100,68 +112,70 @@ function WidgetPicker({ availableTypes, placedTypes, onAdd }: WidgetPickerProps)
 }
 
 interface CommandCenterLayoutControlsProps extends WidgetPickerProps {
-  editing: boolean;
-  onEditingChange: (editing: boolean) => void;
+  onDone: () => void;
   onReset: () => void;
 }
 
 export function CommandCenterLayoutControls({
-  editing,
-  onEditingChange,
+  onDone,
   onReset,
   availableTypes,
   placedTypes,
   onAdd,
 }: CommandCenterLayoutControlsProps) {
   const [confirmResetOpen, setConfirmResetOpen] = useState(false);
-  const handleStartEditing = useCallback(() => onEditingChange(true), [onEditingChange]);
-  const handleDoneEditing = useCallback(() => onEditingChange(false), [onEditingChange]);
   const handleOpenConfirmReset = useCallback(() => setConfirmResetOpen(true), []);
 
-  if (!editing) {
-    return (
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        className="gap-1.5 text-muted-foreground"
-        onClick={handleStartEditing}
-      >
-        <LayoutGrid className="h-3.5 w-3.5" />
-        Customize
-      </Button>
-    );
-  }
-
   return (
-    <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
-      <p className="mr-auto hidden text-xs text-muted-foreground md:block">
-        Drag widgets to move them, pull an edge to resize, or use each widget&apos;s menu.
-      </p>
-      <WidgetPicker availableTypes={availableTypes} placedTypes={placedTypes} onAdd={onAdd} />
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        className="gap-1.5 text-muted-foreground"
-        onClick={handleOpenConfirmReset}
-      >
-        <RotateCcw className="h-3.5 w-3.5" />
-        Reset
-      </Button>
-      <Button type="button" size="sm" className="gap-1.5" onClick={handleDoneEditing}>
-        <Check className="h-3.5 w-3.5" />
-        Done
-      </Button>
-      <ConfirmDialog
-        open={confirmResetOpen}
-        onOpenChange={setConfirmResetOpen}
-        title="Reset your Command Center?"
-        description="Your widgets go back to the default arrangement. Widgets you added or removed are reset too."
-        confirmLabel="Reset layout"
-        destructive
-        onConfirm={onReset}
-      />
-    </div>
+    <TooltipProvider delayDuration={250}>
+      <div className="flex min-w-0 items-center gap-1 rounded-xl border border-border bg-background/95 p-1 shadow-sm backdrop-blur-sm">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              aria-label="How to arrange widgets"
+            >
+              <CircleHelp className="h-4 w-4" aria-hidden="true" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" align="end" className="max-w-64 text-xs">
+            Drag a widget by its handle. On larger screens, pull an edge to resize. Use the arrow keys on a handle to reorder.
+          </TooltipContent>
+        </Tooltip>
+        <WidgetPicker availableTypes={availableTypes} placedTypes={placedTypes} onAdd={onAdd} />
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-9 w-9 shrink-0 gap-1.5 p-0 text-muted-foreground sm:w-auto sm:px-3"
+          onClick={handleOpenConfirmReset}
+          aria-label="Reset Command Center"
+        >
+          <RotateCcw className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">Reset</span>
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          className="h-9 w-9 shrink-0 gap-1.5 p-0 sm:w-auto sm:px-3"
+          onClick={onDone}
+          aria-label="Finish customizing"
+        >
+          <Check className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">Done</span>
+        </Button>
+        <ConfirmDialog
+          open={confirmResetOpen}
+          onOpenChange={setConfirmResetOpen}
+          title="Reset your Command Center?"
+          description="Your widgets go back to the default arrangement. Widgets you added or removed are reset too."
+          confirmLabel="Reset layout"
+          destructive
+          onConfirm={onReset}
+        />
+      </div>
+    </TooltipProvider>
   );
 }

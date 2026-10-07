@@ -89,7 +89,7 @@ it("uses the first My Work page total for the Open Issues statistic without a se
 
   render(<CommandCenterPage />);
 
-  expect(screen.getAllByTestId("stat-card")[1]).toHaveTextContent("My open issues7");
+  expect(screen.getAllByTestId("stat-card")[1]).toHaveTextContent("Open issues7");
   expect(mockUseAllWork).toHaveBeenCalledTimes(callsBefore + 1);
 });
 

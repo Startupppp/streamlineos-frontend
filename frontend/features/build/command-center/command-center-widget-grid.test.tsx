@@ -27,8 +27,8 @@ function renderGrid(overrides: Partial<React.ComponentProps<typeof CommandCenter
     content: CONTENT,
     editing: false,
     onLayoutChange: jest.fn(),
+    onStackedLayoutChange: jest.fn(),
     onRemove: jest.fn(),
-    onResize: jest.fn(),
     onMove: jest.fn(),
     ...overrides,
   };
@@ -70,29 +70,58 @@ describe("CommandCenterWidgetGrid", () => {
     expect(document.querySelector(".react-grid-item")).not.toHaveClass("react-draggable");
   });
 
-  it("shows remove, arrange and resize handles in edit mode and reports the removed widget", () => {
+  it("shows drag, resize, and remove controls in edit mode without a duplicate arrange menu", () => {
     const props = renderGrid({ editing: true });
-    expect(screen.getByRole("button", { name: "Arrange My issues" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Arrange My issues" })).not.toBeInTheDocument();
+    const moveButton = screen.getByRole("button", { name: "Move My issues widget" });
     expect(document.querySelector(".react-grid-item")).not.toHaveClass("react-resizable-hide");
     expect(document.querySelector(".react-grid-item")).toHaveClass("react-draggable");
+    fireEvent.keyDown(moveButton, { key: "ArrowDown" });
+    expect(props.onMove).toHaveBeenCalledWith("my-issues", 1);
     fireEvent.click(screen.getByRole("button", { name: "Remove Projects" }));
     expect(props.onRemove).toHaveBeenCalledWith("projects");
   });
 
-  it("keeps widgets editable through their menu but disables dragging on a narrow screen", () => {
+  it("keeps drag and keyboard ordering available on narrow screens while disabling resize", () => {
     mockContainerWidth.mockReturnValue({ width: 500, mounted: true, containerRef: { current: null }, measureWidth: jest.fn() });
     renderGrid({ editing: true });
+    expect(screen.getByRole("button", { name: "Move Projects widget" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Remove Projects" })).toBeInTheDocument();
     expect(document.querySelector(".react-grid-item")).toHaveClass("react-resizable-hide");
-    expect(document.querySelector(".react-grid-item")).not.toHaveClass("react-draggable");
+    expect(document.querySelector(".react-grid-item")).toHaveClass("react-draggable");
+  });
+
+  it("reserves enough height for a single-column summary on compact phones", () => {
+    mockContainerWidth.mockReturnValue({ width: 288, mounted: true, containerRef: { current: null }, measureWidth: jest.fn() });
+    renderGrid({
+      widgets: [
+        { type: "overview", position: { col: 0, row: 0, w: 12, h: 1 } },
+        { type: "my-issues", position: { col: 0, row: 1, w: 7, h: 6 } },
+      ],
+    });
+    const [overview, issues] = document.querySelectorAll<HTMLElement>(".react-grid-item");
+    expect(overview?.style.height).toBe("224px");
+    expect(issues?.style.transform).toContain("240px");
+  });
+
+  it("does not reserve an empty summary row when three cards fit on a tablet", () => {
+    mockContainerWidth.mockReturnValue({ width: 700, mounted: true, containerRef: { current: null }, measureWidth: jest.fn() });
+    renderGrid({
+      widgets: [
+        { type: "overview", position: { col: 0, row: 0, w: 12, h: 1 } },
+        { type: "my-issues", position: { col: 0, row: 1, w: 7, h: 6 } },
+      ],
+    });
+    const [overview, issues] = document.querySelectorAll<HTMLElement>(".react-grid-item");
+    expect(overview?.style.height).toBe("64px");
+    expect(issues?.style.transform).toContain("80px");
   });
 });
 
 describe("CommandCenterLayoutControls", () => {
-  function renderControls(editing: boolean) {
+  function renderControls() {
     const props = {
-      editing,
-      onEditingChange: jest.fn(),
+      onDone: jest.fn(),
       onReset: jest.fn(),
       availableTypes: ["my-issues", "projects", "risks"] satisfies WidgetType[],
       placedTypes: new Set<WidgetType>(["my-issues"]),
@@ -102,14 +131,8 @@ describe("CommandCenterLayoutControls", () => {
     return props;
   }
 
-  it("offers Customize outside edit mode", () => {
-    const props = renderControls(false);
-    fireEvent.click(screen.getByRole("button", { name: /customize/i }));
-    expect(props.onEditingChange).toHaveBeenCalledWith(true);
-  });
-
   it("lists every permitted widget, marks placed ones as added, and adds an unplaced one", () => {
-    const props = renderControls(true);
+    const props = renderControls();
     fireEvent.click(screen.getByRole("button", { name: /add widget/i }));
     const placed = screen.getByRole("button", { name: /my issues/i });
     expect(placed).toBeDisabled();
@@ -118,10 +141,16 @@ describe("CommandCenterLayoutControls", () => {
   });
 
   it("asks for confirmation before resetting the layout", () => {
-    const props = renderControls(true);
-    fireEvent.click(screen.getByRole("button", { name: /^reset$/i }));
+    const props = renderControls();
+    fireEvent.click(screen.getByRole("button", { name: /reset command center/i }));
     expect(props.onReset).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("button", { name: /reset layout/i }));
     expect(props.onReset).toHaveBeenCalled();
+  });
+
+  it("finishes editing from the Done action", () => {
+    const props = renderControls();
+    fireEvent.click(screen.getByRole("button", { name: /finish customizing/i }));
+    expect(props.onDone).toHaveBeenCalled();
   });
 });

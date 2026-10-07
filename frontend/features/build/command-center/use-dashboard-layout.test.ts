@@ -56,7 +56,6 @@ describe("useDashboardLayoutEditor — which widgets render", () => {
     const { result } = setup({ data: stored([], 0) });
     expect(result.current.widgets.map((slot) => slot.type)).toEqual([
       "overview",
-      "jump-to",
       "my-issues",
       "projects",
       "approvals",
@@ -148,23 +147,39 @@ describe("useDashboardLayoutEditor — edits save immediately", () => {
     expect(savedWidgets().find((slot) => slot.type === "projects")?.position.col).toBe(0);
   });
 
-  it("swaps a widget with the one before it when moved earlier", () => {
+  it("saves narrow-screen ordering without replacing desktop widget widths", () => {
     const { result } = setup({ data: stored(twoWidgets) });
-    act(() => result.current.moveWidget("projects", -1));
-    expect(savedWidgets().find((slot) => slot.type === "projects")?.position).toMatchObject({ col: 0, row: 0 });
+    act(() =>
+      result.current.applyStackedLayout([
+        { i: "projects", x: 0, y: 0, w: 1, h: 6 },
+        { i: "my-issues", x: 0, y: 6, w: 1, h: 6 },
+      ]),
+    );
+    expect(savedWidgets().map((slot) => slot.type)).toEqual(["projects", "my-issues"]);
+    expect(savedWidgets().map((slot) => slot.position.w)).toEqual([6, 6]);
   });
 
-  it("resizes a widget to a preset width", () => {
+  it("supports keyboard reordering through the same saved layout contract", () => {
     const { result } = setup({ data: stored(twoWidgets) });
-    act(() => result.current.resizeWidget("my-issues", 12));
-    expect(savedWidgets().find((slot) => slot.type === "my-issues")?.position.w).toBe(12);
-    expect(savedWidgets().find((slot) => slot.type === "projects")?.position.row).toBe(6);
+    act(() => result.current.moveWidget("my-issues", 1));
+    expect(savedWidgets().map((slot) => slot.type)).toEqual(["projects", "my-issues"]);
   });
 
   it("resets to the permitted default arrangement", () => {
     const { result } = setup({ data: stored(twoWidgets) });
     act(() => result.current.resetLayout());
-    expect(savedWidgets()).toHaveLength(9);
+    expect(savedWidgets()).toHaveLength(8);
+  });
+
+  it("does not carry a retired jump-to slot into the next saved layout", () => {
+    const { result } = setup({
+      data: stored([
+        ...twoWidgets,
+        { type: "jump-to", position: { col: 0, row: 6, w: 12, h: 2 } },
+      ]),
+    });
+    act(() => result.current.removeWidget("projects"));
+    expect(savedWidgets().some((slot) => slot.type === "jump-to")).toBe(false);
   });
 
   it("explains a conflict from another tab instead of showing a raw error", () => {

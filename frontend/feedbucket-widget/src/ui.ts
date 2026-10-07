@@ -40,6 +40,7 @@ export class FeedbucketWidget {
   private errorSubtitle: HTMLElement | null = null;
 
   private readonly container: HTMLDivElement;
+  private readonly launcher: HTMLDivElement;
   private readonly shadowRoot: ShadowRoot;
   private readonly panel: HTMLDivElement;
   private readonly formView: HTMLDivElement;
@@ -104,6 +105,15 @@ export class FeedbucketWidget {
       this.hoverTimer = null;
     }
     this.pendingCapture = null;
+  };
+  private readonly handleLauncherToggle = (): void => {
+    if (window.innerWidth > 1023) return;
+    this.launcher.classList.toggle("expanded");
+    this.launcher.setAttribute("aria-expanded", String(this.launcher.classList.contains("expanded")));
+    this.handleLauncherExpand();
+  };
+  private readonly handleLauncherExpand = (): void => {
+    window.setTimeout(() => this.drag.constrainToViewport(), 0);
   };
   private cancelHoverPrefetch(): void {
     if (this.hoverTimer !== null) {
@@ -277,12 +287,17 @@ export class FeedbucketWidget {
       onComment: this.handleCommentLauncher,
       onHoverEnter: this.handleLauncherHover,
       onHoverLeave: this.handleLauncherLeave,
+      onToggle: this.handleLauncherToggle,
     });
+    this.launcher = launcher;
+    launcher.addEventListener("pointerenter", this.handleLauncherExpand);
+    launcher.addEventListener("focusin", this.handleLauncherExpand);
     this.container.appendChild(launcher);
 
     this.drag = new DragManager(this.container, {
       onDragStart: () => this.cancelHoverPrefetch(),
       onPositionChange: () => { if (this.isOpen) this.positionPanel(); },
+      onTap: this.handleLauncherToggle,
     });
     this.drag.init(logo);
 
