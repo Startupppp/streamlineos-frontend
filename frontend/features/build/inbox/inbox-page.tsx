@@ -10,7 +10,6 @@ import {
   PM_FILL_SECTION,
 } from "@/components/pm-chrome";
 import { useInboxUrlState } from "./use-inbox-url-state";
-import { useShellVariant } from "@/components/layout/shell-variant-context";
 import type {
   Notification,
   NotificationSection,
@@ -29,6 +28,11 @@ import { usePageState } from "@/hooks/api/use-page-state";
 import { LoadingState } from "@/components/shared/loading-state";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { MoveLeftIcon } from "@animateicons/react/lucide";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
 
 const InboxPreviewPane = dynamic(
   () =>
@@ -42,8 +46,6 @@ const InboxList = dynamic(
   { loading: () => null },
 );
 export function InboxPage() {
-  const shellVariant = useShellVariant();
-  const isDesktopShell = shellVariant === "desktop";
   const [selection, setSelection] = React.useState<{ id: number; section: "ALL" | "SNOOZED" | "ARCHIVED"; owner: NotificationMutationOwner } | null>(null);
   const { captureOwner } = useNotificationInboxInvalidation();
   const isOnline = useOnlineStatus();
@@ -159,7 +161,7 @@ export function InboxPage() {
   return (
     <PageWrapper
       title="Inbox"
-      subtitle="Mentions, assignments and approvals"
+      subtitle="Project updates, assignments, mentions and approvals"
       noInternalScroll
     >
       <PmPageShell>
@@ -167,40 +169,45 @@ export function InboxPage() {
           index={0}
           className={cn(PM_FILL_SECTION, CONTENT_PANEL_SOLID)}
         >
-          <div className="flex h-full min-h-0 min-w-0 divide-x divide-border">
-            <div
+          <ResizablePanelGroup orientation="horizontal" className="h-full min-h-0 min-w-0">
+            <ResizablePanel
+              defaultSize="42%"
+              minSize="32%"
+              maxSize="50%"
               className={cn(
-                "min-h-0 min-w-0 flex-col overflow-hidden lg:shrink-0",
+                "min-h-0 min-w-0 overflow-hidden max-lg:!flex-[1_1_100%]",
                 hasSelection
-                  ? "hidden lg:flex lg:w-[280px] xl:w-[320px]"
-                  : "flex w-full lg:w-[320px] xl:w-[360px]",
+                  ? "max-lg:hidden"
+                  : "max-lg:flex",
               )}
             >
-              {listPane}
-            </div>
+              <div className="flex h-full min-h-0 min-w-0 flex-col">{listPane}</div>
+            </ResizablePanel>
 
-            {isDesktopShell || hasSelection ? (
-              <div
-                className={cn(
-                  "min-h-0 min-w-0 flex-1 basis-0 flex-col overflow-hidden",
-                  hasSelection ? "flex" : "hidden lg:flex",
-                )}
-              >
+            <ResizableHandle
+              withHandle
+              aria-label="Resize notification list"
+              className="hidden lg:flex"
+            />
+
+            <ResizablePanel
+              defaultSize="58%"
+              minSize="50%"
+              className={cn(
+                "min-h-0 min-w-0 overflow-hidden max-lg:!flex-[1_1_100%]",
+                hasSelection ? "max-lg:flex" : "max-lg:hidden",
+              )}
+            >
+              <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
                 {hasSelection && !selectedRead.notification ? <div className="flex shrink-0 border-b border-border px-3 py-2 lg:hidden">
                   <AnimatedIconButton type="button" variant="ghost" size="icon" icon={MoveLeftIcon} iconSize={16} aria-label="Back to inbox" onClick={handleClearSelection} />
                 </div> : null}
-                {selectedRead.notification ? <div className="flex shrink-0 items-center justify-end border-b border-border px-3 py-2" aria-label="Selected notification actions">{renderActions(selectedRead.notification)}</div> : null}
                 <PageState resolution={previewState} loading={<LoadingState variant="list" rows={3} />} onRetry={selectedRead.retry}>
                   <InboxPreviewPane notification={selectedRead.notification} onClose={handleClearSelection} />
                 </PageState>
               </div>
-            ) : (
-              <div
-                className="hidden lg:flex min-h-0 min-w-0 flex-1 basis-0 flex-col overflow-hidden"
-                aria-hidden
-              />
-            )}
-          </div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
         </PmSection>
       </PmPageShell>
     </PageWrapper>

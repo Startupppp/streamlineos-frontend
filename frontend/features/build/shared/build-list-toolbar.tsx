@@ -46,6 +46,7 @@ interface BuildListToolbarProps {
   onClearAll?: () => void;
   drawerTitle?: string;
   className?: string;
+  collapseActionsOnSearchFocus?: boolean;
 }
 
 function ToolbarFilterSlot({
@@ -91,6 +92,7 @@ export function BuildListToolbar({
   onClearAll,
   drawerTitle = BUILD_TOOLBAR_FILTERS_LABEL,
   className,
+  collapseActionsOnSearchFocus = false,
 }: BuildListToolbarProps) {
   const {
     value: searchValue,
@@ -110,7 +112,7 @@ export function BuildListToolbar({
     isMobile,
     focused: searchFocused,
   });
-  const showActions = !searchExpanded;
+  const showActions = !searchExpanded && (!collapseActionsOnSearchFocus || !searchFocused);
 
   useEffect(() => {
     if (!drawerOpen) return;

@@ -22,6 +22,12 @@ import {
 } from "@/hooks/api/build/tickets";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface LabelPickerProps {
   ticketId: number;
@@ -31,10 +37,19 @@ interface LabelPickerProps {
   }>;
 }
 
-function RemoveLabelButton({ labelId, labelName, onRemove }: { labelId: number; labelName: string; onRemove: (id: number) => () => void }) {
+function RemoveLabelButton({
+  labelId,
+  labelName,
+  onRemove,
+}: {
+  labelId: number;
+  labelName: string;
+  onRemove: (id: number) => () => void;
+}) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
     <button
+      type="button"
       onClick={onRemove(labelId)}
       aria-label={`Remove ${labelName} label`}
       className="hover:bg-destructive/20 rounded-full p-0.5 transition-colors"
@@ -50,7 +65,8 @@ export function LabelPicker({
   projectId,
   currentLabels,
 }: LabelPickerProps) {
-  const { iconRef: plusIconRef, hoverHandlers: plusHoverHandlers } = useAnimatedIcon();
+  const { iconRef: plusIconRef, hoverHandlers: plusHoverHandlers } =
+    useAnimatedIcon();
   const [open, setOpen] = useState(false);
   const [newLabelName, setNewLabelName] = useState("");
   const [selectedColor, setSelectedColor] = useState<string>(DEFAULT_LABEL_COLOR);
@@ -107,25 +123,38 @@ export function LabelPicker({
             key={label.id}
             variant="secondary"
             className="gap-1 pl-1.5 pr-1 py-0.5 text-xs cursor-default"
-            style={{ borderLeft: `3px solid ${label.color || "#3b82f6"}` }}
+            style={{
+              borderLeft: `3px solid ${label.color || DEFAULT_LABEL_COLOR}`,
+            }}
           >
             {label.name}
-            <RemoveLabelButton labelId={label.id} labelName={label.name} onRemove={handleRemoveLabel} />
+            <RemoveLabelButton
+              labelId={label.id}
+              labelName={label.name}
+              onRemove={handleRemoveLabel}
+            />
           </Badge>
         ))}
         <ResponsivePopover open={open} onOpenChange={setOpen}>
-          <ResponsivePopoverTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              aria-label="Add label"
-              className="h-8 gap-1 rounded-md px-2 text-xs text-muted-foreground"
-              {...plusHoverHandlers}
-            >
-              <PlusIcon ref={plusIconRef} size={14} />
-              Add label
-            </Button>
-          </ResponsivePopoverTrigger>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <ResponsivePopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label="Add label"
+                    className="text-muted-foreground"
+                    {...plusHoverHandlers}
+                  >
+                    <PlusIcon ref={plusIconRef} size={14} />
+                  </Button>
+                </ResponsivePopoverTrigger>
+              </TooltipTrigger>
+              <TooltipContent>Add label</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           <ResponsivePopoverContent
             title="Labels"
             className="w-[min(20rem,calc(100vw-2rem))] p-4"
@@ -137,13 +166,17 @@ export function LabelPicker({
                   <div className="space-y-1">
                     {availableLabels.map((label) => (
                       <button
+                        type="button"
                         key={label.id}
                         onClick={handleAddLabel(label.id)}
                         className="flex items-center gap-2 w-full p-1.5 text-sm rounded hover:bg-muted transition-colors text-left"
                       >
                         <span
                           className="w-3 h-3 rounded-full shrink-0"
-                          style={{ backgroundColor: label.color || "#3b82f6" }}
+                          style={{
+                            backgroundColor:
+                              label.color || DEFAULT_LABEL_COLOR,
+                          }}
                         />
                         {label.name}
                       </button>

@@ -34,7 +34,10 @@ const notificationItemContract = z.object({
   ticketContext: z
     .object({
       ticketId: z.number().int(),
+      projectId: z.number().int(),
+      projectName: z.string(),
       ticketKey: z.string(),
+      ticketTitle: z.string(),
       priority: z.string().nullable(),
       status: z.string().nullable(),
       type: z.string().nullable(),

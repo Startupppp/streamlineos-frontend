@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Eye } from "lucide-react";
+import { Eye, Plus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { EyeIcon, EyeOffIcon } from "@animateicons/react/lucide";
@@ -15,6 +15,12 @@ import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface WatcherListProps {
   projectId: number;
@@ -109,20 +115,26 @@ export function WatcherList({ projectId, ticketId }: WatcherListProps) {
         ) : null}
 
         {watchers.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {watchers.map((w) => (
-              <Avatar
-                key={w.userId}
-                className="h-6 w-6"
-                title={getUserDisplayName(w.user)}
-              >
-                <AvatarImage src={resolveImageUrl(w.user?.image)} />
-                <AvatarFallback className="text-micro bg-primary/10 text-primary">
-                  {getUserInitials(w.user)}
-                </AvatarFallback>
-              </Avatar>
-            ))}
-          </div>
+          <TooltipProvider>
+            <div className="flex flex-wrap gap-1">
+              {watchers.map((w) => {
+                const displayName = getUserDisplayName(w.user);
+                return (
+                  <Tooltip key={w.userId}>
+                    <TooltipTrigger asChild>
+                      <Avatar className="h-6 w-6 cursor-default">
+                        <AvatarImage src={resolveImageUrl(w.user?.image)} />
+                        <AvatarFallback className="text-micro bg-primary/10 text-primary">
+                          {getUserInitials(w.user)}
+                        </AvatarFallback>
+                      </Avatar>
+                    </TooltipTrigger>
+                    <TooltipContent>{displayName}</TooltipContent>
+                  </Tooltip>
+                );
+              })}
+            </div>
+          </TooltipProvider>
         )}
 
         {canUpdate ? (
@@ -130,7 +142,18 @@ export function WatcherList({ projectId, ticketId }: WatcherListProps) {
             projectId={projectId}
             value=""
             onChange={handleAddWatcher}
-            placeholder="+ Add watcher"
+            placeholder="Add watcher"
+            triggerTooltip="Add watcher"
+            trigger={
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                aria-label="Add watcher"
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </Button>
+            }
           />
         ) : null}
       </div>

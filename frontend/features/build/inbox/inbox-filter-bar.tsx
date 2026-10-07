@@ -2,11 +2,20 @@
 
 import * as React from "react";
 import { X } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
-import type { NotificationCategory, NotificationSection } from "@/types/notifications";
-import { BUILD_INBOX_ACTIVE_SECTIONS, BUILD_INBOX_CATEGORIES, getBuildInboxTriageSection, isBuildInboxCategory } from "./inbox-categories";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
+import type {
+  NotificationCategory,
+  NotificationSection,
+} from "@/types/notifications";
+import {
+  BUILD_INBOX_ACTIVE_SECTIONS,
+  BUILD_INBOX_CATEGORIES,
+  getBuildInboxTriageSection,
+  isBuildInboxCategory,
+} from "./inbox-categories";
 
 const ALL_TYPES_SENTINEL = "__all__" as const;
 const TYPE_OPTIONS = [
@@ -41,11 +50,9 @@ export function InboxFilterBar({
   onClearFilters,
   searchInputRef,
 }: InboxFilterBarProps) {
-  const [localQ, setLocalQ] = React.useState(q ?? "");
-
-  React.useEffect(() => {
-    setLocalQ(q ?? "");
-  }, [q]);
+  const sourceQ = q ?? "";
+  const [localQ, setLocalQ] = useSourceOverride(sourceQ, sourceQ);
+  const debouncedQ = useDebouncedValue(localQ, 300);
 
   const onQChangeRef = React.useRef(onQChange);
   React.useLayoutEffect(() => {
@@ -53,18 +60,11 @@ export function InboxFilterBar({
   });
 
   React.useEffect(() => {
-    const timer = setTimeout(() => {
-      onQChangeRef.current(localQ);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [localQ]);
+    if (debouncedQ !== sourceQ) onQChangeRef.current(debouncedQ);
+  }, [debouncedQ, sourceQ]);
 
   function handleValueChange(value: string) {
     setLocalQ(value);
-  }
-
-  function handleClearFilters() {
-    onClearFilters();
   }
 
   function handleTypeSelectChange(value: string) {
@@ -72,18 +72,20 @@ export function InboxFilterBar({
       onTypeChange(null);
       return;
     }
-    if (isBuildInboxCategory(value)) {
-      onTypeChange(value);
-    }
+    if (isBuildInboxCategory(value)) onTypeChange(value);
   }
+
   function handleActiveSectionChange(value: string) {
-    const option = BUILD_INBOX_ACTIVE_SECTIONS.find((entry) => entry.value === value);
+    const option = BUILD_INBOX_ACTIVE_SECTIONS.find(
+      (entry) => entry.value === value,
+    );
     if (option) onSectionChange?.(option.value);
   }
 
   return (
     <BuildListToolbar
-      className="shrink-0 border-b border-border px-3 py-2"
+      collapseActionsOnSearchFocus
+      className="shrink-0 flex-nowrap overflow-x-auto border-b border-border px-2 py-1.5 scrollbar-hide [&>[data-slot=search-input]]:min-w-36 [&>[data-slot=search-input]]:basis-36 [&>[data-slot=search-input]]:md:max-w-none [&>[data-slot=build-toolbar-actions]]:shrink-0"
       search={{
         value: localQ,
         onValueChange: handleValueChange,
@@ -92,10 +94,24 @@ export function InboxFilterBar({
         inputRef: searchInputRef,
       }}
       filters={[
-        ...(getBuildInboxTriageSection(section) === "ALL" && onSectionChange ? [{
-          id: "attention", label: "Attention", active: section !== "ALL",
-          control: <BuildFilterSelect label="Filter active notifications" value={section} onValueChange={handleActiveSectionChange} options={BUILD_INBOX_ACTIVE_SECTIONS} />,
-        }] : []),
+        ...(getBuildInboxTriageSection(section) === "ALL" && onSectionChange
+          ? [
+              {
+                id: "attention",
+                label: "Attention",
+                active: section !== "ALL",
+                control: (
+                  <BuildFilterSelect
+                    label="Filter active notifications"
+                    value={section}
+                    onValueChange={handleActiveSectionChange}
+                    options={BUILD_INBOX_ACTIVE_SECTIONS}
+                    className="md:min-w-28 md:max-w-32"
+                  />
+                ),
+              },
+            ]
+          : []),
         {
           id: "type",
           label: "Category",
@@ -106,7 +122,7 @@ export function InboxFilterBar({
               value={type ?? ALL_TYPES_SENTINEL}
               onValueChange={handleTypeSelectChange}
               options={TYPE_OPTIONS}
-              className="md:min-w-36"
+              className="md:min-w-28 md:max-w-32"
             />
           ),
         },
@@ -121,25 +137,15 @@ export function InboxFilterBar({
               aria-label={`Remove project filter (project ${projectId})`}
             >
               <span className="truncate">Project #{projectId}</span>
-              <X className="h-3 w-3 shrink-0 text-muted-foreground" aria-hidden="true" />
+              <X
+                className="h-3 w-3 shrink-0 text-muted-foreground"
+                aria-hidden="true"
+              />
             </button>
-          ) : null}
-          {hasActiveFilters ? (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-8 shrink-0 gap-1 px-2 text-xs text-muted-foreground"
-              onClick={handleClearFilters}
-              aria-label="Clear filters"
-            >
-              <X className="h-3.5 w-3.5" aria-hidden="true" />
-              <span className="hidden sm:inline">Clear filters</span>
-            </Button>
           ) : null}
         </>
       }
-      onClearAll={handleClearFilters}
+      onClearAll={hasActiveFilters ? onClearFilters : undefined}
     />
   );
 }

@@ -50,6 +50,7 @@ interface AiActionsMenuProps {
   asSubmenu?: boolean;
   defaultSurface?: AiResultSurface;
   iconOnly?: boolean;
+  triggerVariant?: "outline" | "ghost";
 }
 
 const MENU_CONTENT_CLASS = "min-w-72 p-1.5";
@@ -66,6 +67,7 @@ export function AiActionsMenu({
   asSubmenu = false,
   defaultSurface,
   iconOnly = false,
+  triggerVariant = "outline",
 }: AiActionsMenuProps) {
   const isMobile = useIsMobile();
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -185,7 +187,7 @@ export function AiActionsMenu({
   const triggerButton = (
     <Button
       type="button"
-      variant="outline"
+      variant={triggerVariant}
       size="sm"
       disabled={disabled}
       aria-label={iconOnly ? triggerLabel : undefined}
@@ -203,7 +205,7 @@ export function AiActionsMenu({
       <>
         <Button
           type="button"
-          variant="outline"
+          variant={triggerVariant}
           size="sm"
           disabled={disabled || Boolean(onlyAction?.disabledReason)}
           aria-label={

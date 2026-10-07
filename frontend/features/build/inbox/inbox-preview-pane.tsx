@@ -221,14 +221,19 @@ function resolveTicketTarget(
   if (parsedTarget) return parsedTarget;
   const ctx = notification.ticketContext;
   if (!ctx?.ticketId) return null;
-  const projectId = extractBuildProjectId(notification.link);
+  const metadataProjectId = notification.metadata?.projectId;
+  const projectId = ctx.projectId ?? extractBuildProjectId(notification.link)
+    ?? (typeof metadataProjectId === "number" && Number.isSafeInteger(metadataProjectId) && metadataProjectId > 0 ? metadataProjectId : null);
   if (!projectId) return null;
+  const href = notification.link
+    ? normalizeBuildDeepLink(notification.link)
+    : `/build/${projectId}/tickets/${encodeURIComponent(ctx.ticketKey)}`;
   return {
     projectId,
     ticketId: ctx.ticketId,
     ticketKey: null,
     commentId: null,
-    href: normalizeBuildDeepLink(notification.link ?? ""),
+    href,
   };
 }
 

@@ -13,6 +13,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import {
   COMPACT_SEARCH_POPOVER_CONTENT_CLASS,
@@ -67,6 +68,7 @@ interface MemberPickerBaseProps {
   excludeUserId?: string;
   excludeUserIds?: string[];
   trigger?: ReactNode;
+  triggerTooltip?: string;
   contentAlign?: "start" | "center" | "end";
   contentClassName?: string;
 }
@@ -127,6 +129,7 @@ export function MemberPicker(props: MemberPickerProps) {
     excludeUserId,
     excludeUserIds,
     trigger,
+    triggerTooltip,
     contentAlign = "start",
     contentClassName,
   } = props;
@@ -216,9 +219,18 @@ export function MemberPicker(props: MemberPickerProps) {
           </div>
         ) : null}
         <Popover open={open} onOpenChange={handleOpenChange}>
-          <PopoverTrigger asChild>
-            {multiTrigger}
-          </PopoverTrigger>
+          {triggerTooltip ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <PopoverTrigger asChild>{multiTrigger}</PopoverTrigger>
+                </TooltipTrigger>
+                <TooltipContent>{triggerTooltip}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            <PopoverTrigger asChild>{multiTrigger}</PopoverTrigger>
+          )}
           <PopoverContent className={popoverContentClass} align={contentAlign}>
             <Command shouldFilter={false} label={searchLabel}>
               <CommandInput
@@ -299,9 +311,18 @@ export function MemberPicker(props: MemberPickerProps) {
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
-      <PopoverTrigger asChild>
-        {singleTrigger}
-      </PopoverTrigger>
+      {triggerTooltip ? (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <PopoverTrigger asChild>{singleTrigger}</PopoverTrigger>
+            </TooltipTrigger>
+            <TooltipContent>{triggerTooltip}</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ) : (
+        <PopoverTrigger asChild>{singleTrigger}</PopoverTrigger>
+      )}
       <PopoverContent className={popoverContentClass} align={contentAlign}>
         <Command shouldFilter={false} label={searchLabel}>
           <CommandInput

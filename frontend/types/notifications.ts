@@ -46,7 +46,10 @@ export interface NotificationTicketAssignee {
 
 export interface NotificationTicketContext {
   ticketId: number;
+  projectId: number;
+  projectName: string;
   ticketKey: string;
+  ticketTitle: string;
   priority: string | null;
   status: string | null;
   type: string | null;

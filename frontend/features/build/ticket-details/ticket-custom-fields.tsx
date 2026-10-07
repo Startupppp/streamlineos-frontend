@@ -24,6 +24,7 @@ import { Sliders } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import type { ProjectCustomField } from "@/types/projects/tasks";
+import { FIELD_CONTROL_CLASS } from "@/components/ui/field-control";
 
 interface TicketCustomFieldsProps {
   projectId: number;
@@ -81,7 +82,7 @@ const FieldValueInput = memo(function FieldValueInput({ field, currentValue, onS
         value={currentValue ?? ""}
         onValueChange={(v) => onSave(field.id, v)}
       >
-        <SelectTrigger className="border-0 bg-muted hover:bg-accent w-auto min-w-[120px]">
+        <SelectTrigger className={cn(FIELD_CONTROL_CLASS, "w-auto min-w-[120px] bg-muted hover:bg-accent")}>
           <SelectValue placeholder="Select..." />
         </SelectTrigger>
         <SelectContent>
@@ -101,7 +102,7 @@ const FieldValueInput = memo(function FieldValueInput({ field, currentValue, onS
         value={localValue}
         onChange={handleDateChange}
         placeholder="Pick a date"
-        className="text-xs w-36"
+        className="h-9 w-36 text-xs"
       />
     );
   }
@@ -120,7 +121,7 @@ const FieldValueInput = memo(function FieldValueInput({ field, currentValue, onS
       onChange={handleInputChange}
       onBlur={handleBlurSave}
       placeholder={field.type === "currency" ? "0.00" : "Enter value..."}
-      className="border-0 bg-muted hover:bg-accent focus:bg-background max-w-[200px]"
+      className={cn(FIELD_CONTROL_CLASS, "max-w-[200px] bg-muted hover:bg-accent focus:bg-background")}
     />
   );
 });

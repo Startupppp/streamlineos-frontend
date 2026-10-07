@@ -84,7 +84,7 @@ describe("InboxFilterBar — search debounce", () => {
     expect(onQChange).not.toHaveBeenCalledWith("x");
   });
 
-  it("shows a clear-filters button when hasActiveFilters is true", () => {
+  it("uses the search input clear action when the query is populated", () => {
     const ref = React.createRef<HTMLInputElement>();
     render(
       <InboxFilterBar
@@ -97,10 +97,11 @@ describe("InboxFilterBar — search debounce", () => {
         searchInputRef={ref}
       />,
     );
-    expect(screen.getByRole("button", { name: /clear filters/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /clear search/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /clear filters/i })).toBeNull();
   });
 
-  it("does not show clear-filters button when hasActiveFilters is false", () => {
+  it("does not show a clear-search button when the query is empty", () => {
     const ref = React.createRef<HTMLInputElement>();
     render(
       <InboxFilterBar
@@ -113,26 +114,30 @@ describe("InboxFilterBar — search debounce", () => {
         searchInputRef={ref}
       />,
     );
-    expect(screen.queryByRole("button", { name: /clear filters/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /clear search/i })).toBeNull();
   });
 
-  it("calls onClearFilters when the clear button is clicked", async () => {
+  it("clears the search through the shared search input action", async () => {
     const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
-    const onClearFilters = jest.fn();
+    const onQChange = jest.fn();
     const ref = React.createRef<HTMLInputElement>();
     render(
       <InboxFilterBar
         q="foo"
         type={null}
         hasActiveFilters
-        onQChange={noop}
+        onQChange={onQChange}
         onTypeChange={noop}
-        onClearFilters={onClearFilters}
+        onClearFilters={noop}
         searchInputRef={ref}
       />,
     );
-    await user.click(screen.getByRole("button", { name: /clear filters/i }));
-    expect(onClearFilters).toHaveBeenCalledTimes(1);
+    await user.click(screen.getByRole("button", { name: /clear search/i }));
+    expect(screen.getByRole("searchbox", { name: /search notifications/i })).toHaveValue("");
+    act(() => {
+      jest.advanceTimersByTime(300);
+    });
+    expect(onQChange).toHaveBeenCalledWith("");
   });
 
   it("initialises the local input value from the q prop", () => {

@@ -30,7 +30,7 @@ import {
   INBOX_MOBILE_RENDER_PAGE_SIZE,
   resolveInboxVisibleCount,
 } from "./inbox-render-window";
-import { useShellVariant } from "@/components/layout/shell-variant-context";
+import { useIsBelowLg } from "@/hooks/common/use-mobile";
 import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
 import { BUILD_INBOX_TRIAGE_TABS, getBuildInboxTriageSection } from "./inbox-categories";
 
@@ -75,7 +75,7 @@ export function InboxList({
   onClearFilters,
   renderActions,
 }: InboxListProps) {
-  const isDesktopInbox = useShellVariant() === "desktop";
+  const isDesktopInbox = !useIsBelowLg();
   const renderPageSize = isDesktopInbox ? INBOX_RENDER_PAGE_SIZE : INBOX_MOBILE_RENDER_PAGE_SIZE;
   const isOnline = useOnlineStatus();
   const bulk = useInboxBulkActions();
@@ -172,8 +172,8 @@ export function InboxList({
     <>
     <ShortcutHelpDialog open={shortcutHelpOpen} onOpenChange={setShortcutHelpOpen} />
     <Tabs value={getBuildInboxTriageSection(section)} onValueChange={handleTabChange} className="flex h-full min-h-0 flex-col gap-0">
-      <div className="flex shrink-0 items-center justify-between gap-2 border border-r-0 border-border px-4 py-2">
-        <TabsList>
+      <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border bg-card px-2 py-1.5">
+        <TabsList className="h-8 min-h-8 border-0 bg-muted/60 p-0.5 [&_[data-slot=tabs-trigger]]:h-7 [&_[data-slot=tabs-trigger]]:min-h-7 [&_[data-slot=tabs-trigger]]:px-3">
           {BUILD_INBOX_TRIAGE_TABS.map(({ label, value }) => (
             <TabsTrigger key={value} value={value} className="data-[state=active]:bg-foreground data-[state=active]:text-background">{label}</TabsTrigger>
           ))}
@@ -184,7 +184,7 @@ export function InboxList({
       </div>
       <InboxFilterBar section={section} onSectionChange={onSectionChange} q={q} type={type} projectId={projectId} hasActiveFilters={hasActiveFilters} onQChange={handleQChange} onTypeChange={handleTypeChange} onProjectClear={onProjectClear} onClearFilters={handleClearFilters} searchInputRef={searchInputRef} />
       <InboxBulkToolbar selectedIds={selectedIds} totalVisible={deferredVisibleNotifications.length} onSelectAll={handleSelectAll} onDeselectAll={handleDeselectAll} onBulkMarkRead={handleBulkMarkRead} onBulkArchive={handleBulkArchive} onBulkDelete={handleBulkDelete} isMutating={bulk.isMutating || !isOnline} />
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto border-l border-border scrollbar-hide">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto scrollbar-hide">
         <PageState resolution={pageState} loading={<div className="flex min-h-full flex-col"><InboxListSkeleton /></div>} onRetry={handleRetry} compact className="min-h-full w-full flex-1"
           empty={hasNextPage || !isOnline ? <div /> : (
             <EmptyState illustration={<EmptyInboxIllustration />} title={emptyTitle} description={emptyDesc} filtersActive={hasActiveFilters} filteredTitle="No matching notifications" onClearFilters={hasActiveFilters ? onClearFilters : undefined} className="min-h-full w-full flex-1" />

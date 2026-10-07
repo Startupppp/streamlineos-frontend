@@ -30,18 +30,6 @@ export function InboxBulkToolbar({
   const count = selectedIds.size;
   const allSelected = totalVisible > 0 && count >= totalVisible;
 
-  function handleCheckboxChange(checked: boolean | "indeterminate") {
-    if (checked === true || checked === "indeterminate") {
-      if (allSelected) {
-        onDeselectAll();
-      } else {
-        onSelectAll();
-      }
-    } else {
-      onDeselectAll();
-    }
-  }
-
   function handleSelectAllClick(checked: boolean | "indeterminate") {
     if (checked === true) {
       onSelectAll();
@@ -63,20 +51,18 @@ export function InboxBulkToolbar({
     setConfirmDelete(open);
   }
 
-  void handleCheckboxChange;
+  if (count === 0) return null;
 
   return (
     <>
-      <div className="flex shrink-0 items-center gap-2 border-b border-border px-4 py-2">
+      <div className="flex shrink-0 items-center gap-2 border-b border-border bg-muted/30 px-3 py-1.5">
         <Checkbox
           checked={allSelected}
           onCheckedChange={handleSelectAllClick}
           aria-label="Select all notifications"
         />
-        {count > 0 ? (
-          <>
-            <span className="text-xs text-muted-foreground">{count} selected</span>
-            <div className="ml-auto flex items-center gap-1">
+        <span className="text-xs text-muted-foreground">{count} selected</span>
+        <div className="ml-auto flex items-center gap-1">
               <Button
                 type="button"
                 variant="ghost"
@@ -110,9 +96,7 @@ export function InboxBulkToolbar({
               >
                 Delete
               </Button>
-            </div>
-          </>
-        ) : null}
+        </div>
       </div>
 
       <ConfirmDialog

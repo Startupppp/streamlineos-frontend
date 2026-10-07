@@ -22,11 +22,13 @@ const replace = jest.fn();
 let params = new URLSearchParams();
 let mockShellVariant: "desktop" | "mobile" = "mobile";
 jest.mock("next/navigation", () => ({ useRouter: () => ({ replace }), usePathname: () => "/build/inbox", useSearchParams: () => params }));
-jest.mock("@/components/layout/shell-variant-context", () => ({ useShellVariant: () => mockShellVariant }));
+jest.mock("@/hooks/common/use-mobile", () => ({
+  useIsBelowLg: () => mockShellVariant !== "desktop",
+  useIsMobile: () => false,
+}));
 jest.mock("@/components/ui/page-wrapper", () => ({ PageWrapper: ({ children }: { children: React.ReactNode }) => <div>{children}</div> }));
 jest.mock("@/hooks/api/use-page-state", () => ({ usePageState: ({ isLoading, isError, error, isEmpty }: { isLoading: boolean; isError: boolean; error: unknown; isEmpty: boolean }) => isLoading ? { kind: "loading" } : isError ? { kind: "error", error } : isEmpty ? { kind: "empty" } : { kind: "ready" } }));
 jest.mock("@/hooks/common/use-online-status", () => ({ useOnlineStatus: () => online }));
-jest.mock("@/hooks/common/use-mobile", () => ({ useIsMobile: () => false }));
 jest.mock("./inbox-preview-pane", () => ({ InboxPreviewPane: ({ notification, onClose }: { notification: Notification | null; onClose: () => void }) => <div data-testid="preview">{notification?.title}<button onClick={onClose}>Back to inbox</button></div> }));
 
 let row: Notification;
@@ -72,6 +74,8 @@ describe("Build Inbox triage workflow", () => {
     expect(apiClientMock().patch).not.toHaveBeenCalled();
   });
   it("clears the preview only after Resolve acknowledgement", async () => {
+    mockShellVariant = "desktop";
+    params = new URLSearchParams("section=ALL");
     const user = userEvent.setup(); setup();
     await user.click(await screen.findByRole("button", { name: /Notification 42/ }));
     await waitFor(() => expect(screen.getByTestId("preview")).toHaveTextContent("Notification 42"));
@@ -83,10 +87,12 @@ describe("Build Inbox triage workflow", () => {
     expect(screen.getByTestId("preview")).toHaveTextContent("Notification 42");
     expect(screen.getByRole("button", { name: "Resolve" })).toBeDisabled();
     await act(async () => { row = { ...row, archivedAt: new Date().toISOString() }; accept({ success: true }); });
-    await waitFor(() => expect(screen.queryByTestId("preview")).toBeNull());
+    await waitFor(() => expect(screen.getByTestId("preview")).not.toHaveTextContent("Notification 42"));
     expect(apiClientMock().patch.mock.calls[1]?.[0]).toBe("/notifications/42/archive");
   });
   it("refuses read and triage writes offline", async () => {
+    mockShellVariant = "desktop";
+    params = new URLSearchParams("section=ALL");
     online = false;
     const user = userEvent.setup(); setup();
     await user.click(await screen.findByRole("button", { name: /Notification 42/ }));
@@ -99,6 +105,7 @@ describe("Build Inbox triage workflow", () => {
     { section: "ARCHIVED", label: "Restore notification", confirm: "Restore", endpoint: "unarchive" },
     { section: "SNOOZED", label: "Notification actions", confirm: "Unsnooze", endpoint: "unsnooze" },
   ])("uses the exact $endpoint command from $section", async ({ section, label, confirm, endpoint }) => {
+    mockShellVariant = "desktop";
     params = new URLSearchParams(`section=${section}&q=Notification&type=PROJECTS&projectId=54&panel=preview`);
     row = { ...row, isRead: true, archivedAt: section === "ARCHIVED" ? new Date().toISOString() : null, snoozedUntil: new Date(Date.now() + 3_600_000).toISOString() };
     const user = userEvent.setup(); setup();
@@ -119,7 +126,7 @@ describe("Build Inbox triage workflow", () => {
     });
     permitted = false;
     await user.click(screen.getByRole("button", { name: /Notification 42/ }));
-    await waitFor(() => expect(screen.queryByTestId("preview")).toBeNull());
+    await waitFor(() => expect(screen.getByTestId("preview")).not.toHaveTextContent("Notification 42"));
     expect(screen.queryByText("Stale selected private title")).toBeNull();
     expect(jest.mocked(apiClient.request).mock.calls.some((call) => new URL(call[0], "http://api.test").searchParams.get("ids") === "42")).toBe(true);
   });
@@ -134,6 +141,8 @@ describe("Build Inbox triage workflow", () => {
   });
 
   it("keeps the preview and reports failure without resolving linked work", async () => {
+    mockShellVariant = "desktop";
+    params = new URLSearchParams("section=ALL");
     const user = userEvent.setup(); setup();
     await user.click(await screen.findByRole("button", { name: /Notification 42/ }));
     await waitFor(() => expect(screen.getByTestId("preview")).toHaveTextContent("Notification 42"));

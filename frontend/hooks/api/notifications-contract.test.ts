@@ -26,7 +26,10 @@ const backendRow = {
   createdAt: "2026-09-20T10:00:00.000Z",
   ticketContext: {
     ticketId: 41,
+    projectId: 7,
+    projectName: "Build",
     ticketKey: "BLD-41",
+    ticketTitle: "Clarify notifications",
     priority: "HIGH",
     status: "IN_PROGRESS",
     type: "BUG",

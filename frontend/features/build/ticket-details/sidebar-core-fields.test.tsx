@@ -3,10 +3,8 @@ import { SidebarSelectFields } from "./sidebar-select-fields";
 import { TicketDateFields } from "./ticket-date-fields";
 import { SidebarAssigneeSection } from "./sidebar-assignee-section";
 
-jest.mock("@/components/members/project-member-select", () => ({
-  ProjectMemberSelect: ({ placeholder }: { placeholder: string }) => (
-    <button type="button">{placeholder}</button>
-  ),
+jest.mock("@/components/members/member-picker", () => ({
+  MemberPicker: ({ trigger }: { trigger: React.ReactNode }) => trigger,
 }));
 
 const TICKET = {
@@ -141,8 +139,8 @@ describe("Issue detail sidebar — the core fields the page contract lists are o
       />,
     );
     expect(screen.getByText("Assignees")).toBeInTheDocument();
-    expect(screen.getByText("Ada Lovelace")).toBeInTheDocument();
-    expect(screen.getByText("Grace Hopper")).toBeInTheDocument();
+    expect(screen.getByLabelText("Ada Lovelace")).toBeInTheDocument();
+    expect(screen.getByLabelText("Grace Hopper")).toBeInTheDocument();
     expect(screen.queryByText("u-1")).not.toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Remove Ada Lovelace" }),
@@ -159,12 +157,12 @@ describe("Issue detail sidebar — the core fields the page contract lists are o
         disabled
       />,
     );
-    expect(screen.getByText("Grace Hopper")).toBeInTheDocument();
+    expect(screen.getByLabelText("Grace Hopper")).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Remove Grace Hopper" }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: "+ Add assignee" }),
+      screen.queryByRole("button", { name: "Add assignee" }),
     ).not.toBeInTheDocument();
   });
 });

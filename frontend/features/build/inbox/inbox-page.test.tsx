@@ -26,8 +26,9 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => mockSearchParams,
 }));
 
-jest.mock("@/components/layout/shell-variant-context", () => ({
-  useShellVariant: jest.fn().mockReturnValue("desktop"),
+jest.mock("@/hooks/common/use-mobile", () => ({
+  useIsBelowLg: jest.fn().mockReturnValue(false),
+  useIsMobile: jest.fn().mockReturnValue(false),
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({
@@ -66,7 +67,7 @@ jest.mock("@/hooks/api/use-page-state", () => ({ usePageState: ({ isLoading, isE
   isLoading ? { kind: "loading" } : isError ? { kind: "error", error } : { kind: "ready" } }));
 
 import { InboxList } from "./inbox-list";
-import { useShellVariant } from "@/components/layout/shell-variant-context";
+import { useIsBelowLg } from "@/hooks/common/use-mobile";
 
 function makeNotification(id = 42): Notification {
   return {
@@ -94,7 +95,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockSearchParams = new URLSearchParams();
   mockReadState = "ready";
-  (useShellVariant as jest.Mock).mockReturnValue("desktop");
+  (useIsBelowLg as jest.Mock).mockReturnValue(false);
   (InboxList as jest.Mock).mockImplementation(
     ({
       onSelect,
@@ -130,7 +131,7 @@ describe("InboxPage", () => {
     if (state !== "pending" && state !== "error") throw new Error("Unexpected read state");
     mockReadState = state;
     mockSearchParams = new URLSearchParams("section=SNOOZED&q=release&type=PROJECTS&projectId=54&panel=preview");
-    jest.mocked(useShellVariant).mockReturnValue("mobile");
+    jest.mocked(useIsBelowLg).mockReturnValue(true);
     const user = userEvent.setup();
     render(<InboxPage />);
     await user.click(await screen.findByTestId("select-notification"));
@@ -146,6 +147,14 @@ describe("InboxPage", () => {
   it("renders the inbox list panel", async () => {
     render(<InboxPage />);
     await waitFor(() => expect(screen.getByTestId("inbox-list")).toBeInTheDocument());
+  });
+
+  it("exposes an accessible desktop separator for resizing the notification list", async () => {
+    render(<InboxPage />);
+    await waitFor(() => expect(screen.getByTestId("inbox-list")).toBeInTheDocument());
+    const separator = screen.getByRole("separator", { name: "Resize notification list" });
+    expect(separator).toHaveAttribute("aria-orientation", "vertical");
+    expect(separator).toHaveAttribute("data-slot", "resizable-handle");
   });
 
   it("passes null as the selected notification id initially", async () => {
@@ -182,11 +191,13 @@ describe("InboxPage", () => {
   });
 
   it("hides the list panel on mobile when a notification is selected", async () => {
-    (useShellVariant as jest.Mock).mockReturnValue("mobile");
+    (useIsBelowLg as jest.Mock).mockReturnValue(true);
     const user = userEvent.setup();
     render(<InboxPage />);
     await waitFor(() => expect(screen.getByTestId("select-notification")).toBeInTheDocument());
-    const listPanel = screen.getByTestId("inbox-list").closest("div[class]");
+    const listPanel = screen
+      .getByTestId("inbox-list")
+      .closest('[data-slot="resizable-panel"]')?.firstElementChild;
     await user.click(screen.getByTestId("select-notification"));
     expect(listPanel?.className).toMatch(/hidden/);
   });

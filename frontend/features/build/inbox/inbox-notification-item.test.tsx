@@ -80,7 +80,10 @@ describe("InboxNotificationItem", () => {
         notification={makeNotification({
           ticketContext: {
             ticketId: 41,
+            projectId: 7,
+            projectName: "Build experience",
             ticketKey: "BLD-41",
+            ticketTitle: "Clarify the status change notification",
             priority: "HIGH",
             status: "IN_PROGRESS",
             type: "TASK",
@@ -99,6 +102,8 @@ describe("InboxNotificationItem", () => {
     );
 
     expect(screen.getByText("BLD-41")).toBeInTheDocument();
+    expect(screen.getByText("Clarify the status change notification")).toBeInTheDocument();
+    expect(screen.getByText("Build experience")).toBeInTheDocument();
     expect(screen.getByText("Ada Lovelace")).toBeInTheDocument();
     expect(screen.queryByText("BUILD")).not.toBeInTheDocument();
   });

@@ -65,7 +65,14 @@ export function ActivityFeed({
             <span className="shrink-0 text-muted-foreground">({comments.length})</span>
           )}
           {activityAiActions}
-          {canAi ? <AiActionsMenu actions={[draftAction]} triggerLabel="Draft comment" align="end" /> : null}
+          {canAi ? (
+            <AiActionsMenu
+              actions={[draftAction]}
+              triggerLabel="Draft comment"
+              triggerVariant="ghost"
+              align="end"
+            />
+          ) : null}
         </h4>
 
         {canUpdate && composerReady ? (
