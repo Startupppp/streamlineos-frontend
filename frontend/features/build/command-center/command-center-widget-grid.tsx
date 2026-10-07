@@ -4,6 +4,7 @@ import "react-grid-layout/css/styles.css";
 import { useMemo, type ReactNode } from "react";
 import { GridLayout, useContainerWidth, type Layout } from "react-grid-layout";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 import { GRID_COLUMNS, toGridLayout, toStackedLayout, type WidgetSlot, type WidgetType } from "./dashboard-layout";
 import { CommandCenterWidgetFrame, WIDGET_CONTROL_CLASS, WIDGET_DRAG_CLASS } from "./command-center-widget-frame";
 
@@ -31,6 +32,8 @@ export function CommandCenterWidgetGrid({
   onMove,
 }: CommandCenterWidgetGridProps) {
   const { width, containerRef, mounted } = useContainerWidth({ measureBeforeMount: true });
+  /** Width 0 after mount paints a blank GridLayout — keep the skeleton until measured. */
+  const ready = mounted && width > 0;
   const isWide = width >= WIDE_GRID_MIN_WIDTH;
   const canArrange = editing && isWide;
 
@@ -61,7 +64,7 @@ export function CommandCenterWidgetGrid({
       )}
       data-editing={editing ? "true" : undefined}
     >
-      {mounted ? (
+      {ready ? (
         <GridLayout
           width={width}
           layout={layout}
@@ -87,7 +90,18 @@ export function CommandCenterWidgetGrid({
             </div>
           ))}
         </GridLayout>
-      ) : null}
+      ) : (
+        <div
+          className="grid min-w-0 w-full gap-4 sm:grid-cols-2"
+          role="status"
+          aria-busy
+          aria-label="Loading widgets"
+        >
+          {widgets.map((slot) => (
+            <Skeleton key={slot.type} className="h-48 w-full rounded-xl" />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -182,11 +182,11 @@ describe("CommandCenterPage — customize controls", () => {
     expect(screen.queryByTestId("widget-grid")).not.toBeInTheDocument();
   });
 
-  it("shows a skeleton instead of the default widgets while the saved layout is loading", () => {
+  it("paints default widgets while the saved layout is still loading so the body is never a blank placeholder", () => {
     mockUseDashboardLayout.mockReturnValue({ data: undefined, isLoading: true });
     render(<CommandCenterPage />);
-    expect(screen.queryByTestId("widget-grid")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("my-issues-panel")).not.toBeInTheDocument();
+    expect(screen.getByTestId("widget-grid")).toBeInTheDocument();
+    expect(screen.getByTestId("my-issues-panel")).toBeInTheDocument();
   });
 
   it("renders the overview and jump-to widgets from the default layout", () => {

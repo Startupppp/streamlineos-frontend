@@ -1,6 +1,11 @@
-﻿"use client";
+"use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import {
+  useCallback,
+  useLayoutEffect,
+  useRef,
+  type MutableRefObject,
+} from "react";
 import { SparklesIcon } from "@animateicons/react/lucide";
 import { useCan } from "@/hooks/api/access";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -17,13 +22,41 @@ import { useAiPopoverAction } from "@/components/ai/use-ai-popover-action";
 import { useProjectAiSummary } from "@/hooks/api/build/ai";
 import type { ProjectSummaryResult } from "@/types/projects/ai";
 
+/** Backend NO_DATA short-circuit copy from projects-ai.service. */
+const NO_DATA_SUMMARY =
+  "This project has no tickets yet. Add tasks to unlock AI features.";
+
+export type ProjectAiRunRef = MutableRefObject<(() => void) | null>;
+
 interface ProjectAiMenuProps {
   projectId: number;
   hideTrigger?: boolean;
-  onRunRegister?: (run: (() => void) | null) => void;
+  /**
+   * Parent-owned ref. Assigned only in useLayoutEffect — never call execute
+   * during registration, and never notify the parent via setState.
+   */
+  runRef?: ProjectAiRunRef;
+}
+
+function isEmptySummary(data: ProjectSummaryResult): boolean {
+  return (
+    data.evidence.totalTasks === 0 ||
+    data.summary === NO_DATA_SUMMARY
+  );
 }
 
 function formatSummary(data: ProjectSummaryResult): AiActionResult {
+  if (isEmptySummary(data)) {
+    return {
+      text: data.summary,
+      empty: {
+        title: "No issues to summarize",
+        description:
+          "This project has no tickets yet. Create an issue to generate a health summary.",
+      },
+    };
+  }
+
   const lines: string[] = [data.summary];
   if (data.highlights.length > 0) {
     lines.push("", "Highlights:");
@@ -36,37 +69,38 @@ function formatSummary(data: ProjectSummaryResult): AiActionResult {
 export function ProjectAiMenu({
   projectId,
   hideTrigger = false,
-  onRunRegister,
+  runRef,
 }: ProjectAiMenuProps) {
   const canUseAI = useCan("build:ai:use");
   const summaryMutation = useProjectAiSummary(projectId);
   const { iconRef, hoverHandlers } = useAnimatedIcon();
+  const mutateAsync = summaryMutation.mutateAsync;
 
   const summary = useAiPopoverAction({
     run: useCallback(
       async (signal?: AbortSignal): Promise<AiActionResult> =>
-        formatSummary(await summaryMutation.mutateAsync({ signal })),
-      [summaryMutation],
+        formatSummary(await mutateAsync({ signal })),
+      [mutateAsync],
     ),
   });
 
-  const summaryRef = useRef(summary);
-  useEffect(() => {
-    summaryRef.current = summary;
-  });
+  const executeRef = useRef(summary.execute);
+  const isPendingRef = useRef(summary.isPending);
 
   const handleSummarizeClick = useCallback(() => {
-    if (summaryRef.current.isPending) return;
-    void summaryRef.current.execute();
+    if (isPendingRef.current) return;
+    void executeRef.current();
   }, []);
 
-  useEffect(() => {
-    if (!onRunRegister) return;
-    onRunRegister(handleSummarizeClick);
+  useLayoutEffect(() => {
+    executeRef.current = summary.execute;
+    isPendingRef.current = summary.isPending;
+    if (!runRef) return;
+    runRef.current = handleSummarizeClick;
     return () => {
-      onRunRegister(null);
+      runRef.current = null;
     };
-  }, [onRunRegister, handleSummarizeClick]);
+  }, [runRef, handleSummarizeClick, summary.execute, summary.isPending]);
 
   if (!canUseAI) return null;
 

@@ -146,8 +146,15 @@ export function useCreateProject(
     mutationKey: ["projects", "create"],
     mutationFn: (data: CreateProjectInput) =>
       apiClient.post<Project>("/build", data, undefined, projectRowLazy),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.all });
+    onSuccess: (data, variables, context, mutationContext) => {
+      // BUG-055 pattern: list observers unmount on navigate-to-detail after create.
+      // Default refetchType "active" leaves inactive infinite list caches stale →
+      // "No projects yet" until a full reload. refetchType "all" refetches them.
+      void queryClient.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.list(),
+        refetchType: "all",
+      });
+      options?.onSuccess?.(data, variables, context, mutationContext);
     },
   });
 }

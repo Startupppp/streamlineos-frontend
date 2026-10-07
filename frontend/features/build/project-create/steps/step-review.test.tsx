@@ -2,51 +2,44 @@ import { render, screen } from "@testing-library/react";
 import { StepReview } from "./step-review";
 import type { WizardDraft } from "../use-project-create";
 
+jest.mock("next-auth/react", () => ({
+  useSession: jest.fn(() => ({ data: null })),
+}));
+
 jest.mock("@/hooks/api/build/templates", () => ({
   useProjectTemplates: jest.fn(() => ({ data: [] })),
 }));
 
-jest.mock("@/hooks/api/organization", () => ({
-  useOrgMembers: jest.fn(),
+jest.mock("../use-wizard-members", () => ({
+  ...jest.requireActual("../use-wizard-members"),
+  useWizardMembers: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/crm/clients", () => ({
   useSimpleClientsList: jest.fn(),
 }));
 
-const mockUseOrgMembers = jest.requireMock("@/hooks/api/organization").useOrgMembers as jest.Mock;
+const mockUseWizardMembers = jest.requireMock("../use-wizard-members").useWizardMembers as jest.Mock;
 const mockUseSimpleClientsList = jest.requireMock("@/hooks/api/crm/clients").useSimpleClientsList as jest.Mock;
 
 const MEMBERS = [
   {
-    membershipId: 1,
     userId: "u1",
-    role: "MEMBER",
-    joinedAt: "2024-01-01",
     name: "Alice Smith",
     email: "alice@example.com",
     image: null,
-    totpEnabled: false,
   },
   {
-    membershipId: 2,
     userId: "u2",
-    role: "MEMBER",
-    joinedAt: "2024-01-01",
     name: "Bob Jones",
     email: "bob@example.com",
     image: null,
-    totpEnabled: false,
   },
   {
-    membershipId: 3,
     userId: "u3",
-    role: "MEMBER",
-    joinedAt: "2024-01-01",
     name: "Carol Lee",
     email: "carol@example.com",
     image: null,
-    totpEnabled: false,
   },
 ];
 
@@ -69,9 +62,7 @@ function makeDraft(memberIds: string[]): WizardDraft {
 }
 
 beforeEach(() => {
-  mockUseOrgMembers.mockReturnValue({
-    data: { data: MEMBERS, hasMore: false, nextCursor: null },
-  });
+  mockUseWizardMembers.mockReturnValue(MEMBERS);
   mockUseSimpleClientsList.mockReturnValue({ data: [] });
 });
 
@@ -117,7 +108,7 @@ describe("StepReview manager row — BUG-004", () => {
   it("shows Not assigned in the Manager row when no manager is set", () => {
     render(<StepReview draft={makeDraft([])} />);
 
-    expect(document.body.textContent).toContain("Not assigned");
+    expect(document.body.textContent).toContain("No manager");
   });
 });
 
@@ -164,5 +155,24 @@ describe("StepReview team row", () => {
 
     expect(document.body.textContent).not.toContain(unknownId);
     expect(screen.getByText("Unknown member")).toBeInTheDocument();
+  });
+
+  it("shows the creator display name from the wizard member directory (not Unknown member) when manager and team ids resolve", () => {
+    mockUseWizardMembers.mockReturnValue([
+      {
+        userId: "creator-1",
+        name: "sosec237732",
+        email: "sosec237732@maxxspace.com",
+        image: null,
+      },
+    ]);
+    const draft: WizardDraft = {
+      ...makeDraft(["creator-1"]),
+      managerId: "creator-1",
+    };
+    render(<StepReview draft={draft} />);
+
+    expect(document.body.textContent).toContain("sosec237732");
+    expect(document.body.textContent).not.toContain("Unknown member");
   });
 });

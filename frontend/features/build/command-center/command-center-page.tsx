@@ -203,18 +203,20 @@ export function CommandCenterPage() {
               </div>
             ) : null}
 
-            {layout.isLoading ? (
-              <Skeleton className="h-96 w-full rounded-xl" />
-            ) : layout.widgets.length === 0 ? (
-              <EmptyState
-                title="Your Command Center is empty"
-                description={
-                  layout.canCustomize
-                    ? "Add widgets to see your issues, projects and approvals here."
-                    : "There are no widgets you can view yet."
-                }
-                action={customizeAction}
-              />
+            {layout.widgets.length === 0 ? (
+              layout.isLoading ? (
+                <Skeleton className="h-96 w-full rounded-xl" />
+              ) : (
+                <EmptyState
+                  title="Your Command Center is empty"
+                  description={
+                    layout.canCustomize
+                      ? "Add widgets to see your issues, projects and approvals here."
+                      : "There are no widgets you can view yet."
+                  }
+                  action={customizeAction}
+                />
+              )
             ) : (
               <CommandCenterWidgetGrid
                 widgets={layout.widgets}

@@ -39,23 +39,28 @@ jest.mock("@/features/build/shared/build-header-actions", () => ({
   ),
 }));
 
-jest.mock("@/features/build/ai/project-ai-menu", () => ({
-  ProjectAiMenu: ({
-    onRunRegister,
-  }: {
-    onRunRegister?: (run: (() => void) | null) => void;
-  }) => {
-    const React = require("react") as typeof import("react");
-    React.useEffect(() => {
-      registerCalls += 1;
-      onRunRegister?.(() => {
-        execute();
-      });
-      return () => onRunRegister?.(null);
-    }, [onRunRegister]);
-    return <div data-testid="project-ai-menu" />;
-  },
-}));
+jest.mock("@/features/build/ai/project-ai-menu", () => {
+  const { useLayoutEffect } = jest.requireActual("react") as typeof import("react");
+  return {
+    ProjectAiMenu: ({
+      runRef,
+    }: {
+      runRef?: { current: (() => void) | null };
+    }) => {
+      useLayoutEffect(() => {
+        registerCalls += 1;
+        if (!runRef) return;
+        runRef.current = () => {
+          execute();
+        };
+        return () => {
+          runRef.current = null;
+        };
+      }, [runRef]);
+      return <div data-testid="project-ai-menu" />;
+    },
+  };
+});
 
 import { ProjectBoardHeaderActions } from "./project-board-header-actions";
 
