@@ -87,8 +87,6 @@ export function ProjectAiMenu({
 
   const executeRef = useRef(summary.execute);
   const isPendingRef = useRef(summary.isPending);
-  executeRef.current = summary.execute;
-  isPendingRef.current = summary.isPending;
 
   const handleSummarizeClick = useCallback(() => {
     if (isPendingRef.current) return;
@@ -96,12 +94,14 @@ export function ProjectAiMenu({
   }, []);
 
   useLayoutEffect(() => {
+    executeRef.current = summary.execute;
+    isPendingRef.current = summary.isPending;
     if (!runRef) return;
     runRef.current = handleSummarizeClick;
     return () => {
       runRef.current = null;
     };
-  }, [runRef, handleSummarizeClick]);
+  }, [runRef, handleSummarizeClick, summary.execute, summary.isPending]);
 
   if (!canUseAI) return null;
 
