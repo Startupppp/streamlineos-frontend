@@ -2,6 +2,10 @@ import { render, screen } from "@testing-library/react";
 import { StepReview } from "./step-review";
 import type { WizardDraft } from "../use-project-create";
 
+jest.mock("next-auth/react", () => ({
+  useSession: jest.fn(() => ({ data: null })),
+}));
+
 jest.mock("@/hooks/api/build/templates", () => ({
   useProjectTemplates: jest.fn(() => ({ data: [] })),
 }));
@@ -103,7 +107,7 @@ describe("StepReview manager row — BUG-004", () => {
   it("shows Not assigned in the Manager row when no manager is set", () => {
     render(<StepReview draft={makeDraft([])} />);
 
-    expect(document.body.textContent).toContain("Not assigned");
+    expect(document.body.textContent).toContain("No manager");
   });
 });
 

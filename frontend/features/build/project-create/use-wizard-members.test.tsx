@@ -38,7 +38,6 @@ describe("useWizardMembers", () => {
           },
         ],
       },
-      isError: false,
     });
     mockUseBuildMembers.mockReturnValue({ data: undefined });
 
@@ -59,9 +58,9 @@ describe("useWizardMembers", () => {
     );
   });
 
-  it("falls back to build members when settings:view is denied so review can resolve selected ids", () => {
+  it("loads build members when settings:view is denied so review can resolve selected ids", () => {
     mockUseCan.mockImplementation((key: string) => key === "build:members:view");
-    mockUseOrgMembers.mockReturnValue({ data: undefined, isError: false });
+    mockUseOrgMembers.mockReturnValue({ data: undefined });
     mockUseBuildMembers.mockReturnValue({
       data: {
         data: [
@@ -90,28 +89,22 @@ describe("useWizardMembers", () => {
         image: null,
       },
     ]);
-    expect(mockUseOrgMembers).toHaveBeenCalledWith(
-      1,
-      100,
-      undefined,
-      expect.objectContaining({ enabled: false }),
-    );
     expect(mockUseBuildMembers).toHaveBeenCalledWith(
       { limit: 100 },
       expect.objectContaining({ enabled: true }),
     );
   });
 
-  it("falls back to build members when settings:view is granted but the org members query errors", () => {
+  it("merges build members when org list is empty so a lead userId from build:members:view still resolves", () => {
     mockUseCan.mockImplementation(
       (key: string) => key === "settings:view" || key === "build:members:view",
     );
-    mockUseOrgMembers.mockReturnValue({ data: undefined, isError: true });
+    mockUseOrgMembers.mockReturnValue({ data: { data: [] } });
     mockUseBuildMembers.mockReturnValue({
       data: {
         data: [
           {
-            id: "creator-1",
+            id: "e05cd989-3dbb-41f0-a6aa-eb36c33c9c8a",
             name: "sosec237732",
             firstName: "sosec237732",
             lastName: null,
@@ -127,11 +120,23 @@ describe("useWizardMembers", () => {
 
     const { result } = renderHook(() => useWizardMembers());
 
-    expect(result.current[0]?.name).toBe("sosec237732");
+    expect(result.current).toEqual([
+      {
+        userId: "e05cd989-3dbb-41f0-a6aa-eb36c33c9c8a",
+        name: "sosec237732",
+        email: "sosec237732@maxxspace.com",
+        image: null,
+      },
+    ]);
+    expect(mockUseOrgMembers).toHaveBeenCalledWith(
+      1,
+      100,
+      undefined,
+      expect.objectContaining({ enabled: true }),
+    );
     expect(mockUseBuildMembers).toHaveBeenCalledWith(
       { limit: 100 },
       expect.objectContaining({ enabled: true }),
     );
   });
-
 });

@@ -12,6 +12,7 @@ import { useCan } from "@/hooks/api/access";
 import { getUserDisplayName } from "@/lib/person-display";
 import type { StepSharedProps } from "../use-project-create";
 import { useWizardMembers } from "../use-wizard-members";
+import { resolveWizardMemberLabel } from "../resolve-wizard-member-label";
 
 export function StepTeam({ draft, updateDraft }: StepSharedProps) {
   const { data: session } = useSession();
@@ -44,12 +45,15 @@ export function StepTeam({ draft, updateDraft }: StepSharedProps) {
 
   const selectedLabels = useMemo(
     () =>
-      draft.memberIds.map((id) => {
-        const m = members.find((x) => x.userId === id);
-        if (!m) return "Unknown member";
-        return getUserDisplayName({ name: m.name, email: m.email });
-      }),
-    [draft.memberIds, members],
+      draft.memberIds.map((id) =>
+        resolveWizardMemberLabel(
+          id,
+          members,
+          session?.user,
+          "No members added",
+        ),
+      ),
+    [draft.memberIds, members, session?.user],
   );
 
   if (!canManage) {
