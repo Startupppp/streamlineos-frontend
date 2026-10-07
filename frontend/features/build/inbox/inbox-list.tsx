@@ -117,7 +117,7 @@ export function InboxList({
     useMarkAllNotificationsRead("build");
 
   const rawNotifications = React.useMemo(
-    () => data?.pages.flat() ?? [],
+    () => data?.pages.flatMap((page) => page.data) ?? [],
     [data],
   );
   const total = rawNotifications.length;

@@ -79,7 +79,7 @@ export function NotificationsInboxPage() {
     limit: 30,
   });
 
-  const notifications = pages?.pages.flat();
+  const notifications = pages?.pages.flatMap((page) => page.data);
   const { data: unreadData } = useUnreadNotificationCount();
   const unreadCount = unreadData?.count ?? 0;
   const items = useMemo(() => notifications ?? [], [notifications]);

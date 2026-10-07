@@ -55,10 +55,22 @@ export function useNotificationRowPatch<TVars>(spec: NotificationRowPatchSpec<TV
           JSON.stringify([owner.identity.orgId, owner.identity.userId, owner.identity.sessionId])) : [],
       };
     },
-    onSettled: (_data, error, _command, context) => {
+    onSettled: (_data, error, command, context) => {
       if (!context) return;
       settleNotificationCacheChange(context.owner.queryClient, context.receipts, error !== null, context.owner.isCurrent());
-      if (context.owner.isCurrent()) invalidateInbox();
+      if (!context.owner.isCurrent()) return;
+      if (error !== null) {
+        invalidateInbox();
+        return;
+      }
+      if (!command.spec.patch) {
+        invalidateInbox();
+        return;
+      }
+      void context.owner.queryClient.invalidateQueries({
+        queryKey: platformCoreQueryKeys.notifications.unreadCount(),
+        refetchType: "none",
+      });
     },
   });
   function guardOptions(options?: MutateOptions<NotificationAck, Error, TVars, NotifMutationContext>) {

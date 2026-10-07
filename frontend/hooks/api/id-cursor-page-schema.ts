@@ -30,5 +30,5 @@ export function idCursorPageContract<T>(
     data: z.array(item),
     hasMore: z.boolean(),
     nextCursor: z.number().nullable(),
-  });
+  }).strict();
 }

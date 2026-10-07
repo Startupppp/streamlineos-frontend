@@ -69,7 +69,7 @@ export interface Notification {
   entityId?: string | null;
   reason?: string | null;
   title: string;
-  message: string | null;
+  message: string;
   link: string | null;
   isRead: boolean;
   pinned: boolean;

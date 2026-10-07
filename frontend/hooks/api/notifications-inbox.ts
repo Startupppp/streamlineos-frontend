@@ -157,20 +157,6 @@ export const useNotifications = (
   });
 };
 
-/**
- * `/notifications` orders by `id DESC` and continues with `id < cursor`, so the
- * only safe continuation is the lowest id the page carried. Reading
- * `page[page.length - 1].id` assumes the rows arrive in sort order; a page that
- * disagrees skips every row between the last element and the true minimum.
- */
-function lowestNotificationId(page: Notification[]): number | undefined {
-  let lowest: number | undefined;
-  for (const item of page) {
-    if (lowest === undefined || item.id < lowest) lowest = item.id;
-  }
-  return lowest;
-}
-
 type InfiniteNotificationParams = Omit<NotificationListParams, "cursor"> & {
   initialCursor?: number | null;
 };
@@ -184,12 +170,7 @@ export const useInfiniteNotifications = (
   const { initialCursor = null, ...requestParams } = params ?? {};
   const limit = requestParams.limit ?? 30;
 
-  // The page stays a bare `Notification[]` here on purpose: the optimistic cache
-  // helpers in `notifications-inbox-cache.ts` patch `InfiniteData<Notification[]>`
-  // pages in place. The envelope is unwrapped at this boundary, and the
-  // continuation is still the lowest id the page carried — `nextCursor` from the
-  // body would say the same thing.
-  return useInfiniteQuery<Notification[], Error>({
+  return useInfiniteQuery<IdCursorPage<Notification>, Error>({
     queryKey: platformCoreQueryKeys.notifications.list({
       ...requestParams,
       initialCursor,
@@ -197,20 +178,18 @@ export const useInfiniteNotifications = (
     }),
     initialPageParam: initialCursor ?? NO_ID_CURSOR_YET,
     queryFn: async ({ pageParam, signal }) =>
-      (
-        await apiClient.get<IdCursorPage<Notification>>(
-          "/notifications",
-          toStringParams({
-            ...requestParams,
-            limit,
-            cursor: pageParam,
-          }),
-          signal,
-          notificationListLazy,
-        )
-      ).data,
+      apiClient.get<IdCursorPage<Notification>>(
+        "/notifications",
+        toStringParams({
+          ...requestParams,
+          limit,
+          cursor: pageParam,
+        }),
+        signal,
+        notificationListLazy,
+      ),
     getNextPageParam: (lastPage) =>
-      lastPage.length < limit ? undefined : lowestNotificationId(lastPage),
+      lastPage.hasMore ? (lastPage.nextCursor ?? undefined) : undefined,
     staleTime: 30_000,
     enabled: !!orgId && (options?.enabled ?? true),
     refetchOnWindowFocus: true,

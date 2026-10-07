@@ -118,10 +118,10 @@ describe("useInboxUrlState — param round-trips", () => {
     expect(result.current.q).toBe("deploy");
   });
 
-  it("ignores an unknown section value and defaults to UNREAD", () => {
+  it("ignores an unknown section value and defaults to the active section", () => {
     mockSearchParams = new URLSearchParams("section=BOGUS");
     const { result } = renderHook(() => useInboxUrlState());
-    expect(result.current.section).toBe("UNREAD");
+    expect(result.current.section).toBe("ALL");
   });
 
   it("setParams with null value removes the param", () => {

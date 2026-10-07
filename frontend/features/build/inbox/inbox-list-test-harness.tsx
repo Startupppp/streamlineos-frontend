@@ -18,7 +18,7 @@ export function makeNotifications(count: number): Notification[] {
     sourceModule: "build",
     eventKey: "build.ticket.mention",
     title: `notification-${i + 1}`,
-    message: null,
+    message: "",
     link: null,
     isRead: false,
     pinned: false,

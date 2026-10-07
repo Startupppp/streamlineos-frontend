@@ -4,6 +4,7 @@ import { type ReactNode } from "react";
 import type { InfiniteData } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import type { Notification, NotificationListParams } from "@/types/notifications";
+import type { IdCursorPage } from "@/hooks/api/id-cursor-page-schema";
 
 jest.mock("next-auth/react", () => ({
   useSession: jest.fn().mockReturnValue({
@@ -31,18 +32,20 @@ function makeWrapper(client: QueryClient) {
 
 /**
  * The wire shape `/notifications` actually returns. The service builds it with
- * `buildIdCursorPage` and answers `{ data, hasMore, nextCursor }`; the hooks unwrap
- * `.data` and deliberately derive the continuation from the page's own lowest id
- * rather than trusting the server's `nextCursor` — which is the contract asserted
- * below. Mocking a bare array made every hook resolve `undefined`, so all five waits
- * timed out against an empty render rather than failing on an assertion.
+ * `buildIdCursorPage` and answers `{ data, hasMore, nextCursor }`; the hook retains
+ * that envelope and follows the server cursor only while `hasMore` is true.
  */
 function page(items: Notification[]): {
   data: Notification[];
   hasMore: boolean;
-  nextCursor: string | null;
+  nextCursor: number | null;
 } {
-  return { data: items, hasMore: items.length > 0, nextCursor: null };
+  const hasMore = items.length >= 3;
+  return {
+    data: items,
+    hasMore,
+    nextCursor: hasMore ? Math.min(...items.map((item) => item.id)) : null,
+  };
 }
 
 function makeNotification(id: number): Notification {
@@ -52,7 +55,7 @@ function makeNotification(id: number): Notification {
     userId: "user-1",
     type: "GENERIC",
     title: `n-${id}`,
-    message: null,
+    message: "",
     entityType: null,
     entityId: null,
     actionUrl: null,
@@ -65,8 +68,8 @@ function makeNotification(id: number): Notification {
 function cachedPages(
   client: QueryClient,
   params: Omit<NotificationListParams, "cursor">,
-): Notification[][] {
-  const cached = client.getQueryData<InfiniteData<Notification[]>>(
+): IdCursorPage<Notification>[] {
+  const cached = client.getQueryData<InfiniteData<IdCursorPage<Notification>>>(
     queryKeys.notifications.list({ ...params, initialCursor: null, infinite: true }),
   );
   return cached?.pages ?? [];
@@ -139,7 +142,9 @@ describe("id-derived cursors survive a page whose ids disagree with its order", 
     });
     await waitFor(() => expect(cachedPages(client, { limit: LIMIT })).toHaveLength(2));
 
-    const ids = cachedPages(client, { limit: LIMIT }).flat().map((n) => n.id);
+    const ids = cachedPages(client, { limit: LIMIT })
+      .flatMap((cachedPage) => cachedPage.data)
+      .map((notification) => notification.id);
     expect(ids).toEqual([90, 12, 41, 9, 4, 7]);
     expect(new Set(ids).size).toBe(ids.length);
   });
@@ -163,10 +168,8 @@ describe("id-derived cursors survive a page whose ids disagree with its order", 
 });
 
 describe("a cursor survives the round trip into the request", () => {
-  it("sends a falsy-but-real cursor rather than dropping it", async () => {
-    // id 0 is falsy. A `if (pageParam)` guard silently omits it and the backend
-    // replays page one forever.
-    const firstPage = [makeNotification(2), makeNotification(1), makeNotification(0)];
+  it("sends the backend's positive cursor on the continuation request", async () => {
+    const firstPage = [makeNotification(3), makeNotification(2), makeNotification(1)];
     apiClient.get.mockImplementation((url: string, params?: Record<string, string>) => {
       if (url !== "/notifications") return Promise.resolve(page([]));
       if (params?.["cursor"] === undefined) return Promise.resolve(page(firstPage));
@@ -186,7 +189,7 @@ describe("a cursor survives the round trip into the request", () => {
     });
     await waitFor(() => expect(cachedPages(client, { limit: 3 })).toHaveLength(2));
 
-    expect(cursorsSeen()).toEqual([undefined, "0"]);
+    expect(cursorsSeen()).toEqual([undefined, "1"]);
   });
 });
 

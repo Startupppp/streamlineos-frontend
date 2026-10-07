@@ -80,7 +80,7 @@ function makeNotification(id = 42): Notification {
     sourceModule: "build",
     eventKey: null,
     title: `Notification ${id}`,
-    message: null,
+    message: "",
     link: null,
     isRead: false,
     pinned: false,

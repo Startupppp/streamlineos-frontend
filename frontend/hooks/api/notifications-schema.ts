@@ -2,73 +2,73 @@ import { z } from "zod";
 import { DB_ENUMS } from "@/contracts/db-enums.generated";
 import { idCursorPageContract } from "@/hooks/api/id-cursor-page-schema";
 
-/**
- * Response contracts for the notifications family.
- * Derived from backend `notification-response-schema.ts` and
- * `notification-admin-response.schemas.ts`.
- * NOT `.strict()` unless the backend schema is.
- */
-
-const notificationItemContract = z.object({
-  id: z.number().int(),
-  orgId: z.string(),
-  userId: z.string().nullable(),
-  type: z.enum(DB_ENUMS.notification_type),
-  priority: z.enum(DB_ENUMS.notification_priority),
-  category: z.enum(DB_ENUMS.notification_category),
-  sourceModule: z.string().nullable(),
-  eventKey: z.string().nullable().optional(),
-  entityType: z.string().nullable().optional(),
-  entityId: z.string().nullable().optional(),
-  reason: z.string().nullable().optional(),
-  title: z.string(),
-  message: z.string().nullable(),
-  link: z.string().nullable(),
-  isRead: z.boolean(),
-  pinned: z.boolean(),
-  channel: z.string(),
-  metadata: z.record(z.string(), z.unknown()).nullable().optional(),
-  archivedAt: z.string().nullable(),
-  snoozedUntil: z.string().nullable(),
-  createdAt: z.string(),
-  ticketContext: z
-    .object({
-      ticketId: z.number().int(),
-      projectId: z.number().int(),
-      projectName: z.string(),
-      ticketKey: z.string(),
-      ticketTitle: z.string(),
-      priority: z.string().nullable(),
-      status: z.string().nullable(),
-      type: z.string().nullable(),
-      assignee: z
-        .object({
-          id: z.string(),
-          name: z.string().nullable(),
-          firstName: z.string().nullable(),
-          lastName: z.string().nullable(),
-          image: z.string().nullable(),
-        })
-        .nullable(),
-    })
-    .nullable(),
-  actions: z
-    .array(z.object({ label: z.string(), url: z.string().optional(), action: z.string().optional() }))
-    .optional(),
-});
+const notificationItemContract = z
+  .object({
+    id: z.number().int(),
+    orgId: z.string(),
+    userId: z.string().nullable(),
+    type: z.enum(DB_ENUMS.notification_type),
+    priority: z.enum(DB_ENUMS.notification_priority),
+    category: z.enum(DB_ENUMS.notification_category),
+    sourceModule: z.string().nullable(),
+    eventKey: z.string().nullable(),
+    entityType: z.string().nullable(),
+    entityId: z.string().nullable(),
+    reason: z.string().nullable(),
+    title: z.string(),
+    message: z.string(),
+    link: z.string().nullable(),
+    isRead: z.boolean(),
+    pinned: z.boolean(),
+    channel: z.string(),
+    metadata: z.record(z.string(), z.unknown()).nullable(),
+    archivedAt: z.string().nullable(),
+    snoozedUntil: z.string().nullable(),
+    createdAt: z.string(),
+    ticketContext: z
+      .object({
+        ticketId: z.number().int(),
+        projectId: z.number().int(),
+        projectName: z.string(),
+        ticketKey: z.string(),
+        ticketTitle: z.string(),
+        priority: z.string().nullable(),
+        status: z.string().nullable(),
+        type: z.string().nullable(),
+        assignee: z
+          .object({
+            id: z.string(),
+            name: z.string().nullable(),
+            firstName: z.string().nullable(),
+            lastName: z.string().nullable(),
+            image: z.string().nullable(),
+          })
+          .strict()
+          .nullable(),
+      })
+      .strict()
+      .nullable(),
+  })
+  .strict();
 
 /** Keyset page of notifications — `notificationListResponseSchema`. */
-export const notificationListContract = idCursorPageContract(notificationItemContract);
+export const notificationListContract = idCursorPageContract(
+  notificationItemContract,
+);
 
 /** Unread count — `notificationCountResponseSchema`. */
 export const notificationCountContract = z
   .object({ count: z.number().int().nonnegative() })
   .strict();
 
-export const notificationStreamTokenContract = z.object({ token: z.string().min(1) }).strict();
+export const notificationStreamTokenContract = z
+  .object({ token: z.string().min(1) })
+  .strict();
 
 /** Generic mutation ack — `notificationSuccessResponseSchema`. */
-export const notificationAckContract = z.object({ success: z.literal(true) }).strict();
+export const notificationAckContract = z
+  .object({ success: z.literal(true) })
+  .strict();
 
 /** Provider row — `notificationProviderRowSchema`. */
 export const notificationProviderContract = z.object({
@@ -91,7 +91,9 @@ export const notificationProviderContract = z.object({
 });
 
 /** `notificationProvidersListSchema` */
-export const notificationProvidersListContract = z.array(notificationProviderContract);
+export const notificationProvidersListContract = z.array(
+  notificationProviderContract,
+);
 
 /** `notificationProviderTestSchema` */
 export const notificationProviderTestContract = z.object({
@@ -129,10 +131,13 @@ const notificationEventDefinitionBase = z.object({
 });
 
 /** `notificationEventsListSchema` */
-export const notificationEventsListContract = z.array(notificationEventDefinitionBase);
+export const notificationEventsListContract = z.array(
+  notificationEventDefinitionBase,
+);
 
 /** `notificationEventDefinitionSchema` (single row update) */
-export const notificationEventDefinitionContract = notificationEventDefinitionBase;
+export const notificationEventDefinitionContract =
+  notificationEventDefinitionBase;
 
 const policyOverrideSchema = z.object({
   channels: z.array(notificationChannelEnum).optional(),
@@ -182,7 +187,10 @@ export const notificationPreferenceContract = z.object({
   eventPreferences: z.record(z.string(), z.unknown()),
   modulePreferences: z.record(z.string(), z.unknown()),
   inherited: z
-    .object({ defaultChannels: z.array(z.string()), canUserOverride: z.boolean() })
+    .object({
+      defaultChannels: z.array(z.string()),
+      canUserOverride: z.boolean(),
+    })
     .optional(),
   availableChannels: z.array(z.enum(DB_ENUMS.notification_channel)).optional(),
   createdAt: z.string().optional(),
@@ -206,15 +214,10 @@ export const suppressionsListContract = z.array(suppressionBase);
 export const suppressionRowContract = suppressionBase;
 
 /** `notificationSuccessSchema` */
-export const notificationSuccessContract = z.object({ success: z.literal(true) });
+export const notificationSuccessContract = z.object({
+  success: z.literal(true),
+});
 
-/**
- * `NotificationDispatchService.emitNow` -> `DispatchResult`
- * (`notification-dispatch.service.ts`). Written from that interface, NOT from
- * the module's `notificationEmitSchema`, which declares `{ chunkInput, dedupeKey }`
- * — a copy of a neighbouring schema that passes vacuously (`z.unknown()` on an
- * absent key) and describes nothing this handler returns.
- */
 export const notificationEmitContract = z.object({
   eventKey: z.string(),
   notified: z.number().int(),
@@ -336,5 +339,6 @@ export const preferenceEventCatalogItemContract = z.object({
 });
 
 /** `notificationEventCatalogSchema` (user-facing) */
-export const preferenceEventCatalogContract = z.array(preferenceEventCatalogItemContract);
-
+export const preferenceEventCatalogContract = z.array(
+  preferenceEventCatalogItemContract,
+);

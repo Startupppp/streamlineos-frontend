@@ -92,14 +92,20 @@ describe("notificationListContract — inbox item required fields", () => {
     expect(item?.link).toBe(baseRow.link);
   });
 
-  it("accepts nullable message, link, archivedAt and snoozedUntil so archive and snooze states do not require the field to be set", () => {
-    const row = { ...baseRow, message: null, link: null, archivedAt: null, snoozedUntil: null };
+  it("requires the backend's non-null message while accepting nullable link, archivedAt and snoozedUntil", () => {
+    const row = { ...baseRow, message: "", link: null, archivedAt: null, snoozedUntil: null };
     const parsed = notificationListContract.parse({ data: [row], hasMore: false, nextCursor: null });
     const item = parsed.data[0];
-    expect(item?.message).toBeNull();
+    expect(item?.message).toBe("");
     expect(item?.link).toBeNull();
     expect(item?.archivedAt).toBeNull();
     expect(item?.snoozedUntil).toBeNull();
+  });
+
+  it("rejects a nullable message because the backend response schema requires a string", () => {
+    expect(() => notificationListContract.parse({
+      data: [{ ...baseRow, message: null }], hasMore: false, nextCursor: null,
+    })).toThrow(ZodError);
   });
 
   it("rejects a row missing the required title field so a backend regression that drops the title fails here, not as a blank inbox row", () => {

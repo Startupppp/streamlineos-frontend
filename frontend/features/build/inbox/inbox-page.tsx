@@ -72,16 +72,13 @@ export function InboxPage() {
   const snooze = useSnoozeNotification(),
     unsnooze = useUnsnoozeNotification();
   const [selectionDismissed, setSelectionDismissed] = React.useState(false);
-  const [ownerReady, setOwnerReady] = React.useState(false);
   const searchInputRef = React.useRef<HTMLInputElement | null>(null);
   const returnToListFocus = React.useRef(false);
 
   const urlState = useInboxUrlState();
 
   const currentSelection =
-    ownerReady &&
-    selection?.owner.isCurrent() &&
-    captureOwner() === selection.owner
+    selection?.owner.isCurrent() && captureOwner() === selection.owner
       ? selection
       : null;
   const selectedRead = useInboxSelectedNotification(
@@ -100,10 +97,6 @@ export function InboxPage() {
       setSelectionDismissed(true);
     }
   }, [selectedRead.isMissing]);
-
-  React.useLayoutEffect(() => {
-    if (captureOwner()) setOwnerReady(true);
-  }, [captureOwner]);
 
   function handleSelect(notification: Notification) {
     const owner = captureOwner();

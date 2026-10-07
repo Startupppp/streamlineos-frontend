@@ -1,6 +1,7 @@
 import type { InfiniteData, Query, QueryClient } from "@tanstack/react-query";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import type { Notification } from "@/types/notifications";
+import type { IdCursorPage } from "@/hooks/api/id-cursor-page-schema";
 import type { NotificationInboxItem, UnifiedInboxItem, UnifiedInboxResponse } from "@/types/inbox";
 
 type PersonalRow = Notification | NotificationInboxItem;
@@ -32,15 +33,15 @@ function mapRows(data: unknown, transform: (row: CacheRow) => CacheRow | null): 
   function map(rows: CacheRow[]) {
     return rows.flatMap((row) => { const next = transform(row); return next === null ? [] : [next]; });
   }
-  if (isInfiniteData<Notification[] | UnifiedInboxResponse>(data)) {
+  if (isInfiniteData<Notification[] | IdCursorPage<Notification> | UnifiedInboxResponse>(data)) {
     return { ...data, pages: data.pages.map((page) => Array.isArray(page)
-      ? map(page) : { ...page, items: map(page.items) }) };
+      ? map(page) : "items" in page ? { ...page, items: map(page.items) } : { ...page, data: map(page.data) }) };
   }
   return isNotificationList(data) ? map(data) : data;
 }
 function rowsOf(data: unknown): CacheRow[] {
-  if (isInfiniteData<Notification[] | UnifiedInboxResponse>(data))
-    return data.pages.flatMap<CacheRow>((page) => Array.isArray(page) ? page : page.items);
+  if (isInfiniteData<Notification[] | IdCursorPage<Notification> | UnifiedInboxResponse>(data))
+    return data.pages.flatMap<CacheRow>((page) => Array.isArray(page) ? page : "items" in page ? page.items : page.data);
   return isNotificationList(data) ? data : [];
 }
 function readField(row: PersonalRow, change: NotificationFieldChange): NotificationFieldChange {
