@@ -1,4 +1,7 @@
-import { resolveWizardMemberLabel } from "./resolve-wizard-member-label";
+import {
+  findWizardMember,
+  resolveWizardMemberLabel,
+} from "./resolve-wizard-member-label";
 import type { WizardMember } from "./use-wizard-members";
 
 const MEMBERS: WizardMember[] = [
@@ -48,5 +51,31 @@ describe("resolveWizardMemberLabel", () => {
     expect(
       resolveWizardMemberLabel("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee", [], SESSION),
     ).toBe("Unknown member");
+  });
+});
+
+describe("findWizardMember", () => {
+  it("returns the directory member when the id is present", () => {
+    expect(findWizardMember("u1", MEMBERS, SESSION)).toEqual({
+      name: "Alice Smith",
+      email: "alice@example.com",
+    });
+  });
+
+  it("returns the session user when the default lead id misses the directory", () => {
+    expect(findWizardMember(SESSION.id, [], SESSION)).toEqual({
+      name: SESSION.name,
+      email: SESSION.email,
+    });
+  });
+
+  it("treats a session user with no name or email as unresolved", () => {
+    const nameless = { id: SESSION.id, name: null, email: null };
+    expect(findWizardMember(SESSION.id, [], nameless)).toBeNull();
+    expect(resolveWizardMemberLabel(SESSION.id, [], nameless)).toBe("Unknown member");
+  });
+
+  it("returns null for an unset id", () => {
+    expect(findWizardMember(undefined, MEMBERS, SESSION)).toBeNull();
   });
 });

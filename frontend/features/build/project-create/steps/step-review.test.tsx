@@ -11,6 +11,7 @@ jest.mock("@/hooks/api/build/templates", () => ({
 }));
 
 jest.mock("../use-wizard-members", () => ({
+  ...jest.requireActual("../use-wizard-members"),
   useWizardMembers: jest.fn(),
 }));
 

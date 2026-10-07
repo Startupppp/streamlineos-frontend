@@ -1,9 +1,11 @@
 "use client";
 
 import { useMemo } from "react";
+import { useSession } from "next-auth/react";
 import { useCan } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { useBuildMembers } from "@/hooks/api/build/build-members";
+import type { WizardSessionUser } from "./resolve-wizard-member-label";
 
 /**
  * Member directory for the create-project wizard.
@@ -51,4 +53,15 @@ export function useWizardMembers(limit = 100): WizardMember[] {
     }
     return [...byId.values()];
   }, [orgData?.data, workspaceData?.data]);
+}
+
+export function useWizardSessionUser(): WizardSessionUser | undefined {
+  const { data: session } = useSession();
+  const id = session?.user?.id;
+  const name = session?.user?.name;
+  const email = session?.user?.email;
+  return useMemo(
+    () => (id ? { id, name, email } : undefined),
+    [id, name, email],
+  );
 }

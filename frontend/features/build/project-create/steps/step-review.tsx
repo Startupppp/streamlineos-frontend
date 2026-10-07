@@ -1,11 +1,10 @@
 "use client";
 
 import { useMemo } from "react";
-import { useSession } from "next-auth/react";
 import { useProjectTemplates } from "@/hooks/api/build/templates";
 import { useSimpleClientsList } from "@/hooks/api/crm/clients";
 import type { WizardDraft } from "../use-project-create";
-import { useWizardMembers } from "../use-wizard-members";
+import { useWizardMembers, useWizardSessionUser } from "../use-wizard-members";
 import { resolveWizardMemberLabel } from "../resolve-wizard-member-label";
 
 interface StepReviewProps {
@@ -42,8 +41,7 @@ const FEATURE_LABELS: Record<string, string> = {
 };
 
 export function StepReview({ draft }: StepReviewProps) {
-  const { data: session } = useSession();
-  const sessionUser = session?.user;
+  const sessionUser = useWizardSessionUser();
   const { data: templatePages } = useProjectTemplates();
   const members = useWizardMembers(100);
   const { data: clientsList } = useSimpleClientsList();

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useSession } from "next-auth/react";
 import {
   Command,
   CommandEmpty,
@@ -29,8 +28,8 @@ import { Check, ChevronDown, User } from "lucide-react";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { useSimpleClientsList } from "@/hooks/api/crm/clients";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
-import { useWizardMembers } from "../use-wizard-members";
-import { resolveWizardMemberLabel } from "../resolve-wizard-member-label";
+import { useWizardMembers, useWizardSessionUser } from "../use-wizard-members";
+import { findWizardMember } from "../resolve-wizard-member-label";
 
 const NONE_SENTINEL = "__none__";
 
@@ -55,7 +54,7 @@ export function BasicsManagerField({
   value,
   onChange,
 }: BasicsManagerFieldProps) {
-  const { data: session } = useSession();
+  const sessionUser = useWizardSessionUser();
   const members = useWizardMembers(100);
 
   const [managerOpen, setManagerOpen] = useState(false);
@@ -74,10 +73,7 @@ export function BasicsManagerField({
   const selectedManager = value
     ? members.find((m) => m.userId === value)
     : null;
-  const selectedLabel = value
-    ? resolveWizardMemberLabel(value, members, session?.user, "No manager")
-    : null;
-  const hasResolvedSelection = Boolean(value) && selectedLabel !== "Unknown member" && selectedLabel !== "No manager";
+  const selectedPerson = findWizardMember(value, members, sessionUser);
 
   function handleSelect(selected: string) {
     onChange(selected === NONE_SENTINEL ? undefined : selected);
@@ -100,21 +96,18 @@ export function BasicsManagerField({
             aria-label="Select project manager"
             className={cn(
               "w-full justify-between gap-2 font-normal h-8",
-              !hasResolvedSelection && "text-muted-foreground",
+              !selectedPerson && "text-muted-foreground",
             )}
           >
-            {hasResolvedSelection ? (
+            {selectedPerson ? (
               <span className="flex items-center gap-2 min-w-0">
                 <Avatar className="h-5 w-5 shrink-0">
                   <AvatarImage src={resolveImageUrl(selectedManager?.image ?? null)} />
                   <AvatarFallback className="text-micro">
-                    {getUserInitials({
-                      name: selectedManager?.name ?? session?.user?.name,
-                      email: selectedManager?.email ?? session?.user?.email,
-                    })}
+                    {getUserInitials(selectedPerson)}
                   </AvatarFallback>
                 </Avatar>
-                <span className="min-w-0 truncate text-sm">{selectedLabel}</span>
+                <span className="min-w-0 truncate text-sm">{getUserDisplayName(selectedPerson)}</span>
               </span>
             ) : (
               <span className="flex items-center gap-2">

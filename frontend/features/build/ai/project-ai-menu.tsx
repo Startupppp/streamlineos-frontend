@@ -41,8 +41,7 @@ interface ProjectAiMenuProps {
 function isEmptySummary(data: ProjectSummaryResult): boolean {
   return (
     data.evidence.totalTasks === 0 ||
-    data.summary === NO_DATA_SUMMARY ||
-    /no tickets yet/i.test(data.summary)
+    data.summary === NO_DATA_SUMMARY
   );
 }
 

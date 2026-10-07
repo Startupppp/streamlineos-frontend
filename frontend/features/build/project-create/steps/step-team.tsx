@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { User } from "lucide-react";
-import { useSession } from "next-auth/react";
 import { SearchInput } from "@/components/ui/search-input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -11,12 +10,12 @@ import { cn } from "@/lib/utils";
 import { useCan } from "@/hooks/api/access";
 import { getUserDisplayName } from "@/lib/person-display";
 import type { StepSharedProps } from "../use-project-create";
-import { useWizardMembers } from "../use-wizard-members";
+import { useWizardMembers, useWizardSessionUser } from "../use-wizard-members";
 import { resolveWizardMemberLabel } from "../resolve-wizard-member-label";
 
 export function StepTeam({ draft, updateDraft }: StepSharedProps) {
-  const { data: session } = useSession();
-  const currentUserId = session?.user?.id;
+  const sessionUser = useWizardSessionUser();
+  const currentUserId = sessionUser?.id;
   const canManage = useCan("build:manage");
   const members = useWizardMembers(100);
   const [search, setSearch] = useState("");
@@ -49,11 +48,11 @@ export function StepTeam({ draft, updateDraft }: StepSharedProps) {
         resolveWizardMemberLabel(
           id,
           members,
-          session?.user,
+          sessionUser,
           "No members added",
         ),
       ),
-    [draft.memberIds, members, session?.user],
+    [draft.memberIds, members, sessionUser],
   );
 
   if (!canManage) {
