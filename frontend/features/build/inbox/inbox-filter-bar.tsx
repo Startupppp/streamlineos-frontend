@@ -92,6 +92,7 @@ export function InboxFilterBar({
         placeholder: "Search notifications…",
         label: "Search notifications",
         inputRef: searchInputRef,
+        inputClassName: "focus-visible:ring-1 focus-visible:ring-offset-0",
       }}
       filters={[
         ...(getBuildInboxTriageSection(section) === "ALL" && onSectionChange

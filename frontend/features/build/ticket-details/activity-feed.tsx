@@ -1,14 +1,16 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { ErrorReference } from "@/components/shared/error-reference";
 import { MessageSquare, AlertTriangle } from "lucide-react";
-import { SendIcon, XIcon } from "@animateicons/react/lucide";
+import { useRef } from "react";
+import { PaperclipIcon, SendIcon, XIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { AiActionsMenu } from "@/components/ai/ai-actions-menu";
-import { getErrorMessage } from "@/lib/get-error-message";
 import type { TicketComment } from "@/types/projects";
-import { MentionTextarea, type MentionUser } from "@/features/build/comments/mention-textarea";
+import {
+  MentionTextarea,
+  type MentionUser,
+} from "@/features/build/comments/mention-textarea";
 import { CommentItem } from "./comment-item";
 import { useActivityFeed } from "./use-activity-feed";
 
@@ -37,42 +39,94 @@ export function ActivityFeed({
   activityAiActions,
 }: ActivityFeedProps) {
   const {
-    newComment, setNewComment, composerReady, draftLoading, draftLoadError,
-    draftPersistenceStatus, draftPersistenceError,
-    canUpdate, canCreate, canAi,
-    currentUserId, commentRefs,
-    replyingTo, replyText, setReplyText,
-    editingSaveId, deletingId,
+    newComment,
+    setNewComment,
+    composerReady,
+    draftLoading,
+    draftLoadError,
+    draftPersistenceStatus,
+    draftPersistenceError,
+    canUpdate,
+    canCreate,
+    canAi,
+    currentUserId,
+    commentRefs,
+    replyingTo,
+    replyText,
+    setReplyText,
+    editingSaveId,
+    deletingId,
     commentNotFound,
-    addComment, addReply,
-    repliesMap, sortedTopLevel, visibleTopLevel,
+    addComment,
+    addReply,
+    repliesMap,
+    sortedTopLevel,
+    visibleTopLevel,
     commentPermalink,
     draftAction,
-    handleSubmit, handleReplySubmit, handleSaveEdit, handleDeleteComment,
-    handleTopKeyDown, handleReplyKeyDown, handleReply, handleReact, handleUnreact,
-    handleCancelReply, handleDismissNotFound, handleCreateIssue,
-    handleRetryDraft, handleRetryPersistence,
+    handleSubmit,
+    handleReplySubmit,
+    handleSaveEdit,
+    handleDeleteComment,
+    handleTopKeyDown,
+    handleReplyKeyDown,
+    handleReply,
+    handleReact,
+    handleUnreact,
+    handleCancelReply,
+    handleDismissNotFound,
+    handleCreateIssue,
+    handleRetryDraft,
+    handleRetryPersistence,
+    canAttachFiles,
+    isAttachingFiles,
+    handleAttachFiles,
     handleShowOlderComments,
-  } = useActivityFeed({ ticketId, projectId, projectKey, ticketNumber, comments, members, highlightCommentId });
+  } = useActivityFeed({
+    ticketId,
+    projectId,
+    projectKey,
+    ticketNumber,
+    comments,
+    members,
+    highlightCommentId,
+  });
+  const attachmentInputRef = useRef<HTMLInputElement>(null);
+
+  function handleChooseFiles() {
+    attachmentInputRef.current?.click();
+  }
+
+  function handleAttachmentChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? []);
+    event.target.value = "";
+    if (files.length > 0) void handleAttachFiles(files);
+  }
 
   return (
     <div className="w-full space-y-4">
       <div className="flex w-full flex-1 min-w-0 flex-col gap-2">
-        <h4 className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5 pr-2 text-dense font-medium uppercase tracking-wide text-muted-foreground max-md:pr-14">
-          <MessageSquare className="h-3.5 w-3.5 shrink-0" />
-          <span className="truncate">Activity</span>
-          {comments.length > 0 && (
-            <span className="shrink-0 text-muted-foreground">({comments.length})</span>
-          )}
-          {activityAiActions}
-          {canAi ? (
-            <AiActionsMenu
-              actions={[draftAction]}
-              triggerLabel="Draft comment"
-              triggerVariant="ghost"
-              align="end"
-            />
-          ) : null}
+        <h4 className="flex min-w-0 flex-1 items-center gap-1.5 pr-2 text-dense font-medium uppercase tracking-wide text-muted-foreground max-md:pr-14">
+          <span className="flex min-w-0 items-center gap-1.5">
+            <MessageSquare className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">Activity</span>
+            {comments.length > 0 ? (
+              <span className="shrink-0 text-muted-foreground">
+                ({comments.length})
+              </span>
+            ) : null}
+          </span>
+          <span className="ml-auto flex shrink-0 items-center gap-1">
+            {activityAiActions}
+            {canAi ? (
+              <AiActionsMenu
+                actions={[draftAction]}
+                triggerLabel="Draft comment"
+                triggerVariant="ghost"
+                align="end"
+              />
+            ) : null}
+          </span>
         </h4>
 
         {canUpdate && composerReady ? (
@@ -83,9 +137,31 @@ export function ActivityFeed({
               onKeyDown={handleTopKeyDown}
               placeholder="Write a comment... (Ctrl+Enter to send)"
               wrapperClassName="flex-1 min-w-0"
-              className="min-h-[80px] text-sm"
+              className="min-h-[80px] border-border/70 text-sm shadow-none focus-visible:ring-1 focus-visible:ring-offset-0"
               users={members}
             />
+            {canAttachFiles ? (
+              <>
+                <input
+                  ref={attachmentInputRef}
+                  type="file"
+                  multiple
+                  className="hidden"
+                  onChange={handleAttachmentChange}
+                />
+                <AnimatedIconButton
+                  type="button"
+                  size="icon-sm"
+                  variant="ghost"
+                  icon={PaperclipIcon}
+                  iconSize={14}
+                  className="shrink-0"
+                  onClick={handleChooseFiles}
+                  disabled={isAttachingFiles}
+                  aria-label="Attach files to ticket"
+                />
+              </>
+            ) : null}
             <AnimatedIconButton
               type="button"
               size="icon-sm"
@@ -98,19 +174,47 @@ export function ActivityFeed({
             />
           </div>
         ) : null}
-        {canUpdate && draftLoading ? <p role="status" className="text-xs text-muted-foreground">Loading saved draft…</p> : null}
-        {canUpdate && draftPersistenceStatus ? <p role="status" className="text-xs text-muted-foreground">{draftPersistenceStatus}</p> : null}
+        {canUpdate && draftLoading ? (
+          <p role="status" className="text-xs text-muted-foreground">
+            Loading saved draft…
+          </p>
+        ) : null}
+        {canUpdate && !draftPersistenceError && draftPersistenceStatus ? (
+          <p role="status" className="text-xs text-muted-foreground">
+            {draftPersistenceStatus}
+          </p>
+        ) : null}
         {canUpdate && draftPersistenceError ? (
-          <div role="alert" className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-            <span>{getErrorMessage(draftPersistenceError)}</span>
+          <div
+            role="alert"
+            className="flex flex-wrap items-center gap-1.5 text-xs text-destructive"
+          >
+            <span>Failed to save.</span>
             <ErrorReference error={draftPersistenceError} />
-            <Button type="button" variant="outline" size="sm" onClick={handleRetryPersistence}>Retry saving draft</Button>
+            <button
+              type="button"
+              className="font-medium underline underline-offset-2 hover:no-underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              onClick={handleRetryPersistence}
+            >
+              Retry
+            </button>
           </div>
         ) : null}
         {canUpdate && draftLoadError ? (
-          <div className="flex flex-wrap items-center gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive" role="alert">
-            <span>{"Couldn't load the saved draft. Try again, or start a new comment."}</span>
-            <Button type="button" variant="outline" size="sm" onClick={handleRetryDraft}>Retry</Button>
+          <div
+            className="flex min-w-0 items-center gap-2 text-xs text-destructive"
+            role="alert"
+          >
+            <span className="min-w-0 flex-1 truncate">
+              Couldn&apos;t load the saved draft. Try again, or start a new comment.
+            </span>
+            <button
+              type="button"
+              className="shrink-0 rounded-md px-2 py-1 font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              onClick={handleRetryDraft}
+            >
+              Retry
+            </button>
           </div>
         ) : null}
       </div>
@@ -118,7 +222,9 @@ export function ActivityFeed({
       {commentNotFound && (
         <div className="flex items-start gap-2 rounded-md border border-status-warning-rule bg-status-warning-surface px-3 py-2.5 text-xs text-status-warning-ink-strong">
           <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-status-warning-ink" />
-          <span className="flex-1">Comment not found — it may have been deleted.</span>
+          <span className="flex-1">
+            Comment not found — it may have been deleted.
+          </span>
           <button
             type="button"
             onClick={handleDismissNotFound}
@@ -166,7 +272,11 @@ export function ActivityFeed({
               {(repliesMap[comment.id]?.length ?? 0) > 0 && (
                 <div className="ml-4 mt-2 space-y-2 border-l border-border pl-3 sm:ml-9">
                   {[...repliesMap[comment.id]]
-                    .sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime())
+                    .sort(
+                      (a, b) =>
+                        new Date(a.createdAt || 0).getTime() -
+                        new Date(b.createdAt || 0).getTime(),
+                    )
                     .map((reply) => (
                       <div
                         key={reply.id}
@@ -197,7 +307,9 @@ export function ActivityFeed({
                           onDelete={handleDeleteComment}
                           isSavingEdit={editingSaveId === reply.id}
                           isDeletingComment={deletingId === reply.id}
-                          onCreateIssue={canCreate ? handleCreateIssue : undefined}
+                          onCreateIssue={
+                            canCreate ? handleCreateIssue : undefined
+                          }
                         />
                       </div>
                     ))}
@@ -222,7 +334,9 @@ export function ActivityFeed({
 
       {comments.length === 0 && (
         <p className="text-xs text-muted-foreground text-center py-4">
-          {canUpdate ? "No comments yet. Be the first to comment." : "No comments yet."}
+          {canUpdate
+            ? "No comments yet. Be the first to comment."
+            : "No comments yet."}
         </p>
       )}
     </div>

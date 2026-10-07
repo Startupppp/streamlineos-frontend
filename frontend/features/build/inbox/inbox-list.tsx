@@ -13,7 +13,6 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCheckIcon } from "@animateicons/react/lucide";
 import {
   useInfiniteNotifications,
-  useMarkNotificationRead,
   useMarkAllNotificationsRead,
 } from "@/hooks/api/notifications-inbox";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
@@ -87,7 +86,6 @@ export function InboxList({
 
   const [pagesShown, setPagesShown] = React.useState(1);
   const [selectedIds, setSelectedIds] = React.useState<Set<number>>(new Set());
-  const { mutate: markRead } = useMarkNotificationRead();
   const { mutate: markAllRead, isPending: isMarkingAll } = useMarkAllNotificationsRead("build");
 
   const rawNotifications = React.useMemo(() => data?.pages.flat() ?? [], [data]);
@@ -109,7 +107,6 @@ export function InboxList({
   const deferredVisibleNotifications = React.useDeferredValue(visibleNotifications);
 
   function handleSelect(notification: Notification) {
-    if (!notification.isRead && isOnline) markRead(notification.id);
     onSelect(notification);
   }
   function handleTabChange(value: string) {

@@ -242,9 +242,9 @@ export const InboxNotificationItem = React.memo(function InboxNotificationItem({
     )}>
       {isSelectable ? <div
         className={cn(
-          "absolute left-3 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-lg bg-card/95 transition-[opacity,transform] duration-150",
+          "absolute left-3 top-2 z-10 flex h-8 w-8 items-center justify-center transition-[opacity,transform] duration-150",
           "md:scale-95 md:opacity-0 md:group-hover/notification:scale-100 md:group-hover/notification:opacity-100 md:group-focus-within/notification:scale-100 md:group-focus-within/notification:opacity-100",
-          isChecked && "scale-100 opacity-100",
+          (isChecked || isSelected) && "scale-100 opacity-100",
         )}
         {...propagationShield}
       >
@@ -256,7 +256,7 @@ export const InboxNotificationItem = React.memo(function InboxNotificationItem({
       </div> : null}
       {buttonNode}
       {actions ? <div
-        className="absolute right-2 top-1/2 z-10 flex -translate-y-1/2 items-center rounded-md bg-card/95 shadow-sm transition-[opacity,transform] duration-150 md:translate-x-1 md:opacity-0 md:group-hover/notification:translate-x-0 md:group-hover/notification:opacity-100 md:group-focus-within/notification:translate-x-0 md:group-focus-within/notification:opacity-100"
+        className="absolute right-2 top-1/2 z-10 flex -translate-y-1/2 items-center transition-[opacity,transform] duration-150 md:translate-x-1 md:opacity-0 md:group-hover/notification:translate-x-0 md:group-hover/notification:opacity-100 md:group-focus-within/notification:translate-x-0 md:group-focus-within/notification:opacity-100 [&_button]:h-7 [&_button]:w-7 [&_svg]:!h-3.5 [&_svg]:!w-3.5"
         {...propagationShield}
       >{actions}</div> : null}
     </div>

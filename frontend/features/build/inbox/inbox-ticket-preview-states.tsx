@@ -6,22 +6,30 @@ import { Button } from "@/components/ui/button";
 
 export function PreviewSkeleton() {
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
-      <div className="min-h-0 min-w-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4 pt-3 scrollbar-hide lg:px-5">
-        <Skeleton className="h-6 w-2/3" />
-        <Skeleton className="h-4 w-1/3" />
-        <Skeleton className="h-32 w-full rounded-lg" />
-        <Skeleton className="h-24 w-full rounded-lg" />
-        <Skeleton className="h-40 w-full rounded-lg" />
+    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
+      <div className="min-h-0 min-w-0 flex-1 space-y-4 overflow-hidden px-4 pb-4 pt-3 scrollbar-hide lg:overflow-y-auto lg:px-5">
+        <div className="flex items-center justify-between gap-3">
+          <Skeleton className="h-7 w-2/3 rounded-md" />
+          <Skeleton className="h-8 w-8 rounded-md" />
+        </div>
+        <Skeleton className="h-3 w-1/3 rounded" />
+        <Skeleton className="h-28 w-full rounded-lg" />
+        <div className="border-t border-border pt-4">
+          <Skeleton className="h-4 w-28 rounded" />
+          <Skeleton className="mt-3 h-20 w-full rounded-lg" />
+        </div>
       </div>
       <div className="hidden shrink-0 border-t border-border px-4 py-3 lg:block lg:w-72 lg:min-w-72 lg:overflow-y-auto lg:border-t-0 lg:border-l lg:scrollbar-hide xl:w-80 xl:min-w-80">
-        <div className="mb-3 flex gap-2">
+        <div className="mb-4 flex gap-2">
           <Skeleton className="h-5 w-16 rounded-md" />
           <Skeleton className="h-5 w-20 rounded-md" />
         </div>
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="mb-3 h-9 w-full rounded-md" />
-        ))}
+        <Skeleton className="h-4 w-20 rounded" />
+        <Skeleton className="mt-2 h-9 w-full rounded-md" />
+        <Skeleton className="mt-5 h-4 w-16 rounded" />
+        <Skeleton className="mt-2 h-9 w-full rounded-md" />
+        <Skeleton className="mt-5 h-4 w-20 rounded" />
+        <Skeleton className="mt-2 h-9 w-full rounded-md" />
       </div>
     </div>
   );

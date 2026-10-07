@@ -203,22 +203,24 @@ export function AiActionsMenu({
     const onlyAction = actions[0];
     return (
       <>
-        <Button
-          type="button"
-          variant={triggerVariant}
-          size="sm"
-          disabled={disabled || Boolean(onlyAction?.disabledReason)}
-          aria-label={
-            iconOnly || !onlyAction ? triggerLabel : `${triggerLabel}, ${onlyAction.label}`
-          }
-          onClick={handleDirectRun}
-          className={cn("h-8 gap-1.5 text-xs", iconOnly && "h-9 w-9 px-0", className)}
-          {...hoverHandlers}
-        >
-          <SparklesIcon ref={iconRef} className="h-3.5 w-3.5 text-primary" />
-          {iconOnly ? null : triggerLabel}
-        </Button>
         <ResponsivePopover open={popoverOpen} onOpenChange={handlePopoverOpenChange}>
+          <ResponsivePopoverTrigger asChild>
+            <Button
+              type="button"
+              variant={triggerVariant}
+              size="sm"
+              disabled={disabled || Boolean(onlyAction?.disabledReason)}
+              aria-label={
+                iconOnly || !onlyAction ? triggerLabel : `${triggerLabel}, ${onlyAction.label}`
+              }
+              onClick={handleDirectRun}
+              className={cn("h-8 gap-1.5 text-xs", iconOnly && "h-9 w-9 px-0", className)}
+              {...hoverHandlers}
+            >
+              <SparklesIcon ref={iconRef} className="h-3.5 w-3.5 text-primary" />
+              {iconOnly ? null : triggerLabel}
+            </Button>
+          </ResponsivePopoverTrigger>
           {popoverResult}
         </ResponsivePopover>
         {overlays}

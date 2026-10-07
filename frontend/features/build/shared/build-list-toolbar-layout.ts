@@ -16,6 +16,7 @@ export interface BuildToolbarSearch {
   placeholder: string;
   label?: string;
   inputRef?: RefObject<HTMLInputElement | null>;
+  inputClassName?: string;
 }
 
 export const BUILD_TOOLBAR_FILTERS_LABEL = "Filters";

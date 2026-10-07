@@ -100,6 +100,7 @@ export function BuildListToolbar({
     placeholder: searchPlaceholder,
     label: searchLabel,
     inputRef: searchInputRef,
+    inputClassName: searchInputClassName,
   } = search ?? {};
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
@@ -253,6 +254,7 @@ export function BuildListToolbar({
           aria-label={searchLabel ?? searchPlaceholder}
           onFocus={handleSearchFocus}
           onBlur={handleSearchBlur}
+          inputClassName={searchInputClassName}
           className={cn(
             "min-w-0 flex-1 basis-[12rem] md:max-w-md",
             searchExpanded && "max-md:max-w-none max-md:basis-auto",

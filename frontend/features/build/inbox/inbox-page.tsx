@@ -33,6 +33,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
+import { useIsBelowLg } from "@/hooks/common/use-mobile";
 
 const InboxPreviewPane = dynamic(
   () =>
@@ -46,6 +47,7 @@ const InboxList = dynamic(
   { loading: () => null },
 );
 export function InboxPage() {
+  const isSinglePane = useIsBelowLg();
   const [selection, setSelection] = React.useState<{ id: number; section: "ALL" | "SNOOZED" | "ARCHIVED"; owner: NotificationMutationOwner } | null>(null);
   const { captureOwner } = useNotificationInboxInvalidation();
   const isOnline = useOnlineStatus();
@@ -67,6 +69,7 @@ export function InboxPage() {
     const owner = captureOwner();
     if (!owner || notification.sourceModule !== "build" || notification.orgId !== owner.identity.orgId
       || (notification.userId !== null && notification.userId !== owner.identity.userId)) return;
+    if (!notification.isRead && isOnline) read.mutate(notification.id);
     setSelectionDismissed(false);
     setSelection({ id: notification.id, section: getBuildInboxTriageSection(urlState.section), owner });
   }
@@ -85,7 +88,8 @@ export function InboxPage() {
   function handleSectionChange(next: NotificationSection) {
     if (next === urlState.section) return;
     urlState.setParams({ section: next === "UNREAD" ? null : next });
-    handleFilterChange();
+    setSelection(null);
+    setSelectionDismissed(true);
   }
 
   function handleQChange(raw: string) {
@@ -158,28 +162,39 @@ export function InboxPage() {
     />
   );
 
+  const previewPane = (
+    <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
+      {hasSelection && !selectedRead.notification ? <div className="flex shrink-0 border-b border-border px-3 py-2 lg:hidden">
+        <AnimatedIconButton type="button" variant="ghost" size="icon" icon={MoveLeftIcon} iconSize={16} aria-label="Back to inbox" onClick={handleClearSelection} />
+      </div> : null}
+      <PageState resolution={previewState} loading={<LoadingState variant="list" rows={3} />} onRetry={selectedRead.retry}>
+        <InboxPreviewPane notification={selectedRead.notification} onClose={handleClearSelection} />
+      </PageState>
+    </div>
+  );
+
   return (
     <PageWrapper
       title="Inbox"
       subtitle="Project updates, assignments, mentions and approvals"
       noInternalScroll
+      contentClassName="max-md:[.mobile-nav-active_&]:!pb-[calc(5rem+env(safe-area-inset-bottom,0px))]"
     >
       <PmPageShell>
         <PmSection
           index={0}
           className={cn(PM_FILL_SECTION, CONTENT_PANEL_SOLID)}
         >
-          <ResizablePanelGroup orientation="horizontal" className="h-full min-h-0 min-w-0">
+          {isSinglePane ? (
+            <div className="h-full min-h-0 min-w-0 overflow-hidden">
+              {hasSelection ? previewPane : listPane}
+            </div>
+          ) : <ResizablePanelGroup orientation="horizontal" className="h-full min-h-0 min-w-0">
             <ResizablePanel
               defaultSize="42%"
               minSize="32%"
               maxSize="50%"
-              className={cn(
-                "min-h-0 min-w-0 overflow-hidden max-lg:!flex-[1_1_100%]",
-                hasSelection
-                  ? "max-lg:hidden"
-                  : "max-lg:flex",
-              )}
+              className="min-h-0 min-w-0 overflow-hidden"
             >
               <div className="flex h-full min-h-0 min-w-0 flex-col">{listPane}</div>
             </ResizablePanel>
@@ -193,21 +208,11 @@ export function InboxPage() {
             <ResizablePanel
               defaultSize="58%"
               minSize="50%"
-              className={cn(
-                "min-h-0 min-w-0 overflow-hidden max-lg:!flex-[1_1_100%]",
-                hasSelection ? "max-lg:flex" : "max-lg:hidden",
-              )}
+              className="min-h-0 min-w-0 overflow-hidden"
             >
-              <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
-                {hasSelection && !selectedRead.notification ? <div className="flex shrink-0 border-b border-border px-3 py-2 lg:hidden">
-                  <AnimatedIconButton type="button" variant="ghost" size="icon" icon={MoveLeftIcon} iconSize={16} aria-label="Back to inbox" onClick={handleClearSelection} />
-                </div> : null}
-                <PageState resolution={previewState} loading={<LoadingState variant="list" rows={3} />} onRetry={selectedRead.retry}>
-                  <InboxPreviewPane notification={selectedRead.notification} onClose={handleClearSelection} />
-                </PageState>
-              </div>
+              {previewPane}
             </ResizablePanel>
-          </ResizablePanelGroup>
+          </ResizablePanelGroup>}
         </PmSection>
       </PmPageShell>
     </PageWrapper>

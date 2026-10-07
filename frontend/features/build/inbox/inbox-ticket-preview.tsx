@@ -16,6 +16,8 @@ import { TicketDetailRightPanel } from "@/features/build/ticket-details/ticket-d
 import { useTicketDetail } from "@/features/build/ticket-details/use-ticket-detail";
 import type { InboxTicketLinkTarget } from "./parse-inbox-ticket-link";
 import { useCan } from "@/hooks/api/access";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 
 const RIGHT_PANEL_COLLAPSED_KEY =
   "streamlineos:ticket-detail:right-panel:collapsed";
@@ -101,12 +103,27 @@ export function InboxTicketPreview({
 
   const resolving = target.ticketId == null && byKeyLoading;
   const isLoading = resolving || (resolvedTicketId != null && ticketLoading);
+  const loadingState = usePageState({
+    permission: "build:view",
+    isLoading,
+    isError: false,
+  });
   const displayKey = formatTicketKey(
     detailProject?.key ?? projectData?.key,
     ticket?.ticketNumber,
   );
 
-  if (isLoading) return <PreviewSkeleton />;
+  if (isLoading) {
+    return (
+      <PageState
+        resolution={loadingState}
+        loading={<PreviewSkeleton />}
+        className="h-full min-h-0"
+      >
+        <div />
+      </PageState>
+    );
+  }
 
   if (resolvedTicketId == null)
     return (

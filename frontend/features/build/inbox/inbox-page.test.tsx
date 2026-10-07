@@ -52,7 +52,7 @@ jest.mock("@/hooks/api/notifications-inbox", () => ({
   useInboxSelectedNotification: (id: number | null) => ({ notification: id === null || mockReadState !== "ready" ? null : makeNotification(id),
     isPending: id !== null && mockReadState === "pending", isMissing: false,
     error: id !== null && mockReadState === "error" ? new ApiError("Unavailable", 503) : null, retry: jest.fn() }),
-  useMarkNotificationRead: () => ({ mutateAsync: jest.fn() }),
+  useMarkNotificationRead: () => ({ mutate: jest.fn(), mutateAsync: jest.fn() }),
 }));
 
 jest.mock("@/hooks/api/notifications-inbox-actions", () => ({
@@ -101,11 +101,13 @@ beforeEach(() => {
       onSelect,
       selectedId,
       onClearSelection,
+      onSectionChange,
       searchInputRef,
     }: {
       onSelect: (n: Notification) => void;
       selectedId: number | null;
       onClearSelection?: () => void;
+      onSectionChange?: (section: "ARCHIVED") => void;
       selectionDismissed?: boolean;
       searchInputRef: React.RefObject<HTMLInputElement | null>;
     }) => {
@@ -120,6 +122,7 @@ beforeEach(() => {
           <input ref={searchInputRef} aria-label="Search notifications" />
           <button data-testid="select-notification" onClick={handleSelectNotification} />
           <button data-testid="auto-clear" onClick={handleAutoClear} />
+          <button data-testid="switch-done" onClick={() => onSectionChange?.("ARCHIVED")} />
         </div>
       );
     },
@@ -195,11 +198,18 @@ describe("InboxPage", () => {
     const user = userEvent.setup();
     render(<InboxPage />);
     await waitFor(() => expect(screen.getByTestId("select-notification")).toBeInTheDocument());
-    const listPanel = screen
-      .getByTestId("inbox-list")
-      .closest('[data-slot="resizable-panel"]')?.firstElementChild;
     await user.click(screen.getByTestId("select-notification"));
-    expect(listPanel?.className).toMatch(/hidden/);
+    expect(screen.queryByTestId("inbox-list")).toBeNull();
+    expect(screen.getByTestId("inbox-preview-pane")).toBeInTheDocument();
+  });
+
+  it("clears the selected notification when the triage tab changes", async () => {
+    const user = userEvent.setup();
+    render(<InboxPage />);
+    await user.click(await screen.findByTestId("select-notification"));
+    expect(screen.getByTestId("inbox-list")).toHaveAttribute("data-selected-id", "42");
+    await user.click(screen.getByTestId("switch-done"));
+    expect(screen.getByTestId("inbox-list")).toHaveAttribute("data-selected-id", "null");
   });
 
   it("does not own usePageState itself — state classification lives in InboxList", async () => {

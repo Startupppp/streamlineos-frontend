@@ -4,7 +4,7 @@ import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useAddComment } from "@/hooks/api/build/ticket-sub-resources";
+import { useAddAttachment, useAddComment } from "@/hooks/api/build/ticket-sub-resources";
 import { useCreateTicket } from "@/hooks/api/build/tickets";
 import { useUpdateComment, useDeleteComment } from "@/hooks/api/build/comment-mutations";
 import { useDeleteCommentDraftByTicket } from "@/hooks/api/build/comment-draft-commands";
@@ -18,6 +18,7 @@ import type { TicketComment } from "@/types/projects";
 import type { MentionUser } from "@/features/build/comments/mention-textarea";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
+import { MAX_PROJECT_FILE_BYTES, useUploadProjectFile } from "@/hooks/api/build/project-files";
 
 const COMMENT_RENDER_PAGE_SIZE = 20;
 
@@ -56,6 +57,9 @@ export function useActivityFeed({
   } = useTicketCommentComposer(ticketId, canUpdate);
   const canCreate = useCan("build:tickets:create");
   const canAi = useCan("build:ai:use");
+  const canAttachFiles = useCan("build:files:manage") && canUpdate;
+  const uploadProjectFile = useUploadProjectFile(projectId);
+  const addAttachment = useAddAttachment();
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -200,6 +204,22 @@ export function useActivityFeed({
   const draftAction = useDraftCommentAction(ticketId, handleApplyDraft);
   const handleRetryDraft = useCallback(() => { void retryDraft(); }, [retryDraft]);
   const handleRetryPersistence = useCallback(() => { void retryPersistence(); }, [retryPersistence]);
+  const handleAttachFiles = useCallback(async (files: File[]) => {
+    const oversized = files.find((file) => file.size > MAX_PROJECT_FILE_BYTES);
+    if (oversized) {
+      toast.error(`${oversized.name} exceeds the 2 MB file limit.`);
+      return;
+    }
+    try {
+      for (const file of files) {
+        const uploaded = await uploadProjectFile.mutateAsync(file);
+        await addAttachment.mutateAsync({ ticketId, projectId, fileId: uploaded.id });
+      }
+      toast.success(files.length === 1 ? "File attached" : `${files.length} files attached`);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  }, [addAttachment, projectId, ticketId, uploadProjectFile]);
 
   const { repliesMap, sortedTopLevel } = useMemo(() => {
     const topLevel = comments.filter((c) => !c.parentCommentId);
@@ -246,6 +266,9 @@ export function useActivityFeed({
     handleTopKeyDown, handleReplyKeyDown, handleReply, handleReact, handleUnreact,
     handleCancelReply, handleDismissNotFound, handleCreateIssue,
     handleApplyDraft, handleRetryDraft, handleRetryPersistence,
+    canAttachFiles,
+    isAttachingFiles: uploadProjectFile.isPending || addAttachment.isPending,
+    handleAttachFiles,
     handleShowOlderComments,
   };
 }

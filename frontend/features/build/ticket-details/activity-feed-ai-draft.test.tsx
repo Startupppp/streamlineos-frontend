@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, act } from "@testing-library/react";
+import { render, screen, act, fireEvent, waitFor } from "@testing-library/react";
 import { ActivityFeed } from "./activity-feed";
 import type { StagedCommentDraft } from "@/hooks/api/build/comment-draft-commands";
 
@@ -40,8 +40,11 @@ jest.mock("@/components/ai/ai-actions-menu", () => ({
 }));
 
 const mockMutateAsync = jest.fn();
+const mockUploadFile = jest.fn();
+const mockAddAttachment = jest.fn();
 const mockStage = jest.fn<StagedCommentDraft, [{ ticketId: number; body: string }]>();
 const mockFlush = jest.fn();
+let mockDraftLoadError: Error | null = null;
 jest.mock("@/hooks/api/build/comment-draft-commands", () => ({
   useUpsertCommentDraft: () => ({ stageEdit: mockStage, flushStaged: mockFlush, isOnline: true, isPending: false, error: null, receipt: null }),
   useDeleteCommentDraftByTicket: () => ({ mutate: jest.fn() }),
@@ -49,7 +52,7 @@ jest.mock("@/hooks/api/build/comment-draft-commands", () => ({
 jest.mock("@/hooks/api/build/comment-drafts-read", () => ({
   useTicketCommentDraft: () => ({
     owner: { scope: "authenticated:org-1:user-1", key: "authenticated:org-1:user-1:session-1", identity: { userId: "user-1", orgId: "org-1", sessionId: "session-1" } },
-    fresh: false, data: undefined, dataUpdatedAt: 0, isFetching: false, isError: false, error: null, refetch: jest.fn(),
+    fresh: false, data: undefined, dataUpdatedAt: 0, isFetching: false, isError: mockDraftLoadError !== null, error: mockDraftLoadError, refetch: jest.fn(),
   }),
 }));
 jest.mock("@/hooks/api/build/comment-drafts", () => ({
@@ -58,6 +61,11 @@ jest.mock("@/hooks/api/build/comment-drafts", () => ({
 
 jest.mock("@/hooks/api/build/ticket-sub-resources", () => ({
   useAddComment: () => ({ mutate: jest.fn(), isPending: false }),
+  useAddAttachment: () => ({ mutateAsync: mockAddAttachment, isPending: false }),
+}));
+jest.mock("@/hooks/api/build/project-files", () => ({
+  MAX_PROJECT_FILE_BYTES: 2 * 1024 * 1024,
+  useUploadProjectFile: () => ({ mutateAsync: mockUploadFile, isPending: false }),
 }));
 jest.mock("@/hooks/api/build/tickets", () => ({
   useCreateTicket: () => ({ mutate: jest.fn(), isPending: false }),
@@ -71,7 +79,7 @@ jest.mock("@/hooks/api/build/reactions", () => ({
   useRemoveReaction: () => ({ mutate: jest.fn() }),
 }));
 jest.mock("@/features/build/comments/mention-textarea", () => ({
-  MentionTextarea: ({ value, onChange, ...rest }: { value: string; onChange: (v: string) => void; [k: string]: unknown }) => (
+  MentionTextarea: ({ value, onChange, wrapperClassName: _wrapperClassName, users: _users, ...rest }: { value: string; onChange: (v: string) => void; wrapperClassName?: string; users?: unknown[]; [k: string]: unknown }) => (
     <textarea data-testid="comment-textarea" value={value} onChange={(e) => onChange(e.target.value)} {...(rest as object)} />
   ),
 }));
@@ -100,6 +108,9 @@ function renderFeed(canAi = false, canUpdate = false) {
 beforeEach(() => {
   capturedActions = [];
   mockMutateAsync.mockReset();
+  mockDraftLoadError = null;
+  mockUploadFile.mockReset().mockResolvedValue({ id: 91 });
+  mockAddAttachment.mockReset().mockResolvedValue({ id: 501 });
   localStorage.clear();
   mockFlush.mockReset().mockResolvedValue(null);
   mockStage.mockReset().mockImplementation(({ ticketId, body }) => ({
@@ -117,6 +128,56 @@ it("does not render the AI draft menu when build:ai:use is denied", () => {
 it("renders the AI draft menu when build:ai:use is granted", () => {
   renderFeed(true);
   expect(screen.getByTestId("ai-draft-menu")).toBeInTheDocument();
+});
+
+it("offers a file picker without restricting MIME types when file management is granted", () => {
+  mockUseCan.mockImplementation((key: string) => key === "build:tickets:update" || key === "build:files:manage");
+  render(<ActivityFeed {...defaultProps} />);
+  const input = document.querySelector('input[type="file"]');
+  expect(input).not.toBeNull();
+  expect(input).toHaveAttribute("type", "file");
+  expect(input).toHaveAttribute("multiple");
+  expect(input).not.toHaveAttribute("accept");
+});
+
+it("uploads a video through the project file owner and attaches it to the current ticket", async () => {
+  mockUseCan.mockImplementation((key: string) => key === "build:tickets:update" || key === "build:files:manage");
+  render(<ActivityFeed {...defaultProps} />);
+  const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+  const video = new File(["video"], "walkthrough.mp4", { type: "video/mp4" });
+  fireEvent.change(input, { target: { files: [video] } });
+  await waitFor(() => expect(mockUploadFile).toHaveBeenCalledWith(video));
+  expect(mockAddAttachment).toHaveBeenCalledWith({ ticketId: 1, projectId: 1, fileId: 91 });
+});
+
+it("replaces saved status with an inline failure and retries through a native button", async () => {
+  jest.useFakeTimers();
+  mockFlush.mockRejectedValueOnce(new Error("Storage unavailable"));
+  renderFeed(false, true);
+  fireEvent.change(screen.getByTestId("comment-textarea"), { target: { value: "Keep this draft" } });
+  await act(async () => { jest.advanceTimersByTime(1200); await Promise.resolve(); });
+  const alert = await screen.findByRole("alert");
+  expect(alert).toHaveTextContent("Failed to save.");
+  expect(screen.queryByText("Saved")).toBeNull();
+  const retry = screen.getByRole("button", { name: "Retry" });
+  expect(retry).not.toHaveAttribute("data-slot", "button");
+  mockFlush.mockResolvedValueOnce(null);
+  fireEvent.click(retry);
+  await act(async () => { await Promise.resolve(); });
+  await waitFor(() => expect(screen.queryByText("Failed to save.")).toBeNull());
+  jest.useRealTimers();
+});
+
+it("renders saved-draft load failure as one compact row with a native ghost retry", () => {
+  mockDraftLoadError = new Error("Unavailable");
+  const { container } = renderFeed(false, true);
+  const alert = screen.getByRole("alert");
+  expect(alert).toHaveTextContent("Couldn't load the saved draft");
+  expect(alert).not.toHaveClass("flex-wrap");
+  expect(alert.querySelector("span")).toHaveClass("truncate");
+  const retry = screen.getByRole("button", { name: "Retry" });
+  expect(retry).not.toHaveAttribute("data-slot", "button");
+  expect(container.querySelector('[data-slot="button"]')).not.toHaveTextContent("Retry");
 });
 
 it("successful generation puts text in the composer and does not post a comment", async () => {
