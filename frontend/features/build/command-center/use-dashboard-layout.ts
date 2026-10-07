@@ -179,8 +179,14 @@ export function useDashboardLayoutEditor() {
     [updateWidgets],
   );
   const resetLayout = useCallback(
-    () => updateWidgets(normalizeSlots(DEFAULT_WIDGETS, isAllowed)),
-    [isAllowed, updateWidgets],
+    () => {
+      if (isSaving) return;
+      setWidgets([...savedWidgets]);
+      setIsDirty(false);
+      setDraftBaseVersion(null);
+      setCanOverwriteConflict(false);
+    },
+    [isSaving, savedWidgets, setWidgets],
   );
 
   return {

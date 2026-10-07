@@ -72,6 +72,27 @@ beforeEach(() => {
 });
 
 describe("InboxList — type prop wires category to the query and resets pagination", () => {
+  it("changes triage sections without re-enabling automatic selection", async () => {
+    const user = userEvent.setup();
+    const onSectionChange = jest.fn();
+    const onFilterChange = jest.fn();
+    mockPages([1], false);
+    render(
+      <InboxList
+        selectedId={null}
+        onSelect={noop}
+        section="SNOOZED"
+        q={null}
+        searchInputRef={searchRef}
+        onSectionChange={onSectionChange}
+        onFilterChange={onFilterChange}
+      />,
+    );
+    await user.click(screen.getByRole("tab", { name: "Active" }));
+    expect(onSectionChange).toHaveBeenCalledWith("ALL");
+    expect(onFilterChange).not.toHaveBeenCalled();
+  });
+
   it.each(["SNOOZED", "ARCHIVED"] satisfies Array<"SNOOZED" | "ARCHIVED">)("exposes three triage tabs for %s while keeping Build scope", (section) => {
     mockPages([1], false);
     render(<InboxList selectedId={null} onSelect={noop} section={section} q={null} searchInputRef={searchRef} />);

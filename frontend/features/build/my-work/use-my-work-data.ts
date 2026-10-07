@@ -6,7 +6,10 @@ import { addDays, format, subDays } from "date-fns";
 import { useAllWork } from "@/hooks/api/build/all-work";
 import { useBuildListUrlState } from "@/features/build/shared/use-build-list-url-state";
 import { parseMyWorkView } from "./my-work-view";
-import { mapAllWorkTicketToKanban, buildTicketMetaMap } from "./map-all-work-ticket";
+import {
+  mapAllWorkTicketToKanban,
+  buildTicketMetaMap,
+} from "./map-all-work-ticket";
 import {
   type WorkTab,
   tabToDefaultSort,
@@ -16,16 +19,18 @@ import {
   SHOW_VIEW_SWITCHER_TABS,
 } from "./my-work-data-model";
 
-export { type WorkTab, WORK_TABS, TAB_CONFIG, parseWorkTab } from "./my-work-data-model";
+export {
+  type WorkTab,
+  WORK_TABS,
+  TAB_CONFIG,
+  parseWorkTab,
+} from "./my-work-data-model";
 interface UseMyWorkDataOptions {
   activeTab: WorkTab;
   activeView: string;
 }
 
-export function useMyWorkData({
-  activeTab,
-  activeView,
-}: UseMyWorkDataOptions) {
+export function useMyWorkData({ activeTab, activeView }: UseMyWorkDataOptions) {
   const searchParams = useSearchParams();
   const defaults = tabToDefaultSort(activeTab);
 
@@ -62,24 +67,21 @@ export function useMyWorkData({
     () => ({
       ...baseFilters,
       scope: "mine" as const,
-      dueDateTo: format(new Date(), "yyyy-MM-dd"),
+      dueDateTo: format(subDays(new Date(), 1), "yyyy-MM-dd"),
       excludeStatus: "DONE,CANCELLED",
     }),
     [baseFilters],
   );
-  const dueSoonFilters = useMemo(
-    () => {
-      const today = new Date();
-      return {
-        ...baseFilters,
-        scope: "mine" as const,
-        dueDateFrom: format(today, "yyyy-MM-dd"),
-        dueDateTo: format(addDays(today, 7), "yyyy-MM-dd"),
-        excludeStatus: "DONE,CANCELLED",
-      };
-    },
-    [baseFilters],
-  );
+  const dueSoonFilters = useMemo(() => {
+    const today = new Date();
+    return {
+      ...baseFilters,
+      scope: "mine" as const,
+      dueDateFrom: format(today, "yyyy-MM-dd"),
+      dueDateTo: format(addDays(today, 7), "yyyy-MM-dd"),
+      excludeStatus: "DONE,CANCELLED",
+    };
+  }, [baseFilters]);
   const activityFilters = useMemo(
     () => ({ ...baseFilters, scope: "mine" as const }),
     [baseFilters],
@@ -105,20 +107,19 @@ export function useMyWorkData({
     [baseFilters],
   );
   const blockedFilters = useMemo(
-    () => ({ ...baseFilters, scope: "mine" as const, blockingRelation: "true" }),
+    () => ({ ...baseFilters, scope: "mine" as const, blockedOnly: true }),
     [baseFilters],
   );
   const waitingFilters = useMemo(
-    () => ({ ...baseFilters, scope: "mine" as const, status: "WAITING_FOR_REVIEW" }),
-    [baseFilters],
-  );
-  const doneFilters = useMemo(
     () => ({
       ...baseFilters,
       scope: "mine" as const,
-      status: "DONE",
-      updatedAfter: format(subDays(new Date(), 30), "yyyy-MM-dd"),
+      status: "WAITING_FOR_REVIEW",
     }),
+    [baseFilters],
+  );
+  const doneFilters = useMemo(
+    () => ({ ...baseFilters, scope: "recently-completed" as const }),
     [baseFilters],
   );
 
@@ -201,28 +202,56 @@ export function useMyWorkData({
   } = useAllWork(doneFilters, { enabled: activeTab === "done" });
 
   const tabLoading: Record<WorkTab, boolean> = {
-    assigned: assignedLoading, created: createdLoading, subscribed: subscribedLoading,
-    overdue: overdueLoading, "due-soon": dueSoonLoading, activity: activityLoading,
-    today: todayLoading, upcoming: upcomingLoading, blocked: blockedLoading,
-    waiting: waitingLoading, done: doneLoading, snoozed: false,
+    assigned: assignedLoading,
+    created: createdLoading,
+    subscribed: subscribedLoading,
+    overdue: overdueLoading,
+    "due-soon": dueSoonLoading,
+    activity: activityLoading,
+    today: todayLoading,
+    upcoming: upcomingLoading,
+    blocked: blockedLoading,
+    waiting: waitingLoading,
+    done: doneLoading,
   };
   const tabError: Record<WorkTab, boolean> = {
-    assigned: assignedError, created: createdError, subscribed: subscribedError,
-    overdue: overdueError, "due-soon": dueSoonError, activity: activityError,
-    today: todayError, upcoming: upcomingError, blocked: blockedError,
-    waiting: waitingError, done: doneError, snoozed: false,
+    assigned: assignedError,
+    created: createdError,
+    subscribed: subscribedError,
+    overdue: overdueError,
+    "due-soon": dueSoonError,
+    activity: activityError,
+    today: todayError,
+    upcoming: upcomingError,
+    blocked: blockedError,
+    waiting: waitingError,
+    done: doneError,
   };
   const tabFailure: Record<WorkTab, unknown> = {
-    assigned: assignedFailure, created: createdFailure, subscribed: subscribedFailure,
-    overdue: overdueFailure, "due-soon": dueSoonFailure, activity: activityFailure,
-    today: todayFailure, upcoming: upcomingFailure, blocked: blockedFailure,
-    waiting: waitingFailure, done: doneFailure, snoozed: null,
+    assigned: assignedFailure,
+    created: createdFailure,
+    subscribed: subscribedFailure,
+    overdue: overdueFailure,
+    "due-soon": dueSoonFailure,
+    activity: activityFailure,
+    today: todayFailure,
+    upcoming: upcomingFailure,
+    blocked: blockedFailure,
+    waiting: waitingFailure,
+    done: doneFailure,
   };
   const tabData: Record<WorkTab, typeof assignedData> = {
-    assigned: assignedData, created: createdData, subscribed: subscribedData,
-    overdue: overdueData, "due-soon": dueSoonData, activity: activityData,
-    today: todayData, upcoming: upcomingData, blocked: blockedData,
-    waiting: waitingData, done: doneData, snoozed: undefined,
+    assigned: assignedData,
+    created: createdData,
+    subscribed: subscribedData,
+    overdue: overdueData,
+    "due-soon": dueSoonData,
+    activity: activityData,
+    today: todayData,
+    upcoming: upcomingData,
+    blocked: blockedData,
+    waiting: waitingData,
+    done: doneData,
   };
 
   const isLoading = tabLoading[activeTab];
@@ -232,19 +261,32 @@ export function useMyWorkData({
 
   const handleRetry = useCallback(() => {
     const refetchMap: Record<WorkTab, () => void> = {
-      assigned: () => void refetchAssigned(), created: () => void refetchCreated(),
-      subscribed: () => void refetchSubscribed(), overdue: () => void refetchOverdue(),
-      "due-soon": () => void refetchDueSoon(), activity: () => void refetchActivity(),
-      today: () => void refetchToday(), upcoming: () => void refetchUpcoming(),
-      blocked: () => void refetchBlocked(), waiting: () => void refetchWaiting(),
-      done: () => void refetchDone(), snoozed: () => {},
+      assigned: () => void refetchAssigned(),
+      created: () => void refetchCreated(),
+      subscribed: () => void refetchSubscribed(),
+      overdue: () => void refetchOverdue(),
+      "due-soon": () => void refetchDueSoon(),
+      activity: () => void refetchActivity(),
+      today: () => void refetchToday(),
+      upcoming: () => void refetchUpcoming(),
+      blocked: () => void refetchBlocked(),
+      waiting: () => void refetchWaiting(),
+      done: () => void refetchDone(),
     };
     refetchMap[activeTab]?.();
   }, [
     activeTab,
-    refetchAssigned, refetchCreated, refetchSubscribed, refetchOverdue,
-    refetchDueSoon, refetchActivity, refetchToday, refetchUpcoming,
-    refetchBlocked, refetchWaiting, refetchDone,
+    refetchAssigned,
+    refetchCreated,
+    refetchSubscribed,
+    refetchOverdue,
+    refetchDueSoon,
+    refetchActivity,
+    refetchToday,
+    refetchUpcoming,
+    refetchBlocked,
+    refetchWaiting,
+    refetchDone,
   ]);
 
   const kanbanTickets = useMemo(() => {
@@ -258,7 +300,11 @@ export function useMyWorkData({
   }, [activeData]);
 
   const dueBuckets = useMemo(() => {
-    if ((activeTab !== "assigned" && activeTab !== "overdue") || activeView !== "list") return null;
+    if (
+      (activeTab !== "assigned" && activeTab !== "overdue") ||
+      activeView !== "list"
+    )
+      return null;
     if (!activeData?.data) return null;
     return toDueBucketMap(activeData.data);
   }, [activeTab, activeView, activeData]);

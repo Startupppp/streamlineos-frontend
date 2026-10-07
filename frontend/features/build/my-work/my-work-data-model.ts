@@ -17,8 +17,7 @@ export type WorkTab =
   | "upcoming"
   | "blocked"
   | "waiting"
-  | "done"
-  | "snoozed";
+  | "done";
 
 export const WORK_TABS: readonly WorkTab[] = [
   "assigned",
@@ -32,7 +31,6 @@ export const WORK_TABS: readonly WorkTab[] = [
   "blocked",
   "waiting",
   "done",
-  "snoozed",
 ];
 
 export const TAB_CONFIG: Record<WorkTab, { label: string }> = {
@@ -47,13 +45,12 @@ export const TAB_CONFIG: Record<WorkTab, { label: string }> = {
   blocked: { label: "Blocked" },
   waiting: { label: "Waiting" },
   done: { label: "Done" },
-  snoozed: { label: "Snoozed" },
 };
 
 export function parseWorkTab(value: string | null): WorkTab {
   if (value === "created" || value === "overdue" || value === "due-soon" || value === "activity") return value;
   if (value === "subscribed" || value === "watching") return "subscribed";
-  if (value === "today" || value === "upcoming" || value === "blocked" || value === "waiting" || value === "done" || value === "snoozed") return value;
+  if (value === "today" || value === "upcoming" || value === "blocked" || value === "waiting" || value === "done") return value;
   return "assigned";
 }
 
@@ -106,7 +103,6 @@ export const EMPTY_TITLE_MAP: Record<WorkTab, string> = {
   blocked: "No blocked tickets",
   waiting: "No tickets waiting for review",
   done: "Nothing completed recently",
-  snoozed: "No snoozed tickets",
 };
 
 export const EMPTY_DESCRIPTION_MAP: Record<WorkTab, string> = {
@@ -120,8 +116,7 @@ export const EMPTY_DESCRIPTION_MAP: Record<WorkTab, string> = {
   upcoming: "Assigned tickets due in the next seven days will appear here.",
   blocked: "Tickets assigned to you that are blocked by other tickets will appear here.",
   waiting: "Assigned tickets currently waiting for review will appear here.",
-  done: "Assigned tickets completed in the last 30 days will appear here.",
-  snoozed: "Tickets you have snoozed will appear here.",
+  done: "Tickets completed in the last seven days will appear here.",
 };
 
 export const SHOW_VIEW_SWITCHER_TABS: ReadonlySet<WorkTab> = new Set<WorkTab>([

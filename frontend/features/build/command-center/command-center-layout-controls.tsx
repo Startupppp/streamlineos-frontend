@@ -214,7 +214,7 @@ export function CommandCenterLayoutControls({
           open={confirmResetOpen}
           onOpenChange={setConfirmResetOpen}
           title="Reset your Command Center?"
-          description="Your widgets go back to the default arrangement. Widgets you added or removed are reset too."
+          description="Discard these edits and restore your last saved arrangement. If you have never saved one, the default arrangement is restored."
           confirmLabel="Reset layout"
           destructive
           onConfirm={onReset}

@@ -41,6 +41,7 @@ jest.mock("@/components/ai/ai-actions-menu", () => ({
 
 const mockMutateAsync = jest.fn();
 const mockUploadFile = jest.fn();
+const mockDeleteFile = jest.fn();
 const mockAddAttachment = jest.fn();
 const mockStage = jest.fn<StagedCommentDraft, [{ ticketId: number; body: string }]>();
 const mockFlush = jest.fn();
@@ -66,6 +67,7 @@ jest.mock("@/hooks/api/build/ticket-sub-resources", () => ({
 jest.mock("@/hooks/api/build/project-files", () => ({
   MAX_PROJECT_FILE_BYTES: 2 * 1024 * 1024,
   useUploadProjectFile: () => ({ mutateAsync: mockUploadFile, isPending: false }),
+  useDeleteProjectFile: () => ({ mutateAsync: mockDeleteFile, isPending: false }),
 }));
 jest.mock("@/hooks/api/build/tickets", () => ({
   useCreateTicket: () => ({ mutate: jest.fn(), isPending: false }),
@@ -110,6 +112,7 @@ beforeEach(() => {
   mockMutateAsync.mockReset();
   mockDraftLoadError = null;
   mockUploadFile.mockReset().mockResolvedValue({ id: 91 });
+  mockDeleteFile.mockReset().mockResolvedValue(undefined);
   mockAddAttachment.mockReset().mockResolvedValue({ id: 501 });
   localStorage.clear();
   mockFlush.mockReset().mockResolvedValue(null);
@@ -150,6 +153,16 @@ it("uploads a video through the project file owner and attaches it to the curren
   expect(mockAddAttachment).toHaveBeenCalledWith({ ticketId: 1, projectId: 1, fileId: 91 });
 });
 
+it("removes an uploaded project file when creating its ticket attachment fails", async () => {
+  mockUseCan.mockImplementation((key: string) => key === "build:tickets:update" || key === "build:files:manage");
+  mockAddAttachment.mockRejectedValueOnce(new Error("Attachment unavailable"));
+  render(<ActivityFeed {...defaultProps} />);
+  const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+  const file = new File(["data"], "evidence.zip", { type: "application/zip" });
+  fireEvent.change(input, { target: { files: [file] } });
+  await waitFor(() => expect(mockDeleteFile).toHaveBeenCalledWith(91));
+});
+
 it("replaces saved status with an inline failure and retries through a native button", async () => {
   jest.useFakeTimers();
   mockFlush.mockRejectedValueOnce(new Error("Storage unavailable"));
@@ -159,7 +172,7 @@ it("replaces saved status with an inline failure and retries through a native bu
   const alert = await screen.findByRole("alert");
   expect(alert).toHaveTextContent("Failed to save.");
   expect(screen.queryByText("Saved")).toBeNull();
-  const retry = screen.getByRole("button", { name: "Retry" });
+  const retry = screen.getByRole("button", { name: "Retry saving draft" });
   expect(retry).not.toHaveAttribute("data-slot", "button");
   mockFlush.mockResolvedValueOnce(null);
   fireEvent.click(retry);

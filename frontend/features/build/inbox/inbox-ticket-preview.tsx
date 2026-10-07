@@ -33,10 +33,12 @@ export function InboxTicketPreview({
 }: InboxTicketPreviewProps) {
   const canUpdate = useCan("build:tickets:update");
   const canAssign = useCan("build:tickets:assign");
-  const [rightPanelCollapsed, setRightPanelCollapsed] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    return localStorage.getItem(RIGHT_PANEL_COLLAPSED_KEY) === "true";
-  });
+  const [rightPanelCollapsed, setRightPanelCollapsed] = useState<boolean>(
+    () => {
+      if (typeof window === "undefined") return false;
+      return localStorage.getItem(RIGHT_PANEL_COLLAPSED_KEY) === "true";
+    },
+  );
 
   const handleRightPanelOpenChange = useCallback((open: boolean) => {
     const collapsed = !open;
@@ -75,6 +77,7 @@ export function InboxTicketPreview({
     autoSave,
     localTitle,
     ticketError,
+    refetchTicket,
     handleTitleChange,
     commitTitle,
     revertTitle,
@@ -155,6 +158,18 @@ export function InboxTicketPreview({
         title="Ticket not found"
         description="This ticket may have been deleted."
         onClose={onClose}
+      />
+    );
+
+  if (ticketError)
+    return (
+      <PreviewError
+        title="Unable to load ticket"
+        description="Something went wrong while loading this ticket preview."
+        onClose={onClose}
+        onRetry={() => {
+          void refetchTicket();
+        }}
       />
     );
 

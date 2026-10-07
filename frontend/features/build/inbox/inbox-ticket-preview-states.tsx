@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, AlertCircle } from "lucide-react";
+import { ArrowLeft, AlertCircle, RefreshCw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 
@@ -39,10 +39,12 @@ export function PreviewError({
   title,
   description,
   onClose,
+  onRetry,
 }: {
   title: string;
   description: string;
   onClose?: () => void;
+  onRetry?: () => void;
 }) {
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col">
@@ -65,6 +67,18 @@ export function PreviewError({
         </div>
         <p className="mb-1 font-medium text-foreground">{title}</p>
         <p className="text-sm text-muted-foreground">{description}</p>
+        {onRetry ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="mt-4"
+            onClick={onRetry}
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            Retry
+          </Button>
+        ) : null}
       </div>
     </div>
   );

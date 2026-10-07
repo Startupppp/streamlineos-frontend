@@ -15,7 +15,7 @@ describe("parseWorkTab", () => {
   it("returns blocked for blocked", () => expect(parseWorkTab("blocked")).toBe("blocked"));
   it("returns waiting for waiting", () => expect(parseWorkTab("waiting")).toBe("waiting"));
   it("returns done for done", () => expect(parseWorkTab("done")).toBe("done"));
-  it("returns snoozed for snoozed", () => expect(parseWorkTab("snoozed")).toBe("snoozed"));
+  it("falls back to assigned for unsupported snoozed links", () => expect(parseWorkTab("snoozed")).toBe("assigned"));
 });
 
 describe("WORK_TABS includes all tabs", () => {
@@ -24,7 +24,7 @@ describe("WORK_TABS includes all tabs", () => {
   it("has blocked tab", () => expect(WORK_TABS).toContain("blocked"));
   it("has waiting tab", () => expect(WORK_TABS).toContain("waiting"));
   it("has done tab", () => expect(WORK_TABS).toContain("done"));
-  it("has snoozed tab", () => expect(WORK_TABS).toContain("snoozed"));
+  it("does not advertise a snoozed view without a Build-ticket snooze contract", () => expect(WORK_TABS).not.toContain("snoozed"));
   it("still has all original tabs", () => {
     expect(WORK_TABS).toContain("assigned");
     expect(WORK_TABS).toContain("created");
@@ -41,5 +41,4 @@ describe("TAB_CONFIG labels for new tabs", () => {
   it("blocked has Blocked label", () => expect(TAB_CONFIG.blocked.label).toBe("Blocked"));
   it("waiting has Waiting label", () => expect(TAB_CONFIG.waiting.label).toBe("Waiting"));
   it("done has Done label", () => expect(TAB_CONFIG.done.label).toBe("Done"));
-  it("snoozed has Snoozed label", () => expect(TAB_CONFIG.snoozed.label).toBe("Snoozed"));
 });

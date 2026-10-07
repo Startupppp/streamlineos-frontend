@@ -188,7 +188,6 @@ export function CommandCenterPage() {
         subtitle={
           isReady ? "Your work, decisions, and delivery signals" : undefined
         }
-        contentClassName="pb-0 sm:pb-0 max-md:[.mobile-nav-active_&]:!pb-[calc(5rem+env(safe-area-inset-bottom,0px))]"
         actions={
           isReady ? (
             isEditing ? (

@@ -230,6 +230,7 @@ export interface AllWorkFilters extends TicketFilters {
   scope?: "all" | "mine" | "created" | "subscribed" | "mentioned" | "blocked" | "recently-completed";
   teamId?: number;
   managedProductId?: number;
+  blockedOnly?: boolean;
 }
 
 export interface AllWorkTicketLabel {

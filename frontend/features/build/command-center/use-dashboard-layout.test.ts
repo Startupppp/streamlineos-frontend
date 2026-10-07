@@ -173,8 +173,18 @@ describe("useDashboardLayoutEditor — drafts before saving", () => {
     expect(mockSave).not.toHaveBeenCalled();
   });
 
-  it("resets to the permitted default arrangement", () => {
+  it("resets an edited draft to the last saved arrangement", () => {
     const { result } = setup({ data: stored(twoWidgets) });
+    act(() => result.current.removeWidget("projects"));
+    act(() => result.current.resetLayout());
+    expect(result.current.widgets).toEqual(twoWidgets);
+    act(() => result.current.saveLayout());
+    expect(mockSave).not.toHaveBeenCalled();
+  });
+
+  it("resets to defaults when the member has never saved an arrangement", () => {
+    const { result } = setup({ data: stored([], 0) });
+    act(() => result.current.removeWidget("projects"));
     act(() => result.current.resetLayout());
     expect(result.current.widgets).toHaveLength(8);
     expect(mockSave).not.toHaveBeenCalled();

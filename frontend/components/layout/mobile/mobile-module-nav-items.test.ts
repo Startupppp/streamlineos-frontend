@@ -225,7 +225,7 @@ describe("mobile module nav items", () => {
       expect(getMobileModuleContentPaddingClassName(true)).toBe(
         MOBILE_MODULE_CONTENT_PADDING_CLASS,
       );
-      expect(MOBILE_MODULE_CONTENT_PADDING_CLASS).toContain("9rem");
+      expect(MOBILE_MODULE_CONTENT_PADDING_CLASS).toContain("4rem");
       expect(MOBILE_MODULE_CONTENT_PADDING_CLASS).toContain("max-md:pb-[");
       expect(MOBILE_MODULE_CONTENT_PADDING_CLASS).not.toMatch(
         /(?:^|\s)pb-\[calc/,

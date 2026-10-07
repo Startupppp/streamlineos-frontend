@@ -13,6 +13,7 @@ import {
 } from "@/features/build/comments/mention-textarea";
 import { CommentItem } from "./comment-item";
 import { useActivityFeed } from "./use-activity-feed";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const noopVoid = () => {};
 const noopStr = (_: string) => {};
@@ -189,10 +190,13 @@ export function ActivityFeed({
             role="alert"
             className="flex flex-wrap items-center gap-1.5 text-xs text-destructive"
           >
-            <span>Failed to save.</span>
+            <span className="min-w-0 truncate" title={getErrorMessage(draftPersistenceError)}>
+              Failed to save. {getErrorMessage(draftPersistenceError)}
+            </span>
             <ErrorReference error={draftPersistenceError} />
             <button
               type="button"
+              aria-label="Retry saving draft"
               className="font-medium underline underline-offset-2 hover:no-underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               onClick={handleRetryPersistence}
             >

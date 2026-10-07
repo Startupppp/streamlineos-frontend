@@ -1,6 +1,7 @@
 import { renderHook } from "@testing-library/react";
 import { parseWorkTab, useMyWorkData } from "./use-my-work-data";
 import { useAllWork } from "@/hooks/api/build/all-work";
+import { format, subDays } from "date-fns";
 
 const mockReplace = jest.fn();
 let mockSearchParams = new URLSearchParams();
@@ -122,6 +123,27 @@ describe("useMyWorkData overdue relation", () => {
       excludeStatus: "DONE,CANCELLED",
     });
     expect(overdueCall?.[0].dueDateTo).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(overdueCall?.[0].dueDateTo).toBe(format(subDays(new Date(), 1), "yyyy-MM-dd"));
+  });
+});
+
+describe("useMyWorkData server-backed relation tabs", () => {
+  beforeEach(() => {
+    mockedUseAllWork.mockClear();
+  });
+
+  it("keeps Blocked personal while using the supported blocked-only filter", () => {
+    renderHook(() => useMyWorkData({ activeTab: "blocked", activeView: "list" }));
+    const blockedCall = mockedUseAllWork.mock.calls.find(([, options]) => options?.enabled === true);
+    expect(blockedCall?.[0]).toMatchObject({ scope: "mine", blockedOnly: true });
+    expect(blockedCall?.[0]).not.toHaveProperty("blockingRelation");
+  });
+
+  it("uses the backend recently-completed scope instead of an unsupported updatedAfter parameter", () => {
+    renderHook(() => useMyWorkData({ activeTab: "done", activeView: "list" }));
+    const doneCall = mockedUseAllWork.mock.calls.find(([, options]) => options?.enabled === true);
+    expect(doneCall?.[0]).toMatchObject({ scope: "recently-completed" });
+    expect(doneCall?.[0]).not.toHaveProperty("updatedAfter");
   });
 });
 

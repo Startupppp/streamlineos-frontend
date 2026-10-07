@@ -36,7 +36,15 @@ jest.mock("@/hooks/api/build/comment-draft-commands", () => ({
 jest.mock("@/hooks/api/build/comment-drafts", () => ({
   useGenerateCommentDraft: () => ({ mutateAsync: jest.fn() }),
 }));
-jest.mock("@/hooks/api/build/ticket-sub-resources", () => ({ useAddComment: () => ({ mutate: mockPost, isPending: false }) }));
+jest.mock("@/hooks/api/build/ticket-sub-resources", () => ({
+  useAddComment: () => ({ mutate: mockPost, isPending: false }),
+  useAddAttachment: () => ({ mutateAsync: jest.fn(), isPending: false }),
+}));
+jest.mock("@/hooks/api/build/project-files", () => ({
+  MAX_PROJECT_FILE_BYTES: 2 * 1024 * 1024,
+  useUploadProjectFile: () => ({ mutateAsync: jest.fn(), isPending: false }),
+  useDeleteProjectFile: () => ({ mutateAsync: jest.fn(), isPending: false }),
+}));
 jest.mock("@/hooks/api/build/tickets", () => ({ useCreateTicket: () => ({ mutate: jest.fn() }) }));
 jest.mock("@/hooks/api/build/comment-mutations", () => ({
   useUpdateComment: () => ({ mutate: jest.fn() }), useDeleteComment: () => ({ mutate: jest.fn() }),

@@ -260,7 +260,7 @@ test.describe("Managed Products responsive contract", () => {
     test("a mounted bottom nav reserves room under the content", async ({ page }) => {
       const padded = await frame(page, "mobile-nav-clearance")
         .locator(
-          ".max-md\\:\\[\\.mobile-nav-active_\\&\\]\\:pb-\\[calc\\(9rem\\+env\\(safe-area-inset-bottom\\2c 0px\\)\\)\\]",
+          ".max-md\\:\\[\\.mobile-nav-active_\\&\\]\\:pb-\\[calc\\(4rem\\+env\\(safe-area-inset-bottom\\2c 0px\\)\\)\\]",
         )
         .first()
         .evaluate((node: HTMLElement) =>

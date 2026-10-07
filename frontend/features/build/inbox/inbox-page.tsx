@@ -178,7 +178,6 @@ export function InboxPage() {
       title="Inbox"
       subtitle="Project updates, assignments, mentions and approvals"
       noInternalScroll
-      contentClassName="max-md:[.mobile-nav-active_&]:!pb-[calc(5rem+env(safe-area-inset-bottom,0px))]"
     >
       <PmPageShell>
         <PmSection
