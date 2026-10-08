@@ -27,6 +27,7 @@ import {
 } from "@/features/build/shared/use-build-list-filters";
 import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { BuildPaginatedContent } from "@/features/build/shared/build-paginated-content";
 import { TriagePageLoading } from "./triage-page-loading";
 import { useTriageTicketActions } from "./use-triage-ticket-actions";
 import { useTriageBulkActions } from "./use-triage-bulk-actions";
@@ -232,7 +233,20 @@ export function TriagePage({ projectId }: TriagePageProps) {
                   onClear={handleClearSelection}
                 />
               )}
-              <div className="min-h-0 flex-1 overflow-y-auto">
+              <BuildPaginatedContent
+                ariaLabel="Triage tickets"
+                footer={(
+                  <TablePagination
+                    mode="cursor"
+                    rowCount={tickets.length}
+                    pageNumber={cursorTrail.length}
+                    hasMore={hasMore}
+                    hasPrevious={hasPrevious}
+                    onNext={() => handleNextPage(ticketPage?.pagination.nextCursor)}
+                    onPrevious={handlePreviousPage}
+                  />
+                )}
+              >
                 <PmStaggerList className="flex flex-col gap-2.5">
                   {tickets.map((ticket, index) => (
                     <div key={ticket.id} className="flex items-start gap-2">
@@ -259,16 +273,7 @@ export function TriagePage({ projectId }: TriagePageProps) {
                     </div>
                   ))}
                 </PmStaggerList>
-              </div>
-              <TablePagination
-                mode="cursor"
-                rowCount={tickets.length}
-                pageNumber={cursorTrail.length}
-                hasMore={hasMore}
-                hasPrevious={hasPrevious}
-                onNext={() => handleNextPage(ticketPage?.pagination.nextCursor)}
-                onPrevious={handlePreviousPage}
-              />
+              </BuildPaginatedContent>
             </PmSection>
           )}
         </PmPageShell>

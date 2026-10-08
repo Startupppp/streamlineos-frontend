@@ -54,4 +54,41 @@ describe("the Build projects page with nothing in it", () => {
     expect(() => render(<ProjectsPage />)).not.toThrow();
     expect(screen.getByText("No projects yet")).toBeInTheDocument();
   });
+
+  it("keeps pagination available when client-side visibility removes every row on a page that has more", () => {
+    projects.mockReturnValue({
+      data: {
+        data: [
+          {
+            id: 1,
+            name: "Archived project",
+            description: null,
+            key: "ARCH",
+            status: "ARCHIVED",
+            priority: null,
+            health: "on_track",
+            managedProductId: null,
+            startDate: null,
+            endDate: null,
+            manager: null,
+            progress: { total: 0, done: 0, percentage: 0 },
+            members: [],
+            teams: [],
+          },
+        ],
+        hasMore: true,
+        nextCursor: 1,
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+      isFetching: false,
+    });
+
+    render(<ProjectsPage />);
+
+    expect(screen.getByRole("button", { name: "Next page" })).toBeEnabled();
+    expect(screen.queryByText("No projects match your filters")).not.toBeInTheDocument();
+  });
 });

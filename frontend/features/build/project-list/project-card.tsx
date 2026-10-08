@@ -128,8 +128,9 @@ export const ProjectCard = React.memo(function ProjectCard({
   return (
     <>
       <article
+        data-slot="project-card"
         className={cn(
-          "group relative flex h-full cursor-pointer flex-col overflow-hidden p-3 sm:p-4",
+          "group relative flex h-full cursor-pointer flex-col overflow-hidden p-3",
           SURFACE_CARD,
           SURFACE_CARD_INTERACTIVE,
           "hover:bg-accent/20",
@@ -195,11 +196,11 @@ export const ProjectCard = React.memo(function ProjectCard({
           </div>
         ) : null}
 
-        <div className="flex min-w-0 items-start gap-3">
+        <div className="flex min-w-0 items-start gap-2.5">
           <div
             className={cn(
-              "flex size-10 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset",
-              "text-label font-semibold tracking-tight shadow-sm",
+              "flex size-9 shrink-0 items-center justify-center rounded-md ring-1 ring-inset",
+              "text-label font-semibold tracking-tight",
               avatarTint,
             )}
             aria-hidden="true"
@@ -207,7 +208,7 @@ export const ProjectCard = React.memo(function ProjectCard({
             {initials}
           </div>
 
-          <div className={cn(TEXT_FLEX_CHILD, "min-w-0 flex-1 space-y-1")}>
+          <div className={cn(TEXT_FLEX_CHILD, "min-w-0 flex-1 space-y-0.5")}>
             <div
               className={cn(
                 "flex min-w-0 items-center justify-between gap-2",
@@ -271,12 +272,11 @@ export const ProjectCard = React.memo(function ProjectCard({
                 </Link>
               )}
             </h3>
-
           </div>
         </div>
 
         {canEdit || project.description ? (
-          <div className="mt-3 min-h-5 border-l-2 border-border/80 pl-2.5">
+          <div className="mt-2 min-h-4 pl-11">
             {canEdit ? (
               <InlineProjectDescription
                 projectId={project.id}

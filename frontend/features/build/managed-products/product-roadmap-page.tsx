@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { BuildPaginatedContent } from "@/features/build/shared/build-paginated-content";
 import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -233,8 +234,21 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
             onRetry={handleRetry}
             className={CONTENT_FILL_PANEL}
           >
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-              <div className="grid min-h-0 flex-1 gap-3 overflow-y-auto md:grid-cols-2 xl:grid-cols-4">
+            <BuildPaginatedContent
+              ariaLabel="Product roadmap items"
+              contentClassName="grid gap-3 md:grid-cols-2 xl:grid-cols-4"
+              footer={(
+                <TablePagination
+                  mode="cursor"
+                  rowCount={(data?.data ?? []).length}
+                  pageNumber={pager.pageNumber}
+                  hasMore={hasNext}
+                  hasPrevious={pager.hasPrevious}
+                  onNext={handleNext}
+                  onPrevious={handlePrev}
+                />
+              )}
+            >
                 {ROADMAP_COLUMNS.map((col) => (
                   <PmPanel key={col.status} className="flex min-h-[120px] flex-col p-2">
                     <div className="mb-2 flex items-center justify-between px-1">
@@ -254,17 +268,7 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
                     )}
                   </PmPanel>
                 ))}
-              </div>
-              <TablePagination
-                mode="cursor"
-                rowCount={(data?.data ?? []).length}
-                pageNumber={pager.pageNumber}
-                hasMore={hasNext}
-                hasPrevious={pager.hasPrevious}
-                onNext={handleNext}
-                onPrevious={handlePrev}
-              />
-            </div>
+            </BuildPaginatedContent>
           </PageState>
         </PmSection>
       </PmPageShell>

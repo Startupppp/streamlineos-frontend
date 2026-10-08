@@ -266,7 +266,9 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
               </PageState>
             ) : allProjects.length === 0 && !hasFiltersOrSearch ? (
               <ProjectsEmptyState onCreate={canCreate ? handleOpenCreate : undefined} />
-            ) : visibleProjects.length === 0 ? (
+            ) : visibleProjects.length === 0 &&
+              !data?.hasMore &&
+              !pager.hasPrevious ? (
               <EmptyState
                 className={CONTENT_FILL_PANEL}
                 illustrationPreset="search"

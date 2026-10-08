@@ -3,6 +3,7 @@
 import React, { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { DataTable } from "@/components/ui/data-table";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { Badge } from "@/components/ui/badge";
 import { PmPanel } from "@/components/pm-chrome";
 import { useCan } from "@/hooks/api/access";
@@ -148,6 +149,8 @@ export const ProjectTable = React.memo(function ProjectTable({
     null,
   );
   const [activeDialog, setActiveDialog] = useState<ActiveDialog>(null);
+  const showEmptyPagePagination =
+    projects.length === 0 && Boolean(hasMore || hasPrevious);
 
   const handleEdit = useCallback((p: ProjectListItem) => {
     if (!canUpdate) return;
@@ -218,7 +221,7 @@ export const ProjectTable = React.memo(function ProjectTable({
           </div>
         }
         pagination={
-          onNext && onPrevious
+          onNext && onPrevious && !showEmptyPagePagination
             ? {
                 mode: "cursor",
                 pageSize: 25,
@@ -231,6 +234,18 @@ export const ProjectTable = React.memo(function ProjectTable({
             : undefined
         }
       />
+      {showEmptyPagePagination && onNext && onPrevious ? (
+        <TablePagination
+          mode="cursor"
+          rowCount={1}
+          pageNumber={pageNumber}
+          hasMore={Boolean(hasMore)}
+          hasPrevious={Boolean(hasPrevious)}
+          onNext={onNext}
+          onPrevious={onPrevious}
+          showSummary={false}
+        />
+      ) : null}
       {activeProject &&
       ((canUpdate && (activeDialog === "edit" || activeDialog === "archive")) ||
         (canDelete && activeDialog === "delete")) ? (

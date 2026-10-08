@@ -17,6 +17,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { BuildPaginatedContent } from "@/features/build/shared/build-paginated-content";
 import {
   Tooltip,
   TooltipContent,
@@ -238,7 +239,26 @@ function DraftsPanelPage() {
           </div>
         </div>
       ) : null}
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto scrollbar-hide">
+      <BuildPaginatedContent
+        ariaLabel="Drafts"
+        contentClassName="scrollbar-hide"
+        footer={pageState.kind === "ready" ? (
+          <TablePagination
+            mode="cursor"
+            rowCount={drafts.length}
+            pageNumber={pager.pageNumber}
+            hasMore={Boolean(
+              page?.pagination.hasMore && page.pagination.nextCursor,
+            )}
+            hasPrevious={pager.hasPrevious}
+            onNext={handleNext}
+            onPrevious={pager.goPrevious}
+            disabled={query.isFetching || deleting}
+            compact
+            showSummary={false}
+          />
+        ) : null}
+      >
         <PageState
           resolution={pageState}
           loading={<DraftsPanelSkeleton />}
@@ -267,23 +287,7 @@ function DraftsPanelPage() {
             ) : null}
           </div>
         </PageState>
-      </div>
-      {pageState.kind === "ready" ? (
-        <TablePagination
-          mode="cursor"
-          rowCount={drafts.length}
-          pageNumber={pager.pageNumber}
-          hasMore={Boolean(
-            page?.pagination.hasMore && page.pagination.nextCursor,
-          )}
-          hasPrevious={pager.hasPrevious}
-          onNext={handleNext}
-          onPrevious={pager.goPrevious}
-          disabled={query.isFetching || deleting}
-          compact
-          showSummary={false}
-        />
-      ) : null}
+      </BuildPaginatedContent>
       <ConfirmDialog
         destructive
         isPending={deleting}

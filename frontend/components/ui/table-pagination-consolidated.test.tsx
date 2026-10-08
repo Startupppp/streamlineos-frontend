@@ -5,6 +5,14 @@ import { TablePagination } from "@/components/ui/table-pagination";
 const noop = () => {};
 
 describe("TablePagination absorbs the second footer, so there is one pagination module", () => {
+  it("uses normal flex flow to claim the bottom of a short list without overlaying rows", () => {
+    render(<TablePagination page={1} pageSize={10} total={35} onPageChange={noop} />);
+
+    const pagination = screen.getByRole("navigation", { name: "Pagination" });
+    expect(pagination).toHaveClass("mt-auto", "shrink-0");
+    expect(pagination).not.toHaveClass("absolute", "fixed", "sticky");
+  });
+
   it("renders no page-size control when the caller supplies no handler, which is what the 61 existing call sites pass", () => {
     render(<TablePagination page={1} pageSize={10} total={35} onPageChange={noop} />);
 

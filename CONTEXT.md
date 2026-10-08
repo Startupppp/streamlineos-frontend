@@ -58,8 +58,12 @@ is the thing the opt-out exists to prevent.
 `AskOsToolRunContext`. `description` is not documentation — it is prompt text the
 model reads to decide whether to call the tool, and it is billed on every turn.
 
-A tool **reads**. A tool that writes does so by proposing a confirmable action
-and returning `needs-confirmation`; it never performs the write itself.
+A Tool normally reads or proposes a confirmable action and returns
+`needs-confirmation`. Some existing Tools (`clockIn`, `clockOut`, `toggleBreak`,
+and `createTask`) perform writes immediately. They are source-present exceptions,
+not proof that the companion may expose immediate model-selected writes. The
+Companion Pet decision in [ADR 0007](docs/docs/adr/0007-companion-uses-ask-os-toolset.md)
+requires a visible preview and explicit confirmation for every pet-initiated write.
 
 ### Tool provider
 
@@ -80,12 +84,14 @@ The subset of all tool definitions this *particular* actor may use on this
 tool is filtered out when the actor's resolved scope for its `permission` is
 absent or `none`, or when its `module` is not enabled for the org.
 
-The distinction matters: a tool is not "hidden" from the user, it does not exist
-for that turn. The model cannot mention a capability it was never told about.
+The distinction matters: an unavailable Tool is omitted from the model's
+Toolset for that turn. The model can still produce incorrect prose, so the
+client must derive actionable suggestions from available capabilities and the
+server must enforce access on execution.
 
 ### Outcome
 
-What a tool's `run` returns — the discriminated union `ToolOutcome`, six kinds:
+What a Tool's `run` returns — the discriminated union `ToolOutcome`, seven kinds:
 
 | kind | means |
 |---|---|
@@ -94,6 +100,7 @@ What a tool's `run` returns — the discriminated union `ToolOutcome`, six kinds
 | `denied` | the actor lacks the permission (`permission`, human `reason`) |
 | `needs-connection` | a third-party toolkit is unconnected or needs re-auth |
 | `needs-confirmation` | a write is staged and awaits the user (see **proposal**) |
+| `ambiguous` | several permitted targets match; the user must choose |
 | `failed` | it broke (`reason`) |
 
 The union exists so the *rendering* of each case is decided once, in
@@ -103,7 +110,7 @@ arrive as an empty array — a model handed `[]` will confidently report that th
 user has no tickets.
 
 Construct outcomes with the helpers (`data()`, `empty()`, `denied()`,
-`needsConnection()`, `needsConfirmation()`, `failed()`), never with an object
+`needsConnection()`, `needsConfirmation()`, `ambiguous()`, `failed()`), never with an object
 literal.
 
 ### Confirmable action
@@ -129,8 +136,10 @@ the confirmation store carrying the org, the actor, the action key, the payload,
 a redemption `token`, a status (`PROPOSED` → `CONFIRMED` / `EXPIRED`) and an
 expiry.
 
-A proposal is **the only thing that can be executed**. The model cannot execute;
-it can only propose. Re-proposing the same `(org, actor, action, payload)` while
+A proposal is **the only thing that can be executed through the confirmable-action
+path**. Existing immediate-write Tools are exceptions outside that path and
+must not be exposed as Companion Pet writes before they meet its confirmation
+rule. Re-proposing the same `(org, actor, action, payload)` while
 a live proposal exists returns the existing row rather than minting a second one.
 
 Expiry is enforced on the read path: a proposal past its expiry is refused and
@@ -169,7 +178,7 @@ The shape, so the next one is fast:
 1. **Read-only capability** — add a tool provider at
    `core/tools/<module>-copilot-tools.ts` and register it. Each tool declares
    `permission` and `module`; `ctx.read` is a `ScopedRead`
-   ([ADR 0005](backend/docs/adr/0005-a-datascope-is-spent-not-read.md)) that
+   ([ADR 0005](docs/docs/adr/0005-a-datascope-is-spent-not-read.md)) that
    installs the tenant predicate for you.
 2. **Write capability** — add a confirmable action in
    `core/confirm-actions/<module>-confirm-actions.ts`, then a tool that declares

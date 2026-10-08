@@ -9,6 +9,7 @@ import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { BuildPaginatedContent } from "@/features/build/shared/build-paginated-content";
 import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import { Diamond, CheckCircle2, Clock, AlertCircle, X, WifiOff } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
@@ -202,8 +203,21 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
               </div>
             </div>
           )}
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-            <div className="min-h-0 flex-1 overflow-y-auto">
+          <BuildPaginatedContent
+            ariaLabel="Project milestones"
+            footer={milestones.length > 0 || pager.hasPrevious ? (
+              <TablePagination
+                mode="cursor"
+                rowCount={milestones.length}
+                pageNumber={pager.pageNumber}
+                hasMore={pagination?.hasMore ?? false}
+                hasPrevious={pager.hasPrevious}
+                onNext={() => pager.goNext(pagination?.nextCursor)}
+                onPrevious={pager.goPrevious}
+              />
+            ) : null}
+          >
+            <div>
               {milestones.length > 0 ? (
                 <PmStaggerList className="space-y-2.5" aria-label="Project milestones">
                   {milestones.map((m) => (
@@ -233,18 +247,7 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
                 />
               )}
             </div>
-            {milestones.length > 0 || pager.hasPrevious ? (
-              <TablePagination
-                mode="cursor"
-                rowCount={milestones.length}
-                pageNumber={pager.pageNumber}
-                hasMore={pagination?.hasMore ?? false}
-                hasPrevious={pager.hasPrevious}
-                onNext={() => pager.goNext(pagination?.nextCursor)}
-                onPrevious={pager.goPrevious}
-              />
-            ) : null}
-          </div>
+          </BuildPaginatedContent>
         </PmSection>
 
         {actions.createOpen ? (

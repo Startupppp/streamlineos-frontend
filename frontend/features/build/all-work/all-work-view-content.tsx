@@ -3,6 +3,7 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { BuildPaginatedContent } from "@/features/build/shared/build-paginated-content";
 import { cn } from "@/lib/utils";
 import { pmSnappy, viewSwap, viewSwapReduced } from "@/lib/motion-presets";
 import type { AllWorkTicket } from "@/types/projects";
@@ -77,30 +78,40 @@ export function AllWorkViewContent({
 
   if (view === "calendar") {
     return (
-      <>
+      <BuildPaginatedContent
+        ariaLabel="All Work calendar"
+        contentClassName="overflow-hidden"
+        footer={paginationNode}
+      >
         <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
           <AllWorkCalendarSection tickets={tickets} hasMore={hasMore} />
         </ScrollArea>
-        {paginationNode}
-      </>
+      </BuildPaginatedContent>
     );
   }
 
   if (view === "timeline") {
     return (
-      <>
+      <BuildPaginatedContent
+        ariaLabel="All Work timeline"
+        contentClassName="overflow-hidden"
+        footer={paginationNode}
+      >
         <AllWorkTimelineSection
           tickets={tickets}
           hasMore={hasMore}
           onTicketClick={onTicketClick}
         />
-        {paginationNode}
-      </>
+      </BuildPaginatedContent>
     );
   }
 
   return (
-    <>
+    <BuildPaginatedContent
+      ariaLabel={view === "board" ? "All Work board" : "All Work list"}
+      contentClassName="overflow-hidden"
+      footer={paginationNode}
+    >
       <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
         <div
           className={cn(
@@ -147,7 +158,6 @@ export function AllWorkViewContent({
           </AnimatePresence>
         </div>
       </ScrollArea>
-      {paginationNode}
-    </>
+    </BuildPaginatedContent>
   );
 }

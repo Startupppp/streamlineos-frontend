@@ -5,6 +5,7 @@ import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { BuildPaginatedContent } from "@/features/build/shared/build-paginated-content";
 import {
   PmStaggerList,
   CONTENT_FILL_PANEL,
@@ -68,8 +69,22 @@ export function EpicsListSection({
   const showPager = epics.length > 0 || hasPrevious;
 
   return (
-    <div className={PM_FILL_SECTION}>
-      <div className="min-h-0 flex-1 overflow-y-auto">
+    <BuildPaginatedContent
+      ariaLabel="Epics"
+      className={PM_FILL_SECTION}
+      footer={showPager ? (
+        <TablePagination
+          mode="cursor"
+          rowCount={epics.length}
+          pageNumber={pageNumber}
+          hasMore={hasMore}
+          hasPrevious={hasPrevious}
+          onNext={onNextPage}
+          onPrevious={onPreviousPage}
+        />
+      ) : null}
+    >
+      <div>
         {epics.length === 0 && !isOnline ? (
           <div
             className={cn(
@@ -138,18 +153,7 @@ export function EpicsListSection({
           </PmStaggerList>
         )}
       </div>
-      {showPager ? (
-        <TablePagination
-          mode="cursor"
-          rowCount={epics.length}
-          pageNumber={pageNumber}
-          hasMore={hasMore}
-          hasPrevious={hasPrevious}
-          onNext={onNextPage}
-          onPrevious={onPreviousPage}
-        />
-      ) : null}
-    </div>
+    </BuildPaginatedContent>
   );
 }
 

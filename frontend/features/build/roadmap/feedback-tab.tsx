@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
+import { BuildPaginatedContent } from "@/features/build/shared/build-paginated-content";
 import { toast } from "sonner";
 import {
   useFeedbackPosts,
@@ -114,8 +115,22 @@ export function FeedbackTab({
   const hasNext = data?.pagination.hasMore ?? false;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <PageState
+    <>
+      <BuildPaginatedContent
+        ariaLabel="Feedback"
+        footer={(data?.data ?? []).length > 0 || pager.hasPrevious ? (
+          <TablePagination
+            mode="cursor"
+            rowCount={(data?.data ?? []).length}
+            pageNumber={pager.pageNumber}
+            hasMore={hasNext}
+            hasPrevious={pager.hasPrevious}
+            onNext={handleNext}
+            onPrevious={handlePrev}
+          />
+        ) : null}
+      >
+        <PageState
         resolution={resolution}
         loading={<FeedbackListSkeleton />}
         empty={
@@ -134,7 +149,7 @@ export function FeedbackTab({
         onRetry={handleRetry}
         className={CONTENT_FILL_PANEL}
       >
-        <div className="min-h-0 flex-1 overflow-y-auto">
+        <div>
           <PmStaggerList className="space-y-2">
             {(data?.data ?? []).map((post) => (
               <FeedbackRow
@@ -147,19 +162,8 @@ export function FeedbackTab({
             ))}
           </PmStaggerList>
         </div>
-      </PageState>
-
-      {(data?.data ?? []).length > 0 || pager.hasPrevious ? (
-        <TablePagination
-          mode="cursor"
-          rowCount={(data?.data ?? []).length}
-          pageNumber={pager.pageNumber}
-          hasMore={hasNext}
-          hasPrevious={pager.hasPrevious}
-          onNext={handleNext}
-          onPrevious={handlePrev}
-        />
-      ) : null}
+        </PageState>
+      </BuildPaginatedContent>
 
       <MergeFeedbackDialog post={mergeTarget} onOpenChange={handleMergeDialogChange} />
 
@@ -172,6 +176,6 @@ export function FeedbackTab({
         destructive
         onConfirm={handleDelete}
       />
-    </div>
+    </>
   );
 }

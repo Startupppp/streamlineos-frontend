@@ -5,6 +5,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { BuildPaginatedContent } from "@/features/build/shared/build-paginated-content";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -154,8 +155,18 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
             onRetry={handleRetry}
             className={CONTENT_FILL_PANEL}
           >
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-              <div className="min-h-0 flex-1 space-y-8 overflow-y-auto">
+            <BuildPaginatedContent
+              ariaLabel="Product goals"
+              contentClassName="space-y-8"
+              footer={totalGoals > 0 ? (
+                <TablePagination
+                  page={page}
+                  pageSize={PAGE_SIZE}
+                  total={totalGoals}
+                  onPageChange={handlePageChange}
+                />
+              ) : null}
+            >
                 {GOAL_LEVEL_ORDER.map((level) => {
                   const levelGoals = grouped.get(level) ?? [];
                   if (levelGoals.length === 0) return null;
@@ -182,16 +193,7 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
                     </div>
                   );
                 })}
-              </div>
-              {totalGoals > 0 ? (
-                <TablePagination
-                  page={page}
-                  pageSize={PAGE_SIZE}
-                  total={totalGoals}
-                  onPageChange={handlePageChange}
-                />
-              ) : null}
-            </div>
+            </BuildPaginatedContent>
           </PageState>
         </PmSection>
       </PmPageShell>

@@ -5,6 +5,7 @@ import { AnimatePresence } from "framer-motion";
 import { WebhookBulkBar } from "@/features/build/webhooks/webhook-bulk-bar";
 import { WebhookCard } from "@/features/build/settings/webhook-card";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { BuildPaginatedContent } from "@/features/build/shared/build-paginated-content";
 import { PmStaggerList } from "@/components/pm-chrome";
 import type { ProjectWebhook } from "@/hooks/api/build/webhooks";
 
@@ -64,7 +65,21 @@ export function WebhookListContent({
   onEdit,
 }: WebhookListContentProps) {
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+    <BuildPaginatedContent
+      ariaLabel="Webhooks"
+      footer={(
+        <TablePagination
+          mode="cursor"
+          rowCount={webhookList.length}
+          pageNumber={pageNumber}
+          hasMore={hasMore}
+          hasPrevious={hasPrevious}
+          onNext={onNextPage}
+          onPrevious={onPrevious}
+          hideOnSinglePage
+        />
+      )}
+    >
       {canManage && isOnline && selectedIds.size > 0 && (
         <WebhookBulkBar
           selectedCount={selectedIds.size}
@@ -77,7 +92,7 @@ export function WebhookListContent({
           onClear={onClearSelection}
         />
       )}
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div>
         <PmStaggerList className="space-y-2.5" role="list" aria-label="Webhooks">
           <AnimatePresence initial={false}>
             {webhookList.map((wh, index) => (
@@ -101,16 +116,6 @@ export function WebhookListContent({
           </AnimatePresence>
         </PmStaggerList>
       </div>
-      <TablePagination
-        mode="cursor"
-        rowCount={webhookList.length}
-        pageNumber={pageNumber}
-        hasMore={hasMore}
-        hasPrevious={hasPrevious}
-        onNext={onNextPage}
-        onPrevious={onPrevious}
-        hideOnSinglePage
-      />
-    </div>
+    </BuildPaginatedContent>
   );
 }

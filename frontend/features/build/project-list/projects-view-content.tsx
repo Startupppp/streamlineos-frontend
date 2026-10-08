@@ -52,7 +52,7 @@ export function ProjectsViewContent({
   if (viewMode === "grid") {
     return (
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">
           <PmStaggerList
             className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
             role="list"
@@ -68,16 +68,17 @@ export function ProjectsViewContent({
               </motion.div>
             ))}
           </PmStaggerList>
-          {visibleProjects.length > 0 ? (
+          {visibleProjects.length > 0 || hasMore || hasPrevious ? (
             <TablePagination
               mode="cursor"
-              rowCount={visibleProjects.length}
+              rowCount={visibleProjects.length || 1}
               pageNumber={pageNumber}
               hasMore={hasMore}
               hasPrevious={hasPrevious}
               onNext={onNext}
               onPrevious={onPrevious}
-              className="mt-3"
+              showSummary={visibleProjects.length > 0}
+              className="mt-auto pt-3"
             />
           ) : null}
         </div>

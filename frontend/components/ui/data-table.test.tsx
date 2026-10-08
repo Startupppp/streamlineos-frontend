@@ -254,6 +254,29 @@ describe("DataTable — scroll region", () => {
     expect(regions[0]).toHaveAttribute("tabindex", "0");
     expect(regions[0]).toHaveClass("overflow-auto");
   });
+
+  it("keeps pagination after the flexible scroll region instead of overlaying its rows", () => {
+    const data = Array.from({ length: 60 }, (_, index) => ({
+      id: String(index),
+      name: `Person ${index}`,
+    }));
+    render(
+      <DataTable
+        data={data}
+        columns={columns}
+        getRowKey={(row) => row.id}
+        scrollRegionLabel="People"
+      />,
+    );
+
+    const scrollRegion = screen.getByRole("region", { name: "People" });
+    const pagination = screen.getByRole("navigation", { name: "Pagination" });
+    expect(scrollRegion).toHaveClass("min-h-0", "flex-1", "overflow-auto");
+    expect(pagination.parentElement).toBe(scrollRegion.parentElement);
+    expect(
+      scrollRegion.compareDocumentPosition(pagination) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
 });
 
 describe("DataTable — onRowContextMenu covers the whole row, including its padding", () => {

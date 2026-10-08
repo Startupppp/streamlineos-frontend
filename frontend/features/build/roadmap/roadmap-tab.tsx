@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { BuildPaginatedContent } from "@/features/build/shared/build-paginated-content";
 import { cn } from "@/lib/utils";
 import {
   PmPanel,
@@ -162,8 +163,21 @@ export function RoadmapTab({
         onRetry={handleRetry}
         className={CONTENT_FILL_PANEL}
       >
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <div className="grid min-h-0 flex-1 gap-3 overflow-y-auto md:grid-cols-2 xl:grid-cols-4">
+        <BuildPaginatedContent
+          ariaLabel="Roadmap items"
+          contentClassName="grid gap-3 md:grid-cols-2 xl:grid-cols-4"
+          footer={(
+            <TablePagination
+              mode="cursor"
+              rowCount={(data?.data ?? []).length}
+              pageNumber={pager.pageNumber}
+              hasMore={hasNext}
+              hasPrevious={pager.hasPrevious}
+              onNext={handleNext}
+              onPrevious={handlePrev}
+            />
+          )}
+        >
             {ROADMAP_COLUMNS.map((col) => (
               <PmPanel
                 key={col.status}
@@ -195,17 +209,7 @@ export function RoadmapTab({
                 )}
               </PmPanel>
             ))}
-          </div>
-          <TablePagination
-            mode="cursor"
-            rowCount={(data?.data ?? []).length}
-            pageNumber={pager.pageNumber}
-            hasMore={hasNext}
-            hasPrevious={pager.hasPrevious}
-            onNext={handleNext}
-            onPrevious={handlePrev}
-          />
-        </div>
+        </BuildPaginatedContent>
       </PageState>
 
       {sheetOpen ? <RoadmapItemSheet onClose={handleCloseSheet} /> : null}

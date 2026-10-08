@@ -46,6 +46,7 @@ CRM is explicitly excluded from the platform-wide final architecture completion 
 
 ## Other
 
+- [Companion Pet product program, four PRDs, verification, delivery plan, and 200 opportunity candidates](../pet/README.md)
 - [Ask OS hardening](2026-09-19-ask-os-hardening-prd.md)
 - [Ask OS architecture remediation](2026-09-19-ask-os-architecture-remediation-prd.md)
 - [Chat OS](2026-09-18-chat-os-prd.md)

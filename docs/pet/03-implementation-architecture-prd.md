@@ -1,0 +1,90 @@
+# CP-03 — Companion implementation architecture
+
+**Status:** Source-informed architecture requirements, 2026-10-08. No pet implementation or target-environment proof. **Depends on:** [CP-00](00-experience-prd.md), [CP-01](01-intelligence-actions-prd.md), [CP-02](02-proactive-governance-prd.md), and the [verification ledger](verification-and-competition.md).
+
+## Domain ownership and seams
+
+Use the vocabulary in [CONTEXT.md](../../CONTEXT.md). The pet is an entry and presentation module over existing owners, not a new authority for their data. A new module must pass the deletion test: deleting it should restore substantial complexity to its callers, not merely remove a forwarding hop.
+
+**Architectural center:** [ADR 0007](../docs/adr/0007-companion-uses-ask-os-toolset.md) selects the Ask OS Toolset as the per-turn capability interface. Keep that deep module and its typed Outcome and confirmation seam; make the pet a lightweight interaction module. Build counts and Documents answers are owner-specific extensions of this general path, not special cases that define the whole assistant. A request is accepted as natural language, but execution is limited to current, validated Tool definitions and approved connections. This is the selected direction under CP-D15.
+
+| Concern | Current owner and source | Companion rule |
+| --- | --- | --- |
+| Turn, Toolset, Proposal, Directive, Actor, Credit ledger, conversation history | Ask OS under `backend/src/modules/ai/core/`, `ai/confirmation/`, and `frontend/components/assistant/` | Retain these identities and confirmation path. The pet cannot execute a write, authorize itself, or start a second transcript. |
+| Document Retrieve, Standing, Citation, revision, and Degradation | `backend/src/modules/kb/retrieval/` (`KbAskService`, `KbRetrievalService`, `KbAskCitationService`) | Reuse Documents ownership. Ask OS title search is not a content-answer substitute. Retrieval and citation visibility remain distinct. |
+| Ticket count, status group, Project reach, and Ticket mutation | `backend/src/modules/build/core/work-query/`, `qa/bugs.service.ts`, `core/tickets/apply-ticket-change.ts` | Build computes exact scoped totals and performs any authorized change; the model and pet UI never count list rows or write Ticket tables. |
+| Calendar reminder occurrence/attendee and outbox | `backend/src/modules/calendar/calendar-reminder-sweep.service.ts` | Pet presentation reuses the existing reminder identity rather than scheduling a second meeting clock. |
+| Delivery, preferences, quiet hours, and snooze | `backend/src/modules/notifications/` | One effective notification policy; pet categories extend it without another quiet-hours store. |
+| Shift, clock-in, leave, and holiday facts | HR/attendance ownership | A pet clock-in prompt consumes an owner-approved eligibility result, not raw HR joins. Unknown schedule or absence state suppresses the prompt. |
+| Effective permissions, module access, live membership | Access/RBAC and request-local `AuthContext` | Derive capability choices from the current actor snapshot. Recheck object access and policy on citation open, prompt delivery, and proposal redemption. |
+| Leads and CRM activity | `backend/src/modules/ai/core/tools/crm-copilot-tools.ts` and `work-actions-tools.ts`, through CRM ownership | Reuse registered reads and proposals; resolve lead identity and status through CRM reach. |
+| Mail, chat, and meeting work | `mail-copilot-tools.ts`, `comms-actions-tools.ts`, `comms-copilot-tools.ts`, `workspace-copilot-tools.ts` | Honor account connection, recipient/attendee resolution, channel access, and each owning send/schedule command. |
+| Self-service, HR, payroll, and operations | `self-*-tools.ts`, `hr-copilot-tools.ts`, `ops-copilot-tools.ts` | Keep self subject binding, data sensitivity, owner-specific grants, and bounded aggregates. Review immediate self actions before pet exposure. |
+
+## General request and capability path
+
+1. Resolve the signed-in Actor, organization, effective access snapshot, module flags, and connection state for the turn. The current `buildAskOsToolset` already filters definitions by permission and module. A displayed suggestion is a hint about that snapshot, not authority to execute; the server rechecks at each tool run and confirmation.
+2. Interpret the user's question, command, or multi-part request into a bounded sequence of information needs and potential actions. Offer only registered, validated Tools whose inputs and owner semantics fit the request. Do not make a catch-all database query or a generic write Tool. If no Tool matches, give a truthful capability limit and a navigation/manual path.
+3. Resolve entity, scope, time range, and connection ambiguity before consequential reads or proposals. `ToolOutcome` already distinguishes `data`, `empty`, `denied`, `needs-connection`, `needs-confirmation`, `ambiguous`, and `failed`; preserve these distinctions in the panel. In particular, an ambiguous Tool result must become a user choice, never an arbitrary model selection.
+4. Execute independent bounded reads through owner-approved Tool interfaces, then synthesize an answer with per-claim provenance, explicit time/filter scope, and partial-failure state. Do not call every module for every message. General guidance may be model-generated but cannot be presented as current organization data.
+5. Convert each requested side effect into an owner-specific Proposal and Directive, show the target and material effects, wait for explicit confirmation, then redeem through the existing confirmation path. A cross-module plan has separately confirmed steps and receipts; it is not an atomic workflow. Abort or re-plan after failure, revocation, or changed context.
+6. Bound the number of tool invocations, result rows, context bytes, model turns, and elapsed time per request; cancel unused work. Instrument actual fan-out, provider time, owner-query time, credits, and partial outcomes before setting budgets. Limits must produce an honest incomplete result rather than silent truncation.
+
+The Tool provider modules are the extension seam for new owner capabilities. Their interface is relatively small: declared key, description, validated input, permission/module metadata, optional confirmable action, and typed Outcome. The leverage comes from central availability and result handling while business queries and writes stay local to owners. Before adding a new abstraction, apply the deletion test: if removing it merely moves a few forwarding calls, keep the logic with the existing Tool provider or owner. A standalone capability catalog is justified only if one source can drive model availability, UI suggestions, admin policy, and test coverage without duplicating grants or drifting from the registered Toolset. That interface decision needs a design spike with real examples; do not add a second agent framework by default.
+
+The current `self-actions-tools.ts` includes immediate `clockIn`, `clockOut`, and `toggleBreak` Tools alongside confirmable self actions; `crm-copilot-tools.ts` also writes through `createTask` without `confirms`. These Tools must not be available as pet writes until they pass through a preview and explicit confirmation; otherwise the pet directs the user to the normal owner workflow. Preserve existing owning-module semantics and prove that model tool choice cannot bypass user control. `updateLeadStatus` currently takes the first partial-name match (`limit(1)`); that owner path must return a typed ambiguity choice before a pet proposal when multiple visible leads match. Classify draft-only tools explicitly rather than by provider filename.
+
+## Request paths
+
+### Exact Ticket counts — one owner-specific example
+
+1. Ask OS detects a count question. If scope is ambiguous, it emits a structured scope choice before the count query. Route context may order choices but does not authorize them.
+2. A read-only Tool requests a Build-owned aggregate. Build applies tenant, effective scope, Project reach, canonical Ticket type `BUG` where requested, state groups, soft-delete/archival policy, and co-assignee deduplication.
+3. Return an exact total and canonical filter description with `asOf`. A bounded preview is a separate result. A filtered Build link is emitted only when its view reproduces the aggregate predicate.
+4. Unknown status mapping, denied reach, disabled module, failed query, and true zero are distinct outcomes. The model receives a typed result and does not reconstruct totals from prose or a capped page.
+
+The current self-work count has an all-type path; `BugsService.listBugs` stops at 100. A new BUG aggregate belongs behind Build's query seam. Use `ScopedRead` or an equivalent owner-approved scope path that enforces tenant and data scope together ([ADR 0005](../docs/adr/0005-a-datascope-is-spent-not-read.md)). Measure `EXPLAIN (ANALYZE, BUFFERS)` as the non-owner application role on representative tenants before adding indexes or cache. A cache, if justified, must include actor/scope/filter and an invalidation plan for Ticket, status, Project reach, and membership changes.
+
+### Documents answers — one owner-specific example
+
+The existing Documents Ask module already retrieves content, assembles passages, handles per-source degradation, resolves citations, and rechecks citation visibility. Its current context gathering is private to `KbAskService`, whose `ask` path also performs a paid generation. [ADR 0007](../docs/adr/0007-companion-uses-ask-os-toolset.md) selects a **Documents-owned bounded citable-context read** for the companion turn. Extract the substantive retrieval/passages/citation behavior behind an owner interface that Documents Ask and Ask OS can both use; Ask OS performs one final generation, owns one credit reservation/settlement, and stores one visible transcript. The returned source/revision identities and degradation state must survive synthesis and citation replay without copying Documents ACL predicates into AI.
+
+Do not call paid `KbAskService.ask` inside a normal Ask OS Tool execution: the registry wraps ordinary tools in a tenant transaction, while Documents Ask owns provider work and additional tenant transactions. The context Tool must manage its own short tenant transactions around DB reads and release the connection before provider latency. Prove **one billable generation, one visible Ask OS turn, no pooled connection held during provider latency**, access-checked citations, and distinct empty/degraded/denied outcomes. Test a revoked Document between retrieval and render and on transcript replay.
+
+### Confirmed actions across modules
+
+The existing Tool proposes a typed confirmable action. The pet renders the Directive, not a model-written imitation. Confirmation enters `POST /chat/confirm`, which already checks the organization AI flag, module availability, and effective permission; the owning command rechecks record/version and commits its side effects. Extend only where the requirement needs a typed receipt or explicit conflict path. A duplicate redemption, reload, or tenant switch must produce at most one committed result. Do not add a generic mutation or a second confirmation store. Validate representative CRM, mail, chat, calendar, HR/self, and Build actions independently; one successful Ticket action is insufficient proof of the general request path.
+
+### Pet prompts
+
+Calendar emits an attendee/occurrence reminder to the notification outbox. Notifications evaluates effective channel/category settings, quiet hours, and delivery; the pet presents one eligible identity across tabs/devices. Clock-in eligibility comes from HR. Break/friendly prompts use separately opted-in coarse foreground-session timing, never per-keystroke or screen telemetry. Server-side keys, expiry, and last-delivered state decide deduplication; browser coordination can reduce flicker but is not authority. Deterministic prompt evaluation consumes no model credit. Durable side effects use the existing outbox rule; provider/network calls do not run inside a request transaction.
+
+## Client runtime and performance
+
+- Keep the existing `AskOsProvider` lazy panel seam. The always-present character contains only a small visual state machine, accessible button, approved preset, and current prompt indicator. Conversation hooks and heavy assets load when the panel opens. Hide or freeze decorative work for hidden tabs and reduced motion.
+- Derive suggestion chips from validated available Tool definitions and enabled modules, with a safe presentation mapping where descriptions are too technical. Do not maintain a second role-to-feature or permission matrix in the browser. The server remains authoritative when permissions change during a session.
+- Use existing client data hooks and query key conventions. Scope user/organization preferences at the authenticated store; never persist another organization's conversation or prompt reason in unscoped browser storage.
+- No model call, all-module fan-out, or high-frequency attendance/activity polling on the idle shell. The first interaction may prefetch only an authenticated, permissioned minimum after measurement shows a benefit.
+- Instrument incremental launcher transfer, panel-open latency, idle CPU/frames, count-query buffers, Documents answer latency and credit spend, notification lag, and retry/duplicate rates. Establish p50/p95 baselines in the named pilot environment and set release budgets before code sign-off; a source-only claim of “super fast” is invalid.
+
+## Coding and maintenance rules
+
+- Follow the existing repository rules rather than introducing a companion-specific style: backend module registration and owner-only cross-module calls (`BE-01`, `BE-04`), no pass-through modules (`BE-143`), one Ticket mutation owner (`BE-154`), scoped reads and object checks (`BE-90`, ADR 0005), and durable side effects outside provider waits (`BE-83`, `BE-84`).
+- Keep the Tool definition and confirmable-action payload as typed contracts. Validate every input at the existing seam, return a discriminated outcome, and render structured results. Do not depend on parsing assistant prose, broad `any` casts, or a second client copy of permissions.
+- Follow frontend fetching and contract ownership (`FE-15`, `FE-27`), scoped query/storage conventions, shared UI tokens, and motion rules (`FE-108`). Keep character assets and state transitions isolated from the base shell render path.
+- Test through owner interfaces with realistic lower-role and tenant data. Use focused tests for pure rules, integration tests for DB/outbox/revocation, and browser journeys for the compound experience. Replace obsolete tests when the interface changes; avoid mirror tests that assert only source text.
+- Keep count-query complexity and Documents retrieval bounded by configured limits. Reject or degrade safely when limits are exceeded. Measure query count and buffers so a large tenant or long conversation does not turn one pet turn into N+1 reads or an unbounded prompt.
+
+## Reliability and review gates
+
+| Risk | Required design/test proof |
+| --- | --- |
+| Permission or tenant change | Resolve auth facts once per request ([ADR 0004](../docs/adr/0004-auth-facts-resolve-once-per-request.md)); recheck at every new read/write/delivery; run lower-role, cross-Project, and cross-tenant cases as a non-owner database role. |
+| Provider/credit failure | One charge path, bounded timeouts, cancellation/refund behavior, truthful UI result, no long transaction or retry that duplicates a write. |
+| Duplicate or stale action | Proposal idempotency, version conflict, expiry, retry, and committed receipt all traced to the owning command. |
+| Duplicate or stale prompt | Calendar occurrence dedupe, event reschedule/cancellation, multi-tab/device delivery, quiet-hour deferral, leave/holiday suppression, and bounded retry. |
+| Slow shell or query | Compare measured shell/idle and query budgets with the current Ask OS baseline; inspect representative tenant query plans before cache/index changes. |
+| Accessibility | Equivalent static, reduced-motion, keyboard, screen-reader, zoom, and mobile flows; animation never carries the only result. |
+| Tool breadth and partial completion | Inventory each registered Tool, classify its read/write/connection/confirmation behavior, and verify representative journeys from each module cluster. Prove ambiguous targets, missing tools, stale connection, mixed-module answer, and one-success/one-failure multi-step request. |
+
+No second generic agent framework, history store, notification clock, or cross-module data-access shortcut is justified by the first-release requirements. The existing Toolset remains the extensible capability module, with targeted owner additions where the inventory proves a gap. The [delivery plan](delivery-plan.md) orders the work and the [traceability ledger](verification-and-competition.md#acceptance-by-acceptance-trace) tracks proof still needed.

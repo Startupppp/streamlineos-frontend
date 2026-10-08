@@ -4,6 +4,7 @@ import { ChevronDownIcon, ChevronRightIcon } from "@animateicons/react/lucide";
 import { WifiOff } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { BuildPaginatedContent } from "@/features/build/shared/build-paginated-content";
 import { CycleVelocityPanel } from "./cycle-velocity-panel";
 import type { Cycle } from "@/types/projects";
 import type { RefObject } from "react";
@@ -49,8 +50,21 @@ export function CyclesSections({
   renderCycleCard,
 }: CyclesSectionsProps) {
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto">
+    <BuildPaginatedContent
+      ariaLabel="Cycles"
+      contentClassName="flex flex-col gap-6"
+      footer={(
+        <TablePagination
+          mode="cursor"
+          rowCount={displayedCycles.length}
+          pageNumber={pageNumber}
+          hasMore={hasMoreCycles}
+          hasPrevious={hasPrevious}
+          onNext={onNextPage}
+          onPrevious={onPreviousPage}
+        />
+      )}
+    >
         {!isOnline ? (
           <div
             className="flex shrink-0 items-center gap-2 rounded-md border border-border bg-muted/40 px-3 py-2"
@@ -128,16 +142,6 @@ export function CyclesSections({
           </>
         ) : null}
         <CycleVelocityPanel projectId={projectId} />
-      </div>
-      <TablePagination
-        mode="cursor"
-        rowCount={displayedCycles.length}
-        pageNumber={pageNumber}
-        hasMore={hasMoreCycles}
-        hasPrevious={hasPrevious}
-        onNext={onNextPage}
-        onPrevious={onPreviousPage}
-      />
-    </div>
+    </BuildPaginatedContent>
   );
 }

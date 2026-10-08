@@ -33,38 +33,56 @@ export function ProjectCardFooter({
   const leadName = getUserDisplayName(project.manager);
 
   return (
-    <div className="mt-auto space-y-2 border-t border-border/60 pt-3">
-      <div className={cn(TEXT_FLEX_CHILD, "flex items-center gap-1.5")}>
-        <Avatar className="h-5 w-5 shrink-0">
-          {project.manager?.image ? (
-            <AvatarImage
-              src={resolveImageUrl(project.manager.image)}
-              alt=""
-            />
-          ) : null}
-          <AvatarFallback className="text-micro">
-            {getUserInitials(project.manager)}
-          </AvatarFallback>
-        </Avatar>
-        <span className="sr-only">Lead: </span>
-        <TruncatedText
-          text={leadName}
-          className="text-label text-muted-foreground"
-        />
+    <div
+      data-testid="project-card-footer"
+      className="mt-2.5 border-t border-border/60 pt-2.5"
+    >
+      <div className="flex min-w-0 items-center justify-between gap-3">
+        <div className={cn(TEXT_FLEX_CHILD, "flex min-w-0 items-center gap-1.5")}>
+          <Avatar className="size-5 shrink-0">
+            {project.manager?.image ? (
+              <AvatarImage
+                src={resolveImageUrl(project.manager.image)}
+                alt=""
+              />
+            ) : null}
+            <AvatarFallback className="text-micro">
+              {getUserInitials(project.manager)}
+            </AvatarFallback>
+          </Avatar>
+          <span className="sr-only">Lead: </span>
+          <TruncatedText
+            text={leadName}
+            className="text-label text-muted-foreground"
+          />
+        </div>
+
+        {canEdit ? (
+          <InlineProjectDates
+            projectId={project.id}
+            currentStartDate={project.startDate}
+            currentEndDate={project.endDate}
+            currentStatus={status}
+          />
+        ) : dateMeta ? (
+          <div
+            className={cn(
+              "flex shrink-0 items-center gap-1 text-micro font-normal tabular-nums",
+              dateToneClasses[dateMeta.tone],
+            )}
+          >
+            <Calendar className="size-3 shrink-0" aria-hidden="true" />
+            {dateMeta.label}
+          </div>
+        ) : (
+          <span className="shrink-0 text-micro text-muted-foreground">No target</span>
+        )}
       </div>
 
       {hasTickets ? (
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-micro font-normal tabular-nums text-muted-foreground">
-              <span className="text-foreground">{progressValue}%</span> complete
-            </span>
-            <span className="text-micro tabular-nums text-muted-foreground">
-              {project.progress.done}/{project.progress.total}
-            </span>
-          </div>
+        <div className="mt-2 flex items-center gap-2">
           <div
-            className="h-1 overflow-hidden rounded-full bg-muted"
+            className="h-1 min-w-12 flex-1 overflow-hidden rounded-full bg-muted"
             role="progressbar"
             aria-valuenow={progressValue}
             aria-valuemin={0}
@@ -82,37 +100,19 @@ export function ProjectCardFooter({
               style={{ width: `${progressValue}%` }}
             />
           </div>
+          <span className="shrink-0 text-micro tabular-nums text-foreground">
+            {progressValue}%
+          </span>
+          <span className="shrink-0 text-micro tabular-nums text-muted-foreground">
+            {project.progress.done}/{project.progress.total}
+          </span>
         </div>
       ) : (
-        <div className="flex items-center gap-1.5 text-micro text-muted-foreground">
-          <Ticket className="h-3 w-3 shrink-0" aria-hidden="true" />
+        <div className="mt-2 flex items-center gap-1.5 text-micro text-muted-foreground">
+          <Ticket className="size-3 shrink-0" aria-hidden="true" />
           <span>No tickets yet</span>
         </div>
       )}
-
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-micro text-muted-foreground">Target</span>
-        {canEdit ? (
-          <InlineProjectDates
-            projectId={project.id}
-            currentStartDate={project.startDate}
-            currentEndDate={project.endDate}
-            currentStatus={status}
-          />
-        ) : dateMeta ? (
-          <div
-            className={cn(
-              "flex shrink-0 items-center gap-1 text-micro font-normal tabular-nums",
-              dateToneClasses[dateMeta.tone],
-            )}
-          >
-            <Calendar className="h-3 w-3 shrink-0" aria-hidden="true" />
-            {dateMeta.label}
-          </div>
-        ) : (
-          <span className="text-micro text-muted-foreground">—</span>
-        )}
-      </div>
     </div>
   );
 }

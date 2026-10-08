@@ -6,6 +6,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { BuildPaginatedContent } from "@/features/build/shared/build-paginated-content";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Target, TrendingUp, AlertTriangle } from "lucide-react";
 import { RequireModule } from "@/components/auth/require-module";
@@ -146,8 +147,18 @@ export function GoalsPage() {
                 />
               }
             >
-              <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-                <div className="min-h-0 flex-1 overflow-y-auto">
+              <BuildPaginatedContent
+                ariaLabel="Goals"
+                footer={totalGoals > 0 ? (
+                  <TablePagination
+                    page={page}
+                    pageSize={GOALS_PAGE_SIZE}
+                    total={totalGoals}
+                    onPageChange={setPage}
+                  />
+                ) : null}
+              >
+                <div>
                   <div className="flex flex-col gap-6">
                     {GOAL_LEVEL_ORDER.map((level) => {
                       const levelGoals = grouped.get(level) ?? [];
@@ -177,15 +188,7 @@ export function GoalsPage() {
                     })}
                   </div>
                 </div>
-                {totalGoals > 0 ? (
-                  <TablePagination
-                    page={page}
-                    pageSize={GOALS_PAGE_SIZE}
-                    total={totalGoals}
-                    onPageChange={setPage}
-                  />
-                ) : null}
-              </div>
+              </BuildPaginatedContent>
             </PageState>
           </PmSection>
         </PmPageShell>

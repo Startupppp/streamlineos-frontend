@@ -40,6 +40,20 @@ beforeEach(() => {
 });
 
 describe("ProjectCard navigation", () => {
+  it("uses the compact project-card layout contract", () => {
+    render(<ProjectCard project={project} />);
+
+    expect(screen.getByRole("article")).toHaveAttribute(
+      "data-slot",
+      "project-card",
+    );
+    expect(screen.getByRole("article")).toHaveClass("p-3");
+    expect(
+      screen.getByTestId("project-card-footer"),
+    ).toHaveClass("mt-2.5", "pt-2.5");
+    expect(screen.getByText("No tickets yet")).toBeVisible();
+  });
+
   it("exposes a native project URL for new-tab and copied-link navigation", () => {
     render(<ProjectCard project={project} />);
 

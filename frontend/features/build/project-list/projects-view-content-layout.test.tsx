@@ -67,15 +67,60 @@ describe("ProjectsViewContent grid layout", () => {
     );
 
     const grid = screen.getByRole("list", { name: "Projects grid" });
-    expect(grid.parentElement).toHaveClass("overflow-y-auto", "overscroll-contain");
+    expect(grid.parentElement).toHaveClass(
+      "flex",
+      "flex-col",
+      "overflow-y-auto",
+      "overscroll-contain",
+    );
     expect(grid.parentElement).not.toHaveClass("pb-4");
 
     const pagination = screen.getByRole("navigation", { name: "Pagination" });
+    expect(pagination).toHaveClass("mt-auto");
     expect(pagination).not.toHaveClass("sticky");
     expect(pagination).not.toHaveClass("bottom-0");
     expect(pagination.parentElement).toBe(grid.parentElement);
     expect(
       grid.compareDocumentPosition(pagination) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
+  });
+
+  it("keeps the next-page control available when this page has no visible projects", () => {
+    render(
+      <ProjectsViewContent
+        viewMode="grid"
+        visibleProjects={[]}
+        allProjects={[project]}
+        prefs={{
+          showSummary: false,
+          showStatus: true,
+          showClosed: false,
+          showPriority: true,
+          showHealth: true,
+          showLead: true,
+          showMembers: false,
+          showTeams: false,
+          showTargetDate: true,
+          showStartDate: false,
+          showProgress: true,
+          showIssueCount: true,
+          groupBy: "none",
+          orderBy: "name",
+          orderDir: "asc",
+        }}
+        pageNumber={1}
+        hasMore
+        hasPrevious={false}
+        onNext={jest.fn()}
+        onPrevious={jest.fn()}
+        showGroupingSidebar={false}
+        onGroupingSidebarChange={jest.fn()}
+        activeGroup={null}
+        onGroupSelect={jest.fn()}
+        shouldReduceMotion
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Next page" })).toBeEnabled();
   });
 });

@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
+import { BuildPaginatedContent } from "@/features/build/shared/build-paginated-content";
 import { toast } from "sonner";
 import {
   useChangelog,
@@ -143,7 +144,20 @@ export function ChangelogTab({
 
   return (
     <>
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <BuildPaginatedContent
+        ariaLabel="Changelog"
+        footer={(data?.data ?? []).length > 0 || pager.hasPrevious ? (
+          <TablePagination
+            mode="cursor"
+            rowCount={(data?.data ?? []).length}
+            pageNumber={pager.pageNumber}
+            hasMore={hasNext}
+            hasPrevious={pager.hasPrevious}
+            onNext={handleNext}
+            onPrevious={handlePrev}
+          />
+        ) : null}
+      >
         <PageState
           resolution={resolution}
           loading={<ChangelogListSkeleton />}
@@ -159,7 +173,7 @@ export function ChangelogTab({
           onRetry={handleRetry}
           className={CONTENT_FILL_PANEL}
         >
-          <div className="min-h-0 flex-1 overflow-y-auto">
+          <div>
             <PmStaggerList className="space-y-2">
               {(data?.data ?? []).map((entry) => (
                 <ChangelogEntryCard
@@ -175,18 +189,7 @@ export function ChangelogTab({
             </PmStaggerList>
           </div>
         </PageState>
-        {(data?.data ?? []).length > 0 || pager.hasPrevious ? (
-          <TablePagination
-            mode="cursor"
-            rowCount={(data?.data ?? []).length}
-            pageNumber={pager.pageNumber}
-            hasMore={hasNext}
-            hasPrevious={pager.hasPrevious}
-            onNext={handleNext}
-            onPrevious={handlePrev}
-          />
-        ) : null}
-      </div>
+      </BuildPaginatedContent>
 
       {sheetOpen ? <ChangelogSheet onClose={handleCloseSheet} /> : null}
       {editTarget ? <ChangelogSheet entry={editTarget} onClose={handleCloseEdit} /> : null}

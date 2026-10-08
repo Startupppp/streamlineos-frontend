@@ -16,6 +16,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { BuildPaginatedContent } from "@/features/build/shared/build-paginated-content";
 import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import { PmPageShell, PmPanel, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 import { ViewCard, type ViewItem } from "@/features/build/views/saved-views/view-card";
@@ -215,7 +216,20 @@ export function ProjectSettingsViewsPage({ projectId }: ProjectSettingsViewsPage
               </div>
             ) : null}
             <PmPanel className="flex min-h-0 flex-1 flex-col overflow-hidden p-2" solid>
-              <div className="min-h-0 flex-1 overflow-y-auto">
+              <BuildPaginatedContent
+                ariaLabel="Saved views"
+                footer={(pagination?.hasMore || pager.hasPrevious) ? (
+                  <TablePagination
+                    mode="cursor"
+                    rowCount={pagedViews.length}
+                    pageNumber={pager.pageNumber}
+                    hasMore={pagination?.hasMore ?? false}
+                    hasPrevious={pager.hasPrevious}
+                    onNext={() => pager.goNext(pagination?.nextCursor)}
+                    onPrevious={pager.goPrevious}
+                  />
+                ) : null}
+              >
                 {pagedViews.map((view) => (
                   <ViewCard
                     key={view.id}
@@ -231,18 +245,7 @@ export function ProjectSettingsViewsPage({ projectId }: ProjectSettingsViewsPage
                     onToggleSelect={canManage ? handleToggleSelect : undefined}
                   />
                 ))}
-              </div>
-              {(pagination?.hasMore || pager.hasPrevious) ? (
-                <TablePagination
-                  mode="cursor"
-                  rowCount={pagedViews.length}
-                  pageNumber={pager.pageNumber}
-                  hasMore={pagination?.hasMore ?? false}
-                  hasPrevious={pager.hasPrevious}
-                  onNext={() => pager.goNext(pagination?.nextCursor)}
-                  onPrevious={pager.goPrevious}
-                />
-              ) : null}
+              </BuildPaginatedContent>
             </PmPanel>
           </PmSection>
         </PageState>

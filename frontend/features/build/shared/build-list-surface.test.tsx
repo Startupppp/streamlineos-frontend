@@ -13,8 +13,8 @@ jest.mock("@/hooks/api/entitlements", () => ({
 }));
 
 jest.mock("@/components/ui/data-table", () => ({
-  DataTable: ({ data }: { data: unknown[] }) => (
-    <div data-testid="data-table" data-rows={data.length} />
+  DataTable: ({ data, className }: { data: unknown[]; className?: string }) => (
+    <div data-testid="data-table" data-rows={data.length} className={className} />
   ),
   DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
 }));
@@ -203,6 +203,20 @@ describe("BuildListSurface — rows render in ready state", () => {
     render(surface({ rows: [{ id: 1, name: "Alpha" }, { id: 2, name: "Beta" }] }));
     expect(screen.getByTestId("data-table")).toBeInTheDocument();
     expect(screen.getByTestId("data-table")).toHaveAttribute("data-rows", "2");
+  });
+
+  it("preserves the fill-height flex chain that lets the shared table footer reach the page bottom", () => {
+    render(surface({ rows: [{ id: 1, name: "Alpha" }] }));
+
+    const table = screen.getByTestId("data-table");
+    expect(table).toHaveClass("flex", "min-h-0", "flex-1", "flex-col");
+    expect(table.parentElement).toHaveClass("flex", "min-h-0", "flex-1", "flex-col");
+    expect(table.parentElement?.parentElement).toHaveClass(
+      "flex",
+      "min-h-0",
+      "flex-1",
+      "flex-col",
+    );
   });
 
   it("does not render the data table when access is denied even with rows provided", () => {

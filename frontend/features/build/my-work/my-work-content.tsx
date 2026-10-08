@@ -23,6 +23,7 @@ import type { UseMyWorkBulkReturn } from "./use-my-work-bulk";
 import { AllWorkListSkeleton, BucketSection, BUCKET_ORDER } from "./my-work-rows";
 import { MyWorkViewBody } from "./my-work-view-body-lazy";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { BuildPaginatedContent } from "@/features/build/shared/build-paginated-content";
 import { useGuardedDocumentNavigation } from "@/hooks/common/use-guarded-document-navigation";
 import { StatusBadge } from "@/components/shared/ticket-status-badge";
 import { formatTicketKey } from "@/components/shared/format-ticket-key";
@@ -198,7 +199,24 @@ export const MyWorkContent = memo(function MyWorkContent({
           />
         </div>
       ) : showBucketList ? (
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <BuildPaginatedContent
+          ariaLabel="My Work due-date buckets"
+          contentClassName="overflow-hidden"
+          footer={(
+            <TablePagination
+              mode="cursor"
+              rowCount={kanbanTickets.length}
+              pageNumber={pageNumber}
+              hasPrevious={hasPrevious}
+              hasMore={hasMore}
+              onPrevious={onPreviousPage}
+              onNext={onNextPage}
+              hideOnSinglePage
+              compact
+              showSummary={false}
+            />
+          )}
+        >
           <ScrollArea className="min-h-0 flex-1" hideScrollbar>
             <div className="flex flex-col gap-3">
               {BUCKET_ORDER.map((bucket) => {
@@ -224,21 +242,26 @@ export const MyWorkContent = memo(function MyWorkContent({
               })}
             </div>
           </ScrollArea>
-          <TablePagination
-            mode="cursor"
-            rowCount={kanbanTickets.length}
-            pageNumber={pageNumber}
-            hasPrevious={hasPrevious}
-            hasMore={hasMore}
-            onPrevious={onPreviousPage}
-            onNext={onNextPage}
-            hideOnSinglePage
-            compact
-            showSummary={false}
-          />
-        </div>
+        </BuildPaginatedContent>
       ) : (
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <BuildPaginatedContent
+          ariaLabel="My Work tickets"
+          contentClassName="overflow-hidden"
+          footer={view !== "board" ? (
+            <TablePagination
+              mode="cursor"
+              rowCount={kanbanTickets.length}
+              pageNumber={pageNumber}
+              hasPrevious={hasPrevious}
+              hasMore={hasMore}
+              onPrevious={onPreviousPage}
+              onNext={onNextPage}
+              hideOnSinglePage
+              compact
+              showSummary={false}
+            />
+          ) : null}
+        >
           <MyWorkViewBody
             view={view}
             tickets={kanbanTickets}
@@ -247,19 +270,7 @@ export const MyWorkContent = memo(function MyWorkContent({
             boardFilters={boardFilters}
             orgStatuses={orgStatuses}
           />
-          {view !== "board" ? <TablePagination
-            mode="cursor"
-            rowCount={kanbanTickets.length}
-            pageNumber={pageNumber}
-            hasPrevious={hasPrevious}
-            hasMore={hasMore}
-            onPrevious={onPreviousPage}
-            onNext={onNextPage}
-            hideOnSinglePage
-            compact
-            showSummary={false}
-          /> : null}
-        </div>
+        </BuildPaginatedContent>
       )}
     </PageState>
   );
