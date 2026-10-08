@@ -9,14 +9,10 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { MemberPicker } from "@/components/shared";
-import {
-  PRODUCT_TYPE_OPTIONS,
-  type CreateManagedProductFormValues,
-} from "./managed-product-schema";
+import type { CreateManagedProductFormValues } from "./managed-product-schema";
 import { upperCaseFieldChange } from "@/lib/case-field";
 
 interface ManagedProductCreateFieldsProps {
@@ -34,30 +30,6 @@ export function ManagedProductCreateFields({ form, formId, onSubmit }: ManagedPr
         className="space-y-4"
         noValidate
       >
-        <FormField
-          control={form.control}
-          name="productType"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Product type (optional)</FormLabel>
-              <Select value={field.value ?? ""} onValueChange={(v) => field.onChange(v || undefined)}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a template type…" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {PRODUCT_TYPE_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
         <FormField
           control={form.control}
           name="name"

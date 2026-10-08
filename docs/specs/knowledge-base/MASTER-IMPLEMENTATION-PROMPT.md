@@ -14,20 +14,20 @@ Deliver the complete Knowledge Base described by the authoritative documents und
 - docs/specs/knowledge-base/04-backend-scale-architecture.md
 - docs/specs/knowledge-base/05-data-api-search-security.md
 - docs/specs/knowledge-base/06-code-removal-and-reuse.md
-- docs/specs/knowledge-base/07-delivery-roadmap.md
+- docs/specs/knowledge-base/OPEN-TASKS.md
 
-Also read every file under docs/specs/documents-module because those numbered contracts contain implementation-level acceptance details. When the two sets differ, the newer knowledge-base pack owns product scope and architecture; the documents-module pack supplies lower-level acceptance detail unless it conflicts with the newer decision.
+The former Documents Module acceptance details have been consolidated into `OPEN-TASKS.md`. Do not recreate a parallel tracker or infer completion from removed historical files; use Git history only when an item's recorded origin needs deeper context.
 
 Implement every required P0 and P1 outcome, every route marked KEEP/ADD/MOVE that is necessary for the finished product, all required database migrations, all canonical authorization and search behavior, all reusable frontend modules, all lifecycle/background work, all tests, and all release evidence. Implement differentiated features only where the knowledge-base pack marks them as required for the completed product. Do not implement items explicitly marked rejected, unnecessary, deferred pending measured demand, or conditional scale stages whose trigger has not been reached.
 
 EXECUTION CONTRACT
 
-1. Begin by reading repository instructions, the complete knowledge-base pack, the complete documents-module pack, package scripts, current route/component/backend/schema inventories, and git status. Preserve unrelated user changes.
-2. Build a requirement ledger that maps every required outcome to its frontend route, backend interface, schema/migration, authorization rule, cache/index/event writers, tests, browser states, and verification evidence. Store the ledger under docs/specs/knowledge-base and keep it current throughout execution.
+1. Begin by reading repository instructions, the complete knowledge-base pack, `OPEN-TASKS.md`, package scripts, current route/component/backend/schema inventories, and git status. Preserve unrelated user changes.
+2. Maintain `OPEN-TASKS.md` as the requirement ledger. Map completed outcomes to their frontend route, backend interface, schema/migration, authorization rule, cache/index/event writers, tests, browser states, and verification evidence directly beneath the corresponding item. Do not create another checklist.
 3. Execute the work in vertical slices. Each slice includes the user-visible page, backend behavior, database change, authorization, indexing/cache invalidation, tests, telemetry, migration, and browser verification. Do not stop after scaffolding or after completing only one layer.
 4. Use the existing modular monolith, PostgreSQL, tenant transaction/placement system, workflow/outbox, object storage, Redis-compatible cache/rate limiting, replica routing, and shared UI modules. Deepen them behind the interfaces defined in the architecture plan. Add another infrastructure product only when repository evidence proves the existing stack cannot meet the specified acceptance threshold.
 5. Use test-driven diagnosis for every defect and contract tests for every new interface. Reproduce incorrect behavior before replacing it. Keep all tests deterministic.
-6. Continue autonomously across context compactions. The requirement ledger is the resume authority. On every resume, read it, inspect git status and recent diffs, run the smallest relevant verification, and continue from the first incomplete requirement.
+6. Continue autonomously across context compactions. `OPEN-TASKS.md` is the resume authority. On every resume, read it, inspect git status and recent diffs, run the smallest relevant verification, and continue from the first incomplete requirement.
 7. Do not ask clarification questions. Resolve ambiguity from the authoritative docs, existing domain model, tests, and product principles. Choose the option that maximizes correctness, tenant isolation, reusability, reversibility, accessibility, low operating cost, and deletion of duplicate concepts. Ask only if completion requires an external secret/account or an irreversible action outside the Knowledge Base scope that cannot be safely represented by a local adapter or feature flag.
 8. Do not stop to request permission for ordinary implementation, tests, migrations, scoped Knowledge Base data replacement, route removal, or legacy Knowledge Base cleanup. Those actions are authorized by this prompt.
 9. Do not produce a plan as the final output. Planning is an internal execution aid. Finish the implementation, verification, migrations, cleanup, and evidence first.

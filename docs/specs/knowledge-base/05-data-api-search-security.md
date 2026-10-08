@@ -2,7 +2,7 @@
 
 ## September 27 contract corrections
 
-Read [AV-02–AV-07 and AV-12–AV-14](08-architecture-review-validation-2026-09-27.md) alongside this target spec. Schema names are not evidence that values are populated correctly.
+Read the AV items in [OPEN-TASKS.md](OPEN-TASKS.md) alongside this target spec. Schema names are not evidence that values are populated correctly.
 
 - Enforce private-space/project constraints across ordinary visibility, owner and grant branches. Citation presentation cannot authorize provider disclosure. Anonymous/public-token access has a separate interface and never receives authenticated standing invented from request input.
 - Normalize retrieval scope once and apply it to page, article, uploaded-source and passage queries; do not ignore selected space/owner/status filters. Preserve channel failure information even with zero matches.

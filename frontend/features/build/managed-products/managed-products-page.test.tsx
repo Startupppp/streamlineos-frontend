@@ -421,20 +421,6 @@ describe("ManagedProductsPage — create product (BT-6733af0a3e35 item 1)", () =
     expect(toast.success).not.toHaveBeenCalled();
   });
 
-  it("forwards productType to createProduct.mutate when the form includes a template type selection (BT-1680ac475463)", () => {
-    const inputWithType: CreateManagedProductInput = { name: "Content Hub", key: "CNTHUB", productType: "content_brief" };
-    ManagedProductFormSheet.mockImplementation(
-      ({ onSubmitCreate }: { onSubmitCreate?: (i: CreateManagedProductInput) => void }) => {
-        onSubmitCreate?.(inputWithType);
-        return null;
-      },
-    );
-    render(<ManagedProductsPage />);
-    expect(capturedMutate).toHaveBeenCalledWith(
-      expect.objectContaining({ productType: "content_brief" }),
-      expect.any(Object),
-    );
-  });
 });
 
 describe("ManagedProductsPage — delete product (BT-6733af0a3e35 item 1)", () => {

@@ -1,12 +1,12 @@
 # Knowledge Base Product and Scale Plan
 
-**Status:** planning authority
+**Status:** combined planning pack; [OPEN-TASKS.md](OPEN-TASKS.md) is the only actionable checklist
 
 **Latest architecture/completion audit:** 2026-09-27. Original product/browser audit: 2026-09-23.
 
-Start with [the two-review validation and corrective TODOs](08-architecture-review-validation-2026-09-27.md), then [the requirement ledger](REQUIREMENT-LEDGER.md). The validation distinguishes implementation, targeted tests, historical evidence, defects and conditional infrastructure. It supersedes conflicting completion claims in older session reports. Checklist percentages are not release-readiness or million-user capacity measurements.
+Start with [the consolidated open-task queue](OPEN-TASKS.md). It carries forward every unchecked child requirement from the former Knowledge Base and Documents Module trackers, while completed entries and duplicate parent/workstream boxes are omitted. Checklist percentages are not release-readiness or million-user capacity measurements.
 
-**Completion gate:** mark `[x]` only after the code is implemented, the whole requirement is verified, and relevant tests pass with recorded evidence. Otherwise use `[ ]` and distinguish missing implementation from verification pending. The current ledger retains only two narrowly verified test-implementation checks; this is not a measure of how much product code exists. Old audit reports and patch proposals are historical evidence, not authority to recheck work automatically.
+**Completion gate:** mark `[x]` in `OPEN-TASKS.md` only after the code is implemented, the whole requirement is verified, and relevant tests pass with recorded evidence. Otherwise leave it open and distinguish missing implementation from verification pending. Historical source names in that file are provenance, not authority to recheck work automatically.
 
 **Scope:** StreamlineOS `knowledge/**`, its project-wiki adapter, public-page renderer, and the backend modules that store, retrieve, govern, and index knowledge.
 
@@ -26,14 +26,14 @@ This is a **plan**, not authorization to implement production changes. Product w
 - Live browser audit of the localhost product on 2026-09-23, including all primary sidebar destinations and page `34`.
 - Route and component census under `frontend/app/(authenticated)/knowledge` and `frontend/features/wiki`.
 - Backend census under `backend/src/modules/kb` and `backend/src/db/schema/kb`.
-- Existing detailed contracts in [`../documents-module/README.md`](../documents-module/README.md). Those files remain the implementation-level source for their numbered acceptance items.
+- The former Documents Module implementation contracts, whose unchecked child requirements now live verbatim in [`OPEN-TASKS.md`](OPEN-TASKS.md). Git history retains their completed entries and surrounding historical prose.
 - First-party competitor sources in [`competitor-research.md`](competitor-research.md).
 
 Live observations are labelled **Observed**. Source-only conclusions are labelled **Source**. Proposed behavior is labelled **Target**. This distinction prevents a source file from being mistaken for working browser behavior.
 
 ## Document map
 
-Use [`MASTER-IMPLEMENTATION-PROMPT.md`](MASTER-IMPLEMENTATION-PROMPT.md) when handing the complete program to an implementation agent.
+Use [`MASTER-IMPLEMENTATION-PROMPT.md`](MASTER-IMPLEMENTATION-PROMPT.md) when handing the complete program to an implementation agent. Use [`OPEN-TASKS.md`](OPEN-TASKS.md) as its sole resume/checklist authority.
 
 | Step | Document | Decision owned |
 |---:|---|---|
@@ -45,8 +45,7 @@ Use [`MASTER-IMPLEMENTATION-PROMPT.md`](MASTER-IMPLEMENTATION-PROMPT.md) when ha
 | 5 | [`04-backend-scale-architecture.md`](04-backend-scale-architecture.md) | Low-cost million-user target architecture |
 | 6 | [`05-data-api-search-security.md`](05-data-api-search-security.md) | Data, interface, search, ACL, cache, and retention contracts |
 | 7 | [`06-code-removal-and-reuse.md`](06-code-removal-and-reuse.md) | Deletion, consolidation, and reuse plan |
-| 8 | [`07-delivery-roadmap.md`](07-delivery-roadmap.md) | Sequencing, release gates, ownership, and proof |
-| 9 | [`08-architecture-review-validation-2026-09-27.md`](08-architecture-review-validation-2026-09-27.md) | Both architecture reports, corrected decisions, fresh test results and TODOs AV-01–AV-15 |
+| 8 | [`OPEN-TASKS.md`](OPEN-TASKS.md) | Consolidated incomplete requirements, release gates, architecture corrections, provenance, and proof fields |
 
 ## Product thesis
 

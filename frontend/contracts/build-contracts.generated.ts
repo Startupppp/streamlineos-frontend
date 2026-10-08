@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const OPENAPI_HASH = "sha256:44eff5ad388d8b25f8e35aaba62fbeee8f845cdf8f21a555527ecc02cd892025" as const;
+export const OPENAPI_HASH = "sha256:bf47c5e6d7ad02506b2fb14c8de67363a47d4686a4990c423376a9d30dd9e9f4" as const;
 
 export const agentTokensListResponseSchema = z.array(z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -506,11 +506,6 @@ export const commentDraftsListMineResponseSchema = z.object({
   }),
 });
 export type CommentDraftsListMineResponse = z.infer<typeof commentDraftsListMineResponseSchema>;
-
-export const commentDraftsDeleteAllResponseSchema = z.object({
-  deleted: z.boolean(),
-});
-export type CommentDraftsDeleteAllResponse = z.infer<typeof commentDraftsDeleteAllResponseSchema>;
 
 export const commentDraftsUpsertResponseSchema = z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -5614,8 +5609,6 @@ export type ProjectsTicketsCreateTicketBody = z.input<typeof projectsTicketsCrea
 export const projectsTicketsBulkUpdateResponseSchema = z.object({
   updated: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   ticketIds: z.array(z.number().int().gte(-9007199254740991).lte(9007199254740991)),
-  versions: z.record(z.string(), z.number().int().gte(-9007199254740991).lte(9007199254740991)).optional(),
-  updatedAt: z.iso.datetime({ offset: true }).optional(),
   blocked: z.array(z.object({
     ticketId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     reason: z.string(),
@@ -7227,7 +7220,6 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "CommentDraftsController_readByTicket", method: "GET", path: "/build/comment-drafts/by-ticket/{ticketId}", response: "commentDraftsReadByTicketResponseSchema" },
   { operationId: "CommentDraftsController_deleteByTicket", method: "DELETE", path: "/build/comment-drafts/by-ticket/{ticketId}", response: "commentDraftsDeleteByTicketResponseSchema" },
   { operationId: "CommentDraftsController_listMine", method: "GET", path: "/build/comment-drafts/mine", response: "commentDraftsListMineResponseSchema" },
-  { operationId: "CommentDraftsController_deleteAll", method: "DELETE", path: "/build/comment-drafts/mine", response: "commentDraftsDeleteAllResponseSchema" },
   { operationId: "CommentDraftsController_upsert", method: "PUT", path: "/build/comment-drafts/tickets/{ticketId}", response: "commentDraftsUpsertResponseSchema", body: "commentDraftsUpsertBodySchema" },
   { operationId: "CommentDraftsController_generateDraft", method: "POST", path: "/build/comment-drafts/tickets/{ticketId}/generate-draft", response: "commentDraftsGenerateDraftResponseSchema" },
   { operationId: "CommentDraftsController_deleteOne", method: "DELETE", path: "/build/comment-drafts/{draftId}", response: "commentDraftsDeleteOneResponseSchema" },

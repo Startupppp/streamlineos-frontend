@@ -292,6 +292,23 @@ describe("BuildListToolbar", () => {
     });
   });
 
+  it("collapses the opted-in search to an icon until it receives focus", async () => {
+    const { container } = render(
+      <BuildListToolbar
+        search={search}
+        filters={[statusFilter()]}
+        collapseActionsOnSearchFocus
+      />,
+    );
+    const searchSlot = container.querySelector('[data-slot="search-input"]');
+    expect(searchSlot).toHaveClass("!min-w-0", "!w-9", "!basis-9");
+
+    fireEvent.focus(screen.getByLabelText("Search bugs"));
+    await waitFor(() => {
+      expect(searchSlot).not.toHaveClass("!w-9", "!basis-9");
+    });
+  });
+
   it("restores mobile Filters after populated search blurs and opens the drawer without clearing search", async () => {
     useIsMobile.mockReturnValue(true);
     function SearchToolbar() {

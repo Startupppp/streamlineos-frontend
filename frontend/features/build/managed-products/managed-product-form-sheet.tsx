@@ -9,6 +9,7 @@ import {
   type CreateManagedProductFormValues,
   editManagedProductSchema,
   type EditManagedProductFormValues,
+  toCreateManagedProductInput,
 } from "@/features/build/managed-products/managed-product-schema";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -108,13 +109,7 @@ export function ManagedProductFormSheet({
 
   function handleCreateSubmit(v: CreateManagedProductFormValues) {
     if (!onSubmitCreate) return;
-    onSubmitCreate({
-      name: v.name,
-      key: v.key,
-      ...(v.productType ? { productType: v.productType } : {}),
-      ...(v.description ? { description: v.description } : {}),
-      ...(v.ownerId ? { ownerId: v.ownerId } : {}),
-    });
+    onSubmitCreate(toCreateManagedProductInput(v));
   }
 
   function handleEditSubmit(v: EditManagedProductFormValues) {

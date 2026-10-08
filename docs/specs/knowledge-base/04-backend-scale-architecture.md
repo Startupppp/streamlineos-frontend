@@ -2,7 +2,7 @@
 
 ## September 27 decision reconciliation
 
-This is a target architecture, not a description of seven already implemented modules. [The architecture validation](08-architecture-review-validation-2026-09-27.md) maps both reviews to current code and remaining work. Existing services may satisfy an interface; renaming them or adding pass-through wrappers is not progress.
+This is a target architecture, not a description of seven already implemented modules. [The consolidated open-task queue](OPEN-TASKS.md) carries the architecture-review corrections and remaining work. Existing services may satisfy an interface; renaming them or adding pass-through wrappers is not progress.
 
 - Keep the modular monolith and separately scalable workers. Retain public, authenticated and privileged-maintenance entry points with distinct authority. Share authorization/query construction without one oversized DTO or service.
 - Keep a canonical page-change writer. Complete its expected-revision, audit and outbox transaction contract before claiming all writers are consolidated. Constructor injection is not behavioral coverage.

@@ -115,6 +115,8 @@ export function BuildListToolbar({
     isMobile,
     focused: searchFocused,
   });
+  const searchCollapsed =
+    collapseActionsOnSearchFocus && !searchFocused && !searchValue;
   const showActions = !searchExpanded && (!collapseActionsOnSearchFocus || !searchFocused);
 
   useEffect(() => {
@@ -259,6 +261,7 @@ export function BuildListToolbar({
           inputClassName={searchInputClassName}
           className={cn(
             "min-w-0 flex-1 basis-[12rem] md:max-w-md",
+            searchCollapsed && "!min-w-0 !w-9 !max-w-9 !basis-9",
             searchExpanded && "max-md:max-w-none max-md:basis-auto",
           )}
         />
