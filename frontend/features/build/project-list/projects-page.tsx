@@ -223,7 +223,7 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
 
   return (
     <RequireModule module="build">
-      {(canCreate || createOpen) && (
+      {canCreate && (
         <NewProjectDialog
           open={createOpen}
           onOpenChange={handleCreateOpenChange}
@@ -234,6 +234,8 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
         title={pageTitle}
         subtitle={pageSubtitle}
         actions={<BuildHeaderActions actions={headerActions} />}
+        noInternalScroll
+        filtersClassName="flex-col items-stretch gap-0 overflow-visible pb-2 [&>*]:w-full [&>*]:min-w-0 [&>*]:shrink"
         filters={
           <ProjectFilterBar
             search={localSearch}
@@ -263,7 +265,7 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
                 {null}
               </PageState>
             ) : allProjects.length === 0 && !hasFiltersOrSearch ? (
-              <ProjectsEmptyState onCreate={handleOpenCreate} />
+              <ProjectsEmptyState onCreate={canCreate ? handleOpenCreate : undefined} />
             ) : visibleProjects.length === 0 ? (
               <EmptyState
                 className={CONTENT_FILL_PANEL}

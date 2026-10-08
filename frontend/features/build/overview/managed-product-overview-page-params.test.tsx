@@ -63,9 +63,9 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
 }));
 
-jest.mock("@/hooks/api/organization", () => ({
-  useOrgMembers: jest.fn(() => ({
-    data: { data: [{ userId: "user-abc", firstName: "Ada", lastName: "Lovelace", email: "ada@example.com" }] },
+jest.mock("@/hooks/api/build/build-members", () => ({
+  useBuildMembers: jest.fn(() => ({
+    data: { data: [{ id: "user-abc", firstName: "Ada", lastName: "Lovelace", email: "ada@example.com" }] },
   })),
 }));
 

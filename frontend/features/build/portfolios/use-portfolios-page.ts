@@ -9,7 +9,7 @@ import {
   useDeletePortfolio,
 } from "@/hooks/api/build/portfolios";
 import { useCan } from "@/hooks/api/access";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { useBuildMembers } from "@/hooks/api/build/build-members";
 import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import {
@@ -57,11 +57,11 @@ export function usePortfoliosPage() {
     ownerId: ownerIdValue !== BUILD_FILTER_ALL ? ownerIdValue : undefined,
     sort: sortValue !== BUILD_FILTER_ALL ? sortValue : undefined,
   });
-  const { data: membersRes } = useOrgMembers(1, 100);
+  const { data: membersRes } = useBuildMembers({ limit: 100 });
   const members = useMemo(() => membersRes?.data ?? [], [membersRes]);
 
   const ownerOptions = useMemo(
-    () => members.map((m) => ({ value: m.userId, label: m.name ?? m.email })),
+    () => members.map((m) => ({ value: m.id, label: m.name ?? m.email })),
     [members],
   );
 
@@ -72,7 +72,7 @@ export function usePortfoliosPage() {
   const ownerOf = useCallback(
     (ownerId: string | null): NamedUser | null => {
       if (!ownerId) return null;
-      const match = members.find((member) => member.userId === ownerId);
+      const match = members.find((member) => member.id === ownerId);
       return match ? { name: match.name, email: match.email } : null;
     },
     [members],

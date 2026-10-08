@@ -85,6 +85,7 @@ export function ManagedProductEditFields({ form, formId, onSubmit }: ManagedProd
               <FormLabel>Owner (optional)</FormLabel>
               <FormControl>
                 <MemberPicker
+                  directory="build"
                   mode="single"
                   value={field.value || undefined}
                   onChange={(id) => field.onChange(id ?? "")}

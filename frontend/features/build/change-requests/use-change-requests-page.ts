@@ -5,7 +5,7 @@ import {
   useUpdateChangeRequest,
 } from "@/hooks/api/build/change-requests";
 import { useCan } from "@/hooks/api/access";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { useBuildMembers } from "@/hooks/api/build/build-members";
 import type { ChangeRequest } from "@/types/projects";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -79,7 +79,7 @@ export function useChangeRequestsPage(projectId: number) {
     limit: PAGE_SIZE,
   });
 
-  const { data: membersData } = useOrgMembers(1, 100);
+  const { data: membersData } = useBuildMembers({ limit: 100 });
   const deleteCr = useDeleteChangeRequest(projectId);
   const members = useMemo(() => membersData?.data ?? [], [membersData]);
   const updateCr = useUpdateChangeRequest(projectId);

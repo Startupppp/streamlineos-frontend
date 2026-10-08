@@ -40,7 +40,6 @@ import { InlineProjectStatus } from "./project-field-status-priority";
 import {
   avatarTints,
   statusDotColors,
-  statusStripe,
 } from "./project-card-utils";
 
 interface ProjectCardProps {
@@ -59,15 +58,13 @@ export const ProjectCard = React.memo(function ProjectCard({
     useAnimatedIcon();
 
   const canUpdate = useCan("build:update");
-  const canManage = useCan("build:manage");
-  const canEdit = canUpdate || canManage;
+  const canEdit = canUpdate;
   const canDelete = useCan("build:delete");
 
   const status = project.status ?? "ACTIVE";
   const isArchived = status === "ARCHIVED";
   const displayLabel = projectStatusDisplayLabels[status] ?? status;
   const statusColor = getColorSafe(projectStatusColors, status);
-  const stripe = getColorSafe(statusStripe, status);
   const statusDot = getColorSafe(statusDotColors, status);
   const avatarTint = getColorSafe(avatarTints, status);
   const initials = project.key.slice(0, 2).toUpperCase();
@@ -132,14 +129,14 @@ export const ProjectCard = React.memo(function ProjectCard({
     <>
       <article
         className={cn(
-          "group relative flex h-full cursor-pointer flex-col overflow-hidden p-4",
+          "group relative flex h-full cursor-pointer flex-col overflow-hidden p-3 sm:p-4",
           SURFACE_CARD,
           SURFACE_CARD_INTERACTIVE,
+          "hover:bg-accent/20",
           "focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background",
         )}
         onClick={handleCardClick}
       >
-        <span className={cn("absolute inset-x-0 top-0 h-0.5", stripe)} aria-hidden="true" />
         {showActions ? (
           <div className="absolute right-2 top-2 z-10">
             <DropdownMenu>
@@ -202,7 +199,7 @@ export const ProjectCard = React.memo(function ProjectCard({
           <div
             className={cn(
               "flex size-10 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset",
-              "text-xs font-medium tracking-tight",
+              "text-label font-semibold tracking-tight shadow-sm",
               avatarTint,
             )}
             aria-hidden="true"
@@ -210,10 +207,10 @@ export const ProjectCard = React.memo(function ProjectCard({
             {initials}
           </div>
 
-          <div className={cn(TEXT_FLEX_CHILD, "min-w-0 flex-1 space-y-1.5")}>
+          <div className={cn(TEXT_FLEX_CHILD, "min-w-0 flex-1 space-y-1")}>
             <div
               className={cn(
-                "flex min-w-0 items-center gap-2",
+                "flex min-w-0 items-center justify-between gap-2",
                 showActions && "pr-7",
               )}
             >
@@ -221,7 +218,7 @@ export const ProjectCard = React.memo(function ProjectCard({
                 href={`/build/${project.id}`}
                 onClick={handleProjectLinkClick}
                 aria-label={`Open ${project.name}`}
-                className="max-w-full shrink truncate whitespace-nowrap font-mono text-micro font-normal tracking-wide text-muted-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="max-w-full shrink truncate whitespace-nowrap font-mono text-micro font-medium tracking-wide text-muted-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 {project.key}
               </Link>
@@ -252,7 +249,7 @@ export const ProjectCard = React.memo(function ProjectCard({
 
             <h3
               className={cn(
-                "text-sm font-medium leading-snug text-foreground transition-colors group-hover:text-primary",
+                "text-sm font-semibold leading-snug text-foreground transition-colors group-hover:text-primary",
                 TEXT_ONE_LINE,
               )}
             >
@@ -275,24 +272,29 @@ export const ProjectCard = React.memo(function ProjectCard({
               )}
             </h3>
 
+          </div>
+        </div>
+
+        {canEdit || project.description ? (
+          <div className="mt-3 min-h-5 border-l-2 border-border/80 pl-2.5">
             {canEdit ? (
               <InlineProjectDescription
                 projectId={project.id}
                 currentDescription={project.description}
               />
-            ) : project.description ? (
+            ) : (
               <p
                 className={cn(
                   TEXT_ONE_LINE,
-                  "text-micro text-muted-foreground",
+                  "text-micro leading-5 text-muted-foreground",
                 )}
-                title={project.description}
+                title={project.description ?? undefined}
               >
                 {project.description}
               </p>
-            ) : null}
+            )}
           </div>
-        </div>
+        ) : null}
 
         <ProjectCardFooter project={project} canEdit={canEdit} />
       </article>

@@ -152,6 +152,7 @@ export function EditProjectFormFields({
               <FormLabel>Project Lead</FormLabel>
               <FormControl>
                 <MemberPicker
+                  directory="build"
                   value={field.value}
                   onChange={handleManagerChange}
                   allowUnassigned

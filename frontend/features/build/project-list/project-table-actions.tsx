@@ -67,13 +67,11 @@ export function ActionsCell({
   onDelete: (p: ProjectListItem) => void;
 }) {
   const canUpdate = useCan("build:update");
-  const canManage = useCan("build:manage");
-  const canEdit = canUpdate || canManage;
   const canDelete = useCan("build:delete");
   const isArchived = (project.status ?? "ACTIVE") === "ARCHIVED";
   const { iconRef, hoverHandlers } = useAnimatedIcon();
 
-  if (!canEdit && !canDelete) return null;
+  if (!canUpdate && !canDelete) return null;
 
   function handleStopPropagation(e: React.MouseEvent | React.KeyboardEvent) {
     e.stopPropagation();
@@ -106,13 +104,13 @@ export function ActionsCell({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-44">
-          {canEdit ? (
+          {canUpdate ? (
             <DropdownMenuItem onClick={handleEditClick}>
               <Pencil className="mr-2 h-3.5 w-3.5" />
               Edit project
             </DropdownMenuItem>
           ) : null}
-          {canEdit ? (
+          {canUpdate ? (
             <DropdownMenuItem onClick={handleArchiveClick}>
               {isArchived ? (
                 <>

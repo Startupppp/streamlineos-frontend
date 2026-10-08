@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from "react";
 import { useProjectApprovalsPage } from "@/hooks/api/build/approvals";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { useOrgMembersByIds } from "@/hooks/api/organization";
+import { useBuildMembers } from "@/hooks/api/build/build-members";
 import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import {
   BUILD_FILTER_ALL,
@@ -37,8 +38,19 @@ export function useApprovalsData(projectId: number) {
     actorId: actorIdValue !== BUILD_FILTER_ALL ? actorIdValue : undefined,
   }, pager.cursor);
 
-  const { data: membersRes } = useOrgMembers(1, 100);
-  const members = useMemo(() => membersRes?.data ?? [], [membersRes]);
+  const { data: buildMembersRes } = useBuildMembers({ limit: 100 });
+  const buildMemberIds = useMemo(
+    () => new Set((buildMembersRes?.data ?? []).map((member) => member.id)),
+    [buildMembersRes],
+  );
+  const { data: membersRes } = useOrgMembersByIds([...buildMemberIds]);
+  const members = useMemo(
+    () =>
+      (membersRes?.data ?? []).filter((member) =>
+        buildMemberIds.has(member.userId),
+      ),
+    [buildMemberIds, membersRes],
+  );
   const items = useMemo(() => data?.data ?? [], [data]);
 
   const approverOptions = useMemo(

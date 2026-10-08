@@ -17,11 +17,21 @@ import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { IncidentsCreateIncidentResponse } from "@/contracts/build-contracts.generated";
-import type { OrgMember } from "@/hooks/api/organization";
 import { getSlaState } from "./sla";
 
 import { INCIDENTS_TABLE_HEADERS } from "./incidents-table-headers";
 export { INCIDENTS_TABLE_HEADERS };
+
+interface IncidentActor {
+  id?: string;
+  userId?: string;
+  name?: string | null;
+  email: string;
+}
+
+function actorId(actor: IncidentActor): string | undefined {
+  return actor.id ?? actor.userId;
+}
 
 const SEVERITY_STYLES: Record<string, string> = {
   critical: "text-status-danger-ink-strong border-status-danger-rule bg-status-danger-surface",
@@ -102,7 +112,7 @@ export function IncidentSlaBadge({ incident }: { incident: IncidentsCreateIncide
 
 interface IncidentRowHandlers {
   canManage: boolean;
-  members: OrgMember[];
+  members: IncidentActor[];
   projectId: number;
   onEdit: (i: IncidentsCreateIncidentResponse) => void;
   onDelete: (i: IncidentsCreateIncidentResponse) => void;
@@ -192,7 +202,7 @@ export function buildIncidentsColumns({
       key: "owner",
       header: "Owner",
       cell: (row) => {
-        const member = members.find((m) => m.userId === row.ownerId);
+        const member = members.find((m) => actorId(m) === row.ownerId);
         return (
           <span className="text-dense text-muted-foreground">
             {member ? (member.name ?? member.email) : "—"}
@@ -232,13 +242,13 @@ export function IncidentMobileCard({
   onDelete,
 }: {
   incident: IncidentsCreateIncidentResponse;
-  members: OrgMember[];
+  members: IncidentActor[];
   canManage: boolean;
   onEdit: (i: IncidentsCreateIncidentResponse) => void;
   onDelete: (i: IncidentsCreateIncidentResponse) => void;
 }) {
   const owner = incident.ownerId
-    ? members.find((m) => m.userId === incident.ownerId)
+    ? members.find((m) => actorId(m) === incident.ownerId)
     : undefined;
   const personUser = owner ? { name: owner.name ?? null, email: owner.email } : null;
   return (

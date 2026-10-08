@@ -12,7 +12,11 @@ jest.mock("@/hooks/api/build/milestones", () => ({
 }));
 
 jest.mock("@/hooks/api/organization", () => ({
-  useOrgMembers: () => ({ data: undefined }),
+  useOrgMembersByIds: () => ({ data: undefined }),
+}));
+
+jest.mock("@/hooks/api/build/build-members", () => ({
+  useBuildMembers: () => ({ data: undefined }),
 }));
 
 jest.mock("@/components/members/member-picker", () => ({

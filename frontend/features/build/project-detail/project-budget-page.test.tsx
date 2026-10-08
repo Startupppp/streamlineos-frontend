@@ -15,7 +15,7 @@ const accessDenied = {
 const useProjectBudget = jest.fn();
 const useUpdateProjectBudget = jest.fn();
 const useProjectMembers = jest.fn();
-const useOrgMembers = jest.fn();
+const useBuildMembers = jest.fn();
 
 jest.mock("@/hooks/api/access", () => ({
   useAccess: () => useAccess(),
@@ -37,8 +37,8 @@ jest.mock("@/hooks/api/build/project-members", () => ({
   useProjectMembers: (projectId: number) => useProjectMembers(projectId),
 }));
 
-jest.mock("@/hooks/api/organization", () => ({
-  useOrgMembers: (page: number, limit: number) => useOrgMembers(page, limit),
+jest.mock("@/hooks/api/build/build-members", () => ({
+  useBuildMembers: (params: { limit: number }) => useBuildMembers(params),
 }));
 
 jest.mock("@/hooks/api/org-display", () => ({
@@ -78,7 +78,7 @@ beforeEach(() => {
   useProjectBudget.mockReturnValue(settled(BUDGET));
   useUpdateProjectBudget.mockReturnValue({ mutate: jest.fn(), isPending: false });
   useProjectMembers.mockReturnValue({ data: [] });
-  useOrgMembers.mockReturnValue({ data: { data: [] } });
+  useBuildMembers.mockReturnValue({ data: { data: [] } });
 });
 
 describe("ProjectBudgetPage — access is three-valued, not a boolean", () => {

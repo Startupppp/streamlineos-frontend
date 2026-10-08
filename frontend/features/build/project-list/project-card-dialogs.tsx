@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useArchiveProject } from "@/hooks/api/build/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { ProjectListItem } from "@/types/projects/projects";
+import { useCan } from "@/hooks/api/access";
 
 const EditProjectSheet = dynamic(
   () => import("./edit-project-sheet").then((m) => ({ default: m.EditProjectSheet })),
@@ -41,11 +42,13 @@ export function ProjectCardDialogs({
   deleteConfirmOpen,
   onDeleteConfirmOpenChange,
 }: ProjectCardDialogsProps) {
+  const canUpdate = useCan("build:update");
+  const canDelete = useCan("build:delete");
   const archiveProject = useArchiveProject();
 
   const handleArchiveConfirm = useCallback(
     () => {
-      if (archiveProject.isPending) return;
+      if (!canUpdate || archiveProject.isPending) return;
       archiveProject.mutate(
         { projectId: project.id, restore: isArchived },
         {
@@ -59,16 +62,16 @@ export function ProjectCardDialogs({
         },
       );
     },
-    [archiveProject, project.id, isArchived, onArchiveConfirmOpenChange],
+    [archiveProject, canUpdate, project.id, isArchived, onArchiveConfirmOpenChange],
   );
 
   return (
     <>
-      {onEditOpenChange ? (
+      {canUpdate && onEditOpenChange ? (
         <EditProjectSheet open={editOpen} onOpenChange={onEditOpenChange} project={project} />
       ) : null}
 
-      <ConfirmDialog
+      {canUpdate ? <ConfirmDialog
         open={archiveConfirmOpen}
         onOpenChange={onArchiveConfirmOpenChange}
         title={isArchived ? "Restore project?" : "Archive project?"}
@@ -81,14 +84,14 @@ export function ProjectCardDialogs({
         isPending={archiveProject.isPending}
         keepOpenOnConfirm
         onConfirm={handleArchiveConfirm}
-      />
+      /> : null}
 
-      <DeleteProjectDialog
+      {canDelete ? <DeleteProjectDialog
         open={deleteConfirmOpen}
         onOpenChange={onDeleteConfirmOpenChange}
         projectId={project.id}
         projectName={project.name}
-      />
+      /> : null}
     </>
   );
 }

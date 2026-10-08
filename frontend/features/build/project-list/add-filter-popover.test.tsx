@@ -52,15 +52,35 @@ describe("AddFilterPopover", () => {
 
   it("applies a start-date filter instead of rendering a backend-gap message", () => {
     const handleFiltersChange = jest.fn();
-    render(<AddFilterPopover filters={{}} onFiltersChange={handleFiltersChange} />);
+    render(
+      <AddFilterPopover
+        filters={{ startAfter: "2026-10-01" }}
+        onFiltersChange={handleFiltersChange}
+      />,
+    );
 
     fireEvent.click(screen.getByRole("button", { name: "Filters" }));
     fireEvent.click(screen.getByRole("button", { name: "Start date" }));
-    fireEvent.change(screen.getByLabelText("Starts on or after"), {
-      target: { value: "2026-10-08" },
-    });
+    fireEvent.click(screen.getByRole("button", { name: "Starts on or after" }));
+    fireEvent.click(screen.getByRole("gridcell", { name: "8" }));
 
     expect(handleFiltersChange).toHaveBeenCalledWith({ startAfter: "2026-10-08" });
     expect(screen.queryByText(/backend gap/i)).not.toBeInTheDocument();
+  });
+
+  it("clears the target-date filter from the calendar control", () => {
+    const handleFiltersChange = jest.fn();
+    render(
+      <AddFilterPopover
+        filters={{ endBefore: "2026-10-31" }}
+        onFiltersChange={handleFiltersChange}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Filters" }));
+    fireEvent.click(screen.getByRole("button", { name: "Target date" }));
+    fireEvent.click(screen.getByRole("button", { name: "Clear Target is on or before" }));
+
+    expect(handleFiltersChange).toHaveBeenCalledWith({ endBefore: undefined });
   });
 });

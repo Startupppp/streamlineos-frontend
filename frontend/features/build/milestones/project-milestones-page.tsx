@@ -22,7 +22,8 @@ import {
 } from "@/hooks/api/build/milestones";
 import { useCan } from "@/hooks/api/access";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { useOrgMembersByIds } from "@/hooks/api/organization";
+import { useBuildMembers } from "@/hooks/api/build/build-members";
 import { getUserDisplayName } from "@/lib/person-display";
 import { MilestoneUpsertSheet } from "@/features/build/milestones/milestone-upsert-sheet";
 import { MilestoneCard } from "@/features/build/milestones/milestone-card";
@@ -69,13 +70,24 @@ interface ProjectMilestonesPageProps {
 
 export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilestonesPageProps) {
   const projectId = Number(projectIdStr);
-  const canManage = useCan("build:manage");
+  const canManage = useCan("build:workspace:manage");
   const listFilters = useBuildListFilters({ filters: MILESTONE_FILTER_DEFINITIONS });
   const pager = useBuildCursorPager(listFilters.resetKey);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const isOnline = useOnlineStatus();
-  const { data: membersPage } = useOrgMembers(1, 100);
-  const members = useMemo(() => membersPage?.data ?? [], [membersPage]);
+  const { data: buildMembersPage } = useBuildMembers({ limit: 100 });
+  const buildMemberIds = useMemo(
+    () => new Set((buildMembersPage?.data ?? []).map((member) => member.id)),
+    [buildMembersPage],
+  );
+  const { data: membersPage } = useOrgMembersByIds([...buildMemberIds]);
+  const members = useMemo(
+    () =>
+      (membersPage?.data ?? []).filter((member) =>
+        buildMemberIds.has(member.userId),
+      ),
+    [buildMemberIds, membersPage],
+  );
   const ownerOptions = useMemo(
     () => [
       { value: BUILD_FILTER_ALL, label: "Any owner" },

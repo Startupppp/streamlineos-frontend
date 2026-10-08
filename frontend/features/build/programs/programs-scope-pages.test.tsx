@@ -28,6 +28,10 @@ jest.mock("@/hooks/api/build/projects", () => ({
 jest.mock("@/hooks/api/organization", () => ({
   useOrgMembers: jest.fn(() => ({ data: undefined })),
 }));
+
+jest.mock("@/hooks/api/build/build-members", () => ({
+  useBuildMembers: jest.fn(() => ({ data: undefined })),
+}));
 jest.mock("@/hooks/api/use-page-state", () => ({
   usePageState: jest.fn(),
 }));

@@ -12,7 +12,7 @@ import {
 } from "@/hooks/api/build/portfolios";
 import { useProjects } from "@/hooks/api/build/projects";
 import { useCan } from "@/hooks/api/access";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { useBuildMembers } from "@/hooks/api/build/build-members";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -82,7 +82,7 @@ function PortfolioDetailContent({ portfolioId }: Props) {
     isEmpty: data === undefined,
   });
   const { data: allProjectsRes } = useProjects({ limit: 200 });
-  const { data: membersRes } = useOrgMembers(1, 100);
+  const { data: membersRes } = useBuildMembers({ limit: 100 });
   const members = useMemo(() => membersRes?.data ?? [], [membersRes]);
 
   const updatePortfolio = useUpdatePortfolio();
@@ -92,7 +92,7 @@ function PortfolioDetailContent({ portfolioId }: Props) {
 
   function memberName(userId: string | null): string {
     if (!userId) return "—";
-    const m = members.find((x) => x.userId === userId);
+    const m = members.find((x) => x.id === userId);
     return m?.name ?? m?.email ?? "Unknown";
   }
 

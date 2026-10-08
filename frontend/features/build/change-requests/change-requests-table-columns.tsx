@@ -17,7 +17,17 @@ import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { ChangeRequest, ChangeRequestStatus } from "@/types/projects";
 import { CR_STATUS_LABELS } from "./change-request-schema";
-import type { OrgMember } from "@/hooks/api/organization";
+
+interface ChangeRequestActor {
+  id?: string;
+  userId?: string;
+  name?: string | null;
+  email: string;
+}
+
+function actorId(actor: ChangeRequestActor): string | undefined {
+  return actor.id ?? actor.userId;
+}
 
 export const CHANGE_REQUESTS_TABLE_HEADERS = [
   "ID",
@@ -54,7 +64,7 @@ function CrStatusBadge({ status }: { status: ChangeRequestStatus }) {
 
 interface CrRowHandlers {
   canManage: boolean;
-  members: OrgMember[];
+  members: ChangeRequestActor[];
   onEdit: (cr: ChangeRequest) => void;
   onDelete: (cr: ChangeRequest) => void;
 }
@@ -159,7 +169,7 @@ export function buildChangeRequestsColumns({
       key: "requestedById",
       header: "Requester",
       cell: (row) => {
-        const m = members.find((member) => member.userId === row.requestedById);
+        const m = members.find((member) => actorId(member) === row.requestedById);
         return (
           <span className="text-dense text-muted-foreground">
             {m ? (m.name ?? m.email) : "—"}
@@ -189,7 +199,7 @@ export function ChangeRequestMobileCard({
   onDelete,
 }: { cr: ChangeRequest } & CrRowHandlers) {
   const requester = cr.requestedById
-    ? members.find((m) => m.userId === cr.requestedById)
+    ? members.find((m) => actorId(m) === cr.requestedById)
     : undefined;
   const personUser = requester ? { name: requester.name ?? null, email: requester.email } : null;
   return (

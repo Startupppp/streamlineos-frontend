@@ -55,6 +55,9 @@ jest.mock("@/hooks/api/build/managed-products", () => ({
 jest.mock("@/hooks/api/organization", () => ({
   useOrgMembers: jest.fn(() => ({ data: { data: [] } })),
 }));
+jest.mock("@/hooks/api/build/build-members", () => ({
+  useBuildMembers: jest.fn(() => ({ data: { data: [] } })),
+}));
 
 jest.mock("@/hooks/common/use-query-param-open", () => ({
   useQueryParamOpen: jest.fn(() => ({ open: false, onOpenChange: jest.fn(), setOpen: jest.fn() })),

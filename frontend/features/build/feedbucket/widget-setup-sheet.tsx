@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Combobox } from "@/components/ui/combobox";
-import { UserCombobox } from "@/components/ui/user-combobox";
+import { MemberPicker } from "@/components/members/member-picker";
 import {
   Sheet,
   SheetBody,
@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 import type { FeedbucketWidget } from "@/types/feedbucket";
 import { WidgetAssigneeRules } from "./widget-assignee-rules";
 import { useWidgetSetup } from "./use-widget-setup";
+import { useCan } from "@/hooks/api/access";
 
 interface WidgetSetupSheetProps {
   open: boolean;
@@ -31,18 +32,25 @@ interface WidgetSetupSheetProps {
   onClose: () => void;
 }
 
-export function WidgetSetupSheet({ open, widget, onClose }: WidgetSetupSheetProps) {
+export function WidgetSetupSheet({
+  open,
+  widget,
+  onClose,
+}: WidgetSetupSheetProps) {
+  const canUpdate = useCan("feedbucket:widgets:update");
+  const canManage = useCan("feedbucket:widgets:manage");
   const {
-    confirmRotate,
-    setConfirmRotate,
-    projectOptions,
     members,
-    defaultAssigneeUserId,
     snippet,
     rotateKey,
     updateWidget,
+    confirmRotate,
+    projectOptions,
+    setConfirmRotate,
     handleCopySnippet,
     handleCopyPublicKey,
+    membershipIdToUserId,
+    defaultAssigneeUserId,
     handleOpenRotate,
     handleConfirmRotate,
     handleToggleAiAssist,
@@ -50,6 +58,14 @@ export function WidgetSetupSheet({ open, widget, onClose }: WidgetSetupSheetProp
     handleDefaultProjectChange,
     handleDefaultAssigneeChange,
   } = useWidgetSetup(widget, open);
+  const memberCandidates = members.map((member) => ({
+    id: member.id,
+    name: member.name,
+    image: member.image,
+    email: member.email,
+    lastName: member.lastName,
+    firstName: member.firstName,
+  }));
 
   function handleOpenChange(v: boolean) {
     if (!v) onClose();
@@ -62,13 +78,17 @@ export function WidgetSetupSheet({ open, widget, onClose }: WidgetSetupSheetProp
           <SheetHeader className="px-6 py-4 border-b shrink-0 text-left gap-1">
             <SheetTitle>Widget setup</SheetTitle>
             <SheetDescription>
-              Embed the feedback widget, manage the public key, and toggle AI assist.
+              Embed the feedback widget, manage the public key, and toggle AI
+              assist.
             </SheetDescription>
           </SheetHeader>
           <SheetBody className="px-6 py-5 space-y-5">
             <div className="space-y-1.5">
               <div className="flex flex-wrap items-center gap-2">
-                <TruncatedText text={widget.name} className="text-sm font-medium" />
+                <TruncatedText
+                  text={widget.name}
+                  className="text-sm font-medium"
+                />
                 <Badge
                   variant={widget.isActive ? "default" : "outline"}
                   className="shrink-0 text-xs"
@@ -82,14 +102,21 @@ export function WidgetSetupSheet({ open, widget, onClose }: WidgetSetupSheetProp
                 ) : null}
               </div>
               {widget.project?.name ? (
-                <p className={cn("text-xs text-muted-foreground", TEXT_ONE_LINE)}>
+                <p
+                  className={cn("text-xs text-muted-foreground", TEXT_ONE_LINE)}
+                >
                   Project: {widget.project.name}
                 </p>
               ) : null}
             </div>
 
             <div className="space-y-2">
-              <p className={cn("text-xs font-medium text-foreground", TEXT_ONE_LINE)}>
+              <p
+                className={cn(
+                  "text-xs font-medium text-foreground",
+                  TEXT_ONE_LINE,
+                )}
+              >
                 Public key
               </p>
               <div className="flex items-center gap-2">
@@ -114,7 +141,12 @@ export function WidgetSetupSheet({ open, widget, onClose }: WidgetSetupSheetProp
 
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-2">
-                <p className={cn("text-xs font-medium text-foreground", TEXT_ONE_LINE)}>
+                <p
+                  className={cn(
+                    "text-xs font-medium text-foreground",
+                    TEXT_ONE_LINE,
+                  )}
+                >
                   Embed snippet
                 </p>
                 <AnimatedIconButton
@@ -129,8 +161,8 @@ export function WidgetSetupSheet({ open, widget, onClose }: WidgetSetupSheetProp
                 </AnimatedIconButton>
               </div>
               <p className={cn("text-xs text-muted-foreground", TEXT_BODY)}>
-                Paste this script on any page where you want the feedback widget. Uses the
-                production brand domain and public API URL.
+                Paste this script on any page where you want the feedback
+                widget. Uses the production brand domain and public API URL.
               </p>
               <pre
                 className={cn(
@@ -142,50 +174,81 @@ export function WidgetSetupSheet({ open, widget, onClose }: WidgetSetupSheetProp
               </pre>
             </div>
 
-            <div className="flex items-start justify-between gap-4 rounded-lg border border-border px-4 py-3">
-              <div className="min-w-0 space-y-0.5">
-                <p className={cn("text-sm font-medium", TEXT_ONE_LINE)}>AI assist in widget</p>
-                <p className={cn("text-xs leading-relaxed text-muted-foreground", TEXT_BODY)}>
-                  Let people submitting feedback draft a bug/feature with AI from their screenshot.
-                  Uses your org&apos;s AI credits; rate-limited.
-                </p>
+            {canUpdate ? (
+              <div className="flex items-start justify-between gap-4 rounded-lg border border-border px-4 py-3">
+                <div className="min-w-0 space-y-0.5">
+                  <p className={cn("text-sm font-medium", TEXT_ONE_LINE)}>
+                    AI assist in widget
+                  </p>
+                  <p
+                    className={cn(
+                      "text-xs leading-relaxed text-muted-foreground",
+                      TEXT_BODY,
+                    )}
+                  >
+                    Let people submitting feedback draft a bug/feature with AI
+                    from their screenshot. Uses your org&apos;s AI credits;
+                    rate-limited.
+                  </p>
+                </div>
+                <Switch
+                  id="widget-setup-ai-assist"
+                  checked={widget.aiAssistEnabled}
+                  onCheckedChange={handleToggleAiAssist}
+                  disabled={updateWidget.isPending}
+                  className="mt-0.5 shrink-0"
+                />
               </div>
-              <Switch
-                id="widget-setup-ai-assist"
-                checked={widget.aiAssistEnabled}
-                onCheckedChange={handleToggleAiAssist}
-                disabled={updateWidget.isPending}
-                className="mt-0.5 shrink-0"
-              />
-            </div>
+            ) : null}
 
-            <div className="flex items-start justify-between gap-4 rounded-lg border border-border px-4 py-3">
-              <div className="min-w-0 space-y-0.5">
-                <p className={cn("text-sm font-medium", TEXT_ONE_LINE)}>Auto-create ticket</p>
-                <p className={cn("text-xs leading-relaxed text-muted-foreground", TEXT_BODY)}>
-                  Automatically create a ticket for every new submission received by this widget.
-                </p>
+            {canUpdate ? (
+              <div className="flex items-start justify-between gap-4 rounded-lg border border-border px-4 py-3">
+                <div className="min-w-0 space-y-0.5">
+                  <p className={cn("text-sm font-medium", TEXT_ONE_LINE)}>
+                    Auto-create ticket
+                  </p>
+                  <p
+                    className={cn(
+                      "text-xs leading-relaxed text-muted-foreground",
+                      TEXT_BODY,
+                    )}
+                  >
+                    Automatically create a ticket for every new submission
+                    received by this widget.
+                  </p>
+                </div>
+                <Switch
+                  id="widget-setup-auto-create"
+                  checked={widget.autoCreateTicket}
+                  onCheckedChange={handleToggleAutoCreate}
+                  disabled={updateWidget.isPending}
+                  className="mt-0.5 shrink-0"
+                />
               </div>
-              <Switch
-                id="widget-setup-auto-create"
-                checked={widget.autoCreateTicket}
-                onCheckedChange={handleToggleAutoCreate}
-                disabled={updateWidget.isPending}
-                className="mt-0.5 shrink-0"
-              />
-            </div>
+            ) : null}
 
-            {!widget.projectId ? (
+            {canUpdate && !widget.projectId ? (
               <div className="rounded-lg border border-border px-4 py-3 space-y-2">
                 <div className="space-y-0.5">
-                  <p className={cn("text-sm font-medium", TEXT_ONE_LINE)}>Default project</p>
-                  <p className={cn("text-xs leading-relaxed text-muted-foreground", TEXT_BODY)}>
+                  <p className={cn("text-sm font-medium", TEXT_ONE_LINE)}>
+                    Default project
+                  </p>
+                  <p
+                    className={cn(
+                      "text-xs leading-relaxed text-muted-foreground",
+                      TEXT_BODY,
+                    )}
+                  >
                     Project used when converting submissions to tickets.
                   </p>
                 </div>
                 <Combobox
                   options={projectOptions}
-                  value={widget.defaultProjectId ? String(widget.defaultProjectId) : ""}
+                  value={
+                    widget.defaultProjectId
+                      ? String(widget.defaultProjectId)
+                      : ""
+                  }
                   onChange={handleDefaultProjectChange}
                   placeholder="Select project…"
                   aria-label="Default project"
@@ -193,37 +256,64 @@ export function WidgetSetupSheet({ open, widget, onClose }: WidgetSetupSheetProp
               </div>
             ) : null}
 
-            <div className="rounded-lg border border-border px-4 py-3 space-y-2">
-              <div className="space-y-0.5">
-                <p className={cn("text-sm font-medium", TEXT_ONE_LINE)}>Default assignee</p>
-                <p className={cn("text-xs leading-relaxed text-muted-foreground", TEXT_BODY)}>
-                  Fallback used when no per-type assignee rule matches.
-                </p>
+            {canUpdate ? (
+              <div className="rounded-lg border border-border px-4 py-3 space-y-2">
+                <div className="space-y-0.5">
+                  <p className={cn("text-sm font-medium", TEXT_ONE_LINE)}>
+                    Default assignee
+                  </p>
+                  <p
+                    className={cn(
+                      "text-xs leading-relaxed text-muted-foreground",
+                      TEXT_BODY,
+                    )}
+                  >
+                    Fallback used when no per-type assignee rule matches.
+                  </p>
+                </div>
+                <MemberPicker
+                  candidates={memberCandidates}
+                  value={defaultAssigneeUserId}
+                  onChange={(userId) =>
+                    handleDefaultAssigneeChange(userId ?? "")
+                  }
+                  placeholder="Select assignee…"
+                  allowUnassigned
+                  disabled={updateWidget.isPending}
+                />
               </div>
-              <UserCombobox
-                value={defaultAssigneeUserId}
-                onChange={handleDefaultAssigneeChange}
-                placeholder="Select assignee…"
-                allowUnassigned
-                disabled={updateWidget.isPending}
+            ) : null}
+
+            {canUpdate ? (
+              <WidgetAssigneeRules
+                widget={widget}
+                members={members}
+                membershipIdToUserId={membershipIdToUserId}
               />
-            </div>
+            ) : null}
 
-            <WidgetAssigneeRules widget={widget} members={members} />
-
-            <div className="rounded-lg border border-border px-4 py-3 space-y-3">
-              <div className="space-y-0.5">
-                <p className={cn("text-sm font-medium", TEXT_ONE_LINE)}>Rotate public key</p>
-                <p className={cn("text-xs leading-relaxed text-muted-foreground", TEXT_BODY)}>
-                  Invalidates the current key immediately. Update the embed snippet on your site
-                  afterward.
-                </p>
+            {canManage ? (
+              <div className="rounded-lg border border-border px-4 py-3 space-y-3">
+                <div className="space-y-0.5">
+                  <p className={cn("text-sm font-medium", TEXT_ONE_LINE)}>
+                    Rotate public key
+                  </p>
+                  <p
+                    className={cn(
+                      "text-xs leading-relaxed text-muted-foreground",
+                      TEXT_BODY,
+                    )}
+                  >
+                    Invalidates the current key immediately. Update the embed
+                    snippet on your site afterward.
+                  </p>
+                </div>
+                <Button size="sm" variant="outline" onClick={handleOpenRotate}>
+                  <RefreshCcw className="mr-1.5 h-3.5 w-3.5" />
+                  Rotate key
+                </Button>
               </div>
-              <Button size="sm" variant="outline" onClick={handleOpenRotate}>
-                <RefreshCcw className="mr-1.5 h-3.5 w-3.5" />
-                Rotate key
-              </Button>
-            </div>
+            ) : null}
           </SheetBody>
           <SheetFooter className="px-6 py-4 justify-end">
             <Button variant="outline" onClick={onClose}>
@@ -233,16 +323,18 @@ export function WidgetSetupSheet({ open, widget, onClose }: WidgetSetupSheetProp
         </SheetContent>
       </Sheet>
 
-      <ConfirmDialog
-        open={confirmRotate}
-        onOpenChange={setConfirmRotate}
-        title="Rotate widget key?"
-        description="The old key will stop working immediately. Update the embed snippet on your site."
-        confirmLabel="Rotate key"
-        destructive
-        isPending={rotateKey.isPending}
-        onConfirm={handleConfirmRotate}
-      />
+      {canManage ? (
+        <ConfirmDialog
+          open={confirmRotate}
+          onOpenChange={setConfirmRotate}
+          title="Rotate widget key?"
+          description="The old key will stop working immediately. Update the embed snippet on your site."
+          confirmLabel="Rotate key"
+          destructive
+          isPending={rotateKey.isPending}
+          onConfirm={handleConfirmRotate}
+        />
+      ) : null}
     </>
   );
 }

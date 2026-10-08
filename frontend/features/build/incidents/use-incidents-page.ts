@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { useIncidents } from "@/hooks/api/build/incidents";
 import { useDeleteIncident } from "@/hooks/api/build/incident-mutations";
 import { useCan } from "@/hooks/api/access";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { useBuildMembers } from "@/hooks/api/build/build-members";
 import {
   BUILD_FILTER_ALL,
   useBuildListFilters,
@@ -70,7 +70,7 @@ export function useIncidentsPage({ projectId }: UseIncidentsPageProps) {
     limit: PAGE_SIZE,
   });
 
-  const { data: membersData } = useOrgMembers(1, 100);
+  const { data: membersData } = useBuildMembers({ limit: 100 });
   const deleteIncident = useDeleteIncident();
   const members = useMemo(() => membersData?.data ?? [], [membersData]);
 

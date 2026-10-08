@@ -74,6 +74,8 @@ describe("ProductRowActions context menu — C6 jsdom a11y (BSN-A11Y-MP-01)", ()
     plainRender(
       <ProductRowActions
         product={STUB_PRODUCT}
+        canUpdate
+        canDelete
         onEdit={() => undefined}
         onDelete={() => undefined}
       />,
@@ -87,6 +89,8 @@ describe("ProductRowActions context menu — C6 jsdom a11y (BSN-A11Y-MP-01)", ()
     plainRender(
       <ProductRowActions
         product={STUB_PRODUCT}
+        canUpdate
+        canDelete
         onEdit={() => undefined}
         onDelete={() => undefined}
       />,
@@ -99,6 +103,8 @@ describe("ProductRowActions context menu — C6 jsdom a11y (BSN-A11Y-MP-01)", ()
     plainRender(
       <ProductRowActions
         product={STUB_PRODUCT}
+        canUpdate
+        canDelete
         onEdit={() => undefined}
         onDelete={() => undefined}
       />,

@@ -46,7 +46,11 @@ jest.mock("@/hooks/api/entitlements", () => ({
 }));
 
 jest.mock("@/hooks/api/organization", () => ({
-  useOrgMembers: jest.fn(),
+  useOrgMembersByIds: jest.fn(),
+}));
+
+jest.mock("@/hooks/api/build/build-members", () => ({
+  useBuildMembers: jest.fn(),
 }));
 
 jest.mock("next-auth/react", () => ({
@@ -234,7 +238,8 @@ import {
   useDeleteApproval,
 } from "@/hooks/api/build/approvals";
 import { useCan, useAccess } from "@/hooks/api/access";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { useOrgMembersByIds } from "@/hooks/api/organization";
+import { useBuildMembers } from "@/hooks/api/build/build-members";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 
@@ -245,7 +250,8 @@ const mockUseUpdateApproval = useUpdateApproval as jest.Mock;
 const mockUseDeleteApproval = useDeleteApproval as jest.Mock;
 const mockUseCan = useCan as jest.Mock;
 const mockUseAccess = useAccess as jest.Mock;
-const mockUseOrgMembers = useOrgMembers as jest.Mock;
+const mockUseOrgMembersByIds = useOrgMembersByIds as jest.Mock;
+const mockUseBuildMembers = useBuildMembers as jest.Mock;
 const mockUseBuildListFilters = useBuildListFilters as jest.Mock;
 const mockUseBuildCursorPager = useBuildCursorPager as jest.Mock;
 
@@ -330,7 +336,8 @@ beforeEach(() => {
   mockUseDecideApproval.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUseUpdateApproval.mockReturnValue({ mutate: jest.fn(), mutateAsync: jest.fn(), captureOwner: () => ({ isCurrent: () => true }), isPending: false });
   mockUseDeleteApproval.mockReturnValue({ mutate: jest.fn(), isPending: false });
-  mockUseOrgMembers.mockReturnValue({ data: undefined });
+  mockUseOrgMembersByIds.mockReturnValue({ data: undefined });
+  mockUseBuildMembers.mockReturnValue({ data: undefined });
   mockUseBuildListFilters.mockReturnValue(defaultFilters());
 });
 
@@ -388,7 +395,10 @@ const approvalMembers = [
 ];
 
 it("shows the assigned approver on mobile instead of the requester", () => {
-  mockUseOrgMembers.mockReturnValue({ data: { data: approvalMembers } });
+  mockUseOrgMembersByIds.mockReturnValue({ data: { data: approvalMembers } });
+  mockUseBuildMembers.mockReturnValue({
+    data: { data: approvalMembers.map((member) => ({ id: member.userId })) },
+  });
   mockUseProjectApprovals.mockReturnValue(
     baseQueryResult({
       data: approvalPages([
@@ -404,7 +414,10 @@ it("shows the assigned approver on mobile instead of the requester", () => {
 });
 
 it("excludes the assigned approver from delegation by resolving its membership to a user", () => {
-  mockUseOrgMembers.mockReturnValue({ data: { data: approvalMembers } });
+  mockUseOrgMembersByIds.mockReturnValue({ data: { data: approvalMembers } });
+  mockUseBuildMembers.mockReturnValue({
+    data: { data: approvalMembers.map((member) => ({ id: member.userId })) },
+  });
   mockUseProjectApprovals.mockReturnValue(
     baseQueryResult({
       data: approvalPages([

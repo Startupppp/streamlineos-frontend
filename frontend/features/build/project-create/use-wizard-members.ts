@@ -15,7 +15,6 @@ export type WizardMember = {
 export function useWizardMembers(limit = 100, search?: string): WizardMember[] {
   const { data: workspaceData } = useBuildMembers({
     limit,
-    status: "active",
     ...(search ? { search } : {}),
   });
 

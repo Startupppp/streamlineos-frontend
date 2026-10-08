@@ -9,7 +9,8 @@ import {
   useUpdateFeedbucketWidget,
 } from "@/hooks/api/feedbucket";
 import { useProjects } from "@/hooks/api/build/projects";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { useOrgMembersByIds } from "@/hooks/api/organization";
+import { useBuildMembers } from "@/hooks/api/build/build-members";
 import type { FeedbucketWidget } from "@/types/feedbucket";
 import type { ComboboxOption } from "@/components/ui/combobox";
 
@@ -19,20 +20,32 @@ export function useWidgetSetup(widget: FeedbucketWidget, open: boolean) {
   const updateWidget = useUpdateFeedbucketWidget();
 
   const projectsQuery = useProjects(undefined, { enabled: open && !widget.projectId });
-  const membersQuery = useOrgMembers(1, 100, undefined, { enabled: open });
+  const buildMembersQuery = useBuildMembers({ limit: 100 }, { enabled: open });
 
   const projectOptions = useMemo<ComboboxOption[]>(() => {
     if (!projectsQuery.data) return [];
     return projectsQuery.data.data.map((p) => ({ value: String(p.id), label: p.name }));
   }, [projectsQuery.data]);
 
-  const members = useMemo(() => membersQuery.data?.data ?? [], [membersQuery.data]);
+  const members = useMemo(
+    () => buildMembersQuery.data?.data ?? [],
+    [buildMembersQuery.data],
+  );
+  const buildMemberIds = useMemo(
+    () => new Set(members.map((member) => member.id)),
+    [members],
+  );
+  const membersQuery = useOrgMembersByIds([...buildMemberIds], { enabled: open });
 
   const membershipIdToUserId = useMemo(() => {
     const map = new Map<number, string>();
-    for (const m of members) map.set(m.membershipId, m.userId);
+    for (const member of membersQuery.data?.data ?? []) {
+      if (buildMemberIds.has(member.userId)) {
+        map.set(member.membershipId, member.userId);
+      }
+    }
     return map;
-  }, [members]);
+  }, [buildMemberIds, membersQuery.data]);
 
   const defaultAssigneeUserId = useMemo(() => {
     if (!widget.defaultAssigneeMembershipId) return "";
@@ -127,6 +140,7 @@ export function useWidgetSetup(widget: FeedbucketWidget, open: boolean) {
     setConfirmRotate,
     projectOptions,
     members,
+    membershipIdToUserId,
     defaultAssigneeUserId,
     snippet,
     rotateKey,

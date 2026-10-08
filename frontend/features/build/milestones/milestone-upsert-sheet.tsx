@@ -28,7 +28,8 @@ import {
   useUpdateMilestone,
   type ProjectMilestone,
 } from "@/hooks/api/build/milestones";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { useOrgMembersByIds } from "@/hooks/api/organization";
+import { useBuildMembers } from "@/hooks/api/build/build-members";
 import { getUserDisplayName } from "@/lib/person-display";
 
 interface MilestoneUpsertSheetProps {
@@ -50,18 +51,41 @@ export function MilestoneUpsertSheet({
   const [conflictFields, setConflictFields] = useState<
     TicketConflictFieldDiff[] | null
   >(null);
-  const { data: membersPage } = useOrgMembers(1, 100);
-  const members = useMemo(() => membersPage?.data ?? [], [membersPage]);
+  const { data: buildMembersPage } = useBuildMembers({ limit: 100 });
+  const buildMembers = useMemo(
+    () => buildMembersPage?.data ?? [],
+    [buildMembersPage],
+  );
+  const { data: membersPage } = useOrgMembersByIds(
+    buildMembers.map((member) => member.id),
+  );
+  const membershipByUserId = useMemo(
+    () =>
+      new Map(
+        (membersPage?.data ?? []).map((member) => [member.userId, member]),
+      ),
+    [membersPage],
+  );
+  const members = useMemo(
+    () =>
+      buildMembers.flatMap((member) => {
+        const membership = membershipByUserId.get(member.id);
+        return membership ? [membership] : [];
+      }),
+    [buildMembers, membershipByUserId],
+  );
 
   const candidates = useMemo(
     () =>
-      members.map((m) => ({
-        id: m.userId,
-        name: m.name,
-        email: m.email,
-        image: m.image,
-      })),
-    [members],
+      buildMembers
+        .filter((member) => membershipByUserId.has(member.id))
+        .map((member) => ({
+          id: member.id,
+          name: member.name,
+          email: member.email,
+          image: member.image,
+        })),
+    [buildMembers, membershipByUserId],
   );
   const userIdByMembershipId = useMemo(
     () => new Map(members.map((m) => [m.membershipId, m.userId])),

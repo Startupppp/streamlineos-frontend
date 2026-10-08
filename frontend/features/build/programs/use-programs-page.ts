@@ -5,7 +5,7 @@ import { usePrograms, useCreateProgram, useUpdateProgram, useDeleteProgram } fro
 import { usePortfolios } from "@/hooks/api/build/portfolios";
 import { useProjects } from "@/hooks/api/build/projects";
 import { useCan } from "@/hooks/api/access";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { useBuildMembers } from "@/hooks/api/build/build-members";
 import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import {
   BUILD_FILTER_ALL,
@@ -91,7 +91,7 @@ export function useProgramsPage() {
   const portfolios = useMemo(() => portfoliosPage?.data ?? [], [portfoliosPage]);
   const { data: projectsPage } = useProjects({ limit: 100, status: "ALL" });
   const projects = useMemo(() => projectsPage?.data ?? [], [projectsPage]);
-  const { data: membersRes } = useOrgMembers(1, 100);
+  const { data: membersRes } = useBuildMembers({ limit: 100 });
   const members = useMemo(() => membersRes?.data ?? [], [membersRes]);
 
   const createProgram = useCreateProgram();
@@ -101,7 +101,7 @@ export function useProgramsPage() {
   const ownerOf = useCallback(
     (ownerId: string | null): NamedUser | null => {
       if (!ownerId) return null;
-      const match = members.find((member) => member.userId === ownerId);
+      const match = members.find((member) => member.id === ownerId);
       return match ? { name: match.name, email: match.email } : null;
     },
     [members],
@@ -119,7 +119,7 @@ export function useProgramsPage() {
     () => [
       { value: BUILD_FILTER_ALL, label: "All owners" },
       ...members.map((member) => ({
-        value: member.userId,
+        value: member.id,
         label: getUserDisplayName(member),
       })),
     ],

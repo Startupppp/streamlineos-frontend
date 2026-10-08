@@ -34,6 +34,22 @@ describe("MemberPicker revoked module candidate", () => {
     jest.clearAllMocks();
   });
 
+  it("routes Build ownership fields through the Build actor directory", () => {
+    render(<MemberPicker directory="build" value="" onChange={jest.fn()} />);
+
+    expect(jest.mocked(useMemberOptions)).toHaveBeenCalledWith(
+      undefined,
+      undefined,
+      undefined,
+      "build",
+      true,
+      false,
+      false,
+      "",
+      [],
+    );
+  });
+
   it("leaves revoked candidate discovery disabled for ordinary pickers", () => {
     render(<MemberPicker moduleKey="build" value="" onChange={jest.fn()} />);
 
@@ -41,6 +57,7 @@ describe("MemberPicker revoked module candidate", () => {
       undefined,
       undefined,
       "build",
+      undefined,
       true,
       false,
       false,
@@ -76,6 +93,7 @@ describe("MemberPicker revoked module candidate", () => {
       undefined,
       undefined,
       "build",
+      undefined,
       true,
       true,
       true,

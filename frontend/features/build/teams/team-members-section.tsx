@@ -137,6 +137,7 @@ export function TeamMembersSection({
           {canManage ? (
             <>
               <MemberPicker
+                directory="build"
                 value={addMemberId}
                 onChange={(id) => setAddMemberId(id ?? undefined)}
                 excludeUserIds={members.map((m) => m.userId)}

@@ -20,4 +20,13 @@ describe("NewProjectDialog — permission-hidden", () => {
     expect(container).toBeEmptyDOMElement();
     expect(screen.queryByRole("button", { name: /New Project/i })).not.toBeInTheDocument();
   });
+
+  it("does not render a URL-opened wizard without create permission", () => {
+    const { container } = render(
+      <NewProjectDialog open onOpenChange={jest.fn()} trigger={null} />,
+    );
+
+    expect(container).toBeEmptyDOMElement();
+    expect(screen.queryByTestId("wizard")).not.toBeInTheDocument();
+  });
 });

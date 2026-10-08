@@ -33,7 +33,8 @@ export const MANAGED_PRODUCT_TABLE_HEADERS = [
 type ManagedProductOwnerLookup = (ownerId: string | null) => NamedUser | null;
 
 interface ManagedProductRowHandlers {
-  canManage: boolean;
+  canUpdate: boolean;
+  canDelete: boolean;
   ownerOf: ManagedProductOwnerLookup;
   onEdit: (row: ManagedProduct) => void;
   onDelete: (row: ManagedProduct) => void;
@@ -45,10 +46,14 @@ function ownerLabel(user: NamedUser | null): string {
 
 export function ProductRowActions({
   product,
+  canUpdate,
+  canDelete,
   onEdit,
   onDelete,
 }: {
   product: ManagedProduct;
+  canUpdate: boolean;
+  canDelete: boolean;
   onEdit: (row: ManagedProduct) => void;
   onDelete: (row: ManagedProduct) => void;
 }) {
@@ -85,19 +90,24 @@ export function ProductRowActions({
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleCopyLink}>Copy link</DropdownMenuItem>
         <DropdownMenuItem onClick={handleCopyKey}>Copy key</DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem variant="destructive" onClick={handleDelete}>
-          Delete
-        </DropdownMenuItem>
+        {canUpdate || canDelete ? <DropdownMenuSeparator /> : null}
+        {canUpdate ? <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem> : null}
+        {canDelete ? (
+          <>
+            {canUpdate ? <DropdownMenuSeparator /> : null}
+            <DropdownMenuItem variant="destructive" onClick={handleDelete}>
+              Delete
+            </DropdownMenuItem>
+          </>
+        ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
   );
 }
 
 export function buildManagedProductColumns({
-  canManage,
+  canUpdate,
+  canDelete,
   ownerOf,
   onEdit,
   onDelete,
@@ -162,8 +172,14 @@ export function buildManagedProductColumns({
       headerClassName: "sr-only",
       className: "w-10",
       cell: (row) =>
-        canManage ? (
-          <ProductRowActions product={row} onEdit={onEdit} onDelete={onDelete} />
+        canUpdate || canDelete ? (
+          <ProductRowActions
+            product={row}
+            canUpdate={canUpdate}
+            canDelete={canDelete}
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
         ) : null,
     },
   ];
@@ -171,7 +187,8 @@ export function buildManagedProductColumns({
 
 export function ManagedProductMobileCard({
   product,
-  canManage,
+  canUpdate,
+  canDelete,
   ownerOf,
   onEdit,
   onDelete,
@@ -186,9 +203,11 @@ export function ManagedProductMobileCard({
         { label: "Description", value: product.description ?? "—" },
       ]}
       actions={
-        canManage ? (
+        canUpdate || canDelete ? (
           <ProductRowActions
             product={product}
+            canUpdate={canUpdate}
+            canDelete={canDelete}
             onEdit={onEdit}
             onDelete={onDelete}
           />

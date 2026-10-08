@@ -5,8 +5,6 @@ import { motion } from "framer-motion";
 import { ProjectCard } from "./project-card";
 import { ProjectTable } from "./project-table";
 import { TablePagination } from "@/components/ui/table-pagination";
-import { STICKY_FOOTER_ABOVE_MOBILE_NAV } from "@/components/ui/content-fill-panel";
-import { cn } from "@/lib/utils";
 import { PmStaggerList } from "@/components/pm-chrome";
 import { fadeUp, fadeUpReduced } from "@/lib/motion-presets";
 import type { DisplayPrefs } from "./use-display-prefs";
@@ -54,7 +52,7 @@ export function ProjectsViewContent({
   if (viewMode === "grid") {
     return (
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="min-h-0 flex-1 overflow-y-auto max-md:[.mobile-nav-active_&]:pb-4">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
           <PmStaggerList
             className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
             role="list"
@@ -70,19 +68,19 @@ export function ProjectsViewContent({
               </motion.div>
             ))}
           </PmStaggerList>
+          {visibleProjects.length > 0 ? (
+            <TablePagination
+              mode="cursor"
+              rowCount={visibleProjects.length}
+              pageNumber={pageNumber}
+              hasMore={hasMore}
+              hasPrevious={hasPrevious}
+              onNext={onNext}
+              onPrevious={onPrevious}
+              className="mt-3"
+            />
+          ) : null}
         </div>
-        {visibleProjects.length > 0 ? (
-          <TablePagination
-            mode="cursor"
-            rowCount={visibleProjects.length}
-            pageNumber={pageNumber}
-            hasMore={hasMore}
-            hasPrevious={hasPrevious}
-            onNext={onNext}
-            onPrevious={onPrevious}
-            className={cn(STICKY_FOOTER_ABOVE_MOBILE_NAV, "z-10 mt-auto")}
-          />
-        ) : null}
       </div>
     );
   }

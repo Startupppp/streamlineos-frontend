@@ -73,8 +73,8 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
 }));
 
-jest.mock("@/hooks/api/organization", () => ({
-  useOrgMembers: jest.fn(() => ({ data: { data: [] } })),
+jest.mock("@/hooks/api/build/build-members", () => ({
+  useBuildMembers: jest.fn(() => ({ data: { data: [] } })),
 }));
 
 jest.mock("@/features/build/managed-products/managed-product-form-sheet", () => ({

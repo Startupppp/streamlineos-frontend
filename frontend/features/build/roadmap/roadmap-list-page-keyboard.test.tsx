@@ -70,9 +70,13 @@ jest.mock("@/components/ui/select", () => {
 });
 
 jest.mock("@/hooks/api/organization", () => ({
-  useOrgMembers: () => ({
+  useOrgMembersByIds: () => ({
     data: { data: [{ membershipId: 9, userId: "user-9", name: "Fox Mulder", email: "fox@example.com", image: null }] },
   }),
+}));
+
+jest.mock("@/hooks/api/build/build-members", () => ({
+  useBuildMembers: () => ({ data: { data: [{ id: "user-9" }] } }),
 }));
 
 jest.mock("@/components/ui/search-input", () => ({

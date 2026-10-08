@@ -2,11 +2,11 @@
 
 import { useMemo } from "react";
 import { toast } from "sonner";
-import { UserCombobox } from "@/components/ui/user-combobox";
+import { MemberPicker } from "@/components/members/member-picker";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useUpdateFeedbucketWidget } from "@/hooks/api/feedbucket";
 import type { FeedbucketWidget, FeedbucketSubmissionType } from "@/types/feedbucket";
-import type { OrgMember } from "@/hooks/api/organization-schema";
+import type { BuildMember } from "@/hooks/api/build/build-members";
 
 const SUBMISSION_TYPES: { type: FeedbucketSubmissionType; label: string }[] = [
   { type: "bug", label: "Bug" },
@@ -19,17 +19,30 @@ const SUBMISSION_TYPES: { type: FeedbucketSubmissionType; label: string }[] = [
 
 interface WidgetAssigneeRulesProps {
   widget: FeedbucketWidget;
-  members: OrgMember[];
+  members: BuildMember[];
+  membershipIdToUserId: Map<number, string>;
+  disabled?: boolean;
 }
 
-export function WidgetAssigneeRules({ widget, members }: WidgetAssigneeRulesProps) {
+export function WidgetAssigneeRules({
+  widget,
+  members,
+  membershipIdToUserId,
+  disabled = false,
+}: WidgetAssigneeRulesProps) {
   const updateWidget = useUpdateFeedbucketWidget();
-
-  const membershipIdToUserId = useMemo(() => {
-    const map = new Map<number, string>();
-    for (const m of members) map.set(m.membershipId, m.userId);
-    return map;
-  }, [members]);
+  const candidates = useMemo(
+    () =>
+      members.map((member) => ({
+        id: member.id,
+        name: member.name,
+        firstName: member.firstName,
+        lastName: member.lastName,
+        email: member.email,
+        image: member.image,
+      })),
+    [members],
+  );
 
   function resolvedUserIdForType(type: FeedbucketSubmissionType): string {
     const membershipId = widget.assigneeRules?.[type];
@@ -71,7 +84,8 @@ export function WidgetAssigneeRules({ widget, members }: WidgetAssigneeRulesProp
               <AssigneeRuleRow
                 type={type}
                 value={resolvedUserIdForType(type)}
-                disabled={updateWidget.isPending}
+                candidates={candidates}
+                disabled={disabled || updateWidget.isPending}
                 onChange={handleRuleChange}
               />
             </div>
@@ -85,17 +99,26 @@ export function WidgetAssigneeRules({ widget, members }: WidgetAssigneeRulesProp
 interface AssigneeRuleRowProps {
   type: FeedbucketSubmissionType;
   value: string;
+  candidates: Array<{
+    id: string;
+    name: string | null;
+    firstName: string | null;
+    lastName: string | null;
+    email: string;
+    image: string | null;
+  }>;
   disabled: boolean;
   onChange: (type: FeedbucketSubmissionType, userId: string) => Promise<void>;
 }
 
-function AssigneeRuleRow({ type, value, disabled, onChange }: AssigneeRuleRowProps) {
-  function handleChange(userId: string) {
-    void onChange(type, userId);
+function AssigneeRuleRow({ type, value, candidates, disabled, onChange }: AssigneeRuleRowProps) {
+  function handleChange(userId: string | null) {
+    void onChange(type, userId ?? "");
   }
 
   return (
-    <UserCombobox
+    <MemberPicker
+      candidates={candidates}
       value={value}
       onChange={handleChange}
       placeholder="Unassigned"

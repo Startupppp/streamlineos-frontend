@@ -19,6 +19,7 @@ jest.mock("@/components/ui/page-wrapper", () => ({
   PageWrapper: ({
     children,
     state,
+    actions,
   }: {
     children?: React.ReactNode;
     state?: { kind: string };
@@ -32,7 +33,7 @@ jest.mock("@/components/ui/page-wrapper", () => ({
       return <div role="status" data-testid="no-permission-state">Access Restricted</div>;
     if (state?.kind === "loading")
       return <div data-testid="page-loading" />;
-    return <div>{children}</div>;
+    return <div>{actions}{children}</div>;
   },
 }));
 
@@ -100,8 +101,14 @@ jest.mock("@/hooks/api/build/projects", () => ({
   useProject: (id: number) => mockUseProject(id),
 }));
 
+const mockUseCan = jest.fn();
+jest.mock("@/hooks/api/access", () => ({
+  useCan: (permission: string) => mockUseCan(permission),
+}));
+
 beforeEach(() => {
   jest.clearAllMocks();
+  mockUseCan.mockReturnValue(true);
   mockUseProject.mockReturnValue({ data: { name: "My Project" } });
   mockUseFeedbucketWidgets.mockReturnValue({
     data: [],
@@ -171,6 +178,19 @@ describe("ProjectFeedbucketPage — ready and empty states", () => {
     expect(screen.getByText(/no feedback widget/i)).toBeInTheDocument();
   });
 
+  it("hides widget creation when the actor lacks feedbucket:widgets:create", () => {
+    mockUsePageState.mockReturnValue({ kind: "empty" });
+    mockUseCan.mockImplementation(
+      (permission: string) => permission !== "feedbucket:widgets:create",
+    );
+
+    render(<ProjectFeedbucketPage projectId={1} />);
+
+    expect(
+      screen.queryByRole("button", { name: /create feedback widget/i }),
+    ).not.toBeInTheDocument();
+  });
+
   it("renders the submissions inbox when a widget exists for this project", () => {
     const widget = { id: 42, projectId: 1, isActive: true, aiAssistEnabled: false };
     mockUseFeedbucketWidgets.mockReturnValue({
@@ -186,6 +206,24 @@ describe("ProjectFeedbucketPage — ready and empty states", () => {
 
     expect(screen.getByTestId("submissions-inbox")).toBeInTheDocument();
     expect(screen.getByTestId("submissions-inbox")).toHaveAttribute("data-widget", "42");
+  });
+
+  it("hides widget setup when the actor cannot update or manage widgets", () => {
+    const widget = { id: 42, projectId: 1, isActive: true, aiAssistEnabled: false };
+    mockUseFeedbucketWidgets.mockReturnValue({
+      data: [widget],
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+    mockUseCan.mockReturnValue(false);
+
+    render(<ProjectFeedbucketPage projectId={1} />);
+
+    expect(
+      screen.queryByRole("button", { name: /widget setup/i }),
+    ).not.toBeInTheDocument();
   });
 
   it("passes isError and error to usePageState so a 402 or 403 is not silently presented as an empty inbox", () => {

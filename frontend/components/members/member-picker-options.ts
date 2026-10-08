@@ -13,7 +13,6 @@ export interface MemberOption extends NamedUser {
   id: string;
   email: string;
   image: string | null;
-  /** A second line under the name in the option list (e.g. designation · state). */
   description?: string | null;
   moduleAccessRevoked?: boolean;
 }
@@ -22,6 +21,7 @@ export function useMemberOptions(
   candidates: MemberOption[] | undefined,
   projectId: number | undefined,
   moduleKey: string | undefined,
+  directory: "build" | undefined,
   excludeAssigned: boolean,
   includeRevoked: boolean,
   enabled: boolean,
@@ -32,13 +32,26 @@ export function useMemberOptions(
   const canViewOrgMembers = useCan("settings:view");
   const canViewBuildMembers = useCan("build:members:view");
   const useOrgDirectory =
-    enabled && !explicit && projectId === undefined && moduleKey === undefined && canViewOrgMembers;
+    enabled &&
+    !explicit &&
+    projectId === undefined &&
+    moduleKey === undefined &&
+    directory === undefined &&
+    canViewOrgMembers;
+  const useBuildDirectory =
+    enabled &&
+    !explicit &&
+    projectId === undefined &&
+    moduleKey === undefined &&
+    directory === "build" &&
+    canViewBuildMembers;
   const useWorkspaceDirectory =
     enabled &&
     !explicit &&
     projectId === undefined &&
     moduleKey === undefined &&
     !canViewOrgMembers &&
+    directory === undefined &&
     canViewBuildMembers;
   const useModuleDirectory = !explicit && moduleKey !== undefined && enabled;
 
@@ -51,20 +64,32 @@ export function useMemberOptions(
   const { data: workspaceData } = useBuildMembers(
     { limit: 200, search: debouncedSearch || undefined },
     {
-      enabled: useWorkspaceDirectory,
+      enabled: useBuildDirectory || useWorkspaceDirectory,
       staleTime: 30_000,
       placeholderData: (prev) => prev,
     },
   );
-  const { data: projectMembersPage } = useProjectMembers(projectId ?? 0, undefined, {
-    enabled: enabled && !explicit && projectId !== undefined,
-  });
-  const projectMembers = useMemo(() => projectMembersPage?.data ?? [], [projectMembersPage?.data]);
+  const { data: projectMembersPage } = useProjectMembers(
+    projectId ?? 0,
+    undefined,
+    {
+      enabled: enabled && !explicit && projectId !== undefined,
+    },
+  );
+  const projectMembers = useMemo(
+    () => projectMembersPage?.data ?? [],
+    [projectMembersPage?.data],
+  );
   const { data: moduleData } = useModuleMemberCandidates(
     moduleKey ?? "",
     50,
     debouncedSearch,
-    { enabled: useModuleDirectory, userId: selectedIds[0], excludeAssigned, includeRevoked },
+    {
+      enabled: useModuleDirectory,
+      userId: selectedIds[0],
+      excludeAssigned,
+      includeRevoked,
+    },
   );
   const moduleOptions = useMemo(
     () =>
@@ -76,7 +101,9 @@ export function useMemberOptions(
         email: c.email,
         image: c.avatarUrl ?? null,
         moduleAccessRevoked: c.moduleAccessRevoked,
-        description: c.moduleAccessRevoked ? "Access revoked — adding restores module access" : null,
+        description: c.moduleAccessRevoked
+          ? "Access revoked — adding restores module access"
+          : null,
       })),
     [moduleData?.data],
   );
@@ -158,12 +185,16 @@ export function useMemberOptions(
     if (useModuleDirectory) {
       return {
         options: moduleOptions,
-        selectedMembers: moduleOptions.filter((m) => selectedIds.includes(m.id)),
+        selectedMembers: moduleOptions.filter((m) =>
+          selectedIds.includes(m.id),
+        ),
       };
     }
     return {
       options: workspaceOptions,
-      selectedMembers: workspaceOptions.filter((m) => selectedIds.includes(m.id)),
+      selectedMembers: workspaceOptions.filter((m) =>
+        selectedIds.includes(m.id),
+      ),
     };
   }, [
     candidates,
@@ -188,9 +219,10 @@ export function filterMembers(
 ) {
   const excludeSet = new Set<string>(excludeUserIds ?? []);
   if (excludeUserId) excludeSet.add(excludeUserId);
-  const eligible = excludeSet.size > 0
-    ? members.filter((m) => !excludeSet.has(m.id))
-    : members;
+  const eligible =
+    excludeSet.size > 0
+      ? members.filter((m) => !excludeSet.has(m.id))
+      : members;
   if (serverFiltered || !search.trim()) return eligible;
   const q = search.toLowerCase();
   return eligible.filter(

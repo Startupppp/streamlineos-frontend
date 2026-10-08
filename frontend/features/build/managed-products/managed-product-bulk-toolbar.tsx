@@ -13,6 +13,7 @@ import {
 import { useBulkUpdateManagedProducts } from "@/hooks/api/build/managed-products-schema";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useState } from "react";
+import { useCan } from "@/hooks/api/access";
 
 export const MANAGED_PRODUCT_BULK_MAX = 100;
 
@@ -25,10 +26,13 @@ export function ManagedProductBulkToolbar({
   selectedIds,
   onClearSelection,
 }: ManagedProductBulkToolbarProps) {
+  const canUpdate = useCan("build:managed-products:update");
   const [pendingStatus, setPendingStatus] = useState<"active" | "archived" | "">("");
   const bulk = useBulkUpdateManagedProducts();
 
   const cappedIds = selectedIds.slice(0, MANAGED_PRODUCT_BULK_MAX);
+
+  if (!canUpdate) return null;
 
   function handleApply() {
     if (!pendingStatus) return;

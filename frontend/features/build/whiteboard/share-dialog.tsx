@@ -27,7 +27,7 @@ import {
   type WhiteboardVisibility,
   type WhiteboardShareRole,
 } from "@/hooks/api/build/whiteboards";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { useBuildMembers } from "@/hooks/api/build/build-members";
 import { useCanState } from "@/hooks/api/access";
 import { SharePublicLinkSection } from "./share-public-link-section";
 
@@ -47,7 +47,7 @@ interface ShareDialogProps {
 }
 
 export function ShareDialog({ projectId, whiteboard, open, onOpenChange }: ShareDialogProps) {
-  const accessState = useCanState("build:view");
+  const accessState = useCanState("build:whiteboards:manage");
   const { data: session } = useSession();
   const currentUserId = session?.user.id;
   const sharing = whiteboard.sharing;
@@ -68,9 +68,12 @@ export function ShareDialog({ projectId, whiteboard, open, onOpenChange }: Share
     return () => clearTimeout(t);
   }, [searchInput]);
 
-  const { data: membersData } = useOrgMembers(1, 20, querySearch || undefined, { enabled: pickerOpen, staleTime: 30_000 });
+  const { data: membersData } = useBuildMembers(
+    { limit: 20, search: querySearch || undefined },
+    { enabled: pickerOpen, staleTime: 30_000 },
+  );
   const excludedIds = new Set([...shares.map((s) => s.userId), whiteboard.createdBy ?? ""]);
-  const availableMembers = (membersData?.data ?? []).filter((m) => !excludedIds.has(m.userId));
+  const availableMembers = (membersData?.data ?? []).filter((m) => !excludedIds.has(m.id));
 
   function handleVisibilityChange(v: WhiteboardVisibility) {
     updateSharing.mutate({ whiteboardId: whiteboard.id, visibility: v }, {
@@ -182,7 +185,7 @@ export function ShareDialog({ projectId, whiteboard, open, onOpenChange }: Share
                       <CommandEmpty>No members found</CommandEmpty>
                       <CommandGroup>
                         {availableMembers.map((m) => (
-                          <CommandItem key={m.userId} value={m.userId} onSelect={() => handleAddMember(m.userId)}>
+                          <CommandItem key={m.id} value={m.id} onSelect={() => handleAddMember(m.id)}>
                             <div className="flex flex-col min-w-0">
                               <span className="text-sm truncate">{m.name ?? m.email}</span>
                               {m.name && <span className="text-xs text-muted-foreground truncate">{m.email}</span>}

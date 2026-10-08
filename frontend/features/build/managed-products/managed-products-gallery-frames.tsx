@@ -50,7 +50,8 @@ export function InsightsReadyFrame() {
 
 export function ManagedProductsReadyTable() {
   const columns = buildManagedProductColumns({
-    canManage: true,
+    canUpdate: true,
+    canDelete: true,
     ownerOf: stubOwnerOf,
     onEdit: STUB_EDIT,
     onDelete: STUB_DELETE,
@@ -60,7 +61,8 @@ export function ManagedProductsReadyTable() {
     (row: ManagedProduct) => (
       <ManagedProductMobileCard
         product={row}
-        canManage
+        canUpdate
+        canDelete
         ownerOf={stubOwnerOf}
         onEdit={STUB_EDIT}
         onDelete={STUB_DELETE}

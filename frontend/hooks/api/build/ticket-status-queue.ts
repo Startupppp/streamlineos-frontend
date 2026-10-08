@@ -40,10 +40,11 @@ export function settleStatusTransition(
   succeeded: boolean,
 ): { fromStatus: string; toStatus: string } {
   const queue = statusQueues.get(transition.key);
-  if (!queue) return {
-    fromStatus: transition.toStatus,
-    toStatus: transition.toStatus,
-  };
+  if (!queue)
+    return {
+      fromStatus: transition.toStatus,
+      toStatus: transition.toStatus,
+    };
   const previousDesired = queue.layers.at(-1)?.status ?? queue.baseStatus;
   const index = queue.layers.findIndex((layer) => layer.id === transition.id);
   if (index >= 0) {

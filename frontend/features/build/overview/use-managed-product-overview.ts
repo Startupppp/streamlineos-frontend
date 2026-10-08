@@ -5,7 +5,7 @@ import {
   useManagedProductInsights,
 } from "@/hooks/api/build/managed-products";
 import { useCan } from "@/hooks/api/access";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { useBuildMembers } from "@/hooks/api/build/build-members";
 import { getUserDisplayName } from "@/lib/person-display";
 import { Pencil } from "lucide-react";
 import { useProjects } from "@/hooks/api/build/projects";
@@ -77,7 +77,7 @@ export function useManagedProductOverview(managedProductId: number) {
     { enabled: !!managedProductId },
   );
   const insightsQuery = useManagedProductInsights(managedProductId);
-  const { data: membersRes } = useOrgMembers(1, 100);
+  const { data: membersRes } = useBuildMembers({ limit: 100 });
   const isOnline = useOnlineStatus();
   const canEdit = useCan("build:managed-products:update") && isOnline;
   const [editOpen, setEditOpen] = useState(false);
@@ -157,7 +157,7 @@ export function useManagedProductOverview(managedProductId: number) {
     return [
       { value: BUILD_FILTER_ALL, label: "All owners" },
       ...members.map((member) => ({
-        value: member.userId,
+        value: member.id,
         label: getUserDisplayName(member),
       })),
     ];

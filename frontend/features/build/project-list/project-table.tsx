@@ -143,27 +143,29 @@ export const ProjectTable = React.memo(function ProjectTable({
   const router = useRouter();
   const requestLeave = useNavigationLeave();
   const canUpdate = useCan("build:update");
-  const canManage = useCan("build:manage");
-  const canEdit = canUpdate || canManage;
+  const canDelete = useCan("build:delete");
   const [activeProject, setActiveProject] = useState<ProjectListItem | null>(
     null,
   );
   const [activeDialog, setActiveDialog] = useState<ActiveDialog>(null);
 
   const handleEdit = useCallback((p: ProjectListItem) => {
+    if (!canUpdate) return;
     setActiveProject(p);
     setActiveDialog("edit");
-  }, []);
+  }, [canUpdate]);
 
   const handleArchive = useCallback((p: ProjectListItem) => {
+    if (!canUpdate) return;
     setActiveProject(p);
     setActiveDialog("archive");
-  }, []);
+  }, [canUpdate]);
 
   const handleDelete = useCallback((p: ProjectListItem) => {
+    if (!canDelete) return;
     setActiveProject(p);
     setActiveDialog("delete");
-  }, []);
+  }, [canDelete]);
 
   const handleDialogClose = useCallback((open: boolean) => {
     if (!open) setActiveDialog(null);
@@ -171,7 +173,7 @@ export const ProjectTable = React.memo(function ProjectTable({
 
   const columns = useProjectTableColumns({
     prefs,
-    canEdit,
+    canEdit: canUpdate,
     onEdit: handleEdit,
     onArchive: handleArchive,
     onDelete: handleDelete,
@@ -229,7 +231,9 @@ export const ProjectTable = React.memo(function ProjectTable({
             : undefined
         }
       />
-      {activeProject ? (
+      {activeProject &&
+      ((canUpdate && (activeDialog === "edit" || activeDialog === "archive")) ||
+        (canDelete && activeDialog === "delete")) ? (
         <ProjectCardDialogs
           project={activeProject}
           isArchived={activeProject.status === "ARCHIVED"}

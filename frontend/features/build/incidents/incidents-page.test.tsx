@@ -22,8 +22,8 @@ jest.mock("@/hooks/api/access", () => ({
   useAccess: jest.fn(),
 }));
 
-jest.mock("@/hooks/api/organization", () => ({
-  useOrgMembers: jest.fn(),
+jest.mock("@/hooks/api/build/build-members", () => ({
+  useBuildMembers: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/entitlements", () => ({
@@ -115,14 +115,14 @@ jest.mock("./incidents-table-columns", () => ({
 import { useIncidents } from "@/hooks/api/build/incidents";
 import { useDeleteIncident } from "@/hooks/api/build/incident-mutations";
 import { useCan, useAccess } from "@/hooks/api/access";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { useBuildMembers } from "@/hooks/api/build/build-members";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 
 const mockUseIncidents = useIncidents as jest.Mock;
 const mockUseDeleteIncident = useDeleteIncident as jest.Mock;
 const mockUseCan = useCan as jest.Mock;
 const mockUseAccess = useAccess as jest.Mock;
-const mockUseOrgMembers = useOrgMembers as jest.Mock;
+const mockUseBuildMembers = useBuildMembers as jest.Mock;
 const mockUseBuildListFilters = useBuildListFilters as jest.Mock;
 
 const ACCESS_GRANTED = {
@@ -186,7 +186,7 @@ beforeEach(() => {
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseIncidents.mockReturnValue(baseQueryResult({ data: incidentPages([]) }));
   mockUseDeleteIncident.mockReturnValue({ mutate: jest.fn(), isPending: false });
-  mockUseOrgMembers.mockReturnValue({ data: { data: [] } });
+  mockUseBuildMembers.mockReturnValue({ data: { data: [] } });
   mockUseBuildListFilters.mockReturnValue(defaultFilters());
 });
 

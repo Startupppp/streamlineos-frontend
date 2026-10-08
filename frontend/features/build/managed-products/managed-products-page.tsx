@@ -28,7 +28,7 @@ export function ManagedProductsPage() {
   const {
     canCreate,
     canUpdate,
-    canManageRow,
+    canDelete,
     listFilters,
     pageNumber,
     hasPrevious,
@@ -68,13 +68,14 @@ export function ManagedProductsPage() {
     (row: ManagedProduct) => (
       <ManagedProductMobileCard
         product={row}
-        canManage={canManageRow}
+        canUpdate={canUpdate}
+        canDelete={canDelete}
         ownerOf={ownerOf}
         onEdit={handleEditRow}
         onDelete={handleDeleteRow}
       />
     ),
-    [canManageRow, handleDeleteRow, handleEditRow, ownerOf],
+    [canDelete, canUpdate, handleDeleteRow, handleEditRow, ownerOf],
   );
 
   return (
@@ -141,7 +142,7 @@ export function ManagedProductsPage() {
     >
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-          {selectedIds.length > 0 && (
+          {canUpdate && selectedIds.length > 0 && (
             <ManagedProductBulkToolbar
               selectedIds={selectedIds}
               onClearSelection={handleClearKeyboardSelection}
@@ -205,7 +206,7 @@ export function ManagedProductsPage() {
         </PmSection>
       </PmPageShell>
 
-      {createOpen && (
+      {canCreate && createOpen && (
         <ManagedProductFormSheet
           open={createOpen}
           onOpenChange={handleSheetOpenChange}
@@ -215,7 +216,7 @@ export function ManagedProductsPage() {
         />
       )}
 
-      {editTarget && (
+      {canUpdate && editTarget && (
         <ManagedProductFormSheet
           open={!!editTarget}
           onOpenChange={handleSheetOpenChange}
@@ -225,7 +226,7 @@ export function ManagedProductsPage() {
       )}
 
       <ConfirmDialog
-        open={!!deleteTarget}
+        open={canDelete && !!deleteTarget}
         onOpenChange={handleDeleteDialogChange}
         title="Delete this managed product?"
         description="This action cannot be undone. Projects linked to this product will not be deleted."

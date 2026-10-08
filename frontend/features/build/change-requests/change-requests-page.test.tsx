@@ -23,8 +23,8 @@ jest.mock("@/hooks/api/entitlements", () => ({
   useEntitlements: () => ({ data: undefined }),
 }));
 
-jest.mock("@/hooks/api/organization", () => ({
-  useOrgMembers: jest.fn(),
+jest.mock("@/hooks/api/build/build-members", () => ({
+  useBuildMembers: jest.fn(),
 }));
 
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
@@ -203,7 +203,7 @@ jest.mock("lucide-react", () => ({
 
 import { useChangeRequests, useDeleteChangeRequest, useUpdateChangeRequest } from "@/hooks/api/build/change-requests";
 import { useCan, useAccess } from "@/hooks/api/access";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { useBuildMembers } from "@/hooks/api/build/build-members";
 import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 
 const mockUseBuildListKeyboard = useBuildListKeyboard as jest.Mock;
@@ -213,7 +213,7 @@ const mockUseDeleteChangeRequest = useDeleteChangeRequest as jest.Mock;
 const mockUseUpdateChangeRequest = useUpdateChangeRequest as jest.Mock;
 const mockUseCan = useCan as jest.Mock;
 const mockUseAccess = useAccess as jest.Mock;
-const mockUseOrgMembers = useOrgMembers as jest.Mock;
+const mockUseBuildMembers = useBuildMembers as jest.Mock;
 
 const ACCESS_GRANTED = {
   data: { isOrgOwner: false, scopes: { "build:changerequests:view": "all" }, modules: {} },
@@ -241,7 +241,7 @@ beforeEach(() => {
   mockUseChangeRequests.mockReturnValue(baseQueryResult({ data: [] }));
   mockUseDeleteChangeRequest.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUseUpdateChangeRequest.mockReturnValue({ mutate: jest.fn(), isPending: false });
-  mockUseOrgMembers.mockReturnValue(baseQueryResult({ data: { data: [] } }));
+  mockUseBuildMembers.mockReturnValue(baseQueryResult({ data: { data: [] } }));
   mockUseBuildListKeyboard.mockClear();
   mockUseBuildListKeyboard.mockReturnValue({ focusedIndex: null, setFocusedIndex: jest.fn() });
 });

@@ -27,8 +27,8 @@ jest.mock("@/hooks/api/entitlements", () => ({
   useEntitlements: () => ({ data: undefined }),
 }));
 
-jest.mock("@/hooks/api/organization", () => ({
-  useOrgMembers: jest.fn(),
+jest.mock("@/hooks/api/build/build-members", () => ({
+  useBuildMembers: jest.fn(),
 }));
 
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
@@ -211,14 +211,14 @@ import {
   useUpdateChangeRequest,
 } from "@/hooks/api/build/change-requests";
 import { useCan, useAccess } from "@/hooks/api/access";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { useBuildMembers } from "@/hooks/api/build/build-members";
 
 const mockUseChangeRequests = useChangeRequests as jest.Mock;
 const mockUseDeleteChangeRequest = useDeleteChangeRequest as jest.Mock;
 const mockUseUpdateChangeRequest = useUpdateChangeRequest as jest.Mock;
 const mockUseCan = useCan as jest.Mock;
 const mockUseAccess = useAccess as jest.Mock;
-const mockUseOrgMembers = useOrgMembers as jest.Mock;
+const mockUseBuildMembers = useBuildMembers as jest.Mock;
 
 const ACCESS_GRANTED = {
   data: {
@@ -254,7 +254,7 @@ beforeEach(() => {
     mutate: jest.fn(),
     isPending: false,
   });
-  mockUseOrgMembers.mockReturnValue(
+  mockUseBuildMembers.mockReturnValue(
     baseQueryResult({ data: { data: [] } }),
   );
 });

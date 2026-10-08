@@ -44,8 +44,8 @@ jest.mock("@/hooks/api/access", () => ({
   useAccess: jest.fn(),
 }));
 
-jest.mock("@/hooks/api/organization", () => ({
-  useOrgMembers: jest.fn(),
+jest.mock("@/hooks/api/build/build-members", () => ({
+  useBuildMembers: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/entitlements", () => ({
@@ -171,7 +171,7 @@ jest.mock("./approvals-constants", () => ({
 
 import { useApprovalInboxPage, useUpdateApproval } from "@/hooks/api/build/approvals";
 import { useCan, useAccess } from "@/hooks/api/access";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { useBuildMembers } from "@/hooks/api/build/build-members";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 
@@ -179,7 +179,7 @@ const mockUseApprovalInbox = useApprovalInboxPage as jest.Mock;
 const mockUseUpdateApproval = useUpdateApproval as jest.Mock;
 const mockUseCan = useCan as jest.Mock;
 const mockUseAccess = useAccess as jest.Mock;
-const mockUseOrgMembers = useOrgMembers as jest.Mock;
+const mockUseBuildMembers = useBuildMembers as jest.Mock;
 const mockUseBuildListFilters = useBuildListFilters as jest.Mock;
 const mockUseBuildCursorPager = useBuildCursorPager as jest.Mock;
 const { useApproval: mockUseApproval, useDecideApproval: mockUseDecideApproval } = jest.requireMock<{
@@ -253,7 +253,7 @@ beforeEach(() => {
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseApprovalInbox.mockReturnValue(baseQueryResult({ data: approvalPages([]) }));
   mockUseUpdateApproval.mockReturnValue({ mutate: jest.fn(), mutateAsync: jest.fn(), captureOwner: () => ({ isCurrent: () => true }), isPending: false });
-  mockUseOrgMembers.mockReturnValue({ data: { data: [] } });
+  mockUseBuildMembers.mockReturnValue({ data: { data: [] } });
   mockUseBuildListFilters.mockReturnValue(defaultFilters());
   mockUseApproval.mockReturnValue({ data: undefined, isPending: false, error: null, ownerStamp: null, refetch: jest.fn() });
   mockUseDecideApproval.mockReturnValue({ mutateAsync: jest.fn(), isPending: false });

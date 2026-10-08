@@ -233,7 +233,7 @@ export function ProgramFormSheet({
               <FormItem>
                 <FormLabel>Owner (optional)</FormLabel>
                 <FormControl>
-                  <MemberPicker value={field.value} onChange={field.onChange} />
+                  <MemberPicker directory="build" value={field.value} onChange={field.onChange} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

@@ -8,7 +8,7 @@ import {
   useUpdateApproval,
 } from "@/hooks/api/build/approvals";
 import { useCan } from "@/hooks/api/access";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { useBuildMembers } from "@/hooks/api/build/build-members";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import {
   BUILD_FILTER_ALL,
@@ -67,7 +67,7 @@ export function useApprovalsInboxPage() {
   }, pager.cursor);
 
   const items = useMemo(() => data?.data ?? [], [data]);
-  const { data: membersRes } = useOrgMembers(1, 100);
+  const { data: membersRes } = useBuildMembers({ limit: 100 });
   const members = useMemo(() => membersRes?.data ?? [], [membersRes]);
 
   const [queueTarget, setQueueTarget] = useState<DecideTarget | null>(null);
@@ -116,7 +116,7 @@ export function useApprovalsInboxPage() {
   const memberName = useCallback(
     (userId: string | null): string => {
       if (!userId) return "—";
-      const m = members.find((row) => row.userId === userId);
+      const m = members.find((row) => row.id === userId);
       return m?.name ?? m?.email ?? "Unknown";
     },
     [members],
@@ -125,7 +125,7 @@ export function useApprovalsInboxPage() {
   const ownerOf = useCallback(
     (userId: string | null) => {
       if (!userId) return null;
-      const m = members.find((row) => row.userId === userId);
+      const m = members.find((row) => row.id === userId);
       return m ? { name: m.name ?? undefined, email: m.email } : null;
     },
     [members],

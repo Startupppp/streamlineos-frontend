@@ -13,7 +13,7 @@ describe("useWizardMembers", () => {
     jest.clearAllMocks();
   });
 
-  it("uses only active Build members for project manager and team choices", () => {
+  it("uses the canonical Build actor directory for project manager and team choices", () => {
     mockUseBuildMembers.mockReturnValue({
       data: {
         data: [
@@ -37,7 +37,7 @@ describe("useWizardMembers", () => {
     expect(result.current).toEqual([
       { userId: "build-1", name: "Build Member", email: "build@x.com", image: null },
     ]);
-    expect(mockUseBuildMembers).toHaveBeenCalledWith({ limit: 100, status: "active" });
+    expect(mockUseBuildMembers).toHaveBeenCalledWith({ limit: 100 });
   });
 
   it("returns an empty module directory while Build members are unavailable", () => {
@@ -46,6 +46,6 @@ describe("useWizardMembers", () => {
     const { result } = renderHook(() => useWizardMembers(25));
 
     expect(result.current).toEqual([]);
-    expect(mockUseBuildMembers).toHaveBeenCalledWith({ limit: 25, status: "active" });
+    expect(mockUseBuildMembers).toHaveBeenCalledWith({ limit: 25 });
   });
 });

@@ -19,12 +19,19 @@ import { useProject } from "@/hooks/api/build/projects";
 import { CreateFeedbucketWidgetSheet } from "./create-feedbucket-widget-sheet";
 import { WidgetSetupSheet } from "./widget-setup-sheet";
 import { ProjectSubmissionsInbox } from "./project-submissions-inbox";
+import { useCan } from "@/hooks/api/access";
 
 interface ProjectFeedbucketPageProps {
   projectId: number;
 }
 
-export function ProjectFeedbucketPage({ projectId }: ProjectFeedbucketPageProps) {
+export function ProjectFeedbucketPage({
+  projectId,
+}: ProjectFeedbucketPageProps) {
+  const canCreateWidget = useCan("feedbucket:widgets:create");
+  const canManageWidget = useCan("feedbucket:widgets:manage");
+  const canConfigureWidget = useCan("feedbucket:widgets:update");
+
   const [createOpen, setCreateOpen] = useState(false);
   const [setupOpen, setSetupOpen] = useState(false);
 
@@ -84,16 +91,18 @@ export function ProjectFeedbucketPage({ projectId }: ProjectFeedbucketPageProps)
           </Badge>
         ) : null}
       </div>
-      <AnimatedIconButton
-        size="sm"
-        variant="outline"
-        icon={SettingsIcon}
-        iconSize={14}
-        iconClassName="mr-1.5"
-        onClick={handleOpenSetup}
-      >
-        Widget setup
-      </AnimatedIconButton>
+      {canConfigureWidget || canManageWidget ? (
+        <AnimatedIconButton
+          size="sm"
+          variant="outline"
+          icon={SettingsIcon}
+          iconSize={14}
+          iconClassName="mr-1.5"
+          onClick={handleOpenSetup}
+        >
+          Widget setup
+        </AnimatedIconButton>
+      ) : null}
     </div>
   ) : undefined;
 
@@ -115,7 +124,9 @@ export function ProjectFeedbucketPage({ projectId }: ProjectFeedbucketPageProps)
       <PmPageShell>
         {projectWidget ? (
           <PmSection index={0} className="flex flex-1 min-h-0 flex-col">
-            <p className="mb-2 text-sm font-medium text-foreground">Submissions</p>
+            <p className="mb-2 text-sm font-medium text-foreground">
+              Submissions
+            </p>
             <PmPanel className="flex flex-1 min-h-0 h-full flex-col p-0" solid>
               <ProjectSubmissionsInbox
                 widgetId={projectWidget.id}
@@ -129,19 +140,25 @@ export function ProjectFeedbucketPage({ projectId }: ProjectFeedbucketPageProps)
             illustrationPreset="mail"
             title="No feedback widget"
             description="Create a widget to embed on your product and start collecting feedback for this project."
-            action={{ label: "Create feedback widget", onClick: handleOpenCreate }}
+            action={
+              canCreateWidget
+                ? { label: "Create feedback widget", onClick: handleOpenCreate }
+                : undefined
+            }
           />
         )}
       </PmPageShell>
 
-      <CreateFeedbucketWidgetSheet
-        open={createOpen}
-        projectId={projectId}
-        defaultName={defaultWidgetName}
-        onClose={handleCloseCreate}
-      />
+      {canCreateWidget ? (
+        <CreateFeedbucketWidgetSheet
+          open={createOpen}
+          projectId={projectId}
+          defaultName={defaultWidgetName}
+          onClose={handleCloseCreate}
+        />
+      ) : null}
 
-      {projectWidget ? (
+      {projectWidget && (canConfigureWidget || canManageWidget) ? (
         <WidgetSetupSheet
           open={setupOpen}
           widget={projectWidget}

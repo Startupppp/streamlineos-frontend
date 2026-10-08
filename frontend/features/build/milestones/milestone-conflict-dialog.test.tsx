@@ -11,8 +11,26 @@ jest.mock("@/hooks/api/build/milestones", () => ({
 }));
 
 jest.mock("@/hooks/api/organization", () => ({
-  useOrgMembers: () => ({
+  useOrgMembersByIds: () => ({
     data: { data: [{ membershipId: 4, userId: "user-4", name: "Dana Scully", email: "dana@example.com", image: null }] },
+  }),
+}));
+
+jest.mock("@/hooks/api/build/build-members", () => ({
+  useBuildMembers: () => ({
+    data: {
+      data: [{
+        id: "user-4",
+        role: "member",
+        addedAt: "2026-01-01T00:00:00.000Z",
+        name: "Dana Scully",
+        firstName: "Dana",
+        lastName: "Scully",
+        email: "dana@example.com",
+        image: null,
+        teams: [],
+      }],
+    },
   }),
 }));
 

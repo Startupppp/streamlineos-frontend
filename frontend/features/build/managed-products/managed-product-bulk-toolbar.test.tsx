@@ -3,6 +3,11 @@ import { ManagedProductBulkToolbar, MANAGED_PRODUCT_BULK_MAX } from "./managed-p
 
 const mockMutateBulk = jest.fn();
 const mockUseBulkUpdateManagedProducts = jest.fn();
+const mockUseCan = jest.fn();
+
+jest.mock("@/hooks/api/access", () => ({
+  useCan: (permission: string) => mockUseCan(permission),
+}));
 
 jest.mock("@/hooks/api/build/managed-products-schema", () => ({
   useBulkUpdateManagedProducts: () => mockUseBulkUpdateManagedProducts(),
@@ -85,6 +90,9 @@ jest.mock("@/components/ui/select", () => ({
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockUseCan.mockImplementation(
+    (permission: string) => permission === "build:managed-products:update",
+  );
   mockUseBulkUpdateManagedProducts.mockReturnValue({
     mutate: mockMutateBulk,
     isPending: false,
@@ -101,6 +109,14 @@ function renderToolbar(selectedIds = [1, 2, 3], onClearSelection = jest.fn()) {
 }
 
 describe("ManagedProductBulkToolbar — S1 bulk action bar (C3)", () => {
+  it("renders nothing without the exact update permission", () => {
+    mockUseCan.mockReturnValue(false);
+    const { container } = renderToolbar([1]);
+
+    expect(container).toBeEmptyDOMElement();
+    expect(screen.queryByRole("toolbar")).not.toBeInTheDocument();
+  });
+
   it("shows the count of selected products", () => {
     renderToolbar([1, 2, 3]);
     expect(screen.getByText(/3 selected/i)).toBeInTheDocument();

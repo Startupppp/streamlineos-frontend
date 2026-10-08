@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { toast } from "sonner";
@@ -8,7 +8,7 @@ import {
   useDeleteManagedProduct,
 } from "@/hooks/api/build/managed-products";
 import { useCan } from "@/hooks/api/access";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { useBuildMembers } from "@/hooks/api/build/build-members";
 import type {
   ManagedProduct,
   CreateManagedProductInput,
@@ -58,9 +58,8 @@ export function useManagedProductsPage() {
   const canDelete = useCan("build:managed-products:delete");
 
   const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
-  const { cursor, pageNumber, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
-    listFilters.resetKey,
-  );
+  const { cursor, pageNumber, hasPrevious, goNext, goPrevious } =
+    useBuildCursorPager(listFilters.resetKey);
 
   const {
     open: createOpen,
@@ -81,13 +80,16 @@ export function useManagedProductsPage() {
     search: listFilters.debouncedSearch.trim() || undefined,
     ownerId: ownerIdValue !== BUILD_FILTER_ALL ? ownerIdValue : undefined,
     sort:
-      sortValue && sortValue !== BUILD_FILTER_ALL &&
-      (sortValue === "name" || sortValue === "updated" || sortValue === "status")
+      sortValue &&
+      sortValue !== BUILD_FILTER_ALL &&
+      (sortValue === "name" ||
+        sortValue === "updated" ||
+        sortValue === "status")
         ? sortValue
         : undefined,
   });
 
-  const { data: membersRes } = useOrgMembers(1, 100);
+  const { data: membersRes } = useBuildMembers({ limit: 100 });
   const members = useMemo(() => membersRes?.data ?? [], [membersRes]);
 
   const createProduct = useCreateManagedProduct();
@@ -96,7 +98,7 @@ export function useManagedProductsPage() {
   const ownerOf = useCallback(
     (ownerId: string | null): NamedUser | null => {
       if (!ownerId) return null;
-      const match = members.find((member) => member.userId === ownerId);
+      const match = members.find((member) => member.id === ownerId);
       return match ? { name: match.name, email: match.email } : null;
     },
     [members],
@@ -106,6 +108,7 @@ export function useManagedProductsPage() {
 
   const handleCreate = useCallback(
     (input: CreateManagedProductInput) => {
+      if (!canCreate) return;
       createProduct.mutate(input, {
         onSuccess: () => {
           toast.success("Managed product created");
@@ -114,11 +117,11 @@ export function useManagedProductsPage() {
         onError: (e) => toast.error(getErrorMessage(e)),
       });
     },
-    [createProduct, setCreateOpen],
+    [canCreate, createProduct, setCreateOpen],
   );
 
   const handleDeleteConfirm = useCallback(() => {
-    if (!deleteTarget) return;
+    if (!canDelete || !deleteTarget) return;
     deleteProduct.mutate(deleteTarget.id, {
       onSuccess: () => {
         toast.success("Managed product deleted");
@@ -126,7 +129,7 @@ export function useManagedProductsPage() {
       },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
-  }, [deleteProduct, deleteTarget]);
+  }, [canDelete, deleteProduct, deleteTarget]);
 
   const handleStatusChange = useCallback(
     (value: string) => listFilters.setValue("status", value),
@@ -139,8 +142,8 @@ export function useManagedProductsPage() {
   );
 
   const handleOpenCreate = useCallback(() => {
-    openCreate();
-  }, [openCreate]);
+    if (canCreate) openCreate();
+  }, [canCreate, openCreate]);
 
   const handleSheetOpenChange = useCallback(
     (open: boolean) => {
@@ -177,9 +180,9 @@ export function useManagedProductsPage() {
   const handleEditFocused = useCallback(
     (index: number) => {
       const product = displayed[index];
-      if (product) setEditTarget(product);
+      if (canUpdate && product) setEditTarget(product);
     },
-    [displayed],
+    [canUpdate, displayed],
   );
 
   const selectedIds = useMemo(
@@ -190,7 +193,7 @@ export function useManagedProductsPage() {
   useBuildListKeyboard({
     itemCount: displayed.length,
     onOpen: handleOpenFocused,
-    onEdit: handleEditFocused,
+    onEdit: canUpdate ? handleEditFocused : undefined,
     onCreate: canCreate ? handleOpenCreate : undefined,
     onClearSelection: handleClearKeyboardSelection,
     searchInputRef,
@@ -198,35 +201,47 @@ export function useManagedProductsPage() {
   });
 
   const handleEditRow = useCallback(
-    (row: ManagedProduct) => setEditTarget(row),
-    [],
+    (row: ManagedProduct) => {
+      if (canUpdate) setEditTarget(row);
+    },
+    [canUpdate],
   );
   const handleDeleteRow = useCallback(
-    (row: ManagedProduct) => setDeleteTarget(row),
-    [],
+    (row: ManagedProduct) => {
+      if (canDelete) setDeleteTarget(row);
+    },
+    [canDelete],
   );
 
   const handleNextPage = useCallback(() => {
     goNext(data?.pagination.nextCursor);
   }, [data, goNext]);
 
-  const canManageRow = canUpdate || canDelete;
-
   const columns = useMemo(
     () =>
       buildManagedProductColumns({
-        canManage: canManageRow,
+        canUpdate,
+        canDelete,
         ownerOf,
         onEdit: handleEditRow,
         onDelete: handleDeleteRow,
       }),
-    [canManageRow, handleDeleteRow, handleEditRow, ownerOf],
+    [canDelete, canUpdate, handleDeleteRow, handleEditRow, ownerOf],
   );
+
+  useEffect(() => {
+    if (!canCreate) setCreateOpen(false);
+    if (!canUpdate) {
+      setEditTarget(null);
+      setSelected(new Set());
+    }
+    if (!canDelete) setDeleteTarget(null);
+  }, [canCreate, canDelete, canUpdate, setCreateOpen]);
 
   return {
     canCreate,
     canUpdate,
-    canManageRow,
+    canDelete,
     listFilters,
     pageNumber,
     hasPrevious,

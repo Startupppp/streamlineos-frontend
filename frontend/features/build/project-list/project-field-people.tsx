@@ -80,6 +80,7 @@ export const InlineProjectLead = memo(function InlineProjectLead({
   return (
     <InlineFieldWrapper>
       <MemberPicker
+        directory="build"
         value={currentManagerId}
         onChange={handleLeadChange}
         allowUnassigned
@@ -134,6 +135,7 @@ export const InlineProjectMembers = memo(function InlineProjectMembers({
   return (
     <InlineFieldWrapper>
       <MemberPicker
+        directory="build"
         mode="multi"
         values={currentIds}
         onToggle={handleToggle}
