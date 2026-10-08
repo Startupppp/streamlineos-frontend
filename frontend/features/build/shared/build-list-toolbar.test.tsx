@@ -301,11 +301,15 @@ describe("BuildListToolbar", () => {
       />,
     );
     const searchSlot = container.querySelector('[data-slot="search-input"]');
-    expect(searchSlot).toHaveClass("!min-w-0", "!w-9", "!basis-9");
+    expect(searchSlot).toHaveClass("!size-9", "!min-w-9", "!flex-none", "!basis-9");
+    const actions = container.querySelector('[data-slot="build-toolbar-actions"]');
+    expect(actions).toHaveClass("flex-1");
+    expect(container.querySelector('[data-filter-id="status"]')).toHaveClass("flex-1", "basis-0");
 
     fireEvent.focus(screen.getByLabelText("Search bugs"));
     await waitFor(() => {
-      expect(searchSlot).not.toHaveClass("!w-9", "!basis-9");
+      expect(searchSlot).not.toHaveClass("!size-9", "!basis-9");
+      expect(container.querySelector('[data-slot="build-toolbar-actions"]')).toBeNull();
     });
   });
 

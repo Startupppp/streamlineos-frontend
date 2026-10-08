@@ -63,3 +63,22 @@ it("still runs a caller's own onKeyDown", () => {
   expect(onKeyDown).toHaveBeenCalledTimes(1);
   expect(onSubmitSearch).toHaveBeenCalledTimes(1);
 });
+
+it("owns the complete icon-only box model in compact mode", () => {
+  const { input } = renderSearch({ value: "", compact: true });
+
+  expect(input.parentElement).toHaveClass(
+    "!size-9",
+    "!min-w-9",
+    "!max-w-9",
+    "!flex-none",
+    "overflow-hidden",
+  );
+  expect(input).toHaveClass(
+    "absolute",
+    "inset-0",
+    "!size-9",
+    "!p-0",
+    "text-transparent",
+  );
+});

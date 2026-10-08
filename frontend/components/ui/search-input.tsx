@@ -27,6 +27,8 @@ export interface SearchInputProps
   inputClassName?: string;
   /** Span the container instead of capping at the shared filter max-width. */
   fill?: boolean;
+  /** Render a square icon-only control until the caller expands it. */
+  compact?: boolean;
 }
 
 export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
@@ -41,6 +43,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
       placeholder = "Search…",
       disabled,
       fill = false,
+      compact = false,
       id,
       ...props
     },
@@ -71,10 +74,15 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
           SEARCH_INPUT_WIDTH,
           !fill && SEARCH_INPUT_MAX_WIDTH,
           className,
+          compact &&
+            "!size-9 !min-w-9 !max-w-9 !flex-none !basis-9 overflow-hidden",
         )}
       >
         <Search
-          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+          className={cn(
+            "pointer-events-none absolute top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground",
+            compact ? "left-1/2 -translate-x-1/2" : "left-3",
+          )}
           aria-hidden="true"
         />
         <Input
@@ -89,6 +97,8 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
           className={cn(
             "min-w-0 pl-9 pr-9 [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden",
             inputClassName,
+            compact &&
+              "absolute inset-0 !size-9 !min-w-9 !max-w-9 !p-0 text-transparent placeholder:text-transparent",
           )}
           {...props}
           // After the spread: a caller's own onKeyDown is chained inside

@@ -85,7 +85,7 @@ export function InboxFilterBar({
   return (
     <BuildListToolbar
       collapseActionsOnSearchFocus
-      className="shrink-0 flex-nowrap overflow-x-auto border-b border-border px-2 py-1.5 scrollbar-hide [&>[data-slot=search-input]]:min-w-36 [&>[data-slot=search-input]]:basis-36 [&>[data-slot=search-input]]:md:max-w-none [&>[data-slot=build-toolbar-actions]]:shrink-0"
+      className="shrink-0 flex-nowrap overflow-x-auto border-b border-border px-2 py-1.5 scrollbar-hide [&>[data-slot=search-input]]:md:max-w-none [&>[data-slot=build-toolbar-actions]]:shrink-0"
       search={{
         value: localQ,
         onValueChange: handleValueChange,

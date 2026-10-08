@@ -55,18 +55,21 @@ function ToolbarFilterSlot({
   collapsed,
   fieldIndex,
   fieldFilterCount,
+  searchCollapsed,
 }: {
   filter: BuildToolbarFilter;
   collapsed: boolean;
   fieldIndex: number | null;
   fieldFilterCount: number;
+  searchCollapsed: boolean;
 }) {
   return (
     <div
       data-slot="build-toolbar-filter"
       data-filter-id={filter.id}
       className={cn(
-        "min-w-0 w-auto shrink-0 basis-auto",
+        "min-w-0 w-auto shrink-0 basis-auto transition-[flex-basis,width] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]",
+        searchCollapsed && "flex-1 basis-0 [&_[data-slot=select-trigger]]:!w-full [&_[data-slot=select-trigger]]:!min-w-0 [&_[data-slot=select-trigger]]:!max-w-none",
         fieldIndex === null
           ? "max-md:min-w-0 max-md:shrink-0"
           : toolbarInlineVisibility(fieldIndex, collapsed, fieldFilterCount),
@@ -160,6 +163,7 @@ export function BuildListToolbar({
           collapsed={entry.collapsed}
           fieldIndex={entry.fieldIndex}
           fieldFilterCount={layout.fieldFilterCount}
+          searchCollapsed={searchCollapsed}
         />
       ))}
 
@@ -246,6 +250,7 @@ export function BuildListToolbar({
   return (
     <div
       data-slot="build-list-toolbar"
+      data-search-collapsed={searchCollapsed || undefined}
       className={cn(BUILD_TOOLBAR_ROOT_CLASS, layout.mobileColumns, className)}
     >
       {search && searchValue !== undefined && onSearchValueChange ? (
@@ -258,22 +263,23 @@ export function BuildListToolbar({
           aria-label={searchLabel ?? searchPlaceholder}
           onFocus={handleSearchFocus}
           onBlur={handleSearchBlur}
+          compact={searchCollapsed}
           inputClassName={searchInputClassName}
           className={cn(
-            "min-w-0 flex-1 basis-[12rem] md:max-w-md",
-            searchCollapsed && "!min-w-0 !w-9 !max-w-9 !basis-9",
+            "min-w-0 flex-1 basis-[12rem] md:max-w-md transition-[flex-basis,width,max-width] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]",
             searchExpanded && "max-md:max-w-none max-md:basis-auto",
           )}
         />
       ) : null}
 
-      <AnimatePresence initial={false}>
+      <AnimatePresence initial={false} mode="popLayout">
         {showActions ? (
           <motion.div
             key="build-toolbar-actions"
             data-slot="build-toolbar-actions"
             className={cn(
-              "flex shrink-0 flex-nowrap items-center gap-2",
+              "flex shrink-0 flex-nowrap items-center gap-2 transition-[flex-basis,width] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]",
+              searchCollapsed && "flex-1",
               fillMobileActions && "max-md:w-full max-md:justify-between",
             )}
             initial={actionInitial}
