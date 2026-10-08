@@ -12,6 +12,7 @@ const mockToastError = jest.fn();
 const mockRequest = jest.fn();
 let mockUseRealMutation = false;
 let mockMemberChange: (id: string | null) => void = () => undefined;
+const mockMemberPicker = jest.fn();
 
 jest.mock("@/hooks/api/build/project-members", () => ({
   useAddProjectMember: () => mockUseRealMutation
@@ -35,12 +36,17 @@ jest.mock("@/components/members/member-picker", () => ({
     placeholder,
     value,
     disabled,
+    directory,
+    moduleKey,
   }: {
     onChange: (id: string | null) => void;
     placeholder?: string;
     value?: string;
     disabled?: boolean;
+    directory?: string;
+    moduleKey?: string;
   }) => {
+    mockMemberPicker({ directory, moduleKey });
     mockMemberChange = onChange;
     return (
     <input
@@ -200,6 +206,14 @@ describe("actual project member draft recovery", () => {
 });
 
 describe("AddProjectMemberDialog — renders title specific to project (not workspace)", () => {
+  it("limits the picker to the existing Build actor directory", () => {
+    render(<AddProjectMemberDialog projectId={42} open onOpenChange={jest.fn()} />);
+    expect(mockMemberPicker).toHaveBeenCalledWith({
+      directory: "build",
+      moduleKey: "build",
+    });
+  });
+
   it("renders 'Add project member' so users cannot mistake this for the workspace-level dialog", () => {
     render(<AddProjectMemberDialog projectId={42} open onOpenChange={jest.fn()} />);
     expect(screen.getByText("Add project member")).toBeInTheDocument();

@@ -99,6 +99,7 @@ export function AddProjectMemberDialog({
       <>
         <MemberPicker
           mode="single"
+          directory="build"
           moduleKey="build"
           excludeAssigned={false}
           enabled={open}
