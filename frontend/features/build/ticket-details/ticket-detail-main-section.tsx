@@ -184,12 +184,14 @@ export function TicketDetailMainSection({
 
   return (
     <motion.div
-      className="mx-auto flex min-h-full w-full max-w-4xl min-w-0 flex-col gap-5 pb-6 max-md:pb-24"
+      className={`mx-auto flex min-h-full w-full min-w-0 flex-col gap-5 ${
+        isPreview ? "max-w-none pb-0" : "max-w-4xl pb-6"
+      }`}
       initial={isPreview || reduceMotion ? false : "hidden"}
       animate={isPreview || reduceMotion ? undefined : "visible"}
       variants={reduceMotion ? undefined : fadeIn}
     >
-      {canUpdate && editingTitle ? (
+      {canUpdate && editingTitle && !isPreview ? (
         <div className="flex justify-start">
           <Button
             type="button"

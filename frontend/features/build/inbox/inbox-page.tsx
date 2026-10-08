@@ -10,6 +10,8 @@ import {
   PM_FILL_SECTION,
 } from "@/components/pm-chrome";
 import { useInboxUrlState } from "./use-inbox-url-state";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { MoveLeftIcon } from "@animateicons/react/lucide";
 import type {
   Notification,
   NotificationSection,
@@ -37,8 +39,6 @@ import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { LoadingState } from "@/components/shared/loading-state";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { MoveLeftIcon } from "@animateicons/react/lucide";
 import {
   ResizableHandle,
   ResizablePanel,

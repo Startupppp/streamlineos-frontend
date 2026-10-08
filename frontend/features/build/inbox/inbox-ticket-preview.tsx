@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { PanelRightOpen } from "lucide-react";
+import { ArrowLeft, PanelRightOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PreviewSkeleton, PreviewError } from "./inbox-ticket-preview-states";
 import { isApiError, getApiErrorCode } from "@/lib/api-client";
@@ -189,6 +189,20 @@ export function InboxTicketPreview({
 
   return (
     <div className="relative flex h-full min-h-0 min-w-0 w-full flex-col overflow-hidden">
+      {onClose ? (
+        <div className="flex shrink-0 items-center border-b border-border px-2 py-1 lg:hidden">
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            onClick={onClose}
+            aria-label="Back to inbox"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      ) : null}
       {rightPanelCollapsed ? (
         <Button
           type="button"
@@ -204,7 +218,7 @@ export function InboxTicketPreview({
 
       <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden md:flex-row">
         {rightPanelCollapsed ? (
-        <div ref={mainScrollRef} className="flex min-h-0 min-w-0 flex-1 basis-0 overflow-y-auto bg-gradient-to-b from-card/80 to-background/40 px-4 pb-4 pt-10 scrollbar-hide max-md:pr-20 md:px-6 md:pb-5 md:pr-6">
+        <div ref={mainScrollRef} className="flex min-h-0 min-w-0 flex-1 basis-0 overflow-y-auto bg-gradient-to-b from-card/80 to-background/40 px-4 pb-0 pt-2 scrollbar-hide md:px-6 md:pr-6">
           <TicketDetailMainSection
             ticket={ticket}
             ticketId={resolvedTicketId}
