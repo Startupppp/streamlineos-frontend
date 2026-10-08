@@ -26,6 +26,7 @@ export interface TablePaginationOffsetProps extends TablePaginationChrome {
   onPageChange: (page: number) => void;
   showPageNumbers?: boolean;
   showEdgeJumps?: boolean;
+  compact?: never;
   rowCount?: never;
   pageNumber?: never;
   hasMore?: never;
@@ -44,7 +45,10 @@ interface TablePaginationCursorBase extends TablePaginationChrome {
   onNext: () => void;
   pageSize?: number;
   hideOnSinglePage?: boolean;
+  /** Hide the result summary when pagination is embedded in a compact list footer. */
+  showSummary?: boolean;
   showLabels?: boolean;
+  compact?: boolean;
   page?: never;
   total?: never;
   onPageChange?: never;
@@ -71,7 +75,7 @@ export type TablePaginationProps =
   | TablePaginationCursorProps;
 
 export const SHELL_CLASS =
-  "flex shrink-0 flex-row flex-nowrap items-center justify-between gap-2 border-t border-border/60 bg-card px-2 py-1.5 max-md:[.mobile-nav-active_&]:pr-16 max-md:[.mobile-nav-active_&]:pb-[max(3.25rem,calc(env(safe-area-inset-bottom)+2.5rem))]";
+  "grid min-h-14 w-full shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 border-t border-border/60 bg-card px-3 py-2 max-md:[.mobile-nav-active_&]:pr-16";
 
 export function getVisiblePageItems(
   totalPages: number,
@@ -104,40 +108,58 @@ export interface CursorPagerUrlOptions {
 }
 
 export function useCursorPager(resetKey?: string, urlOptions?: CursorPagerUrlOptions): CursorPager {
-  const [stack, setStack] = useState<(string | undefined)[]>(() => {
+  const [trail, setTrail] = useState<{
+    resetKey: string | undefined;
+    stack: (string | undefined)[];
+  }>(() => {
     const c = urlOptions?.initialCursor;
-    return c !== undefined ? [undefined, c] : [undefined];
+    return {
+      resetKey,
+      stack: c !== undefined ? [undefined, c] : [undefined],
+    };
   });
-  const [appliedKey, setAppliedKey] = useState(resetKey);
-
-  if (appliedKey !== resetKey) {
-    setAppliedKey(resetKey);
-    setStack([undefined]);
-  }
-
+  const stack = useMemo(
+    () => trail.resetKey === resetKey ? trail.stack : [undefined],
+    [trail, resetKey],
+  );
   const currentCursor = stack[stack.length - 1];
-  const onCursorChangeRef = useRef(urlOptions?.onCursorChange);
-  onCursorChangeRef.current = urlOptions?.onCursorChange;
   const emittedCursor = useRef(currentCursor);
+  const onCursorChange = urlOptions?.onCursorChange;
 
   useEffect(() => {
     if (emittedCursor.current === currentCursor) return;
     emittedCursor.current = currentCursor;
-    onCursorChangeRef.current?.(currentCursor);
-  }, [currentCursor]);
+    onCursorChange?.(currentCursor);
+  }, [currentCursor, onCursorChange]);
 
   const goNext = useCallback((nextCursor: string | null | undefined) => {
     if (!nextCursor) return;
-    setStack((prev) => [...prev, nextCursor]);
-  }, []);
+    setTrail((previous) => ({
+      resetKey,
+      stack: [
+        ...(previous.resetKey === resetKey ? previous.stack : [undefined]),
+        nextCursor,
+      ],
+    }));
+  }, [resetKey]);
 
   const goPrevious = useCallback(() => {
-    setStack((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev));
-  }, []);
+    setTrail((previous) => {
+      const previousStack = previous.resetKey === resetKey
+        ? previous.stack
+        : [undefined];
+      return {
+        resetKey,
+        stack: previousStack.length > 1
+          ? previousStack.slice(0, -1)
+          : previousStack,
+      };
+    });
+  }, [resetKey]);
 
   const reset = useCallback(() => {
-    setStack([undefined]);
-  }, []);
+    setTrail({ resetKey, stack: [undefined] });
+  }, [resetKey]);
 
   return useMemo(
     () => ({
@@ -172,7 +194,7 @@ export function PageSizeSelect({
       disabled={disabled}
     >
       <SelectTrigger
-        className="h-7 w-[4.75rem] px-2 text-xs"
+        className="h-8 w-[4.75rem] px-2 text-xs"
         aria-label="Rows per page"
       >
         <SelectValue />

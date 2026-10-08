@@ -43,6 +43,8 @@ interface TicketFilterActionsProps {
   hideCompleted?: boolean;
   onHideCompletedChange?: (checked: boolean) => void;
   doneCount: number;
+  iconOnly?: boolean;
+  desktopIconOnly?: boolean;
 }
 
 export function TicketFilterActions({
@@ -57,6 +59,8 @@ export function TicketFilterActions({
   hideCompleted,
   onHideCompletedChange,
   doneCount,
+  iconOnly = false,
+  desktopIconOnly = false,
 }: TicketFilterActionsProps) {
   const [filterMounted, setFilterMounted] = useState(false);
   const handleFilterOpen = useCallback(() => setFilterMounted(true), []);
@@ -118,6 +122,7 @@ export function TicketFilterActions({
     presentation,
     simplifySingleOptionCategories: true,
     triggerLabel: presentation === "all-work" ? "Filters" : "Add filter",
+    desktopIconOnly,
     statusItems,
     statusConfig,
     members,
@@ -142,21 +147,45 @@ export function TicketFilterActions({
     onHideCompletedChange?.(!hideCompleted);
   }
 
+  const filterTrigger = (
+    <FilterTriggerButton
+      activeFilterCount={activeFilterCount}
+      label={presentation === "all-work" ? "Filters" : "Add filter"}
+      showLabelOnMobile={presentation === "all-work"}
+      iconOnly={iconOnly}
+      desktopIconOnly={desktopIconOnly}
+      onClick={handleFilterOpen}
+      className={cn(
+        presentation === "all-work" &&
+          !iconOnly &&
+          (desktopIconOnly
+            ? "h-9 w-full flex-1 justify-center rounded-lg px-3 max-lg:!w-full max-lg:!flex-1 lg:size-9 lg:min-w-0 lg:flex-none lg:px-0"
+            : "h-9 w-full min-w-28 flex-1 rounded-lg border-border/80 bg-muted/45 px-3 font-medium shadow-sm hover:border-primary/35 hover:bg-muted/70"),
+      )}
+    />
+  );
+
   return (
     <>
       {filterMounted ? (
         <FilterCommandMenu {...filterMenuProps} defaultOpen />
       ) : (
-        <FilterTriggerButton
-          activeFilterCount={activeFilterCount}
-          label={presentation === "all-work" ? "Filters" : "Add filter"}
-          showLabelOnMobile={presentation === "all-work"}
-          onClick={handleFilterOpen}
-          className={cn(
-            presentation === "all-work" &&
-              "h-9 w-auto min-w-28 rounded-lg border-border/80 bg-muted/45 px-3 font-medium shadow-sm hover:border-primary/35 hover:bg-muted/70",
-          )}
-        />
+        iconOnly ? (
+          <TooltipProvider delayDuration={200}>
+            <Tooltip>
+              <TooltipTrigger asChild>{filterTrigger}</TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs">
+                {activeFilterCount > 0
+                  ? `Filters (${activeFilterCount} active)`
+                  : presentation === "all-work"
+                    ? "Filters"
+                    : "Add filter"}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ) : (
+          filterTrigger
+        )
       )}
 
       {showDoneToggle &&

@@ -33,6 +33,7 @@ export function FilterCommandMenu({
   presentation = "default",
   simplifySingleOptionCategories = true,
   triggerLabel = "Add filter",
+  desktopIconOnly = false,
   statusItems,
   statusConfig,
   members,
@@ -113,6 +114,7 @@ export function FilterCommandMenu({
         activeFilterCount={activeFilterCount}
         triggerLabel={triggerLabel}
         presentation={presentation}
+        desktopIconOnly={desktopIconOnly}
         showTypeFilter={showTypeFilter}
         showAssigneeFilter={showAssigneeFilter}
         open={open}
@@ -141,10 +143,14 @@ export function FilterCommandMenu({
             <PopoverTrigger asChild>
               <FilterTriggerButton
                 activeFilterCount={activeFilterCount}
-              label={triggerLabel}
+                label={triggerLabel}
+                showLabelOnMobile={presentation === "all-work"}
+                desktopIconOnly={desktopIconOnly}
                 className={cn(
                   presentation === "all-work" &&
-                    "h-9 w-auto min-w-28 rounded-lg border-border/80 bg-muted/45 px-3 font-medium shadow-sm hover:border-primary/35 hover:bg-muted/70",
+                    (desktopIconOnly
+                      ? "h-9 w-full flex-1 justify-center rounded-lg px-3 max-lg:!w-full max-lg:!flex-1 lg:size-9 lg:min-w-0 lg:flex-none lg:px-0"
+                      : "h-9 w-auto min-w-28 rounded-lg border-border/80 bg-muted/45 px-3 font-medium shadow-sm hover:border-primary/35 hover:bg-muted/70"),
                 )}
               />
             </PopoverTrigger>
@@ -163,7 +169,7 @@ export function FilterCommandMenu({
         className={cn(
           "w-auto max-w-[min(560px,var(--radix-popover-content-available-width))] overflow-hidden rounded-xl border border-border bg-card p-0 shadow-lg",
           presentation === "all-work" &&
-            "w-[min(40rem,calc(100vw-2rem))] max-w-[min(40rem,var(--radix-popover-content-available-width))] rounded-2xl border-border/80 shadow-xl",
+            "w-[min(36rem,calc(100vw-2rem))] max-w-[min(36rem,var(--radix-popover-content-available-width))] rounded-2xl border-border/80 shadow-xl",
         )}
       >
         {isSearching ? (

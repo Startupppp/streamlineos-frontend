@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useCallback } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
@@ -23,7 +23,7 @@ import type { UseMyWorkBulkReturn } from "./use-my-work-bulk";
 import { AllWorkListSkeleton, BucketSection, BUCKET_ORDER } from "./my-work-rows";
 import { MyWorkViewBody } from "./my-work-view-body-lazy";
 import { TablePagination } from "@/components/ui/table-pagination";
-import { useNavigationLeave } from "@/components/shared/dirty-state-context";
+import { useGuardedDocumentNavigation } from "@/hooks/common/use-guarded-document-navigation";
 import { StatusBadge } from "@/components/shared/ticket-status-badge";
 import { formatTicketKey } from "@/components/shared/format-ticket-key";
 import { PriorityBadge } from "@/features/build/shared/priority-badge";
@@ -82,8 +82,7 @@ export const MyWorkContent = memo(function MyWorkContent({
   orgStatuses,
   boardFilters,
 }: MyWorkContentProps) {
-  const router = useRouter();
-  const requestLeave = useNavigationLeave();
+  const navigate = useGuardedDocumentNavigation();
   const isOnline = useOnlineStatus();
   const searchParams = useSearchParams();
   const returnHref = buildMyWorkReturnHref(searchParams);
@@ -92,13 +91,9 @@ export const MyWorkContent = memo(function MyWorkContent({
     (id: number) => {
       const meta = ticketMeta.get(id);
       if (!meta) return;
-      requestLeave(() =>
-        router.push(
-          getMyWorkTicketHref(meta.projectId, meta.projectKey, meta.ticketNumber, returnHref),
-        ),
-      );
+      navigate(getMyWorkTicketHref(meta.projectId, meta.projectKey, meta.ticketNumber, returnHref));
     },
-    [ticketMeta, requestLeave, returnHref, router],
+    [ticketMeta, navigate, returnHref],
   );
 
   const handleRowClick = useCallback(
@@ -218,9 +213,12 @@ export const MyWorkContent = memo(function MyWorkContent({
                     type: t.type,
                     dueDate: t.dueDate,
                     assignee: t.assignee,
+                    assigneeId: t.assigneeId,
+                    version: t.version,
+                    labels: t.labels,
                   })) ?? [];
                 if (items.length === 0) return null;
-                return <BucketSection key={bucket} bucket={bucket} items={items} returnHref={returnHref} />;
+                return <BucketSection key={bucket} bucket={bucket} items={items} returnHref={returnHref} displayOptions={displayOptions} />;
               })}
             </div>
           </ScrollArea>
@@ -233,6 +231,8 @@ export const MyWorkContent = memo(function MyWorkContent({
             onPrevious={onPreviousPage}
             onNext={onNextPage}
             hideOnSinglePage
+            compact
+            showSummary={false}
           />
         </div>
       ) : (
@@ -254,6 +254,8 @@ export const MyWorkContent = memo(function MyWorkContent({
             onPrevious={onPreviousPage}
             onNext={onNextPage}
             hideOnSinglePage
+            compact
+            showSummary={false}
           /> : null}
         </div>
       )}

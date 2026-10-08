@@ -21,6 +21,22 @@ interface ResponsivePopoverContextValue {
 const ResponsivePopoverContext =
   React.createContext<ResponsivePopoverContextValue | null>(null);
 
+const BELOW_LG_QUERY = "(max-width: 1023px)";
+
+function subscribeBelowLg(onStoreChange: () => void) {
+  const query = window.matchMedia(BELOW_LG_QUERY);
+  query.addEventListener("change", onStoreChange);
+  return () => query.removeEventListener("change", onStoreChange);
+}
+
+function useIsBelowLgViewport() {
+  return React.useSyncExternalStore(
+    subscribeBelowLg,
+    () => window.matchMedia(BELOW_LG_QUERY).matches,
+    () => false,
+  );
+}
+
 function useResponsivePopoverContext(): ResponsivePopoverContextValue {
   const ctx = React.useContext(ResponsivePopoverContext);
   if (!ctx) {
@@ -37,6 +53,7 @@ interface ResponsivePopoverProps {
   defaultOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
   modal?: boolean;
+  collapseBelow?: "md" | "lg";
 }
 
 function ResponsivePopover({
@@ -45,8 +62,11 @@ function ResponsivePopover({
   defaultOpen,
   onOpenChange,
   modal,
+  collapseBelow = "md",
 }: ResponsivePopoverProps) {
-  const isMobile = useIsMobile();
+  const isMobileViewport = useIsMobile();
+  const isBelowLg = useIsBelowLgViewport();
+  const isMobile = collapseBelow === "lg" ? isBelowLg : isMobileViewport;
   const value = React.useMemo(() => ({ isMobile }), [isMobile]);
 
   if (isMobile) {

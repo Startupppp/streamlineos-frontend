@@ -12,6 +12,14 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     backendRoute: { method: "get", path: "/build" },
   },
   {
+    prefix: "/build/search",
+    exact: true,
+    product: "build",
+    permission: "build:view",
+    reason: "Build search reads the caller's accessible project list and applies narrower product and ticket gates inside the page.",
+    backendRoute: { method: "get", path: "/build" },
+  },
+  {
     prefix: "/billing/invoices",
     product: "finance",
     permission: "accounting:read",

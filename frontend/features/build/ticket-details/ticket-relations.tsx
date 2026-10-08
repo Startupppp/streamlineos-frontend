@@ -29,7 +29,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { RemoveRelationButton } from "./remove-relation-button";
 import { cn } from "@/lib/utils";
-import { SubtaskRow } from "./subtask-row";
+import { RelatedTicketCard } from "./related-ticket-card";
 import type { ProjectStatusRecord } from "@/types/projects";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -240,15 +240,14 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
                       if (!t) return null;
 
                       return (
-                        <SubtaskRow
+                        <RelatedTicketCard
                           key={r.id}
-                          subtask={{
+                          ticket={{
                             id: t.id,
                             title: t.title,
                             status: t.status ?? "TODO",
                             version: t.version,
                             priority: t.priority,
-                            points: t.points,
                             ticketNumber: t.ticketNumber,
                             assigneeId: t.assignee?.id ?? null,
                             projectId: t.projectId ?? projectId,
@@ -258,6 +257,7 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
                           projectId={projectId}
                           projectKey={projectKey}
                           projectStatuses={projectStatuses}
+                          canUpdate={canUpdate}
                           endAction={canUpdate ? (
                             <RemoveRelationButton onClick={() => handleRemoveRelation(t.id)} />
                           ) : undefined}

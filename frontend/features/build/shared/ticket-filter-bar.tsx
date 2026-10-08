@@ -1,6 +1,9 @@
 "use client";
 
 import { type ReactNode, type RefObject } from "react";
+import { SearchIcon } from "@animateicons/react/lucide";
+import { motion } from "framer-motion";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { SearchInput } from "@/components/ui/search-input";
 import { cn } from "@/lib/utils";
 import type { StatusOptionSource } from "@/features/build/shared/types";
@@ -29,6 +32,15 @@ interface TicketFilterBarProps {
   searchInputRef?: RefObject<HTMLInputElement | null>;
   presentation?: "default" | "all-work";
   hideChipsBelow?: "md" | "lg";
+  showSearch?: boolean;
+  showFilters?: boolean;
+  showChips?: boolean;
+  fillSearch?: boolean;
+  iconOnlyFilters?: boolean;
+  desktopIconOnlyFilters?: boolean;
+  collapsibleSearch?: boolean;
+  searchExpanded?: boolean;
+  onSearchExpandedChange?: (expanded: boolean) => void;
 }
 
 export function TicketFilterBar({
@@ -52,20 +64,33 @@ export function TicketFilterBar({
   searchInputRef,
   presentation = "default",
   hideChipsBelow,
+  showSearch = true,
+  showFilters = true,
+  showChips = true,
+  fillSearch = false,
+  iconOnlyFilters = false,
+  desktopIconOnlyFilters = false,
+  collapsibleSearch = false,
+  searchExpanded = true,
+  onSearchExpandedChange,
 }: TicketFilterBarProps) {
   const { localSearch, handleSearchChange } = useTicketFilterParams();
 
   const searchField = (
     <div
       className={cn(
-        "relative min-w-0",
-        mobileSearchFirst
-          ? MOBILE_SEARCH_FIRST_LAYOUT[mobileSearchFirstBreakpoint].searchField
-          : leading
-            ? "w-[min(100%,240px)] min-w-[10rem] flex-1 sm:w-[220px] sm:flex-none md:w-[240px]"
-            : align === "end"
-              ? "w-full max-w-[240px] min-w-[10rem] flex-1 sm:w-[220px] sm:flex-none md:w-[240px]"
-              : "w-full max-w-[240px] min-w-[10rem] flex-1 sm:max-w-[220px] md:max-w-[240px]",
+        fillSearch
+          ? "relative w-full min-w-0 flex-1"
+          : cn(
+              "relative min-w-0",
+              mobileSearchFirst
+                ? MOBILE_SEARCH_FIRST_LAYOUT[mobileSearchFirstBreakpoint].searchField
+                : leading
+                  ? "w-[min(100%,240px)] min-w-[10rem] flex-1 sm:w-[220px] sm:flex-none md:w-[240px]"
+                  : align === "end"
+                    ? "w-full max-w-[240px] min-w-[10rem] flex-1 sm:w-[220px] sm:flex-none md:w-[240px]"
+                    : "w-full max-w-[240px] min-w-[10rem] flex-1 sm:max-w-[220px] md:max-w-[240px]",
+            ),
       )}
     >
       <SearchInput
@@ -73,13 +98,55 @@ export function TicketFilterBar({
         placeholder="Search..."
         value={localSearch}
         onValueChange={handleSearchChange}
+        fill={fillSearch}
         className="[&_svg]:left-2 [&_svg]:h-3.5 [&_svg]:w-3.5"
         inputClassName="h-9 pl-7 pr-7"
+        onBlur={(event) => {
+          if (collapsibleSearch && !event.currentTarget.value.trim()) {
+            onSearchExpandedChange?.(false);
+          }
+        }}
       />
     </div>
   );
 
-  const actions = (
+  const searchControl = collapsibleSearch ? (
+    searchExpanded ? (
+      <motion.div
+        key="expanded-search"
+        initial={{ opacity: 0, width: 36 }}
+        animate={{ opacity: 1, width: "100%" }}
+        transition={{ duration: 0.18, ease: "easeOut" }}
+        className="min-w-0 flex-1"
+      >
+        {searchField}
+      </motion.div>
+    ) : (
+      <motion.div
+        key="collapsed-search"
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.16, ease: "easeOut" }}
+        className="shrink-0"
+      >
+        <AnimatedIconButton
+          type="button"
+          icon={SearchIcon}
+          iconSize={15}
+          variant="outline"
+          size="icon"
+          className="size-9"
+          aria-label="Expand search"
+          onClick={() => {
+            onSearchExpandedChange?.(true);
+            requestAnimationFrame(() => searchInputRef?.current?.focus());
+          }}
+        />
+      </motion.div>
+    )
+  ) : searchField;
+
+  const actions = showFilters ? (
     <TicketFilterActions
       presentation={presentation}
       statuses={statuses}
@@ -92,14 +159,28 @@ export function TicketFilterBar({
       hideCompleted={hideCompleted}
       onHideCompletedChange={onHideCompletedChange}
       doneCount={doneCount}
+      iconOnly={iconOnlyFilters}
+      desktopIconOnly={desktopIconOnlyFilters}
     />
-  );
+  ) : null;
 
-  const toolbar = mobileCompactToolbar ? (
+  const toolbar = !showSearch ? (
+    <div className="flex w-full min-w-0 items-center gap-2">
+      {actions}
+      {trailing}
+    </div>
+  ) : !showFilters ? (
+    <div className="flex w-full min-w-0 items-center gap-2">
+      <div className={cn("min-w-0 flex-1", fillSearch && "w-full")}>
+        {searchControl}
+      </div>
+      {trailing}
+    </div>
+  ) : mobileCompactToolbar ? (
     <div className="flex w-full min-w-0 flex-col gap-2 lg:flex-row lg:flex-nowrap lg:items-center lg:gap-1.5">
       <div className="flex w-full min-w-0 items-center gap-2 lg:contents">
         <div className="min-w-0 flex-1 lg:w-auto lg:flex-none">
-          {searchField}
+          {searchControl}
         </div>
         <div className="shrink-0 lg:order-2">{actions}</div>
       </div>
@@ -122,7 +203,7 @@ export function TicketFilterBar({
           MOBILE_SEARCH_FIRST_LAYOUT[mobileSearchFirstBreakpoint].searchSlot,
         )}
       >
-        {searchField}
+        {searchControl}
       </div>
       <div
         className={cn(
@@ -171,7 +252,7 @@ export function TicketFilterBar({
           leading ? "shrink-0" : "flex-1",
         )}
       >
-        {searchField}
+        {searchControl}
         {actions}
         {trailing}
       </div>
@@ -181,18 +262,20 @@ export function TicketFilterBar({
   return (
     <div className={cn("flex w-full min-w-0 flex-col gap-1.5", className)}>
       {toolbar}
-      <TicketFilterChips
-        members={members}
-        projectId={projectId}
-        projectOptions={projectOptions}
-        className={
-          hideChipsBelow === "lg"
-            ? "max-lg:hidden"
-            : hideChipsBelow === "md"
-              ? "max-md:hidden"
-              : undefined
-        }
-      />
+      {showChips ? (
+        <TicketFilterChips
+          members={members}
+          projectId={projectId}
+          projectOptions={projectOptions}
+          className={
+            hideChipsBelow === "lg"
+              ? "max-lg:hidden"
+              : hideChipsBelow === "md"
+                ? "max-md:hidden"
+                : undefined
+          }
+        />
+      ) : null}
     </div>
   );
 }

@@ -1,8 +1,16 @@
-import { CheckSquare, Inbox, LayoutList } from "lucide-react";
+import { CheckSquare, Inbox, LayoutList, Search } from "lucide-react";
 import { BUILD_ROOT_PATH } from "../build-scope";
 import type { BuildNavDestination } from "./build-nav-destination";
 
 export const BUILD_MY_WORK_DESTINATIONS: BuildNavDestination[] = [
+  {
+    id: "build-search",
+    label: "Search",
+    href: `${BUILD_ROOT_PATH}/search`,
+    icon: Search,
+    requiredPermission: "build:view",
+    mobilePriority: 50,
+  },
   {
     id: "my-work-inbox",
     label: "Inbox",

@@ -37,7 +37,7 @@ export function OffsetFooter({
 
   return (
     <nav aria-label="Pagination" className={cn(SHELL_CLASS, className)}>
-      <div className="flex min-w-0 flex-1 items-center gap-1.5">
+      <div className="min-w-0 flex items-center gap-1.5">
         <span className="min-w-0 truncate text-left text-xs text-muted-foreground tabular-nums">
           Showing {from}–{to} of {total}
         </span>
@@ -49,31 +49,31 @@ export function OffsetFooter({
         />
       </div>
 
-      <div className="flex shrink-0 flex-nowrap items-center justify-end gap-0.5">
+      <div className="col-start-2 flex shrink-0 flex-nowrap items-center justify-center gap-1">
         {showEdgeJumps ? (
           <Button
             type="button"
             variant="outline"
-            size="sm"
-            className="h-7 px-1.5"
+            size="icon"
+            className="size-8"
             disabled={disabled || currentPage <= 1}
             onClick={() => onPageChange(1)}
             aria-label="First page"
           >
-            <ChevronsLeft className="h-3.5 w-3.5" />
+            <ChevronsLeft className="h-3.5 w-3.5" aria-hidden="true" />
           </Button>
         ) : null}
 
         <Button
           type="button"
           variant="outline"
-          size="sm"
-          className="h-7 px-1.5"
+          size="icon"
+          className="size-8"
           disabled={disabled || currentPage <= 1}
           onClick={() => onPageChange(currentPage - 1)}
           aria-label="Previous page"
         >
-          <ChevronLeft className="h-3.5 w-3.5" />
+          <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
         </Button>
 
         {showPageNumbers ? (
@@ -92,8 +92,8 @@ export function OffsetFooter({
                   key={item}
                   type="button"
                   variant={item === currentPage ? "default" : "outline"}
-                  size="sm"
-                  className="h-7 min-w-7 px-1.5 tabular-nums"
+                  size="icon"
+                  className="size-8 tabular-nums"
                   disabled={disabled}
                   onClick={() => onPageChange(item)}
                   aria-label={`Page ${item}`}
@@ -104,35 +104,42 @@ export function OffsetFooter({
               ),
             )}
           </div>
-        ) : (
-          <span className="min-w-[3.5rem] text-center text-xs text-muted-foreground tabular-nums">
-            {currentPage} / {totalPages}
-          </span>
-        )}
+        ) : null}
 
         <Button
           type="button"
           variant="outline"
-          size="sm"
-          className="h-7 px-1.5"
+          size="icon"
+          className="size-8"
           disabled={disabled || currentPage >= totalPages}
           onClick={() => onPageChange(currentPage + 1)}
           aria-label="Next page"
         >
-          <ChevronRight className="h-3.5 w-3.5" />
+          <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
         </Button>
+
+        <span
+          className="inline-flex h-8 min-w-8 items-center justify-center rounded-md border border-border/70 bg-muted/50 px-2 text-xs font-medium tabular-nums text-foreground"
+          aria-label={`Current page ${currentPage} of ${totalPages}`}
+          aria-current="page"
+        >
+          {currentPage}
+        </span>
+        <span className="whitespace-nowrap text-xs text-muted-foreground">
+          of {totalPages} pages
+        </span>
 
         {showEdgeJumps ? (
           <Button
             type="button"
             variant="outline"
-            size="sm"
-            className="h-7 px-1.5"
+            size="icon"
+            className="size-8"
             disabled={disabled || currentPage >= totalPages}
             onClick={() => onPageChange(totalPages)}
             aria-label="Last page"
           >
-            <ChevronsRight className="h-3.5 w-3.5" />
+            <ChevronsRight className="h-3.5 w-3.5" aria-hidden="true" />
           </Button>
         ) : null}
       </div>

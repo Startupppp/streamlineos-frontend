@@ -45,6 +45,7 @@ const PROJECT_CASES: PermissionCase[] = [
 const ORG_CASES: PermissionCase[] = [
   ["/build/all-work", "build:tickets:view"],
   ["/build/managed-products", "build:managed-products:view"],
+  ["/build/search", "build:view"],
   ["/build/teams", "build:teams:view"],
   ["/portal", "build:portal:view"],
 ];
@@ -153,6 +154,7 @@ describe("Build route-access permission posture is pinned for every manifested p
     ["/build/programs/[programId]", "module:build + build:programs:view"],
     ["/build/projects", "module:build + build:view"],
     ["/build/roadmap", "module:build + build:roadmap:view"],
+    ["/build/search", "module:build + build:view"],
     ["/build/settings/access", "module:build + build:members:view,build:access:view"],
     ["/build/settings/client-access", "module:build + build:portal:view"],
     ["/build/settings/integrations", "module:build + integrations:git:view"],
@@ -161,7 +163,7 @@ describe("Build route-access permission posture is pinned for every manifested p
     ["/build/templates", "module:build + build:create"],
   ];
 
-  it("pins all 78 manifest routes so this table cannot drift out of step with the manifest", () => {
+  it("pins all 79 manifest routes so this table cannot drift out of step with the manifest", () => {
     expect(EXPECTED_ACCESS).toHaveLength(BUILD_ROUTE_MANIFEST.length);
     expect(EXPECTED_ACCESS.map(([route]) => route).sort()).toEqual(
       BUILD_ROUTE_MANIFEST.map((entry) => entry.route).sort(),

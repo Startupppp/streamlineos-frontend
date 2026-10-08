@@ -189,7 +189,7 @@ export function CommentDraftRow({ draft, href, onNavigate, onDelete, selected, s
         href && "hover:bg-primary/5",
       )}
     >
-      {onSelect ? <Checkbox checked={selected} disabled={selectionDisabled} onCheckedChange={handleSelect} aria-label={`Select draft for ${ticketKey}`} className="mt-1 shrink-0" /> : null}
+      {onSelect ? <Checkbox checked={selected} disabled={selectionDisabled} onCheckedChange={handleSelect} aria-label={`Select draft for ${ticketKey}`} className={cn("mt-1 shrink-0 transition-opacity duration-150 max-md:opacity-100 md:group-hover:opacity-100 md:group-focus-within:opacity-100", selected ? "opacity-100" : "opacity-0")} /> : null}
       {href ? (
         <Link
           href={href}

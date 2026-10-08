@@ -1,13 +1,11 @@
 "use client";
 
-import { type MouseEvent, type RefObject } from "react";
+import { type MouseEvent, type RefObject, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
-  TabsList,
-  TabsTrigger,
   TabsNavigation,
   TabsNavigationLink,
 } from "@/components/ui/tabs";
@@ -18,12 +16,7 @@ import {
   PmSection,
   PM_FILL_SECTION,
 } from "@/components/pm-chrome";
-import {
-  ViewSwitcher,
-  type ViewType,
-} from "@/features/build/views/view-switcher";
-import { Button } from "@/components/ui/button";
-import { PanelRight } from "lucide-react";
+import type { ViewType } from "@/features/build/views/view-switcher";
 import {
   Select,
   SelectContent,
@@ -36,9 +29,9 @@ import {
 import { cn } from "@/lib/utils";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 import { useAfterLoad } from "@/hooks/common/use-after-load";
-import { MY_WORK_VIEWS } from "./my-work-view";
-import { MyWorkSortControl } from "./my-work-sort-control";
+import { useIsBelowLg } from "@/hooks/common/use-mobile";
 import { parseWorkTab, TAB_CONFIG, type WorkTab } from "./my-work-data-model";
+import { MyWorkToolbarActions } from "./my-work-toolbar-actions";
 import type {
   DisplayOptions,
   StatusOptionSource,
@@ -52,13 +45,6 @@ const TicketFilterBar = dynamic(
   () =>
     import("@/features/build/shared/ticket-filter-bar").then((m) => ({
       default: m.TicketFilterBar,
-    })),
-  { ssr: false },
-);
-const DisplayOptionsPanel = dynamic(
-  () =>
-    import("@/features/build/views/display-options-panel").then((m) => ({
-      default: m.DisplayOptionsPanel,
     })),
   { ssr: false },
 );
@@ -183,23 +169,24 @@ export function MyWorkTicketsFilters({
   onToggleSidebar,
 }: MyWorkTicketsFiltersProps) {
   const filterBarReady = useAfterLoad();
-  const focusedTab = isFocusTab(activeTab) ? activeTab : "focus";
-
+  const isBelowLg = useIsBelowLg();
+  const [desktopSearchExpanded, setDesktopSearchExpanded] = useState(false);
   function handleFocusChange(value: string) {
     onTabChange(parseWorkTab(value));
   }
 
   return (
-    <div className="flex min-w-0 flex-col gap-2">
+    <div className="h-auto min-w-0 flex-none">
       <PageTabsToolbar
-        className="rounded-xl border border-border/80 bg-card/55 p-2 shadow-sm md:!flex-col md:!items-stretch 2xl:!flex-row 2xl:!items-center 2xl:!flex-nowrap"
-        searchClassName="md:basis-auto 2xl:basis-[14rem]"
+        tabsDensity="icons"
+        className="h-auto flex-col items-stretch lg:flex-row lg:flex-nowrap lg:items-center"
+        searchClassName="!min-w-0 !flex-none !basis-auto lg:!min-w-[12rem] lg:!flex-1 lg:!basis-0"
         tabs={
-          <>
+          <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_auto] gap-2 lg:flex lg:w-auto lg:flex-none lg:items-center">
             <Select value={activeTab} onValueChange={handleFocusChange}>
               <SelectTrigger
                 aria-label="Work scope"
-                className="h-10 w-full bg-muted/35 px-3 font-medium md:hidden"
+                className="h-9 w-full min-w-0 bg-muted/35 px-3 font-medium lg:w-40"
               >
                 <SelectValue />
               </SelectTrigger>
@@ -222,72 +209,48 @@ export function MyWorkTicketsFilters({
                 </SelectGroup>
               </SelectContent>
             </Select>
-            <div className="hidden min-w-0 items-center gap-1.5 md:flex">
-              <TabsList className="w-auto min-w-0 flex-1 md:flex-none">
-                {RELATION_TABS.map((tab) => (
-                  <TabsTrigger
-                    key={tab}
-                    value={tab}
-                    className="px-1.5 text-xs sm:px-3 sm:text-sm"
-                  >
-                    {TAB_CONFIG[tab].label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-              <Select value={focusedTab} onValueChange={handleFocusChange}>
-                <SelectTrigger
-                  aria-label="Focused work"
-                  className={cn(
-                    "h-9 w-[7.25rem] shrink-0 px-2 text-xs sm:w-[7.75rem] sm:text-sm",
-                    focusedTab !== "focus" &&
-                      "border-primary/40 bg-primary/[0.06] text-foreground",
-                  )}
-                >
-                  <SelectValue placeholder="Focus" />
-                </SelectTrigger>
-                <SelectContent align="end">
-                  <SelectGroup>
-                    <SelectLabel>Focused work</SelectLabel>
-                    <SelectItem value="focus" disabled>
-                      Focus
-                    </SelectItem>
-                    {FOCUS_TABS.map((tab) => (
-                      <SelectItem key={tab} value={tab}>
-                        {TAB_CONFIG[tab].label}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-          </>
+            {filterBarReady ? (
+              <TicketFilterBar
+                className="w-full flex-1 shrink-0 lg:w-auto lg:flex-none"
+                showSearch={false}
+                showChips={false}
+                iconOnlyFilters
+                desktopIconOnlyFilters
+                showAssigneeFilter={false}
+                statuses={orgStates}
+                presentation="all-work"
+              />
+            ) : (
+              <Skeleton className="size-9 shrink-0" />
+            )}
+            <MyWorkToolbarActions
+              activeView={activeView}
+              displayOptions={displayOptions}
+              showGroupingSidebar={showGroupingSidebar}
+              showViewSwitcher={showViewSwitcher}
+              sortDirection={sortDirection}
+              sortField={sortField}
+              onDisplayOptionsChange={onDisplayOptionsChange}
+              onSortChange={onSortChange}
+              onToggleSidebar={onToggleSidebar}
+              onViewChange={onViewChange}
+            />
+          </div>
         }
         search={
           filterBarReady ? (
             <TicketFilterBar
               className="w-full"
+              showFilters={false}
+              showChips={false}
+              fillSearch
+              collapsibleSearch={!isBelowLg}
+              searchExpanded={isBelowLg || desktopSearchExpanded}
+              onSearchExpandedChange={setDesktopSearchExpanded}
               showAssigneeFilter={false}
               statuses={orgStates}
               presentation="all-work"
               searchInputRef={searchInputRef}
-              mobileSearchFirst
-              mobileSearchFirstBreakpoint="lg"
-              mobileCompactToolbar
-              hideChipsBelow="lg"
-              trailing={
-                <MyWorkToolbarActions
-                  activeView={activeView}
-                  displayOptions={displayOptions}
-                  showGroupingSidebar={showGroupingSidebar}
-                  showViewSwitcher={showViewSwitcher}
-                  sortDirection={sortDirection}
-                  sortField={sortField}
-                  onDisplayOptionsChange={onDisplayOptionsChange}
-                  onSortChange={onSortChange}
-                  onToggleSidebar={onToggleSidebar}
-                  onViewChange={onViewChange}
-                />
-              }
             />
           ) : (
             <div
@@ -306,76 +269,6 @@ export function MyWorkTicketsFilters({
   );
 }
 
-interface MyWorkToolbarActionsProps {
-  activeView: ViewType;
-  displayOptions: DisplayOptions;
-  showGroupingSidebar: boolean;
-  showViewSwitcher: boolean;
-  sortDirection: BuildListSortDirection;
-  sortField: BuildListSortField;
-  onDisplayOptionsChange: (next: DisplayOptions) => void;
-  onSortChange: (
-    field: BuildListSortField,
-    direction: BuildListSortDirection,
-  ) => void;
-  onToggleSidebar: () => void;
-  onViewChange: (next: ViewType) => void;
-}
-
-function MyWorkToolbarActions({
-  activeView,
-  displayOptions,
-  showGroupingSidebar,
-  showViewSwitcher,
-  sortDirection,
-  sortField,
-  onDisplayOptionsChange,
-  onSortChange,
-  onToggleSidebar,
-  onViewChange,
-}: MyWorkToolbarActionsProps) {
-  return (
-    <div className="flex shrink-0 items-center gap-1">
-      <MyWorkSortControl
-        sortField={sortField}
-        sortDirection={sortDirection}
-        onSortChange={onSortChange}
-      />
-      {showViewSwitcher ? (
-        <>
-          <ViewSwitcher
-            activeView={activeView}
-            onViewChange={onViewChange}
-            allowedViews={MY_WORK_VIEWS}
-            iconOnly
-            className="shrink-0"
-          />
-          <DisplayOptionsPanel
-            viewType={activeView}
-            options={displayOptions}
-            onChange={onDisplayOptionsChange}
-          />
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className={cn(
-              "hidden size-9 shrink-0 md:inline-flex",
-              showGroupingSidebar &&
-                "border-foreground bg-foreground text-background",
-            )}
-            aria-label="Toggle grouping sidebar"
-            aria-pressed={showGroupingSidebar}
-            onClick={onToggleSidebar}
-          >
-            <PanelRight className="h-3.5 w-3.5" />
-          </Button>
-        </>
-      ) : null}
-    </div>
-  );
-}
-
 const RELATION_TABS = ["assigned", "created", "subscribed"] as const;
 const FOCUS_TABS = [
   "overdue",
@@ -387,9 +280,3 @@ const FOCUS_TABS = [
   "waiting",
   "done",
 ] as const satisfies readonly WorkTab[];
-
-type FocusTab = (typeof FOCUS_TABS)[number];
-
-function isFocusTab(tab: WorkTab): tab is FocusTab {
-  return tab !== "assigned" && tab !== "created" && tab !== "subscribed";
-}

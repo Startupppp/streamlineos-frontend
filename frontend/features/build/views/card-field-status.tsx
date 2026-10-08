@@ -20,6 +20,7 @@ import { buildStatusConfig } from "../shared/types";
 import { getStatusEntry } from "@/lib/status-config";
 import { Check } from "lucide-react";
 import { InlineFieldWrapper } from "./card-field-wrapper";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface InlineStatusProps {
   ticketId: number;
@@ -27,6 +28,7 @@ interface InlineStatusProps {
   version: number;
   currentStatus: string;
   projectStatuses?: Array<{ name: string; color: string | null; type?: string | null }>;
+  compact?: boolean;
 }
 
 export const InlineStatus = memo(function InlineStatus({
@@ -35,6 +37,7 @@ export const InlineStatus = memo(function InlineStatus({
   version,
   currentStatus,
   projectStatuses,
+  compact = false,
 }: InlineStatusProps) {
   const [open, setOpen] = useState(false);
   const updateTicket = useUpdateTicket(projectId, {
@@ -63,24 +66,28 @@ export const InlineStatus = memo(function InlineStatus({
 
   return (
     <InlineFieldWrapper>
+      <TooltipProvider delayDuration={200}>
+      <Tooltip>
       <ResponsivePopover open={open} onOpenChange={setOpen}>
+        <TooltipTrigger asChild>
         <ResponsivePopoverTrigger asChild>
           <button
             type="button"
             className="inline-flex items-center gap-1 rounded px-1 py-0.5 hover:bg-muted/60 transition-colors disabled:pointer-events-none disabled:opacity-50"
-            aria-label="Change status"
+            aria-label={compact ? `Change status: ${currentEntry.label}` : "Change status"}
             disabled={updateTicket.isPending}
             aria-busy={updateTicket.isPending || undefined}
           >
             <StatusConfigDot
               entry={currentEntry}
-              className="h-1.5 w-1.5 rounded-full shrink-0"
+              className={compact ? "h-3 w-3 rounded-full shrink-0" : "h-1.5 w-1.5 rounded-full shrink-0"}
             />
-            <span className="text-micro text-muted-foreground">
+            {!compact ? <span className="text-micro text-muted-foreground">
               {currentEntry.label}
-            </span>
+            </span> : null}
           </button>
         </ResponsivePopoverTrigger>
+        </TooltipTrigger>
         <ResponsivePopoverContent
           title="Status"
           className={cn("p-1", INLINE_POPOVER_MIN_CLASS, "min-w-44")}
@@ -108,6 +115,9 @@ export const InlineStatus = memo(function InlineStatus({
           })}
         </ResponsivePopoverContent>
       </ResponsivePopover>
+      <TooltipContent>{currentEntry.label}</TooltipContent>
+      </Tooltip>
+      </TooltipProvider>
     </InlineFieldWrapper>
   );
 });

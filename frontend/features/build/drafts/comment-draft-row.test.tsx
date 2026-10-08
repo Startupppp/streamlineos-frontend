@@ -27,6 +27,18 @@ const draft: CommentDraftListItem = {
 const href = "/build/2/tickets/BLD-81?returnTo=%2Fbuild%2Fmy-work%3Fsection%3Ddrafts";
 
 describe("CommentDraftRow", () => {
+  it("reveals an unselected checkbox on hover or keyboard focus and keeps selected rows visible", () => {
+    const props = { draft, href, onNavigate: jest.fn(), onSelect: jest.fn() };
+    const view = render(<CommentDraftRow {...props} selected={false} />);
+    const checkbox = screen.getByRole("checkbox", { name: "Select draft for BLD-81" });
+    expect(checkbox).toHaveClass("opacity-0", "md:group-hover:opacity-100", "md:group-focus-within:opacity-100", "max-md:opacity-100");
+    fireEvent.click(checkbox);
+    expect(props.onSelect).toHaveBeenCalledWith(3, true);
+    expect(props.onNavigate).not.toHaveBeenCalled();
+    view.rerender(<CommentDraftRow {...props} selected />);
+    expect(checkbox).toHaveClass("opacity-100");
+    expect(checkbox).not.toHaveClass("opacity-0");
+  });
   it("renders a native ticket link and leaves modifier navigation to the browser", () => {
     const onNavigate = jest.fn();
     render(<CommentDraftRow draft={draft} href={href} onNavigate={onNavigate} onDelete={jest.fn()} />);

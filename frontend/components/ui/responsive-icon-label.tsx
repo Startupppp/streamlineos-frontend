@@ -21,18 +21,23 @@ export const RESPONSIVE_ICON_LABEL_TEXT_CLASS = "hidden md:inline";
 interface MobileOnlyLabelTooltipProps {
   label: string;
   children: ReactElement;
+  always?: boolean;
 }
 
-/** Tooltip naming the control on mobile only; desktop keeps the visible label. */
+/** Tooltip naming the control when its text label is hidden or icon-only. */
 export function MobileOnlyLabelTooltip({
   label,
   children,
+  always = false,
 }: MobileOnlyLabelTooltipProps) {
   return (
     <TooltipProvider delayDuration={200}>
       <Tooltip>
         <TooltipTrigger asChild>{children}</TooltipTrigger>
-        <TooltipContent side="bottom" className="text-xs md:hidden">
+        <TooltipContent
+          side="bottom"
+          className={cn("text-xs", !always && "md:hidden")}
+        >
           {label}
         </TooltipContent>
       </Tooltip>

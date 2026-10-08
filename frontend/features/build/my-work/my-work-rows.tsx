@@ -1,8 +1,7 @@
 "use client";
 
-import { memo, useDeferredValue, type ComponentType } from "react";
+import { memo, useCallback, useMemo, useDeferredValue, type ComponentType } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -22,10 +21,13 @@ import { StatusBadge } from "@/components/shared/ticket-status-badge";
 import { PmPanel, PM_ROW } from "@/components/pm-chrome";
 import { FLEX_TITLE_SLOT, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { getMyWorkTicketHref } from "@/features/build/ticket-details/build-ticket-detail-url";
-import { useNavigationLeave } from "@/components/shared/dirty-state-context";
+import { useGuardedDocumentNavigation } from "@/hooks/common/use-guarded-document-navigation";
 import { formatTicketKey } from "@/components/shared/format-ticket-key";
 import { formatCalendarDate } from "@/lib/date-utils";
 import { getUserDisplayName } from "@/lib/person-display";
+import { WorkIndexTicketRow } from "../views/work-index-ticket-row";
+import type { Ticket } from "../views/list-view-shared";
+import type { DisplayOptions } from "../shared/types";
 
 export type DueBucket = "overdue" | "today" | "upcoming" | "none";
 
@@ -41,6 +43,10 @@ interface WorkRowShape {
   type: string;
   dueDate: string | null;
   assignee?: MyWorkItem["assignee"];
+  assigneeId?: MyWorkItem["assigneeId"];
+  version?: number;
+  moduleId?: number | null;
+  labels?: MyWorkItem["labels"];
 }
 
 export const BUCKET_ORDER: DueBucket[] = [
@@ -84,6 +90,7 @@ export const WorkItemRow = memo(function WorkItemRow({
   isBlocked,
   isOverdue,
   density = "comfortable",
+  displayOptions,
   onDelete,
 }: {
   item: WorkRowShape;
@@ -92,10 +99,18 @@ export const WorkItemRow = memo(function WorkItemRow({
   isBlocked?: boolean;
   isOverdue?: boolean;
   density?: "compact" | "comfortable";
+  displayOptions?: DisplayOptions;
   onDelete?: () => void;
 }) {
-  const router = useRouter();
-  const requestLeave = useNavigationLeave();
+  const navigate = useGuardedDocumentNavigation();
+  const href = item.projectId === null ? "" : item.ticketNumber != null
+    ? getMyWorkTicketHref(item.projectId, item.projectKey, item.ticketNumber, returnHref)
+    : `/build/${item.projectId}`;
+  const handleOpen = useCallback(() => navigate(href), [navigate, href]);
+  const ticket = useMemo<Ticket>(() => ({ ...item, version: item.version ?? 0,
+    labels: item.labels?.map((label) => ({ label })),
+    project: item.projectId === null ? null : { id: item.projectId, key: item.projectKey, name: item.projectName },
+  }), [item]);
 
   if (item.projectId === null) {
     function handleDeleteClick() {
@@ -131,21 +146,11 @@ export const WorkItemRow = memo(function WorkItemRow({
     );
   }
 
-  const href =
-    item.ticketNumber != null
-      ? getMyWorkTicketHref(
-          item.projectId,
-          item.projectKey,
-          item.ticketNumber,
-          returnHref,
-        )
-      : `/build/${item.projectId}`;
-
   function handlePrimaryClick(e: React.MouseEvent<HTMLAnchorElement>) {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0)
       return;
     e.preventDefault();
-    requestLeave(() => router.push(href, { scroll: false }));
+    navigate(href);
   }
 
   return (
@@ -158,6 +163,7 @@ export const WorkItemRow = memo(function WorkItemRow({
       data-blocked={isBlocked ? true : undefined}
       data-overdue={isOverdue ? true : undefined}
     >
+      {item.version != null ? <WorkIndexTicketRow ticket={ticket} href={href} onClick={handleOpen} displayOptions={displayOptions} /> :
       <Link
         href={href}
         onClick={handlePrimaryClick}
@@ -210,6 +216,7 @@ export const WorkItemRow = memo(function WorkItemRow({
           <ChevronRight className="h-3 w-3 -translate-x-1 text-muted-foreground opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100" />
         </div>
       </Link>
+      }
     </div>
   );
 });
@@ -218,10 +225,12 @@ export const BucketSection = memo(function BucketSection({
   bucket,
   items,
   returnHref = "/build/my-work",
+  displayOptions,
 }: {
   bucket: DueBucket;
   items: MyWorkItem[];
   returnHref?: string;
+  displayOptions?: DisplayOptions;
 }) {
   const cfg = BUCKET_CONFIG[bucket];
   const deferredItems = useDeferredValue(items);
@@ -239,7 +248,7 @@ export const BucketSection = memo(function BucketSection({
       </div>
       <div>
         {deferredItems.map((item) => (
-          <WorkItemRow key={item.id} item={item} returnHref={returnHref} />
+          <WorkItemRow key={item.id} item={item} returnHref={returnHref} displayOptions={displayOptions} />
         ))}
       </div>
     </PmPanel>

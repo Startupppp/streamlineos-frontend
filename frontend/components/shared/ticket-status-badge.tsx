@@ -82,6 +82,7 @@ export const StatusBadge = memo(function StatusBadge({
     const label =
       custom?.name ?? STATUS_LABEL[status] ?? status.replace(/_/g, " ");
     const key = status.toUpperCase();
+    const iconTone = key.includes("REVIEW") ? "text-status-warning-ink" : key.includes("PROGRESS") ? "text-status-info-ink" : key.includes("DONE") || key.includes("COMPLETE") ? "text-status-success-ink" : key.includes("CANCEL") ? "text-status-danger-ink" : "text-muted-foreground";
     const Icon = key.includes("REVIEW")
       ? GitPullRequest
       : key.includes("PROGRESS")
@@ -100,9 +101,10 @@ export const StatusBadge = memo(function StatusBadge({
               role="img"
               aria-label={`Status: ${label}`}
               className={cn(
-                "inline-flex shrink-0 text-muted-foreground",
+                "inline-flex shrink-0", iconTone,
                 className,
               )}
+              style={custom ? { color: resolveColumnColor(custom.color) } : undefined}
             >
               <Icon aria-hidden="true" className="h-4 w-4" />
             </span>

@@ -110,7 +110,6 @@ describe("bounded cursor pagination", () => {
   it("confirms deletion of the selected count rather than all drafts", () => {
     useMyCommentDrafts.mockReturnValue(makeResult([makeDraft(1), makeDraft(2), makeDraft(3)]));
     render(<InboxDraftsPanel />);
-    fireEvent.click(screen.getByRole("button", { name: "Enter selection" }));
     fireEvent.click(screen.getByRole("checkbox", { name: "Select draft for BLD-1" }));
     fireEvent.click(screen.getByRole("checkbox", { name: "Select draft for BLD-2" }));
     fireEvent.click(screen.getByRole("button", { name: "Delete selected drafts (2)" }));
@@ -122,7 +121,9 @@ describe("bounded cursor pagination", () => {
     render(<InboxDraftsPanel />);
     expect(screen.getByRole("button", { name: "Next page" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Previous page" })).toBeDisabled();
-    expect(screen.getByText("Page 1")).toBeInTheDocument();
+    expect(screen.getByLabelText("Current page 1")).toHaveTextContent(/^1$/);
+    expect(screen.getByRole("button", { name: "Next page" }).textContent).toBe("");
+    expect(screen.getByRole("button", { name: "Previous page" }).textContent).toBe("");
     expect(screen.queryByText(/of \d+/)).not.toBeInTheDocument();
   });
   it("writes the next cursor into the URL and preserves ticket filters", () => {
@@ -143,7 +144,7 @@ describe("bounded cursor pagination", () => {
   it("reloads the URL cursor, resets selection on page change, and can return to an empty prior page", () => {
     useMyCommentDrafts.mockReturnValue(makeResult([makeDraft(1), makeDraft(2)]));
     const view = render(<InboxDraftsPanel />);
-    fireEvent.click(screen.getByRole("button", { name: "Enter selection" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "Select draft for BLD-1" }));
     fireEvent.click(screen.getByRole("checkbox", { name: "Select drafts on this page" }));
     expect(screen.getByRole("button", { name: "Delete selected drafts (2)" })).toBeInTheDocument();
     mockSearchParams = new URLSearchParams({ section: "drafts", draftCursors: '["next"]' });
@@ -157,33 +158,62 @@ describe("bounded cursor pagination", () => {
 });
 
 describe("draft composition, selection and navigation", () => {
-  it("shows only a compact selection entry control by default with no inner heading", () => {
+  it("reveals the bulk toolbar only after selecting a draft, with no standalone selection entry", () => {
+    useMyCommentDrafts.mockReturnValue(makeResult([makeDraft(1), makeDraft(2)]));
+    render(<InboxDraftsPanel />);
+    expect(screen.queryByRole("button", { name: "Enter selection" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("checkbox", { name: "Select drafts on this page" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("checkbox", { name: "Select draft for BLD-1" }));
+    expect(screen.getByRole("checkbox", { name: "Select drafts on this page" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Resume selected draft" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Delete selected draft (1)" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("checkbox", { name: "Select drafts on this page" }));
+    expect(screen.getByRole("button", { name: "Delete selected drafts (2)" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("checkbox", { name: "Select drafts on this page" }));
+    expect(screen.queryByRole("checkbox", { name: "Select drafts on this page" })).not.toBeInTheDocument();
+  });
+  it("has no inner heading and clears selected row state with the page checkbox", () => {
     useMyCommentDrafts.mockReturnValue(makeResult([makeDraft(1), makeDraft(2)]));
     render(<InboxDraftsPanel />);
     expect(screen.queryByText("Comment drafts")).not.toBeInTheDocument();
     expect(screen.queryByText("Resume a saved comment where you left off.")).not.toBeInTheDocument();
-    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Enter selection" }));
+    expect(screen.getAllByRole("checkbox")).toHaveLength(2);
+    fireEvent.click(screen.getByRole("checkbox", { name: "Select draft for BLD-1" }));
     expect(screen.getByRole("checkbox", { name: "Select drafts on this page" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("checkbox", { name: "Select drafts on this page" }));
-    fireEvent.click(screen.getByRole("button", { name: "Done" }));
-    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("checkbox", { name: "Select drafts on this page" }));
+    expect(screen.queryByRole("checkbox", { name: "Select drafts on this page" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Delete selected drafts/ })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Enter selection" }));
-    expect(screen.getByRole("checkbox", { name: "Select drafts on this page" })).not.toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "Select draft for BLD-1" })).not.toBeChecked();
   });
-  it("shows bulk delete only after multiple drafts are selected", () => {
+  it("offers resume and delete actions for one selected draft", () => {
     useMyCommentDrafts.mockReturnValue(makeResult([makeDraft(1), makeDraft(2)]));
     render(<InboxDraftsPanel />);
     expect(screen.queryByRole("button", { name: "Clear all drafts" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Delete selected drafts/ })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Enter selection" }));
     fireEvent.click(screen.getByRole("checkbox", { name: "Select draft for BLD-1" }));
-    expect(screen.queryByRole("button", { name: /Delete selected drafts/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Resume selected draft" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Delete selected draft (1)" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("checkbox", { name: "Select draft for BLD-2" }));
     expect(screen.getByRole("button", { name: "Delete selected drafts (2)" })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Clear selection" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "Select drafts on this page" }));
     expect(screen.queryByRole("button", { name: /Delete selected drafts/ })).not.toBeInTheDocument();
+  });
+  it("resumes a selected draft through the leave guard", () => {
+    useMyCommentDrafts.mockReturnValue(makeResult([makeDraft(1)]));
+    let pendingNavigation: (() => void) | undefined;
+    requestLeave.mockImplementation((action: () => void) => {
+      pendingNavigation = action;
+    });
+    render(<InboxDraftsPanel />);
+    fireEvent.click(screen.getByRole("checkbox", { name: "Select draft for BLD-1" }));
+    fireEvent.click(screen.getByRole("button", { name: "Resume selected draft" }));
+    expect(requestLeave).toHaveBeenCalledTimes(1);
+    expect(assign).not.toHaveBeenCalled();
+    pendingNavigation?.();
+    expect(assign).toHaveBeenCalledWith(
+      "/build/1/tickets/1?returnTo=%2Fbuild%2Fmy-work%3Fsection%3Ddrafts&draft=resume",
+    );
   });
   it("opens the numeric ticket route with explicit saved-draft intent", () => {
     useMyCommentDrafts.mockReturnValue(makeResult([makeDraft(1)]));
@@ -193,7 +223,6 @@ describe("draft composition, selection and navigation", () => {
   it("reuses draft rows with selectable identities", () => {
     useMyCommentDrafts.mockReturnValue(makeResult([makeDraft(1)]));
     render(<InboxDraftsPanel />);
-    fireEvent.click(screen.getByRole("button", { name: "Enter selection" }));
     expect(screen.getByRole("checkbox", { name: "Select draft for BLD-1" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Delete draft for BLD-1" })).not.toBeInTheDocument();
   });
@@ -230,7 +259,6 @@ describe("draft composition, selection and navigation", () => {
   it("deletes only selected drafts, leaving unselected drafts untouched", async () => {
     useMyCommentDrafts.mockReturnValue(makeResult([makeDraft(1), makeDraft(2), makeDraft(3)]));
     render(<InboxDraftsPanel />);
-    fireEvent.click(screen.getByRole("button", { name: "Enter selection" }));
     fireEvent.click(screen.getByRole("checkbox", { name: "Select draft for BLD-1" }));
     fireEvent.click(screen.getByRole("checkbox", { name: "Select draft for BLD-2" }));
     fireEvent.click(screen.getByRole("button", { name: "Delete selected drafts (2)" }));

@@ -71,6 +71,95 @@ describe("ticket filter bar", () => {
     expect(screen.queryByRole("button", { name: /add filter/i })).not.toBeInTheDocument();
   });
 
+  it("supports an icon-only filter row without rendering its own search or chips", () => {
+    mockSearchParams = new URLSearchParams("status=OPEN");
+    window.history.replaceState({}, "", "/build/tickets?status=OPEN");
+    render(
+      <TicketFilterBar
+        statuses={[{ name: "OPEN" }, { name: "DONE" }]}
+        presentation="all-work"
+        showSearch={false}
+        showChips={false}
+        iconOnlyFilters
+      />,
+    );
+
+    const filters = screen.getByRole("button", { name: "Filters (1 active)" });
+    expect(filters).toHaveClass("size-9", "p-0");
+    expect(filters).not.toHaveTextContent("Filters");
+    expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/remove .* filter/i)).not.toBeInTheDocument();
+  });
+
+  it("keeps the All Work filter trigger labeled on smaller screens and compact at desktop", () => {
+    render(
+      <TicketFilterBar
+        presentation="all-work"
+        showSearch={false}
+        showChips={false}
+        desktopIconOnlyFilters
+      />,
+    );
+
+    const filters = screen.getByRole("button", { name: "Filters" });
+    expect(filters).toHaveClass("max-lg:!w-full", "lg:size-9", "lg:p-0");
+    expect(screen.getByText("Filters")).toHaveClass("lg:hidden");
+  });
+
+  it("collapses an empty expandable search after blur", () => {
+    const onSearchExpandedChange = jest.fn();
+    render(
+      <TicketFilterBar
+        showFilters={false}
+        showChips={false}
+        fillSearch
+        collapsibleSearch
+        searchExpanded
+        onSearchExpandedChange={onSearchExpandedChange}
+      />,
+    );
+
+    fireEvent.blur(screen.getByRole("searchbox"));
+
+    expect(onSearchExpandedChange).toHaveBeenCalledWith(false);
+  });
+
+  it("keeps an expandable search open after blur when it has a query", () => {
+    const onSearchExpandedChange = jest.fn();
+    render(
+      <TicketFilterBar
+        showFilters={false}
+        showChips={false}
+        fillSearch
+        collapsibleSearch
+        searchExpanded
+        onSearchExpandedChange={onSearchExpandedChange}
+      />,
+    );
+
+    const search = screen.getByRole("searchbox");
+    fireEvent.change(search, { target: { value: "onboarding" } });
+    fireEvent.blur(search);
+
+    expect(onSearchExpandedChange).not.toHaveBeenCalledWith(false);
+  });
+
+  it("supports a growing search row with only its responsive options action", () => {
+    const { container } = render(
+      <TicketFilterBar
+        showFilters={false}
+        showChips={false}
+        fillSearch
+        trailing={<button type="button" aria-label="More options" />}
+      />,
+    );
+
+    expect(screen.getByRole("searchbox")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "More options" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /filters|add filter/i })).not.toBeInTheDocument();
+    expect(container.querySelector('[data-slot="search-input"]')).toHaveClass("w-full");
+  });
+
   it("separates My Work search and keeps all mobile actions on one scrollable row", () => {
     mockSearchParams = new URLSearchParams("status=OPEN");
     window.history.replaceState({}, "", "/build/tickets?status=OPEN");

@@ -14,6 +14,7 @@ export interface FilterCommandMenuProps {
   presentation?: "default" | "all-work";
   simplifySingleOptionCategories?: boolean;
   triggerLabel?: string;
+  desktopIconOnly?: boolean;
   statusItems: StatusFilterOption[];
   statusConfig: Record<string, StatusConfigEntry>;
   members: Member[];

@@ -23,6 +23,7 @@ import {
 } from "./my-work-page-test-harness";
 
 const mockRequestLeave = jest.fn((action: () => void) => action());
+const mockUseAfterLoad = jest.fn((): boolean => false);
 const mockUseBuildListKeyboard = jest.fn(
   (_options: UseBuildListKeyboardOptions): UseBuildListKeyboardReturn => ({
     focusedIndex: null,
@@ -70,11 +71,16 @@ jest.mock("@/hooks/api/build/custom-states", () => ({
 }));
 
 jest.mock("@/hooks/common/use-after-load", () => ({
-  useAfterLoad: () => false,
+  useAfterLoad: () => mockUseAfterLoad(),
 }));
 
 jest.mock("@/hooks/common/use-online-status", () => ({
   useOnlineStatus: jest.fn(() => true),
+}));
+
+jest.mock("@/hooks/common/use-mobile", () => ({
+  useIsMobile: () => false,
+  useIsBelowLg: () => false,
 }));
 
 jest.mock("@/features/build/views/use-display-options", () => ({
@@ -82,15 +88,21 @@ jest.mock("@/features/build/views/use-display-options", () => ({
 }));
 
 jest.mock("@/features/build/shared/ticket-filter-bar", () => ({
-  TicketFilterBar: () => <div data-testid="filter-bar" />,
-}));
-
-jest.mock("@/features/build/views/view-switcher", () => ({
-  ViewSwitcher: () => <div data-testid="view-switcher" />,
-}));
-
-jest.mock("@/features/build/views/display-options-panel", () => ({
-  DisplayOptionsPanel: () => null,
+  TicketFilterBar: ({
+    showSearch = true,
+    showFilters = true,
+    trailing,
+  }: {
+    showSearch?: boolean;
+    showFilters?: boolean;
+    trailing?: ReactNode;
+  }) => (
+    <div data-testid={showSearch ? "search-filter-bar" : "filter-only-bar"}>
+      {showFilters ? <button type="button" aria-label="Filters" /> : null}
+      {showSearch ? <input type="search" aria-label="Search tickets" /> : null}
+      {trailing}
+    </div>
+  ),
 }));
 
 jest.mock("@/features/build/inbox/inbox-drafts-panel", () => ({
@@ -99,10 +111,6 @@ jest.mock("@/features/build/inbox/inbox-drafts-panel", () => ({
 
 jest.mock("./grouping-sidebar", () => ({
   GroupingSidebar: () => null,
-}));
-
-jest.mock("./my-work-sort-control", () => ({
-  MyWorkSortControl: () => <div data-testid="sort-control" />,
 }));
 
 jest.mock("./my-work-content", () => ({
@@ -173,6 +181,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockRequestLeave.mockImplementation((action: () => void) => action());
   mockUseAccess.mockReturnValue(accessGranted);
+  mockUseAfterLoad.mockReturnValue(false);
   mockSearchParamsContainer.current = new URLSearchParams();
   mockUseAllWork.mockReturnValue(defaultAllWork());
 });
@@ -264,21 +273,6 @@ describe("MyWorkPage — sections", () => {
     expect(mockPush).toHaveBeenCalledWith(
       "/build/42/tickets/ENG-1?returnTo=%2Fbuild%2Fmy-work%3Fq%3Drelease%26relation%3Dcreated",
     );
-  });
-});
-
-describe("MyWorkPage — responsive toolbar structure", () => {
-  it("condenses work scope on mobile while preserving the desktop scope controls", () => {
-    render(<MyWorkPage />);
-
-    const toolbar = screen.getByTestId("tabs-toolbar");
-    expect(toolbar).toHaveClass("md:!flex-col", "md:!items-stretch");
-    expect(toolbar).toHaveClass("2xl:!flex-row", "2xl:!flex-nowrap");
-    expect(screen.getByRole("combobox", { name: "Work scope" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Assigned" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Created" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Subscribed" })).toBeInTheDocument();
-    expect(screen.getByRole("combobox", { name: "Focused work" })).toBeInTheDocument();
   });
 });
 
@@ -471,15 +465,14 @@ describe("MyWorkPage — Previous walks back one page instead of jumping to the 
     expect(screen.getByTestId("page-number").textContent).toBe("2");
   });
 
-  it("drops a stale cursor when the tab changes so one tab's keyset never pages another", () => {
+  it("drops a stale cursor when the work scope changes so one scope's keyset never pages another", async () => {
     mockSearchParamsContainer.current = new URLSearchParams("cursor=c9");
     mockUseAllWork.mockReturnValue(withDataCursor("c10"));
     render(<MyWorkPage />);
 
-    const trigger = screen.getByRole("tab", { name: "Created" });
-    fireEvent.mouseDown(trigger);
-    fireEvent.focus(trigger);
-    fireEvent.click(trigger);
+    const trigger = screen.getByRole("combobox", { name: "Work scope" });
+    fireEvent.keyDown(trigger, { key: "Enter" });
+    fireEvent.click(await screen.findByRole("option", { name: "Created" }));
 
     const calls = mockReplace.mock.calls;
     const last = calls[calls.length - 1] as [string] | undefined;

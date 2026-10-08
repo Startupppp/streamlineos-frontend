@@ -13,6 +13,9 @@ type FilterTriggerButtonProps = Omit<
   activeFilterCount: number;
   label?: string;
   showLabelOnMobile?: boolean;
+  iconOnly?: boolean;
+  /** Keep the mobile label while using the compact icon treatment on desktop. */
+  desktopIconOnly?: boolean;
 };
 
 export const FilterTriggerButton = forwardRef<
@@ -23,6 +26,8 @@ export const FilterTriggerButton = forwardRef<
     activeFilterCount,
     label = "Add filter",
     showLabelOnMobile = false,
+    iconOnly = false,
+    desktopIconOnly = false,
     className,
     ...props
   },
@@ -37,7 +42,9 @@ export const FilterTriggerButton = forwardRef<
       icon={SlidersHorizontalIcon}
       iconSize={14}
       className={cn(
-        "relative size-9 shrink-0 gap-1 p-0 text-sm font-normal md:h-9 md:w-auto md:px-2",
+        "relative size-9 shrink-0 gap-1 p-0 text-sm font-normal",
+        !iconOnly && !desktopIconOnly && "md:h-9 md:w-auto md:px-2",
+        !iconOnly && desktopIconOnly && "h-9 w-auto px-2 lg:size-9 lg:p-0",
         "data-[state=open]:border-primary data-[state=open]:focus-visible:border-primary",
         className,
       )}
@@ -47,11 +54,23 @@ export const FilterTriggerButton = forwardRef<
           : label
       }
     >
-      <span className={cn(!showLabelOnMobile && "hidden md:inline")}>
-        {label}
-      </span>
+      {!iconOnly ? (
+        <span
+          className={cn(
+            !showLabelOnMobile && "hidden md:inline",
+            desktopIconOnly && "lg:hidden",
+          )}
+        >
+          {label}
+        </span>
+      ) : null}
       {activeFilterCount > 0 ? (
-        <span className="absolute -right-1 -top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-primary px-0.5 text-micro font-normal text-primary-foreground md:static md:ml-0.5 md:h-4 md:min-w-4 md:px-1">
+        <span
+          className={cn(
+            "absolute -right-1 -top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-primary px-0.5 text-micro font-normal text-primary-foreground",
+            !desktopIconOnly && "md:static md:ml-0.5 md:h-4 md:min-w-4 md:px-1",
+          )}
+        >
           {activeFilterCount}
         </span>
       ) : null}

@@ -5,7 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
 export const AI_FIELD_POPOVER_CONTENT_CLASS =
-  "flex w-[min(24rem,var(--radix-popover-content-available-width))] max-h-[min(28rem,var(--radix-popover-content-available-height))] flex-col overflow-hidden p-0";
+  "flex h-[min(28rem,calc(100dvh-2rem))] min-h-0 w-[min(24rem,var(--radix-popover-content-available-width))] max-h-[min(28rem,var(--radix-popover-content-available-height))] flex-col overflow-hidden p-0";
 
 interface AiFieldPopoverLayoutProps {
   children: ReactNode;

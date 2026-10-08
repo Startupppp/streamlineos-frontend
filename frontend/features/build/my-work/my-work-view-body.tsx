@@ -1,18 +1,24 @@
 ﻿"use client";
 
 import { memo, useCallback } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MyWorkBoard } from "./my-work-board";
 import { ListView } from "@/features/build/views/list-view";
 import { TableView } from "@/features/build/views/table-view";
 import { pmSnappy, viewSwap, viewSwapReduced } from "@/lib/motion-presets";
-import type { KanbanTicket, DisplayOptions } from "@/features/build/shared/types";
+import type {
+  KanbanTicket,
+  DisplayOptions,
+} from "@/features/build/shared/types";
 import type { AllWorkTicketMeta } from "./map-all-work-ticket";
 import type { MyWorkView } from "./my-work-view";
-import { buildMyWorkReturnHref, getMyWorkTicketHref } from "@/features/build/ticket-details/build-ticket-detail-url";
-import { useNavigationLeave } from "@/components/shared/dirty-state-context";
+import {
+  buildMyWorkReturnHref,
+  getMyWorkTicketHref,
+} from "@/features/build/ticket-details/build-ticket-detail-url";
+import { useGuardedDocumentNavigation } from "@/hooks/common/use-guarded-document-navigation";
 import type { AllWorkFilters } from "@/types/projects";
 
 interface MyWorkViewBodyProps {
@@ -32,8 +38,7 @@ export const MyWorkViewBody = memo(function MyWorkViewBody({
   boardFilters,
   orgStatuses,
 }: MyWorkViewBodyProps) {
-  const router = useRouter();
-  const requestLeave = useNavigationLeave();
+  const navigate = useGuardedDocumentNavigation();
   const searchParams = useSearchParams();
   const returnHref = buildMyWorkReturnHref(searchParams);
   const shouldReduceMotion = useReducedMotion();
@@ -43,17 +48,30 @@ export const MyWorkViewBody = memo(function MyWorkViewBody({
     (id: number) => {
       const meta = ticketMeta.get(id);
       if (!meta) return;
-      requestLeave(() =>
-        router.push(
-          getMyWorkTicketHref(meta.projectId, meta.projectKey, meta.ticketNumber, returnHref),
+      navigate(
+        getMyWorkTicketHref(
+          meta.projectId,
+          meta.projectKey,
+          meta.ticketNumber,
+          returnHref,
         ),
       );
     },
-    [ticketMeta, requestLeave, returnHref, router],
+    [ticketMeta, navigate, returnHref],
   );
-  const handleBoardTicketSelect = useCallback((meta: AllWorkTicketMeta) => {
-    requestLeave(() => router.push(getMyWorkTicketHref(meta.projectId, meta.projectKey, meta.ticketNumber, returnHref)));
-  }, [requestLeave, router, returnHref]);
+  const handleBoardTicketSelect = useCallback(
+    (meta: AllWorkTicketMeta) => {
+      navigate(
+        getMyWorkTicketHref(
+          meta.projectId,
+          meta.projectKey,
+          meta.ticketNumber,
+          returnHref,
+        ),
+      );
+    },
+    [navigate, returnHref],
+  );
 
   return (
     <AnimatePresence mode="wait" initial={false}>

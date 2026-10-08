@@ -164,21 +164,16 @@ export function TicketDetailPage({
     >
       <PageWrapper
         title={pageTitle}
+        badge={displayKey}
         subtitle={
           <span className="inline-flex min-w-0 max-w-full flex-wrap items-center gap-x-1.5 gap-y-0.5">
-            <span className="shrink-0 font-mono text-label font-normal text-muted-foreground">
-              {displayKey}
-            </span>
             {versionedTicket?.parentTicketId != null ? (
-              <>
-                <span className="shrink-0 text-muted-foreground" aria-hidden>·</span>
-                <TicketParentControl
-                  ticket={versionedTicket}
-                  projectId={projectId}
-                  projectKey={projectData?.key}
-                  variant="breadcrumb"
-                />
-              </>
+              <TicketParentControl
+                ticket={versionedTicket}
+                projectId={projectId}
+                projectKey={projectData?.key}
+                variant="breadcrumb"
+              />
             ) : null}
           </span>
         }

@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { CheckCheckIcon, TrashIcon } from "@animateicons/react/lucide";
+import { TrashIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import {
   useMyCommentDrafts,
@@ -13,11 +13,16 @@ import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TablePagination } from "@/components/ui/table-pagination";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   buildMyWorkReturnHref,
@@ -26,6 +31,17 @@ import {
 import { CommentDraftRow } from "@/features/build/drafts/comment-draft-row";
 import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
+import type { CommentDraftListItem } from "@/hooks/api/build/comment-draft-command-cache";
+
+function getDraftResumeHref(
+  draft: CommentDraftListItem,
+  returnHref: string,
+) {
+  const projectId = draft.ticket.projectId;
+  if (!projectId || projectId <= 0) return null;
+
+  return `${getMyWorkTicketHref(projectId, null, draft.ticket.ticketNumber, returnHref)}&draft=resume`;
+}
 
 function DraftsPanelSkeleton() {
   return (
@@ -61,7 +77,6 @@ function DraftsPanelPage() {
   const deleteDraft = useDeleteCommentDraft();
   const canDelete = useCan("build:tickets:view");
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
-  const [selectionMode, setSelectionMode] = useState(false);
   const [deleteIds, setDeleteIds] = useState<number[]>([]);
   const [deleting, setDeleting] = useState(false);
   const page = query.data?.pages[0];
@@ -70,6 +85,11 @@ function DraftsPanelPage() {
     () => selectedIds.filter((id) => drafts.some((draft) => draft.id === id)),
     [selectedIds, drafts],
   );
+  const selectedDraftHref = useMemo(() => {
+    if (selection.length !== 1) return null;
+    const selectedDraft = drafts.find((draft) => draft.id === selection[0]);
+    return selectedDraft ? getDraftResumeHref(selectedDraft, returnHref) : null;
+  }, [drafts, returnHref, selection]);
   const allSelected = drafts.length > 0 && selection.length === drafts.length;
   const pageState = usePageState({
     permission: "build:tickets:view",
@@ -96,17 +116,14 @@ function DraftsPanelPage() {
     },
     [drafts],
   );
-  const handleClearSelection = useCallback(() => setSelectedIds([]), []);
-  const handleEnterSelection = useCallback(() => setSelectionMode(true), []);
-  const handleExitSelection = useCallback(() => {
-    setSelectionMode(false);
-    setSelectedIds([]);
-  }, []);
   const handleDelete = useCallback((id: number) => setDeleteIds([id]), []);
   const handleOpenDeleteSelected = useCallback(
     () => setDeleteIds(selection),
     [selection],
   );
+  const handleResumeSelected = useCallback(() => {
+    if (selectedDraftHref) handleNavigateDraft(selectedDraftHref);
+  }, [handleNavigateDraft, selectedDraftHref]);
   const handleCloseDelete = useCallback(
     (open: boolean) => {
       if (!open && !deleting) setDeleteIds([]);
@@ -140,11 +157,7 @@ function DraftsPanelPage() {
   }, [page, pager]);
   const renderDraft = useCallback(
     (draft: (typeof drafts)[number]) => {
-      const projectId = draft.ticket.projectId;
-      const href =
-        projectId && projectId > 0
-          ? `${getMyWorkTicketHref(projectId, null, draft.ticket.ticketNumber, returnHref)}&draft=resume`
-          : null;
+      const href = getDraftResumeHref(draft, returnHref);
       return (
         <CommentDraftRow
           key={draft.id}
@@ -153,7 +166,7 @@ function DraftsPanelPage() {
           onNavigate={handleNavigateDraft}
           onDelete={!href && canDelete ? handleDelete : undefined}
           selected={selection.includes(draft.id)}
-          onSelect={canDelete && selectionMode ? handleSelect : undefined}
+          onSelect={canDelete ? handleSelect : undefined}
           selectionDisabled={deleting}
         />
       );
@@ -166,7 +179,6 @@ function DraftsPanelPage() {
       handleSelect,
       returnHref,
       selection,
-      selectionMode,
     ],
   );
 
@@ -175,23 +187,8 @@ function DraftsPanelPage() {
       {pageState.kind === "ready" &&
       drafts.length > 0 &&
       canDelete &&
-      !selectionMode ? (
-        <div className="flex shrink-0 justify-end px-3 py-1">
-          <AnimatedIconButton
-            icon={CheckCheckIcon}
-            variant="ghost"
-            size="icon-sm"
-            onClick={handleEnterSelection}
-            aria-label="Enter selection"
-            title="Select drafts"
-          />
-        </div>
-      ) : null}
-      {pageState.kind === "ready" &&
-      drafts.length > 0 &&
-      canDelete &&
-      selectionMode ? (
-        <div className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2">
+      selection.length > 0 ? (
+        <div className="flex min-w-0 shrink-0 flex-nowrap items-center gap-2 border-b border-border px-3 py-2">
           <Checkbox
             checked={
               allSelected ? true : selection.length ? "indeterminate" : false
@@ -200,43 +197,44 @@ function DraftsPanelPage() {
             disabled={deleting}
             aria-label="Select drafts on this page"
           />
-          <span className="text-xs text-muted-foreground tabular-nums">
+          <span className="min-w-0 truncate text-xs text-muted-foreground tabular-nums">
             {selection.length
               ? `${selection.length} selected`
               : "Select drafts"}
           </span>
-          {selection.length > 0 ? (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={handleClearSelection}
-              disabled={deleting}
-            >
-              Clear selection
-            </Button>
-          ) : null}
           <div className="ml-auto flex items-center gap-1">
-            {selection.length > 1 ? (
-              <AnimatedIconButton
-                icon={TrashIcon}
-                variant="ghost"
-                size="icon-sm"
-                className="text-destructive hover:text-destructive"
-                onClick={handleOpenDeleteSelected}
-                aria-label={`Delete selected drafts (${selection.length})`}
+            {selectedDraftHref ? (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={handleResumeSelected}
                 disabled={deleting}
-              />
+                aria-label="Resume selected draft"
+              >
+                Resume
+              </Button>
             ) : null}
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={handleExitSelection}
-              disabled={deleting}
-            >
-              Done
-            </Button>
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="size-9"
+                    onClick={handleOpenDeleteSelected}
+                    aria-label={`Delete selected ${selection.length === 1 ? "draft" : "drafts"} (${selection.length})`}
+                    disabled={deleting}
+                  >
+                    <TrashIcon aria-hidden="true" className="size-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="text-xs">
+                  Delete selected drafts
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
       ) : null}
@@ -282,7 +280,8 @@ function DraftsPanelPage() {
           onNext={handleNext}
           onPrevious={pager.goPrevious}
           disabled={query.isFetching || deleting}
-          showLabels
+          compact
+          showSummary={false}
         />
       ) : null}
       <ConfirmDialog

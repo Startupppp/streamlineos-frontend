@@ -55,7 +55,7 @@ interface AiActionsMenuProps {
 
 const MENU_CONTENT_CLASS = "min-w-72 p-1.5";
 const RESULT_CONTENT_CLASS =
-  "flex w-[min(28rem,calc(100vw-1.5rem))] max-h-[min(32rem,80vh)] flex-col overflow-hidden p-0";
+  "flex h-[min(32rem,calc(100dvh-2rem))] min-h-0 w-[min(28rem,calc(100vw-1.5rem))] max-h-[min(32rem,80dvh)] flex-col overflow-hidden p-0";
 
 export function AiActionsMenu({
   actions,

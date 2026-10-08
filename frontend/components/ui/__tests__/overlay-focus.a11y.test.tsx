@@ -174,6 +174,19 @@ describe("ResponsivePopover — the same trigger yields a Drawer below md and a 
     );
   }
 
+  function TabletHarness() {
+    return (
+      <ResponsivePopover collapseBelow="lg">
+        <ResponsivePopoverTrigger asChild>
+          <Button>View options</Button>
+        </ResponsivePopoverTrigger>
+        <ResponsivePopoverContent title="View options">
+          <Button>Change view</Button>
+        </ResponsivePopoverContent>
+      </ResponsivePopover>
+    );
+  }
+
   it("renders a titled dialog surface at 375px so the panel is reachable on mobile", async () => {
     const restore = atViewport("mobile");
     try {
@@ -195,6 +208,18 @@ describe("ResponsivePopover — the same trigger yields a Drawer below md and a 
       expect(
         await screen.findByRole("button", { name: "Clear filters" }),
       ).toBeInTheDocument();
+    } finally {
+      restore();
+    }
+  });
+
+  it("supports a tablet drawer when the caller collapses below lg", async () => {
+    const restore = atViewport("tablet");
+    try {
+      const user = userEvent.setup();
+      render(<TabletHarness />);
+      await user.click(screen.getByRole("button", { name: "View options" }));
+      expect(await screen.findByRole("dialog", { name: "View options" })).toBeInTheDocument();
     } finally {
       restore();
     }

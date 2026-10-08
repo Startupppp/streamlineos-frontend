@@ -28,6 +28,7 @@ interface FilterCommandMenuMobileProps {
   activeFilterCount: number;
   triggerLabel: string;
   presentation: "default" | "all-work";
+  desktopIconOnly: boolean;
   showTypeFilter: boolean;
   showAssigneeFilter: boolean;
   open: boolean;
@@ -50,6 +51,7 @@ export function FilterCommandMenuMobile({
   activeFilterCount,
   triggerLabel,
   presentation,
+  desktopIconOnly,
   showTypeFilter,
   showAssigneeFilter,
   open,
@@ -86,9 +88,12 @@ export function FilterCommandMenuMobile({
           activeFilterCount={activeFilterCount}
           label={triggerLabel}
           showLabelOnMobile={presentation === "all-work"}
+          desktopIconOnly={desktopIconOnly}
           className={cn(
             presentation === "all-work" &&
-              "h-9 w-auto min-w-28 rounded-lg border-border/80 bg-muted/45 px-3 font-medium shadow-sm hover:border-primary/35 hover:bg-muted/70",
+              (desktopIconOnly
+                ? "h-9 w-full flex-1 justify-center rounded-lg px-3 max-lg:!w-full max-lg:!flex-1 lg:size-9 lg:min-w-0 lg:flex-none lg:px-0"
+                : "h-9 w-auto min-w-28 rounded-lg border-border/80 bg-muted/45 px-3 font-medium shadow-sm hover:border-primary/35 hover:bg-muted/70"),
           )}
         />
       </DrawerTrigger>

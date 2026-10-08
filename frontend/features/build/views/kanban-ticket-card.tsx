@@ -118,9 +118,10 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
 
   return (
     <div
+      data-testid="kanban-ticket-card"
       data-selected={isSelected ? "true" : undefined}
       className={cn(
-        "group relative p-3",
+        "group relative overflow-hidden bg-gradient-to-br from-card via-card to-muted/45 p-3",
         SURFACE_CARD,
         readOnly
           ? "cursor-pointer"
@@ -180,7 +181,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
         </p>
       ) : null}
 
-      <div className="mt-2.5 flex min-w-0 flex-wrap items-center gap-1.5">
+      <div className="mt-2 flex min-w-0 flex-wrap items-center gap-1.5">
         {showId ? (
           <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 font-mono text-micro font-medium tabular-nums text-muted-foreground">
             {ticketKey}
@@ -268,7 +269,10 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
         </div>
       ) : null}
 
-      <div className="mt-2.5 flex min-w-0 items-center justify-between gap-2 border-t border-border/60 pt-2.5">
+      <div
+        data-testid="kanban-ticket-card-footer"
+        className="mt-2 flex min-w-0 items-center justify-between gap-2 border-t border-border/60 pt-2"
+      >
         {showDueDate && resolvedProjectId && canUpdate ? (
           <InlineDueDate
             ticketId={ticket.id}

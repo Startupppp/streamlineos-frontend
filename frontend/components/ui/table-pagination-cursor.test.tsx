@@ -6,6 +6,20 @@ import { TablePagination, useCursorPager } from "@/components/ui/table-paginatio
 describe("TablePagination cursor mode", () => {
   const noop = () => {};
 
+  it("renders compact cursor numbers and chevron-only controls in one responsive row", () => {
+    render(<TablePagination mode="cursor" compact showLabels rowCount={25} pageNumber={3} hasMore hasPrevious onNext={noop} onPrevious={noop} />);
+    const footer = screen.getByRole("navigation", { name: "Pagination" });
+    expect(footer).toHaveClass("grid", "grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]");
+    expect(footer.className).not.toContain("pb-[max(3.25rem");
+    expect(screen.getByLabelText("Current page 3")).toHaveTextContent(/^3$/);
+    expect(screen.getByLabelText("25 results shown")).toHaveTextContent(/^25$/);
+    expect(screen.getByRole("button", { name: "Previous page" })).not.toHaveTextContent("Previous");
+    expect(screen.getByRole("button", { name: "Next page" })).not.toHaveTextContent("Next");
+    expect(screen.queryByText("Page 3")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Page 1")).not.toBeInTheDocument();
+    expect(screen.queryByText(/of \d/)).not.toBeInTheDocument();
+  });
+
   it("renders prev/next plus the current walk position, but no fake jump or total", () => {
     render(
       <TablePagination
@@ -166,10 +180,10 @@ describe("TablePagination cursor hideOnSinglePage option", () => {
   });
 });
 
-describe("TablePagination cursor showLabels option", () => {
+describe("TablePagination cursor navigation labels", () => {
   const noop = () => {};
 
-  it("renders text labels on buttons when showLabels is true", () => {
+  it("keeps navigation icon-only even when a legacy showLabels prop is supplied", () => {
     render(
       <TablePagination
         mode="cursor"
@@ -182,11 +196,11 @@ describe("TablePagination cursor showLabels option", () => {
       />,
     );
 
-    expect(screen.getByLabelText("Previous page")).toHaveTextContent("Previous");
-    expect(screen.getByLabelText("Next page")).toHaveTextContent("Next");
+    expect(screen.getByLabelText("Previous page")).not.toHaveTextContent("Previous");
+    expect(screen.getByLabelText("Next page")).not.toHaveTextContent("Next");
   });
 
-  it("renders icon-only buttons without showLabels so existing callers are unchanged", () => {
+  it("uses icon-only navigation for the centered pagination treatment", () => {
     render(
       <TablePagination
         mode="cursor"

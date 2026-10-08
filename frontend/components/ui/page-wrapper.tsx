@@ -230,7 +230,7 @@ export function PageWrapper({
               <div
                 className={cn(
                   actionsInline
-                    ? "flex shrink-0 items-center gap-2 self-center"
+                    ? "ml-auto flex max-w-full shrink-0 items-center gap-2 self-center"
                     : "flex w-full flex-col items-stretch gap-2 sm:ml-auto sm:w-auto sm:shrink-0 sm:flex-row sm:flex-nowrap sm:items-center sm:self-start [&>*]:w-full sm:[&>*]:w-auto",
                 )}
               >

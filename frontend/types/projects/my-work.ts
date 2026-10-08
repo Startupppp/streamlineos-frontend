@@ -1,3 +1,5 @@
+import type { AllWorkTicket } from "./tasks";
+
 export interface MyWorkItem {
   id: number;
   projectId: number;
@@ -9,5 +11,9 @@ export interface MyWorkItem {
   priority: string | null;
   type: string;
   dueDate: string | null;
-  assignee?: { name?: string | null; firstName?: string | null; lastName?: string | null; email?: string | null } | null;
+  assignee?: AllWorkTicket["assignee"];
+  assigneeId?: AllWorkTicket["assigneeId"];
+  version?: number;
+  moduleId?: number | null;
+  labels?: AllWorkTicket["labels"];
 }

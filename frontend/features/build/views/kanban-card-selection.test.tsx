@@ -59,6 +59,17 @@ function renderCard(overrides: Record<string, unknown> = {}) {
 }
 
 describe("KanbanTicketCard — selection does not cost navigation", () => {
+  it("uses the shared compact card frame so every Kanban board has the same visual hierarchy", () => {
+    renderCard();
+
+    const title = screen.getByRole("button", { name: /Fix the broken import/i });
+    const card = title.closest("[data-testid='kanban-ticket-card']");
+    const footer = screen.getByTestId("kanban-ticket-card-footer");
+
+    expect(card).toHaveClass("overflow-hidden", "bg-gradient-to-br");
+    expect(footer).toHaveClass("border-t", "pt-2");
+  });
+
   it("opens the ticket when the title is clicked while selection is active", async () => {
     const onSelectedChange = jest.fn();
     const onSelect = jest.fn();

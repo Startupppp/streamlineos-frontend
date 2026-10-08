@@ -1,13 +1,21 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { MyWorkContent } from "./my-work-content";
 import { DEFAULT_DISPLAY_OPTIONS } from "../views/display-options-model";
+import type { KanbanTicket } from "../shared/types";
+
+const mockNavigate = jest.fn();
+const mockTicket: KanbanTicket = { id: 35, version: 4, title: "Review", status: "TODO", type: "TASK", ticketNumber: 35, project: { id: 1, key: "STRE", name: "Streamline" } };
 
 jest.mock("next/navigation", () => ({ useRouter: () => ({ push: jest.fn() }), useSearchParams: () => new URLSearchParams() }));
 jest.mock("@/components/shared/dirty-state-context", () => ({ useNavigationLeave: () => jest.fn() }));
 jest.mock("@/hooks/common/use-online-status", () => ({ useOnlineStatus: () => true }));
+jest.mock("@/hooks/common/use-guarded-document-navigation", () => ({ useGuardedDocumentNavigation: () => mockNavigate }));
 jest.mock("./my-work-view-body-lazy", () => ({ MyWorkViewBody: () => <div>Ticket view</div> }));
-jest.mock("@/components/ui/data-table", () => ({ DataTable: () => <div>Table</div> }));
+jest.mock("@/components/ui/data-table", () => ({ DataTable: ({ onRowClick }: { onRowClick: (ticket: KanbanTicket) => void }) => {
+  function handleOpen() { onRowClick(mockTicket); }
+  return <button type="button" onClick={handleOpen}>Open table ticket</button>;
+} }));
 
 const props: ComponentProps<typeof MyWorkContent> = {
   pageState: { kind: "ready" }, view: "board", grouping: "none", showBucketList: false,
@@ -21,6 +29,11 @@ const props: ComponentProps<typeof MyWorkContent> = {
 };
 
 describe("My Work pagination placement", () => {
+  it("opens DataTable rows through guarded document navigation", () => {
+    render(<MyWorkContent {...props} view="table" kanbanTickets={[mockTicket]} ticketMeta={new Map([[35, { id: 35, projectId: 1, projectKey: "STRE", ticketNumber: 35 }]])} />);
+    fireEvent.click(screen.getByRole("button", { name: "Open table ticket" }));
+    expect(mockNavigate).toHaveBeenCalledWith("/build/1/tickets/STRE-35?returnTo=%2Fbuild%2Fmy-work");
+  });
   it("omits global cursor controls from board view even when the list has a next page", () => {
     render(<MyWorkContent {...props} />);
     expect(screen.getByText("Ticket view")).toBeInTheDocument();
