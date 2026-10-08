@@ -255,7 +255,7 @@ function DraftsPanelPage() {
             />
           }
         >
-          <div className="flex min-h-0 flex-1 flex-col">
+          <div className="flex min-h-0 flex-1 flex-col gap-2 p-2">
             {drafts.map(renderDraft)}
             {drafts.length === 0 ? (
               <EmptyState

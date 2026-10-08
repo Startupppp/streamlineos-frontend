@@ -41,5 +41,8 @@ describe("filterVisibleProjects", () => {
     expect(
       filterVisibleProjects([active, archived], { status: "ARCHIVED" }, true).map((p) => p.id),
     ).toEqual([2]);
+    expect(
+      filterVisibleProjects([active, archived], { status: "ARCHIVED" }, false).map((p) => p.id),
+    ).toEqual([2]);
   });
 });

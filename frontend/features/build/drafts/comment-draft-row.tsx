@@ -10,6 +10,12 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { CommentDraftListItem } from "@/hooks/api/build/comment-draft-command-cache";
 import { formatTicketKey } from "@/components/shared/format-ticket-key";
 import {
@@ -105,10 +111,21 @@ export function CommentDraftRow({ draft, href, onNavigate, onDelete, selected, s
         <span className="inline-flex w-fit max-w-[9rem] shrink-0 items-center rounded-md border border-border bg-muted/50 px-1.5 py-0.5 font-mono text-micro font-normal text-muted-foreground">
           <TruncatedText text={ticketKey} className="min-w-0" />
         </span>
-        <TruncatedText
-          text={ticket.title}
-          className="min-w-0 text-label font-medium leading-snug text-foreground"
-        />
+        <TooltipProvider delayDuration={300}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="min-w-0">
+                <TruncatedText
+                  text={ticket.title}
+                  className="min-w-0 text-label font-medium leading-snug text-foreground"
+                />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-sm whitespace-normal">
+              {ticket.title}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
 
       {projectName ? (
@@ -184,9 +201,10 @@ export function CommentDraftRow({ draft, href, onNavigate, onDelete, selected, s
   return (
     <div
       className={cn(
-        "group flex w-full min-w-0 items-start gap-2 border-b border-border/70 px-3 py-2.5 text-left last:border-b-0",
-        "transition-colors duration-150",
-        href && "hover:bg-primary/5",
+        "group flex w-full min-w-0 items-start gap-2 rounded-xl border border-border/80 bg-card/80 px-3 py-2.5 text-left shadow-xs",
+        "transition-[border-color,background-color,box-shadow] duration-150",
+        href && "hover:border-foreground/20 hover:bg-muted/40 hover:shadow-sm",
+        selected && "border-primary/40 bg-primary/5",
       )}
     >
       {onSelect ? <Checkbox checked={selected} disabled={selectionDisabled} onCheckedChange={handleSelect} aria-label={`Select draft for ${ticketKey}`} className={cn("mt-1 shrink-0 transition-opacity duration-150 max-md:opacity-100 md:group-hover:opacity-100 md:group-focus-within:opacity-100", selected ? "opacity-100" : "opacity-0")} /> : null}

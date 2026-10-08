@@ -357,6 +357,8 @@ export interface ProjectFilters {
   managedProductId?: number;
   managerId?: string;
   health?: ProjectHealth;
+  startAfter?: string;
+  endBefore?: string;
   sort?: "name_asc" | "priority_desc" | "due_asc" | "due_desc";
 }
 

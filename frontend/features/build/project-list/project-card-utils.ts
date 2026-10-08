@@ -1,11 +1,11 @@
 import { differenceInDays, format, isPast } from "date-fns";
 
 export const statusStripe: Record<string, string> = {
-  ACTIVE: "border-l-emerald-500",
-  PLANNING: "border-l-blue-500",
-  COMPLETED: "border-l-slate-400",
-  ON_HOLD: "border-l-amber-500",
-  ARCHIVED: "border-l-slate-400 dark:border-l-slate-600",
+  ACTIVE: "bg-status-success-fill",
+  PLANNING: "bg-status-info-fill",
+  COMPLETED: "bg-status-neutral-fill",
+  ON_HOLD: "bg-status-warning-fill",
+  ARCHIVED: "bg-status-neutral-fill",
 };
 
 export const statusDotColors: Record<string, string> = {

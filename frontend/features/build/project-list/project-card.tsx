@@ -132,14 +132,14 @@ export const ProjectCard = React.memo(function ProjectCard({
     <>
       <article
         className={cn(
-          "group relative flex h-full cursor-pointer flex-col overflow-hidden border-l-[3px] p-3",
+          "group relative flex h-full cursor-pointer flex-col overflow-hidden p-4",
           SURFACE_CARD,
           SURFACE_CARD_INTERACTIVE,
           "focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background",
-          stripe,
         )}
         onClick={handleCardClick}
       >
+        <span className={cn("absolute inset-x-0 top-0 h-0.5", stripe)} aria-hidden="true" />
         {showActions ? (
           <div className="absolute right-2 top-2 z-10">
             <DropdownMenu>
@@ -201,8 +201,8 @@ export const ProjectCard = React.memo(function ProjectCard({
         <div className="flex min-w-0 items-start gap-3">
           <div
             className={cn(
-              "flex h-8 w-8 shrink-0 items-center justify-center rounded-md ring-1 ring-inset",
-              "text-micro font-medium tracking-tight",
+              "flex size-10 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset",
+              "text-xs font-medium tracking-tight",
               avatarTint,
             )}
             aria-hidden="true"
@@ -210,7 +210,7 @@ export const ProjectCard = React.memo(function ProjectCard({
             {initials}
           </div>
 
-          <div className={cn(TEXT_FLEX_CHILD, "min-w-0 flex-1 space-y-1")}>
+          <div className={cn(TEXT_FLEX_CHILD, "min-w-0 flex-1 space-y-1.5")}>
             <div
               className={cn(
                 "flex min-w-0 items-center gap-2",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
   Command,
   CommandEmpty,
@@ -30,6 +30,7 @@ import { useSimpleClientsList } from "@/hooks/api/crm/clients";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { useWizardMembers, useWizardSessionUser } from "../use-wizard-members";
 import { findWizardMember } from "../resolve-wizard-member-label";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 
 const NONE_SENTINEL = "__none__";
 
@@ -55,20 +56,10 @@ export function BasicsManagerField({
   onChange,
 }: BasicsManagerFieldProps) {
   const sessionUser = useWizardSessionUser();
-  const members = useWizardMembers(100);
-
   const [managerOpen, setManagerOpen] = useState(false);
   const [managerSearch, setManagerSearch] = useState("");
-
-  const filteredManagers = useMemo(() => {
-    if (!managerSearch.trim()) return members;
-    const q = managerSearch.toLowerCase();
-    return members.filter(
-      (m) =>
-        (m.name ?? "").toLowerCase().includes(q) ||
-        m.email.toLowerCase().includes(q),
-    );
-  }, [members, managerSearch]);
+  const debouncedManagerSearch = useDebouncedValue(managerSearch, 300).trim();
+  const members = useWizardMembers(100, debouncedManagerSearch || undefined);
 
   const selectedManager = value
     ? members.find((m) => m.userId === value)
@@ -95,19 +86,23 @@ export function BasicsManagerField({
             role="combobox"
             aria-label="Select project manager"
             className={cn(
-              "w-full justify-between gap-2 font-normal h-8",
+              "h-9 w-full justify-between gap-2 font-normal",
               !selectedPerson && "text-muted-foreground",
             )}
           >
             {selectedPerson ? (
               <span className="flex items-center gap-2 min-w-0">
                 <Avatar className="h-5 w-5 shrink-0">
-                  <AvatarImage src={resolveImageUrl(selectedManager?.image ?? null)} />
+                  <AvatarImage
+                    src={resolveImageUrl(selectedManager?.image ?? null)}
+                  />
                   <AvatarFallback className="text-micro">
                     {getUserInitials(selectedPerson)}
                   </AvatarFallback>
                 </Avatar>
-                <span className="min-w-0 truncate text-sm">{getUserDisplayName(selectedPerson)}</span>
+                <span className="min-w-0 truncate text-sm">
+                  {getUserDisplayName(selectedPerson)}
+                </span>
               </span>
             ) : (
               <span className="flex items-center gap-2">
@@ -144,7 +139,7 @@ export function BasicsManagerField({
                 <span className="text-xs">No manager</span>
                 {!value && <Check className="ml-auto h-3 w-3" />}
               </CommandItem>
-              {filteredManagers.map((m) => (
+              {members.map((m) => (
                 <CommandItem
                   key={m.userId}
                   value={m.userId}
@@ -184,10 +179,7 @@ interface BasicsClientFieldProps {
   onChange: (value: string | undefined) => void;
 }
 
-export function BasicsClientField({
-  value,
-  onChange,
-}: BasicsClientFieldProps) {
+export function BasicsClientField({ value, onChange }: BasicsClientFieldProps) {
   const { data: clients } = useSimpleClientsList();
   const clientList = clients ?? [];
 

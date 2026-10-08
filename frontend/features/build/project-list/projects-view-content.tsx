@@ -56,7 +56,7 @@ export function ProjectsViewContent({
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <div className="min-h-0 flex-1 overflow-y-auto max-md:[.mobile-nav-active_&]:pb-4">
           <PmStaggerList
-            className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+            className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
             role="list"
             aria-label="Projects grid"
           >

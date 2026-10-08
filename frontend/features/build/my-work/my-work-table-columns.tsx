@@ -6,7 +6,7 @@ import { PriorityBadge } from "../shared/priority-badge";
 import { formatCalendarDate } from "@/lib/date-utils";
 
 export const MY_WORK_TABLE_COLUMNS: DataTableColumn<KanbanTicket>[] = [
-  { key: "title", header: "Work item", className: "min-w-[14rem] flex-1", cell: function renderTitle(ticket) {
+  { key: "title", header: "Work item", className: "w-[28rem] min-w-80 max-w-[28rem]", headerClassName: "w-[28rem] min-w-80 max-w-[28rem]", cell: function renderTitle(ticket) {
     return <div className="flex min-w-0 items-center gap-2"><span className="shrink-0 rounded bg-muted/70 px-1.5 py-0.5 font-mono text-xs text-muted-foreground">{formatTicketKey(ticket.project?.key, ticket.ticketNumber, ticket.id)}</span><span className="truncate text-sm font-medium leading-tight">{ticket.title}</span></div>;
   } },
   { key: "project", header: "Project", className: "hidden xl:table-cell", cell: function renderProject(ticket) {

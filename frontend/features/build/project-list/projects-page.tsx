@@ -90,6 +90,8 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
       managerId: null,
       filterStatus: null,
       filterHealth: null,
+      startAfter: null,
+      endBefore: null,
       productId: null,
       clientId: null,
     });
@@ -102,6 +104,8 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
     activeFilters.status ?? "",
     filterManagerId ?? "",
     filterHealth ?? "",
+    activeFilters.startAfter ?? "",
+    activeFilters.endBefore ?? "",
     managedProductId ?? filterProductId ?? "",
   ].join(":");
   const pager = useBuildCursorPager(cursorResetKey);
@@ -122,6 +126,8 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
       status: activeFilters.status,
       ...(filterManagerId ? { managerId: filterManagerId } : {}),
       ...(filterHealth ? { health: filterHealth } : {}),
+      ...(activeFilters.startAfter ? { startAfter: activeFilters.startAfter } : {}),
+      ...(activeFilters.endBefore ? { endBefore: activeFilters.endBefore } : {}),
       ...(managedProductId !== undefined
         ? { managedProductId }
         : filterProductId

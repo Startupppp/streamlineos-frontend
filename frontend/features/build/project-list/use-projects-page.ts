@@ -23,6 +23,13 @@ import { buildListSearchParams } from "@/features/build/shared/use-build-list-ur
 type ViewMode = "grid" | "list";
 const VIEW_MODES: readonly ViewMode[] = ["grid", "list"];
 
+function readDateFilter(value: string | null): string | undefined {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return undefined;
+  const [year, month, day] = value.split("-").map(Number);
+  const parsed = new Date(Date.UTC(year, month - 1, day));
+  return parsed.toISOString().slice(0, 10) === value ? value : undefined;
+}
+
 export type { ViewMode };
 export { VIEW_MODES };
 
@@ -136,6 +143,8 @@ export function useProjectsPage(): ProjectsPageUrlState {
     (h) => h === searchParams.get("filterHealth"),
   );
   const filterLead = searchParams.get("filterLead") ?? undefined;
+  const filterStartAfter = readDateFilter(searchParams.get("startAfter"));
+  const filterEndBefore = readDateFilter(searchParams.get("endBefore"));
   const filterManagerId = searchParams.get("managerId") ?? filterLead;
   const filterProductId = searchParams.get("productId");
   const filterClientId = searchParams.get("clientId") ?? undefined;
@@ -145,8 +154,10 @@ export function useProjectsPage(): ProjectsPageUrlState {
       ...(filterStatus ? { status: filterStatus } : {}),
       ...(filterHealth ? { health: filterHealth } : {}),
       ...(filterManagerId ? { lead: filterManagerId } : {}),
+      ...(filterStartAfter ? { startAfter: filterStartAfter } : {}),
+      ...(filterEndBefore ? { endBefore: filterEndBefore } : {}),
     }),
-    [filterStatus, filterHealth, filterManagerId],
+    [filterStatus, filterHealth, filterManagerId, filterStartAfter, filterEndBefore],
   );
 
   const handleSearchChange = useCallback(
@@ -174,7 +185,10 @@ export function useProjectsPage(): ProjectsPageUrlState {
       updateParams({
         filterStatus: next.status ?? null,
         filterHealth: next.health ?? null,
-        filterLead: next.lead ?? null,
+        managerId: next.lead ?? null,
+        filterLead: null,
+        startAfter: next.startAfter ?? null,
+        endBefore: next.endBefore ?? null,
       });
     },
     [updateParams],

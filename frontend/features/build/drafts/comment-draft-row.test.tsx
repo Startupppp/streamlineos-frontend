@@ -57,6 +57,17 @@ describe("CommentDraftRow", () => {
     expect(onNavigate).toHaveBeenCalledWith(href);
   });
 
+  it("shows the complete ticket title in a formatted tooltip on hover", async () => {
+    render(<CommentDraftRow draft={draft} href={href} onNavigate={jest.fn()} />);
+
+    const trigger = screen.getByText("Review access").parentElement;
+    expect(trigger).not.toBeNull();
+    fireEvent.pointerMove(trigger!);
+    fireEvent.mouseOver(trigger!);
+
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("Review access");
+  });
+
   it("keeps keyboard deletion separate from ticket navigation", () => {
     const onNavigate = jest.fn();
     const onDelete = jest.fn();

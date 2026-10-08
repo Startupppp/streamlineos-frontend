@@ -144,18 +144,7 @@ export function ProjectCreateWizard({
         onPointerDownOutside={handleDismissRequest}
         onInteractOutside={handleDismissRequest}
       >
-        <SheetHeader className="shrink-0 px-6 pt-5 pb-4 border-b text-left">
-          <div className="flex gap-1 mb-3">
-            {Array.from({ length: TOTAL_STEPS }, (_, i) => (
-              <div
-                key={i}
-                className={cn(
-                  "flex-1 h-1 rounded-full transition-colors duration-300",
-                  i + 1 <= step ? "bg-primary" : "bg-border/60",
-                )}
-              />
-            ))}
-          </div>
+        <SheetHeader className="shrink-0 border-b py-4 pl-6 pr-14 text-left">
           <p className="text-xs text-muted-foreground mb-0.5">
             Step {step} of {TOTAL_STEPS}
           </p>
@@ -165,6 +154,17 @@ export function ProjectCreateWizard({
           <SheetDescription className="sr-only">
             Project creation wizard — step {step} of {TOTAL_STEPS}
           </SheetDescription>
+          <div className="mt-3 flex gap-1" aria-label={`Step ${step} of ${TOTAL_STEPS}`}>
+            {Array.from({ length: TOTAL_STEPS }, (_, i) => (
+              <div
+                key={i}
+                className={cn(
+                  "h-1 flex-1 rounded-full transition-colors duration-300",
+                  i + 1 <= step ? "bg-primary" : "bg-border/60",
+                )}
+              />
+            ))}
+          </div>
         </SheetHeader>
 
         <SheetBody
