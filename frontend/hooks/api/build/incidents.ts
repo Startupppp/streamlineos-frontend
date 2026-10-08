@@ -1,12 +1,11 @@
 "use client";
 
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
-import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import type {
   IncidentsCreateIncidentResponse,
   IncidentsGetIncidentResponse,
@@ -28,6 +27,8 @@ type IncidentFilters = {
   status?: string;
   severity?: string;
   q?: string;
+  cursor?: string;
+  limit?: number;
 };
 
 type IncidentPageParam = {
@@ -44,24 +45,24 @@ export function useIncidents(projectId?: number, filters?: IncidentFilters) {
   if (filters?.status) params["status"] = filters.status;
   if (filters?.severity) params["severity"] = filters.severity;
   if (filters?.q) params["q"] = filters.q;
+  if (filters?.cursor) params["cursor"] = filters.cursor;
+  if (filters?.limit) params["limit"] = String(filters.limit);
 
-  return useInfiniteQuery({
+  return useQuery({
     queryKey: buildWorkQueryKeys.projects.incidents.list(
       projectId ?? 0,
-      filters,
+      Object.keys(params).length > 0 ? params : undefined,
     ),
-    queryFn: ({ pageParam, signal }) =>
+    queryFn: ({ signal }) =>
       apiClient.get<{
         data: IncidentsCreateIncidentResponse[];
         pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
       }>(
         `/build/${projectId}/incidents`,
-        pageParam !== undefined ? { ...params, cursor: pageParam } : params,
+        params,
         signal,
         incidentListContract,
       ),
-    initialPageParam: NO_CURSOR_YET,
-    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canView && !!projectId,
     staleTime: 60_000,
     refetchOnWindowFocus: "always",

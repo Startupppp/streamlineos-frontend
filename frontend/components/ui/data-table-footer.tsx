@@ -61,7 +61,6 @@ export function DataTableFooter({
       pageSize={limit}
       total={total}
       onPageChange={onPageChange}
-      showEdgeJumps
       onPageSizeChange={onLimitChange}
       pageSizeOptions={pageSizeOptions}
     />

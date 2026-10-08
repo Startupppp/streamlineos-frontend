@@ -23,10 +23,11 @@ interface ProjectsViewContentProps {
   visibleProjects: ProjectListItem[];
   allProjects: ProjectListItem[];
   prefs: DisplayPrefs;
-  pageCount: number;
-  hasNextPage: boolean | undefined;
-  isFetchingNextPage: boolean;
-  onLoadMore: () => void;
+  pageNumber: number;
+  hasMore: boolean;
+  hasPrevious: boolean;
+  onNext: () => void;
+  onPrevious: () => void;
   showGroupingSidebar: boolean;
   onGroupingSidebarChange: (open: boolean) => void;
   activeGroup: string | null;
@@ -39,10 +40,11 @@ export function ProjectsViewContent({
   visibleProjects,
   allProjects,
   prefs,
-  pageCount,
-  hasNextPage,
-  isFetchingNextPage,
-  onLoadMore,
+  pageNumber,
+  hasMore,
+  hasPrevious,
+  onNext,
+  onPrevious,
   showGroupingSidebar,
   onGroupingSidebarChange,
   activeGroup,
@@ -72,12 +74,12 @@ export function ProjectsViewContent({
         {visibleProjects.length > 0 ? (
           <TablePagination
             mode="cursor"
-            cursorVariant="load-more"
             rowCount={visibleProjects.length}
-            pageNumber={pageCount}
-            hasMore={Boolean(hasNextPage)}
-            onNext={onLoadMore}
-            disabled={isFetchingNextPage}
+            pageNumber={pageNumber}
+            hasMore={hasMore}
+            hasPrevious={hasPrevious}
+            onNext={onNext}
+            onPrevious={onPrevious}
             className={cn(STICKY_FOOTER_ABOVE_MOBILE_NAV, "z-10 mt-auto")}
           />
         ) : null}
@@ -91,9 +93,11 @@ export function ProjectsViewContent({
         <ProjectTable
           projects={visibleProjects}
           prefs={prefs}
-          hasMore={Boolean(hasNextPage)}
-          pageNumber={pageCount}
-          onLoadMore={onLoadMore}
+          hasMore={hasMore}
+          hasPrevious={hasPrevious}
+          pageNumber={pageNumber}
+          onNext={onNext}
+          onPrevious={onPrevious}
         />
       </div>
       <GroupingSidebar

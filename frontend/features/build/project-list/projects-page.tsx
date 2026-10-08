@@ -4,7 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { Plus } from "lucide-react";
-import { useInfiniteProjects } from "@/hooks/api/build/projects";
+import { useProjects } from "@/hooks/api/build/projects";
 import { useAccess, useCan } from "@/hooks/api/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { RequireModule } from "@/components/auth/require-module";
@@ -35,6 +35,7 @@ import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useProjectsPage } from "./use-projects-page";
 import { ProjectsViewContent } from "./projects-view-content";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 
 const NewProjectDialog = dynamic(
   () =>
@@ -94,18 +95,29 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
     });
   }, [updateParams]);
 
-  const {
-    data,
-    isLoading,
-    isError,
-    error,
-    refetch,
-    hasNextPage,
-    isFetchingNextPage,
-    fetchNextPage,
-  } = useInfiniteProjects(
+  const pageSize = viewMode === "grid" ? 12 : 25;
+  const cursorResetKey = [
+    pageSize,
+    debouncedSearch,
+    activeFilters.status ?? "",
+    filterManagerId ?? "",
+    filterHealth ?? "",
+    managedProductId ?? filterProductId ?? "",
+  ].join(":");
+  const pager = useBuildCursorPager(cursorResetKey);
+  const parsedAfterId =
+    pager.cursor === undefined ? undefined : Number(pager.cursor);
+  const afterId =
+    parsedAfterId !== undefined &&
+    Number.isInteger(parsedAfterId) &&
+    parsedAfterId > 0
+      ? parsedAfterId
+      : undefined;
+
+  const { data, isLoading, isError, error, refetch } = useProjects(
     {
-      limit: viewMode === "grid" ? 12 : 25,
+      limit: pageSize,
+      ...(afterId === undefined ? {} : { afterId }),
       search: debouncedSearch || undefined,
       status: activeFilters.status,
       ...(filterManagerId ? { managerId: filterManagerId } : {}),
@@ -127,10 +139,12 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
   });
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
-  const handleLoadMore = useCallback(() => { void fetchNextPage(); }, [fetchNextPage]);
+  const handleNextPage = useCallback(() => {
+    pager.goNext(data?.nextCursor == null ? null : String(data.nextCursor));
+  }, [data?.nextCursor, pager]);
 
   const allProjects = useMemo(
-    () => (data?.pages ?? []).flatMap((p) => p.data),
+    () => data?.data ?? [],
     [data],
   );
 
@@ -259,10 +273,11 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
                 visibleProjects={visibleProjects}
                 allProjects={allProjects}
                 prefs={prefs}
-                pageCount={data?.pages.length ?? 1}
-                hasNextPage={hasNextPage}
-                isFetchingNextPage={isFetchingNextPage}
-                onLoadMore={handleLoadMore}
+                pageNumber={pager.pageNumber}
+                hasMore={Boolean(data?.hasMore)}
+                hasPrevious={pager.hasPrevious}
+                onNext={handleNextPage}
+                onPrevious={pager.goPrevious}
                 showGroupingSidebar={showGroupingSidebar}
                 onGroupingSidebarChange={setShowGroupingSidebar}
                 activeGroup={activeGroup}

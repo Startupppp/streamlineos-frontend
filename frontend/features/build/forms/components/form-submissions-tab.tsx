@@ -24,6 +24,9 @@ import type {
   FormSubmissionStatus,
 } from "@/types/projects/forms";
 import { SubmissionActionsCell } from "./submission-actions-cell";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
+
+const PAGE_SIZE = 25;
 
 const FORM_SUBMISSION_TABLE_HEADERS = [
   "Submitter",
@@ -61,6 +64,10 @@ export function FormSubmissionsTab({
 }: FormSubmissionsTabProps) {
   const canManage = useCan("build:forms:manage");
   const [viewTarget, setViewTarget] = useState<FormSubmission | null>(null);
+  const pager = useBuildCursorPager(
+    `${projectId}:${formId}`,
+    "submissionCursors",
+  );
 
   const {
     data,
@@ -68,10 +75,10 @@ export function FormSubmissionsTab({
     isError,
     error,
     refetch,
-    hasNextPage,
-    fetchNextPage,
-    isFetchingNextPage,
-  } = useFormSubmissions(projectId, formId);
+  } = useFormSubmissions(projectId, formId, {
+    cursor: pager.cursor,
+    limit: PAGE_SIZE,
+  });
   const updateSubmission = useUpdateSubmission(projectId, formId);
 
   const handleStatusUpdate = useCallback(
@@ -99,7 +106,9 @@ export function FormSubmissionsTab({
     void refetch();
   }, [refetch]);
 
-  const handleNextPage = useCallback(() => void fetchNextPage(), [fetchNextPage]);
+  const handleNextPage = useCallback(() => {
+    pager.goNext(data?.pagination.nextCursor);
+  }, [data?.pagination.nextCursor, pager]);
 
   const columns: DataTableColumn<FormSubmission>[] = [
     {
@@ -158,9 +167,7 @@ export function FormSubmissionsTab({
     },
   ];
 
-  const items = Array.isArray(data)
-    ? data
-    : (data?.pages.flatMap((page) => page.data) ?? []);
+  const items = data?.data ?? [];
 
   const renderMobileCard = useCallback(
     (row: FormSubmission) => (
@@ -213,13 +220,13 @@ export function FormSubmissionsTab({
         loadingRows={12}
         pagination={{
           mode: "cursor",
-          cursorVariant: "load-more",
-          pageSize: 25,
-          pageNumber: data?.pages.length ?? 1,
-          hasMore: Boolean(hasNextPage),
+          pageSize: PAGE_SIZE,
+          pageNumber: pager.pageNumber,
+          hasMore: Boolean(data?.pagination.hasMore),
+          hasPrevious: pager.hasPrevious,
           onNext: handleNextPage,
+          onPrevious: pager.goPrevious,
         }}
-        isFetchingMore={isFetchingNextPage}
         empty={
           <EmptyState
             className="min-h-0 flex-1"

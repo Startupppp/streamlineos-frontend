@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 
 let mockSearchParams = new URLSearchParams();
 const mockReplace = jest.fn();
-const mockUseInfiniteProjects = jest.fn();
+const mockUseProjects = jest.fn();
 const mockAccess = jest.fn();
 
 jest.mock("next/navigation", () => ({
@@ -27,7 +27,7 @@ jest.mock("@/components/auth/require-module", () => ({
 }));
 
 jest.mock("@/hooks/api/build/projects", () => ({
-  useInfiniteProjects: (filters: unknown) => mockUseInfiniteProjects(filters),
+  useProjects: (filters: unknown) => mockUseProjects(filters),
   useProject: () => ({ data: undefined, isError: false, error: null }),
 }));
 
@@ -45,16 +45,14 @@ function emptyProjectsResult() {
     isError: false,
     error: null,
     refetch: jest.fn(),
-    hasNextPage: false,
-    isFetchingNextPage: false,
-    fetchNextPage: jest.fn(),
+    isFetching: false,
   };
 }
 
 beforeEach(() => {
   jest.clearAllMocks();
   mockSearchParams = new URLSearchParams();
-  mockUseInfiniteProjects.mockReturnValue(emptyProjectsResult());
+  mockUseProjects.mockReturnValue(emptyProjectsResult());
   mockAccess.mockReturnValue({
     data: { isOrgOwner: false, scopes: { "build:view": "all" }, modules: {} },
     isLoading: false,
@@ -63,22 +61,22 @@ beforeEach(() => {
 });
 
 describe("ProjectsPage — productId URL param", () => {
-  it("passes managedProductId to useInfiniteProjects from the productId URL param so the API returns only that product's projects", () => {
+  it("passes managedProductId to useProjects from the productId URL param so the API returns only that product's projects", () => {
     mockSearchParams = new URLSearchParams("productId=7");
 
     render(<ProjectsPage />);
 
-    const calls = mockUseInfiniteProjects.mock.calls;
+    const calls = mockUseProjects.mock.calls;
     expect(calls.length).toBeGreaterThan(0);
     expect(calls[0]?.[0]).toMatchObject({ managedProductId: 7 });
   });
 
-  it("omits managedProductId from useInfiniteProjects when productId is absent so the API returns all projects", () => {
+  it("omits managedProductId from useProjects when productId is absent so the API returns all projects", () => {
     mockSearchParams = new URLSearchParams();
 
     render(<ProjectsPage />);
 
-    const calls = mockUseInfiniteProjects.mock.calls;
+    const calls = mockUseProjects.mock.calls;
     expect(calls.length).toBeGreaterThan(0);
     expect(calls[0]?.[0]).not.toHaveProperty("managedProductId");
   });
@@ -88,7 +86,7 @@ describe("ProjectsPage — productId URL param", () => {
 
     render(<ProjectsPage managedProductId={3} />);
 
-    const calls = mockUseInfiniteProjects.mock.calls;
+    const calls = mockUseProjects.mock.calls;
     expect(calls[0]?.[0]).toMatchObject({ managedProductId: 3 });
   });
 
@@ -106,7 +104,7 @@ describe("ProjectsPage — managerId URL param", () => {
 
     render(<ProjectsPage />);
 
-    expect(mockUseInfiniteProjects).toHaveBeenCalledWith(
+    expect(mockUseProjects).toHaveBeenCalledWith(
       expect.objectContaining({ managerId: "user-abc" }),
     );
   });
@@ -116,7 +114,7 @@ describe("ProjectsPage — managerId URL param", () => {
 
     render(<ProjectsPage />);
 
-    expect(mockUseInfiniteProjects).toHaveBeenCalledWith(
+    expect(mockUseProjects).toHaveBeenCalledWith(
       expect.objectContaining({ managerId: "user-abc" }),
     );
   });
@@ -124,7 +122,9 @@ describe("ProjectsPage — managerId URL param", () => {
   it("omits managerId when neither URL parameter is present", () => {
     render(<ProjectsPage />);
 
-    const [filters] = mockUseInfiniteProjects.mock.calls.at(-1) as [Record<string, unknown>];
+    const [filters] = mockUseProjects.mock.calls.at(-1) as [
+      Record<string, unknown>,
+    ];
     expect(filters).not.toHaveProperty("managerId");
   });
 });
@@ -177,25 +177,54 @@ describe("ProjectsPage — clientId URL param", () => {
 });
 
 describe("ProjectsPage — health URL param reaches the server", () => {
-  it("passes filterHealth to useInfiniteProjects, so the health chip narrows the whole result set and not one keyset page", () => {
+  it("passes filterHealth to useProjects, so the health chip narrows the whole result set and not one keyset page", () => {
     mockSearchParams = new URLSearchParams("filterHealth=off_track");
     render(<ProjectsPage />);
-    expect(mockUseInfiniteProjects).toHaveBeenCalledWith(
+    expect(mockUseProjects).toHaveBeenCalledWith(
       expect.objectContaining({ health: "off_track" }),
     );
   });
 
   it("passes no health when the param is absent — paired with the present case above", () => {
     render(<ProjectsPage />);
-    const [filters] = mockUseInfiniteProjects.mock.calls.at(-1) as [Record<string, unknown>];
+    const [filters] = mockUseProjects.mock.calls.at(-1) as [
+      Record<string, unknown>,
+    ];
     expect("health" in filters).toBe(false);
   });
 
   it("passes no health for a band the backend enum does not define, which a strict schema would reject", () => {
     mockSearchParams = new URLSearchParams("filterHealth=exploding");
     render(<ProjectsPage />);
-    const [filters] = mockUseInfiniteProjects.mock.calls.at(-1) as [Record<string, unknown>];
+    const [filters] = mockUseProjects.mock.calls.at(-1) as [
+      Record<string, unknown>,
+    ];
     expect("health" in filters).toBe(false);
+  });
+});
+
+describe("ProjectsPage — cursor pagination", () => {
+  it("passes the current numeric cursor to the bounded projects query", () => {
+    mockSearchParams = new URLSearchParams({ cursors: JSON.stringify(["29"]) });
+
+    render(<ProjectsPage />);
+
+    expect(mockUseProjects).toHaveBeenCalledWith(
+      expect.objectContaining({ afterId: 29, limit: 25 }),
+    );
+  });
+
+  it("does not send an invalid cursor to the projects endpoint", () => {
+    mockSearchParams = new URLSearchParams({
+      cursors: JSON.stringify(["not-an-id"]),
+    });
+
+    render(<ProjectsPage />);
+
+    const [filters] = mockUseProjects.mock.calls.at(-1) as [
+      Record<string, unknown>,
+    ];
+    expect(filters).not.toHaveProperty("afterId");
   });
 });
 

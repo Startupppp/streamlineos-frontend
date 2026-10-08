@@ -16,6 +16,9 @@ import {
 import { getSlaState } from "./sla";
 import type { IncidentsCreateIncidentResponse } from "@/contracts/build-contracts.generated";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
+
+const PAGE_SIZE = 25;
 
 const FILTER_DEFINITIONS = [
   {
@@ -44,6 +47,7 @@ export function useIncidentsPage({ projectId }: UseIncidentsPageProps) {
   const canManage = useCan("build:incidents:manage");
 
   const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
+  const pager = useBuildCursorPager(listFilters.resetKey);
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editIncident, setEditIncident] = useState<IncidentsCreateIncidentResponse | null>(null);
@@ -58,26 +62,19 @@ export function useIncidentsPage({ projectId }: UseIncidentsPageProps) {
     isError,
     error,
     refetch,
-    hasNextPage,
-    fetchNextPage,
-    isFetchingNextPage,
   } = useIncidents(projectId, {
     status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
     severity: severityValue !== BUILD_FILTER_ALL ? severityValue : undefined,
     q: listFilters.debouncedSearch.trim() || undefined,
+    cursor: pager.cursor,
+    limit: PAGE_SIZE,
   });
 
   const { data: membersData } = useOrgMembers(1, 100);
   const deleteIncident = useDeleteIncident();
   const members = useMemo(() => membersData?.data ?? [], [membersData]);
 
-  const all = useMemo(
-    () =>
-      Array.isArray(data)
-        ? data
-        : (data?.pages.flatMap((page) => page.data) ?? []),
-    [data],
-  );
+  const all = useMemo(() => data?.data ?? [], [data]);
 
   const openCount = all.filter(
     (i) => i.status !== "resolved" && i.status !== "closed",
@@ -132,7 +129,9 @@ export function useIncidentsPage({ projectId }: UseIncidentsPageProps) {
     [listFilters],
   );
 
-  const handleNextPage = useCallback(() => void fetchNextPage(), [fetchNextPage]);
+  const handleNextPage = useCallback(() => {
+    pager.goNext(data?.pagination.nextCursor);
+  }, [data?.pagination.nextCursor, pager]);
 
   const handleOpenFocused = useCallback(
     (index: number) => { router.push(`/build/${projectId}/incidents/${all[index].id}`); },
@@ -178,8 +177,9 @@ export function useIncidentsPage({ projectId }: UseIncidentsPageProps) {
     isLoading,
     isError,
     error,
-    hasNextPage,
-    isFetchingNextPage,
+    pageNumber: pager.pageNumber,
+    hasPrevious: pager.hasPrevious,
+    hasMore: data?.pagination.hasMore ?? false,
     members,
     all,
     openCount,
@@ -194,5 +194,6 @@ export function useIncidentsPage({ projectId }: UseIncidentsPageProps) {
     handleStatusChange,
     handleSeverityChange,
     handleNextPage,
+    handlePreviousPage: pager.goPrevious,
   };
 }

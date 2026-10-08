@@ -35,12 +35,12 @@ export function ApprovalsInboxPage() {
     fromFilter,
     toFilter,
     searchDisplay,
-    data,
     isLoading,
     isError,
     error,
-    hasNextPage,
-    isFetchingNextPage,
+    pageNumber,
+    hasPrevious,
+    hasMore,
     filteredItems,
     queueTarget,
     decideTarget,
@@ -60,6 +60,7 @@ export function ApprovalsInboxPage() {
     handleClearSelection,
     isRowSelectable,
     handleNextPage,
+    handlePreviousPage,
     handleBulkCancel,
   } = useApprovalsInboxPage();
 
@@ -178,13 +179,13 @@ export function ApprovalsInboxPage() {
             }}
             pagination={{
               mode: "cursor",
-              cursorVariant: "load-more",
               pageSize: 25,
-              pageNumber: data?.pages.length ?? 1,
-              hasMore: Boolean(hasNextPage),
+              pageNumber,
+              hasPrevious,
+              hasMore,
               onNext: handleNextPage,
+              onPrevious: handlePreviousPage,
             }}
-            isFetchingMore={isFetchingNextPage}
             empty={
               <EmptyState
                 className={CONTENT_FILL_PANEL}

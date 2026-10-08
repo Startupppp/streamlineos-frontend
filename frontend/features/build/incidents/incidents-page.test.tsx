@@ -142,15 +142,15 @@ function baseQueryResult(overrides: Record<string, unknown> = {}) {
     isError: false,
     error: undefined,
     refetch: jest.fn(),
-    hasNextPage: false,
-    fetchNextPage: jest.fn(),
-    isFetchingNextPage: false,
     ...overrides,
   };
 }
 
 function incidentPages(rows: unknown[]) {
-  return { pages: [{ data: rows }] };
+  return {
+    data: rows,
+    pagination: { limit: 25, hasMore: false, nextCursor: null },
+  };
 }
 
 function defaultFilters(overrides: Record<string, unknown> = {}) {

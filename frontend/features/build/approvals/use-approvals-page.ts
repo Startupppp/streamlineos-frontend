@@ -33,8 +33,9 @@ export function useApprovalsPage(projectId: number) {
     isLoading,
     isError,
     error,
-    hasNextPage,
-    isFetchingNextPage,
+    pageNumber,
+    hasPrevious,
+    hasMore,
     items,
     members,
     approverOptions,
@@ -44,7 +45,8 @@ export function useApprovalsPage(projectId: number) {
     handleEntityTypeChange,
     handleActorIdChange,
     handleRetry,
-    handleNextPage,
+    handleNextPage: goNextPage,
+    handlePreviousPage: goPreviousPage,
   } = useApprovalsData(projectId);
 
   const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
@@ -55,6 +57,15 @@ export function useApprovalsPage(projectId: number) {
   const [cancelTarget, setCancelTarget] = useState<BuildApprovalsCreateApprovalResponse | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<BuildApprovalsCreateApprovalResponse | null>(null);
   const [isBulkPending, setIsBulkPending] = useState(false);
+
+  const handleNextPage = useCallback(() => {
+    setSelectedIds(new Set());
+    goNextPage();
+  }, [goNextPage]);
+  const handlePreviousPage = useCallback(() => {
+    setSelectedIds(new Set());
+    goPreviousPage();
+  }, [goPreviousPage]);
 
   const createApproval = useCreateApproval(projectId);
   const updateApproval = useUpdateApproval(projectId);
@@ -183,8 +194,9 @@ export function useApprovalsPage(projectId: number) {
     isLoading,
     isError,
     error,
-    hasNextPage,
-    isFetchingNextPage,
+    pageNumber,
+    hasPrevious,
+    hasMore,
     items,
     members,
     ownerOf,
@@ -212,6 +224,7 @@ export function useApprovalsPage(projectId: number) {
     handleDeleteConfirm,
     handleRetry,
     handleNextPage,
+    handlePreviousPage,
     isRowSelectable,
     handleDecideDialogChange,
     handleDelegateDialogChange,

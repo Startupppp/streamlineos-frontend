@@ -38,8 +38,6 @@ const STATUS_OPTIONS = [
   { value: "closed", label: "Closed" },
 ];
 
-const INCIDENTS_LIST_CAP = 100;
-
 interface IncidentsPageProps {
   projectId: number;
 }
@@ -55,12 +53,12 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
     setDeleteTarget,
     statusValue,
     severityValue,
-    data,
     isLoading,
     isError,
     error,
-    hasNextPage,
-    isFetchingNextPage,
+    pageNumber,
+    hasPrevious,
+    hasMore,
     members,
     all,
     openCount,
@@ -75,6 +73,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
     handleStatusChange,
     handleSeverityChange,
     handleNextPage,
+    handlePreviousPage,
   } = useIncidentsPage({ projectId });
 
   const renderMobileCard = useCallback(
@@ -177,12 +176,6 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
         </PmSection>
 
         <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
-          {!isLoading && !isError && all.length >= INCIDENTS_LIST_CAP ? (
-            <p className="mb-2 shrink-0 text-micro text-muted-foreground">
-              Showing the most recent {INCIDENTS_LIST_CAP} incidents. Narrow the
-              status or severity filter to see more.
-            </p>
-          ) : null}
           <BuildListSurface<IncidentsCreateIncidentResponse>
             permission="build:incidents:view"
             rows={all}
@@ -197,13 +190,13 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
             loadingRows={12}
             pagination={{
               mode: "cursor",
-              cursorVariant: "load-more",
               pageSize: 25,
-              pageNumber: Array.isArray(data) ? 1 : (data?.pages.length ?? 1),
-              hasMore: Boolean(hasNextPage),
+              pageNumber,
+              hasMore,
+              hasPrevious,
               onNext: handleNextPage,
+              onPrevious: handlePreviousPage,
             }}
-            isFetchingMore={isFetchingNextPage}
             empty={
               <EmptyState
                 className={CONTENT_FILL_PANEL}

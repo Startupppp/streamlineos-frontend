@@ -39,6 +39,32 @@ type ApprovalTarget = { approvalId: number; projectId?: number };
 interface ApprovalFilters { status?: string; entityType?: string; actorId?: string }
 interface InboxFilters { status?: string; type?: string; q?: string; from?: string; to?: string }
 
+function getApprovalInboxPage(filters: InboxFilters | undefined, cursor: string | undefined, signal: AbortSignal) {
+  const params: Record<string, string> = {};
+  if (cursor !== undefined) params.cursor = cursor;
+  for (const [key, value] of Object.entries(filters ?? {})) if (value) params[key] = value;
+  return apiClient.get(
+    "/build/approvals/inbox",
+    Object.keys(params).length ? params : undefined,
+    signal,
+    approvalInboxPageContract,
+  );
+}
+
+function getProjectApprovalsPage(projectId: number, filters: ApprovalFilters | undefined, cursor: string | undefined, signal: AbortSignal) {
+  const params: Record<string, string> = {};
+  if (filters?.status) params.status = filters.status;
+  if (filters?.entityType) params.entityType = filters.entityType;
+  if (filters?.actorId) params.approverId = filters.actorId;
+  if (cursor !== undefined) params.cursor = cursor;
+  return apiClient.get(
+    `/build/${projectId}/approvals`,
+    params,
+    signal,
+    approvalPageContract,
+  );
+}
+
 function subscribeImpersonation(change: () => void) {
   window.addEventListener("impersonation-change", change);
   return () => window.removeEventListener("impersonation-change", change);
@@ -77,15 +103,26 @@ export function useApprovalInbox(filters?: InboxFilters) {
   const activeFilters = filters && Object.values(filters).some(Boolean) ? filters : undefined;
   return useInfiniteQuery({
     queryKey: buildWorkQueryKeys.projects.approvals.inbox(activeFilters),
-    queryFn: ({ pageParam, signal }) => {
-      const params: Record<string, string> = {};
-      if (pageParam !== undefined) params.cursor = pageParam;
-      for (const [key, value] of Object.entries(activeFilters ?? {})) if (value) params[key] = value;
-      return apiClient.get("/build/approvals/inbox", Object.keys(params).length ? params : undefined, signal, approvalInboxPageContract);
-    },
+    queryFn: ({ pageParam, signal }) => getApprovalInboxPage(activeFilters, pageParam, signal),
     initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canView, staleTime: 120_000, refetchInterval: 120_000, refetchIntervalInBackground: false,
+  });
+}
+
+export function useApprovalInboxPage(filters?: InboxFilters, cursor?: string) {
+  const canView = useCan("build:approvals:view");
+  const activeFilters = filters && Object.values(filters).some(Boolean) ? filters : undefined;
+  return useQuery({
+    queryKey: buildWorkQueryKeys.projects.approvals.inbox({
+      ...activeFilters,
+      cursor: cursor ?? null,
+    }),
+    queryFn: ({ signal }) => getApprovalInboxPage(activeFilters, cursor, signal),
+    enabled: canView,
+    staleTime: 120_000,
+    refetchInterval: 120_000,
+    refetchIntervalInBackground: false,
   });
 }
 export function useBuildNotificationUnreadCount() {
@@ -105,11 +142,24 @@ export function useProjectApprovals(projectId: number, filters?: ApprovalFilters
   if (filters?.actorId) params.approverId = filters.actorId;
   return useInfiniteQuery({
     queryKey: buildWorkQueryKeys.projects.approvals.list(projectId, Object.keys(params).length ? params : undefined),
-    queryFn: ({ pageParam, signal }) => apiClient.get(`/build/${projectId}/approvals`,
-      pageParam !== undefined ? { ...params, cursor: pageParam } : params, signal, approvalPageContract),
+    queryFn: ({ pageParam, signal }) => getProjectApprovalsPage(projectId, filters, pageParam, signal),
     initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canView && projectId > 0, staleTime: 60_000,
+  });
+}
+
+export function useProjectApprovalsPage(projectId: number, filters?: ApprovalFilters, cursor?: string) {
+  const canView = useCan("build:approvals:view");
+  const params: Record<string, string | null> = { cursor: cursor ?? null };
+  if (filters?.status) params.status = filters.status;
+  if (filters?.entityType) params.entityType = filters.entityType;
+  if (filters?.actorId) params.approverId = filters.actorId;
+  return useQuery({
+    queryKey: buildWorkQueryKeys.projects.approvals.list(projectId, params),
+    queryFn: ({ signal }) => getProjectApprovalsPage(projectId, filters, cursor, signal),
+    enabled: canView && projectId > 0,
+    staleTime: 60_000,
   });
 }
 

@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
@@ -16,8 +16,6 @@ import type {
   FormType,
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
-
 
 const formListContract = lazyContract(() =>
   import("@/hooks/api/build/forms-schema").then((m) => m.formResponseContract),
@@ -42,6 +40,8 @@ interface FormFilters {
   type?: FormType;
   isActive?: boolean;
   q?: string;
+  cursor?: string;
+  limit?: number;
 }
 
 export function useForms(projectId: number, filters?: FormFilters) {
@@ -50,21 +50,21 @@ export function useForms(projectId: number, filters?: FormFilters) {
   if (filters?.type) params["type"] = filters.type;
   if (filters?.isActive !== undefined) params["isActive"] = String(filters.isActive);
   if (filters?.q) params["q"] = filters.q;
+  if (filters?.cursor) params["cursor"] = filters.cursor;
+  if (filters?.limit) params["limit"] = String(filters.limit);
 
-  return useInfiniteQuery({
+  return useQuery({
     queryKey: buildWorkQueryKeys.projects.forms.list(
       projectId,
       Object.keys(params).length > 0 ? params : undefined,
     ),
-    queryFn: ({ pageParam, signal }) =>
+    queryFn: ({ signal }) =>
       apiClient.get<{ data: ProjectForm[]; pagination: { limit: number; hasMore: boolean; nextCursor: string | null } }>(
         `/build/${projectId}/forms`,
-        pageParam !== undefined ? { ...params, cursor: pageParam } : params,
+        params,
         signal,
         formListContract,
       ),
-    initialPageParam: NO_CURSOR_YET,
-    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
@@ -117,19 +117,34 @@ export function useDeleteForm(projectId: number) {
   });
 }
 
-export function useFormSubmissions(projectId: number, formId: number) {
+interface FormSubmissionFilters {
+  cursor?: string;
+  limit?: number;
+}
+
+export function useFormSubmissions(
+  projectId: number,
+  formId: number,
+  filters?: FormSubmissionFilters,
+) {
   const canManage = useCan("build:forms:manage");
-  return useInfiniteQuery({
-    queryKey: buildWorkQueryKeys.projects.forms.submissions(projectId, formId),
-    queryFn: ({ pageParam, signal }) =>
+  const params: Record<string, string> = {};
+  if (filters?.cursor) params["cursor"] = filters.cursor;
+  if (filters?.limit) params["limit"] = String(filters.limit);
+
+  return useQuery({
+    queryKey: buildWorkQueryKeys.projects.forms.submissions(
+      projectId,
+      formId,
+      Object.keys(params).length > 0 ? params : undefined,
+    ),
+    queryFn: ({ signal }) =>
       apiClient.get<{ data: FormSubmission[]; pagination: { limit: number; hasMore: boolean; nextCursor: string | null } }>(
         `/build/${projectId}/forms/${formId}/submissions`,
-        pageParam !== undefined ? { cursor: pageParam } : undefined,
+        Object.keys(params).length > 0 ? params : undefined,
         signal,
         submissionListContract,
       ),
-    initialPageParam: NO_CURSOR_YET,
-    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canManage && !!projectId && !!formId,
     staleTime: 60_000,
   });

@@ -4,7 +4,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import {
-  useApprovalInbox,
+  useApprovalInboxPage,
   useUpdateApproval,
 } from "@/hooks/api/build/approvals";
 import { useCan } from "@/hooks/api/access";
@@ -15,6 +15,7 @@ import {
   useBuildListFilters,
 } from "@/features/build/shared/use-build-list-filters";
 import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import { ENTITY_OPTIONS, STATUS_OPTIONS } from "./approvals-constants";
 import type { ApprovalInboxItem } from "@/types/projects";
 import {
@@ -49,6 +50,7 @@ export function useApprovalsInboxPage() {
   const toFilter = listFilters.value("to");
   const searchDisplay = listFilters.search;
   const searchParam = listFilters.debouncedSearch;
+  const pager = useBuildCursorPager(listFilters.resetKey, "approvalInboxCursors");
 
   const {
     data,
@@ -56,21 +58,15 @@ export function useApprovalsInboxPage() {
     isError,
     error,
     refetch,
-    hasNextPage,
-    fetchNextPage,
-    isFetchingNextPage,
-  } = useApprovalInbox({
+  } = useApprovalInboxPage({
     status: statusFilter !== BUILD_FILTER_ALL ? statusFilter : undefined,
     type: typeFilter !== BUILD_FILTER_ALL ? typeFilter : undefined,
     q: searchParam || undefined,
     from: fromFilter !== BUILD_FILTER_ALL ? fromFilter : undefined,
     to: toFilter !== BUILD_FILTER_ALL ? toFilter : undefined,
-  });
+  }, pager.cursor);
 
-  const items = useMemo(
-    () => data?.pages.flatMap((page) => page.data) ?? [],
-    [data],
-  );
+  const items = useMemo(() => data?.data ?? [], [data]);
   const { data: membersRes } = useOrgMembers(1, 100);
   const members = useMemo(() => membersRes?.data ?? [], [membersRes]);
 
@@ -200,9 +196,16 @@ export function useApprovalsInboxPage() {
   const handleClearSelection = useCallback(() => setSelection(new Set()), []);
   const isRowSelectable = useCallback(() => canManage, [canManage]);
   const handleNextPage = useCallback(
-    () => void fetchNextPage(),
-    [fetchNextPage],
+    () => {
+      setSelection(new Set());
+      pager.goNext(data?.pagination.nextCursor);
+    },
+    [data?.pagination.nextCursor, pager],
   );
+  const handlePreviousPage = useCallback(() => {
+    setSelection(new Set());
+    pager.goPrevious();
+  }, [pager]);
 
   const handleBulkCancel = useCallback(() => {
     if (isBulkPending || !canManage) return;
@@ -295,8 +298,9 @@ export function useApprovalsInboxPage() {
     isLoading,
     isError,
     error,
-    hasNextPage,
-    isFetchingNextPage,
+    pageNumber: pager.pageNumber,
+    hasPrevious: pager.hasPrevious,
+    hasMore: data?.pagination.hasMore ?? false,
     items,
     filteredItems,
     members,
@@ -319,6 +323,7 @@ export function useApprovalsInboxPage() {
     handleClearSelection,
     isRowSelectable,
     handleNextPage,
+    handlePreviousPage,
     handleBulkCancel,
   };
 }

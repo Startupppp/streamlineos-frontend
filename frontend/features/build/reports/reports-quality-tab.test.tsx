@@ -185,7 +185,7 @@ it("forwards only supported filters and the cursor to the canonical API", async 
   mount();
   await screen.findByRole("row", { name: /Regression run/ });
   expect(mockGet).toHaveBeenCalledWith("/build/1/test-runs", { q: "regression", status: "completed", failuresOnly: "true", cursor: "42" }, expect.any(AbortSignal), expect.anything());
-  expect(screen.getByText("Page 2")).toBeVisible();
+  expect(screen.getByLabelText("Current page 2")).toHaveTextContent(/^2$/);
   expect(screen.queryByRole("button", { name: "Load more" })).not.toBeInTheDocument();
 });
 

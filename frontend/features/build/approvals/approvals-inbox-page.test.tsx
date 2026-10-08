@@ -9,6 +9,23 @@ import type { DataTableColumn } from "@/components/ui/data-table";
 let mockSearchParams = new URLSearchParams();
 const mockReplace = jest.fn();
 const mockPush = jest.fn();
+const mockPager = {
+  cursor: undefined as string | undefined,
+  pageNumber: 1,
+  hasPrevious: false,
+  goNext: jest.fn(),
+  goPrevious: jest.fn(),
+  reset: jest.fn(),
+};
+let mockCapturedPagination: {
+  mode: "cursor";
+  pageNumber?: number;
+  hasMore: boolean;
+  hasPrevious?: boolean;
+  onNext: () => void;
+  onPrevious?: () => void;
+  cursorVariant?: "paged" | "load-more";
+} | undefined;
 jest.mock("next/navigation", () => ({
   useSearchParams: () => mockSearchParams,
   useRouter: () => ({ replace: mockReplace, push: mockPush }),
@@ -16,7 +33,7 @@ jest.mock("next/navigation", () => ({
 }));
 
 jest.mock("@/hooks/api/build/approvals", () => ({
-  useApprovalInbox: jest.fn(),
+  useApprovalInboxPage: jest.fn(),
   useUpdateApproval: jest.fn(),
   useApproval: jest.fn(),
   useDecideApproval: jest.fn(),
@@ -83,8 +100,13 @@ jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
   useBuildListKeyboard: jest.fn(),
 }));
 
+jest.mock("@/features/build/shared/use-build-cursor-pager", () => ({
+  useBuildCursorPager: jest.fn(() => mockPager),
+}));
+
 jest.mock("@/components/ui/data-table", () => ({
-  DataTable: ({ data, selection, columns }: { data: ApprovalInboxItem[]; columns: DataTableColumn<ApprovalInboxItem>[]; selection?: { selected: Set<string | number>; onChange: (ids: Set<string | number>) => void } }) => {
+  DataTable: ({ data, selection, columns, pagination }: { data: ApprovalInboxItem[]; columns: DataTableColumn<ApprovalInboxItem>[]; selection?: { selected: Set<string | number>; onChange: (ids: Set<string | number>) => void }; pagination?: typeof mockCapturedPagination }) => {
+    mockCapturedPagination = pagination;
     function handleSelectApprovals() {
       selection?.onChange(new Set(data.map((row) => `${row.projectId}-${row.id}`)));
     }
@@ -147,17 +169,19 @@ jest.mock("./approvals-constants", () => ({
   ],
 }));
 
-import { useApprovalInbox, useUpdateApproval } from "@/hooks/api/build/approvals";
+import { useApprovalInboxPage, useUpdateApproval } from "@/hooks/api/build/approvals";
 import { useCan, useAccess } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 
-const mockUseApprovalInbox = useApprovalInbox as jest.Mock;
+const mockUseApprovalInbox = useApprovalInboxPage as jest.Mock;
 const mockUseUpdateApproval = useUpdateApproval as jest.Mock;
 const mockUseCan = useCan as jest.Mock;
 const mockUseAccess = useAccess as jest.Mock;
 const mockUseOrgMembers = useOrgMembers as jest.Mock;
 const mockUseBuildListFilters = useBuildListFilters as jest.Mock;
+const mockUseBuildCursorPager = useBuildCursorPager as jest.Mock;
 const { useApproval: mockUseApproval, useDecideApproval: mockUseDecideApproval } = jest.requireMock<{
   useApproval: jest.Mock<unknown, [number, number, boolean]>;
   useDecideApproval: jest.Mock;
@@ -180,15 +204,15 @@ function baseQueryResult(overrides: Record<string, unknown> = {}) {
     isError: false,
     error: undefined,
     refetch: jest.fn(),
-    hasNextPage: false,
-    fetchNextPage: jest.fn(),
-    isFetchingNextPage: false,
     ...overrides,
   };
 }
 
 function approvalPages(rows: unknown[]) {
-  return { pages: [{ data: rows }] };
+  return {
+    data: rows,
+    pagination: { limit: 25, hasMore: false, nextCursor: null },
+  };
 }
 
 function defaultFilters(overrides: Record<string, unknown> = {}) {
@@ -221,6 +245,10 @@ const approvalRow = {
 beforeEach(() => {
   jest.clearAllMocks();
   mockSearchParams = new URLSearchParams();
+  mockPager.cursor = undefined;
+  mockPager.pageNumber = 1;
+  mockPager.hasPrevious = false;
+  mockCapturedPagination = undefined;
   mockUseCan.mockReturnValue(false);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseApprovalInbox.mockReturnValue(baseQueryResult({ data: approvalPages([]) }));
@@ -229,6 +257,36 @@ beforeEach(() => {
   mockUseBuildListFilters.mockReturnValue(defaultFilters());
   mockUseApproval.mockReturnValue({ data: undefined, isPending: false, error: null, ownerStamp: null, refetch: jest.fn() });
   mockUseDecideApproval.mockReturnValue({ mutateAsync: jest.fn(), isPending: false });
+});
+
+it("renders a single cursor page with previous and next controls", () => {
+  mockPager.cursor = "cursor-2";
+  mockPager.pageNumber = 2;
+  mockPager.hasPrevious = true;
+  mockUseApprovalInbox.mockReturnValue(baseQueryResult({
+    data: {
+      data: [approvalRow],
+      pagination: { limit: 25, hasMore: true, nextCursor: "cursor-3" },
+    },
+  }));
+
+  render(<ApprovalsInboxPage />);
+
+  expect(mockUseApprovalInbox).toHaveBeenCalledWith(expect.any(Object), "cursor-2");
+  expect(mockUseBuildCursorPager).toHaveBeenCalledWith("0", "approvalInboxCursors");
+  expect(mockCapturedPagination).toMatchObject({
+    mode: "cursor",
+    pageNumber: 2,
+    hasPrevious: true,
+    hasMore: true,
+  });
+  expect(mockCapturedPagination?.cursorVariant).toBeUndefined();
+  act(() => {
+    mockCapturedPagination?.onNext();
+    mockCapturedPagination?.onPrevious?.();
+  });
+  expect(mockPager.goNext).toHaveBeenCalledWith("cursor-3");
+  expect(mockPager.goPrevious).toHaveBeenCalledTimes(1);
 });
 
 it.each([[42, 7], [2_147_483_647, 2_147_483_647]])("opens fresh project %s approval %s outside the loaded queue", (projectId, approvalId) => {

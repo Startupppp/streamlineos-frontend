@@ -123,18 +123,30 @@ describe("TablePagination absorbs the second footer, so there is one pagination 
       />,
     );
 
-    expect(screen.getByLabelText("Current page 3")).toHaveTextContent("Page 3");
+    expect(screen.getByLabelText("Current page 3")).toHaveTextContent(/^3$/);
     expect(screen.queryByLabelText("Page 3")).not.toBeInTheDocument();
   });
 
-  it("keeps the current offset page in the numbered window", () => {
+  it("keeps the current offset page in the numbered window when detailed page numbers are requested", () => {
     render(
-      <TablePagination page={5} pageSize={10} total={100} onPageChange={noop} />,
+      <TablePagination page={5} pageSize={10} total={100} onPageChange={noop} showPageNumbers />,
     );
 
     expect(screen.getByLabelText("Page 5")).toHaveAttribute("aria-current", "page");
     expect(screen.getByLabelText("Page 4")).toBeInTheDocument();
     expect(screen.getByLabelText("Page 6")).toBeInTheDocument();
+  });
+
+  it("uses the compact previous, current, and next controls by default in offset mode", () => {
+    render(
+      <TablePagination page={2} pageSize={10} total={35} onPageChange={noop} />,
+    );
+
+    expect(screen.getByLabelText("Previous page")).toBeInTheDocument();
+    expect(screen.getByLabelText("Current page 2")).toHaveTextContent(/^2$/);
+    expect(screen.getByLabelText("Next page")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Page 1")).not.toBeInTheDocument();
+    expect(screen.queryByText(/of \d+ pages/)).not.toBeInTheDocument();
   });
 
   it("renders nothing for an empty first page, because a footer over no rows reports nothing", () => {

@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from "react";
-import { useProjectApprovals } from "@/hooks/api/build/approvals";
+import { useProjectApprovalsPage } from "@/hooks/api/build/approvals";
 import { useOrgMembers } from "@/hooks/api/organization";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import {
   BUILD_FILTER_ALL,
   useBuildListFilters,
@@ -22,6 +23,7 @@ export function useApprovalsData(projectId: number) {
   const statusValue = listFilters.value("status");
   const entityTypeValue = listFilters.value("entityType");
   const actorIdValue = listFilters.value("actorId");
+  const pager = useBuildCursorPager(listFilters.resetKey, "projectApprovalCursors");
 
   const {
     data,
@@ -29,21 +31,15 @@ export function useApprovalsData(projectId: number) {
     isError,
     error,
     refetch,
-    hasNextPage,
-    fetchNextPage,
-    isFetchingNextPage,
-  } = useProjectApprovals(projectId, {
+  } = useProjectApprovalsPage(projectId, {
     status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
     entityType: entityTypeValue !== BUILD_FILTER_ALL ? entityTypeValue : undefined,
     actorId: actorIdValue !== BUILD_FILTER_ALL ? actorIdValue : undefined,
-  });
+  }, pager.cursor);
 
   const { data: membersRes } = useOrgMembers(1, 100);
   const members = useMemo(() => membersRes?.data ?? [], [membersRes]);
-  const items = useMemo(
-    () => data?.pages.flatMap((page) => page.data) ?? [],
-    [data],
-  );
+  const items = useMemo(() => data?.data ?? [], [data]);
 
   const approverOptions = useMemo(
     () => [
@@ -85,8 +81,12 @@ export function useApprovalsData(projectId: number) {
   );
   const handleRetry = useCallback(() => void refetch(), [refetch]);
   const handleNextPage = useCallback(
-    () => void fetchNextPage(),
-    [fetchNextPage],
+    () => pager.goNext(data?.pagination.nextCursor),
+    [data?.pagination.nextCursor, pager],
+  );
+  const handlePreviousPage = useCallback(
+    () => pager.goPrevious(),
+    [pager],
   );
 
   return {
@@ -98,8 +98,9 @@ export function useApprovalsData(projectId: number) {
     isLoading,
     isError,
     error,
-    hasNextPage,
-    isFetchingNextPage,
+    pageNumber: pager.pageNumber,
+    hasPrevious: pager.hasPrevious,
+    hasMore: data?.pagination.hasMore ?? false,
     items,
     members,
     approverOptions,
@@ -110,5 +111,6 @@ export function useApprovalsData(projectId: number) {
     handleActorIdChange,
     handleRetry,
     handleNextPage,
+    handlePreviousPage,
   };
 }

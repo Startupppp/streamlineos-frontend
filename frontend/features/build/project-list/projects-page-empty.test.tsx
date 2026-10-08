@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { ProjectsPage } from "./projects-page";
 
-const infiniteProjects = jest.fn();
+const projects = jest.fn();
 const project = jest.fn();
 
 jest.mock("next/navigation", () => ({
@@ -28,7 +28,7 @@ jest.mock("@/components/auth/require-module", () => ({
 }));
 
 jest.mock("@/hooks/api/build/projects", () => ({
-  useInfiniteProjects: () => infiniteProjects(),
+  useProjects: () => projects(),
   useProject: () => project(),
 }));
 
@@ -39,15 +39,13 @@ jest.mock("./new-project-dialog", () => ({
 beforeEach(() => {
   jest.clearAllMocks();
   project.mockReturnValue({ data: undefined, isError: false, error: null });
-  infiniteProjects.mockReturnValue({
-    data: { pages: [{ data: [], hasMore: false, nextCursor: null }], pageParams: [undefined] },
+  projects.mockReturnValue({
+    data: { data: [], hasMore: false, nextCursor: null },
     isLoading: false,
     isError: false,
     error: null,
     refetch: jest.fn(),
-    hasNextPage: false,
-    isFetchingNextPage: false,
-    fetchNextPage: jest.fn(),
+    isFetching: false,
   });
 });
 

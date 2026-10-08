@@ -34,10 +34,10 @@ describe("TablePagination cursor mode", () => {
 
     expect(screen.getByLabelText("Previous page")).toBeInTheDocument();
     expect(screen.getByLabelText("Next page")).toBeInTheDocument();
-    expect(screen.getByLabelText("Current page 1")).toHaveTextContent("Page 1");
+    expect(screen.getByLabelText("Current page 1")).toHaveTextContent(/^1$/);
     expect(screen.queryByLabelText("Page 1")).not.toBeInTheDocument();
     expect(screen.queryByText(/of \d/)).not.toBeInTheDocument();
-    expect(screen.getByText("20 results shown")).toBeInTheDocument();
+    expect(screen.getByLabelText("20 results shown")).toHaveTextContent(/^20$/);
   });
 
   it("disables next at the end of the list and previous at the head", () => {
@@ -75,9 +75,9 @@ describe("TablePagination cursor mode", () => {
     );
   });
 
-  it("still renders numbered pages in offset mode", () => {
+  it("still renders numbered pages in offset mode when explicitly requested", () => {
     render(
-      <TablePagination page={2} pageSize={10} total={35} onPageChange={noop} />,
+      <TablePagination page={2} pageSize={10} total={35} onPageChange={noop} showPageNumbers />,
     );
 
     expect(screen.getByLabelText("Page 1")).toBeInTheDocument();

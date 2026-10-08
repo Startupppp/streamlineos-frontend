@@ -8,6 +8,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { ErrorState } from "@/components/shared/error-state";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -136,30 +142,40 @@ export function BuildScopeBrowser({
         className="shrink-0 border-b border-border/60 p-2"
         onKeyDown={handleSearchKeyDown}
       >
-        <SearchInput
-          value={search}
-          onValueChange={setSearch}
-          placeholder="Search projects and products"
-          autoFocus
-        />
-        <div className="mt-1.5 flex items-center justify-between">
-          <button
-            type="button"
-            onClick={handleToggleArchived}
-            aria-pressed={includeArchived}
-            className={cn(
-              "flex items-center gap-1.5 rounded-md px-2 py-1 text-micro font-medium transition-colors motion-reduce:transition-none",
-              includeArchived
-                ? "bg-primary/10 text-foreground"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground",
-            )}
-          >
-            <Archive className="h-3 w-3" />
-            Include archived
-          </button>
+        <div className="flex items-center gap-1.5">
+          <SearchInput
+            value={search}
+            onValueChange={setSearch}
+            placeholder="Search projects and products"
+            autoFocus
+            className="min-w-0 flex-1"
+          />
+          <TooltipProvider delayDuration={0}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={handleToggleArchived}
+                  aria-label="Include archived"
+                  aria-pressed={includeArchived}
+                  className={cn(
+                    "flex size-9 shrink-0 items-center justify-center rounded-md border text-muted-foreground transition-colors motion-reduce:transition-none",
+                    includeArchived
+                      ? "border-primary/40 bg-primary/10 text-foreground"
+                      : "border-border/70 hover:bg-muted hover:text-foreground",
+                  )}
+                >
+                  <Archive className="size-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" sideOffset={6} className="text-xs font-medium">
+                Include archived
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           {directory.isRefreshing ? (
             <Loader2
-              className="h-3 w-3 animate-spin text-muted-foreground motion-reduce:animation-none"
+              className="size-3 shrink-0 animate-spin text-muted-foreground motion-reduce:animation-none"
               aria-label="Refreshing scopes"
             />
           ) : null}

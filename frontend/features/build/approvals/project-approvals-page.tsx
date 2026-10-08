@@ -42,12 +42,12 @@ export function ProjectApprovalsPage({
     entityTypeValue,
     actorIdValue,
     approverOptions,
-    data,
     isLoading,
     isError,
     error,
-    hasNextPage,
-    isFetchingNextPage,
+    pageNumber,
+    hasPrevious,
+    hasMore,
     items,
     members,
     ownerOf,
@@ -75,6 +75,7 @@ export function ProjectApprovalsPage({
     handleDeleteConfirm,
     handleRetry,
     handleNextPage,
+    handlePreviousPage,
     isRowSelectable,
     handleDecideDialogChange,
     handleDelegateDialogChange,
@@ -164,13 +165,13 @@ export function ProjectApprovalsPage({
             }}
             pagination={{
               mode: "cursor",
-              cursorVariant: "load-more",
               pageSize: 25,
-              pageNumber: data?.pages.length ?? 1,
-              hasMore: Boolean(hasNextPage),
+              pageNumber,
+              hasPrevious,
+              hasMore,
               onNext: handleNextPage,
+              onPrevious: handlePreviousPage,
             }}
-            isFetchingMore={isFetchingNextPage}
             minWidth="720px"
             loadingHeaders={APPROVALS_TABLE_HEADERS}
             loadingRows={12}

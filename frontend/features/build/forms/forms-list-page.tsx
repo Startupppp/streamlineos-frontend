@@ -25,6 +25,9 @@ import {
   FormMobileCard,
   buildFormsColumns,
 } from "./forms-table-columns";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
+
+const PAGE_SIZE = 25;
 
 const TYPE_OPTIONS = [
   { value: BUILD_FILTER_ALL, label: "All types" },
@@ -51,6 +54,7 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
   const canManage = useCan("build:forms:manage");
 
   const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
+  const pager = useBuildCursorPager(listFilters.resetKey);
 
   const typeValue = listFilters.value("type");
   const statusValue = listFilters.value("status");
@@ -69,13 +73,12 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
     isError,
     error,
     refetch,
-    hasNextPage,
-    fetchNextPage,
-    isFetchingNextPage,
   } = useForms(projectId, {
     type: formTypeValue,
     isActive: isActiveParam,
     q: listFilters.debouncedSearch || undefined,
+    cursor: pager.cursor,
+    limit: PAGE_SIZE,
   });
 
   const createForm = useCreateForm(projectId);
@@ -107,15 +110,11 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
     [listFilters],
   );
 
-  const handleNextPage = useCallback(() => void fetchNextPage(), [fetchNextPage]);
+  const handleNextPage = useCallback(() => {
+    pager.goNext(data?.pagination.nextCursor);
+  }, [data?.pagination.nextCursor, pager]);
 
-  const items = useMemo(
-    () =>
-      Array.isArray(data)
-        ? data
-        : (data?.pages.flatMap((page) => page.data) ?? []),
-    [data],
-  );
+  const items = useMemo(() => data?.data ?? [], [data]);
 
   const columns = useMemo(() => buildFormsColumns({ projectId }), [projectId]);
 
@@ -202,13 +201,13 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
             loadingRows={12}
             pagination={{
               mode: "cursor",
-              cursorVariant: "load-more",
-              pageSize: 25,
-              pageNumber: Array.isArray(data) ? 1 : (data?.pages.length ?? 1),
-              hasMore: Boolean(hasNextPage),
+              pageSize: PAGE_SIZE,
+              pageNumber: pager.pageNumber,
+              hasMore: Boolean(data?.pagination.hasMore),
+              hasPrevious: pager.hasPrevious,
               onNext: handleNextPage,
+              onPrevious: pager.goPrevious,
             }}
-            isFetchingMore={isFetchingNextPage}
             empty={
               <EmptyState
                 className={CONTENT_FILL_PANEL}

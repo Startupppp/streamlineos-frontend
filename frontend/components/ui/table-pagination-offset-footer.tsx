@@ -20,7 +20,7 @@ export function OffsetFooter({
   pageSize,
   total,
   onPageChange,
-  showPageNumbers = true,
+  showPageNumbers = false,
   showEdgeJumps = false,
   onPageSizeChange,
   pageSizeOptions,
@@ -31,7 +31,14 @@ export function OffsetFooter({
   const currentPage = Math.min(Math.max(1, page), totalPages);
   const from = total === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const to = Math.min(currentPage * pageSize, total);
-  const pageItems = getVisiblePageItems(totalPages, currentPage);
+  const pageItems = showPageNumbers
+    ? getVisiblePageItems(totalPages, currentPage)
+    : [];
+
+  const handleFirstPage = () => onPageChange(1);
+  const handlePreviousPage = () => onPageChange(currentPage - 1);
+  const handleNextPage = () => onPageChange(currentPage + 1);
+  const handleLastPage = () => onPageChange(totalPages);
 
   if (total === 0) return null;
 
@@ -57,7 +64,7 @@ export function OffsetFooter({
             size="icon"
             className="size-8"
             disabled={disabled || currentPage <= 1}
-            onClick={() => onPageChange(1)}
+            onClick={handleFirstPage}
             aria-label="First page"
           >
             <ChevronsLeft className="h-3.5 w-3.5" aria-hidden="true" />
@@ -70,7 +77,7 @@ export function OffsetFooter({
           size="icon"
           className="size-8"
           disabled={disabled || currentPage <= 1}
-          onClick={() => onPageChange(currentPage - 1)}
+          onClick={handlePreviousPage}
           aria-label="Previous page"
         >
           <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
@@ -104,7 +111,15 @@ export function OffsetFooter({
               ),
             )}
           </div>
-        ) : null}
+        ) : (
+          <span
+            className="inline-flex h-8 min-w-8 items-center justify-center rounded-md border border-border/70 bg-muted/50 px-2 text-xs font-medium tabular-nums text-foreground"
+            aria-label={`Current page ${currentPage}`}
+            aria-current="page"
+          >
+            {currentPage}
+          </span>
+        )}
 
         <Button
           type="button"
@@ -112,22 +127,11 @@ export function OffsetFooter({
           size="icon"
           className="size-8"
           disabled={disabled || currentPage >= totalPages}
-          onClick={() => onPageChange(currentPage + 1)}
+          onClick={handleNextPage}
           aria-label="Next page"
         >
           <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
         </Button>
-
-        <span
-          className="inline-flex h-8 min-w-8 items-center justify-center rounded-md border border-border/70 bg-muted/50 px-2 text-xs font-medium tabular-nums text-foreground"
-          aria-label={`Current page ${currentPage} of ${totalPages}`}
-          aria-current="page"
-        >
-          {currentPage}
-        </span>
-        <span className="whitespace-nowrap text-xs text-muted-foreground">
-          of {totalPages} pages
-        </span>
 
         {showEdgeJumps ? (
           <Button
@@ -136,7 +140,7 @@ export function OffsetFooter({
             size="icon"
             className="size-8"
             disabled={disabled || currentPage >= totalPages}
-            onClick={() => onPageChange(totalPages)}
+            onClick={handleLastPage}
             aria-label="Last page"
           >
             <ChevronsRight className="h-3.5 w-3.5" aria-hidden="true" />

@@ -247,15 +247,29 @@ export const buildWorkQueryKeys = {
           : ([...base, "projects", projectId, "forms", params] as const),
       detail: (projectId: number, formId: number) =>
         [...base, "projects", projectId, "forms", formId] as const,
-      submissions: (projectId: number, formId: number) =>
-        [
-          ...base,
-          "projects",
-          projectId,
-          "forms",
-          formId,
-          "submissions",
-        ] as const,
+      submissions: (
+        projectId: number,
+        formId: number,
+        params?: QueryKeyParams,
+      ) =>
+        params === undefined
+          ? ([
+              ...base,
+              "projects",
+              projectId,
+              "forms",
+              formId,
+              "submissions",
+            ] as const)
+          : ([
+              ...base,
+              "projects",
+              projectId,
+              "forms",
+              formId,
+              "submissions",
+              params,
+            ] as const),
     },
     portfolios: {
       list: (params?: QueryKeyParams) =>

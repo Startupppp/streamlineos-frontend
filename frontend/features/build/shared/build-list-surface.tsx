@@ -9,29 +9,15 @@ import { usePageState } from "@/hooks/api/use-page-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 
-interface BuildListSurfaceCursorPaginationBase {
+interface BuildListSurfaceCursorPagination {
   mode: "cursor";
   pageSize: number;
-
   pageNumber: number;
   hasMore: boolean;
+  hasPrevious: boolean;
   onNext: () => void;
+  onPrevious: () => void;
 }
-
-type BuildListSurfaceCursorPagination =
-  BuildListSurfaceCursorPaginationBase &
-    (
-      | {
-          cursorVariant?: "paged";
-          hasPrevious: boolean;
-          onPrevious: () => void;
-        }
-      | {
-          cursorVariant: "load-more";
-          hasPrevious?: never;
-          onPrevious?: never;
-        }
-    );
 
 interface BuildListSurfaceServerPagination {
   mode: "server";
@@ -152,13 +138,7 @@ export function BuildListSurface<TRow>({
           onRowContextMenu={onRowContextMenu}
           mobileCard={mobileCard}
           selection={selection}
-          pagination={
-            pagination === undefined || pagination.mode === "server"
-              ? pagination
-              : {
-                  ...pagination,
-                }
-          }
+          pagination={pagination}
           isLoading={isFetchingMore}
           minWidth={minWidth}
           footer={footer}

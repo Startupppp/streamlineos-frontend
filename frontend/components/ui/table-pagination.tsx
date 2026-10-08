@@ -32,7 +32,7 @@ function CursorFooter({
   disabled = false,
   className,
   hideOnSinglePage = false,
-  compact = false,
+  compact = true,
   showSummary = true,
 }: TablePaginationCursorProps) {
   const currentPage = Math.max(1, pageNumber ?? 1);

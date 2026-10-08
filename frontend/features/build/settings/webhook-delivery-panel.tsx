@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { Clock, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useWebhookDeliveries, useRetryDelivery } from "@/hooks/api/build/webhooks";
@@ -140,28 +141,19 @@ export function WebhookDeliveryPanel({
               <DeliveryRow key={d.id} delivery={d} projectId={projectId} webhookId={webhookId} />
             ))}
           </div>
-          {(hasPrevious || nextCursor) && (
-            <div className="flex items-center justify-end gap-2 mt-2">
-              {hasPrevious && (
-                <button
-                  type="button"
-                  onClick={handlePrevious}
-                  className="text-micro text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Previous
-                </button>
-              )}
-              {nextCursor && (
-                <button
-                  type="button"
-                  onClick={handleNext}
-                  className="text-micro text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Next
-                </button>
-              )}
-            </div>
-          )}
+          <TablePagination
+            mode="cursor"
+            rowCount={items.length}
+            pageNumber={cursorStack.length + 1}
+            hasMore={nextCursor !== null}
+            hasPrevious={hasPrevious}
+            onNext={handleNext}
+            onPrevious={handlePrevious}
+            hideOnSinglePage
+            compact
+            showSummary={false}
+            className="mt-2"
+          />
         </>
       )}
     </div>
