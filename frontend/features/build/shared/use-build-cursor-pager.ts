@@ -23,29 +23,29 @@ function encodeStack(stack: (string | undefined)[]): string | null {
   return cursors.length === 0 ? null : JSON.stringify(cursors);
 }
 
-export function useBuildCursorPager(resetKey?: string): CursorPager {
+export function useBuildCursorPager(resetKey?: string, cursorParam = BUILD_CURSOR_STACK_PARAM): CursorPager {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
 
   const stack = useMemo(
-    () => decodeStack(searchParams.get(BUILD_CURSOR_STACK_PARAM)),
-    [searchParams],
+    () => decodeStack(searchParams.get(cursorParam)),
+    [searchParams, cursorParam],
   );
 
   const write = useCallback(
     (next: (string | undefined)[]) => {
       const params = new URLSearchParams(searchParams.toString());
       const encoded = encodeStack(next);
-      if (encoded) params.set(BUILD_CURSOR_STACK_PARAM, encoded);
-      else params.delete(BUILD_CURSOR_STACK_PARAM);
+      if (encoded) params.set(cursorParam, encoded);
+      else params.delete(cursorParam);
       const query = params.toString();
       startTransition(() => {
         router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
       });
     },
-    [pathname, router, searchParams],
+    [pathname, router, searchParams, cursorParam],
   );
 
   const prevKeyRef = useRef(resetKey);

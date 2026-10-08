@@ -36,6 +36,14 @@ export function mapAllWorkTicketToKanban(t: AllWorkTicket): KanbanTicket {
           image: t.assignee.image ?? null,
         }
       : null,
+    project:
+      t.projectId !== null && t.projectKey !== null
+        ? {
+            id: t.projectId,
+            key: t.projectKey,
+            name: t.projectName ?? t.projectKey,
+          }
+        : null,
     labels: (t.labels ?? []).map((l) => ({
       label: { id: l.id, name: l.name, color: l.color ?? null },
     })),

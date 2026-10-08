@@ -71,6 +71,63 @@ describe("ticket filter bar", () => {
     expect(screen.queryByRole("button", { name: /add filter/i })).not.toBeInTheDocument();
   });
 
+  it("separates My Work search and keeps all mobile actions on one scrollable row", () => {
+    mockSearchParams = new URLSearchParams("status=OPEN");
+    window.history.replaceState({}, "", "/build/tickets?status=OPEN");
+    const { container } = render(
+      <TicketFilterBar
+        statuses={[{ name: "OPEN" }, { name: "DONE" }]}
+        presentation="all-work"
+        mobileSearchFirst
+        mobileSearchFirstBreakpoint="lg"
+        hideChipsBelow="lg"
+        trailing={<button type="button">Sort</button>}
+      />,
+    );
+
+    const searchRow = container.querySelector(".order-1");
+    const actionsRow = container.querySelector(
+      "[class*=flex-nowrap][class*=overflow-x-auto]",
+    );
+    const chips = container.querySelector(".max-lg\\:hidden");
+
+    expect(searchRow).toContainElement(screen.getByRole("searchbox"));
+    expect(actionsRow).toContainElement(screen.getByRole("button", { name: "Filters (1 active)" }));
+    expect(actionsRow).toContainElement(screen.getByRole("button", { name: "Sort" }));
+    expect(actionsRow).toHaveClass("flex-nowrap", "overflow-x-auto");
+    expect(actionsRow).toHaveClass("lg:contents");
+    expect(actionsRow).not.toHaveClass("sm:contents");
+    expect(chips).toHaveClass("max-lg:hidden");
+  });
+
+  it("gives My Work a compact mobile hierarchy with search and filters together", () => {
+    mockSearchParams = new URLSearchParams("status=OPEN");
+    window.history.replaceState({}, "", "/build/tickets?status=OPEN");
+    const { container } = render(
+      <TicketFilterBar
+        statuses={[{ name: "OPEN" }, { name: "DONE" }]}
+        presentation="all-work"
+        mobileSearchFirst
+        mobileSearchFirstBreakpoint="lg"
+        mobileCompactToolbar
+        leading={<button type="button">Sort</button>}
+        trailing={<button type="button">Views</button>}
+      />,
+    );
+
+    const rows = container.querySelectorAll(":scope > div > div > div");
+    const searchAndFilters = rows.item(0);
+    const utilityRow = rows.item(1);
+
+    expect(searchAndFilters).toContainElement(screen.getByRole("searchbox"));
+    expect(searchAndFilters).toContainElement(
+      screen.getByRole("button", { name: "Filters (1 active)" }),
+    );
+    expect(utilityRow).toContainElement(screen.getByRole("button", { name: "Sort" }));
+    expect(utilityRow).toContainElement(screen.getByRole("button", { name: "Views" }));
+    expect(utilityRow).toHaveClass("overflow-x-auto", "lg:contents");
+  });
+
   it("defers cycle and label reads until filter options are requested", () => {
     renderWith("");
 

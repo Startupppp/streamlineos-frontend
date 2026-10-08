@@ -8,6 +8,7 @@ import { Trash2Icon } from "@animateicons/react/lucide";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { CommentDraftListItem } from "@/hooks/api/build/comment-draft-command-cache";
 import { formatTicketKey } from "@/components/shared/format-ticket-key";
@@ -22,7 +23,10 @@ import { priorityConfig, statusConfig } from "@/features/build/shared/types";
 interface CommentDraftRowProps {
   draft: CommentDraftListItem;
   href: string | null;
-  onDelete: (id: number) => void;
+  onDelete?: (id: number) => void;
+  selected?: boolean;
+  selectionDisabled?: boolean;
+  onSelect?: (id: number, selected: boolean) => void;
   onNavigate: (href: string) => void;
 }
 
@@ -51,7 +55,7 @@ function formatStatusLabel(status: string): string {
   return statusConfig[status]?.label ?? status.replace(/_/g, " ");
 }
 
-export function CommentDraftRow({ draft, href, onNavigate, onDelete }: CommentDraftRowProps) {
+export function CommentDraftRow({ draft, href, onNavigate, onDelete, selected, selectionDisabled, onSelect }: CommentDraftRowProps) {
   const ticket = draft.ticket;
   const ticketKey = formatTicketKey(
     ticket.projectKey,
@@ -88,7 +92,11 @@ export function CommentDraftRow({ draft, href, onNavigate, onDelete }: CommentDr
   }
 
   function handleDelete() {
-    onDelete(draft.id);
+    onDelete?.(draft.id);
+  }
+
+  function handleSelect(checked: boolean | "indeterminate") {
+    onSelect?.(draft.id, checked === true);
   }
 
   const details = (
@@ -181,6 +189,7 @@ export function CommentDraftRow({ draft, href, onNavigate, onDelete }: CommentDr
         href && "hover:bg-primary/5",
       )}
     >
+      {onSelect ? <Checkbox checked={selected} disabled={selectionDisabled} onCheckedChange={handleSelect} aria-label={`Select draft for ${ticketKey}`} className="mt-1 shrink-0" /> : null}
       {href ? (
         <Link
           href={href}
@@ -202,7 +211,7 @@ export function CommentDraftRow({ draft, href, onNavigate, onDelete }: CommentDr
         <span className="text-micro tabular-nums text-muted-foreground sm:text-dense">
           {age}
         </span>
-        <AnimatedIconButton
+        {onDelete ? <AnimatedIconButton
           icon={Trash2Icon}
           size="icon-sm"
           variant="ghost"
@@ -210,7 +219,7 @@ export function CommentDraftRow({ draft, href, onNavigate, onDelete }: CommentDr
           className="shrink-0 text-muted-foreground opacity-70 hover:text-destructive group-hover:opacity-100"
           onClick={handleDelete}
           aria-label={`Delete draft for ${ticketKey}`}
-        />
+        /> : null}
       </div>
     </div>
   );

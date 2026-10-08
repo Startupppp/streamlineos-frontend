@@ -43,12 +43,12 @@ export function useMyWorkData({ activeTab, activeView }: UseMyWorkDataOptions) {
   const legacyCycle = searchParams.get("cycle");
   const baseFilters = useMemo(
     () => ({
-      ...urlState.filters,
+      ...urlState.filters, ...(activeView === "board" ? { cursor: undefined } : {}),
       ...(!urlState.filters.cycleId && legacyCycle
         ? { cycleId: legacyCycle }
         : {}),
     }),
-    [urlState.filters, legacyCycle],
+    [urlState.filters, legacyCycle, activeView],
   );
 
   const assignedFilters = useMemo(
@@ -122,7 +122,7 @@ export function useMyWorkData({ activeTab, activeView }: UseMyWorkDataOptions) {
     () => ({ ...baseFilters, scope: "recently-completed" as const }),
     [baseFilters],
   );
-
+  const boardFilters = { assigned: assignedFilters, created: createdFilters, subscribed: subscribedFilters, overdue: overdueFilters, "due-soon": dueSoonFilters, activity: activityFilters, today: todayFilters, upcoming: upcomingFilters, blocked: blockedFilters, waiting: waitingFilters, done: doneFilters }[activeTab];
   const {
     data: assignedData,
     isLoading: assignedLoading,
@@ -315,7 +315,7 @@ export function useMyWorkData({ activeTab, activeView }: UseMyWorkDataOptions) {
     (!activeData?.data || activeData.data.length === 0);
 
   return {
-    hasActiveFilters: urlState.hasActiveFilters,
+    hasActiveFilters: urlState.hasActiveFilters, boardFilters,
     isLoading,
     isError,
     error,

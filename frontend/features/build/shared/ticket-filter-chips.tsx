@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { XIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { cn } from "@/lib/utils";
 import { getUserDisplayName } from "@/lib/person-display";
 import { useCycles } from "@/hooks/api/build/cycles";
 import { useProjectLabels } from "@/hooks/api/build/projects";
@@ -34,12 +35,14 @@ interface TicketFilterChipsProps {
   members?: Member[];
   projectId?: number;
   projectOptions?: ProjectOption[];
+  className?: string;
 }
 
 export function TicketFilterChips({
   members = [],
   projectId,
   projectOptions,
+  className,
 }: TicketFilterChipsProps) {
   const { iconRef: clearAllIconRef, hoverHandlers: clearAllHoverHandlers } =
     useAnimatedIcon();
@@ -93,7 +96,7 @@ export function TicketFilterChips({
   if (activeFilterCount === 0) return null;
 
   return (
-    <div className="flex w-full min-w-0 items-center gap-1.5">
+    <div className={cn("flex w-full min-w-0 items-center gap-1.5", className)}>
       <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1 [&>*]:shrink-0">
         {selectedStatuses.map((s) => (
           <FilterChip

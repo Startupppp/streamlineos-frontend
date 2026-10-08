@@ -210,10 +210,15 @@ describe("MyWorkPage — sections", () => {
     expect(screen.queryByTestId("content-ready")).toBeNull();
     expect(mockUseAllWork).not.toHaveBeenCalled();
     expect(screen.getByRole("link", { name: "Drafts" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByTestId("page-wrapper-actions")).toContainElement(
+      screen.getByRole("navigation", { name: "My Work sections" }),
+    );
   });
 
   it("keeps ticket list state in the URL while switching sections through the leave guard", () => {
-    mockSearchParamsContainer.current = new URLSearchParams("status=TODO&cursor=c1");
+    mockSearchParamsContainer.current = new URLSearchParams(
+      "status=TODO&cursor=c1&draftCursors=%5B%22draft-cursor%22%5D",
+    );
     render(<MyWorkPage />);
 
     let pendingNavigation: (() => void) | undefined;
@@ -230,6 +235,23 @@ describe("MyWorkPage — sections", () => {
     );
   });
 
+  it("clears draft pagination when returning to tickets while preserving ticket state", () => {
+    mockSearchParamsContainer.current = new URLSearchParams(
+      "section=drafts&status=TODO&cursor=ticket-cursor&draftCursors=%5B%22draft-cursor%22%5D",
+    );
+    render(<MyWorkPage />);
+
+    fireEvent.click(screen.getByRole("link", { name: "Tickets" }));
+
+    expect(mockPush).toHaveBeenCalledWith(
+      "/build/my-work?status=TODO&cursor=ticket-cursor",
+      { scroll: false },
+    );
+    expect(screen.getByTestId("page-wrapper-actions")).toContainElement(
+      screen.getByRole("navigation", { name: "My Work sections" }),
+    );
+  });
+
   it("keeps a filtered My Work return URL on keyboard ticket opening", () => {
     mockSearchParamsContainer.current = new URLSearchParams("relation=created&q=release&unsafe=value");
     mockUseAllWork.mockReturnValue(withData());
@@ -242,6 +264,21 @@ describe("MyWorkPage — sections", () => {
     expect(mockPush).toHaveBeenCalledWith(
       "/build/42/tickets/ENG-1?returnTo=%2Fbuild%2Fmy-work%3Fq%3Drelease%26relation%3Dcreated",
     );
+  });
+});
+
+describe("MyWorkPage — responsive toolbar structure", () => {
+  it("condenses work scope on mobile while preserving the desktop scope controls", () => {
+    render(<MyWorkPage />);
+
+    const toolbar = screen.getByTestId("tabs-toolbar");
+    expect(toolbar).toHaveClass("md:!flex-col", "md:!items-stretch");
+    expect(toolbar).toHaveClass("2xl:!flex-row", "2xl:!flex-nowrap");
+    expect(screen.getByRole("combobox", { name: "Work scope" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Assigned" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Created" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Subscribed" })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Focused work" })).toBeInTheDocument();
   });
 });
 

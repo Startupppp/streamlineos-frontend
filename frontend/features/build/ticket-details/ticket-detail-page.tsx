@@ -235,6 +235,7 @@ export function TicketDetailPage({
               subtasks={subtasks}
               members={members}
               highlightCommentId={highlightCommentId}
+              resumeDraft={searchParams.get("draft") === "resume"}
               onApplyDescription={handleApplyAiDescription}
               onTitleChange={handleTitleChange}
               onCommitTitle={commitTitle}

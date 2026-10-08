@@ -12,13 +12,20 @@ type FilterTriggerButtonProps = Omit<
 > & {
   activeFilterCount: number;
   label?: string;
+  showLabelOnMobile?: boolean;
 };
 
 export const FilterTriggerButton = forwardRef<
   HTMLButtonElement,
   FilterTriggerButtonProps
 >(function FilterTriggerButton(
-  { activeFilterCount, label = "Add filter", className, ...props },
+  {
+    activeFilterCount,
+    label = "Add filter",
+    showLabelOnMobile = false,
+    className,
+    ...props
+  },
   ref,
 ) {
   return (
@@ -40,7 +47,9 @@ export const FilterTriggerButton = forwardRef<
           : label
       }
     >
-      <span className="hidden md:inline">{label}</span>
+      <span className={cn(!showLabelOnMobile && "hidden md:inline")}>
+        {label}
+      </span>
       {activeFilterCount > 0 ? (
         <span className="absolute -right-1 -top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-primary px-0.5 text-micro font-normal text-primary-foreground md:static md:ml-0.5 md:h-4 md:min-w-4 md:px-1">
           {activeFilterCount}

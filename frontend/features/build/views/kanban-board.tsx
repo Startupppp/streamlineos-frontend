@@ -39,6 +39,7 @@ interface KanbanBoardProps {
   hasActiveFilters?: boolean;
   filters?: BoardFilters;
   selection?: ListSelection;
+  readOnly?: boolean;
 }
 
 export function KanbanBoard({
@@ -53,6 +54,7 @@ export function KanbanBoard({
   hasActiveFilters = false,
   filters,
   selection,
+  readOnly = false,
 }: KanbanBoardProps) {
   const {
     canManage,
@@ -81,6 +83,8 @@ export function KanbanBoard({
     hideCompleted,
     filters,
   });
+  const boardCanManage = !readOnly && canManage;
+  const boardCanUpdateTickets = !readOnly && canUpdateTickets;
 
   if (!isMounted) return null;
 
@@ -123,7 +127,7 @@ export function KanbanBoard({
                         projectId={projectId}
                         projectKey={projectKey}
                         droppableId={`${encodeRowKey(rowKey)}||${col.id}`}
-                        canManage={canManage}
+                        canManage={boardCanManage}
                         existingNames={existingNames}
                         wipLimit={wipLimits?.[col.id]}
                         serverCount={columnCountsData ? (columnCountsData[col.id] ?? 0) : undefined}
@@ -135,7 +139,7 @@ export function KanbanBoard({
                         onSelect={handleSelect}
                         selection={selection}
                         dragStartRef={dragStartRef}
-                        canDragTickets={canUpdateTickets}
+                        canDragTickets={boardCanUpdateTickets}
                       />
                     ))}
                   </div>
@@ -166,7 +170,7 @@ export function KanbanBoard({
           >
             {visibleColumns.map((col, index) => {
               const columnTickets = ticketsByStatus.get(col.id) ?? [];
-              const canReorderColumn = canManage && col.statusId != null;
+              const canReorderColumn = boardCanManage && col.statusId != null;
 
               return (
                 <Draggable
@@ -186,12 +190,12 @@ export function KanbanBoard({
                       projectId={projectId}
                       projectKey={projectKey}
                       droppableId={col.id}
-                      canManage={canManage}
+                      canManage={boardCanManage}
                       existingNames={existingNames}
                       wipLimit={wipLimits?.[col.id]}
                       serverCount={columnCountsData ? (columnCountsData[col.id] ?? 0) : undefined}
                       displayOptions={displayOptions}
-                      showHeaderQuickAdd
+                      showHeaderQuickAdd={!readOnly}
                       dragHandleProps={
                         canReorderColumn ? columnProvided.dragHandleProps : null
                       }
@@ -201,7 +205,7 @@ export function KanbanBoard({
                       onSelect={handleSelect}
                         selection={selection}
                       dragStartRef={dragStartRef}
-                      canDragTickets={canUpdateTickets}
+                      canDragTickets={boardCanUpdateTickets}
                       columnInnerRef={columnProvided.innerRef}
                       columnDraggableProps={columnProvided.draggableProps}
                     />
@@ -210,7 +214,9 @@ export function KanbanBoard({
               );
             })}
             {columnsProvided.placeholder}
-            <AddColumn projectId={projectId} existingNames={existingNames} />
+            {!readOnly ? (
+              <AddColumn projectId={projectId} existingNames={existingNames} />
+            ) : null}
           </div>
         )}
       </Droppable>

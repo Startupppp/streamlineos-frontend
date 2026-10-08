@@ -2,7 +2,7 @@
 
 import { ErrorReference } from "@/components/shared/error-reference";
 import { MessageSquare, AlertTriangle } from "lucide-react";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { PaperclipIcon, SendIcon, XIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { AiActionsMenu } from "@/components/ai/ai-actions-menu";
@@ -26,6 +26,7 @@ interface ActivityFeedProps {
   comments: TicketComment[];
   members?: MentionUser[];
   highlightCommentId?: number | null;
+  resumeDraft?: boolean;
   activityAiActions?: React.ReactNode;
 }
 
@@ -37,6 +38,7 @@ export function ActivityFeed({
   comments,
   members = [],
   highlightCommentId,
+  resumeDraft = false,
   activityAiActions,
 }: ActivityFeedProps) {
   const {
@@ -93,6 +95,16 @@ export function ActivityFeed({
     highlightCommentId,
   });
   const attachmentInputRef = useRef<HTMLInputElement>(null);
+  const composerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!resumeDraft || !canUpdate || !composerReady || draftLoading) return;
+    const frame = requestAnimationFrame(() => {
+      const composer = composerRef.current;
+      composer?.scrollIntoView?.({ block: "center" });
+      composer?.querySelector("textarea")?.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [resumeDraft, canUpdate, composerReady, draftLoading, ticketId]);
 
   function handleChooseFiles() {
     attachmentInputRef.current?.click();
@@ -131,7 +143,7 @@ export function ActivityFeed({
         </h4>
 
         {canUpdate && composerReady ? (
-          <div className="flex w-full min-w-0 flex-row items-end gap-2">
+          <div ref={composerRef} className="flex w-full min-w-0 flex-row items-end gap-2">
             <MentionTextarea
               value={newComment}
               onChange={setNewComment}

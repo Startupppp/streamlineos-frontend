@@ -10,6 +10,7 @@ const mockApiGet = jest.fn();
 jest.mock("next/navigation", () => ({
   usePathname: () => mockPathname,
   useRouter: () => ({ push: mockPush }),
+  useSearchParams: () => new URLSearchParams(),
   notFound: jest.fn(() => {
     throw new Error("NEXT_NOT_FOUND");
   }),

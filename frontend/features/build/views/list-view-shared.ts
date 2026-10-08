@@ -24,6 +24,7 @@ export interface Ticket {
   assignees?: { user?: { id: string; name?: string | null; firstName?: string | null; lastName?: string | null; email?: string | null; image?: string | null } }[];
   labels?: { label?: { id: number; name: string; color?: string | null } }[];
   cycle?: { id: number; name: string; status: string; startDate: string; endDate: string } | null;
+  project?: { id: number; name: string; key: string } | null;
 }
 
 export interface ListSelection {

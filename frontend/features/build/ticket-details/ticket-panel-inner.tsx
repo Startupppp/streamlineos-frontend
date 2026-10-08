@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { notFound, usePathname } from "next/navigation";
+import { notFound, usePathname, useSearchParams } from "next/navigation";
+import { TicketDetailPage } from "./ticket-detail-page";
 import {
   parseTicketKey,
   ticketKeyMatchesProject,
@@ -27,6 +28,7 @@ export function TicketPanelInner({
   returnTo,
 }: TicketPanelInnerProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const isCurrentTicketRoute = useMemo(
     () => isTicketDetailPath(pathname, projectId, ticketKey),
     [pathname, projectId, ticketKey],
@@ -58,6 +60,7 @@ export function TicketPanelInner({
 
   if (!isCurrentTicketRoute) return null;
   if (routeKeyMismatch) return notFound();
+  if (searchParams.get("draft") === "resume") return <TicketDetailPage projectId={projectId} ticketKey={ticketKey} />;
 
   return (
     <PageState resolution={pageState} loading={null} onRetry={parsed ? handleRetry : undefined}>

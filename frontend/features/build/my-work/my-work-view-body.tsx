@@ -4,7 +4,7 @@ import { memo, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { KanbanBoard } from "@/features/build/views/kanban-board";
+import { MyWorkBoard } from "./my-work-board";
 import { ListView } from "@/features/build/views/list-view";
 import { TableView } from "@/features/build/views/table-view";
 import { pmSnappy, viewSwap, viewSwapReduced } from "@/lib/motion-presets";
@@ -13,12 +13,15 @@ import type { AllWorkTicketMeta } from "./map-all-work-ticket";
 import type { MyWorkView } from "./my-work-view";
 import { buildMyWorkReturnHref, getMyWorkTicketHref } from "@/features/build/ticket-details/build-ticket-detail-url";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
+import type { AllWorkFilters } from "@/types/projects";
 
 interface MyWorkViewBodyProps {
   view: MyWorkView;
   tickets: KanbanTicket[];
   displayOptions: DisplayOptions;
   ticketMeta: Map<number, AllWorkTicketMeta>;
+  boardFilters: AllWorkFilters;
+  orgStatuses?: readonly { name: string }[];
 }
 
 export const MyWorkViewBody = memo(function MyWorkViewBody({
@@ -26,6 +29,8 @@ export const MyWorkViewBody = memo(function MyWorkViewBody({
   tickets,
   displayOptions,
   ticketMeta,
+  boardFilters,
+  orgStatuses,
 }: MyWorkViewBodyProps) {
   const router = useRouter();
   const requestLeave = useNavigationLeave();
@@ -46,6 +51,9 @@ export const MyWorkViewBody = memo(function MyWorkViewBody({
     },
     [ticketMeta, requestLeave, returnHref, router],
   );
+  const handleBoardTicketSelect = useCallback((meta: AllWorkTicketMeta) => {
+    requestLeave(() => router.push(getMyWorkTicketHref(meta.projectId, meta.projectKey, meta.ticketNumber, returnHref)));
+  }, [requestLeave, router, returnHref]);
 
   return (
     <AnimatePresence mode="wait" initial={false}>
@@ -59,10 +67,11 @@ export const MyWorkViewBody = memo(function MyWorkViewBody({
           exit="exit"
           transition={pmSnappy}
         >
-          <KanbanBoard
+          <MyWorkBoard
             tickets={tickets}
-            projectId={0}
-            onTicketSelect={handleTicketSelect}
+            filters={boardFilters}
+            statuses={orgStatuses}
+            onTicketSelect={handleBoardTicketSelect}
             displayOptions={displayOptions}
           />
         </motion.div>
@@ -83,6 +92,7 @@ export const MyWorkViewBody = memo(function MyWorkViewBody({
                 tickets={tickets}
                 onTicketClick={handleTicketSelect}
                 displayOptions={displayOptions}
+                itemLayout="work-index"
               />
             </div>
           </ScrollArea>

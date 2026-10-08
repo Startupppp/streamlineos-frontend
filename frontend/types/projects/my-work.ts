@@ -9,4 +9,5 @@ export interface MyWorkItem {
   priority: string | null;
   type: string;
   dueDate: string | null;
+  assignee?: { name?: string | null; firstName?: string | null; lastName?: string | null; email?: string | null } | null;
 }

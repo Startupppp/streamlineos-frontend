@@ -6,7 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
 import { DataTable } from "@/components/ui/data-table";
-import type { DataTableColumn } from "@/components/ui/data-table";
+import { MY_WORK_TABLE_COLUMNS } from "./my-work-table-columns";
 import type { DataTableSortState } from "@/components/ui/data-table.types";
 import { BulkActionBar } from "@/features/build/shared/bulk-action-bar";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
@@ -15,7 +15,7 @@ import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import type { PageStateResolution } from "@/lib/page-state/resolve-page-state";
 import type { KanbanTicket, DisplayOptions } from "@/features/build/shared/types";
 import type { BuildListSortField, BuildListSortDirection, BuildListGrouping } from "@/features/build/shared/use-build-list-url-state";
-import type { AllWorkTicket, CursorPaginatedResponse } from "@/types/projects";
+import type { AllWorkTicket, AllWorkFilters, CursorPaginatedResponse } from "@/types/projects";
 import type { AllWorkTicketMeta } from "./map-all-work-ticket";
 import type { DueBucket } from "./my-work-rows";
 import type { MyWorkView } from "./my-work-view";
@@ -24,42 +24,10 @@ import { AllWorkListSkeleton, BucketSection, BUCKET_ORDER } from "./my-work-rows
 import { MyWorkViewBody } from "./my-work-view-body-lazy";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
-
-const TABLE_COLUMNS: DataTableColumn<KanbanTicket>[] = [
-  {
-    key: "title",
-    header: "Title",
-    className: "min-w-[14rem] flex-1",
-    cell: (t) => (
-      <span className="text-sm font-medium leading-tight">{t.title}</span>
-    ),
-  },
-  {
-    key: "status",
-    header: "Status",
-    cell: (t) => (
-      <span className="text-xs text-muted-foreground">{t.status}</span>
-    ),
-  },
-  {
-    key: "priority",
-    header: "Priority",
-    cell: (t) => (
-      <span className="text-xs text-muted-foreground">
-        {t.priority ?? "—"}
-      </span>
-    ),
-  },
-  {
-    key: "dueDate",
-    header: "Due",
-    cell: (t) => (
-      <span className="text-xs tabular-nums text-muted-foreground">
-        {t.dueDate ?? "—"}
-      </span>
-    ),
-  },
-];
+import { StatusBadge } from "@/components/shared/ticket-status-badge";
+import { formatTicketKey } from "@/components/shared/format-ticket-key";
+import { PriorityBadge } from "@/features/build/shared/priority-badge";
+import { formatCalendarDate } from "@/lib/date-utils";
 
 interface MyWorkContentProps {
   pageState: PageStateResolution;
@@ -85,6 +53,7 @@ interface MyWorkContentProps {
   onPreviousPage: () => void;
   bulk: UseMyWorkBulkReturn;
   orgStatuses: readonly { name: string; color: string | null; type?: string | null }[] | undefined;
+  boardFilters: AllWorkFilters;
 }
 
 export const MyWorkContent = memo(function MyWorkContent({
@@ -111,6 +80,7 @@ export const MyWorkContent = memo(function MyWorkContent({
   onPreviousPage,
   bulk,
   orgStatuses,
+  boardFilters,
 }: MyWorkContentProps) {
   const router = useRouter();
   const requestLeave = useNavigationLeave();
@@ -190,7 +160,7 @@ export const MyWorkContent = memo(function MyWorkContent({
           ) : null}
           <DataTable
             data={kanbanTickets}
-            columns={TABLE_COLUMNS}
+            columns={MY_WORK_TABLE_COLUMNS}
             getRowKey={(row) => row.id}
             onRowClick={handleRowClick}
             sortState={sortState}
@@ -209,11 +179,22 @@ export const MyWorkContent = memo(function MyWorkContent({
               onPrevious: onPreviousPage,
             }}
             mobileCard={(row) => (
-              <div className="flex flex-col gap-0.5 py-2">
-                <span className="text-sm font-medium">{row.title}</span>
-                <span className="text-xs text-muted-foreground">
-                  {row.status} · {row.priority ?? "—"}
+              <div className="flex min-w-0 flex-col gap-2 py-2">
+                <span className="line-clamp-2 text-sm font-medium leading-5">
+                  {row.title}
                 </span>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                  <span className="font-mono text-xs text-muted-foreground">
+                    {formatTicketKey(row.project?.key, row.ticketNumber, row.id)}
+                  </span>
+                  <StatusBadge status={row.status} />
+                  {row.priority ? <PriorityBadge priority={row.priority} /> : null}
+                  {row.dueDate ? (
+                    <span className="text-xs text-muted-foreground">
+                      Due {formatCalendarDate(row.dueDate)}
+                    </span>
+                  ) : null}
+                </div>
               </div>
             )}
             emptyState={emptySlot}
@@ -236,6 +217,7 @@ export const MyWorkContent = memo(function MyWorkContent({
                     priority: t.priority,
                     type: t.type,
                     dueDate: t.dueDate,
+                    assignee: t.assignee,
                   })) ?? [];
                 if (items.length === 0) return null;
                 return <BucketSection key={bucket} bucket={bucket} items={items} returnHref={returnHref} />;
@@ -260,8 +242,10 @@ export const MyWorkContent = memo(function MyWorkContent({
             tickets={kanbanTickets}
             displayOptions={displayOptions}
             ticketMeta={ticketMeta}
+            boardFilters={boardFilters}
+            orgStatuses={orgStatuses}
           />
-          <TablePagination
+          {view !== "board" ? <TablePagination
             mode="cursor"
             rowCount={kanbanTickets.length}
             pageNumber={pageNumber}
@@ -270,7 +254,7 @@ export const MyWorkContent = memo(function MyWorkContent({
             onPrevious={onPreviousPage}
             onNext={onNextPage}
             hideOnSinglePage
-          />
+          /> : null}
         </div>
       )}
     </PageState>

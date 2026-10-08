@@ -58,6 +58,15 @@ describe("useMyWorkData Due Dates filter", () => {
   });
 });
 
+describe("useMyWorkData board filters", () => {
+  it("retains relation and URL filters while starting column discovery from the first cursor", () => {
+    mockSearchParams = new URLSearchParams("cursor=list-page-2&status=CODE_REVIEW&projectIds=1&q=payments");
+    const { result } = renderHook(() => useMyWorkData({ activeTab: "created", activeView: "board" }));
+    expect(result.current.boardFilters).toMatchObject({ scope: "created", status: "CODE_REVIEW", projectIds: "1", search: "payments", cursor: undefined });
+    expect(mockSearchParams.get("cursor")).toBe("list-page-2");
+  });
+});
+
 describe("parseWorkTab relation aliases", () => {
   it("accepts the canonical watching relation and maps it to subscribed work", () => {
     expect(parseWorkTab("watching")).toBe("subscribed");

@@ -49,6 +49,7 @@ interface TicketDetailMainSectionProps {
   subtasks: Ticket[];
   members: ProjectMember[];
   highlightCommentId?: number | null;
+  resumeDraft?: boolean;
   variant?: "full" | "preview";
   onApplyDescription: (html: string) => void;
   onTitleChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
@@ -113,6 +114,7 @@ export function TicketDetailMainSection({
   subtasks,
   members,
   highlightCommentId,
+  resumeDraft,
   variant = "full",
   onApplyDescription,
   onTitleChange,
@@ -372,6 +374,7 @@ export function TicketDetailMainSection({
         comments={ticket.comments || []}
         members={members.map((m) => ({ id: m.id, name: m.name, email: m.email }))}
         highlightCommentId={highlightCommentId}
+        resumeDraft={resumeDraft}
         activityAiActions={
           !isPreview ? (
             <TicketDetailAiActivityActions

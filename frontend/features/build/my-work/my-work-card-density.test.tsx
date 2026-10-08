@@ -45,7 +45,7 @@ function makeItem(overrides?: Partial<{
   };
 }
 
-describe("WorkItemRow — density: compact hides optional metadata fields", () => {
+describe("WorkItemRow — compact density keeps useful identity", () => {
   it("comfortable density (default) renders the project and type metadata", () => {
     render(
       <WorkItemRow item={makeItem()} returnHref="/build/my-work" />,
@@ -54,11 +54,12 @@ describe("WorkItemRow — density: compact hides optional metadata fields", () =
     expect(screen.getByText("TASK")).toBeInTheDocument();
   });
 
-  it("compact density hides the project and type metadata row", () => {
+  it("compact density keeps the project and ticket identity but hides optional type", () => {
     render(
       <WorkItemRow item={makeItem()} returnHref="/build/my-work" density="compact" />,
     );
-    expect(screen.queryByText("Alpha")).not.toBeInTheDocument();
+    expect(screen.getByText("Alpha")).toBeInTheDocument();
+    expect(screen.getByText("AL-1")).toBeInTheDocument();
     expect(screen.queryByText("TASK")).not.toBeInTheDocument();
   });
 
@@ -73,11 +74,11 @@ describe("WorkItemRow — density: compact hides optional metadata fields", () =
     expect(screen.getByText("Important Task")).toBeInTheDocument();
   });
 
-  it("compact density still renders the status badge", () => {
+  it("compact density exposes the status through a labelled icon", () => {
     render(
       <WorkItemRow item={makeItem({ status: "IN_PROGRESS" })} returnHref="/build/my-work" density="compact" />,
     );
-    expect(screen.getByText(/in progress/i)).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Status: In Progress" })).toBeInTheDocument();
   });
 });
 

@@ -58,6 +58,8 @@ export const ListViewItem = memo(function ListViewItem({
   const canUpdate = useCan("build:tickets:update");
   const canAssign = useCan("build:tickets:assign");
   const moduleName = useModuleName(ticket.moduleId);
+  const resolvedProjectId = projectId ?? ticket.project?.id;
+  const resolvedProjectKey = projectKey ?? ticket.project?.key;
 
   const showId = displayOptions?.showId ?? true;
   const showPriority = displayOptions?.showPriority ?? true;
@@ -80,7 +82,7 @@ export const ListViewItem = memo(function ListViewItem({
     .map((user) => getUserDisplayName(user))
     .join(", ");
 
-  const hasProjectId = projectId != null;
+  const hasProjectId = resolvedProjectId != null;
   const hasDragHandle = dragHandleProps != null;
   const version = ticket.version;
 
@@ -133,7 +135,7 @@ export const ListViewItem = memo(function ListViewItem({
         {hasProjectId && canUpdate ? (
           <InlineStatus
             ticketId={ticket.id}
-            projectId={projectId}
+            projectId={resolvedProjectId}
             version={version}
             currentStatus={ticket.status}
             projectStatuses={projectStatuses}
@@ -144,7 +146,7 @@ export const ListViewItem = memo(function ListViewItem({
         {hasProjectId && canUpdate ? (
           <InlineType
             ticketId={ticket.id}
-            projectId={projectId}
+            projectId={resolvedProjectId}
             version={version}
             currentType={ticket.type}
           />
@@ -159,7 +161,7 @@ export const ListViewItem = memo(function ListViewItem({
                 "rounded-md bg-muted/70 px-1.5 py-0.5 font-medium text-foreground/70 ring-1 ring-inset ring-border/50",
             )}
           >
-            {formatTicketKey(projectKey, ticket.ticketNumber, ticket.sequenceId ?? undefined)}
+            {formatTicketKey(resolvedProjectKey, ticket.ticketNumber, ticket.sequenceId ?? undefined)}
           </span>
         )}
         <button
@@ -177,7 +179,7 @@ export const ListViewItem = memo(function ListViewItem({
           <span className={cn(layout === "work-index" && "hidden sm:inline-flex")}>
             <InlineLabels
               ticketId={ticket.id}
-              projectId={projectId}
+              projectId={resolvedProjectId}
               currentLabelIds={labelIds}
             />
           </span>
@@ -185,7 +187,7 @@ export const ListViewItem = memo(function ListViewItem({
         {showPriority && hasProjectId && canUpdate ? (
           <InlinePriority
             ticketId={ticket.id}
-            projectId={projectId}
+            projectId={resolvedProjectId}
             version={version}
             currentPriority={ticket.priority}
           />
@@ -196,7 +198,7 @@ export const ListViewItem = memo(function ListViewItem({
           <span className={cn(layout === "work-index" && "hidden md:inline-flex")}>
             <InlineEstimate
               ticketId={ticket.id}
-              projectId={projectId}
+              projectId={resolvedProjectId}
               version={version}
               currentPoints={ticket.points}
             />
@@ -216,7 +218,7 @@ export const ListViewItem = memo(function ListViewItem({
           <span className={cn(layout === "work-index" && "hidden md:inline-flex")}>
             <InlineDueDate
               ticketId={ticket.id}
-              projectId={projectId}
+              projectId={resolvedProjectId}
               version={version}
               currentDueDate={ticket.dueDate}
             />
@@ -225,7 +227,7 @@ export const ListViewItem = memo(function ListViewItem({
         {showAssignee && hasProjectId && canAssign ? (
           <InlineAssignee
             ticketId={ticket.id}
-            projectId={projectId}
+            projectId={resolvedProjectId}
             version={version}
             currentAssigneeId={ticket.assigneeId ?? primaryAssignee?.id}
             assignee={primaryAssignee}
@@ -258,7 +260,7 @@ export const ListViewItem = memo(function ListViewItem({
         {hasProjectId && canUpdate ? (
           <InlineModule
             ticketId={ticket.id}
-            projectId={projectId}
+            projectId={resolvedProjectId}
             version={version}
             currentModuleId={ticket.moduleId}
           />
@@ -285,8 +287,8 @@ export const ListViewItem = memo(function ListViewItem({
       <div className="pr-2 flex-shrink-0">
         <TicketQuickActions
           ticketId={ticket.id}
-          projectId={projectId}
-          projectKey={projectKey}
+          projectId={resolvedProjectId}
+          projectKey={resolvedProjectKey ?? undefined}
           ticketNumber={ticket.ticketNumber}
           onOpen={onClick}
           open={menuOpen}

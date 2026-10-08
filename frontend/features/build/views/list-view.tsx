@@ -18,6 +18,7 @@ import {
   encodeNestedAccordionValue,
 } from "./list-view-shared";
 import { ListViewItem } from "./list-view-item";
+import { WorkIndexTicketRow } from "./work-index-ticket-row";
 import { InlineGroupCreate } from "./list-view-group-create";
 import { GroupRows } from "./list-view-group-rows";
 import { OuterGroupHeader, NestedGroup, DroppableGroup, formatGroupLabel } from "./list-view-group";
@@ -53,6 +54,7 @@ export const ListView = memo(function ListView({
     handleItemSelect,
     visibleFlatCount,
   } = useListView({ tickets, groupBy, rowBy, projectId, showEmptyRows, selection });
+  const RowComponent = itemLayout === "work-index" ? WorkIndexTicketRow : ListViewItem;
 
   if (hasRowBy && nested) {
     return (
@@ -219,7 +221,7 @@ export const ListView = memo(function ListView({
         <div className="flex flex-col gap-2">
           <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm divide-y divide-border">
             {optimisticTickets.slice(0, visibleFlatCount).map((ticket) => (
-              <ListViewItem
+              <RowComponent
                 key={ticket.id}
                 ticket={ticket}
                 projectKey={projectKey}

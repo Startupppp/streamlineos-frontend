@@ -150,6 +150,7 @@ export function TicketFilterActions({
         <FilterTriggerButton
           activeFilterCount={activeFilterCount}
           label={presentation === "all-work" ? "Filters" : "Add filter"}
+          showLabelOnMobile={presentation === "all-work"}
           onClick={handleFilterOpen}
           className={cn(
             presentation === "all-work" &&

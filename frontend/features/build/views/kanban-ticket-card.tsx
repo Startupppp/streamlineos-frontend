@@ -22,6 +22,8 @@ import { Calendar } from "lucide-react";
 import { format, isValid, parseISO } from "date-fns";
 import { useCan } from "@/hooks/api/access";
 import { Badge } from "@/components/ui/badge";
+import { PriorityBadge } from "../shared/priority-badge";
+import { formatCalendarDate } from "@/lib/date-utils";
 import { useModuleName } from "./module-names-context";
 
 interface KanbanTicketCardProps {
@@ -33,6 +35,7 @@ interface KanbanTicketCardProps {
   isSelected?: boolean;
   onSelectedChange?: (id: number, next: boolean) => void;
   displayOptions?: DisplayOptions;
+  readOnly?: boolean;
 }
 
 export const KanbanTicketCard = memo(function KanbanTicketCard({
@@ -44,10 +47,16 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
   isSelected,
   onSelectedChange,
   displayOptions,
+  readOnly = false,
 }: KanbanTicketCardProps) {
-  const canUpdate = useCan("build:tickets:update");
-  const canAssign = useCan("build:tickets:assign");
+  const updateAllowed = useCan("build:tickets:update");
+  const assignAllowed = useCan("build:tickets:assign");
+  const canUpdate = !readOnly && updateAllowed;
+  const canAssign = !readOnly && assignAllowed;
   const moduleName = useModuleName(ticket.moduleId);
+  const resolvedProjectId =
+    projectId && projectId > 0 ? projectId : ticket.project?.id;
+  const resolvedProjectKey = projectKey ?? ticket.project?.key;
   const handleActivate = useCallback(
     (event: MouseEvent<HTMLButtonElement>) => {
       event.stopPropagation();
@@ -56,10 +65,14 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
     [ticket.id, onSelect],
   );
   const [menuOpen, setMenuOpen] = useState(false);
-  const handleContextMenu = useCallback((event: MouseEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    setMenuOpen(true);
-  }, []);
+  const handleContextMenu = useCallback(
+    (event: MouseEvent<HTMLDivElement>) => {
+      if (readOnly) return;
+      event.preventDefault();
+      setMenuOpen(true);
+    },
+    [readOnly],
+  );
   const handleSelectedChange = useCallback(
     (next: boolean | "indeterminate") => {
       onSelectedChange?.(ticket.id, next === true);
@@ -68,12 +81,13 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
   );
 
   const ticketKey =
-    projectKey && ticket.ticketNumber != null
-      ? `${projectKey}-${ticket.ticketNumber}`
+    resolvedProjectKey && ticket.ticketNumber != null
+      ? `${resolvedProjectKey}-${ticket.ticketNumber}`
       : `#${ticket.ticketNumber ?? ticket.id}`;
 
   const assigneeUsers =
-    ticket.assignees?.flatMap((entry) => (entry.user ? [entry.user] : [])) ?? [];
+    ticket.assignees?.flatMap((entry) => (entry.user ? [entry.user] : [])) ??
+    [];
   const primaryAssignee = assigneeUsers[0] ?? ticket.assignee ?? null;
   const extraCount = Math.max(
     0,
@@ -93,15 +107,14 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
   const createdDate = parseDisplayDate(ticket.createdAt);
   const version = ticket.version;
   const labelIds =
-    ticket.labels?.flatMap((label) => (label.label ? [label.label.id] : [])) ?? [];
+    ticket.labels?.flatMap((label) => (label.label ? [label.label.id] : [])) ??
+    [];
   const showPlanningRow =
-    projectId !== undefined &&
+    resolvedProjectId !== undefined &&
     canUpdate &&
-    (
-      (showEstimate && points != null) ||
+    ((showEstimate && points != null) ||
       (showCycle && ticket.cycleId != null) ||
-      Boolean(ticket.startDate)
-    );
+      Boolean(ticket.startDate));
 
   return (
     <div
@@ -109,7 +122,9 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
       className={cn(
         "group relative p-3",
         SURFACE_CARD,
-        "cursor-grab active:cursor-grabbing will-change-transform",
+        readOnly
+          ? "cursor-pointer"
+          : "cursor-grab active:cursor-grabbing will-change-transform",
         SURFACE_CARD_INTERACTIVE,
         "motion-safe:transition-[border-color,box-shadow,transform,background-color,color] motion-safe:duration-200 motion-reduce:transform-none",
         isSelected && SURFACE_CARD_SELECTED,
@@ -140,20 +155,27 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
         >
           {ticket.title}
         </button>
-        <TicketQuickActions
-          ticketId={ticket.id}
-          projectId={projectId}
-          projectKey={projectKey}
-          ticketNumber={ticket.ticketNumber}
-          onOpen={onSelect}
-          open={menuOpen}
-          onOpenChange={setMenuOpen}
-          className="-mr-1 -mt-1 opacity-100 transition-opacity duration-150 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 [&_button]:h-8 [&_button]:w-8"
-        />
+        {!readOnly ? (
+          <TicketQuickActions
+            ticketId={ticket.id}
+            projectId={resolvedProjectId}
+            projectKey={resolvedProjectKey}
+            ticketNumber={ticket.ticketNumber}
+            onOpen={onSelect}
+            open={menuOpen}
+            onOpenChange={setMenuOpen}
+            className="-mr-1 -mt-1 opacity-100 transition-opacity duration-150 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 [&_button]:h-8 [&_button]:w-8"
+          />
+        ) : null}
       </div>
 
       {showDescription && ticket.descriptionExcerpt ? (
-        <p className={cn(TEXT_TWO_LINES, "mt-1.5 text-dense leading-relaxed text-muted-foreground")}>
+        <p
+          className={cn(
+            TEXT_TWO_LINES,
+            "mt-1.5 text-dense leading-relaxed text-muted-foreground",
+          )}
+        >
           {ticket.descriptionExcerpt}
         </p>
       ) : null}
@@ -165,55 +187,60 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
           </span>
         ) : null}
 
-        {showPriority && projectId && canUpdate ? (
+        {showPriority && resolvedProjectId && canUpdate ? (
           <InlinePriority
             ticketId={ticket.id}
-            projectId={projectId}
+            projectId={resolvedProjectId}
             version={version}
             currentPriority={ticket.priority}
             showLabel
           />
+        ) : showPriority && ticket.priority ? (
+          <PriorityBadge priority={ticket.priority} showLabel />
         ) : null}
 
-        {projectId && canUpdate ? (
+        {resolvedProjectId && canUpdate ? (
           <InlineType
             ticketId={ticket.id}
-            projectId={projectId}
+            projectId={resolvedProjectId}
             version={version}
             currentType={ticket.type}
             showLabel
           />
         ) : null}
 
-        {showLabels && projectId && canUpdate ? (
+        {showLabels && resolvedProjectId && canUpdate ? (
           <InlineLabels
             ticketId={ticket.id}
-            projectId={projectId}
+            projectId={resolvedProjectId}
             currentLabelIds={labelIds}
           />
         ) : null}
 
-        {projectId !== undefined && canUpdate ? (
+        {resolvedProjectId !== undefined && canUpdate ? (
           <InlineModule
             ticketId={ticket.id}
-            projectId={projectId}
+            projectId={resolvedProjectId}
             version={version}
             currentModuleId={ticket.moduleId}
             hideEmpty
           />
         ) : moduleName !== null ? (
-          <Badge variant="secondary" className="max-w-full shrink truncate text-micro font-medium">
+          <Badge
+            variant="secondary"
+            className="max-w-full shrink truncate text-micro font-medium"
+          >
             {moduleName}
           </Badge>
         ) : null}
       </div>
 
-      {showPlanningRow && projectId !== undefined ? (
+      {showPlanningRow && resolvedProjectId !== undefined ? (
         <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 rounded-md bg-muted/45 px-1.5 py-1">
           {showEstimate ? (
             <InlineEstimate
               ticketId={ticket.id}
-              projectId={projectId}
+              projectId={resolvedProjectId}
               version={version}
               currentPoints={points}
               hideEmpty
@@ -223,7 +250,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
           {showCycle ? (
             <InlineCycle
               ticketId={ticket.id}
-              projectId={projectId}
+              projectId={resolvedProjectId}
               version={version}
               currentCycleId={ticket.cycleId}
               hideEmpty
@@ -233,7 +260,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
           {ticket.startDate ? (
             <InlineStartDate
               ticketId={ticket.id}
-              projectId={projectId}
+              projectId={resolvedProjectId}
               version={version}
               currentStartDate={ticket.startDate}
             />
@@ -242,14 +269,19 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
       ) : null}
 
       <div className="mt-2.5 flex min-w-0 items-center justify-between gap-2 border-t border-border/60 pt-2.5">
-        {showDueDate && projectId && canUpdate ? (
+        {showDueDate && resolvedProjectId && canUpdate ? (
           <InlineDueDate
             ticketId={ticket.id}
-            projectId={projectId}
+            projectId={resolvedProjectId}
             version={version}
             currentDueDate={ticket.dueDate}
             hideEmpty
           />
+        ) : showDueDate && ticket.dueDate ? (
+          <span className="inline-flex items-center gap-1 text-dense tabular-nums text-muted-foreground">
+            <Calendar aria-hidden="true" className="h-3.5 w-3.5" />
+            Due {formatCalendarDate(ticket.dueDate)}
+          </span>
         ) : createdDate ? (
           <span className="inline-flex items-center gap-1 text-dense tabular-nums text-muted-foreground">
             <Calendar className="h-3.5 w-3.5" />
@@ -259,13 +291,15 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
           <span />
         )}
 
-        {showAssignee && projectId && canAssign ? (
+        {showAssignee && resolvedProjectId && canAssign ? (
           <div className="ml-1 flex min-w-0 shrink items-center gap-1.5">
             <InlineAssignee
               ticketId={ticket.id}
-              projectId={projectId}
+              projectId={resolvedProjectId}
               version={version}
-              currentAssigneeId={ticket.assigneeId ?? primaryAssignee?.id ?? null}
+              currentAssigneeId={
+                ticket.assigneeId ?? primaryAssignee?.id ?? null
+              }
               assignee={primaryAssignee}
             />
             {primaryAssignee ? (
@@ -279,6 +313,19 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
               </span>
             ) : null}
           </div>
+        ) : showAssignee ? (
+          <span
+            className="min-w-0 truncate text-dense text-muted-foreground"
+            title={
+              primaryAssignee
+                ? getUserDisplayName(primaryAssignee)
+                : "Unassigned"
+            }
+          >
+            {primaryAssignee
+              ? getUserDisplayName(primaryAssignee)
+              : "Unassigned"}
+          </span>
         ) : null}
       </div>
     </div>
@@ -286,7 +333,6 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
 });
 
 function parseDisplayDate(value?: string | null): Date | undefined {
-  if (!value) return undefined;
-  const parsed = parseISO(value);
-  return isValid(parsed) ? parsed : undefined;
+  const parsed = value ? parseISO(value) : undefined;
+  return parsed && isValid(parsed) ? parsed : undefined;
 }

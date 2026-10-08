@@ -11,6 +11,12 @@ import {
 import type { IconHandle } from "@animateicons/react";
 import { cn } from "@/lib/utils";
 import { VIEW_TYPES, type ViewType } from "@/lib/build/view-types";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export type { ViewType } from "@/lib/build/view-types";
 export { parseViewType } from "@/lib/build/view-types";
@@ -20,6 +26,7 @@ interface ViewSwitcherProps {
   onViewChange: (view: ViewType) => void;
   className?: string;
   allowedViews?: readonly ViewType[];
+  iconOnly?: boolean;
 }
 
 type AnimatedViewIcon = ComponentType<{
@@ -52,6 +59,7 @@ export const ViewSwitcher = memo(function ViewSwitcher({
   onViewChange,
   className,
   allowedViews,
+  iconOnly = false,
 }: ViewSwitcherProps) {
   const views = allowedViews
     ? ALL_VIEWS.filter((v) => allowedViews.includes(v.value))
@@ -65,7 +73,7 @@ export const ViewSwitcher = memo(function ViewSwitcher({
     [allowedViews, onViewChange],
   );
 
-  return (
+  const switcher = (
     <div
       role="group"
       aria-label="Select view"
@@ -81,7 +89,7 @@ export const ViewSwitcher = memo(function ViewSwitcher({
         function onClick() {
           handleSelect(v.value);
         }
-        return (
+        const button = (
           <button
             key={v.value}
             type="button"
@@ -90,6 +98,7 @@ export const ViewSwitcher = memo(function ViewSwitcher({
             aria-pressed={isActive}
             className={cn(
               "inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium leading-none transition-colors press-scale outline-none motion-reduce:transition-none",
+              iconOnly && "size-8 px-0 py-0",
               "focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background",
               isActive
                 ? "bg-foreground text-background shadow-sm [&_svg]:text-background"
@@ -101,10 +110,28 @@ export const ViewSwitcher = memo(function ViewSwitcher({
             ) : StaticIcon ? (
               <StaticIcon className="h-3.5 w-3.5" />
             ) : null}
-            <span className="hidden sm:inline">{v.label}</span>
+            {!iconOnly ? (
+              <span className="hidden sm:inline">{v.label}</span>
+            ) : null}
           </button>
+        );
+        return iconOnly ? (
+          <Tooltip key={v.value}>
+            <TooltipTrigger asChild>{button}</TooltipTrigger>
+            <TooltipContent side="bottom" className="text-xs">
+              {v.label}
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          button
         );
       })}
     </div>
+  );
+
+  return iconOnly ? (
+    <TooltipProvider delayDuration={200}>{switcher}</TooltipProvider>
+  ) : (
+    switcher
   );
 });

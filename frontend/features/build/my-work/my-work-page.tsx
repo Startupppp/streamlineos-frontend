@@ -7,7 +7,11 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { Tabs } from "@/components/ui/tabs";
-import { PmPageShell, PmSection, PM_FILL_SECTION } from "@/components/pm-chrome";
+import {
+  PmPageShell,
+  PmSection,
+  PM_FILL_SECTION,
+} from "@/components/pm-chrome";
 import type { ViewType } from "@/features/build/views/view-switcher";
 import { useDisplayOptions } from "@/features/build/views/use-display-options";
 import { cn } from "@/lib/utils";
@@ -26,11 +30,13 @@ import {
 } from "./use-my-work-data";
 import {
   MyWorkDraftsPage,
+  MyWorkSectionNavigation,
   MyWorkTicketsFilters,
 } from "./my-work-sections";
 
 const GroupingSidebar = dynamic(
-  () => import("./grouping-sidebar").then((m) => ({ default: m.GroupingSidebar })),
+  () =>
+    import("./grouping-sidebar").then((m) => ({ default: m.GroupingSidebar })),
   { ssr: false, loading: () => null },
 );
 const MyWorkContent = dynamic(
@@ -62,7 +68,8 @@ function MyWorkTicketsPage() {
 
   const [showGroupingSidebar, setShowGroupingSidebar] = useState(false);
   const [groupingMounted, setGroupingMounted] = useState(false);
-  const [displayOptions, setDisplayOptions] = useDisplayOptions(DISPLAY_STORAGE_ID);
+  const [displayOptions, setDisplayOptions] =
+    useDisplayOptions(DISPLAY_STORAGE_ID);
   const { data: orgStates } = useOrgCustomStates();
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -73,6 +80,7 @@ function MyWorkTicketsPage() {
     error,
     isEmpty,
     activeData,
+    boardFilters,
     handleRetry,
     filtersActive,
     handleClearFilters,
@@ -196,7 +204,12 @@ function MyWorkTicketsPage() {
   if (isGateState)
     return (
       <PageWrapper title="My Work" subtitle="Your tickets across all projects">
-        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+        <PageState
+          resolution={pageState}
+          loading={null}
+          onRetry={handleRetry}
+          className="flex-1"
+        >
           {null}
         </PageState>
       </PageWrapper>
@@ -211,10 +224,12 @@ function MyWorkTicketsPage() {
       <PageWrapper
         title="My Work"
         subtitle="Your tickets across all projects"
+        actions={<MyWorkSectionNavigation activeSection="tickets" />}
         noInternalScroll
         filtersClassName="flex-col items-stretch gap-0 overflow-visible pb-2 [&>*]:w-full [&>*]:min-w-0 [&>*]:shrink"
         filters={
           <MyWorkTicketsFilters
+            activeTab={activeTab}
             activeView={activeView}
             hasActiveFilters={hasActiveFilters}
             showViewSwitcher={showViewSwitcher}
@@ -223,6 +238,8 @@ function MyWorkTicketsPage() {
             orgStates={orgStates}
             displayOptions={displayOptions}
             showGroupingSidebar={showGroupingSidebar}
+            searchInputRef={searchInputRef}
+            onTabChange={handleTabChange}
             onSortChange={handleSortChange}
             onViewChange={handleViewChange}
             onDisplayOptionsChange={setDisplayOptions}
@@ -240,6 +257,7 @@ function MyWorkTicketsPage() {
                   grouping={grouping}
                   showBucketList={showBucketList}
                   activeData={activeData}
+                  boardFilters={boardFilters}
                   kanbanTickets={kanbanTickets}
                   ticketMeta={ticketMeta}
                   dueBuckets={dueBuckets}

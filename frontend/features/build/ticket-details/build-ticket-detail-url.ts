@@ -29,6 +29,7 @@ const TICKET_COLLECTION_QUERY_KEYS = [
   "completed",
   "cols",
   "cursor",
+  "draftCursors",
   "section",
   "relation",
   "tab",
@@ -193,9 +194,6 @@ export function boardCollectionSearchParams(
 ): URLSearchParams {
   const match = pathname.match(TICKET_ROUTE_PATTERN);
   if (!match) {
-    if (typeof (searchParams as URLSearchParams).toString === "function") {
-      return new URLSearchParams((searchParams as URLSearchParams).toString());
-    }
     const next = new URLSearchParams();
     for (const key of [
       ...TICKET_COLLECTION_QUERY_KEYS,

@@ -97,6 +97,19 @@ it("shows the saved body in the existing editor without posting or resaving it",
   expect(mockDeleteDraft).not.toHaveBeenCalled();
 });
 
+it("focuses the restored composer for explicit resume navigation only after the draft is ready", () => {
+  mockFresh = false;
+  const feed = render(<ActivityFeed ticketId={7} projectId={1} comments={[]} resumeDraft />);
+  expect(screen.getByRole("textbox", { name: "Comment body" })).not.toHaveFocus();
+  mockFresh = true;
+  feed.rerender(<ActivityFeed ticketId={7} projectId={1} comments={[]} resumeDraft />);
+  act(() => jest.advanceTimersByTime(50));
+  expect(screen.getByRole("textbox", { name: "Comment body" })).toHaveValue("saved draft");
+  expect(screen.getByRole("textbox", { name: "Comment body" })).toHaveFocus();
+  expect(mockPost).not.toHaveBeenCalled();
+  expect(mockSave).not.toHaveBeenCalled();
+});
+
 it("shows the failed read and the existing default retry button without clearing editor text", () => {
   mockFresh = false;
   mockError = new Error("Saved draft unavailable");

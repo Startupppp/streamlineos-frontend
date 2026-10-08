@@ -21,4 +21,24 @@ describe("ViewSwitcher", () => {
     await user.click(list);
     expect(onViewChange).toHaveBeenCalledWith("list");
   });
+
+  it("keeps My Work view controls icon-only and labels them for screen readers and tooltips", async () => {
+    const user = userEvent.setup();
+    render(
+      <ViewSwitcher
+        activeView="board"
+        onViewChange={jest.fn()}
+        allowedViews={["board", "list", "table"] as const}
+        iconOnly
+      />,
+    );
+
+    const board = screen.getByRole("button", { name: "Board" });
+    expect(board).toHaveAttribute("aria-pressed", "true");
+    expect(board).toHaveClass("size-8");
+    expect(board).toHaveTextContent(/^$/);
+
+    await user.hover(board);
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("Board");
+  });
 });

@@ -121,12 +121,15 @@ export function MockMyWorkContentStub({
 export function mockPageWrapperStub({
   children,
   filters,
+  actions,
 }: {
   children?: ReactNode;
   filters?: ReactNode;
+  actions?: ReactNode;
 }) {
   return (
     <div data-testid="page-wrapper">
+      <div data-testid="page-wrapper-actions">{actions}</div>
       {filters}
       {children}
     </div>
@@ -135,16 +138,21 @@ export function mockPageWrapperStub({
 
 export function mockPageTabsToolbarStub({
   tabs,
+  search,
   filters,
   actions,
+  className,
 }: {
   tabs?: ReactNode;
+  search?: ReactNode;
   filters?: (() => ReactNode) | ReactNode;
   actions?: ReactNode;
+  className?: string;
 }) {
   return (
-    <div data-testid="tabs-toolbar">
+    <div data-testid="tabs-toolbar" className={className}>
       {tabs}
+      {search}
       {typeof filters === "function" ? filters() : filters}
       {actions}
     </div>

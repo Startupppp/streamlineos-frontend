@@ -19,7 +19,7 @@ import {
   MobileFilterSearch,
   FilterCategoryList,
 } from "@/components/list-view";
-import { pmSnappy, stepSlide, stepSlideReduced } from "@/lib/motion-presets";
+import { pmSnappy } from "@/lib/motion-presets";
 import type { useFilterCommandMenuState } from "./use-filter-command-menu-state";
 
 type MenuState = ReturnType<typeof useFilterCommandMenuState>;
@@ -67,7 +67,17 @@ export function FilterCommandMenuMobile({
   categoryListProps,
   handleBackToCategories,
 }: FilterCommandMenuMobileProps) {
-  const slideVariants = shouldReduceMotion ? stepSlideReduced : stepSlide;
+  const slideVariants = shouldReduceMotion
+    ? {
+        initial: { opacity: 0 },
+        animate: { opacity: 1 },
+        exit: { opacity: 0 },
+      }
+    : {
+        initial: (direction: number) => ({ opacity: 0, x: direction * 8 }),
+        animate: { opacity: 1, x: 0 },
+        exit: (direction: number) => ({ opacity: 0, x: direction * -6 }),
+      };
 
   return (
     <Drawer open={open} onOpenChange={handleOpenChange}>
@@ -75,6 +85,7 @@ export function FilterCommandMenuMobile({
         <FilterTriggerButton
           activeFilterCount={activeFilterCount}
           label={triggerLabel}
+          showLabelOnMobile={presentation === "all-work"}
           className={cn(
             presentation === "all-work" &&
               "h-9 w-auto min-w-28 rounded-lg border-border/80 bg-muted/45 px-3 font-medium shadow-sm hover:border-primary/35 hover:bg-muted/70",

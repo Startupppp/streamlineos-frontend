@@ -176,6 +176,16 @@ describe("KanbanTicketCard — selection does not cost navigation", () => {
 });
 
 describe("KanbanTicketCard — right click opens the card's own action menu", () => {
+  it("read-only cards expose no module editor or action menu even when permissions permit editing", () => {
+    renderCard({ readOnly: true });
+    expect(screen.queryByText("module-editor-none")).not.toBeInTheDocument();
+    expect(screen.getByText("Unassigned")).toBeInTheDocument();
+    const card = screen.getByText(ticket.title).closest("div");
+    if (card === null) throw new Error("the kanban card rendered nothing");
+    expect(fireEvent.contextMenu(card)).toBe(true);
+    expect(screen.queryByTestId("card-menu-open")).not.toBeInTheDocument();
+  });
+
   it("keeps the menu closed until the card is right clicked", () => {
     renderCard();
     expect(screen.queryByTestId("card-menu-open")).toBeNull();

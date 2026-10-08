@@ -26,6 +26,7 @@ interface PageTabsToolbarProps {
   tabsDensity?: PageTabsDensity;
   collapseBelow?: PageTabsCollapseBelow;
   filtersAlwaysVisible?: boolean;
+  searchClassName?: string;
   className?: string;
 }
 
@@ -55,13 +56,16 @@ export function PageTabsToolbar({
   tabsDensity = "labeled",
   collapseBelow = "md",
   filtersAlwaysVisible = false,
+  searchClassName,
   className,
 }: PageTabsToolbarProps) {
   const hasFilters = filters !== undefined && filters !== null;
   const isLabeled = tabsDensity === "labeled";
 
   const searchField = search ? (
-    <div className="min-w-[12rem] flex-1 basis-[14rem]">{search}</div>
+    <div className={cn("min-w-[12rem] flex-1 basis-[14rem]", searchClassName)}>
+      {search}
+    </div>
   ) : null;
 
   const filterControls = hasFilters ? (
@@ -102,7 +106,9 @@ export function PageTabsToolbar({
   ) : null;
 
   const actionCluster = actions ? (
-    <div className="flex shrink-0 items-center gap-2">{actions}</div>
+    <div className="flex max-w-full shrink-0 items-center gap-2 overflow-x-auto overscroll-x-contain scrollbar-hide">
+      {actions}
+    </div>
   ) : null;
 
   if (!isLabeled) {

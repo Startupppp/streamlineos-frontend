@@ -20,12 +20,12 @@ import { cn } from "@/lib/utils";
 import { PriorityBadge } from "@/features/build/shared/priority-badge";
 import { StatusBadge } from "@/components/shared/ticket-status-badge";
 import { PmPanel, PM_ROW } from "@/components/pm-chrome";
-import {
-  FLEX_TITLE_SLOT,
-  TEXT_ONE_LINE,
-} from "@/lib/text-overflow";
+import { FLEX_TITLE_SLOT, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { getMyWorkTicketHref } from "@/features/build/ticket-details/build-ticket-detail-url";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
+import { formatTicketKey } from "@/components/shared/format-ticket-key";
+import { formatCalendarDate } from "@/lib/date-utils";
+import { getUserDisplayName } from "@/lib/person-display";
 
 export type DueBucket = "overdue" | "today" | "upcoming" | "none";
 
@@ -40,18 +40,40 @@ interface WorkRowShape {
   priority: string | null;
   type: string;
   dueDate: string | null;
+  assignee?: MyWorkItem["assignee"];
 }
 
-export const BUCKET_ORDER: DueBucket[] = ["overdue", "today", "upcoming", "none"];
+export const BUCKET_ORDER: DueBucket[] = [
+  "overdue",
+  "today",
+  "upcoming",
+  "none",
+];
 
 export const BUCKET_CONFIG: Record<
   DueBucket,
-  { label: string; icon: ComponentType<{ className?: string }>; iconClass: string }
+  {
+    label: string;
+    icon: ComponentType<{ className?: string }>;
+    iconClass: string;
+  }
 > = {
-  overdue: { label: "Overdue", icon: AlertCircle, iconClass: "text-status-danger-ink" },
-  today: { label: "Due Today", icon: CalendarClock, iconClass: "text-status-warning-ink" },
+  overdue: {
+    label: "Overdue",
+    icon: AlertCircle,
+    iconClass: "text-status-danger-ink",
+  },
+  today: {
+    label: "Due Today",
+    icon: CalendarClock,
+    iconClass: "text-status-warning-ink",
+  },
   upcoming: { label: "Upcoming", icon: Clock, iconClass: "text-primary" },
-  none: { label: "No Due Date", icon: CheckCircle2, iconClass: "text-muted-foreground" },
+  none: {
+    label: "No Due Date",
+    icon: CheckCircle2,
+    iconClass: "text-muted-foreground",
+  },
 };
 
 export const BUCKET_SYNC_LIMIT = 20;
@@ -84,10 +106,18 @@ export const WorkItemRow = memo(function WorkItemRow({
       <div className={cn(PM_ROW, "gap-2.5 opacity-60")} data-unavailable>
         <PriorityBadge priority={item.priority} size="sm" />
         <div className={FLEX_TITLE_SLOT}>
-          <p className={cn(TEXT_ONE_LINE, "text-label font-medium leading-tight text-muted-foreground")} title={item.title}>
+          <p
+            className={cn(
+              TEXT_ONE_LINE,
+              "text-label font-medium leading-tight text-muted-foreground",
+            )}
+            title={item.title}
+          >
             {item.title}
           </p>
-          <span className="text-micro text-status-danger-ink">Unavailable — project was deleted</span>
+          <span className="text-micro text-status-danger-ink">
+            Unavailable — project was deleted
+          </span>
         </div>
         <button
           type="button"
@@ -101,12 +131,19 @@ export const WorkItemRow = memo(function WorkItemRow({
     );
   }
 
-  const href = item.ticketNumber != null
-    ? getMyWorkTicketHref(item.projectId, item.projectKey, item.ticketNumber, returnHref)
-    : `/build/${item.projectId}`;
+  const href =
+    item.ticketNumber != null
+      ? getMyWorkTicketHref(
+          item.projectId,
+          item.projectKey,
+          item.ticketNumber,
+          returnHref,
+        )
+      : `/build/${item.projectId}`;
 
   function handlePrimaryClick(e: React.MouseEvent<HTMLAnchorElement>) {
-    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0)
+      return;
     e.preventDefault();
     requestLeave(() => router.push(href, { scroll: false }));
   }
@@ -124,10 +161,13 @@ export const WorkItemRow = memo(function WorkItemRow({
       <Link
         href={href}
         onClick={handlePrimaryClick}
-        className={cn(PM_ROW, "gap-2.5")}
+        className={cn(PM_ROW, "flex-wrap gap-x-3 gap-y-1.5 md:flex-nowrap")}
       >
         <PriorityBadge priority={item.priority} size="sm" />
-        <div className={FLEX_TITLE_SLOT}>
+        <span className="shrink-0 font-mono text-xs text-muted-foreground">
+          {formatTicketKey(item.projectKey, item.ticketNumber)}
+        </span>
+        <div className={cn(FLEX_TITLE_SLOT, "basis-1/2 md:basis-0")}>
           <p
             className={cn(
               TEXT_ONE_LINE,
@@ -137,25 +177,36 @@ export const WorkItemRow = memo(function WorkItemRow({
           >
             {item.title}
           </p>
-          {density !== "compact" ? (
-            <div className="mt-0.5 flex min-w-0 items-center gap-1.5 overflow-hidden" data-optional-fields>
-              <span className="shrink-0 font-mono text-micro font-normal text-primary/80">
-                {item.projectKey}
-              </span>
-              <span className="shrink-0 text-micro text-muted-foreground">·</span>
-              <span
-                className={cn(TEXT_ONE_LINE, "min-w-0 flex-1 text-micro text-muted-foreground")}
-                title={item.projectName}
-              >
-                {item.projectName}
-              </span>
-              <span className="shrink-0 text-micro text-muted-foreground">·</span>
-              <span className="shrink-0 text-micro text-muted-foreground">{item.type}</span>
-            </div>
-          ) : null}
         </div>
+        <span
+          className="max-w-32 truncate text-xs text-muted-foreground"
+          title={item.projectName}
+        >
+          {item.projectName}
+        </span>
+        {density !== "compact" ? (
+          <span
+            className="hidden shrink-0 text-micro text-muted-foreground lg:inline"
+            data-optional-fields
+          >
+            {item.type}
+          </span>
+        ) : null}
+        {item.dueDate ? (
+          <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+            Due {formatCalendarDate(item.dueDate)}
+          </span>
+        ) : null}
+        <span
+          className="max-w-24 truncate text-xs text-muted-foreground"
+          title={
+            item.assignee ? getUserDisplayName(item.assignee) : "Unassigned"
+          }
+        >
+          {item.assignee ? getUserDisplayName(item.assignee) : "Unassigned"}
+        </span>
         <div className="flex shrink-0 items-center gap-1.5">
-          <StatusBadge status={item.status} className="text-dense" />
+          <StatusBadge status={item.status} compact />
           <ChevronRight className="h-3 w-3 -translate-x-1 text-muted-foreground opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100" />
         </div>
       </Link>

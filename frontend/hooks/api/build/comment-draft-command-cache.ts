@@ -89,33 +89,25 @@ export function applyCommentDraftReceipt(
   else client.setQueryData(ticketDraftKey, { draft, ownerKey });
   void client.invalidateQueries({
     queryKey: buildWorkQueryKeys.projects.agentPulseAll(),
+    refetchType: "none",
   });
   const listKey = buildWorkQueryKeys.projects.commentDrafts.mine();
-  const pages = client.getQueryData<DraftPages>(listKey);
   if (!draft) {
-    if (pages && "pages" in pages && Array.isArray(pages.pages)) {
-      client.setQueryData<DraftPages>(
-        listKey,
-        mapPages(pages, (items) =>
+      client.setQueriesData<DraftPages>(
+        { queryKey: listKey },
+        (pages) => pages && "pages" in pages && Array.isArray(pages.pages) ? mapPages(pages, (items) =>
           items.filter((item) => item.ticketId !== ticketId),
-        ),
+        ) : pages,
       );
-    }
-    void client.invalidateQueries({ queryKey: listKey });
     return;
   }
-  if (!pages || !("pages" in pages) || !Array.isArray(pages.pages)) {
-    void client.invalidateQueries({ queryKey: listKey });
-    return;
-  }
-  const firstPage = pages.pages[0];
-  const list = firstPage?.data;
-  const index =
-    list?.findIndex((item) => item.ticketId === draft.ticketId) ?? -1;
-  const cached = index === -1 ? undefined : list?.[index];
+  const cached = client.getQueriesData<DraftPages>({ queryKey: listKey })
+    .flatMap(([, pages]) => pages && "pages" in pages && Array.isArray(pages.pages) ? pages.pages.flatMap((page) => page.data) : [])
+    .find((item) => item.ticketId === ticketId);
   const ticket = draft.ticket ?? cached?.ticket;
   if (!ticket) {
-    void client.invalidateQueries({ queryKey: listKey });
+    for (const [key] of client.getQueriesData({ queryKey: listKey }))
+      void client.invalidateQueries({ queryKey: key, exact: true, refetchType: "none" });
     return;
   }
   const merged: CommentDraftListItem = {
@@ -128,13 +120,21 @@ export function applyCommentDraftReceipt(
     updatedAt: draft.updatedAt,
     ticket,
   };
-  client.setQueryData<DraftPages>(
-    listKey,
-    mapPages(pages, (items) => {
-      const next = [...items];
-      if (index === -1) next.unshift(merged);
-      else next[index] = merged;
-      return next;
-    }),
-  );
+  for (const [key, pages] of client.getQueriesData<DraftPages>({ queryKey: listKey })) {
+    if (!pages || !("pages" in pages) || !Array.isArray(pages.pages)) continue;
+    const firstPage = key.length === listKey.length;
+    let found = false;
+    const updated = mapPages(pages, (items) => items.map((item) => {
+      if (item.ticketId !== ticketId) return item;
+      found = true;
+      return merged;
+    }));
+    if (!found && firstPage && !cached) {
+      updated.pages = updated.pages.map((page, index) => index === 0
+        ? page.data.length < page.pagination.limit ? { ...page, data: [merged, ...page.data] } : page
+        : page);
+    }
+    client.setQueryData(key, updated);
+    if (!found) void client.invalidateQueries({ queryKey: key, exact: true, refetchType: "none" });
+  }
 }
