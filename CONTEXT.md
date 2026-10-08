@@ -62,7 +62,7 @@ A Tool normally reads or proposes a confirmable action and returns
 `needs-confirmation`. Some existing Tools (`clockIn`, `clockOut`, `toggleBreak`,
 and `createTask`) perform writes immediately. They are source-present exceptions,
 not proof that the companion may expose immediate model-selected writes. The
-Companion Pet decision in [ADR 0007](docs/docs/adr/0007-companion-uses-ask-os-toolset.md)
+Companion Pet decision in [ADR 0007](docs/pet/0007-companion-uses-ask-os-toolset.md)
 requires a visible preview and explicit confirmation for every pet-initiated write.
 
 ### Tool provider

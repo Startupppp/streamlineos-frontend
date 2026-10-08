@@ -30,7 +30,7 @@ const project: ProjectListItem = {
 };
 
 describe("ProjectsViewContent grid layout", () => {
-  it("keeps cards and the non-sticky pagination footer in one scrolling results area", () => {
+  it("keeps cards scrollable while pagination remains a non-scrolling sibling", () => {
     render(
       <ProjectsViewContent
         viewMode="grid"
@@ -76,12 +76,14 @@ describe("ProjectsViewContent grid layout", () => {
     expect(grid.parentElement).not.toHaveClass("pb-4");
 
     const pagination = screen.getByRole("navigation", { name: "Pagination" });
-    expect(pagination).toHaveClass("mt-auto");
+    expect(pagination).toHaveClass("mt-auto", "pt-0");
     expect(pagination).not.toHaveClass("sticky");
     expect(pagination).not.toHaveClass("bottom-0");
-    expect(pagination.parentElement).toBe(grid.parentElement);
+    expect(pagination.parentElement).toBe(grid.parentElement?.parentElement);
+    expect(pagination.parentElement).not.toBe(grid.parentElement);
     expect(
-      grid.compareDocumentPosition(pagination) & Node.DOCUMENT_POSITION_FOLLOWING,
+      (grid.parentElement?.compareDocumentPosition(pagination) ?? 0) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
   });
 

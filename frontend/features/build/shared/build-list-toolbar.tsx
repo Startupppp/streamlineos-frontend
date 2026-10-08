@@ -47,6 +47,7 @@ interface BuildListToolbarProps {
   drawerTitle?: string;
   className?: string;
   collapseActionsOnSearchFocus?: boolean;
+  fillMobileActions?: boolean;
 }
 
 function ToolbarFilterSlot({
@@ -93,6 +94,7 @@ export function BuildListToolbar({
   drawerTitle = BUILD_TOOLBAR_FILTERS_LABEL,
   className,
   collapseActionsOnSearchFocus = false,
+  fillMobileActions = false,
 }: BuildListToolbarProps) {
   const {
     value: searchValue,
@@ -267,7 +269,10 @@ export function BuildListToolbar({
           <motion.div
             key="build-toolbar-actions"
             data-slot="build-toolbar-actions"
-            className="flex shrink-0 flex-nowrap items-center gap-2"
+            className={cn(
+              "flex shrink-0 flex-nowrap items-center gap-2",
+              fillMobileActions && "max-md:w-full max-md:justify-between",
+            )}
             initial={actionInitial}
             animate={actionAnimate}
             exit={actionInitial}

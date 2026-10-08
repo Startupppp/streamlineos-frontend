@@ -71,7 +71,11 @@ export function ProjectFilterBar({
           label: "Filters",
           presentation: "trigger",
           control: (
-            <AddFilterPopover filters={filters} onFiltersChange={onFiltersChange} />
+            <AddFilterPopover
+              filters={filters}
+              onFiltersChange={onFiltersChange}
+              showMobileLabel
+            />
           ),
           active: hasActiveFilters,
         },
@@ -82,6 +86,7 @@ export function ProjectFilterBar({
             prefs={prefs}
             onToggle={onTogglePrefs}
             onSet={onSetPrefs}
+            showMobileLabel
           />
           <ViewToggle value={viewMode} options={VIEW_OPTIONS} onChange={handleViewChange} />
           {onToggleGroupingSidebar ? (
@@ -103,6 +108,7 @@ export function ProjectFilterBar({
         </>
       }
       onClearAll={onClearAll}
+      fillMobileActions
     />
   );
 }

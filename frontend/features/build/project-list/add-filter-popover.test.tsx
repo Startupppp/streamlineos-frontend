@@ -30,6 +30,18 @@ describe("AddFilterPopover", () => {
     });
   });
 
+  it("can expose its text label in the compact mobile toolbar", () => {
+    render(
+      <AddFilterPopover
+        filters={{}}
+        onFiltersChange={jest.fn()}
+        showMobileLabel
+      />,
+    );
+
+    expect(screen.getByText("Filters")).toHaveClass("max-md:inline");
+  });
+
   it("opens with usable status choices instead of an empty instruction panel", () => {
     render(<AddFilterPopover filters={{}} onFiltersChange={jest.fn()} />);
 

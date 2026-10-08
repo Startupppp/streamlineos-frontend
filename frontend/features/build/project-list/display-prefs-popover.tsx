@@ -32,6 +32,7 @@ interface DisplayPrefsPopoverProps {
   prefs: DisplayPrefs;
   onToggle: (key: keyof DisplayPrefs) => void;
   onSet: (next: Partial<DisplayPrefs>) => void;
+  showMobileLabel?: boolean;
 }
 
 function SectionLabel({ children }: { children: string }) {
@@ -111,6 +112,7 @@ export function DisplayPrefsPopover({
   prefs,
   onToggle,
   onSet,
+  showMobileLabel = false,
 }: DisplayPrefsPopoverProps) {
   function handleGroupByChange(value: string) {
     const groupBy = GROUP_BY_OPTIONS.find((candidate) => candidate === value);
@@ -140,10 +142,15 @@ export function DisplayPrefsPopover({
             variant="outline"
             size="sm"
             aria-label="Display"
-            className={RESPONSIVE_ICON_LABEL_TRIGGER_CLASS}
+            className={cn(
+              RESPONSIVE_ICON_LABEL_TRIGGER_CLASS,
+              showMobileLabel && "max-md:h-9 max-md:w-auto max-md:px-2.5",
+            )}
           >
             <SlidersHorizontal className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-            <ResponsiveIconLabelText>Display</ResponsiveIconLabelText>
+            <ResponsiveIconLabelText className={cn(showMobileLabel && "max-md:inline")}>
+              Display
+            </ResponsiveIconLabelText>
           </Button>
         </ResponsivePopoverTrigger>
       </MobileOnlyLabelTooltip>

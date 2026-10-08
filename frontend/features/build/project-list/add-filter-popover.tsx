@@ -246,11 +246,13 @@ function LeadFilterPanel({
 interface AddFilterPopoverProps {
   filters: ProjectActiveFilters;
   onFiltersChange: (next: ProjectActiveFilters) => void;
+  showMobileLabel?: boolean;
 }
 
 export function AddFilterPopover({
   filters,
   onFiltersChange,
+  showMobileLabel = false,
 }: AddFilterPopoverProps) {
   const [activeCategory, setActiveCategory] = useState<FilterKey>("status");
   const activeCount = Object.values(filters).filter(Boolean).length;
@@ -316,11 +318,14 @@ export function AddFilterPopover({
             aria-label="Filters"
             className={cn(
               RESPONSIVE_ICON_LABEL_TRIGGER_CLASS,
+              showMobileLabel && "max-md:h-9 max-md:w-auto max-md:px-2.5",
               hasAny && "border-primary/40 bg-primary/5 text-primary",
             )}
           >
             <Filter className="size-3.5 shrink-0" aria-hidden="true" />
-            <ResponsiveIconLabelText>Filters</ResponsiveIconLabelText>
+            <ResponsiveIconLabelText className={cn(showMobileLabel && "max-md:inline")}>
+              Filters
+            </ResponsiveIconLabelText>
             {hasAny ? (
               <Badge className="ml-0.5 h-4 min-w-4 rounded-full px-1 text-micro">
                 {activeCount}

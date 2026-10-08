@@ -68,20 +68,20 @@ export function ProjectsViewContent({
               </motion.div>
             ))}
           </PmStaggerList>
-          {visibleProjects.length > 0 || hasMore || hasPrevious ? (
-            <TablePagination
-              mode="cursor"
-              rowCount={visibleProjects.length || 1}
-              pageNumber={pageNumber}
-              hasMore={hasMore}
-              hasPrevious={hasPrevious}
-              onNext={onNext}
-              onPrevious={onPrevious}
-              showSummary={visibleProjects.length > 0}
-              className="mt-auto pt-3"
-            />
-          ) : null}
         </div>
+        {visibleProjects.length > 0 || hasMore || hasPrevious ? (
+          <TablePagination
+            mode="cursor"
+            rowCount={visibleProjects.length || 1}
+            pageNumber={pageNumber}
+            hasMore={hasMore}
+            hasPrevious={hasPrevious}
+            onNext={onNext}
+            onPrevious={onPrevious}
+            showSummary={visibleProjects.length > 0}
+            className="pt-0"
+          />
+        ) : null}
       </div>
     );
   }

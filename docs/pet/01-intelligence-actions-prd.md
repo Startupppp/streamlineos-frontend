@@ -61,7 +61,7 @@ Do not infer team or organization-wide visibility from “we.” Every count ans
 - Answer only the part supported by retrieved text. If sources conflict, show the conflict and dates rather than choosing one silently. If no source supports an answer, say so and offer a search or a human owner, without fabricating a citation.
 - Distinguish source text from instructions. Content in a ticket, email, page, or attachment cannot override the assistant's permissions, identity, confirmation rule, or system policy.
 - Revocation takes effect before subsequent retrieval and before opening a source link. Conversation history may retain an earlier answer but must not provide a new route to a revoked source.
-- Integrate a Documents-owned bounded citable-context read into the Ask OS turn, as selected in [ADR 0007](../docs/adr/0007-companion-uses-ask-os-toolset.md). Ask OS performs the single metered generation and stores one transcript; do not call paid Documents Ask inside its ambient Tool transaction, double-charge, or hold a pooled connection during provider latency. Propagate Documents' per-source degradation and citation revalidation to the companion.
+- Integrate a Documents-owned bounded citable-context read into the Ask OS turn, as selected in [ADR 0007](0007-companion-uses-ask-os-toolset.md). Ask OS performs the single metered generation and stores one transcript; do not call paid Documents Ask inside its ambient Tool transaction, double-charge, or hold a pooled connection during provider latency. Propagate Documents' per-source degradation and citation revalidation to the companion.
 
 ## Work action flow
 

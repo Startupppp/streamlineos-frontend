@@ -1,0 +1,96 @@
+# Companion implementation contract
+
+**Status:** Build handoff, 2026-10-08; proposed, not implemented. Read [the program decisions](README.md), [ADR 0007](0007-companion-uses-ask-os-toolset.md), [CP-00](00-experience-prd.md), [CP-01](01-intelligence-actions-prd.md), [CP-02](02-proactive-governance-prd.md), and [CP-03](03-implementation-architecture-prd.md) first. This file resolves implementation behavior where those documents remain high level. The current code is the source of truth for existing API names and domain invariants; a conflict with current security/owner contracts must be recorded and resolved before changing them.
+
+## 1. Scope and immutable rules
+
+- One original character with curated presets replaces the visible Ask OS launcher; one companion uses the existing Ask OS conversations and typed Toolset. Signed-in organization members are the first-release audience. All roles get the same entry where AI is enabled, with effective capabilities determined by grants, module flags, organization policy, connection and object reach. External guests, arbitrary web/desktop control, opt-in voice, and repository bug diagnosis follow later.
+- Text accepts any question, command, or mixed request. The pet can **answer, clarify, propose, or explain a limit**. It does work only through a registered, reviewed, currently available owner capability. It never interprets a missing Tool as permission to use generic SQL, browser automation, or an invented action.
+- Every pet-initiated write, including external send and attendance change, needs a server-produced preview and explicit card confirmation. A model Tool call or free-text assent cannot commit it. Four known immediate-write keys and the unsafe lead-status lookup are gated as described in [the inventory](capability-inventory.md).
+- A count is calculated by Build; a knowledge citation is supplied by Documents; a reminder fact comes from Calendar/HR/Notifications. The model synthesizes but is never the authority for current organization numbers, records, or write success.
+- A request-local access snapshot is a stable view for one turn, **not** a promise that access cannot change. New requests, proposal redemption, citation open/replay, and prompt delivery perform fresh checks. An already running Tool uses the snapshot and owner object checks; prevent any new operation with revoked scope. Release tests must cover revocation races.
+
+## 2. State and wire contracts
+
+Use the repository's controller/DTO and API-client conventions. Extend the existing Ask OS routes and persisted conversation identity; avoid a second chat API or history table. The shapes below are semantic contracts rather than a demand for these exact TypeScript names.
+
+| Object | Required fields and invariants | Owner |
+| --- | --- | --- |
+| `CompanionContext` | `orgId` and `userId` from auth only; optional route/module/project/record reference, captured at send time; server validates reference and strips stale/denied context; page context cannot widen scope. | Ask OS turn; frontend supplies only hints. |
+| `CapabilityDecision` | Stable Tool key, reviewed exposure state, effective grant/module/policy/connection checks, reason code, optional safe suggestion. Do not send hidden private candidates to client. | Ask OS Toolset plus owning module. |
+| `Clarification` | Question, purpose (`scope`, `entity`, `time`, `connection`, or `other`), bounded authorized options with opaque IDs, expiry and same actor/org binding. No Tool write while unresolved; original turn resumes with the explicit selection. | Ask OS directive/presentation; owner resolves options. |
+| `AnswerEvidence` | Owner, source ID/revision or query predicate, `asOf`, scope/filters, bounded excerpts or typed values, accessible destination, partial/degraded status. Unsupported general guidance is labeled separately. | Owning read Tool; Ask OS synthesizes. |
+| `ActionPlan` | Ordered steps, target, material changes/recipient, dependency, confirmation boundary, pending/completed/failed/declined state. Each step has a separate proposal/receipt. No implied atomic transaction. | Ask OS presentation over owner proposals. |
+| `Proposal` | Existing proposal ID and redemption token, actor/org, action, target and revision, preview, expiry, idempotency identity, policy snapshot reference. Secret token is sent only to the authorized confirmer and never placed in model context, analytics, or shared logs. | Existing confirmation owner. |
+| `ActionReceipt` | Action and target IDs, committed/failed/conflicted result, owner-generated stable result ID or idempotency key, changed fields, time, authorized destination, audit correlation. Render success only after owner commit/accepted external send receipt. | Owner command and Ask OS confirm endpoint. |
+| `CompanionPreference` | User/org key, pet visible, name, preset, tone, animation, anchor, four prompt-category switches, friendly consent, coarse-activity consent, global prompt pause/snooze, update version/time. Server returns effective values and lock reasons. | New preference storage under authenticated org/user; Notifications remains quiet-hours owner. |
+| `PromptEvent` | Org/user, category, source identity/occurrence or work-session ID, eligibility time, expiry, dedupe key, reason code, status, channel/presentation claim, policy version and timestamps. Store no private message body in shared previews or analytics. | Pet prompt policy with Calendar/HR/Notifications owners. |
+
+Persist preferences and prompt delivery/activity through versioned database migrations, with unique org/user keys and a unique per-user prompt dedupe key. Use existing naming, RLS/tenant, migration, and audit conventions; schema review must verify non-owner application-role behavior. A cosmetic preference change must never create a new conversation. The existing conversation ID remains the only history identity. Do not store raw foreground event streams: retain only bounded duration aggregates necessary for opted-in break/friendly eligibility, with a short documented retention period no longer than the platform's applicable notification/audit retention. If that platform retention is not defined, choose a conservative 30-day maximum for prompt activity and 24-hour maximum for raw session duration, then get privacy review before release. Consent revocation deletes ephemeral timing state and prevents future collection.
+
+### Preference defaults and precedence
+
+| Setting | First-visit default | Effective rule |
+| --- | --- | --- |
+| Visibility | On desktop; compact entry on mobile | Org can disable pet presentation; user can hide it; normal Ask OS route remains available if AI is allowed. |
+| Name, preset, tone, anchor | Design-approved name/preset; neutral tone; lower safe anchor | User can choose from curated presets and safe anchors; org may restrict preset list. Reject arbitrary HTML, remote animation URLs, or executable assets. |
+| Animation | Subtle | User off or OS reduced-motion overrides motion. Static state always remains meaningful. |
+| Meeting prompt | Mirrors enabled underlying meeting-reminder category | Org/user/channel policy, quiet hours and event eligibility all must allow it. Pet disable does not disable normal calendar notifications. |
+| Clock-in, break, friendly | Off | Explicit per-user enable. Break and friendly additionally require coarse-activity consent; friendly has independent one-click disable. |
+| Global prompt pause | Off | Pauses pet prompts only; does not stop underlying notifications or Ask OS chat. |
+
+Order of restriction: current authentication/membership and owner ACL; organization AI/module/capability/prompt policy; user setting and consent; existing notification channel/category/quiet hours; live event eligibility; frequency/dedupe; client safe presentation. A later layer can only narrow the prior layer. An admin cannot use companion policy to grant a capability absent from RBAC. On org switch or logout, cancel in-flight UI work, clear context, suggestions, prompt queue and local drafts from the prior org, and reload scoped preferences/history.
+
+## 3. Request lifecycle and UI states
+
+1. **Open:** Render static/idle launcher without a model call. Lazy-load the panel. Load existing conversations and effective preferences with authenticated scoped queries. First-visit choices are Ask, Customize, Hide; no forced naming or unsolicited speech.
+2. **Send:** Validate message and capture route context. Create/append to the existing Ask OS conversation. Resolve current actor and effective Toolset. The server filters a reviewed companion exposure list **before** passing Tools to the model; direct writes are absent here. Connection requirements and object-level access remain owner checks.
+3. **Interpret:** For a general answer, clearly mark it as general guidance. For organization facts, request bounded owner evidence. Ask a structured clarification for missing scope, target, time zone, or connection before consequential read or proposal. An ambiguity choice is same-user/org bound, expires, and is validated anew before use. An ambiguous Build “we” count **always** asks scope, even with a project page hint.
+4. **Read:** Limit model steps, owner calls, row count, excerpt bytes and elapsed time; keep each read tenant-scoped. Independent reads may run concurrently only if provider and DB capacity are measured; dependent reads wait for prerequisites. Return separate source statuses. A failed owner cannot be silently replaced by model memory.
+5. **Propose:** Build a typed owner proposal for each side effect. Show target, before/after, recipient, consequences and expiry. Confirmation card is the only commit control. If a requested field/action has no confirmed owner capability, show an authorized route to the owning workflow.
+6. **Confirm:** Use the existing `/chat/confirm` path. Re-resolve membership, grants, module flag, org policy, connection where relevant, object reach, target version, token/expiry, and idempotency. On conflict or revocation, perform zero writes and offer a new preview. A duplicate redemption returns the original receipt or a stable already-completed result, never a second side effect.
+7. **Report:** Present actual owner receipt, authorized link, and any partial completion. A declined or failed step stops dependent steps. The user can request a new plan. A credit/provider failure is distinct from a Tool failure, denial, missing connection, empty data, and unsupported action.
+
+Use the seven current `ToolOutcome` kinds. `explain limit` is a UI path for unsupported or withheld capability, **not** an invented eighth outcome. The panel must provide text and accessible status for idle, input/listening, thinking, clarification, partial evidence, proposal ready, confirmation pending, success, conflict/expired, denied, disconnected, failed, stopped, and quiet/reminder. Animation mirrors these states and cannot be the only signal. A stop cancels model/unused reads where supported but never assumes a confirmed external action can be rolled back.
+
+### Exact Build aggregate
+
+Build accepts explicit scope `project(id)`, `allAccessible`, or `mine` (team only after a separate owner-approved scope). Type is `BUG` or `all`; open state groups are `backlog`, `unstarted`, `started`. `mine` includes primary or co-assignment once. Query applies tenant, effective project/ticket reach, deletion/archive policy, canonical ticket type and status group in one owner-controlled scope. Return integer total, normalized filters, `asOf`, and a filtered destination only if the view reproduces the predicate; a separate bounded preview may have fewer rows. Inaccessible scope returns denied/not-found, never zero. Missing status mapping makes exactness unavailable and raises a Build data-quality signal. Measure with `EXPLAIN (ANALYZE, BUFFERS)` using the non-owner application role and representative tenant sizes before cache/index decisions.
+
+### Documents content answer
+
+Extract bounded passage retrieval, source/revision metadata, degradation and citation identifiers from Documents' current private Ask gathering path. Do not call its paid `ask` operation inside the Ask OS Tool transaction. The Documents context read owns short tenant transactions and releases pooled connections before provider latency; Ask OS performs one generation, one credit settlement and one transcript append. Treat retrieved text as untrusted data. Cite only claims backed by accessible passages, preserve conflict and degradation, and revalidate source access on click and history replay. A revoked source cannot become a live link or be fetched through a retained citation identifier.
+
+## 4. Prompt computation and delivery
+
+Prompts are deterministic and do not call the model. Calendar supplies event occurrence/attendee identity and existing outbox reminder eligibility; HR supplies a single attendance eligibility answer including shift, clock record, leave and holiday. Notifications supplies channel/category/quiet-hours decisions and delivery. The pet composes user/admin preference, frequency, safe presentation and activity history; it does not run a second calendar sweep or copy HR joins.
+
+| Category | Identity / eligibility | Expiry and repeat rule |
+| --- | --- | --- |
+| Meeting | Existing calendar event ID + occurrence start + attendee + underlying reminder identity. Recheck cancellation, reschedule, recurrence exception and access at delivery. | Expire after the relevant start/notification window; one actionable pet presentation per identity. A reschedule invalidates old identity. |
+| Missed clock-in | Org + user + effective scheduled local workday, after 15-minute grace, only if HR returns eligible/no recorded clock-in. Unknown shift, leave, holiday or stale attendance suppresses. | One per eligible workday; expire on clock-in or day end. Never use accusatory wording. |
+| Break | Opted-in foreground session ID + threshold window; 90 minutes proposed; reset on recorded break; cap two per workday. | Dismiss/snooze prevents immediate repeat; hidden-tab time does not accrue. Say “StreamlineOS has been open for a while,” not “you worked continuously.” |
+| Friendly | Explicit category opt-in and activity consent; no recent direct pet interaction and no higher-priority item. | At most once per workday; separate disable control. No unsolicited social chat turn. |
+
+Server uses a unique dedupe identity and an atomic claim/transition for actionable presentation across tabs and devices. A tab may display only an event it successfully claims; losing tabs reconcile to activity history. Client BroadcastChannel may reduce flicker but cannot guarantee uniqueness. Recheck settings, org, source access, quiet hours, focus/DND, current meeting and expiry immediately before display; cancellation or a remote disable removes queued items. Suppress on missing facts rather than guessing. Priority: meeting, clock-in, break, friendly; show one bubble. Quiet/focus/modal/full-screen deferral never extends beyond expiry. Offline reconnect fetches current eligible events, not an old unbounded queue. Use existing outbox retries for durable delivery, with idempotent worker handling and operational reason codes.
+
+## 5. Build map and sequence
+
+| Order | Owner files/seam to inspect and extend | Concrete completion |
+| --- | --- | --- |
+| 0 | `backend/src/modules/ai/core/tools/`, `registry/ask-os-tool.types.ts`, `ask-os-tool-registry.ts`, `confirm-actions/` | Reconcile [inventory](capability-inventory.md) with actual registered providers; classify all side effects; server-gate unreviewed/immediate writes and unsafe target lookup. Record launch review rows. |
+| 1 | Ask OS chat service/controller, streaming directives, frontend `components/assistant/` | Add structured clarification, evidence, plan and receipt presentation while retaining conversation IDs/history/credits; make unsupported, denied and partial results honest. |
+| 2 | Build work-query/count owner and `projects-copilot-tools.ts` or a dedicated Build provider | Add exact scoped BUG/all-issue aggregate and capped search preview; prove parity with filtered Build view and owner permissions. |
+| 3 | Documents `kb/retrieval/` and one Ask OS provider | Extract citable-context read, single-generation integration and citation replay; prove revocation and cost/transaction behavior. |
+| 4 | Confirmable action definitions, owner command paths, CRM target resolver | Convert desired immediate writes; enforce separate confirmations and receipts; fix first-match lead ambiguity. Unconverted keys remain blocked. |
+| 5 | Authenticated user preferences, organization AI/policy config, Notifications, Calendar, HR | Add scoped preference and prompt policy persistence, eligibility, atomic dedupe, activity record and worker delivery. Preserve existing quiet-hour/calendar ownership. |
+| 6 | `AskOsProvider`, launcher, mobile quick action, panel and shared UI tokens | Swap visible launcher for original pet, keep lazy panel and normal history; implement safe anchors, static fallback, setting and prompt views, keyboard and reduced-motion behavior. |
+| 7 | Release gates in [delivery plan](delivery-plan.md) and [verification ledger](verification-and-competition.md) | Test role/tenant/project matrix, real owner writes and citations, browser/mobile/accessibility, multi-device prompts, non-owner DB plans, operational retries/rollback, and pilot metrics. |
+
+Do not rewrite all registered providers or add a new agent framework just to launch the pet. Preserve current public Ask OS endpoints when possible; add versioned DTO fields/routes only where a new structured card or preference/prompt read is required. Frontend uses existing authenticated query-key and API conventions. No raw private source text, proposal tokens, recipient addresses, or individual activity durations enter aggregate analytics. Metrics may record outcome code, capability key, latency, cost, confirmation and suppression reason with org/role-cohort aggregation and retention review.
+
+## 6. Verification and release record
+
+An implementing agent must attach evidence, not a checkbox, to every CP-00/01/02 acceptance ID. The minimum artifact is a reproducible test/environment/actor/role/org identifier, observed result, DB or owner trace where relevant, browser screenshot or recording for UI, console/network status, and reviewer/date. Source inspection and focused tests close only their named layer. A feature flag supports returning to the existing Ask OS launcher with history intact. Rollback disables pet presentation and prompt generation/delivery, invalidates pending pet-only proposals, and leaves existing underlying notifications and owner records intact.
+
+Release is **No-Go** while an exposed write bypasses confirmation, a cited or counted answer leaks across access, a duplicate prompt/action occurs in the agreed matrix, a required role starter has no truthful path, or target-environment notification/confirmation persistence is unverified. Performance targets and pilot outcome numbers are set after measuring a named nonproduction baseline; no source-only latency promise is valid. The [delivery plan](delivery-plan.md) defines the sequence and [ledger](verification-and-competition.md) tracks the open proof.

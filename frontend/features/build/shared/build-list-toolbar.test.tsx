@@ -79,6 +79,24 @@ const search = {
 };
 
 describe("BuildListToolbar", () => {
+  it("can distribute a labeled mobile action row across the available width", () => {
+    render(
+      <BuildListToolbar
+        filters={[statusFilter()]}
+        trailing={<button type="button">Display</button>}
+        fillMobileActions
+      />,
+    );
+
+    const toolbar = screen.getByText("Display").closest(
+      '[data-slot="build-toolbar-actions"]',
+    );
+    expect(toolbar).toHaveClass(
+      "max-md:w-full",
+      "max-md:justify-between",
+    );
+  });
+
   beforeEach(() => {
     useIsMobile.mockReturnValue(false);
   });

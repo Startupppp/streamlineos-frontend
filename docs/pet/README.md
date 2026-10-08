@@ -13,7 +13,10 @@
 5. [Verification and competitive baseline](verification-and-competition.md): current-source audit, acceptance-by-acceptance trace, focused tests, proof boundaries, and dated official sources.
 6. [200 opportunity candidates](wow-opportunity-catalog.md): research-informed idea pool, evidence rules, and a short list for validation. Candidates are not a shipping commitment or a uniqueness claim.
 7. [Sequenced delivery and validation plan](delivery-plan.md): decisions, design, backend, frontend, accessibility, and release evidence.
-8. [ADR 0007 — Companion uses the Ask OS Toolset](../docs/adr/0007-companion-uses-ask-os-toolset.md): the accepted first-release architecture decision and its proof gates.
+8. [ADR 0007 — Companion uses the Ask OS Toolset](0007-companion-uses-ask-os-toolset.md): the accepted first-release architecture decision and its proof gates.
+9. [Architecture report reconciliation](architecture-review.md) and [corrected HTML copy](architecture-review.html): claim-by-claim check of the supplied report against source and these requirements. The Markdown contract is authoritative.
+10. [Implementation contract](implementation-contract.md): build sequence, state and data contracts, failure rules, and release handoff.
+11. [Registered capability inventory](capability-inventory.md): all 73 source-registered Tool keys, launch treatment, and owner validation checklist.
 
 The current [Chat OS PRD](../specs/2026-09-18-chat-os-prd.md), [Ask OS hardening PRD](../specs/2026-09-19-ask-os-hardening-prd.md), and [Build acceptance catalog](../specs/build/module/README.md) remain authoritative for their own underlying systems. This program defines the new user experience and its added capabilities. A conflict with a current security or Build contract is resolved in favor of that contract until the product owner explicitly changes it. Historical PRD progress is not proof of current production behavior.
 
@@ -37,13 +40,26 @@ The current [Chat OS PRD](../specs/2026-09-18-chat-os-prd.md), [Ask OS hardening
 | CP-D14 | One original, recognizable StreamlineOS character with curated appearance presets in the first release; users do not choose among separate pet characters. |
 | CP-D15 | Accept any natural-language question or action request. Resolve and execute it only when an approved, currently available capability can satisfy it for this actor. Clarify missing scope or target, distinguish unsupported/denied/disconnected requests, and never imply an action succeeded without an owning-module receipt. The first-release execution boundary is StreamlineOS and approved connected tools, not arbitrary websites or computer control. |
 
+## Original request coverage
+
+| Requested behavior | First-release decision and detailed location |
+| --- | --- |
+| Replace Ask OS with an animated Codex-like pet | One original StreamlineOS character with presets, small desktop presence, mobile quick entry, accessible static/motion states; keep Ask OS engine/history. [CP-00](00-experience-prd.md). The supplied pet image is inspiration only; do not copy its pixels or identity. |
+| Talk, understand any question, offer options, do requested work | Text conversation and open natural-language intake across every reviewed available capability; options and clarification precede consequential work. Speech input/replies are a later opt-in release. [CP-01](01-intelligence-actions-prd.md), [implementation contract](implementation-contract.md). |
+| Update tickets, find bugs, count issues | Confirmed Build actions, canonical `BUG` search and exact counts, explicit scope on ambiguous questions, owner-filtered links. Repository bug diagnosis follows later. [CP-01](01-intelligence-actions-prd.md). |
+| Answer with knowledge base context | Documents-owned content retrieval with access-checked citations, one Ask OS generation/credit/transcript. [CP-01](01-intelligence-actions-prd.md), [ADR 0007](0007-companion-uses-ask-os-toolset.md). |
+| Speak up while a user is busy, with an off switch | Useful prompts respect focus, quiet hours, consent, controls, source eligibility and dedupe. Friendly check-ins default off; coarse in-app timing is separately opt-in. [CP-02](02-proactive-governance-prd.md). |
+| Break, missed clock-in, and meeting notices | Four separately controlled classes with calendar/HR/notification ownership and truthful wording; no inferred health or productivity surveillance. [CP-02](02-proactive-governance-prd.md). |
+| All roles and many wow features | All signed-in organization member roles have the universal core where AI is permitted; role-specific starters use effective grants. [200 candidates](wow-opportunity-catalog.md) are researched opportunities, not 200 launch promises or unverified uniqueness claims. |
+| Reliable, efficient, clean and scalable implementation | Existing deep Toolset and owner seams, no generic write path, measured bounded work, layered verification and rollback. [CP-03](03-implementation-architecture-prd.md), [architecture reconciliation](architecture-review.md), [implementation contract](implementation-contract.md). |
+
 ## Verification snapshot
 
 | Area | Current conclusion |
 | --- | --- |
 | Product discussions | CP-D01–D15 settled for this planning round, including broad natural-language intake, approved-tool execution scope, audience, scope prompts, open-BUG definition, activity consent, and one character with presets. Final name and art are design outputs. |
-| Repository architecture | [ADR 0007](../docs/adr/0007-companion-uses-ask-os-toolset.md) selects the existing Ask OS Toolset as the capability seam. Ask OS has the turn, history, and confirmation owners. Existing Tool providers span Build, CRM, HR/self-service, mail, communications, calendar, payroll, operations, and workspace; their presence does not prove every task works end to end. Documents already has content Retrieve and Citation; Build lacks an exact scoped BUG aggregate tool; Calendar/Notifications have reminder and preference foundations. Details and source paths are in the [ledger](verification-and-competition.md). |
-| Focused checks | At HEAD `0cd316204`, this architecture recheck passed 3 backend registry/confirmation suites / 84 tests and 2 frontend lazy-provider/confirmation-card suites / 11 tests. Earlier planning runs passed 5 backend suites / 35 tests, 9 backend suites / 108 tests, and 3 frontend suites / 11 tests. Runs overlap and prove only their named local assertions. |
+| Repository architecture | [ADR 0007](0007-companion-uses-ask-os-toolset.md) selects the existing Ask OS Toolset as the capability seam. Ask OS has the turn, history, and confirmation owners. Existing Tool providers span Build, CRM, HR/self-service, mail, communications, calendar, payroll, operations, and workspace; their presence does not prove every task works end to end. Documents already has content Retrieve and Citation; Build lacks an exact scoped BUG aggregate tool; Calendar/Notifications have reminder and preference foundations. Details and source paths are in the [ledger](verification-and-competition.md). |
+| Focused checks | At HEAD `9d9651c11`, the backend registry/confirmation suites passed 3 suites / 84 tests and the frontend lazy-provider/confirmation-card suites passed 2 suites / 11 tests. Earlier planning runs passed 5 backend suites / 35 tests, 9 backend suites / 108 tests, and 3 frontend suites / 11 tests. Runs overlap and prove only their named local assertions. |
 | Runtime and release | Anonymous backend `/health` responded on port 1500; no frontend listener was found on checked ports 1000/3000/3001. No authenticated pet journey, target database, cross-role/tenant, notification delivery, deployment, or customer outcome is verified. |
 | Competitors and 200 ideas | Official public sources show significant existing overlap; the 200 catalog entries remain hypotheses. No universal exclusivity or customer validation claim is made. |
 

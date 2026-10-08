@@ -13,6 +13,15 @@ describe("TablePagination absorbs the second footer, so there is one pagination 
     expect(pagination).not.toHaveClass("absolute", "fixed", "sticky");
   });
 
+  it("has no top padding and keeps mobile pagination centered symmetrically", () => {
+    render(<TablePagination page={1} pageSize={10} total={35} onPageChange={noop} />);
+
+    const pagination = screen.getByRole("navigation", { name: "Pagination" });
+    expect(pagination).toHaveClass("pt-0", "max-md:px-3");
+    expect(pagination).not.toHaveClass("py-1");
+    expect(pagination.className).not.toContain("pr-16");
+  });
+
   it("renders no page-size control when the caller supplies no handler, which is what the 61 existing call sites pass", () => {
     render(<TablePagination page={1} pageSize={10} total={35} onPageChange={noop} />);
 

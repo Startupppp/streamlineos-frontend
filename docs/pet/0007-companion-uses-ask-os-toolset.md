@@ -35,4 +35,4 @@ The source review also found gaps that the architecture must expose rather than 
 - Documents integration needs a source-preserving extraction from its current private context-gathering implementation. Prove one metered generation, one transcript, access-checked citations, degradation, and no tenant DB transaction held across provider latency; the exact internal type and method layout is an implementation choice.
 - Release sign-off requires actual role/project/tenant isolation, target-database queries, cross-module answers, ambiguous-target choices, confirmed writes and partial multi-step receipts, history and preference persistence, browser/accessibility journeys, and notification delivery. Source inspection, the architecture report, and focused tests alone do not close those gates.
 
-See the [Companion program](../../pet/README.md), [architecture PRD](../../pet/03-implementation-architecture-prd.md), and [verification ledger](../../pet/verification-and-competition.md).
+See the [Companion program](README.md), [architecture PRD](03-implementation-architecture-prd.md), and [verification ledger](verification-and-competition.md).
