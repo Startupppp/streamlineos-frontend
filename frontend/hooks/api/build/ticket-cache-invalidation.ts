@@ -66,9 +66,8 @@ export function invalidateBuildViews(
     queryKey: buildWorkQueryKeys.projectReports.all,
     refetchType: "none",
     predicate: (query) =>
-      query.queryKey[
-        buildWorkQueryKeys.projectReports.all.length + 1
-      ] === projectId,
+      query.queryKey[buildWorkQueryKeys.projectReports.all.length + 1] ===
+      projectId,
   });
   void client.invalidateQueries({
     queryKey: collaborationQueryKeys.dashboard.activeSprintSummary(),
@@ -92,23 +91,11 @@ export function invalidateTicketUpdateViews(
   },
 ) {
   void client.invalidateQueries({
-    queryKey: buildWorkQueryKeys.projects.tickets({ projectId }),
-    refetchType: "none",
-  });
-  void client.invalidateQueries({
     queryKey: accountingAndSupportQueryKeys.ticketActivity.list(ticketId),
     exact: true,
   });
   void client.invalidateQueries({
-    queryKey: buildWorkQueryKeys.projects.allWorkAll,
-    refetchType: "none",
-  });
-  void client.invalidateQueries({
     queryKey: buildWorkQueryKeys.projects.analytics(projectId),
-    refetchType: "none",
-  });
-  void client.invalidateQueries({
-    queryKey: buildWorkQueryKeys.projects.list(),
     refetchType: "none",
   });
   void client.invalidateQueries({
@@ -123,7 +110,13 @@ export function invalidateTicketUpdateViews(
   const schedulingChanged =
     changes.startDate !== undefined || changes.dueDate !== undefined;
 
-  if (!titleChanged && !statusChanged && !cycleChanged && !pointsChanged && !schedulingChanged)
+  if (
+    !titleChanged &&
+    !statusChanged &&
+    !cycleChanged &&
+    !pointsChanged &&
+    !schedulingChanged
+  )
     return;
 
   if (statusChanged || cycleChanged) {

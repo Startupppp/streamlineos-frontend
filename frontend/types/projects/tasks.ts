@@ -231,6 +231,7 @@ export interface AllWorkFilters extends TicketFilters {
   teamId?: number;
   managedProductId?: number;
   blockedOnly?: boolean;
+  includeTotal?: boolean;
 }
 
 export interface AllWorkTicketLabel {

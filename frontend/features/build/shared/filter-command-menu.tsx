@@ -169,7 +169,7 @@ export function FilterCommandMenu({
         className={cn(
           "w-auto max-w-[min(560px,var(--radix-popover-content-available-width))] overflow-hidden rounded-xl border border-border bg-card p-0 shadow-lg",
           presentation === "all-work" &&
-            "w-[min(36rem,calc(100vw-2rem))] max-w-[min(36rem,var(--radix-popover-content-available-width))] rounded-2xl border-border/80 shadow-xl",
+            "w-[min(32rem,calc(100vw-2rem))] max-w-[min(32rem,var(--radix-popover-content-available-width))] rounded-xl border-border/80 shadow-xl",
         )}
       >
         {isSearching ? (
@@ -181,11 +181,11 @@ export function FilterCommandMenu({
             {...sharedProps}
           />
         ) : (
-          <div className="flex max-h-[min(480px,var(--radix-popover-content-available-height))] min-w-0">
+          <div className="flex max-h-[min(420px,var(--radix-popover-content-available-height))] min-w-0">
             <div
               className={cn(
                 "flex w-[200px] shrink-0 flex-col border-r border-border",
-                presentation === "all-work" && "w-[220px] bg-muted/20",
+                presentation === "all-work" && "w-44 bg-muted/15",
               )}
             >
               <Command
@@ -220,7 +220,7 @@ export function FilterCommandMenu({
                   animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, x: 0 }}
                   exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, x: -4 }}
                   transition={pmSnappy}
-                  className="min-w-0 flex-1 overflow-y-auto bg-background outline-none"
+                  className="min-w-0 flex-1 overflow-y-auto bg-card outline-none"
                 >
                   {resolvedCategory === "assignee" ? (
                     <AssigneeFilterSubmenu
@@ -228,14 +228,14 @@ export function FilterCommandMenu({
                       onToggleAssignee={sharedProps.onToggleAssignee}
                       onClose={handleSubmenuClose}
                       showTitle
-                      className={cn("w-[280px]", presentation === "all-work" && "w-full min-w-[300px]")}
+                      className={cn("w-[280px]", presentation === "all-work" && "w-full min-w-0")}
                     />
                   ) : (
                     <FilterCategorySubmenu
                       category={resolvedCategory}
                       onClose={handleSubmenuClose}
                       showTitle
-                      className={cn("w-[280px]", presentation === "all-work" && "w-full min-w-[300px]")}
+                      className={cn("w-[280px]", presentation === "all-work" && "w-full min-w-0")}
                       {...sharedProps}
                     />
                   )}

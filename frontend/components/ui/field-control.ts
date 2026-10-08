@@ -21,4 +21,4 @@ export const COMPACT_SEARCH_POPOVER_CONTENT_CLASS =
 export const FIELD_DATE_POPOVER_CONTENT_CLASS =
   "min-w-[var(--radix-popover-trigger-width)] w-auto";
 
-export const INLINE_POPOVER_MIN_CLASS = "min-w-[var(--radix-popover-trigger-width)]";
+export const INLINE_POPOVER_MIN_CLASS = "w-auto";

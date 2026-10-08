@@ -37,6 +37,35 @@ interface LabelPickerProps {
   }>;
 }
 
+export function TicketLabelChip({
+  label,
+  onRemove,
+}: {
+  label: { id: number; name: string; color: string | null };
+  onRemove?: (id: number) => void;
+}) {
+  return (
+    <Badge
+      variant="secondary"
+      className="h-7 gap-1.5 rounded-full border border-border/70 bg-muted/60 px-2 text-xs font-medium text-foreground shadow-none"
+    >
+      <span
+        aria-hidden="true"
+        className="size-2 shrink-0 rounded-full"
+        style={{ backgroundColor: label.color || DEFAULT_LABEL_COLOR }}
+      />
+      <span className="max-w-36 truncate">{label.name}</span>
+      {onRemove ? (
+        <RemoveLabelButton
+          labelId={label.id}
+          labelName={label.name}
+          onRemove={onRemove}
+        />
+      ) : null}
+    </Badge>
+  );
+}
+
 function RemoveLabelButton({
   labelId,
   labelName,
@@ -44,13 +73,13 @@ function RemoveLabelButton({
 }: {
   labelId: number;
   labelName: string;
-  onRemove: (id: number) => () => void;
+  onRemove: (id: number) => void;
 }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
     <button
       type="button"
-      onClick={onRemove(labelId)}
+      onClick={() => onRemove(labelId)}
       aria-label={`Remove ${labelName} label`}
       className="hover:bg-destructive/20 rounded-full p-0.5 transition-colors"
       {...hoverHandlers}
@@ -95,7 +124,7 @@ export function LabelPicker({
   const availableLabels =
     allLabels?.filter((l) => !currentLabelIds.has(l.id)) ?? [];
 
-  const handleRemoveLabel = (labelId: number) => () => {
+  const handleRemoveLabel = (labelId: number) => {
     if (projectId === undefined) return;
     removeLabel.mutate({ ticketId, projectId, labelId });
   };
@@ -119,21 +148,11 @@ export function LabelPicker({
       </div>
       <div className="flex flex-wrap gap-1.5">
         {currentLabels.map(({ label }) => (
-          <Badge
+          <TicketLabelChip
             key={label.id}
-            variant="secondary"
-            className="gap-1 pl-1.5 pr-1 py-0.5 text-xs cursor-default"
-            style={{
-              borderLeft: `3px solid ${label.color || DEFAULT_LABEL_COLOR}`,
-            }}
-          >
-            {label.name}
-            <RemoveLabelButton
-              labelId={label.id}
-              labelName={label.name}
-              onRemove={handleRemoveLabel}
-            />
-          </Badge>
+            label={label}
+            onRemove={handleRemoveLabel}
+          />
         ))}
         <ResponsivePopover open={open} onOpenChange={setOpen}>
           <TooltipProvider>

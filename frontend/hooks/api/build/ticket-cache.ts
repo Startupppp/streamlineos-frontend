@@ -5,6 +5,15 @@ import type {
   Ticket,
 } from "@/types/projects";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import { allWorkTickets, isAllWorkCollection } from "./all-work-cache";
+import { rollbackOptimisticFields } from "./optimistic-cache-rollback";
+export {
+  patchAllWorkCollections,
+  restoreAllWorkCollections,
+  revalidateAllWorkCollections,
+} from "./all-work-cache";
+export type { AllWorkSnapshots } from "./all-work-cache";
+export { rollbackOptimisticFields as rollbackTicketFields } from "./optimistic-cache-rollback";
 
 type TicketCollection =
   | CursorPageResponse<Ticket>
@@ -40,21 +49,6 @@ function mapCollection(
     : { ...collection, data: collection.data.map(patch) };
 }
 
-export function rollbackTicketFields<T extends object>(
-  current: T,
-  previous: T,
-  optimistic: T,
-): T {
-  const restored = { ...current };
-  for (const field in optimistic)
-    if (
-      !Object.is(previous[field], optimistic[field]) &&
-      Object.is(current[field], optimistic[field])
-    )
-      restored[field] = previous[field];
-  return restored;
-}
-
 export function ticketRollback<T extends { id: number }>(
   previous: T[],
   optimistic: T[],
@@ -67,7 +61,7 @@ export function ticketRollback<T extends { id: number }>(
     const before = previousById.get(current.id);
     const after = optimisticById.get(current.id);
     return before && after
-      ? rollbackTicketFields(current, before, after)
+      ? rollbackOptimisticFields(current, before, after)
       : current;
   };
 }
@@ -107,14 +101,26 @@ export function resolveTicketVersions(
   })) {
     if (!collection) continue;
     for (const ticket of collectionTickets(collection)) {
-      if (!foundVersions.has(ticket.id)) foundVersions.set(ticket.id, ticket.version);
+      if (!foundVersions.has(ticket.id))
+        foundVersions.set(ticket.id, ticket.version);
+    }
+  }
+  for (const [, value] of client.getQueriesData<unknown>({
+    queryKey: buildWorkQueryKeys.projects.allWorkAll,
+  })) {
+    if (!isAllWorkCollection(value)) continue;
+    for (const ticket of allWorkTickets(value)) {
+      if (ticket.projectId === projectId && !foundVersions.has(ticket.id)) {
+        foundVersions.set(ticket.id, ticket.version);
+      }
     }
   }
   const detail = client.getQueryData<ProjectWithDetails | null>(
     buildWorkQueryKeys.projects.detail(projectId),
   );
   for (const ticket of detail?.tickets ?? []) {
-    if (!foundVersions.has(ticket.id)) foundVersions.set(ticket.id, ticket.version);
+    if (!foundVersions.has(ticket.id))
+      foundVersions.set(ticket.id, ticket.version);
   }
   for (const ticketId of ticketIds) {
     if (foundVersions.has(ticketId)) continue;
@@ -131,6 +137,35 @@ export function resolveTicketVersions(
     else versions[ticketId] = version;
   }
   return { versions, missingTicketIds };
+}
+
+export function resolveTicketStatus(
+  client: QueryClient,
+  projectId: number,
+  ticketId: number,
+): string | undefined {
+  const single = client.getQueryData<Ticket | null>(
+    buildWorkQueryKeys.projects.ticket(projectId, ticketId),
+  );
+  if (single) return single.status;
+  for (const [, collection] of client.getQueriesData<TicketCollection>({
+    queryKey: buildWorkQueryKeys.projects.tickets({ projectId }),
+  })) {
+    const found =
+      collection &&
+      collectionTickets(collection).find((ticket) => ticket.id === ticketId);
+    if (found) return found.status;
+  }
+  for (const [, value] of client.getQueriesData<unknown>({
+    queryKey: buildWorkQueryKeys.projects.allWorkAll,
+  })) {
+    if (!isAllWorkCollection(value)) continue;
+    const found = allWorkTickets(value).find(
+      (ticket) => ticket.projectId === projectId && ticket.id === ticketId,
+    );
+    if (found) return found.status;
+  }
+  return undefined;
 }
 
 export function restoreTicketCollections(

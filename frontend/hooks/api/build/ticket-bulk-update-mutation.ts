@@ -13,13 +13,20 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
 import {
   patchTicketCollections,
+  patchAllWorkCollections,
+  revalidateAllWorkCollections,
   restoreTicketCollections,
+  restoreAllWorkCollections,
   resolveTicketVersions,
   rollbackTicketFields,
   type TicketSnapshots,
+  type AllWorkSnapshots,
 } from "./ticket-cache";
-import { invalidateBuildViews } from "./ticket-cache-invalidation";
-import { applyTicketPatch } from "./ticket-update-mutation";
+import {
+  invalidateBuildViews,
+  invalidateTicketUpdateViews,
+} from "./ticket-cache-invalidation";
+import { applyAllWorkTicketPatch, applyTicketPatch } from "./ticket-update-mutation";
 
 const bulkUpdateResultLazy = lazyContract(() =>
   import("@/hooks/api/build/build-tickets-subresource-schema").then(
@@ -50,6 +57,8 @@ interface BulkUpdateBlockedTicket {
 interface BulkUpdateTicketsResult {
   updated: number;
   ticketIds: number[];
+  versions?: Record<string, number>;
+  updatedAt?: string;
   blocked?: BulkUpdateBlockedTicket[];
 }
 
@@ -59,6 +68,7 @@ interface BulkUpdateTicketsContext {
   previousTickets: Map<number, Ticket | null | undefined>;
   optimisticTickets: Map<number, Ticket | null | undefined>;
   listSnapshots: TicketSnapshots;
+  allWorkSnapshots: AllWorkSnapshots;
 }
 
 function toTicketUpdateInput(
@@ -118,6 +128,7 @@ export function useBulkUpdateTickets(projectId: number) {
           previousTickets: new Map<number, Ticket | null | undefined>(),
           optimisticTickets: new Map<number, Ticket | null | undefined>(),
           listSnapshots: [],
+          allWorkSnapshots: [],
         };
       }
       const detailKey = buildWorkQueryKeys.projects.detail(projectId);
@@ -127,6 +138,9 @@ export function useBulkUpdateTickets(projectId: number) {
       await Promise.all([
         queryClient.cancelQueries({
           queryKey: buildWorkQueryKeys.projects.tickets({ projectId }),
+        }),
+        queryClient.cancelQueries({
+          queryKey: buildWorkQueryKeys.projects.allWorkAll,
         }),
         queryClient.cancelQueries({ queryKey: detailKey }),
         ...ticketKeys.map((queryKey) =>
@@ -149,6 +163,26 @@ export function useBulkUpdateTickets(projectId: number) {
         queryClient,
         projectId,
         patch,
+      );
+      const allWorkSnapshots = patchAllWorkCollections(
+        queryClient,
+        projectId,
+        (ticket) =>
+          selected.has(ticket.id)
+            ? applyAllWorkTicketPatch(
+                ticket,
+                {
+                  ticketId: ticket.id,
+                  version: ticket.version,
+                  assigneeId: variables.assigneeId,
+                  status: variables.status,
+                  cycleId: variables.cycleId,
+                  priority: variables.priority,
+                  parentTicketId: variables.parentTicketId,
+                },
+                members,
+              )
+            : ticket,
       );
       if (previousDetail?.tickets) {
         queryClient.setQueryData<ProjectWithDetails | null>(detailKey, {
@@ -176,11 +210,13 @@ export function useBulkUpdateTickets(projectId: number) {
         previousTickets,
         optimisticTickets,
         listSnapshots,
+        allWorkSnapshots,
       };
     },
     onError: (_error, variables, context) => {
       if (!context) return;
       restoreTicketCollections(queryClient, context.listSnapshots);
+      restoreAllWorkCollections(queryClient, context.allWorkSnapshots);
       const detailKey = buildWorkQueryKeys.projects.detail(projectId);
       if (context.previousDetail && context.optimisticDetail) {
         queryClient.setQueryData<ProjectWithDetails | null>(
@@ -225,8 +261,49 @@ export function useBulkUpdateTickets(projectId: number) {
         );
       }
     },
-    onSettled: (_data, _error, variables) => {
-      invalidateBuildViews(queryClient, projectId, variables.ticketIds);
+    onSuccess: (data, _variables, context) => {
+      const updated = new Set(data.ticketIds);
+      const applyVersion = (ticket: Ticket) =>
+        updated.has(ticket.id)
+          ? {
+              ...ticket,
+              version: data.versions?.[String(ticket.id)] ?? ticket.version,
+              updatedAt: data.updatedAt ?? ticket.updatedAt,
+            }
+          : ticket;
+      patchTicketCollections(queryClient, projectId, applyVersion);
+      patchAllWorkCollections(queryClient, projectId, (ticket) =>
+        updated.has(ticket.id)
+          ? {
+              ...ticket,
+              version: data.versions?.[String(ticket.id)] ?? ticket.version,
+              updatedAt: data.updatedAt ?? ticket.updatedAt,
+            }
+          : ticket,
+      );
+      const detailKey = buildWorkQueryKeys.projects.detail(projectId);
+      queryClient.setQueryData<ProjectWithDetails | null>(detailKey, (current) =>
+        current?.tickets
+          ? { ...current, tickets: current.tickets.map(applyVersion) }
+          : current,
+      );
+      for (const ticketId of data.ticketIds) {
+        queryClient.setQueryData<Ticket | null>(
+          buildWorkQueryKeys.projects.ticket(projectId, ticketId),
+          (current) => (current ? applyVersion(current) : current),
+        );
+      }
+      revalidateAllWorkCollections(queryClient, context?.allWorkSnapshots ?? []);
+    },
+    onSettled: (data, _error, variables) => {
+      const ticketIds = data?.ticketIds ?? variables.ticketIds;
+      if (variables.archive || variables.labelIds !== undefined) {
+        invalidateBuildViews(queryClient, projectId, ticketIds);
+        return;
+      }
+      for (const ticketId of ticketIds) {
+        invalidateTicketUpdateViews(queryClient, projectId, ticketId, variables);
+      }
     },
   });
 }

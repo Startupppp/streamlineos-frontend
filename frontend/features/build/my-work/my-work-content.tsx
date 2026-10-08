@@ -28,6 +28,7 @@ import { StatusBadge } from "@/components/shared/ticket-status-badge";
 import { formatTicketKey } from "@/components/shared/format-ticket-key";
 import { PriorityBadge } from "@/features/build/shared/priority-badge";
 import { formatCalendarDate } from "@/lib/date-utils";
+import { MY_WORK_PAGE_SIZE } from "./my-work-data-model";
 
 interface MyWorkContentProps {
   pageState: PageStateResolution;
@@ -146,6 +147,7 @@ export const MyWorkContent = memo(function MyWorkContent({
               cycles={[]}
               statuses={orgStatuses}
               hideCycle
+              hideAssignee
               onBulkStatus={bulk.handleBulkStatus}
               onBulkPriority={bulk.handleBulkPriority}
               onBulkAssignee={bulk.handleBulkAssignee}
@@ -166,7 +168,7 @@ export const MyWorkContent = memo(function MyWorkContent({
             }}
             pagination={{
               mode: "cursor",
-              pageSize: 50,
+              pageSize: MY_WORK_PAGE_SIZE,
               pageNumber,
               hasMore,
               hasPrevious,

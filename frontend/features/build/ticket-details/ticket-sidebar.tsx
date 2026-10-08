@@ -3,7 +3,7 @@
 import { useEpics } from "@/hooks/api/build/epics";
 import { useModules } from "@/hooks/api/build/modules";
 import { useCycles } from "@/hooks/api/build/cycles";
-import { LabelPicker } from "../tickets/label-picker";
+import { LabelPicker, TicketLabelChip } from "../tickets/label-picker";
 import { RecurrencePicker } from "../tickets/recurrence-picker";
 import {
   useSetRecurrence,
@@ -18,7 +18,6 @@ import { TicketParentControl } from "./ticket-parent-control";
 import { TicketCustomerPicker } from "./ticket-customer-picker";
 import { TicketDateFields } from "./ticket-date-fields";
 import { TicketSidebarMetadata } from "./ticket-sidebar-metadata";
-import { Badge } from "@/components/ui/badge";
 
 interface TicketSidebarProps {
   ticket: {
@@ -179,9 +178,9 @@ export function TicketSidebar({
             )}
           />
         ) : (
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-1.5">
             {(ticket.labels ?? []).flatMap((entry) =>
-              entry.label ? [<Badge key={entry.label.id} variant="secondary">{entry.label.name}</Badge>] : [],
+              entry.label ? [<TicketLabelChip key={entry.label.id} label={entry.label} />] : [],
             )}
           </div>
         )}

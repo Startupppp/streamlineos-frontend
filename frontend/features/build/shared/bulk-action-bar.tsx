@@ -42,6 +42,7 @@ interface BulkActionBarProps {
   statuses: readonly StatusOptionSource[] | undefined;
   labels?: LabelOption[];
   hideCycle?: boolean;
+  hideAssignee?: boolean;
   projectId?: number;
   excludeIds?: Set<string | number>;
   onBulkStatus: (value: string) => void;
@@ -65,6 +66,7 @@ export const BulkActionBar = memo(function BulkActionBar({
   statuses,
   labels,
   hideCycle = false,
+  hideAssignee = false,
   projectId,
   excludeIds,
   onBulkStatus,
@@ -120,7 +122,7 @@ export const BulkActionBar = memo(function BulkActionBar({
             ))}
           </SelectContent>
         </Select>
-        {canAssign ? <Select onValueChange={onBulkAssignee}>
+        {canAssign && !hideAssignee ? <Select onValueChange={onBulkAssignee}>
           <SelectTrigger className={DYNAMIC_SELECT_TRIGGER_CLASS}>
             <SelectValue placeholder="Assign to" />
           </SelectTrigger>

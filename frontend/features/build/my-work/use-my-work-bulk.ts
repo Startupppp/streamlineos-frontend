@@ -12,7 +12,16 @@ import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { lazyContract } from "@/lib/api-envelope";
 import type { AllWorkTicket } from "@/types/projects";
-import type { BuildListSortField, BuildListSortDirection } from "@/features/build/shared/use-build-list-url-state";
+import type {
+  BuildListSortField,
+  BuildListSortDirection,
+} from "@/features/build/shared/use-build-list-url-state";
+import {
+  patchAllWorkCollections,
+  revalidateAllWorkCollections,
+  restoreAllWorkCollections,
+  type AllWorkSnapshots,
+} from "@/hooks/api/build/ticket-cache";
 
 const bulkUpdateResultLazy = lazyContract(() =>
   import("@/hooks/api/build/build-tickets-subresource-schema").then(
@@ -20,49 +29,80 @@ const bulkUpdateResultLazy = lazyContract(() =>
   ),
 );
 
-
 interface BulkPayload {
-  ticketsByProject: Map<number, number[]>;
+  ticketsByProject: Map<number, AllWorkTicket[]>;
   status?: string;
   priority?: BulkPriority;
   assigneeId?: string;
 }
 
-async function fanOutBulk(payload: BulkPayload): Promise<number[]> {
+interface BulkProjectResult {
+  projectId: number;
+  ticketIds: number[];
+  versions?: Record<string, number>;
+  updatedAt?: string;
+}
+
+interface BulkFanOutResult {
+  succeeded: BulkProjectResult[];
+  failed: { projectId: number; reason: unknown }[];
+}
+
+async function fanOutBulk(payload: BulkPayload): Promise<BulkFanOutResult> {
+  const entries = [...payload.ticketsByProject.entries()];
   const calls = [...payload.ticketsByProject.entries()].map(
-    ([projectId, ticketIds]) =>
+    ([projectId, tickets]) =>
       apiClient
-        .post<{ updated: number; ticketIds: number[] }>(
+        .post<{
+          updated: number;
+          ticketIds: number[];
+          versions?: Record<string, number>;
+          updatedAt?: string;
+        }>(
           `/build/${projectId}/tickets/bulk`,
           {
-            ticketIds,
+            ticketIds: tickets.map((ticket) => ticket.id),
             status: payload.status,
             priority: payload.priority,
             assigneeId: payload.assigneeId,
+            versions: Object.fromEntries(
+              tickets.map((ticket) => [ticket.id, ticket.version]),
+            ),
           },
           undefined,
           bulkUpdateResultLazy,
         )
-        .then((r) => ({ updated: r.updated, projectId })),
+        .then((response) => ({ ...response, projectId })),
   );
 
   const results = await Promise.allSettled(calls);
 
-  const succeeded = results.filter(
-    (r): r is PromiseFulfilledResult<{ updated: number; projectId: number }> =>
-      r.status === "fulfilled",
+  const succeeded = results.flatMap((result) =>
+    result.status === "fulfilled" && result.value.updated > 0
+      ? [
+          {
+            projectId: result.value.projectId,
+            ticketIds: result.value.ticketIds,
+            versions: result.value.versions,
+            updatedAt: result.value.updatedAt,
+          },
+        ]
+      : [],
   );
-  const failed = results.filter(
-    (r): r is PromiseRejectedResult => r.status === "rejected",
+  const failed = results.flatMap((result, index) =>
+    result.status === "rejected"
+      ? [{ projectId: entries[index][0], reason: result.reason }]
+      : [],
   );
 
-  const totalUpdated = succeeded.reduce((acc, r) => acc + r.value.updated, 0);
-
-  const conflicts = failed.filter(
-    (r) => isWriteConflict(r.reason),
+  const totalUpdated = succeeded.reduce(
+    (acc, result) => acc + result.ticketIds.length,
+    0,
   );
+
+  const conflicts = failed.filter((result) => isWriteConflict(result.reason));
   const otherFailures = failed.filter(
-    (r) => !isWriteConflict(r.reason),
+    (result) => !isWriteConflict(result.reason),
   );
 
   if (totalUpdated > 0) {
@@ -80,16 +120,12 @@ async function fanOutBulk(payload: BulkPayload): Promise<number[]> {
     toast.error(getErrorMessage(firstError));
   }
 
-  return succeeded
-    .filter((r) => r.value.updated > 0)
-    .map((r) => r.value.projectId);
+  return { succeeded, failed };
 }
 
 export interface UseMyWorkBulkReturn {
   tableSelection: Set<string | number>;
-  setTableSelection: React.Dispatch<
-    React.SetStateAction<Set<string | number>>
-  >;
+  setTableSelection: React.Dispatch<React.SetStateAction<Set<string | number>>>;
   selectedCount: number;
   isPendingBulk: boolean;
   handleBulkStatus: (value: string) => void;
@@ -106,10 +142,10 @@ export function useMyWorkBulk(
 ): UseMyWorkBulkReturn {
   const queryClient = useQueryClient();
   const sortKey = `${sortField}:${sortDirection}`;
-  const [tableSelection, setTableSelection] = useSourceOverride<string, Set<string | number>>(
-    sortKey,
-    new Set(),
-  );
+  const [tableSelection, setTableSelection] = useSourceOverride<
+    string,
+    Set<string | number>
+  >(sortKey, new Set());
   const [isPendingBulk, setIsPendingBulk] = useState(false);
 
   const selectedTicketIds = useMemo(
@@ -123,42 +159,90 @@ export function useMyWorkBulk(
   );
 
   const ticketsByProject = useMemo(() => {
-    const map = new Map<number, number[]>();
+    const map = new Map<number, AllWorkTicket[]>();
     for (const t of selectedTickets) {
       if (t.projectId === null) continue;
       const existing = map.get(t.projectId);
-      if (existing) {
-        existing.push(t.id);
-      } else {
-        map.set(t.projectId, [t.id]);
-      }
+      if (existing) existing.push(t);
+      else map.set(t.projectId, [t]);
     }
     return map;
   }, [selectedTickets]);
 
   const handleBulkAction = useCallback(
-    (partial: {
+    async (partial: {
       status?: string;
       priority?: BulkPriority;
       assigneeId?: string;
     }) => {
       if (ticketsByProject.size === 0) return;
       setIsPendingBulk(true);
-      fanOutBulk({ ticketsByProject, ...partial })
-        .then((updatedProjectIds) => {
-          for (const projectId of updatedProjectIds) {
-            queryClient.invalidateQueries({
-              queryKey: buildWorkQueryKeys.projects.tickets({ projectId }),
-            });
+      await queryClient.cancelQueries({
+        queryKey: buildWorkQueryKeys.projects.allWorkAll,
+      });
+      const snapshots = new Map<number, AllWorkSnapshots>();
+      for (const [projectId, projectTickets] of ticketsByProject) {
+        const selected = new Set(projectTickets.map((ticket) => ticket.id));
+        snapshots.set(
+          projectId,
+          patchAllWorkCollections(queryClient, projectId, (ticket) =>
+            selected.has(ticket.id)
+              ? {
+                  ...ticket,
+                  ...(partial.status !== undefined
+                    ? { status: partial.status }
+                    : {}),
+                  ...(partial.priority !== undefined
+                    ? { priority: partial.priority }
+                    : {}),
+                  ...(partial.assigneeId !== undefined
+                    ? { assigneeId: partial.assigneeId, assignee: null }
+                    : {}),
+                  updatedAt: new Date().toISOString(),
+                }
+              : ticket,
+          ),
+        );
+      }
+      void fanOutBulk({ ticketsByProject, ...partial })
+        .then(({ succeeded, failed }) => {
+          for (const failure of failed) {
+            restoreAllWorkCollections(
+              queryClient,
+              snapshots.get(failure.projectId) ?? [],
+            );
           }
-          queryClient.invalidateQueries({
-            queryKey: buildWorkQueryKeys.projects.allWorkAll,
-          });
-          if (updatedProjectIds.length > 0) setTableSelection(new Set());
+          for (const success of succeeded) {
+            const updated = new Set(success.ticketIds);
+            patchAllWorkCollections(queryClient, success.projectId, (ticket) =>
+              updated.has(ticket.id)
+                ? {
+                    ...ticket,
+                    version:
+                      success.versions?.[String(ticket.id)] ?? ticket.version,
+                    updatedAt: success.updatedAt ?? ticket.updatedAt,
+                  }
+                : ticket,
+            );
+            revalidateAllWorkCollections(
+              queryClient,
+              snapshots.get(success.projectId) ?? [],
+            );
+          }
+          const failedIds = new Set(
+            failed.flatMap((failure) =>
+              (ticketsByProject.get(failure.projectId) ?? []).map(
+                (ticket) => ticket.id,
+              ),
+            ),
+          );
+          setTableSelection(
+            new Set([...tableSelection].filter((id) => failedIds.has(Number(id)))),
+          );
         })
         .finally(() => setIsPendingBulk(false));
     },
-    [ticketsByProject, queryClient, setTableSelection],
+    [ticketsByProject, queryClient, setTableSelection, tableSelection],
   );
 
   const handleBulkStatus = useCallback(

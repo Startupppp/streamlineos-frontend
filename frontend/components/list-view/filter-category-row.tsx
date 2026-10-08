@@ -138,7 +138,7 @@ export function FilterCategoryRow({
       onMouseLeave={handleMouseLeave}
       onKeyDown={handleKeyDown}
       className={cn(
-        "relative flex w-full cursor-pointer select-none items-center gap-2.5 rounded-lg px-3 text-sm outline-none",
+        "relative flex w-full cursor-pointer select-none items-center gap-2 rounded-lg px-2.5 text-sm outline-none",
         dense ? "h-9" : "h-10",
         "border-l-2 transition-[background-color,color,border-color] duration-150 ease-out motion-reduce:transition-none",
         "focus-visible:bg-primary/10 focus-visible:text-foreground focus-visible:border-l-primary",

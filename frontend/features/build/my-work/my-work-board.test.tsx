@@ -42,7 +42,7 @@ describe("My Work board cursor columns", () => {
 
   it("uses an independent status cursor and retains URL filters instead of exposing a global pagination footer", () => {
     renderBoard("TODO,IN_REVIEW");
-    expect(mockQuery).toHaveBeenCalledWith(expect.objectContaining({ scope: "mine", search: "review", projectIds: "1", status: "TODO", cursor: undefined, limit: 50, orderBy: "dueDate", orderDir: "asc" }));
+    expect(mockQuery).toHaveBeenCalledWith(expect.objectContaining({ scope: "mine", search: "review", projectIds: "1", status: "TODO", cursor: undefined, limit: 10, orderBy: "dueDate", orderDir: "asc" }));
     expect(mockQuery).toHaveBeenCalledWith(expect.objectContaining({ status: "IN_REVIEW", cursor: undefined }));
     expect(screen.queryByText(/Page \d/i)).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /next page/i })).not.toBeInTheDocument();
@@ -64,10 +64,10 @@ describe("My Work board cursor columns", () => {
   });
 
   it("bounds retained pages and gives an explicit filter-narrowing notice at the limit", () => {
-    mockPages = Array.from({ length: 5 }, (_, index) => ({ data: Array.from({ length: 50 }, (_, row) => makeTicket(index * 50 + row + 1)), nextCursor: `cursor-${index}`, hasMore: true, limit: 50, total: 500 }));
+    mockPages = Array.from({ length: 5 }, (_, index) => ({ data: Array.from({ length: 10 }, (_, row) => makeTicket(index * 10 + row + 1)), nextCursor: `cursor-${index}`, hasMore: true, limit: 10, total: 500 }));
     renderBoard();
-    expect(screen.getByTestId("virtual-list")).toHaveAttribute("data-row-count", "251");
-    expect(screen.getByRole("status")).toHaveTextContent("250 tickets loaded");
+    expect(screen.getByTestId("virtual-list")).toHaveAttribute("data-row-count", "51");
+    expect(screen.getByRole("status")).toHaveTextContent("50 tickets loaded");
     expect(screen.queryByRole("button", { name: /Load next/ })).not.toBeInTheDocument();
     expect(mockNext).not.toHaveBeenCalled();
   });

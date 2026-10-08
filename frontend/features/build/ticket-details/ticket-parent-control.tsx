@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ChevronsUpDown, CornerLeftUp, Search } from "lucide-react";
+import { ChevronsUpDown, CornerLeftUp, Search, SearchX } from "lucide-react";
 import { XIcon } from "@animateicons/react/lucide";
 import {
   ResponsivePopover,
@@ -10,7 +10,13 @@ import {
   ResponsivePopoverTrigger,
 } from "@/components/ui/responsive-popover";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { Input } from "@/components/ui/input";
+import {
+  Command,
+  CommandEmpty,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { useTicketSearch } from "@/hooks/api/build/ticket-search";
 import { useUpdateTicket } from "@/hooks/api/build/tickets";
 import { useCan } from "@/hooks/api/access";
@@ -82,10 +88,6 @@ export function TicketParentControl({
     setParent(null);
   }
 
-  function handleQueryChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setQ(e.target.value);
-  }
-
   function handleOpenChange(next: boolean) {
     setOpen(next);
     if (!next) setQ("");
@@ -102,42 +104,47 @@ export function TicketParentControl({
           : FIELD_SEARCH_POPOVER_CONTENT_CLASS,
       )}
     >
-      <div className="flex items-center gap-2 border-b px-2.5 py-2">
-        <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-        <Input
+      <Command shouldFilter={false} className="rounded-none bg-transparent">
+        <CommandInput
           value={q}
-          onChange={handleQueryChange}
-          placeholder="Search tickets to set as parent…"
-          className="h-7 border-0 p-0 text-xs shadow-none focus-visible:ring-0"
+          onValueChange={setQ}
+          placeholder="Search parent tickets…"
           autoFocus
+          className="h-10 text-xs"
         />
-      </div>
-      <div className="max-h-64 overflow-y-auto p-1">
-        {debounced.trim().length === 0 ? (
-          <p className="px-2 py-3 text-center text-xs text-muted-foreground">Type to search…</p>
-        ) : isFetching && matches.length === 0 ? (
-          <p className="px-2 py-3 text-center text-xs text-muted-foreground">Searching…</p>
-        ) : matches.length === 0 ? (
-          <p className="px-2 py-3 text-center text-xs text-muted-foreground">
-            No matching tickets in this project
-          </p>
-        ) : (
-          matches.map((r) => (
-            <button
-              key={r.id}
-              type="button"
-              onClick={() => setParent(r.id)}
-              disabled={updateTicket.isPending}
-              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-muted/60"
-            >
-              <span className="shrink-0 font-mono text-micro text-muted-foreground">
-                {r.projectKey}-{r.ticketNumber}
+        <CommandList className="max-h-64">
+          {debounced.trim().length === 0 ? (
+            <div className="flex flex-col items-center gap-2 px-4 py-7 text-center">
+              <span className="flex size-8 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                <Search className="size-4" />
               </span>
-              <span className="min-w-0 flex-1 truncate text-xs">{r.title}</span>
-            </button>
-          ))
-        )}
-      </div>
+              <span className="text-xs text-muted-foreground">Search this project for a parent ticket</span>
+            </div>
+          ) : isFetching && matches.length === 0 ? (
+            <div className="px-4 py-7 text-center text-xs text-muted-foreground">Searching…</div>
+          ) : matches.length === 0 ? (
+            <CommandEmpty className="flex flex-col items-center gap-2 px-4 py-7 text-xs text-muted-foreground">
+              <SearchX className="size-4" />
+              No matching tickets in this project
+            </CommandEmpty>
+          ) : (
+            matches.map((r) => (
+              <CommandItem
+                key={r.id}
+                value={`${r.projectKey}-${r.ticketNumber} ${r.title}`}
+                onSelect={() => setParent(r.id)}
+                disabled={updateTicket.isPending}
+                className="mx-1 my-0.5 gap-2 px-2.5 py-2"
+              >
+                <span className="shrink-0 font-mono text-micro text-muted-foreground">
+                  {r.projectKey}-{r.ticketNumber}
+                </span>
+                <span className="min-w-0 flex-1 truncate text-xs">{r.title}</span>
+              </CommandItem>
+            ))
+          )}
+        </CommandList>
+      </Command>
     </ResponsivePopoverContent>
   );
 

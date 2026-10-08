@@ -1,41 +1,55 @@
 "use client";
-
 import { useQueryClient } from "@tanstack/react-query";
-import type { UseMutationOptions } from "@tanstack/react-query";
+import type { QueryClient, UseMutationOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type {
   Ticket,
   UpdateTicketInput,
   ProjectWithDetails,
-  ProjectMember,
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
 import { ticketUpdateRequestContract } from "./build-tickets-subresource-schema";
 import {
   patchTicketCollections,
+  patchAllWorkCollections,
+  revalidateAllWorkCollections,
   restoreTicketCollections,
+  restoreAllWorkCollections,
   rollbackTicketFields,
   ticketRollback,
   type TicketSnapshots,
+  type AllWorkSnapshots,
+  resolveTicketVersions,
+  resolveTicketStatus,
 } from "./ticket-cache";
 import { invalidateTicketUpdateViews } from "./ticket-cache-invalidation";
+import { enqueueTicketWrite } from "./ticket-write-queue";
+import {
+  beginStatusTransition,
+  type StatusTransition,
+} from "./ticket-status-queue";
+import { reconcileStatusTransition } from "./ticket-status-cache";
+import {
+  applyAllWorkTicketPatch,
+  applyTicketPatch,
+} from "./ticket-optimistic-patch";
+export {
+  applyAllWorkTicketPatch,
+  applyTicketPatch,
+} from "./ticket-optimistic-patch";
 
 const ticketUpdateResultLazy = lazyContract(() =>
   import("@/hooks/api/build/build-tickets-subresource-schema").then(
     (m) => m.ticketUpdateResultContract,
   ),
 );
-
 interface UpdateTicketResponse {
   updated: boolean;
   updatedAt: string;
   version: number;
 }
-
-type ColCountSnap = { key: readonly unknown[]; data: Record<string, number> };
-
 interface UpdateTicketContext {
   detailKey: readonly unknown[];
   ticketKey: readonly unknown[];
@@ -44,56 +58,37 @@ interface UpdateTicketContext {
   optimisticDetail: ProjectWithDetails | null | undefined;
   optimisticTicket: Ticket | null | undefined;
   listSnapshots: TicketSnapshots;
-  colCountSnapshots: ColCountSnap[];
+  allWorkSnapshots: AllWorkSnapshots;
+  statusTransition?: StatusTransition;
 }
-
-function resolveAssigneeId(
-  input: UpdateTicketInput,
-): string | null | undefined {
-  if (input.assigneeIds !== undefined) return input.assigneeIds[0] ?? null;
-  if (input.assigneeId !== undefined) return input.assigneeId;
-  return undefined;
+function reconcileTicketVersion(
+  queryClient: QueryClient,
+  projectId: number,
+  ticketId: number,
+  response: UpdateTicketResponse,
+): void {
+  const apply = (ticket: Ticket) =>
+    ticket.id === ticketId
+      ? { ...ticket, updatedAt: response.updatedAt, version: response.version }
+      : ticket;
+  patchTicketCollections(queryClient, projectId, apply);
+  patchAllWorkCollections(queryClient, projectId, (ticket) =>
+    ticket.id === ticketId
+      ? { ...ticket, updatedAt: response.updatedAt, version: response.version }
+      : ticket,
+  );
+  queryClient.setQueryData<Ticket | null>(
+    buildWorkQueryKeys.projects.ticket(projectId, ticketId),
+    (current) => (current ? apply(current) : current),
+  );
+  queryClient.setQueryData<ProjectWithDetails | null>(
+    buildWorkQueryKeys.projects.detail(projectId),
+    (current) =>
+      current?.tickets
+        ? { ...current, tickets: current.tickets.map(apply) }
+        : current,
+  );
 }
-
-export function applyTicketPatch(
-  ticket: Ticket,
-  input: UpdateTicketInput,
-  members: ProjectMember[],
-): Ticket {
-  const next: Ticket = { ...ticket };
-  if (input.title !== undefined) next.title = input.title;
-  if (input.description !== undefined) next.description = input.description;
-  if (input.type !== undefined) next.type = input.type;
-  if (input.status !== undefined) next.status = input.status;
-  if (input.priority !== undefined) next.priority = input.priority;
-  if (input.points !== undefined) next.points = input.points;
-  if (input.epicId !== undefined) next.epicId = input.epicId;
-  if (input.moduleId !== undefined) next.moduleId = input.moduleId;
-  if (input.cycleId !== undefined) next.cycleId = input.cycleId;
-  if (input.startDate !== undefined) next.startDate = input.startDate;
-  if (input.dueDate !== undefined) next.dueDate = input.dueDate;
-  if (input.parentTicketId !== undefined)
-    next.parentTicketId = input.parentTicketId;
-  const assigneeId = resolveAssigneeId(input);
-  if (assigneeId !== undefined) {
-    next.assigneeId = assigneeId;
-    const member = assigneeId
-      ? members.find((m) => m.user?.id === assigneeId)
-      : undefined;
-    next.assignee = member?.user
-      ? {
-          id: member.user.id,
-          name: member.user.name,
-          firstName: member.user.firstName,
-          lastName: member.user.lastName,
-          email: member.user.email,
-          image: member.user.image,
-        }
-      : null;
-  }
-  return next;
-}
-
 export function useUpdateTicket(
   projectId: number,
   options?: Omit<
@@ -115,28 +110,56 @@ export function useUpdateTicket(
   >("build:tickets:update", {
     ...options,
     mutationKey: ["projects", "tickets", "update"],
-    mutationFn: ({ ticketId, ...data }) => {
-      ticketUpdateRequestContract.parse(data);
-      return apiClient.patch<UpdateTicketResponse>(
-        `/build/${projectId}/tickets/${ticketId}`,
-        data,
-        undefined,
-        ticketUpdateResultLazy,
-      );
-    },
+    mutationFn: ({ ticketId, ...data }) =>
+      enqueueTicketWrite(projectId, ticketId, () => {
+        const versions = resolveTicketVersions(queryClient, projectId, [
+          ticketId,
+        ]);
+        const request = {
+          ...data,
+          version: versions.versions[String(ticketId)] ?? data.version,
+        };
+        ticketUpdateRequestContract.parse(request);
+        return apiClient
+          .patch<UpdateTicketResponse>(
+            `/build/${projectId}/tickets/${ticketId}`,
+            request,
+            undefined,
+            ticketUpdateResultLazy,
+          )
+          .then((response) => {
+            reconcileTicketVersion(queryClient, projectId, ticketId, response);
+            return response;
+          });
+      }),
     onMutate: async (variables) => {
       const detailKey = buildWorkQueryKeys.projects.detail(projectId);
-      const ticketKey = buildWorkQueryKeys.projects.ticket(projectId, variables.ticketId);
+      const ticketKey = buildWorkQueryKeys.projects.ticket(
+        projectId,
+        variables.ticketId,
+      );
       await Promise.all([
         queryClient.cancelQueries({ queryKey: detailKey }),
         queryClient.cancelQueries({ queryKey: ticketKey }),
         queryClient.cancelQueries({
           queryKey: buildWorkQueryKeys.projects.tickets({ projectId }),
         }),
+        queryClient.cancelQueries({
+          queryKey: buildWorkQueryKeys.projects.allWorkAll,
+        }),
       ]);
       const previousDetail =
         queryClient.getQueryData<ProjectWithDetails | null>(detailKey);
       const previousTicket = queryClient.getQueryData<Ticket | null>(ticketKey);
+      const currentStatus = resolveTicketStatus(
+        queryClient,
+        projectId,
+        variables.ticketId,
+      );
+      const statusTransition =
+        variables.status !== undefined && currentStatus !== undefined
+          ? beginStatusTransition(projectId, variables.ticketId, currentStatus, variables.status)
+          : undefined;
       const members = previousDetail?.members ?? [];
       const listSnapshots = patchTicketCollections(
         queryClient,
@@ -146,7 +169,14 @@ export function useUpdateTicket(
             ? applyTicketPatch(ticket, variables, members)
             : ticket,
       );
-
+      const allWorkSnapshots = patchAllWorkCollections(
+        queryClient,
+        projectId,
+        (ticket) =>
+          ticket.id === variables.ticketId
+            ? applyAllWorkTicketPatch(ticket, variables, members)
+            : ticket,
+      );
       if (previousDetail?.tickets) {
         queryClient.setQueryData<ProjectWithDetails | null>(
           detailKey,
@@ -168,13 +198,16 @@ export function useUpdateTicket(
           old ? applyTicketPatch(old, variables, members) : old,
         );
       }
-      const colCountSnapshots: ColCountSnap[] = [];
-      if (variables.status !== undefined && previousTicket?.status !== undefined && previousTicket.status !== variables.status) {
-        const oldStatus = previousTicket.status;
-        const newStatus = variables.status;
-        for (const [key, counts] of queryClient.getQueriesData<Record<string, number>>({ queryKey: buildWorkQueryKeys.projects.columnCounts(projectId) })) {
+      if (
+        statusTransition &&
+        statusTransition.fromStatus !== statusTransition.toStatus
+      ) {
+        const oldStatus = statusTransition.fromStatus;
+        const newStatus = statusTransition.toStatus;
+        for (const [key, counts] of queryClient.getQueriesData<
+          Record<string, number>
+        >({ queryKey: buildWorkQueryKeys.projects.columnCounts(projectId) })) {
           if (!counts) continue;
-          colCountSnapshots.push({ key, data: counts });
           queryClient.setQueryData<Record<string, number>>(key, {
             ...counts,
             [oldStatus]: Math.max(0, (counts[oldStatus] ?? 0) - 1),
@@ -192,7 +225,8 @@ export function useUpdateTicket(
         ),
         optimisticTicket: queryClient.getQueryData<Ticket | null>(ticketKey),
         listSnapshots,
-        colCountSnapshots,
+        allWorkSnapshots,
+        statusTransition,
       };
     },
     onError: (error, variables, context, mutFnCtx) => {
@@ -218,28 +252,28 @@ export function useUpdateTicket(
             : current,
         );
         restoreTicketCollections(queryClient, context.listSnapshots);
-        for (const { key, data } of context.colCountSnapshots) {
-          queryClient.setQueryData(key, data);
-        }
+        restoreAllWorkCollections(queryClient, context.allWorkSnapshots);
+        reconcileStatusTransition(
+          queryClient,
+          projectId,
+          variables.ticketId,
+          context.statusTransition,
+          false,
+        );
       }
       options?.onError?.(error, variables, context, mutFnCtx);
     },
     onSuccess: (data, variables, context, mutFnCtx) => {
-      const applyServerVersion = (ticket: Ticket) =>
-        ticket.id === variables.ticketId
-          ? { ...ticket, updatedAt: data.updatedAt, version: data.version }
-          : ticket;
-      patchTicketCollections(queryClient, projectId, applyServerVersion);
-      queryClient.setQueryData<Ticket | null>(
-        buildWorkQueryKeys.projects.ticket(projectId, variables.ticketId),
-        (current) => (current ? applyServerVersion(current) : current),
+      reconcileStatusTransition(
+        queryClient,
+        projectId,
+        variables.ticketId,
+        context?.statusTransition,
+        true,
       );
-      queryClient.setQueryData<ProjectWithDetails | null>(
-        buildWorkQueryKeys.projects.detail(projectId),
-        (current) =>
-          current?.tickets
-            ? { ...current, tickets: current.tickets.map(applyServerVersion) }
-            : current,
+      revalidateAllWorkCollections(
+        queryClient,
+        context?.allWorkSnapshots ?? [],
       );
       options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
@@ -252,7 +286,10 @@ export function useUpdateTicket(
       );
       if (variables.type !== undefined) {
         void queryClient.invalidateQueries({
-          queryKey: buildWorkQueryKeys.projects.bugs.detail(projectId, variables.ticketId),
+          queryKey: buildWorkQueryKeys.projects.bugs.detail(
+            projectId,
+            variables.ticketId,
+          ),
         });
       }
       options?.onSettled?.(data, error, variables, context, mutFnCtx);

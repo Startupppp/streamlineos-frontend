@@ -61,6 +61,158 @@ it("updates an infinite board without destroying its pages", async () => {
   client.clear();
 });
 
+it("updates My Work immediately and rolls it back when the request fails", async () => {
+  const client = createAppQueryClient();
+  client.setDefaultOptions({ mutations: { retry: false } });
+  const key = buildWorkQueryKeys.projects.allWork({ scope: "mine", limit: 10 });
+  const ticket = { id: 1, projectId: 42, title: "Before", priority: "LOW", version: 2 };
+  const page = { data: [ticket], limit: 10, nextCursor: null, hasMore: false };
+  client.setQueryData(key, page);
+  const pending = Promise.withResolvers<void>();
+  jest.mocked(apiClient.patch).mockImplementationOnce(async () => {
+    await pending.promise;
+    throw new Error("conflict");
+  });
+  const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
+  const { result } = renderHook(() => useUpdateTicket(42), { wrapper });
+  let failed: Promise<unknown> = Promise.resolve();
+  act(() => {
+    failed = result.current.mutateAsync({ ticketId: 1, version: 2, title: "After", priority: "HIGH" }).catch((error: unknown) => error);
+  });
+  await waitFor(() => expect(client.getQueryData(key)).toEqual({ ...page, data: [{ ...ticket, title: "After", priority: "HIGH", updatedAt: expect.any(String) }] }));
+  pending.resolve();
+  await act(async () => { await failed; });
+  expect(client.getQueryData(key)).toEqual(page);
+  client.clear();
+});
+
+it("moves an optimistic My Work ticket between cached status columns and keeps the target ordered", async () => {
+  const client = createAppQueryClient();
+  const filters = { scope: "mine" as const, limit: 10, orderBy: "updated" as const, orderDir: "desc" as const };
+  const todoKey = buildWorkQueryKeys.projects.allWork({ ...filters, status: "TODO" });
+  const doneKey = buildWorkQueryKeys.projects.allWork({ ...filters, status: "DONE" });
+  const ticket = { id: 1, projectId: 42, title: "Move me", type: "TASK", status: "TODO", priority: "MEDIUM", version: 2, updatedAt: "2026-09-01T00:00:00.000Z", labels: [] };
+  const existing = { id: 2, projectId: 42, title: "Existing", type: "TASK", status: "DONE", priority: "MEDIUM", version: 1, updatedAt: "2026-08-01T00:00:00.000Z", labels: [] };
+  client.setQueryData(todoKey, { data: [ticket], limit: 10, total: 2, nextCursor: null, hasMore: false });
+  client.setQueryData(doneKey, { data: [existing], limit: 10, total: 4, nextCursor: null, hasMore: false });
+  const pending = Promise.withResolvers<{ updated: true; version: number; updatedAt: string }>();
+  jest.mocked(apiClient.patch).mockReturnValueOnce(pending.promise);
+  const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
+  const { result } = renderHook(() => useUpdateTicket(42), { wrapper });
+
+  let mutation: Promise<unknown> = Promise.resolve();
+  act(() => {
+    mutation = result.current.mutateAsync({ ticketId: 1, version: 2, status: "DONE" });
+  });
+
+  await waitFor(() => {
+    expect((client.getQueryData(todoKey) as { data: unknown[] }).data).toEqual([]);
+    expect((client.getQueryData(doneKey) as { data: { id: number }[] }).data.map(({ id }) => id)).toEqual([1, 2]);
+    expect(client.getQueryData(todoKey)).toMatchObject({ total: 1 });
+    expect(client.getQueryData(doneKey)).toMatchObject({ total: 5 });
+  });
+  pending.resolve({ updated: true, version: 3, updatedAt: "2026-09-15T10:01:00.000Z" });
+  await act(async () => { await mutation; });
+  expect((client.getQueryData(doneKey) as { data: { id: number; version: number }[] }).data[0]).toMatchObject({ id: 1, version: 3 });
+  client.clear();
+});
+
+it("preserves a later rapid status edit when the earlier request fails", async () => {
+  const client = createAppQueryClient();
+  client.setDefaultOptions({ mutations: { retry: false } });
+  const allWorkKey = buildWorkQueryKeys.projects.allWork({ scope: "mine", limit: 10 });
+  const todoKey = buildWorkQueryKeys.projects.allWork({ scope: "mine", limit: 10, status: "TODO" });
+  const doneKey = buildWorkQueryKeys.projects.allWork({ scope: "mine", limit: 10, status: "DONE" });
+  const progressKey = buildWorkQueryKeys.projects.allWork({ scope: "mine", limit: 10, status: "IN_PROGRESS" });
+  const ticket = { id: 1, projectId: 42, title: "Rapid", type: "TASK", status: "TODO", priority: "LOW", version: 1, labels: [] };
+  client.setQueryData(allWorkKey, { data: [ticket], limit: 10, nextCursor: null, hasMore: false });
+  client.setQueryData(todoKey, { data: [ticket], limit: 10, total: 1, nextCursor: null, hasMore: false });
+  client.setQueryData(doneKey, { data: [], limit: 10, total: 0, nextCursor: null, hasMore: false });
+  client.setQueryData(progressKey, { data: [], limit: 10, total: 0, nextCursor: null, hasMore: false });
+  client.setQueryData(buildWorkQueryKeys.projects.ticket(42, 1), ticket);
+  const countsKey = buildWorkQueryKeys.projects.columnCounts(42);
+  client.setQueryData(countsKey, { TODO: 1, DONE: 0, IN_PROGRESS: 0 });
+  const first = Promise.withResolvers<void>();
+  jest.mocked(apiClient.patch)
+    .mockImplementationOnce(async () => {
+      await first.promise;
+      throw new Error("failed");
+    })
+    .mockResolvedValueOnce({ updated: true, version: 2, updatedAt: "2026-09-15T10:01:00.000Z" });
+  const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
+  const firstHook = renderHook(() => useUpdateTicket(42), { wrapper });
+  const secondHook = renderHook(() => useUpdateTicket(42), { wrapper });
+
+  let firstWrite: Promise<unknown> = Promise.resolve();
+  let secondWrite: Promise<unknown> = Promise.resolve();
+  act(() => {
+    firstWrite = firstHook.result.current.mutateAsync({ ticketId: 1, version: 1, status: "DONE" }).catch((error: unknown) => error);
+    secondWrite = secondHook.result.current.mutateAsync({ ticketId: 1, version: 1, status: "IN_PROGRESS" });
+  });
+  await waitFor(() =>
+    expect(client.getQueryData(allWorkKey)).toMatchObject({ data: [{ status: "IN_PROGRESS" }] }),
+  );
+  first.resolve();
+  await act(async () => {
+    await firstWrite;
+    await secondWrite;
+  });
+
+  expect(client.getQueryData(allWorkKey)).toMatchObject({
+    data: [{ status: "IN_PROGRESS", version: 2 }],
+  });
+  expect(client.getQueryData(countsKey)).toEqual({
+    TODO: 0,
+    DONE: 0,
+    IN_PROGRESS: 1,
+  });
+  expect(client.getQueryData(todoKey)).toMatchObject({ data: [], total: 0 });
+  expect(client.getQueryData(doneKey)).toMatchObject({ data: [], total: 0 });
+  expect(client.getQueryData(progressKey)).toMatchObject({
+    data: [{ id: 1, status: "IN_PROGRESS" }],
+    total: 1,
+  });
+  client.clear();
+});
+
+it("restores the original status and counts when two rapid status edits both fail", async () => {
+  const client = createAppQueryClient();
+  client.setDefaultOptions({ mutations: { retry: false } });
+  const ticket = { id: 1, projectId: 42, title: "Rapid", type: "TASK", status: "TODO", priority: "LOW", version: 1, labels: [] };
+  const keys = Object.fromEntries(
+    ["TODO", "DONE", "IN_PROGRESS"].map((status) => [
+      status,
+      buildWorkQueryKeys.projects.allWork({ scope: "mine", limit: 10, status }),
+    ]),
+  );
+  client.setQueryData(keys.TODO, { data: [ticket], limit: 10, total: 1, nextCursor: null, hasMore: false });
+  client.setQueryData(keys.DONE, { data: [], limit: 10, total: 0, nextCursor: null, hasMore: false });
+  client.setQueryData(keys.IN_PROGRESS, { data: [], limit: 10, total: 0, nextCursor: null, hasMore: false });
+  client.setQueryData(buildWorkQueryKeys.projects.ticket(42, 1), ticket);
+  const countsKey = buildWorkQueryKeys.projects.columnCounts(42);
+  client.setQueryData(countsKey, { TODO: 1, DONE: 0, IN_PROGRESS: 0 });
+  const first = Promise.withResolvers<void>();
+  jest.mocked(apiClient.patch)
+    .mockImplementationOnce(async () => { await first.promise; throw new Error("first"); })
+    .mockRejectedValueOnce(new Error("second"));
+  const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
+  const firstHook = renderHook(() => useUpdateTicket(42), { wrapper });
+  const secondHook = renderHook(() => useUpdateTicket(42), { wrapper });
+  let firstWrite: Promise<unknown> = Promise.resolve();
+  let secondWrite: Promise<unknown> = Promise.resolve();
+  act(() => {
+    firstWrite = firstHook.result.current.mutateAsync({ ticketId: 1, version: 1, status: "DONE" }).catch((error: unknown) => error);
+    secondWrite = secondHook.result.current.mutateAsync({ ticketId: 1, version: 1, status: "IN_PROGRESS" }).catch((error: unknown) => error);
+  });
+  first.resolve();
+  await act(async () => { await firstWrite; await secondWrite; });
+  expect(client.getQueryData(countsKey)).toEqual({ TODO: 1, DONE: 0, IN_PROGRESS: 0 });
+  expect(client.getQueryData(keys.TODO)).toMatchObject({ data: [{ id: 1, status: "TODO" }], total: 1 });
+  expect(client.getQueryData(keys.DONE)).toMatchObject({ data: [], total: 0 });
+  expect(client.getQueryData(keys.IN_PROGRESS)).toMatchObject({ data: [], total: 0 });
+  client.clear();
+});
+
 it("rolls back filtered multipage boards and paginated lists after failure", async () => {
   const client = createAppQueryClient();
   client.setDefaultOptions({ mutations: { retry: false } });
@@ -93,16 +245,22 @@ it.each(["title", "priority", "dueDate"])("invalidates My Issues after %s change
   client.clear();
 });
 
-it("bulk updates invalidate actual detail, board, cycle and report cache entries", async () => {
+it("bulk updates keep patched ticket caches fresh while invalidating derived aggregates", async () => {
   const client = createAppQueryClient();
   const board = queryKeys.projects.tickets({ projectId: 42, view: "board", status: "OPEN" });
   const keys = [queryKeys.projects.ticket(42, 1), queryKeys.projects.ticket(42, 2), board, queryKeys.projects.cycles(42), queryKeys.projects.analytics(42), queryKeys.projectReports.velocity(42), queryKeys.dashboard.myIssues()];
   for (const key of keys) client.setQueryData(key, key === board ? { data: [{ id: 1, version: 3, status: "OPEN" }, { id: 2, version: 5, status: "OPEN" }], pagination: { nextCursor: null } } : []);
-  jest.mocked(apiClient.post).mockResolvedValue({ updated: 2, ticketIds: [1, 2] });
+  jest.mocked(apiClient.post).mockResolvedValue({ updated: 2, ticketIds: [1, 2], versions: { 1: 11, 2: 15 }, updatedAt: "2026-09-15T10:01:00.000Z" });
   const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
   const { result } = renderHook(() => useBulkUpdateTickets(42), { wrapper });
   await act(async () => { await result.current.mutateAsync({ ticketIds: [1, 2], status: "DONE" }); });
-  for (const key of keys) expect(client.getQueryState(key)?.isInvalidated).toBe(true);
+  for (const key of [queryKeys.projects.ticket(42, 1), queryKeys.projects.ticket(42, 2), board]) {
+    expect(client.getQueryState(key)?.isInvalidated).toBe(false);
+  }
+  expect(client.getQueryState(queryKeys.projects.cycles(42))?.isInvalidated).toBe(false);
+  for (const key of [queryKeys.projects.analytics(42), queryKeys.projectReports.velocity(42), queryKeys.dashboard.myIssues()]) {
+    expect(client.getQueryState(key)?.isInvalidated).toBe(true);
+  }
   client.clear();
 });
 
@@ -118,7 +276,7 @@ it("bulk updates patch every loaded ticket collection before refetch completes",
     pagination: { nextCursor: null },
   };
   client.setQueryData(board, original);
-  jest.mocked(apiClient.post).mockResolvedValue({ updated: 2, ticketIds: [1, 2] });
+  jest.mocked(apiClient.post).mockResolvedValue({ updated: 2, ticketIds: [1, 2], versions: { 1: 11, 2: 15 }, updatedAt: "2026-09-15T10:01:00.000Z" });
   const wrapper = ({ children }: { children: ReactNode }) =>
     createElement(QueryClientProvider, { client }, children);
   const { result } = renderHook(() => useBulkUpdateTickets(42), { wrapper });
@@ -130,8 +288,8 @@ it("bulk updates patch every loaded ticket collection before refetch completes",
   expect(client.getQueryData(board)).toEqual({
     ...original,
     data: [
-      { id: 1, priority: "LOW", title: "One", version: 1 },
-      { id: 2, priority: "LOW", title: "Two", version: 4 },
+      { id: 1, priority: "LOW", title: "One", version: 11, updatedAt: "2026-09-15T10:01:00.000Z" },
+      { id: 2, priority: "LOW", title: "Two", version: 15, updatedAt: "2026-09-15T10:01:00.000Z" },
       { id: 3, priority: "URGENT", title: "Three", version: 2 },
     ],
   });
@@ -169,6 +327,37 @@ it("bulk update posts each selected ticket's own cached version keyed by id rath
     undefined,
     expect.anything(),
   );
+  client.clear();
+});
+
+it("bulk updates use and advance versions from the My Work cache", async () => {
+  const client = createAppQueryClient();
+  const key = buildWorkQueryKeys.projects.allWork({ scope: "mine", limit: 10 });
+  const page = {
+    data: [{ id: 1, projectId: 42, title: "One", status: "TODO", priority: "MEDIUM", version: 7 }],
+    limit: 10,
+    nextCursor: null,
+    hasMore: false,
+  };
+  client.setQueryData(key, page);
+  jest.mocked(apiClient.post).mockResolvedValue({ updated: 1, ticketIds: [1], versions: { 1: 19 }, updatedAt: "2026-09-15T10:01:00.000Z" });
+  const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
+  const { result } = renderHook(() => useBulkUpdateTickets(42), { wrapper });
+
+  await act(async () => {
+    await result.current.mutateAsync({ ticketIds: [1], priority: "HIGH" });
+  });
+
+  expect(apiClient.post).toHaveBeenCalledWith(
+    "/build/42/tickets/bulk",
+    { ticketIds: [1], priority: "HIGH", versions: { 1: 7 } },
+    undefined,
+    expect.anything(),
+  );
+  expect(client.getQueryData(key)).toEqual({
+    ...page,
+    data: [{ ...page.data[0], priority: "HIGH", version: 19, updatedAt: "2026-09-15T10:01:00.000Z" }],
+  });
   client.clear();
 });
 
@@ -227,7 +416,7 @@ it("rank updates patch an active board without issuing a duplicate list request"
     ...page,
     data: [{ ...ticket, rank: "a1", status: "DONE" }],
   });
-  expect(client.getQueryState(board)?.isInvalidated).toBe(true);
+  expect(client.getQueryState(board)?.isInvalidated).toBe(false);
   expect(queryFn).toHaveBeenCalledTimes(1);
   unsubscribe();
   client.clear();

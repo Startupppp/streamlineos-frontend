@@ -19,6 +19,8 @@ export type WorkTab =
   | "waiting"
   | "done";
 
+export const MY_WORK_PAGE_SIZE = 10;
+
 export const WORK_TABS: readonly WorkTab[] = [
   "assigned",
   "created",

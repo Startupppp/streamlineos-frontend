@@ -4,12 +4,27 @@ import type { AllWorkTicket } from "@/types/projects";
 import { ApiError } from "@/lib/api-envelope";
 
 const mockInvalidateQueries = jest.fn();
+const mockRefetchQueries = jest.fn();
+const mockCancelQueries = jest.fn();
+const mockPatchAllWorkCollections = jest.fn(() => []);
+const mockRestoreAllWorkCollections = jest.fn();
+const mockRevalidateAllWorkCollections = jest.fn();
 const mockPost = jest.fn();
 
 jest.mock("@tanstack/react-query", () => ({
   ...jest.requireActual("@tanstack/react-query"),
-  useQueryClient: () => ({ invalidateQueries: mockInvalidateQueries }),
+  useQueryClient: () => ({
+    invalidateQueries: mockInvalidateQueries,
+    refetchQueries: mockRefetchQueries,
+    cancelQueries: mockCancelQueries,
+  }),
   useMutation: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+}));
+
+jest.mock("@/hooks/api/build/ticket-cache", () => ({
+  patchAllWorkCollections: (...args: unknown[]) => mockPatchAllWorkCollections(...args),
+  restoreAllWorkCollections: (...args: unknown[]) => mockRestoreAllWorkCollections(...args),
+  revalidateAllWorkCollections: (...args: unknown[]) => mockRevalidateAllWorkCollections(...args),
 }));
 
 jest.mock("@/lib/api-client", () => ({
@@ -107,6 +122,13 @@ describe("useMyWorkBulk — Promise.allSettled fan-out", () => {
     );
     expect(projectIds).toContain("10");
     expect(projectIds).toContain("20");
+    expect(mockPost).toHaveBeenCalledWith(
+      "/build/10/tickets/bulk",
+      expect.objectContaining({ versions: { 1: 1 } }),
+      undefined,
+      expect.anything(),
+    );
+    expect(mockPatchAllWorkCollections).toHaveBeenCalled();
   });
 
   it("reports partial success by toasting updated count even when one project fails", async () => {
@@ -134,6 +156,11 @@ describe("useMyWorkBulk — Promise.allSettled fan-out", () => {
       expect.stringMatching(/1 ticket/i),
     );
     expect(toast.error).toHaveBeenCalled();
+    expect(mockRestoreAllWorkCollections).toHaveBeenCalled();
+    expect(result.current.tableSelection).toEqual(new Set([2]));
+    expect(mockCancelQueries).toHaveBeenCalledWith({
+      queryKey: ["build", "all-work"],
+    });
   });
 
   it("surfaces a 409 conflict as a distinct conflict toast, not a generic error", async () => {

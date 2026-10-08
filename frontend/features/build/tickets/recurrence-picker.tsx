@@ -6,7 +6,7 @@ import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
-import { RefreshCw } from "lucide-react";
+import { Repeat2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { RecurrenceRule } from "@/hooks/api/build/recurring";
 
@@ -46,11 +46,11 @@ export function RecurrencePicker({ value, onChange }: RecurrencePickerProps) {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-3">
-        <div className="w-7 rounded-lg bg-muted flex items-center justify-center shrink-0">
-          <RefreshCw className="h-3.5 w-3.5 text-muted-foreground" />
+      <div className="flex items-center gap-2.5">
+        <div className="flex size-7 shrink-0 items-center justify-center rounded-full border border-border/70 bg-muted/60">
+          <Repeat2 className="size-3.5 text-muted-foreground" />
         </div>
-        <span className="text-sm font-medium flex-1">Recurring</span>
+        <span className="flex-1 text-sm font-medium">Recurring</span>
         <Switch checked={enabled} onCheckedChange={handleToggle} aria-label="Toggle recurrence" />
       </div>
 

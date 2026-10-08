@@ -17,6 +17,7 @@ import {
   EMPTY_TITLE_MAP,
   EMPTY_DESCRIPTION_MAP,
   SHOW_VIEW_SWITCHER_TABS,
+  MY_WORK_PAGE_SIZE,
 } from "./my-work-data-model";
 
 export {
@@ -35,7 +36,7 @@ export function useMyWorkData({ activeTab, activeView }: UseMyWorkDataOptions) {
   const defaults = tabToDefaultSort(activeTab);
 
   const urlState = useBuildListUrlState({
-    limit: 50,
+    limit: MY_WORK_PAGE_SIZE,
     defaultSortField: defaults.field,
     defaultSortDirection: defaults.dir,
   });
@@ -43,7 +44,9 @@ export function useMyWorkData({ activeTab, activeView }: UseMyWorkDataOptions) {
   const legacyCycle = searchParams.get("cycle");
   const baseFilters = useMemo(
     () => ({
-      ...urlState.filters, ...(activeView === "board" ? { cursor: undefined } : {}),
+      ...urlState.filters,
+      includeTotal: false,
+      ...(activeView === "board" ? { cursor: undefined } : {}),
       ...(!urlState.filters.cycleId && legacyCycle
         ? { cycleId: legacyCycle }
         : {}),

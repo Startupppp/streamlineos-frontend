@@ -46,7 +46,7 @@ export function FilterCategoryList({
       role="menu"
       aria-label="Filter categories"
       tabIndex={-1}
-      className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-1.5 outline-none"
+      className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-2 outline-none"
       variants={listContainer}
       initial="hidden"
       animate="show"

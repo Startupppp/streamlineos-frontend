@@ -8,6 +8,7 @@ import { useUpdateTicket } from "./ticket-update-mutation";
 import { useCreateTicket, useDeleteTicket } from "./ticket-create-rank-mutations";
 import { useBulkUpdateTickets } from "./ticket-bulk-update-mutation";
 import { queryKeys } from "@/lib/query-keys";
+import { apiClient } from "@/lib/api-client";
 
 jest.mock("@/lib/api-client", () => ({
   apiClient: {
@@ -205,7 +206,7 @@ describe("useUpdateTicket — invalidation contract", () => {
     });
   });
 
-  it("marks every project ticket list stale without refetching loaded pages", async () => {
+  it("keeps optimistically patched project ticket lists fresh", async () => {
     const { result } = renderHook(() => useUpdateTicket(42), {
       wrapper: wrap(client),
     });
@@ -214,10 +215,11 @@ describe("useUpdateTicket — invalidation contract", () => {
       await result.current.mutateAsync({ ticketId: 9, version: 3, title: "After" });
     });
 
-    expect(invalidateSpy).toHaveBeenCalledWith({
-      queryKey: queryKeys.projects.tickets({ projectId: 42 }),
-      refetchType: "none",
-    });
+    expect(invalidateSpy).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        queryKey: queryKeys.projects.tickets({ projectId: 42 }),
+      }),
+    );
   });
 });
 
@@ -231,7 +233,8 @@ describe("useBulkUpdateTickets — invalidation contract", () => {
     invalidateSpy = jest.spyOn(client, "invalidateQueries");
   });
 
-  it("invalidates projectReports.all so cycle burndown reflects bulk status/cycle changes", async () => {
+  it("invalidates the status-derived reports without staling unrelated report caches", async () => {
+    jest.mocked(apiClient.post).mockResolvedValueOnce({ updated: 2, ticketIds: [1, 2] });
     client.setQueryData(queryKeys.projects.tickets({ projectId: 42 }), {
       data: [{ id: 1, version: 1 }, { id: 2, version: 1 }],
       pagination: { nextCursor: null },
@@ -245,12 +248,13 @@ describe("useBulkUpdateTickets — invalidation contract", () => {
     const invalidatedKeys = invalidateSpy.mock.calls.map(
       (c) => JSON.stringify((c[0] as { queryKey: unknown }).queryKey),
     );
-    expect(invalidatedKeys).toContain(
-      JSON.stringify(queryKeys.projectReports.all),
-    );
+    expect(invalidatedKeys).toContain(JSON.stringify(queryKeys.projectReports.velocity(42)));
+    expect(invalidatedKeys).toContain(JSON.stringify(queryKeys.projectReports.burnup(42)));
+    expect(invalidatedKeys).not.toContain(JSON.stringify(queryKeys.projectReports.all));
   });
 
   it("invalidates dashboard.myIssues() so My Issues widget reflects bulk assignee/status changes", async () => {
+    jest.mocked(apiClient.post).mockResolvedValueOnce({ updated: 2, ticketIds: [1, 2] });
     client.setQueryData(queryKeys.projects.tickets({ projectId: 42 }), {
       data: [{ id: 1, version: 1 }, { id: 2, version: 1 }],
       pagination: { nextCursor: null },

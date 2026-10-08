@@ -108,54 +108,53 @@ export function WatcherList({ projectId, ticketId }: WatcherListProps) {
           ) : null}
         </div>
 
-        {watchers.length === 0 ? (
-          <p className="text-xs text-muted-foreground">
-            No one is watching this ticket yet.
-          </p>
-        ) : null}
+        <div className="flex min-h-9 items-center gap-3">
+          {watchers.length > 0 ? (
+            <TooltipProvider>
+              <div className="flex items-center -space-x-2">
+                {watchers.map((w) => {
+                  const displayName = getUserDisplayName(w.user);
+                  return (
+                    <Tooltip key={w.userId}>
+                      <TooltipTrigger asChild>
+                        <Avatar className="h-8 w-8 cursor-default border-2 border-card ring-0 transition-transform hover:z-10 hover:scale-105">
+                          <AvatarImage src={resolveImageUrl(w.user?.image)} />
+                          <AvatarFallback className="bg-primary/10 text-micro font-medium text-primary">
+                            {getUserInitials(w.user)}
+                          </AvatarFallback>
+                        </Avatar>
+                      </TooltipTrigger>
+                      <TooltipContent>{displayName}</TooltipContent>
+                    </Tooltip>
+                  );
+                })}
+              </div>
+            </TooltipProvider>
+          ) : (
+            <p className="text-xs text-muted-foreground">No one is watching this ticket yet.</p>
+          )}
 
-        {watchers.length > 0 && (
-          <TooltipProvider>
-            <div className="flex flex-wrap gap-1">
-              {watchers.map((w) => {
-                const displayName = getUserDisplayName(w.user);
-                return (
-                  <Tooltip key={w.userId}>
-                    <TooltipTrigger asChild>
-                      <Avatar className="h-6 w-6 cursor-default">
-                        <AvatarImage src={resolveImageUrl(w.user?.image)} />
-                        <AvatarFallback className="text-micro bg-primary/10 text-primary">
-                          {getUserInitials(w.user)}
-                        </AvatarFallback>
-                      </Avatar>
-                    </TooltipTrigger>
-                    <TooltipContent>{displayName}</TooltipContent>
-                  </Tooltip>
-                );
-              })}
-            </div>
-          </TooltipProvider>
-        )}
-
-        {canUpdate ? (
-          <MemberPicker
-            projectId={projectId}
-            value=""
-            onChange={handleAddWatcher}
-            placeholder="Add watcher"
-            triggerTooltip="Add watcher"
-            trigger={
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                aria-label="Add watcher"
-              >
-                <Plus className="h-3.5 w-3.5" />
-              </Button>
-            }
-          />
-        ) : null}
+          {canUpdate ? (
+            <MemberPicker
+              projectId={projectId}
+              value=""
+              onChange={handleAddWatcher}
+              placeholder="Add watcher"
+              triggerTooltip="Add watcher"
+              trigger={
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon-sm"
+                  aria-label="Add watcher"
+                  className="h-8 w-8 rounded-full border-dashed"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                </Button>
+              }
+            />
+          ) : null}
+        </div>
       </div>
     </PageState>
   );

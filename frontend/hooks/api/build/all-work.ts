@@ -96,6 +96,7 @@ export function useInfiniteAllWork(
     initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     staleTime: 30_000,
+    placeholderData: (previous) => previous,
     ...restOptions,
     enabled: canView && (enabledOption ?? true),
   });

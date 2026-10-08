@@ -13,8 +13,8 @@ import type { AllWorkFilters } from "@/types/projects";
 import type { DisplayOptions, KanbanTicket } from "../shared/types";
 import { buildTicketMetaMap, mapAllWorkTicketToKanban } from "./map-all-work-ticket";
 import type { AllWorkTicketMeta } from "./map-all-work-ticket";
+import { MY_WORK_PAGE_SIZE } from "./my-work-data-model";
 
-const COLUMN_PAGE_SIZE = 50;
 const COLUMN_PAGE_LIMIT = 5;
 const DEFAULT_STATUSES = ["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE", "CANCELLED"];
 
@@ -42,7 +42,7 @@ function BoardRow({ index, style, ariaAttributes, tickets, displayOptions, onSel
   return (
     <div style={style} {...ariaAttributes} className="px-2 pb-2">
       {ticket ? <KanbanTicketCard ticket={ticket} isDragging={false} onSelect={onSelect} displayOptions={displayOptions} readOnly /> : capped ? (
-        <p role="status" className="px-2 py-3 text-xs text-muted-foreground">250 tickets loaded in this column. Narrow your filters to see remaining tickets.</p>
+        <p role="status" className="px-2 py-3 text-xs text-muted-foreground">{MY_WORK_PAGE_SIZE * COLUMN_PAGE_LIMIT} tickets loaded in this column. Narrow your filters to see remaining tickets.</p>
       ) : <InfiniteScrollSentinel hasNextPage={hasNext} isFetchingNextPage={isFetching} onLoadMore={onNext} label={`Load next ${formatStatusName(status)} tickets`} />}
     </div>
   );
@@ -53,7 +53,7 @@ function rowKey(index: number, props: BoardRows) {
 }
 
 const MyWorkBoardColumn = memo(function MyWorkBoardColumn({ status, filters, displayOptions, onTicketSelect }: Omit<MyWorkBoardProps, "tickets" | "statuses"> & { status: string }) {
-  const columnFilters = useMemo(() => ({ ...filters, cursor: undefined, status, limit: COLUMN_PAGE_SIZE }), [filters, status]);
+  const columnFilters = useMemo(() => ({ ...filters, cursor: undefined, status, limit: MY_WORK_PAGE_SIZE }), [filters, status]);
   const query = useInfiniteAllWork(columnFilters);
   const { hasNextPage, isFetching, fetchNextPage, refetch } = query;
   const pageCount = query.data?.pages.length ?? 0;

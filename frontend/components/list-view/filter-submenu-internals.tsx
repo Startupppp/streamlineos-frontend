@@ -33,7 +33,7 @@ export function OptionRow({
       type="button"
       onClick={onClick}
       className={cn(
-        "flex min-h-9 w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm",
+        "flex min-h-9 w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm",
         "transition-colors motion-reduce:transition-none",
         "hover:bg-accent hover:text-accent-foreground",
         "focus-visible:outline-none focus-visible:bg-accent",
@@ -130,8 +130,8 @@ export function PanelShell({
       className={cn("flex w-[260px] flex-col outline-none", className)}
     >
       {showTitle && !withSearch ? (
-        <div className="flex h-10 shrink-0 items-center border-b border-border px-3">
-          <span className="text-sm font-medium text-foreground">
+        <div className="flex h-11 shrink-0 items-center border-b border-border px-4">
+          <span className="text-sm font-semibold text-foreground">
             {categoryTitle(category)}
           </span>
         </div>
@@ -162,28 +162,32 @@ export function FilterDatesPanel({
 }: FilterDatesPanelProps) {
   const hasDate = Boolean(dueDateFrom || dueDateTo);
   return (
-    <div className="px-3 py-3">
-      <div className="mb-2.5 flex items-center gap-2 text-xs text-muted-foreground">
+    <div className="space-y-3 px-4 py-4">
+      <div className="flex items-start gap-2 rounded-lg bg-muted/35 px-3 py-2.5 text-xs text-muted-foreground">
         <CalendarRange className="h-3.5 w-3.5 shrink-0" />
-        {hasDate ? (
-          <span className="font-normal text-foreground">Range active</span>
-        ) : (
-          <span>Select a date range</span>
-        )}
+        <span className={cn("leading-4", hasDate && "font-medium text-foreground")}>
+          {hasDate ? "Date range active" : "Choose a start and end date"}
+        </span>
       </div>
-      <div className="grid grid-cols-1 gap-2.5">
-        <DatePicker
-          value={dueDateFrom}
-          onChange={onDueDateFromChange}
-          placeholder="From"
-          className="w-full text-sm"
-        />
-        <DatePicker
-          value={dueDateTo}
-          onChange={onDueDateToChange}
-          placeholder="To"
-          className="w-full text-sm"
-        />
+      <div className="grid grid-cols-1 gap-3">
+        <div className="space-y-1.5">
+          <span className="text-micro font-medium uppercase tracking-wider text-muted-foreground">From</span>
+          <DatePicker
+            value={dueDateFrom}
+            onChange={onDueDateFromChange}
+            placeholder="Start date"
+            className="w-full text-sm"
+          />
+        </div>
+        <div className="space-y-1.5">
+          <span className="text-micro font-medium uppercase tracking-wider text-muted-foreground">To</span>
+          <DatePicker
+            value={dueDateTo}
+            onChange={onDueDateToChange}
+            placeholder="End date"
+            className="w-full text-sm"
+          />
+        </div>
       </div>
     </div>
   );

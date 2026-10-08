@@ -169,16 +169,16 @@ describe("MyWorkPage — offline suppresses misleading empty copy", () => {
   });
 });
 
-describe("MyWorkPage — sort control renders for the assigned tab", () => {
+describe("MyWorkPage — sort control availability", () => {
   it("renders the sort control when the view switcher is shown (assigned tab)", () => {
     render(<MyWorkPage />);
     expect(screen.getByTestId("sort-control")).toBeInTheDocument();
   });
 
-  it("does not render the sort control for non-assigned tabs", () => {
+  it("keeps sorting available when a non-assigned tab has no view switcher", () => {
     mockSearchParamsContainer.current = new URLSearchParams("tab=created");
     render(<MyWorkPage />);
-    expect(screen.queryByTestId("sort-control")).toBeNull();
+    expect(screen.getByTestId("sort-control")).toBeInTheDocument();
     expect(screen.queryByTestId("view-switcher")).toBeNull();
   });
 });

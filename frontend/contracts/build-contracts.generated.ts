@@ -5614,6 +5614,8 @@ export type ProjectsTicketsCreateTicketBody = z.input<typeof projectsTicketsCrea
 export const projectsTicketsBulkUpdateResponseSchema = z.object({
   updated: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   ticketIds: z.array(z.number().int().gte(-9007199254740991).lte(9007199254740991)),
+  versions: z.record(z.string(), z.number().int().gte(-9007199254740991).lte(9007199254740991)).optional(),
+  updatedAt: z.iso.datetime({ offset: true }).optional(),
   blocked: z.array(z.object({
     ticketId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     reason: z.string(),
