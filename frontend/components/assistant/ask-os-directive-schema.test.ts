@@ -322,3 +322,106 @@ describe("a directive replayed from stored chat history carries no redeemable to
     ).toMatchObject({ token: "redeemable" });
   });
 });
+
+describe("companion directives round-trip through the message text and the stream", () => {
+  const clarify = {
+    kind: "clarify" as const,
+    clarificationId: "clr-1",
+    purpose: "scope" as const,
+    question: "Which bugs should I count?",
+    options: [
+      { id: "project:42", label: "This project", description: "Mobile app" },
+      { id: "allAccessible", label: "All projects I can access" },
+      { id: "mine", label: "My assigned work" },
+    ],
+    expiresAt: "2026-10-09T10:00:00.000Z",
+  };
+  const evidence = {
+    kind: "evidence" as const,
+    sources: [
+      {
+        owner: "Build",
+        label: "Open bugs in Mobile app",
+        status: "ok" as const,
+        asOf: "2026-10-09T09:00:00.000Z",
+        scope: "This project",
+        href: "/build/42/issues?type=BUG",
+      },
+      { owner: "Documents", label: "Leave policy", status: "degraded" as const, citationId: "c1", excerpt: "Up to 20 days" },
+    ],
+  };
+  const plan = {
+    kind: "action-plan" as const,
+    steps: [
+      { index: 1, title: "Reply to Acme", action: "mail.send", status: "completed" as const },
+      { index: 2, title: "Schedule follow-up", status: "proposed" as const },
+    ],
+  };
+  const limit = {
+    kind: "capability-limit" as const,
+    reason: "unsupported" as const,
+    summary: "Payroll amounts can't be changed through the assistant.",
+    href: "/payroll/runs",
+  };
+  const receipt = {
+    kind: "action-receipt" as const,
+    proposalId: 11,
+    action: "build.ticket.updateStatus",
+    status: "committed" as const,
+    summary: "Moved STRE-7 to Done",
+    resultId: "STRE-7",
+    href: "/build/42/tickets/STRE-7",
+    changedFields: ["status"],
+    at: "2026-10-09T09:05:00.000Z",
+  };
+  const all = [clarify, evidence, plan, limit, receipt];
+
+  it.each(all.map((directive) => [directive.kind, directive] as const))(
+    "serializes and parses %s back to the same object",
+    (_kind, directive) => {
+      expect(parseAskOsDirective(serializeAskOsDirective(directive))).toEqual(directive);
+    },
+  );
+
+  it.each([
+    ["CLARIFY:", clarify],
+    ["EVIDENCE:", evidence],
+    ["ACTION_PLAN:", plan],
+    ["CAPABILITY_LIMIT:", limit],
+    ["ACTION_RECEIPT:", receipt],
+  ] as const)("writes the %s line prefix the backend persists", (prefix, directive) => {
+    expect(serializeAskOsDirective(directive).startsWith(prefix)).toBe(true);
+  });
+
+  it.each(all.map((directive) => [directive.kind, directive] as const))(
+    "accepts a live %s stream payload",
+    (_kind, directive) => {
+      expect(parseAskOsDirectivePayload(directive)).toEqual(directive);
+    },
+  );
+
+  it("extracts every kind from one persisted turn and keeps the prose", () => {
+    const encoded = appendAskOsDirective("Here is what I found.", all);
+    const extracted = extractAskOsDirective(encoded);
+    expect(extracted.prose).toBe("Here is what I found.");
+    expect(extracted.directives).toEqual(all);
+  });
+
+  it("drops a script or protocol-relative href instead of rendering a dangerous link", () => {
+    const parsed = parseAskOsDirectivePayload({
+      ...evidence,
+      sources: [{ owner: "x", label: "y", status: "ok", href: "javascript:alert(1)" }],
+    });
+    expect(parsed?.kind).toBe("evidence");
+    if (parsed?.kind !== "evidence") throw new Error("narrowing");
+    expect(parsed.sources[0]?.href).toBeUndefined();
+    const relative = parseAskOsDirectivePayload({ ...limit, href: "//evil.example" });
+    if (relative?.kind !== "capability-limit") throw new Error("narrowing");
+    expect(relative.href).toBeUndefined();
+  });
+
+  it("refuses a clarification with no options and a receipt with an unknown status", () => {
+    expect(parseAskOsDirectivePayload({ ...clarify, options: [] })).toBeNull();
+    expect(parseAskOsDirectivePayload({ ...receipt, status: "done" })).toBeNull();
+  });
+});

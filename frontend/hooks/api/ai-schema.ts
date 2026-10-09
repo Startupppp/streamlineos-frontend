@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { askOsActionReceiptSchema } from "@/components/assistant/ask-os-directive-schema";
 
 const wireDate = () => z.string();
 const nullableWireDate = () => z.string().nullable();
@@ -219,6 +220,7 @@ export const confirmActionContract = z.object({
   ok: z.literal(true),
   result: z.record(z.string(), z.unknown()),
   summary: z.string(),
+  receipt: askOsActionReceiptSchema.optional(),
 });
 
 export const declineProposalContract = z.object({

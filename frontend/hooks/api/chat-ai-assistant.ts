@@ -24,6 +24,7 @@ import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+import { askOsPageContext } from "@/components/assistant/ask-os-request-policy";
 
 export interface AskAIMessage {
   role: "user" | "assistant";
@@ -145,13 +146,18 @@ export function useAskAI() {
       conversationId?: number,
       persona?: string,
       onData?: (name: string, data: unknown) => void,
+      options?: { clarification?: { clarificationId: string; optionId: string } },
     ): Promise<AskAiStreamOutcome> => {
       const outcome = await stream({
         path: "/chat",
         body: {
           messages,
+          context: askOsPageContext(window.location.pathname),
           ...(conversationId !== undefined && { conversationId }),
           ...(persona !== undefined && { persona }),
+          ...(options?.clarification !== undefined && {
+            clarification: options.clarification,
+          }),
         },
         onToken,
         onData,
