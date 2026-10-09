@@ -444,3 +444,98 @@ describe("a proposal the server has already settled stops being offered", () => 
     expect(screen.getByRole("button", { name: "Discard" })).toBeInTheDocument();
   });
 });
+
+describe("the confirm response's receipt is what reports the outcome", () => {
+  it("renders the committed receipt with its changed fields and link once confirm returns one", async () => {
+    mutate.mockImplementation(
+      (_token: string, options: { onSuccess: (data: ConfirmActionResult) => void }) => {
+        options.onSuccess({
+          ok: true,
+          result: {},
+          summary: "Leave requested",
+          receipt: {
+            proposalId: 8,
+            action: "self.leave.request",
+            status: "committed",
+            summary: "Leave requested for 1 to 3 October",
+            href: "/me/leave",
+            changedFields: ["status"],
+            at: "2026-10-01T10:00:00.000Z",
+          },
+        });
+      },
+    );
+
+    render(
+      <AskOsBubble
+        role="assistant"
+        content="Filing that leave request."
+        streaming={false}
+        reduce={false}
+        directives={[leaveDirective]}
+      />,
+    );
+    await userEvent.click(await screen.findByRole("button", { name: "Confirm" }));
+
+    expect(await screen.findByRole("region", { name: "Action result: Done" })).toBeInTheDocument();
+    expect(screen.getByText("Leave requested for 1 to 3 October")).toBeInTheDocument();
+    expect(screen.getByText("Changed: status")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open result" })).toHaveAttribute("href", "/me/leave");
+  });
+
+  it("shows an already-completed duplicate redemption as such, not as a fresh success", async () => {
+    mutate.mockImplementation(
+      (_token: string, options: { onSuccess: (data: ConfirmActionResult) => void }) => {
+        options.onSuccess({
+          ok: true,
+          result: {},
+          summary: "Already done",
+          receipt: {
+            proposalId: 8,
+            action: "self.leave.request",
+            status: "already-completed",
+            summary: "This leave request was already submitted",
+            at: "2026-10-01T10:00:00.000Z",
+          },
+        });
+      },
+    );
+
+    render(
+      <AskOsBubble
+        role="assistant"
+        content=""
+        streaming={false}
+        reduce={false}
+        directives={[leaveDirective]}
+      />,
+    );
+    await userEvent.click(await screen.findByRole("button", { name: "Confirm" }));
+
+    expect(
+      await screen.findByRole("region", { name: "Action result: Already completed" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Done")).toBeNull();
+  });
+
+  it("renders an ACTION_RECEIPT directive from a later turn and claims nothing from prose", async () => {
+    render(
+      <AskOsBubble
+        role="assistant"
+        content={`Done! Everything worked.\n${serializeAskOsDirective({
+          kind: "action-receipt",
+          proposalId: 9,
+          action: "mail.send",
+          status: "failed",
+          summary: "The email could not be sent",
+          at: "2026-10-01T10:00:00.000Z",
+        })}`}
+        streaming={false}
+        reduce={false}
+      />,
+    );
+
+    expect(await screen.findByRole("region", { name: "Action result: Failed" })).toBeInTheDocument();
+    expect(screen.getByText("The email could not be sent")).toBeInTheDocument();
+  });
+});
