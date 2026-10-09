@@ -12,16 +12,6 @@ export type CompanionActivity =
   | "error"
   | "quiet";
 
-export const COMPANION_ACTIVITY_LABEL: Record<CompanionActivity, string> = {
-  idle: "Ready",
-  thinking: "Thinking",
-  clarification: "Needs your answer",
-  proposal: "Action ready to review",
-  success: "Done",
-  error: "Something went wrong",
-  quiet: "Quiet",
-};
-
 const COMPANION_CSS = `
 .companion-pet{--cp-body:var(--primary);--cp-face:var(--primary-foreground);--cp-spark:var(--category-amber-fill);overflow:visible}
 .companion-pet[data-preset=dusk]{--cp-body:var(--category-violet-fill);--cp-face:var(--card)}

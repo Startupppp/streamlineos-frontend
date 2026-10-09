@@ -11,17 +11,28 @@ import {
 import type { CompanionPreference } from "@/hooks/api/companion-schema";
 import { orgScopedStorageKey, useOrgStorageScope } from "@/lib/org-scoped-storage";
 import { cn } from "@/lib/utils";
+import type { AskOsCompanionState } from "./ask-os-companion-state";
 import { useAskOs } from "./ask-os-context";
-import {
-  COMPANION_ACTIVITY_LABEL,
-  CompanionCharacter,
-  type CompanionActivity,
-} from "./companion-character";
+import { CompanionCharacter, type CompanionActivity } from "./companion-character";
 import { CompanionPromptBubble } from "./companion-prompt-bubble";
 
 const INTRO_KEY = "companion-intro-seen";
 const HEARTBEAT_MS = 60_000;
-const ANNOUNCED: ReadonlySet<CompanionActivity> = new Set(["clarification", "proposal", "success", "error"]);
+const PET_STATE: Record<AskOsCompanionState | "quiet", { visual: CompanionActivity; label: string }> = {
+  idle: { visual: "idle", label: "Ready" },
+  quiet: { visual: "quiet", label: "Prompts paused" },
+  thinking: { visual: "thinking", label: "Working" },
+  clarification: { visual: "clarification", label: "Needs your answer" },
+  "partial-evidence": { visual: "idle", label: "Partly answered" },
+  "proposal-ready": { visual: "proposal", label: "Review the proposal" },
+  "confirmation-pending": { visual: "thinking", label: "Confirming" },
+  success: { visual: "success", label: "Done" },
+  conflict: { visual: "error", label: "Nothing was saved" },
+  denied: { visual: "error", label: "Not allowed" },
+  disconnected: { visual: "error", label: "Connection needed" },
+  failed: { visual: "error", label: "Something went wrong" },
+  stopped: { visual: "idle", label: "Stopped" },
+};
 
 export function useCompanionPresence(): CompanionPreference | null {
   const { data } = useCompanionPreferences();
@@ -29,6 +40,12 @@ export function useCompanionPresence(): CompanionPreference | null {
     () => (data && data.policy.petEnabled && data.preferences.visible ? data.preferences : null),
     [data],
   );
+}
+
+const SILENT: ReadonlySet<CompanionActivity> = new Set(["idle", "thinking", "quiet"]);
+
+export function companionPetState(state: AskOsCompanionState | "quiet") {
+  return PET_STATE[state];
 }
 
 export function companionDisplayName(preferences: CompanionPreference): string {
@@ -90,11 +107,11 @@ function useForegroundHeartbeat(enabled: boolean) {
 }
 
 interface CompanionLauncherProps {
-  activity: CompanionActivity;
+  state: AskOsCompanionState;
   preferences: CompanionPreference;
 }
 
-export function CompanionLauncher({ activity, preferences }: CompanionLauncherProps) {
+export function CompanionLauncher({ state: chatState, preferences }: CompanionLauncherProps) {
   const router = useRouter();
   const { open, setOpen, toggle } = useAskOs();
   const scope = useOrgStorageScope();
@@ -116,9 +133,9 @@ export function CompanionLauncher({ activity, preferences }: CompanionLauncherPr
 
   const paused =
     preferences.pausedUntil !== null && new Date(preferences.pausedUntil).getTime() > mountedAt;
-  const state: CompanionActivity = activity === "idle" && paused ? "quiet" : activity;
+  const pet = companionPetState(chatState === "idle" && paused ? "quiet" : chatState);
   const name = companionDisplayName(preferences);
-  const status = COMPANION_ACTIVITY_LABEL[state];
+  const status = pet.label;
   const left = preferences.anchor === "bottom-left";
   const showIntro = !introSeen && !open;
 
@@ -182,7 +199,7 @@ export function CompanionLauncher({ activity, preferences }: CompanionLauncherPr
       >
         <CompanionCharacter
           preset={preferences.preset}
-          state={state}
+          state={pet.visual}
           animation={preferences.animation}
           className="size-5"
         />
@@ -190,7 +207,7 @@ export function CompanionLauncher({ activity, preferences }: CompanionLauncherPr
         <span className="truncate text-micro leading-none text-muted-foreground">{status}</span>
       </button>
       <span role="status" className="sr-only">
-        {ANNOUNCED.has(state) ? `${name}: ${status}` : ""}
+        {SILENT.has(pet.visual) ? "" : `${name}: ${status}`}
       </span>
     </div>
   );

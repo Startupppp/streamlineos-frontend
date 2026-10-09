@@ -3,29 +3,9 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { AnimatedLogo } from "@/components/brand/animated-logo";
-import type { AiFailureState } from "@/components/ai";
 import { useAskOs } from "./ask-os-context";
-import { extractAskOsDirective } from "./ask-os-directive-schema";
-import type { CompanionActivity } from "./companion-character";
+import { useAskOsCompanionState } from "./ask-os-companion-state";
 import { CompanionLauncher, useCompanionPresence } from "./companion-launcher";
-
-const RECEIPT_SUCCESS = new Set(["committed", "already-completed"]);
-
-export function companionActivity(
-  busy: boolean,
-  failure: AiFailureState | null,
-  latest: { role: string; content: string } | undefined,
-): CompanionActivity {
-  if (busy) return "thinking";
-  if (failure && failure.status !== "cancelled") return "error";
-  if (!latest || latest.role !== "assistant") return "idle";
-  const last = extractAskOsDirective(latest.content).directives.at(-1);
-  if (!last) return "idle";
-  if (last.kind === "clarify") return "clarification";
-  if (last.kind === "confirm-action") return "proposal";
-  if (last.kind === "action-receipt") return RECEIPT_SUCCESS.has(last.status) ? "success" : "error";
-  return "idle";
-}
 
 function LegacyAskOsLauncher() {
   const { open, toggle } = useAskOs();
@@ -49,8 +29,9 @@ function LegacyAskOsLauncher() {
   );
 }
 
-export function AskOsLauncher({ activity = "idle" }: { activity?: CompanionActivity }) {
+export function AskOsLauncher() {
   const companion = useCompanionPresence();
-  if (companion) return <CompanionLauncher activity={activity} preferences={companion} />;
+  const state = useAskOsCompanionState();
+  if (companion) return <CompanionLauncher state={state} preferences={companion} />;
   return <LegacyAskOsLauncher />;
 }

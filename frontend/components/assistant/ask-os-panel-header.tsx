@@ -8,8 +8,9 @@ import {
 import { Maximize2, Minimize2 } from "lucide-react";
 import { AnimatedLogo } from "@/components/brand/animated-logo";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { COMPANION_ACTIVITY_LABEL, CompanionCharacter } from "./companion-character";
-import { companionDisplayName, useCompanionPresence } from "./companion-launcher";
+import { useAskOsCompanionState } from "./ask-os-companion-state";
+import { CompanionCharacter } from "./companion-character";
+import { companionDisplayName, companionPetState, useCompanionPresence } from "./companion-launcher";
 
 interface AskOsPanelHeaderProps {
   activeConversationId: number | null;
@@ -63,6 +64,7 @@ export function AskOsPanelHeader({
   onOpenConversations,
 }: AskOsPanelHeaderProps) {
   const companion = useCompanionPresence();
+  const pet = companionPetState(useAskOsCompanionState());
   return (
     <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border/70 px-3 py-2">
       {isConversations ? (
@@ -85,7 +87,7 @@ export function AskOsPanelHeader({
           {companion ? (
             <CompanionCharacter
               preset={companion.preset}
-              state={isStreaming ? "thinking" : "idle"}
+              state={pet.visual}
               animation={companion.animation}
               className="size-6"
             />
@@ -97,9 +99,7 @@ export function AskOsPanelHeader({
               {companion ? companionDisplayName(companion) : "Ask OS"}
             </p>
             <p className="mt-0.5 text-dense text-muted-foreground">
-              {companion
-                ? COMPANION_ACTIVITY_LABEL[isStreaming ? "thinking" : "idle"]
-                : "Your organization assistant"}
+              {companion ? pet.label : "Your organization assistant"}
             </p>
           </div>
         </div>

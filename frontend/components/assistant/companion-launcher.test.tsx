@@ -6,7 +6,7 @@ import { ApiError } from "@/lib/api-envelope";
 import { apiClient } from "@/lib/api-client";
 import { AskOsContext, useAskOsState } from "./ask-os-context";
 import { AskOsLauncher } from "./ask-os-launcher";
-import type { CompanionActivity } from "./companion-character";
+import { AskOsCompanionStateContext, type AskOsCompanionState } from "./ask-os-companion-state";
 
 const push = jest.fn();
 
@@ -87,14 +87,16 @@ function server({ preferences, policy, prefsFail, prompt = null, claimConflict }
 
 const harness: { current: ReturnType<typeof useAskOsState> | null } = { current: null };
 
-function Harness({ activity }: { activity?: CompanionActivity }) {
+function Harness({ activity = "idle" }: { activity?: AskOsCompanionState }) {
   const state = useAskOsState();
   useEffect(() => {
     harness.current = state;
   });
   return (
     <AskOsContext.Provider value={state}>
-      <AskOsLauncher activity={activity} />
+      <AskOsCompanionStateContext value={activity}>
+        <AskOsLauncher />
+      </AskOsCompanionStateContext>
     </AskOsContext.Provider>
   );
 }
@@ -105,7 +107,7 @@ async function settle() {
   });
 }
 
-function renderLauncher(activity?: CompanionActivity) {
+function renderLauncher(activity?: AskOsCompanionState) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   function Wrapper({ children }: { children: ReactNode }) {
     return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
@@ -147,8 +149,8 @@ describe("companion launcher rollback", () => {
   it("shows the named companion with a text status when enabled", async () => {
     server();
     renderLauncher("thinking");
-    expect(await screen.findByRole("button", { name: "Open Pip, Thinking" })).toBeInTheDocument();
-    expect(screen.getByText("Thinking")).toBeVisible();
+    expect(await screen.findByRole("button", { name: "Open Pip, Working" })).toBeInTheDocument();
+    expect(screen.getByText("Working")).toBeVisible();
     expect(screen.queryByRole("button", { name: "Open Ask OS assistant" })).not.toBeInTheDocument();
   });
 });
