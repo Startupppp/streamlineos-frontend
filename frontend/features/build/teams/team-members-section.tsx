@@ -118,7 +118,10 @@ export function TeamMembersSection({
   }
 
   return (
-    <PmSection index={1} className="min-w-0 space-y-3">
+    <PmSection
+      index={1}
+      className="flex min-h-0 min-w-0 w-full flex-1 flex-col gap-3"
+    >
       <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="text-sm font-semibold text-foreground">
@@ -171,7 +174,7 @@ export function TeamMembersSection({
       </PmPanel>
 
       {pageMembers.length === 0 && !membersResult.isLoading ? (
-        <PmPanel className="flex min-h-52 items-center justify-center p-4">
+        <PmPanel className="flex min-h-0 min-w-0 w-full flex-1 items-center justify-center p-4">
           <EmptyState
             illustrationPreset="projects"
             title={!isOnline ? "You are offline" : "No members yet"}

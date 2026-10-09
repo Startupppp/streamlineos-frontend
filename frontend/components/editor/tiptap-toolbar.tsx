@@ -76,7 +76,7 @@ export function TiptapToolbar({ editor, onImageInsert, compact = false }: Tiptap
 
   return (
     <TooltipProvider delayDuration={400}>
-      <div className="flex flex-wrap items-center gap-0.5 p-1">
+      <div className="flex min-w-max flex-nowrap items-center gap-0.5 p-1">
         {!compact && (
           <>
             <ToolbarButton onClick={handleUndo} title="Undo">

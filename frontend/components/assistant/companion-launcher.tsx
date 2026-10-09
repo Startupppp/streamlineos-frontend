@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { MessageCircle, Mic, MicOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   useCompanionHeartbeat,
@@ -115,9 +116,18 @@ function useForegroundHeartbeat(enabled: boolean) {
 interface CompanionLauncherProps {
   state: AskOsCompanionState;
   preferences: CompanionPreference;
+  onVoiceStart?: () => void;
+  voiceState?: "idle" | "listening" | "processing" | "error";
+  voiceSupported?: boolean;
 }
 
-export function CompanionLauncher({ state: chatState, preferences }: CompanionLauncherProps) {
+export function CompanionLauncher({
+  state: chatState,
+  preferences,
+  onVoiceStart,
+  voiceState = "idle",
+  voiceSupported = false,
+}: CompanionLauncherProps) {
   const router = useRouter();
   const { open, setOpen, toggle } = useAskOs();
   const scope = useOrgStorageScope();
@@ -153,6 +163,7 @@ export function CompanionLauncher({ state: chatState, preferences }: CompanionLa
   const paused =
     preferences.pausedUntil !== null && Date.parse(preferences.pausedUntil) > now;
   const pet = companionPetState(chatState === "idle" && paused ? "quiet" : chatState);
+  const petVisual = voiceState === "listening" ? "listening" : pet.visual;
   const name = companionDisplayName(preferences);
   const status = pet.label;
   const left = preferences.anchor === "bottom-left";
@@ -173,6 +184,9 @@ export function CompanionLauncher({ state: chatState, preferences }: CompanionLa
   function handleIntroHide() {
     dismissIntro();
     updatePreferences.mutate({ version: preferences.version, visible: false });
+  }
+  function handleVoiceStart() {
+    onVoiceStart?.();
   }
 
   return (
@@ -205,26 +219,50 @@ export function CompanionLauncher({ state: chatState, preferences }: CompanionLa
       ) : (
         <CompanionPromptBubble enabled={!open} preferences={preferences} />
       )}
-      <button
-        ref={buttonRef}
-        type="button"
-        onClick={toggle}
-        aria-expanded={open}
-        aria-label={`${open ? "Minimize" : "Open"} ${name}, ${status}`}
-        className={cn(
-          "flex min-h-11 max-w-full items-center gap-1 bg-card px-3 text-foreground shadow-lg ring-1 ring-inset ring-border transition-colors hover:bg-muted",
-          left ? "rounded-tr-lg" : open ? "w-full" : "rounded-tl-lg",
-        )}
-      >
-        <CompanionCharacter
-          preset={preferences.preset}
-          state={pet.visual}
-          animation={preferences.animation}
-          className="size-7"
-        />
-        <span className="truncate text-micro font-semibold leading-none">{name}</span>
-        <span className="truncate text-micro leading-none text-muted-foreground">{status}</span>
-      </button>
+      <div className={cn("flex flex-col items-center px-2 pb-2 pt-1", open && "ml-auto")}>
+        <button
+          ref={buttonRef}
+          type="button"
+          onClick={toggle}
+          aria-expanded={open}
+          aria-label={`${open ? "Minimize" : "Open"} ${name}, ${status}`}
+          className="group flex min-h-11 max-w-full flex-col items-center justify-end rounded-2xl text-foreground outline-none transition-transform hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        >
+        <span className="relative flex items-end justify-center" aria-hidden="true">
+          <span className="absolute bottom-1 h-3 w-12 rounded-full bg-foreground/10 blur-sm transition-transform group-hover:scale-110" />
+          <CompanionCharacter
+            preset={preferences.preset}
+            state={petVisual}
+            animation={preferences.animation}
+            className={cn("relative", open ? "size-14" : "size-20")}
+          />
+        </span>
+        </button>
+        <span className="relative -mt-1 flex max-w-[10rem] items-center gap-0.5 rounded-full border border-border/80 bg-card/95 p-1 shadow-lg backdrop-blur">
+          <button
+            type="button"
+            onClick={toggle}
+            aria-label={open ? `Minimize ${name}` : `Chat with ${name}`}
+            className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <MessageCircle className="size-4" aria-hidden />
+          </button>
+          <span className="min-w-0 px-1 text-center">
+          <span className="truncate text-micro font-semibold leading-none">{name}</span>
+            <span className="block truncate text-micro leading-none text-muted-foreground">{voiceState === "listening" ? "Listening" : status}</span>
+          </span>
+          <button
+            type="button"
+            onClick={handleVoiceStart}
+            disabled={!voiceSupported || voiceState === "processing"}
+            aria-label={voiceState === "listening" ? "Stop voice input" : `Talk to ${name}`}
+            title={voiceSupported ? "Voice input" : "Voice input is not supported in this browser"}
+            className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-45"
+          >
+            {voiceState === "listening" ? <MicOff className="size-4" aria-hidden /> : <Mic className="size-4" aria-hidden />}
+          </button>
+        </span>
+      </div>
       <span role="status" className="sr-only">
         {SILENT.has(pet.visual) ? "" : `${name}: ${status}`}
       </span>

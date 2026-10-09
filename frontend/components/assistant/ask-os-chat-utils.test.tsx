@@ -36,6 +36,11 @@ const declineState = { isPending: false };
 jest.mock("@/hooks/api/ai-confirm-action", () => ({
   useConfirmAction: () => ({ mutate, isPending: false }),
   useDeclineProposal: () => ({ mutate: declineMutate, isPending: declineState.isPending }),
+  useRecoverProposal: () => ({
+    data: { state: "expired", reason: "Past proposal — view only." },
+    isError: false,
+    isPending: false,
+  }),
 }));
 
 jest.mock("sonner", () => ({

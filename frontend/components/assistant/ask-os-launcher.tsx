@@ -29,9 +29,25 @@ function LegacyAskOsLauncher() {
   );
 }
 
-export function AskOsLauncher() {
+interface AskOsLauncherProps {
+  onVoiceStart?: () => void;
+  voiceState?: "idle" | "listening" | "processing" | "error";
+  voiceSupported?: boolean;
+}
+
+export function AskOsLauncher({ onVoiceStart, voiceState, voiceSupported }: AskOsLauncherProps = {}) {
   const companion = useCompanionPresence();
   const state = useAskOsCompanionState();
-  if (companion) return <CompanionLauncher state={state} preferences={companion} />;
+  if (companion) {
+    return (
+      <CompanionLauncher
+        state={state}
+        preferences={companion}
+        onVoiceStart={onVoiceStart}
+        voiceState={voiceState}
+        voiceSupported={voiceSupported}
+      />
+    );
+  }
   return <LegacyAskOsLauncher />;
 }

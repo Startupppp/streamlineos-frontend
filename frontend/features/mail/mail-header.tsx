@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Settings, PenSquare, Mail, UsersRound, ChevronDown } from "lucide-react";
+import { Settings, PenSquare, Mail, UsersRound, ChevronDown, Clock3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -34,6 +34,7 @@ interface MailHeaderProps {
   onGenerateBrief: () => void;
   onOpenBrief: () => void;
   onOpenAccounts: () => void;
+  onOpenRecent?: () => void;
 }
 
 export function MailHeader({
@@ -49,6 +50,7 @@ export function MailHeader({
   onGenerateBrief,
   onOpenBrief,
   onOpenAccounts,
+  onOpenRecent,
 }: MailHeaderProps) {
   const hasAccounts = accounts.length > 0;
   const { data: inboxData } = useMailMessages(
@@ -82,11 +84,11 @@ export function MailHeader({
           </span>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h1 className="hidden text-base font-semibold leading-tight tracking-tight text-foreground sm:block sm:text-lg">
+              <h1 className="text-base font-semibold leading-tight tracking-tight text-foreground sm:text-lg">
                 Mail
               </h1>
               {hasAccounts && unreadCount > 0 ? (
-                <span className="hidden h-5 min-w-5 items-center justify-center rounded-md border border-primary/20 bg-primary/10 px-1.5 text-micro font-medium tabular-nums text-foreground sm:inline-flex">
+                <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-md border border-primary/20 bg-primary/10 px-1.5 text-micro font-medium tabular-nums text-foreground">
                   {unreadCount}
                   <span className="sr-only"> unread in loaded inbox</span>
                 </span>
@@ -99,6 +101,7 @@ export function MailHeader({
         </div>
 
         <div className="ml-auto flex min-w-0 shrink-0 items-center gap-1">
+          {hasAccounts && onOpenRecent ? <Button type="button" variant="ghost" size="icon" className="size-9 lg:hidden" onClick={onOpenRecent} aria-label="Open recent mail"><Clock3 className="size-4" aria-hidden="true" /></Button> : null}
           {hasAccounts ? (
             <MailDailyBrief
               state={summaryState}

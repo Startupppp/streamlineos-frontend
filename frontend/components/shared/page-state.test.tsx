@@ -86,7 +86,7 @@ describe("PageState", () => {
     expect(screen.getByTestId("skeleton").parentElement).toHaveClass("flex-1");
   });
 
-  it("forwards className to the empty branch so EmptyState fills the shell like Teams", () => {
+  it("forwards className to the empty branch so EmptyState fills every list shell", () => {
     render(
       <PageState
         resolution={{ kind: "empty" }}
@@ -98,6 +98,23 @@ describe("PageState", () => {
       </PageState>,
     );
     expect(screen.getByTestId("empty-body").parentElement).toHaveClass("flex-1");
+  });
+
+  it("gives every empty-list branch the full available content width", () => {
+    render(
+      <PageState
+        resolution={{ kind: "empty" }}
+        loading={loading}
+        empty={<div data-testid="empty-list">No rows</div>}
+      >
+        <div>body</div>
+      </PageState>,
+    );
+
+    expect(screen.getByTestId("empty-list").parentElement).toHaveClass(
+      "min-w-0",
+      "w-full",
+    );
   });
 
   it("renders access-restricted, not the empty state, when the caller is denied — the Ticket 26 guarantee at the component boundary", () => {

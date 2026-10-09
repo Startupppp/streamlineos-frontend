@@ -28,7 +28,7 @@ The current [Chat OS PRD](../specs/2026-09-18-chat-os-prd.md), [Ask OS hardening
 | CP-D01 | One pet with many permitted skills, rather than a separate pet per module. |
 | CP-D02 | Small, quiet desktop corner presence; compact mobile entry opens the existing assistant workspace. |
 | CP-D03 | Suggestions and previews precede every pet-initiated write. The user explicitly confirms each write; existing immediate-write Tools are unavailable through the pet until adapted. |
-| CP-D04 | Text and animation first. Speech input and output follow in a separate release and are opt-in. |
+| CP-D04 | Text, animation, explicit voice input, and user-triggered spoken replies ship together. Voice is progressive enhancement: microphone access starts only from a user action, recognized text remains editable and is never auto-sent, replies never speak automatically, and typed interaction remains complete when browser speech support is unavailable. |
 | CP-D05 | Individual appearance and nudge preferences operate within organization policy. |
 | CP-D06 | Useful reminders may be configured separately. Friendly non-task check-ins are off by default and require individual opt-in. |
 | CP-D07 | “Find bugs” in this release means find and count canonical Build `BUG` tickets. Repository/CI diagnosis is later. |
@@ -46,7 +46,7 @@ The current [Chat OS PRD](../specs/2026-09-18-chat-os-prd.md), [Ask OS hardening
 | Requested behavior | First-release decision and detailed location |
 | --- | --- |
 | Replace Ask OS with an animated Codex-like pet | One original StreamlineOS character with presets, small desktop presence, mobile quick entry, accessible static/motion states; keep Ask OS engine/history. [CP-00](00-experience-prd.md). The supplied pet image is inspiration only; do not copy its pixels or identity. |
-| Talk, understand any question, offer options, do requested work | Text conversation and open natural-language intake across every reviewed available capability; options and clarification precede consequential work. Speech input/replies are a later opt-in release. [CP-01](01-intelligence-actions-prd.md), [implementation contract](implementation-contract.md). |
+| Talk, understand any question, offer options, do requested work | Text and explicit voice intake accept natural-language requests across every reviewed available capability; options and clarification precede consequential work. Voice transcripts remain editable before send, and completed visible replies can be read aloud only after the user asks. [CP-00](00-experience-prd.md), [CP-01](01-intelligence-actions-prd.md), [implementation contract](implementation-contract.md). |
 | Update tickets, find bugs, count issues | Confirmed Build actions, canonical `BUG` search and exact counts, explicit scope on ambiguous questions, owner-filtered links. Repository bug diagnosis follows later. [CP-01](01-intelligence-actions-prd.md). |
 | Answer with knowledge base context | Documents-owned content retrieval with access-checked citations, one Ask OS generation/credit/transcript. [CP-01](01-intelligence-actions-prd.md), [ADR 0007](0007-companion-uses-ask-os-toolset.md). |
 | Speak up while a user is busy, with an off switch | Useful prompts respect focus, quiet hours, consent, controls, source eligibility and dedupe. Friendly check-ins default off; coarse in-app timing is separately opt-in. [CP-02](02-proactive-governance-prd.md). |
@@ -90,7 +90,7 @@ Public documentation checked 2026-10-08; these are vendor-described capabilities
 3. Implement CP-02 preferences, trigger evaluation, and prompt delivery; pilot with category-level controls and observe suppression/deduplication.
 4. Release only after cross-role, cross-tenant, browser, persistence, accessibility, notification-delivery, and operational evidence. Keep feature flags and a rollback path to the current Ask OS launcher.
 
-**Later release:** opt-in voice, deeper automation, and repository/CI bug diagnosis. None is implied by first-release acceptance.
+**Later release:** provider-backed cross-browser transcription, voice/persona selection, deeper automation, and repository/CI bug diagnosis. Browser voice in this release does not imply background listening, stored audio, or automatic spoken replies.
 
 ## Current evidence and remaining execution gates
 

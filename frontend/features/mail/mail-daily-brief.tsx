@@ -39,7 +39,7 @@ export function MailDailyBrief({
           <span className="hidden max-w-56 truncate text-left text-sm font-medium xl:block">
             {state.summary}
           </span>
-          <span className="hidden text-sm font-medium md:inline xl:hidden">Daily brief</span>
+          <span className="hidden text-sm font-medium lg:inline xl:hidden">Daily brief</span>
           {state.actionItems.length > 0 ? (
             <span className="hidden rounded-md bg-primary/10 px-1.5 py-0.5 text-micro font-semibold tabular-nums text-primary sm:inline-flex">
               {state.actionItems.length}

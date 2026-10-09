@@ -91,7 +91,12 @@ describe("EmptyState — semantic structure", () => {
     expect(container.firstElementChild).not.toHaveClass("border-dashed");
   });
 
-  it("fills the content pane like Teams when not compact", () => {
+  it("lets compact list empty states fill the available content width", () => {
+    const { container } = render(<EmptyState title="No rows" compact />);
+    expect(container.firstElementChild).toHaveClass("w-full");
+  });
+
+  it("fills the content pane across full-page list surfaces when not compact", () => {
     const { container } = render(
       <EmptyState title="No teams yet" className="min-h-full" />,
     );

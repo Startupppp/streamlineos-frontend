@@ -23,6 +23,7 @@ The first-release audience is every signed-in organization member across the thr
 3. **Review a suggestion.** The pet can display a concise prompt with its reason and one primary action. Selecting it opens the relevant page or prefilled conversation. Dismiss and snooze are adjacent controls; a prompt never captures focus or covers a form submit button.
 4. **Personalize or disable.** Settings expose name, approved appearance preset, tone, animation level, placement, reminder categories, friendly check-ins, snooze, and a master “Hide companion” switch. Hiding the pet retains the normal assistant access path and chat history unless organization AI is disabled.
 5. **Continue across sessions.** Conversation list, messages, proposals, and confirmed results remain associated with the signed-in user and organization. A cosmetic change or pet rename never forks the history.
+6. **Talk by choice.** A microphone control in the companion dock or composer starts browser speech recognition only after the user activates it. Listening and processing are visibly labelled. Final words are added to the current editable draft and never auto-sent. The user can stop or cancel without losing typed text. A completed assistant reply exposes a read-aloud control when speech synthesis is available; playback never starts automatically and stops when the panel closes. Unsupported or denied browser speech leaves the complete text experience available.
 
 ## Surface contract
 
@@ -43,7 +44,7 @@ The first-release audience is every signed-in organization member across the thr
 | Context chip | Module, project or record reference, remove-context control. | Hidden when no safe context is available; an inaccessible or stale record is removed with a brief explanation. |
 | Conversation list | Title, last activity time, search, rename/delete where existing Ask OS permits, active selection. | Separate no-conversations, no-search-results, loading, and failed-load/retry states. |
 | Message area | User/assistant messages, source cards, bounded work previews, action cards, timestamps, retry and jump-to-latest. | Preserve prior messages on background refresh; distinguish streamed text, stopped turn, failed turn, and no-history state. |
-| Composer | Open text entry, send/stop, character limit and validation, suggested questions/options based on available capabilities and optional page context. | Disabled with reason when AI/credits/policy are unavailable; unsent draft is retained when the panel closes. |
+| Composer | Open text entry, explicit voice-input control, visible listening/processing state, editable transcript, send/stop, character limit and validation, suggested questions/options based on available capabilities and optional page context. | Disabled with reason when AI/credits/policy are unavailable; unsent draft is retained when the panel closes. Unsupported/denied voice explains the limitation without disabling text. |
 | Action card | Target, proposed before/after values, consequences/recipient, expiry, confirm, decline, pending, success, conflict, and receipt link. | Expired or executed history cannot be reconfirmed; failed execution never appears successful. |
 | Prompt/activity area | Prompt text, reason/source, time, primary action, dismiss, snooze, category settings; recent outcomes. | No eligible prompts is quiet, not a blank alert; delivery failures do not become conversational claims. |
 
@@ -63,6 +64,7 @@ The asset is one original StreamlineOS character with curated appearance presets
 - When a prompt and an active conversation compete, the panel remains stable. The prompt is queued or placed in a nonblocking activity area.
 - On logout or organization switch, clear in-memory conversation/context and load only the newly authorized organization's state. Local cosmetic preferences may persist only in the authenticated, scoped preference store.
 - On the first visit, introduce the pet with “Ask”, “Customize”, and “Hide” choices. Do not block the user behind onboarding, require naming the pet, or start friendly conversation.
+- Voice activation is always a direct user action. Browser recognition audio is not recorded or persisted by StreamlineOS. Starting listening stops local reply playback to avoid feedback. Closing the panel, hiding the tab, submitting, logging out, or switching organization ends the active voice session. Browser/provider errors never clear typed text.
 
 ## Accessibility and quality requirements
 
@@ -83,7 +85,9 @@ The asset is one original StreamlineOS character with curated appearance presets
 | CP-00-A05 | User hides the pet, switches organizations, or loses AI access. | No stale content or controls from the prior scope; re-enable path is clear where permitted. |
 | CP-00-A06 | Pet assets fail to load. | Static accessible launcher, chat, and actions continue to work. |
 | CP-00-A07 | Dialog, full-screen editor, and page bottom action coexist with pet. | No blocked controls or focus trap; prompt waits or relocates. |
+| CP-00-A08 | User starts voice input, reviews the transcript, edits it, and sends. | Permission begins only after activation; listening/processing is visible; transcript is not auto-sent; stop/error/unsupported states preserve typed input. |
+| CP-00-A09 | User asks to read a completed response aloud and stops it. | Only visible assistant prose is spoken after activation; no directive/token content or automatic playback; close/unmount stops speech. |
 
 ## Out of first release
 
-Speech input/output, pet marketplace, user-supplied pet code or animation, multiple specialist pets, autonomous social conversation, and a mobile floating character. Voice is a separate opt-in PRD after core behavior is proven.
+Provider-backed cross-browser transcription, background listening, stored audio, automatic spoken replies, remembered voice selection, pet marketplace, user-supplied pet code or animation, multiple specialist pets, autonomous social conversation, and a mobile floating character.

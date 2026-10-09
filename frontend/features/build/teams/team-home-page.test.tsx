@@ -157,11 +157,11 @@ jest.mock("@/components/ui/page-wrapper", () => ({
 }));
 
 jest.mock("@/components/pm-chrome", () => ({
-  PmPageShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  PmPanel: ({ children, role, "aria-label": ariaLabel }: { children: React.ReactNode; role?: string; "aria-label"?: string }) => (
-    <div role={role} aria-label={ariaLabel}>{children}</div>
+  PmPageShell: ({ children, className }: { children: React.ReactNode; className?: string }) => <div className={className}>{children}</div>,
+  PmPanel: ({ children, className, role, "aria-label": ariaLabel }: { children: React.ReactNode; className?: string; role?: string; "aria-label"?: string }) => (
+    <div className={className} role={role} aria-label={ariaLabel}>{children}</div>
   ),
-  PmSection: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  PmSection: ({ children, className }: { children: React.ReactNode; className?: string }) => <div className={className}>{children}</div>,
   PM_PANEL: "",
   PM_ROW: "",
 }));
@@ -594,7 +594,23 @@ describe("TeamHomePage — empty member list (BLD-X-FE-TEAMS-DETAIL-009)", () =>
     };
     mockUsePageState.mockReturnValue({ kind: "ready" });
     render(<TeamHomePage teamId={1} />);
-    expect(screen.getByText("No members yet")).toBeInTheDocument();
+    const emptyState = screen.getByText("No members yet");
+    expect(emptyState).toBeInTheDocument();
+
+    const emptyPanel = emptyState.parentElement;
+    expect(emptyPanel).toHaveClass("min-h-0", "w-full", "flex-1");
+    expect(emptyPanel).not.toHaveClass("min-h-52");
+    expect(emptyPanel?.parentElement).toHaveClass(
+      "flex",
+      "min-h-0",
+      "min-w-0",
+      "w-full",
+      "flex-1",
+      "flex-col",
+    );
+
+    const membersTab = screen.getByRole("tabpanel");
+    expect(membersTab).toHaveClass("min-w-0", "w-full", "flex-1");
   });
 });
 

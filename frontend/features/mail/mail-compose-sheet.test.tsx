@@ -248,8 +248,10 @@ describe("MailComposeSheet — draft lifecycle and offline sending", () => {
 
     const toggle = screen.getByRole("button", { name: "Message details" });
     expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(toggle).toHaveTextContent("Message details");
     fireEvent.click(toggle);
     expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(toggle).toHaveTextContent("Add recipients and subject");
     expect(screen.queryByLabelText("Subject")).toBeNull();
   });
 

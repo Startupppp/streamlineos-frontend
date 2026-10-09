@@ -212,7 +212,7 @@ export function useMailAction() {
   return useAuthorizedMutation("mail:messages:manage", {
     mutationKey: ["mail", "action"],
     mutationFn: ({ messageId, body }: { messageId: string; body: MailActionBody }) =>
-      apiClient.post<{ success: boolean }>(`/mail/messages/${messageId}/actions`, body, undefined, mailActionSuccessContract),
+      apiClient.post<{ ok: true }>(`/mail/messages/${messageId}/actions`, body, undefined, mailActionSuccessContract),
     onMutate: ({ messageId, body }) => applyMailActionToCaches(qc, messageId, body),
     onError: (_, _variables, context) => {
       if (!context) return;

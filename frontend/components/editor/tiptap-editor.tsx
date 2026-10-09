@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
-import { resolveImageUrl, storageKeyFromUrl } from "@/lib/utils";
+import { cn, resolveImageUrl, storageKeyFromUrl } from "@/lib/utils";
 
 const storageUploadC = lazyContract(() =>
   import("@/components/storage/storage-schema").then((m) => m.storageUploadContract),
@@ -232,9 +232,9 @@ export function TiptapEditor({
   }
 
   return (
-    <div className={embedded ? minHeightClassName : "rounded-md border bg-background"}>
+    <div className={cn("flex min-h-0 flex-col", embedded ? minHeightClassName : "rounded-md border bg-background")}>
       {editable && menuMode === "static" && editor && (
-        <div className="border-b">
+        <div className="overflow-x-auto border-b scrollbar-hide">
           <TiptapToolbar editor={editor} onImageInsert={handleImageInsert} />
         </div>
       )}
@@ -244,8 +244,8 @@ export function TiptapEditor({
           onImageInsert={handleImageInsert}
         />
       )}
-      <div onContextMenu={editable ? handleEditorContextMenu : undefined}>
-        <EditorContent editor={editor} />
+      <div className="min-h-0 flex-1 overflow-y-auto" onContextMenu={editable ? handleEditorContextMenu : undefined}>
+        <EditorContent editor={editor} className="h-full" />
       </div>
       <input
         ref={imageInputRef}

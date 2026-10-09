@@ -7,6 +7,7 @@ import {
   UserIcon,
 } from "@animateicons/react/lucide";
 import { AnimatedLogo } from "@/components/brand/animated-logo";
+import { CompanionCharacter } from "@/components/assistant/companion-character";
 import { useAskOs } from "@/components/assistant/ask-os-context";
 import { useCompanionPresence } from "@/components/assistant/companion-launcher";
 import { useCommandPalette } from "@/components/command-palette";
@@ -51,7 +52,8 @@ function FabMenuRow({
 export function FabPanelBody({ onClose, onOpenMobileMenu }: FabPanelBodyProps) {
   const [profileOpen, setProfileOpen] = useState(false);
   const { open: askOsOpen, toggle: toggleAskOs } = useAskOs();
-  const assistantName = useCompanionPresence() ? "Companion" : "Ask OS";
+  const companion = useCompanionPresence();
+  const assistantName = companion ? "Companion" : "Ask OS";
   const { setPaletteOpen } = useCommandPalette();
 
   const handleAskOs = useCallback(() => {
@@ -86,7 +88,16 @@ export function FabPanelBody({ onClose, onOpenMobileMenu }: FabPanelBodyProps) {
           label={askOsOpen ? `Close ${assistantName}` : assistantName}
           onClick={handleAskOs}
           icon={
-            <AnimatedLogo size={20} gradient className="rounded-full" />
+            companion ? (
+              <CompanionCharacter
+                preset={companion.preset}
+                state="idle"
+                animation="off"
+                className="size-7"
+              />
+            ) : (
+              <AnimatedLogo size={20} gradient className="rounded-full" />
+            )
           }
         />
         <FabMenuRow

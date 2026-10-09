@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { AskOsDirective } from "./ask-os-directive-schema";
 import type { AskOsClarificationAnswer } from "./ask-os-clarify-card";
 import { AskOsStatusText, useAskOsPanelState } from "./ask-os-companion-state";
+import type { SpeechPlaybackController } from "./use-browser-speech";
 import {
   AskOsBubble,
   buildMsgRows,
@@ -41,6 +42,7 @@ interface AskOsChatViewProps {
   topSentinelRef: RefObject<HTMLDivElement | null>;
   directives?: AskOsDirective[];
   onClarify?: (answer: AskOsClarificationAnswer) => void;
+  speech: SpeechPlaybackController;
 }
 
 export function AskOsChatView({
@@ -64,6 +66,7 @@ export function AskOsChatView({
   topSentinelRef,
   directives = [],
   onClarify,
+  speech,
 }: AskOsChatViewProps) {
   const panelState = useAskOsPanelState({ draft, failure, directives, persisted });
   const msgRows = buildMsgRows(persisted);
@@ -129,6 +132,8 @@ export function AskOsChatView({
                   reduce={reduce}
                   live={row.message.id < 0}
                   onClarify={row.message.id === answerable ? onClarify : undefined}
+                  speech={speech}
+                  speechKey={`message-${row.message.id}`}
                 />
               ),
             )}
@@ -151,6 +156,8 @@ export function AskOsChatView({
                 content={draft.assistant}
                 streaming={isStreaming || awaitingReply}
                 reduce={reduce}
+                speech={speech}
+                speechKey="draft-assistant"
                 directives={directives}
               />
             )}

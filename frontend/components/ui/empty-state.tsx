@@ -128,7 +128,7 @@ export function EmptyState({
     <div
       role="status"
       className={cn(
-        "flex flex-col items-center justify-center text-center",
+        "flex min-w-0 w-full flex-col items-center justify-center text-center",
         compact ? "py-4 px-2" : bare ? "" : SURFACE_EMPTY,
         className,
       )}

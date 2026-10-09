@@ -1,7 +1,7 @@
 "use client";
 
 import { useId } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, MailOpen } from "lucide-react";
 import { Controller } from "react-hook-form";
 import type { UseFormReturn } from "react-hook-form";
 import {
@@ -57,17 +57,19 @@ export function MailComposeHeaderFields({
     <div className="flex flex-col gap-3 border-b border-border/40 px-4 py-3 sm:px-6 sm:py-4">
       <Button
         type="button"
-        variant="ghost"
+        variant="outline"
         size="sm"
-        className="h-8 w-full justify-between px-2 text-xs text-muted-foreground"
+        className="h-11 w-full justify-between rounded-lg border-border/60 bg-muted/20 px-3 text-left hover:bg-muted/40"
         aria-label="Message details"
         aria-expanded={detailsExpanded}
         onClick={onToggleDetails}
       >
-        <span>
-          {detailsExpanded
-            ? "Hide message details"
-            : "Show recipients and subject"}
+        <span className="flex min-w-0 items-center gap-2">
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-background text-foreground shadow-sm"><MailOpen className="size-3.5" aria-hidden="true" /></span>
+          <span className="flex min-w-0 flex-col">
+            <span className="text-xs font-medium text-foreground">{detailsExpanded ? "Message details" : "Add recipients and subject"}</span>
+            <span className="truncate text-micro font-normal text-muted-foreground">{detailsExpanded ? "From, recipients and subject" : "Expand before sending"}</span>
+          </span>
         </span>
         <ChevronDown
           className={`size-4 transition-transform ${detailsExpanded ? "rotate-180" : ""}`}

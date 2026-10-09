@@ -8,10 +8,10 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AiDraftCard } from "@/components/ai/ai-draft-card";
+import { AiUsageChip } from "@/components/ai/ai-usage-chip";
 import { AiQuotaEmptyState } from "@/components/ai/ai-quota-empty-state";
 import { AiPermissionDenied } from "@/components/ai/ai-permission-denied";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, CheckCircle2, Sparkles } from "lucide-react";
 import type { MailInboxSummaryState } from "./use-mail-inbox-summary";
 
 interface MailInboxSummarySheetProps {
@@ -25,6 +25,8 @@ export function MailInboxSummarySheet({
   onClose,
   summaryState,
 }: MailInboxSummarySheetProps) {
+  const visibleSender = (value: string) =>
+    /^\[REDACTED(?:_EMAIL)?\]$/i.test(value.trim()) ? null : value;
   return (
     <Sheet open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
       <SheetContent className="p-0 flex flex-col gap-0 sm:max-w-lg overflow-hidden">
@@ -63,51 +65,54 @@ export function MailInboxSummarySheet({
           )}
 
           {summaryState.status === "ready" && (
-            <AiDraftCard usage={summaryState.aiUsage}>
-              <div className="flex flex-col gap-4">
-                <p className="text-label leading-relaxed text-foreground whitespace-pre-wrap">
+            <div className="flex flex-col gap-5" data-testid="mail-inbox-brief">
+              <section className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <span className="flex items-center gap-2 text-xs font-semibold text-foreground"><Sparkles className="size-4 text-primary" aria-hidden="true" />Inbox overview</span>
+                  {summaryState.aiUsage ? <AiUsageChip usage={summaryState.aiUsage} /> : null}
+                </div>
+                <p className="text-sm leading-6 text-foreground/90 whitespace-pre-wrap">
                   {summaryState.summary}
                 </p>
+              </section>
 
                 {summaryState.highlights.length > 0 && (
-                  <div>
-                    <p className="text-xs font-semibold text-foreground mb-2">
+                  <section aria-labelledby="brief-highlights">
+                    <p id="brief-highlights" className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                       Highlights
                     </p>
                     <ul className="flex flex-col gap-2">
                       {summaryState.highlights.map((h, i) => (
                         <li
                           key={i}
-                          className="flex flex-col gap-0.5 px-3 py-2 rounded-md bg-muted/40 border border-border/40"
+                          className="grid grid-cols-[2rem_minmax(0,1fr)] gap-3 rounded-xl border border-border/60 bg-card p-3 shadow-sm"
                         >
-                          <span className="text-xs font-medium text-foreground line-clamp-1">
-                            {h.subject}
+                          <span className="flex size-8 items-center justify-center rounded-full bg-muted text-xs font-semibold tabular-nums text-foreground">{i + 1}</span>
+                          <span className="min-w-0 space-y-1">
+                            <span className="block text-sm font-medium leading-5 text-foreground">{h.subject}</span>
+                            {visibleSender(h.fromEmail) ? <span className="block truncate text-xs text-muted-foreground">{visibleSender(h.fromEmail)}</span> : null}
+                            <span className="block text-xs leading-5 text-foreground/75">{h.reason}</span>
                           </span>
-                          <span className="text-dense text-muted-foreground">
-                            {h.fromEmail}
-                          </span>
-                          <span className="text-dense text-foreground/80">{h.reason}</span>
                         </li>
                       ))}
                     </ul>
-                  </div>
+                  </section>
                 )}
 
                 {summaryState.actionItems.length > 0 && (
-                  <div>
-                    <p className="text-xs font-semibold text-foreground mb-2">Action items</p>
-                    <ul className="flex flex-col gap-1.5">
+                  <section aria-labelledby="brief-actions" className="rounded-xl border border-border/60 bg-muted/20 p-4">
+                    <p id="brief-actions" className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Next actions</p>
+                    <ul className="flex flex-col gap-3">
                       {summaryState.actionItems.map((item, i) => (
-                        <li key={i} className="flex items-start gap-2 text-label text-foreground">
-                          <span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary shrink-0" aria-hidden />
+                        <li key={i} className="flex items-start gap-2.5 text-sm leading-5 text-foreground">
+                          <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
                           <span>{item}</span>
                         </li>
                       ))}
                     </ul>
-                  </div>
+                  </section>
                 )}
-              </div>
-            </AiDraftCard>
+            </div>
           )}
 
           {summaryState.status === "idle" && (

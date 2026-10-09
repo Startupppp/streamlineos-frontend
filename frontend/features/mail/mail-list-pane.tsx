@@ -3,10 +3,18 @@
 import { useCallback, useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
-import { Inbox, Send, Archive, Trash2, Star, AlertCircle, WifiOff, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Inbox,
+  Send,
+  Archive,
+  Trash2,
+  Star,
+  AlertCircle,
+  WifiOff,
+} from "lucide-react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import {
@@ -19,6 +27,10 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { groupMailMessages } from "./mail-group-messages";
 import { MailVirtualList } from "./mail-virtual-list";
+import {
+  MailThreadBriefSheet,
+  type MailThreadBriefState,
+} from "./mail-thread-brief-sheet";
 import type { MailListAction } from "./mail-message-row";
 import type {
   MailFolder,
@@ -55,7 +67,10 @@ function MailFolderButton({
   onSelect: (folder: MailFolder) => void;
 }) {
   const Icon = folder.icon;
-  const handleClick = useCallback(() => onSelect(folder.key), [onSelect, folder.key]);
+  const handleClick = useCallback(
+    () => onSelect(folder.key),
+    [onSelect, folder.key],
+  );
   return (
     <button
       type="button"
@@ -93,6 +108,9 @@ export function MailListPane({
   const [search, setSearch] = useState("");
   const [view, setView] = useState("all");
   const [pageIndex, setPageIndex] = useState(0);
+  const [threadBriefOpen, setThreadBriefOpen] = useState(false);
+  const [threadBriefState, setThreadBriefState] =
+    useState<MailThreadBriefState>({ status: "loading" });
   const debouncedSearch = useDebouncedValue(search, 300);
   const mailAction = useMailAction();
   const threadSummary = useMailThreadSummary();
@@ -107,24 +125,35 @@ export function MailListPane({
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useMailMessages({
-    folder: activeFolder,
-    accountId: selectedAccountId,
-    q: debouncedSearch || undefined,
-  }, { enabled: accounts.length > 0 });
+  } = useMailMessages(
+    {
+      folder: activeFolder,
+      accountId: selectedAccountId,
+      q: debouncedSearch || undefined,
+    },
+    { enabled: accounts.length > 0 },
+  );
 
   const pages = useMemo(() => data?.pages ?? [], [data]);
   const currentPageIndex = Math.min(pageIndex, Math.max(0, pages.length - 1));
   const visibleMessages = useMemo(() => {
     const pageMessages = pages[currentPageIndex]?.messages ?? [];
     return pageMessages.filter((message) =>
-      view === "unread" ? !message.isRead : view === "attachments" ? message.hasAttachments : true,
+      view === "unread"
+        ? !message.isRead
+        : view === "attachments"
+          ? message.hasAttachments
+          : true,
     );
   }, [currentPageIndex, pages, view]);
   const accountErrors = useMemo(() => {
-    const byAccount = new Map<number, MailListResponse["accountErrors"][number]>();
+    const byAccount = new Map<
+      number,
+      MailListResponse["accountErrors"][number]
+    >();
     for (const page of data?.pages ?? [])
-      for (const failure of page.accountErrors) byAccount.set(failure.accountId, failure);
+      for (const failure of page.accountErrors)
+        byAccount.set(failure.accountId, failure);
     return [...byAccount.values()];
   }, [data]);
   const groups = useMemo(
@@ -158,24 +187,22 @@ export function MailListPane({
   );
 
   const handleAiBrief = useCallback(
-    (accountId: number, threadId: string) => {
-      toast.promise(
-        threadSummary.mutateAsync({ accountId, threadId }).then((data) => {
-          const items = data.actionItems.length
-            ? `\n\nActions:\n${data.actionItems.map((i) => `• ${i}`).join("\n")}`
-            : "";
-          return `${data.summary}${items}`;
-        }),
-        {
-          loading: "Briefing thread…",
-          success: (text) => ({
-            message: "Thread brief",
-            description:
-              text.length > 280 ? `${text.slice(0, 280)}…` : text,
-          }),
-          error: (err) => getErrorMessage(err),
-        },
-      );
+    async (accountId: number, threadId: string) => {
+      setThreadBriefState({ status: "loading" });
+      setThreadBriefOpen(true);
+      try {
+        const result = await threadSummary.mutateAsync({ accountId, threadId });
+        setThreadBriefState({
+          status: "ready",
+          summary: result.summary,
+          actionItems: result.actionItems,
+        });
+      } catch (error) {
+        setThreadBriefState({
+          status: "error",
+          message: getErrorMessage(error),
+        });
+      }
     },
     [threadSummary],
   );
@@ -215,7 +242,14 @@ export function MailListPane({
     if ((result.data?.pages.length ?? 0) > pages.length) {
       setPageIndex((current) => current + 1);
     }
-  }, [currentPageIndex, fetchNextPage, hasNextPage, isFetchingNextPage, isOnline, pages.length]);
+  }, [
+    currentPageIndex,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isOnline,
+    pages.length,
+  ]);
 
   const handleClearFilters = useCallback(() => {
     setSearch("");
@@ -357,9 +391,11 @@ export function MailListPane({
       ) : visibleMessages.length === 0 ? (
         <div className="flex-1 min-h-0 flex flex-col items-center justify-center px-4 py-10 text-center">
           <p className="text-label font-medium text-foreground/80">
-            {view !== "all" ? "No matching loaded messages" : debouncedSearch
-              ? "No messages found"
-              : `No messages in ${activeFolder}`}
+            {view !== "all"
+              ? "No matching loaded messages"
+              : debouncedSearch
+                ? "No messages found"
+                : `No messages in ${activeFolder}`}
           </p>
           {debouncedSearch ? (
             <p className="mt-1 text-dense text-muted-foreground">
@@ -381,20 +417,25 @@ export function MailListPane({
         </div>
       )}
       {visibleMessages.length > 0 ? (
-        <div className="flex h-10 shrink-0 items-center justify-between border-t border-border/50 px-3">
-          <span className="text-micro tabular-nums text-muted-foreground">
-            Page {currentPageIndex + 1} · {visibleMessages.length} messages
-          </span>
-          <div className="flex items-center gap-1">
-            <Button type="button" variant="ghost" size="icon" className="size-8" onClick={handlePreviousPage} disabled={currentPageIndex === 0} aria-label="Previous mail page">
-              <ChevronLeft className="size-4" aria-hidden="true" />
-            </Button>
-            <Button type="button" variant="ghost" size="icon" className="size-8" onClick={handleNextPage} disabled={(currentPageIndex >= pages.length - 1 && !hasNextPage) || !isOnline || isFetchingNextPage} aria-label="Next mail page">
-              <ChevronRight className="size-4" aria-hidden="true" />
-            </Button>
-          </div>
-        </div>
+        <TablePagination
+          mode="cursor"
+          rowCount={visibleMessages.length}
+          pageNumber={currentPageIndex + 1}
+          hasPrevious={currentPageIndex > 0}
+          hasMore={currentPageIndex < pages.length - 1 || Boolean(hasNextPage)}
+          onPrevious={handlePreviousPage}
+          onNext={() => {
+            void handleNextPage();
+          }}
+          disabled={!isOnline || isFetchingNextPage}
+          compact
+        />
       ) : null}
+      <MailThreadBriefSheet
+        open={threadBriefOpen}
+        onOpenChange={setThreadBriefOpen}
+        state={threadBriefState}
+      />
     </div>
   );
 }

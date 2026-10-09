@@ -329,7 +329,7 @@ export function MailComposeSheet({
         </SheetHeader>
 
         <form
-          className="flex-1 min-h-0 flex flex-col gap-0 overflow-y-auto"
+          className="flex flex-1 min-h-0 flex-col gap-0 overflow-hidden"
           onSubmit={isReply ? onSubmitReply : onSubmitCompose}
         >
           <MailComposeHeaderFields
@@ -368,7 +368,7 @@ export function MailComposeSheet({
                 onSubjectOnly={handleAiSubject}
               />
             </div>
-            <div className="flex-1 min-h-0 overflow-y-auto">
+            <div className="flex-1 min-h-0 overflow-hidden">
               <TiptapEditor
                 output="html"
                 menuMode="static"
@@ -376,7 +376,7 @@ export function MailComposeSheet({
                 contentKey={bodyContentKey}
                 onChangeHtml={handleBodyChange}
                 placeholder="Write your message..."
-                minHeightClassName="min-h-[240px]"
+                minHeightClassName="h-full min-h-[240px]"
               />
             </div>
             {activeErrors.bodyHtml && (
@@ -386,12 +386,12 @@ export function MailComposeSheet({
             )}
           </div>
 
-          <div className="grid shrink-0 grid-cols-2 gap-2 border-t border-border px-4 py-3 sm:flex sm:px-6 sm:py-4">
+          <div className="grid w-full shrink-0 grid-cols-2 gap-2 border-t border-border px-4 py-3 sm:px-6 sm:py-4">
             <LoadingButton
               type="submit"
               isPending={isPending}
               loadingText="Sending..."
-              className="h-9 w-full text-sm sm:w-auto"
+              className="h-9 w-full text-sm"
             >
               {isReply ? "Send reply" : "Send"}
             </LoadingButton>
@@ -399,7 +399,7 @@ export function MailComposeSheet({
               type="button"
               variant="outline"
               size="sm"
-              className="h-9 w-full text-sm sm:w-auto"
+              className="h-9 w-full text-sm"
               onClick={handleDiscard}
               disabled={isPending}
             >

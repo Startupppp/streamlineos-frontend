@@ -184,15 +184,21 @@ describe("companion launcher rollback", () => {
 });
 
 describe("companion motion", () => {
+  it("keeps a distinct proposal expression when motion is disabled", async () => {
+    server({ preferences: { animation: "off" } });
+    renderLauncher("proposal-ready");
+    const character = await screen.findByTestId("companion-character");
+    expect(character).toHaveAttribute("data-state", "proposal");
+    expect(character.querySelector('[data-expression="proposal"]')).toBeInTheDocument();
+  });
+
   it("stops decorative motion for reduced-motion users and for animation off", async () => {
     server({ preferences: { animation: "off" } });
     renderLauncher();
     const character = await screen.findByTestId("companion-character");
     expect(character).toHaveAttribute("data-animation", "off");
     expect(character).toHaveAttribute("aria-hidden", "true");
-    expect(character.querySelector("style")?.textContent).toMatch(
-      /@media \(prefers-reduced-motion:reduce\)\{\.companion-pet \*\{animation:none\}\}/,
-    );
+    expect(character.querySelector("style")).not.toBeInTheDocument();
   });
 
   it("pauses while the tab is hidden", async () => {

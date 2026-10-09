@@ -163,6 +163,13 @@ describe("Build list empty states", () => {
     expect(container.querySelector(".size-48")).not.toBeNull();
   });
 
+  it("lets compact empty states span the full Build list width", () => {
+    const { container } = render(
+      <EmptyState title="No members yet" compact />,
+    );
+    expect(container.firstElementChild).toHaveClass("min-w-0", "w-full");
+  });
+
   it("states a refusal rather than emptiness when the read was denied", () => {
     render(
       <EmptyState

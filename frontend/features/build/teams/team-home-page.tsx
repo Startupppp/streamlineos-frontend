@@ -198,7 +198,10 @@ export function TeamHomePage({ teamId }: Props) {
       }
     >
       <PmPageShell className="gap-3 pb-6">
-        <Tabs defaultValue="members" className="min-h-0 min-w-0 flex-1 gap-3">
+        <Tabs
+          defaultValue="members"
+          className="min-h-0 min-w-0 w-full flex-1 gap-3"
+        >
           <div className="flex min-w-0 shrink-0 items-center gap-2">
             <TabsList aria-label="Team workspace" className="flex-1 sm:flex-none">
               <TabsTrigger value="members">
@@ -219,7 +222,10 @@ export function TeamHomePage({ teamId }: Props) {
             ) : null}
           </div>
 
-          <TabsContent value="members" className="mt-0">
+          <TabsContent
+            value="members"
+            className="mt-0 min-h-0 min-w-0 w-full flex-1"
+          >
             <TeamMembersSection
               teamId={teamId}
               members={data.members}
@@ -238,7 +244,10 @@ export function TeamHomePage({ teamId }: Props) {
             />
           </TabsContent>
 
-          <TabsContent value="projects" className="mt-0 min-h-0 flex-1">
+          <TabsContent
+            value="projects"
+            className="mt-0 min-h-0 min-w-0 w-full flex-1"
+          >
             <TeamProjectsSection teamId={teamId} />
           </TabsContent>
         </Tabs>

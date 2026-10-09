@@ -29,9 +29,11 @@ interface AskOsPanelHeaderProps {
 
 function ExpandToggleButton({
   expanded,
+  label,
   onToggle,
 }: {
   expanded: boolean;
+  label: string;
   onToggle: () => void;
 }) {
   const Icon = expanded ? Minimize2 : Maximize2;
@@ -40,7 +42,7 @@ function ExpandToggleButton({
       type="button"
       onClick={onToggle}
       aria-pressed={expanded}
-      aria-label={expanded ? "Exit full screen" : "Expand Ask OS"}
+      aria-label={expanded ? "Exit full screen" : `Expand ${label}`}
       title={expanded ? "Exit full screen" : "Full screen"}
       className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
     >
@@ -89,7 +91,7 @@ export function AskOsPanelHeader({
               preset={companion.preset}
               state={pet.visual}
               animation={companion.animation}
-              className="size-6"
+              className="size-8"
             />
           ) : (
             <AnimatedLogo size={22} gradient className="shrink-0 rounded-full" />
@@ -143,7 +145,11 @@ export function AskOsPanelHeader({
           </>
         )}
         {showExpand ? (
-          <ExpandToggleButton expanded={expanded} onToggle={onToggleExpanded} />
+          <ExpandToggleButton
+            expanded={expanded}
+            label={companion ? companionDisplayName(companion) : "Ask OS"}
+            onToggle={onToggleExpanded}
+          />
         ) : null}
         <AnimatedIconButton
           type="button"

@@ -29,7 +29,7 @@ jest.mock("@/hooks/api/mail", () => ({
   useMailThreadSummary: () => ({ mutateAsync: jest.fn() }),
 }));
 jest.mock("./mail-virtual-list", () => ({
-  MailVirtualList: ({ groups }: { groups: MailTriageGroup[] }) => <div>{groups.flatMap((group) => group.messages).map((message) => <p key={message.id}>{message.subject}</p>)}</div>,
+  MailVirtualList: ({ groups, onAiBrief }: { groups: MailTriageGroup[]; onAiBrief: (accountId: number, threadId: string) => void }) => <div>{groups.flatMap((group) => group.messages).map((message) => <p key={message.id}>{message.subject}</p>)}<button onClick={() => onAiBrief(7, "thread-1")}>Brief test thread</button></div>,
 }));
 
 it("filters the current page and keeps explicit pagination outside the toolbar", async () => {
@@ -39,13 +39,15 @@ it("filters the current page and keeps explicit pagination outside the toolbar",
   await user.click(screen.getByRole("option", { name: "Unread", exact: true }));
   expect(screen.getByText("Unread message")).toBeInTheDocument();
   expect(screen.queryByText("Attachment message")).toBeNull();
-  expect(screen.getByText("Page 1 · 1 messages")).toBeInTheDocument();
-  expect(screen.queryByText(/loaded$/)).toBeNull();
+  expect(screen.getByRole("navigation", { name: "Pagination" })).toBeInTheDocument();
+  expect(screen.getByLabelText("Current page 1")).toBeInTheDocument();
   fetchNextPage.mockResolvedValueOnce({ data: { pages: [{ messages, accountErrors: [] }, { messages: [], accountErrors: [] }] } });
-  await user.click(screen.getByRole("button", { name: "Next mail page" }));
+  await user.click(screen.getByRole("button", { name: "Next page" }));
   expect(fetchNextPage).toHaveBeenCalledTimes(1);
   await user.click(screen.getByRole("combobox", { name: "Filter loaded mail" }));
   await user.click(screen.getByRole("option", { name: "With attachments" }));
   expect(screen.queryByText("Unread message")).toBeNull();
   expect(screen.getByText("Attachment message")).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Brief test thread" }));
+  expect(screen.getByRole("heading", { name: "Thread brief" })).toBeInTheDocument();
 });

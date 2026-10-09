@@ -13,6 +13,9 @@ import { NoPermissionState } from "./no-permission-state";
 import { DeniedView, FeatureLockedView, QuotaExceededView } from "./page-state-views";
 import type { GateStateProps } from "./page-state-shared";
 
+const PAGE_STATE_CONTAINER =
+  "flex min-h-0 min-w-0 w-full flex-1 flex-col";
+
 function SessionExpiredState({ compact = false, className }: GateStateProps) {
   function handleSignInAgain() {
     window.location.assign(
@@ -82,7 +85,7 @@ export function PageState({
   switch (resolution.kind) {
     case "loading":
       return (
-        <div className={cn("flex min-h-0 flex-1 flex-col", className)}>
+        <div className={cn(PAGE_STATE_CONTAINER, className)}>
           {loading}
         </div>
       );
@@ -143,13 +146,13 @@ export function PageState({
       );
     case "empty":
       return (
-        <div className={cn("flex min-h-0 flex-1 flex-col", className)}>
+        <div className={cn(PAGE_STATE_CONTAINER, className)}>
           {empty ?? children}
         </div>
       );
     case "ready":
       return (
-        <div className={cn("flex min-h-0 flex-1 flex-col", className)}>
+        <div className={cn(PAGE_STATE_CONTAINER, className)}>
           {children}
         </div>
       );

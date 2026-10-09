@@ -30,6 +30,7 @@ import {
 } from "@/hooks/api";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { cn } from "@/lib/utils";
+import { useOrgStorageScope } from "@/lib/org-scoped-storage";
 import { classifyAiError, type AiFailureState } from "@/components/ai";
 import { useHydrated } from "@/hooks/common/use-hydrated";
 import { useIsMobile } from "@/hooks/common/use-mobile";
@@ -46,14 +47,22 @@ import { AskOsConversationList } from "./ask-os-conversation-list";
 import { useAskOs } from "./ask-os-context";
 import { AskOsPanelHeader } from "./ask-os-panel-header";
 import { AskOsLauncher } from "./ask-os-launcher";
+import {
+  companionDisplayName,
+  useCompanionPresence,
+} from "./companion-launcher";
 import type { AskOsClarificationAnswer } from "./ask-os-clarify-card";
-import { AskOsCompanionStateContext, useAskOsPanelState } from "./ask-os-companion-state";
+import {
+  AskOsCompanionStateContext,
+  useAskOsPanelState,
+} from "./ask-os-companion-state";
 import {
   appendAskOsDirective,
   extractAskOsDirective,
   parseAskOsDirectivePayload,
   type AskOsDirective,
 } from "./ask-os-directive-schema";
+import { useSpeechInput, useSpeechPlayback } from "./use-browser-speech";
 
 interface Draft {
   assistant: string;
@@ -67,20 +76,35 @@ export function GlobalAskOs() {
   const pathname = usePathname();
   const { open, setOpen } = useAskOs();
   const queryClient = useQueryClient();
+  const voiceScope = useOrgStorageScope();
+  const companion = useCompanionPresence();
 
   const [input, setInput] = useState("");
   const [composerError, setComposerError] = useState<string | null>(null);
   const [failure, setFailure] = useState<AiFailureState | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
-  const [inFlightDirective, setInFlightDirective] = useState<AskOsDirective[]>([]);
+  const [inFlightDirective, setInFlightDirective] = useState<AskOsDirective[]>(
+    [],
+  );
   const inFlightDirectiveRef = useRef<AskOsDirective[]>([]);
   const [atBottom, setAtBottom] = useState(true);
   const [view, setView] = useState<"chat" | "conversations">("chat");
-  const [activeConversationId, setActiveConversationId] = useState<number | null>(null);
+  const [activeConversationId, setActiveConversationId] = useState<
+    number | null
+  >(null);
   const [convSearch, setConvSearch] = useState("");
-  const [selectedPersona, setSelectedPersona] = useState<PersonaId | null>(null);
+  const [selectedPersona, setSelectedPersona] = useState<PersonaId | null>(
+    null,
+  );
   const [expanded, setExpanded] = useState(false);
-  const [contextDismissedForRoute, setContextDismissedForRoute] = useState<string | null>(null);
+  const speechPlayback = useSpeechPlayback(voiceScope);
+  const speechInput = useSpeechInput({
+    beforeStart: speechPlayback.stop,
+    scopeKey: voiceScope,
+  });
+  const [contextDismissedForRoute, setContextDismissedForRoute] = useState<
+    string | null
+  >(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const topSentinelRef = useRef<HTMLDivElement>(null);
   const previousScrollHeightRef = useRef(0);
@@ -93,11 +117,12 @@ export function GlobalAskOs() {
   const { sendMessage, stop, isStreaming } = useAskAI();
   const pageContext = useMemo(() => askOsPageContext(pathname), [pathname]);
   const contextEnabled = contextDismissedForRoute !== pathname;
-  const contextLabel = pageContext.recordType && pageContext.recordId
-    ? `${pageContext.recordType} ${pageContext.recordId}`
-    : pageContext.module
-      ? `${pageContext.module} page`
-      : null;
+  const contextLabel =
+    pageContext.recordType && pageContext.recordId
+      ? `${pageContext.recordType} ${pageContext.recordId}`
+      : pageContext.module
+        ? `${pageContext.module} page`
+        : null;
   const createConversation = useCreateAiConversation();
   const renameConversation = useRenameAiConversation();
   const deleteConversation = useDeleteAiConversation();
@@ -134,7 +159,9 @@ export function GlobalAskOs() {
 
   const isConversations = view === "conversations";
   const showEmpty = activeConversationId === null && !draft;
-  const { data: starterSuggestionData } = useAskOsStarterSuggestions(open && showEmpty);
+  const { data: starterSuggestionData } = useAskOsStarterSuggestions(
+    open && showEmpty,
+  );
   const threadBusy = isStreaming || draft !== null;
   const fillViewport = isMobile || expanded;
   const panelTransition = reduce
@@ -163,7 +190,13 @@ export function GlobalAskOs() {
 
   const loadOlder = useCallback(() => {
     const element = scrollRef.current;
-    if (!element || loadingOlderRef.current || !hasNextPage || isFetchingNextPage) return;
+    if (
+      !element ||
+      loadingOlderRef.current ||
+      !hasNextPage ||
+      isFetchingNextPage
+    )
+      return;
     previousScrollHeightRef.current = element.scrollHeight;
     loadingOlderRef.current = true;
     void fetchNextPage();
@@ -221,22 +254,24 @@ export function GlobalAskOs() {
   }, [expanded, isMobile, open]);
   useEffect(() => {
     if (!open || view !== "chat" || threadBusy) return;
-    const frame = window.requestAnimationFrame(() => composerRef.current?.focus());
+    const frame = window.requestAnimationFrame(() =>
+      composerRef.current?.focus(),
+    );
     return () => window.cancelAnimationFrame(frame);
   }, [open, threadBusy, view]);
-  const handleDirectiveData = useCallback(
-    (name: string, data: unknown) => {
-      if (name !== "askos-directive") return;
-      const parsed = parseAskOsDirectivePayload(data);
-      if (parsed === null) return;
-      inFlightDirectiveRef.current = [...inFlightDirectiveRef.current, parsed];
-      setInFlightDirective((previous) => [...previous, parsed]);
-    },
-    [],
-  );
+  const handleDirectiveData = useCallback((name: string, data: unknown) => {
+    if (name !== "askos-directive") return;
+    const parsed = parseAskOsDirectivePayload(data);
+    if (parsed === null) return;
+    inFlightDirectiveRef.current = [...inFlightDirectiveRef.current, parsed];
+    setInFlightDirective((previous) => [...previous, parsed]);
+  }, []);
 
   const send = useCallback(
-    async (override?: string, clarification?: { clarificationId: string; optionId: string }) => {
+    async (
+      override?: string,
+      clarification?: { clarificationId: string; optionId: string },
+    ) => {
       const prepared = prepareAskOsSend(override ?? input);
       if (prepared.status === "empty" || isStreaming || sendingRef.current)
         return;
@@ -327,7 +362,8 @@ export function GlobalAskOs() {
           setDraft(null);
           setFailure({
             status: "error",
-            message: "The assistant returned nothing. Try rephrasing your question.",
+            message:
+              "The assistant returned nothing. Try rephrasing your question.",
           });
           return;
         }
@@ -340,7 +376,10 @@ export function GlobalAskOs() {
         const assistantMessage: AskAiHistoryMessage = {
           id: (temporaryIdRef.current -= 1),
           role: "assistant",
-          content: appendAskOsDirective(outcome.text, inFlightDirectiveRef.current),
+          content: appendAskOsDirective(
+            outcome.text,
+            inFlightDirectiveRef.current,
+          ),
           createdAt: new Date().toISOString(),
         };
         queryClient.setQueryData<InfiniteData<AskAiHistoryPage>>(
@@ -406,21 +445,39 @@ export function GlobalAskOs() {
       sendMessage,
     ],
   );
-  const panelState = useAskOsPanelState({ draft, failure, directives: inFlightDirective, persisted });
+  const panelState = useAskOsPanelState({
+    draft,
+    failure,
+    directives: inFlightDirective,
+    persisted,
+  });
   function handleClarify(answer: AskOsClarificationAnswer) {
-    void send(answer.label, { clarificationId: answer.clarificationId, optionId: answer.optionId });
+    speechInput.cancel();
+    speechInput.reset();
+    speechPlayback.stop();
+    void send(answer.label, {
+      clarificationId: answer.clarificationId,
+      optionId: answer.optionId,
+    });
   }
   const handleRetrySend = useCallback(() => {
     const last = lastSentRef.current;
-    if (last) void send(last);
-  }, [send]);
+    if (last) {
+      speechInput.cancel();
+      speechInput.reset();
+      speechPlayback.stop();
+      void send(last);
+    }
+  }, [send, speechInput, speechPlayback]);
   function handleScroll() {
     const element = scrollRef.current;
     if (!element) return;
     const nearBottom =
       element.scrollHeight - element.scrollTop - element.clientHeight < 120;
     isNearBottomRef.current = nearBottom;
-    setAtBottom((previous) => (previous === nearBottom ? previous : nearBottom));
+    setAtBottom((previous) =>
+      previous === nearBottom ? previous : nearBottom,
+    );
   }
   function handleJumpToLatest() {
     const element = scrollRef.current;
@@ -434,16 +491,38 @@ export function GlobalAskOs() {
   }
   function handleInputChange(event: ChangeEvent<HTMLInputElement>) {
     setInput(event.target.value);
+    speechInput.reset();
     if (composerError) setComposerError(null);
+  }
+  function handleVoiceTranscript(transcript: string) {
+    setInput((current) =>
+      current.trim() ? `${current.trim()} ${transcript}` : transcript,
+    );
+    if (composerError) setComposerError(null);
+  }
+  function handleLauncherVoiceStart() {
+    setOpen(true);
+    speechPlayback.stop();
+    if (speechInput.state === "listening") speechInput.stop();
+    else speechInput.start(handleVoiceTranscript);
   }
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    speechInput.cancel();
+    speechInput.reset();
+    speechPlayback.stop();
     void send();
   }
   function handleSuggestion(event: MouseEvent<HTMLButtonElement>) {
+    speechInput.cancel();
+    speechInput.reset();
+    speechPlayback.stop();
     void send(event.currentTarget.dataset.suggestion ?? "");
   }
   function handleClose() {
+    speechInput.cancel();
+    speechInput.reset();
+    speechPlayback.stop();
     setOpen(false);
     setView("chat");
     setConvSearch("");
@@ -459,12 +538,18 @@ export function GlobalAskOs() {
     setConvSearch("");
   }
   function handleNewChat() {
+    speechInput.cancel();
+    speechInput.reset();
+    speechPlayback.stop();
     setActiveConversationId(null);
     setDraft(null);
     setFailure(null);
     setView("chat");
   }
   function handleSelectConversation(id: number) {
+    speechInput.cancel();
+    speechInput.reset();
+    speechPlayback.stop();
     setActiveConversationId(id);
     setView("chat");
   }
@@ -472,13 +557,24 @@ export function GlobalAskOs() {
     renameConversation.mutate({ conversationId: id, title });
   }
   function handleDeleteActive() {
-    if (activeConversationId === null || threadBusy || deleteConversation.isPending) return;
+    if (
+      activeConversationId === null ||
+      threadBusy ||
+      deleteConversation.isPending
+    )
+      return;
     deleteConversation.mutate(activeConversationId);
+    speechInput.cancel();
+    speechInput.reset();
+    speechPlayback.stop();
     setActiveConversationId(null);
   }
   function handleDeleteConversation(id: number) {
     deleteConversation.mutate(id);
     if (id === activeConversationId) {
+      speechInput.cancel();
+      speechInput.reset();
+      speechPlayback.stop();
       setActiveConversationId(null);
       setView("chat");
     }
@@ -488,131 +584,149 @@ export function GlobalAskOs() {
     <div
       className={anchorClassName}
       role="complementary"
-      aria-label="Ask OS assistant"
+      aria-label={
+        companion
+          ? `StreamlineOS AI companion: ${companionDisplayName(companion)}`
+          : "Ask OS assistant"
+      }
     >
       <AskOsCompanionStateContext value={panelState}>
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            key="ask-os-panel"
-            {...panelMotionProps}
-            transition={panelTransition}
-            className={cn(
-              "overflow-hidden",
-              fillViewport && "flex h-full min-h-0 w-full flex-1 flex-col",
-            )}
-          >
-            <div
+        <AnimatePresence initial={false}>
+          {open && (
+            <motion.div
+              key="ask-os-panel"
+              {...panelMotionProps}
+              transition={panelTransition}
               className={cn(
-                "flex flex-col overflow-hidden bg-card",
-                fillViewport
-                  ? "h-full min-h-0 w-full rounded-none border-0 pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]"
-                  : "h-[min(70dvh,560px)] rounded-tl-2xl border border-b-0 border-border shadow-2xl",
+                "overflow-hidden",
+                fillViewport && "flex h-full min-h-0 w-full flex-1 flex-col",
               )}
             >
-              <AskOsPanelHeader
-                activeConversationId={activeConversationId}
-                deletePending={deleteConversation.isPending}
-                isConversations={isConversations}
-                isStreaming={threadBusy}
-                expanded={expanded}
-                showExpand={!isMobile}
-                onToggleExpanded={handleToggleExpanded}
-                onBackToChat={handleBackToChat}
-                onClose={handleClose}
-                onDeleteActive={handleDeleteActive}
-                onNewChat={handleNewChat}
-                onOpenConversations={handleOpenConversations}
-              />
-              <AnimatePresence initial={false} mode="wait">
-                {isConversations ? (
-                  <motion.div
-                    key="conversations"
-                    initial={reduce ? false : { opacity: 0, x: 24 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={reduce ? undefined : { opacity: 0, x: -24 }}
-                    transition={panelTransition}
-                    className="min-h-0 flex-1 overflow-hidden"
-                  >
-                    <AskOsConversationList
-                      conversations={conversations}
-                      hasNextPage={conversationHasNext}
-                      isFetchingNextPage={isFetchingNextConversations}
-                      onLoadMore={() => void fetchNextConversations()}
-                      onSelect={handleSelectConversation}
-                      onNewChat={handleNewChat}
-                      onRename={handleRenameConversation}
-                      onDelete={handleDeleteConversation}
-                      search={convSearch}
-                      onSearchChange={setConvSearch}
-                      activeConversationId={activeConversationId}
-                    />
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="chat"
-                    initial={reduce ? false : { opacity: 0, x: 24 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={reduce ? undefined : { opacity: 0, x: -24 }}
-                    transition={panelTransition}
-                    className="flex min-h-0 flex-1 flex-col"
-                  >
-                    <AskOsChatView
-                      atBottom={atBottom}
-                      draft={draft}
-                      failure={failure}
-                      onRetry={handleRetrySend}
-                      hasNextPage={hasNextPage}
-                      isFetchingNextPage={isFetchingNextPage}
-                      isLoading={isLoading}
-                      isStreaming={isStreaming}
-                      onJumpToLatest={handleJumpToLatest}
-                      onLoadOlder={loadOlder}
-                      onScroll={handleScroll}
-                      onSuggestion={handleSuggestion}
-                      suggestions={starterSuggestionData?.suggestions}
-                      persisted={persisted}
-                      reduce={Boolean(reduce)}
-                      scrollRef={scrollRef}
-                      showEmpty={showEmpty}
-                      topSentinelRef={topSentinelRef}
-                      directives={inFlightDirective}
-                      onClarify={handleClarify}
-                    />
-                    {contextEnabled && contextLabel ? (
-                      <div className="flex items-center gap-1.5 border-t border-border/60 px-3 pt-2 text-xs text-muted-foreground">
-                        <span className="truncate rounded-full bg-muted px-2 py-1" title={pageContext.route}>
-                          Context: {contextLabel}
-                        </span>
-                        <button
-                          type="button"
-                          aria-label="Remove page context"
-                          className="inline-flex size-7 shrink-0 items-center justify-center rounded-md hover:bg-muted hover:text-foreground"
-                          onClick={() => setContextDismissedForRoute(pathname)}
-                        >
-                          <XIcon className="size-3.5" aria-hidden />
-                        </button>
-                      </div>
-                    ) : null}
-                    <AskOsChatComposer
-                      inputRef={composerRef}
-                      error={composerError}
-                      input={input}
-                      isStreaming={threadBusy}
-                      onInputChange={handleInputChange}
-                      onSelectPersona={setSelectedPersona}
-                      onStop={stop}
-                      onSubmit={handleSubmit}
-                      selectedPersona={selectedPersona}
-                    />
-                  </motion.div>
+              <div
+                className={cn(
+                  "flex flex-col overflow-hidden bg-card",
+                  fillViewport
+                    ? "h-full min-h-0 w-full rounded-none border-0 pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]"
+                    : "h-[min(70dvh,560px)] rounded-tl-2xl border border-b-0 border-border shadow-2xl",
                 )}
-              </AnimatePresence>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      {!(expanded && open) ? <AskOsLauncher /> : null}
+              >
+                <AskOsPanelHeader
+                  activeConversationId={activeConversationId}
+                  deletePending={deleteConversation.isPending}
+                  isConversations={isConversations}
+                  isStreaming={threadBusy}
+                  expanded={expanded}
+                  showExpand={!isMobile}
+                  onToggleExpanded={handleToggleExpanded}
+                  onBackToChat={handleBackToChat}
+                  onClose={handleClose}
+                  onDeleteActive={handleDeleteActive}
+                  onNewChat={handleNewChat}
+                  onOpenConversations={handleOpenConversations}
+                />
+                <AnimatePresence initial={false} mode="wait">
+                  {isConversations ? (
+                    <motion.div
+                      key="conversations"
+                      initial={reduce ? false : { opacity: 0, x: 24 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={reduce ? undefined : { opacity: 0, x: -24 }}
+                      transition={panelTransition}
+                      className="min-h-0 flex-1 overflow-hidden"
+                    >
+                      <AskOsConversationList
+                        conversations={conversations}
+                        hasNextPage={conversationHasNext}
+                        isFetchingNextPage={isFetchingNextConversations}
+                        onLoadMore={() => void fetchNextConversations()}
+                        onSelect={handleSelectConversation}
+                        onNewChat={handleNewChat}
+                        onRename={handleRenameConversation}
+                        onDelete={handleDeleteConversation}
+                        search={convSearch}
+                        onSearchChange={setConvSearch}
+                        activeConversationId={activeConversationId}
+                      />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="chat"
+                      initial={reduce ? false : { opacity: 0, x: 24 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={reduce ? undefined : { opacity: 0, x: -24 }}
+                      transition={panelTransition}
+                      className="flex min-h-0 flex-1 flex-col"
+                    >
+                      <AskOsChatView
+                        atBottom={atBottom}
+                        draft={draft}
+                        failure={failure}
+                        onRetry={handleRetrySend}
+                        hasNextPage={hasNextPage}
+                        isFetchingNextPage={isFetchingNextPage}
+                        isLoading={isLoading}
+                        isStreaming={isStreaming}
+                        onJumpToLatest={handleJumpToLatest}
+                        onLoadOlder={loadOlder}
+                        onScroll={handleScroll}
+                        onSuggestion={handleSuggestion}
+                        suggestions={starterSuggestionData?.suggestions}
+                        persisted={persisted}
+                        reduce={Boolean(reduce)}
+                        scrollRef={scrollRef}
+                        showEmpty={showEmpty}
+                        topSentinelRef={topSentinelRef}
+                        directives={inFlightDirective}
+                        onClarify={handleClarify}
+                        speech={speechPlayback}
+                      />
+                      {contextEnabled && contextLabel ? (
+                        <div className="flex items-center gap-1.5 border-t border-border/60 px-3 pt-2 text-xs text-muted-foreground">
+                          <span
+                            className="truncate rounded-full bg-muted px-2 py-1"
+                            title={pageContext.route}
+                          >
+                            Context: {contextLabel}
+                          </span>
+                          <button
+                            type="button"
+                            aria-label="Remove page context"
+                            className="inline-flex size-7 shrink-0 items-center justify-center rounded-md hover:bg-muted hover:text-foreground"
+                            onClick={() =>
+                              setContextDismissedForRoute(pathname)
+                            }
+                          >
+                            <XIcon className="size-3.5" aria-hidden />
+                          </button>
+                        </div>
+                      ) : null}
+                      <AskOsChatComposer
+                        inputRef={composerRef}
+                        error={composerError}
+                        input={input}
+                        isStreaming={threadBusy}
+                        onInputChange={handleInputChange}
+                        onVoiceTranscript={handleVoiceTranscript}
+                        onSelectPersona={setSelectedPersona}
+                        onStop={stop}
+                        onSubmit={handleSubmit}
+                        selectedPersona={selectedPersona}
+                        speech={speechInput}
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        {!(expanded && open) ? (
+          <AskOsLauncher
+            onVoiceStart={handleLauncherVoiceStart}
+            voiceState={speechInput.state}
+            voiceSupported={speechInput.supported}
+          />
+        ) : null}
       </AskOsCompanionStateContext>
     </div>,
     document.body,

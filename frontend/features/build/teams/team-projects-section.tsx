@@ -117,7 +117,7 @@ export function TeamProjectsSection({ teamId }: TeamProjectsSectionProps) {
 
   return (
     <>
-      <PmSection index={2} className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
+      <PmSection index={2} className="flex min-h-0 min-w-0 w-full flex-1 flex-col gap-3">
         <div className="space-y-0.5">
           <h2 className="text-sm font-semibold text-foreground">
             Projects{teamProjects.length > 0 ? ` (${teamProjects.length})` : ""}
@@ -144,7 +144,7 @@ export function TeamProjectsSection({ teamId }: TeamProjectsSectionProps) {
             ))}
           </PmPanel>
         ) : teamProjects.length === 0 ? (
-          <PmPanel className="flex min-h-44 flex-1 items-center justify-center p-4">
+          <PmPanel className="flex min-h-0 min-w-0 w-full flex-1 items-center justify-center p-4">
             <EmptyState
               illustrationPreset="projects"
               title="No projects yet"

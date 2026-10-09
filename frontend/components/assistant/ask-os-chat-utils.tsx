@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
+import { Volume2, VolumeX } from "lucide-react";
 import { AnimatedLogo } from "@/components/brand/animated-logo";
 import { MarkdownContent } from "@/components/markdown/markdown-content";
 import type { AskAiHistoryMessage } from "@/hooks/api/chat-ai-assistant";
@@ -11,6 +12,9 @@ import {
   type AskOsDirective,
 } from "./ask-os-directive-schema";
 import type { AskOsClarificationAnswer } from "./ask-os-clarify-card";
+import type { SpeechPlaybackController } from "./use-browser-speech";
+import { CompanionCharacter } from "./companion-character";
+import { useCompanionPresence } from "./companion-launcher";
 
 const ConfirmDirectiveSlot = dynamic(
   () =>
@@ -96,9 +100,19 @@ export function EmptyAskOs({
   onSuggestion: (e: React.MouseEvent<HTMLButtonElement>) => void;
   suggestions?: readonly string[];
 }) {
+  const companion = useCompanionPresence();
   return (
     <div className="flex min-h-full flex-col items-center justify-center gap-5 px-2 py-8 text-center">
-      <AnimatedLogo size={36} gradient className="rounded-full" />
+      {companion ? (
+        <CompanionCharacter
+          preset={companion.preset}
+          state="idle"
+          animation={companion.animation}
+          className="size-20"
+        />
+      ) : (
+        <AnimatedLogo size={36} gradient className="rounded-full" />
+      )}
       <div className="space-y-1.5">
         <p className="text-lg font-semibold tracking-tight text-foreground">How can I help?</p>
         <p className="mx-auto max-w-[18rem] text-label leading-5 text-muted-foreground">
@@ -135,6 +149,8 @@ export function AskOsBubble({
   directives: directivesProp,
   live = false,
   onClarify,
+  speech,
+  speechKey,
 }: {
   role: "user" | "assistant";
   content: string;
@@ -143,6 +159,8 @@ export function AskOsBubble({
   directives?: AskOsDirective[];
   live?: boolean;
   onClarify?: (answer: AskOsClarificationAnswer) => void;
+  speech?: SpeechPlaybackController;
+  speechKey?: string;
 }) {
   if (role === "user") {
     return (
@@ -179,8 +197,11 @@ export function AskOsBubble({
       />
       <div className="min-w-0 max-w-[92%] flex-1 space-y-2 text-sm leading-6 text-foreground">
         {prose ? (
-          <div className="break-words">
+          <div className="space-y-1 break-words">
             <MarkdownContent content={prose} />
+            {!streaming && speech && speechKey ? (
+              <AssistantSpeechControl content={prose} speech={speech} speechKey={speechKey} />
+            ) : null}
           </div>
         ) : null}
         {directivesOf(directives, "evidence").map((directive, index) => (
@@ -220,6 +241,37 @@ export function AskOsBubble({
         ))}
       </div>
     </motion.div>
+  );
+}
+
+function AssistantSpeechControl({
+  content,
+  speech,
+  speechKey,
+}: {
+  content: string;
+  speech: SpeechPlaybackController;
+  speechKey: string;
+}) {
+  const speaking = speech.activeKey === speechKey;
+  function handleToggle() {
+    if (speaking) speech.stop();
+    else speech.speak(speechKey, content);
+  }
+
+  if (!speech.supported) return null;
+  const Icon = speaking ? VolumeX : Volume2;
+  return (
+    <button
+      type="button"
+      onClick={handleToggle}
+      aria-label={speaking ? "Stop reading response" : "Read response aloud"}
+      aria-pressed={speaking}
+      className="inline-flex min-h-8 items-center gap-1.5 rounded-md px-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <Icon className="size-3.5" aria-hidden />
+      {speaking ? "Stop reading" : "Read aloud"}
+    </button>
   );
 }
 
