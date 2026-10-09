@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -85,11 +85,13 @@ function server({ preferences, policy, prefsFail, prompt = null, claimConflict }
   );
 }
 
-let askOs: ReturnType<typeof useAskOsState> | null = null;
+const harness: { current: ReturnType<typeof useAskOsState> | null } = { current: null };
 
 function Harness({ activity }: { activity?: CompanionActivity }) {
   const state = useAskOsState();
-  askOs = state;
+  useEffect(() => {
+    harness.current = state;
+  });
   return (
     <AskOsContext.Provider value={state}>
       <AskOsLauncher activity={activity} />
@@ -185,10 +187,10 @@ describe("companion keyboard focus", () => {
     const button = await screen.findByRole("button", { name: "Open Pip, Ready" });
     button.focus();
     await user.keyboard("{Enter}");
-    expect(askOs?.open).toBe(true);
+    expect(harness.current?.open).toBe(true);
     act(() => {
       button.blur();
-      askOs?.setOpen(false);
+      harness.current?.setOpen(false);
     });
     expect(screen.getByRole("button", { name: "Open Pip, Ready" })).toHaveFocus();
   });
@@ -214,7 +216,7 @@ describe("companion first visit", () => {
     const user = userEvent.setup();
     renderLauncher();
     await user.click(await screen.findByRole("button", { name: "Ask" }));
-    expect(askOs?.open).toBe(true);
+    expect(harness.current?.open).toBe(true);
     expect(screen.queryByRole("dialog", { name: "Meet Pip" })).not.toBeInTheDocument();
   });
 });
