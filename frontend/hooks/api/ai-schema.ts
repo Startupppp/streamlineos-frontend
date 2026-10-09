@@ -1,9 +1,6 @@
 import { z } from "zod";
 import { askOsActionReceiptSchema } from "@/components/assistant/ask-os-directive-schema";
 
-const wireDate = () => z.string();
-const nullableWireDate = () => z.string().nullable();
-
 const leadScoreSchema = z.object({
   score: z.number(),
   confidence: z.enum(["low", "medium", "high"]).optional(),
