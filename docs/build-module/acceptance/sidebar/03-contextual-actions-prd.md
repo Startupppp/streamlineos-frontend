@@ -335,7 +335,6 @@ Closed in the fourth pass (2026-09-19):
 
 ## Acceptance Checklist
 
-- [x] **BSN-03-A03** Zero-count and no-action states add no visual noise.
   **Closed — unit proof, executed 2026-09-21 (5 suites / 56 tests).**
   Zero is omitted, not rendered as "0": `build-nav-link.tsx:49` gates on
   `hasBadge = badgeCount > 0`, pinned by `build-nav-link-badge-a11y.test.tsx:51`
@@ -364,7 +363,6 @@ Closed in the fourth pass (2026-09-19):
      with and cannot intercept a row the `WHERE` clause should have excluded. What
      is proven is that the service passes `projectId` through unchanged rather
      than fabricating it; cross-org exclusion needs live seed rows.
-- [x] **BSN-03-A08** Collapsed and expanded controls have equivalent accessible
   names and behavior. CLOSED in the sixth pass. One control actually differed:
   `BuildQuickCreate` announced "Create in Build" collapsed and "Create" expanded,
   so a screen-reader user met one control under two names depending on rail state.

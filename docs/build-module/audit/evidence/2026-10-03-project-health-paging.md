@@ -42,15 +42,7 @@ pnpm exec jest src/modules/build/core/project-crud/projects-query-health-sort.sp
 
 Result: seven suites, 67 tests passed. The real Drizzle compilation suite verifies one correlated aggregate, shared projection/filter fields, tenant/status joins, the own predicate, and the denied predicate. Existing list scope, keyset, tenant isolation, and detail tests also pass. Scoped ESLint reports zero errors or warnings on the seven changed backend files.
 
-- [x] Focused negative-first tests and established adjacent suites pass.
-- [x] Real Drizzle SQL compiles with one progress aggregate before the limit.
-- [x] Scoped lint and diff whitespace checks pass.
-- [x] Target application-role read-only EXPLAIN succeeds.
-- [x] Final production typecheck passes after the severity-rank/request-validation revisions.
-- [x] Final scoped source/test dependency-graph typecheck passes.
-- [x] Independent source review is complete.
 - [ ] Browser filtering, pagination, refresh, and access acceptance are evidenced.
-- [x] Representative larger-data query cost is evidenced.
 
 ## Target database method
 
@@ -141,6 +133,5 @@ Zero shared reads confirms the 24 000 tickets were fully served from buffer cach
 
 ## Delivery checklist
 
-- [x] Record the named evidence, its source or runtime scope, and the remaining verification limits in this report.
 
 Unfinished implementation and release acceptance remain tracked in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). This checked item records evidence capture only.

@@ -5,15 +5,10 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
+  ResponsivePopover,
+  ResponsivePopoverContent,
+  ResponsivePopoverTrigger,
+} from "@/components/ui/responsive-popover";
 import {
   MobileOnlyLabelTooltip,
   RESPONSIVE_ICON_LABEL_TRIGGER_CLASS,
@@ -80,7 +75,7 @@ function ToolbarFilterSlot({
   );
 }
 
-function ToolbarDrawerField({ filter }: { filter: BuildToolbarFilter }) {
+function ToolbarOverflowField({ filter }: { filter: BuildToolbarFilter }) {
   return (
     <div
       data-slot="build-toolbar-drawer-field"
@@ -112,9 +107,9 @@ export function BuildListToolbar({
     inputRef: searchInputRef,
     inputClassName: searchInputClassName,
   } = search ?? {};
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
-  const drawerBodyRef = useRef<HTMLDivElement>(null);
+  const overflowBodyRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
   const shouldReduceMotion = useReducedMotion();
   const layout = buildToolbarLayout({ search, filters });
@@ -130,17 +125,21 @@ export function BuildListToolbar({
   const showActions = !searchExpanded;
 
   useEffect(() => {
-    if (!drawerOpen) return;
+    if (!filtersOpen) return;
     const frame = window.requestAnimationFrame(() => {
-      drawerBodyRef.current?.focus();
+      overflowBodyRef.current?.focus();
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [drawerOpen]);
+  }, [filtersOpen]);
 
   const handleClearAll = useCallback(() => {
     onClearAll?.();
-    setDrawerOpen(false);
+    setFiltersOpen(false);
   }, [onClearAll]);
+
+  const handleCloseFilters = useCallback(() => {
+    setFiltersOpen(false);
+  }, []);
 
   const handleSearchFocus = useCallback(() => {
     setSearchFocused(true);
@@ -175,9 +174,9 @@ export function BuildListToolbar({
       ))}
 
       {showDrawer ? (
-        <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
+        <ResponsivePopover open={filtersOpen} onOpenChange={setFiltersOpen}>
           <MobileOnlyLabelTooltip label={BUILD_TOOLBAR_FILTERS_LABEL}>
-            <DrawerTrigger asChild>
+            <ResponsivePopoverTrigger asChild>
               <Button
                 type="button"
                 variant="outline"
@@ -198,55 +197,64 @@ export function BuildListToolbar({
                   </span>
                 ) : null}
               </Button>
-            </DrawerTrigger>
+            </ResponsivePopoverTrigger>
           </MobileOnlyLabelTooltip>
-          <DrawerContent className="w-full max-w-none max-h-[85dvh] gap-0">
-            <DrawerHeader className="shrink-0 border-b border-border text-left">
-              <DrawerTitle className="text-base">{drawerTitle}</DrawerTitle>
-              <DrawerDescription className="text-label">
-                {BUILD_TOOLBAR_DRAWER_DESCRIPTION}
-              </DrawerDescription>
-            </DrawerHeader>
-            <div
-              ref={drawerBodyRef}
-              tabIndex={-1}
-              data-slot="build-toolbar-drawer-body"
-              className="flex min-h-0 min-w-0 w-full flex-1 flex-col gap-4 overflow-y-auto p-4 outline-none"
-            >
-              {layout.filters.map((entry) => {
-                if (!isToolbarFieldFilter(entry.filter)) return null;
-                const drawerClass = toolbarDrawerVisibility(
-                  entry.fieldIndex ?? 0,
-                  entry.collapsed,
-                  layout.fieldFilterCount,
-                );
-                if (drawerClass === "hidden") return null;
-                return (
-                  <div key={entry.filter.id} className={drawerClass}>
-                    <ToolbarDrawerField filter={entry.filter} />
-                  </div>
-                );
-              })}
-            </div>
-            <DrawerFooter className="shrink-0 border-t border-border pb-[max(1rem,env(safe-area-inset-bottom))]">
-              <div
-                className={cn(
-                  "grid gap-2",
-                  showClear ? "grid-cols-2" : "grid-cols-1",
-                )}
-              >
-                {showClear ? (
-                  <Button type="button" variant="outline" onClick={handleClearAll}>
-                    {BUILD_TOOLBAR_CLEAR_LABEL}
-                  </Button>
-                ) : null}
-                <DrawerClose asChild>
-                  <Button type="button">Done</Button>
-                </DrawerClose>
+          <ResponsivePopoverContent
+            align="end"
+            title={drawerTitle}
+            description={BUILD_TOOLBAR_DRAWER_DESCRIPTION}
+            drawerClassName="w-full max-w-none"
+            stickyFooter
+            className="flex max-h-[min(36rem,calc(100dvh-2rem))] w-[min(28rem,calc(100vw-2rem))] flex-col gap-0 overflow-hidden p-0"
+          >
+            <div className="flex min-h-0 flex-1 flex-col">
+              <div className="shrink-0 border-b border-border px-4 py-3 text-left">
+                <h2 className="text-base font-semibold">{drawerTitle}</h2>
+                <p className="mt-1 text-label text-muted-foreground">
+                  {BUILD_TOOLBAR_DRAWER_DESCRIPTION}
+                </p>
               </div>
-            </DrawerFooter>
-          </DrawerContent>
-        </Drawer>
+              <div
+                ref={overflowBodyRef}
+                tabIndex={-1}
+                data-slot="build-toolbar-drawer-body"
+                className="flex min-h-0 min-w-0 w-full flex-1 flex-col gap-4 overflow-y-auto p-4 outline-none"
+              >
+                {layout.filters.map((entry) => {
+                  if (!isToolbarFieldFilter(entry.filter)) return null;
+                  const drawerClass = toolbarDrawerVisibility(
+                    entry.fieldIndex ?? 0,
+                    entry.collapsed,
+                    layout.fieldFilterCount,
+                  );
+                  if (drawerClass === "hidden") return null;
+                  return (
+                    <div key={entry.filter.id} className={drawerClass}>
+                      <ToolbarOverflowField filter={entry.filter} />
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="shrink-0 border-t border-border p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+                <div
+                  className={cn(
+                    "grid gap-2",
+                    showClear ? "grid-cols-2" : "grid-cols-1",
+                  )}
+                >
+                  {showClear ? (
+                    <Button type="button" variant="outline" onClick={handleClearAll}>
+                      {BUILD_TOOLBAR_CLEAR_LABEL}
+                    </Button>
+                  ) : null}
+                  <Button type="button" onClick={handleCloseFilters}>
+                    Done
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </ResponsivePopoverContent>
+        </ResponsivePopover>
       ) : null}
 
       {trailing ? (

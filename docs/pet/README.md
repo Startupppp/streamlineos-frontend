@@ -19,7 +19,7 @@
 11. [Registered capability inventory](capability-inventory.md): all 79 source-registered Tool keys, launch treatment, and owner validation checklist.
 12. [Current implementation review and TODOs](review-2026-10-09.md): code, migration, test, UX, and acceptance findings from the latest audit.
 
-The current [Chat OS PRD](../specs/2026-09-18-chat-os-prd.md), [Ask OS hardening PRD](../specs/2026-09-19-ask-os-hardening-prd.md), and [Build acceptance catalog](../specs/build/module/README.md) remain authoritative for their own underlying systems. This program defines the new user experience and its added capabilities. A conflict with a current security or Build contract is resolved in favor of that contract until the product owner explicitly changes it. Historical PRD progress is not proof of current production behavior.
+The current [Chat OS PRD](../specs/2026-09-18-chat-os-prd.md), [Ask OS hardening PRD](../specs/2026-09-19-ask-os-hardening-prd.md), and [Build acceptance catalog](../build-module/acceptance/module/README.md) remain authoritative for their own underlying systems. This program defines the new user experience and its added capabilities. A conflict with a current security or Build contract is resolved in favor of that contract until the product owner explicitly changes it. Historical PRD progress is not proof of current production behavior.
 
 ## Product decision record
 

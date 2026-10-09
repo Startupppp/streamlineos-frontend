@@ -75,7 +75,4 @@ Route: cold-load permission and param validation. Hook: key identity, enabled ga
 
 Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
 
-- [x] Reconcile proposed route, navigation, query-key, permission, and component owners with the current Next.js tree; list exact files to reuse, split, move, or delete before edits.
-- [x] Implement one canonical record URL and pane/page navigation contract with Back, refresh, modifier click, direct link, mobile, and inaccessible-record behavior.
-- [x] Centralize filter serialization, query keys, invalidation, and permission-derived visibility while preserving server-side authorization for every action.
 - [ ] Verify each changed page at mobile, tablet, and desktop sizes with loading, empty, stale, denied, conflict, and retry states; record accessibility results.

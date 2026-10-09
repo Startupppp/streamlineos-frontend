@@ -51,6 +51,9 @@ interface AiActionsMenuProps {
   defaultSurface?: AiResultSurface;
   iconOnly?: boolean;
   triggerVariant?: "outline" | "ghost";
+  pickerOpen?: boolean;
+  onPickerOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
 }
 
 const MENU_CONTENT_CLASS = "min-w-72 p-1.5";
@@ -68,10 +71,14 @@ export function AiActionsMenu({
   defaultSurface,
   iconOnly = false,
   triggerVariant = "outline",
+  pickerOpen: controlledPickerOpen,
+  onPickerOpenChange,
+  hideTrigger = false,
 }: AiActionsMenuProps) {
   const isMobile = useIsMobile();
   const { iconRef, hoverHandlers } = useAnimatedIcon();
-  const [pickerOpen, setPickerOpen] = React.useState(false);
+  const [internalPickerOpen, setInternalPickerOpen] = React.useState(false);
+  const pickerOpen = controlledPickerOpen ?? internalPickerOpen;
   const {
     active,
     state,
@@ -90,12 +97,13 @@ export function AiActionsMenu({
   const activeSurface = active ? resolveSurface(active, defaultSurface) : null;
 
   function handleActionSelect(action: AiAction) {
-    setPickerOpen(false);
+    handlePickerOpenChange(false);
     void runAction(action);
   }
 
   function handlePickerOpenChange(open: boolean) {
-    setPickerOpen(open);
+    if (controlledPickerOpen === undefined) setInternalPickerOpen(open);
+    onPickerOpenChange?.(open);
   }
 
   function handleDirectRun() {
@@ -199,7 +207,7 @@ export function AiActionsMenu({
     </Button>
   );
 
-  if (actions.length === 1 && !asSubmenu) {
+  if (actions.length === 1 && !asSubmenu && !hideTrigger) {
     const onlyAction = actions[0];
     return (
       <>
@@ -258,7 +266,7 @@ export function AiActionsMenu({
     return (
       <>
         <Drawer open={pickerOpen} onOpenChange={handlePickerOpenChange}>
-          <DrawerTrigger asChild>{triggerButton}</DrawerTrigger>
+          {hideTrigger ? null : <DrawerTrigger asChild>{triggerButton}</DrawerTrigger>}
           <DrawerContent className="z-[110] gap-0 p-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
             <DrawerHeader className="border-b border-border px-4 py-3 text-left">
               <DrawerTitle className="text-sm font-semibold">{menuLabel}</DrawerTitle>

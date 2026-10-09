@@ -273,7 +273,6 @@ The [route table](../routes-and-screen-decisions.md) distinguishes existing rout
 
 Track completion in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
 
-- [x] Establish the source route split at frontend `062007959`: `/build` authorizes then redirects to Command Center by default, `/build/projects` is a dedicated gated page, legacy project query keys map to the Projects page, and unknown Build paths stay undecidable. Six focused suites/323 tests and the 76-page route census pass; saved landing and browser evidence remain open.
 - [ ] Implement `/build` as a temporary authorized landing resolver with access-needed state, then render Command Center through the versioned dashboard layout and bounded widget-query contract.
 - [ ] Deliver `/build/projects` as a dedicated searchable grid/list with My projects default for Members, active/archive tabs, authorized card fields, and the declared owner/client/product/team/health/date filters.
 - [ ] Wire project card to full overview; show health reason, current cycle/milestone, blockers, update, approvals, and budget only when permitted, with exact drill-down predicates.

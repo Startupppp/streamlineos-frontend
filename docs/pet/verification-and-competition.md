@@ -43,7 +43,7 @@ The table below is the historical preimplementation trace. Its “missing pet pr
 | A01 desktop open/focus/draft | Current Ask OS launcher, lazy panel, and provider tests. | Pet focus return, draft persistence, and browser interaction. |
 | A02 mobile open | Existing mobile quick action and focused test. | Pet panel at narrow width, virtual keyboard, and real device behavior. |
 | A03 reduced motion | Current launcher uses reduced-motion support; pet asset not built. | First paint, live preference changes, every animation state. |
-| A04 preferences across devices | No pet preference store found in bounded search. | Persist name/preset/tone/anchor under user and organization. |
+| A04 preferences across devices | No pet preference store found in the original bounded search. | Persist name/preset/tone under user and organization. Pet placement is now a separate browser-local preference; a legacy server anchor remains only as a fallback. |
 | A05 hide/switch/access loss | Existing Ask OS access gates and conversation scope. | Hidden re-entry, organization switch, role/AI revocation with pet UI. |
 | A06 asset failure | Existing static Ask OS launcher only. | Static pet fallback while chat and actions still operate. |
 | A07 overlays and controls | No pet placement implementation. | Dialog, editor, page action, zoom, keyboard, and prompt collision checks. |

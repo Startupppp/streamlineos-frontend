@@ -227,5 +227,4 @@ Track completion in the [requirement ledger](../../implementation/REQUIREMENT-LE
 - [ ] Implement QA catalog and run execution with case/version, assignee, environment, result, evidence attachment, defect link, and regression filters; preserve in-progress run state on navigation.
 - [ ] Implement Incidents list and command/postmortem detail with severity, owner, timeline, affected release/tickets, actions, communications, and audit trail.
 - [ ] Apply typed filters for release state/date/owner, QA result/environment, and incident severity/status/time; counts and report drill-downs must reflect only authorized records.
-- [x] Use full pages for QA execution and incident command, panes for source tickets, and mobile ordered-list alternatives for dense matrices with usable sticky actions.
 - [ ] Verify concurrent QA edits, release gate refusal, incident timeline ordering, evidence file access, direct-link/Back behavior, tenant/project denial, persisted status/audit, and cache/report refresh.

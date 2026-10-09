@@ -227,19 +227,15 @@ Normative BLD-00 contract:
 - one ticket relation, one permission family, one filter, one analytics owner;
 - cadence, completion, carry-over, velocity, and events use the same record.
 
-- [x] **BLD-07-001** inventory live Sprint/Cycle rows, links, analytics,
   templates, automations, views, notifications, and portal projections.
   *Evidence: pre-migration inventory drove `1197_build_cycle_permissions.sql`
   and the phase-D migration series; verified 2026-09-23 on production.*
-- [x] **BLD-07-002** define deterministic merge/mapping rules and conflict
   report before migration.
   *Evidence: `backend/src/modules/build/phase-2/sprint-cycle-detach-invariant.spec.ts`
   pins the invariant; merge rules documented in `06-prioritized-backlog.md` Stage D.*
-- [x] **BLD-07-003** backfill and cutover preserve IDs or provide a complete
   reference map.
   *Evidence: migration `a-sprint-cycle-04-detach` detached sprint_id; `cycles.legacy_sprint_id`
   preserved as audit column; production read-back 2026-09-23 confirmed 103 of 220 tickets retain cycle.*
-- [x] **BLD-07-004** delete duplicate columns, tables, services, permissions,
   routes, hooks, types, and tests after verified cutover.
   *Evidence: `build.sprints` dropped (`a-sprint-cycle-05-drop` APPLIED); frontend
   `sprints.ts` and `sprints.types.ts` deleted; `SprintsService` frozen with
@@ -255,15 +251,12 @@ Normative BLD-00 contract:
   lifecycle;
 - QA views are filtered projections, not duplicate bug records.
 
-- [x] **BLD-07-005** compare every QA bug field and behavior with ticket BUG.
   *Evidence: field-mapping analysis preceded migration `b-qa-bug-04-contract-freeze`
   and `b-qa-bug-05-contract-drop`; result documented in `06-prioritized-backlog.md` Stage B.*
-- [x] **BLD-07-006** migrate unique QA evidence to an extension/relation owned
   by QA and link it to the canonical ticket.
   *Evidence: `backend/src/db/schema/build/qa.ts:141` — `build.work_item_qa_details`
   FK-linked to `tickets` (`fk_work_item_qa_details_org_project_item`); `b-qa-bug-05-contract-drop`
   dropped `build.bugs` and `test_run_results.linked_bug_id`.*
-- [x] **BLD-07-007** remove independent duplicate mutation and route owners.
   *Evidence: `build/qa/bugs.service.ts` now routes all writes through
   `BuildTicketCreationService` and `tickets` + `workItemQaDetails`; no
   `from(bugs)` / `insert(bugs)` / `update(bugs)` / `delete(bugs)` in non-test,
@@ -306,7 +299,6 @@ Normative BLD-00 contract:
   contract and data-retention rule.
 - [ ] **BLD-07-011** Build tables contain only canonical IDs, relation metadata,
   and intentional snapshots; copied mutable fields have a reconciliation rule.
-- [x] **BLD-07-012** deleting or archiving a source record has defined Build
   behavior without dangling unsafe links.
 
 ## Integration Workflows
@@ -390,7 +382,6 @@ Typed events include:
 
 Consumers re-authorize reads; an event is not a data-access grant.
 
-- [x] **BLD-07-016** inventory Build event producers and consumers. The only orphaned Build event was removed because incident status already persists a timeline entry and audit record, with no downstream consumer or user job for an outbox delivery.
 - [ ] **BLD-07-017** remove duplicate direct side effects where an owned outbox
   event exists.
 - [ ] **BLD-07-018** version compatibility, replay, poison message, and
@@ -465,7 +456,6 @@ queues and records remain on operational pages.
   verified, tenant-resolved, deduplicated durable receipt; processing failure
   remains retryable and an advertised provider has signature, parser, replay,
   and negative tests.
-- [x] **BLD-07-034** every cross-module collection has stable ordering,
   cursor/continuation or an explicit truthful truncation flag, freshness,
   source-deleted behavior, and an org-leading supporting index.
 - [ ] **BLD-07-035** backend Zod operation schemas are the API contract owner;

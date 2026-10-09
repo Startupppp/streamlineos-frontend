@@ -33,9 +33,3 @@ Each implementation ticket names exact existing files after a fresh inventory, p
 ## Delivery checklist
 
 Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
-- [x] Record the dependency-ordered slice plan and per-slice file/evidence template; the [work-package registry](18-architecture-work-package-registry.md) maps the 16 architecture decisions and 26 product areas at source revision `a5b8347fb`.
-- [x] Revalidate Slice 0 gates on the current branch and attach exact outputs, environment, source revision, and remaining failures to [work claims](WORK-CLAIMS.md).
-- [x] Complete invite acceptance, module assignment, and client grant activation in that order, with atomic persistence, negative access checks, and browser journeys.
-- [x] For each later slice, claim exact files and interfaces, implement one vertical path, verify negative then happy cases, and update the [requirement ledger](REQUIREMENT-LEDGER.md).
-- [x] Keep scale and launch open until target database, cache/job, rollback, role/tenant browser, and deployment evidence is recorded.

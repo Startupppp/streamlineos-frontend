@@ -250,8 +250,5 @@ Backend: `check:params-schema-completeness` (approvals `projectAndApprovalIdPara
 
 Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
 
-- [x] Inventory all live routes, imports, callers, persisted IDs, permission keys, integrations, jobs, and deep links before deleting or relocating any Build file or table. See caller inventory above (2026-10-04).
-- [x] Write per-slice additive migration, bounded backfill, read/write parity, rollback, and removal condition for Workstreams, My Work, Feedbucket mapping, Cycle, and cross-module seams.
 - [ ] Prove Timesheets, CRM, Accounting, Home, and Files own their authoritative data before replacing duplicate Build paths with contextual adapters.
-- [x] Verify old URLs and client shares still resolve to the same authorized records after migration, including unavailable and revoked cases.
 - [ ] Remove compatibility code only after current callers, production data, and deployed-revision evidence satisfy the documented exit condition.

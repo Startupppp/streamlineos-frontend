@@ -20,6 +20,31 @@ Use the following route contracts with the [shared screen contract](./shared-scr
 
 ## Implementation Decisions
 
+### Build search
+
+Route: `/build/search`
+Audience: authorized Build members
+Entry points: workspace search, navigation, and authorized deep link.
+
+**Layout and components:** Search input, scope-aware result list, and clear empty/loading/error states. The current route renders `WorkspaceSearchPage`; exact runtime behavior needs browser proof.
+
+**Exact projection/card/row fields:** Result title, type, owning scope, short context, and destination. Record details must remain scoped to what the actor may read.
+
+**Filters and operators:** Query text and available scope/type controls must preserve URL state and use server-authorized results. Do not infer a complete result set from a bounded first page.
+
+**Primary and secondary flows:** Submit or refine a query, open a permitted result, and return to the prior result state.
+
+**Opening and return:** Open the owning record route with safe return context; denied or stale targets show an explicit recovery state.
+
+**Data/API/schema:** Search uses the owning module's authorized search projection and bounded response. No new Build record is created by this page.
+
+**Access and cache:** Enforce organization, module, project, and record reachability on the server. Partition cached results by tenant and principal.
+
+**States and recovery:** Initial, loading, populated, empty, no-match, error, denied, and stale-result states need truthful messaging.
+
+**Mobile:** Keep the query and result title readable; result opening and Back restore a usable list context.
+
+**Acceptance:** Verify query/URL behavior, permitted results, denied tenant/project results, result opening and return, refresh, keyboard, and mobile in a browser with named actors. Source presence alone does not close this.
 ### My Work
 
 Route: `/build/my-work`

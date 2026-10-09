@@ -1,4 +1,5 @@
 import "./product-scope-pages.test-harness";
+import { fireEvent } from "@testing-library/react";
 import { ProductFeedbackPage } from "./product-feedback-page";
 import {
   EMPTY_FEEDBUCKET_RESULT,
@@ -44,6 +45,17 @@ jest.mock("@/components/shared/submission-bulk-toolbar", () => ({
 }));
 
 describe("ProductFeedbackPage — usePageState integration (BSN-01-012)", () => {
+  it("opens desktop filter overflow in a popover instead of a drawer", async () => {
+    useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
+    const { baseElement } = render(<ProductFeedbackPage managedProductId={7} />);
+
+    fireEvent.click(screen.getByRole("button", { name: /^Filters/ }));
+
+    const overlay = await screen.findByRole("dialog");
+    expect(overlay).not.toHaveAttribute("data-slot", "drawer-content");
+    expect(baseElement.querySelector('[data-slot="drawer-content"]')).toBeNull();
+  });
+
   it("calls usePageState with feedbucket:submissions:view permission so 402 errors get classified correctly", () => {
     useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
     render(<ProductFeedbackPage managedProductId={7} />);

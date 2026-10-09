@@ -46,4 +46,3 @@ Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work cl
 - [ ] Implement the shared page shell, collection views, card/row, detail pane/page, filter builder, saved-view picker, dashboard grid, operation status, and permission state using the existing UI kit.
 - [ ] Validate each card/row uses the specified information hierarchy and seven-signal limit, keyboard semantics, accessible names, truncation, status color plus text, and consistent density.
 - [ ] Exercise sheet, dialog, and full-page actions with focus return, browser history, modifier click, Escape, conflict, upload, and mobile behavior.
-- [x] Prove canonical components are reused across Tickets, Intake, products, projects, and client delivery without duplicating business rules.

@@ -97,7 +97,6 @@ duplicated as TODO checkboxes.
   `orgId`. 34 tests in `scope-directory.service.spec.ts`, including the negative
   gate. **The migration is UNAPPLIED** — no database is available, and a
   migration is unverified until applied (same blocker as BSN-02-006).
-- [x] **BSN-02-006** VOID, not done — migration `1122` targeted PM Workspace
   hierarchy indexes; PM Workspace is removed (BLD-00 D01, migration
   `1159_build_remove_pm_workspaces`), so those indexes have no column left to
   serve.
@@ -217,7 +216,6 @@ behavior regresses:
 
 - [ ] **BSN-02-A01** A scope beyond the first 50 records is discoverable by
   search and pagination.
-- [x] **BSN-02-A02** VOID — PM Workspace is removed; a standalone project
   appears directly under the organization.
 - [ ] **BSN-02-A03** A linked project appears under its product with an
   unambiguous parent path.

@@ -27,17 +27,6 @@ These are trusted internal service methods, not authorization boundaries for a p
 
 ## Source gates
 
-- [x] New exact-claim tests initially failed in eight cases because the method did not exist.
-- [x] New publisher tests initially failed in thirteen exact-entrypoint cases, while the existing global-entrypoint control passed.
-- [x] Real Drizzle UPDATE compilation verifies bound tenant/event selector and outer-update scope, one-row locking, canonical lease, and due/expired eligibility clauses.
-- [x] Focused publisher tests exercise canonical success, unavailable claim, lifecycle suppression, retry, dead-letter, missing consumer, successful and failing stale-worker fences, producer-context restoration, replay refusal, and concurrent calls receiving one granted claim.
-- [x] Seven suites pass with **64 tests**: exact claim, exact publisher, established publisher, global fairness, trace context, delivery deadline, and consumer fanout.
-- [x] ESLint on all four owned paths passes with zero warnings.
-- [x] Owned-path `git diff --check` passes.
-- [x] Backend production `pnpm typecheck` passes.
-- [x] The seven-suite scoped TypeScript dependency graph passes.
-- [x] Independent nested review and coordinator source/test review found no blocking defect before commit.
-- [x] No new code comments or type assertions were introduced. Source files remain below 300 lines.
 
 ## Proof boundaries and remaining acceptance
 
@@ -48,12 +37,10 @@ The SQL tests compile the actual claim implementation. The no-candidate test moc
 - [ ] Verify a physically locked row is skipped, parallel exact/global claims have one owner, and live or delivered replay does not redeliver.
 - [ ] Verify bookkeeping after a competing lease change remains fenced for success, retry and dead-letter in PostgreSQL.
 - [ ] Wire the reviewed runner's exact synthetic setup event and verify receipts, inbox/outbox persistence, invitation delivery capture and browser resume/retry behavior.
-- [x] Verify deployed revision parity and operational dispatch before closing the corresponding requirement ledger criteria.
 
 No target event was claimed or dispatched for this source verification.
 
 ## Delivery checklist
 
-- [x] Record the named evidence, its source or runtime scope, and the remaining verification limits in this report.
 
 Unfinished implementation and release acceptance remain tracked in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). This checked item records evidence capture only.

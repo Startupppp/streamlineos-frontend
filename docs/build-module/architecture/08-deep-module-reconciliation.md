@@ -212,14 +212,5 @@ These gaps prohibit a release or production-readiness claim. They do not invalid
 Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
 
 - [ ] ARC-01: make Module Access the sole positive Build assignment and revocation authority, then migrate invitation, group, delegation, and administration writers with permission-version and audit evidence.
-- [x] ARC-02/05: keep Timesheets as the time-ledger owner and Files as the attachment-byte owner; move Build callers to contextual adapters and reconcile existing data before removing duplicate implementations.
 - [ ] ARC-03/14: route project and ticket creation/change through Project Provision and Ticket Command; make Workspace → Products → optional People activation durable, idempotent, resumable, and quota-aware.
-- [x] ARC-04: separate Forms capture, Feedbucket evidence, Triage processing, and Intake project requests; conversion to a ticket or project must use canonical commands and retain source mapping.
-- [x] ARC-06/07: generate one strict wire contract and serve bounded, tenant-scoped, permission-scoped collection projections with FilterEnvelope v1, stable cursors, matching counts, and query-plan proof.
-- [x] ARC-08: measure primary/join assignee parity, Bug/Ticket identity, client link cardinality, and derived time usage; use compatibility reads/writes, backfill comparison, and reversible removal before dropping any schema.
 - [ ] ARC-09/16: enforce workflow-oriented frontend import direction and one capability registry for routes, navigation, plan locks, searchable More, and preserved authorized deep links.
-- [x] ARC-11/12/13: centralize typed planning relationships, shared collaboration delivery, and versioned metrics while keeping domain content, visibility, and source records with their owners.
-- [x] ARC-15: converge automation, webhook, agent, import, notification, callback, and AI effects on one observable, idempotent runtime that rechecks authority at execution.
-- [x] ARC-10: resolve contradictory scanners, generated-contract drift, unbounded reads, duplicate identities, and open gate failures before deleting implementations; retain a caller and migration ledger.
-- [x] Follow the authority → contracts → commands → capture → effects → relationships → projections → experience dependency order; claim parallel work only for non-overlapping interfaces in the work-package registry.
-- [x] For every action, prove organization standing, module standing, project/record reachability, and action/field policy across API, browser, jobs, cache, export, AI, and client projections; obtain target-database and deployed recovery evidence before release.

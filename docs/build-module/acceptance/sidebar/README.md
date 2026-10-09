@@ -4,7 +4,7 @@
 
 Normative sidebar acceptance catalog and historical evidence for Build sidebar
 completion. The product direction lives in
-[`docs/superpowers/specs/2026-09-19-build-sidebar-design.md`](../../../superpowers/specs/2026-09-19-build-sidebar-design.md).
+[`docs/superpowers/specs/2026-09-19-build-sidebar-design.md`](../../experience/02-personas-navigation-and-sidebars.md).
 This folder preserves that design and its evidence without redefining it.
 
 The only agent scheduler is the

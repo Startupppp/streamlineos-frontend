@@ -247,12 +247,6 @@ Cheaper/prettier/all-in-one claims, guaranteed market leadership, and treating t
 
 Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
 
-- [x] Classify the 100 numbered customer needs as baseline, workflow advantage, or differentiation hypothesis with priority and proof required ([value register](#implementation-decisions); [original reasons and release gates](../delivery/09-delivery-roadmap-release-gates-and-positioning.md#11-one-hundred-customer-value-reasons)). This closes the documentation classification only.
-- [x] Link every reason ID to a requirement, owning work package, route/API, and evidence record; record explicit deferral when the capability is outside the release scope.
 - [ ] Prove the P0 chain in order: cold invite acceptance, positive Build assignment for Organization Members, then atomic client-grant activation and revocation.
-- [x] Implement and test the P1 connected-work journey: authorized project discovery, canonical ticket/detail navigation, reliable views and filters, and client feedback entering Intake.
 - [ ] Implement the P2 freelancer, project, and product journeys that connect approval, delivery, approved time, invoice state, evidence, prioritization, roadmap, and measured outcome through their owning modules.
-- [x] Keep P3 scenario, retainer, and enterprise-deployment hypotheses conditional on customer frequency and validated architecture readiness. P3 hypotheses (IDs 50, 69, and enterprise-deployment rows) are DEFERRED until Phase 6 unlock criteria are met: ≥3 confirmed enterprise customers requesting SSO/SCIM AND Phase 1–3 Gates A–I passed. (BT-072ec81948a5, ruling 2026-10-04)
 - [ ] Test each claimed reason with a populated persona task, saved result, negative access case, retry/recovery, and mobile behavior; a rendered screen or passing unit test alone does not close the claim.
-- [x] For every comparative statement, record competitor, plan, configuration, test date, customer segment, completion time, and observed failure or advantage before sales uses it.
-- [x] Validate each differentiation-hypothesis claim by linking it to internal persona-journey test evidence and shipped behavior rather than external competitor scraping. A claim is not publishable until a corresponding shipped feature has focused test evidence and a persona journey that exercises the workflow. (BT-54ed783f0238, ruling 2026-10-04)

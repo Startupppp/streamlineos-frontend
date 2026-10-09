@@ -108,7 +108,5 @@ Compare actual page files against the 75 existing route rows; count both externa
 
 Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
 
-- [x] Record the source-revision `a5b8347fb` documentation cross-check for 16 architecture decisions, 26 areas, 75 Build pages, two portal pages, 120 original WOW IDs, and 100 value themes in [Cross-check ledger](#cross-check-ledger) and the [validation report](./validation-report.md#checks-performed).
-- [x] Refresh the [start-readiness gate sample](#final-start-readiness-gate-sample) on the implementation revision; retain the dated failures as historical results and cite replacement command output.
 - [ ] Verify six onboarding journeys and the invite → module standing → client grant priority path through browser, persisted state, role/tenant, and worker evidence.
 - [ ] Resolve the documented portal ID/file-access, root instruction reference, and unsampled screenshot limitations with separate evidence before asserting release readiness.

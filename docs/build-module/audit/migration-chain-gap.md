@@ -30,10 +30,6 @@ Migration journal reconciliation currently also reports six unrelated unjournall
 
 ## Delivery checklist
 
-- [x] Identify the checked-in `0965` prerequisite gap and its later `1728` index; record the journal order and separate it from unrelated chain findings.
-- [x] Commit a reviewed, journalled pre-`0965` prerequisite and a narrow migration-seal exception without rewriting existing entries.
-- [x] Align `1728` index and rollback ownership with the prerequisite and pass schema/migration integrity, journal, and immutability checks.
-- [x] Prove cold and upgraded disposable database paths, PostgreSQL constraints, RLS, rollback, and lock behavior before closing BLD-MIGRATION-CHAIN-01.
 
 ## Disposable-database evidence — 2026-10-05
 

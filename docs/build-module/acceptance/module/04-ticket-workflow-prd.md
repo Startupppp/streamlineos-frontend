@@ -99,7 +99,6 @@ Actions appear only when applicable and authorized:
   label, field, relation, access, and client-visibility changes.
 - [ ] **BLD-04-007** destructive actions state impact, require the correct
   confirmation, and preserve recoverability where supported.
-- [x] **BLD-04-008** menus use roving keyboard focus, restore opener focus, and
   remain reachable without hover.
 
 ## Inline Edit, Dialog, Sheet, and Full Page
@@ -180,7 +179,6 @@ view changes. The toolbar states count and scope.
 
 - [ ] **BLD-04-016** bulk API accepts a bounded ID set or a signed,
   short-lived server query token for `all matching`.
-- [x] **BLD-04-017** authorization and record scope are checked for every
   target; one allowed record never authorizes another.
   **Closed — unit proof, executed 2026-09-21.**
   `projects-bulk-write-isolation.spec.ts` and `ticket-scope-predicate.spec.ts` both
@@ -191,7 +189,6 @@ view changes. The toolbar states count and scope.
   mixed batch cannot be partially applied on the strength of its permitted members.
   The specs pin both halves directly: "rejects a mixed tenant batch without any
   update" and "returns 403 for a same-tenant ticket outside DataScope".
-- [x] **BLD-04-018** project-local bulk updates are transactional and
   idempotent.
   **Closed — unit proof, executed 2026-09-21.**
   `build-bulk-mutation-invariants.spec.ts` passed (6-suite / 42-test batch),
@@ -265,7 +262,6 @@ Completion preview includes:
   explicit.
 - [ ] **BLD-04-029** undo is offered only while no incompatible downstream
   write has occurred.
-- [x] **BLD-04-038** iteration completion derives all completed states from the
   workflow category and contains no hard-coded status name.
 
 ## Ticket Detail
@@ -286,7 +282,6 @@ Completion preview includes:
   large collections.
 - [ ] **BLD-04-033** comment and update drafts are actor, organization, scope,
   and record keyed with defined expiry.
-- [x] **BLD-04-036** card action triggers remain visible and operable for
   touch, keyboard, high zoom, and reduced-pointer users.
 - [ ] **BLD-04-037** archive is the default removal action; permanent delete is
   shown only when the approved retention policy and dependency preview permit

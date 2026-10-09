@@ -121,6 +121,7 @@ describe("BuildListToolbar", () => {
   });
 
   it("routes a lone mobile field filter through the responsive drawer while preserving its desktop dropdown", async () => {
+    useIsMobile.mockReturnValue(true);
     const { container } = render(
       <BuildListToolbar filters={[statusFilter()]} />,
     );
@@ -136,7 +137,32 @@ describe("BuildListToolbar", () => {
     expect(within(dialog).getByRole("combobox", { name: "Status" })).toBeInTheDocument();
   });
 
+  it("opens desktop overflow filters in a popover instead of a drawer", async () => {
+    render(
+      <BuildListToolbar
+        search={search}
+        filters={[
+          statusFilter(),
+          severityFilter(),
+          {
+            id: "owner",
+            label: "Owner",
+            control: <button type="button">Owner</button>,
+          },
+        ]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /^Filters/ }));
+
+    const overlay = await screen.findByRole("dialog");
+    expect(overlay).not.toHaveAttribute("data-slot", "drawer-content");
+    expect(document.querySelector('[data-slot="drawer-content"]')).toBeNull();
+    expect(within(overlay).getByRole("combobox", { name: "Status" })).toBeInTheDocument();
+  });
+
   it("gives the mobile drawer and every filter field the full available width", async () => {
+    useIsMobile.mockReturnValue(true);
     render(
       <BuildListToolbar
         search={search}
@@ -146,6 +172,7 @@ describe("BuildListToolbar", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /^Filters/ }));
     const dialog = await screen.findByRole("dialog");
+    expect(dialog).toHaveAttribute("data-slot", "drawer-content");
     expect(dialog).toHaveClass("w-full");
     expect(
       dialog.querySelector('[data-slot="build-toolbar-drawer-body"]'),
@@ -233,6 +260,7 @@ describe("BuildListToolbar", () => {
   });
 
   it("opens a titled, described drawer holding every collapsed filter", async () => {
+    useIsMobile.mockReturnValue(true);
     render(
       <BuildListToolbar
         search={search}
@@ -253,6 +281,7 @@ describe("BuildListToolbar", () => {
   });
 
   it("offers Clear all in the drawer only while something is active", async () => {
+    useIsMobile.mockReturnValue(true);
     const onClearAll = jest.fn();
     const { rerender } = render(
       <BuildListToolbar
@@ -278,6 +307,7 @@ describe("BuildListToolbar", () => {
   });
 
   it("returns focus to the Filters trigger when the drawer closes", async () => {
+    useIsMobile.mockReturnValue(true);
     render(
       <BuildListToolbar
         search={search}

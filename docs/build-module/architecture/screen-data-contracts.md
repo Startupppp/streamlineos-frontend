@@ -75,11 +75,5 @@ Implementing migrations/controllers or changing permission keys in this document
 
 Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
 
-- [x] Give OnboardingActivation, TicketCommands, ScopedQueries, Dashboard, and PortalGrants one versioned application interface each; route handlers, importers, AI, and automation must call those owners.
-- [x] Register and generate strict request/response schemas for every listed projection and command, including revision, allowedActions, typed references, and explicit omitted sensitive fields.
 - [ ] Add same-tenant database constraints and authorized command validation for membership, grant, and record relationships; keep authorization-bearing links out of opaque JSON.
-- [x] Reconcile every listed HTTP family against actual controllers and generated clients; provide compatibility adapters and an expiry plan for old routes or payloads.
-- [x] Make list responses bounded and cursor-stable with items, pageInfo, sourceRevision, generatedAt, and the same FilterEnvelope v1 predicate used by views, reports, exports, and AI.
-- [x] Make command results return recordRef, revision, auditRef, replayed, and affected namespace versions; verify replay and stale-revision conflicts on persisted data.
 - [ ] Route legacy Command Center reads through the canonical dashboard owner; cap widget fanout and verify layout/query/cache parity and authorized drill-down.
-- [x] Run contract round trips and persisted negative tenant, project, field-policy, legacy-ID, and browser tests before marking any screen data contract Current verified.

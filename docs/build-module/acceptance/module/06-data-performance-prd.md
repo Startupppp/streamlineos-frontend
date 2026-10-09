@@ -237,7 +237,6 @@ Every cache has a writer matrix:
   when a bounded patch is possible.
 - [ ] **BLD-06-033** access, client grant, approval, payment, or agent policy
   cache never authorizes an atomic write.
-- [x] **BLD-06-034** revoked access and organization switch remove stale data
   before rendering.
   **Closed — unit proof, executed 2026-09-21 (21 tests / 2 suites).**
   Organization switch: `frontend/lib/query-scope-isolation.test.tsx` asserts data
@@ -252,7 +251,6 @@ Every cache has a writer matrix:
   (`frontend/CLAUDE.md:26`), open at BSN-04-A07; and `hooks/api/entitlements.ts:21-25`
   keys on a different prefix from the one the access listener invalidates, with
   `staleTime: 900_000`, so a plan change lags a sibling tab — open at BSN-04-A08.
-- [x] **BLD-06-035** cache failure degrades to the database without returning
   cross-scope or falsely fresh data.
   **Closed — unit proof, executed 2026-09-21 (part of a 4-suite / 32-test batch).**
   `backend/src/common/cache/cache-degradation.spec.ts` passed, covering all three

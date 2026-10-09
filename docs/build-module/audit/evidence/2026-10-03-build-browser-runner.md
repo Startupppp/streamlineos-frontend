@@ -213,6 +213,5 @@ The saved real Intake create, update and list payloads all parse through the reg
 
 The original implementation index contained 50 checked and 392 open items. Ten subsequently added evidence reports had not yet been indexed because they lacked the required Delivery heading. Adding that documentary heading and regenerating the index includes their existing 44 checked evidence-capture items and 19 open follow-up items: 94 checked and 411 open across 70 current documents. This reconciles tracking scope; it does not close any of the original 392 implementation items. Evidence-capture checks do not certify product acceptance, and overlapping release obligations remain tied to the canonical requirement IDs.
 
-- [x] Record the named evidence, its source or runtime scope, and the remaining verification limits in this report.
 
 Unfinished implementation and release acceptance remain tracked in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). This checked item records evidence capture only.

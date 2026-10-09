@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, forwardRef } from "react";
+import { useCallback, forwardRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -76,6 +76,7 @@ export const MailReadingToolbar = forwardRef<
 ) {
   const { iconRef: starRef, hoverHandlers: starHover } = useAnimatedIcon();
   const isMobile = useIsMobile();
+  const [aiPickerOpen, setAiPickerOpen] = useState(false);
 
   const handleArchiveClick = useCallback(
     (e: React.MouseEvent) => {
@@ -149,12 +150,9 @@ export const MailReadingToolbar = forwardRef<
             {canAi && aiActions.length > 0 ? (
               <>
                 <DropdownMenuSeparator />
-                <AiActionsMenu
-                  actions={aiActions}
-                  triggerLabel="AI assist"
-                  menuLabel="AI assist"
-                  asSubmenu
-                />
+                <DropdownMenuItem onSelect={() => setAiPickerOpen(true)}>
+                  AI assist
+                </DropdownMenuItem>
               </>
             ) : null}
             <DropdownMenuSeparator />
@@ -164,6 +162,15 @@ export const MailReadingToolbar = forwardRef<
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        {canAi && aiActions.length > 0 ? (
+          <AiActionsMenu
+            actions={aiActions}
+            menuLabel="AI assist"
+            pickerOpen={aiPickerOpen}
+            onPickerOpenChange={setAiPickerOpen}
+            hideTrigger
+          />
+        ) : null}
       </div>
     );
   }

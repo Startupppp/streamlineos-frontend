@@ -17,14 +17,6 @@ The fix nests the member-role expression in a typed SQL projection, matching the
 
 ## Gates
 
-- [x] A regression compiled the actual `resolveProjectAccess` SELECT through real Drizzle execution up to logger capture. Two assertions failed before the fix: qualified member role and correlation to the outer project.
-- [x] The new suite passes all four cases after the fix, including bound tenant and active-membership predicates and a principal without accountable membership.
-- [x] Seven focused suites pass: projection, relationship, access authorization, access decisions, cross-organization 404, query cost, and project detail. Total: **115 tests**.
-- [x] ESLint on both owned paths passes with zero warnings.
-- [x] Owned-path `git diff --check` passes.
-- [x] Backend production `pnpm typecheck` passes.
-- [x] The seven-suite scoped TypeScript dependency graph passes.
-- [x] Coordinator independent review approved the minimal projection and regression before commit.
 
 ## Actual target read
 
@@ -45,13 +37,11 @@ An intermediate attempt to replay compiled SQL without its parameter bindings re
 ## Remaining proof
 
 - [ ] Authenticated local browser project detail action, console and network verification on this source revision.
-- [x] Deployed revision parity and resolution of the previously observed deployed HTTP 500.
 - [ ] Full role and tenant browser acceptance beyond this administrator read.
 
 This evidence verifies current source against the selected target read. It does not establish deployed or browser completion.
 
 ## Delivery checklist
 
-- [x] Record the named evidence, its source or runtime scope, and the remaining verification limits in this report.
 
 Unfinished implementation and release acceptance remain tracked in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). This checked item records evidence capture only.

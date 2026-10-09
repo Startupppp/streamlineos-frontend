@@ -104,7 +104,6 @@ deliveries, incident timelines, drafts, and ticket history require:
 
 ## Completion Checks
 
-- [x] **BLD-06B-006** all current Build schema files appear exactly once in
   this matrix. **Closed — set equality measured 2026-09-21, re-measured
   2026-09-23 after PM Workspace removal.** `backend/src/db/schema/build/*.ts`
   held 36 files on 2026-09-21; `pm-workspaces.ts` and

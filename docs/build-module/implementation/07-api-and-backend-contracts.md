@@ -118,9 +118,3 @@ No compatibility adapters are needed at this time; all codes above are current. 
 ## Delivery checklist
 
 Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
-- [x] Reconcile the proposed success/error envelopes and machine codes with current controllers, shared serializers, generated OpenAPI, and repository conventions; record compatibility adapters before changing callers.
-- [x] Assign one command or query owner to every Build API family and eliminate duplicate write paths only after route and caller parity is demonstrated.
-- [x] Define Zod/DTO validation, tenant and actor context, permission key, idempotency key, revision precondition, bounded pagination, and response fields for each changed endpoint.
-- [x] Exercise negative and happy paths for access denial, stale revision, duplicate retry, rate limit, partial job, and dependency failure; compare browser network and generated client behavior.
-- [x] Verify request and outbox correlation, query count, cache decision, and safe logs without recording credentials or unrestricted record bodies.

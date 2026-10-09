@@ -502,4 +502,3 @@ Track completion in the [requirement ledger](../../implementation/REQUIREMENT-LE
 - [ ] Implement agent credentials, integration mappings, and webhooks with secret references only, rotation/revoke, signed callback verification, attempt history, retry/dead-letter state, and unlink impact.
 - [ ] Implement retention/recovery with legal hold, export/delete preview, future effective policy, durable job status, and auditable restore/irreversible confirmation.
 - [ ] Give every settings section field/section search or declared typed filters, correct short-sheet versus full-builder navigation, mobile form layout, 44 px controls, and safe return to its parent settings page.
-- [x] Verify each permission and secret change against owner/admin/member/client roles and two tenants, plus stale revision, job retry, post-commit cache purge, persisted audit, browser deep link, and responsive states.

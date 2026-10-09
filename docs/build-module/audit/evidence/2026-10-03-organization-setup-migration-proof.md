@@ -85,20 +85,10 @@ Root approved future additive identities `ck_organization_setup_invitation_recei
 
 ## Tracking
 
-- [x] Refresh ownership and repository rules; preserve unrelated changes.
-- [x] Inspect IAM capability and migration dependencies using read-only access.
-- [x] Implement unique current-run target, durable identity guards, source seals, and truthful fragment boundaries.
-- [x] Pass 16 pure tests and scoped lint without database execution.
-- [x] Obtain independent source review and commit the exact claimed files.
-- [x] Authorize and provision the exact named scratch database.
-- [x] Execute PostgreSQL cases, record SQLSTATE/count evidence and actual cleanup outcome.
-- [x] Reproduce NULL-reason and child-index RED.
-- [x] Reserve and verify additive repairs and upgrade/rollback ownership decisions separately in the 1729 phase below; historical failures remain recorded.
 - [ ] Verify official migration runners, full chain, deployment, and browser activation separately.
 
 ## Delivery checklist
 
-- [x] Record the named evidence, its source or runtime scope, and the remaining verification limits in this report.
 
 Unfinished implementation and release acceptance remain tracked in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). This checked item records evidence capture only.
 
@@ -141,14 +131,6 @@ The runner reported `droppedCurrentRunDatabase=true`. A fresh independent IAM-ad
 | `1729_organization_setup_invitation_receipts_hardening.sql` | `8d6a7bf4efc3519ee244a35f322cea5448d2fa479b830529fb9dddc52f2f642b` |
 | `rollback/1729_organization_setup_invitation_receipts_hardening.down.sql` | `151d394c72d907019b33adb101e6ec7e726401ebd4b40b08fef32d7db9365226` |
 
-- [x] Preserve the historical five RED results and all historical source hashes.
-- [x] Add the strict receipt schema CHECK and invitation child index after focused RED tests.
-- [x] Add the new journal identity after confirming current maxima.
-- [x] Pass focused source, pure guard, TypeScript, lint, and immutability gates.
-- [x] Finish root and independent migration source review and commit exact owned paths.
-- [x] Authorize one fresh named scratch database and execute the additive phase.
-- [x] Record actual constraint deparse, catalog/FK OID preservation, observed branch coverage, concurrency, lock behavior, SQLSTATE failures, retry, and guarded cleanup.
-- [x] Exercise the previously unobserved canonical-bound receipt FK rebinding branch using the independently reviewed synthetic fixture below.
 - [ ] Verify both official migration runners, full-chain replay, production application, runtime readiness, and browser activation separately.
 
 ## Canonical receipt FK rebinding phase — reviewed source and isolated PostgreSQL proof
@@ -184,11 +166,4 @@ The runner reported `droppedCurrentRunDatabase=true`. A separate fresh IAM-admin
 
 This six-check run adds canonical-bound receipt branch evidence to the prior independent 59/59 additive result; it does not replace that result or the historical 57/62 result and its five RED findings. The sealed 0965 execution remains only its twelve-statement invitation fragment. Real REINDEX lock-timeout behavior was not induced in this run; its injected failure/connection-close coverage remains pure test evidence. No official-runner, full-chain, production deployment, actual runtime readiness-service, or browser proof is inferred.
 
-- [x] Preserve historical and additive results, immutable SQL, and journal identities.
-- [x] Verify PostgreSQL 18 primary documentation and index-selection source.
-- [x] Add the fixed guarded command, dedicated connection, explicit branch assertion, six cases, and separate CLI phase.
-- [x] Pass pure negative guards, fixed-command/cleanup tests, scoped lint, and diff checks.
-- [x] Complete root and independent source review, then commit only the claimed source paths.
-- [x] Authorize one fresh exact scratch name and execute the rebinding phase.
-- [x] Record actual pre/post FK/key identities, six case results, guarded cleanup, and an independent cleanup catalog read.
 - [ ] Verify official migration runners, full-chain replay, production application, runtime readiness, and browser activation separately.

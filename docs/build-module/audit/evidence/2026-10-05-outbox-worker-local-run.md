@@ -127,16 +127,3 @@ In-process membership caches (1 s TTL per `MembershipStateService`) and session 
 Backend (PID 13160) terminated with `taskkill /PID 13160 /F`. Upstash shim (PID 25724) terminated. Redis shut down via `redis-cli shutdown nosave`. replay2 left clean: all 4 outbox events deleted, placement rows deleted, organization region reset to NULL, access_versions row deleted.
 
 ## Delivery checklist
-
-- [x] Redis + shim started; shim proxied to real Redis (PONG confirmed).
-- [x] Backend booted against replay2 with safe env (no production host reached; no outbound provider keys set).
-- [x] DB host confirmed 127.0.0.1 before starting.
-- [x] Outbox events enqueued via direct insert matching the writer shape.
-- [x] Worker claimed events (4 claimed on second trigger after placement fix).
-- [x] Failure path exercised: unregistered event type → retry_count incremented, last_error set.
-- [x] Dead-letter and replay path exercised: 1 event dead-lettered and replayed to PENDING.
-- [x] Effect correlation checked: no external_effect_ledger rows (expected for unregistered consumers).
-- [x] Migration ledger checked: 1005 applied through 1396; 89 pending (1397–1908); replay2 is not at head.
-- [x] Cache revocation mechanism confirmed: versioned keys in Redis, permission version bumped, no stale keys present.
-- [x] Worker health confirmed via /health/ready (db: up, cache: up, queue: up).
-- [x] All seeded rows cleaned up; all processes stopped.

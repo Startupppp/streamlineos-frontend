@@ -42,7 +42,6 @@ The named disposable or staging environment includes:
 - external clients with different grants;
 - realistic skew, history, and high-cardinality filters.
 
-- [x] **BLD-10-006** dataset creation is repeatable and contains no production
   secrets or personal data. **Closed — source proof plus a passing self-test.**
   `backend/src/scripts/seed-scratch-e2e.mjs` seeds two fixed synthetic orgs
   (`aaaaaaaa-1111-0000-0000-00000000000{1,2}`) with `ON CONFLICT DO NOTHING`
@@ -61,7 +60,6 @@ The named disposable or staging environment includes:
 
 ## Route and Navigation
 
-- [x] **BLD-10-008** static route manifest self-test and gate pass.
   **Closed — both static route gates executed self-test-first, exit codes
   captured, and each proven to bite.** 2026-09-21.
   `node scripts/build-route-census.mjs --self-test` → 5/5 PASS, exit 0; then
@@ -204,7 +202,6 @@ offline/stale, error, conflict, and partial-success states where applicable.
 
 ## Database, Migration, and Recovery
 
-- [x] **BLD-10-037** migration generation/journal integrity checks pass.
   **Closed — the spec was executed, not merely read.**
   `backend/src/db/migration-integrity.spec.ts`: 38 tests, 38 passed
   (2026-09-21). It reads migration files and the journal from disk and needs no
@@ -390,7 +387,6 @@ Exact package commands and results are recorded at execution time.
   unlisted file that exists, never a listed file that stopped existing.
   `check:command-catalog` also dropped 19 → 16 findings once the three
   Build hooks that bypassed `useAuthorizedMutation` were guarded.
-- [x] **BLD-10-068** cycle self-tests pass before cycle gates; resolved import
   counts prove the gates are non-vacuous.
   **Closed — all three cycle gates ran self-test-first, with counts.**
   2026-09-21 at `f5cc6ef65`, in this order:

@@ -31,7 +31,7 @@ const RELOCATED_ACCESS_PAGE: Readonly<Record<string, RelocatedAccessPage>> = {
     segments: ["build", "settings", "access"],
     route: "/build/settings/access",
     reason:
-      "Build administers membership and module access from one organisation-scoped settings surface, so its access screen sits at /build/settings/access beside /build/settings/client-access and /build/settings/integrations rather than at /build/access. Recorded in docs/build-module/01-ia-navigation.md:66,155 and docs/specs/build/module/02a-cross-scope-pages-prd.md:45. The legacy /build/access path survives only as a next.config redirect, which Next.js resolves before filesystem routing.",
+      "Build administers membership and module access from one organisation-scoped settings surface, so its access screen sits at /build/settings/access beside /build/settings/client-access and /build/settings/integrations rather than at /build/access. Recorded in docs/build-module/01-ia-navigation.md:66,155 and docs/build-module/acceptance/module/02a-cross-scope-pages-prd.md:45. The legacy /build/access path survives only as a next.config redirect, which Next.js resolves before filesystem routing.",
   },
 };
 

@@ -33,7 +33,7 @@ Persist preferences and prompt delivery/activity through versioned database migr
 | Setting | First-visit default | Effective rule |
 | --- | --- | --- |
 | Visibility | On desktop; compact entry on mobile | Org can disable pet presentation; user can hide it; normal Ask OS route remains available if AI is allowed. |
-| Name, preset, tone, anchor | Design-approved name/preset; neutral tone; lower safe anchor | User can choose from curated presets and safe anchors; org may restrict preset list. Reject arbitrary HTML, remote animation URLs, or executable assets. |
+| Name, preset, tone, placement | Design-approved name/preset; neutral tone; lower safe initial position | User chooses a curated preset and drags or uses Alt+arrow keys to place the pet. Placement is stored per browser and organization; no Position selector is shown. The legacy server anchor is read as a fallback and is not written by the settings form. Org may restrict preset list. Reject arbitrary HTML, remote animation URLs, or executable assets. |
 | Animation | Subtle | User off or OS reduced-motion overrides motion. Static state always remains meaningful. |
 | Meeting prompt | Mirrors enabled underlying meeting-reminder category | Org/user/channel policy, quiet hours and event eligibility all must allow it. Pet disable does not disable normal calendar notifications. |
 | Clock-in, break, friendly | Off | Explicit per-user enable. Break and friendly additionally require coarse-activity consent; friendly has independent one-click disable. |

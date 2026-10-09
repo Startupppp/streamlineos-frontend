@@ -387,5 +387,4 @@ Track completion in the [requirement ledger](../../implementation/REQUIREMENT-LE
 - [ ] Implement Triage as a focused mode over the same Intake records with next/previous, duplicate/link/routing decisions, keyboard actions, and return to the original filtered queue.
 - [ ] Map legacy bug-feedback list/detail URLs by submission ID into Intake Bug reports and preserve screenshot/browser metadata, attachments, comments, and authorized record history.
 - [ ] Implement portal administration/preview through client grant activation, capability and publication settings, client-safe preview, and explicit revoke/resend outcomes; keep external client sessions separate from org membership.
-- [x] Implement change-request, decision, and risk registers with owner, severity/impact, dates, linked work, status transitions, audit, and exact pane/detail navigation.
 - [ ] Verify approval race/changed artifact, intake duplicate/replay, client A/B isolation, legacy deep links, grant revocation, filtered-empty, mobile sheets, keyboard triage, persisted audit, and invalidation.

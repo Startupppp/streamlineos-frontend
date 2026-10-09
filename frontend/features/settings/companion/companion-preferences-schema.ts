@@ -71,7 +71,6 @@ export function toCompanionPatch(
     preset: values.preset,
     tone: values.tone,
     animation: values.animation,
-    anchor: preferences.anchor,
     prompts: {
       meeting: values.meeting,
       clockIn: values.clockIn,

@@ -568,8 +568,5 @@ CI browser reports distinguish observed UI, blocked flows and public-document cl
 
 Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
 
-- [x] Index the retained research sources, finding IDs, and screenshot paths under [source inventory](#every-retained-research-source), [finding index](#finding-id-index), and [screenshot inventory](#screenshot-inventory); the [validation report](./validation-report.md#checks-performed) records the 116-source count.
-- [x] Keep the 120 original WOW IDs separate from the new 100 value themes through the [original WOW crosswalk](./original-wow-research-crosswalk.md) and its recorded 120/120 check in the [validation report](./validation-report.md#checks-performed).
 - [ ] Recheck historical `HAVE` and `VERIFIED` findings against the current application revision, actor, action, persistence, and access before upgrading their status.
 - [ ] Reproduce PM-011 invitation acceptance, PM-002 module assignment, and PM-001 client grant activation in order, linking each current browser/DB/role record to its finding ID.
-- [x] Refresh time-sensitive competitor claims against named primary sources before using a finding in sales copy.

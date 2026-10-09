@@ -68,8 +68,4 @@ Webhook deliveries sign the exact bytes, timestamp, event ID, and version; recei
 
 Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
 
-- [x] Reconcile proposed BuildEvent versions and event owners with the existing outbox registry; document payload compatibility and migration for each producer and consumer.
-- [x] Prove command write plus outbox insert is atomic and every consumer is idempotent under duplicate, delayed, and out-of-order delivery.
 - [ ] Define durable import/export, notification, webhook, automation, and projection jobs with 202 operation status, retries, backoff, dead-letter handling, and actor-scoped result access.
-- [x] Test notification deduplication and permission recheck; verify webhook signing, secret rotation, callback allowlists, SSRF controls, and revoked-access behavior.
-- [x] Record queue lag, failure, replay, and effect-correlation evidence in the operational acceptance run.

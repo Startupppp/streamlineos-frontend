@@ -128,8 +128,5 @@ An area is implementation complete only when its screen spec names audience, ent
 
 Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
 
-- [x] Record the universal behavior contract for record families plus detailed Ticket, Intake/Forms/Triage/Feedbucket, onboarding, and client-portal flows; see the [dated cross-check](../audit/comprehensive-recheck-2026-10-02.md) at source revision `a5b8347fb`.
-- [x] For each record family, record explicit adoption, justified rejection, or deferral of all universal behaviors in its owning screen and API contract. See section 6 above (2026-10-04).
-- [x] Verify Ticket comments, status, assignments, links, files, history, conflicts, and effects through the same command path across UI, bulk, import, automation, and AI.
 - [ ] Verify intake conversion and portal actions preserve identity, idempotency, permissions, visibility, and record return navigation.
 - [ ] Close each of the 26 product areas only after screen, schema, query/command, permission, cache/event, mobile, negative, and browser evidence exists.

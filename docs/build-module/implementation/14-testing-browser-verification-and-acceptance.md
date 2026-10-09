@@ -70,7 +70,4 @@ Until these three conditions are met, Phase 6 scope items carry DEFERRED status 
 
 Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
 
-- [x] Map each Build route and command to focused unit/integration, negative role/tenant, persistence, browser, and operational evidence in the [requirement ledger](REQUIREMENT-LEDGER.md).
-- [x] Run the named Build gates on the current revision and record command, revision, exit code, failure output, fixture, and environment; rerun after implementation changes.
 - [ ] Exercise owner, org admin, assigned member, unassigned member, and external client journeys in a browser, including mobile layout, network, console, refresh, and real persisted mutations.
-- [x] Verify target database migrations and query plans, cache revocation, jobs/replay, worker health, rollback, and deployment identity; keep unsupported evidence explicitly open.

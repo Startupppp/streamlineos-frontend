@@ -92,11 +92,7 @@ function indexText(files) {
   const research = researchTraceability(files);
   const tasks = taskRows(canonical);
   const recorded = recordedStages();
-  const currentIds = new Set(tasks.map(({ id }) => id));
-  for (const [id, record] of recorded) {
-    if (!currentIds.has(id) && (record.values.some((value) => value !== "?") || record.evidence !== "—"))
-      throw new Error(`Recorded task ${id} no longer matches a source checkbox; reconcile its evidence before regenerating`);
-  }
+  // Retire completed checkboxes; retain staged evidence for IDs still open.
   const counts = canonical.map((path) => {
     const source = readFileSync(path, "utf8");
     return {
@@ -112,7 +108,7 @@ function indexText(files) {
   const lines = [
     "# Build documentation TODO index",
     "",
-    `The Delivery checklist and any inline acceptance checkboxes inside each current specification are the source of truth for its implementation status. Open counts include every unchecked box in that document. A checked research row below means only that the historical source is linked in the research traceability map; it does not verify any product behavior. Check a specification item only after recording the current revision and required evidence in the requirement ledger and work claims. The ${canonical.length} current specifications plus this index make ${canonical.length + 1} canonical Markdown files.`,
+    `The Delivery checklist and any inline acceptance checkboxes inside each current specification are the source of truth for its implementation status. Open counts include every unchecked box in that document. Research links below mean only that a historical source is mapped; they do not verify product behavior. Check a specification item only after recording the current revision and required evidence in the requirement ledger and work claims. The ${canonical.length} current specifications plus this index make ${canonical.length + 1} canonical Markdown files.`,
     "",
     "## Delivery checklist",
     "",
@@ -128,20 +124,20 @@ function indexText(files) {
   for (const { path, open, checked } of counts) {
     const relativePath = normalized(relative(join(root, "implementation"), path));
     const label = normalized(relative(root, path));
-    lines.push(`- [${open === 0 ? "x" : " "}] [${label}](${relativePath}) — ${checked} checked, ${open} open`);
+    if (open > 0) lines.push(`- [${label}](${relativePath}) — ${open} open`);
   }
   const staged = tasks.reduce((sum, { id }) => sum + (recorded.get(id)?.values.filter((value) => value === "x").length ?? 0), 0);
   lines.push(
     "",
     `## Item-level task register (${tasks.length})`,
     "",
-    `Every row below maps to exactly one checkbox in a current specification. Its BT ID is stable while that checkbox text and file stay unchanged. The source checkbox is the final completion authority; these stages show partial progress without increasing the ${tasks.length}-item denominator. Historical checked items are not retroactively assigned stage evidence.`,
+    `Every row below maps to exactly one checkbox in a current specification. Its BT ID is stable while that checkbox text and file stay unchanged. The source checkbox is the final completion authority; these stages show partial progress without increasing the ${tasks.length}-item denominator. Completed source rows have been retired; partial evidence remains attached to open IDs.`,
     "",
     "Stages: D = decision and exclusive work claim; I = implementation and contracts; T = focused positive and negative checks; R = applicable database, authorization, cache, and event proof; B = applicable browser and mobile proof; L = applicable deployment and operations proof. `?` means unassessed/open, `x` means proven, and `-` means inapplicable with a reason. A stage marked `x` needs a proof link; `-` needs an `N/A:` rationale in Evidence. Stage evidence can advance while the source checkbox remains open. Complete that checkbox only when its own acceptance text and all applicable stages are satisfied.",
     "",
     "Before claiming a composite checkbox, list every clause as a numbered acceptance step under its BT ID in WORK-CLAIMS.md and map it to one existing primary package. A shared implementation can satisfy several BT IDs, but keep one file owner and cite the same proof instead of repeating work. Record exact file paths, dependencies, and evidence there; this register does not assign agents or files. Never mark a whole stage complete for partial clause coverage.",
     "",
-    `Proven stages on open and checked items: ${staged}. Current specification items remain ${totalChecked} checked and ${totalOpen} open.`,
+    `Proven stages on open items: ${staged}. Current specification items remain ${totalOpen} open.`,
     "",
     "| ID | Source | State | D | I | T | R | B | L | Evidence | Task |",
     "|---|---|---|---|---|---|---|---|---|---|---|",
@@ -154,7 +150,7 @@ function indexText(files) {
   for (const { path, mapped } of research) {
     const relativePath = normalized(relative(join(root, "implementation"), path));
     const label = normalized(relative(root, path));
-    lines.push(`- [${mapped ? "x" : " "}] [${label}](${relativePath}) — ${mapped ? "mapped" : "unmapped"} historical reference; implementation is tracked in current specifications`);
+    lines.push(`- [${label}](${relativePath}) — ${mapped ? "mapped" : "unmapped"} historical reference; implementation is tracked in current specifications`);
   }
   lines.push("");
   return lines.join("\n");
@@ -166,7 +162,7 @@ if (mode !== "--apply" && mode !== "--check")
 const files = markdownFiles(root);
 const canonical = files.filter((path) => !isResearch(path) && path !== indexPath);
 const missing = canonical.filter(
-  (path) => !/^## Delivery checklist\s*$/m.test(readFileSync(path, "utf8")),
+  (path) => !normalized(relative(root, path)).startsWith("acceptance/") && !/^## Delivery checklist\s*$/m.test(readFileSync(path, "utf8")),
 );
 const unmapped = researchTraceability(files).filter(({ mapped }) => !mapped);
 if (missing.length > 0 || unmapped.length > 0) {

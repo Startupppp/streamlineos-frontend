@@ -1,9 +1,11 @@
 import { render, screen, fireEvent } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { queryKeys } from "@/lib/query-keys";
 import { MailShell } from "./mail-shell";
 import { MailReadingPane } from "./mail-reading-pane";
+import { MailReadingToolbar } from "./mail-reading-toolbar";
 import type { MailMessageDetail, MailMessageSummary } from "@/types/mail";
 
 const LIST_ROW: MailMessageSummary = {
@@ -248,5 +250,32 @@ describe("MailReadingPane — a seeded thread renders its chrome, not a full ske
     expect(onReply).toHaveBeenCalledTimes(1);
     expect(screen.getByRole("button", { name: "More message actions" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Archive" })).toBeNull();
+  });
+
+  it("opens mobile AI actions in a drawer rather than an off-screen submenu", async () => {
+    mockMobile = true;
+    const user = userEvent.setup();
+    render(
+      <MailReadingToolbar
+        message={LIST_ROW}
+        onReply={jest.fn()}
+        onArchive={jest.fn()}
+        onTrash={jest.fn()}
+        onMarkUnread={jest.fn()}
+        onToggleStar={jest.fn()}
+        canAi
+        aiActions={[
+          { key: "summary", label: "Summarize thread", run: jest.fn().mockResolvedValue({ text: "Summary" }) },
+          { key: "reply", label: "Draft reply", run: jest.fn().mockResolvedValue({ text: "Draft" }) },
+        ]}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "More message actions" }));
+    await user.click(screen.getByRole("menuitem", { name: "AI assist" }));
+
+    expect(screen.getByRole("dialog", { name: "AI assist" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Summarize thread" })).toBeInTheDocument();
+    expect(screen.queryByRole("menu", { name: "AI assist" })).not.toBeInTheDocument();
   });
 });

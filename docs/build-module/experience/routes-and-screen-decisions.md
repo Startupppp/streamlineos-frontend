@@ -2,9 +2,9 @@
 
 Status: Planned
 
-This table is the target UI contract. The original 75 page files were checked on 2026-10-02; the dedicated Projects route brings the count to 76; two routes added 2026-10-04 bring the current Build page count to 78. The `/build` redirect and Projects destination remain Current unverified until browser and role evidence is recorded. A screen hidden from the sidebar remains reachable by authorized deep link. No underlying data is deleted as part of screen consolidation.
+This table is the target UI contract. The original 75 page files were checked on 2026-10-02; the dedicated Projects route brings the count to 76; two routes added 2026-10-04 and the current search page bring the current Build page count to 79. The `/build` redirect and Projects destination remain Current unverified until browser and role evidence is recorded. A screen hidden from the sidebar remains reachable by authorized deep link. No underlying data is deleted as part of screen consolidation.
 
-## Existing routes — 78 decisions
+## Existing routes — 79 decisions
 
 | Existing route | Decision | Target/destination | Screen contract | Opening |
 |---|---|---|---|---|
@@ -79,6 +79,7 @@ This table is the target UI contract. The original 75 page files were checked on
 | `/build/programs` | Keep | `/build/programs` | [Programs](./screens/planning.md) | program pane/full-page promotion; project full page |
 | `/build/programs/[programId]` | Keep | `/build/programs/[programId]` | [Program detail](./screens/planning.md) | list selection may intercept into a pane; direct link/refresh opens full page |
 | `/build/projects` | Keep; dedicated Projects destination | `/build/projects` | [Projects](./screens/projects.md) | project full page; project creation sheet; authorized list and filters |
+| `/build/search` | Keep; workspace search entry | `/build/search` | [Build search](./screens/daily-work.md) | authorized result opens its owning record with return context |
 | `/build/roadmap` | Keep | `/build/roadmap` | [Organization roadmap](./screens/planning.md) | initiative pane; ticket pane; external projection preview |
 | `/build/settings/access` | Keep | `/build/settings/access` | [Build access](./screens/settings.md) | short edit sheet; complex workflow/rule builder full page; privileged impact confirmation |
 | `/build/settings/client-access` | Keep | `/build/settings/client-access` | [Client grants](./screens/settings.md) | short edit sheet; complex workflow/rule builder full page; privileged impact confirmation |
@@ -205,9 +206,7 @@ Every manifest route appears exactly once above. Every sidebar destination resol
 
 Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
 
-- [x] Re-run the route census and reconcile all 76 Build page routes to a decision in this table at frontend `062007959`; `pnpm check:route-census` reports 76 pages and zero weak cold-load gates. Browser and role evidence remains open below.
 - [ ] Add saved authorized landing preference to the `/build` default redirect and verify the dedicated Projects destination, sidebar/More links, and denied routes in a browser with role fixtures.
 - [ ] Implement recorded compatibility redirects and record-ID mappings for Assigned→My Work, Drafts→My Work, bug feedback→Intake, project Modules→Workstreams label, and persona aliases without breaking deep links.
-- [x] Remove duplicate standalone navigation entries only after their configured canonical views and saved links resolve with the same authorized data.
 - [ ] Verify full-page and intercepted-pane refresh, modifier-click, Back/Forward, close-to-origin, mobile full-screen detail, and direct URL access for every record type.
 - [ ] Run cold-load and role/tenant/client matrices over the route manifest and physical pages; update route snapshot and log any missing or unexplained screen before checking this section.

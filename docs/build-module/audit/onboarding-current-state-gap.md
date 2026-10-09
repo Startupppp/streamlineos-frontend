@@ -48,17 +48,10 @@ The additive `1728` receipt migration is not a repair for historical cold-build 
 
 ## Delivery checklist
 
-- [x] Reconcile the current wizard, backend endpoints, draft storage, invitation payload, and launch destination against the three-step target without claiming runtime verification.
-- [x] Add the transaction-bound fresh-tier plan guard at backend `9fd0b94d2`; five focused suites/109 tests, production typecheck, and scoped lint pass for Free, trial, Build-only, mixed selection, and replay. Target database rollback and concurrent subscription transition proof remain open.
-- [x] Add source recovery for an authoritative plan-lock 402 at frontend `3aba4c3c8`: Back to Products preserves draft/invitees and suppresses a false ready state; three focused suites/23 tests and scoped lint pass. Browser proof remains open.
-- [x] Identify the exact setup invitation status provenance gap and choose event-scoped receipts over organization/email or inbox error text; implementation and target database proof remain open.
 - [ ] Implement authenticated, setup-target-aware eligibility preview and prove 402 recovery on a deployed browser with owner, existing-user, and wrong-organization paths.
-- [x] Write and read one event-scoped receipt per deduplicated setup invitee in source at backend `e1001a934`, with same-org FKs, additive migration `1728`, and legacy null fallback; focused source checks pass.
-- [x] Apply migration `1728` to a disposable target database; prove tenant RLS/FKs, rollback, replay, older pending invite, and owner/member browser refresh before closing the recipient-status defect.
 - [ ] Correlate each resent invitation generation with its own email outbox row and derive later terminal failure from that row; separately prove worker claim/CAS safety against duplicate or stale transport writes.
 - [ ] Define and migrate a revisioned, identity-scoped pre-organization draft and activation run with idempotent recovery and privacy bounds.
 - [ ] Replace the current required Basics form and inferred goal modules with at most five Build-only inputs and explicit single/multi-product selection.
 - [ ] Add adaptive module questions, immutable template previews, custom-field drafts, and accurate plan/quota previews without extra mandatory steps.
-- [x] Preserve internal multi-invite selected-module grants while adding separate external client grant activation.
 - [ ] Implement six destination journeys and first useful Build project/ticket through canonical owners.
 - [ ] Prove cross-device resume, retry, tenant/role negatives, database/outbox, and responsive browser acceptance before BLD-001 is verified.

@@ -8,6 +8,7 @@ import {
 import { Maximize2, Minimize2 } from "lucide-react";
 import { AnimatedLogo } from "@/components/brand/animated-logo";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { Button } from "@/components/ui/button";
 import { useAskOsCompanionState } from "./ask-os-companion-state";
 import { CompanionCharacter } from "./companion-character";
 import { companionDisplayName, companionPetState, useCompanionPresence } from "./companion-launcher";
@@ -151,15 +152,13 @@ export function AskOsPanelHeader({
             onToggle={onToggleExpanded}
           />
         ) : null}
-        <AnimatedIconButton
-          type="button"
-          icon={companion ? Minimize2 : XIcon}
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7"
-          aria-label={companion ? "Minimize chat" : "Close"}
-          onClick={onClose}
-        />
+        {companion ? (
+          <Button type="button" variant="ghost" size="icon" className="h-7 w-7" aria-label="Minimize chat" onClick={onClose}>
+            <Minimize2 className="size-4" aria-hidden />
+          </Button>
+        ) : (
+          <AnimatedIconButton type="button" icon={XIcon} variant="ghost" size="icon" className="h-7 w-7" aria-label="Close" onClick={onClose} />
+        )}
       </div>
     </div>
   );

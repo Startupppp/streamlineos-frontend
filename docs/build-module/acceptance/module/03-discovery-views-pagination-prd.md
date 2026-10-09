@@ -109,7 +109,6 @@ Rules:
   canonical filter vocabulary and serializer.
 - [ ] **BLD-03-002** malformed values fail with a field-level 400 and never
   disappear into a broader query.
-- [x] **BLD-03-003** every date value is ISO validated and range order is
   checked.
 - [ ] **BLD-03-004** archived, deleted, inaccessible, and cross-tenant option
   IDs cannot widen or leak the result.
@@ -148,7 +147,6 @@ Rules:
 
 - [ ] **BLD-03-007** every retained collection implements its applicable row
   with no decorative filter that the backend ignores.
-- [x] **BLD-03-008** no client sends its own user or organization ID to express
   `mine`; identity comes from the token.
   **Closed — unit proof, executed 2026-09-21.**
   `backend/src/modules/build/core/work-scope-mine.spec.ts` passed (part of a 6-suite
@@ -186,7 +184,6 @@ Rules:
 
 - [ ] **BLD-03-011** project and cross-project search use indexed plans at
   realistic scale.
-- [x] **BLD-03-012** out-of-order responses cannot replace newer results.
   **Closed — gate proof, executed 2026-09-21.**
   `pnpm check:query-signal` passed with its self-test (run as part of the full
   41-gate battery; both exit 0). The gate resolves the `signal` argument **by
@@ -233,7 +230,6 @@ Rules:
   is loaded.
 - [ ] **BLD-03-018** board, table, list, and timeline share one record and
   mutation owner rather than parallel business logic.
-- [x] **BLD-03-033** the general view switcher does not render local Calendar
   or Gantt implementations; Calendar deep-links to `/calendar` and Gantt maps
   to the canonical Timeline layout.
 
@@ -253,7 +249,6 @@ It never stores a cursor, tenant ID from the client, or unauthorized option.
   archive, and delete are permission checked.
 - [ ] **BLD-03-020** opening a view reports missing/archived fields and offers a
   safe repair rather than silently changing meaning.
-- [x] **BLD-03-021** private views cannot be resolved by another actor.
   **Closed — source proof plus a bite-proven regression test (2026-09-21).**
   `ViewsService` exposes no get-by-id route: `workspace.controller.ts:166-266`
   registers list/create/update/delete only, at both project and workspace scope.
@@ -312,9 +307,7 @@ Rules:
 
 - [ ] **BLD-03-026** filtered boards expose every matching item through
   per-column continuation.
-- [x] **BLD-03-027** column counts accept the identical authorized filter
   contract as board rows.
-- [x] **BLD-03-028** no UI labels loaded count as total count.
 - [ ] **BLD-03-029** lists remain responsive at 100, 1,000, 10,000, and
   enterprise-scale records through server paging and row/column virtualization.
 - [ ] **BLD-03-030** pagination has no duplicates or omissions during stable

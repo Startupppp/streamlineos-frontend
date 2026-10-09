@@ -329,7 +329,6 @@ inert, which is what was added:
   cannot be observed on that entry point in the test suite. This needs a real
   browser and does not reopen this acceptance criterion, which is about surface
   coverage.
-- [x] **BSN-04-A06** Zero accessible Build scopes shows the empty state rather
   than inventing a parent. **The "rather than inventing a parent" half is
   CLOSED** (fifth pass). `build-scope-recovery.test.tsx` asserts that under
   `{ kind: "no-access" }` the component renders nothing and offers **no**

@@ -66,7 +66,7 @@ Each candidate maps to a StreamlineOS surface and a concrete user payoff. This i
 
 ## Build and delivery intelligence
 
-**Current source map:** `backend/src/modules/build; docs/specs/build/module/00-product-decisions-prd.md`. The source map establishes a relevant product surface, not implementation or customer demand for every idea.
+**Current source map:** `backend/src/modules/build; docs/build-module/acceptance/module/00-product-decisions-prd.md`. The source map establishes a relevant product surface, not implementation or customer demand for every idea.
 
 | ID | Candidate | User payoff |
 | --- | --- | --- |

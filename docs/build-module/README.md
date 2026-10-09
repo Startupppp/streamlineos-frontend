@@ -1,128 +1,48 @@
-# Streamline Build product specification
+# Streamline Build: product context and remaining work
 
-Status: canonical planning set
-Scope: signup, multi-module onboarding, Build experience, integrations, architecture, delivery, and release evidence
-Audience: product, design, engineering, QA, security, sales, and support
+Build is StreamlineOS's permission-aware work and delivery module. It connects a request or customer signal to triage, scoped work, planning, execution, quality, release, client review, and the commercial handoff. Build owns projects, work items, delivery records, and their links. CRM owns customer records; Timesheets owns time; Accounting owns invoices and payments. Build opens those owners with context instead of duplicating their records.
 
-## Purpose
+This is the entry point for anyone implementing or verifying Build. The detailed contracts and all still-open acceptance criteria live below this folder. A checked source task in an older report never proves a browser journey, a database migration, a permission boundary, or a deployment.
 
-This folder defines the product Streamline intends to build. It converts the research packs, repository inventory, and product decisions into one implementation-ready plan. It does not claim that every described capability exists today.
+## What the module covers
 
-## Truth labels
+| Area | Purpose | Detailed contract |
+|---|---|---|
+| Activation and access | Signup, organization and module setup, invitations, Build standing, roles, client grants | [Onboarding](onboarding/01-signup-and-multi-module-onboarding.md), [RBAC](governance/rbac/README.md) |
+| Scope and navigation | Organization, managed product, project, sidebar, search, pins, recent scopes, My Work and Inbox | [Navigation](experience/02-personas-navigation-and-sidebars.md), [route decisions](experience/routes-and-screen-decisions.md), [sidebar acceptance](acceptance/sidebar/README.md) |
+| Project delivery | Project setup, tickets and bugs, boards, lists, detail, bulk actions, workflows, cycles, epics, milestones, releases and dependencies | [Work surfaces](experience/04-work-surfaces-and-ticket-detail.md), [ticket acceptance](acceptance/module/04-ticket-workflow-prd.md) |
+| Intake and discovery | Forms, submissions, triage, feedback, search, filters, saved views, sorting and pagination | [Page catalog](experience/05-page-catalog-and-flows.md), [discovery acceptance](acceptance/module/03-discovery-views-pagination-prd.md), [forms acceptance](acceptance/module/05-forms-validation-prd.md) |
+| Coordination and governance | Comments, files, updates, goals, risks, decisions, approvals, budgets, client portal, notifications and automation | [Screen catalog](experience/screens/README.md), [integration ownership](integrations/08-cross-module-client-content-commercial.md) |
+| Reporting and operations | Dashboards, workload, quality, analytics, reports, exports, audit, jobs, cache and performance | [Screen catalog](experience/screens/README.md), [data acceptance](acceptance/module/06-data-performance-prd.md) |
+| Experience | Responsive web, empty/loading/error/denied states, keyboard behavior, accessibility and consistent UI components | [Shared screen contract](experience/screens/shared-screen-contract.md), [visual acceptance](acceptance/module/08-visual-accessibility-prd.md) |
 
-Every implementation ticket and release note derived from this specification must use one of these labels:
+The product supports solo users, agencies, and larger organizations. Software delivery is the primary workflow; templates and custom fields adapt it to other work. Desktop and responsive mobile web are in scope. External client access is granted per authorized relationship and publication state. Server-side permission and tenant checks govern every read and write.
 
-- **Current verified**: demonstrated on the current commit through the stated evidence.
-- **Current unverified**: found in source or prior evidence but not revalidated on the current commit.
-- **Planned**: accepted target behavior that still needs implementation and verification.
-- **Conditional**: enabled by plan, permission, module selection, integration, or feature flag.
-- **Deferred**: intentionally outside the first sellable release.
+## What is implemented and what remains
 
-Research files are inputs, not release claims. A screenshot, route, mock, or source file alone cannot upgrade a capability to **Current verified**.
+The repository contains a broad Build implementation: frontend routes and feature surfaces, backend controllers and services, a Build schema, navigation and permission catalogs, and focused tests. The [current-state audit](implementation/00-current-state-audit.md) and [requirement ledger](implementation/REQUIREMENT-LEDGER.md) map these source surfaces. Their source and test results are bounded evidence; the detailed acceptance documents retain unchecked criteria wherever the complete behavior or required proof is still open.
 
-## Canonical documents
+The main remaining work is grouped here so a new implementer can find it without reading historical handoff reports:
 
-1. [Product vision and decisions](./product/00-product-vision-and-decisions.md)
-2. [Signup and multi-module onboarding](./onboarding/01-signup-and-multi-module-onboarding.md)
-3. [Personas, navigation, and sidebars](./experience/02-personas-navigation-and-sidebars.md)
-4. [Command Center and personal dashboards](./experience/03-command-center-and-personal-dashboards.md)
-5. [Work surfaces and ticket details](./experience/04-work-surfaces-and-ticket-detail.md)
-6. [Page catalog and flows](./experience/05-page-catalog-and-flows.md)
-7. [UI components, filters, and states](./experience/06-ui-component-and-filter-system.md)
-8. [Architecture, data, interfaces, cache, and AI](./architecture/07-architecture-data-api-cache-ai.md)
-9. [Cross-module, client, content, and commercial flows](./integrations/08-cross-module-client-content-commercial.md)
-10. [Roadmap, release gates, and positioning](./delivery/09-delivery-roadmap-release-gates-and-positioning.md)
-11. [RBAC review](./governance/rbac/README.md)
-12. [Cross-module product screen catalog](./experience/screens/cross-module-products.md)
-13. [Paste-ready Claude implementation prompt](./CLAUDE-MASTER-IMPLEMENTATION-PROMPT.md)
-14. [Source-aware implementation contract](./implementation/README.md)
-15. [Deep-module reconciliation and ownership](./architecture/08-deep-module-reconciliation.md)
-16. [Agent coordination and work ownership](./implementation/17-agent-coordination-and-work-ownership.md)
-17. [Architecture work-package registry](./implementation/18-architecture-work-package-registry.md)
-18. [Complete surface behavior matrix](./implementation/19-complete-surface-behavior-matrix.md)
-19. [Active/completed work claims](./implementation/WORK-CLAIMS.md)
-20. [Delivery checklists and full Markdown status index](./implementation/TODO-INDEX.md)
+1. **Exact behavior and contract gaps:** complete the unchecked route, page, form, ticket, sidebar, permission, API, schema, cache, event, and cross-module criteria in the [Build acceptance catalog](acceptance/module/README.md) and [sidebar catalog](acceptance/sidebar/README.md). Recheck each finding against current code before changing it.
+2. **Browser and responsive journeys:** test real navigation, create/edit flows, drafts and Inbox, ticket detail, filters, empty/error states, client portal, keyboard use, and mobile layouts using the roles and data required by each criterion.
+3. **Authorization and persistence:** demonstrate allowed and denied actors, cross-tenant and cross-project negatives, invitation and grant lifecycle, transaction/replay behavior, cache invalidation, migration application and recovery on an appropriate test database.
+4. **Release evidence:** verify deployed revision parity, provider/worker effects, monitoring, performance, accessibility, rollback and operational behavior. The [release acceptance](acceptance/module/10-release-verification-prd.md) and [sidebar release acceptance](acceptance/sidebar/05-release-verification-prd.md) stay open until their named evidence exists.
 
-## Tracking delivery
+An unchecked box means that its *whole stated criterion* is pending. It does not necessarily mean its UI or service is absent. Implement only the missing part, then attach evidence at the required tier. Do not turn route presence, screenshots, source review, mocks, or focused tests into a claim of deployed or end-to-end completion.
 
-Each current specification ends with a `Delivery checklist`. Work from its smallest evidence-backed item, record the implementation revision and test result in the [requirement ledger](./implementation/REQUIREMENT-LEDGER.md) and [work claims](./implementation/WORK-CLAIMS.md), then check that item. A source-only correction can be checked when its wording explicitly limits the claim to source and focused tests. Keep browser, target database, role, tenant, and deployment items open until those actions have been observed. Historical research files retain their original bytes; the TODO index tracks whether each is mapped in [research traceability](./audit/research-traceability.md).
+## Where to start
 
-From the repository root, run `pnpm update:build-doc-todos` after a checklist edit and `pnpm check:build-doc-todos` to verify that every current specification has a checklist, every retained research file has a traceability link, and the index is current.
+- [Product decisions](product/00-product-vision-and-decisions.md) and [architecture ownership](architecture/08-deep-module-reconciliation.md) define the accepted model and seams.
+- [Detailed screens](experience/screens/README.md), [route decisions](experience/routes-and-screen-decisions.md), and [screen data contracts](architecture/screen-data-contracts.md) define user behavior.
+- [Implementation contract](implementation/README.md), [requirement ledger](implementation/REQUIREMENT-LEDGER.md), and [work claims](implementation/WORK-CLAIMS.md) identify code owners, dependencies, and evidence boundaries.
+- [Build acceptance catalog](acceptance/module/README.md) and [sidebar acceptance catalog](acceptance/sidebar/README.md) contain the pending criteria relocated from the former `docs/specs/build` folder.
+- [Browser and acceptance method](implementation/14-testing-browser-verification-and-acceptance.md) describes what counts as verification. Historical audit material remains under `audit/` only where it supports an open criterion.
 
-## Research inputs
+## Evidence rule
 
-- `streamlineos-analysis-pack/`: competitor inventory, capability evidence, filter research, and gap analysis.
-- `streamlineos-pm-pack/`: JTBD, activation gaps, role/invite PRDs, and prioritized roadmap.
-- `streamlineos-ux/`: surface ledger, browser observations, screenshots, UX patterns, and design challenges.
-- Current repository routes, schemas, permission catalogs, and module registry.
-- Product decisions recorded in the conversation with the owner.
-
-Where an input conflicts with this canonical set, this set records the intended product decision. Current implementation truth must still be checked against the code and a running environment.
-
-## Product in one sentence
-
-Streamline Build turns customer evidence and agreed scope into prioritized work, controlled delivery, client approval, and traceable commercial outcomes in one permission-aware workspace.
-
-## Required outcome chain
-
-```mermaid
-flowchart LR
-    A[Request or evidence] --> B[Intake and triage]
-    B --> C[Approved scope]
-    C --> D[Plan and execution]
-    D --> E[Quality and release]
-    E --> F[Client review and approval]
-    F --> G[Invoice, payment, and outcome]
-```
-
-The chain is the primary differentiator to build and verify. Each link must preserve ownership: Build owns delivery records; CRM owns customer records; Timesheets owns time entries; Accounting owns invoices, payments, taxes, and ledgers.
-
-## Product constraints
-
-- One experience must work for a solo freelancer, an agency, and a large product organization.
-- Software delivery is the primary opinionated workflow. Other professions use templates and custom fields without weakening the software workflow.
-- Desktop web and responsive mobile web are required. Native mobile is deferred until the web experience is stable.
-- Both full navigation and an AI-assisted low-screen workflow are supported.
-- Security decisions are enforced on the server. Hidden UI is convenience, not authorization.
-- Full export, account recovery, and baseline security are never pricing gates.
-- Client access is grant-based and least privilege; a client is not automatically an organization member.
-- Cross-module actions open the owning module with context and return links. Build does not duplicate another module's source of truth.
-
-## Change control
-
-A change to navigation, permissions, lifecycle, source-of-truth ownership, public links, money movement, or AI mutation requires an update to the relevant canonical document before implementation. Each delivery ticket must cite the section it implements and the evidence needed to close it.
-
-Application implementation also requires an unambiguous work-package claim. An agent must claim one package, identify its primary seam and paths, verify prerequisites, and record its handoff in `implementation/WORK-CLAIMS.md`. Parallel work is allowed only for packages whose primary seams and file sets do not overlap.
-
-
-
-## Complete screen and audit set
-
-- [Detailed screens](./experience/screens/README.md): activation, projects, daily work, discovery, planning, clients, collaboration, quality, reporting, settings.
-- [External client portal screens](./experience/screens/external-client-portal.md): granted projects, project overview, conditional deliverables, requests, approvals, files, updates, and invoices.
-- [Route decisions](./experience/routes-and-screen-decisions.md): 75 existing routes, planned additions, aliases, redirects, removed navigation and deferrals.
-- [Screen data contracts](./architecture/screen-data-contracts.md): authoritative domain projections and interface families.
-- [Requirements coverage](./audit/requirements-coverage.md): original request mapped to decisions and acceptance.
-- [Research traceability](./audit/research-traceability.md): retained source findings, identifiers and screenshot inventory.
-- [Original WOW research crosswalk](./audit/original-wow-research-crosswalk.md): every numbered original finding mapped to an adopted, conditional, or deferred destination.
-- [Comprehensive recheck](./audit/comprehensive-recheck-2026-10-02.md): source-to-spec reconciliation, corrections, and remaining implementation evidence.
-- [Bugs and verification](./audit/bugs-and-verification.md): historical issues and required closure proof.
-- [Customer value classification](./product/customer-value-and-differentiation.md): 100 reasons with customers, sources, priority and proof.
-- [Cleanup manifest](./audit/cleanup-manifest.md): exact duplicate deletion/retention and reference rewrites.
-- [Validation report](./audit/validation-report.md): final documentation checks and release limitations.
-
-## Folder maintenance
-
-Keep product decisions in product, activation in onboarding, page/UI contracts in experience, data/API/cache/AI in architecture, cross-module ownership in integrations, phased verification in delivery, authorization risks in governance/rbac, and coverage/evidence/cleanup records in audit. Retained research packs are historical inputs, not competing target specifications. New implementation work cites a canonical decision plus its evidence/acceptance section.
-
+Close a criterion only against its exact wording and a named frontend/backend revision, actor and tenant, initial state, observed action, persisted or external effect when applicable, and relevant negative case. Keep source, focused test, browser, database, provider, deployment, and human evidence distinct. Product decisions and historic research describe intended behavior; current code and observed runtime establish current state.
 ## Delivery checklist
 
-Track completion in the [requirement ledger](implementation/REQUIREMENT-LEDGER.md) and [work claims](implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
-- [x] Canonical planning, evidence, and historical research locations are linked from this index; checked on the current documentation revision.
-- [x] Current verified, Current unverified, Planned, Conditional, and Deferred are defined here and used as the status vocabulary for the planning set.
-- [x] Every accepted requirement has a current owner, implementation status, and evidence link in the requirement ledger.
-- [x] Every active work package has a committed claim and an unambiguous handoff or completion row.
-- [x] The request-to-commercial-outcome chain works across Build and its owning modules with authorized record links.
-- [ ] Every documented Build screen, route, component, and cross-module action has the required source and runtime evidence.
-- [ ] Release evidence covers browser behavior, permissions, tenant isolation, persistence, deployment, and operations for the sellable scope.
+- [ ] Every open Build and sidebar acceptance criterion is satisfied at its stated evidence tier.
+- [ ] Browser, database, role, tenant, provider, deployment, and operational release evidence is recorded for the sellable scope.

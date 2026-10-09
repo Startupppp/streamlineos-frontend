@@ -22,7 +22,7 @@ Portfolios directly; there is no workspace scope in the selector.
 ## Dependencies
 
 - Design source:
-  [`2026-09-19-build-sidebar-design.md`](../../../superpowers/specs/2026-09-19-build-sidebar-design.md)
+  [`2026-09-19-build-sidebar-design.md`](../../experience/02-personas-navigation-and-sidebars.md)
 - Current resolver: `frontend/lib/build/build-scope.ts`
 - Current catalog: `frontend/lib/build/build-nav-model.ts`
 - Backend remains the owner of scope filtering and authorization.
@@ -99,7 +99,6 @@ duplicated as TODO checkboxes.
 BSN-01-011, BSN-01-013, BSN-01-014, BSN-01-015 and BSN-01-016 CLOSED in the
 fourth pass — see the Evidence Log.
 
-- [x] **BSN-01-018** VOID, not done — PM Workspace is removed (BLD-00 D01), so
   there is no workspace reference or cross-workspace product link left to
   audit. Migration `1159_build_remove_pm_workspaces` dropped the column this
   item would have audited.
@@ -141,7 +140,6 @@ see the Evidence Log.
 
 BSN-01-031 and BSN-01-032 CLOSED in the fourth pass — see the Evidence Log.
 
-- [x] **BSN-01-033** Populate the complete project catalog with Overview as the
   selected scope landing destination.
   **Closed — source plus a passing pinned test (2026-09-21).**
   `lib/build/nav/build-project-catalog.ts` emits the nine primary destinations
@@ -303,7 +301,6 @@ Closed in the fourth pass (2026-09-19):
 - [ ] **BSN-01-A01** Selecting each of the three scope types (organization,
   managed product, project) lands on an Overview that renders every required
   Overview Contract field.
-- [x] **BSN-01-A02** VOID — PM Workspace is removed; there is no workspace
   scope to isolate.
 - [ ] **BSN-01-A03** Product pages never show unlinked product data or projects.
 - [ ] **BSN-01-A04** Project Issues, Updates, Files, and Client portal are

@@ -393,15 +393,5 @@ Release requires every applicable level. A passing lower level does not imply a 
 
 Track completion in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
 
-- [x] Bind every internal route to active organization membership, enabled Build entitlement, an effective module standing, operation permission, canonical project/record reachability, and field policy; distinguish safe 403 from non-disclosing 404.
-- [x] Resolve Org Owner as effective Build Owner and Org Admin as effective Build Admin for enabled Build; require a positive auditable assignment for Org Members and reject project membership without Build standing.
-- [x] Reconcile seeded Owner/Admin/Member bundles with the current permission catalog and migrated organizations; test productive Build Member work, Viewer restrictions, Owner-only transfers, and grantability/self-elevation limits.
-- [x] Enforce same-tenant active-membership constraints, exactly-one-owner transfer rules, typed portal grants, invitation acceptance binding, and permission/grant revision bumps in transactions.
-- [x] Implement versioned Build member, invitation, standing, ownership transfer, project access, grant, rotation, and safe access-explanation APIs with strict schemas, idempotency, audit, and outbox emission.
-- [x] Decide whether a typed Approval can own client-access requests before introducing a new table; a request decision must lead to separate grant preview/confirmation, never silently issue access.
-- [x] Build the member-management page with distinct org/Build standing, assignment origin, project coverage, status, audit link, filters, and gained/lost capability review; make denied, changed-access, and expired-link states actionable without disclosing hidden records.
-- [x] Verify client magic-link hashing, audience binding, one-time exchange, narrow portal session, exact surface/action/field projection, signed-file recheck, rotation, and immediate revocation.
 - [ ] Give AI, automation, import, integration, export, and jobs named bounded principals and execution-time authorization; require human confirmation for access, publication, finance, export, destructive, and bulk effects.
-- [x] Invalidate permission, project, and grant caches plus private search/notification/job effects after a revocation; measure propagation across replicas and fail closed on uncertain privileged reads.
-- [x] Record the named access, ownership, project, grant, visibility, export, restore, retention, and AI audit events without tokens or sensitive content.
 - [ ] Complete the verification matrix with source, static, focused, target-database/RLS/concurrency, browser, and deployed multi-replica evidence; leave each historical risk open until its stated closure proof exists.

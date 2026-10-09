@@ -26,7 +26,4 @@ Persona is a default configuration, not an access role. Every screen is governed
 
 Track completion in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
 
-- [x] Map every route section below to the authoritative route decision row, existing physical page, owning API contract, and requirement/work-package ID before coding.
-- [x] Apply the shared opening, FilterEnvelope v1, permission, cache, state, and mobile contracts to every screen; record each explicit route-specific override beside its screen.
-- [x] Keep proposed endpoint examples separate from current OpenAPI operations; reject duplicate controllers introduced solely from a browser route name.
 - [ ] Verify every screen family has populated, empty, filtered-empty, denied, failed, direct-link/refresh, keyboard, mobile, persisted-action, and cross-tenant evidence before closing its checklist.

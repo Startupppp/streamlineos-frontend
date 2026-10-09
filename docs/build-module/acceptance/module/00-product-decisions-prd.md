@@ -39,7 +39,6 @@ implementation can close.
   `/build/pm-workspaces` → `/build`.
 - Managed Product linkage is optional and never substitutes for Project.
 
-- [x] **BLD-00-D01-A** sidebar design, quick create, schema, create forms,
   APIs, scope resolver, and tests agree PM Workspace does not exist.
 
 ## D02 — Drafts Stay Discoverable but Lose a Standalone Page

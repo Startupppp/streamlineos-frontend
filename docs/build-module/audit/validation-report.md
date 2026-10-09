@@ -80,9 +80,6 @@ After future edits, compare page files to route decision table; verify every rou
 
 Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
 
-- [x] Record the 2026-10-02 static census of 75 Build pages, 29 requirement mappings, 120 original WOW IDs, and research cleanup in [Checks performed](#checks-performed) and the [cleanup manifest](./cleanup-manifest.md); this does not verify application behavior.
-- [x] Rerun route, requirement, local-link, retained-evidence hash, and whitespace checks at the implementation revision; attach the exact commands, counts, and commit.
-- [x] Reconcile the dated failing gate sample in the [comprehensive recheck](./comprehensive-recheck-2026-10-02.md#final-start-readiness-gate-sample) with current normal-gate output without rewriting the historical result.
 - [ ] Attach browser, role/tenant, target database, worker/cache, and deployment evidence before any product requirement is promoted to Current verified.
 
 ## Gate reconciliation 2026-10-04

@@ -238,7 +238,6 @@ protects trust boundaries, and the database protects durable state.
 
 - [ ] **BLD-05-019** duplicate name/key races produce a field-level 409.
 - [ ] **BLD-05-020** stale version produces merge/reload choices.
-- [x] **BLD-05-021** relation-cycle and last-owner checks are transactional.
   **Closed — unit proof, executed 2026-09-21.**
   Relation cycle: `assertSelfRefChain` runs on `tx` inside `this.db.transaction`
   (`core/projects-tickets-update.service.ts:246,255,257`, helper at `:56-124`).

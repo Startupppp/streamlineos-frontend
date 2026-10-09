@@ -334,8 +334,3 @@ Probe: `rg "build:timesheets" frontend/hooks` returns `ticket-time-tracker.tsx` 
 ## Delivery checklist
 
 Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
-- [x] Preserve the pre-deletion SHA-256 mapping for 39 byte-identical research copies and seven redundant generated summaries in [Authorized cleanup](#authorized-cleanup) and [Generated specification consolidation](#generated-specification-consolidation); the [validation report](./validation-report.md#checks-performed) records the matching counts.
-- [x] Record the retained authority and inbound-reference changes in [Reference changes](#reference-changes); the [validation report](./validation-report.md#checks-performed) records zero broken local links and 183 unchanged non-Markdown evidence files at the dated audit.
-- [x] Before any later Markdown or evidence deletion, classify unique findings and references, compare hashes where duplication is claimed, and append the path, replacement, and result here.
-- [x] Rerun retained-source, screenshot, and relative-link validation on the final integration revision; preserve unresolved and contradictory research evidence.

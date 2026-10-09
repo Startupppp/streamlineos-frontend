@@ -321,9 +321,6 @@ The four core items are Command Center, My Work, Inbox and Projects. Persona tem
 
 Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
 
-- [x] Map every visible Build rail/sidebar item to the route manifest and permission key; keep `/build` as an authorized landing resolver and Projects as its own destination.
-- [x] Implement the always-visible destinations, persona pin defaults, and searchable More without duplicating Briefs, Assets, Content Pipeline, or hidden records.
-- [x] Implement project sidebar groups, rename project Modules to Workstreams in labels, and preserve existing deep links and compatible URLs.
 - [ ] Persist per-user pinned, reordered, and collapsed navigation with a versioned actor/org scope; reject unavailable targets and restore a safe default on revocation.
 - [ ] Implement click, modifier-click, refresh, Back/Forward, split-pane, and mobile drawer behavior without losing origin query, scroll anchor, or focus.
 - [ ] Verify freelancer, product manager, project manager, engineer, content, executive, and external-client navigation with real role/module/project grants across two tenants; record denied deep-link and mobile evidence.

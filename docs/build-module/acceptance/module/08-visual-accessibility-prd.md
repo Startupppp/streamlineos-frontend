@@ -311,7 +311,6 @@ mark a state N/A only with a product reason in its page contract.
 - progress does not simulate certainty or invent status.
 - AI is absent when it cannot provide scoped, evidence-backed value.
 
-- [x] **BLD-08-025** no agent count reuses unrelated global notification data.
   **Closed — unit proof, executed 2026-09-21 (5 suites / 56 tests).**
   There is no agent *count* at all: `BuildAgentPulse` reads a dedicated
   `/build/agent-pulse/top-signal` under its own key

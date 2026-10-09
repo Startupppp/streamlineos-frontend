@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Controller, useForm, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -38,6 +38,15 @@ import {
 } from "./companion-preferences-schema";
 
 const ORG_LOCK = "Turned off by your organization";
+const TONE_OPTIONS: SelectOption[] = [
+  { value: "neutral", label: "Neutral" },
+  { value: "warm", label: "Warm" },
+  { value: "brief", label: "Brief" },
+];
+const ANIMATION_OPTIONS: SelectOption[] = [
+  { value: "subtle", label: "Subtle" },
+  { value: "off", label: "Off" },
+];
 
 type BooleanField = "visible" | "meeting" | "clockIn" | "break" | "friendly" | "activityConsent";
 type PromptField = "meeting" | "clockIn" | "break" | "friendly";
@@ -61,35 +70,27 @@ interface SwitchRowProps {
   label: string;
   hint: string;
   lock?: string;
-  onRequestEnable?: () => void;
+  onRequestEnable?: (field: BooleanField) => void;
   onToggle?: (checked: boolean) => void;
 }
 
 function SwitchRow({ control, field, label, hint, lock, onRequestEnable, onToggle }: SwitchRowProps) {
   const id = `companion-${field}`;
+  function renderSwitch({ field: { value, onChange } }: { field: { value: boolean; onChange: (checked: boolean) => void } }) {
+    function handleCheckedChange(checked: boolean) {
+      if (checked && onRequestEnable) return onRequestEnable(field);
+      onChange(checked);
+      onToggle?.(checked);
+    }
+    return <Switch id={id} className="shrink-0" checked={value} onCheckedChange={handleCheckedChange} disabled={Boolean(lock)} />;
+  }
   return (
     <div className="relative flex min-h-16 items-center justify-between gap-6 rounded-md border border-border p-4">
       <div className="min-w-0 space-y-1">
         <Label htmlFor={id}>{label}</Label>
         <p className="text-xs text-muted-foreground">{lock ?? hint}</p>
       </div>
-      <Controller
-        control={control}
-        name={field}
-        render={({ field: { value, onChange } }) => (
-          <Switch
-            id={id}
-            className="shrink-0"
-            checked={value}
-            onCheckedChange={(checked) => {
-              if (checked && onRequestEnable) return onRequestEnable();
-              onChange(checked);
-              onToggle?.(checked);
-            }}
-            disabled={Boolean(lock)}
-          />
-        )}
-      />
+      <Controller control={control} name={field} render={renderSwitch} />
     </div>
   );
 }
@@ -102,17 +103,21 @@ function CompanionSelectField({ control, name, label, options, note }: {
   note?: string;
 }) {
   const id = `companion-${name}`;
+  function renderOption(option: SelectOption) {
+    return <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>;
+  }
+  function renderSelect({ field }: { field: { value: string; onChange: (value: string) => void; onBlur: () => void; ref: (element: HTMLElement | null) => void } }) {
+    return (
+      <Select value={field.value} onValueChange={field.onChange}>
+        <SelectTrigger id={id} ref={field.ref} onBlur={field.onBlur}><SelectValue /></SelectTrigger>
+        <SelectContent>{options.map(renderOption)}</SelectContent>
+      </Select>
+    );
+  }
   return (
     <div className="relative flex min-w-0 flex-col gap-1.5">
       <Label htmlFor={id}>{label}</Label>
-      <Controller control={control} name={name} render={({ field }) => (
-        <Select value={field.value} onValueChange={field.onChange}>
-          <SelectTrigger id={id} ref={field.ref} onBlur={field.onBlur}><SelectValue /></SelectTrigger>
-          <SelectContent>
-            {options.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      )} />
+      <Controller control={control} name={name} render={renderSelect} />
       {note ? <p className="text-xs text-muted-foreground">{note}</p> : null}
     </div>
   );
@@ -135,9 +140,18 @@ function CompanionPreferencesForm({ data }: { data: CompanionPreferences }) {
   const previewName = watch("name").trim() || "Companion";
   const previewPreset = watch("preset");
   const previewAnimation = watch("animation");
-  const presets = COMPANION_PRESETS.filter((preset) => policy.allowedPresets.includes(preset));
+  const presetOptions = useMemo(() => COMPANION_PRESETS
+    .filter((preset) => policy.allowedPresets.includes(preset))
+    .map((preset) => ({ value: preset, label: preset.charAt(0).toUpperCase() + preset.slice(1) })), [policy.allowedPresets]);
   const presetNote = locks["preset"];
   const pausedUntil = defaultValues.pause === "keep" ? preferences.pausedUntil : null;
+  const pauseOptions = useMemo(() => [
+    ...(pausedUntil !== null ? [{ value: "keep", label: pauseLabel(pausedUntil) }] : []),
+    { value: "none", label: pausedUntil !== null ? "Resume prompts" : "Not paused" },
+    { value: "1h", label: "For 1 hour" },
+    { value: "today", label: "For the rest of today" },
+    { value: "resume", label: "Until I resume" },
+  ], [pausedUntil]);
 
   function handleSave(values: CompanionPreferencesFormValues) {
     update.mutate(toCompanionPatch(values, preferences, new Date(), orgTimeZone), {
@@ -160,6 +174,34 @@ function CompanionPreferencesForm({ data }: { data: CompanionPreferences }) {
     form.setValue("activityConsent", true, { shouldDirty: true });
     form.setValue(requestedPrompt, true, { shouldDirty: true });
     setRequestedPrompt(null);
+  }
+
+  function handleRequestEnable(field: BooleanField) {
+    if (field === "break" || field === "friendly") setRequestedPrompt(field);
+  }
+
+  function handleActivityConsentToggle(checked: boolean) {
+    if (checked) return;
+    form.setValue("break", false, { shouldDirty: true });
+    form.setValue("friendly", false, { shouldDirty: true });
+  }
+
+  function handleConsentDialogOpenChange(open: boolean) {
+    if (!open) setRequestedPrompt(null);
+  }
+
+  function renderPromptRow(row: (typeof PROMPT_ROWS)[number]) {
+    return (
+      <SwitchRow
+        key={row.field}
+        control={control}
+        field={row.field}
+        label={row.label}
+        hint={row.hint}
+        lock={locks[`prompts.${row.field}`] ?? (policy.prompts[row.field] ? undefined : ORG_LOCK)}
+        onRequestEnable={(row.field === "break" || row.field === "friendly") && !consent ? handleRequestEnable : undefined}
+      />
+    );
   }
 
   return (
@@ -189,45 +231,24 @@ function CompanionPreferencesForm({ data }: { data: CompanionPreferences }) {
           <Input id="companion-name" placeholder="Companion" aria-invalid={!!formState.errors.name} {...register("name")} />
           {formState.errors.name ? <p className="text-xs text-destructive">{formState.errors.name.message}</p> : null}
         </div>
-        <CompanionSelectField control={control} name="preset" label="Appearance" options={presets.map((preset) => ({ value: preset, label: preset.charAt(0).toUpperCase() + preset.slice(1) }))} note={presetNote} />
-        <CompanionSelectField control={control} name="tone" label="Tone" options={[{ value: "neutral", label: "Neutral" }, { value: "warm", label: "Warm" }, { value: "brief", label: "Brief" }]} />
-        <CompanionSelectField control={control} name="animation" label="Animation" options={[{ value: "subtle", label: "Subtle" }, { value: "off", label: "Off" }]} />
-        <CompanionSelectField control={control} name="pause" label="Pause all companion prompts" options={[
-          ...(pausedUntil !== null ? [{ value: "keep", label: pauseLabel(pausedUntil) }] : []),
-          { value: "none", label: pausedUntil !== null ? "Resume prompts" : "Not paused" },
-          { value: "1h", label: "For 1 hour" },
-          { value: "today", label: "For the rest of today" },
-          { value: "resume", label: "Until I resume" },
-        ]} />
+        <CompanionSelectField control={control} name="preset" label="Appearance" options={presetOptions} note={presetNote} />
+        <CompanionSelectField control={control} name="tone" label="Tone" options={TONE_OPTIONS} />
+        <CompanionSelectField control={control} name="animation" label="Animation" options={ANIMATION_OPTIONS} />
+        <CompanionSelectField control={control} name="pause" label="Pause all companion prompts" options={pauseOptions} />
       </div>
-      <SwitchRow control={control} field="activityConsent" label="Activity timing" hint="Counts only foreground time while this StreamlineOS window is focused. Turning it off deletes that timing." onToggle={(checked) => {
-        if (!checked) {
-          form.setValue("break", false, { shouldDirty: true });
-          form.setValue("friendly", false, { shouldDirty: true });
-        }
-      }} />
+      <SwitchRow control={control} field="activityConsent" label="Activity timing" hint="Counts only foreground time while this StreamlineOS window is focused. Turning it off deletes that timing." onToggle={handleActivityConsentToggle} />
       <p className="text-xs text-muted-foreground">
         Companion prompts also respect your notification quiet hours.{" "}
         <Link href="/settings/notifications/my-preferences" className="font-medium text-primary underline-offset-2 hover:underline">
           Manage quiet hours
         </Link>
       </p>
-      {PROMPT_ROWS.map((row) => (
-        <SwitchRow
-          key={row.field}
-          control={control}
-          field={row.field}
-          label={row.label}
-          hint={row.hint}
-          lock={locks[`prompts.${row.field}`] ?? (policy.prompts[row.field] ? undefined : ORG_LOCK)}
-          onRequestEnable={(row.field === "break" || row.field === "friendly") && !consent ? () => setRequestedPrompt(row.field as "break" | "friendly") : undefined}
-        />
-      ))}
+      {PROMPT_ROWS.map(renderPromptRow)}
       <div className="flex justify-end">
         <LoadingButton type="submit" isPending={update.isPending}>Save companion settings</LoadingButton>
       </div>
     </form>
-    <AlertDialog open={requestedPrompt !== null} onOpenChange={(open) => { if (!open) setRequestedPrompt(null); }}>
+    <AlertDialog open={requestedPrompt !== null} onOpenChange={handleConsentDialogOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Allow activity timing?</AlertDialogTitle>

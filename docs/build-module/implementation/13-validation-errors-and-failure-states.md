@@ -47,7 +47,5 @@ Log machine code, request/correlation ID, operation, scoped identifiers, retryab
 
 Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
 
-- [x] Reconcile field validation, Zod/DTO schemas, machine error codes, and error envelopes with live backend serializers and generated frontend contracts.
-- [x] Define and test precise validation for identifiers, dates/timezones, filters, custom fields, uploads, public form answers, and all mutable record commands.
 - [ ] Verify each error maps to a useful UI state and preserves user input, pane context, Back/refresh behavior, safe retry, and accessibility announcement.
 - [ ] Exercise permission loss, stale revision, duplicate submission, offline/resume, partial background job, rate limit, and provider outage without leaking private details.
