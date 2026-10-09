@@ -1,8 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { z } from "zod";
+import { apiClient } from "@/lib/api-client";
+import { isApiError } from "@/lib/api-envelope";
 
-type SpeechInputState = "idle" | "listening" | "processing" | "error";
+type SpeechInputState = "idle" | "requesting" | "listening" | "processing" | "error";
+const MAX_RECORDING_MS = 30_000;
+const MAX_AUDIO_BYTES = 4 * 1024 * 1024;
+const transcriptionContract = z.object({ text: z.string() });
 
 interface SpeechRecognitionResultLike {
   readonly isFinal: boolean;
@@ -51,7 +57,7 @@ function getSpeechRecognition(): SpeechRecognitionConstructor | null {
 }
 
 function speechInputSupported() {
-  return getSpeechRecognition() !== null;
+  return (typeof navigator !== "undefined" && Boolean(navigator.mediaDevices?.getUserMedia) && typeof MediaRecorder !== "undefined") || getSpeechRecognition() !== null;
 }
 
 function speechOutputSupported() {
@@ -77,6 +83,19 @@ export function useSpeechInput({ beforeStart, scopeKey }: UseSpeechInputOptions 
   const [message, setMessage] = useState<string | null>(null);
   const [renderScope, setRenderScope] = useState(scopeKey);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const timeoutRef = useRef<number | null>(null);
+  const uploadRef = useRef<AbortController | null>(null);
+  const generationRef = useRef(0);
+
+  const releaseMedia = useCallback(() => {
+    if (timeoutRef.current !== null) window.clearTimeout(timeoutRef.current);
+    timeoutRef.current = null;
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+    recorderRef.current = null;
+  }, []);
 
   if (renderScope !== scopeKey) {
     setRenderScope(scopeKey);
@@ -86,22 +105,33 @@ export function useSpeechInput({ beforeStart, scopeKey }: UseSpeechInputOptions 
   }
 
   const reset = useCallback(() => {
-    if (recognitionRef.current) return;
+    if (recognitionRef.current || recorderRef.current || uploadRef.current) return;
     setInterimTranscript("");
     setMessage(null);
     setState("idle");
   }, []);
 
   const cancel = useCallback(() => {
-    if (!recognitionRef.current) return;
-    recognitionRef.current.abort();
+    generationRef.current += 1;
+    recognitionRef.current?.abort();
     recognitionRef.current = null;
+    const recorder = recorderRef.current;
+    if (recorder?.state === "recording") recorder.stop();
+    uploadRef.current?.abort();
+    uploadRef.current = null;
+    releaseMedia();
     setInterimTranscript("");
-    setMessage("Voice input cancelled.");
+    setMessage(null);
     setState("idle");
-  }, []);
+  }, [releaseMedia]);
 
   const stop = useCallback(() => {
+    if (recorderRef.current?.state === "recording") {
+      setState("processing");
+      setMessage("Turning your voice into text…");
+      recorderRef.current.stop();
+      return;
+    }
     if (!recognitionRef.current) return;
     setState("processing");
     setInterimTranscript("");
@@ -111,6 +141,88 @@ export function useSpeechInput({ beforeStart, scopeKey }: UseSpeechInputOptions 
 
   const start = useCallback((onTranscript: (transcript: string) => void) => {
     beforeStart?.();
+    if (navigator.mediaDevices?.getUserMedia && typeof MediaRecorder !== "undefined") {
+      const generation = ++generationRef.current;
+      setState("requesting");
+      setMessage("Waiting for microphone access…");
+      void (async () => {
+        let stream: MediaStream;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        } catch {
+          if (generation !== generationRef.current) return;
+          setState("error");
+          setMessage("Microphone access is unavailable. Check browser permission and try again.");
+          return;
+        }
+        if (generation !== generationRef.current) {
+          stream.getTracks().forEach((track) => track.stop());
+          return;
+        }
+        streamRef.current = stream;
+        const mimeType = ["audio/webm", "audio/mp4"].find((type) => MediaRecorder.isTypeSupported(type));
+        let recorder: MediaRecorder;
+        try {
+          recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+        } catch {
+          releaseMedia();
+          setState("error");
+          setMessage("Audio recording is unavailable in this browser.");
+          return;
+        }
+        const chunks: Blob[] = [];
+        recorderRef.current = recorder;
+        recorder.ondataavailable = (event) => { if (event.data.size) chunks.push(event.data); };
+        recorder.onerror = () => {
+          if (generation !== generationRef.current) return;
+          releaseMedia();
+          setState("error");
+          setMessage("Recording stopped unexpectedly. Try again.");
+        };
+        recorder.onstop = () => {
+          releaseMedia();
+          if (generation !== generationRef.current) return;
+          const audio = new Blob(chunks, { type: recorder.mimeType || mimeType || "audio/webm" });
+          if (!audio.size || audio.size > MAX_AUDIO_BYTES) {
+            setState("error");
+            setMessage(audio.size ? "Recording is too long. Try a shorter message." : "I did not hear anything. Try speaking again.");
+            return;
+          }
+          const abort = new AbortController();
+          uploadRef.current = abort;
+          const form = new FormData();
+          form.append("file", audio, `companion.${audio.type.includes("mp4") ? "mp4" : "webm"}`);
+          setState("processing");
+          setMessage("Turning your voice into text…");
+          void apiClient.upload("/chat/voice/transcribe", form, transcriptionContract, { signal: abort.signal })
+            .then(({ text }) => {
+              if (generation !== generationRef.current) return;
+              onTranscript(text);
+              setState("idle");
+              setMessage("Transcript ready. Review it before sending.");
+            })
+            .catch((error: unknown) => {
+              if (generation !== generationRef.current) return;
+              setState("error");
+              setMessage(isApiError(error) && error.status === 400
+                ? error.message
+                : "Voice transcription could not connect. Try again or type your message.");
+            })
+            .finally(() => { if (uploadRef.current === abort) uploadRef.current = null; });
+        };
+        try {
+          recorder.start();
+          setState("listening");
+          setMessage("Listening… tap the microphone when you are done.");
+          timeoutRef.current = window.setTimeout(() => { if (recorder.state === "recording") recorder.stop(); }, MAX_RECORDING_MS);
+        } catch {
+          releaseMedia();
+          setState("error");
+          setMessage("Audio recording could not start. Try again.");
+        }
+      })();
+      return;
+    }
     const Recognition = getSpeechRecognition();
     if (!Recognition) {
       setState("error");
@@ -165,7 +277,7 @@ export function useSpeechInput({ beforeStart, scopeKey }: UseSpeechInputOptions 
       setMessage("Voice input could not start. Try again.");
       setState("error");
     }
-  }, [beforeStart]);
+  }, [beforeStart, releaseMedia]);
 
   useEffect(() => {
     function handleVisibilityChange() {
@@ -174,10 +286,16 @@ export function useSpeechInput({ beforeStart, scopeKey }: UseSpeechInputOptions 
     document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      generationRef.current += 1;
       recognitionRef.current?.abort();
       recognitionRef.current = null;
+      const recorder = recorderRef.current;
+      if (recorder?.state === "recording") recorder.stop();
+      uploadRef.current?.abort();
+      uploadRef.current = null;
+      releaseMedia();
     };
-  }, [cancel, scopeKey]);
+  }, [cancel, releaseMedia, scopeKey]);
 
   return {
     cancel,

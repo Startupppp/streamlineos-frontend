@@ -165,7 +165,7 @@ export function MailThreadMessage({
   }
 
   return (
-    <div className="border-b border-border/20 last:border-0">
+    <div className="min-w-0 max-w-full overflow-hidden border-b border-border/20 last:border-0">
       <button
         type="button"
         className={cn(
@@ -200,7 +200,7 @@ export function MailThreadMessage({
         </div>
       </button>
 
-      <div className="px-4 pb-4">
+      <div className="min-w-0 max-w-full px-4 pb-4">
         {message.bodyHtml ? (
           <MailHtmlViewer html={message.bodyHtml} className="mt-1" />
         ) : message.bodyText ? (

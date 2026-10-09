@@ -7,7 +7,7 @@ import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyInboxIllustration } from "@/components/illustrations";
-import { PmPageShell, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
+import { CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 import { useFeedbucketSubmissions } from "@/hooks/api/feedbucket";
 import { useCan } from "@/hooks/api/access";
 import { SubmissionBulkToolbar } from "@/components/shared/submission-bulk-toolbar";
@@ -32,6 +32,11 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { resolveProductFeedbackSubmissionHref } from "./product-feedback-model";
 import { useProductFeedbackFilters, PAGE_SIZE } from "./use-product-feedback-filters";
+import {
+  MANAGED_PRODUCT_DETAIL_CONTENT_CLASS,
+  ManagedProductDetailPrimarySection,
+  ManagedProductDetailShell,
+} from "./managed-product-detail-layout";
 
 interface ProductFeedbackPageProps {
   managedProductId: number;
@@ -150,6 +155,7 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
     <PageWrapper
       title="Feedback"
       subtitle="Submissions collected from widgets linked to this product"
+      contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
       filters={
         <BuildListToolbar
           search={{
@@ -248,8 +254,8 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
           onClearSelection={handleClearSelection}
         />
       ) : null}
-      <PmPageShell>
-        <PmSection index={0} className="flex flex-1 min-h-0 flex-col">
+      <ManagedProductDetailShell>
+        <ManagedProductDetailPrimarySection>
           <BuildListSurface<SubmissionRow>
             permission="feedbucket:submissions:view"
             rows={data?.data ?? []}
@@ -289,8 +295,8 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
             }
             onRetry={handleRetry}
           />
-        </PmSection>
-      </PmPageShell>
+        </ManagedProductDetailPrimarySection>
+      </ManagedProductDetailShell>
     </PageWrapper>
   );
 }

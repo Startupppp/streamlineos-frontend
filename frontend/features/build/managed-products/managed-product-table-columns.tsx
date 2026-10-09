@@ -3,6 +3,7 @@
 import { useCallback } from "react";
 import Link from "next/link";
 import { EllipsisIcon } from "@animateicons/react/lucide";
+import { ArrowRight, Copy, Link2, Pencil, Trash2 } from "lucide-react";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Button } from "@/components/ui/button";
 import type { DataTableColumn } from "@/components/ui/data-table";
@@ -86,16 +87,31 @@ export function ProductRowActions({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem asChild>
-          <Link href={`/build/managed-products/${product.id}`}>Open</Link>
+          <Link href={`/build/managed-products/${product.id}`}>
+            <ArrowRight aria-hidden="true" />
+            Open
+          </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleCopyLink}>Copy link</DropdownMenuItem>
-        <DropdownMenuItem onClick={handleCopyKey}>Copy key</DropdownMenuItem>
+        <DropdownMenuItem onClick={handleCopyLink}>
+          <Link2 aria-hidden="true" />
+          Copy link
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleCopyKey}>
+          <Copy aria-hidden="true" />
+          Copy key
+        </DropdownMenuItem>
         {canUpdate || canDelete ? <DropdownMenuSeparator /> : null}
-        {canUpdate ? <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem> : null}
+        {canUpdate ? (
+          <DropdownMenuItem onClick={handleEdit}>
+            <Pencil aria-hidden="true" />
+            Edit
+          </DropdownMenuItem>
+        ) : null}
         {canDelete ? (
           <>
             {canUpdate ? <DropdownMenuSeparator /> : null}
             <DropdownMenuItem variant="destructive" onClick={handleDelete}>
+              <Trash2 aria-hidden="true" />
               Delete
             </DropdownMenuItem>
           </>

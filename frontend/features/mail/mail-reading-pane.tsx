@@ -241,7 +241,10 @@ export function MailReadingPane({
   }
 
   return (
-    <div className="flex flex-col h-full min-h-0">
+    <div
+      className="flex h-full w-full min-h-0 min-w-0 max-w-full flex-col overflow-hidden"
+      data-testid="mail-reading-pane"
+    >
       <div className="shrink-0 border-b border-border/40 px-4 py-3 bg-card/60">
         {onBack && (
           <Button
@@ -253,7 +256,7 @@ export function MailReadingPane({
             ← Back
           </Button>
         )}
-        <div className="flex items-start justify-between gap-3 min-w-0">
+        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 flex-1">
             <h2 className="text-sm font-semibold text-foreground leading-tight line-clamp-2">
               {selectedMessage.subject || "(no subject)"}
@@ -278,7 +281,7 @@ export function MailReadingPane({
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto">
+      <div className="min-h-0 min-w-0 max-w-full flex-1 overflow-x-hidden overflow-y-auto">
         {messages.map((msg, index) => (
           <MailThreadMessage
             key={msg.id}

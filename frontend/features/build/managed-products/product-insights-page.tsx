@@ -4,7 +4,7 @@ import { useCallback, useMemo } from "react";
 import { BarChart2, CheckCircle2, FolderOpen, Inbox, LayoutGrid, MessageSquare, ThumbsUp, Clock } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
-import { PmPageShell, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
+import { CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 import { useManagedProductInsights } from "@/hooks/api/build/managed-products";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
@@ -13,6 +13,11 @@ import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import { getUserDisplayName } from "@/lib/person-display";
+import {
+  MANAGED_PRODUCT_DETAIL_CONTENT_CLASS,
+  ManagedProductDetailPrimarySection,
+  ManagedProductDetailShell,
+} from "./managed-product-detail-layout";
 
 const RANGE_OPTIONS = [
   { label: "All time", value: "all" },
@@ -63,6 +68,7 @@ export function ProductInsightsPage({ managedProductId }: ProductInsightsPagePro
     <PageWrapper
       title="Insights"
       subtitle="Aggregated activity for this product"
+      contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
       filters={
         <BuildListToolbar
           filters={[
@@ -84,8 +90,8 @@ export function ProductInsightsPage({ managedProductId }: ProductInsightsPagePro
         />
       }
     >
-      <PmPageShell>
-        <PmSection index={0} className="shrink-0">
+      <ManagedProductDetailShell>
+        <ManagedProductDetailPrimarySection>
           <PageState
             resolution={resolution}
             loading={
@@ -231,8 +237,8 @@ export function ProductInsightsPage({ managedProductId }: ProductInsightsPagePro
               </div>
             </div>
           </PageState>
-        </PmSection>
-      </PmPageShell>
+        </ManagedProductDetailPrimarySection>
+      </ManagedProductDetailShell>
     </PageWrapper>
   );
 }

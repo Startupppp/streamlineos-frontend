@@ -28,7 +28,7 @@ The current [Chat OS PRD](../specs/2026-09-18-chat-os-prd.md), [Ask OS hardening
 | CP-D01 | One pet with many permitted skills, rather than a separate pet per module. |
 | CP-D02 | Small, quiet desktop corner presence; compact mobile entry opens the existing assistant workspace. |
 | CP-D03 | Suggestions and previews precede every pet-initiated write. The user explicitly confirms each write; existing immediate-write Tools are unavailable through the pet until adapted. |
-| CP-D04 | Text, animation, explicit voice input, and user-triggered spoken replies ship together. Voice is progressive enhancement: microphone access starts only from a user action, recognized text remains editable and is never auto-sent, replies never speak automatically, and typed interaction remains complete when browser speech support is unavailable. |
+| CP-D04 | Text, animation, explicit voice input, and user-triggered spoken replies ship together. The dock microphone shows a small listening card above the pet without opening chat. Short recordings go through a permission-scoped backend transcription endpoint; audio is transient and never stored. The returned text remains editable and is never auto-sent. Replies never speak automatically, and typed interaction remains complete when microphone or transcription is unavailable. |
 | CP-D05 | Individual appearance and nudge preferences operate within organization policy. |
 | CP-D06 | Useful reminders may be configured separately. Friendly non-task check-ins are off by default and require individual opt-in. |
 | CP-D07 | “Find bugs” in this release means find and count canonical Build `BUG` tickets. Repository/CI diagnosis is later. |
@@ -90,7 +90,7 @@ Public documentation checked 2026-10-08; these are vendor-described capabilities
 3. Implement CP-02 preferences, trigger evaluation, and prompt delivery; pilot with category-level controls and observe suppression/deduplication.
 4. Release only after cross-role, cross-tenant, browser, persistence, accessibility, notification-delivery, and operational evidence. Keep feature flags and a rollback path to the current Ask OS launcher.
 
-**Later release:** provider-backed cross-browser transcription, voice/persona selection, deeper automation, and repository/CI bug diagnosis. Browser voice in this release does not imply background listening, stored audio, or automatic spoken replies.
+**Later release:** voice/persona selection, deeper automation, and repository/CI bug diagnosis. Voice in this release does not imply background listening, stored audio, or automatic spoken replies. Real microphone capture and provider output remain separate browser acceptance gates.
 
 ## Current evidence and remaining execution gates
 

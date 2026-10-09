@@ -36,6 +36,11 @@ import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useProjectsPage } from "./use-projects-page";
 import { ProjectsViewContent } from "./projects-view-content";
 import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
+import {
+  MANAGED_PRODUCT_DETAIL_CONTENT_CLASS,
+  ManagedProductDetailPrimarySection,
+  ManagedProductDetailShell,
+} from "@/features/build/managed-products/managed-product-detail-layout";
 
 const NewProjectDialog = dynamic(
   () =>
@@ -221,6 +226,9 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
     return actions;
   }, [resumeAction, canCreate, handleOpenCreate]);
 
+  const ContentShell = managedProductId === undefined ? PmPageShell : ManagedProductDetailShell;
+  const PrimarySection = managedProductId === undefined ? PmSection : ManagedProductDetailPrimarySection;
+
   return (
     <RequireModule module="build">
       {canCreate && (
@@ -234,6 +242,11 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
         title={pageTitle}
         subtitle={pageSubtitle}
         actions={<BuildHeaderActions actions={headerActions} />}
+        contentClassName={
+          managedProductId === undefined
+            ? undefined
+            : MANAGED_PRODUCT_DETAIL_CONTENT_CLASS
+        }
         noInternalScroll
         filtersClassName="flex-col items-stretch gap-0 overflow-visible pb-2 [&>*]:w-full [&>*]:min-w-0 [&>*]:shrink"
         filters={
@@ -253,8 +266,8 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
           />
         }
       >
-        <PmPageShell>
-          <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
+        <ContentShell>
+          <PrimarySection index={0} className="flex min-h-0 flex-1 flex-col">
             {pageState.kind !== "ready" ? (
               <PageState
                 resolution={pageState}
@@ -295,8 +308,8 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
                 shouldReduceMotion={shouldReduceMotion}
               />
             )}
-          </PmSection>
-        </PmPageShell>
+          </PrimarySection>
+        </ContentShell>
       </PageWrapper>
     </RequireModule>
   );

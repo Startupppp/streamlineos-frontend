@@ -23,7 +23,7 @@ The first-release audience is every signed-in organization member across the thr
 3. **Review a suggestion.** The pet can display a concise prompt with its reason and one primary action. Selecting it opens the relevant page or prefilled conversation. Dismiss and snooze are adjacent controls; a prompt never captures focus or covers a form submit button.
 4. **Personalize or disable.** Settings expose name, approved appearance preset, tone, animation level, placement, reminder categories, friendly check-ins, snooze, and a master “Hide companion” switch. Hiding the pet retains the normal assistant access path and chat history unless organization AI is disabled.
 5. **Continue across sessions.** Conversation list, messages, proposals, and confirmed results remain associated with the signed-in user and organization. A cosmetic change or pet rename never forks the history.
-6. **Talk by choice.** A microphone control in the companion dock or composer starts browser speech recognition only after the user activates it. Listening and processing are visibly labelled. Final words are added to the current editable draft and never auto-sent. The user can stop or cancel without losing typed text. A completed assistant reply exposes a read-aloud control when speech synthesis is available; playback never starts automatically and stops when the panel closes. Unsupported or denied browser speech leaves the complete text experience available.
+6. **Talk by choice.** The dock microphone keeps the chat panel closed and shows a compact listening card directly above the pet, with status, caption, finish, dismiss, retry, and review controls as appropriate. The composer microphone may use the same capture path inside chat. Capture starts only after activation. A short recording is sent to the authenticated StreamlineOS transcription endpoint, which returns text; the recording is never retained by StreamlineOS. Final words enter an editable draft and are never auto-sent. The user can stop or cancel without losing typed text. Completed assistant replies expose user-triggered read-aloud where speech synthesis is available. Denied or unavailable microphone and transcription errors retain the full text path.
 
 ## Surface contract
 
@@ -64,7 +64,7 @@ The asset is one original StreamlineOS character with curated appearance presets
 - When a prompt and an active conversation compete, the panel remains stable. The prompt is queued or placed in a nonblocking activity area.
 - On logout or organization switch, clear in-memory conversation/context and load only the newly authorized organization's state. Local cosmetic preferences may persist only in the authenticated, scoped preference store.
 - On the first visit, introduce the pet with “Ask”, “Customize”, and “Hide” choices. Do not block the user behind onboarding, require naming the pet, or start friendly conversation.
-- Voice activation is always a direct user action. Browser recognition audio is not recorded or persisted by StreamlineOS. Starting listening stops local reply playback to avoid feedback. Closing the panel, hiding the tab, submitting, logging out, or switching organization ends the active voice session. Browser/provider errors never clear typed text.
+- Voice activation is always a direct user action. Audio exists transiently in browser memory and in the authenticated transcription request; StreamlineOS does not persist it. Recordings are limited to 30 seconds and 4 MiB. Starting listening stops local reply playback to avoid feedback. Dismissing the compact card, hiding the tab, submitting, logging out, or switching organization ends the active voice session. A browser recognition fallback may be used if recording APIs are unavailable. Browser/provider errors never clear typed text.
 
 ## Accessibility and quality requirements
 
@@ -90,4 +90,4 @@ The asset is one original StreamlineOS character with curated appearance presets
 
 ## Out of first release
 
-Provider-backed cross-browser transcription, background listening, stored audio, automatic spoken replies, remembered voice selection, pet marketplace, user-supplied pet code or animation, multiple specialist pets, autonomous social conversation, and a mobile floating character.
+Background listening, stored audio, automatic spoken replies, remembered voice selection, pet marketplace, user-supplied pet code or animation, multiple specialist pets, autonomous social conversation, and a mobile floating character.

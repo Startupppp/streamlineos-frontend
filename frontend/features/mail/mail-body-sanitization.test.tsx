@@ -91,6 +91,17 @@ describe("mail body sanitization runs on the real thread render path", () => {
     expect(body.innerHTML).toContain("Invoice attached, please pay.");
   });
 
+  it("contains wide provider HTML inside the reading pane instead of expanding the app shell", async () => {
+    const body = await renderPane();
+
+    expect(body.closest("[data-testid='mail-reading-pane']")).toHaveClass(
+      "w-full",
+      "min-w-0",
+      "max-w-full",
+      "overflow-hidden",
+    );
+  });
+
   it("no script from the thread body ever executes or survives into the DOM", async () => {
     const body = await renderPane();
 

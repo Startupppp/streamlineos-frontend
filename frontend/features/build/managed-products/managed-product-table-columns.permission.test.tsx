@@ -11,7 +11,9 @@ jest.mock("@/components/ui/dropdown-menu", () => ({
   DropdownMenu: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   DropdownMenuTrigger: ({ children }: { children: ReactNode }) => <>{children}</>,
   DropdownMenuContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  DropdownMenuItem: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  DropdownMenuItem: ({ children, variant }: { children: ReactNode; variant?: string }) => (
+    <div role="menuitem" data-variant={variant ?? "default"}>{children}</div>
+  ),
   DropdownMenuSeparator: () => <hr />,
 }));
 
@@ -38,6 +40,19 @@ function renderActions(canUpdate: boolean, canDelete: boolean) {
 }
 
 describe("managed product row action permissions", () => {
+  it("pairs every action label with an icon while retaining destructive styling", () => {
+    renderActions(true, true);
+
+    for (const label of ["Open", "Copy link", "Copy key", "Edit", "Delete"]) {
+      const item = screen.getByText(label).closest('[role="menuitem"]');
+      expect(item?.querySelector("svg")).not.toBeNull();
+    }
+    expect(screen.getByText("Delete").closest('[role="menuitem"]')).toHaveAttribute(
+      "data-variant",
+      "destructive",
+    );
+  });
+
   it("does not expose Delete to an update-only user", () => {
     renderActions(true, false);
 

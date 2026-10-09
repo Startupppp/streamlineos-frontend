@@ -17,6 +17,11 @@ import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
 import { LinkedProjectRow } from "./linked-project-row";
 import { BuildOfflineNotice } from "@/features/build/shared/build-offline-notice";
 import {
+  MANAGED_PRODUCT_DETAIL_CONTENT_CLASS,
+  ManagedProductDetailPrimarySection,
+  ManagedProductDetailShell,
+} from "@/features/build/managed-products/managed-product-detail-layout";
+import {
   useManagedProductOverview,
   PROJECT_SORT_OPTIONS,
   PROJECT_STATUS_OPTIONS,
@@ -73,6 +78,7 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
       title={product?.name ?? "Product overview"}
       badge={product?.key}
       subtitle={overviewSubtitle}
+      contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
       actions={<BuildHeaderActions actions={editActions} />}
       filters={
         <BuildListToolbar
@@ -137,20 +143,22 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
           defaultValues={product}
         />
       ) : null}
-      <PageState
-        resolution={resolution}
-        loading={<ManagedProductOverviewSkeleton />}
-        empty={
-          <EmptyState
-            title="Product not found"
-            description="This product may have been deleted or moved."
-            className="flex-1"
-          />
-        }
-        onRetry={handleRetry}
-        className="flex-1 min-h-0"
-      >
-        <div className="flex flex-1 min-h-0 flex-col gap-6">
+      <ManagedProductDetailShell>
+        <ManagedProductDetailPrimarySection>
+          <PageState
+            resolution={resolution}
+            loading={<ManagedProductOverviewSkeleton />}
+            empty={
+              <EmptyState
+                title="Product not found"
+                description="This product may have been deleted or moved."
+                className="flex-1"
+              />
+            }
+            onRetry={handleRetry}
+            className="flex-1 min-h-0"
+          >
+            <div className="flex flex-1 min-h-0 flex-col gap-6">
           <BuildOfflineNotice dataUpdatedAt={productDataUpdatedAt} />
 
           <StatCardGrid cols={3}>
@@ -251,8 +259,10 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
               </CardContent>
             </Card>
           )}
-        </div>
-      </PageState>
+            </div>
+          </PageState>
+        </ManagedProductDetailPrimarySection>
+      </ManagedProductDetailShell>
     </PageWrapper>
   );
 }

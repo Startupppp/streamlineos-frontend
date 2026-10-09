@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useSyncExternalStore, type CSSProperties } from "react";
+import { useId, useMemo, useSyncExternalStore, type CSSProperties } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -16,10 +16,10 @@ export type CompanionActivity =
 
 const PRESET_COLORS: Record<string, { shell: string; shellDark: string; glow: string; face: string }> = {
   default: {
-    shell: "var(--primary)",
-    shellDark: "color-mix(in oklab, var(--primary) 72%, black)",
-    glow: "var(--category-cyan-fill, #67e8f9)",
-    face: "color-mix(in oklab, var(--primary) 24%, #07162f)",
+    shell: "#527cff",
+    shellDark: "#2449c9",
+    glow: "#67ecff",
+    face: "#0a1838",
   },
   dusk: {
     shell: "var(--category-violet-fill)",
@@ -127,7 +127,9 @@ function CompanionFace({ state }: { state: CompanionActivity }) {
     <g fill="var(--cp-glow)">
       <rect x="23" y="26" width="7" height="5" rx="2.5" />
       <rect x="42" y="26" width="7" height="5" rx="2.5" />
-      <path d="M34 35.5h4" stroke="var(--cp-glow)" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M32 35q4 3.5 8 0" fill="none" stroke="var(--cp-glow)" strokeWidth="1.7" strokeLinecap="round" />
+      <circle cx="20" cy="34" r="1.2" opacity=".55" />
+      <circle cx="52" cy="34" r="1.2" opacity=".55" />
     </g>
   );
 }
@@ -140,6 +142,7 @@ interface CompanionCharacterProps {
 }
 
 export function CompanionCharacter({ preset, state, animation, className }: CompanionCharacterProps) {
+  const gradientId = useId().replace(/:/g, "");
   const hidden = useSyncExternalStore(subscribeVisibility, pageHidden, serverPageHidden);
   const reduce = useReducedMotion();
   const colors = PRESET_COLORS[preset] ?? PRESET_COLORS.default;
@@ -176,25 +179,33 @@ export function CompanionCharacter({ preset, state, animation, className }: Comp
       className={cn("shrink-0 overflow-visible drop-shadow-sm", className)}
       style={style}
     >
-      <ellipse cx="36" cy="75" rx="18" ry="3" fill="currentColor" opacity=".14" />
+      <defs>
+        <linearGradient id={`${gradientId}-shell`} x1="12%" y1="5%" x2="88%" y2="100%">
+          <stop stopColor="var(--cp-glow)" stopOpacity=".85" />
+          <stop offset=".27" stopColor="var(--cp-shell)" />
+          <stop offset="1" stopColor="var(--cp-shell-dark)" />
+        </linearGradient>
+        <linearGradient id={`${gradientId}-visor`} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop stopColor="#182d5d" />
+          <stop offset="1" stopColor="var(--cp-face)" />
+        </linearGradient>
+      </defs>
+      <ellipse cx="36" cy="75" rx="20" ry="3" fill="var(--cp-shell-dark)" opacity=".25" />
       <motion.g animate={figureAnimation} transition={figureTransition} style={{ transformOrigin: "36px 72px" }}>
-        <path d="M18 52c-6 2-8 8-5 14 1.2 2.5 3.4 3.4 5.4 1.7l4.8-7.1" fill="var(--cp-shell-dark)" />
-        <path d="M54 52c6 2 8 8 5 14-1.2 2.5-3.4 3.4-5.4 1.7l-4.8-7.1" fill="var(--cp-shell-dark)" />
-        <rect x="23" y="45" width="26" height="24" rx="11" fill="var(--cp-shell)" />
-        <path d="M28 65v7c0 2 1.5 3 3.5 3h1c2 0 3-1 3-3v-5M44 65v7c0 2-1.5 3-3.5 3h-1c-2 0-3-1-3-3v-5" fill="var(--cp-shell-dark)" />
-        <rect x="29" y="50" width="14" height="10" rx="5" fill="var(--cp-face)" opacity=".34" />
-        <path d="M33 53.2l3 2.2-3 2.2M39 53.2l-3 2.2 3 2.2" fill="none" stroke="var(--cp-glow)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M13 17l-6 7 6 7zM59 17l6 7-6 7z" fill="var(--cp-shell-dark)" />
-        <rect x="7" y="19" width="10" height="17" rx="5" fill="var(--cp-shell)" />
-        <rect x="55" y="19" width="10" height="17" rx="5" fill="var(--cp-shell)" />
-        <rect x="11" y="7" width="50" height="41" rx="18" fill="var(--cp-shell)" />
-        <path d="M19 10c8-5 26-5 34 0" fill="none" stroke="white" strokeOpacity=".24" strokeWidth="2" strokeLinecap="round" />
-        <rect x="16" y="15" width="40" height="27" rx="10" fill="var(--cp-face)" />
-        <path d="M20 18c7-3 25-3 32 0" fill="none" stroke="white" strokeOpacity=".08" strokeWidth="2" strokeLinecap="round" />
+        <path d="M19 50 9 56l-3 9 7 5 9-6 4-10zM53 50l10 6 3 9-7 5-9-6-4-10z" fill="var(--cp-shell-dark)" stroke="var(--cp-face)" strokeWidth="1.5" strokeLinejoin="round" />
+        <path d="m9 58-2 7 6 2 5-5M63 58l2 7-6 2-5-5" fill="var(--cp-shell)" opacity=".8" />
+        <path d="M25 45h22l8 13-5 13H22l-5-13z" fill={`url(#${gradientId}-shell)`} stroke="var(--cp-face)" strokeWidth="2.5" strokeLinejoin="round" />
+        <path d="M25 68v5q0 3 3 3h7l1-7M47 68v5q0 3-3 3h-7l-1-7" fill="var(--cp-shell-dark)" stroke="var(--cp-face)" strokeWidth="2" />
+        <path d="M23 53h26l2 10-6 6H27l-6-6z" fill="var(--cp-face)" opacity=".75" />
+        <path d="m27 57 5 4-5 4m18-8-5 4 5 4" fill="none" stroke="var(--cp-glow)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M33 61h6" stroke="var(--cp-shell)" strokeWidth="2" strokeLinecap="round" />
+        <path d="M14 15 20 3l10 7 6-6 6 6 10-7 6 12 7 10-4 19-12 9H23L11 44 7 25z" fill={`url(#${gradientId}-shell)`} stroke="var(--cp-face)" strokeWidth="2.5" strokeLinejoin="round" />
+        <path d="m20 4 3 10-9 5m38-15-3 10 9 5M36 5v8" fill="none" stroke="var(--cp-glow)" strokeOpacity=".75" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M13 26q0-10 12-12h22q12 2 12 12l-3 15q-3 7-20 8-17-1-20-8z" fill={`url(#${gradientId}-visor)`} stroke="var(--cp-shell-dark)" strokeWidth="2" />
+        <path d="M19 22q5-5 16-5h10" fill="none" stroke="white" strokeOpacity=".22" strokeWidth="2" strokeLinecap="round" />
         <CompanionFace state={state} />
-        <path d="M36 7V3" stroke="var(--cp-shell-dark)" strokeWidth="2" strokeLinecap="round" />
         <motion.path
-          d="M36 0.5l2.2 2.2L36 5l-2.2-2.3z"
+          d="m36 1 2.2 2.2L36 5.4l-2.2-2.2z"
           fill="var(--cp-glow)"
           animate={motionEnabled && state === "thinking" ? { opacity: [0.35, 1, 0.35], scale: [0.85, 1.15, 0.85] } : undefined}
           transition={{ duration: 0.9, repeat: Infinity, ease: "easeInOut" }}

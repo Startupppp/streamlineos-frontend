@@ -57,7 +57,7 @@ function MessagePreviewRow({
       type="button"
       onClick={handleClick}
       className={cn(
-        "group grid min-h-12 w-full grid-cols-[minmax(0,8rem)_minmax(0,1fr)_auto] items-center gap-3 border-b border-border/50 px-4 py-2 text-left transition-colors last:border-b-0",
+        "group grid min-h-16 w-full grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 border-b border-border/50 px-4 py-3 text-left transition-colors last:border-b-0",
         "hover:bg-muted/50 focus-visible:relative focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
         !message.isRead && "bg-muted/25",
       )}
@@ -75,19 +75,17 @@ function MessagePreviewRow({
           {senderLabel(message)}
         </span>
       </span>
+      <span className="row-start-1 flex shrink-0 items-center gap-2 text-micro tabular-nums text-muted-foreground">
+        {message.hasAttachments ? <Paperclip className="size-3" aria-label="Has attachments" /> : null}
+        <span>{formatPreviewDate(message.date)}</span>
+      </span>
       <span
         className={cn(
-          "min-w-0 truncate text-xs text-muted-foreground",
+          "col-span-2 min-w-0 truncate pl-3.5 text-xs text-muted-foreground",
           !message.isRead && "font-medium text-foreground",
         )}
       >
         {message.subject || "(no subject)"}
-      </span>
-      <span className="flex shrink-0 items-center gap-2 text-micro tabular-nums text-muted-foreground">
-        {message.hasAttachments ? (
-          <Paperclip className="size-3" aria-label="Has attachments" />
-        ) : null}
-        <span>{formatPreviewDate(message.date)}</span>
       </span>
     </button>
   );

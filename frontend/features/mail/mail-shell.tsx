@@ -11,6 +11,7 @@ import { useMailAccounts, useMailAction } from "@/hooks/api/mail";
 import { useFinalizeIntegrationConnection } from "@/hooks/api/integrations";
 import { useCan, usePermissionGate } from "@/hooks/api/access";
 import { PageState } from "@/components/shared/page-state";
+import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { MailListPane } from "./mail-list-pane";
 import { MailEmptyPane } from "./mail-empty-pane";
 import { MailHeader, MAIL_ACCOUNT_SENTINEL } from "./mail-header";
@@ -85,6 +86,7 @@ export function MailShell() {
     type: "compose",
   });
   const [summarySheetOpen, setSummarySheetOpen] = useState(false);
+  const [recentDrawerOpen, setRecentDrawerOpen] = useState(false);
   const composeParamConsumedRef = useRef(false);
 
   const rawAccountId = searchParams.get("accountId");
@@ -193,6 +195,10 @@ export function MailShell() {
     },
     [canManageMail, mailActionMutate, queryClient, searchParams, router],
   );
+  const handleSelectRecentMessage = useCallback((message: MailMessageSummary) => {
+    setRecentDrawerOpen(false);
+    handleSelectMessage(message);
+  }, [handleSelectMessage]);
 
   useEffect(() => {
     if (urlAccountId === null || (urlMessageId === null && urlThreadId === null)) return;
@@ -302,6 +308,7 @@ export function MailShell() {
         onGenerateBrief={handleGenerateBrief}
         onOpenBrief={handleBriefDetails}
         onOpenAccounts={handleOpenAccountsSheet}
+        onOpenRecent={() => setRecentDrawerOpen(true)}
       />
 
       <PageState
@@ -333,7 +340,7 @@ export function MailShell() {
 
         <div
           className={cn(
-            "flex flex-1 min-h-0 min-w-0 bg-muted/15",
+            "flex w-0 max-w-full flex-1 min-h-0 min-w-0 overflow-hidden bg-muted/15",
             showMobileList && "hidden lg:flex",
           )}
         >
@@ -385,6 +392,17 @@ export function MailShell() {
           summaryState={summaryState}
         />
       )}
+      <Drawer open={recentDrawerOpen} onOpenChange={setRecentDrawerOpen} shouldScaleBackground={false}>
+        <DrawerContent className="max-h-[88dvh] gap-0 overflow-hidden p-0">
+          <DrawerHeader className="border-b border-border px-4 py-3 text-left">
+            <DrawerTitle>Recent mail</DrawerTitle>
+            <DrawerDescription>Open a recent message without losing your place.</DrawerDescription>
+          </DrawerHeader>
+          <div className="min-h-0 flex-1 overflow-hidden">
+            <MailEmptyPane variant="select" selectedAccountId={selectedAccountId} onSelectMessage={handleSelectRecentMessage} />
+          </div>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 }

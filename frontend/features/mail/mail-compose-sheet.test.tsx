@@ -235,8 +235,10 @@ describe("MailComposeSheet — draft lifecycle and offline sending", () => {
 
     const send = screen.getByRole("button", { name: /^send$/i });
     const footer = send.parentElement;
-    expect(footer).toHaveClass("grid", "grid-cols-2");
+    expect(footer).toHaveClass("grid", "grid-cols-2", "w-full");
+    expect(footer).not.toHaveClass("sm:flex");
     expect(send).toHaveClass("w-full");
+    expect(send).not.toHaveClass("sm:w-auto");
     expect(screen.getByRole("button", { name: "Discard" })).toHaveClass("w-full");
 
     const aiToolbar = screen.getByRole("button", { name: "Write with AI" }).parentElement;

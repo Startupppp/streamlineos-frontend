@@ -31,11 +31,16 @@ function LegacyAskOsLauncher() {
 
 interface AskOsLauncherProps {
   onVoiceStart?: () => void;
-  voiceState?: "idle" | "listening" | "processing" | "error";
+  onVoiceDismiss?: () => void;
+  onVoiceReview?: () => void;
+  voiceState?: "idle" | "requesting" | "listening" | "processing" | "error";
   voiceSupported?: boolean;
+  voiceMessage?: string | null;
+  voiceCaption?: string;
+  voiceOverlayOpen?: boolean;
 }
 
-export function AskOsLauncher({ onVoiceStart, voiceState, voiceSupported }: AskOsLauncherProps = {}) {
+export function AskOsLauncher({ onVoiceStart, onVoiceDismiss, onVoiceReview, voiceState, voiceSupported, voiceMessage, voiceCaption, voiceOverlayOpen }: AskOsLauncherProps = {}) {
   const companion = useCompanionPresence();
   const state = useAskOsCompanionState();
   if (companion) {
@@ -44,8 +49,13 @@ export function AskOsLauncher({ onVoiceStart, voiceState, voiceSupported }: AskO
         state={state}
         preferences={companion}
         onVoiceStart={onVoiceStart}
+        onVoiceDismiss={onVoiceDismiss}
+        onVoiceReview={onVoiceReview}
         voiceState={voiceState}
         voiceSupported={voiceSupported}
+        voiceMessage={voiceMessage}
+        voiceCaption={voiceCaption}
+        voiceOverlayOpen={voiceOverlayOpen}
       />
     );
   }

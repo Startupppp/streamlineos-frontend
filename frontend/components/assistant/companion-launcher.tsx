@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { MessageCircle, Mic, MicOff } from "lucide-react";
+import { MessageCircle, Mic, MicOff, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   useCompanionHeartbeat,
@@ -117,16 +117,26 @@ interface CompanionLauncherProps {
   state: AskOsCompanionState;
   preferences: CompanionPreference;
   onVoiceStart?: () => void;
-  voiceState?: "idle" | "listening" | "processing" | "error";
+  onVoiceDismiss?: () => void;
+  onVoiceReview?: () => void;
+  voiceState?: "idle" | "requesting" | "listening" | "processing" | "error";
   voiceSupported?: boolean;
+  voiceMessage?: string | null;
+  voiceCaption?: string;
+  voiceOverlayOpen?: boolean;
 }
 
 export function CompanionLauncher({
   state: chatState,
   preferences,
   onVoiceStart,
+  onVoiceDismiss,
+  onVoiceReview,
   voiceState = "idle",
   voiceSupported = false,
+  voiceMessage,
+  voiceCaption,
+  voiceOverlayOpen = false,
 }: CompanionLauncherProps) {
   const router = useRouter();
   const { open, setOpen, toggle } = useAskOs();
@@ -163,11 +173,11 @@ export function CompanionLauncher({
   const paused =
     preferences.pausedUntil !== null && Date.parse(preferences.pausedUntil) > now;
   const pet = companionPetState(chatState === "idle" && paused ? "quiet" : chatState);
-  const petVisual = voiceState === "listening" ? "listening" : pet.visual;
+  const petVisual = voiceState === "listening" || voiceState === "requesting" ? "listening" : pet.visual;
   const name = companionDisplayName(preferences);
   const status = pet.label;
   const left = preferences.anchor === "bottom-left";
-  const showIntro = !introSeen && !open;
+  const showIntro = !introSeen && !open && !voiceOverlayOpen;
 
   function dismissIntro() {
     writeIntroSeen(introKey);
@@ -188,6 +198,10 @@ export function CompanionLauncher({
   function handleVoiceStart() {
     onVoiceStart?.();
   }
+  function handleChatToggle() {
+    if (voiceOverlayOpen) onVoiceDismiss?.();
+    toggle();
+  }
 
   return (
     <div
@@ -196,7 +210,34 @@ export function CompanionLauncher({
         left ? "fixed bottom-0 left-0 z-50 w-auto" : "w-full justify-end",
       )}
     >
-      {showIntro ? (
+      {voiceOverlayOpen ? (
+        <div
+          role="group"
+          aria-label="Companion voice input"
+          className={cn(
+            "absolute bottom-full mb-2 w-72 rounded-2xl border border-border/80 bg-popover p-3 text-popover-foreground shadow-2xl backdrop-blur-xl",
+            left ? "left-2" : "right-2",
+          )}
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span className="flex items-center gap-2 text-xs font-semibold">
+              <span className={cn("size-2 rounded-full bg-primary", voiceState === "listening" && "animate-pulse")} />
+              {voiceState === "listening" ? "Listening to you" : voiceState === "requesting" ? "Connecting microphone" : voiceState === "processing" ? "Writing your words" : voiceState === "error" ? "Voice needs attention" : "Ready to review"}
+            </span>
+            <button type="button" onClick={onVoiceDismiss} aria-label="Dismiss voice input" className="rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground"><X className="size-3.5" aria-hidden /></button>
+          </div>
+          <p role="status" aria-live="polite" className={cn("mt-2 min-h-8 text-sm leading-snug", voiceState === "error" ? "text-destructive" : "text-foreground")}>
+            {voiceCaption ? `“${voiceCaption}”` : voiceMessage ?? "Say what you need help with."}
+          </p>
+          <p className="mt-1 text-micro leading-snug text-muted-foreground">Audio is sent to OpenAI for transcription and isn&apos;t saved by StreamlineOS.</p>
+          <div className="mt-2 flex items-center justify-end gap-2">
+            {voiceState === "listening" ? <button type="button" onClick={onVoiceStart} className="rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground">Finish speaking</button> : null}
+            {voiceState === "error" ? <button type="button" onClick={onVoiceStart} className="rounded-full border border-border px-3 py-1.5 text-xs font-semibold">Try again</button> : null}
+            {voiceCaption ? <button type="button" onClick={onVoiceReview} className="rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground">Review in chat</button> : null}
+            {voiceState === "error" ? <button type="button" onClick={onVoiceReview} className="rounded-full border border-border px-3 py-1.5 text-xs font-semibold">Type instead</button> : null}
+          </div>
+        </div>
+      ) : showIntro ? (
         <div
           role="dialog"
           aria-modal="false"
@@ -217,13 +258,13 @@ export function CompanionLauncher({
           </div>
         </div>
       ) : (
-        <CompanionPromptBubble enabled={!open} preferences={preferences} />
+        <CompanionPromptBubble enabled={!open && !voiceOverlayOpen} preferences={preferences} />
       )}
       <div className={cn("flex flex-col items-center px-2 pb-2 pt-1", open && "ml-auto")}>
         <button
           ref={buttonRef}
           type="button"
-          onClick={toggle}
+          onClick={handleChatToggle}
           aria-expanded={open}
           aria-label={`${open ? "Minimize" : "Open"} ${name}, ${status}`}
           className="group flex min-h-11 max-w-full flex-col items-center justify-end rounded-2xl text-foreground outline-none transition-transform hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
@@ -234,14 +275,14 @@ export function CompanionLauncher({
             preset={preferences.preset}
             state={petVisual}
             animation={preferences.animation}
-            className={cn("relative", open ? "size-14" : "size-20")}
+            className={cn("relative", open ? "size-16" : "size-24")}
           />
         </span>
         </button>
         <span className="relative -mt-1 flex max-w-[10rem] items-center gap-0.5 rounded-full border border-border/80 bg-card/95 p-1 shadow-lg backdrop-blur">
           <button
             type="button"
-            onClick={toggle}
+            onClick={handleChatToggle}
             aria-label={open ? `Minimize ${name}` : `Chat with ${name}`}
             className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
@@ -254,9 +295,9 @@ export function CompanionLauncher({
           <button
             type="button"
             onClick={handleVoiceStart}
-            disabled={!voiceSupported || voiceState === "processing"}
+            disabled={voiceState === "processing" || voiceState === "requesting"}
             aria-label={voiceState === "listening" ? "Stop voice input" : `Talk to ${name}`}
-            title={voiceSupported ? "Voice input" : "Voice input is not supported in this browser"}
+            title={voiceSupported ? "Voice input" : "Check voice input availability"}
             className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-45"
           >
             {voiceState === "listening" ? <MicOff className="size-4" aria-hidden /> : <Mic className="size-4" aria-hidden />}

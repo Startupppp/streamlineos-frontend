@@ -23,7 +23,7 @@ import {
   BUILD_FILTER_ALL,
   useBuildListFilters,
 } from "@/features/build/shared/use-build-list-filters";
-import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import { ResponsiveBuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { IncidentFollowUpBulkBar } from "./incident-follow-up-bulk-bar";
 import { EditFollowUpDialog, AddFollowUpForm } from "./incident-follow-up-form";
 import {
@@ -67,7 +67,10 @@ function FollowUpStatusCell({
 
   if (!canManage) {
     return (
-      <Badge variant="outline" className={`text-micro ${FOLLOW_UP_STATUS_STYLES[action.status]}`}>
+      <Badge
+        variant="outline"
+        className={`text-micro ${FOLLOW_UP_STATUS_STYLES[action.status]}`}
+      >
         {FOLLOW_UP_STATUS_LABELS[action.status]}
       </Badge>
     );
@@ -144,7 +147,9 @@ function buildFollowUpColumns(options: {
         <div className="min-w-0 space-y-0.5">
           <p className="text-xs text-foreground">{row.title}</p>
           {row.description ? (
-            <p className="text-micro text-muted-foreground">{row.description}</p>
+            <p className="text-micro text-muted-foreground">
+              {row.description}
+            </p>
           ) : null}
         </div>
       ),
@@ -157,7 +162,9 @@ function buildFollowUpColumns(options: {
         const owner = members.find((m) => m.id === row.ownerId);
         return (
           <span className="text-xs text-muted-foreground">
-            {owner?.name ?? owner?.email ?? (row.ownerId ? "Former member" : "Unassigned")}
+            {owner?.name ??
+              owner?.email ??
+              (row.ownerId ? "Former member" : "Unassigned")}
           </span>
         );
       },
@@ -215,13 +222,19 @@ export function IncidentFollowUps({
   canManage: boolean;
   members: ProjectMemberRecord[];
 }) {
-  const listFilters = useBuildListFilters({ filters: STATUS_FILTER_DEFINITIONS, withSearch: false });
+  const listFilters = useBuildListFilters({
+    filters: STATUS_FILTER_DEFINITIONS,
+    withSearch: false,
+  });
   const [selectedIds, setSelectedIds] = useState(new Set<string | number>());
   const handleClearSelection = () => setSelectedIds(new Set());
 
   const filtered = useMemo(() => {
     const statusFilter = listFilters.value("followUpStatus");
-    const sorted = [...actions].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const sorted = [...actions].sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
     if (statusFilter === BUILD_FILTER_ALL) return sorted;
     return sorted.filter((a) => a.status === statusFilter);
   }, [actions, listFilters]);
@@ -240,11 +253,14 @@ export function IncidentFollowUps({
           Follow-up actions
         </p>
         {unresolved > 0 ? (
-          <Badge variant="outline" className="text-micro text-status-warning-ink-strong border-status-warning-rule">
+          <Badge
+            variant="outline"
+            className="text-micro text-status-warning-ink-strong border-status-warning-rule"
+          >
             {unresolved} unresolved
           </Badge>
         ) : null}
-        <BuildFilterSelect
+        <ResponsiveBuildFilterSelect
           label="Status"
           value={listFilters.value("followUpStatus")}
           options={STATUS_FILTER_OPTIONS}
@@ -263,7 +279,9 @@ export function IncidentFollowUps({
 
       {filtered.length === 0 ? (
         <p className="text-xs italic text-muted-foreground">
-          {listFilters.isFiltered ? "No follow-up actions match the current filter." : "No follow-up actions yet."}
+          {listFilters.isFiltered
+            ? "No follow-up actions match the current filter."
+            : "No follow-up actions yet."}
         </p>
       ) : (
         <DataTable
@@ -282,7 +300,9 @@ export function IncidentFollowUps({
         />
       )}
 
-      {canManage && <AddFollowUpForm projectId={projectId} incidentId={incidentId} />}
+      {canManage && (
+        <AddFollowUpForm projectId={projectId} incidentId={incidentId} />
+      )}
     </div>
   );
 }

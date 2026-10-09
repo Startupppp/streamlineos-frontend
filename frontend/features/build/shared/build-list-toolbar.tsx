@@ -82,9 +82,14 @@ function ToolbarFilterSlot({
 
 function ToolbarDrawerField({ filter }: { filter: BuildToolbarFilter }) {
   return (
-    <div className="flex flex-col gap-1.5">
+    <div
+      data-slot="build-toolbar-drawer-field"
+      className="flex w-full min-w-0 flex-col gap-1.5"
+    >
       <span className="text-sm font-normal text-foreground">{filter.label}</span>
-      <div className="[&_[data-slot=select-trigger]]:w-full">{filter.control}</div>
+      <div className="w-full min-w-0 [&>*]:w-full [&>*]:max-w-none [&_[data-slot=select-trigger]]:w-full">
+        {filter.control}
+      </div>
     </div>
   );
 }
@@ -113,7 +118,7 @@ export function BuildListToolbar({
   const isMobile = useIsMobile();
   const shouldReduceMotion = useReducedMotion();
   const layout = buildToolbarLayout({ search, filters });
-  const showDrawer = layout.collapse || layout.fieldFilterCount > 1;
+  const showDrawer = layout.fieldFilterCount > 0;
   const searchExpanded = isToolbarMobileSearchExpanded({
     isMobile,
     focused: searchFocused,
@@ -187,15 +192,15 @@ export function BuildListToolbar({
                 <ResponsiveIconLabelText className="truncate">
                   {BUILD_TOOLBAR_FILTERS_LABEL}
                 </ResponsiveIconLabelText>
-                {layout.collapsedActiveCount > 0 ? (
+                {layout.activeCount > 0 ? (
                   <span className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 px-1 text-dense font-normal tabular-nums text-foreground">
-                    {layout.collapsedActiveCount}
+                    {layout.activeCount}
                   </span>
                 ) : null}
               </Button>
             </DrawerTrigger>
           </MobileOnlyLabelTooltip>
-          <DrawerContent className="max-h-[85dvh] gap-0">
+          <DrawerContent className="w-full max-w-none max-h-[85dvh] gap-0">
             <DrawerHeader className="shrink-0 border-b border-border text-left">
               <DrawerTitle className="text-base">{drawerTitle}</DrawerTitle>
               <DrawerDescription className="text-label">
@@ -205,7 +210,8 @@ export function BuildListToolbar({
             <div
               ref={drawerBodyRef}
               tabIndex={-1}
-              className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4 outline-none"
+              data-slot="build-toolbar-drawer-body"
+              className="flex min-h-0 min-w-0 w-full flex-1 flex-col gap-4 overflow-y-auto p-4 outline-none"
             >
               {layout.filters.map((entry) => {
                 if (!isToolbarFieldFilter(entry.filter)) return null;

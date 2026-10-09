@@ -127,6 +127,8 @@ describe("MailHtmlViewer — HTML sanitization", () => {
       await waitFor(() =>
         expect(getMailBody()?.querySelector("img")?.getAttribute("src")).toBe("https://example.com/img.png"),
       );
+      expect(getMailBody()?.querySelector("img")).toHaveAttribute("referrerpolicy", "no-referrer");
+      expect(getMailBody()?.querySelector("img")).toHaveAttribute("loading", "lazy");
     });
 
     it("does not block inline data: images", async () => {

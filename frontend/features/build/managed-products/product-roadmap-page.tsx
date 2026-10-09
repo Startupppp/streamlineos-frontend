@@ -24,8 +24,6 @@ import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { BUILD_FILTER_ALL, useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import {
-  PmPageShell,
-  PmSection,
   PmPanel,
   PmStaggerList,
   CONTENT_FILL_PANEL,
@@ -37,6 +35,11 @@ import {
   ROADMAP_SORT_OPTS,
   ROADMAP_FILTER_DEFS,
 } from "./product-roadmap-model";
+import {
+  MANAGED_PRODUCT_DETAIL_CONTENT_CLASS,
+  ManagedProductDetailPrimarySection,
+  ManagedProductDetailShell,
+} from "./managed-product-detail-layout";
 
 interface ProductRoadmapPageProps {
   managedProductId: number;
@@ -158,6 +161,7 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
     <PageWrapper
       title="Roadmap"
       subtitle="Product roadmap items"
+      contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
       actions={
         resolution.kind !== "denied" ? (
           <Button size="sm" onClick={handleOpenCreate}>New Item</Button>
@@ -217,8 +221,8 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
         />
       }
     >
-      <PmPageShell>
-        <PmSection index={0} className="flex min-h-0 flex-1 flex-col gap-4">
+      <ManagedProductDetailShell>
+        <ManagedProductDetailPrimarySection className="gap-4">
           <PageState
             resolution={resolution}
             loading={<RoadmapSkeleton />}
@@ -270,8 +274,8 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
                 ))}
             </BuildPaginatedContent>
           </PageState>
-        </PmSection>
-      </PmPageShell>
+        </ManagedProductDetailPrimarySection>
+      </ManagedProductDetailShell>
 
       {createOpen ? <RoadmapItemSheet onClose={handleCloseCreate} /> : null}
       {editTarget ? <RoadmapItemSheet item={editTarget} onClose={handleCloseEdit} /> : null}

@@ -98,7 +98,7 @@ function server({ preferences, policy, prefsFail, prompt = null, claimConflict, 
 
 const harness: { current: ReturnType<typeof useAskOsState> | null } = { current: null };
 
-function Harness({ activity = "idle" }: { activity?: AskOsCompanionState }) {
+function Harness({ activity = "idle", voice }: { activity?: AskOsCompanionState; voice?: boolean }) {
   const state = useAskOsState();
   useEffect(() => {
     harness.current = state;
@@ -106,7 +106,15 @@ function Harness({ activity = "idle" }: { activity?: AskOsCompanionState }) {
   return (
     <AskOsContext.Provider value={state}>
       <AskOsCompanionStateContext value={activity}>
-        <AskOsLauncher />
+        <AskOsLauncher
+          onVoiceStart={voice ? jest.fn() : undefined}
+          onVoiceDismiss={voice ? jest.fn() : undefined}
+          onVoiceReview={voice ? jest.fn() : undefined}
+          voiceState={voice ? "listening" : "idle"}
+          voiceSupported={voice}
+          voiceOverlayOpen={voice}
+          voiceMessage={voice ? "Listening… tap the microphone when you are done." : null}
+        />
       </AskOsCompanionStateContext>
     </AskOsContext.Provider>
   );
@@ -118,12 +126,12 @@ async function settle() {
   });
 }
 
-function renderLauncher(activity?: AskOsCompanionState) {
+function renderLauncher(activity?: AskOsCompanionState, voice = false) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   function Wrapper({ children }: { children: ReactNode }) {
     return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
   }
-  return { ...render(<Harness activity={activity} />, { wrapper: Wrapper }), client };
+  return { ...render(<Harness activity={activity} voice={voice} />, { wrapper: Wrapper }), client };
 }
 
 beforeEach(() => {
@@ -241,6 +249,13 @@ describe("companion activity timing", () => {
 });
 
 describe("companion keyboard focus", () => {
+  it("shows a small listening caption above the pet while chat stays closed", async () => {
+    server();
+    renderLauncher("idle", true);
+    expect(await screen.findByText("Listening to you")).toBeInTheDocument();
+    expect(screen.getByText("Listening… tap the microphone when you are done.")).toBeInTheDocument();
+    expect(harness.current?.open).toBe(false);
+  });
   it("opens from the keyboard and returns focus to the pet when the panel closes", async () => {
     server();
     const user = userEvent.setup();

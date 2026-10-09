@@ -46,6 +46,7 @@ it("uses one common page header with the daily brief in its action row", () => {
   );
 
   expect(screen.getByRole("heading", { name: "Mail" })).toBeInTheDocument();
+  expect(screen.getByRole("heading", { name: "Mail" })).not.toHaveClass("hidden");
   expect(screen.getByText("Messages and follow-ups across your connected accounts")).toBeInTheDocument();
   expect(screen.getAllByLabelText("Daily mail brief")).toHaveLength(1);
   expect(screen.queryByText("Your inbox, distilled")).toBeNull();

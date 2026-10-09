@@ -17,7 +17,6 @@ import {
 import { PageState } from "@/components/shared/page-state";
 import { cn } from "@/lib/utils";
 import {
-  PmPageShell,
   PmSection,
   PmStaggerList,
   CONTENT_FILL_PANEL,
@@ -34,6 +33,11 @@ import {
   GoalsListToolbar,
 } from "@/features/build/goals/goals-list-toolbar";
 import { useProductGoalsPage, PAGE_SIZE } from "./use-product-goals-page";
+import {
+  MANAGED_PRODUCT_DETAIL_CONTENT_CLASS,
+  ManagedProductDetailPrimarySection,
+  ManagedProductDetailShell,
+} from "./managed-product-detail-layout";
 
 interface ProductGoalsPageProps {
   managedProductId: number;
@@ -90,10 +94,11 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
     <PageWrapper
       title="Goals & OKRs"
       subtitle="Product objectives and key results"
+      contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
       filters={<GoalsListToolbar listFilters={listFilters} searchInputRef={searchInputRef} />}
       actions={<BuildHeaderActions actions={createActions} />}
     >
-      <PmPageShell>
+      <ManagedProductDetailShell>
         <PmSection index={0} className="shrink-0">
           <StatCardGrid cols={4}>
             <StatCard
@@ -129,7 +134,7 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
 
         <BuildOfflineNotice dataUpdatedAt={dataUpdatedAt} />
 
-        <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
+        <ManagedProductDetailPrimarySection index={1}>
           <PageState
             resolution={resolution}
             loading={<GoalsSkeleton />}
@@ -195,8 +200,8 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
                 })}
             </BuildPaginatedContent>
           </PageState>
-        </PmSection>
-      </PmPageShell>
+        </ManagedProductDetailPrimarySection>
+      </ManagedProductDetailShell>
 
       <ShortcutHelpDialog open={shortcutHelpOpen} onOpenChange={setShortcutHelpOpen} />
 

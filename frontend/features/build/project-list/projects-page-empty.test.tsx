@@ -55,6 +55,19 @@ describe("the Build projects page with nothing in it", () => {
     expect(screen.getByText("No projects yet")).toBeInTheDocument();
   });
 
+  it("uses the full-height managed-product detail body for linked-projects empty state", () => {
+    const { container } = render(<ProjectsPage managedProductId={7} />);
+    const detailShell = Array.from(container.querySelectorAll("div")).find(
+      (element) =>
+        element.classList.contains("relative") &&
+        element.classList.contains("h-full") &&
+        element.classList.contains("flex-1"),
+    );
+
+    expect(detailShell).toBeDefined();
+    expect(screen.getByText("No projects yet")).toBeInTheDocument();
+  });
+
   it("keeps pagination available when client-side visibility removes every row on a page that has more", () => {
     projects.mockReturnValue({
       data: {

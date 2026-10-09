@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { TicketFilterBar } from "@/features/build/shared/ticket-filter-bar";
-import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import { ResponsiveBuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import type { StatusOptionSource } from "@/features/build/shared/types";
 import { cn } from "@/lib/utils";
 import type { BuildMember } from "@/hooks/api/build/build-members";
@@ -121,7 +121,7 @@ export function AllWorkPageToolbar({
           trailing={
             <>
               {teamOptions.length > 1 && (
-                <BuildFilterSelect
+                <ResponsiveBuildFilterSelect
                   label="Team"
                   value={teamIdFilter ?? ""}
                   onValueChange={onTeamFilter}
@@ -129,7 +129,7 @@ export function AllWorkPageToolbar({
                 />
               )}
               {productOptions.length > 1 && (
-                <BuildFilterSelect
+                <ResponsiveBuildFilterSelect
                   label="Product"
                   value={productIdFilter ?? ""}
                   onValueChange={onProductFilter}

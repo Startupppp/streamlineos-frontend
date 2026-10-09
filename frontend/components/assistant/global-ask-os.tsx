@@ -80,6 +80,8 @@ export function GlobalAskOs() {
   const companion = useCompanionPresence();
 
   const [input, setInput] = useState("");
+  const [voiceOverlayOpen, setVoiceOverlayOpen] = useState(false);
+  const [voiceCaption, setVoiceCaption] = useState("");
   const [composerError, setComposerError] = useState<string | null>(null);
   const [failure, setFailure] = useState<AiFailureState | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -495,16 +497,34 @@ export function GlobalAskOs() {
     if (composerError) setComposerError(null);
   }
   function handleVoiceTranscript(transcript: string) {
+    setVoiceCaption(transcript);
     setInput((current) =>
       current.trim() ? `${current.trim()} ${transcript}` : transcript,
     );
     if (composerError) setComposerError(null);
   }
   function handleLauncherVoiceStart() {
-    setOpen(true);
+    if (speechInput.state === "requesting" || speechInput.state === "processing") return;
+    setOpen(false);
+    setVoiceOverlayOpen(true);
     speechPlayback.stop();
     if (speechInput.state === "listening") speechInput.stop();
-    else speechInput.start(handleVoiceTranscript);
+    else {
+      setVoiceCaption("");
+      speechInput.start(handleVoiceTranscript);
+    }
+  }
+  function handleVoiceDismiss() {
+    speechInput.cancel();
+    speechInput.reset();
+    setVoiceOverlayOpen(false);
+    setVoiceCaption("");
+  }
+  function handleVoiceReview() {
+    speechInput.cancel();
+    setVoiceOverlayOpen(false);
+    setView("chat");
+    setOpen(true);
   }
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -524,6 +544,7 @@ export function GlobalAskOs() {
     speechInput.reset();
     speechPlayback.stop();
     setOpen(false);
+    setVoiceOverlayOpen(false);
     setView("chat");
     setConvSearch("");
   }
@@ -723,8 +744,13 @@ export function GlobalAskOs() {
         {!(expanded && open) ? (
           <AskOsLauncher
             onVoiceStart={handleLauncherVoiceStart}
+            onVoiceDismiss={handleVoiceDismiss}
+            onVoiceReview={handleVoiceReview}
             voiceState={speechInput.state}
             voiceSupported={speechInput.supported}
+            voiceMessage={speechInput.message}
+            voiceCaption={voiceCaption}
+            voiceOverlayOpen={voiceOverlayOpen}
           />
         ) : null}
       </AskOsCompanionStateContext>

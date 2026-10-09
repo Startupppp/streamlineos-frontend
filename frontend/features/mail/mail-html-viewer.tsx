@@ -21,6 +21,7 @@ const ALLOWED_ATTR = [
   "align", "alt", "border", "cellpadding", "cellspacing", "class",
   "colspan", "height", "href", "rowspan", "src", "style", "target",
   "title", "valign", "width",
+  "loading", "referrerpolicy",
   BLOCKED_ATTR,
 ];
 
@@ -58,6 +59,10 @@ function hardenLinks(html: string): string {
   );
 }
 
+function hardenImages(html: string): string {
+  return html.replace(/<img(\s)/gi, '<img loading="lazy" referrerpolicy="no-referrer"$1');
+}
+
 function countBlockedImages(html: string): number {
   const matches = html.match(new RegExp(BLOCKED_ATTR, "g"));
   return matches?.length ?? 0;
@@ -77,7 +82,7 @@ export function MailHtmlViewer({ html, className }: MailHtmlViewerProps) {
   );
 
   const sanitized = useMemo(
-    () => (sanitizedBody === null ? "" : hardenLinks(sanitizedBody)),
+    () => (sanitizedBody === null ? "" : hardenImages(hardenLinks(sanitizedBody))),
     [sanitizedBody],
   );
 
@@ -89,9 +94,9 @@ export function MailHtmlViewer({ html, className }: MailHtmlViewerProps) {
   const handleLoadImages = useCallback(() => setAllowImages(true), []);
 
   return (
-    <div className={cn("min-w-0", className)}>
+    <div className={cn("w-full min-w-0 max-w-full", className)}>
       {blockedCount > 0 && (
-        <div className="flex items-center gap-2 mb-3 px-3 py-1.5 rounded-md bg-muted/60 border border-border/40 text-dense text-muted-foreground">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-xs text-foreground">
           <span>
             {blockedCount} remote image{blockedCount > 1 ? "s" : ""} blocked
           </span>
@@ -107,11 +112,11 @@ export function MailHtmlViewer({ html, className }: MailHtmlViewerProps) {
         </div>
       )}
       <div
-        className="mail-html-frame overflow-x-auto rounded-lg border border-border/50 bg-white text-foreground shadow-sm"
+        className="mail-html-frame w-full min-w-0 max-w-full overflow-x-auto rounded-lg border border-border/50 bg-white text-foreground shadow-sm"
         style={{ colorScheme: "light" }}
       >
         <div
-          className="mail-html-body prose prose-sm max-w-none px-4 py-3 text-label leading-relaxed text-foreground break-words [&_a]:text-primary [&_a]:underline [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded [&_table]:max-w-full [&_table]:overflow-x-auto [&_td]:align-top [&_th]:align-top [&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground"
+          className="mail-html-body prose prose-sm min-w-0 max-w-none px-4 py-3 text-label leading-relaxed text-foreground break-words [&_a]:text-primary [&_a]:underline [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded [&_table]:max-w-full [&_table]:overflow-x-auto [&_td]:align-top [&_th]:align-top [&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground"
           dangerouslySetInnerHTML={{ __html: sanitized }}
         />
       </div>

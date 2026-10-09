@@ -63,17 +63,13 @@ export function isToolbarMobileSearchExpanded({
 }
 
 function mobileColumnsFor({
-  hasSearch,
-  inlineFieldCount,
+  hasSearch: _hasSearch,
+  inlineFieldCount: _inlineFieldCount,
 }: {
   hasSearch: boolean;
   inlineFieldCount: number;
 }): string {
-  if (hasSearch) return "";
-  if (inlineFieldCount <= 0) return "";
-  if (inlineFieldCount === 1)
-    return "[&_[data-slot=build-toolbar-filter]]:max-md:flex-1";
-  return "[&_[data-slot=build-toolbar-filter]]:max-md:min-w-0 [&_[data-slot=build-toolbar-filter]]:max-md:flex-1";
+  return "";
 }
 
 export function buildToolbarLayout({
@@ -129,7 +125,7 @@ export function toolbarInlineVisibility(
   collapsed: boolean,
   fieldFilterCount: number,
 ): string {
-  const mobile = collapsed ? "max-md:hidden" : "max-md:min-w-0 max-md:shrink-0";
+  const mobile = "max-md:hidden";
   const desktop =
     index <= 0
       ? ""
@@ -156,9 +152,9 @@ export function toolbarDrawerVisibility(
   collapsed: boolean,
   fieldFilterCount: number,
 ): string {
-  if (index <= 0) return collapsed ? "md:hidden" : "hidden";
+  if (index <= 0) return "md:hidden";
   if (index === 1 && fieldFilterCount === 2)
-    return collapsed ? "md:hidden" : "hidden";
+    return "md:hidden";
   if (index === 2 && fieldFilterCount === 3) return "lg:hidden";
   if (index === 3 && fieldFilterCount === 4) return "xl:hidden";
   if (index === 4 && fieldFilterCount === 5) return "2xl:hidden";
@@ -176,9 +172,9 @@ export function toolbarDrawerVisibility(
 
 export function toolbarMoreButtonClass(
   filterCount: number,
-  collapse: boolean,
+  _collapse: boolean,
 ): string {
-  const mobile = collapse ? "inline-flex shrink-0" : "hidden";
+  const mobile = filterCount > 0 ? "inline-flex shrink-0" : "hidden";
   if (filterCount <= 2) return `${mobile} md:hidden`;
   if (filterCount === 3) return `${mobile} md:inline-flex lg:hidden`;
   if (filterCount === 4) return `${mobile} md:inline-flex xl:hidden`;

@@ -404,7 +404,7 @@ export function MailListPane({
           ) : null}
         </div>
       ) : (
-        <div className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0 max-md:pb-11">
           <MailVirtualList
             groups={groups}
             selectedMessageId={selectedMessageId}
@@ -418,6 +418,7 @@ export function MailListPane({
       )}
       {visibleMessages.length > 0 ? (
         <TablePagination
+          className="sticky bottom-0 z-40 min-h-11 bg-background pb-[max(0.25rem,env(safe-area-inset-bottom))] max-md:fixed max-md:inset-x-0 max-md:bottom-16"
           mode="cursor"
           rowCount={visibleMessages.length}
           pageNumber={currentPageIndex + 1}

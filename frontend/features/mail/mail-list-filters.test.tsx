@@ -39,7 +39,7 @@ it("filters the current page and keeps explicit pagination outside the toolbar",
   await user.click(screen.getByRole("option", { name: "Unread", exact: true }));
   expect(screen.getByText("Unread message")).toBeInTheDocument();
   expect(screen.queryByText("Attachment message")).toBeNull();
-  expect(screen.getByRole("navigation", { name: "Pagination" })).toBeInTheDocument();
+  expect(screen.getByRole("navigation", { name: "Pagination" })).toHaveClass("sticky", "bottom-0", "z-40", "max-md:fixed", "max-md:bottom-16");
   expect(screen.getByLabelText("Current page 1")).toBeInTheDocument();
   fetchNextPage.mockResolvedValueOnce({ data: { pages: [{ messages, accountErrors: [] }, { messages: [], accountErrors: [] }] } });
   await user.click(screen.getByRole("button", { name: "Next page" }));

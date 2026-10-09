@@ -27,11 +27,11 @@ function collapsedIds(layout: ReturnType<typeof buildToolbarLayout>): string[] {
 }
 
 describe("Build adaptive filter layout", () => {
-  it("leaves a lone filter inline so it fills the mobile row", () => {
+  it("keeps a lone filter available to desktop without assigning it a mobile slot", () => {
     const layout = buildToolbarLayout({ filters: [filter("status")] });
     expect(layout.collapse).toBe(false);
     expect(collapsedIds(layout)).toEqual([]);
-    expect(layout.mobileColumns).toContain("flex-1");
+    expect(layout.mobileColumns).toBe("");
   });
 
   it("leaves search plus one filter inline as search-grow plus a compact control", () => {
@@ -59,12 +59,12 @@ describe("Build adaptive filter layout", () => {
     expect(collapsedIds(layout)).toEqual(["severity", "owner"]);
   });
 
-  it("shares the mobile row equally when two filters have no search", () => {
+  it("routes two filters through the mobile drawer instead of sharing the row", () => {
     const layout = buildToolbarLayout({
       filters: [filter("status"), filter("severity")],
     });
     expect(layout.collapse).toBe(false);
-    expect(layout.mobileColumns).toContain("flex-1");
+    expect(layout.mobileColumns).toBe("");
   });
 
   it("does not collapse a single field filter when trailing is present", () => {
@@ -151,8 +151,9 @@ describe("isToolbarMobileSearchExpanded", () => {
 });
 
 describe("toolbar viewport visibility", () => {
-  it("renders a lone overflow filter directly instead of behind Filters", () => {
-    expect(toolbarInlineVisibility(1, false, 2)).not.toContain("md:hidden");
+  it("hides every direct field trigger on mobile while preserving desktop breakpoints", () => {
+    expect(toolbarInlineVisibility(0, false, 1)).toContain("max-md:hidden");
+    expect(toolbarInlineVisibility(1, false, 2)).toContain("max-md:hidden");
     expect(toolbarInlineVisibility(2, true, 3)).toContain("lg:block");
     expect(toolbarInlineVisibility(3, true, 4)).toContain("xl:block");
     expect(toolbarInlineVisibility(4, true, 5)).toContain("2xl:block");
@@ -164,14 +165,14 @@ describe("toolbar viewport visibility", () => {
     expect(toolbarInlineVisibility(3, true, 5)).toContain("2xl:block");
   });
 
-  it("hides drawer fields wherever the direct controls are visible", () => {
-    expect(toolbarDrawerVisibility(0, false, 2)).toBe("hidden");
+  it("shows drawer fields on mobile and hides them wherever direct desktop controls are visible", () => {
+    expect(toolbarDrawerVisibility(0, false, 2)).toBe("md:hidden");
     expect(toolbarDrawerVisibility(0, true, 3)).toBe("md:hidden");
-    expect(toolbarDrawerVisibility(1, false, 2)).toBe("hidden");
+    expect(toolbarDrawerVisibility(1, false, 2)).toBe("md:hidden");
     expect(toolbarDrawerVisibility(2, true, 3)).toBe("lg:hidden");
   });
 
-  it("shows Filters only while at least two controls would overflow", () => {
+  it("shows Filters for every mobile field filter and retains wider overflow breakpoints", () => {
     expect(toolbarMoreButtonClass(1, false)).toContain("md:hidden");
     expect(toolbarMoreButtonClass(2, false)).toContain("md:hidden");
     expect(toolbarMoreButtonClass(3, true)).toContain("lg:hidden");

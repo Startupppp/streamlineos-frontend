@@ -1,4 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
+import { apiClient } from "@/lib/api-client";
 import { speechTextFromMarkdown, useSpeechInput, useSpeechPlayback } from "./use-browser-speech";
 
 interface RecognitionResult {
@@ -60,6 +61,8 @@ function installSynthesis() {
 }
 
 afterEach(() => {
+  Reflect.deleteProperty(globalThis, "MediaRecorder");
+  Reflect.deleteProperty(navigator, "mediaDevices");
   Reflect.deleteProperty(window, "SpeechRecognition");
   Reflect.deleteProperty(window, "SpeechSynthesisUtterance");
   Reflect.deleteProperty(window, "speechSynthesis");
@@ -69,6 +72,42 @@ afterEach(() => {
 });
 
 describe("browser speech input", () => {
+  it("records only after activation, transcribes on stop, and leaves text editable", async () => {
+    const trackStop = jest.fn();
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia: jest.fn().mockResolvedValue({ getTracks: () => [{ stop: trackStop }] }) },
+    });
+    class FakeRecorder {
+      static latest: FakeRecorder;
+      static isTypeSupported = () => true;
+      mimeType = "audio/webm";
+      state = "recording";
+      ondataavailable: ((event: { data: Blob }) => void) | null = null;
+      onstop: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      constructor() { FakeRecorder.latest = this; }
+      start() { this.state = "recording"; }
+      stop() {
+        this.state = "inactive";
+        this.ondataavailable?.({ data: new Blob(["spoken words"], { type: "audio/webm" }) });
+        this.onstop?.();
+      }
+    }
+    Object.defineProperty(globalThis, "MediaRecorder", { configurable: true, value: FakeRecorder });
+    const upload = jest.spyOn(apiClient, "upload").mockResolvedValue({ text: "Find my tickets" });
+    const transcript = jest.fn();
+    const { result } = renderHook(() => useSpeechInput());
+    expect(navigator.mediaDevices.getUserMedia).not.toHaveBeenCalled();
+    await act(async () => { result.current.start(transcript); await Promise.resolve(); });
+    expect(result.current.state).toBe("listening");
+    await act(async () => { result.current.stop(); await Promise.resolve(); });
+    expect(upload).toHaveBeenCalledWith("/chat/voice/transcribe", expect.any(FormData), expect.anything(), expect.anything());
+    expect(transcript).toHaveBeenCalledWith("Find my tickets");
+    expect(result.current.state).toBe("idle");
+    expect(trackStop).toHaveBeenCalledTimes(1);
+    upload.mockRestore();
+  });
   it("creates recognition only after an explicit start and commits only final words", () => {
     installRecognition();
     const transcript = jest.fn();

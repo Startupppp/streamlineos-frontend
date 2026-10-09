@@ -102,6 +102,16 @@ describe("every URL resolveImageUrl emits is loadable under the configured img-s
   });
 });
 
+describe("mail remote-image delivery", () => {
+  it.each(POLICIES)("%s permits HTTPS newsletter images after the reader opts in", (_name, csp) => {
+    expect(imgSrcPermits(csp, "https://cdn.example-mail.com/newsletter/hero.png", PAGE_ORIGIN)).toBe(true);
+  });
+
+  it.each(POLICIES)("%s still rejects insecure HTTP newsletter images", (_name, csp) => {
+    expect(imgSrcPermits(csp, "http://cdn.example-mail.com/newsletter/hero.png", PAGE_ORIGIN)).toBe(false);
+  });
+});
+
 describe("the pre-fix delivery path is exactly what img-src rejects", () => {
   const preFix = `${API_ORIGIN}/storage/image?key=${encodeURIComponent(KEY)}`;
 
