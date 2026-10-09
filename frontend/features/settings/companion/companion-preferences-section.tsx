@@ -21,10 +21,12 @@ import { COMPANION_PRESETS, type CompanionPreferences } from "@/hooks/api/compan
 import { isApiError } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
+import { formatDateTime } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
 import { CompanionActivityList } from "./companion-activity-list";
 import {
   companionPreferencesFormSchema,
+  isPausedUntilResume,
   toCompanionFormValues,
   toCompanionPatch,
   type CompanionPreferencesFormValues,
@@ -43,8 +45,8 @@ const PROMPT_ROWS: Array<{ field: PromptField; label: string; hint: string }> = 
   { field: "friendly", label: "Friendly check-ins", hint: "Needs activity timing. At most once a workday." },
 ];
 
-function lockFor(locks: Record<string, string>, field: string): string | undefined {
-  return locks[field] ?? locks[`prompts.${field}`];
+function pauseLabel(pausedUntil: string): string {
+  return isPausedUntilResume(pausedUntil) ? "Paused until you resume" : `Paused until ${formatDateTime(pausedUntil)}`;
 }
 
 interface SwitchRowProps {
@@ -81,14 +83,16 @@ function CompanionPreferencesForm({ data }: { data: CompanionPreferences }) {
   const revoke = useRevokeCompanionActivity();
   const { preferences, locks, policy } = data;
   const [now] = useState(Date.now);
+  const defaultValues = toCompanionFormValues(preferences, now);
   const form = useForm<CompanionPreferencesFormValues>({
     resolver: zodResolver(companionPreferencesFormSchema),
-    defaultValues: toCompanionFormValues(preferences, now),
+    defaultValues,
   });
   const { control, register, handleSubmit, watch, formState } = form;
   const consent = watch("activityConsent");
   const presets = COMPANION_PRESETS.filter((preset) => policy.allowedPresets.includes(preset));
-  const presetLock = lockFor(locks, "preset");
+  const presetNote = locks["preset"];
+  const pausedUntil = defaultValues.pause === "keep" ? preferences.pausedUntil : null;
 
   function handleSave(values: CompanionPreferencesFormValues) {
     update.mutate(toCompanionPatch(values, preferences, new Date()), {
@@ -114,25 +118,25 @@ function CompanionPreferencesForm({ data }: { data: CompanionPreferences }) {
           Your organization has turned off the companion. Ask OS stays available from the corner of the screen.
         </p>
       ) : null}
-      <SwitchRow control={control} field="visible" label="Show companion" hint="Hiding it keeps Ask OS and your chat history." lock={lockFor(locks, "visible")} />
+      <SwitchRow control={control} field="visible" label="Show companion" hint="Hiding it keeps Ask OS and your chat history." lock={locks["visible"]} />
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="companion-name">Name</Label>
-          <Input id="companion-name" placeholder="Companion" aria-invalid={!!formState.errors.name} disabled={Boolean(lockFor(locks, "name"))} {...register("name")} />
+          <Input id="companion-name" placeholder="Companion" aria-invalid={!!formState.errors.name} {...register("name")} />
           {formState.errors.name ? <p className="text-xs text-destructive">{formState.errors.name.message}</p> : null}
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="companion-preset">Appearance</Label>
-          <select id="companion-preset" className={SELECT_CLASS} disabled={Boolean(presetLock)} {...register("preset")}>
+          <select id="companion-preset" className={SELECT_CLASS} {...register("preset")}>
             {presets.map((preset) => (
               <option key={preset} value={preset}>{preset.charAt(0).toUpperCase() + preset.slice(1)}</option>
             ))}
           </select>
-          {presetLock ? <p className="text-xs text-muted-foreground">{presetLock}</p> : null}
+          {presetNote ? <p className="text-xs text-muted-foreground">{presetNote}</p> : null}
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="companion-tone">Tone</Label>
-          <select id="companion-tone" className={SELECT_CLASS} disabled={Boolean(lockFor(locks, "tone"))} {...register("tone")}>
+          <select id="companion-tone" className={SELECT_CLASS} {...register("tone")}>
             <option value="neutral">Neutral</option>
             <option value="warm">Warm</option>
             <option value="brief">Brief</option>
@@ -140,14 +144,14 @@ function CompanionPreferencesForm({ data }: { data: CompanionPreferences }) {
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="companion-animation">Animation</Label>
-          <select id="companion-animation" className={SELECT_CLASS} disabled={Boolean(lockFor(locks, "animation"))} {...register("animation")}>
+          <select id="companion-animation" className={SELECT_CLASS} {...register("animation")}>
             <option value="subtle">Subtle</option>
             <option value="off">Off</option>
           </select>
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="companion-anchor">Position</Label>
-          <select id="companion-anchor" className={SELECT_CLASS} disabled={Boolean(lockFor(locks, "anchor"))} {...register("anchor")}>
+          <select id="companion-anchor" className={SELECT_CLASS} {...register("anchor")}>
             <option value="bottom-right">Bottom right</option>
             <option value="bottom-left">Bottom left</option>
           </select>
@@ -155,14 +159,15 @@ function CompanionPreferencesForm({ data }: { data: CompanionPreferences }) {
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="companion-pause">Pause all companion prompts</Label>
           <select id="companion-pause" className={SELECT_CLASS} {...register("pause")}>
-            <option value="none">Not paused</option>
-            {preferences.pausedUntil !== null ? <option value="keep">Keep current pause</option> : null}
+            {pausedUntil !== null ? <option value="keep">{pauseLabel(pausedUntil)}</option> : null}
+            <option value="none">{pausedUntil !== null ? "Resume prompts" : "Not paused"}</option>
             <option value="1h">For 1 hour</option>
             <option value="today">For the rest of today</option>
+            <option value="resume">Until I resume</option>
           </select>
         </div>
       </div>
-      <SwitchRow control={control} field="activityConsent" label="Activity timing" hint="Counts only how long StreamlineOS is open in a visible tab. Turning it off deletes that timing." lock={lockFor(locks, "activityConsent")} />
+      <SwitchRow control={control} field="activityConsent" label="Activity timing" hint="Counts only how long StreamlineOS is open in a visible tab. Turning it off deletes that timing." />
       {PROMPT_ROWS.map((row) => (
         <SwitchRow
           key={row.field}
@@ -170,7 +175,7 @@ function CompanionPreferencesForm({ data }: { data: CompanionPreferences }) {
           field={row.field}
           label={row.label}
           hint={row.hint}
-          lock={policy.prompts[row.field] ? lockFor(locks, row.field) : ORG_LOCK}
+          lock={locks[`prompts.${row.field}`] ?? (policy.prompts[row.field] ? undefined : ORG_LOCK)}
           disabled={(row.field === "break" || row.field === "friendly") && !consent}
         />
       ))}

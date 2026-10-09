@@ -1,5 +1,7 @@
 "use client";
 
+import { useCallback, useMemo } from "react";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { useCompanionPromptHistory } from "@/hooks/api/companion";
 import { formatDateTime } from "@/lib/date-utils";
 
@@ -11,8 +13,11 @@ const CATEGORY_LABEL = {
 } as const;
 
 export function CompanionActivityList() {
-  const { data, isLoading, isError } = useCompanionPromptHistory();
-  const items = data?.items ?? [];
+  const { data, isLoading, isError, hasNextPage, isFetchingNextPage, fetchNextPage } = useCompanionPromptHistory();
+  const items = useMemo(() => data?.pages.flatMap((page) => page.items) ?? [], [data]);
+  const handleLoadMore = useCallback(() => {
+    void fetchNextPage();
+  }, [fetchNextPage]);
   return (
     <div id="companion-activity" className="flex flex-col gap-2">
       <h3 className="text-sm font-semibold text-foreground">Recent suggestions</h3>
@@ -36,6 +41,14 @@ export function CompanionActivityList() {
             </li>
           ))}
         </ul>
+      ) : null}
+      {items.length > 0 ? (
+        <InfiniteScrollSentinel
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          onLoadMore={handleLoadMore}
+          label="Load more suggestions"
+        />
       ) : null}
     </div>
   );

@@ -13,8 +13,14 @@ export const companionPreferencesFormSchema = z.object({
   break: z.boolean(),
   friendly: z.boolean(),
   activityConsent: z.boolean(),
-  pause: z.enum(["none", "keep", "1h", "today"]),
+  pause: z.enum(["none", "keep", "1h", "today", "resume"]),
 });
+
+export const PAUSED_UNTIL_RESUME = "2999-12-31T23:59:59.000Z";
+
+export function isPausedUntilResume(pausedUntil: string | null): boolean {
+  return pausedUntil !== null && new Date(pausedUntil).getTime() >= new Date(PAUSED_UNTIL_RESUME).getTime();
+}
 
 export type CompanionPreferencesFormValues = z.infer<typeof companionPreferencesFormSchema>;
 
@@ -46,6 +52,7 @@ function pausedUntil(
   now: Date,
 ): string | null {
   if (pause === "keep") return current;
+  if (pause === "resume") return PAUSED_UNTIL_RESUME;
   if (pause === "1h") return new Date(now.getTime() + 60 * 60_000).toISOString();
   if (pause === "today") {
     const end = new Date(now);

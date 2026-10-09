@@ -37,7 +37,9 @@ const policy = {
   version: 1,
 };
 
-function serve(overrides: { preferences?: Partial<typeof preferences>; locks?: Record<string, string> } = {}) {
+function serve(
+  overrides: { preferences?: Partial<Omit<typeof preferences, "pausedUntil">> & { pausedUntil?: string | null }; locks?: Record<string, string> } = {},
+) {
   get.mockImplementation((url: string) => {
     if (url === "/companion/preferences")
       return Promise.resolve({
@@ -65,16 +67,84 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
+function historyItem(id: string, title: string) {
+  return {
+    id,
+    category: "meeting",
+    title,
+    body: "",
+    reasonCode: "meeting.upcoming",
+    reason: "A meeting starts soon",
+    sourceRef: null,
+    href: null,
+    status: "dismissed",
+    eligibleAt: "2026-10-09T09:00:00.000Z",
+    expiresAt: "2026-10-09T10:00:00.000Z",
+    snoozedUntil: null,
+  };
+}
+
 describe("companion preferences", () => {
-  it("disables admin-locked settings and says why", async () => {
-    serve({ locks: { preset: "Set by your organization" } });
+  it("pages prompt history by cursor", async () => {
+    serve();
+    const preferencesGet = get.getMockImplementation();
+    get.mockImplementation((url: string, params?: unknown) => {
+      if (url !== "/companion/prompts/history") return preferencesGet?.(url) ?? Promise.resolve(undefined);
+      return Promise.resolve(
+        params === undefined
+          ? { items: [historyItem("a", "Standup")], nextCursor: "c2" }
+          : { items: [historyItem("b", "Retro")], nextCursor: null },
+      );
+    });
+    const user = userEvent.setup();
     renderSection();
-    expect(await screen.findByLabelText("Appearance")).toBeDisabled();
-    expect(screen.getByText("Set by your organization")).toBeInTheDocument();
+    expect(await screen.findByText("Standup")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Load more suggestions" }));
+    expect(await screen.findByText("Retro")).toBeInTheDocument();
+    expect(get).toHaveBeenCalledWith("/companion/prompts/history", { cursor: "c2" }, expect.anything(), expect.anything());
+    expect(screen.queryByRole("button", { name: "Load more suggestions" })).not.toBeInTheDocument();
+  });
+
+  it("reads the backend's lock keys and says why", async () => {
+    serve({
+      locks: {
+        visible: "Turned off by your organization",
+        preset: "Limited to the presets your organization allows",
+        "prompts.friendly": "Turned off by your organization",
+      },
+    });
+    renderSection();
+    expect(await screen.findByLabelText("Appearance")).toBeEnabled();
+    expect(screen.getByText("Limited to the presets your organization allows")).toBeInTheDocument();
+    expect(screen.getByRole("switch", { name: "Show companion" })).toBeDisabled();
+    expect(screen.getByRole("switch", { name: "Friendly check-ins" })).toBeDisabled();
     expect(screen.getByLabelText("Tone")).toBeEnabled();
     expect(screen.getByRole("switch", { name: "Missed clock-in" })).toBeDisabled();
-    expect(screen.getByText("Turned off by your organization")).toBeInTheDocument();
     expect(screen.getByRole("switch", { name: "Upcoming meetings" })).toBeEnabled();
+  });
+
+  it("pauses prompts until the user resumes", async () => {
+    serve();
+    patch.mockResolvedValue({ preferences: { ...preferences, version: 4 }, locks: {}, policy });
+    const user = userEvent.setup();
+    renderSection();
+    await user.selectOptions(await screen.findByLabelText("Pause all companion prompts"), "Until I resume");
+    await user.click(screen.getByRole("button", { name: "Save companion settings" }));
+    await waitFor(() => expect(patch).toHaveBeenCalled());
+    expect(patch.mock.calls[0]?.[1]).toMatchObject({ pausedUntil: "2999-12-31T23:59:59.000Z" });
+  });
+
+  it("shows an indefinite pause and clears it on resume", async () => {
+    serve({ preferences: { pausedUntil: "2999-12-31T23:59:59.000Z" } });
+    patch.mockResolvedValue({ preferences: { ...preferences, version: 4 }, locks: {}, policy });
+    const user = userEvent.setup();
+    renderSection();
+    const pause = await screen.findByLabelText("Pause all companion prompts");
+    expect(pause).toHaveDisplayValue("Paused until you resume");
+    await user.selectOptions(pause, "Resume prompts");
+    await user.click(screen.getByRole("button", { name: "Save companion settings" }));
+    await waitFor(() => expect(patch).toHaveBeenCalled());
+    expect(patch.mock.calls[0]?.[1]).toMatchObject({ pausedUntil: null });
   });
 
   it("keeps break and friendly prompts off until activity timing is allowed", async () => {

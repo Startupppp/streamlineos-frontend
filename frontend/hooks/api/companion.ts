@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -8,6 +8,7 @@ import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import type {
   CompanionPolicy,
   CompanionPreference,
@@ -142,15 +143,17 @@ export function useCompanionPromptAction() {
 }
 
 export function useCompanionPromptHistory() {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: keys.promptHistory(),
-    queryFn: ({ signal }) =>
+    queryFn: ({ pageParam, signal }) =>
       apiClient.get<{ items: CompanionPrompt[]; nextCursor: string | null }>(
         "/companion/prompts/history",
-        undefined,
+        pageParam === undefined ? undefined : { cursor: pageParam },
         signal,
         promptHistoryContract,
       ),
+    initialPageParam: NO_CURSOR_YET,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     staleTime: 30_000,
     ...INLINE_READ_ERROR,
   });
