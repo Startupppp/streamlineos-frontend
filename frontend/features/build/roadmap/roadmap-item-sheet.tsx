@@ -11,6 +11,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetFooter,
@@ -177,6 +178,11 @@ export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
       <SheetContent className="w-full sm:max-w-lg p-0 flex flex-col gap-0">
         <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle>{isEdit ? "Edit Roadmap Item" : "New Roadmap Item"}</SheetTitle>
+          <SheetDescription>
+            {isEdit
+              ? "Update the item details, delivery status, visibility, and priority score."
+              : "Add an item to the roadmap with a clear outcome and delivery horizon."}
+          </SheetDescription>
         </SheetHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSave)} className="flex flex-col flex-1 min-h-0">

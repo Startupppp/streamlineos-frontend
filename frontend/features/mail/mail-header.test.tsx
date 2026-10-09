@@ -51,7 +51,8 @@ it("uses one common page header with the daily brief in its action row", () => {
   expect(screen.queryByText("Your inbox, distilled")).toBeNull();
   expect(screen.getByRole("button", { name: "Compose" })).toBeEnabled();
   expect(screen.getByRole("button", { name: "Mail account settings" })).toBeEnabled();
-  expect(screen.getByRole("combobox", { name: "Account: All accounts" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Switch mail account. Current: All accounts" })).toBeInTheDocument();
+  expect(screen.queryByRole("combobox", { name: "Account: All accounts" })).toBeNull();
 });
 
 it("keeps the generated brief in the header without rendering a second banner", () => {

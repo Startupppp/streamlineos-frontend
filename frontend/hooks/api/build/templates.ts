@@ -2,7 +2,11 @@
 import { z } from "zod";
 import type { templateRowContract as templateRowContractDef } from "@/hooks/api/build/roadmap-schema";
 
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -16,7 +20,9 @@ type TemplateListPage = {
 };
 
 const templateListContract = lazyContract<TemplateListPage>(() =>
-  import("@/hooks/api/build/roadmap-schema").then((m) => m.templateListContract),
+  import("@/hooks/api/build/roadmap-schema").then(
+    (m) => m.templateListContract,
+  ),
 );
 const templateRowContract = lazyContract(() =>
   import("@/hooks/api/build/roadmap-schema").then((m) => m.templateRowContract),
@@ -25,7 +31,9 @@ const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 const applyTemplateResultContract = lazyContract(() =>
-  import("@/hooks/api/build/roadmap-schema").then((m) => m.applyTemplateResultContract),
+  import("@/hooks/api/build/roadmap-schema").then(
+    (m) => m.applyTemplateResultContract,
+  ),
 );
 
 export type ProjectTemplate = z.infer<typeof templateRowContractDef>;
@@ -65,7 +73,10 @@ export function useProjectTemplates(filters?: TemplateFilters) {
   const category = filters?.category;
   const sort = filters?.sort;
   return useInfiniteQuery({
-    queryKey: [...buildWorkQueryKeys.projects.templates(), { q, category, sort }],
+    queryKey: [
+      ...buildWorkQueryKeys.projects.templates(),
+      { q, category, sort },
+    ],
     queryFn: ({ pageParam, signal }) => {
       const params: Record<string, string> = {};
       if (pageParam !== undefined) params["cursor"] = pageParam;
@@ -83,6 +94,7 @@ export function useProjectTemplates(filters?: TemplateFilters) {
     getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canView,
     staleTime: 60_000,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -91,8 +103,16 @@ export function useCreateProjectTemplate() {
   return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "templates", "create"],
     mutationFn: (input: CreateProjectTemplateInput) =>
-      apiClient.post<ProjectTemplate>("/build/templates", input, undefined, templateRowContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.templates() }),
+      apiClient.post<ProjectTemplate>(
+        "/build/templates",
+        input,
+        undefined,
+        templateRowContract,
+      ),
+    onSuccess: () =>
+      qc.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.templates(),
+      }),
   });
 }
 
@@ -101,8 +121,16 @@ export function useDeleteProjectTemplate() {
   return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "templates", "delete"],
     mutationFn: (templateId: number) =>
-      apiClient.delete<void>(`/build/templates/${templateId}`, undefined, undefined, noContentContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.templates() }),
+      apiClient.delete<void>(
+        `/build/templates/${templateId}`,
+        undefined,
+        undefined,
+        noContentContract,
+      ),
+    onSuccess: () =>
+      qc.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.templates(),
+      }),
   });
 }
 
@@ -110,8 +138,20 @@ export function useApplyProjectTemplate() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "templates", "apply"],
-    mutationFn: ({ templateId, input }: { templateId: number; input: ApplyProjectTemplateInput }) =>
-      apiClient.post<{ projectId: number; key: string; ticketsCreated: number; customFieldsCreated: number; savedViewsCreated: number }>(
+    mutationFn: ({
+      templateId,
+      input,
+    }: {
+      templateId: number;
+      input: ApplyProjectTemplateInput;
+    }) =>
+      apiClient.post<{
+        projectId: number;
+        key: string;
+        ticketsCreated: number;
+        customFieldsCreated: number;
+        savedViewsCreated: number;
+      }>(
         `/build/templates/${templateId}/apply`,
         input,
         undefined,
@@ -125,5 +165,3 @@ export function useApplyProjectTemplate() {
     },
   });
 }
-
-

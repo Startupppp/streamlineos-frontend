@@ -229,4 +229,41 @@ describe("MailComposeSheet — draft lifecycle and offline sending", () => {
     const options = toastError.mock.calls[0]?.[1];
     expect(options).toMatchObject({ action: { label: "Retry" } });
   });
+
+  it("uses equal-width mobile actions and a single-row scrollable AI toolbar", () => {
+    render(<Harness mode={COMPOSE_MODE} />);
+
+    const send = screen.getByRole("button", { name: /^send$/i });
+    const footer = send.parentElement;
+    expect(footer).toHaveClass("grid", "grid-cols-2");
+    expect(send).toHaveClass("w-full");
+    expect(screen.getByRole("button", { name: "Discard" })).toHaveClass("w-full");
+
+    const aiToolbar = screen.getByRole("button", { name: "Write with AI" }).parentElement;
+    expect(aiToolbar).toHaveClass("flex-nowrap", "overflow-x-auto");
+  });
+
+  it("offers a collapsible addressing section", () => {
+    render(<Harness mode={COMPOSE_MODE} />);
+
+    const toggle = screen.getByRole("button", { name: "Message details" });
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByLabelText("Subject")).toBeNull();
+  });
+
+  it("starts with message details collapsed on mobile", () => {
+    const previousWidth = window.innerWidth;
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: 394 });
+
+    render(<Harness mode={COMPOSE_MODE} />);
+
+    expect(screen.getByRole("button", { name: "Message details" })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+    expect(screen.queryByLabelText("Subject")).toBeNull();
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: previousWidth });
+  });
 });

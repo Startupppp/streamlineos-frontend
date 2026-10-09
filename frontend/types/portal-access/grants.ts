@@ -29,6 +29,7 @@ export interface ProjectClientGrant {
   canSubmitChangeRequests: boolean;
   canViewApprovals: boolean;
   canViewInvoices: boolean;
+  canViewRequests: boolean;
   status: PortalGrantStatus;
   expiresAt: string | null;
   createdAt: string;
@@ -63,6 +64,7 @@ export interface CreateGrantInput {
   canSubmitChangeRequests?: boolean;
   canViewApprovals?: boolean;
   canViewInvoices?: boolean;
+  canViewRequests?: boolean;
 }
 
 export interface UpdateGrantInput {
@@ -73,6 +75,7 @@ export interface UpdateGrantInput {
   canSubmitChangeRequests?: boolean;
   canViewApprovals?: boolean;
   canViewInvoices?: boolean;
+  canViewRequests?: boolean;
   status?: PortalGrantStatus;
   expiresAt?: string | null;
 }

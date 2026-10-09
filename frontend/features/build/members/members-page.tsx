@@ -116,7 +116,7 @@ export function MembersPage() {
   useBuildListKeyboard({
     itemCount: members.length,
     onOpen: handleKeyboardOpen,
-    onCreate: handleOpenAddDialog,
+    onCreate: canManage ? handleOpenAddDialog : undefined,
     onClearSelection: handleKeyboardClearSelection,
     onShortcutHelp: handleShortcutHelp,
     searchInputRef,

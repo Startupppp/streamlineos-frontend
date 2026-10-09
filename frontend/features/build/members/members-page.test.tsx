@@ -265,9 +265,17 @@ describe("MembersPage — keyboard shortcut wiring (BLD-X-FE-ACCESS-011)", () =>
   });
 
   it("passes onCreate to useBuildListKeyboard so the c key opens the add member dialog", () => {
+    mockUseCan.mockReturnValue(true);
     render(<MembersPage />);
     const lastCallArgs = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0];
     expect(typeof lastCallArgs?.onCreate).toBe("function");
+  });
+
+  it("omits onCreate for a read-only member so the hidden add action has no keyboard backdoor", () => {
+    mockUseCan.mockReturnValue(false);
+    render(<MembersPage />);
+    const lastCallArgs = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0];
+    expect(lastCallArgs?.onCreate).toBeUndefined();
   });
 
   it("ShortcutHelpDialog is not shown on initial render — paired with the open test below", () => {

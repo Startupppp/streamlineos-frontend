@@ -6,12 +6,15 @@ jest.mock("@/components/ui/page-wrapper", () => ({
   PageWrapper: ({
     children,
     actions,
+    filters,
   }: {
     children: React.ReactNode;
     actions?: React.ReactNode;
+    filters?: React.ReactNode;
   }) => (
     <div>
       {actions}
+      {filters}
       {children}
     </div>
   ),
@@ -20,7 +23,13 @@ jest.mock("@/components/ui/page-wrapper", () => ({
 jest.mock("@/components/ui/data-table", () => ({
   DataTable: ({ selection }: { selection?: { onChange: (sel: Set<string | number>) => void } }) => {
     const handleSelectGrant = () => selection?.onChange(new Set(["grant-1"]));
-    return <div data-testid="data-table" onClick={handleSelectGrant} />;
+    return (
+      <div
+        data-testid="data-table"
+        data-has-selection={String(selection !== undefined)}
+        onClick={handleSelectGrant}
+      />
+    );
   },
   DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
 }));
@@ -167,6 +176,8 @@ const mockUseRevokeGrant = jest.fn();
 const mockUseBulkRevokeGrant = jest.fn();
 const mockUseAccess = jest.fn();
 const mockUseCan = jest.fn<boolean, [string]>(() => false);
+const mockSetFilter = jest.fn();
+const mockResetFilters = jest.fn();
 
 jest.mock("@/hooks/api/portal-access/grants", () => ({
   useProjectClientGrants: (...args: unknown[]) => mockUseProjectClientGrants(...args),
@@ -206,8 +217,8 @@ jest.mock("./use-client-access-url-state", () => ({
     hasActiveFilters: Object.keys(mockSearchParamsMap).some((k) =>
       ["q", "state", "permission"].includes(k),
     ),
-    setFilter: jest.fn(),
-    resetFilters: jest.fn(),
+    setFilter: mockSetFilter,
+    resetFilters: mockResetFilters,
   }),
 }));
 
@@ -257,6 +268,8 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockSearchParamsMap = {};
   mockRouterReplace.mockReset();
+  mockSetFilter.mockReset();
+  mockResetFilters.mockReset();
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseCan.mockReturnValue(true);
   mockUseProjectClientGrants.mockReturnValue(
@@ -354,6 +367,19 @@ describe("ClientAccessPage — page state correctness", () => {
 });
 
 describe("ClientAccessPage — URL filter wiring", () => {
+  it("renders lifecycle and capability filters instead of exposing search as the only discovery control", () => {
+    render(<ClientAccessPage />);
+    expect(screen.getByRole("combobox", { name: /filter by grant status/i })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: /filter by client permission/i })).toBeInTheDocument();
+  });
+
+  it("clears every URL-owned filter from the visible clear action", () => {
+    mockSearchParamsMap = { state: "expired" };
+    render(<ClientAccessPage />);
+    fireEvent.click(screen.getAllByRole("button", { name: /clear filters/i })[0]);
+    expect(mockResetFilters).toHaveBeenCalledTimes(1);
+  });
+
   it("passes q from URL search params to useProjectClientGrants so search is server-side rather than client-side filtering one page", () => {
     mockSearchParamsMap = { q: "alice" };
     render(<ClientAccessPage />);
@@ -448,6 +474,8 @@ describe("ClientAccessPage — keyboard shortcuts (Requirement C3)", () => {
     render(<ClientAccessPage />);
     const lastCall = mockUseBuildListKeyboard.mock.calls.at(-1) as [{ onCreate?: () => void }];
     expect(lastCall?.[0]?.onCreate).toBeUndefined();
+    expect(typeof lastCall?.[0]?.onOpen).toBe("function");
+    expect(lastCall?.[0]?.onEdit).toBeUndefined();
   });
 
   it("passes onEdit so the e key opens the focused grant in the edit dialog", () => {
@@ -460,6 +488,13 @@ describe("ClientAccessPage — keyboard shortcuts (Requirement C3)", () => {
 });
 
 describe("ClientAccessPage — bulk revoke selection (Requirement C3)", () => {
+  it("does not render row selection for a read-only viewer", () => {
+    mockUseCan.mockReturnValue(false);
+    mockUseProjectClientGrants.mockReturnValue(baseQueryResult({ data: oneGrantPage }));
+    render(<ClientAccessPage />);
+    expect(screen.getByTestId("data-table")).toHaveAttribute("data-has-selection", "false");
+  });
+
   it("shows the bulk revoke bar with selected count after a row is selected", () => {
     mockUseCan.mockReturnValue(true);
     mockUseProjectClientGrants.mockReturnValue(baseQueryResult({ data: oneGrantPage }));

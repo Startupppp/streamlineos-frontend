@@ -1,6 +1,7 @@
 "use client";
 
 import { PlusIcon } from "@animateicons/react/lucide";
+import { WifiOff } from "lucide-react";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -24,23 +25,17 @@ import {
   CONTENT_FILL_PANEL,
 } from "@/components/pm-chrome";
 import { useBuildTemplatesPage } from "./use-build-templates-page";
-
-const CATEGORY_OPTIONS = [
-  { value: "GENERAL", label: "General" },
-  { value: "ENGINEERING", label: "Engineering" },
-  { value: "MARKETING", label: "Marketing" },
-  { value: "OPERATIONS", label: "Operations" },
-  { value: "DESIGN", label: "Design" },
-  { value: "SALES", label: "Sales" },
-  { value: "CONTENT", label: "Content Production" },
-  { value: "FREELANCER", label: "Freelancer" },
-  { value: "SOFTWARE_PRODUCT", label: "Software Product" },
-] as const;
+import { TEMPLATE_CATEGORY_OPTIONS } from "./template-categories";
 
 function NewTemplateButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
-    <Button size="sm" onClick={onClick} {...hoverHandlers}>
+    <Button
+      size="sm"
+      className="min-h-11 sm:min-h-8"
+      onClick={onClick}
+      {...hoverHandlers}
+    >
       <PlusIcon ref={iconRef} size={14} className="mr-1" /> New Template
     </Button>
   );
@@ -56,8 +51,10 @@ export function BuildTemplatesPage() {
     sortFilter,
     searchDisplay,
     hasNextPage,
+    isFetching,
     isFetchingNextPage,
     templates,
+    isFiltered,
     pageState,
     createOpen,
     applyTarget,
@@ -73,6 +70,7 @@ export function BuildTemplatesPage() {
     handleDeleteDialogChange,
     handleDelete,
     handleRetry,
+    isDeleting,
   } = useBuildTemplatesPage();
 
   if (pageState.kind === "loading") {
@@ -124,6 +122,7 @@ export function BuildTemplatesPage() {
               value: searchDisplay,
               onValueChange: listFilters.setSearch,
               placeholder: "Search templates…",
+              label: "Search templates",
               inputRef: searchRef,
             }}
             filters={[
@@ -138,7 +137,7 @@ export function BuildTemplatesPage() {
                     onValueChange={handleCategoryChange}
                     options={[
                       { value: BUILD_FILTER_ALL, label: "All categories" },
-                      ...CATEGORY_OPTIONS,
+                      ...TEMPLATE_CATEGORY_OPTIONS,
                     ]}
                   />
                 ),
@@ -160,13 +159,32 @@ export function BuildTemplatesPage() {
                 ),
               },
             ]}
-            onClearAll={listFilters.activeCount > 0 ? listFilters.clearAll : undefined}
+            onClearAll={listFilters.clearAll}
+            collapseActionsOnSearchFocus
           />
         }
       >
         <PmPageShell>
           <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-            {templates.length > 0 ? (
+            <div
+              className="flex min-h-0 flex-1 flex-col"
+              aria-busy={isFetching || undefined}
+            >
+              <span className="sr-only" aria-live="polite">
+                {isFetching ? "Updating templates" : `${templates.length} templates shown`}
+              </span>
+            {!isOnline && templates.length > 0 ? (
+              <div
+                className="mb-3 flex shrink-0 items-center gap-2 rounded-md border border-border bg-muted/40 px-3 py-2"
+                role="status"
+              >
+                <WifiOff className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                <p className="text-xs text-muted-foreground">
+                  You&apos;re offline — these templates may be out of date.
+                </p>
+              </div>
+            ) : null}
+              {templates.length > 0 ? (
               <>
                 <PmStaggerList
                   className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
@@ -177,6 +195,7 @@ export function BuildTemplatesPage() {
                     <div key={t.id} role="listitem">
                       <TemplateCard
                         template={t}
+                        canManage={canManage}
                         onApply={handleApplyTarget}
                         onDelete={handleDeleteTarget}
                       />
@@ -197,6 +216,15 @@ export function BuildTemplatesPage() {
                 title="You are offline"
                 description="Showing cached data. Reconnect to see the latest templates."
               />
+            ) : isFiltered ? (
+              <EmptyState
+                className={CONTENT_FILL_PANEL}
+                illustrationPreset="projects"
+                filtersActive
+                filteredTitle="No templates match your search or filters"
+                description="Try another search or clear the active filters."
+                onClearFilters={listFilters.clearAll}
+              />
             ) : (
               <EmptyState
                 className={CONTENT_FILL_PANEL}
@@ -205,7 +233,8 @@ export function BuildTemplatesPage() {
                 description="Create a reusable project structure to bootstrap new projects quickly."
                 action={canManage ? { label: "Create your first template", onClick: handleOpenCreate } : undefined}
               />
-            )}
+              )}
+            </div>
           </PmSection>
         </PmPageShell>
 
@@ -222,6 +251,7 @@ export function BuildTemplatesPage() {
           description={`"${deleteTarget?.name ?? ""}" will be permanently deleted. Projects created from it will not be affected.`}
           confirmLabel="Delete"
           destructive
+          isPending={isDeleting}
           onConfirm={handleDelete}
         />
       </PageWrapper>

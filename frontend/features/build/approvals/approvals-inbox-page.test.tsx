@@ -26,6 +26,11 @@ let mockCapturedPagination: {
   onPrevious?: () => void;
   cursorVariant?: "paged" | "load-more";
 } | undefined;
+let mockDateRangeProps: {
+  from?: string;
+  to?: string;
+  onChange: (range: { from: string; to: string }) => void;
+} | undefined;
 jest.mock("next/navigation", () => ({
   useSearchParams: () => mockSearchParams,
   useRouter: () => ({ replace: mockReplace, push: mockPush }),
@@ -141,7 +146,9 @@ jest.mock("@/components/pm-chrome", () => ({
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({
-  PageWrapper: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  PageWrapper: ({ children, filters }: { children: React.ReactNode; filters?: React.ReactNode }) => (
+    <div>{filters}{children}</div>
+  ),
 }));
 
 jest.mock("@/components/ui/stat-card", () => ({
@@ -151,7 +158,10 @@ jest.mock("@/components/ui/stat-card", () => ({
 }));
 
 jest.mock("@/components/ui/date-range-picker", () => ({
-  DateRangePicker: () => null,
+  DateRangePicker: (props: typeof mockDateRangeProps) => {
+    mockDateRangeProps = props;
+    return <button type="button">Date range</button>;
+  },
 }));
 
 jest.mock("./approval-bulk-action-bar", () => ({
@@ -249,6 +259,7 @@ beforeEach(() => {
   mockPager.pageNumber = 1;
   mockPager.hasPrevious = false;
   mockCapturedPagination = undefined;
+  mockDateRangeProps = undefined;
   mockUseCan.mockReturnValue(false);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseApprovalInbox.mockReturnValue(baseQueryResult({ data: approvalPages([]) }));
@@ -287,6 +298,12 @@ it("renders a single cursor page with previous and next controls", () => {
   });
   expect(mockPager.goNext).toHaveBeenCalledWith("cursor-3");
   expect(mockPager.goPrevious).toHaveBeenCalledTimes(1);
+});
+
+it("passes an empty date range to the picker when URL filters use the all sentinel", () => {
+  render(<ApprovalsInboxPage />);
+
+  expect(mockDateRangeProps).toMatchObject({ from: undefined, to: undefined });
 });
 
 it.each([[42, 7], [2_147_483_647, 2_147_483_647]])("opens fresh project %s approval %s outside the loaded queue", (projectId, approvalId) => {

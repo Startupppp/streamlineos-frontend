@@ -73,6 +73,7 @@ interface GoalsParams {
   health?: string;
   due?: string;
   scope?: string;
+  metricType?: KeyResultMetric;
 }
 
 export interface KeyResultInput {

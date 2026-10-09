@@ -1,17 +1,18 @@
 "use client";
 
 import { useMemo } from "react";
-import { Settings, PenSquare, Mail, UsersRound } from "lucide-react";
+import { Settings, PenSquare, Mail, UsersRound, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
 import { useMailMessages } from "@/hooks/api/mail";
 import { MailDailyBrief } from "./mail-daily-brief";
@@ -110,26 +111,36 @@ export function MailHeader({
           {accountsLoading ? (
             <Skeleton className="h-9 w-28 rounded-md" />
           ) : hasAccounts ? (
-            <Select
-              value={selectedAccountId === "all" ? SENTINEL : String(selectedAccountId)}
-              onValueChange={onAccountChange}
-            >
-              <SelectTrigger
-                className="size-9 gap-1 border-input bg-card px-0 text-sm shadow-none md:h-9 md:w-auto md:max-w-36 md:px-2.5 lg:max-w-52"
-                aria-label={`Account: ${accountLabel}`}
-              >
-                <UsersRound className="size-4 shrink-0 md:hidden" aria-hidden="true" />
-                <span className="hidden min-w-0 md:block"><SelectValue placeholder="All accounts" /></span>
-              </SelectTrigger>
-              <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                <SelectItem value={SENTINEL}>All accounts</SelectItem>
-                {accounts.map((account) => (
-                  <SelectItem key={account.id} value={String(account.id)}>
-                    {account.accountEmail ?? account.accountLabel ?? `Account ${account.id}`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="size-9 gap-1 px-0 md:h-9 md:w-auto md:max-w-44 md:px-2.5 lg:max-w-52"
+                  aria-label={`Switch mail account. Current: ${accountLabel}`}
+                >
+                  <UsersRound className="size-4 shrink-0" aria-hidden="true" />
+                  <span className="hidden min-w-0 truncate md:block">{accountLabel}</span>
+                  <ChevronDown className="hidden size-3.5 shrink-0 opacity-60 md:block" aria-hidden="true" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64">
+                <DropdownMenuLabel>Mail account</DropdownMenuLabel>
+                <DropdownMenuRadioGroup
+                  value={selectedAccountId === "all" ? SENTINEL : String(selectedAccountId)}
+                  onValueChange={onAccountChange}
+                >
+                  <DropdownMenuRadioItem value={SENTINEL}>All accounts</DropdownMenuRadioItem>
+                  {accounts.map((account) => (
+                    <DropdownMenuRadioItem key={account.id} value={String(account.id)}>
+                      <span className="truncate">
+                        {account.accountEmail ?? account.accountLabel ?? `Account ${account.id}`}
+                      </span>
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : null}
 
           {showAccountSettings ? (

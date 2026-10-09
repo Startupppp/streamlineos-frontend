@@ -58,10 +58,19 @@ export function MailComposeSheet({
   preferredAccountId,
 }: MailComposeSheetProps) {
   const isReply = mode.type === "reply";
+  const [detailsExpanded, setDetailsExpanded] = useState(() =>
+    typeof window === "undefined" ? true : window.innerWidth >= 768,
+  );
 
-  const primaryAccount = accounts.find((a) => a.id === preferredAccountId && a.status === "active") ?? accounts.find((a) => a.isPrimary) ?? accounts[0];
-  const defaultAccountId =
-    isReply ? mode.accountId : (primaryAccount?.id ?? (accounts[0]?.id ?? 0));
+  const primaryAccount =
+    accounts.find(
+      (a) => a.id === preferredAccountId && a.status === "active",
+    ) ??
+    accounts.find((a) => a.isPrimary) ??
+    accounts[0];
+  const defaultAccountId = isReply
+    ? mode.accountId
+    : (primaryAccount?.id ?? accounts[0]?.id ?? 0);
 
   const composeForm = useForm<MailComposeValues>({
     resolver: zodResolver(mailComposeSchema),
@@ -96,7 +105,9 @@ export function MailComposeSheet({
   const [showBcc, setShowBcc] = useState(false);
   const [bodyContentKey, setBodyContentKey] = useState(0);
   const [bodyHtmlForEditor, setBodyHtmlForEditor] = useState(
-    isReply && mode.type === "reply" && mode.prefillBody ? mode.prefillBody : "",
+    isReply && mode.type === "reply" && mode.prefillBody
+      ? mode.prefillBody
+      : "",
   );
 
   const wasOpenRef = useRef(false);
@@ -130,7 +141,10 @@ export function MailComposeSheet({
     }
 
     const body = saved?.bodyHtml ?? "";
-    const savedAccount = accounts.find((account) => account.id === saved?.accountId && account.status === "active");
+    const savedAccount = accounts.find(
+      (account) =>
+        account.id === saved?.accountId && account.status === "active",
+    );
     composeForm.reset({
       accountId: savedAccount?.id ?? defaultAccountId,
       to: saved?.to ?? [],
@@ -141,7 +155,15 @@ export function MailComposeSheet({
     });
     setBodyHtmlForEditor(body);
     setBodyContentKey((k) => k + 1);
-  }, [open, draftKey, mode, replyForm, composeForm, defaultAccountId, accounts]);
+  }, [
+    open,
+    draftKey,
+    mode,
+    replyForm,
+    composeForm,
+    defaultAccountId,
+    accounts,
+  ]);
 
   const handleAiInsert = useCallback(
     (subject: string, body: string) => {
@@ -171,14 +193,17 @@ export function MailComposeSheet({
     (html: string) => {
       if (isReply)
         replyForm.setValue("bodyHtml", html, { shouldValidate: true });
-      else
-        composeForm.setValue("bodyHtml", html, { shouldValidate: true });
+      else composeForm.setValue("bodyHtml", html, { shouldValidate: true });
     },
     [isReply, composeForm, replyForm],
   );
 
   const handleToggleCc = useCallback(() => setShowCc((v) => !v), []);
   const handleToggleBcc = useCallback(() => setShowBcc((v) => !v), []);
+  const handleToggleDetails = useCallback(
+    () => setDetailsExpanded((value) => !value),
+    [],
+  );
 
   const persistDraft = useCallback(() => {
     const values = isReply ? replyForm.getValues() : composeForm.getValues();
@@ -214,14 +239,18 @@ export function MailComposeSheet({
   }, [draftKey, resetSheet]);
 
   const handleOpenChange = useCallback(
-    (v: boolean) => { if (!v) handleClose(); },
+    (v: boolean) => {
+      if (!v) handleClose();
+    },
     [handleClose],
   );
 
   const onSubmitCompose = composeForm.handleSubmit(async (data) => {
     if (!isOnline) {
       persistDraft();
-      toast.error("You're offline — your draft is saved. Try again once you reconnect.");
+      toast.error(
+        "You're offline — your draft is saved. Try again once you reconnect.",
+      );
       return;
     }
     try {
@@ -246,7 +275,9 @@ export function MailComposeSheet({
   const onSubmitReply = replyForm.handleSubmit(async (data) => {
     if (!isOnline) {
       persistDraft();
-      toast.error("You're offline — your draft is saved. Try again once you reconnect.");
+      toast.error(
+        "You're offline — your draft is saved. Try again once you reconnect.",
+      );
       return;
     }
     try {
@@ -277,7 +308,9 @@ export function MailComposeSheet({
 
   const title = isReply ? "Reply" : "New message";
 
-  const activeErrors = isReply ? replyForm.formState.errors : composeForm.formState.errors;
+  const activeErrors = isReply
+    ? replyForm.formState.errors
+    : composeForm.formState.errors;
   const isPending = isReply ? replyMail.isPending : sendMail.isPending;
 
   const activeAccountOptions = useMemo(
@@ -290,7 +323,9 @@ export function MailComposeSheet({
       <SheetContent className="p-0 flex flex-col gap-0 sm:max-w-2xl overflow-hidden">
         <SheetHeader className="shrink-0 border-b border-border px-6 py-4">
           <SheetTitle className="text-base font-semibold">{title}</SheetTitle>
-          <SheetDescription>Unsent drafts are saved on this device when you close the composer.</SheetDescription>
+          <SheetDescription>
+            Unsent drafts are saved on this device when you close the composer.
+          </SheetDescription>
         </SheetHeader>
 
         <form
@@ -306,6 +341,8 @@ export function MailComposeSheet({
             onToggleCc={handleToggleCc}
             onToggleBcc={handleToggleBcc}
             activeAccountOptions={activeAccountOptions}
+            detailsExpanded={detailsExpanded}
+            onToggleDetails={handleToggleDetails}
           />
 
           <div className="flex-1 min-h-0 flex flex-col px-0">
@@ -349,12 +386,12 @@ export function MailComposeSheet({
             )}
           </div>
 
-          <div className="shrink-0 border-t border-border px-6 py-4 flex items-center gap-2">
+          <div className="grid shrink-0 grid-cols-2 gap-2 border-t border-border px-4 py-3 sm:flex sm:px-6 sm:py-4">
             <LoadingButton
               type="submit"
               isPending={isPending}
               loadingText="Sending..."
-              className="h-9 text-sm"
+              className="h-9 w-full text-sm sm:w-auto"
             >
               {isReply ? "Send reply" : "Send"}
             </LoadingButton>
@@ -362,7 +399,7 @@ export function MailComposeSheet({
               type="button"
               variant="outline"
               size="sm"
-              className="h-9 text-sm"
+              className="h-9 w-full text-sm sm:w-auto"
               onClick={handleDiscard}
               disabled={isPending}
             >

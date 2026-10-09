@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { MessageSquare, Megaphone, Plus, Sparkles } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -10,8 +9,6 @@ import {
   BUILD_FILTER_ALL,
   useBuildListFilters,
 } from "@/features/build/shared/use-build-list-filters";
-import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
-import { Input } from "@/components/ui/input";
 import {
   Tabs,
   TabsContent,
@@ -36,6 +33,7 @@ import {
   FILTER_DEFINITIONS,
 } from "./roadmap-list-page-model";
 import { useRoadmapListPage } from "./use-roadmap-list-page";
+import { RoadmapFilters } from "./roadmap-filters";
 
 export function RoadmapListPage() {
   const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
@@ -44,7 +42,6 @@ export function RoadmapListPage() {
     roadmapCreateOpen,
     changelogCreateOpen,
     externalEditTarget,
-    horizonDraft,
     statusValue,
     sortValue,
     managedProductId,
@@ -63,56 +60,34 @@ export function RoadmapListPage() {
     handleStatusFilterChange,
     handleSortFilterChange,
     handleOwnerFilterChange,
-    handleHorizonDraftChange,
     handleHorizonCommit,
-    handleHorizonKeyDown,
   } = useRoadmapListPage(listFilters);
 
-  const renderRoadmapFilters = useCallback(
-    () => (
-      <div className="contents">
-        <BuildFilterSelect
-          label="Status"
-          value={statusValue}
-          onValueChange={handleStatusFilterChange}
-          options={ROADMAP_FILTER_STATUS_OPTIONS}
-        />
-        <BuildFilterSelect
-          label="Sort"
-          value={sortValue}
-          onValueChange={handleSortFilterChange}
-          options={ROADMAP_SORT_OPTIONS}
-        />
-        <BuildFilterSelect
-          label="Owner"
-          value={ownerId !== undefined ? String(ownerId) : BUILD_FILTER_ALL}
-          onValueChange={handleOwnerFilterChange}
-          options={ownerOptions}
-        />
-        <Input
-          value={horizonDraft}
-          onChange={handleHorizonDraftChange}
-          onBlur={handleHorizonCommit}
-          onKeyDown={handleHorizonKeyDown}
-          placeholder="Horizon, e.g. Q3 2026"
-          aria-label="Filter by horizon"
-          className="w-40"
-        />
-      </div>
-    ),
-    [
-      statusValue,
-      sortValue,
-      ownerId,
-      ownerOptions,
-      horizonDraft,
-      handleStatusFilterChange,
-      handleSortFilterChange,
-      handleOwnerFilterChange,
-      handleHorizonDraftChange,
-      handleHorizonCommit,
-      handleHorizonKeyDown,
-    ],
+  const activeRoadmapFilterCount = [
+    "productId",
+    "status",
+    "sort",
+    "projectId",
+    "horizon",
+    "ownerId",
+  ].filter((param) => listFilters.isActive(param)).length;
+
+  const roadmapFilters = (
+    <RoadmapFilters
+      activeFilterCount={activeRoadmapFilterCount}
+      statusValue={statusValue}
+      sortValue={sortValue}
+      ownerValue={ownerId !== undefined ? String(ownerId) : BUILD_FILTER_ALL}
+      horizonValue={horizon ?? ""}
+      statusOptions={ROADMAP_FILTER_STATUS_OPTIONS}
+      sortOptions={ROADMAP_SORT_OPTIONS}
+      ownerOptions={ownerOptions}
+      onStatusChange={handleStatusFilterChange}
+      onSortChange={handleSortFilterChange}
+      onOwnerChange={handleOwnerFilterChange}
+      onHorizonCommit={handleHorizonCommit}
+      onClear={listFilters.clearAll}
+    />
   );
 
   const showSearch = activeTab === "roadmap" || activeTab === "feedback";
@@ -121,13 +96,21 @@ export function RoadmapListPage() {
     <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
       <RoadmapPublicationActions />
       {activeTab === "roadmap" ? (
-        <Button size="sm" className="min-w-0 flex-1 sm:flex-none" onClick={handleOpenRoadmapCreate}>
+        <Button
+          size="sm"
+          className="min-w-0 flex-1 sm:flex-none"
+          onClick={handleOpenRoadmapCreate}
+        >
           <Plus className="h-3.5 w-3.5" />
           New Item
         </Button>
       ) : null}
       {activeTab === "changelog" ? (
-        <Button size="sm" className="min-w-0 flex-1 sm:flex-none" onClick={handleOpenChangelogCreate}>
+        <Button
+          size="sm"
+          className="min-w-0 flex-1 sm:flex-none"
+          onClick={handleOpenChangelogCreate}
+        >
           <Plus className="h-3.5 w-3.5" />
           New Entry
         </Button>
@@ -165,7 +148,8 @@ export function RoadmapListPage() {
                   </TabsTrigger>
                 </TabsList>
               }
-              filters={activeTab === "roadmap" ? renderRoadmapFilters : undefined}
+              filters={activeTab === "roadmap" ? roadmapFilters : undefined}
+              filtersAlwaysVisible
               search={
                 showSearch ? (
                   <SearchInput

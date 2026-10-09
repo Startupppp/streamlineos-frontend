@@ -17,7 +17,11 @@ import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { ENTITY_OPTIONS, STATUS_OPTIONS } from "./approvals-constants";
 import type { ApprovalInboxItem } from "@/types/projects";
-import { PmPageShell, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
+import {
+  PmPageShell,
+  PmSection,
+  CONTENT_FILL_PANEL,
+} from "@/components/pm-chrome";
 import {
   INBOX_TABLE_HEADERS,
   ApprovalsInboxMobileCard,
@@ -26,6 +30,7 @@ import { useApprovalsInboxPage } from "./use-approvals-inbox-page";
 
 export function ApprovalsInboxPage() {
   const {
+    canDecide,
     canManage,
     searchInputRef,
     isOnline,
@@ -51,6 +56,7 @@ export function ApprovalsInboxPage() {
     overdue,
     ownerOf,
     columns,
+    handleDecideClick,
     handleRetry,
     handleDecideDialogChange,
     handleReturnFocus,
@@ -66,9 +72,13 @@ export function ApprovalsInboxPage() {
 
   const renderMobileCard = useCallback(
     (row: ApprovalInboxItem) => (
-      <ApprovalsInboxMobileCard row={row} ownerOf={ownerOf} />
+      <ApprovalsInboxMobileCard
+        row={row}
+        ownerOf={ownerOf}
+        onDecide={canDecide ? handleDecideClick : undefined}
+      />
     ),
-    [ownerOf],
+    [canDecide, handleDecideClick, ownerOf],
   );
 
   return (
@@ -107,17 +117,23 @@ export function ApprovalsInboxPage() {
             {
               id: "dateRange",
               label: "Date",
-              active: listFilters.isActive("from") || listFilters.isActive("to"),
+              active:
+                listFilters.isActive("from") || listFilters.isActive("to"),
               control: (
                 <DateRangePicker
-                  from={fromFilter || undefined}
-                  to={toFilter || undefined}
+                  from={fromFilter === "all" ? undefined : fromFilter}
+                  to={toFilter === "all" ? undefined : toFilter}
                   onChange={handleDateRangeChange}
                 />
               ),
             },
           ]}
-          search={{ value: searchDisplay, onValueChange: listFilters.setSearch, placeholder: "Search approvals…", inputRef: searchInputRef }}
+          search={{
+            value: searchDisplay,
+            onValueChange: listFilters.setSearch,
+            placeholder: "Search approvals…",
+            inputRef: searchInputRef,
+          }}
           onClearAll={listFilters.clearAll}
         />
       }
@@ -129,14 +145,14 @@ export function ApprovalsInboxPage() {
           ) : (
             <StatCardGrid cols={2}>
               <StatCard
-                label="Pending"
+                label="Pending on page"
                 value={pending}
                 icon={ListChecks}
                 tone="amber"
                 index={0}
               />
               <StatCard
-                label="Overdue"
+                label="Overdue on page"
                 value={overdue}
                 icon={Clock}
                 tone="red"
@@ -152,12 +168,14 @@ export function ApprovalsInboxPage() {
               You&apos;re offline — results may not be up to date
             </p>
           )}
-          {canManage && <ApprovalBulkActionBar
-            selectedCount={selection.size}
-            isPending={isBulkPending}
-            onCancelSelected={handleBulkCancel}
-            onClear={handleClearSelection}
-          />}
+          {canManage && (
+            <ApprovalBulkActionBar
+              selectedCount={selection.size}
+              isPending={isBulkPending}
+              onCancelSelected={handleBulkCancel}
+              onClear={handleClearSelection}
+            />
+          )}
           <BuildListSurface<ApprovalInboxItem>
             permission="build:approvals:view"
             rows={filteredItems}
@@ -213,7 +231,12 @@ export function ApprovalsInboxPage() {
         onOpenChange={handleDecideDialogChange}
         projectId={decideTarget?.projectId ?? 0}
         approvalId={decideTarget?.approvalId ?? 0}
-        revision={queueTarget?.projectId === decideTarget?.projectId && queueTarget?.approvalId === decideTarget?.approvalId ? queueTarget?.revision : undefined}
+        revision={
+          queueTarget?.projectId === decideTarget?.projectId &&
+          queueTarget?.approvalId === decideTarget?.approvalId
+            ? queueTarget?.revision
+            : undefined
+        }
         onCloseAutoFocus={handleReturnFocus}
       />
     </PageWrapper>

@@ -1,5 +1,5 @@
 import React from "react";
-import { act, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { BuildTemplatesPage } from "./build-templates-page";
 import { ApiError } from "@/lib/api-envelope";
 
@@ -65,8 +65,21 @@ jest.mock("@/components/ui/button", () => ({
 }));
 
 jest.mock("@/components/ui/empty-state", () => ({
-  EmptyState: ({ title }: { title: string }) => (
-    <div data-testid="empty-state">{title}</div>
+  EmptyState: ({
+    title,
+    filteredTitle,
+    filtersActive,
+    onClearFilters,
+  }: {
+    title?: string;
+    filteredTitle?: string;
+    filtersActive?: boolean;
+    onClearFilters?: () => void;
+  }) => (
+    <div data-testid="empty-state">
+      {filtersActive ? filteredTitle : title}
+      {filtersActive ? <button onClick={onClearFilters}>Clear filters</button> : null}
+    </div>
   ),
 }));
 
@@ -101,7 +114,9 @@ jest.mock("@/components/illustrations", () => ({
 }));
 
 jest.mock("./template-card", () => ({
-  TemplateCard: () => <div data-testid="template-card" />,
+  TemplateCard: ({ canManage }: { canManage: boolean }) => (
+    <div data-testid="template-card" data-can-manage={String(canManage)} />
+  ),
 }));
 
 jest.mock("./create-template-sheet", () => ({
@@ -144,8 +159,16 @@ jest.mock("@/features/build/shared/use-build-list-filters", () => ({
 }));
 
 jest.mock("@/features/build/shared/build-list-toolbar", () => ({
-  BuildListToolbar: ({ search }: { search?: { value: string; inputRef?: React.RefObject<HTMLInputElement | null> } }) =>
-    search ? <input type="search" ref={search.inputRef} aria-label="Search templates" /> : null,
+  BuildListToolbar: ({ search }: { search?: { value: string; onValueChange: (value: string) => void; inputRef?: React.RefObject<HTMLInputElement | null> } }) =>
+    search ? (
+      <input
+        type="search"
+        ref={search.inputRef}
+        aria-label="Search templates"
+        value={search.value}
+        onChange={(event) => search.onValueChange(event.target.value)}
+      />
+    ) : null,
 }));
 
 jest.mock("@/features/build/shared/build-filter-select", () => ({
@@ -184,6 +207,7 @@ function baseQueryResult(overrides = {}) {
     refetch: jest.fn(),
     hasNextPage: false,
     fetchNextPage: jest.fn(),
+    isFetching: false,
     isFetchingNextPage: false,
     ...overrides,
   };
@@ -205,6 +229,11 @@ beforeEach(() => {
   mockListFiltersState.value.mockReturnValue("all");
   mockListFiltersState.isActive.mockReturnValue(false);
   mockListFiltersState.setSearch.mockReset();
+  mockListFiltersState.clearAll.mockReset();
+  mockListFiltersState.search = "";
+  mockListFiltersState.debouncedSearch = "";
+  mockListFiltersState.activeCount = 0;
+  mockListFiltersState.isFiltered = false;
   mockUseOnlineStatus.mockReturnValue(true);
 });
 
@@ -285,6 +314,48 @@ it("renders a search input via BuildListToolbar so the / shortcut has a reachabl
   expect(screen.getByRole("searchbox", { name: /search templates/i })).toBeInTheDocument();
 });
 
+it("trims search text before sending it to the server query", () => {
+  mockListFiltersState.search = "  roadmap  ";
+  mockListFiltersState.debouncedSearch = "  roadmap  ";
+  render(<BuildTemplatesPage />);
+  expect(mockUseProjectTemplates).toHaveBeenCalledWith(
+    expect.objectContaining({ q: "roadmap" }),
+  );
+});
+
+it("shows a filtered-empty explanation and clears search and filters together", () => {
+  mockListFiltersState.search = "roadmap";
+  mockListFiltersState.debouncedSearch = "roadmap";
+  render(<BuildTemplatesPage />);
+  expect(screen.getByText(/no templates match your search or filters/i)).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: /clear filters/i }));
+  expect(mockListFiltersState.clearAll).toHaveBeenCalledTimes(1);
+});
+
+it("accepts categories produced by the create form instead of dropping them from URL state", () => {
+  mockListFiltersState.value.mockImplementation((param: string) =>
+    param === "category" ? "SOFTWARE" : "all",
+  );
+  mockListFiltersState.activeCount = 1;
+  render(<BuildTemplatesPage />);
+  expect(mockUseProjectTemplates).toHaveBeenCalledWith(
+    expect.objectContaining({ category: "SOFTWARE" }),
+  );
+});
+
+it("does not expose apply or delete controls to viewers without build:manage", () => {
+  mockUseCan.mockImplementation((key: string) => key !== "build:manage");
+  mockUseProjectTemplates.mockReturnValue(
+    baseQueryResult({
+      data: templatePages([
+        { id: 1, name: "Sprint", description: null, category: "GENERAL", tickets: [] },
+      ]),
+    }),
+  );
+  render(<BuildTemplatesPage />);
+  expect(screen.getByTestId("template-card")).toHaveAttribute("data-can-manage", "false");
+});
+
 it("wires onCreate to the keyboard hook so c creates a new template when build:manage is granted", () => {
   render(<BuildTemplatesPage />);
   const [call] = mockUseBuildListKeyboard.mock.calls;
@@ -305,4 +376,17 @@ it("shows an offline empty state instead of the no-templates empty state when th
   render(<BuildTemplatesPage />);
   expect(screen.getByText(/you are offline/i)).toBeInTheDocument();
   expect(screen.queryByText(/no templates yet/i)).not.toBeInTheDocument();
+});
+
+it("warns that populated cached results may be stale while offline", () => {
+  mockUseOnlineStatus.mockReturnValue(false);
+  mockUseProjectTemplates.mockReturnValue(
+    baseQueryResult({
+      data: templatePages([
+        { id: 1, name: "Sprint", description: null, category: "GENERAL", tickets: [] },
+      ]),
+    }),
+  );
+  render(<BuildTemplatesPage />);
+  expect(screen.getByText(/these templates may be out of date/i)).toBeInTheDocument();
 });

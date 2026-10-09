@@ -178,9 +178,11 @@ export function buildApprovalsInboxColumns({
 export function ApprovalsInboxMobileCard({
   row,
   ownerOf,
+  onDecide,
 }: {
   row: ApprovalInboxItem;
   ownerOf: (userId: string | null) => NamedUser | null;
+  onDecide?: (item: ApprovalInboxItem) => void;
 }) {
   const narrowStatus =
     APPROVAL_STATUS_VALUES.find((v) => v === row.status) ?? "pending";
@@ -189,6 +191,11 @@ export function ApprovalsInboxMobileCard({
       eyebrow={row.projectKey ?? undefined}
       title={row.title}
       status={<ApprovalStatusBadge status={narrowStatus} />}
+      actions={
+        onDecide && DECIDABLE.has(row.status) ? (
+          <DecideButtonCell row={row} onDecide={onDecide} />
+        ) : undefined
+      }
       person={{ user: ownerOf(row.requestedById), role: "Requested by" }}
       meta={[
         { label: "Type", value: entityTypeLabel(row.entityType) },

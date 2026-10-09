@@ -131,6 +131,10 @@ jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
 
 const mockUseBuildListKeyboard = useBuildListKeyboard as jest.Mock;
 
+function openRoadmapFilters() {
+  fireEvent.click(screen.getByRole("button", { name: /^Filters/ }));
+}
+
 beforeEach(() => {
   jest.clearAllMocks();
   capturedOnItemsChange = undefined;
@@ -259,27 +263,42 @@ describe("RoadmapListPage — search is URL-backed as q", () => {
 });
 
 describe("RoadmapListPage — every response-shaping value has a control that writes the URL", () => {
+  it("summarizes active filters in one accessible trigger and clears them from that panel", () => {
+    mockSearchParams = new URLSearchParams("status=in_progress&ownerId=9");
+    render(<RoadmapListPage />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Filters (2 active)" }));
+    fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
+
+    expect(mockReplace).toHaveBeenCalledWith("/build/roadmap", { scroll: false });
+  });
+
   it("writes a picked status to the URL rather than filtering the loaded page in memory", () => {
     render(<RoadmapListPage />);
+    openRoadmapFilters();
     fireEvent.click(screen.getByRole("button", { name: "In Progress" }));
     expect(mockReplace).toHaveBeenCalledWith(expect.stringContaining("status=in_progress"), { scroll: false });
   });
 
   it("writes a picked sort to the URL", () => {
     render(<RoadmapListPage />);
+    openRoadmapFilters();
     fireEvent.click(screen.getByRole("button", { name: "Recently created" }));
     expect(mockReplace).toHaveBeenCalledWith(expect.stringContaining("sort=created_at"), { scroll: false });
   });
 
   it("offers owners by display name and writes the membership id to the URL, never a raw id label", () => {
     render(<RoadmapListPage />);
-    expect(screen.getByTestId("roadmap-filters")).toHaveTextContent("Fox Mulder");
-    fireEvent.click(screen.getByRole("button", { name: "Fox Mulder" }));
+    openRoadmapFilters();
+    const ownerOption = screen.getByRole("button", { name: "Fox Mulder" });
+    expect(ownerOption).toBeInTheDocument();
+    fireEvent.click(ownerOption);
     expect(mockReplace).toHaveBeenCalledWith(expect.stringContaining("ownerId=9"), { scroll: false });
   });
 
   it("commits the typed horizon to the URL on blur", () => {
     render(<RoadmapListPage />);
+    openRoadmapFilters();
     const horizon = screen.getByLabelText("Filter by horizon");
     fireEvent.change(horizon, { target: { value: "Q3 2026" } });
     expect(mockReplace).not.toHaveBeenCalled();
@@ -289,6 +308,7 @@ describe("RoadmapListPage — every response-shaping value has a control that wr
 
   it("commits the typed horizon to the URL on Enter, so the filter is reachable from the keyboard", () => {
     render(<RoadmapListPage />);
+    openRoadmapFilters();
     const horizon = screen.getByLabelText("Filter by horizon");
     fireEvent.change(horizon, { target: { value: "Q4 2026" } });
     fireEvent.keyDown(horizon, { key: "Enter" });
@@ -298,7 +318,19 @@ describe("RoadmapListPage — every response-shaping value has a control that wr
   it("seeds the horizon box from the URL so a shared roadmap link reopens filtered", () => {
     mockSearchParams = new URLSearchParams("horizon=Q1 2027");
     render(<RoadmapListPage />);
+    openRoadmapFilters();
     expect(screen.getByLabelText("Filter by horizon")).toHaveValue("Q1 2027");
+  });
+
+  it("keeps the horizon field synchronized when browser navigation changes the URL", () => {
+    mockSearchParams = new URLSearchParams("horizon=Q1 2027");
+    const { rerender } = render(<RoadmapListPage />);
+    openRoadmapFilters();
+
+    mockSearchParams = new URLSearchParams("horizon=Q2 2027");
+    rerender(<RoadmapListPage />);
+
+    expect(screen.getByLabelText("Filter by horizon")).toHaveValue("Q2 2027");
   });
 
   it("renders no roadmap filter controls on the feedback tab, where they shape no read", () => {

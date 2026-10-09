@@ -45,6 +45,7 @@ const grantSchema = z.object({
   canSubmitChangeRequests: z.boolean(),
   canViewApprovals: z.boolean(),
   canViewInvoices: z.boolean(),
+  canViewRequests: z.boolean(),
 });
 
 type GrantFormValues = z.infer<typeof grantSchema>;
@@ -59,6 +60,7 @@ const EMPTY_DEFAULTS: GrantFormValues = {
   canSubmitChangeRequests: false,
   canViewApprovals: false,
   canViewInvoices: false,
+  canViewRequests: false,
 };
 
 function toFormValues(grant: ProjectClientGrant): GrantFormValues {
@@ -72,6 +74,7 @@ function toFormValues(grant: ProjectClientGrant): GrantFormValues {
     canSubmitChangeRequests: grant.canSubmitChangeRequests,
     canViewApprovals: grant.canViewApprovals,
     canViewInvoices: grant.canViewInvoices,
+    canViewRequests: grant.canViewRequests,
   };
 }
 
@@ -145,6 +148,7 @@ export function GrantFormDialog({ open, onOpenChange, mode, defaultValues }: Pro
           canSubmitChangeRequests: values.canSubmitChangeRequests,
           canViewApprovals: values.canViewApprovals,
           canViewInvoices: values.canViewInvoices,
+          canViewRequests: values.canViewRequests,
         },
         {
           onSuccess: () => {
@@ -164,6 +168,7 @@ export function GrantFormDialog({ open, onOpenChange, mode, defaultValues }: Pro
           canSubmitChangeRequests: values.canSubmitChangeRequests,
           canViewApprovals: values.canViewApprovals,
           canViewInvoices: values.canViewInvoices,
+          canViewRequests: values.canViewRequests,
         },
         {
           onSuccess: () => {
@@ -468,6 +473,24 @@ export function GrantFormDialog({ open, onOpenChange, mode, defaultValues }: Pro
                     </FormControl>
                     <FormLabel className="cursor-pointer font-normal">
                       View invoices
+                    </FormLabel>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="canViewRequests"
+                render={({ field }) => (
+                  <FormItem className="flex items-center gap-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormLabel className="cursor-pointer font-normal">
+                      View requests
                     </FormLabel>
                   </FormItem>
                 )}

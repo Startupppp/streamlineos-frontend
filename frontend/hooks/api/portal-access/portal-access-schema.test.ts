@@ -13,6 +13,7 @@ const mutationGrantPayload = {
   canSubmitChangeRequests: false,
   canViewApprovals: false,
   canViewInvoices: false,
+  canViewRequests: true,
   status: "ACTIVE" as const,
   expiresAt: null,
   createdAt: "2026-09-01T10:00:00.000Z",
@@ -63,5 +64,9 @@ describe("grantContract — mutation response shape (POST /grants, PATCH, POST /
     const { projectClientGrantId: _omit, ...rest } = mutationGrantPayload;
     const result = grantContract.safeParse(rest);
     expect(result.success).toBe(false);
+  });
+
+  it("preserves the requests capability returned by the access service", () => {
+    expect(grantContract.parse(mutationGrantPayload).canViewRequests).toBe(true);
   });
 });

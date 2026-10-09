@@ -37,8 +37,7 @@ import {
 } from "@/components/ui/sheet";
 import { useCreateProjectTemplate } from "@/hooks/api/build/templates";
 import { TicketRow, type TicketDraft } from "./ticket-row";
-
-const CATEGORIES = ["GENERAL", "SOFTWARE", "ONBOARDING", "MARKETING", "SALES", "HR"] as const;
+import { TEMPLATE_CATEGORY_OPTIONS } from "./template-categories";
 
 interface CreateTemplateSheetProps {
   open: boolean;
@@ -142,8 +141,10 @@ export function CreateTemplateSheet({ open, onClose }: CreateTemplateSheetProps)
                           <SelectTrigger><SelectValue /></SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {CATEGORIES.map((c) => (
-                            <SelectItem key={c} value={c}>{c}</SelectItem>
+                          {TEMPLATE_CATEGORY_OPTIONS.map((category) => (
+                            <SelectItem key={category.value} value={category.value}>
+                              {category.label}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>

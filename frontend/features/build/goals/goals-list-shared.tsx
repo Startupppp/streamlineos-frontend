@@ -3,7 +3,12 @@
 import { useCallback, useState, type MouseEvent } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { CalendarDays, Link2 as LinkIcon, ListChecks, Users } from "lucide-react";
+import {
+  CalendarDays,
+  Link2 as LinkIcon,
+  ListChecks,
+  Users,
+} from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -33,7 +38,13 @@ interface GoalCardActionsProps {
   onOpenChange: (open: boolean) => void;
 }
 
-function GoalCardActions({ goal, onEdit, onDelete, open, onOpenChange }: GoalCardActionsProps) {
+function GoalCardActions({
+  goal,
+  onEdit,
+  onDelete,
+  open,
+  onOpenChange,
+}: GoalCardActionsProps) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   const handleEdit = useCallback(() => onEdit?.(goal), [goal, onEdit]);
   const handleDelete = useCallback(() => onDelete?.(goal), [goal, onDelete]);
@@ -44,16 +55,20 @@ function GoalCardActions({ goal, onEdit, onDelete, open, onOpenChange }: GoalCar
         <button
           type="button"
           aria-label="Goal actions"
-          className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
+          className="flex h-8 w-8 items-center justify-center rounded text-muted-foreground opacity-100 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-6 sm:w-6 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
           {...hoverHandlers}
         >
           <EllipsisIcon ref={iconRef} size={14} />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {onEdit ? <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem> : null}
+        {onEdit ? (
+          <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
+        ) : null}
         {onDelete ? (
-          <DropdownMenuItem variant="destructive" onClick={handleDelete}>Delete</DropdownMenuItem>
+          <DropdownMenuItem variant="destructive" onClick={handleDelete}>
+            Delete
+          </DropdownMenuItem>
         ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
@@ -98,7 +113,10 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
           <div className="flex min-w-0 items-start justify-between gap-2">
             <Link href={`/build/goals/${goal.id}`} className="min-w-0 flex-1">
               <p
-                className={cn(TEXT_TWO_LINES, "text-sm font-medium leading-snug")}
+                className={cn(
+                  TEXT_TWO_LINES,
+                  "text-sm font-medium leading-snug",
+                )}
                 title={goal.title}
               >
                 {goal.title}
@@ -150,7 +168,8 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
             ) : (
               <span>
                 {goal.linkCount} linked ({goal.linkedProjectCount} project
-                {goal.linkedProjectCount === 1 ? "" : "s"}, {goal.linkedTicketCount} ticket
+                {goal.linkedProjectCount === 1 ? "" : "s"},{" "}
+                {goal.linkedTicketCount} ticket
                 {goal.linkedTicketCount === 1 ? "" : "s"})
               </span>
             )}

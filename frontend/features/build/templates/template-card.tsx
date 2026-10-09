@@ -27,6 +27,7 @@ import {
 
 interface TemplateCardProps {
   template: ProjectTemplate;
+  canManage?: boolean;
   onApply: (template: ProjectTemplate) => void;
   onDelete: (template: ProjectTemplate) => void;
 }
@@ -44,14 +45,19 @@ function TemplateCardActions({
   const { iconRef: trashRef, hoverHandlers: trashHandlers } = useAnimatedIcon();
   return (
     <div className="flex gap-2">
-      <Button size="sm" className="flex-1" onClick={onApply} {...playHandlers}>
+      <Button
+        size="sm"
+        className="min-h-11 flex-1 sm:min-h-8"
+        onClick={onApply}
+        {...playHandlers}
+      >
         <PlayIcon ref={playRef} size={14} className="mr-1" aria-hidden="true" />
         Use Template
       </Button>
       <Button
         size="sm"
         variant="outline"
-        className="shrink-0 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+        className="min-h-11 min-w-11 shrink-0 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive sm:min-h-8 sm:min-w-8"
         onClick={onDelete}
         aria-label={`Delete ${templateName} template`}
         {...trashHandlers}
@@ -93,7 +99,10 @@ const TaskPreviewRow = memo(function TaskPreviewRow({
       >
         {type}
       </span>
-      <TruncatedText text={title} className="flex-1 text-dense text-foreground/90" />
+      <TruncatedText
+        text={title}
+        className="flex-1 text-dense text-foreground/90"
+      />
       {phase ? (
         <span className="shrink-0 rounded bg-muted px-1 py-px text-micro text-muted-foreground">
           {phase}
@@ -105,12 +114,16 @@ const TaskPreviewRow = memo(function TaskPreviewRow({
 
 export const TemplateCard = memo(function TemplateCard({
   template,
+  canManage = false,
   onApply,
   onDelete,
 }: TemplateCardProps) {
   const shouldReduceMotion = useReducedMotion();
   const handleApply = useCallback(() => onApply(template), [onApply, template]);
-  const handleDelete = useCallback(() => onDelete(template), [onDelete, template]);
+  const handleDelete = useCallback(
+    () => onDelete(template),
+    [onDelete, template],
+  );
 
   const category = template.category || "GENERAL";
   const accentBar = getColorSafe(categoryAccentBar, category);
@@ -135,10 +148,13 @@ export const TemplateCard = memo(function TemplateCard({
           "transition-[border-color,box-shadow] duration-200 ease-out motion-reduce:transition-none",
           "hover:border-primary/35 hover:shadow-md",
         )}
-        role="listitem"
+        role="article"
         aria-label={`${template.name} template — ${formatCategoryLabel(category)}, ${taskCount} tasks`}
       >
-        <div className={cn("absolute inset-x-0 top-0 h-0.5", accentBar)} aria-hidden="true" />
+        <div
+          className={cn("absolute inset-x-0 top-0 h-0.5", accentBar)}
+          aria-hidden="true"
+        />
 
         <div className="mb-2.5 flex min-w-0 items-start gap-2.5">
           <div
@@ -171,7 +187,10 @@ export const TemplateCard = memo(function TemplateCard({
                 badgeColor,
               )}
             >
-              <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", dotColor)} aria-hidden="true" />
+              <span
+                className={cn("h-1.5 w-1.5 shrink-0 rounded-full", dotColor)}
+                aria-hidden="true"
+              />
               {formatCategoryLabel(category)}
             </Badge>
           </div>
@@ -179,7 +198,10 @@ export const TemplateCard = memo(function TemplateCard({
 
         {template.description ? (
           <p
-            className={cn(TEXT_TWO_LINES, "mb-2.5 flex-1 text-dense leading-relaxed text-muted-foreground")}
+            className={cn(
+              TEXT_TWO_LINES,
+              "mb-2.5 flex-1 text-dense leading-relaxed text-muted-foreground",
+            )}
             title={template.description}
           >
             {template.description}
@@ -215,15 +237,19 @@ export const TemplateCard = memo(function TemplateCard({
                 className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
                 aria-hidden="true"
               />
-              <span className="text-micro text-muted-foreground">No tasks defined</span>
+              <span className="text-micro text-muted-foreground">
+                No tasks defined
+              </span>
             </div>
           )}
 
-          <TemplateCardActions
-            templateName={template.name}
-            onApply={handleApply}
-            onDelete={handleDelete}
-          />
+          {canManage ? (
+            <TemplateCardActions
+              templateName={template.name}
+              onApply={handleApply}
+              onDelete={handleDelete}
+            />
+          ) : null}
         </div>
       </div>
     </motion.div>

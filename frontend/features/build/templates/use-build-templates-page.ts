@@ -17,9 +17,13 @@ import {
   BUILD_FILTER_ALL,
 } from "@/features/build/shared/use-build-list-filters";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
+import { TEMPLATE_CATEGORY_OPTIONS } from "./template-categories";
 
 const FILTER_DEFINITIONS = [
-  { param: "category", options: ["GENERAL", "ENGINEERING", "MARKETING", "OPERATIONS", "DESIGN", "SALES", "CONTENT", "FREELANCER", "SOFTWARE_PRODUCT"] },
+  {
+    param: "category",
+    options: TEMPLATE_CATEGORY_OPTIONS.map((option) => option.value),
+  },
   { param: "sort", options: ["newest", "name"] },
 ] as const;
 
@@ -28,11 +32,16 @@ export function useBuildTemplatesPage() {
   const isOnline = useOnlineStatus();
   const searchRef = useRef<HTMLInputElement>(null);
 
-  const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS, withSearch: true });
+  const listFilters = useBuildListFilters({
+    filters: FILTER_DEFINITIONS,
+    withSearch: true,
+  });
   const categoryFilter = listFilters.value("category");
   const sortFilter = listFilters.value("sort");
   const searchDisplay = listFilters.search;
   const debouncedSearch = listFilters.debouncedSearch;
+  const normalizedSearch = debouncedSearch.trim();
+  const isFiltered = listFilters.activeCount > 0 || normalizedSearch.length > 0;
 
   const {
     data: templatePages,
@@ -42,16 +51,19 @@ export function useBuildTemplatesPage() {
     refetch,
     hasNextPage,
     fetchNextPage,
+    isFetching,
     isFetchingNextPage,
   } = useProjectTemplates({
-    q: debouncedSearch || undefined,
+    q: normalizedSearch || undefined,
     category: categoryFilter !== BUILD_FILTER_ALL ? categoryFilter : undefined,
     sort: sortFilter !== BUILD_FILTER_ALL ? sortFilter : undefined,
   });
   const deleteTemplate = useDeleteProjectTemplate();
   const [createOpen, setCreateOpen] = useState(false);
   const [applyTarget, setApplyTarget] = useState<ProjectTemplate | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<ProjectTemplate | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ProjectTemplate | null>(
+    null,
+  );
 
   const templates = useMemo(
     () => templatePages?.pages.flatMap((p) => p.data) ?? [],
@@ -67,9 +79,15 @@ export function useBuildTemplatesPage() {
 
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
   const handleCloseCreate = useCallback(() => setCreateOpen(false), []);
-  const handleApplyTarget = useCallback((t: ProjectTemplate) => setApplyTarget(t), []);
+  const handleApplyTarget = useCallback(
+    (t: ProjectTemplate) => setApplyTarget(t),
+    [],
+  );
   const handleCloseApply = useCallback(() => setApplyTarget(null), []);
-  const handleDeleteTarget = useCallback((t: ProjectTemplate) => setDeleteTarget(t), []);
+  const handleDeleteTarget = useCallback(
+    (t: ProjectTemplate) => setDeleteTarget(t),
+    [],
+  );
   const handleCategoryChange = useCallback(
     (value: string) => listFilters.setValue("category", value),
     [listFilters],
@@ -79,8 +97,8 @@ export function useBuildTemplatesPage() {
     [listFilters],
   );
   const handleLoadMore = useCallback(() => {
-    if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+    if (hasNextPage && !isFetching) void fetchNextPage();
+  }, [fetchNextPage, hasNextPage, isFetching]);
   const handleKeyboardOpen = useCallback(
     (index: number) => {
       const t = templates[index];
@@ -137,8 +155,10 @@ export function useBuildTemplatesPage() {
     isLoading,
     isError,
     hasNextPage,
+    isFetching,
     isFetchingNextPage,
     templates,
+    isFiltered,
     pageState,
     createOpen,
     applyTarget,

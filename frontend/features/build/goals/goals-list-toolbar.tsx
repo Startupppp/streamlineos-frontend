@@ -63,6 +63,7 @@ interface GoalOutcomeParams {
   health?: (typeof GOAL_HEALTH_VALUES)[number];
   scope?: "own" | "all";
   due?: string;
+  metricType?: "number" | "percentage" | "currency" | "boolean";
 }
 
 export function resolveGoalOutcomeParams(
@@ -72,11 +73,15 @@ export function resolveGoalOutcomeParams(
   const health = read("health");
   const scope = read("scope");
   const due = read("due");
+  const metricType = read("metricType");
   if (isGoalHealth(health)) {
     params.health = health;
   }
   if (scope === "own") params.scope = "own";
   if (GOAL_DUE_PATTERN.test(due)) params.due = due;
+  if (METRIC_OPTIONS.some((option) => option.value === metricType)) {
+    params.metricType = metricType as GoalOutcomeParams["metricType"];
+  }
   return params;
 }
 

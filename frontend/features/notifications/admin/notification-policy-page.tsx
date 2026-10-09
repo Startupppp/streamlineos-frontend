@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -24,30 +24,84 @@ import {
 export function NotificationPolicyPage() {
   const canManage = useCan("notifications:policy:manage");
   const { data: policies, isLoading, isError, refetch } = useNotificationPolicies();
-  const upsert = useUpsertNotificationPolicy();
-
-  const hydrated = useRef(false);
 
   const orgPolicy = policies?.find(
     (p) => p.scopeType === "ORG" && p.scopeId === null,
   ) ?? null;
 
-  const [defaultChannels, setDefaultChannels] = useState<NotificationChannel[]>([]);
-  const [canUserOverride, setCanUserOverride] = useState(true);
-  const [categoryState, setCategoryState] = useState<Record<NotificationCategory, CategoryState>>(
-    () => buildInitialCategoryState({}),
-  );
-
-  if (!hydrated.current && orgPolicy !== null && policies !== undefined) {
-    hydrated.current = true;
-    setDefaultChannels(orgPolicy.defaultChannels);
-    setCanUserOverride(orgPolicy.canUserOverride);
-    setCategoryState(buildInitialCategoryState(orgPolicy.categoryOverrides));
-  }
-
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  if (isLoading) {
+    return (
+      <PageWrapper
+        title="Notification Policy"
+        subtitle="Configure organization-wide notification delivery defaults"
+      >
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="rounded-xl border border-border p-4 space-y-3">
+              <Skeleton className="h-4 w-40" />
+              <div className="space-y-2">
+                {Array.from({ length: 4 }).map((_, j) => (
+                  <Skeleton key={j} className="h-4 w-56" />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper
+        title="Notification Policy"
+        subtitle="Configure organization-wide notification delivery defaults"
+      >
+        <ErrorState
+          title="Failed to load policy"
+          description="Could not load the notification policy. Please try again."
+          onRetry={handleRetry}
+        />
+      </PageWrapper>
+    );
+  }
+
+  return (
+    <NotificationPolicyForm
+      key={orgPolicy?.updatedAt ? String(orgPolicy.updatedAt) : "default-policy"}
+      canManage={canManage}
+      initialDefaultChannels={orgPolicy?.defaultChannels ?? []}
+      initialCanUserOverride={orgPolicy?.canUserOverride ?? true}
+      initialCategoryOverrides={orgPolicy?.categoryOverrides ?? {}}
+    />
+  );
+}
+
+interface NotificationPolicyFormProps {
+  canManage: boolean;
+  initialDefaultChannels: NotificationChannel[];
+  initialCanUserOverride: boolean;
+  initialCategoryOverrides: Record<string, PolicyOverride>;
+}
+
+function NotificationPolicyForm({
+  canManage,
+  initialDefaultChannels,
+  initialCanUserOverride,
+  initialCategoryOverrides,
+}: NotificationPolicyFormProps) {
+  const upsert = useUpsertNotificationPolicy();
+  const [defaultChannels, setDefaultChannels] = useState<NotificationChannel[]>(
+    initialDefaultChannels,
+  );
+  const [canUserOverride, setCanUserOverride] = useState(initialCanUserOverride);
+  const [categoryState, setCategoryState] = useState<Record<NotificationCategory, CategoryState>>(
+    () => buildInitialCategoryState(initialCategoryOverrides),
+  );
 
   const handleDefaultChannelToggle = useCallback(
     (channel: NotificationChannel, checked: boolean) => {
@@ -113,43 +167,6 @@ export function NotificationPolicyPage() {
       },
     );
   }, [upsert, defaultChannels, canUserOverride, categoryState]);
-
-  if (isLoading) {
-    return (
-      <PageWrapper
-        title="Notification Policy"
-        subtitle="Configure organization-wide notification delivery defaults"
-      >
-        <div className="flex flex-1 min-h-0 flex-col gap-4">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="rounded-xl border border-border p-4 space-y-3">
-              <Skeleton className="h-4 w-40" />
-              <div className="space-y-2">
-                {Array.from({ length: 4 }).map((_, j) => (
-                  <Skeleton key={j} className="h-4 w-56" />
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </PageWrapper>
-    );
-  }
-
-  if (isError) {
-    return (
-      <PageWrapper
-        title="Notification Policy"
-        subtitle="Configure organization-wide notification delivery defaults"
-      >
-        <ErrorState
-          title="Failed to load policy"
-          description="Could not load the notification policy. Please try again."
-          onRetry={handleRetry}
-        />
-      </PageWrapper>
-    );
-  }
 
   return (
     <PageWrapper

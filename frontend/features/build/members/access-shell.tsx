@@ -9,6 +9,8 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
+import { cn } from "@/lib/utils";
 
 type AccessSection = "members" | "access";
 
@@ -53,8 +55,8 @@ export function BuildAccessShell({
       onValueChange={handleSectionChange}
       className="flex flex-col"
     >
-      <div className="shrink-0 px-6 pt-4">
-        <TabsList>
+      <div className={cn("shrink-0 pt-3", PAGE_CHROME_X)}>
+        <TabsList className="grid w-full grid-cols-2 sm:flex sm:w-auto" aria-label="Build access settings">
           <TabsTrigger value="members">Members</TabsTrigger>
           <TabsTrigger value="access">Access control</TabsTrigger>
         </TabsList>
