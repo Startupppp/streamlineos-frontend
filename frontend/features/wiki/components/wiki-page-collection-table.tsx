@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useState, useCallback } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { LayoutList, LayoutGrid } from "lucide-react";
 import { useKbPageCollection } from "@/hooks/api/kb/page-collection";
@@ -305,7 +305,14 @@ export function WikiPageCollectionTable({
     useKbPageCollection(queryParams);
 
   const [hadData, setHadData] = useState(false);
-  if (!hadData && data && data.data.length > 0) setHadData(true);
+  useEffect(() => {
+    if (data && data.data.length > 0 && !hadData) {
+      // Query history is external state: remember a successful non-empty result
+      // so a later empty response can be distinguished from first-use emptiness.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setHadData(true);
+    }
+  }, [data, hadData]);
 
   const filtersActive =
     debouncedSearch !== "" ||

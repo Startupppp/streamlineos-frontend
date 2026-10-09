@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { format, isWeekend, isToday as isDateToday } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -69,22 +69,28 @@ export function WorkLogEntryRow({
 }: WorkLogEntryRowProps) {
   const [content, setContent] = useState(initialContent);
   const [links, setLinks] = useState<string[]>(() => parseLinks(initialWorkLink));
-  const [prevInitial, setPrevInitial] = useState(initialContent);
-  const [prevInitialLink, setPrevInitialLink] = useState(initialWorkLink);
-  const [isDirty, setIsDirty] = useState(false);
+  const previousInitialRef = useRef(initialContent);
+  const previousInitialLinkRef = useRef(initialWorkLink);
   const [linkError, setLinkError] = useState("");
   const [expanded, setExpanded] = useState(
     Boolean(initialContent) || Boolean(initialWorkLink.trim()),
   );
 
-  if (initialContent !== prevInitial) {
-    setPrevInitial(initialContent);
-    if (!isDirty) setContent(initialContent);
-  }
-  if (initialWorkLink !== prevInitialLink) {
-    setPrevInitialLink(initialWorkLink);
-    if (!isDirty) setLinks(parseLinks(initialWorkLink));
-  }
+  useEffect(() => {
+    const previousInitial = previousInitialRef.current;
+    previousInitialRef.current = initialContent;
+    setContent((current) => current === previousInitial ? initialContent : current);
+  }, [initialContent]);
+
+  useEffect(() => {
+    const previousInitialLink = previousInitialLinkRef.current;
+    previousInitialLinkRef.current = initialWorkLink;
+    setLinks((current) =>
+      serializeLinks(current) === serializeLinks(parseLinks(previousInitialLink))
+        ? parseLinks(initialWorkLink)
+        : current,
+    );
+  }, [initialWorkLink]);
 
   const serializedLinks = serializeLinks(links);
   const initialSerialized = serializeLinks(parseLinks(initialWorkLink));
@@ -113,33 +119,28 @@ export function WorkLogEntryRow({
     }
     setLinkError("");
     onSave(content, serializeLinks(trimmed));
-    setIsDirty(false);
   };
 
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (readOnly) return;
     setContent(e.target.value);
-    setIsDirty(true);
   };
 
   const handleDiscard = () => {
     setContent(initialContent);
     setLinks(parseLinks(initialWorkLink));
     setLinkError("");
-    setIsDirty(false);
     if (!initialContent && !initialWorkLink.trim()) setExpanded(false);
   };
 
   function updateLink(index: number, value: string) {
     setLinks((prev) => prev.map((l, i) => (i === index ? value : l)));
-    setIsDirty(true);
     if (linkError) setLinkError("");
   }
 
   function addLink() {
     if (links.length >= MAX_LINKS) return;
     setLinks((prev) => [...prev, ""]);
-    setIsDirty(true);
   }
 
   function removeLink(index: number) {
@@ -147,7 +148,6 @@ export function WorkLogEntryRow({
       const next = prev.filter((_, i) => i !== index);
       return next.length > 0 ? next : [""];
     });
-    setIsDirty(true);
     if (linkError) setLinkError("");
   }
 

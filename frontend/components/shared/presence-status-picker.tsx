@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState, type ChangeEvent, type KeyboardEvent, type PointerEvent } from "react";
+import { useEffect, useId, useState, type ChangeEvent, type KeyboardEvent, type PointerEvent } from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { formatDateTime } from "@/lib/date-utils";
@@ -33,14 +33,12 @@ export function PresenceStatusPicker({ layout, className }: PresenceStatusPicker
   const { status, statusMessage, statusExpiresAt, selectStatus, isPending } =
     usePresenceSelection();
   const messageInputId = useId();
-  const [syncedMessage, setSyncedMessage] = useState(statusMessage);
   const [messageDraft, setMessageDraft] = useState(statusMessage);
   const [clearAfter, setClearAfter] = useState<PresenceClearAfter>(DEFAULT_CLEAR_AFTER);
 
-  if (syncedMessage !== statusMessage) {
-    setSyncedMessage(statusMessage);
+  useEffect(() => {
     setMessageDraft(statusMessage);
-  }
+  }, [statusMessage]);
 
   function commit(next: {
     status: PresenceStatus;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export const SEARCH_INTEGRITY_MESSAGE =
   "Search failed integrity check — showing unfiltered. Report ref HRMS-SEARCH-001.";
@@ -36,9 +36,14 @@ export function useSearchIntegrity(input: SearchIntegrityInput): boolean {
   );
   const { scopeKey, isSearching, isSettled, rowCount } = input;
 
-  if (isSettled && !isSearching && rowCount > 0 && !knownNonEmptyScopes.has(scopeKey)) {
-    setKnownNonEmptyScopes(new Set(knownNonEmptyScopes).add(scopeKey));
-  }
+  useEffect(() => {
+    if (!isSettled || isSearching || rowCount === 0) return;
+    // A settled query is an external observation; retain it for later integrity checks.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setKnownNonEmptyScopes((known) =>
+      known.has(scopeKey) ? known : new Set(known).add(scopeKey),
+    );
+  }, [isSearching, isSettled, rowCount, scopeKey]);
 
   return searchIntegrityFailed(knownNonEmptyScopes, input);
 }

@@ -108,11 +108,9 @@ export function SalaryProfileSheet({
     setShowBreakup((shown) => !shown);
   }
 
-  const [prevOpen, setPrevOpen] = useState(open);
-    if (open !== prevOpen) {
-    setPrevOpen(open);
+  useEffect(() => {
     if (open && !employeeUserId && !workerId) setPicked(null);
-  }
+  }, [employeeUserId, open, workerId]);
 
   useEffect(() => {
     if (open) {

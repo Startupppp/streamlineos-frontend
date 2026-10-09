@@ -8,9 +8,47 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { usePublicLiveSession, useJoinLiveSession, useSubmitLiveAnswer } from "@/hooks/api/surveys/live-session";
+import {
+  usePublicLiveSession,
+  useJoinLiveSession,
+  useSubmitLiveAnswer,
+} from "@/hooks/api/surveys/live-session";
 import type { AnswerValue } from "@/features/surveys/respondent/answer-value";
 import { QuestionInput } from "@/features/surveys/respondent/question-input";
+
+interface ActiveQuestionProps {
+  question: NonNullable<
+    NonNullable<
+      ReturnType<typeof usePublicLiveSession>["data"]
+    >["currentQuestion"]
+  >;
+  isPending: boolean;
+  onSubmit: (answer: AnswerValue) => Promise<void>;
+}
+
+function ActiveQuestion({
+  question,
+  isPending,
+  onSubmit,
+}: ActiveQuestionProps) {
+  const [answer, setAnswer] = useState<AnswerValue | undefined>(undefined);
+
+  return (
+    <div className="space-y-4">
+      <h3 className="text-base font-medium text-foreground">
+        {question.title}
+      </h3>
+      <QuestionInput question={question} value={answer} onChange={setAnswer} />
+      <Button
+        onClick={() => answer && void onSubmit(answer)}
+        disabled={!answer || isPending}
+        className="w-full h-11"
+      >
+        Submit answer
+      </Button>
+    </div>
+  );
+}
 
 export default function LiveSessionJoinPage() {
   const params = useParams<{ sessionCode: string }>();
@@ -22,17 +60,12 @@ export default function LiveSessionJoinPage() {
 
   const [name, setName] = useState("");
   const [participantToken, setParticipantToken] = useState<string | null>(null);
-  const [answer, setAnswer] = useState<AnswerValue | undefined>(undefined);
-  const [answeredQuestionId, setAnsweredQuestionId] = useState<number | null>(null);
+  const [answeredQuestionId, setAnsweredQuestionId] = useState<number | null>(
+    null,
+  );
 
   const session = sessionQuery.data;
   const currentQuestion = session?.currentQuestion;
-
-  const [prevQuestionId, setPrevQuestionId] = useState(currentQuestion?.id);
-  if (currentQuestion?.id !== prevQuestionId) {
-    setPrevQuestionId(currentQuestion?.id);
-    setAnswer(undefined);
-  }
 
   async function handleJoin() {
     try {
@@ -43,8 +76,8 @@ export default function LiveSessionJoinPage() {
     }
   }
 
-  async function handleSubmitAnswer() {
-    if (!participantToken || !currentQuestion || !answer) return;
+  async function handleSubmitAnswer(answer: AnswerValue) {
+    if (!participantToken || !currentQuestion) return;
     try {
       await submitAnswer.mutateAsync({
         participantToken,
@@ -58,7 +91,8 @@ export default function LiveSessionJoinPage() {
     }
   }
 
-  const hasAnsweredCurrent = currentQuestion && answeredQuestionId === currentQuestion.id;
+  const hasAnsweredCurrent =
+    currentQuestion && answeredQuestionId === currentQuestion.id;
 
   return (
     <main className="min-h-dvh surface-soft flex items-start justify-center pt-8 sm:pt-12 px-4">
@@ -71,19 +105,33 @@ export default function LiveSessionJoinPage() {
         <Card className="rounded-t-none border-t-0 px-6 py-6 shadow-noir">
           {sessionQuery.isError && (
             <div className="py-8 text-center">
-              <p className="text-lg font-semibold text-foreground">Session unavailable</p>
-              <p className="mt-2 text-sm text-muted-foreground">This live session has ended or the code is invalid.</p>
+              <p className="text-lg font-semibold text-foreground">
+                Session unavailable
+              </p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                This live session has ended or the code is invalid.
+              </p>
             </div>
           )}
 
           {sessionQuery.isSuccess && session && !participantToken && (
             <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">Enter your name to join (optional).</p>
+              <p className="text-sm text-muted-foreground">
+                Enter your name to join (optional).
+              </p>
               <div className="space-y-1.5">
                 <Label>Name</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Optional" />
+                <Input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Optional"
+                />
               </div>
-              <Button onClick={handleJoin} disabled={join.isPending} className="w-full h-11">
+              <Button
+                onClick={handleJoin}
+                disabled={join.isPending}
+                className="w-full h-11"
+              >
                 Join
               </Button>
             </div>
@@ -91,23 +139,26 @@ export default function LiveSessionJoinPage() {
 
           {participantToken && !currentQuestion && (
             <div className="py-10 text-center">
-              <p className="text-sm text-muted-foreground">Waiting for the host to start...</p>
+              <p className="text-sm text-muted-foreground">
+                Waiting for the host to start...
+              </p>
             </div>
           )}
 
           {participantToken && currentQuestion && !hasAnsweredCurrent && (
-            <div className="space-y-4">
-              <h3 className="text-base font-medium text-foreground">{currentQuestion.title}</h3>
-              <QuestionInput question={currentQuestion} value={answer} onChange={setAnswer} />
-              <Button onClick={handleSubmitAnswer} disabled={!answer || submitAnswer.isPending} className="w-full h-11">
-                Submit answer
-              </Button>
-            </div>
+            <ActiveQuestion
+              key={currentQuestion.id}
+              question={currentQuestion}
+              isPending={submitAnswer.isPending}
+              onSubmit={handleSubmitAnswer}
+            />
           )}
 
           {participantToken && currentQuestion && hasAnsweredCurrent && (
             <div className="py-10 text-center">
-              <p className="text-sm text-muted-foreground">Answer submitted. Waiting for the host...</p>
+              <p className="text-sm text-muted-foreground">
+                Answer submitted. Waiting for the host...
+              </p>
             </div>
           )}
         </Card>

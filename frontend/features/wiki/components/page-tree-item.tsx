@@ -57,6 +57,13 @@ interface PageTreeItemProps {
   baseHref?: string;
 }
 
+export function resolvePageTreeExpanded(
+  manuallyExpanded: boolean,
+  hasActiveDescendant: boolean,
+): boolean {
+  return manuallyExpanded || hasActiveDescendant;
+}
+
 const PageTreeItem = memo(function PageTreeItemInner({
   node,
   depth,
@@ -83,22 +90,17 @@ const PageTreeItem = memo(function PageTreeItemInner({
   const updatePage = useUpdateKbPage();
   const { iconRef, animatedNavHoverHandlers } = useAnimatedNavIconHover();
   const shouldReduceMotion = useReducedMotion();
+  const hasActiveDescendant = pathname.startsWith(`${nodeHref}/`);
+  const isExpanded = resolvePageTreeExpanded(expanded, hasActiveDescendant);
 
   const {
     data: childrenData,
     hasNextPage: childrenHasNextPage,
     isFetchingNextPage: childrenFetchingNext,
     fetchNextPage: fetchChildrenNextPage,
-  } = useKbPageChildrenLevel(node.id, expanded, spaceId);
+  } = useKbPageChildrenLevel(node.id, isExpanded, spaceId);
 
   const children: KbPageTreeNode[] = childrenData?.pages.flatMap((p) => p.data) ?? [];
-
-  const hasActiveDescendant = pathname.startsWith(`${nodeHref}/`);
-  const [autoExpandedPath, setAutoExpandedPath] = useState<string | null>(null);
-  if (hasActiveDescendant && autoExpandedPath !== pathname) {
-    setAutoExpandedPath(pathname);
-    if (!expanded) setExpanded(true);
-  }
 
   const showChevron = node.hasChildren || children.length > 0;
 
@@ -238,11 +240,11 @@ const PageTreeItem = memo(function PageTreeItemInner({
             type="button"
             className="shrink-0 h-4 w-4 flex items-center justify-center text-muted-foreground hover:text-foreground"
             onClick={handleToggleExpand}
-            aria-label={expanded ? "Collapse" : "Expand"}
+            aria-label={isExpanded ? "Collapse" : "Expand"}
             tabIndex={-1}
           >
             {showChevron ? (
-              expanded ? (
+              isExpanded ? (
                 <KbChevronDownIcon className="h-3 w-3" />
               ) : (
                 <KbChevronRightIcon className="h-3 w-3" />
@@ -347,7 +349,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
         </div>
 
         <AnimatePresence initial={false}>
-          {expanded && (children.length > 0 || childrenHasNextPage) && (
+          {isExpanded && (children.length > 0 || childrenHasNextPage) && (
             <motion.div
               className="min-w-0 overflow-hidden"
               initial={{ opacity: 0, y: shouldReduceMotion ? 0 : -4 }}

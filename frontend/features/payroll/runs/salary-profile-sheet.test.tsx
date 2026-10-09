@@ -132,6 +132,18 @@ describe("SalaryProfileSheet person picker", () => {
     expect(screen.getByRole("button", { name: "Create" })).toBeEnabled();
   });
 
+  it("clears a picked person when the controlled sheet is closed and reopened", () => {
+    const onClose = jest.fn();
+    const { rerender } = render(<SalaryProfileSheet open onClose={onClose} />);
+    fireEvent.click(rowButton("Asha Rao"));
+    expect(screen.getByRole("button", { name: "Create" })).toBeEnabled();
+
+    rerender(<SalaryProfileSheet open={false} onClose={onClose} />);
+    rerender(<SalaryProfileSheet open onClose={onClose} />);
+
+    expect(screen.getByRole("button", { name: "Create" })).toBeDisabled();
+  });
+
   it("routes a user payee to the employee profile create", async () => {
     renderSheet();
     fireEvent.click(rowButton("Asha Rao"));

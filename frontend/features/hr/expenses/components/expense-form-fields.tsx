@@ -24,29 +24,31 @@ import { type ExpenseFormData } from "./expense-form-schema";
 import { MAX_EXPENSE_RECEIPTS, type ExpenseReceipt } from "@/lib/expense-constants";
 import { ReceiptManager, type PendingReceipt } from "./receipt-manager";
 
-function AmountInput({ value, onChange }: { value: number; onChange: (v: number) => void }) {
-  const [display, setDisplay] = useState(value ? String(value) : "");
-  const [prevValue, setPrevValue] = useState(value);
-
-  if (value !== prevValue) {
-    setPrevValue(value);
-    setDisplay(value ? String(value) : "");
-  }
+export function AmountInput({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  const [draft, setDraft] = useState(() => ({
+    sourceValue: value,
+    display: value ? String(value) : "",
+  }));
+  const display = draft.sourceValue === value ? draft.display : value ? String(value) : "";
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value;
     if (raw === "" || /^\d{0,12}(\.\d{0,2})?$/.test(raw)) {
       const num = parseFloat(raw);
       if (!isNaN(num) && num > 999_999_999.99) return;
-      setDisplay(raw);
-      onChange(isNaN(num) ? 0 : num);
+      const nextValue = isNaN(num) ? 0 : num;
+      setDraft({ sourceValue: nextValue, display: raw });
+      onChange(nextValue);
     }
   };
 
   const handleBlur = () => {
     const num = parseFloat(display);
     if (!isNaN(num) && num > 0) {
-      setDisplay(num % 1 === 0 ? String(num) : num.toFixed(2));
+      setDraft({
+        sourceValue: value,
+        display: num % 1 === 0 ? String(num) : num.toFixed(2),
+      });
     }
   };
 

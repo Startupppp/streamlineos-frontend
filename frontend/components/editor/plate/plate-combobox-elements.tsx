@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, type SetStateAction } from 'react';
 import ReactDOM from 'react-dom';
 import { PlateElement, useEditorRef } from 'platejs/react';
 import type { PlateElementProps, PlateEditor } from 'platejs/react';
@@ -38,6 +38,21 @@ const SLASH_COMMANDS: CommandItem[] = [
   { key: 'citation', label: 'Citation', description: 'Quoted text with a source' },
   { key: 'link_preview', label: 'Link preview', description: 'Embed a link with a preview card' },
 ];
+
+function useQueryActiveIndex(query: string) {
+  const [selection, setSelection] = useState({ query, index: 0 });
+  const activeIndex = selection.query === query ? selection.index : 0;
+  const setActiveIndex = useCallback((next: SetStateAction<number>) => {
+    setSelection((current) => {
+      const currentIndex = current.query === query ? current.index : 0;
+      return {
+        query,
+        index: typeof next === 'function' ? next(currentIndex) : next,
+      };
+    });
+  }, [query]);
+  return [activeIndex, setActiveIndex] as const;
+}
 
 function applySlashCommand(editor: PlateEditor, key: string, path: Path) {
   const blockEntry = editor.api.above({ at: path, match: { type: 'p' } }) as [TElement, Path] | undefined;
@@ -206,10 +221,8 @@ export function SlashInputElement({ element, children, ...props }: PlateElementP
   const editor = useEditorRef();
   const spanRef = useRef<HTMLSpanElement>(null);
   const query = NodeApi.string(element);
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useQueryActiveIndex(query);
   const [rect, setRect] = useState<DOMRect | null>(null);
-  const [prevQuery, setPrevQuery] = useState(query);
-  if (query !== prevQuery) { setPrevQuery(query); setActiveIndex(0); }
 
   const filtered = query
     ? SLASH_COMMANDS.filter(
@@ -233,7 +246,7 @@ export function SlashInputElement({ element, children, ...props }: PlateElementP
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === 'ArrowDown') {
         e.preventDefault(); e.stopPropagation();
-        setActiveIndex((i) => Math.min(i + 1, filtered.length - 1));
+        setActiveIndex((i) => Math.min(i + 1, Math.max(0, filtered.length - 1)));
       } else if (e.key === 'ArrowUp') {
         e.preventDefault(); e.stopPropagation();
         setActiveIndex((i) => Math.max(i - 1, 0));
@@ -244,7 +257,7 @@ export function SlashInputElement({ element, children, ...props }: PlateElementP
     }
     window.addEventListener('keydown', onKeyDown, true);
     return () => window.removeEventListener('keydown', onKeyDown, true);
-  }, [filtered, activeIndex, handleSelect]);
+  }, [filtered, activeIndex, handleSelect, setActiveIndex]);
 
   return (
     <PlateElement {...props} element={element} as="span">
@@ -278,10 +291,8 @@ export function EmojiInputElement({ element, children, ...props }: PlateElementP
   const editor = useEditorRef();
   const spanRef = useRef<HTMLSpanElement>(null);
   const query = NodeApi.string(element).toLowerCase();
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useQueryActiveIndex(query);
   const [rect, setRect] = useState<DOMRect | null>(null);
-  const [prevQuery, setPrevQuery] = useState(query);
-  if (query !== prevQuery) { setPrevQuery(query); setActiveIndex(0); }
 
   const filtered = (
     query
@@ -305,7 +316,7 @@ export function EmojiInputElement({ element, children, ...props }: PlateElementP
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === 'ArrowDown') {
         e.preventDefault(); e.stopPropagation();
-        setActiveIndex((i) => Math.min(i + 1, filtered.length - 1));
+        setActiveIndex((i) => Math.min(i + 1, Math.max(0, filtered.length - 1)));
       } else if (e.key === 'ArrowUp') {
         e.preventDefault(); e.stopPropagation();
         setActiveIndex((i) => Math.max(i - 1, 0));
@@ -316,7 +327,7 @@ export function EmojiInputElement({ element, children, ...props }: PlateElementP
     }
     window.addEventListener('keydown', onKeyDown, true);
     return () => window.removeEventListener('keydown', onKeyDown, true);
-  }, [filtered, activeIndex, handleSelect]);
+  }, [filtered, activeIndex, handleSelect, setActiveIndex]);
 
   return (
     <PlateElement {...props} element={element} as="span">

@@ -37,19 +37,18 @@ export function StepTemplate({
   );
   const templates = data?.items ?? [];
 
-  const [selectedId, setSelectedId] = useState<number | null>(
-    draft.templateId ?? preselectedId ?? null,
-  );
+  const [manuallySelectedId, setManuallySelectedId] = useState<number | null>(null);
   const [previewTemplate, setPreviewTemplate] = useState<PayrollTemplate | null>(null);
   const [duplicateTemplate, setDuplicateTemplate] = useState<PayrollTemplate | null>(null);
 
-  if (preselectedKey && selectedId === null && templates.length > 0) {
-    const found = templates.find((t) => t.key === preselectedKey);
-    if (found) setSelectedId(found.id);
-  }
+  const preferredId = manuallySelectedId ?? draft.templateId ?? preselectedId ?? null;
+  const selectedId =
+    preferredId !== null && templates.some((template) => template.id === preferredId)
+      ? preferredId
+      : (templates.find((template) => template.key === preselectedKey)?.id ?? null);
 
   function handleSelectTemplate(t: PayrollTemplate) {
-    setSelectedId(t.id);
+    setManuallySelectedId(t.id);
   }
 
   function handlePreviewClose(open: boolean) {
@@ -61,7 +60,7 @@ export function StepTemplate({
   }
 
   function handleDuplicateSuccess(newTemplate: PayrollTemplate) {
-    setSelectedId(newTemplate.id);
+    setManuallySelectedId(newTemplate.id);
   }
 
   function handleRetry() {

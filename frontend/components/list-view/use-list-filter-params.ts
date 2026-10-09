@@ -205,13 +205,18 @@ export function useListFilterParams(spec: ListFilterSpec): ListFilterParams {
   }, [navigate, spec]);
 
   const [localSearch, setLocalSearch] = useState(search);
-  const [appliedUrlSearch, setAppliedUrlSearch] = useState(search);
+  const appliedUrlSearch = useRef(search);
   const debouncedSearch = useDebouncedValue(localSearch, debounceMs);
 
-  if (appliedUrlSearch !== search) {
-    setAppliedUrlSearch(search);
-    if (search !== debouncedSearch) setLocalSearch(search);
-  }
+  useEffect(() => {
+    if (appliedUrlSearch.current === search) return;
+    appliedUrlSearch.current = search;
+    if (search === debouncedSearch) return;
+    function applyExternalSearch() {
+      setLocalSearch(search);
+    }
+    startTransition(applyExternalSearch);
+  }, [debouncedSearch, search, startTransition]);
 
   const previousDebounced = useRef(debouncedSearch);
   const immediateSearchRef = useRef<string | null>(null);

@@ -50,10 +50,12 @@ export function PackageDetailSheet({ open, onOpenChange, packageId }: PackageDet
   const closeMutation = useClosePackage();
   const reopenMutation = useReopenPackage();
 
-  const [editableLines, setEditableLines] = useState<EditableLine[]>([]);
+  const [lineDraft, setLineDraft] = useState<{
+    packageId: number;
+    lines: EditableLine[];
+  } | null>(null);
   const [closeConfirmOpen, setCloseConfirmOpen] = useState<boolean>(false);
   const [reopenConfirmOpen, setReopenConfirmOpen] = useState<boolean>(false);
-  const [hydratedPackageId, setHydratedPackageId] = useState<number | null>(null);
 
   function handleRefetchPackage(): void {
     void pkgQuery.refetch();
@@ -61,24 +63,40 @@ export function PackageDetailSheet({ open, onOpenChange, packageId }: PackageDet
 
   const pkg = pkgQuery.data;
 
-  if (pkg && hydratedPackageId !== pkg.id) {
-    setHydratedPackageId(pkg.id);
-    setEditableLines(buildDefaultLines(pkg.lines));
-  }
+  const editableLines =
+    pkg && lineDraft?.packageId === pkg.id
+      ? lineDraft.lines
+      : buildDefaultLines(pkg?.lines);
+
+  const updateEditableLines = useCallback(
+    (update: (lines: EditableLine[]) => EditableLine[]): void => {
+      if (!pkg) return;
+      setLineDraft((current) => {
+        const lines = current?.packageId === pkg.id
+          ? current.lines
+          : buildDefaultLines(pkg.lines);
+        return { packageId: pkg.id, lines: update(lines) };
+      });
+    },
+    [pkg],
+  );
 
   function handleAddLine(): void {
-    setEditableLines((prev) => [...prev, { variantId: "", qty: "1", lotId: "", serialId: "" }]);
+    updateEditableLines((lines) => [
+      ...lines,
+      { variantId: "", qty: "1", lotId: "", serialId: "" },
+    ]);
   }
 
   const handleRemoveLine = useCallback((index: number): void => {
-    setEditableLines((prev) => prev.filter((_, i) => i !== index));
-  }, []);
+    updateEditableLines((lines) => lines.filter((_, i) => i !== index));
+  }, [updateEditableLines]);
 
   const handleChangeField = useCallback((index: number, field: keyof EditableLine, value: string): void => {
-    setEditableLines((prev) =>
-      prev.map((l, i) => (i === index ? { ...l, [field]: value } : l)),
+    updateEditableLines((lines) =>
+      lines.map((line, i) => (i === index ? { ...line, [field]: value } : line)),
     );
-  }, []);
+  }, [updateEditableLines]);
 
   function handleSaveLines(): void {
     if (!packageId) return;
