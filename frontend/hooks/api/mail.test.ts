@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { InfiniteData } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { createElement } from "react";
-import { useMailAction } from "./mail";
+import { useMailAction, useMailMessages } from "./mail";
 import { queryKeys } from "@/lib/query-keys";
 import type { MailListResponse, MailMessageSummary } from "@/types/mail";
 import type { UnifiedInboxResponse } from "@/types/inbox";
@@ -16,9 +16,15 @@ jest.mock("next-auth/react", () => ({
 
 jest.mock("@/lib/api-client", () => ({
   apiClient: {
+    get: jest.fn().mockResolvedValue({ messages: [], nextCursor: null, accountErrors: [] }),
     post: jest.fn().mockResolvedValue({ success: true }),
   },
 }));
+
+it("does not fetch mail without a connected account", () => {
+  const { result } = renderHook(() => useMailMessages({ folder: "inbox", accountId: "all" }, { enabled: false }), { wrapper: wrapper(makeClient()) });
+  expect(result.current.fetchStatus).toBe("idle");
+});
 
 jest.mock("@/hooks/api/access", () => ({
   useAccess: jest.fn(() => ({ data: { scopes: {}, modules: {}, isOrgOwner: false }, refetch: jest.fn() })),

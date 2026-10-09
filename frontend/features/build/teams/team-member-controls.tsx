@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { forwardRef, useCallback } from "react";
 import { PlusIcon, XIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Button } from "@/components/ui/button";
@@ -18,14 +18,27 @@ import { getUserDisplayName } from "@/lib/person-display";
 import { cn } from "@/lib/utils";
 import type { ProjectTeamMember } from "@/types/projects";
 
-export function TeamActionsButton() {
+export const TeamActionsButton = forwardRef<
+  HTMLButtonElement,
+  React.ComponentProps<typeof Button>
+>(function TeamActionsButton({ className, ...props }, ref) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
-    <Button variant="outline" {...hoverHandlers}>
-      <EllipsisIcon ref={iconRef} size={14} /> Actions
+    <Button
+      ref={ref}
+      type="button"
+      variant="outline"
+      size="sm"
+      className={cn("gap-1.5", className)}
+      aria-label="Team actions"
+      {...props}
+      {...hoverHandlers}
+    >
+      <EllipsisIcon ref={iconRef} size={14} />
+      <span className="hidden sm:inline">Actions</span>
     </Button>
   );
-}
+});
 
 export function AddMemberButton({
   isPending,
@@ -40,7 +53,7 @@ export function AddMemberButton({
   return (
     <LoadingButton
       size="sm"
-      className="gap-1 text-xs"
+      className="h-9 gap-1 text-xs"
       onClick={onClick}
       disabled={disabled}
       isPending={isPending}
@@ -102,7 +115,7 @@ export function MemberRoleSelect({
   return (
     <Select value={role} onValueChange={handleValueChange} disabled={isPending}>
       <SelectTrigger
-        className="w-24 shrink-0 border-input bg-card"
+        className="h-9 w-24 shrink-0 border-input bg-card"
         aria-label={roleLabel}
       >
         <SelectValue />

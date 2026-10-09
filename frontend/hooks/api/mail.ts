@@ -4,7 +4,6 @@ import {
   useQuery,
   useInfiniteQuery,
   useQueryClient,
-  keepPreviousData,
 } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -65,7 +64,7 @@ export function useMailAccounts() {
   });
 }
 
-export function useMailMessages(params: MailMessagesParams) {
+export function useMailMessages(params: MailMessagesParams, options?: { enabled?: boolean }) {
   const can = useCan("mail:inbox:view");
   const queryParams: Record<string, unknown> = {};
   if (params.folder) queryParams.folder = params.folder;
@@ -87,8 +86,7 @@ export function useMailMessages(params: MailMessagesParams) {
     initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     staleTime: 30_000,
-    placeholderData: keepPreviousData,
-    enabled: can,
+    enabled: can && options?.enabled !== false,
   });
 }
 

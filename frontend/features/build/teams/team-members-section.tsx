@@ -118,34 +118,42 @@ export function TeamMembersSection({
   }
 
   return (
-    <PmSection index={1} className="space-y-3">
-      <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
-        <p className="text-dense font-medium uppercase tracking-wider text-muted-foreground">
-          Members
+    <PmSection index={1} className="min-w-0 space-y-3">
+      <div className="flex min-w-0 items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="text-sm font-semibold text-foreground">
+            Members
           {pageMembers.length > 0
             ? ` (${pageMembers.length}${membersResult.data?.pagination.hasMore ? "+" : ""})`
             : ""}
-        </p>
-        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          </h2>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Assign a lead and manage who receives access through this team.
+          </p>
+        </div>
+      </div>
+
+      <PmPanel className="space-y-2 p-2.5 sm:p-3">
+        <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(12rem,1fr)_auto]">
           <SearchInput
             ref={searchRef}
             value={listFilters.search}
             onValueChange={listFilters.setSearch}
             placeholder="Search members…"
             aria-label="Search members"
+            inputClassName="h-9"
           />
-          {canManage ? (
-            <>
+          {canManage ? <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_6.75rem_auto] gap-2">
               <MemberPicker
                 directory="build"
                 value={addMemberId}
                 onChange={(id) => setAddMemberId(id ?? undefined)}
                 excludeUserIds={members.map((m) => m.userId)}
                 placeholder="Add a member…"
-                className="h-8 min-w-[180px]"
+                className="h-9 min-w-0 w-full"
               />
               <Select value={addMemberRole} onValueChange={handleAddMemberRoleChange}>
-                <SelectTrigger className="w-24 border-input bg-card">
+                <SelectTrigger className="h-9 w-full border-input bg-card">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
@@ -158,13 +166,12 @@ export function TeamMembersSection({
                 isPending={addMember.isPending}
                 onClick={handleAddMember}
               />
-            </>
-          ) : null}
+            </div> : null}
         </div>
-      </div>
+      </PmPanel>
 
       {pageMembers.length === 0 && !membersResult.isLoading ? (
-        <PmPanel className="flex items-center justify-center p-4">
+        <PmPanel className="flex min-h-52 items-center justify-center p-4">
           <EmptyState
             illustrationPreset="projects"
             title={!isOnline ? "You are offline" : "No members yet"}
@@ -195,7 +202,7 @@ export function TeamMembersSection({
                 email: member.email,
               });
               return (
-                <div key={member.id} role="listitem" className={PM_ROW}>
+                <div key={member.id} role="listitem" className={cn(PM_ROW, "gap-2.5 px-3 py-2.5")}>
                   <Avatar className="h-7 w-7 shrink-0">
                     <AvatarImage src={resolveImageUrl(member.image)} />
                     <AvatarFallback className="text-micro">{initials}</AvatarFallback>
@@ -210,13 +217,18 @@ export function TeamMembersSection({
                       {member.email}
                     </span>
                   </div>
-                  {canManage ? (
+                  {canManage ? <div className="flex shrink-0 items-center gap-1">
                     <MemberRoleSelect
                       member={member}
                       isPending={isRoleUpdatePending}
                       onRoleChange={onRoleChange}
                     />
-                  ) : (
+                    <RemoveMemberButton
+                      member={member}
+                      isPending={isRemovePending}
+                      onRemove={onRemove}
+                    />
+                  </div> : (
                     <Badge
                       variant="outline"
                       className="shrink-0 px-1.5 py-0.5 text-micro capitalize"
@@ -224,13 +236,6 @@ export function TeamMembersSection({
                       {member.role}
                     </Badge>
                   )}
-                  {canManage ? (
-                    <RemoveMemberButton
-                      member={member}
-                      isPending={isRemovePending}
-                      onRemove={onRemove}
-                    />
-                  ) : null}
                 </div>
               );
             })}

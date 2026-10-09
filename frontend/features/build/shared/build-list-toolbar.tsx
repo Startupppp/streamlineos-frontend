@@ -120,7 +120,9 @@ export function BuildListToolbar({
   });
   const searchCollapsed =
     collapseActionsOnSearchFocus && !searchFocused && !searchValue;
-  const showActions = !searchExpanded && (!collapseActionsOnSearchFocus || !searchFocused);
+  // Tablet/desktop search expansion must not make filters unreachable. Only the
+  // true mobile full-width search state temporarily hides the action row.
+  const showActions = !searchExpanded;
 
   useEffect(() => {
     if (!drawerOpen) return;

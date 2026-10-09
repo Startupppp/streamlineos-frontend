@@ -3,8 +3,10 @@
 import { useCallback, useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
-import { SearchInput } from "@/components/ui/search-input";
-import { Inbox, Send, Archive, Trash2, Star, AlertCircle, WifiOff } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
+import { Inbox, Send, Archive, Trash2, Star, AlertCircle, WifiOff, ChevronLeft, ChevronRight } from "lucide-react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import {
@@ -36,6 +38,12 @@ const FOLDER_NAV: {
   { key: "archive", label: "Archive", icon: Archive },
   { key: "trash", label: "Trash", icon: Trash2 },
 ];
+
+const MAIL_VIEW_OPTIONS = [
+  { value: "all", label: "All messages" },
+  { value: "unread", label: "Unread" },
+  { value: "attachments", label: "With attachments" },
+] as const;
 
 function MailFolderButton({
   folder,
@@ -83,6 +91,8 @@ export function MailListPane({
 }: MailListPaneProps) {
   const [activeFolder, setActiveFolder] = useState<MailFolder>("inbox");
   const [search, setSearch] = useState("");
+  const [view, setView] = useState("all");
+  const [pageIndex, setPageIndex] = useState(0);
   const debouncedSearch = useDebouncedValue(search, 300);
   const mailAction = useMailAction();
   const threadSummary = useMailThreadSummary();
@@ -101,12 +111,16 @@ export function MailListPane({
     folder: activeFolder,
     accountId: selectedAccountId,
     q: debouncedSearch || undefined,
-  });
+  }, { enabled: accounts.length > 0 });
 
-  const allMessages = useMemo(
-    () => data?.pages.flatMap((p) => p.messages) ?? [],
-    [data],
-  );
+  const pages = useMemo(() => data?.pages ?? [], [data]);
+  const currentPageIndex = Math.min(pageIndex, Math.max(0, pages.length - 1));
+  const visibleMessages = useMemo(() => {
+    const pageMessages = pages[currentPageIndex]?.messages ?? [];
+    return pageMessages.filter((message) =>
+      view === "unread" ? !message.isRead : view === "attachments" ? message.hasAttachments : true,
+    );
+  }, [currentPageIndex, pages, view]);
   const accountErrors = useMemo(() => {
     const byAccount = new Map<number, MailListResponse["accountErrors"][number]>();
     for (const page of data?.pages ?? [])
@@ -116,9 +130,9 @@ export function MailListPane({
   const groups = useMemo(
     () =>
       activeFolder === "inbox" && !debouncedSearch
-        ? groupMailMessages(allMessages)
-        : [{ key: "earlier" as const, label: "", messages: allMessages }],
-    [allMessages, activeFolder, debouncedSearch],
+        ? groupMailMessages(visibleMessages)
+        : [{ key: "earlier" as const, label: "", messages: visibleMessages }],
+    [visibleMessages, activeFolder, debouncedSearch],
   );
 
   const handleAction = useCallback(
@@ -169,6 +183,17 @@ export function MailListPane({
   const handleFolderSelect = useCallback((folder: MailFolder) => {
     setActiveFolder(folder);
     setSearch("");
+    setPageIndex(0);
+  }, []);
+
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
+    setPageIndex(0);
+  }, []);
+
+  const handleViewChange = useCallback((value: string) => {
+    setView(value);
+    setPageIndex(0);
   }, []);
 
   /**
@@ -176,12 +201,27 @@ export function MailListPane({
    * scroll's one load-more trigger on a request that fails, and the failure is
    * indistinguishable from the end of the mailbox once the user reconnects.
    */
-  const handleLoadMore = useCallback(() => {
-    if (!isOnline) return;
-    void fetchNextPage();
-  }, [fetchNextPage, isOnline]);
+  const handlePreviousPage = useCallback(() => {
+    setPageIndex((current) => Math.max(0, current - 1));
+  }, []);
 
-  const handleSearchClear = useCallback(() => setSearch(""), []);
+  const handleNextPage = useCallback(async () => {
+    if (currentPageIndex < pages.length - 1) {
+      setPageIndex((current) => current + 1);
+      return;
+    }
+    if (!hasNextPage || !isOnline || isFetchingNextPage) return;
+    const result = await fetchNextPage();
+    if ((result.data?.pages.length ?? 0) > pages.length) {
+      setPageIndex((current) => current + 1);
+    }
+  }, [currentPageIndex, fetchNextPage, hasNextPage, isFetchingNextPage, isOnline, pages.length]);
+
+  const handleClearFilters = useCallback(() => {
+    setSearch("");
+    setView("all");
+    setPageIndex(0);
+  }, []);
 
   if (accounts.length === 0) {
     return (
@@ -198,16 +238,37 @@ export function MailListPane({
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      <div className="px-3 pt-2.5 pb-2 border-b border-border/40 shrink-0 space-y-2">
-        <SearchInput
-          value={search}
-          onValueChange={setSearch}
-          onClear={handleSearchClear}
-          placeholder="Search — from:, subject, or plain words…"
-          className="h-9"
+      <div className="shrink-0 border-b border-border/40">
+        <BuildListToolbar
+          collapseActionsOnSearchFocus
+          className="flex-nowrap overflow-x-auto border-b-0 px-2 py-1.5 scrollbar-hide [&>[data-slot=search-input]]:md:max-w-none [&>[data-slot=build-toolbar-actions]]:shrink-0"
+          search={{
+            value: search,
+            onValueChange: handleSearchChange,
+            placeholder: "Search mail…",
+            label: "Search mail",
+            inputClassName: "focus-visible:ring-1 focus-visible:ring-offset-0",
+          }}
+          filters={[
+            {
+              id: "view",
+              label: "Message view",
+              active: view !== "all",
+              control: (
+                <BuildFilterSelect
+                  label="Filter loaded mail"
+                  value={view}
+                  onValueChange={handleViewChange}
+                  options={MAIL_VIEW_OPTIONS}
+                  className="md:min-w-32 md:max-w-40"
+                />
+              ),
+            },
+          ]}
+          onClearAll={search || view !== "all" ? handleClearFilters : undefined}
         />
         <nav
-          className="flex gap-1 overflow-x-auto scrollbar-hide pb-0.5 -mx-0.5 px-0.5"
+          className="flex gap-1 overflow-x-auto px-2 pb-1.5 scrollbar-hide"
           aria-label="Mail folders"
         >
           {FOLDER_NAV.map((folder) => (
@@ -293,10 +354,10 @@ export function MailListPane({
             {getErrorMessage(error)}
           </p>
         </div>
-      ) : allMessages.length === 0 ? (
+      ) : visibleMessages.length === 0 ? (
         <div className="flex-1 min-h-0 flex flex-col items-center justify-center px-4 py-10 text-center">
           <p className="text-label font-medium text-foreground/80">
-            {debouncedSearch
+            {view !== "all" ? "No matching loaded messages" : debouncedSearch
               ? "No messages found"
               : `No messages in ${activeFolder}`}
           </p>
@@ -310,18 +371,30 @@ export function MailListPane({
         <div className="flex-1 min-h-0">
           <MailVirtualList
             groups={groups}
-            hasNextPage={hasNextPage ?? false}
-            isFetchingNextPage={isFetchingNextPage}
             selectedMessageId={selectedMessageId}
             activeFolder={activeFolder}
             canAi={canAi}
             onSelect={onSelectMessage}
             onAction={handleAction}
             onAiBrief={handleAiBrief}
-            onLoadMore={handleLoadMore}
           />
         </div>
       )}
+      {visibleMessages.length > 0 ? (
+        <div className="flex h-10 shrink-0 items-center justify-between border-t border-border/50 px-3">
+          <span className="text-micro tabular-nums text-muted-foreground">
+            Page {currentPageIndex + 1} · {visibleMessages.length} messages
+          </span>
+          <div className="flex items-center gap-1">
+            <Button type="button" variant="ghost" size="icon" className="size-8" onClick={handlePreviousPage} disabled={currentPageIndex === 0} aria-label="Previous mail page">
+              <ChevronLeft className="size-4" aria-hidden="true" />
+            </Button>
+            <Button type="button" variant="ghost" size="icon" className="size-8" onClick={handleNextPage} disabled={(currentPageIndex >= pages.length - 1 && !hasNextPage) || !isOnline || isFetchingNextPage} aria-label="Next mail page">
+              <ChevronRight className="size-4" aria-hidden="true" />
+            </Button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

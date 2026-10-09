@@ -3,6 +3,7 @@
 import { memo, useCallback, useState } from "react";
 import {
   Sheet,
+  SheetBody,
   SheetContent,
   SheetHeader,
   SheetTitle,
@@ -28,6 +29,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyMailIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared/error-state";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -243,11 +245,11 @@ export function MailAccountsSheet({ open, onClose }: MailAccountsSheetProps) {
   ) : !connections || connections.length === 0 ? (
     <EmptyState
       compact
-      illustrationPreset="mail"
       illustrationSize="sm"
-      className="w-full flex-1 border-0 bg-transparent py-2 px-0"
+      illustration={<EmptyMailIllustration className="h-20 w-20" />}
+      className="h-full w-full border-0 bg-transparent px-0 py-6"
       title="No mail accounts connected"
-      description="Connect a Gmail or Outlook account to manage your email here."
+      description="Connect Gmail or Microsoft Outlook to bring your inbox into StreamlineOS."
     />
   ) : (
     <div className="space-y-2">
@@ -269,7 +271,7 @@ export function MailAccountsSheet({ open, onClose }: MailAccountsSheetProps) {
       <LoadingButton
         variant="outline"
         size="sm"
-        className="flex-1 h-11 px-4 text-xs bg-card justify-center gap-2 min-w-[9rem]"
+        className="h-9 min-w-[9rem] flex-1 justify-center gap-2 bg-card px-3 text-sm font-medium"
         disabled={pendingToolkit !== null && pendingToolkit !== "gmail"}
         isPending={pendingToolkit === "gmail"}
         onClick={handleConnectGmail}
@@ -287,7 +289,7 @@ export function MailAccountsSheet({ open, onClose }: MailAccountsSheetProps) {
       <LoadingButton
         variant="outline"
         size="sm"
-        className="flex-1 h-11 px-4 text-xs bg-card justify-center gap-2 min-w-[9rem]"
+        className="h-9 min-w-[9rem] flex-1 justify-center gap-2 bg-card px-3 text-sm font-medium"
         disabled={pendingToolkit !== null && pendingToolkit !== "outlook"}
         isPending={pendingToolkit === "outlook"}
         onClick={handleConnectOutlook}
@@ -300,7 +302,7 @@ export function MailAccountsSheet({ open, onClose }: MailAccountsSheetProps) {
             <rect x="11" y="11" width="9" height="9" fill="#ffb900" />
           </svg>
         )}
-        Connect Outlook
+        Microsoft Outlook
       </LoadingButton>
     </div>
   ) : null;
@@ -316,7 +318,7 @@ export function MailAccountsSheet({ open, onClose }: MailAccountsSheetProps) {
             <DrawerHeader className="px-4 py-3 border-b shrink-0">
               <DrawerTitle className="text-base">Mail accounts</DrawerTitle>
             </DrawerHeader>
-            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
+            <div className="min-h-0 flex flex-1 flex-col overflow-y-auto px-4 py-3">
               {accountsContent}
             </div>
             {connectActions}
@@ -327,14 +329,14 @@ export function MailAccountsSheet({ open, onClose }: MailAccountsSheetProps) {
           <SheetContent
             side="right"
             aria-describedby={undefined}
-            className="w-full sm:max-w-lg gap-0 p-0 flex flex-col overflow-hidden"
+            className="w-full gap-0 p-0 sm:max-w-md flex flex-col overflow-hidden"
           >
             <SheetHeader className="px-4 py-3 border-b shrink-0">
               <SheetTitle className="text-base">Mail accounts</SheetTitle>
             </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-4 py-3 min-h-0">
+            <SheetBody className="flex flex-col px-4 py-3">
               {accountsContent}
-            </div>
+            </SheetBody>
             {connectActions}
           </SheetContent>
         </Sheet>

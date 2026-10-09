@@ -1,15 +1,18 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { formatDistanceToNow, parseISO } from "date-fns";
-import { motion, useReducedMotion } from "framer-motion";
+import { format, isThisYear, isToday, parseISO } from "date-fns";
+import { Paperclip } from "lucide-react";
+import { PageState } from "@/components/shared/page-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyMailIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   ScrollArea,
   SCROLL_AREA_PAGE_BODY_CLASS,
 } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { resolvePageState } from "@/lib/page-state/resolve-page-state";
 import { useMailMessages } from "@/hooks/api/mail";
 import { groupMailMessages } from "./mail-group-messages";
 import type { MailMessageSummary } from "@/types/mail";
@@ -29,69 +32,64 @@ function senderLabel(message: MailMessageSummary): string {
   return message.from.email;
 }
 
-interface TriagePreviewCardProps {
+interface MessagePreviewRowProps {
   message: MailMessageSummary;
   onSelect: (message: MailMessageSummary) => void;
-  index: number;
-  reduceMotion: boolean | null;
 }
 
-function TriagePreviewCard({
+function formatPreviewDate(dateValue: string): string {
+  const date = parseISO(dateValue);
+  if (isToday(date)) return format(date, "h:mm a");
+  if (isThisYear(date)) return format(date, "MMM d");
+  return format(date, "MMM d, yyyy");
+}
+
+function MessagePreviewRow({
   message,
   onSelect,
-  index,
-  reduceMotion,
-}: TriagePreviewCardProps) {
+}: MessagePreviewRowProps) {
   const handleClick = useCallback(() => {
     onSelect(message);
   }, [message, onSelect]);
 
-  const when = formatDistanceToNow(parseISO(message.date), { addSuffix: true });
-
   return (
-    <motion.button
+    <button
       type="button"
       onClick={handleClick}
-      initial={reduceMotion ? false : { opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2, ease: "easeOut", delay: index * 0.04 }}
       className={cn(
-        "group flex w-full flex-col gap-1 rounded-xl border border-border/50 bg-card/80 px-3.5 py-3 text-left shadow-sm transition-colors",
-        "hover:border-primary/30 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-        !message.isRead && "border-l-2 border-l-primary",
+        "group grid min-h-12 w-full grid-cols-[minmax(0,8rem)_minmax(0,1fr)_auto] items-center gap-3 border-b border-border/50 px-4 py-2 text-left transition-colors last:border-b-0",
+        "hover:bg-muted/50 focus-visible:relative focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
+        !message.isRead && "bg-muted/25",
       )}
+      aria-label={`Open message from ${senderLabel(message)}: ${message.subject || "No subject"}`}
     >
-      <div className="flex items-baseline justify-between gap-2 min-w-0">
+      <span className="flex min-w-0 items-center gap-2">
         <span
+          aria-hidden
           className={cn(
-            "truncate text-label",
-            message.isRead
-              ? "font-medium text-foreground/90"
-              : "font-semibold text-foreground",
+            "size-1.5 shrink-0 rounded-full",
+            message.isRead ? "bg-transparent" : "bg-primary",
           )}
-        >
+        />
+        <span className={cn("truncate text-xs", !message.isRead && "font-semibold")}>
           {senderLabel(message)}
         </span>
-        <span className="shrink-0 text-micro tabular-nums text-muted-foreground">
-          {when}
-        </span>
-      </div>
-      <p
+      </span>
+      <span
         className={cn(
-          "truncate text-xs",
-          message.isRead
-            ? "text-muted-foreground"
-            : "font-medium text-foreground",
+          "min-w-0 truncate text-xs text-muted-foreground",
+          !message.isRead && "font-medium text-foreground",
         )}
       >
         {message.subject || "(no subject)"}
-      </p>
-      {message.snippet ? (
-        <p className="line-clamp-2 text-dense leading-relaxed text-muted-foreground">
-          {message.snippet}
-        </p>
-      ) : null}
-    </motion.button>
+      </span>
+      <span className="flex shrink-0 items-center gap-2 text-micro tabular-nums text-muted-foreground">
+        {message.hasAttachments ? (
+          <Paperclip className="size-3" aria-label="Has attachments" />
+        ) : null}
+        <span>{formatPreviewDate(message.date)}</span>
+      </span>
+    </button>
   );
 }
 
@@ -121,8 +119,7 @@ function SelectEmptySurface({
   onSelectMessage?: (message: MailMessageSummary) => void;
   className?: string;
 }) {
-  const reduceMotion = useReducedMotion();
-  const { data, isLoading } = useMailMessages({
+  const { data, isLoading, isError, error, refetch } = useMailMessages({
     folder: "inbox",
     accountId: selectedAccountId,
   });
@@ -137,135 +134,137 @@ function SelectEmptySurface({
   );
   const needsYou = groups.find((g) => g.key === "needs_you");
   const today = groups.find((g) => g.key === "today");
-  const previewNeeds = (needsYou?.messages ?? []).slice(0, 5);
+  const previewNeeds = (needsYou?.messages ?? []).slice(0, 3);
   const previewToday = (today?.messages ?? []).slice(0, 3);
   const hasPreviews = previewNeeds.length > 0 || previewToday.length > 0;
   const unreadCount = allMessages.filter((m) => !m.isRead).length;
+  const handleSelectPreview = useCallback(
+    (message: MailMessageSummary) => onSelectMessage?.(message),
+    [onSelectMessage],
+  );
+  const pageState = resolvePageState({
+    isLoading,
+    isError,
+    error,
+    isEmpty: !hasPreviews || !onSelectMessage,
+  });
 
-  if (isLoading) {
-    return (
-      <div
-        className={cn(
-          "relative flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden",
-          className,
-        )}
-      >
-        <div className="flex flex-col gap-3 px-5 py-6 sm:px-6">
-          <Skeleton className="h-3 w-24 rounded" />
-          {[0, 1, 2].map((i) => (
-            <div
-              key={i}
-              className="rounded-xl border border-border/40 bg-card/60 px-3.5 py-3 space-y-2"
-            >
-              <div className="flex justify-between gap-2">
-                <Skeleton className="h-3.5 w-32 rounded" />
-                <Skeleton className="h-3 w-14 rounded" />
-              </div>
-              <Skeleton className="h-3.5 w-4/5 rounded" />
-              <Skeleton className="h-3 w-full rounded" />
-            </div>
-          ))}
-        </div>
+  const loading = (
+    <div className="px-5 py-5 sm:px-6" aria-label="Loading recent messages">
+      <Skeleton className="mb-3 h-3 w-24 rounded" />
+      <div className="divide-y divide-border/50 border-y border-border/50">
+        {[0, 1, 2].map((index) => (
+          <div
+            key={index}
+            className="grid min-h-12 grid-cols-[8rem_1fr_3rem] items-center gap-3 px-4 py-2"
+          >
+            <Skeleton className="h-3 w-24 rounded" />
+            <Skeleton className="h-3 w-4/5 rounded" />
+            <Skeleton className="h-3 w-10 rounded" />
+          </div>
+        ))}
       </div>
-    );
-  }
+    </div>
+  );
 
-  if (!hasPreviews || !onSelectMessage) {
-    return (
-      <div
-        className={cn(
-          "relative flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden",
-          className,
-        )}
-      >
-        <CalmPlaceholder
-          title={
-            allMessages.length === 0 ? "Inbox is clear" : "Select a message"
-          }
-          description={
-            allMessages.length === 0
-              ? "Use Compose or What needs me in the header when you’re ready."
-              : "Choose a thread from the list to read and reply."
-          }
-        />
-      </div>
-    );
-  }
+  const empty = (
+    <CalmPlaceholder
+      title={allMessages.length === 0 ? "Inbox is clear" : "Select a message"}
+      description={
+        allMessages.length === 0
+          ? "New mail will appear here when it arrives."
+          : "Choose a thread from the list to read and reply."
+      }
+    />
+  );
 
   return (
     <div
       className={cn(
-        "relative flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden",
+        "flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-background",
         className,
       )}
     >
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_20%_0%,color-mix(in_oklab,var(--primary)_6%,transparent),transparent_45%)]"
-      />
-
-      <div className="relative z-[1] shrink-0 border-b border-border/40 px-5 py-3 sm:px-6">
-        <h2 className="text-sm font-semibold tracking-tight text-foreground">
-          Start with what needs you
-        </h2>
-        <p className="mt-0.5 text-xs text-muted-foreground">
-          {unreadCount > 0
-            ? `${unreadCount} unread · open a preview or pick from the list`
-            : "Open a preview below or choose from the list"}
-        </p>
-      </div>
-
-      <ScrollArea fill className={cn(SCROLL_AREA_PAGE_BODY_CLASS, "relative z-[1]")}>
-        <div className="flex min-h-full flex-col gap-5 px-5 py-4 sm:px-6">
-          {previewNeeds.length > 0 ? (
-            <section className="space-y-2">
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">
-                  Needs you
-                </h3>
-                <span className="text-micro tabular-nums text-muted-foreground">
-                  {needsYou?.messages.length ?? previewNeeds.length}
-                </span>
-              </div>
-              <div className="grid gap-2">
-                {previewNeeds.map((message, index) => (
-                  <TriagePreviewCard
-                    key={`${message.accountId}-${message.id}`}
-                    message={message}
-                    onSelect={onSelectMessage}
-                    index={index}
-                    reduceMotion={reduceMotion}
-                  />
-                ))}
-              </div>
-            </section>
-          ) : null}
-
-          {previewToday.length > 0 ? (
-            <section className="space-y-2">
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">
-                  Today & yesterday
-                </h3>
-                <span className="text-micro tabular-nums text-muted-foreground">
-                  {today?.messages.length ?? previewToday.length}
-                </span>
-              </div>
-              <div className="grid gap-2">
-                {previewToday.map((message, index) => (
-                  <TriagePreviewCard
-                    key={`${message.accountId}-${message.id}`}
-                    message={message}
-                    onSelect={onSelectMessage}
-                    index={index + previewNeeds.length}
-                    reduceMotion={reduceMotion}
-                  />
-                ))}
-              </div>
-            </section>
-          ) : null}
+      <PageState
+        resolution={pageState}
+        loading={loading}
+        empty={empty}
+        onRetry={() => void refetch()}
+        compact
+        className="min-h-0 flex-1"
+      >
+        <div className="shrink-0 border-b border-border px-5 py-4 sm:px-6">
+          <h2 className="text-sm font-semibold text-foreground">
+            Select a message
+          </h2>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {unreadCount > 0
+              ? `${unreadCount} unread in this view`
+              : "Your inbox is up to date"}
+          </p>
         </div>
-      </ScrollArea>
+
+        <ScrollArea fill className={SCROLL_AREA_PAGE_BODY_CLASS}>
+          <div className="flex min-h-full px-5 py-4 sm:px-6">
+            <div className="flex min-h-full w-full flex-col overflow-hidden rounded-lg border border-border bg-card/20">
+              {previewNeeds.length > 0 ? (
+                <section aria-labelledby="needs-you-heading">
+                  <div className="flex h-8 items-center justify-between gap-2 border-b border-border/50 bg-muted/30 px-4">
+                    <h3
+                      id="needs-you-heading"
+                      className="text-micro font-semibold uppercase tracking-wider text-muted-foreground"
+                    >
+                      Needs you
+                    </h3>
+                    <span className="text-micro tabular-nums text-muted-foreground">
+                      {previewNeeds.length}
+                    </span>
+                  </div>
+                  <div className="flex-1">
+                    {previewNeeds.map((message) => (
+                      <MessagePreviewRow
+                        key={`${message.accountId}-${message.id}`}
+                        message={message}
+                        onSelect={handleSelectPreview}
+                      />
+                    ))}
+                  </div>
+                </section>
+              ) : null}
+
+              {previewToday.length > 0 ? (
+                <section
+                  aria-labelledby="recent-mail-heading"
+                  className={cn(
+                    previewNeeds.length > 0 && "border-t border-border",
+                  )}
+                >
+                  <div className="flex h-8 items-center justify-between gap-2 border-b border-border/50 bg-muted/30 px-4">
+                    <h3
+                      id="recent-mail-heading"
+                      className="text-micro font-semibold uppercase tracking-wider text-muted-foreground"
+                    >
+                      Recent mail
+                    </h3>
+                    <span className="text-micro tabular-nums text-muted-foreground">
+                      {previewToday.length}
+                    </span>
+                  </div>
+                  <div>
+                    {previewToday.map((message) => (
+                      <MessagePreviewRow
+                        key={`${message.accountId}-${message.id}`}
+                        message={message}
+                        onSelect={handleSelectPreview}
+                      />
+                    ))}
+                  </div>
+                </section>
+              ) : null}
+            </div>
+          </div>
+        </ScrollArea>
+      </PageState>
     </div>
   );
 }
@@ -326,12 +325,15 @@ export function MailEmptyPane({
         )}
       >
         <EmptyState
-          illustrationPreset="mail"
-          title="Connect your inbox"
-          description="Link Gmail or Outlook to triage, reply, and draft with AI — all inside StreamlineOS."
+          compact
+          illustrationSize="sm"
+          illustration={<EmptyMailIllustration className="h-24 w-24" />}
+          className="w-full max-w-xl border-0 bg-transparent px-4 py-8"
+          title="Your inbox. One focused workspace."
+          description="Bring Gmail and Outlook together. Read across accounts, reply in context, and turn your inbox into a brief with clear next steps."
           action={
             onConnect
-              ? { label: "Connect email", onClick: onConnect }
+              ? { label: "Directly Connect", onClick: onConnect }
               : undefined
           }
         />

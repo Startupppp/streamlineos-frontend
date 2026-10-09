@@ -1,14 +1,13 @@
 "use client";
 
-import { memo, useCallback, useMemo, useRef, type Key } from "react";
+import { memo, useCallback, useMemo, type Key } from "react";
 import { List, type RowComponentProps } from "react-window";
-import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { MailMessageRow, type MailListAction } from "./mail-message-row";
 import type { MailFolder, MailMessageSummary } from "@/types/mail";
 import type { MailTriageGroup } from "./mail-group-messages";
 
-const MESSAGE_ROW_HEIGHT = 72;
-const HEADER_ROW_HEIGHT = 36;
+const MESSAGE_ROW_HEIGHT = 56;
+const HEADER_ROW_HEIGHT = 32;
 const OVERSCAN_COUNT = 5;
 const DEFAULT_LIST_HEIGHT = 600;
 
@@ -79,7 +78,7 @@ function MailVirtualRow({
       <div
         style={style}
         {...ariaAttributes}
-        className="flex items-center justify-between gap-2 px-3 bg-background/90 backdrop-blur-sm border-b border-border/30"
+        className="flex items-center justify-between gap-2 border-b border-border/40 bg-muted/20 px-3"
       >
         <span className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">
           {item.label}
@@ -109,8 +108,6 @@ function MailVirtualRow({
 
 export interface MailVirtualListProps {
   groups: MailTriageGroup[];
-  hasNextPage: boolean;
-  isFetchingNextPage: boolean;
   selectedMessageId: string | null;
   activeFolder: MailFolder;
   canAi: boolean;
@@ -122,20 +119,16 @@ export interface MailVirtualListProps {
     threadId?: string,
   ) => void;
   onAiBrief: (accountId: number, threadId: string) => void;
-  onLoadMore: () => void;
 }
 
 export const MailVirtualList = memo(function MailVirtualList({
   groups,
-  hasNextPage,
-  isFetchingNextPage,
   selectedMessageId,
   activeFolder,
   canAi,
   onSelect,
   onAction,
   onAiBrief,
-  onLoadMore,
 }: MailVirtualListProps) {
   const items = useMemo(() => buildFlatItems(groups), [groups]);
 
@@ -169,23 +162,6 @@ export const MailVirtualList = memo(function MailVirtualList({
     [],
   );
 
-  const lastTriggerStopIndexRef = useRef(-1);
-
-  const handleRowsRendered = useCallback(
-    ({ stopIndex }: { startIndex: number; stopIndex: number }) => {
-      if (
-        stopIndex >= items.length - 1 &&
-        hasNextPage &&
-        !isFetchingNextPage &&
-        stopIndex !== lastTriggerStopIndexRef.current
-      ) {
-        lastTriggerStopIndexRef.current = stopIndex;
-        onLoadMore();
-      }
-    },
-    [items.length, hasNextPage, isFetchingNextPage, onLoadMore],
-  );
-
   return (
     <div className="flex flex-col h-full">
       <List<MailVirtualRowData>
@@ -196,15 +172,8 @@ export const MailVirtualList = memo(function MailVirtualList({
         rowKey={stableRowKey}
         defaultHeight={DEFAULT_LIST_HEIGHT}
         overscanCount={OVERSCAN_COUNT}
+        className="scrollbar-hide"
         style={{ flex: "1 1 0", minHeight: 0 }}
-        onRowsRendered={handleRowsRendered}
-      />
-      <InfiniteScrollSentinel
-        hasNextPage={hasNextPage}
-        isFetchingNextPage={isFetchingNextPage}
-        onLoadMore={onLoadMore}
-        label="Load more messages"
-        className="py-2"
       />
     </div>
   );

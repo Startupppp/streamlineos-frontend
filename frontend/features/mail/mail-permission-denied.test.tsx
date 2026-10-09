@@ -1,9 +1,11 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { MailShell } from "./mail-shell";
 
 let gate = { allowed: false, denied: true, pending: false };
+let accountsFailed = false;
+const refetchAccounts = jest.fn();
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: jest.fn(), push: jest.fn() }),
@@ -24,7 +26,7 @@ jest.mock("@/hooks/api/integrations", () => ({
 }));
 
 jest.mock("@/hooks/api/mail", () => ({
-  useMailAccounts: () => ({ data: undefined, isLoading: false }),
+  useMailAccounts: () => ({ data: undefined, isLoading: false, isError: accountsFailed, error: accountsFailed ? new Error("Offline") : null, refetch: refetchAccounts }),
   useMailAction: () => ({ mutate: jest.fn(), isPending: false }),
   useMailMessages: () => ({
     data: undefined,
@@ -60,6 +62,8 @@ function renderShell() {
 describe("/mail — a reader without mail:inbox:view", () => {
   afterEach(() => {
     gate = { allowed: false, denied: true, pending: false };
+    accountsFailed = false;
+    refetchAccounts.mockClear();
   });
 
   it("BITE: is refused, and is NOT told to connect an inbox", () => {
@@ -83,6 +87,16 @@ describe("/mail — a reader without mail:inbox:view", () => {
     renderShell();
 
     expect(screen.queryByText("Access Restricted")).toBeNull();
-    expect(screen.getByText("Connect your inbox")).toBeInTheDocument();
+    expect(screen.getByText("Your inbox. One focused workspace.")).toBeInTheDocument();
+  });
+
+  it("does not misrepresent an account loading failure as a disconnected mailbox", () => {
+    gate = { allowed: true, denied: false, pending: false };
+    accountsFailed = true;
+    renderShell();
+    expect(screen.getByText("Offline")).toBeInTheDocument();
+    expect(screen.queryByText("Your inbox. One focused workspace.")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /try again/i }));
+    expect(refetchAccounts).toHaveBeenCalledTimes(1);
   });
 });

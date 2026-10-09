@@ -32,6 +32,7 @@ import { useIsMobile } from "@/hooks/common/use-mobile"
 import { useCan } from "@/hooks/api/access"
 import { useEnabledModules } from "@/hooks/api/access/org-modules"
 import { useCommandPalette } from "@/components/command-palette/hooks/use-command-palette"
+import { useGlobalMailComposer } from "@/features/mail/mail-compose-provider"
 import { cn } from "@/lib/utils"
 import { matchesOrgModule } from "@/lib/org-module-keys"
 import { getProductFromPathname } from "@/components/layout/sidebar/sidebar-nav-items"
@@ -138,10 +139,12 @@ export function useQuickCreateGroups(): CreateGroup[] {
 export function QuickCreatePanel({
   groups,
   onCreateIssue,
+  onComposeMail,
   onNavigate,
 }: {
   groups: CreateGroup[]
   onCreateIssue: () => void
+  onComposeMail: () => void
   onNavigate: () => void
 }) {
   return (
@@ -163,6 +166,19 @@ export function QuickCreatePanel({
                     key={action.id}
                     type="button"
                     onClick={onCreateIssue}
+                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm text-foreground transition-colors hover:bg-muted"
+                  >
+                    <action.icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    {action.label}
+                  </button>
+                )
+              }
+              if (action.action === "compose-mail") {
+                return (
+                  <button
+                    key={action.id}
+                    type="button"
+                    onClick={onComposeMail}
                     className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm text-foreground transition-colors hover:bg-muted"
                   >
                     <action.icon className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -252,10 +268,12 @@ const QuickCreateTriggerButton = forwardRef<
 function QuickCreateMenuItems({
   groups,
   onCreateIssue,
+  onComposeMail,
   onNavigate,
 }: {
   groups: CreateGroup[]
   onCreateIssue: () => void
+  onComposeMail: () => void
   onNavigate: () => void
 }) {
   return (
@@ -273,6 +291,19 @@ function QuickCreateMenuItems({
                   key={action.id}
                   type="button"
                   onClick={onCreateIssue}
+                  className="flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm text-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                >
+                  <action.icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  {action.label}
+                </button>
+              )
+            }
+            if (action.action === "compose-mail") {
+              return (
+                <button
+                  key={action.id}
+                  type="button"
+                  onClick={onComposeMail}
                   className="flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm text-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
                 >
                   <action.icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
@@ -306,6 +337,7 @@ export function QuickCreateButton({ compact = false }: { compact?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { openCreateTicket } = useCommandPalette()
+  const { openCompose } = useGlobalMailComposer()
   const { iconRef, hoverHandlers } = useAnimatedIcon()
   const enableHoverOpen = !isMobile
 
@@ -343,6 +375,12 @@ export function QuickCreateButton({ compact = false }: { compact?: boolean }) {
     setMenuOpen(false)
   }, [openCreateTicket])
 
+  const handleComposeMail = useCallback(() => {
+    openCompose()
+    setDrawerOpen(false)
+    setMenuOpen(false)
+  }, [openCompose])
+
   const handleNavigate = useCallback(() => {
     setDrawerOpen(false)
     setMenuOpen(false)
@@ -369,6 +407,7 @@ export function QuickCreateButton({ compact = false }: { compact?: boolean }) {
           <QuickCreatePanel
             groups={groups}
             onCreateIssue={handleCreateIssue}
+            onComposeMail={handleComposeMail}
             onNavigate={handleNavigate}
           />
         </DrawerContent>
@@ -401,6 +440,7 @@ export function QuickCreateButton({ compact = false }: { compact?: boolean }) {
           <QuickCreateMenuItems
             groups={groups}
             onCreateIssue={handleCreateIssue}
+            onComposeMail={handleComposeMail}
             onNavigate={handleNavigate}
           />
         </ScrollArea>

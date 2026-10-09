@@ -10,7 +10,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useMailAccounts, useMailAction } from "@/hooks/api/mail";
 import { useFinalizeIntegrationConnection } from "@/hooks/api/integrations";
 import { useCan, usePermissionGate } from "@/hooks/api/access";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { PageState } from "@/components/shared/page-state";
 import { MailListPane } from "./mail-list-pane";
 import { MailEmptyPane } from "./mail-empty-pane";
 import { MailHeader, MAIL_ACCOUNT_SENTINEL } from "./mail-header";
@@ -23,6 +23,7 @@ import {
 import type { MailMessageSummary } from "@/types/mail";
 import type { MailComposeMode } from "./mail-compose-schema";
 import type { MailReplyParams } from "./mail-reading-ai-actions";
+import type { PageStateResolution } from "@/lib/page-state/resolve-page-state";
 
 const MailReadingPane = dynamic(
   () => import("./mail-reading-pane").then((m) => ({ default: m.MailReadingPane })),
@@ -51,18 +52,29 @@ export function MailShell() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
-  const { data: accounts = [], isLoading: accountsLoading } = useMailAccounts();
+  const {
+    data: accounts = [],
+    isLoading: accountsLoading,
+    isError: accountsFailed,
+    error: accountsError,
+    refetch: refetchAccounts,
+  } = useMailAccounts();
   const finalize = useFinalizeIntegrationConnection();
   const finalizeRef = useRef(false);
   const canAi = useCan("mail:ai:use");
   const canManageMail = useCan("mail:messages:manage");
+  const canConnect = useCan("integrations:connections:manage");
   const inboxAccess = usePermissionGate("mail:inbox:view");
   const mailAction = useMailAction();
 
   const [accountsSheetOpen, setAccountsSheetOpen] = useState(false);
-  const [selectedAccountId, setSelectedAccountId] = useState<number | "all">(
+  const [requestedAccountId, setSelectedAccountId] = useState<number | "all">(
     "all",
   );
+  const selectedAccountId =
+    requestedAccountId === "all" || accounts.some((account) => account.id === requestedAccountId)
+      ? requestedAccountId
+      : "all";
   const [selectedMessage, setSelectedMessage] =
     useState<MailMessageSummary | null>(null);
   const [showMobileList, setShowMobileList] = useState(true);
@@ -90,7 +102,7 @@ export function MailShell() {
   const [deepLinkStatus, setDeepLinkStatus] = useState<DeepLinkStatus>("idle");
   const deepLinkConsumedRef = useRef(false);
 
-  const { summaryState, triggerSummary } = useMailInboxSummarySheet();
+  const { summaryState, triggerSummary } = useMailInboxSummarySheet(selectedAccountId);
 
   const finalizeMutate = finalize.mutate;
   useEffect(() => {
@@ -245,35 +257,35 @@ export function MailShell() {
     setComposeOpen(true);
   }, []);
 
-  const handleOpenSummary = useCallback(() => {
+  const handleCloseSummary = useCallback(() => setSummarySheetOpen(false), []);
+  const handleGenerateBrief = useCallback(() => {
     setSummarySheetOpen(true);
     triggerSummary(selectedAccountId);
   }, [triggerSummary, selectedAccountId]);
-
-  const handleCloseSummary = useCallback(() => setSummarySheetOpen(false), []);
+  const handleBriefDetails = useCallback(() => setSummarySheetOpen(true), []);
 
   const hasAccounts = accounts.length > 0;
+  const activeMessage =
+    selectedMessage && accounts.some((account) => account.id === selectedMessage.accountId)
+      ? selectedMessage
+      : null;
+  const handleRetryAccounts = useCallback(() => {
+    void refetchAccounts();
+  }, [refetchAccounts]);
 
-  /**
-   * A reader without `mail:inbox:view` is refused, not asked to connect a
-   * mailbox. Both reads this page makes are gated on that key already, so a
-   * member who lacks it gets an empty account list and used to land on the
-   * "Connect your inbox" pane — an instruction to fix an account problem they
-   * do not have and a Connect button that cannot help them.
-   *
-   * `denied`, never `!allowed`: until the access snapshot arrives the gate is
-   * pending, and reading that as a refusal flashes "Access Restricted" at a
-   * permitted reader on every load.
-   */
-  if (inboxAccess.denied)
-    return (
-      <div className="flex h-full min-h-0 flex-col">
-        <NoPermissionState
-          permission={inboxAccess.permission}
-          description="Mail is not available to your role."
-        />
-      </div>
-    );
+  const pageState: PageStateResolution = inboxAccess.denied
+    ? {
+        kind: "denied",
+        permission: inboxAccess.permission,
+        message: "Mail is not available to your role.",
+      }
+    : inboxAccess.pending || accountsLoading
+      ? { kind: "loading" }
+      : accountsFailed
+        ? { kind: "error", error: accountsError }
+        : !hasAccounts
+          ? { kind: "empty" }
+          : { kind: "ready" };
 
   return (
     <div className="flex flex-col h-full min-h-0 min-w-0">
@@ -282,21 +294,36 @@ export function MailShell() {
         accountsLoading={accountsLoading}
         selectedAccountId={selectedAccountId}
         canAi={canAi}
+        canCompose={canManageMail}
+        showAccountSettings={!inboxAccess.denied && !accountsFailed}
+        summaryState={summaryState}
         onAccountChange={handleAccountChange}
         onCompose={handleOpenCompose}
-        onSummarize={handleOpenSummary}
+        onGenerateBrief={handleGenerateBrief}
+        onOpenBrief={handleBriefDetails}
         onOpenAccounts={handleOpenAccountsSheet}
       />
 
-      <div className="flex flex-1 min-h-0 min-w-0">
+      <PageState
+        resolution={pageState}
+        loading={<MailReadingPaneSkeleton />}
+        empty={
+          <MailEmptyPane
+            variant="connect"
+            onConnect={canConnect ? handleOpenAccountsSheet : undefined}
+          />
+        }
+        onRetry={handleRetryAccounts}
+      >
+        <div className="flex flex-1 min-h-0 min-w-0">
         <div
           className={cn(
-            "flex flex-col h-full shrink-0 border-r border-border/40 bg-card/40 w-full lg:w-[320px]",
+            "flex flex-col h-full min-w-0 shrink-0 border-r border-border bg-card w-full lg:w-96 xl:w-1/3",
             !showMobileList && "hidden lg:flex",
           )}
         >
           <MailListPane
-            selectedMessageId={selectedMessage?.id ?? null}
+            selectedMessageId={activeMessage?.id ?? null}
             selectedAccountId={selectedAccountId}
             onSelectMessage={handleSelectMessage}
             onOpenAccountsSheet={handleOpenAccountsSheet}
@@ -310,21 +337,16 @@ export function MailShell() {
             showMobileList && "hidden lg:flex",
           )}
         >
-          {!hasAccounts && !accountsLoading ? (
-            <MailEmptyPane
-              variant="connect"
-              onConnect={handleOpenAccountsSheet}
-            />
-          ) : deepLinkStatus === "not_found" ? (
+          {deepLinkStatus === "not_found" ? (
             <MailEmptyPane variant="not_found" />
           ) : deepLinkStatus === "needs_reauth" ? (
             <MailEmptyPane
               variant="needs_reauth"
               onReconnect={handleOpenAccountsSheet}
             />
-          ) : selectedMessage ? (
+          ) : activeMessage ? (
             <MailReadingPane
-              selectedMessage={selectedMessage}
+              selectedMessage={activeMessage}
               onBack={handleBackToList}
               onReply={handleReply}
             />
@@ -336,7 +358,8 @@ export function MailShell() {
             />
           )}
         </div>
-      </div>
+        </div>
+      </PageState>
 
       {accountsSheetOpen && (
         <MailAccountsSheet
@@ -351,6 +374,7 @@ export function MailShell() {
           onClose={handleCloseCompose}
           mode={composeMode}
           accounts={accounts}
+          preferredAccountId={selectedAccountId}
         />
       )}
 

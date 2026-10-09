@@ -251,6 +251,36 @@ describe("a11y — Mail surface (MailMessageRow)", () => {
     expect(btn).toHaveAttribute("aria-current", "true");
   });
 
+  it("reserves a separate action rail so hover controls cannot cover message text", () => {
+    const { container } = render(
+      <MailMessageRow
+        message={MOCK_MSG}
+        isSelected={false}
+        folder="inbox"
+        showPriority={false}
+        canAi
+        onSelect={jest.fn()}
+        onAction={jest.fn()}
+        onAiBrief={jest.fn()}
+      />,
+    );
+
+    const row = container.querySelector('[data-slot="mail-message-row"]');
+    const messageButton = screen.getByRole("button", {
+      name: /Message from Jane Smith: Q3 Budget Proposal/i,
+    });
+    const actionRail = container.querySelector('[data-slot="mail-action-rail"]');
+
+    expect(row).toHaveClass("grid", "grid-cols-[minmax(0,1fr)_auto]");
+    expect(actionRail).toHaveClass("w-[6.75rem]");
+    expect(messageButton.parentElement).toBe(row);
+    expect(actionRail?.parentElement).toBe(row);
+    expect(messageButton.contains(actionRail)).toBe(false);
+    expect(screen.getByRole("button", { name: "AI brief" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Archive" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Move to trash" })).toBeInTheDocument();
+  });
+
   it("BITE PROOF (axe) — message button aria-label contains sender and subject", () => {
     render(
       <MailMessageRow

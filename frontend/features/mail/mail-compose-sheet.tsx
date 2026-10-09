@@ -9,6 +9,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetDescription,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -46,6 +47,7 @@ interface MailComposeSheetProps {
   onClose: () => void;
   mode: MailComposeMode;
   accounts: MailAccount[];
+  preferredAccountId?: number | "all";
 }
 
 export function MailComposeSheet({
@@ -53,10 +55,11 @@ export function MailComposeSheet({
   onClose,
   mode,
   accounts,
+  preferredAccountId,
 }: MailComposeSheetProps) {
   const isReply = mode.type === "reply";
 
-  const primaryAccount = accounts.find((a) => a.isPrimary) ?? accounts[0];
+  const primaryAccount = accounts.find((a) => a.id === preferredAccountId && a.status === "active") ?? accounts.find((a) => a.isPrimary) ?? accounts[0];
   const defaultAccountId =
     isReply ? mode.accountId : (primaryAccount?.id ?? (accounts[0]?.id ?? 0));
 
@@ -87,7 +90,7 @@ export function MailComposeSheet({
   const sendMail = useSendMail();
   const replyMail = useReplyMail();
   const isOnline = useOnlineStatus();
-  const draftKey = mailDraftKey(mode);
+  const draftKey = mailDraftKey(mode, defaultAccountId);
 
   const [showCc, setShowCc] = useState(false);
   const [showBcc, setShowBcc] = useState(false);
@@ -108,13 +111,15 @@ export function MailComposeSheet({
     if (wasOpen && prevDraftKey === draftKey) return;
 
     const saved = readMailDraft(draftKey);
+    setShowCc(Boolean(saved?.cc?.length));
+    setShowBcc(Boolean(saved?.bcc?.length));
 
     if (mode.type === "reply") {
       const body = saved?.bodyHtml ?? mode.prefillBody ?? "";
       replyForm.reset({
         accountId: mode.accountId,
-        to: [mode.toEmail],
-        cc: [],
+        to: saved?.to?.length === 1 ? saved.to : [mode.toEmail],
+        cc: saved?.cc ?? [],
         bodyHtml: body,
         messageId: mode.messageId,
         threadId: mode.threadId,
@@ -125,17 +130,18 @@ export function MailComposeSheet({
     }
 
     const body = saved?.bodyHtml ?? "";
+    const savedAccount = accounts.find((account) => account.id === saved?.accountId && account.status === "active");
     composeForm.reset({
-      accountId: defaultAccountId,
-      to: [],
-      cc: [],
-      bcc: [],
+      accountId: savedAccount?.id ?? defaultAccountId,
+      to: saved?.to ?? [],
+      cc: saved?.cc ?? [],
+      bcc: saved?.bcc ?? [],
       subject: saved?.subject ?? "",
       bodyHtml: body,
     });
     setBodyHtmlForEditor(body);
     setBodyContentKey((k) => k + 1);
-  }, [open, draftKey, mode, replyForm, composeForm, defaultAccountId]);
+  }, [open, draftKey, mode, replyForm, composeForm, defaultAccountId, accounts]);
 
   const handleAiInsert = useCallback(
     (subject: string, body: string) => {
@@ -179,6 +185,10 @@ export function MailComposeSheet({
     const subject = isReply ? undefined : composeForm.getValues("subject");
     writeMailDraft(draftKey, {
       bodyHtml: values.bodyHtml ?? "",
+      accountId: values.accountId,
+      to: values.to,
+      cc: values.cc,
+      ...(!isReply ? { bcc: composeForm.getValues("bcc") } : {}),
       ...(subject ? { subject } : {}),
     });
   }, [draftKey, isReply, composeForm, replyForm]);
@@ -280,6 +290,7 @@ export function MailComposeSheet({
       <SheetContent className="p-0 flex flex-col gap-0 sm:max-w-2xl overflow-hidden">
         <SheetHeader className="shrink-0 border-b border-border px-6 py-4">
           <SheetTitle className="text-base font-semibold">{title}</SheetTitle>
+          <SheetDescription>Unsent drafts are saved on this device when you close the composer.</SheetDescription>
         </SheetHeader>
 
         <form
@@ -323,6 +334,7 @@ export function MailComposeSheet({
             <div className="flex-1 min-h-0 overflow-y-auto">
               <TiptapEditor
                 output="html"
+                menuMode="static"
                 content={bodyHtmlForEditor}
                 contentKey={bodyContentKey}
                 onChangeHtml={handleBodyChange}

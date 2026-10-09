@@ -74,7 +74,7 @@ export function AddProjectPicker({
   }, []);
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
       <ResponsivePopover open={open} onOpenChange={setOpen}>
         <ResponsivePopoverTrigger asChild>
           <Button
@@ -84,7 +84,7 @@ export function AddProjectPicker({
             aria-label="Add project to team"
             size="sm"
             className={cn(
-              "h-8 min-w-[180px] justify-start gap-1.5 text-xs font-normal",
+              "h-9 min-w-0 w-full justify-start gap-1.5 text-xs font-normal",
               !selectedProject && "text-muted-foreground",
             )}
           >
@@ -133,7 +133,7 @@ export function AddProjectPicker({
       </ResponsivePopover>
       <LoadingButton
         size="sm"
-        className="gap-1 text-xs"
+        className="h-9 gap-1 text-xs"
         disabled={selectedId === null}
         isPending={isPending}
         loadingText="Adding…"

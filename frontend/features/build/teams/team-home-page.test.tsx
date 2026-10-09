@@ -140,13 +140,16 @@ jest.mock("@/components/ui/page-wrapper", () => ({
     children,
     actions,
     title,
+    subtitle,
   }: {
     children: React.ReactNode;
     actions?: React.ReactNode;
-    title?: string;
+    title?: React.ReactNode;
+    subtitle?: React.ReactNode;
   }) => (
     <div>
       {title ? <h1>{title}</h1> : null}
+      {subtitle}
       {actions}
       {children}
     </div>
@@ -184,7 +187,7 @@ jest.mock("@/components/ui/button", () => ({
 }));
 
 jest.mock("@/components/ui/loading-button", () => ({
-  LoadingButton: ({ children, isPending: _p, ...props }: { children?: React.ReactNode; isPending?: boolean } & React.ButtonHTMLAttributes<HTMLButtonElement>) => (
+  LoadingButton: ({ children, isPending: _p, loadingText: _loadingText, ...props }: { children?: React.ReactNode; isPending?: boolean; loadingText?: string } & React.ButtonHTMLAttributes<HTMLButtonElement>) => (
     <button {...props}>{children}</button>
   ),
 }));
@@ -209,12 +212,27 @@ jest.mock("@/components/ui/confirm-dialog", () => ({
 }));
 
 jest.mock("@/components/ui/dropdown-menu", () => ({
-  DropdownMenu: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  DropdownMenuContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  DropdownMenuItem: ({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) => (
-    <button onClick={onClick}>{children}</button>
-  ),
-  DropdownMenuTrigger: ({ children }: { children: React.ReactNode }) => <div data-testid="team-actions-trigger">{children}</div>,
+  ...(() => {
+    const ReactRuntime = jest.requireActual<typeof import("react")>("react");
+    const MenuContext = ReactRuntime.createContext({ open: false, setOpen: (_open: boolean) => undefined });
+    return {
+      DropdownMenu: ({ children }: { children: React.ReactNode }) => {
+        const [open, setOpen] = ReactRuntime.useState(false);
+        return <MenuContext.Provider value={{ open, setOpen }}>{children}</MenuContext.Provider>;
+      },
+      DropdownMenuContent: ({ children }: { children: React.ReactNode }) => {
+        const { open } = ReactRuntime.useContext(MenuContext);
+        return open ? <div>{children}</div> : null;
+      },
+      DropdownMenuItem: ({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) => (
+        <button onClick={onClick}>{children}</button>
+      ),
+      DropdownMenuTrigger: ({ children }: { children: React.ReactElement }) => {
+        const { setOpen } = ReactRuntime.useContext(MenuContext);
+        return ReactRuntime.cloneElement(children, { onClick: () => setOpen(true) });
+      },
+    };
+  })(),
 }));
 
 jest.mock("@/features/build/teams/team-form-sheet", () => ({
@@ -440,9 +458,18 @@ describe("TeamHomePage — ready state (BLD-X-FE-TEAMS-DETAIL-005)", () => {
     expect(screen.getAllByText("bob@example.com").length).toBeGreaterThanOrEqual(1);
   });
 
-  it("renders the team projects section", () => {
+  it("shows projects when the Projects tab is selected", () => {
     render(<TeamHomePage teamId={1} />);
+    expect(screen.queryByTestId("team-projects-section")).not.toBeInTheDocument();
+    const projectsTab = screen.getByRole("tab", { name: /projects/i });
+    fireEvent.mouseDown(projectsTab, { button: 0, ctrlKey: false });
     expect(screen.getByTestId("team-projects-section")).toBeInTheDocument();
+  });
+
+  it("opens with Members selected", () => {
+    render(<TeamHomePage teamId={1} />);
+    expect(screen.getByRole("tab", { name: /members/i })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("list", { name: /team members/i })).toBeInTheDocument();
   });
 
   it("renders the member list with accessible role and aria-label via PmPanel", () => {
@@ -470,7 +497,7 @@ describe("TeamHomePage — permission-gated actions (BLD-X-FE-TEAMS-DETAIL-006)"
   it("shows the team actions dropdown when the viewer has build:teams:manage", () => {
     mockUseCan.mockReturnValue(true);
     render(<TeamHomePage teamId={1} />);
-    expect(screen.getByTestId("team-actions-trigger")).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Team actions" })).toHaveLength(2);
   });
 
   it("hides the MemberPicker (add member) when the viewer lacks build:teams:manage", () => {
@@ -585,6 +612,7 @@ describe("TeamHomePage — overlay lifecycle (BLD-X-FE-TEAMS-DETAIL-010)", () =>
   it("opens the team edit sheet when Edit Team is clicked and closes it when not open", () => {
     render(<TeamHomePage teamId={1} />);
     expect(screen.queryByTestId("team-form-sheet")).not.toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole("button", { name: "Team actions" })[0]!);
     fireEvent.click(screen.getByText("Edit Team"));
     expect(screen.getByTestId("team-form-sheet")).toBeInTheDocument();
   });
@@ -592,6 +620,7 @@ describe("TeamHomePage — overlay lifecycle (BLD-X-FE-TEAMS-DETAIL-010)", () =>
   it("opens the delete confirm dialog when Delete Team is clicked and does not show it before click", () => {
     render(<TeamHomePage teamId={1} />);
     expect(screen.queryByTestId("confirm-dialog")).not.toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole("button", { name: "Team actions" })[0]!);
     fireEvent.click(screen.getByText("Delete Team"));
     expect(screen.getByTestId("confirm-dialog")).toBeInTheDocument();
   });

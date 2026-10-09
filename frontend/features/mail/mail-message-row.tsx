@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, forwardRef } from "react";
+import { useCallback, forwardRef } from "react";
 import { cn } from "@/lib/utils";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -116,7 +116,7 @@ const QuickActions = forwardRef<HTMLDivElement, QuickActionsProps>(
     if (folder === "archive" || folder === "trash") return null;
 
     return (
-      <div className="flex items-center gap-0.5">
+      <div className="flex items-center gap-0.5" data-slot="mail-quick-actions">
         {canAi && threadId && (
           <button
             type="button"
@@ -176,37 +176,32 @@ export function MailMessageRow({
   onAction,
   onAiBrief,
 }: MailMessageRowProps) {
-  const [isHovered, setIsHovered] = useState(false);
   const handleSelect = useCallback(
     () => onSelect(message),
     [message, onSelect],
   );
-  const handleMouseEnter = useCallback(() => setIsHovered(true), []);
-  const handleMouseLeave = useCallback(() => setIsHovered(false), []);
   const senderLabel = message.from.name ?? message.from.email;
   const priority = showPriority && scoreNeedsYou(message) >= 5;
 
   return (
     <div
       className={cn(
-        "relative border-b border-border/25 transition-colors border-l-2",
+        "group grid min-h-14 grid-cols-[minmax(0,1fr)_auto] items-stretch border-b border-border/40 border-l-2 transition-colors",
         isSelected
           ? "bg-primary/10 border-l-primary"
-          : "hover:bg-muted/40 border-l-transparent",
-        !message.isRead && !isSelected && "bg-primary/5",
+          : "border-l-transparent hover:bg-muted/45",
+        !message.isRead && !isSelected && "bg-background",
       )}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+      data-slot="mail-message-row"
     >
       <button
         type="button"
-        className="w-full text-left px-3 pt-2 pb-1.5 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring"
+        className="min-w-0 py-2 pl-3 pr-2 text-left focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring"
         onClick={handleSelect}
         aria-label={`Message from ${senderLabel}: ${message.subject}`}
         aria-current={isSelected ? "true" : undefined}
       >
-        <div className="flex items-start justify-between gap-1.5 min-w-0">
-          <div className="flex items-center gap-1.5 min-w-0 flex-1">
+        <div className="flex min-w-0 items-center gap-1.5">
             {!message.isRead ? (
               <span
                 className="h-1.5 w-1.5 rounded-full bg-primary shrink-0"
@@ -218,36 +213,32 @@ export function MailMessageRow({
             <TruncatedText
               text={senderLabel}
               className={cn(
-                "text-label min-w-0",
+                "min-w-0 text-label",
                 !message.isRead
                   ? "font-semibold text-foreground"
                   : "font-medium text-foreground/80",
               )}
             />
-            {priority && (
-              <span className="shrink-0 rounded px-1 py-px text-micro font-semibold uppercase tracking-wide bg-status-warning-surface text-status-warning-ink border border-status-warning-rule">
-                Act
-              </span>
-            )}
-          </div>
-          <span
-            className={cn(
-              "text-dense text-muted-foreground tabular-nums shrink-0",
-              !message.isRead && "font-medium text-foreground/70",
-            )}
-          >
-            {formatMessageDate(message.date)}
-          </span>
+            {priority ? <span className="sr-only">Needs attention</span> : null}
         </div>
-        <div className="flex items-baseline gap-1 mt-0.5 min-w-0 pl-3">
+        <div className="mt-0.5 flex min-w-0 items-baseline gap-1 pl-3">
           <TruncatedText
             text={message.subject || "(no subject)"}
             className={cn(
-              "text-xs flex-1 min-w-0",
+              "min-w-0 shrink-0 max-w-[55%] text-xs",
               !message.isRead
                 ? "font-semibold text-foreground"
                 : "text-foreground/70",
             )}
+          />
+          {message.snippet ? (
+            <span className="shrink-0 text-xs text-muted-foreground" aria-hidden>
+              —
+            </span>
+          ) : null}
+          <TruncatedText
+            text={message.snippet}
+            className="min-w-0 flex-1 text-xs text-muted-foreground"
           />
           {message.hasAttachments && (
             <Paperclip
@@ -256,15 +247,20 @@ export function MailMessageRow({
             />
           )}
         </div>
-        <div className="mt-0.5 pl-3 pr-8 min-w-0">
-          <TruncatedText
-            text={message.snippet}
-            className="text-dense text-muted-foreground"
-          />
-        </div>
       </button>
-      <div className="absolute right-2 bottom-1.5 flex items-center gap-1">
-        {isHovered && (
+      <div
+        className="relative flex w-[6.75rem] shrink-0 items-center justify-end pr-2"
+        data-slot="mail-action-rail"
+      >
+        <span
+          className={cn(
+            "absolute right-9 top-2 whitespace-nowrap text-dense tabular-nums text-muted-foreground transition-opacity group-hover:opacity-0 group-focus-within:opacity-0",
+            !message.isRead && "font-medium text-foreground/70",
+          )}
+        >
+          {formatMessageDate(message.date)}
+        </span>
+        <div className="pointer-events-none absolute right-8 flex items-center rounded-md bg-inherit opacity-0 transition-opacity group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100">
           <QuickActions
             messageId={message.id}
             accountId={message.accountId}
@@ -274,7 +270,7 @@ export function MailMessageRow({
             onAction={onAction}
             onAiBrief={onAiBrief}
           />
-        )}
+        </div>
         <StarButton
           messageId={message.id}
           accountId={message.accountId}

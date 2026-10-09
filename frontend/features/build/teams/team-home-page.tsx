@@ -20,14 +20,7 @@ import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
 import { TeamFormSheet } from "./team-form-sheet";
 import { TeamProjectsSection } from "./team-projects-section";
@@ -35,14 +28,15 @@ import type { UpdateTeamInput } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   PmPageShell,
-  PmPanel,
   PmSection,
 } from "@/components/pm-chrome";
 import {
-  TeamActionsButton,
   TeamDetailSkeleton,
 } from "./team-member-controls";
 import { TeamMembersSection } from "./team-members-section";
+import { TeamActionsMenu, TeamHeaderMeta, TeamHeaderTitle } from "./team-header";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FolderKanban, Users } from "lucide-react";
 
 const FILTER_DEFINITIONS = [{ param: "leadId" }, { param: "memberId" }] as const;
 
@@ -183,69 +177,71 @@ export function TeamHomePage({ teamId }: Props) {
 
   return (
     <PageWrapper
-      title={data.name}
-      subtitle={`Team · ${data.key}`}
+      title={<TeamHeaderTitle team={data} />}
+      subtitle={
+        <TeamHeaderMeta
+          team={data}
+          memberCount={pageMembers.length}
+          hasMoreMembers={Boolean(membersResult.data?.pagination.hasMore)}
+        />
+      }
       backHref="/build/teams"
+      actionsInline
       actions={
         canManage ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <TeamActionsButton />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setEditOpen(true)}>Edit Team</DropdownMenuItem>
-              <DropdownMenuItem variant="destructive" onClick={() => setDeleteOpen(true)}>
-                Delete Team
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <TeamActionsMenu
+            className="hidden sm:inline-flex"
+            onEdit={() => setEditOpen(true)}
+            onDelete={() => setDeleteOpen(true)}
+          />
         ) : undefined
       }
     >
-      <PmPageShell>
-        <PmSection index={0}>
-          <PmPanel className="flex flex-wrap items-center gap-3 p-4">
-            <span
-              className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-xs font-medium text-white"
-              style={{ backgroundColor: data.color ?? "#64748b" }}
-            >
-              {data.icon ?? data.key.slice(0, 2)}
-            </span>
-            <span className="font-mono text-xs text-muted-foreground">{data.key}</span>
-            {data.isPrivate ? (
-              <Badge variant="outline" className="text-micro">Private</Badge>
-            ) : (
-              <Badge variant="secondary" className="text-micro">Public</Badge>
-            )}
-            <span className="text-sm text-muted-foreground">
-              {pageMembers.length}{membersResult.data?.pagination.hasMore ? "+" : ""} member{pageMembers.length !== 1 ? "s" : ""}
-            </span>
-            {data.capacity !== null && data.capacity !== undefined ? (
-              <span className="text-sm text-muted-foreground" data-testid="team-capacity">
-                Capacity {data.capacity}
-              </span>
+      <PmPageShell className="gap-3 pb-6">
+        <Tabs defaultValue="members" className="min-h-0 min-w-0 flex-1 gap-3">
+          <div className="flex min-w-0 shrink-0 items-center gap-2">
+            <TabsList aria-label="Team workspace" className="flex-1 sm:flex-none">
+              <TabsTrigger value="members">
+                <Users aria-hidden="true" />
+                Members
+              </TabsTrigger>
+              <TabsTrigger value="projects">
+                <FolderKanban aria-hidden="true" />
+                Projects
+              </TabsTrigger>
+            </TabsList>
+            {canManage ? (
+              <TeamActionsMenu
+                className="size-9 px-0 sm:hidden"
+                onEdit={() => setEditOpen(true)}
+                onDelete={() => setDeleteOpen(true)}
+              />
             ) : null}
-          </PmPanel>
-        </PmSection>
+          </div>
 
-        <TeamMembersSection
-          teamId={teamId}
-          members={data.members}
-          isOnline={isOnline}
-          searchRef={searchRef}
-          listFilters={listFilters}
-          pageMembers={pageMembers}
-          membersResult={membersResult}
-          memberPager={memberPager}
-          onMembersNext={handleMembersNext}
-          isRoleUpdatePending={updateMemberRole.isPending}
-          onRoleChange={handleRoleChange}
-          isRemovePending={removeMember.isPending}
-          onRemove={handleRemoveMember}
-          canManage={canManage}
-        />
+          <TabsContent value="members" className="mt-0">
+            <TeamMembersSection
+              teamId={teamId}
+              members={data.members}
+              isOnline={isOnline}
+              searchRef={searchRef}
+              listFilters={listFilters}
+              pageMembers={pageMembers}
+              membersResult={membersResult}
+              memberPager={memberPager}
+              onMembersNext={handleMembersNext}
+              isRoleUpdatePending={updateMemberRole.isPending}
+              onRoleChange={handleRoleChange}
+              isRemovePending={removeMember.isPending}
+              onRemove={handleRemoveMember}
+              canManage={canManage}
+            />
+          </TabsContent>
 
-        <TeamProjectsSection teamId={teamId} />
+          <TabsContent value="projects" className="mt-0 min-h-0 flex-1">
+            <TeamProjectsSection teamId={teamId} />
+          </TabsContent>
+        </Tabs>
       </PmPageShell>
 
       <TeamFormSheet

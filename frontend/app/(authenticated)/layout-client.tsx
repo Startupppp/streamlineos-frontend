@@ -9,6 +9,7 @@ import { useNotificationEvents } from "@/features/notifications/use-notification
 import { I18nProvider } from "@/lib/i18n/i18n";
 import { BuildSidebarSkeleton } from "@/components/layout/sidebar/build-sidebar-skeleton";
 import type { BuildSidebarSlotProps } from "@/components/layout/sidebar/build-sidebar-slot";
+import { AuthenticatedProviders } from "@/components/providers/authenticated-providers";
 
 const BuildSidebar = dynamic(
   () =>
@@ -61,15 +62,17 @@ function AccessVersionSync() {
 export function LayoutClient({ children, ...shellProps }: LayoutClientProps) {
   return (
     <I18nProvider>
-      <DashboardShell
-        {...shellProps}
-        buildSidebarSlot={renderBuildSidebar}
-        chatMobileNavSlot={renderChatMobileNav}
-        notificationBellSlot={notificationBellSlot}
-      >
-        <AccessVersionSync />
-        {children}
-      </DashboardShell>
+      <AuthenticatedProviders>
+        <DashboardShell
+          {...shellProps}
+          buildSidebarSlot={renderBuildSidebar}
+          chatMobileNavSlot={renderChatMobileNav}
+          notificationBellSlot={notificationBellSlot}
+        >
+          <AccessVersionSync />
+          {children}
+        </DashboardShell>
+      </AuthenticatedProviders>
     </I18nProvider>
   );
 }

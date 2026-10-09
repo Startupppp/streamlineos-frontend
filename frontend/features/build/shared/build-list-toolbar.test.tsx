@@ -292,7 +292,7 @@ describe("BuildListToolbar", () => {
     });
   });
 
-  it("collapses the opted-in search to an icon until it receives focus", async () => {
+  it("expands opted-in search without removing tablet and desktop filters", async () => {
     const { container } = render(
       <BuildListToolbar
         search={search}
@@ -309,7 +309,8 @@ describe("BuildListToolbar", () => {
     fireEvent.focus(screen.getByLabelText("Search bugs"));
     await waitFor(() => {
       expect(searchSlot).not.toHaveClass("!size-9", "!basis-9");
-      expect(container.querySelector('[data-slot="build-toolbar-actions"]')).toBeNull();
+      expect(container.querySelector('[data-slot="build-toolbar-actions"]')).toBeInTheDocument();
+      expect(screen.getByRole("combobox", { name: "Status" })).toBeInTheDocument();
     });
   });
 

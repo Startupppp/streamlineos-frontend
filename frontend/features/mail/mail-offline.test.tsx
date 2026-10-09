@@ -128,7 +128,7 @@ describe("MailListPane — offline and reconnect", () => {
     expect(screen.getByText(NETWORK_ERROR_TEXT)).toBeInTheDocument();
   });
 
-  it("does not spend the infinite list's load-more on a page that cannot arrive", () => {
+  it("does not request the next page while offline", async () => {
     listState.pages = [
       {
         messages: [
@@ -156,11 +156,12 @@ describe("MailListPane — offline and reconnect", () => {
     fetchNextPage.mockClear();
 
     setOnline(false);
-    fireEvent.click(screen.getByRole("button", { name: /load more/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Next mail page" }));
     expect(fetchNextPage).not.toHaveBeenCalled();
 
     setOnline(true);
-    fireEvent.click(screen.getByRole("button", { name: /load more/i }));
+    fetchNextPage.mockResolvedValueOnce({ data: { pages: listState.pages } });
+    fireEvent.click(screen.getByRole("button", { name: "Next mail page" }));
     expect(fetchNextPage).toHaveBeenCalledTimes(1);
   });
 

@@ -65,8 +65,8 @@ const REPLY_MODE: MailComposeMode = {
   accountId: 7,
 };
 
-const COMPOSE_DRAFT_KEY = "mail:draft:compose";
-const REPLY_DRAFT_KEY = "mail:draft:reply:m1";
+const COMPOSE_DRAFT_KEY = "mail:draft:compose:7";
+const REPLY_DRAFT_KEY = "mail:draft:reply:7:m1";
 
 function Harness({ mode }: { mode: MailComposeMode }) {
   const [open, setOpen] = useState(true);
@@ -129,7 +129,7 @@ describe("MailComposeSheet — draft lifecycle and offline sending", () => {
     await waitFor(() =>
       expect(screen.queryByTestId("mail-body")).not.toBeInTheDocument(),
     );
-    expect(readStoredDraft(COMPOSE_DRAFT_KEY)).toEqual({
+    expect(readStoredDraft(COMPOSE_DRAFT_KEY)).toMatchObject({
       bodyHtml: "<p>half-written thought</p>",
     });
 
@@ -137,6 +137,15 @@ describe("MailComposeSheet — draft lifecycle and offline sending", () => {
 
     const restored = await screen.findByTestId("mail-body");
     expect(restored).toHaveValue("<p>half-written thought</p>");
+  });
+
+  it("recovers recipients and the sending account into the submitted compose payload", async () => {
+    const draft = { bodyHtml: "<p>Saved message</p>", subject: "Saved subject", accountId: 8, to: ["to@example.com"], cc: ["cc@example.com"], bcc: ["bcc@example.com"] };
+    window.localStorage.setItem(COMPOSE_DRAFT_KEY, JSON.stringify(draft));
+    render(<MailComposeSheet open onClose={jest.fn()} mode={COMPOSE_MODE} accounts={[...ACCOUNTS, { ...ACCOUNTS[0], id: 8, accountEmail: "second@example.com", isPrimary: false }]} />);
+    fireEvent.click(screen.getByRole("button", { name: /^send$/i }));
+    await waitFor(() => expect(sendMutateAsync).toHaveBeenCalledWith(draft));
+    expect(window.localStorage.getItem(COMPOSE_DRAFT_KEY)).toBeNull();
   });
 
   it("BITE PROOF — the restored body really comes from storage, not from a form that was never reset", async () => {
@@ -178,6 +187,7 @@ describe("MailComposeSheet — draft lifecycle and offline sending", () => {
     expect(String(toastError.mock.calls[0]?.[0])).toMatch(/offline/i);
     expect(readStoredDraft(REPLY_DRAFT_KEY)).toEqual({
       bodyHtml: "<p>reply while the tunnel eats the wifi</p>",
+      accountId: 7, to: ["them@example.com"], cc: [],
     });
   });
 
@@ -214,6 +224,7 @@ describe("MailComposeSheet — draft lifecycle and offline sending", () => {
     await waitFor(() => expect(toastError).toHaveBeenCalledTimes(1));
     expect(readStoredDraft(REPLY_DRAFT_KEY)).toEqual({
       bodyHtml: "<p>please survive the failure</p>",
+      accountId: 7, to: ["them@example.com"], cc: [],
     });
     const options = toastError.mock.calls[0]?.[1];
     expect(options).toMatchObject({ action: { label: "Retry" } });

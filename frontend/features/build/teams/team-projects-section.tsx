@@ -11,6 +11,8 @@ import {
 } from "@/hooks/api/build/teams";
 import { useCan, useCanState } from "@/hooks/api/access";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
+import { ArrowUpRight, FolderKanban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -19,7 +21,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import {
   PmPanel,
   PmSection,
-  PM_ROW,
 } from "@/components/pm-chrome";
 import type { TeamProject } from "@/hooks/api/build/teams";
 import { AddProjectPicker } from "./add-project-picker";
@@ -116,29 +117,34 @@ export function TeamProjectsSection({ teamId }: TeamProjectsSectionProps) {
 
   return (
     <>
-      <PmSection index={2} className="space-y-3">
-        <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
-          <p className="text-dense font-medium uppercase tracking-wider text-muted-foreground">
+      <PmSection index={2} className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
+        <div className="space-y-0.5">
+          <h2 className="text-sm font-semibold text-foreground">
             Projects{teamProjects.length > 0 ? ` (${teamProjects.length})` : ""}
+          </h2>
+          <p className="text-xs text-muted-foreground">
+            Members inherit access to every project linked here.
           </p>
-          {canManage ? (
+        </div>
+        {canManage ? (
+          <PmPanel className="p-2.5 sm:p-3">
             <AddProjectPicker
               teamId={teamId}
               assignedProjectIds={assignedIds}
               isPending={addProject.isPending}
               onAdd={handleAdd}
             />
-          ) : null}
-        </div>
+          </PmPanel>
+        ) : null}
 
         {effectiveLoading ? (
-          <PmPanel className="space-y-2 p-2">
+          <PmPanel className="flex-1 space-y-2 p-3">
             {Array.from({ length: 3 }).map((_, i) => (
               <Skeleton key={i} className="h-10 w-full rounded-md" />
             ))}
           </PmPanel>
         ) : teamProjects.length === 0 ? (
-          <PmPanel className="flex items-center justify-center p-4">
+          <PmPanel className="flex min-h-44 flex-1 items-center justify-center p-4">
             <EmptyState
               illustrationPreset="projects"
               title="No projects yet"
@@ -147,15 +153,21 @@ export function TeamProjectsSection({ teamId }: TeamProjectsSectionProps) {
             />
           </PmPanel>
         ) : (
-          <PmPanel>
+          <PmPanel className="divide-y divide-border">
             {teamProjects.map((project) => (
-              <div key={project.id} className={PM_ROW}>
-                <span className="font-mono text-micro text-muted-foreground shrink-0">
-                  {project.key}
+              <div key={project.id} className="flex min-w-0 items-center gap-2.5 px-3 py-3">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                  <FolderKanban className="size-4" aria-hidden="true" />
                 </span>
-                <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
-                  {project.name}
-                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Link href={`/build/${project.id}`} className="min-w-0 truncate text-sm font-medium text-foreground hover:underline">
+                      {project.name}
+                    </Link>
+                    <ArrowUpRight className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+                  </div>
+                  <span className="font-mono text-micro text-muted-foreground">{project.key}</span>
+                </div>
                 <ProjectStatusBadge status={project.status} />
                 {canManage ? (
                   <RemoveProjectButton

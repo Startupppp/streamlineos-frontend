@@ -25,7 +25,7 @@ export interface CreateAction {
   icon: LucideIcon
   permission?: PermissionKey | readonly PermissionKey[]
   module?: string
-  action?: "create-issue"
+  action?: "create-issue" | "compose-mail"
 }
 
 export interface CreateGroup {
@@ -50,9 +50,9 @@ export const QUICK_CREATE_GROUPS: CreateGroup[] = [
       {
         id: "send-mail",
         label: "Send mail",
-        href: "/mail?compose=1",
         icon: Send,
         permission: "mail:messages:send",
+        action: "compose-mail",
       },
       {
         id: "calendar-event",

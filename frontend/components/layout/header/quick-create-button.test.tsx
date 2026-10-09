@@ -48,6 +48,7 @@ describe("QuickCreatePanel", () => {
       <QuickCreatePanel
         groups={[]}
         onCreateIssue={jest.fn()}
+        onComposeMail={jest.fn()}
         onNavigate={jest.fn()}
       />,
     )
