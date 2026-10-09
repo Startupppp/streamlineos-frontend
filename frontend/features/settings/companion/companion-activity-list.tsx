@@ -3,10 +3,11 @@
 import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCompanionPromptHistory } from "@/hooks/api/companion";
 import { formatDateTime } from "@/lib/date-utils";
 import type { CompanionPromptCategory } from "@/hooks/api/companion-schema";
-import { FIELD_CONTROL_CLASS } from "@/components/ui/field-control";
 
 const CATEGORY_LABEL = {
   meeting: "Meeting",
@@ -34,32 +35,28 @@ export function CompanionActivityList() {
     <div id="companion-activity" className="flex flex-col gap-2">
       <h3 className="text-sm font-semibold text-foreground">Recent suggestions</h3>
       <div className="grid gap-2 sm:grid-cols-2">
-        <label className="flex flex-col gap-1 text-xs text-muted-foreground">
-          Category
-          <select
-            aria-label="Filter suggestion category"
-            className={FIELD_CONTROL_CLASS}
-            value={category}
-            onChange={(event) => setCategory(event.target.value as CompanionPromptCategory | "all")}
-          >
-            <option value="all">All categories</option>
-            {Object.entries(CATEGORY_LABEL).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-xs text-muted-foreground">
-          Outcome
-          <select
-            aria-label="Filter suggestion outcome"
-            className={FIELD_CONTROL_CLASS}
-            value={status}
-            onChange={(event) => setStatus(event.target.value)}
-          >
-            <option value="all">All outcomes</option>
-            {['eligible', 'claimed', 'dismissed', 'snoozed', 'expired', 'suppressed'].map((value) => (
-              <option key={value} value={value}>{value.charAt(0).toUpperCase() + value.slice(1)}</option>
-            ))}
-          </select>
-        </label>
+        <div className="relative flex min-w-0 flex-col gap-1.5">
+          <Label htmlFor="companion-category-filter">Category</Label>
+          <Select value={category} onValueChange={(value) => setCategory(value as CompanionPromptCategory | "all")}>
+            <SelectTrigger id="companion-category-filter" aria-label="Filter suggestion category"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All categories</SelectItem>
+              {Object.entries(CATEGORY_LABEL).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="relative flex min-w-0 flex-col gap-1.5">
+          <Label htmlFor="companion-status-filter">Outcome</Label>
+          <Select value={status} onValueChange={setStatus}>
+            <SelectTrigger id="companion-status-filter" aria-label="Filter suggestion outcome"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All outcomes</SelectItem>
+              {['eligible', 'claimed', 'dismissed', 'snoozed', 'expired', 'suppressed'].map((value) => (
+                <SelectItem key={value} value={value}>{value.charAt(0).toUpperCase() + value.slice(1)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       {isLoading ? <p className="text-xs text-muted-foreground">Loading recent suggestions…</p> : null}
       {isError ? <p className="text-xs text-muted-foreground">Recent suggestions couldn&apos;t be loaded.</p> : null}

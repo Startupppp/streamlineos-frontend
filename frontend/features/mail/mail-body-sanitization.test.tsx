@@ -126,15 +126,14 @@ describe("mail body sanitization runs on the real thread render path", () => {
     expect(legit?.getAttribute("rel")).toContain("noopener");
   });
 
-  it("remote tracking pixels are held back until the reader asks for them", async () => {
+  it("remote images load automatically with referrer privacy enabled", async () => {
     const body = await renderPane();
     const img = body.querySelector("img");
 
-    expect(img?.getAttribute("src")).toBeFalsy();
-    expect(img?.getAttribute("data-blocked-src")).toBe(
-      "https://tracker.evil.com/pixel.gif",
-    );
-    expect(await screen.findByText(/1 remote image blocked/i)).toBeInTheDocument();
+    expect(img).toHaveAttribute("src", "https://tracker.evil.com/pixel.gif");
+    expect(img).toHaveAttribute("referrerpolicy", "no-referrer");
+    expect(img).toHaveAttribute("loading", "lazy");
+    expect(screen.queryByText(/remote image blocked/i)).toBeNull();
   });
 
   it("BITE PROOF — the payload really is hostile, so a green result means the sanitizer worked", () => {

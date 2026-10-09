@@ -176,7 +176,7 @@ export function MailHeader({
         <Button
           type="button"
           size="icon"
-          className="fixed right-3 bottom-[calc(4rem+0.375rem+env(safe-area-inset-bottom))] z-40 size-12 rounded-full shadow-lg md:hidden"
+          className="fixed right-3 bottom-[calc(4rem+0.375rem+env(safe-area-inset-bottom))] z-50 size-12 rounded-full shadow-lg md:hidden"
           onClick={onCompose}
           disabled={!canCompose}
           aria-label="Compose mail"

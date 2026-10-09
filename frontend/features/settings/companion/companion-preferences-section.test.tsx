@@ -15,7 +15,6 @@ jest.mock("@/lib/api-client", () => ({
 
 const get = jest.mocked(apiClient.get);
 const patch = jest.mocked(apiClient.patch);
-const del = jest.mocked(apiClient.delete);
 
 const preferences = {
   visible: true,
@@ -63,6 +62,13 @@ function preferenceReads() {
   return get.mock.calls.filter(([url]) => url === "/companion/preferences").length;
 }
 
+async function chooseOption(user: ReturnType<typeof userEvent.setup>, label: string, option: string) {
+  const trigger = screen.getByRole("combobox", { name: label });
+  trigger.focus();
+  await user.keyboard("{Enter}");
+  await user.click(screen.getByRole("option", { name: option }));
+}
+
 beforeEach(() => {
   jest.clearAllMocks();
 });
@@ -91,7 +97,7 @@ describe("companion preferences", () => {
     const user = userEvent.setup();
     renderSection();
     expect(await screen.findByLabelText("Companion preview")).toHaveTextContent("Pip");
-    await user.selectOptions(screen.getByLabelText("Appearance"), "ember");
+    await chooseOption(user, "Appearance", "Ember");
     expect(screen.getByTestId("companion-character")).toHaveAttribute("data-preset", "ember");
     expect(screen.getByRole("link", { name: "Manage quiet hours" })).toHaveAttribute(
       "href",
@@ -120,7 +126,7 @@ describe("companion preferences", () => {
     expect(await screen.findByText("Standup")).toBeInTheDocument();
     expect(screen.getByText("Source: calendarEvent (event-1)")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open destination" })).toHaveAttribute("href", "/calendar/events/event-1");
-    await user.selectOptions(screen.getByLabelText("Filter suggestion outcome"), "suppressed");
+    await chooseOption(user, "Filter suggestion outcome", "Suppressed");
     expect(screen.queryByText("Standup")).not.toBeInTheDocument();
     expect(screen.getByText("Take a break")).toBeInTheDocument();
     expect(screen.getByText("Suppression reason: A meeting starts soon")).toBeInTheDocument();
@@ -169,7 +175,8 @@ describe("companion preferences", () => {
     patch.mockResolvedValue({ preferences: { ...preferences, version: 4 }, locks: {}, policy });
     const user = userEvent.setup();
     renderSection();
-    await user.selectOptions(await screen.findByLabelText("Pause all companion prompts"), "Until I resume");
+    await screen.findByRole("combobox", { name: "Pause all companion prompts" });
+    await chooseOption(user, "Pause all companion prompts", "Until I resume");
     await user.click(screen.getByRole("button", { name: "Save companion settings" }));
     await waitFor(() => expect(patch).toHaveBeenCalled());
     expect(patch.mock.calls[0]?.[1]).toMatchObject({ pausedUntil: "2999-12-31T23:59:59.000Z" });
@@ -180,22 +187,31 @@ describe("companion preferences", () => {
     patch.mockResolvedValue({ preferences: { ...preferences, version: 4 }, locks: {}, policy });
     const user = userEvent.setup();
     renderSection();
-    const pause = await screen.findByLabelText("Pause all companion prompts");
-    expect(pause).toHaveDisplayValue("Paused until you resume");
-    await user.selectOptions(pause, "Resume prompts");
+    const pause = await screen.findByRole("combobox", { name: "Pause all companion prompts" });
+    expect(pause).toHaveTextContent("Paused until you resume");
+    await chooseOption(user, "Pause all companion prompts", "Resume prompts");
     await user.click(screen.getByRole("button", { name: "Save companion settings" }));
     await waitFor(() => expect(patch).toHaveBeenCalled());
     expect(patch.mock.calls[0]?.[1]).toMatchObject({ pausedUntil: null });
   });
 
-  it("keeps break and friendly prompts off until activity timing is allowed", async () => {
+  it("offers explicit timing consent when enabling break or friendly prompts", async () => {
     serve();
     const user = userEvent.setup();
     renderSection();
     const friendly = await screen.findByRole("switch", { name: "Friendly check-ins" });
-    expect(friendly).toBeDisabled();
-    await user.click(screen.getByRole("switch", { name: "Activity timing" }));
     expect(friendly).toBeEnabled();
+    await user.click(friendly);
+    expect(screen.getByRole("alertdialog", { name: "Allow activity timing?" })).toBeInTheDocument();
+    expect(friendly).not.toBeChecked();
+    await user.click(screen.getByRole("button", { name: "Not now" }));
+    expect(screen.getByRole("switch", { name: "Activity timing" })).not.toBeChecked();
+    await user.click(friendly);
+    await user.click(screen.getByRole("button", { name: "Add to settings" }));
+    expect(screen.getByRole("switch", { name: "Activity timing" })).toBeChecked();
+    expect(friendly).toBeChecked();
+    await user.click(screen.getByRole("switch", { name: "Activity timing" }));
+    expect(friendly).not.toBeChecked();
   });
 
   it("saves with the loaded version", async () => {
@@ -210,7 +226,6 @@ describe("companion preferences", () => {
     await waitFor(() => expect(patch).toHaveBeenCalled());
     expect(patch.mock.calls[0]?.[1]).toMatchObject({ version: 3, name: "Nova", pausedUntil: null });
     expect(toast.success).toHaveBeenCalledWith("Companion settings saved");
-    expect(del).not.toHaveBeenCalled();
   });
 
   it("reloads the latest settings when another device saved first", async () => {
@@ -225,15 +240,15 @@ describe("companion preferences", () => {
     await waitFor(() => expect(preferenceReads()).toBe(2));
   });
 
-  it("deletes activity timing when consent is revoked", async () => {
+  it("revokes timing through the preference update without a second delete request", async () => {
     serve({ preferences: { activityConsent: true } });
     patch.mockResolvedValue({ preferences: { ...preferences, version: 4 }, locks: {}, policy });
-    del.mockResolvedValue(undefined);
     const user = userEvent.setup();
     renderSection();
     await user.click(await screen.findByRole("switch", { name: "Activity timing" }));
     await user.click(screen.getByRole("button", { name: "Save companion settings" }));
-    await waitFor(() => expect(del).toHaveBeenCalledWith("/companion/activity", undefined, undefined, expect.anything()));
+    await waitFor(() => expect(patch).toHaveBeenCalled());
+    expect(apiClient.delete).not.toHaveBeenCalled();
     expect(patch.mock.calls[0]?.[1]).toMatchObject({ activityConsent: false });
   });
 });

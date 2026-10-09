@@ -6,6 +6,7 @@ import { AnimatedLogo } from "@/components/brand/animated-logo";
 import { useAskOs } from "./ask-os-context";
 import { useAskOsCompanionState } from "./ask-os-companion-state";
 import { CompanionLauncher, useCompanionPresence } from "./companion-launcher";
+import type { CompanionVoiceSettings } from "./companion-voice-settings";
 
 function LegacyAskOsLauncher() {
   const { open, toggle } = useAskOs();
@@ -30,17 +31,19 @@ function LegacyAskOsLauncher() {
 }
 
 interface AskOsLauncherProps {
+  compact?: boolean;
   onVoiceStart?: () => void;
   onVoiceDismiss?: () => void;
   onVoiceReview?: () => void;
-  voiceState?: "idle" | "connecting" | "listening" | "thinking" | "speaking" | "error";
+  voiceState?: "idle" | "connecting" | "listening" | "thinking" | "working" | "speaking" | "error";
   voiceSupported?: boolean;
   voiceMessage?: string | null;
-  voiceCaption?: string;
   voiceOverlayOpen?: boolean;
+  voiceSettings?: CompanionVoiceSettings;
+  onVoiceSettingsChange?: (settings: CompanionVoiceSettings) => void;
 }
 
-export function AskOsLauncher({ onVoiceStart, onVoiceDismiss, onVoiceReview, voiceState, voiceSupported, voiceMessage, voiceCaption, voiceOverlayOpen }: AskOsLauncherProps = {}) {
+export function AskOsLauncher({ compact, onVoiceStart, onVoiceDismiss, onVoiceReview, voiceState, voiceSupported, voiceMessage, voiceOverlayOpen, voiceSettings, onVoiceSettingsChange }: AskOsLauncherProps = {}) {
   const companion = useCompanionPresence();
   const state = useAskOsCompanionState();
   if (companion) {
@@ -48,14 +51,16 @@ export function AskOsLauncher({ onVoiceStart, onVoiceDismiss, onVoiceReview, voi
       <CompanionLauncher
         state={state}
         preferences={companion}
+        compact={compact}
         onVoiceStart={onVoiceStart}
         onVoiceDismiss={onVoiceDismiss}
         onVoiceReview={onVoiceReview}
         voiceState={voiceState}
         voiceSupported={voiceSupported}
         voiceMessage={voiceMessage}
-        voiceCaption={voiceCaption}
         voiceOverlayOpen={voiceOverlayOpen}
+        voiceSettings={voiceSettings}
+        onVoiceSettingsChange={onVoiceSettingsChange}
       />
     );
   }

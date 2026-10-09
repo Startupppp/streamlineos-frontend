@@ -22,7 +22,6 @@ import { toast } from "sonner";
 import { resolveImageUrl } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { SettingsLanguageSwitch } from "./settings-language-switch";
 
 const AvatarCropDialog = dynamic(
   () => import("@/components/ui/avatar-crop-dialog").then((m) => ({ default: m.AvatarCropDialog })),
@@ -264,7 +263,6 @@ export function SettingsProfile() {
           </p>
         </div>
 
-        <SettingsLanguageSwitch />
       </div>
 
       {cropImageSrc && (

@@ -24,6 +24,8 @@ import { isApiError } from "@/lib/api-envelope";
 interface CompanionPromptBubbleProps {
   enabled: boolean;
   preferences: CompanionPreference;
+  horizontal?: "left" | "right";
+  vertical?: "above" | "below";
 }
 
 interface PromptBroadcast {
@@ -84,7 +86,7 @@ function usePresentationAllowed(enabled: boolean) {
   return allowed;
 }
 
-export function CompanionPromptBubble({ enabled, preferences }: CompanionPromptBubbleProps) {
+export function CompanionPromptBubble({ enabled, preferences, horizontal, vertical = "above" }: CompanionPromptBubbleProps) {
   const router = useRouter();
   const qc = useQueryClient();
   const scope = useOrgStorageScope();
@@ -206,8 +208,9 @@ export function CompanionPromptBubble({ enabled, preferences }: CompanionPromptB
       aria-label="Companion suggestion"
       aria-live="polite"
       className={cn(
-        "absolute bottom-full mb-2 w-[min(18rem,calc(100vw-2rem))] max-h-[min(70dvh,32rem)] overflow-y-auto rounded-xl border border-border bg-popover p-3 text-popover-foreground shadow-panel",
-        preferences.anchor === "bottom-left" ? "left-0" : "right-0",
+        "absolute w-[min(18rem,calc(100vw-2rem))] max-h-[min(70dvh,32rem)] overflow-y-auto rounded-xl border border-border bg-popover p-3 text-popover-foreground shadow-panel",
+        vertical === "below" ? "top-full mt-2" : "bottom-full mb-2",
+        (horizontal ?? (preferences.anchor === "bottom-left" ? "left" : "right")) === "left" ? "left-0" : "right-0",
       )}
     >
       <div className="flex items-start gap-2">

@@ -153,11 +153,11 @@ export function AskOsPanelHeader({
         ) : null}
         <AnimatedIconButton
           type="button"
-          icon={XIcon}
+          icon={companion ? Minimize2 : XIcon}
           variant="ghost"
           size="icon"
           className="h-7 w-7"
-          aria-label="Close"
+          aria-label={companion ? "Minimize chat" : "Close"}
           onClick={onClose}
         />
       </div>

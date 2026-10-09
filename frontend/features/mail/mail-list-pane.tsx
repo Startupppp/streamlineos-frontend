@@ -268,8 +268,7 @@ export function MailListPane({
     <div className="flex flex-col h-full min-h-0">
       <div className="shrink-0 border-b border-border/40">
         <BuildListToolbar
-          collapseActionsOnSearchFocus
-          className="flex-nowrap overflow-x-auto border-b-0 px-2 py-1.5 scrollbar-hide [&>[data-slot=search-input]]:md:max-w-none [&>[data-slot=build-toolbar-actions]]:shrink-0"
+          className="flex-row flex-nowrap overflow-x-hidden border-b-0 px-2 py-1.5 [&>[data-slot=search-input]]:min-w-0 [&>[data-slot=search-input]]:basis-auto [&>[data-slot=search-input]]:md:max-w-none [&>[data-slot=build-toolbar-actions]]:shrink-0"
           search={{
             value: search,
             onValueChange: handleSearchChange,
@@ -278,29 +277,17 @@ export function MailListPane({
             inputClassName: "focus-visible:ring-1 focus-visible:ring-offset-0",
           }}
           trailing={(
-            <div className="hidden md:block">
+            <div className="w-36 min-w-28 sm:w-40">
               <BuildFilterSelect
                 label="Filter loaded mail"
                 value={view}
                 onValueChange={handleViewChange}
                 options={MAIL_VIEW_OPTIONS}
-                className="w-36 min-w-36 max-w-40"
+                className="w-full min-w-0 max-w-40"
               />
             </div>
           )}
         />
-        <div
-          data-slot="mail-mobile-filters"
-          className="flex px-2 pb-1.5 md:hidden"
-        >
-          <BuildFilterSelect
-            label="Filter loaded mail"
-            value={view}
-            onValueChange={handleViewChange}
-            options={MAIL_VIEW_OPTIONS}
-            className="w-full max-w-none"
-          />
-        </div>
         <nav
           className="flex gap-1 overflow-x-auto px-2 pb-1.5 scrollbar-hide"
           aria-label="Mail folders"
@@ -418,7 +405,7 @@ export function MailListPane({
       )}
       {visibleMessages.length > 0 ? (
         <TablePagination
-          className="sticky bottom-0 z-40 min-h-11 bg-background pb-[max(0.25rem,env(safe-area-inset-bottom))] max-md:fixed max-md:inset-x-0 max-md:bottom-32"
+          className="sticky bottom-0 z-40 min-h-11 bg-background pb-[max(0.25rem,env(safe-area-inset-bottom))] max-md:fixed max-md:inset-x-0 max-md:bottom-[calc(4rem+env(safe-area-inset-bottom))]"
           mode="cursor"
           rowCount={visibleMessages.length}
           pageNumber={currentPageIndex + 1}

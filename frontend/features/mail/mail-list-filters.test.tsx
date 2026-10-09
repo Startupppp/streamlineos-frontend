@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MailListPane } from "./mail-list-pane";
 import type { MailMessageSummary } from "@/types/mail";
@@ -40,9 +40,8 @@ it("filters the current page and keeps explicit pagination outside the toolbar",
   const user = userEvent.setup();
   const { container } = render(<MailListPane accounts={[{ id: 7, provider: "gmail", accountEmail: "me@example.com", accountLabel: null, status: "active", isPrimary: true }]} selectedMessageId={null} selectedAccountId="all" onSelectMessage={jest.fn()} onOpenAccountsSheet={jest.fn()} />);
   expect(screen.queryByRole("button", { name: "Filters" })).toBeNull();
-  const mobileFilters = container.querySelector('[data-slot="mail-mobile-filters"]');
-  expect(mobileFilters).not.toBeNull();
-  const mobileFilter = within(mobileFilters as HTMLElement).getByRole("combobox", { name: "Filter loaded mail" });
+  expect(container.querySelector('[data-slot="mail-mobile-filters"]')).toBeNull();
+  const mobileFilter = screen.getByRole("combobox", { name: "Filter loaded mail" });
   await user.click(mobileFilter);
   await user.click(screen.getByRole("option", { name: "Unread", exact: true }));
   expect(screen.getByText("Unread message")).toBeInTheDocument();
@@ -66,9 +65,8 @@ it("filters the current page and keeps explicit pagination outside the toolbar",
 it("renders the mobile search and view filter directly without a generic Filters trigger", () => {
   const { container } = render(<MailListPane accounts={[{ id: 7, provider: "gmail", accountEmail: "me@example.com", accountLabel: null, status: "active", isPrimary: true }]} selectedMessageId={null} selectedAccountId="all" onSelectMessage={jest.fn()} onOpenAccountsSheet={jest.fn()} />);
 
-  expect(container.querySelector('[data-slot="mail-mobile-filters"]')).toBeInTheDocument();
-  expect(container.querySelector('[data-slot="mail-mobile-filters"]')).toHaveClass("hidden");
+  expect(container.querySelector('[data-slot="mail-mobile-filters"]')).toBeNull();
   expect(container.querySelector('[data-slot="build-list-toolbar"]')).toHaveClass("flex-row");
-  expect(screen.getAllByRole("combobox", { name: "Filter loaded mail" })).toHaveLength(2);
+  expect(screen.getAllByRole("combobox", { name: "Filter loaded mail" })).toHaveLength(1);
   expect(screen.queryByRole("button", { name: "Filters" })).toBeNull();
 });

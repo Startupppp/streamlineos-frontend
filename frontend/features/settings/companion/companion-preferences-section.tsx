@@ -6,16 +6,19 @@ import { Controller, useForm, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { ErrorState } from "@/components/shared/error-state";
-import { FIELD_CONTROL_CLASS } from "@/components/ui/field-control";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import {
   useCompanionPreferences,
-  useRevokeCompanionActivity,
   useUpdateCompanionPreferences,
 } from "@/hooks/api/companion";
 import { COMPANION_PRESETS, type CompanionPreferences } from "@/hooks/api/companion-schema";
@@ -24,7 +27,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useOrgTimeZone } from "@/hooks/api/org-display";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { formatDateTime } from "@/lib/date-utils";
-import { cn } from "@/lib/utils";
 import { CompanionCharacter } from "@/components/assistant/companion-character";
 import { CompanionActivityList } from "./companion-activity-list";
 import {
@@ -35,17 +37,18 @@ import {
   type CompanionPreferencesFormValues,
 } from "./companion-preferences-schema";
 
-const SELECT_CLASS = cn(FIELD_CONTROL_CLASS, "w-full px-2 disabled:opacity-50");
 const ORG_LOCK = "Turned off by your organization";
 
 type BooleanField = "visible" | "meeting" | "clockIn" | "break" | "friendly" | "activityConsent";
 type PromptField = "meeting" | "clockIn" | "break" | "friendly";
+type SelectFieldName = "preset" | "tone" | "animation" | "pause";
+type SelectOption = { value: string; label: string };
 
 const PROMPT_ROWS: Array<{ field: PromptField; label: string; hint: string }> = [
   { field: "meeting", label: "Upcoming meetings", hint: "Shown from your existing calendar reminders." },
   { field: "clockIn", label: "Missed clock-in", hint: "Only when no clock-in is recorded for a scheduled day." },
   { field: "break", label: "Break suggestions", hint: "Needs activity timing. Based on how long StreamlineOS is open." },
-  { field: "friendly", label: "Friendly check-ins", hint: "Needs activity timing. At most once a workday." },
+  { field: "friendly", label: "Friendly check-ins", hint: "Needs activity timing. At most once per work session after two focused minutes." },
 ];
 
 function pauseLabel(pausedUntil: string): string {
@@ -58,14 +61,15 @@ interface SwitchRowProps {
   label: string;
   hint: string;
   lock?: string;
-  disabled?: boolean;
+  onRequestEnable?: () => void;
+  onToggle?: (checked: boolean) => void;
 }
 
-function SwitchRow({ control, field, label, hint, lock, disabled }: SwitchRowProps) {
+function SwitchRow({ control, field, label, hint, lock, onRequestEnable, onToggle }: SwitchRowProps) {
   const id = `companion-${field}`;
   return (
-    <div className="flex items-center justify-between gap-4 rounded-md border border-border p-3">
-      <div>
+    <div className="relative flex min-h-16 items-center justify-between gap-6 rounded-md border border-border p-4">
+      <div className="min-w-0 space-y-1">
         <Label htmlFor={id}>{label}</Label>
         <p className="text-xs text-muted-foreground">{lock ?? hint}</p>
       </div>
@@ -73,9 +77,43 @@ function SwitchRow({ control, field, label, hint, lock, disabled }: SwitchRowPro
         control={control}
         name={field}
         render={({ field: { value, onChange } }) => (
-          <Switch id={id} checked={value} onCheckedChange={onChange} disabled={Boolean(lock) || disabled} />
+          <Switch
+            id={id}
+            className="shrink-0"
+            checked={value}
+            onCheckedChange={(checked) => {
+              if (checked && onRequestEnable) return onRequestEnable();
+              onChange(checked);
+              onToggle?.(checked);
+            }}
+            disabled={Boolean(lock)}
+          />
         )}
       />
+    </div>
+  );
+}
+
+function CompanionSelectField({ control, name, label, options, note }: {
+  control: Control<CompanionPreferencesFormValues>;
+  name: SelectFieldName;
+  label: string;
+  options: SelectOption[];
+  note?: string;
+}) {
+  const id = `companion-${name}`;
+  return (
+    <div className="relative flex min-w-0 flex-col gap-1.5">
+      <Label htmlFor={id}>{label}</Label>
+      <Controller control={control} name={name} render={({ field }) => (
+        <Select value={field.value} onValueChange={field.onChange}>
+          <SelectTrigger id={id} ref={field.ref} onBlur={field.onBlur}><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {options.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      )} />
+      {note ? <p className="text-xs text-muted-foreground">{note}</p> : null}
     </div>
   );
 }
@@ -83,9 +121,9 @@ function SwitchRow({ control, field, label, hint, lock, disabled }: SwitchRowPro
 function CompanionPreferencesForm({ data }: { data: CompanionPreferences }) {
   const qc = useQueryClient();
   const update = useUpdateCompanionPreferences();
-  const revoke = useRevokeCompanionActivity();
   const { preferences, locks, policy } = data;
   const [now] = useState(Date.now);
+  const [requestedPrompt, setRequestedPrompt] = useState<"break" | "friendly" | null>(null);
   const orgTimeZone = useOrgTimeZone();
   const defaultValues = toCompanionFormValues(preferences, now);
   const form = useForm<CompanionPreferencesFormValues>({
@@ -104,7 +142,6 @@ function CompanionPreferencesForm({ data }: { data: CompanionPreferences }) {
   function handleSave(values: CompanionPreferencesFormValues) {
     update.mutate(toCompanionPatch(values, preferences, new Date(), orgTimeZone), {
       onSuccess: () => {
-        if (preferences.activityConsent && !values.activityConsent) revoke.mutate();
         toast.success("Companion settings saved");
       },
       onError: (error) => {
@@ -118,8 +155,16 @@ function CompanionPreferencesForm({ data }: { data: CompanionPreferences }) {
     });
   }
 
+  function allowActivityTiming() {
+    if (requestedPrompt === null) return;
+    form.setValue("activityConsent", true, { shouldDirty: true });
+    form.setValue(requestedPrompt, true, { shouldDirty: true });
+    setRequestedPrompt(null);
+  }
+
   return (
-    <form className="flex flex-col gap-3" onSubmit={handleSubmit(handleSave)} noValidate>
+    <>
+    <form className="flex flex-col gap-4" onSubmit={handleSubmit(handleSave)} noValidate>
       {!policy.petEnabled ? (
         <p className="rounded-md border border-border p-3 text-xs text-muted-foreground">
           Your organization has turned off the companion. Ask OS stays available from the corner of the screen.
@@ -144,49 +189,23 @@ function CompanionPreferencesForm({ data }: { data: CompanionPreferences }) {
           <Input id="companion-name" placeholder="Companion" aria-invalid={!!formState.errors.name} {...register("name")} />
           {formState.errors.name ? <p className="text-xs text-destructive">{formState.errors.name.message}</p> : null}
         </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="companion-preset">Appearance</Label>
-          <select id="companion-preset" className={SELECT_CLASS} {...register("preset")}>
-            {presets.map((preset) => (
-              <option key={preset} value={preset}>{preset.charAt(0).toUpperCase() + preset.slice(1)}</option>
-            ))}
-          </select>
-          {presetNote ? <p className="text-xs text-muted-foreground">{presetNote}</p> : null}
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="companion-tone">Tone</Label>
-          <select id="companion-tone" className={SELECT_CLASS} {...register("tone")}>
-            <option value="neutral">Neutral</option>
-            <option value="warm">Warm</option>
-            <option value="brief">Brief</option>
-          </select>
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="companion-animation">Animation</Label>
-          <select id="companion-animation" className={SELECT_CLASS} {...register("animation")}>
-            <option value="subtle">Subtle</option>
-            <option value="off">Off</option>
-          </select>
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="companion-anchor">Position</Label>
-          <select id="companion-anchor" className={SELECT_CLASS} {...register("anchor")}>
-            <option value="bottom-right">Bottom right</option>
-            <option value="bottom-left">Bottom left</option>
-          </select>
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="companion-pause">Pause all companion prompts</Label>
-          <select id="companion-pause" className={SELECT_CLASS} {...register("pause")}>
-            {pausedUntil !== null ? <option value="keep">{pauseLabel(pausedUntil)}</option> : null}
-            <option value="none">{pausedUntil !== null ? "Resume prompts" : "Not paused"}</option>
-            <option value="1h">For 1 hour</option>
-            <option value="today">For the rest of today</option>
-            <option value="resume">Until I resume</option>
-          </select>
-        </div>
+        <CompanionSelectField control={control} name="preset" label="Appearance" options={presets.map((preset) => ({ value: preset, label: preset.charAt(0).toUpperCase() + preset.slice(1) }))} note={presetNote} />
+        <CompanionSelectField control={control} name="tone" label="Tone" options={[{ value: "neutral", label: "Neutral" }, { value: "warm", label: "Warm" }, { value: "brief", label: "Brief" }]} />
+        <CompanionSelectField control={control} name="animation" label="Animation" options={[{ value: "subtle", label: "Subtle" }, { value: "off", label: "Off" }]} />
+        <CompanionSelectField control={control} name="pause" label="Pause all companion prompts" options={[
+          ...(pausedUntil !== null ? [{ value: "keep", label: pauseLabel(pausedUntil) }] : []),
+          { value: "none", label: pausedUntil !== null ? "Resume prompts" : "Not paused" },
+          { value: "1h", label: "For 1 hour" },
+          { value: "today", label: "For the rest of today" },
+          { value: "resume", label: "Until I resume" },
+        ]} />
       </div>
-      <SwitchRow control={control} field="activityConsent" label="Activity timing" hint="Counts only foreground time while this StreamlineOS window is focused. Turning it off deletes that timing." />
+      <SwitchRow control={control} field="activityConsent" label="Activity timing" hint="Counts only foreground time while this StreamlineOS window is focused. Turning it off deletes that timing." onToggle={(checked) => {
+        if (!checked) {
+          form.setValue("break", false, { shouldDirty: true });
+          form.setValue("friendly", false, { shouldDirty: true });
+        }
+      }} />
       <p className="text-xs text-muted-foreground">
         Companion prompts also respect your notification quiet hours.{" "}
         <Link href="/settings/notifications/my-preferences" className="font-medium text-primary underline-offset-2 hover:underline">
@@ -201,13 +220,28 @@ function CompanionPreferencesForm({ data }: { data: CompanionPreferences }) {
           label={row.label}
           hint={row.hint}
           lock={locks[`prompts.${row.field}`] ?? (policy.prompts[row.field] ? undefined : ORG_LOCK)}
-          disabled={(row.field === "break" || row.field === "friendly") && !consent}
+          onRequestEnable={(row.field === "break" || row.field === "friendly") && !consent ? () => setRequestedPrompt(row.field as "break" | "friendly") : undefined}
         />
       ))}
       <div className="flex justify-end">
         <LoadingButton type="submit" isPending={update.isPending}>Save companion settings</LoadingButton>
       </div>
     </form>
+    <AlertDialog open={requestedPrompt !== null} onOpenChange={(open) => { if (!open) setRequestedPrompt(null); }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Allow activity timing?</AlertDialogTitle>
+          <AlertDialogDescription>
+            {requestedPrompt === "break" ? "Break suggestions" : "Friendly check-ins"} need coarse foreground session timing. StreamlineOS does not monitor keystrokes or your screen. Save companion settings to apply this choice. You can turn activity timing off and delete it later.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Not now</AlertDialogCancel>
+          <AlertDialogAction onClick={allowActivityTiming}>Add to settings</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
 
@@ -221,7 +255,7 @@ export function CompanionPreferencesSection() {
       <div>
         <h2 className="text-sm font-semibold text-foreground">Companion</h2>
         <p className="mt-0.5 text-xs text-muted-foreground">
-          Choose how your assistant looks, where it sits, and when it may suggest something.
+          Choose how your assistant looks and when it may suggest something. Drag the pet to move it.
         </p>
       </div>
       {isLoading ? <Skeleton className="h-40 w-full" /> : null}

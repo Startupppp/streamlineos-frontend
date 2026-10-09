@@ -106,12 +106,13 @@ export const MailReadingToolbar = forwardRef<
       <div className="flex shrink-0 items-center gap-1.5">
         <Button
           type="button"
-          size="sm"
-          className="h-9 gap-1.5 px-3"
+          size="icon"
+          className="size-9 p-0"
           onClick={onReply}
+          aria-label="Reply"
+          title="Reply"
         >
           <Reply className="size-4" aria-hidden="true" />
-          Reply
         </Button>
 
         <DropdownMenu>

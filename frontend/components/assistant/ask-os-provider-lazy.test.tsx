@@ -6,6 +6,7 @@ import { AskOsLauncher } from "./ask-os-launcher";
 
 const mounted = jest.fn();
 const unmounted = jest.fn();
+let mockCompanionVisible = false;
 
 jest.mock("next/dynamic", () => () => function DeferredAssistant() {
   useEffect(() => {
@@ -17,11 +18,22 @@ jest.mock("next/dynamic", () => () => function DeferredAssistant() {
 
 jest.mock("@/components/brand/animated-logo", () => ({ AnimatedLogo: () => <span /> }));
 jest.mock("@/hooks/common/use-hydrated", () => ({ useHydrated: () => true }));
-jest.mock("@/hooks/api/companion", () => ({ useCompanionPreferences: () => ({ data: undefined }) }));
+jest.mock("./companion-launcher", () => ({
+  useCompanionPresence: () => mockCompanionVisible ? { visible: true } : null,
+  CompanionLauncher: () => <button type="button">Loading companion</button>,
+}));
 
 beforeEach(() => {
   mounted.mockClear();
   unmounted.mockClear();
+  mockCompanionVisible = false;
+});
+
+it("loads the full companion runtime as soon as the pet is available", async () => {
+  mockCompanionVisible = true;
+  render(<AskOsProvider><div>Workspace</div></AskOsProvider>);
+  await waitFor(() => expect(mounted).toHaveBeenCalledTimes(1));
+  expect(screen.getByTestId("assistant-runtime")).toBeInTheDocument();
 });
 
 it("does not mount the full assistant until opened, then preserves its state when minimized", async () => {

@@ -1,12 +1,9 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { useSanitizedHtml } from "@/hooks/common/use-sanitized-html";
 import type { SanitizeHtmlPolicy } from "@/lib/sanitize-html";
-
-const BLOCKED_ATTR = "data-blocked-src";
 
 const ALLOWED_TAGS = [
   "a", "abbr", "b", "blockquote", "br", "caption", "cite", "code", "col",
@@ -22,21 +19,7 @@ const ALLOWED_ATTR = [
   "colspan", "height", "href", "rowspan", "src", "style", "target",
   "title", "valign", "width",
   "loading", "referrerpolicy",
-  BLOCKED_ATTR,
 ];
-
-function isRemoteUrl(src: string): boolean {
-  return src.startsWith("http://") || src.startsWith("https://") || src.startsWith("//");
-}
-
-const blockRemoteImage: NonNullable<SanitizeHtmlPolicy["afterSanitizeAttributes"]> = (node) => {
-  if (node.tagName !== "IMG") return;
-  const src = node.getAttribute("src") ?? "";
-  if (!isRemoteUrl(src)) return;
-  node.setAttribute(BLOCKED_ATTR, src);
-  node.removeAttribute("src");
-  node.setAttribute("alt", node.getAttribute("alt") ?? "remote image");
-};
 
 const MAIL_POLICY: SanitizeHtmlPolicy = {
   config: {
@@ -45,11 +28,6 @@ const MAIL_POLICY: SanitizeHtmlPolicy = {
     FORCE_BODY: true,
     ALLOW_UNKNOWN_PROTOCOLS: false,
   },
-};
-
-const MAIL_POLICY_BLOCKING_REMOTE_IMAGES: SanitizeHtmlPolicy = {
-  ...MAIL_POLICY,
-  afterSanitizeAttributes: blockRemoteImage,
 };
 
 function hardenLinks(html: string): string {
@@ -63,62 +41,90 @@ function hardenImages(html: string): string {
   return html.replace(/<img(\s)/gi, '<img loading="lazy" referrerpolicy="no-referrer"$1');
 }
 
-function countBlockedImages(html: string): number {
-  const matches = html.match(new RegExp(BLOCKED_ATTR, "g"));
-  return matches?.length ?? 0;
-}
-
 interface MailHtmlViewerProps {
   html: string;
   className?: string;
 }
 
 export function MailHtmlViewer({ html, className }: MailHtmlViewerProps) {
-  const [allowImages, setAllowImages] = useState(false);
-
-  const sanitizedBody = useSanitizedHtml(
-    html,
-    allowImages ? MAIL_POLICY : MAIL_POLICY_BLOCKING_REMOTE_IMAGES,
-  );
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const sanitizedBody = useSanitizedHtml(html, MAIL_POLICY);
 
   const sanitized = useMemo(
     () => (sanitizedBody === null ? "" : hardenImages(hardenLinks(sanitizedBody))),
     [sanitizedBody],
   );
 
-  const blockedCount = useMemo(
-    () => (allowImages ? 0 : countBlockedImages(sanitized)),
-    [sanitized, allowImages],
-  );
+  useEffect(() => {
+    const body = bodyRef.current;
+    if (!body) return;
 
-  const handleLoadImages = useCallback(() => setAllowImages(true), []);
+    body.querySelectorAll("td").forEach((cell) => {
+      const children = Array.from(cell.childNodes).filter(
+        (node) => node.nodeType !== Node.TEXT_NODE || Boolean(node.textContent?.trim()),
+      );
+      if (children.length === 1 && children[0] instanceof Element &&
+          ["TABLE", "DIV"].includes(children[0].tagName)) {
+        cell.dataset.mailLayoutCell = "true";
+      }
+    });
+    const rowImages = new WeakMap<HTMLTableRowElement, Set<string>>();
+    const cleanups = Array.from(body.querySelectorAll("img")).map((image) => {
+      const row = image.closest("tr");
+      const src = image.getAttribute("src");
+      if (row && src) {
+        const seen = rowImages.get(row) ?? new Set<string>();
+        if (seen.has(src)) {
+          image.dataset.mailDuplicateImage = "true";
+          const cell = image.closest("td");
+          if (cell && cell.querySelectorAll("img").length === 1 && !cell.textContent?.trim()) {
+            cell.dataset.mailDuplicateImageCell = "true";
+          }
+        }
+        seen.add(src);
+        rowImages.set(row, seen);
+      }
+      const markLoaded = () => {
+        image.dataset.mailImageState = "loaded";
+      };
+      const markFailed = () => {
+        image.dataset.mailImageState = "failed";
+      };
+
+      image.addEventListener("load", markLoaded);
+      image.addEventListener("error", markFailed);
+      if (image.complete) {
+        if (image.naturalWidth > 0) markLoaded();
+        else markFailed();
+      }
+
+      return () => {
+        image.removeEventListener("load", markLoaded);
+        image.removeEventListener("error", markFailed);
+      };
+    });
+
+    return () => {
+      cleanups.forEach((cleanup) => cleanup());
+    };
+  }, [sanitized]);
 
   return (
     <div className={cn("w-full min-w-0 max-w-full", className)}>
-      {blockedCount > 0 && (
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-xs text-foreground">
-          <span>
-            {blockedCount} remote image{blockedCount > 1 ? "s" : ""} blocked
-          </span>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-6 text-dense px-2 text-primary hover:text-primary"
-            onClick={handleLoadImages}
-          >
-            Load images
-          </Button>
-        </div>
-      )}
       <div
-        className="mail-html-frame w-full min-w-0 max-w-full overflow-x-auto rounded-lg border border-border/50 bg-white text-foreground shadow-sm"
+        className="mail-html-frame @container w-full min-w-0 max-w-full overflow-x-hidden rounded-lg border border-border/50 bg-white text-foreground shadow-sm"
         style={{ colorScheme: "light" }}
       >
         <div
-          className="mail-html-body prose prose-sm min-w-0 max-w-none px-4 py-3 text-label leading-relaxed text-foreground break-words [&_a]:text-primary [&_a]:underline [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded [&_table]:max-w-full [&_table]:overflow-x-auto [&_td]:align-top [&_th]:align-top [&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground"
-          dangerouslySetInnerHTML={{ __html: sanitized }}
-        />
+          className="w-full min-w-0 max-w-full overflow-hidden px-3 py-3 sm:px-4"
+        >
+          <div
+            ref={bodyRef}
+            className="mail-html-body min-w-0 max-w-none text-label leading-relaxed text-foreground break-words [overflow-wrap:anywhere] @max-[640px]:[&_table]:!w-full @max-[640px]:[&_table]:!min-w-0 @max-[640px]:[&_table]:!max-w-full @max-[640px]:[&_tbody]:block @max-[640px]:[&_tr]:block @max-[640px]:[&_td]:block @max-[640px]:[&_td]:!w-full @max-[640px]:[&_td]:!max-w-full @max-[640px]:[&_td]:!box-border @max-[640px]:[&_td]:!p-3 @max-[640px]:[&_td[data-mail-layout-cell=true]]:!p-0 @max-[640px]:[&_td[data-mail-duplicate-image-cell=true]]:hidden @max-[640px]:[&_th]:block @max-[640px]:[&_th]:!w-full @max-[640px]:[&_div]:!max-w-full @max-[640px]:[&_img[data-mail-duplicate-image=true]]:hidden [&_*]:max-w-full [&_a]:text-primary [&_a]:underline [&_img]:!max-w-full [&_img]:rounded [&_img[data-mail-image-state=failed]]:hidden [&_img[data-mail-image-state=loaded]]:!h-auto [&_table]:!max-w-full [&_table]:!min-w-0 [&_td]:align-top [&_td]:break-words [&_th]:align-top [&_th]:break-words [&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground"
+            style={{ width: "100%" }}
+            dangerouslySetInnerHTML={{ __html: sanitized }}
+          />
+        </div>
       </div>
     </div>
   );

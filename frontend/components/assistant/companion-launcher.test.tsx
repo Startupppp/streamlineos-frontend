@@ -1,5 +1,5 @@
 import { useEffect, type ReactNode } from "react";
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ApiError } from "@/lib/api-envelope";
@@ -10,6 +10,8 @@ import { AskOsLauncher } from "./ask-os-launcher";
 import { AskOsCompanionStateContext, type AskOsCompanionState } from "./ask-os-companion-state";
 
 const push = jest.fn();
+const voiceStart = jest.fn();
+const voiceDismiss = jest.fn();
 const HEARTBEAT_TEST_INTERVAL = 60_000;
 
 jest.mock("next-auth/react", () => ({ useSession: () => ({ status: "authenticated" }) }));
@@ -98,7 +100,7 @@ function server({ preferences, policy, prefsFail, prompt = null, claimConflict, 
 
 const harness: { current: ReturnType<typeof useAskOsState> | null } = { current: null };
 
-function Harness({ activity = "idle", voice }: { activity?: AskOsCompanionState; voice?: boolean }) {
+function Harness({ activity = "idle", voice, settings = false, compact = false }: { activity?: AskOsCompanionState; voice?: boolean; settings?: boolean; compact?: boolean }) {
   const state = useAskOsState();
   useEffect(() => {
     harness.current = state;
@@ -107,13 +109,16 @@ function Harness({ activity = "idle", voice }: { activity?: AskOsCompanionState;
     <AskOsContext.Provider value={state}>
       <AskOsCompanionStateContext value={activity}>
         <AskOsLauncher
-          onVoiceStart={voice ? jest.fn() : undefined}
-          onVoiceDismiss={voice ? jest.fn() : undefined}
+          compact={compact}
+          onVoiceStart={voice || settings ? voiceStart : undefined}
+          onVoiceDismiss={voice ? voiceDismiss : undefined}
           onVoiceReview={voice ? jest.fn() : undefined}
           voiceState={voice ? "listening" : "idle"}
           voiceSupported={voice}
           voiceOverlayOpen={voice}
           voiceMessage={voice ? "Listening… tap the microphone when you are done." : null}
+          voiceSettings={settings ? { voice: "marin" } : undefined}
+          onVoiceSettingsChange={settings ? jest.fn() : undefined}
         />
       </AskOsCompanionStateContext>
     </AskOsContext.Provider>
@@ -126,12 +131,12 @@ async function settle() {
   });
 }
 
-function renderLauncher(activity?: AskOsCompanionState, voice = false) {
+function renderLauncher(activity?: AskOsCompanionState, voice = false, settings = false) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   function Wrapper({ children }: { children: ReactNode }) {
     return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
   }
-  return { ...render(<Harness activity={activity} voice={voice} />, { wrapper: Wrapper }), client };
+  return { ...render(<Harness activity={activity} voice={voice} settings={settings} />, { wrapper: Wrapper }), client };
 }
 
 beforeEach(() => {
@@ -178,7 +183,7 @@ describe("companion launcher rollback", () => {
     server();
     renderLauncher("thinking");
     expect(await screen.findByRole("button", { name: "Open Pip, Working" })).toBeInTheDocument();
-    expect(screen.getByText("Working")).toBeVisible();
+    expect(screen.queryByText("Working")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Open Ask OS assistant" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Open Pip, Working" })).toHaveClass("min-h-11");
   });
@@ -249,12 +254,105 @@ describe("companion activity timing", () => {
 });
 
 describe("companion keyboard focus", () => {
-  it("shows a small listening caption above the pet while chat stays closed", async () => {
+  it("toggles chat, voice, and pet size with shortcuts without taking over text input", async () => {
     server();
+    const user = userEvent.setup();
+    renderLauncher("idle", false, true);
+    await screen.findByRole("button", { name: "Chat with Pip" });
+
+    await user.keyboard("{Alt>}{Shift>}c{/Shift}{/Alt}");
+    expect(harness.current?.open).toBe(true);
+    await user.keyboard("{Alt>}{Shift>}c{/Shift}{/Alt}");
+    expect(harness.current?.open).toBe(false);
+
+    await user.keyboard("{Alt>}{Shift>}m{/Shift}{/Alt}");
+    await waitFor(() => expect(screen.getByRole("button", { name: "Restore Pip" })).toHaveFocus());
+    await user.keyboard("{Alt>}{Shift>}v{/Shift}{/Alt}");
+    expect(voiceStart).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("button", { name: "Open Pip, Ready" })).toBeInTheDocument();
+
+    const input = document.createElement("input");
+    document.body.appendChild(input);
+    input.focus();
+    await user.keyboard("{Alt>}{Shift>}c{/Shift}{/Alt}");
+    expect(harness.current?.open).toBe(false);
+    input.remove();
+
+    const modal = document.createElement("div");
+    modal.setAttribute("role", "dialog");
+    modal.setAttribute("aria-modal", "true");
+    await act(async () => { document.body.appendChild(modal); });
+    await user.keyboard("{Alt>}{Shift>}c{/Shift}{/Alt}");
+    expect(harness.current?.open).toBe(false);
+    await act(async () => { modal.remove(); });
+  });
+  it("keeps the dock icon-only and offers a voice choice", async () => {
+    server();
+    const user = userEvent.setup();
+    renderLauncher("idle", false, true);
+    await screen.findByRole("button", { name: "Voice settings" });
+    expect(screen.queryByText("Ready")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Voice settings" }));
+    expect(await screen.findByRole("combobox", { name: "Voice" })).toHaveTextContent("Marin");
+    expect(screen.queryByLabelText("Spoken language")).not.toBeInTheDocument();
+    expect(screen.getByText(/Replies follow the language you speak/)).toBeInTheDocument();
+    screen.getByRole("combobox", { name: "Voice" }).focus();
+    await user.keyboard("{Enter}");
+    expect(await screen.findByRole("option", { name: "Cedar" })).toBeInTheDocument();
+  });
+  it("shows only voice state and keeps processing details behind Info", async () => {
+    server();
+    const user = userEvent.setup();
     renderLauncher("idle", true);
     expect(await screen.findByText("Listening to you")).toBeInTheDocument();
-    expect(screen.getByText("Listening… tap the microphone when you are done.")).toBeInTheDocument();
+    expect(screen.queryByText("Listening… tap the microphone when you are done.")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Microphone audio is sent/)).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "About live voice" }));
+    expect(await screen.findByText(/Microphone audio is sent to OpenAI/)).toBeInTheDocument();
     expect(harness.current?.open).toBe(false);
+  });
+  it("can minimize, restore, and reposition the pet with the keyboard", async () => {
+    server();
+    const user = userEvent.setup();
+    renderLauncher();
+    await user.click(await screen.findByRole("button", { name: "Minimize Pip pet" }));
+    expect(screen.getByRole("button", { name: "Restore Pip" })).toBeInTheDocument();
+    expect(window.localStorage.getItem("unscoped::companion-minimized")).toBe("1");
+    await user.click(screen.getByRole("button", { name: "Restore Pip" }));
+    const pet = screen.getByRole("button", { name: "Open Pip, Ready" });
+    pet.focus();
+    await user.keyboard("{Alt>}{ArrowRight}{/Alt}");
+    expect(window.localStorage.getItem("unscoped::companion-position")).toContain('"x"');
+  });
+  it("moves by pointer without opening chat when the drag ends", async () => {
+    server();
+    renderLauncher();
+    const pet = await screen.findByRole("button", { name: "Open Pip, Ready" });
+    const root = pet.parentElement?.parentElement;
+    expect(root).toBeTruthy();
+    jest.spyOn(root!, "getBoundingClientRect").mockReturnValue(Object.assign(root!.getBoundingClientRect(), { x: 200, y: 300, left: 200, top: 300, width: 176, height: 150, right: 376, bottom: 450 }));
+    const pointer = (type: string, x: number, y: number) => {
+      const event = new MouseEvent(type, { bubbles: true, button: 0, clientX: x, clientY: y });
+      Object.defineProperty(event, "pointerId", { value: 1 });
+      fireEvent(pet, event);
+    };
+    pointer("pointerdown", 220, 320);
+    pointer("pointermove", 270, 370);
+    pointer("pointerup", 270, 370);
+    fireEvent.click(pet);
+    expect(harness.current?.open).toBe(false);
+    expect(window.localStorage.getItem("unscoped::companion-position")).toContain('"x":250');
+  });
+  it("does not copy a desktop drag position into mobile storage", async () => {
+    server();
+    const view = renderLauncher();
+    const pet = await screen.findByRole("button", { name: "Open Pip, Ready" });
+    pet.focus();
+    await userEvent.keyboard("{Alt>}{ArrowRight}{/Alt}");
+    expect(window.localStorage.getItem("unscoped::companion-position")).not.toBeNull();
+    view.rerender(<Harness compact />);
+    await waitFor(() => expect(pet.parentElement?.parentElement?.getAttribute("style")).toBe(""));
+    expect(window.localStorage.getItem("unscoped::companion-position-mobile-v2")).toBeNull();
   });
   it("opens from the keyboard and returns focus to the pet when the panel closes", async () => {
     server();

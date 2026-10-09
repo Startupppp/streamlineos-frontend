@@ -64,6 +64,7 @@ import {
 } from "./ask-os-directive-schema";
 import { useSpeechInput, useSpeechPlayback } from "./use-browser-speech";
 import { useCompanionRealtimeVoice } from "./use-companion-realtime-voice";
+import { useCompanionVoiceSettings } from "./use-companion-voice-settings";
 
 interface Draft {
   assistant: string;
@@ -78,6 +79,7 @@ export function GlobalAskOs() {
   const { open, setOpen } = useAskOs();
   const queryClient = useQueryClient();
   const voiceScope = useOrgStorageScope();
+  const companionVoiceSettings = useCompanionVoiceSettings(voiceScope);
   const companion = useCompanionPresence();
 
   const [input, setInput] = useState("");
@@ -171,7 +173,9 @@ export function GlobalAskOs() {
     : { duration: 0.25, ease: "easeOut" as const };
   const anchorClassName = cn(
     "fixed flex flex-col items-stretch",
-    fillViewport
+    isMobile
+      ? cn("inset-x-0 bottom-0 z-[60] w-full", !open && "pointer-events-none")
+      : expanded
       ? cn("inset-0 z-[60] w-full", !open && "hidden")
       : cn(
           "right-0 bottom-[env(safe-area-inset-bottom,0px)] z-50",
@@ -459,7 +463,7 @@ export function GlobalAskOs() {
       text: `${result.text.slice(0, 6000)}${result.requiresReview ? " An action is ready to review in chat. No change has been made yet." : ""}`,
       requiresReview: result.requiresReview,
     };
-  });
+  }, companionVoiceSettings.settings);
   const panelState = useAskOsPanelState({
     draft,
     failure,
@@ -519,7 +523,7 @@ export function GlobalAskOs() {
     setOpen(false);
     setVoiceOverlayOpen(true);
     speechPlayback.stop();
-    if (realtimeVoice.state === "listening" || realtimeVoice.state === "speaking" || realtimeVoice.state === "thinking" || realtimeVoice.state === "connecting") realtimeVoice.stop();
+    if (realtimeVoice.state === "listening" || realtimeVoice.state === "speaking" || realtimeVoice.state === "thinking" || realtimeVoice.state === "working" || realtimeVoice.state === "connecting") realtimeVoice.stop();
     else void realtimeVoice.start();
   }
   function handleVoiceDismiss() {
@@ -626,13 +630,15 @@ export function GlobalAskOs() {
               transition={panelTransition}
               className={cn(
                 "overflow-hidden",
-                fillViewport && "flex h-full min-h-0 w-full flex-1 flex-col",
+                isMobile ? "pointer-events-auto flex h-[min(78dvh,640px)] min-h-0 w-full flex-col" : fillViewport && "flex h-full min-h-0 w-full flex-1 flex-col",
               )}
             >
               <div
                 className={cn(
                   "flex flex-col overflow-hidden bg-card",
-                  fillViewport
+                  isMobile
+                    ? "h-full min-h-0 w-full rounded-t-2xl border border-b-0 border-border pb-[env(safe-area-inset-bottom,0px)] shadow-2xl"
+                    : fillViewport
                     ? "h-full min-h-0 w-full rounded-none border-0 pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]"
                     : "h-[min(70dvh,560px)] rounded-tl-2xl border border-b-0 border-border shadow-2xl",
                 )}
@@ -747,16 +753,18 @@ export function GlobalAskOs() {
             </motion.div>
           )}
         </AnimatePresence>
-        {!(expanded && open) ? (
+        {(!open || (!isMobile && !expanded)) ? (
           <AskOsLauncher
+            compact={isMobile}
             onVoiceStart={handleLauncherVoiceStart}
             onVoiceDismiss={handleVoiceDismiss}
             onVoiceReview={handleVoiceReview}
             voiceState={realtimeVoice.state}
             voiceSupported={realtimeVoice.supported}
             voiceMessage={realtimeVoice.message}
-            voiceCaption={realtimeVoice.caption}
             voiceOverlayOpen={voiceOverlayOpen}
+            voiceSettings={companionVoiceSettings.settings}
+            onVoiceSettingsChange={companionVoiceSettings.update}
           />
         ) : null}
       </AskOsCompanionStateContext>

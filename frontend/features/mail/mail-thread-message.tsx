@@ -200,7 +200,7 @@ export function MailThreadMessage({
         </div>
       </button>
 
-      <div className="min-w-0 max-w-full px-4 pb-4">
+      <div className="min-w-0 max-w-full overflow-hidden px-3 pb-4 sm:px-4">
         {message.bodyHtml ? (
           <MailHtmlViewer html={message.bodyHtml} className="mt-1" />
         ) : message.bodyText ? (

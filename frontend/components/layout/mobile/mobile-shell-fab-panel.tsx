@@ -7,7 +7,6 @@ import {
   UserIcon,
 } from "@animateicons/react/lucide";
 import { AnimatedLogo } from "@/components/brand/animated-logo";
-import { CompanionCharacter } from "@/components/assistant/companion-character";
 import { useAskOs } from "@/components/assistant/ask-os-context";
 import { useCompanionPresence } from "@/components/assistant/companion-launcher";
 import { useCommandPalette } from "@/components/command-palette";
@@ -84,22 +83,11 @@ export function FabPanelBody({ onClose, onOpenMobileMenu }: FabPanelBodyProps) {
           onClick={handleSearch}
           icon={<SearchIcon size={18} />}
         />
-        <FabMenuRow
+        {!companion ? <FabMenuRow
           label={askOsOpen ? `Close ${assistantName}` : assistantName}
           onClick={handleAskOs}
-          icon={
-            companion ? (
-              <CompanionCharacter
-                preset={companion.preset}
-                state="idle"
-                animation="off"
-                className="size-7"
-              />
-            ) : (
-              <AnimatedLogo size={20} gradient className="rounded-full" />
-            )
-          }
-        />
+          icon={<AnimatedLogo size={20} gradient className="rounded-full" />}
+        /> : null}
         <FabMenuRow
           label="Menu"
           onClick={handleMenu}
