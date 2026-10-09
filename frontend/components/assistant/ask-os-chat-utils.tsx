@@ -1,24 +1,50 @@
 "use client";
 
-import { useState } from "react";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { AnimatedLogo } from "@/components/brand/animated-logo";
 import { MarkdownContent } from "@/components/markdown/markdown-content";
 import type { AskAiHistoryMessage } from "@/hooks/api/chat-ai-assistant";
-import { toast } from "sonner";
-import { getErrorMessage, getErrorStatus } from "@/lib/get-error-message";
-import { useDeclineProposal, type ConfirmActionResult } from "@/hooks/api/ai-confirm-action";
-import { extractAskOsDirective, type AskOsDirective } from "./ask-os-directive-schema";
+import {
+  directivesOf,
+  extractAskOsDirective,
+  type AskOsDirective,
+} from "./ask-os-directive-schema";
+import type { AskOsClarificationAnswer } from "./ask-os-clarify-card";
 
-const AskOsConfirmationCard = dynamic(
+const ConfirmDirectiveSlot = dynamic(
   () =>
-    import("./ask-os-confirmation-card").then((m) => m.AskOsConfirmationCard),
+    import("./ask-os-confirmation-card").then((m) => m.ConfirmDirectiveSlot),
   { ssr: false },
 );
 
 const AskOsConnectCard = dynamic(
   () => import("./ask-os-connect-card").then((m) => m.AskOsConnectCard),
+  { ssr: false },
+);
+
+const AskOsClarifyCard = dynamic(
+  () => import("./ask-os-clarify-card").then((m) => m.AskOsClarifyCard),
+  { ssr: false },
+);
+
+const AskOsEvidenceCard = dynamic(
+  () => import("./ask-os-answer-card").then((m) => m.AskOsEvidenceCard),
+  { ssr: false },
+);
+
+const AskOsPlanCard = dynamic(
+  () => import("./ask-os-answer-card").then((m) => m.AskOsPlanCard),
+  { ssr: false },
+);
+
+const AskOsLimitCard = dynamic(
+  () => import("./ask-os-answer-card").then((m) => m.AskOsLimitCard),
+  { ssr: false },
+);
+
+const AskOsReceiptCard = dynamic(
+  () => import("./ask-os-answer-card").then((m) => m.AskOsReceiptCard),
   { ssr: false },
 );
 
@@ -102,100 +128,22 @@ export function EmptyAskOs({
   );
 }
 
-type ConfirmActionDirective = Extract<AskOsDirective, { kind: "confirm-action" }>;
-
-function confirmOutcomeFallback(action: string): string {
-  if (action === "email.send" || action === "mail.send") return "Email sent.";
-  return "Done.";
-}
-
-function confirmOutcomeCopy(outcome: ConfirmActionResult, action: string): string {
-  const summary = typeof outcome.summary === "string" ? outcome.summary.trim() : "";
-  if (summary) return summary;
-  return confirmOutcomeFallback(action);
-}
-
-function ConfirmDirectiveSlot({
-  directive,
-  persisted,
-}: {
-  directive: ConfirmActionDirective;
-  persisted: boolean;
-}) {
-  const [confirmedOutcome, setConfirmedOutcome] =
-    useState<ConfirmActionResult | null>(null);
-  const [cancelled, setCancelled] = useState(false);
-  const decline = useDeclineProposal();
-
-  function handleConfirmed(outcome: ConfirmActionResult) {
-    setConfirmedOutcome(outcome);
-  }
-
-  function handleCancelled() {
-    decline.mutate(directive.proposalId, {
-      onSuccess: () => {
-        setCancelled(true);
-      },
-      onError: (error) => {
-        const status = getErrorStatus(error);
-        if (status === 404 || status === 409) {
-          setCancelled(true);
-          return;
-        }
-        toast.error(getErrorMessage(error));
-      },
-    });
-  }
-
-  const { token } = directive;
-
-  if (persisted || token === undefined)
-    return (
-      <AskOsConfirmationCard
-        mode="record"
-        summary={directive.summary}
-        preview={directive.preview}
-        title={directive.title}
-      />
-    );
-
-  if (confirmedOutcome !== null)
-    return (
-      <p className="text-label text-muted-foreground">
-        {confirmOutcomeCopy(confirmedOutcome, directive.action)}
-      </p>
-    );
-  if (cancelled)
-    return <p className="text-label text-muted-foreground">Cancelled.</p>;
-
-  return (
-    <AskOsConfirmationCard
-      mode="live"
-      summary={directive.summary}
-      preview={directive.preview}
-      token={token}
-      expiresAt={directive.expiresAt}
-      title={directive.title}
-      confirmLabel={directive.confirmLabel}
-      onConfirmed={handleConfirmed}
-      onCancelled={handleCancelled}
-      cancelPending={decline.isPending}
-    />
-  );
-}
-
 export function AskOsBubble({
   role,
   content,
   streaming,
   reduce,
   directives: directivesProp,
+  live = false,
+  onClarify,
 }: {
   role: "user" | "assistant";
   content: string;
   streaming: boolean;
   reduce: boolean;
   directives?: AskOsDirective[];
+  live?: boolean;
+  onClarify?: (answer: AskOsClarificationAnswer) => void;
 }) {
   if (role === "user") {
     return (
@@ -213,20 +161,11 @@ export function AskOsBubble({
 
   const { directives: extracted, prose } = extractAskOsDirective(content);
   const directives = directivesProp ?? extracted;
-  const isPersistedTurn = directivesProp === undefined;
+  const isPersistedTurn = !live && directivesProp === undefined;
 
-  const confirmDirectives = directives.filter(
-    (d): d is ConfirmActionDirective => d.kind === "confirm-action",
-  );
-  const connectDirectives = directives.filter(
-    (d): d is Extract<AskOsDirective, { kind: "connect-integration" }> =>
-      d.kind === "connect-integration",
-  );
-
-  const showTyping =
-    streaming && !prose && confirmDirectives.length === 0 && connectDirectives.length === 0;
-  const showChrome =
-    Boolean(prose) || confirmDirectives.length > 0 || showTyping;
+  const confirmDirectives = directivesOf(directives, "confirm-action");
+  const connectDirectives = directivesOf(directives, "connect-integration");
+  const showTyping = streaming && !prose && directives.length === 0;
 
   return (
     <motion.div
@@ -240,23 +179,38 @@ export function AskOsBubble({
         className="mt-0.5 shrink-0 rounded-full"
       />
       <div className="min-w-0 max-w-[92%] flex-1 space-y-2 text-sm leading-6 text-foreground">
-        {showChrome ? (
-          <div className="space-y-2">
-            {prose ? (
-              <div className="break-words">
-                <MarkdownContent content={prose} />
-              </div>
-            ) : null}
-            {confirmDirectives.map((directive) => (
-              <ConfirmDirectiveSlot
-                key={directive.proposalId}
-                directive={directive}
-                persisted={isPersistedTurn}
-              />
-            ))}
-            {showTyping ? <TypingDots reduce={reduce} /> : null}
+        {prose ? (
+          <div className="break-words">
+            <MarkdownContent content={prose} />
           </div>
         ) : null}
+        {directivesOf(directives, "evidence").map((directive, index) => (
+          <AskOsEvidenceCard key={`evidence-${index}`} directive={directive} />
+        ))}
+        {directivesOf(directives, "action-plan").map((directive, index) => (
+          <AskOsPlanCard key={`plan-${index}`} directive={directive} />
+        ))}
+        {directivesOf(directives, "clarify").map((directive) => (
+          <AskOsClarifyCard
+            key={directive.clarificationId}
+            directive={directive}
+            onAnswer={onClarify}
+          />
+        ))}
+        {confirmDirectives.map((directive) => (
+          <ConfirmDirectiveSlot
+            key={directive.proposalId}
+            directive={directive}
+            persisted={isPersistedTurn}
+          />
+        ))}
+        {directivesOf(directives, "action-receipt").map((directive) => (
+          <AskOsReceiptCard key={`receipt-${directive.proposalId}`} receipt={directive} />
+        ))}
+        {directivesOf(directives, "capability-limit").map((directive) => (
+          <AskOsLimitCard key={`limit-${directive.reason}`} directive={directive} />
+        ))}
+        {showTyping ? <TypingDots reduce={reduce} /> : null}
         {connectDirectives.map((directive) => (
           <AskOsConnectCard
             key={directive.toolkit}

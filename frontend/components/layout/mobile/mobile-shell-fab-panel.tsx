@@ -8,6 +8,7 @@ import {
 } from "@animateicons/react/lucide";
 import { AnimatedLogo } from "@/components/brand/animated-logo";
 import { useAskOs } from "@/components/assistant/ask-os-context";
+import { useCompanionPresence } from "@/components/assistant/companion-launcher";
 import { useCommandPalette } from "@/components/command-palette";
 import { UserAvatarMenu } from "../header/user-avatar-menu";
 
@@ -50,6 +51,7 @@ function FabMenuRow({
 export function FabPanelBody({ onClose, onOpenMobileMenu }: FabPanelBodyProps) {
   const [profileOpen, setProfileOpen] = useState(false);
   const { open: askOsOpen, toggle: toggleAskOs } = useAskOs();
+  const assistantName = useCompanionPresence() ? "Companion" : "Ask OS";
   const { setPaletteOpen } = useCommandPalette();
 
   const handleAskOs = useCallback(() => {
@@ -81,7 +83,7 @@ export function FabPanelBody({ onClose, onOpenMobileMenu }: FabPanelBodyProps) {
           icon={<SearchIcon size={18} />}
         />
         <FabMenuRow
-          label={askOsOpen ? "Close Ask OS" : "Ask OS"}
+          label={askOsOpen ? `Close ${assistantName}` : assistantName}
           onClick={handleAskOs}
           icon={
             <AnimatedLogo size={20} gradient className="rounded-full" />

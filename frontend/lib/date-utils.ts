@@ -139,6 +139,31 @@ export function readerTimeZone(): string {
   return Intl.DateTimeFormat().resolvedOptions().timeZone;
 }
 
+function zoneOffsetMs(instant: Date, timeZone: string): number {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hourCycle: "h23",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).formatToParts(instant);
+  const part = (type: Intl.DateTimeFormatPartTypes): number =>
+    Number(parts.find((p) => p.type === type)?.value ?? 0);
+  const wall = Date.UTC(part("year"), part("month") - 1, part("day"), part("hour"), part("minute"), part("second"));
+  return wall - Math.floor(instant.getTime() / 1000) * 1000;
+}
+
+export function endOfDayInTimeZone(now: Date, zone: string | null | undefined): Date {
+  const timeZone = resolveTimeZone(zone, readerTimeZone());
+  const today = new Date(now.getTime() + zoneOffsetMs(now, timeZone));
+  const wallEnd = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate(), 23, 59, 59);
+  const guess = new Date(wallEnd - zoneOffsetMs(now, timeZone));
+  return new Date(wallEnd - zoneOffsetMs(guess, timeZone));
+}
+
 /**
  * An IANA zone the browser does not know makes `Intl.DateTimeFormat` throw a
  * `RangeError`, which would take the whole detail panel down. The backend

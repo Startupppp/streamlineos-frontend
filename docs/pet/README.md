@@ -1,6 +1,6 @@
 # StreamlineOS Companion Pet — product program
 
-**Status:** Product decisions settled; proposed requirements, 2026-10-08. Not implemented or release-verified.
+**Status:** Product decisions settled 2026-10-08. First-release engineering implemented on `feat/companion-pet` in both repositories 2026-10-09; not release-verified (no browser, target-database or pilot evidence yet).
 **Decision owner:** Product owner. **Audience:** Product, design, engineering, security, QA, support.
 **Product boundary:** Replace the Ask OS entry experience with one original, optional companion for natural-language questions and requests across StreamlineOS and approved connected tools. Keep Ask OS conversations, permission-scoped tools, confirmations, and the owning modules' business rules.
 
@@ -101,5 +101,17 @@ The current repository contains an Ask OS launcher/panel (`frontend/components/a
 | Baseline and numeric outcome targets | PILOT EVIDENCE | Instrument the named pilot, record the baseline, then set targets and evaluation window before claiming improvement. |
 | Existing Ask OS defects and release gates | CURRENT UNVERIFIED | Recheck the linked Ask OS/open-items PRDs against the implementation branch and run target-environment evidence. |
 | Notification and attendance source availability for every tenant | CURRENT UNVERIFIED | Verify enabled modules, shifts, leave, holidays, calendar connections, and event delivery in the pilot environment. |
+
+## Implementation record (2026-10-09, branch `feat/companion-pet`)
+
+| Build map order | Delivered | Evidence | Still open |
+| --- | --- | --- | --- |
+| 0, 4 Toolset review and write gating | `registry/ask-os-tool-exposure.ts` review map filters every turn's Toolset; `clockIn`/`clockOut`/`toggleBreak`/`createTask` converted to confirmable actions; ambiguous lead match returns a choice; four inline paid-generation or unscoped tools blocked; every confirm action runs in a tenant transaction | Focused jest; exposure, catalog and tenant-context specs | Real-database confirm journeys per module cluster |
+| 1 Turn presentation | `CLARIFY`, `EVIDENCE`, `ACTION_PLAN`, `CAPABILITY_LIMIT` directives; page context hint; clarification resume; per-turn bounds; typed confirm receipts with `already-completed` replay | Focused jest | Receipt is returned by `/chat/confirm` but not appended to the transcript |
+| 2 Build aggregate | `countTickets` over one scoped owner query, scope clarification, preview cap | SQL-shape and mocked jest | No filtered Build view reproduces the predicate, so no `href`; non-owner `EXPLAIN` not measured |
+| 3 Documents context | `KbAskService.citableContext` shared with Documents Ask; `searchDocumentContext` Tool; citation recheck on evidence and history replay | Focused jest | Real-database revocation race |
+| 5 Preferences and prompts | `companion` module, migration `1974_companion_pet` (replayed, rolled back and re-applied locally; RLS fails closed and isolates tenants), deterministic meeting/clock-in/break/friendly eligibility, atomic claim, retention sweep, rate limits | Focused jest; local replay | Production apply; worker delivery and multi-device proof |
+| 6 Frontend | Original pet launcher with presets and rollback to the Ask OS launcher, structured cards, preferences and admin policy, prompt bubble, organisation-day pause | Focused jest; type-check | Browser, mobile, reduced-motion and screen-reader journeys |
+| 7 Release gates | Backend `typecheck` and `typecheck:test` clean; contract vendored | Gate runs | All release gates in the delivery plan remain open |
 
 No blocking product-scope discussion remains from this planning round. Requirements are ready for design and ticket breakdown. Design deliverables and evidence gates are tracked work, and `CURRENT UNVERIFIED` cannot be treated as a shipped capability.

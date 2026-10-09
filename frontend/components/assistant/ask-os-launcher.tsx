@@ -4,8 +4,10 @@ import { motion, useReducedMotion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { AnimatedLogo } from "@/components/brand/animated-logo";
 import { useAskOs } from "./ask-os-context";
+import { useAskOsCompanionState } from "./ask-os-companion-state";
+import { CompanionLauncher, useCompanionPresence } from "./companion-launcher";
 
-export function AskOsLauncher() {
+function LegacyAskOsLauncher() {
   const { open, toggle } = useAskOs();
   const reduce = useReducedMotion();
   return (
@@ -25,4 +27,11 @@ export function AskOsLauncher() {
       <ChevronDown className={`h-2.5 w-2.5 shrink-0 text-primary-foreground/70 transition-transform duration-200 ${open ? "rotate-180" : ""}`} aria-hidden />
     </motion.button>
   );
+}
+
+export function AskOsLauncher() {
+  const companion = useCompanionPresence();
+  const state = useAskOsCompanionState();
+  if (companion) return <CompanionLauncher state={state} preferences={companion} />;
+  return <LegacyAskOsLauncher />;
 }

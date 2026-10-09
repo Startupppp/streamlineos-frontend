@@ -75,6 +75,7 @@ export type PermissionKey =
   | "accounting:vendor-credits:read"
   | "accounting:view"
   | "ai:chat:use"
+  | "ai:companion:manage"
   | "ai:executive-brief:generate"
   | "ai:executive-brief:view"
   | "ai:feedback:create"
@@ -862,6 +863,7 @@ export const PERMISSION_METADATA: Readonly<Record<PermissionKey, PermissionMetad
   "accounting:vendor-credits:read": { resource: "accounting:vendor-credits", action: "read", description: "View vendor credits" },
   "accounting:view": { resource: "accounting", action: "view", description: "View chart of accounts, journal entries, and accounting reports" },
   "ai:chat:use": { resource: "ai:chat", action: "use", description: "Use the AI chat assistant" },
+  "ai:companion:manage": { resource: "ai:companion", action: "manage", description: "Manage the organization's companion pet policy, presets and prompt categories" },
   "ai:executive-brief:generate": { resource: "ai:executive-brief", action: "generate", description: "Trigger generation of a new executive brief" },
   "ai:executive-brief:view": { resource: "ai:executive-brief", action: "view", description: "View the AI-generated cross-module executive brief" },
   "ai:feedback:create": { resource: "ai:feedback", action: "create", description: "Submit thumbs-up/down feedback on AI responses" },

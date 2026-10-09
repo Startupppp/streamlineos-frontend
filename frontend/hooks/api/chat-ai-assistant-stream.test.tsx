@@ -270,4 +270,66 @@ describe("useAskAI — the one streaming AI client", () => {
 
     expect(authedFetch).toHaveBeenCalledTimes(2);
   });
+
+  it("sends the page it was asked from and the chosen clarification, captured at send time", async () => {
+    authedFetch.mockImplementation(streamingResponse);
+    window.history.pushState({}, "", "/build/42/tickets/STRE-7");
+    const { result } = renderHook(() => useAskAI());
+
+    let outcome: Promise<AskAiStreamOutcome> | null = null;
+    await act(async () => {
+      outcome = result.current.sendMessage(
+        [{ role: "user", content: "This project" }],
+        jest.fn(),
+        9,
+        undefined,
+        undefined,
+        { clarification: { clarificationId: "clr-1", optionId: "project:42" } },
+      );
+      await Promise.resolve();
+    });
+    await act(async () => {
+      lastStream?.finish();
+      await outcome;
+    });
+
+    const init: unknown = authedFetch.mock.calls[0]?.[1];
+    const body: unknown =
+      init && typeof init === "object" && "body" in init ? JSON.parse(String(init.body)) : null;
+    expect(body).toMatchObject({
+      conversationId: 9,
+      context: {
+        route: "/build/42/tickets/STRE-7",
+        module: "build",
+        projectId: "42",
+        recordType: "ticket",
+        recordId: "STRE-7",
+      },
+      clarification: { clarificationId: "clr-1", optionId: "project:42" },
+    });
+    window.history.pushState({}, "", "/");
+  });
+
+  it("sends no clarification on an ordinary turn, so the server never resumes a question that was not answered", async () => {
+    authedFetch.mockImplementation(streamingResponse);
+    window.history.pushState({}, "", "/dashboard");
+    const { result } = renderHook(() => useAskAI());
+
+    let outcome: Promise<AskAiStreamOutcome> | null = null;
+    await act(async () => {
+      outcome = result.current.sendMessage([{ role: "user", content: "hi" }], jest.fn());
+      await Promise.resolve();
+    });
+    await act(async () => {
+      lastStream?.finish();
+      await outcome;
+    });
+
+    const init: unknown = authedFetch.mock.calls[0]?.[1];
+    const body: unknown =
+      init && typeof init === "object" && "body" in init ? JSON.parse(String(init.body)) : null;
+    expect(body).toMatchObject({ context: { route: "/dashboard", module: "dashboard" } });
+    expect(body).not.toHaveProperty("clarification");
+    window.history.pushState({}, "", "/");
+  });
 });

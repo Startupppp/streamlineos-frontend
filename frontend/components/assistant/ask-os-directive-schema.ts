@@ -1,7 +1,11 @@
 import { z } from "zod";
 
-const CONFIRM_ACTION_PREFIX = "CONFIRM_ACTION:";
-const CONNECT_INTEGRATION_PREFIX = "CONNECT_INTEGRATION:";
+function isSafeHref(href: string): boolean {
+  if (href.startsWith("/")) return !href.startsWith("//");
+  return /^https?:\/\//i.test(href);
+}
+
+const safeHrefSchema = z.string().refine(isSafeHref).optional().catch(undefined);
 
 const confirmActionDirectiveSchema = z.object({
   kind: z.literal("confirm-action"),
@@ -26,23 +30,134 @@ const connectIntegrationDirectiveSchema = z.object({
   summary: z.string(),
 });
 
+const clarifyDirectiveSchema = z.object({
+  kind: z.literal("clarify"),
+  clarificationId: z.string().min(1),
+  purpose: z.enum(["scope", "entity", "time", "connection", "other"]),
+  question: z.string(),
+  options: z
+    .array(
+      z.object({
+        id: z.string().min(1),
+        label: z.string(),
+        description: z.string().optional(),
+      }),
+    )
+    .min(1),
+  expiresAt: z.string(),
+});
+
+const evidenceDirectiveSchema = z.object({
+  kind: z.literal("evidence"),
+  sources: z.array(
+    z.object({
+      owner: z.string(),
+      label: z.string(),
+      status: z.enum([
+        "ok",
+        "empty",
+        "partial",
+        "degraded",
+        "denied",
+        "needs-connection",
+        "failed",
+      ]),
+      asOf: z.string().optional(),
+      scope: z.string().optional(),
+      href: safeHrefSchema,
+      citationId: z.string().optional(),
+      excerpt: z.string().optional(),
+    }),
+  ),
+});
+
+const actionPlanDirectiveSchema = z.object({
+  kind: z.literal("action-plan"),
+  steps: z.array(
+    z.object({
+      index: z.number(),
+      title: z.string(),
+      action: z.string().optional(),
+      status: z.enum(["pending", "proposed", "completed", "failed", "declined"]),
+    }),
+  ),
+});
+
+const capabilityLimitDirectiveSchema = z.object({
+  kind: z.literal("capability-limit"),
+  reason: z.enum([
+    "unsupported",
+    "denied",
+    "module-disabled",
+    "needs-connection",
+    "companion-blocked",
+  ]),
+  summary: z.string(),
+  href: safeHrefSchema,
+});
+
+export const askOsActionReceiptSchema = z.object({
+  proposalId: z.number(),
+  action: z.string(),
+  status: z.enum([
+    "committed",
+    "failed",
+    "conflicted",
+    "expired",
+    "denied",
+    "already-completed",
+  ]),
+  summary: z.string(),
+  resultId: z.string().optional(),
+  href: safeHrefSchema,
+  changedFields: z.array(z.string()).optional(),
+  at: z.string(),
+});
+
+const actionReceiptDirectiveSchema = askOsActionReceiptSchema.extend({
+  kind: z.literal("action-receipt"),
+});
+
+const sharedDirectiveSchemas = [
+  connectIntegrationDirectiveSchema,
+  clarifyDirectiveSchema,
+  evidenceDirectiveSchema,
+  actionPlanDirectiveSchema,
+  capabilityLimitDirectiveSchema,
+  actionReceiptDirectiveSchema,
+] as const;
+
 export const askOsDirectiveSchema = z.discriminatedUnion("kind", [
   confirmActionDirectiveSchema,
-  connectIntegrationDirectiveSchema,
+  ...sharedDirectiveSchemas,
 ]);
 
 const liveAskOsDirectiveSchema = z.discriminatedUnion("kind", [
   liveConfirmActionDirectiveSchema,
-  connectIntegrationDirectiveSchema,
+  ...sharedDirectiveSchemas,
 ]);
 
 export type AskOsDirective = z.infer<typeof askOsDirectiveSchema>;
 export type LiveAskOsDirective = z.infer<typeof liveAskOsDirectiveSchema>;
 export type ConnectIntegrationDirective = z.infer<typeof connectIntegrationDirectiveSchema>;
+export type AskOsActionReceipt = z.infer<typeof askOsActionReceiptSchema>;
+export type AskOsDirectiveOf<K extends AskOsDirective["kind"]> = Extract<AskOsDirective, { kind: K }>;
+
+export function directivesOf<K extends AskOsDirective["kind"]>(
+  directives: AskOsDirective[],
+  kind: K,
+): AskOsDirectiveOf<K>[] {
+  return directives.filter((d): d is AskOsDirectiveOf<K> => d.kind === kind);
+}
 
 const DIRECTIVE_PREFIXES: Array<{ prefix: string; kind: AskOsDirective["kind"] }> = [
-  { prefix: CONFIRM_ACTION_PREFIX, kind: "confirm-action" },
-  { prefix: CONNECT_INTEGRATION_PREFIX, kind: "connect-integration" },
+  { prefix: "CONFIRM_ACTION:", kind: "confirm-action" },
+  { prefix: "CONNECT_INTEGRATION:", kind: "connect-integration" },
+  { prefix: "CLARIFY:", kind: "clarify" },
+  { prefix: "EVIDENCE:", kind: "evidence" },
+  { prefix: "ACTION_PLAN:", kind: "action-plan" },
+  { prefix: "CAPABILITY_LIMIT:", kind: "capability-limit" },
+  { prefix: "ACTION_RECEIPT:", kind: "action-receipt" },
 ];
 
 export function parseAskOsDirective(content: string): AskOsDirective | null {
@@ -61,16 +176,9 @@ export function parseAskOsDirective(content: string): AskOsDirective | null {
 }
 
 export function serializeAskOsDirective(directive: AskOsDirective): string {
-  switch (directive.kind) {
-    case "confirm-action": {
-      const { kind: _kind, ...body } = directive;
-      return `${CONFIRM_ACTION_PREFIX}${JSON.stringify(body)}`;
-    }
-    case "connect-integration": {
-      const { kind: _kind, ...body } = directive;
-      return `${CONNECT_INTEGRATION_PREFIX}${JSON.stringify(body)}`;
-    }
-  }
+  const { kind, ...body } = directive;
+  const entry = DIRECTIVE_PREFIXES.find((candidate) => candidate.kind === kind);
+  return `${entry?.prefix ?? ""}${JSON.stringify(body)}`;
 }
 
 export function extractAskOsDirective(content: string): {

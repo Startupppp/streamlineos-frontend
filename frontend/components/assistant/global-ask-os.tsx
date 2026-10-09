@@ -42,6 +42,8 @@ import { AskOsConversationList } from "./ask-os-conversation-list";
 import { useAskOs } from "./ask-os-context";
 import { AskOsPanelHeader } from "./ask-os-panel-header";
 import { AskOsLauncher } from "./ask-os-launcher";
+import type { AskOsClarificationAnswer } from "./ask-os-clarify-card";
+import { AskOsCompanionStateContext, useAskOsPanelState } from "./ask-os-companion-state";
 import {
   appendAskOsDirective,
   extractAskOsDirective,
@@ -69,13 +71,10 @@ export function GlobalAskOs() {
   const inFlightDirectiveRef = useRef<AskOsDirective[]>([]);
   const [atBottom, setAtBottom] = useState(true);
   const [view, setView] = useState<"chat" | "conversations">("chat");
-  const [activeConversationId, setActiveConversationId] = useState<
-    number | null
-  >(null);
+  const [activeConversationId, setActiveConversationId] = useState<number | null>(null);
   const [convSearch, setConvSearch] = useState("");
   const [selectedPersona, setSelectedPersona] = useState<PersonaId | null>(null);
   const [expanded, setExpanded] = useState(false);
-  
   const scrollRef = useRef<HTMLDivElement>(null);
   const topSentinelRef = useRef<HTMLDivElement>(null);
   const previousScrollHeightRef = useRef(0);
@@ -149,13 +148,7 @@ export function GlobalAskOs() {
 
   const loadOlder = useCallback(() => {
     const element = scrollRef.current;
-    if (
-      !element ||
-      loadingOlderRef.current ||
-      !hasNextPage ||
-      isFetchingNextPage
-    )
-      return;
+    if (!element || loadingOlderRef.current || !hasNextPage || isFetchingNextPage) return;
     previousScrollHeightRef.current = element.scrollHeight;
     loadingOlderRef.current = true;
     void fetchNextPage();
@@ -223,7 +216,7 @@ export function GlobalAskOs() {
   );
 
   const send = useCallback(
-    async (override?: string) => {
+    async (override?: string, clarification?: { clarificationId: string; optionId: string }) => {
       const prepared = prepareAskOsSend(override ?? input);
       if (prepared.status === "empty" || isStreaming || sendingRef.current)
         return;
@@ -290,6 +283,7 @@ export function GlobalAskOs() {
           conversationId,
           selectedPersona ?? undefined,
           handleDirectiveData,
+          { clarification },
         );
         if (outcome.status === "busy") {
           setDraft(null);
@@ -391,6 +385,10 @@ export function GlobalAskOs() {
       sendMessage,
     ],
   );
+  const panelState = useAskOsPanelState({ draft, failure, directives: inFlightDirective, persisted });
+  function handleClarify(answer: AskOsClarificationAnswer) {
+    void send(answer.label, { clarificationId: answer.clarificationId, optionId: answer.optionId });
+  }
   const handleRetrySend = useCallback(() => {
     const last = lastSentRef.current;
     if (last) void send(last);
@@ -401,9 +399,7 @@ export function GlobalAskOs() {
     const nearBottom =
       element.scrollHeight - element.scrollTop - element.clientHeight < 120;
     isNearBottomRef.current = nearBottom;
-    setAtBottom((previous) =>
-      previous === nearBottom ? previous : nearBottom,
-    );
+    setAtBottom((previous) => (previous === nearBottom ? previous : nearBottom));
   }
   function handleJumpToLatest() {
     const element = scrollRef.current;
@@ -455,12 +451,7 @@ export function GlobalAskOs() {
     renameConversation.mutate({ conversationId: id, title });
   }
   function handleDeleteActive() {
-    if (
-      activeConversationId === null ||
-      threadBusy ||
-      deleteConversation.isPending
-    )
-      return;
+    if (activeConversationId === null || threadBusy || deleteConversation.isPending) return;
     deleteConversation.mutate(activeConversationId);
     setActiveConversationId(null);
   }
@@ -478,6 +469,7 @@ export function GlobalAskOs() {
       role="complementary"
       aria-label="Ask OS assistant"
     >
+      <AskOsCompanionStateContext value={panelState}>
       <AnimatePresence initial={false}>
         {open && (
           <motion.div
@@ -563,6 +555,7 @@ export function GlobalAskOs() {
                       showEmpty={showEmpty}
                       topSentinelRef={topSentinelRef}
                       directives={inFlightDirective}
+                      onClarify={handleClarify}
                     />
                     <AskOsChatComposer
                       error={composerError}
@@ -582,6 +575,7 @@ export function GlobalAskOs() {
         )}
       </AnimatePresence>
       {!(expanded && open) ? <AskOsLauncher /> : null}
+      </AskOsCompanionStateContext>
     </div>,
     document.body,
   );

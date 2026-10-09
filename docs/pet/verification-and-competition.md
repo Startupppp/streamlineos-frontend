@@ -107,3 +107,95 @@ Official product/help sources reviewed 2026-10-08. Features, availability, plans
 4. Integrate a Documents-owned bounded citable-context read with Ask OS generation and prove content and citation ACLs with real Documents; the current Ask OS title search alone cannot close this criterion. Prove one credit reservation/settlement, one visible transcript, and no pooled tenant transaction across a provider call.
 5. Prove representative real reads and actions across every launch module cluster, an ambiguous target, a missing/denied/disconnected capability, a mixed-module answer, partial multi-step completion, and the immediate-self-action policy. Also prove persisted history, each prompt category, multi-tab/device dedupe, opt-in activity signal, admin policy, and accessibility in browser and operational traces.
 6. Establish baseline and target metrics in a pilot before claiming reduced interruption or a competitor advantage.
+
+## Real-database evidence (2026-10-09)
+
+**Environment.** Backend `feat/companion-pet` at `c61d0ad46`, `nest build`, `dist/main.js` booted on `localhost:1597` from a scratch working directory with throwaway secrets and an EdDSA `AUTH_SIGNING_KEYS` pair. Database `scratch_pet_e2e` on local Postgres, created from `a2z_smoke` (1055 ledger rows) and brought forward 70 journal entries with `run-pending-migrations.mjs --tag=X`, including `1974_companion_pet`. The three tags that fail on every lineage (1174, 1226, 1396; kb and build only) were left pending. `APP_DATABASE_URL` was a login role `pet_e2e_app` granted `streamline_app` (`rolsuper=false`, `rolbypassrls=false`), after `db-bootstrap-app-role.mjs` re-granted 1063/1063 tables. Two seeded organisations: A (`Asia/Kolkata`) and B (`America/New_York`). Each has an `ORG_ADMIN` owner and two `MEMBER`s, plus placement, `org_modules` and live `user_sessions` rows. Every token was signed per actor and checked by the real `JwtAuthGuard`. The API log ended with **0 occurrences of `42501`** and no error-level entries. The scratch database and role were dropped afterwards. Result: **109 PASS lines, 0 product failures.** The count includes one re-run of the `countTickets` block. The single FAIL line was a fixture gap, fixed during the run (see 2.18).
+
+### 1. Companion API (HTTP, `RUNTIME-VERIFIED`)
+
+| # | Actor | Request | Status | Key body / DB check |
+|---|---|---|---|---|
+| 1 | A.member | GET /companion/preferences | 200 | v0 defaults: meeting on, clockIn/break/friendly off, consent false |
+| 2 | A.member | PATCH /companion/preferences `{version:0,name:"Pip",preset:"dusk",tone:"warm"}` | 200 | v1 |
+| 3 | A.member | PATCH /companion/preferences `{version:0,...}` (stale) | 409 | "changed elsewhere"; DB row still v1 `Pip` |
+| 4-5 | A.member | PATCH and GET /companion/policy | 403 | Permission denied (`ai:companion:manage`) |
+| 6 | A.owner | PATCH /companion/policy `{version:0,allowedPresets:[default,mono],prompts:{friendly:false}}` | 200 | policy v1 |
+| 7 | A.owner | PATCH /companion/policy `{version:0}` (stale) | 409 | policy unchanged |
+| 8-9 | A.member | PATCH prefs `{version:1,prompts:{friendly:true}}`, then GET | 200 | Effective preset `default`, friendly `false`, `locks` = `preset`, `prompts.friendly`. The DB keeps the member's own `dusk` and `prompt_friendly=true` |
+| 10 | A.member | POST /companion/activity/heartbeat (no consent) | 409 | "Activity timing is off"; 0 activity rows |
+| 11-12 | A.member | PATCH consent on, then heartbeat `{foregroundSeconds:60}` | 200 / 204 | one `companion_activity_sessions` row, 60 s |
+| 13-14 | A.owner, A.member | Admin lifts the lock (policy v2); member GET | 200 | preset back to `dusk`, friendly on, `locks` = {} |
+| 15 | A.member | GET /companion/prompts/next | 200 | `null` at 60 s foreground |
+| 16 | A.member | GET /companion/prompts/next (accrual set to 5400 s in DB) | 200 | `break:eligible`; **0 rows written by the GET** |
+| 17-18 | A.member | claim, claim again | 200 / 409 | one row, `claimed`, break accrual reset to 0. The second claim's message is "no longer eligible", because the claim reset accrual |
+| 19 | A.member | snooze `{minutes:10}` | 200 | `break:snoozed` |
+| 20-22 | A.member | next → dismiss → dismiss | 200 / 200 / 409 | `friendly:eligible` → `dismissed` → "no longer open" |
+| 23-24 | A.member | next, history | 200 | `null`; history = friendly:dismissed, break:snoozed |
+| 33-35 | A.co | consent+friendly, heartbeat, next (foreground 700 s) | 200/204/200 | `friendly:eligible` |
+| 36-37 | A.co | **two concurrent claims** (two tabs) | 200 + 409 | "already taken by another tab or device"; DB holds 1 row |
+| 38-39 | A.co | third claim, next | 409 / 200 | next returns the same prompt as `claimed` |
+| 40-41 | A.co | snooze `{minutes:7}`, snooze `{minutes:30}` | 400 / 200 | `snoozed` |
+| 30 | A.member | DELETE /companion/activity | 204 | 0 activity rows for A.member |
+| 25-29 | B.member, B.owner | history; claim/dismiss A's prompt ids; GET policy/prefs | 200 / 404 / 404 / 200 / 200 | B sees 0 items, `Prompt not found`, policy v0 (A is v2), prefs v0. A's prompt is still `snoozed` |
+| 31 | anon | POST /cron/companion-retention-sweep, wrong bearer | 401 | — |
+| 32 | anon | POST /cron/companion-retention-sweep, `Bearer $CRON_SECRET` | 200 | `organizationsScanned:5, activitySessionsDeleted:1, promptEventsDeleted:1`. Deleted: the 2-day-old activity row in org A and the 31-day-old prompt in org B. Kept: the fresh activity row, the 1-day-old prompt and A's 2 live prompts |
+
+**RLS checked directly as `pet_e2e_app` (member of `streamline_app`).** With `app.organization_id` = B, all four companion tables return 0 of A's rows and 0 rows in total. With A, they return 1 / 1 / 2 / 1. An insert of an org-A policy under B's tenant setting failed with `42501 new row violates row-level security policy`.
+
+### 2. Ask OS confirm path and `countTickets`
+
+**Confirm path (HTTP `POST /chat/confirm`).** Proposals were minted by the real `AiConfirmationService.propose`, run on the app role. No model provider was used.
+
+| # | Actor | Proposal | Status | Receipt / DB |
+|---|---|---|---|---|
+| 2.2 | A.owner | `crm.createLead` "Ada Lovelace" | 201 | `committed`, leadId 2; `lead_party_map` +1, `party_roles` PROSPECT +1, proposal `EXECUTED` |
+| 2.3 | A.owner | same token again | 201 | `already-completed`, same resultId 2; 0 new rows |
+| 2.4 | A.owner | fresh proposal, two concurrent redemptions | 201 + 409 | one `committed` and one 409 "Proposal already confirmed or executed"; exactly 1 new row |
+| 2.5 | B.owner | A's token | 404 | "Proposal not found"; 0 rows; A's proposal still `PROPOSED` |
+| 2.6-2.7 | A.member | `crm.createTask`, `crm.createLead` | 403 | receipt `denied` (no `tasks:write` / `crm:leads:create`) |
+| 2.8 | A.owner | `self.clockIn` `{expectedStatus:OFFLINE}` | 201 | `committed`; one `attendance` row `PRESENT` |
+| 2.8c | A.owner | second `self.clockIn` expecting OFFLINE | 409 | receipt `conflicted` ("attendance changed to PRESENT"); still 1 row |
+| 2.9 | A.owner | `crm.createTask`, then the same token again | 201 / 201 | `committed`, then `already-completed`; exactly 1 `tasks` row |
+
+All of these DB-only actions committed under RLS with no `42501`.
+
+**`countTickets`.** HTTP cannot reach this Tool without a model, so it ran through the real toolset. `NestFactory.createApplicationContext(AppModule)` booted against the same database and app role. The real `JwtAuthGuard` resolved each caller from a signed token. Then `fetchChatContext`, `AccessService.getAccessSnapshot` and `buildAskOsToolset` ran, and `toolset.countTickets.execute` was called. That is the same path `POST /chat` uses, with `runInNewTenantTransaction`.
+
+Fixture for org A:
+- Project APL has a custom state set: Backlog, TODO, IN_PROGRESS, FIXED, READY_FOR_QA (started), DONE, CANCELLED.
+- APL holds 7 live BUGs, one soft-deleted BUG, 2 TASKs and 1 STORY.
+- Project BOR holds 2 BUGs and 2 TASKs.
+- Project OLD is archived and holds 1 BUG.
+- The owner is primary assignee on some tickets and co-assignee on others. On READY_FOR_QA the owner is both.
+
+| Case (A.owner unless noted) | Tool total | Direct SQL |
+|---|---|---|
+| BUG, open, allAccessible | 7 | 7 |
+| all types, open, allAccessible | 11 | 11 |
+| BUG, every state group | 9 | 9 |
+| all types, every state group | 15 | 15 |
+| mine, open (primary ∪ co-assignee) | 5 | 5 (a naive UNION ALL gives 6: the co-assignee counted once) |
+| mine, BUG, open | 4 | 4 |
+| mine, every group | 8 | 8 |
+| project APL, BUG, open | 5 | 5 |
+| B.owner, BUG, open | 4 | 4 (org B only) |
+| A.member (BUILD_MODULE_MEMBER, APL member only), BUG, open | 5 | 5 (the whole org would be 7) |
+
+FIXED and READY_FOR_QA count as open, CANCELLED and DONE are excluded, and soft-deleted and archived tickets are excluded. Without a scope the Tool returns `ambiguous` with the `allAccessible` and `mine` options. An archived project, org B's project id asked for by A.owner, and BOR asked for by A.member all return `denied` "not found or you cannot access it".
+
+**2.18 fixture gap.** On the first run A.member had no `countTickets`. Members seeded straight into the DB hold no Build module standing. A.owner then called `POST /roles/seed-defaults` (200) and `POST /roles/153/members` `{principalType:"user"}` (201) to grant BUILD_MODULE_MEMBER. `GET /me/access` then showed `build:tickets:view: all`, and the re-run passed. This is not a product defect.
+
+### 3. `/me/org-display`
+
+| Actor | Status | Body |
+|---|---|---|
+| A.member | 200 | `{currency:"INR", locale:"en-IN", timezone:"Asia/Kolkata"}` |
+| B.owner | 200 | `timezone:"America/New_York"` |
+| anon | 401 | — |
+
+### Findings and limits
+
+- **Contract deviation, no extra write.** A redemption that races an in-flight one gets 409 "Proposal already confirmed or executed" with no receipt. Only a redemption after commit gets `already-completed`. CONTRACT.md promises `already-completed` for every duplicate, so the frontend should treat that 409 as a pending duplicate.
+- **Minor.** A snooze longer than the prompt's remaining TTL is accepted. `snoozedUntil` then falls after `expiresAt`, so the prompt expires and never comes back.
+- **Not exercised here.** Meeting and clock-in prompt categories were not run, because they need calendar events and HR shifts. Quiet hours, leave and holiday suppression were not run. Neither was a real model-driven `POST /chat` turn with CLARIFY/EVIDENCE directives, because no provider key is available. Foreground time was advanced by setting `foreground_seconds`/`break_accrued_seconds` in SQL, because heartbeat credit is capped at the wall-clock time elapsed.

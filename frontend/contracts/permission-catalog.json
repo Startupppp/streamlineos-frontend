@@ -76,6 +76,7 @@
     "accounting:vendor-credits:read",
     "accounting:view",
     "ai:chat:use",
+    "ai:companion:manage",
     "ai:executive-brief:generate",
     "ai:executive-brief:view",
     "ai:feedback:create",
@@ -1153,6 +1154,11 @@
       "resource": "ai:chat",
       "action": "use",
       "description": "Use the AI chat assistant"
+    },
+    "ai:companion:manage": {
+      "resource": "ai:companion",
+      "action": "manage",
+      "description": "Manage the organization's companion pet policy, presets and prompt categories"
     },
     "ai:executive-brief:generate": {
       "resource": "ai:executive-brief",

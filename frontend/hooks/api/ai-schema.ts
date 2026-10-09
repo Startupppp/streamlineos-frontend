@@ -1,7 +1,5 @@
 import { z } from "zod";
-
-const wireDate = () => z.string();
-const nullableWireDate = () => z.string().nullable();
+import { askOsActionReceiptSchema } from "@/components/assistant/ask-os-directive-schema";
 
 const leadScoreSchema = z.object({
   score: z.number(),
@@ -219,6 +217,7 @@ export const confirmActionContract = z.object({
   ok: z.literal(true),
   result: z.record(z.string(), z.unknown()),
   summary: z.string(),
+  receipt: askOsActionReceiptSchema.optional(),
 });
 
 export const declineProposalContract = z.object({
