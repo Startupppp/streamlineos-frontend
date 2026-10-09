@@ -46,6 +46,13 @@ export const collaborationQueryKeys = {
       [...base, "aiChat", "conversations", conversationId, "messages"] as const,
   },
 
+  companion: {
+    preferences: () => [...base, "companion", "preferences"] as const,
+    policy: () => [...base, "companion", "policy"] as const,
+    nextPrompt: () => [...base, "companion", "prompts", "next"] as const,
+    promptHistory: () => [...base, "companion", "prompts", "history"] as const,
+  },
+
   aiCrm: {
     leadSummary: (leadId: number) =>
       [...base, "ai", "crm", "lead-summary", leadId] as const,

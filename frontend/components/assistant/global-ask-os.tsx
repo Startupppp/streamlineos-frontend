@@ -41,7 +41,7 @@ import { AskOsChatView } from "./ask-os-chat-view";
 import { AskOsConversationList } from "./ask-os-conversation-list";
 import { useAskOs } from "./ask-os-context";
 import { AskOsPanelHeader } from "./ask-os-panel-header";
-import { AskOsLauncher } from "./ask-os-launcher";
+import { AskOsLauncher, companionActivity } from "./ask-os-launcher";
 import {
   appendAskOsDirective,
   extractAskOsDirective,
@@ -581,7 +581,7 @@ export function GlobalAskOs() {
           </motion.div>
         )}
       </AnimatePresence>
-      {!(expanded && open) ? <AskOsLauncher /> : null}
+      {!(expanded && open) ? <AskOsLauncher activity={companionActivity(threadBusy, failure, persisted.at(-1))} /> : null}
     </div>,
     document.body,
   );

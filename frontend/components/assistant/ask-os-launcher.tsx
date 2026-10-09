@@ -3,9 +3,31 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { AnimatedLogo } from "@/components/brand/animated-logo";
+import type { AiFailureState } from "@/components/ai";
 import { useAskOs } from "./ask-os-context";
+import { extractAskOsDirective } from "./ask-os-directive-schema";
+import type { CompanionActivity } from "./companion-character";
+import { CompanionLauncher, useCompanionPresence } from "./companion-launcher";
 
-export function AskOsLauncher() {
+const RECEIPT_SUCCESS = new Set(["committed", "already-completed"]);
+
+export function companionActivity(
+  busy: boolean,
+  failure: AiFailureState | null,
+  latest: { role: string; content: string } | undefined,
+): CompanionActivity {
+  if (busy) return "thinking";
+  if (failure && failure.status !== "cancelled") return "error";
+  if (!latest || latest.role !== "assistant") return "idle";
+  const last = extractAskOsDirective(latest.content).directives.at(-1);
+  if (!last) return "idle";
+  if (last.kind === "clarify") return "clarification";
+  if (last.kind === "confirm-action") return "proposal";
+  if (last.kind === "action-receipt") return RECEIPT_SUCCESS.has(last.status) ? "success" : "error";
+  return "idle";
+}
+
+function LegacyAskOsLauncher() {
   const { open, toggle } = useAskOs();
   const reduce = useReducedMotion();
   return (
@@ -25,4 +47,10 @@ export function AskOsLauncher() {
       <ChevronDown className={`h-2.5 w-2.5 shrink-0 text-primary-foreground/70 transition-transform duration-200 ${open ? "rotate-180" : ""}`} aria-hidden />
     </motion.button>
   );
+}
+
+export function AskOsLauncher({ activity = "idle" }: { activity?: CompanionActivity }) {
+  const companion = useCompanionPresence();
+  if (companion) return <CompanionLauncher activity={activity} preferences={companion} />;
+  return <LegacyAskOsLauncher />;
 }

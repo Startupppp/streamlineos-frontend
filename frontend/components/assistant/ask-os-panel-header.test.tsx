@@ -5,6 +5,7 @@ import { AskOsPanelHeader } from "./ask-os-panel-header";
 jest.mock("@/components/brand/animated-logo", () => ({
   AnimatedLogo: () => <span />,
 }));
+jest.mock("@/hooks/api/companion", () => ({ useCompanionPreferences: () => ({ data: undefined }) }));
 
 const headerProps = {
   activeConversationId: 1,

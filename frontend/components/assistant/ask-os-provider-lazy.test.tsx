@@ -17,6 +17,7 @@ jest.mock("next/dynamic", () => () => function DeferredAssistant() {
 
 jest.mock("@/components/brand/animated-logo", () => ({ AnimatedLogo: () => <span /> }));
 jest.mock("@/hooks/common/use-hydrated", () => ({ useHydrated: () => true }));
+jest.mock("@/hooks/api/companion", () => ({ useCompanionPreferences: () => ({ data: undefined }) }));
 
 beforeEach(() => {
   mounted.mockClear();
