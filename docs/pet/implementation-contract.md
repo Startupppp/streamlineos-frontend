@@ -1,6 +1,6 @@
 # Companion implementation contract
 
-**Status:** Build handoff, 2026-10-08; proposed, not implemented. Read [the program decisions](README.md), [ADR 0007](0007-companion-uses-ask-os-toolset.md), [CP-00](00-experience-prd.md), [CP-01](01-intelligence-actions-prd.md), [CP-02](02-proactive-governance-prd.md), and [CP-03](03-implementation-architecture-prd.md) first. This file resolves implementation behavior where those documents remain high level. The current code is the source of truth for existing API names and domain invariants; a conflict with current security/owner contracts must be recorded and resolved before changing them.
+**Status:** Build handoff written 2026-10-08. Source implementation exists as of 2026-10-09, with gaps and release proof in [the current review](review-2026-10-09.md). Read [the program decisions](README.md), [ADR 0007](0007-companion-uses-ask-os-toolset.md), [CP-00](00-experience-prd.md), [CP-01](01-intelligence-actions-prd.md), [CP-02](02-proactive-governance-prd.md), and [CP-03](03-implementation-architecture-prd.md) first. This file remains the desired behavior contract; a described requirement is not evidence that code or deployment already satisfies it. Current code is the source of truth for existing API names and domain invariants; a conflict with security/owner contracts must be recorded and resolved before changing them.
 
 ## 1. Scope and immutable rules
 

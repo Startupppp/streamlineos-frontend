@@ -79,10 +79,12 @@ function useForegroundHeartbeat(enabled: boolean) {
   useEffect(() => {
     if (!enabled) return;
     const sessionId = newSessionId();
-    let visibleSince = document.visibilityState === "visible" ? Date.now() : null;
+    const isForeground = () => document.visibilityState === "visible" && document.hasFocus();
+    let visibleSince = isForeground() ? Date.now() : null;
     let accrued = 0;
-    function handleVisibility() {
-      if (document.visibilityState === "visible") {
+    function handleForegroundChange() {
+      if (isForeground()) {
+        if (visibleSince !== null) return;
         visibleSince = Date.now();
       } else if (visibleSince !== null) {
         accrued += Date.now() - visibleSince;
@@ -90,17 +92,21 @@ function useForegroundHeartbeat(enabled: boolean) {
       }
     }
     function handleTick() {
-      if (document.visibilityState !== "visible" || visibleSince === null) return;
+      if (!isForeground() || visibleSince === null) return;
       const now = Date.now();
       const seconds = Math.min(120, Math.round((accrued + now - visibleSince) / 1000));
       accrued = 0;
       visibleSince = now;
       if (seconds > 0) mutate({ sessionId, foregroundSeconds: seconds });
     }
-    document.addEventListener("visibilitychange", handleVisibility);
+    document.addEventListener("visibilitychange", handleForegroundChange);
+    window.addEventListener("focus", handleForegroundChange);
+    window.addEventListener("blur", handleForegroundChange);
     const timer = window.setInterval(handleTick, HEARTBEAT_MS);
     return () => {
-      document.removeEventListener("visibilitychange", handleVisibility);
+      document.removeEventListener("visibilitychange", handleForegroundChange);
+      window.removeEventListener("focus", handleForegroundChange);
+      window.removeEventListener("blur", handleForegroundChange);
       window.clearInterval(timer);
     };
   }, [enabled, mutate]);
@@ -117,7 +123,7 @@ export function CompanionLauncher({ state: chatState, preferences }: CompanionLa
   const scope = useOrgStorageScope();
   const introKey = orgScopedStorageKey(INTRO_KEY, scope);
   const [introSeen, setIntroSeen] = useState(() => readIntroSeen(introKey));
-  const [mountedAt] = useState(Date.now);
+  const [now, setNow] = useState(Date.now);
   const updatePreferences = useUpdateCompanionPreferences();
   const buttonRef = useRef<HTMLButtonElement>(null);
   const wasOpenRef = useRef(open);
@@ -127,12 +133,25 @@ export function CompanionLauncher({ state: chatState, preferences }: CompanionLa
     const wasOpen = wasOpenRef.current;
     wasOpenRef.current = open;
     if (!wasOpen || open) return;
-    const active = document.activeElement;
-    if (active === null || active === document.body) buttonRef.current?.focus();
+    const frame = window.requestAnimationFrame(() => buttonRef.current?.focus());
+    return () => window.cancelAnimationFrame(frame);
   }, [open]);
 
+  useEffect(() => {
+    const expiresAt = preferences.pausedUntil ? Date.parse(preferences.pausedUntil) : NaN;
+    let timer: number;
+    function refresh() {
+      const current = Date.now();
+      setNow(current);
+      const remaining = expiresAt - current;
+      if (remaining > 0) timer = window.setTimeout(refresh, Math.min(remaining, 2_147_483_647));
+    }
+    timer = window.setTimeout(refresh, 0);
+    return () => window.clearTimeout(timer);
+  }, [preferences.pausedUntil]);
+
   const paused =
-    preferences.pausedUntil !== null && new Date(preferences.pausedUntil).getTime() > mountedAt;
+    preferences.pausedUntil !== null && Date.parse(preferences.pausedUntil) > now;
   const pet = companionPetState(chatState === "idle" && paused ? "quiet" : chatState);
   const name = companionDisplayName(preferences);
   const status = pet.label;
@@ -193,7 +212,7 @@ export function CompanionLauncher({ state: chatState, preferences }: CompanionLa
         aria-expanded={open}
         aria-label={`${open ? "Minimize" : "Open"} ${name}, ${status}`}
         className={cn(
-          "flex h-6 max-w-full items-center gap-1 bg-card px-1.5 text-foreground shadow-lg ring-1 ring-inset ring-border transition-colors hover:bg-muted",
+          "flex min-h-11 max-w-full items-center gap-1 bg-card px-3 text-foreground shadow-lg ring-1 ring-inset ring-border transition-colors hover:bg-muted",
           left ? "rounded-tr-lg" : open ? "w-full" : "rounded-tl-lg",
         )}
       >
@@ -201,7 +220,7 @@ export function CompanionLauncher({ state: chatState, preferences }: CompanionLa
           preset={preferences.preset}
           state={pet.visual}
           animation={preferences.animation}
-          className="size-5"
+          className="size-7"
         />
         <span className="truncate text-micro font-semibold leading-none">{name}</span>
         <span className="truncate text-micro leading-none text-muted-foreground">{status}</span>

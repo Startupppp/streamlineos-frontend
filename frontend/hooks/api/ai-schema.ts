@@ -223,3 +223,26 @@ export const confirmActionContract = z.object({
 export const declineProposalContract = z.object({
   declined: z.literal(true),
 });
+
+export const recoverProposalContract = z.discriminatedUnion("state", [
+  z.object({
+    state: z.literal("ready"),
+    proposalId: z.number().int(),
+    action: z.string(),
+    token: z.string(),
+    expiresAt: z.string().datetime(),
+  }),
+  z.object({
+    state: z.enum(["expired", "cancelled", "unavailable"]),
+    proposalId: z.number().int(),
+    action: z.string(),
+    reason: z.string().optional(),
+  }),
+  z.object({
+    state: z.literal("resolved"),
+    proposalId: z.number().int(),
+    action: z.string(),
+    status: z.enum(["CONFIRMED", "EXECUTED"]),
+    receipt: askOsActionReceiptSchema.optional(),
+  }),
+]);

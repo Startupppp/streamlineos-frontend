@@ -4,11 +4,13 @@ import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ApiError } from "@/lib/api-envelope";
 import { apiClient } from "@/lib/api-client";
+import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { AskOsContext, useAskOsState } from "./ask-os-context";
 import { AskOsLauncher } from "./ask-os-launcher";
 import { AskOsCompanionStateContext, type AskOsCompanionState } from "./ask-os-companion-state";
 
 const push = jest.fn();
+const HEARTBEAT_TEST_INTERVAL = 60_000;
 
 jest.mock("next-auth/react", () => ({ useSession: () => ({ status: "authenticated" }) }));
 jest.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
@@ -51,7 +53,7 @@ const meetingPrompt = {
   href: "/calendar/events/e1",
   status: "eligible",
   eligibleAt: "2026-10-09T09:50:00.000Z",
-  expiresAt: "2026-10-09T10:00:00.000Z",
+  expiresAt: new Date(Date.now() + 10 * 60_000).toISOString(),
   snoozedUntil: null,
 };
 
@@ -61,9 +63,12 @@ interface ServerSetup {
   prefsFail?: boolean;
   prompt?: typeof meetingPrompt | null;
   claimConflict?: boolean;
+  claimFailure?: boolean;
 }
 
-function server({ preferences, policy, prefsFail, prompt = null, claimConflict }: ServerSetup = {}) {
+function server({ preferences, policy, prefsFail, prompt = null, claimConflict, claimFailure }: ServerSetup = {}) {
+  let conflictSeen = false;
+  let resolved = false;
   get.mockImplementation((url: string) => {
     if (url === "/companion/preferences") {
       if (prefsFail) return Promise.reject(new ApiError("Unavailable", 503, "SERVICE_UNAVAILABLE"));
@@ -73,11 +78,17 @@ function server({ preferences, policy, prefsFail, prompt = null, claimConflict }
         policy: { ...basePolicy, ...policy },
       });
     }
-    if (url === "/companion/prompts/next") return Promise.resolve({ prompt });
+    if (url === "/companion/prompts/next") return Promise.resolve({ prompt: conflictSeen || resolved ? null : prompt });
     return Promise.reject(new Error(`unexpected GET ${url}`));
   });
   post.mockImplementation((url: string) => {
-    if (url.endsWith("/claim") && claimConflict) return Promise.reject(new ApiError("Claimed", 409, "CONFLICT"));
+    if (url.endsWith("/claim") && claimFailure)
+      return Promise.reject(new ApiError("Unavailable", 503, "SERVICE_UNAVAILABLE"));
+    if (url.endsWith("/claim") && claimConflict) {
+      conflictSeen = true;
+      return Promise.reject(new ApiError("Claimed", 409, "CONFLICT"));
+    }
+    if (url.endsWith("/dismiss") || url.endsWith("/snooze")) resolved = true;
     return Promise.resolve({ prompt: { ...meetingPrompt, status: "claimed" } });
   });
   patch.mockImplementation(() =>
@@ -112,13 +123,22 @@ function renderLauncher(activity?: AskOsCompanionState) {
   function Wrapper({ children }: { children: ReactNode }) {
     return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
   }
-  return render(<Harness activity={activity} />, { wrapper: Wrapper });
+  return { ...render(<Harness activity={activity} />, { wrapper: Wrapper }), client };
 }
 
 beforeEach(() => {
   jest.clearAllMocks();
+  jest.spyOn(document, "hasFocus").mockReturnValue(true);
   window.localStorage.clear();
   window.localStorage.setItem("unscoped::companion-intro-seen", "1");
+});
+
+afterEach(() => {
+  jest.useRealTimers();
+});
+
+afterEach(() => {
+  jest.restoreAllMocks();
 });
 
 describe("companion launcher rollback", () => {
@@ -152,6 +172,14 @@ describe("companion launcher rollback", () => {
     expect(await screen.findByRole("button", { name: "Open Pip, Working" })).toBeInTheDocument();
     expect(screen.getByText("Working")).toBeVisible();
     expect(screen.queryByRole("button", { name: "Open Ask OS assistant" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Open Pip, Working" })).toHaveClass("min-h-11");
+  });
+
+  it("resumes its ready status when a prompt pause expires", async () => {
+    server({ preferences: { pausedUntil: new Date(Date.now() + 500).toISOString() } });
+    renderLauncher();
+    expect(await screen.findByRole("button", { name: "Open Pip, Prompts paused" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Open Pip, Ready" })).toBeInTheDocument();
   });
 });
 
@@ -181,6 +209,31 @@ describe("companion motion", () => {
   });
 });
 
+describe("companion activity timing", () => {
+  it("does not count time while the window is blurred", async () => {
+    jest.useFakeTimers();
+    const focus = jest.spyOn(document, "hasFocus").mockReturnValue(true);
+    server({ preferences: { activityConsent: true } });
+    renderLauncher();
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    focus.mockReturnValue(false);
+    act(() => window.dispatchEvent(new Event("blur")));
+    act(() => jest.advanceTimersByTime(HEARTBEAT_TEST_INTERVAL));
+    expect(post.mock.calls.some(([url]) => url === "/companion/activity/heartbeat")).toBe(false);
+
+    focus.mockReturnValue(true);
+    act(() => window.dispatchEvent(new Event("focus")));
+    act(() => jest.advanceTimersByTime(HEARTBEAT_TEST_INTERVAL));
+    await act(async () => Promise.resolve());
+    expect(post.mock.calls.some(([url]) => url === "/companion/activity/heartbeat")).toBe(true);
+    focus.mockRestore();
+  });
+});
+
 describe("companion keyboard focus", () => {
   it("opens from the keyboard and returns focus to the pet when the panel closes", async () => {
     server();
@@ -194,7 +247,7 @@ describe("companion keyboard focus", () => {
       button.blur();
       harness.current?.setOpen(false);
     });
-    expect(screen.getByRole("button", { name: "Open Pip, Ready" })).toHaveFocus();
+    await waitFor(() => expect(screen.getByRole("button", { name: "Open Pip, Ready" })).toHaveFocus());
   });
 });
 
@@ -224,6 +277,19 @@ describe("companion first visit", () => {
 });
 
 describe("companion prompt bubble", () => {
+  it("defers claiming while another modal owns the user's attention", async () => {
+    const modal = document.createElement("div");
+    modal.setAttribute("role", "dialog");
+    modal.setAttribute("aria-modal", "true");
+    document.body.appendChild(modal);
+    server({ prompt: meetingPrompt });
+    renderLauncher();
+    await settle();
+    expect(post).not.toHaveBeenCalledWith("/companion/prompts/p1/claim", undefined, undefined, expect.anything());
+    modal.remove();
+    expect(await screen.findByText("Design review in 10 minutes")).toBeInTheDocument();
+  });
+
   it("shows a prompt only after this tab claims it", async () => {
     server({ prompt: meetingPrompt });
     renderLauncher();
@@ -231,11 +297,33 @@ describe("companion prompt bubble", () => {
     expect(post).toHaveBeenCalledWith("/companion/prompts/p1/claim", undefined, undefined, expect.anything());
   });
 
+  it("keeps this tab's claimed prompt visible when the next candidate changes", async () => {
+    server({ prompt: meetingPrompt });
+    const { client } = renderLauncher();
+    await screen.findByText("Design review in 10 minutes");
+    act(() => {
+      client.setQueryData(collaborationQueryKeys.companion.nextPrompt(), { prompt: null });
+    });
+    expect(screen.getByText("Design review in 10 minutes")).toBeInTheDocument();
+  });
+
   it("drops the prompt silently when another tab already claimed it", async () => {
     server({ prompt: meetingPrompt, claimConflict: true });
     renderLauncher();
     await waitFor(() => expect(post).toHaveBeenCalledWith("/companion/prompts/p1/claim", undefined, undefined, expect.anything()));
     expect(screen.queryByText("Design review in 10 minutes")).not.toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Companion suggestion" })).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(get.mock.calls.filter(([url]) => url === "/companion/prompts/next").length).toBeGreaterThan(1),
+    );
+  });
+
+  it("does not retry a failed claim in a tight loop", async () => {
+    server({ prompt: meetingPrompt, claimFailure: true });
+    renderLauncher();
+    await waitFor(() => expect(post).toHaveBeenCalledTimes(1));
+    await settle();
+    expect(post).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole("region", { name: "Companion suggestion" })).not.toBeInTheDocument();
   });
 
@@ -267,5 +355,17 @@ describe("companion prompt bubble", () => {
     await screen.findByText("Design review in 10 minutes");
     await user.click(screen.getByRole("button", { name: "Open Pip, Ready" }));
     expect(screen.queryByText("Design review in 10 minutes")).not.toBeInTheDocument();
+  });
+
+  it("restores this tab's claimed prompt after the panel closes", async () => {
+    server({ prompt: meetingPrompt });
+    const user = userEvent.setup();
+    renderLauncher();
+    await screen.findByText("Design review in 10 minutes");
+    await user.click(screen.getByRole("button", { name: "Open Pip, Ready" }));
+    expect(screen.queryByText("Design review in 10 minutes")).not.toBeInTheDocument();
+    act(() => harness.current?.setOpen(false));
+    expect(await screen.findByText("Design review in 10 minutes")).toBeInTheDocument();
+    expect(post.mock.calls.filter(([url]) => String(url).endsWith("/claim"))).toHaveLength(1);
   });
 });

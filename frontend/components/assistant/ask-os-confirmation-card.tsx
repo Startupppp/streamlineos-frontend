@@ -9,6 +9,7 @@ import {
   refusedConfirmOutcome,
   useConfirmAction,
   useDeclineProposal,
+  useRecoverProposal,
   type ConfirmActionResult,
 } from "@/hooks/api/ai-confirm-action";
 import { AskOsReceiptCard } from "./ask-os-answer-card";
@@ -42,6 +43,7 @@ type RecordProps = {
   summary: string;
   preview: Record<string, unknown>;
   title?: string;
+  note?: string;
 };
 
 type ReceiptProps = {
@@ -103,13 +105,13 @@ function ConfirmationReceipt({ title, receipt }: ReceiptProps) {
   );
 }
 
-function ConfirmationRecord({ summary, preview, title }: RecordProps) {
+function ConfirmationRecord({ summary, preview, title, note = "Past proposal — view only." }: RecordProps) {
   const cardTitle = title ?? summary;
   return (
     <div className="space-y-2">
       <p className="text-label font-medium leading-5 text-foreground">{cardTitle}</p>
       <PreviewFields preview={preview} />
-      <p className="text-dense text-muted-foreground">Past proposal — view only.</p>
+      <p className="text-dense text-muted-foreground">{note}</p>
     </div>
   );
 }
@@ -212,6 +214,7 @@ export function ConfirmDirectiveSlot({
     useState<ConfirmActionResult | null>(null);
   const [cancelled, setCancelled] = useState(false);
   const decline = useDeclineProposal();
+  const recovery = useRecoverProposal(directive.proposalId, persisted);
 
   function handleConfirmed(outcome: ConfirmActionResult) {
     setConfirmedOutcome(outcome);
@@ -233,9 +236,59 @@ export function ConfirmDirectiveSlot({
     });
   }
 
-  const { token } = directive;
+  const recovered = persisted ? recovery.data : undefined;
+  const token = recovered?.state === "ready" ? recovered.token : directive.token;
+  const expiresAt = recovered?.state === "ready" ? recovered.expiresAt : directive.expiresAt;
 
-  if (persisted || token === undefined)
+  if (persisted && recovery.isPending)
+    return (
+      <AskOsConfirmationCard
+        mode="record"
+        summary={directive.summary}
+        preview={directive.preview}
+        title={directive.title}
+        note="Checking whether this proposal is still available…"
+      />
+    );
+  if (persisted && (recovery.isError || recovered === undefined))
+    return (
+      <AskOsConfirmationCard
+        mode="record"
+        summary={directive.summary}
+        preview={directive.preview}
+        title={directive.title}
+        note="This proposal could not be restored. Try reloading or ask for a new preview."
+      />
+    );
+  if (recovered?.state === "resolved" && recovered.receipt)
+    return (
+      <AskOsConfirmationCard
+        mode="receipt"
+        title={directive.title ?? directive.summary}
+        receipt={recovered.receipt}
+      />
+    );
+  if (recovered?.state === "resolved")
+    return (
+      <AskOsConfirmationCard
+        mode="record"
+        summary={directive.summary}
+        preview={directive.preview}
+        title={directive.title}
+        note="This proposal has already been resolved."
+      />
+    );
+  if (recovered && recovered.state !== "ready")
+    return (
+      <AskOsConfirmationCard
+        mode="record"
+        summary={directive.summary}
+        preview={directive.preview}
+        title={directive.title}
+        note={recovered.reason ?? `This proposal is ${recovered.state}. Ask for a new preview to continue.`}
+      />
+    );
+  if (token === undefined)
     return (
       <AskOsConfirmationCard
         mode="record"
@@ -268,7 +321,7 @@ export function ConfirmDirectiveSlot({
       summary={directive.summary}
       preview={directive.preview}
       token={token}
-      expiresAt={directive.expiresAt}
+      expiresAt={expiresAt}
       title={directive.title}
       confirmLabel={directive.confirmLabel}
       onConfirmed={handleConfirmed}

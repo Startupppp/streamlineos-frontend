@@ -33,6 +33,7 @@ interface AskOsChatViewProps {
   onRetry: () => void;
   onScroll: () => void;
   onSuggestion: (event: MouseEvent<HTMLButtonElement>) => void;
+  suggestions?: readonly string[];
   persisted: AskAiHistoryMessage[];
   reduce: boolean;
   scrollRef: RefObject<HTMLDivElement | null>;
@@ -55,6 +56,7 @@ export function AskOsChatView({
   onRetry,
   onScroll,
   onSuggestion,
+  suggestions,
   persisted,
   reduce,
   scrollRef,
@@ -90,7 +92,7 @@ export function AskOsChatView({
             <Skeleton className="ml-auto h-8 w-1/2 rounded-2xl" />
           </div>
         ) : showEmpty ? (
-          <EmptyAskOs onSuggestion={onSuggestion} />
+          <EmptyAskOs onSuggestion={onSuggestion} suggestions={suggestions} />
         ) : (
           <div className="mx-auto w-full max-w-[36rem] space-y-4">
             {hasNextPage ? (

@@ -63,5 +63,9 @@ export const aiConversationMessagesContract = z.object({
 /** `deleteConversationResponseSchema` */
 export const aiDeleteConversationContract = z.object({ success: z.literal(true) });
 
+export const aiStarterSuggestionsContract = z.object({
+  suggestions: z.array(z.string().min(1).max(160)).max(5),
+});
+
 /** chat attachment URL response */
 export const chatAttachmentUrlContract = z.object({ url: z.string() });

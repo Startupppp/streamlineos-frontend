@@ -12,7 +12,9 @@ import {
   type MouseEvent,
 } from "react";
 import { createPortal } from "react-dom";
+import { usePathname } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { XIcon } from "lucide-react";
 import { type InfiniteData, useQueryClient } from "@tanstack/react-query";
 import {
   useAskAI,
@@ -21,6 +23,7 @@ import {
   useRenameAiConversation,
   useDeleteAiConversation,
   useAiConversationMessages,
+  useAskOsStarterSuggestions,
   type AskAIMessage,
   type AskAiHistoryMessage,
   type AskAiHistoryPage,
@@ -32,6 +35,7 @@ import { useHydrated } from "@/hooks/common/use-hydrated";
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import {
   askOsComposerRefusal,
+  askOsPageContext,
   boundedAskOsContext,
   prepareAskOsSend,
   type PersonaId,
@@ -60,6 +64,7 @@ export function GlobalAskOs() {
   const reduce = useReducedMotion();
   const hydrated = useHydrated();
   const isMobile = useIsMobile();
+  const pathname = usePathname();
   const { open, setOpen } = useAskOs();
   const queryClient = useQueryClient();
 
@@ -75,6 +80,7 @@ export function GlobalAskOs() {
   const [convSearch, setConvSearch] = useState("");
   const [selectedPersona, setSelectedPersona] = useState<PersonaId | null>(null);
   const [expanded, setExpanded] = useState(false);
+  const [contextDismissedForRoute, setContextDismissedForRoute] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const topSentinelRef = useRef<HTMLDivElement>(null);
   const previousScrollHeightRef = useRef(0);
@@ -83,7 +89,15 @@ export function GlobalAskOs() {
   const sendingRef = useRef(false);
   const lastSentRef = useRef<string | null>(null);
   const temporaryIdRef = useRef(0);
+  const composerRef = useRef<HTMLInputElement>(null);
   const { sendMessage, stop, isStreaming } = useAskAI();
+  const pageContext = useMemo(() => askOsPageContext(pathname), [pathname]);
+  const contextEnabled = contextDismissedForRoute !== pathname;
+  const contextLabel = pageContext.recordType && pageContext.recordId
+    ? `${pageContext.recordType} ${pageContext.recordId}`
+    : pageContext.module
+      ? `${pageContext.module} page`
+      : null;
   const createConversation = useCreateAiConversation();
   const renameConversation = useRenameAiConversation();
   const deleteConversation = useDeleteAiConversation();
@@ -120,6 +134,7 @@ export function GlobalAskOs() {
 
   const isConversations = view === "conversations";
   const showEmpty = activeConversationId === null && !draft;
+  const { data: starterSuggestionData } = useAskOsStarterSuggestions(open && showEmpty);
   const threadBusy = isStreaming || draft !== null;
   const fillViewport = isMobile || expanded;
   const panelTransition = reduce
@@ -204,6 +219,11 @@ export function GlobalAskOs() {
     window.addEventListener("keydown", handleEscape);
     return () => window.removeEventListener("keydown", handleEscape);
   }, [expanded, isMobile, open]);
+  useEffect(() => {
+    if (!open || view !== "chat" || threadBusy) return;
+    const frame = window.requestAnimationFrame(() => composerRef.current?.focus());
+    return () => window.cancelAnimationFrame(frame);
+  }, [open, threadBusy, view]);
   const handleDirectiveData = useCallback(
     (name: string, data: unknown) => {
       if (name !== "askos-directive") return;
@@ -283,7 +303,7 @@ export function GlobalAskOs() {
           conversationId,
           selectedPersona ?? undefined,
           handleDirectiveData,
-          { clarification },
+          { clarification, includePageContext: contextEnabled },
         );
         if (outcome.status === "busy") {
           setDraft(null);
@@ -375,6 +395,7 @@ export function GlobalAskOs() {
     },
     [
       activeConversationId,
+      contextEnabled,
       createConversation,
       handleDirectiveData,
       input,
@@ -549,6 +570,7 @@ export function GlobalAskOs() {
                       onLoadOlder={loadOlder}
                       onScroll={handleScroll}
                       onSuggestion={handleSuggestion}
+                      suggestions={starterSuggestionData?.suggestions}
                       persisted={persisted}
                       reduce={Boolean(reduce)}
                       scrollRef={scrollRef}
@@ -557,7 +579,23 @@ export function GlobalAskOs() {
                       directives={inFlightDirective}
                       onClarify={handleClarify}
                     />
+                    {contextEnabled && contextLabel ? (
+                      <div className="flex items-center gap-1.5 border-t border-border/60 px-3 pt-2 text-xs text-muted-foreground">
+                        <span className="truncate rounded-full bg-muted px-2 py-1" title={pageContext.route}>
+                          Context: {contextLabel}
+                        </span>
+                        <button
+                          type="button"
+                          aria-label="Remove page context"
+                          className="inline-flex size-7 shrink-0 items-center justify-center rounded-md hover:bg-muted hover:text-foreground"
+                          onClick={() => setContextDismissedForRoute(pathname)}
+                        >
+                          <XIcon className="size-3.5" aria-hidden />
+                        </button>
+                      </div>
+                    ) : null}
                     <AskOsChatComposer
+                      inputRef={composerRef}
                       error={composerError}
                       input={input}
                       isStreaming={threadBusy}

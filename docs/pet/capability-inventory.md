@@ -1,38 +1,38 @@
 # Registered Tool inventory and companion exposure
 
-**Source check:** 2026-10-08, `backend/src/modules/ai/core/tools/*-tools.ts`. This is an inventory of **73 source-declared keys across 16 providers**, not a claim that all work in a deployed environment. Registration, effective availability, object access, connected-account state, correct result, and end-to-end write behavior are separate gates. Re-run the inventory against the implementation branch before launch. The server-side Toolset intersects this review with current module flags, effective permissions, organization policy, and connection/owner checks.
+**Source check:** 2026-10-09, `backend/src/modules/ai/core/tools/*-tools.ts` and `services/chat-assistant-inline-tools.ts`. There are **79 source-declared keys**: 75 across 16 providers and four inline Tools. The server review map in `registry/ask-os-tool-exposure.ts` allows reviewed reads/confirmable actions and blocks four inline Tools. This is source inventory, not proof that every capability works in a deployed environment. Registration, effective availability, object access, connected-account state, correct result, and end-to-end write behavior remain separate gates.
 
-`R` = read or generation/draft with no owner write found from the declared contract; still audit network/DB side effects. `C` = declared `confirms` action; validate owner receipt and idempotency. `B` = known immediate write; **block from the pet Toolset** until converted to a confirmable action. `N` = new Tool needed. All entries are `SOURCE PRESENT / RUNTIME UNVERIFIED` unless marked `N`.
+`R` = reviewed read or draft; still audit network/DB side effects. `C` = declared `confirms` action; validate owner receipt and idempotency. `B` = blocked by the server exposure map. These classifications describe the current source. Some named paths have [scratch database evidence](verification-and-competition.md#real-database-evidence-2026-10-09), but full browser, provider, role, and delivery acceptance remains open.
 
 | Source provider | R keys | C keys | B keys |
 | --- | --- | --- | --- |
 | `comms-actions-tools.ts` | — | `sendEmail`, `postChannelMessage`, `grantRecognition`, `grantBonus`, `archiveMailMessage` | — |
 | `comms-copilot-tools.ts` | — | `scheduleEvent`, `sendDirectMessage` | — |
-| `crm-copilot-tools.ts` | `searchLeads` | `updateLeadStatus`* | `createTask` |
+| `crm-copilot-tools.ts` | `searchLeads` | `updateLeadStatus`, `createTask` | — |
 | `hr-copilot-tools.ts` | `askHrPolicy`, `getHeadcountSummary`, `getAttritionSummary`, `draftPerformanceReviewNote`, `draftPromotionLetter`, `getMoodTrend`, `getLeaveUtilization` | — | — |
 | `mail-copilot-tools.ts` | `listRecentEmails`, `summarizeMailThread` | `sendMailFromAccount` | — |
 | `ops-copilot-tools.ts` | `getInventoryStock`, `getOrgPayrollSummary`, `getMyLeaveBalances` | — | — |
-| `projects-copilot-tools.ts` | `readTicket`, `searchTickets` | `createTicket`, `updateTicketStatus`, `addTicketComment`, `createCalendarReminder` | — |
-| `self-actions-tools.ts` | — | `applyForLeave`, `submitExpense`, `logTimesheetEntry`, `applyToJobOpening`, `submitReferral` | `clockIn`, `clockOut`, `toggleBreak` |
+| `projects-copilot-tools.ts` | `readTicket`, `searchTickets`, `countTickets` | `createTicket`, `updateTicketStatus`, `addTicketComment`, `createCalendarReminder` | — |
+| `self-actions-tools.ts` | — | `applyForLeave`, `submitExpense`, `logTimesheetEntry`, `applyToJobOpening`, `submitReferral`, `clockIn`, `clockOut`, `toggleBreak` | — |
 | `self-comms-tools.ts` | `getMyInbox`, `getMyNotificationCount`, `getMyAnnouncements` | — | — |
-| `self-digest-tools.ts` | `summarizeMyDay`, `searchMyDocuments`** | — | — |
+| `self-digest-tools.ts` | `summarizeMyDay`, `searchMyDocuments`**, `searchDocumentContext` | — | — |
 | `self-growth-tools.ts` | `getMyOnboardingTasks`, `getMyDisciplinaryCases`, `getMyGoals`, `getMyReviews`, `getMyHelpdeskItems` | — | — |
 | `self-hr-tools.ts` | `getMyEmployment`, `getMyProfile`, `getMyAttendanceSummary`, `getMyAttendanceStatus`, `getMyLeaveRequests`, `getMyExpenses` | — | — |
 | `self-payroll-tools.ts` | `getMyPayslips`, `getMyTotalRewards` | — | — |
 | `self-work-tools.ts` | `getMyTickets`, `getMyTicketStats`, `getMyCreatedTickets`, `getMyReferrals`, `getMyTasks`, `getMyTimesheets`, `getMyJobApplications`, `getMyInterviews` | — | — |
 | `work-actions-tools.ts` | — | `createLead`, `logCrmActivity`, `assignTicket`, `moveToCycle`, `createCalendarEvent`, `replyToMailThread` | — |
 | `workspace-copilot-tools.ts` | `findPerson`, `getPersonTicketStats`, `getMyCalendarEvents`, `searchChatMessages` | — | — |
+| `chat-assistant-inline-tools.ts` | — | — | `searchKnowledgeBase`, `askProjectAI`, `getProjectSummary`, `searchProjects` |
 
-\* `updateLeadStatus` is confirmable but currently uses a first partial-name match; it is **blocked from pet exposure** until access-scoped disambiguation is fixed and proved.  
-\** `searchMyDocuments` is a title/filename and limited excerpt search; it is **not** the proposed content-grounded Documents answer Tool.
+`updateLeadStatus` now returns an access-scoped ambiguity choice when multiple leads match; browser and non-owner database proof remains open. `searchMyDocuments` remains title/filename oriented; `searchDocumentContext` is the new bounded Documents content path. The four inline Tools remain blocked because three invoke nested paid generation and one searches projects without actor reach.
 
 ## Required new owner capabilities
 
 | Need | Owner and shape | Exposure gate |
 | --- | --- | --- |
-| `N`: Exact canonical BUG and all-issue aggregates | Build-owned aggregate/read Tool with explicit user-selected scope, type, state groups, true total, `asOf`, bounded preview, and matching filter link. | Non-owner DB and UI tests for custom statuses, deleted/archived/inaccessible projects, co-assignee dedupe, and count/view parity. |
-| `N`: Bounded citable Documents context | Documents-owned read Tool/service extracted from existing retrieval/citation owner; Ask OS generates once. | One credit/transcript, bounded context, degradation, injection resistance, citation revocation and replay tests. |
-| `N`: Prompt eligibility | Calendar occurrence, HR attendance eligibility, Notifications policy/outbox and pet preference composition. This is deterministic server work, **not** a model Tool. | Suppression, dedupe, expiry, delivery, privacy, and multi-device proof. |
+| Implemented, unverified end to end: exact canonical BUG and all-issue aggregate | `countTickets` uses a Build-owned aggregate with explicit scope, type, state groups, total, `asOf`, and bounded preview. | Scratch DB checks totals and isolation. Matching filtered Build view and `href`, non-owner query plan, browser answer, and role breadth remain open. |
+| Implemented, unverified end to end: bounded Documents context | `searchDocumentContext` uses Documents-owned citable context; Ask OS generates once. | Actual provider turn, one credit/transcript, access-checked citation click/replay, and revocation race remain open. |
+| Implemented, unverified end to end: prompt eligibility | Calendar, HR, Notifications, and companion preference/prompt services compose deterministic eligibility. This is not a model Tool. | Focus/meeting/full-screen suppression, delivery, multi-device UI, privacy, and browser proof remain open. |
 
 ## Per-capability launch review record
 
@@ -51,6 +51,6 @@ For **each key above**, the implementing team must record a row in the release i
 
 1. Ship the universal entry and verified read capabilities for each enabled pilot role cluster. Fail closed for source-present Tools whose object scope, result provenance, or cost is unreviewed. A read being blocked does not block the whole pet; explain its unavailable scope.
 2. Enable individually verified `C` actions. Every pet write renders the typed directive/card and waits for the existing confirm endpoint. The user's free-text “yes” never redeems a proposal.
-3. Keep `B` keys out of the pet's server Toolset until a new owner confirm action is registered and verified. Do not depend on model instructions or hidden UI to suppress them.
-4. Add the two `N` read capabilities through Build and Documents, then validate representative cross-module answers. Do not infer a count from an existing capped list or answer policy questions from title-only search.
+3. Keep the four `B` inline keys out of the server Toolset until their access and nested-generation problems are resolved. The former immediate self and CRM writes now have `confirms`, but still require owner receipt and live browser verification.
+4. Validate `countTickets` and `searchDocumentContext` through representative model-driven and cross-module answers. Do not infer a count from a capped list or answer policy questions from title-only search.
 5. Reconcile this file against `collectToolDefinitions` and the confirm registry on every release. New keys default to **unreviewed and unavailable** until the row is approved; deleted keys disappear from suggestions.

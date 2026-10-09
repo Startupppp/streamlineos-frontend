@@ -41,6 +41,7 @@ export const collaborationQueryKeys = {
   aiChat: {
     all: [...base, "aiChat"] as const,
     history: () => [...base, "aiChat", "history"] as const,
+    starterSuggestions: () => [...base, "aiChat", "starterSuggestions"] as const,
     conversations: () => [...base, "aiChat", "conversationList"] as const,
     conversationMessages: (conversationId: number) =>
       [...base, "aiChat", "conversations", conversationId, "messages"] as const,

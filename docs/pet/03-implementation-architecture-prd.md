@@ -1,6 +1,6 @@
 # CP-03 — Companion implementation architecture
 
-**Status:** Source-informed architecture requirements, 2026-10-08. No pet implementation or target-environment proof. **Depends on:** [CP-00](00-experience-prd.md), [CP-01](01-intelligence-actions-prd.md), [CP-02](02-proactive-governance-prd.md), and the [verification ledger](verification-and-competition.md).
+**Status:** Source-informed architecture requirements, 2026-10-08. Pet implementation and named database proof now exist; complete target-environment and UX proof does not. See [the current review](review-2026-10-09.md). **Depends on:** [CP-00](00-experience-prd.md), [CP-01](01-intelligence-actions-prd.md), [CP-02](02-proactive-governance-prd.md), and the [verification ledger](verification-and-competition.md).
 
 ## Domain ownership and seams
 

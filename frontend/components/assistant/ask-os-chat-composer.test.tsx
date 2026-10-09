@@ -1,3 +1,4 @@
+import { createRef } from "react";
 import { render, screen } from "@testing-library/react";
 import { AskOsChatComposer } from "./ask-os-chat-composer";
 import { ASK_OS_MAX_MESSAGE_CHARS } from "./ask-os-request-policy";
@@ -12,6 +13,12 @@ const composerProps = {
 };
 
 describe("Ask OS composer validation", () => {
+  it("exposes the message field so the panel can move focus to it on open", () => {
+    const inputRef = createRef<HTMLInputElement>();
+    render(<AskOsChatComposer {...composerProps} inputRef={inputRef} error={null} input="" />);
+    expect(inputRef.current).toBe(screen.getByPlaceholderText("Ask anything about your organization…"));
+  });
+
   it("keeps a server validation refusal on the input instead of a thread retry", () => {
     render(
       <AskOsChatComposer

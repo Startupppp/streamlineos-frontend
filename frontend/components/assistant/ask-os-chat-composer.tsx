@@ -1,4 +1,4 @@
-import type { ChangeEvent, FormEvent } from "react";
+import type { ChangeEvent, FormEvent, Ref } from "react";
 import { PauseIcon, SendIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { cn } from "@/lib/utils";
@@ -22,17 +22,19 @@ interface AskOsChatComposerProps {
   onStop: () => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   selectedPersona: PersonaId | null;
+  inputRef?: Ref<HTMLInputElement>;
 }
 
 export function AskOsChatComposer({
   error,
   input,
+  inputRef,
   isStreaming,
-  onInputChange,
-  onSelectPersona,
+  selectedPersona,
   onStop,
   onSubmit,
-  selectedPersona,
+  onInputChange,
+  onSelectPersona,
 }: AskOsChatComposerProps) {
   const lengthError = askOsInputError(input);
   const shownError = lengthError ?? error;
@@ -55,6 +57,7 @@ export function AskOsChatComposer({
         )}
       >
         <input
+          ref={inputRef}
           id={COMPOSER_INPUT_ID}
           type="text"
           value={input}

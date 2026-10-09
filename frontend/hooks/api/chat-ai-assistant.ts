@@ -3,7 +3,7 @@ import type { z } from "zod";
 import type { aiConversationContract as aiConversationContractDef } from "@/hooks/api/chat-extra-schema";
 
 import { useCallback } from "react";
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 
@@ -18,6 +18,9 @@ const aiDeleteConversationContract = lazyContract(() =>
 );
 const aiConversationMessagesContract = lazyContract(() =>
   import("@/hooks/api/chat-extra-schema").then((m) => m.aiConversationMessagesContract),
+);
+const aiStarterSuggestionsContract = lazyContract(() =>
+  import("@/hooks/api/chat-extra-schema").then((m) => m.aiStarterSuggestionsContract),
 );
 import { useAiTextStream } from "@/hooks/api/ai-text-stream";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
@@ -51,6 +54,22 @@ export interface AiConversationListPage {
 }
 
 const HISTORY_PAGE_SIZE = 30;
+
+export function useAskOsStarterSuggestions(enabled: boolean) {
+  const canAi = useCan("ai:chat:use");
+  return useQuery({
+    queryKey: collaborationQueryKeys.aiChat.starterSuggestions(),
+    queryFn: ({ signal }) =>
+      apiClient.get<{ suggestions: string[] }>(
+        "/chat/starter-suggestions",
+        undefined,
+        signal,
+        aiStarterSuggestionsContract,
+      ),
+    enabled: canAi && enabled,
+    staleTime: 30_000,
+  });
+}
 
 export function useAiConversations(enabled: boolean) {
   const canAi = useCan("ai:chat:use");
@@ -146,13 +165,18 @@ export function useAskAI() {
       conversationId?: number,
       persona?: string,
       onData?: (name: string, data: unknown) => void,
-      options?: { clarification?: { clarificationId: string; optionId: string } },
+      options?: {
+        clarification?: { clarificationId: string; optionId: string };
+        includePageContext?: boolean;
+      },
     ): Promise<AskAiStreamOutcome> => {
       const outcome = await stream({
         path: "/chat",
         body: {
           messages,
-          context: askOsPageContext(window.location.pathname),
+          ...(options?.includePageContext !== false && {
+            context: askOsPageContext(window.location.pathname),
+          }),
           ...(conversationId !== undefined && { conversationId }),
           ...(persona !== undefined && { persona }),
           ...(options?.clarification !== undefined && {

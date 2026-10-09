@@ -2,6 +2,7 @@ import { apiClient } from "@/lib/api-client";
 import { isApiError, lazyContract } from "@/lib/api-envelope";
 import { useMutationState } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import { getErrorStatus } from "@/lib/get-error-message";
 import {
   askOsActionReceiptSchema,
@@ -15,6 +16,15 @@ const confirmActionContract = lazyContract(() =>
 const declineProposalContract = lazyContract(() =>
   import("@/hooks/api/ai-schema").then((m) => m.declineProposalContract),
 );
+
+const recoverProposalContract = lazyContract(() =>
+  import("@/hooks/api/ai-schema").then((m) => m.recoverProposalContract),
+);
+
+export type RecoverProposalResult =
+  | { state: "ready"; proposalId: number; action: string; token: string; expiresAt: string }
+  | { state: "expired" | "cancelled" | "unavailable"; proposalId: number; action: string; reason?: string }
+  | { state: "resolved"; proposalId: number; action: string; status: "CONFIRMED" | "EXECUTED"; receipt?: AskOsActionReceipt };
 
 export interface ConfirmActionResult {
   ok: boolean;
@@ -81,5 +91,21 @@ export function useDeclineProposal() {
         undefined,
         declineProposalContract,
       ),
+  });
+}
+
+export function useRecoverProposal(proposalId: number, enabled: boolean) {
+  return useGatedQuery("ai:chat:use", {
+    queryKey: ["aiChat", "proposalRecovery", proposalId],
+    queryFn: ({ signal }) =>
+      apiClient.get<RecoverProposalResult>(
+        `/chat/proposals/${proposalId}/recovery`,
+        undefined,
+        signal,
+        recoverProposalContract,
+      ),
+    enabled,
+    staleTime: 0,
+    retry: false,
   });
 }

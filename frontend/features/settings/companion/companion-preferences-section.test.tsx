@@ -67,7 +67,7 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
-function historyItem(id: string, title: string) {
+function historyItem(id: string, title: string, overrides: Record<string, unknown> = {}) {
   return {
     id,
     category: "meeting",
@@ -81,10 +81,51 @@ function historyItem(id: string, title: string) {
     eligibleAt: "2026-10-09T09:00:00.000Z",
     expiresAt: "2026-10-09T10:00:00.000Z",
     snoozedUntil: null,
+    ...overrides,
   };
 }
 
 describe("companion preferences", () => {
+  it("previews appearance changes and links to notification quiet hours", async () => {
+    serve();
+    const user = userEvent.setup();
+    renderSection();
+    expect(await screen.findByLabelText("Companion preview")).toHaveTextContent("Pip");
+    await user.selectOptions(screen.getByLabelText("Appearance"), "ember");
+    expect(screen.getByTestId("companion-character")).toHaveAttribute("data-preset", "ember");
+    expect(screen.getByRole("link", { name: "Manage quiet hours" })).toHaveAttribute(
+      "href",
+      "/settings/notifications/my-preferences",
+    );
+  });
+
+  it("filters activity by category and outcome and shows source and destination", async () => {
+    serve();
+    const preferencesGet = get.getMockImplementation();
+    get.mockImplementation((url: string) => {
+      if (url !== "/companion/prompts/history") return preferencesGet?.(url) ?? Promise.resolve(undefined);
+      return Promise.resolve({
+        items: [
+          historyItem("a", "Standup", {
+            sourceRef: { type: "calendarEvent", id: "event-1" },
+            href: "/calendar/events/event-1",
+          }),
+          historyItem("b", "Take a break", { category: "break", status: "suppressed" }),
+        ],
+        nextCursor: null,
+      });
+    });
+    const user = userEvent.setup();
+    renderSection();
+    expect(await screen.findByText("Standup")).toBeInTheDocument();
+    expect(screen.getByText("Source: calendarEvent (event-1)")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open destination" })).toHaveAttribute("href", "/calendar/events/event-1");
+    await user.selectOptions(screen.getByLabelText("Filter suggestion outcome"), "suppressed");
+    expect(screen.queryByText("Standup")).not.toBeInTheDocument();
+    expect(screen.getByText("Take a break")).toBeInTheDocument();
+    expect(screen.getByText("Suppression reason: A meeting starts soon")).toBeInTheDocument();
+  });
+
   it("pages prompt history by cursor", async () => {
     serve();
     const preferencesGet = get.getMockImplementation();

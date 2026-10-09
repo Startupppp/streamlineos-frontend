@@ -48,14 +48,6 @@ const AskOsReceiptCard = dynamic(
   { ssr: false },
 );
 
-const SUGGESTIONS = [
-  "Summarize my day",
-  "What are my hot leads right now?",
-  "Search the knowledge base for our leave policy",
-  "Schedule a reminder for STRE-42",
-  "Send kudos to John for shipping the feature",
-];
-
 export type MsgRow =
   | { type: "sep"; id: string; label: string }
   | { type: "msg"; message: AskAiHistoryMessage };
@@ -99,8 +91,10 @@ export function buildMsgRows(messages: AskAiHistoryMessage[]): MsgRow[] {
 
 export function EmptyAskOs({
   onSuggestion,
+  suggestions,
 }: {
   onSuggestion: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  suggestions?: readonly string[];
 }) {
   return (
     <div className="flex min-h-full flex-col items-center justify-center gap-5 px-2 py-8 text-center">
@@ -112,7 +106,7 @@ export function EmptyAskOs({
         </p>
       </div>
       <div className="flex w-full max-w-[28rem] flex-wrap justify-center gap-2">
-        {SUGGESTIONS.map((s) => (
+        {suggestions?.map((s) => (
           <button
             key={s}
             type="button"
@@ -123,6 +117,11 @@ export function EmptyAskOs({
             {s}
           </button>
         ))}
+        {suggestions?.length === 0 ? (
+          <p className="text-label text-muted-foreground">
+            Ask a question about the workspace information you can access.
+          </p>
+        ) : null}
       </div>
     </div>
   );

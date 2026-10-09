@@ -38,6 +38,7 @@ const noContentContract = lazyContract(() =>
 
 const keys = collaborationQueryKeys.companion;
 const PROMPT_REFRESH_MS = 2 * 60_000;
+const PREFERENCES_REFRESH_MS = 60_000;
 
 export type CompanionPreferencesPatch = Partial<
   Omit<CompanionPreference, "version" | "updatedAt">
@@ -49,7 +50,11 @@ export function useCompanionPreferences() {
     queryKey: keys.preferences(),
     queryFn: ({ signal }) =>
       apiClient.get<CompanionPreferences>("/companion/preferences", undefined, signal, preferencesContract),
-    staleTime: 5 * 60_000,
+    staleTime: PREFERENCES_REFRESH_MS,
+    refetchInterval: PREFERENCES_REFRESH_MS,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: "always",
+    refetchOnReconnect: true,
     enabled: status === "authenticated",
     retry: 1,
     ...INLINE_READ_ERROR,

@@ -332,4 +332,33 @@ describe("useAskAI — the one streaming AI client", () => {
     expect(body).not.toHaveProperty("clarification");
     window.history.pushState({}, "", "/");
   });
+
+  it("omits page context when the user removes it", async () => {
+    authedFetch.mockImplementation(streamingResponse);
+    window.history.pushState({}, "", "/build/42/tickets/STRE-7");
+    const { result } = renderHook(() => useAskAI());
+
+    let outcome: Promise<AskAiStreamOutcome> | null = null;
+    await act(async () => {
+      outcome = result.current.sendMessage(
+        [{ role: "user", content: "Do not use this ticket" }],
+        jest.fn(),
+        undefined,
+        undefined,
+        undefined,
+        { includePageContext: false },
+      );
+      await Promise.resolve();
+    });
+    await act(async () => {
+      lastStream?.finish();
+      await outcome;
+    });
+
+    const init: unknown = authedFetch.mock.calls[0]?.[1];
+    const body: unknown =
+      init && typeof init === "object" && "body" in init ? JSON.parse(String(init.body)) : null;
+    expect(body).not.toHaveProperty("context");
+    window.history.pushState({}, "", "/");
+  });
 });

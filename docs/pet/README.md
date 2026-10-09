@@ -1,6 +1,6 @@
 # StreamlineOS Companion Pet — product program
 
-**Status:** Product decisions settled 2026-10-08. First-release engineering implemented on `feat/companion-pet` in both repositories 2026-10-09; not release-verified (no browser, target-database or pilot evidence yet).
+**Status:** Product decisions settled 2026-10-08. First-release engineering is present on `main` in the frontend and nested backend repositories as of 2026-10-09. It is **partially verified**, not release-ready: focused tests and named scratch/RDS database checks exist; browser, provider, all-role, delivery, performance, and pilot gates remain open. See the [current review and TODOs](review-2026-10-09.md).
 **Decision owner:** Product owner. **Audience:** Product, design, engineering, security, QA, support.
 **Product boundary:** Replace the Ask OS entry experience with one original, optional companion for natural-language questions and requests across StreamlineOS and approved connected tools. Keep Ask OS conversations, permission-scoped tools, confirmations, and the owning modules' business rules.
 
@@ -16,7 +16,8 @@
 8. [ADR 0007 — Companion uses the Ask OS Toolset](0007-companion-uses-ask-os-toolset.md): the accepted first-release architecture decision and its proof gates.
 9. [Architecture report reconciliation](architecture-review.md) and [corrected HTML copy](architecture-review.html): claim-by-claim check of the supplied report against source and these requirements. The Markdown contract is authoritative.
 10. [Implementation contract](implementation-contract.md): build sequence, state and data contracts, failure rules, and release handoff.
-11. [Registered capability inventory](capability-inventory.md): all 73 source-registered Tool keys, launch treatment, and owner validation checklist.
+11. [Registered capability inventory](capability-inventory.md): all 79 source-registered Tool keys, launch treatment, and owner validation checklist.
+12. [Current implementation review and TODOs](review-2026-10-09.md): code, migration, test, UX, and acceptance findings from the latest audit.
 
 The current [Chat OS PRD](../specs/2026-09-18-chat-os-prd.md), [Ask OS hardening PRD](../specs/2026-09-19-ask-os-hardening-prd.md), and [Build acceptance catalog](../specs/build/module/README.md) remain authoritative for their own underlying systems. This program defines the new user experience and its added capabilities. A conflict with a current security or Build contract is resolved in favor of that contract until the product owner explicitly changes it. Historical PRD progress is not proof of current production behavior.
 
@@ -58,9 +59,9 @@ The current [Chat OS PRD](../specs/2026-09-18-chat-os-prd.md), [Ask OS hardening
 | Area | Current conclusion |
 | --- | --- |
 | Product discussions | CP-D01–D15 settled for this planning round, including broad natural-language intake, approved-tool execution scope, audience, scope prompts, open-BUG definition, activity consent, and one character with presets. Final name and art are design outputs. |
-| Repository architecture | [ADR 0007](0007-companion-uses-ask-os-toolset.md) selects the existing Ask OS Toolset as the capability seam. Ask OS has the turn, history, and confirmation owners. Existing Tool providers span Build, CRM, HR/self-service, mail, communications, calendar, payroll, operations, and workspace; their presence does not prove every task works end to end. Documents already has content Retrieve and Citation; Build lacks an exact scoped BUG aggregate tool; Calendar/Notifications have reminder and preference foundations. Details and source paths are in the [ledger](verification-and-competition.md). |
+| Repository architecture | [ADR 0007](0007-companion-uses-ask-os-toolset.md) selects the existing Ask OS Toolset as the capability seam. `countTickets`, `searchDocumentContext`, companion preferences, and prompt services now exist. Owner behavior and launch readiness remain capability-specific. Details are in the [current review](review-2026-10-09.md) and [ledger](verification-and-competition.md). |
 | Focused checks | At HEAD `9d9651c11`, the backend registry/confirmation suites passed 3 suites / 84 tests and the frontend lazy-provider/confirmation-card suites passed 2 suites / 11 tests. Earlier planning runs passed 5 backend suites / 35 tests, 9 backend suites / 108 tests, and 3 frontend suites / 11 tests. Runs overlap and prove only their named local assertions. |
-| Runtime and release | Anonymous backend `/health` responded on port 1500; no frontend listener was found on checked ports 1000/3000/3001. No authenticated pet journey, target database, cross-role/tenant, notification delivery, deployment, or customer outcome is verified. |
+| Runtime and release | Earlier disposable PostgreSQL tests covered named preference, RLS, confirmation, and Build count cases. On 2026-10-09 the authorized RDS target received migrations `1974` and `1975`; ledger, four tables with RLS, and the outbox index were verified. No authenticated browser pet journey, provider-driven chat, all-role matrix, notification delivery, deployment, or customer outcome is signed off. |
 | Competitors and 200 ideas | Official public sources show significant existing overlap; the 200 catalog entries remain hypotheses. No universal exclusivity or customer validation claim is made. |
 
 ## Outcome and success measures
@@ -93,7 +94,7 @@ Public documentation checked 2026-10-08; these are vendor-described capabilities
 
 ## Current evidence and remaining execution gates
 
-The current repository contains an Ask OS launcher/panel (`frontend/components/assistant/`), tool registry and confirmation layer (`backend/src/modules/ai/core/`), self-ticket count tools (`self-work-tools.ts`), and a scoped **title/filename** document-search tool (`self-digest-tools.ts`). The separate Documents Ask path already retrieves content and revalidates citations; Companion integration with that path remains new work. Build `BUG` is the canonical actionable defect (`build/module/00-product-decisions-prd.md` D04), and Calendar/Notifications provide reminder infrastructure. The [ledger](verification-and-competition.md) records source, focused tests, and the status of every acceptance scenario. An anonymous backend health response was observed, but no authenticated pet browser, target database, or deployment proof exists.
+The current repository contains the companion launcher and Ask OS panel (`frontend/components/assistant/`), reviewed tool registry and confirmation layer (`backend/src/modules/ai/core/`), permission-scoped Build count tool, and Documents `searchDocumentContext` tool backed by `KbAskService.citableContext`. Build `BUG` is the canonical actionable defect (`build/module/00-product-decisions-prd.md` D04), and Calendar/Notifications provide reminder infrastructure. The [ledger](verification-and-competition.md) records historical and current evidence. The authorized RDS target has the companion schema and index; authenticated pet browser journeys, real provider output, notification delivery, and deployment proof remain open.
 
 | Item | State | Closure |
 | --- | --- | --- |
@@ -102,16 +103,16 @@ The current repository contains an Ask OS launcher/panel (`frontend/components/a
 | Existing Ask OS defects and release gates | CURRENT UNVERIFIED | Recheck the linked Ask OS/open-items PRDs against the implementation branch and run target-environment evidence. |
 | Notification and attendance source availability for every tenant | CURRENT UNVERIFIED | Verify enabled modules, shifts, leave, holidays, calendar connections, and event delivery in the pilot environment. |
 
-## Implementation record (2026-10-09, branch `feat/companion-pet`)
+## Implementation record (reviewed 2026-10-09 on `main`)
 
 | Build map order | Delivered | Evidence | Still open |
 | --- | --- | --- | --- |
 | 0, 4 Toolset review and write gating | `registry/ask-os-tool-exposure.ts` review map filters every turn's Toolset; `clockIn`/`clockOut`/`toggleBreak`/`createTask` converted to confirmable actions; ambiguous lead match returns a choice; four inline paid-generation or unscoped tools blocked; every confirm action runs in a tenant transaction | Focused jest; exposure, catalog and tenant-context specs | Real-database confirm journeys per module cluster |
-| 1 Turn presentation | `CLARIFY`, `EVIDENCE`, `ACTION_PLAN`, `CAPABILITY_LIMIT` directives; page context hint; clarification resume; per-turn bounds; typed confirm receipts with `already-completed` replay | Focused jest | Receipt is returned by `/chat/confirm` but not appended to the transcript |
-| 2 Build aggregate | `countTickets` over one scoped owner query, scope clarification, preview cap | SQL-shape and mocked jest | No filtered Build view reproduces the predicate, so no `href`; non-owner `EXPLAIN` not measured |
+| 1 Turn presentation | `CLARIFY`, `EVIDENCE`, `ACTION_PLAN`, `CAPABILITY_LIMIT` directives; removable route/record context with server access recheck; clarification resume; per-turn bounds; typed confirm receipts with `already-completed` replay; secure proposal recovery issues a fresh short-lived token only for a still-pending authorized proposal | Focused Jest | Browser reload, navigation, inaccessible-record and duplicate-redemption journeys remain open; recovery tokens are never stored in transcript history |
+| 2 Build aggregate | `countTickets` over one scoped owner query, scope clarification, preview cap, and an explicit no-link reason because no existing Build view reproduces the predicate | SQL-shape and mocked Jest | Non-owner `EXPLAIN (ANALYZE, BUFFERS)` not measured |
 | 3 Documents context | `KbAskService.citableContext` shared with Documents Ask; `searchDocumentContext` Tool; citation recheck on evidence and history replay | Focused jest | Real-database revocation race |
-| 5 Preferences and prompts | `companion` module, migration `1974_companion_pet` (replayed, rolled back and re-applied locally; RLS fails closed and isolates tenants), deterministic meeting/clock-in/break/friendly eligibility, atomic claim, retention sweep, rate limits | Focused jest; local replay | Production apply; worker delivery and multi-device proof |
-| 6 Frontend | Original pet launcher with presets and rollback to the Ask OS launcher, structured cards, preferences and admin policy, prompt bubble, organisation-day pause | Focused jest; type-check | Browser, mobile, reduced-motion and screen-reader journeys |
+| 5 Preferences and prompts | `companion` module, migrations `1974_companion_pet` and `1975_companion_meeting_lookup_index`, deterministic meeting/clock-in/break/friendly eligibility, active timed-meeting suppression, atomic claim, retention sweep, rate limits | Focused Jest and scratch-DB cases; both migrations applied to the authorized RDS target and their ledger hashes, four RLS-enabled tables and outbox index verified | Authoritative focus/DND, exact stored suppression reason, worker delivery, policy matrix and multi-device proof |
+| 6 Frontend | Original pet launcher with presets and rollback to the Ask OS launcher, effective permission/module-derived starter prompts, structured cards, recoverable confirmation cards, removable context chip, live preference preview, filtered activity, foreground-only timing, prompt presentation deferral, organisation-day pause and 44 px launcher target | Focused Jest; route type generation; production TypeScript check; focused ESLint | Browser, mobile, safe-area, zoom, reduced-motion and screen-reader journeys |
 | 7 Release gates | Backend `typecheck` and `typecheck:test` clean; contract vendored | Gate runs | All release gates in the delivery plan remain open |
 
-No blocking product-scope discussion remains from this planning round. Requirements are ready for design and ticket breakdown. Design deliverables and evidence gates are tracked work, and `CURRENT UNVERIFIED` cannot be treated as a shipped capability.
+The settled product scope and implementation contracts are in this folder. The current implementation review and ordered work list are in [review-2026-10-09.md](review-2026-10-09.md). Focused source and schema checks do not close the browser, actor/tenant, provider, worker, accessibility, performance or release gates; `CURRENT UNVERIFIED` cannot be treated as a shipped capability.

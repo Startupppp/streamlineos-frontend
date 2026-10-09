@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type MouseEvent } from "react";
+import { useCallback, useEffect, useState, type MouseEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
@@ -19,6 +19,7 @@ import {
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useOrgStorageScope } from "@/lib/org-scoped-storage";
 import { cn } from "@/lib/utils";
+import { isApiError } from "@/lib/api-envelope";
 
 interface CompanionPromptBubbleProps {
   enabled: boolean;
@@ -45,6 +46,44 @@ function newTabId() {
   return Math.random().toString(36).slice(2);
 }
 
+const COMPETING_OVERLAY_SELECTOR = [
+  '[role="dialog"][aria-modal="true"]',
+  '[role="alertdialog"]',
+  '[data-slot="dialog-content"]',
+  '[data-slot="sheet-content"]',
+].join(",");
+
+function usePresentationAllowed(enabled: boolean) {
+  const [allowed, setAllowed] = useState(enabled);
+  const refresh = useCallback(() => {
+    const visible = document.visibilityState === "visible";
+    const focused = typeof document.hasFocus !== "function" || document.hasFocus();
+    const fullscreen = document.fullscreenElement != null;
+    const competingOverlay = document.querySelector(COMPETING_OVERLAY_SELECTOR) !== null;
+    setAllowed(enabled && visible && focused && !fullscreen && !competingOverlay);
+  }, [enabled]);
+
+  useEffect(() => {
+    const observer = new MutationObserver(refresh);
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["role", "aria-modal", "data-slot"] });
+    document.addEventListener("visibilitychange", refresh);
+    document.addEventListener("fullscreenchange", refresh);
+    window.addEventListener("focus", refresh);
+    window.addEventListener("blur", refresh);
+    const timer = window.setTimeout(refresh, 0);
+    return () => {
+      window.clearTimeout(timer);
+      observer.disconnect();
+      document.removeEventListener("visibilitychange", refresh);
+      document.removeEventListener("fullscreenchange", refresh);
+      window.removeEventListener("focus", refresh);
+      window.removeEventListener("blur", refresh);
+    };
+  }, [refresh]);
+
+  return allowed;
+}
+
 export function CompanionPromptBubble({ enabled, preferences }: CompanionPromptBubbleProps) {
   const router = useRouter();
   const qc = useQueryClient();
@@ -56,12 +95,12 @@ export function CompanionPromptBubble({ enabled, preferences }: CompanionPromptB
   const [tabId] = useState(newTabId);
   const [showReason, setShowReason] = useState(false);
   const [showSnooze, setShowSnooze] = useState(false);
+  const presentationAllowed = usePresentationAllowed(enabled);
   const candidate = next.data?.prompt ?? null;
   const candidateId = candidate?.id ?? null;
-  const { mutate: claimPrompt, variables: claimVariables } = claim;
-  const claimedFor = claimVariables?.promptId ?? null;
-  const prompt =
-    candidate && claim.isSuccess && claimedFor === candidate.id ? claim.data.prompt : null;
+  const { mutate: claimPrompt, reset: resetClaim } = claim;
+  const claimed = claim.data?.prompt ?? null;
+  const prompt = presentationAllowed ? claimed : null;
 
   useEffect(() => {
     if (typeof BroadcastChannel === "undefined") return;
@@ -82,9 +121,31 @@ export function CompanionPromptBubble({ enabled, preferences }: CompanionPromptB
   }, [qc, scope, tabId]);
 
   useEffect(() => {
-    if (!enabled || candidateId === null || claimedFor === candidateId) return;
+    if (!presentationAllowed || candidateId === null || claim.isPending || claim.isError || claimed) return;
     claimPrompt({ promptId: candidateId, action: "claim" });
-  }, [candidateId, claimPrompt, claimedFor, enabled]);
+  }, [candidateId, claim.isPending, claim.isError, claimPrompt, claimed, presentationAllowed]);
+
+  useEffect(() => {
+    if (!claim.isError || !isApiError(claim.error) || claim.error.status !== 409) return;
+    qc.setQueryData(collaborationQueryKeys.companion.nextPrompt(), { prompt: null });
+    resetClaim();
+    void qc.invalidateQueries({ queryKey: collaborationQueryKeys.companion.nextPrompt() });
+  }, [claim.error, claim.isError, qc, resetClaim]);
+
+  useEffect(() => {
+    if (!claimed) return;
+    const remaining = Date.parse(claimed.expiresAt) - Date.now();
+    if (remaining <= 0) {
+      resetClaim();
+      void qc.invalidateQueries({ queryKey: collaborationQueryKeys.companion.nextPrompt() });
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      resetClaim();
+      void qc.invalidateQueries({ queryKey: collaborationQueryKeys.companion.nextPrompt() });
+    }, remaining);
+    return () => window.clearTimeout(timer);
+  }, [claimed, qc, resetClaim]);
 
   useEffect(() => {
     if (!prompt || typeof BroadcastChannel === "undefined") return;
@@ -97,11 +158,25 @@ export function CompanionPromptBubble({ enabled, preferences }: CompanionPromptB
   const promptId = prompt.id;
   const href = prompt.href;
 
+  function resolvePrompt(action: "dismiss" | "snooze", minutes?: CompanionSnoozeMinutes) {
+    act.mutate(
+      action === "snooze" && minutes !== undefined
+        ? { promptId, action, minutes }
+        : { promptId, action: "dismiss" },
+      {
+        onSuccess: () => {
+          resetClaim();
+          void qc.invalidateQueries({ queryKey: collaborationQueryKeys.companion.nextPrompt() });
+        },
+      },
+    );
+  }
+
   function handleDismiss() {
-    act.mutate({ promptId, action: "dismiss" });
+    resolvePrompt("dismiss");
   }
   function handleOpen() {
-    act.mutate({ promptId, action: "dismiss" });
+    resolvePrompt("dismiss");
     if (href) router.push(href);
   }
   function handleToggleReason() {
@@ -115,14 +190,14 @@ export function CompanionPromptBubble({ enabled, preferences }: CompanionPromptB
       (value) => String(value) === event.currentTarget.dataset.minutes,
     );
     if (minutes === undefined) return;
-    act.mutate({ promptId, action: "snooze", minutes });
+    resolvePrompt("snooze", minutes);
   }
   function handleDisableFriendly() {
     updatePreferences.mutate({
       version: preferences.version,
       prompts: { ...preferences.prompts, friendly: false },
     });
-    act.mutate({ promptId, action: "dismiss" });
+    resolvePrompt("dismiss");
   }
 
   return (
@@ -131,7 +206,7 @@ export function CompanionPromptBubble({ enabled, preferences }: CompanionPromptB
       aria-label="Companion suggestion"
       aria-live="polite"
       className={cn(
-        "absolute bottom-full mb-2 w-72 rounded-xl border border-border bg-popover p-3 text-popover-foreground shadow-panel",
+        "absolute bottom-full mb-2 w-[min(18rem,calc(100vw-2rem))] max-h-[min(70dvh,32rem)] overflow-y-auto rounded-xl border border-border bg-popover p-3 text-popover-foreground shadow-panel",
         preferences.anchor === "bottom-left" ? "left-0" : "right-0",
       )}
     >

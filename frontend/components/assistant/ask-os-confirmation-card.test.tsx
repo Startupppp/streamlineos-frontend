@@ -1,15 +1,19 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { AskOsConfirmationCard } from "./ask-os-confirmation-card";
+import { AskOsConfirmationCard, ConfirmDirectiveSlot } from "./ask-os-confirmation-card";
 import type { ConfirmActionResult } from "@/hooks/api/ai-confirm-action";
 import { ApiError } from "@/lib/api-envelope";
 
 const mutate = jest.fn();
+const decline = jest.fn();
 const toastError = jest.fn();
+let mockRecovery: Record<string, unknown> = { isPending: false, isError: false, data: undefined };
 
 jest.mock("@/hooks/api/ai-confirm-action", () => ({
   refusedConfirmOutcome: jest.requireActual("@/hooks/api/ai-confirm-action").refusedConfirmOutcome,
   useConfirmAction: () => ({ mutate, isPending: false }),
+  useDeclineProposal: () => ({ mutate: decline, isPending: false }),
+  useRecoverProposal: () => mockRecovery,
 }));
 jest.mock("sonner", () => ({ toast: { error: (message: string) => toastError(message) } }));
 
@@ -21,7 +25,60 @@ const emailPreview = {
 
 beforeEach(() => {
   mutate.mockReset();
+  decline.mockReset();
   toastError.mockReset();
+  mockRecovery = { isPending: false, isError: false, data: undefined };
+});
+
+describe("a persisted proposal recovers without storing its capability token in history", () => {
+  const directive = {
+    kind: "confirm-action" as const,
+    proposalId: 41,
+    action: "mail.send",
+    summary: "Send the update",
+    preview: emailPreview,
+    title: "Send email",
+    confirmLabel: "Send",
+  };
+
+  it("rehydrates a live server-owned proposal and confirms with the newly issued token", async () => {
+    mockRecovery = {
+      isPending: false,
+      isError: false,
+      data: {
+        state: "ready",
+        proposalId: 41,
+        action: "mail.send",
+        token: "reissued-token",
+        expiresAt: new Date(Date.now() + 60_000).toISOString(),
+      },
+    };
+    mutate.mockImplementation((_token: string, options: { onSuccess: (data: ConfirmActionResult) => void }) => {
+      options.onSuccess({ ok: true, result: {}, summary: "Sent" });
+    });
+    render(<ConfirmDirectiveSlot directive={directive} persisted />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Send" }));
+    expect(mutate).toHaveBeenCalledWith("reissued-token", expect.objectContaining({ onSuccess: expect.any(Function) }));
+    expect(screen.getByText("Sent")).toBeInTheDocument();
+  });
+
+  it("keeps a revoked proposal non-actionable and explains why", () => {
+    mockRecovery = {
+      isPending: false,
+      isError: false,
+      data: {
+        state: "unavailable",
+        proposalId: 41,
+        action: "mail.send",
+        reason: "You no longer have permission to send mail.",
+      },
+    };
+    render(<ConfirmDirectiveSlot directive={directive} persisted />);
+
+    expect(screen.getByText("You no longer have permission to send mail.")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /send|confirm|discard/i })).not.toBeInTheDocument();
+  });
 });
 
 describe("a pending write is a compact proposal inside the message, not a nested AI draft card", () => {

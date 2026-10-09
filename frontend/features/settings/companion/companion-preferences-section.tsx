@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Controller, useForm, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
@@ -24,6 +25,7 @@ import { useOrgTimeZone } from "@/hooks/api/org-display";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { formatDateTime } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
+import { CompanionCharacter } from "@/components/assistant/companion-character";
 import { CompanionActivityList } from "./companion-activity-list";
 import {
   companionPreferencesFormSchema,
@@ -92,6 +94,9 @@ function CompanionPreferencesForm({ data }: { data: CompanionPreferences }) {
   });
   const { control, register, handleSubmit, watch, formState } = form;
   const consent = watch("activityConsent");
+  const previewName = watch("name").trim() || "Companion";
+  const previewPreset = watch("preset");
+  const previewAnimation = watch("animation");
   const presets = COMPANION_PRESETS.filter((preset) => policy.allowedPresets.includes(preset));
   const presetNote = locks["preset"];
   const pausedUntil = defaultValues.pause === "keep" ? preferences.pausedUntil : null;
@@ -121,6 +126,18 @@ function CompanionPreferencesForm({ data }: { data: CompanionPreferences }) {
         </p>
       ) : null}
       <SwitchRow control={control} field="visible" label="Show companion" hint="Hiding it keeps Ask OS and your chat history." lock={locks["visible"]} />
+      <div aria-label="Companion preview" className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
+        <CompanionCharacter
+          preset={previewPreset}
+          state="idle"
+          animation={previewAnimation}
+          className="size-12"
+        />
+        <div>
+          <p className="text-sm font-semibold text-foreground">{previewName}</p>
+          <p className="text-xs text-muted-foreground">Live appearance and animation preview</p>
+        </div>
+      </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="companion-name">Name</Label>
@@ -169,7 +186,13 @@ function CompanionPreferencesForm({ data }: { data: CompanionPreferences }) {
           </select>
         </div>
       </div>
-      <SwitchRow control={control} field="activityConsent" label="Activity timing" hint="Counts only how long StreamlineOS is open in a visible tab. Turning it off deletes that timing." />
+      <SwitchRow control={control} field="activityConsent" label="Activity timing" hint="Counts only foreground time while this StreamlineOS window is focused. Turning it off deletes that timing." />
+      <p className="text-xs text-muted-foreground">
+        Companion prompts also respect your notification quiet hours.{" "}
+        <Link href="/settings/notifications/my-preferences" className="font-medium text-primary underline-offset-2 hover:underline">
+          Manage quiet hours
+        </Link>
+      </p>
       {PROMPT_ROWS.map((row) => (
         <SwitchRow
           key={row.field}

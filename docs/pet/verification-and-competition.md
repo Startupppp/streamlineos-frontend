@@ -1,12 +1,12 @@
 # Companion Pet — verification ledger and competitive baseline
 
-**Checked:** 2026-10-08 against repository HEAD `9d9651c11` for the source paths named below. Earlier planning checks ran at `0cd316204`. **Purpose:** Separate current source and focused-test evidence from browser, database, deployment, and market claims. This ledger does not certify release readiness.
+**Baseline checked:** 2026-10-08 at `9d9651c11`. The tables immediately below capture the **preimplementation baseline** and are retained for traceability; statements that a pet or `countTickets` is absent are historical. For the 2026-10-09 current-source review, tests, RDS migration result, and open items, read [the current implementation review](review-2026-10-09.md) first. This ledger does not certify release readiness.
 
 ## Evidence vocabulary
 
 `SOURCE-VERIFIED` = current code path inspected. `FOCUSED-TEST` = named local test passed. `RUNTIME-HEALTH` = anonymous service health only. `PUBLIC-REPORTED` = vendor's dated public claim, not signed-in verification. `UNVERIFIED` = behavior still needs a real journey, database, role/tenant, or operational check. `PROPOSED` = product requirement or hypothesis; no current implementation is claimed.
 
-## Current StreamlineOS audit
+## Historical preimplementation StreamlineOS audit (2026-10-08)
 
 | Claim or dependency | Finding and source | Evidence | What remains |
 | --- | --- | --- | --- |
@@ -36,7 +36,7 @@
 
 ## Acceptance-by-acceptance trace
 
-Every scenario below remains **PROPOSED / NOT SIGNED OFF** for the pet. “Foundation” records reusable source or focused-test evidence, not completion of the new behavior.
+The table below is the historical preimplementation trace. Its “missing pet proof” column is **not** a current absence claim. Current source and evidence status is in [the 2026-10-09 review](review-2026-10-09.md). No scenario is signed off for release merely because its source and focused tests exist.
 
 | CP-00 scenario | Foundation checked | Missing pet proof |
 | --- | --- | --- |
@@ -197,5 +197,5 @@ FIXED and READY_FOR_QA count as open, CANCELLED and DONE are excluded, and soft-
 ### Findings and limits
 
 - **Contract deviation, no extra write.** A redemption that races an in-flight one gets 409 "Proposal already confirmed or executed" with no receipt. Only a redemption after commit gets `already-completed`. CONTRACT.md promises `already-completed` for every duplicate, so the frontend should treat that 409 as a pending duplicate.
-- **Minor.** A snooze longer than the prompt's remaining TTL is accepted. `snoozedUntil` then falls after `expiresAt`, so the prompt expires and never comes back.
+- **Resolved in source and focused tests.** Snooze now rejects a duration that would extend beyond the prompt expiry, so `snoozedUntil` cannot silently outlive `expiresAt`. Real browser and worker delivery remain part of the release evidence matrix.
 - **Not exercised here.** Meeting and clock-in prompt categories were not run, because they need calendar events and HR shifts. Quiet hours, leave and holiday suppression were not run. Neither was a real model-driven `POST /chat` turn with CLARIFY/EVIDENCE directives, because no provider key is available. Foreground time was advanced by setting `foreground_seconds`/`break_accrued_seconds` in SQL, because heartbeat credit is capped at the wall-clock time elapsed.
