@@ -250,7 +250,6 @@ These are deep modules. Their implementations hide policy, tenancy, validation, 
 ## Delivery checklist
 
 Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Unify My Work, All Work, backlog, board, list, calendar, and timeline over canonical ticket IDs and FilterEnvelope v1; preserve saved-view predicates and authorized counts.
 - [ ] Implement collection opening rules: primary click opens ticket pane, direct URL/modifier-click opens full detail, related ticket stacks panes, mobile opens full screen, and Back/close restores origin state.
 - [ ] Build the ticket detail header, description/acceptance, property rail, subtasks/relations, comments, files, activity, approvals, time, and client visibility with the exact fields and allowed actions specified above.

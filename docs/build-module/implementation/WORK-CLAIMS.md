@@ -1943,7 +1943,6 @@ Add nullable target membership and target epoch as a strict pair, reusing the ex
 ## Delivery checklist
 
 Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Close ARCH-01 only after inherited grants and revocation are covered end to end.
 - [ ] Close ARCH-14 only after invitation acceptance, authorized landing, and selected grants pass browser and persistence checks.
 

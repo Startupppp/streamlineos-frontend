@@ -210,7 +210,6 @@ These gaps prohibit a release or production-readiness claim. They do not invalid
 ## Delivery checklist
 
 Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] ARC-01: make Module Access the sole positive Build assignment and revocation authority, then migrate invitation, group, delegation, and administration writers with permission-version and audit evidence.
 - [ ] ARC-03/14: route project and ticket creation/change through Project Provision and Ticket Command; make Workspace → Products → optional People activation durable, idempotent, resumable, and quota-aware.
 - [ ] ARC-09/16: enforce workflow-oriented frontend import direction and one capability registry for routes, navigation, plan locks, searchable More, and preserved authorized deep links.

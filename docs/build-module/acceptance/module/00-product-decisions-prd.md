@@ -48,7 +48,6 @@ implementation can close.
 - `/build/drafts` is deleted only after draft list, resume, discard, expiry,
   source link, badge, dirty navigation, and deep-link parity.
 - Draft storage remains actor, organization, scope, and record keyed.
-
 - [ ] **BLD-00-D02-A** sidebar catalog, command palette, notifications, route
   manifest, and tests use the Inbox Drafts destination with zero old callers.
 
@@ -66,7 +65,6 @@ implementation can close.
 - There is one ticket relation, one active-iteration policy, one carry-over
   flow, and one velocity definition.
 - No alternative two-model outcome remains available in BLD-07.
-
 - [ ] **BLD-00-D03-A** schema, migrations, services, routes, nav, filters,
   reports, templates, automations, events, portal, and tests use one identity.
   *Application cutover complete: `build.sprints` dropped
@@ -86,7 +84,6 @@ implementation can close.
 - A failed test may create or link one BUG idempotently.
 - The independent QA bug lifecycle is migrated and removed after evidence
   preservation.
-
 - [ ] **BLD-00-D04-A** every QA bug field has a keep/migrate/drop mapping and no
   duplicate actionable lifecycle remains.
   *Migration complete: `build.bugs` dropped (`b-qa-bug-05-contract-drop` APPLIED
@@ -106,7 +103,6 @@ implementation can close.
   Build module or project configuration.
 - Operational queues, run history, approvals, incidents, and customer work do
   not move into Settings.
-
 - [ ] **BLD-00-D05-A** every settings row has one canonical scope/path,
   permission, schema, API, cache owner, inheritance rule, and dirty-state test.
 
@@ -123,7 +119,6 @@ implementation can close.
 - The project collaborative canvas remains singular `/whiteboard` because the
   product currently owns one board per project. If multiple boards are later
   supported, that is a new data migration and route decision.
-
 - [ ] **BLD-00-D06-A** route manifest, physical pages, nav, access rules,
   emails/notifications, public links, and `frontend/PAGES.md` match these names.
 
@@ -136,7 +131,6 @@ implementation can close.
 - Saved-view creation and daily management live in Issues; administrative
   visibility/default/archive controls may live in Project Settings.
 - Standalone project Timeline and Views routes are deleted after parity.
-
 - [ ] **BLD-00-D07-A** view switchers, deep links, saved-view schema, filters,
   and route files have one owner each.
 
@@ -148,7 +142,6 @@ implementation can close.
   distinct capture channel, but it converts into the same Triage/Ticket model.
 - Generic authenticated/public Intake routes migrate to Forms + Triage and are
   deleted after history, links, and tokens are preserved.
-
 - [ ] **BLD-00-D08-A** form, intake, triage, and feedback records have one
   submission/provenance contract and no duplicate accepted-work lifecycle.
 
@@ -160,7 +153,6 @@ implementation can close.
 - `/analytics` is consolidated into Reports Overview.
 - Every metric links to the exact authorized source predicate.
 - Cache revision, invalidation, and canonical Cycle terminology are shared.
-
 - [ ] **BLD-00-D09-A** analytics/report endpoints, charts, filters, exports,
   cache keys, and routes are consolidated without metric drift.
 
@@ -175,7 +167,6 @@ implementation can close.
   grant, while authentication and actions remain separate.
 - Every portal list, detail, download, and mutation enforces grant status and
   `expires_at IS NULL OR expires_at > now()`; expiry is not a UI-only label.
-
 - [ ] **BLD-00-D10-A** route access, projection parity, invitation replay,
   expiry, revocation, cache, and cross-tenant tests pass for both identities.
 
@@ -189,7 +180,6 @@ implementation can close.
   owns durable agent runs, and `/calendar` owns calendar events.
 - Build pages may show permission-safe summaries and source links without
   creating a second operational owner.
-
 - [ ] **BLD-00-D11-A** proposed Activity, Governance, Customers, Time Tracking,
   Agents, and project Calendar pages are removed from route plans and replaced
   with their exact source link/projection contract.
@@ -206,12 +196,10 @@ implementation can close.
 - Inbound events are acknowledged only after a verified, tenant-resolved,
   deduplicated durable receipt; auto-transition and link writes are
   idempotent consumers, not fire-and-forget after HTTP 200.
-
 - [ ] **BLD-00-D12-A** every advertised provider has signature, parser, receipt,
   replay, and negative tests, and Build schemas store no provider secrets.
 
 ## Decision-Gate Acceptance
-
 - [ ] **BLD-00-A01** no Build PRD, sidebar PRD, design file, route catalog,
   schema, or test asserts a conflicting decision.
 - [ ] **BLD-00-A02** each decision has a migration owner, dependency order, and

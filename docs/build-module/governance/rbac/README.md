@@ -92,6 +92,5 @@ An allow requires four yes answers. Missing evidence is recorded as open; it is 
 ## Delivery checklist
 
 Track completion in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Exercise each standard standing and an unrelated tenant in the browser, including denied navigation, direct URLs, mutations, cache refresh, and private-data non-disclosure.
 - [ ] Capture append-only access-change audit events, deployed multi-replica invalidation timing, RLS under the runtime role, and consumer recovery evidence before any RBAC release signoff.

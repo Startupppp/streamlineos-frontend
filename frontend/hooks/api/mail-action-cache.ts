@@ -3,8 +3,17 @@
 import type { InfiniteData, QueryClient } from "@tanstack/react-query";
 import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
-import type { MailActionBody, MailListResponse, MailMessageSummary } from "@/types/mail";
-import type { UnifiedInboxItem, UnifiedInboxResponse } from "@/types/inbox";
+import type {
+  MailActionBody,
+  MailListResponse,
+  MailMessageDetail,
+  MailMessageSummary,
+} from "@/types/mail";
+import type {
+  UnifiedInboxCount,
+  UnifiedInboxItem,
+  UnifiedInboxResponse,
+} from "@/types/inbox";
 
 interface MailCacheSnapshot {
   key: readonly unknown[];
@@ -15,34 +24,34 @@ export interface MailActionCacheContext {
   snapshots: MailCacheSnapshot[];
 }
 
-/**
- * A mail action reaches two caches: the folder listing and the unified inbox.
- * Both are patched before the request leaves, and both are restored from the
- * same snapshot set when it fails.
- *
- * Every patch matches on `(id, accountId)`, never on `id` alone. A message id is
- * the provider's, not ours — the lists key their rows `accountId-id` for exactly
- * that reason — so archiving in one connected mailbox used to delete a same-id
- * row belonging to another, with no request in flight that could ever put it
- * back. markRead and star already matched on the pair; archive/trash did not.
- *
- * There is deliberately no star branch for the unified inbox: `MailInboxItem`
- * carries no `isStarred`, and inventing one here would patch a field the list
- * neither receives from the server nor renders.
- */
 export async function applyMailActionToCaches(
   qc: QueryClient,
   messageId: string,
   body: MailActionBody,
 ): Promise<MailActionCacheContext> {
   const { action, accountId } = body;
-  const messagesPrefix = [...directoryAndOwnershipQueryKeys.mail.all, "messages"] as const;
-  const unifiedPrefix = [...platformCoreQueryKeys.inbox.all, "unified"] as const;
+  const messagesPrefix = [
+    ...directoryAndOwnershipQueryKeys.mail.all,
+    "messages",
+  ] as const;
+  const unifiedPrefix = [
+    ...platformCoreQueryKeys.inbox.all,
+    "unified",
+  ] as const;
+  const unifiedCountKey = platformCoreQueryKeys.inbox.unified({ count: true });
 
   await qc.cancelQueries({ queryKey: directoryAndOwnershipQueryKeys.mail.all });
   await qc.cancelQueries({ queryKey: unifiedPrefix });
 
   const snapshots: MailCacheSnapshot[] = [];
+  const capturedKeys = new Set<string>();
+  const capture = (key: readonly unknown[], data: unknown): void => {
+    const serialized = JSON.stringify(key);
+    if (capturedKeys.has(serialized)) return;
+    capturedKeys.add(serialized);
+    snapshots.push({ key, data });
+  };
+  let previousIsRead: boolean | undefined;
 
   const cache = qc.getQueriesData<InfiniteData<MailListResponse>>({
     queryKey: messagesPrefix,
@@ -50,7 +59,15 @@ export async function applyMailActionToCaches(
 
   for (const [key, data] of cache) {
     if (!data) continue;
-    snapshots.push({ key, data });
+    capture(key, data);
+
+    const cachedMessage = data.pages
+      .flatMap((page) => page.messages)
+      .find(
+        (message) =>
+          message.id === messageId && message.accountId === accountId,
+      );
+    if (cachedMessage) previousIsRead = cachedMessage.isRead;
 
     if (action === "archive" || action === "trash") {
       qc.setQueryData<InfiniteData<MailListResponse>>(key, (old) => {
@@ -73,10 +90,11 @@ export async function applyMailActionToCaches(
           ...old,
           pages: old.pages.map((page) => ({
             ...page,
-            messages: page.messages.map((m): MailMessageSummary =>
-              m.id === messageId && m.accountId === accountId
-                ? { ...m, isRead: nextIsRead }
-                : m,
+            messages: page.messages.map(
+              (m): MailMessageSummary =>
+                m.id === messageId && m.accountId === accountId
+                  ? { ...m, isRead: nextIsRead }
+                  : m,
             ),
           })),
         };
@@ -89,14 +107,51 @@ export async function applyMailActionToCaches(
           ...old,
           pages: old.pages.map((page) => ({
             ...page,
-            messages: page.messages.map((m): MailMessageSummary =>
-              m.id === messageId && m.accountId === accountId
-                ? { ...m, isStarred: nextIsStarred }
-                : m,
+            messages: page.messages.map(
+              (m): MailMessageSummary =>
+                m.id === messageId && m.accountId === accountId
+                  ? { ...m, isStarred: nextIsStarred }
+                  : m,
             ),
           })),
         };
       });
+    }
+  }
+
+  if (action !== "archive" && action !== "trash") {
+    const detailCache = qc.getQueriesData<MailMessageDetail>({
+      queryKey: [
+        ...directoryAndOwnershipQueryKeys.mail.all,
+        "message",
+        accountId,
+      ],
+    });
+    for (const [key, data] of detailCache) {
+      if (!data || data.id !== messageId) continue;
+      capture(key, data);
+      qc.setQueryData<MailMessageDetail>(key, (old) =>
+        old ? patchMailMessage(old, action) : old,
+      );
+    }
+
+    const threadCache = qc.getQueriesData<MailMessageDetail[]>({
+      queryKey: [
+        ...directoryAndOwnershipQueryKeys.mail.all,
+        "thread",
+        accountId,
+      ],
+    });
+    for (const [key, data] of threadCache) {
+      if (!data?.some((message) => message.id === messageId)) continue;
+      capture(key, data);
+      qc.setQueryData<MailMessageDetail[]>(key, (old) =>
+        old?.map((message) =>
+          message.id === messageId
+            ? patchMailMessage(message, action)
+            : message,
+        ),
+      );
     }
   }
 
@@ -106,7 +161,19 @@ export async function applyMailActionToCaches(
 
   for (const [key, data] of unifiedCache) {
     if (!data) continue;
-    snapshots.push({ key, data });
+    capture(key, data);
+
+    if ("pages" in data) {
+      const cachedItem = data.pages
+        .flatMap((page) => page.items)
+        .find(
+          (item) =>
+            item.kind === "mail" &&
+            item.id === messageId &&
+            item.accountId === accountId,
+        );
+      if (cachedItem) previousIsRead = cachedItem.isRead;
+    }
 
     if (action === "archive" || action === "trash") {
       qc.setQueryData<InfiniteData<UnifiedInboxResponse>>(key, (old) => {
@@ -134,12 +201,13 @@ export async function applyMailActionToCaches(
           ...old,
           pages: old.pages.map((page) => ({
             ...page,
-            items: page.items.map((item): UnifiedInboxItem =>
-              item.kind === "mail" &&
-              item.id === messageId &&
-              item.accountId === accountId
-                ? { ...item, isRead: nextIsRead }
-                : item,
+            items: page.items.map(
+              (item): UnifiedInboxItem =>
+                item.kind === "mail" &&
+                item.id === messageId &&
+                item.accountId === accountId
+                  ? { ...item, isRead: nextIsRead }
+                  : item,
             ),
           })),
         };
@@ -147,10 +215,58 @@ export async function applyMailActionToCaches(
     }
   }
 
+  const count = qc.getQueryData<UnifiedInboxCount>(unifiedCountKey);
+  const unreadDelta = unreadCountDelta(action, previousIsRead);
+  if (count && unreadDelta !== 0) {
+    capture(unifiedCountKey, count);
+    qc.setQueryData<UnifiedInboxCount>(unifiedCountKey, {
+      ...count,
+      mail: Math.max(0, count.mail + unreadDelta),
+      total: Math.max(0, count.total + unreadDelta),
+    });
+  } else if (
+    count &&
+    previousIsRead === undefined &&
+    action !== "star" &&
+    action !== "unstar"
+  ) {
+    void qc.invalidateQueries({
+      queryKey: unifiedCountKey,
+      exact: true,
+      refetchType: "none",
+    });
+  }
+
   return { snapshots };
 }
 
-export function restoreMailCaches(qc: QueryClient, context: MailActionCacheContext): void {
+function patchMailMessage<T extends MailMessageSummary>(
+  message: T,
+  action: MailActionBody["action"],
+): T {
+  if (action === "markRead") return { ...message, isRead: true };
+  if (action === "markUnread") return { ...message, isRead: false };
+  if (action === "star") return { ...message, isStarred: true };
+  if (action === "unstar") return { ...message, isStarred: false };
+  return message;
+}
+
+function unreadCountDelta(
+  action: MailActionBody["action"],
+  previousIsRead: boolean | undefined,
+): number {
+  if (previousIsRead === undefined) return 0;
+  if (action === "markRead" && !previousIsRead) return -1;
+  if (action === "markUnread" && previousIsRead) return 1;
+  if ((action === "archive" || action === "trash") && !previousIsRead)
+    return -1;
+  return 0;
+}
+
+export function restoreMailCaches(
+  qc: QueryClient,
+  context: MailActionCacheContext,
+): void {
   for (const { key, data } of context.snapshots) {
     qc.setQueryData(key, data);
   }

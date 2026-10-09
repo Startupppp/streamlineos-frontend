@@ -637,7 +637,6 @@ No capability becomes a release claim until the applicable source, static, datab
 ## Delivery checklist
 
 Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Finish the deep application interfaces for module access, project provisioning, ticket commands, scoped queries, dashboards, portal grants, Files relations, and cross-module references before moving callers or deleting duplicate services.
 - [ ] Add normalized tenant-scoped relationship tables and constraints for authorization-bearing links; migrate custom fields through a typed registry with validation, indexing, revision, and lifecycle rules.
 - [ ] Standardize FilterEnvelope v1, stable cursor pagination, allowlisted sorting, authorized facets/counts, and bounded ticket workspace projections across screens, reports, exports, and AI.

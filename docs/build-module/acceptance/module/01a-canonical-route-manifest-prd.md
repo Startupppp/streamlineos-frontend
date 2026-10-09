@@ -197,7 +197,6 @@ authoritative after those decisions and currently reports 83 live Build routes.
 - No project Calendar, Gantt, Roadmap, or separate saved-views page.
 
 ## Manifest Acceptance
-
 - [ ] **BLD-01M-001** filesystem census contains exactly the 74 current
   Build-owned pages above and zero unclassified Build pages.
 - [ ] **BLD-01M-002** every stable ID links to one detailed BLD-02C through

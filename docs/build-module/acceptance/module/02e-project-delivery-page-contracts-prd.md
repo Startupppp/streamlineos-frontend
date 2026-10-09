@@ -51,7 +51,6 @@ source tree. It inherits BLD-03 through BLD-08.
 | `/build/{projectId}/meetings/{meetingId}` · KEEP | Header/time/attendees; agenda/minutes; linked issues; decisions; action items; recordings/files per grant | Action status/owner filters; activity cursor; no layout switcher | Edit notes with dirty/autosave; create/link action sheet; cancel/delete confirmation; meeting/project match and source ACL enforced |
 
 ## Completion Checks
-
 - [ ] **BLD-02E-001** every current core delivery/collaboration route appears
   once and every proposed removal names its replacement.
 - [ ] **BLD-02E-002** every page explicitly defines components, fields,

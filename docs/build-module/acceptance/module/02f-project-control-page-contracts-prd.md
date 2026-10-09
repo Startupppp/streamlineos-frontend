@@ -82,7 +82,6 @@ the product does not preserve duplicate work models.
 | `/build/{projectId}/settings/retention` · ADD | Archive state, retention windows, export/recovery, transfer and dependency summary | Archive/restore, transfer ownership, retention change and eligible purge confirmations with exact impact | Project lifecycle transaction; dependencies enumerated; provider/file effects durable; permanent purge only through approved retention job |
 
 ## Completion Checks
-
 - [ ] **BLD-02F-001** every current quality/governance/analytics/configuration
   route appears exactly once with current and target ownership.
 - [ ] **BLD-02F-002** Intake/Forms/Triage, BUG/QA/Ticket,

@@ -107,6 +107,5 @@ Compare actual page files against the 75 existing route rows; count both externa
 ## Delivery checklist
 
 Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Verify six onboarding journeys and the invite → module standing → client grant priority path through browser, persisted state, role/tenant, and worker evidence.
 - [ ] Resolve the documented portal ID/file-access, root instruction reference, and unsampled screenshot limitations with separate evidence before asserting release readiness.

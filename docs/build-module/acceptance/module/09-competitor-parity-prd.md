@@ -81,7 +81,6 @@ errors, mobile, accessibility, lifecycle, and end-to-end customer outcome work.
 - [Asana multi-home tasks](https://help.asana.com/s/article/multi-home-tasks-to-avoid-information-silos?language=en_US)
 - [ClickUp tasks in multiple lists](https://help.clickup.com/hc/en-us/articles/6309958824727-Tasks-in-Multiple-Lists)
 - [monday Excel import](https://support.monday.com/hc/en-us/articles/360000219209-Import-files-from-Excel)
-
 - [ ] **BLD-09-001** revalidate every source URL and claim within 30 days of
   product sign-off.
   **Open — swept 2026-09-21; the baseline is substantially unverified.**
@@ -119,7 +118,6 @@ errors, mobile, accessibility, lifecycle, and end-to-end customer outcome work.
 - private, shared, and default views;
 - templates and repeatable setup;
 - guests and controlled external collaboration.
-
 - [ ] **BLD-09-003** hierarchy remains understandable without mandatory
   enterprise layers for a freelancer.
 - [ ] **BLD-09-004** every hierarchy link has explicit access and lifecycle
@@ -135,7 +133,6 @@ errors, mobile, accessibility, lifecycle, and end-to-end customer outcome work.
 - stable sort/group/subgroup and configurable fields;
 - command search and direct key lookup;
 - truthful pagination and export.
-
 - [ ] **BLD-09-005** BLD-03 closes the selected ClickUp/Linear/Jira discovery
   baseline.
 - [ ] **BLD-09-006** advanced query building remains usable without requiring a
@@ -152,7 +149,6 @@ errors, mobile, accessibility, lifecycle, and end-to-end customer outcome work.
 - comments, mentions, attachments, activity, and notifications;
 - forms/intake and triage;
 - automation with run history and failure recovery.
-
 - [ ] **BLD-09-007** common project work is no more clicks than the measured
   competitor benchmark unless extra confirmation prevents real risk.
 - [ ] **BLD-09-008** automation and bulk behavior expose partial failure and
@@ -170,7 +166,6 @@ errors, mobile, accessibility, lifecycle, and end-to-end customer outcome work.
 - dashboards/reports with source drill-down;
 - linked-record and roll-up fields that preserve one source record and
   authorized drill-down.
-
 - [ ] **BLD-09-009** roll-ups reconcile to source records and never present an
   unexplained score.
 - [ ] **BLD-09-010** enterprise pages stay out of the freelancer's primary
@@ -189,7 +184,6 @@ errors, mobile, accessibility, lifecycle, and end-to-end customer outcome work.
 - API/event contract and import/export;
 - responsive and accessible core workflows;
 - permission and audit controls.
-
 - [ ] **BLD-09-011** customization has limits and indexed data contracts; it
   cannot create unbounded query or UI behavior.
 - [ ] **BLD-09-012** every integration follows BLD-07 ownership and does not
@@ -215,7 +209,6 @@ Known source-level priorities:
 - validation and tenant/project identity before richer forms;
 - integration ownership before copying module records;
 - visual hierarchy and overlay consolidation before decorative redesign.
-
 - [ ] **BLD-09-013** current-state classification links to source and runnable
   evidence, not screenshots alone.
 - [ ] **BLD-09-014** no capability is marked complete because a route or schema
@@ -271,7 +264,6 @@ branded progress view from the same source records:
 
 Every field is previewable per grant. Internal costs, notes, people data, AI
 traces, audit metadata, and unapproved work remain hidden.
-
 - [ ] **BLD-09-015** client preview and external session render the same
   projection.
 - [ ] **BLD-09-016** revocation is immediate and cache safe.
@@ -281,7 +273,6 @@ traces, audit metadata, and unapproved work remain hidden.
 Build can connect delivery to CRM customer, calendar dates, meeting decisions,
 knowledge specs, documents, approved time, accounting actuals, chat/mail source
 threads, and notifications without copying their records.
-
 - [ ] **BLD-09-017** every cross-module chip or summary opens its authoritative
   source and states freshness.
 - [ ] **BLD-09-018** users never need to reconcile two editable copies of the
@@ -297,7 +288,6 @@ The Build agent can:
 - propose field, bulk, scheduling, and automation changes;
 - execute only after policy-appropriate review and reauthorization;
 - show cost, affected records, exact diff, evidence, and outcome.
-
 - [ ] **BLD-09-019** agent evaluation covers hallucination, stale context,
   prompt injection, denied records, destructive proposals, and partial failure.
 - [ ] **BLD-09-020** deterministic product behavior remains usable when AI is
@@ -371,7 +361,6 @@ The Build agent can:
   **Reason:** scenario planning is a Jira Premium capability (see the plan-limit
   note below), not a baseline expectation. Automatic schedule commitment also
   contradicts the agent policy: propose a diff, execute only after review.
-
 - [ ] **BLD-09-021** excluded competitor features have a written product reason.
   **Drafted 2026-09-21 — awaiting product review, not closed.**
   Every one of the twelve non-goals above now carries a `**Reason:**` stating
@@ -388,7 +377,6 @@ The Build agent can:
   evidenced behavior.
 
 ## Persona Acceptance
-
 - [ ] **BLD-09-A01** freelancer creates a project, plans work, posts updates,
   and shares approved client progress without workspace/product setup.
 - [ ] **BLD-09-A02** agency manages many client projects and isolates each

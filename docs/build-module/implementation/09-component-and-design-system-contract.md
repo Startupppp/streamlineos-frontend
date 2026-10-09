@@ -42,7 +42,6 @@ Dropdowns expose a button trigger and roving keyboard menu. Tabs use URL state w
 ## Delivery checklist
 
 Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Implement the shared page shell, collection views, card/row, detail pane/page, filter builder, saved-view picker, dashboard grid, operation status, and permission state using the existing UI kit.
 - [ ] Validate each card/row uses the specified information hierarchy and seven-signal limit, keyboard semantics, accessible names, truncation, status color plus text, and consistent density.
 - [ ] Exercise sheet, dialog, and full-page actions with focus return, browser history, modifier click, Escape, conflict, upload, and mobile behavior.

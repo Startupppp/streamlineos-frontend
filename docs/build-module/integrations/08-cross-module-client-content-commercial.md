@@ -267,7 +267,6 @@ Priorities require customer evidence before commitment. No third-party marketpla
 ## Delivery checklist
 
 Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Link projects to authorized CRM accounts/contacts/deals and provide reviewed deal-to-project creation plus delivery-to-CRM projections; reconcile lightweight clients when CRM is enabled later.
 - [ ] Open Timesheets quick-log sheets from tickets and full weekly timesheets with context; keep overlap, lock, approval, rates, and ledger writes in Timesheets while Build refreshes permission-safe totals.
 - [ ] Open Accounting estimate, invoice, payment, and reconciliation actions from approved Build records; show source-stamped status while Razorpay and direct/offline payments remain Accounting-owned.

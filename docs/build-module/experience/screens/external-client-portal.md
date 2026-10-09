@@ -57,7 +57,6 @@ Exercise new/existing client, multiple grants, wrong identity, expired/replayed 
 ## Delivery checklist
 
 Track completion in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Implement audience-bound magic-link exchange and grant-scoped portal shell; remove raw tokens from history and keep internal Build navigation/counts out of responses and UI.
 - [ ] Deliver `/client-portal` with only granted project cards, safe status/milestone/action counts, name/status/waiting filters, bounded cursor pagination, and full-page card navigation.
 - [ ] Deliver `/client-portal/[projectId]` with published overview and capability-filtered tabs that survive refresh; direct tab and record URLs must reauthorize the same grant.

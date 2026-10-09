@@ -246,7 +246,6 @@ Cheaper/prettier/all-in-one claims, guaranteed market leadership, and treating t
 ## Delivery checklist
 
 Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Prove the P0 chain in order: cold invite acceptance, positive Build assignment for Organization Members, then atomic client-grant activation and revocation.
 - [ ] Implement the P2 freelancer, project, and product journeys that connect approval, delivery, approved time, invoice state, evidence, prioritization, roadmap, and measured outcome through their owning modules.
 - [ ] Test each claimed reason with a populated persona task, saved result, negative access case, retry/recovery, and mobile behavior; a rendered screen or passing unit test alone does not close the claim.

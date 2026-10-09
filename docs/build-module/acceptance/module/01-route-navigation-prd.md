@@ -120,7 +120,6 @@ application.
   extra page-history entry.
 - A deleted, archived, moved, or access-revoked record resolves through the
   lifecycle contract instead of an unhandled 404.
-
 - [ ] **BLD-01-011** every detail and execution page declares a deterministic
   `backHref`.
 - [ ] **BLD-01-012** back destinations are permission checked and cannot use an
@@ -142,7 +141,6 @@ application.
   repository-standard denial behavior without leaking metadata.
 - An archived record presents restore or parent navigation only when allowed.
 - Backend unavailable is an error state, never Not Found or empty.
-
 - [ ] **BLD-01-016** Build owns scoped `not-found`, `error`, and loading states
   at the smallest useful route boundaries.
 - [ ] **BLD-01-017** 400, 403, 404, 409, and 5xx responses map to distinct,
@@ -164,7 +162,6 @@ application.
 - Saved view IDs, record IDs, and search cursors never cross scope.
 - Organization changes clear all tenant-scoped return locations and query
   state before rendering.
-
 - [ ] **BLD-01-021** project, product, workspace, and organization switches
   pass the semantic destination matrix.
 - [ ] **BLD-01-022** renamed, moved, archived, deleted, and revoked scopes pass
@@ -175,7 +172,6 @@ application.
   never render in the new route.
 
 ## Automated Route Inventory
-
 - [ ] **BLD-01-025** one canonical manifest maps each retained customer route
   to its owner, scope, module, permission, page file, and parent route.
 - [ ] **BLD-01-026** a static gate extracts sidebar destinations, `Link`
@@ -191,7 +187,6 @@ application.
   one unknown access rule, and one wrong-scope destination.
 
 ## Browser Matrix
-
 - [ ] **BLD-01-031** crawl every retained route as owner, manager, member,
   restricted member, client, and no-access actor.
 - [ ] **BLD-01-032** crawl primary actions, table/card links, breadcrumbs,
@@ -203,7 +198,6 @@ application.
   the current page.
 
 ## Acceptance
-
 - [ ] **BLD-01-A01** static route and route-access gates pass with non-vacuous
   self-tests.
 - [ ] **BLD-01-A02** the known wrong-root and missing-project links have focused

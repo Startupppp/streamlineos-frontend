@@ -18,7 +18,6 @@ permissions, data volumes, responsive layouts, accessibility, performance, and
 failure states.
 
 ## Entry Conditions
-
 - [ ] **BSN-05-E01** BSN-01 is complete with evidence.
 - [ ] **BSN-05-E02** BSN-02 is complete with evidence.
 - [ ] **BSN-05-E03** BSN-03 is complete with evidence.
@@ -50,7 +49,6 @@ failure states.
 ### User and Organization Shapes
 
 Each persona checkbox passes only when its assertions all pass.
-
 - [ ] **BSN-05-001** Freelancer owner: one workspace, one standalone project,
   and one client-linked project; Quick Create defaults match the matrix; client
   portal preview works for the linked project.
@@ -71,7 +69,6 @@ Each persona checkbox passes only when its assertions all pass.
   BSN-04 Lifecycle Contract without stale stars, recents, pins, or data.
 
 ### Data Shapes
-
 - [ ] **BSN-05-010** Empty organization and empty accessible workspace show
   authorized create or join guidance, not generic errors.
 - [ ] **BSN-05-011** Duplicate workspace, product, and project names remain
@@ -87,7 +84,6 @@ Each persona checkbox passes only when its assertions all pass.
   BSN-03 badge and priority contracts.
 
 ### Navigation Journeys
-
 - [ ] **BSN-05-020** Organization, workspace, product, and project selection
   each open an Overview that satisfies the BSN-01 Overview Contracts.
 - [ ] **BSN-05-021** Browser Back and Forward restore valid scope and
@@ -106,7 +102,6 @@ Each persona checkbox passes only when its assertions all pass.
   recovery follow the BSN-04 Lifecycle Contract.
 
 ### Responsive and Accessibility
-
 - [ ] **BSN-05-030** Desktop expanded sidebar at 1280 CSS pixels.
 - [ ] **BSN-05-031** Desktop collapsed sidebar at 1280 CSS pixels.
 - [ ] **BSN-05-032** Tablet navigation at 768 CSS pixels.
@@ -126,7 +121,6 @@ Each persona checkbox passes only when its assertions all pass.
 - [ ] **BSN-05-041** Light and dark themes meet WCAG 2.2 AA contrast.
 
 ### Reliability and Performance
-
 - [ ] **BSN-05-050** Initial selector and sidebar states use shape-matched
   skeletons.
 - [ ] **BSN-05-051** Background refresh preserves visible content.
@@ -148,7 +142,6 @@ Each persona checkbox passes only when its assertions all pass.
 
 Run the smallest relevant test paths before these repository gates. Record every
 exact command and result; do not replace browser or DB evidence with type checks.
-
 - [ ] **BSN-05-070** File-size gates pass under the Measurable Standards rule.
   **Every Build-owned violation is now FIXED. The gate is still red, and the
   five remaining files all belong to other lanes**, so this program cannot close
@@ -177,12 +170,10 @@ exact command and result; do not replace browser or DB evidence with type checks
 - [ ] **BSN-05-072** Build read-budget commands in Measurable Standards pass.
 
 ## Documentation and Sign-off
-
 - [ ] **BSN-05-085** Product, frontend, backend, security, accessibility, and QA
   owners record approval or a named residual risk.
 
 ## Release Decision
-
 - [ ] **BSN-05-R01** Release approved for the reviewed revision pair and named
   environment.
 

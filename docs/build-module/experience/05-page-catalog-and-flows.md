@@ -356,7 +356,6 @@ This document is an overview. [All screen specifications](./screens/README.md) s
 ## Delivery checklist
 
 Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Wire record clicks from list/cards/reports/notifications to the matching detail or sheet; preserve record-ID mapping for legacy Feedbucket submissions and browser history/return state.
 - [ ] Verify every route's loading, empty, filtered-empty, error, inaccessible, archived, and mobile states plus cross-page cache refresh after a mutation.
 - [ ] Record evidence for navigation from freelancer, product, project, content, and client journeys, including role/tenant isolation and canonical destination precedence.

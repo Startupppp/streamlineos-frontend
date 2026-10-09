@@ -35,7 +35,6 @@ The canonical membership read confirmed an active organization administrator wit
 An intermediate attempt to replay compiled SQL without its parameter bindings returned `42P02`; it was discarded as a diagnostic harness error. The bound current-source invocation reproduced `42702` and the repaired actual source invocation succeeded.
 
 ## Remaining proof
-
 - [ ] Authenticated local browser project detail action, console and network verification on this source revision.
 - [ ] Full role and tenant browser acceptance beyond this administrator read.
 

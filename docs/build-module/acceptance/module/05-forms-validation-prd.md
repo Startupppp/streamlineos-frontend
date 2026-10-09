@@ -96,7 +96,6 @@ protects trust boundaries, and the database protects durable state.
 - archived or inaccessible options cannot be newly assigned.
 - server defaults are visible before submit or returned and patched
   immediately after create.
-
 - [ ] **BLD-05-001** a field contract inventory records name, label, type,
   requiredness, nullability, default, normalization, limits, permission, source,
   and database column for every mutation field.
@@ -167,7 +166,6 @@ protects trust boundaries, and the database protects durable state.
 | Time entry | project/ticket access; date; positive duration; overlap/period/approval rules |
 | Budget/cost | currency; nonnegative amount; date/category; finance permission and precision |
 | Agent proposal/credential | exact scope/action; confirmation policy; secret shown once; expiry and budget bounds |
-
 - [ ] **BLD-05-005** every active create/edit/import/bulk form maps to one row in
   the inventory.
 - [ ] **BLD-05-006** each row is expanded with actual current fields before
@@ -181,7 +179,6 @@ protects trust boundaries, and the database protects durable state.
   request schema, mutation, response/error mapping, and database invariants.
 
 ## Ticket Contract Repairs
-
 - [ ] **BLD-05-009** create/edit/import/duplicate/template/bulk share one title,
   type, priority, points, estimate, link, and date policy.
 - [ ] **BLD-05-010** `SUBTASK` is represented by one explicit hierarchy policy;
@@ -213,7 +210,6 @@ protects trust boundaries, and the database protects durable state.
 - executables and unsafe active content follow the platform file policy;
 - failed scan never publishes a file URL;
 - deleting a linked file follows retention and audit policy.
-
 - [ ] **BLD-05-016** import has dry-run and commit contracts against the same
   parser.
 - [ ] **BLD-05-017** import cannot reference another tenant's project, actor,
@@ -235,7 +231,6 @@ protects trust boundaries, and the database protects durable state.
 - date, hierarchy, workflow, transition, and relation checks run again inside
   the write transaction;
 - conflict errors preserve entered values and explain the changed server state.
-
 - [ ] **BLD-05-019** duplicate name/key races produce a field-level 409.
 - [ ] **BLD-05-020** stale version produces merge/reload choices.
   **Closed — unit proof, executed 2026-09-21.**
@@ -262,7 +257,6 @@ Every mutating surface chooses one:
 Covered exits include sidebar, breadcrumb, row link, scope selector, command
 palette, browser Back/Forward, overlay close, Escape, refresh, tab close,
 organization switch, sign-out, and programmatic post-action navigation.
-
 - [ ] **BLD-05-022** enumerate every Build form, sheet, dialog, rich editor,
   whiteboard, meeting note, update, workflow editor, and settings surface.
 - [ ] **BLD-05-023** every enumerated surface declares its save model and has a
@@ -283,7 +277,6 @@ organization switch, sign-out, and programmatic post-action navigation.
 - global toast does not replace field errors.
 - conflict/dependency dialogs remain open and show every actionable blocker.
 - secrets and internal SQL/provider errors never reach the client.
-
 - [ ] **BLD-05-027** all forms map backend field paths to controls.
 - [ ] **BLD-05-028** unknown errors retain user input and provide retry/support
   context.
@@ -329,7 +322,6 @@ organization switch, sign-out, and programmatic post-action navigation.
   `*-schema.ts` files declaring one shape; that clause is still unproven.
 
 ## Acceptance
-
 - [ ] **BLD-05-A01** schema parity gate covers all Build request forms and has a
   failing drift self-test.
 - [ ] **BLD-05-A02** boundary tests cover empty, null, whitespace, limit,

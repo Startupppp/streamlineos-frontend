@@ -1,6 +1,6 @@
 "use client";
 
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -8,29 +8,37 @@ import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
-import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import type {
   CompanionPolicy,
   CompanionPreference,
   CompanionPreferences,
   CompanionPrompt,
+  CompanionPromptCategory,
   CompanionSnoozeMinutes,
 } from "@/hooks/api/companion-schema";
 
 const preferencesContract = lazyContract(() =>
-  import("@/hooks/api/companion-schema").then((m) => m.companionPreferencesContract),
+  import("@/hooks/api/companion-schema").then(
+    (m) => m.companionPreferencesContract,
+  ),
 );
 const policyContract = lazyContract(() =>
   import("@/hooks/api/companion-schema").then((m) => m.companionPolicyContract),
 );
 const nextPromptContract = lazyContract(() =>
-  import("@/hooks/api/companion-schema").then((m) => m.companionNextPromptContract),
+  import("@/hooks/api/companion-schema").then(
+    (m) => m.companionNextPromptContract,
+  ),
 );
 const promptResultContract = lazyContract(() =>
-  import("@/hooks/api/companion-schema").then((m) => m.companionPromptResultContract),
+  import("@/hooks/api/companion-schema").then(
+    (m) => m.companionPromptResultContract,
+  ),
 );
 const promptHistoryContract = lazyContract(() =>
-  import("@/hooks/api/companion-schema").then((m) => m.companionPromptHistoryContract),
+  import("@/hooks/api/companion-schema").then(
+    (m) => m.companionPromptHistoryContract,
+  ),
 );
 const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
@@ -49,7 +57,12 @@ export function useCompanionPreferences() {
   return useQuery({
     queryKey: keys.preferences(),
     queryFn: ({ signal }) =>
-      apiClient.get<CompanionPreferences>("/companion/preferences", undefined, signal, preferencesContract),
+      apiClient.get<CompanionPreferences>(
+        "/companion/preferences",
+        undefined,
+        signal,
+        preferencesContract,
+      ),
     staleTime: PREFERENCES_REFRESH_MS,
     refetchInterval: PREFERENCES_REFRESH_MS,
     refetchIntervalInBackground: false,
@@ -66,9 +79,15 @@ export function useUpdateCompanionPreferences() {
   return useMutation({
     mutationKey: ["companion", "preferences", "update"],
     mutationFn: (patch: CompanionPreferencesPatch) =>
-      apiClient.patch<CompanionPreferences>("/companion/preferences", patch, undefined, preferencesContract),
+      apiClient.patch<CompanionPreferences>(
+        "/companion/preferences",
+        patch,
+        undefined,
+        preferencesContract,
+      ),
     onSuccess: (data) => {
       qc.setQueryData(keys.preferences(), data);
+      void qc.invalidateQueries({ queryKey: keys.nextPrompt(), exact: true });
     },
   });
 }
@@ -76,15 +95,26 @@ export function useUpdateCompanionPreferences() {
 export function useRevokeCompanionActivity() {
   return useMutation({
     mutationKey: ["companion", "activity", "delete"],
-    mutationFn: () => apiClient.delete<void>("/companion/activity", undefined, undefined, noContentContract),
+    mutationFn: () =>
+      apiClient.delete<void>(
+        "/companion/activity",
+        undefined,
+        undefined,
+        noContentContract,
+      ),
   });
 }
 
 export function useCompanionHeartbeat() {
-  return useMutation({
+  return useAuthorizedMutation("ai:chat:use", {
     mutationKey: ["companion", "activity", "heartbeat"],
     mutationFn: (input: { sessionId: string; foregroundSeconds: number }) =>
-      apiClient.post<void>("/companion/activity/heartbeat", input, undefined, noContentContract),
+      apiClient.post<void>(
+        "/companion/activity/heartbeat",
+        input,
+        undefined,
+        noContentContract,
+      ),
   });
 }
 
@@ -92,7 +122,12 @@ export function useCompanionPolicy() {
   return useGatedQuery("ai:companion:manage", {
     queryKey: keys.policy(),
     queryFn: ({ signal }) =>
-      apiClient.get<CompanionPolicy>("/companion/policy", undefined, signal, policyContract),
+      apiClient.get<CompanionPolicy>(
+        "/companion/policy",
+        undefined,
+        signal,
+        policyContract,
+      ),
     staleTime: 5 * 60_000,
   });
 }
@@ -101,20 +136,32 @@ export function useUpdateCompanionPolicy() {
   const qc = useQueryClient();
   return useAuthorizedMutation("ai:companion:manage", {
     mutationKey: ["companion", "policy", "update"],
-    mutationFn: (patch: Partial<Omit<CompanionPolicy, "version">> & { version: number }) =>
-      apiClient.patch<CompanionPolicy>("/companion/policy", patch, undefined, policyContract),
+    mutationFn: (
+      patch: Partial<Omit<CompanionPolicy, "version">> & { version: number },
+    ) =>
+      apiClient.patch<CompanionPolicy>(
+        "/companion/policy",
+        patch,
+        undefined,
+        policyContract,
+      ),
     onSuccess: (data) => {
       qc.setQueryData(keys.policy(), data);
-      void qc.invalidateQueries({ queryKey: keys.preferences(), exact: true, refetchType: "none" });
+      void qc.invalidateQueries({ queryKey: keys.preferences(), exact: true });
     },
   });
 }
 
 export function useNextCompanionPrompt(enabled: boolean) {
-  return useQuery({
+  return useGatedQuery("ai:chat:use", {
     queryKey: keys.nextPrompt(),
     queryFn: ({ signal }) =>
-      apiClient.get<{ prompt: CompanionPrompt | null }>("/companion/prompts/next", undefined, signal, nextPromptContract),
+      apiClient.get<{ prompt: CompanionPrompt | null }>(
+        "/companion/prompts/next",
+        undefined,
+        signal,
+        nextPromptContract,
+      ),
     staleTime: 0,
     refetchInterval: PROMPT_REFRESH_MS,
     refetchIntervalInBackground: false,
@@ -131,7 +178,7 @@ type PromptAction =
 
 export function useCompanionPromptAction() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("ai:chat:use", {
     mutationKey: ["companion", "prompts", "action"],
     mutationFn: (input: PromptAction) =>
       apiClient.post<{ prompt: CompanionPrompt }>(
@@ -141,24 +188,32 @@ export function useCompanionPromptAction() {
         promptResultContract,
       ),
     onSuccess: (_data, input) => {
-      if (input.action !== "claim") qc.setQueryData(keys.nextPrompt(), { prompt: null });
-      void qc.invalidateQueries({ queryKey: keys.promptHistory(), exact: true, refetchType: "none" });
+      if (input.action !== "claim")
+        qc.setQueryData(keys.nextPrompt(), { prompt: null });
+      void qc.invalidateQueries({
+        queryKey: keys.promptHistory(),
+        refetchType: "active",
+      });
     },
   });
 }
 
-export function useCompanionPromptHistory() {
-  return useInfiniteQuery({
-    queryKey: keys.promptHistory(),
-    queryFn: ({ pageParam, signal }) =>
+export function useCompanionPromptHistory(
+  filters: {
+    category?: CompanionPromptCategory;
+    status?: CompanionPrompt["status"];
+  },
+  cursor?: string,
+) {
+  return useGatedQuery("ai:chat:use", {
+    queryKey: keys.promptHistory(filters, cursor),
+    queryFn: ({ signal }) =>
       apiClient.get<{ items: CompanionPrompt[]; nextCursor: string | null }>(
         "/companion/prompts/history",
-        pageParam === undefined ? undefined : { cursor: pageParam },
+        { ...(cursor === undefined ? {} : { cursor }), ...filters },
         signal,
         promptHistoryContract,
       ),
-    initialPageParam: NO_CURSOR_YET,
-    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     staleTime: 30_000,
     ...INLINE_READ_ERROR,
   });

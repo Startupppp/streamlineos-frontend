@@ -206,7 +206,6 @@ The [route table](../routes-and-screen-decisions.md) distinguishes existing rout
 ## Delivery checklist
 
 Track completion in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Implement `/build/my-work` Focus/Today/Upcoming/Overdue/Blocked/Waiting/Drafts/Done with private rank and snooze, canonical ticket links, and typed assignee/creator/status/due filters.
 - [ ] Implement `/build/inbox` as a Build-filtered Home notification projection with read/resolved/snoozed state and safe target links; approval action opens an exact-version decision sheet.
 - [ ] Implement `/build/all-work` list/table/board/calendar/timeline with saved views, full FilterEnvelope v1, bounded selection/export preview, and permission-scoped counts.

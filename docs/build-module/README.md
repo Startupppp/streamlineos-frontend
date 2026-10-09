@@ -43,6 +43,5 @@ An unchecked box means that its *whole stated criterion* is pending. It does not
 
 Close a criterion only against its exact wording and a named frontend/backend revision, actor and tenant, initial state, observed action, persisted or external effect when applicable, and relevant negative case. Keep source, focused test, browser, database, provider, deployment, and human evidence distinct. Product decisions and historic research describe intended behavior; current code and observed runtime establish current state.
 ## Delivery checklist
-
 - [ ] Every open Build and sidebar acceptance criterion is satisfied at its stated evidence tier.
 - [ ] Browser, database, role, tenant, provider, deployment, and operational release evidence is recorded for the sellable scope.

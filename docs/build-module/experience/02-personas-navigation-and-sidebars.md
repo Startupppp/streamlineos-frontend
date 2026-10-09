@@ -320,7 +320,6 @@ The four core items are Command Center, My Work, Inbox and Projects. Persona tem
 ## Delivery checklist
 
 Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Persist per-user pinned, reordered, and collapsed navigation with a versioned actor/org scope; reject unavailable targets and restore a safe default on revocation.
 - [ ] Implement click, modifier-click, refresh, Back/Forward, split-pane, and mobile drawer behavior without losing origin query, scroll anchor, or focus.
 - [ ] Verify freelancer, product manager, project manager, engineer, content, executive, and external-client navigation with real role/module/project grants across two tenants; record denied deep-link and mobile evidence.

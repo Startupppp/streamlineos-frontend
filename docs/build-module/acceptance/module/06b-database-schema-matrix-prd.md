@@ -76,7 +76,6 @@ deliveries, incident timelines, drafts, and ticket history require:
 - vacuum/analyze and index-bloat monitoring;
 - asynchronous export and purge with audit;
 - no cascade that can lock/delete an unbounded graph synchronously.
-
 - [ ] **BLD-06B-001** table-by-table row counts, growth, largest tenant, index
   size, dead tuples, and query owners are recorded from a named environment.
 - [ ] **BLD-06B-002** high-volume read/write plans pass at projected 12- and
@@ -94,7 +93,6 @@ deliveries, incident timelines, drafts, and ticket history require:
 - journal/migration integrity;
 - post-migration counts and query plans;
 - approved forward recovery or restore procedure.
-
 - [ ] **BLD-06B-003** every proposed canonicalization has a field-level source
   to target map and unmappable-row policy.
 - [ ] **BLD-06B-004** every index add/drop has measured before/after plans and

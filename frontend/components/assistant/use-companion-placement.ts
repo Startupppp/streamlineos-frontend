@@ -29,6 +29,8 @@ export function useCompanionPlacement(scope: string, compact: boolean) {
   const positionRef = useRef<Position | null>(null);
   const dragRef = useRef<{ pointerId: number; x: number; y: number; origin: Position; moved: boolean } | null>(null);
   const suppressClickRef = useRef(false);
+  const suppressTimerRef = useRef<number | null>(null);
+  const frameRef = useRef<number | null>(null);
   const [position, setPosition] = useState<Position | null>(null);
   const [minimized, setMinimized] = useState(false);
   const positionKey = orgScopedStorageKey(compact ? "companion-position-mobile-v2" : "companion-position", scope);
@@ -69,7 +71,11 @@ export function useCompanionPlacement(scope: string, compact: boolean) {
       if (positionRef.current) place(positionRef.current);
     };
     window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      if (suppressTimerRef.current !== null) window.clearTimeout(suppressTimerRef.current);
+      if (frameRef.current !== null) window.cancelAnimationFrame(frameRef.current);
+    };
   }, [place]);
 
   function onPointerDown(event: PointerEvent<HTMLButtonElement>) {
@@ -100,7 +106,11 @@ export function useCompanionPlacement(scope: string, compact: boolean) {
     if (drag.moved && positionRef.current) {
       save(positionKey, JSON.stringify(positionRef.current));
       suppressClickRef.current = true;
-      window.setTimeout(() => { suppressClickRef.current = false; }, 0);
+      if (suppressTimerRef.current !== null) window.clearTimeout(suppressTimerRef.current);
+      suppressTimerRef.current = window.setTimeout(() => {
+        suppressClickRef.current = false;
+        suppressTimerRef.current = null;
+      }, 0);
     }
   }
 
@@ -130,7 +140,9 @@ export function useCompanionPlacement(scope: string, compact: boolean) {
       save(minimizedKey, current ? "0" : "1");
       return !current;
     });
-    window.requestAnimationFrame(() => {
+    if (frameRef.current !== null) window.cancelAnimationFrame(frameRef.current);
+    frameRef.current = window.requestAnimationFrame(() => {
+      frameRef.current = null;
       if (positionRef.current) place(positionRef.current);
     });
   }

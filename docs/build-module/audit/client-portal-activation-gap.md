@@ -118,6 +118,5 @@ All **40 PostgreSQL checks passed, zero failed**, exit 0. The [machine-readable 
 The new binding-aware application source `fe5997894` remains blocked from portal runtime use until production prerequisites and schema are ready. A possible migration/acceptance lock-order inversion is a source-review hypothesis, not a reproduced race; controlled portal-writer quiescence and fresh preflight are required before real application. This rehearsal does not prove the activation producer, delivery, Party lifecycle, full-chain migration, production role matrix, browser journey or operations, and closes none of those broad checklist items.
 
 ## Delivery checklist
-
 - [ ] Replace the false-success invite UI with one project-aware activation flow and truthful delivery states.
 - [ ] Prove tenant, role, publication, grant, file, retry, worker, browser, and revocation behavior before marking BLD-005 verified.

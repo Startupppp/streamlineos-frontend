@@ -127,6 +127,5 @@ An area is implementation complete only when its screen spec names audience, ent
 ## Delivery checklist
 
 Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Verify intake conversion and portal actions preserve identity, idempotency, permissions, visibility, and record return navigation.
 - [ ] Close each of the 26 product areas only after screen, schema, query/command, permission, cache/event, mobile, negative, and browser evidence exists.

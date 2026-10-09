@@ -154,6 +154,7 @@ describe("useMailAction — markRead optimistic patch", () => {
     const { result } = renderHook(() => useMailAction(), {
       wrapper: wrapper(client),
     });
+    const invalidate = jest.spyOn(client, "invalidateQueries");
 
     await act(async () => {
       await result.current.mutateAsync({
@@ -166,6 +167,7 @@ describe("useMailAction — markRead optimistic patch", () => {
     expect(after?.pages[0]?.messages[0]?.isRead).toBe(true);
     expect(after?.pages[0]?.messages[1]?.isRead).toBe(false);
     expect(after?.pages[1]?.messages[0]?.isRead).toBe(false);
+    expect(invalidate).not.toHaveBeenCalled();
   });
 
   it("restores original data on mutation error", async () => {

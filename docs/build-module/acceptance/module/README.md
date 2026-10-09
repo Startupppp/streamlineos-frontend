@@ -123,7 +123,6 @@ Passing types, mocks, or unit tests alone does not close a customer journey.
   permissions are rechecked at execution, and every action is auditable.
 
 ## Acceptance Workstreams
-
 - [ ] [BLD-00 — Normative product and architecture decisions](./00-product-decisions-prd.md)
 - [ ] [BLD-01 — Route and navigation integrity](./01-route-navigation-prd.md)
 - [ ] [BLD-01A — Canonical Build route manifest](./01a-canonical-route-manifest-prd.md)
@@ -155,7 +154,6 @@ session-sized packets in the Build execution ledger; do not assign these
 aggregate boxes to agents.
 
 ### Phase 0 — Lock Product and Data Decisions
-
 - [ ] **BLD-00-012** Complete the first-party competitor baseline and select
   deliberate non-goals before final page/feature scope is locked.
 - [ ] **BLD-00-001** Reconcile every route disposition and page contract in
@@ -178,7 +176,6 @@ aggregate boxes to agents.
   Integrations, and acknowledge ingress only after a durable receipt.
 
 ### Phase 1 — Repair Reachability and Contracts
-
 - [ ] **BLD-00-005** Complete BLD-01 route integrity, BLD-01A manifest
   reconciliation, and BLD-01B access/persona parity.
 - [ ] **BLD-00-006** Complete page moves, additions, removals, components,
@@ -188,7 +185,6 @@ aggregate boxes to agents.
   prerequisites from BLD-05, BLD-05A, BLD-06, BLD-06A, and BLD-06B.
 
 ### Phase 2 — Complete Customer Workflows
-
 - [ ] **BLD-00-008** Complete discovery, view, board, table, and pagination
   behavior from BLD-03.
 - [ ] **BLD-00-009** Complete ticket, bulk, workflow, and settings behavior from
@@ -197,7 +193,6 @@ aggregate boxes to agents.
   BLD-07.
 
 ### Phase 3 — Product Quality and Release
-
 - [ ] **BLD-00-011** Complete visual and accessibility acceptance from BLD-08.
 - [ ] **BLD-00-013** Complete BLD-10 against one reviewed frontend/backend
   revision pair.
@@ -241,7 +236,6 @@ Each checked item must name the evidence level. Inference must be labelled as
 inference.
 
 ## Program Definition of Done
-
 - [ ] No Build navigation, card, table row, command, notification, or back
   action reaches a missing or semantically wrong destination.
 - [ ] Every retained page has an owner, required customer job, permission,

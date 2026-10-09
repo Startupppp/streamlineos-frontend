@@ -107,7 +107,6 @@ fourth pass — see the Evidence Log.
 
 BSN-01-020, BSN-01-021, BSN-01-026 and BSN-01-027 CLOSED in the fourth pass —
 see the Evidence Log.
-
 - [ ] **BSN-01-024** Implement or wire project Updates and Files pages.
   **Updates is DONE-PENDING-MIGRATION** (fifth pass). `build.project_updates`
   (migration `1126`, journal idx 1014) carries a keyset-ready partial index
@@ -297,7 +296,6 @@ Closed in the fourth pass (2026-09-19):
   navigation model serves every shell surface without obsolete aliases.
 
 ## Acceptance Checklist
-
 - [ ] **BSN-01-A01** Selecting each of the three scope types (organization,
   managed product, project) lands on an Overview that renders every required
   Overview Contract field.

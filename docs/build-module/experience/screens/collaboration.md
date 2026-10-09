@@ -355,7 +355,6 @@ The [route table](../routes-and-screen-decisions.md) distinguishes existing rout
 ## Delivery checklist
 
 Track completion in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Implement project Updates with draft/preview/publish/acknowledge, audience and health filters, cited AI drafts, and client-safe publication revisions.
 - [ ] Implement project Chat threads with authorized mentions, search, attachment/link previews, and conversion to canonical ticket or decision without duplicate writes.
 - [ ] Implement Meetings list/detail with participant/action filters and notes/decision/action links; schedule or reschedule in Home Calendar with signed return context.

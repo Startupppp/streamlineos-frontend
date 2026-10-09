@@ -69,5 +69,4 @@ Until these three conditions are met, Phase 6 scope items carry DEFERRED status 
 ## Delivery checklist
 
 Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Exercise owner, org admin, assigned member, unassigned member, and external client journeys in a browser, including mobile layout, network, console, refresh, and real persisted mutations.

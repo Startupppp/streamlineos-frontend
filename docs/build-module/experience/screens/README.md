@@ -25,5 +25,4 @@ Persona is a default configuration, not an access role. Every screen is governed
 ## Delivery checklist
 
 Track completion in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Verify every screen family has populated, empty, filtered-empty, denied, failed, direct-link/refresh, keyboard, mobile, persisted-action, and cross-tenant evidence before closing its checklist.

@@ -49,7 +49,6 @@ unique requirements are migrated and verified.
 | `/build/settings` | ADD | Build module settings landing for access, terminology, defaults, templates, client access, integrations, retention, and archive. |
 
 ### Organization Acceptance
-
 - [ ] **BLD-02A-001** every kept page exposes one primary job and no duplicate
   configuration owner.
 - [ ] **BLD-02A-002** Command Center metrics are server-derived, permission
@@ -133,7 +132,6 @@ Every retained directory or overview includes:
 - keyboard-operable row/card actions;
 - last-updated or data-freshness treatment for roll-ups; and
 - a responsive compact mode that does not hide required actions behind hover.
-
 - [ ] **BLD-02A-019** all pages pass the shared anatomy checklist.
 - [ ] **BLD-02A-020** every add/move/consolidate decision has route, API,
   permission, cache, migration, and inbound-link evidence.

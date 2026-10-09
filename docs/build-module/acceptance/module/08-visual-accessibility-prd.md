@@ -52,7 +52,6 @@ Rules:
 - overlays include scrim, border, shadow, and an elevated surface token;
 - visual hierarchy changes are made in global tokens/primitives when the job is
   global, not copied into Build pages.
-
 - [ ] **BLD-08-001** measure current light/dark surface combinations and approve
   token changes with screenshots, not subjective labels.
   **Measured 2026-09-21; open on the approval clause.**
@@ -126,7 +125,6 @@ Rules:
 - one section owner per route;
 - sticky Save only for explicit-save forms;
 - danger/archive separated after normal settings.
-
 - [ ] **BLD-08-005** all retained pages map to collection, overview, detail,
   execution, settings, or canvas anatomy.
 - [ ] **BLD-08-006** page headers contain no duplicate breadcrumb, back, title,
@@ -144,7 +142,6 @@ Rules:
 - titles truncate after preserving key and action access;
 - descriptions do not appear on every card by default;
 - whitespace groups related controls before borders and cards are added.
-
 - [ ] **BLD-08-008** board card defaults show at most five secondary signals.
 - [ ] **BLD-08-009** tables support resize/reorder without making the first
   identity column inaccessible.
@@ -167,7 +164,6 @@ Responsive behavior:
 - dialogs fit the viewport and scroll internally without hiding title/actions;
 - nested modal stacks are removed or replaced by one owned flow;
 - destructive confirmation is never buried behind a second menu after submit.
-
 - [ ] **BLD-08-011** inventory every Build overlay and assign one ladder level.
 - [ ] **BLD-08-012** rich ticket/project forms no longer masquerade as small
   dialogs.
@@ -207,7 +203,6 @@ Responsive behavior:
 - zoom and date navigation are labelled;
 - unscheduled and dependency states are available without pointer precision;
 - reduced motion removes animated pans/transitions.
-
 - [ ] **BLD-08-015** each view passes mouse, touch, keyboard, and screen-reader
   task checks.
 - [ ] **BLD-08-016** virtualized content preserves focus and announcements when
@@ -238,7 +233,6 @@ Rules:
 - optimistic change is visibly pending only when meaningful;
 - toast confirms transient outcome but does not carry required detail;
 - destructive or partial errors stay in context.
-
 - [ ] **BLD-08-018** state matrix is implemented on every retained route.
 - [ ] **BLD-08-019** stale and offline data are labelled with last successful
   update and unsafe writes disabled.
@@ -265,7 +259,6 @@ Rules:
 
 Every BLD-02C through BLD-02F page inherits exactly one anatomy. A page may
 mark a state N/A only with a product reason in its page contract.
-
 - [ ] **BLD-08-031** every retained page records its anatomy, applicable state
   set, N/A reasons, and browser evidence IDs; validation reports zero blank
   cells.
@@ -286,7 +279,6 @@ mark a state N/A only with a product reason in its page contract.
 - charts expose text summary and underlying data;
 - reduced motion disables nonessential animation;
 - high contrast/forced colors preserve controls and state.
-
 - [ ] **BLD-08-021** automated accessibility checks run on representative
   states but do not replace manual testing.
 - [ ] **BLD-08-022** keyboard task suite covers navigation, filters, views,
@@ -339,14 +331,12 @@ mark a state N/A only with a product reason in its page contract.
 - settings navigation becomes a labelled selector;
 - no hover-only control;
 - safe-area insets and virtual keyboard do not cover actions.
-
 - [ ] **BLD-08-028** persona task flows pass on narrow phone, tablet, laptop,
   and large desktop viewports.
 - [ ] **BLD-08-029** landscape/portrait changes preserve unsaved state and
   current record.
 
 ## Acceptance
-
 - [ ] **BLD-08-A01** approved before/after screenshots cover every page anatomy,
   overlay level, theme, and responsive breakpoint.
 - [ ] **BLD-08-A02** no global primitive change regresses non-Build screens in

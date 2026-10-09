@@ -127,7 +127,6 @@ previously proposed duplicate, as stated in those matrices.
   credentials, retention, and audit.
 - **Archive and retention** — archived issues/views/forms and project archive
   or restore. Destructive purge is platform-governed.
-
 - [ ] **BLD-02B-001** every settings section has one route and one data owner.
 - [ ] **BLD-02B-002** moving a capability preserves unique requirements,
   permissions, records, and inbound links before the old route is deleted.
@@ -148,7 +147,6 @@ Every retained page provides:
 - loading, empty, no-results, denied, offline, conflict, and error states;
 - bounded pagination or an explicitly bounded configuration list; and
 - responsive behavior that keeps primary and destructive actions available.
-
 - [ ] **BLD-02B-005** every retained route has a page contract naming its
   primary action, secondary actions, views, filters, and collection strategy.
 - [ ] **BLD-02B-006** no read-only, aggregate, or settings page gains CRUD
@@ -158,7 +156,6 @@ Every retained page provides:
   explicitly approved client progress view.
 
 ## Acceptance
-
 - [ ] **BLD-02B-A01** all current project routes appear exactly once across the
   exhaustive BLD-02E and BLD-02F inventories and match this disposition.
 - [ ] **BLD-02B-A02** retained routes have matching frontend access, backend

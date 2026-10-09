@@ -51,7 +51,9 @@ export const collaborationQueryKeys = {
     preferences: () => [...base, "companion", "preferences"] as const,
     policy: () => [...base, "companion", "policy"] as const,
     nextPrompt: () => [...base, "companion", "prompts", "next"] as const,
-    promptHistory: () => [...base, "companion", "prompts", "history"] as const,
+    promptHistory: (filters?: { category?: string; status?: string }, cursor?: string) => filters
+      ? [...base, "companion", "prompts", "history", filters.category ?? "all", filters.status ?? "all", cursor ?? null] as const
+      : [...base, "companion", "prompts", "history"] as const,
   },
 
   aiCrm: {

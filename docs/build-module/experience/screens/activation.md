@@ -80,7 +80,6 @@ Changing authentication providers, payroll/tax onboarding implementation, or sen
 ## Delivery checklist
 
 Track completion in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Implement invitation-aware signup/signin OTP with resend, autofill, non-enumerating errors, safe callback validation, and first-priority valid invitation handling.
 - [ ] Replace current Welcome/Basics/Launch presentation with Workspace → Products → optional People while keeping the Build-only default to five visible inputs and at most two blocking multi-module questions.
 - [ ] Persist selected modules, reversible defaults, module-specific answers, template preview, custom-field drafts, and invitation rows across refresh and cross-device resume.

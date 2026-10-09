@@ -67,5 +67,4 @@ Webhook deliveries sign the exact bytes, timestamp, event ID, and version; recei
 ## Delivery checklist
 
 Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Define durable import/export, notification, webhook, automation, and projection jobs with 202 operation status, retries, backoff, dead-letter handling, and actor-scoped result access.

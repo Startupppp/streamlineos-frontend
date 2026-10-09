@@ -233,7 +233,6 @@ The [route table](../routes-and-screen-decisions.md) distinguishes existing rout
 ## Delivery checklist
 
 Track completion in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Implement managed-products list and overview with owner/lifecycle/health/segment/tag filters, stable product page links, create/archive commands, and linked project/goal summaries.
 - [ ] Implement feedback capture with source/customer/segment/theme/date/duplicate filters; preserve raw evidence and provenance when deduplicating or routing to Intake.
 - [ ] Implement insights/opportunities with evidence links, confidence, score, age, override reason, experiment/review dates, and source drill-down.

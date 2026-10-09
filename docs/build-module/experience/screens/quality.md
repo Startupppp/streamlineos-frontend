@@ -222,7 +222,6 @@ The [route table](../routes-and-screen-decisions.md) distinguishes existing rout
 ## Delivery checklist
 
 Track completion in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Implement Releases list/detail with version, scope, milestone, readiness, risk, QA state, approval, and publish/deploy event links; require a review preview before release transitions.
 - [ ] Implement QA catalog and run execution with case/version, assignee, environment, result, evidence attachment, defect link, and regression filters; preserve in-progress run state on navigation.
 - [ ] Implement Incidents list and command/postmortem detail with severity, owner, timeline, affected release/tickets, actions, communications, and audit trail.

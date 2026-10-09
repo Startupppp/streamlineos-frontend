@@ -140,5 +140,4 @@ The first activation sequence remains PM-011 invitation acceptance → PM-002 mo
 ## Delivery checklist
 
 Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Prove PM-011 invite acceptance, PM-002 Build standing, then PM-001 usable client grant before promoting later WOW rows, as required by the [priority guardrail](#priority-guardrail).

@@ -41,7 +41,6 @@ pnpm exec jest src/modules/build/core/project-crud/projects-query-health-sort.sp
 ```
 
 Result: seven suites, 67 tests passed. The real Drizzle compilation suite verifies one correlated aggregate, shared projection/filter fields, tenant/status joins, the own predicate, and the denied predicate. Existing list scope, keyset, tenant isolation, and detail tests also pass. Scoped ESLint reports zero errors or warnings on the seven changed backend files.
-
 - [ ] Browser filtering, pagination, refresh, and access acceptance are evidenced.
 
 ## Target database method

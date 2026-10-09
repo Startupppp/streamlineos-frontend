@@ -63,5 +63,4 @@ Security, baseline export, recovery, and tenant isolation are never paid-plan ga
 ## Delivery checklist
 
 Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Attach browser/network, backend negative tests, database isolation, and deployed-revision evidence before marking RBAC behavior verified.

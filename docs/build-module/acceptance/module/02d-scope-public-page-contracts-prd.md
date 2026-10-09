@@ -76,7 +76,6 @@ the existence/count of hidden records.
 - analytics avoid personal data and cannot become an access side channel.
 
 ## Completion Checks
-
 - [ ] **BLD-02D-001** every current product, portal, and public Build route
   appears exactly once.
 - [ ] **BLD-02D-002** every scope collection has explicit components, filters,

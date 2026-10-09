@@ -62,7 +62,6 @@ Every handler must pass:
 
 Controllers do not trust `orgId`, current `userId`, author, creator, reporter,
 subscriber, or acting actor from the client.
-
 - [ ] **BLD-06-001** every Build controller handler is classified by auth,
   module, permission, scope, validation, response contract, and idempotency.
 - [ ] **BLD-06-002** every read and write applies tenant and record scope in the
@@ -101,7 +100,6 @@ subscriber, or acting actor from the client.
 - unknown sort/filter/include fields fail;
 - expansions are allowlisted and separately authorized;
 - write responses return enough canonical state to patch caches safely.
-
 - [ ] **BLD-06-007** repair ticket route parameter validation and pass
   `projectId` through read/update/delete service contracts.
 - [ ] **BLD-06-008** request/response contract tests cover every Build
@@ -124,7 +122,6 @@ Every DB call is:
 - stable under pagination; and
 - executed once per customer action unless an explicit dependency requires
   otherwise.
-
 - [ ] **BLD-06-011** inventory endpoint-to-query counts for list, detail,
   dashboard, report, bulk, and client portal flows.
 - [ ] **BLD-06-012** remove N+1 relation, count, member, customer, label, and
@@ -154,7 +151,6 @@ Every DB call is:
 - customer/client references are tenant safe;
 - project nullability on tickets is either justified by a live projectless
   workflow or migrated to `NOT NULL`.
-
 - [ ] **BLD-06-016** schema audit records column nullability, default, check,
   FK, unique, delete behavior, and live service owner for every Build table.
 - [ ] **BLD-06-017** duplicate or non-tenant-leading indexes are evaluated with
@@ -179,7 +175,6 @@ Every DB call is:
   total are a real requirement;
 - concurrent writes do not create silent duplicate/omitted traversal within
   the documented consistency model.
-
 - [ ] **BLD-06-022** replace global board auto-loading with per-column bounded
   continuation.
 - [ ] **BLD-06-023** filtered and unfiltered boards expose identical
@@ -200,7 +195,6 @@ Every DB call is:
 - partial success is an explicit result type, never inferred from Promise
   completion;
 - retry is safe after network timeout at any point.
-
 - [ ] **BLD-06-026** every write endpoint records transaction owner,
   idempotency scope, conflict rule, outbox effects, and retry response.
 - [ ] **BLD-06-027** bulk and import cap record count, lock deterministically,
@@ -228,7 +222,6 @@ Every cache has a writer matrix:
 - cache-unavailable behavior;
 - organization switch, access revoke, archive, restore, and rollback behavior;
 - cross-tab/client synchronization.
-
 - [ ] **BLD-06-030** inventory every Build client and server cache and assign
   one owner.
 - [ ] **BLD-06-031** mutation responses patch matching cached records before
@@ -281,7 +274,6 @@ excluding client network latency unless stated:
 
 The release record must include dataset shape, concurrency, warm/cold state,
 query plans, and p50/p95/p99; a local empty database is not evidence.
-
 - [ ] **BLD-06-036** seed or anonymized production-like scale covers large
   tenant, many projects, skewed statuses, long history, and high-cardinality
   custom fields.
@@ -292,7 +284,6 @@ query plans, and p50/p95/p99; a local empty database is not evidence.
 - [ ] **BLD-06-039** performance regressions have alert thresholds and an owner.
 
 ## Acceptance
-
 - [ ] **BLD-06-A01** controller classification reports zero unvalidated,
   unauthorized, uncontracted, or unbounded Build handlers.
 - [ ] **BLD-06-A02** cross-tenant, wrong-project, scope-widening, portal-grant,

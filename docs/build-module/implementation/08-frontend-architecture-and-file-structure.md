@@ -74,5 +74,4 @@ Route: cold-load permission and param validation. Hook: key identity, enabled ga
 ## Delivery checklist
 
 Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Verify each changed page at mobile, tablet, and desktop sizes with loading, empty, stale, denied, conflict, and retry states; record accessibility results.

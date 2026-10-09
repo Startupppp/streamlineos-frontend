@@ -249,6 +249,5 @@ Backend: `check:params-schema-completeness` (approvals `projectAndApprovalIdPara
 ## Delivery checklist
 
 Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Prove Timesheets, CRM, Accounting, Home, and Files own their authoritative data before replacing duplicate Build paths with contextual adapters.
 - [ ] Remove compatibility code only after current callers, production data, and deployed-revision evidence satisfy the documented exit condition.

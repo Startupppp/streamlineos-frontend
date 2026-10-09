@@ -128,7 +128,6 @@ The implementation audit must cover every file under
 - roadmap, goals, feedback, releases, approvals, workflow, automations/webhooks;
 - portfolios, meetings, forms, QA, governance, incidents, changes, whiteboards,
   Git, and client portal relations.
-
 - [ ] **BLD-06A-001** the generated controller census and this matrix contain
   the same 49 current controllers and 325 HTTP handlers, with zero blank
   auth/parent/schema/bound/idempotency fields.

@@ -43,5 +43,4 @@ Browser, persistence, target-DB, tenant/RBAC, deployment, provider, load, revoca
 ## Delivery checklist
 
 Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Close no release criterion from a Markdown link or source file alone; attach the role/tenant, persistence, browser, and operations proof named by that row.

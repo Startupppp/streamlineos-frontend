@@ -209,18 +209,23 @@ export function useMailAiDraft() {
 
 export function useMailAction() {
   const qc = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("mail:messages:manage", {
     mutationKey: ["mail", "action"],
     mutationFn: ({ messageId, body }: { messageId: string; body: MailActionBody }) =>
-      apiClient.post<{ ok: true }>(`/mail/messages/${messageId}/actions`, body, undefined, mailActionSuccessContract),
+      apiClient.post<{ ok: true }>(
+        `/mail/messages/${messageId}/actions`,
+        body,
+        operation.configFor({ messageId, body }),
+        mailActionSuccessContract,
+      ),
     onMutate: ({ messageId, body }) => applyMailActionToCaches(qc, messageId, body),
+    onSuccess: () => {
+      operation.settle();
+    },
     onError: (_, _variables, context) => {
       if (!context) return;
       restoreMailCaches(qc, context);
-    },
-    onSettled: () => {
-      void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.mail.all });
-      void qc.invalidateQueries({ queryKey: platformCoreQueryKeys.inbox.all });
     },
   });
 }

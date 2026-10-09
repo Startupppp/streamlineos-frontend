@@ -104,7 +104,6 @@ Rules:
 - unavailable feature filters are omitted, not disabled without explanation;
 - filter option counts are optional but, when shown, reflect the current query
   excluding only their own dimension.
-
 - [ ] **BLD-03-001** frontend, API, saved view, export, and automation reuse one
   canonical filter vocabulary and serializer.
 - [ ] **BLD-03-002** malformed values fail with a field-level 400 and never
@@ -144,7 +143,6 @@ Rules:
 | Customers | CRM customer, project/product, owner, health, portal grant, last update |
 | Access | actor, role, scope, access source, client/internal, expiry, review state |
 | Agents/Automations | type, state, trigger, actor/agent, approval, failure, date, cost/budget |
-
 - [ ] **BLD-03-007** every retained collection implements its applicable row
   with no decorative filter that the backend ignores.
   `mine`; identity comes from the token.
@@ -181,7 +179,6 @@ Rules:
 - server search covers the documented fields only and labels its scope.
 - recent searches and suggestions are tenant and actor scoped.
 - no-result state shows active filters and a one-click clear action.
-
 - [ ] **BLD-03-011** project and cross-project search use indexed plans at
   realistic scale.
   **Closed — gate proof, executed 2026-09-21.**
@@ -222,7 +219,6 @@ Rules:
 - Board is offered only where a real state transition exists.
 - Timeline is offered only for records with meaningful dates and dependencies.
 - Settings, forms, and read-only summaries do not gain view switchers.
-
 - [ ] **BLD-03-015** unsupported view/page combinations are absent.
 - [ ] **BLD-03-016** switching views preserves compatible search, filters,
   sort, group, selection scope, and saved-view identity.
@@ -244,7 +240,6 @@ A saved view stores:
 - creator, updater, timestamps, and migration version.
 
 It never stores a cursor, tenant ID from the client, or unauthorized option.
-
 - [ ] **BLD-03-019** create, update, duplicate, rename, share, set default,
   archive, and delete are permission checked.
 - [ ] **BLD-03-020** opening a view reports missing/archived fields and offers a
@@ -274,7 +269,6 @@ It never stores a cursor, tenant ID from the client, or unauthorized option.
 - Grouping by status, assignee, priority, type, iteration, module, epic, label,
   project, or supported custom field is server-aware.
 - Empty groups are optional display state, not fake records.
-
 - [ ] **BLD-03-023** every sort has a matching index or measured acceptable
   plan.
 - [ ] **BLD-03-024** keyset cursor encoding contains the sort tuple and rejects
@@ -304,7 +298,6 @@ Rules:
 - export is asynchronous and re-authorizes the predicate at execution;
 - bulk `select all matching` uses a server-side query token, not IDs for only
   the rendered page.
-
 - [ ] **BLD-03-026** filtered boards expose every matching item through
   per-column continuation.
   contract as board rows.
@@ -314,7 +307,6 @@ Rules:
   traversal and documents concurrent-write semantics.
 
 ## Acceptance
-
 - [ ] **BLD-03-A01** contract tests prove URL, frontend request, backend schema,
   service predicate, count, export, and saved-view parity.
 - [ ] **BLD-03-A02** invalid enum, ID, date, operator, cursor, and cross-tenant

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import {
   useCompanionPromptAction,
   useNextCompanionPrompt,
@@ -20,6 +21,7 @@ import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useOrgStorageScope } from "@/lib/org-scoped-storage";
 import { cn } from "@/lib/utils";
 import { isApiError } from "@/lib/api-envelope";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 interface CompanionPromptBubbleProps {
   enabled: boolean;
@@ -102,7 +104,12 @@ export function CompanionPromptBubble({ enabled, preferences, horizontal, vertic
   const candidateId = candidate?.id ?? null;
   const { mutate: claimPrompt, reset: resetClaim } = claim;
   const claimed = claim.data?.prompt ?? null;
-  const prompt = presentationAllowed ? claimed : null;
+  const prompt = presentationAllowed && claimed && preferences.prompts[claimed.category]
+    ? claimed : null;
+
+  useEffect(() => {
+    if (claimed && !preferences.prompts[claimed.category]) resetClaim();
+  }, [claimed, preferences.prompts, resetClaim]);
 
   useEffect(() => {
     if (typeof BroadcastChannel === "undefined") return;
@@ -123,9 +130,9 @@ export function CompanionPromptBubble({ enabled, preferences, horizontal, vertic
   }, [qc, scope, tabId]);
 
   useEffect(() => {
-    if (!presentationAllowed || candidateId === null || claim.isPending || claim.isError || claimed) return;
+    if (!presentationAllowed || candidateId === null || !candidate || !preferences.prompts[candidate.category] || claim.isPending || claim.isError || claimed) return;
     claimPrompt({ promptId: candidateId, action: "claim" });
-  }, [candidateId, claim.isPending, claim.isError, claimPrompt, claimed, presentationAllowed]);
+  }, [candidate, candidateId, claim.isPending, claim.isError, claimPrompt, claimed, preferences.prompts, presentationAllowed]);
 
   useEffect(() => {
     if (!claim.isError || !isApiError(claim.error) || claim.error.status !== 409) return;
@@ -195,11 +202,19 @@ export function CompanionPromptBubble({ enabled, preferences, horizontal, vertic
     resolvePrompt("snooze", minutes);
   }
   function handleDisableFriendly() {
-    updatePreferences.mutate({
-      version: preferences.version,
-      prompts: { ...preferences.prompts, friendly: false },
-    });
-    resolvePrompt("dismiss");
+    updatePreferences.mutate(
+      {
+        version: preferences.version,
+        prompts: { ...preferences.prompts, friendly: false },
+      },
+      {
+        onSuccess: () => resolvePrompt("dismiss"),
+        onError: (error) => {
+          toast.error(getErrorMessage(error));
+          void qc.invalidateQueries({ queryKey: collaborationQueryKeys.companion.preferences(), exact: true });
+        },
+      },
+    );
   }
 
   return (
@@ -254,7 +269,7 @@ export function CompanionPromptBubble({ enabled, preferences, horizontal, vertic
         </div>
       ) : null}
       {prompt.category === "friendly" ? (
-        <Button type="button" size="sm" variant="link" className="mt-1 px-0" onClick={handleDisableFriendly}>
+        <Button type="button" size="sm" variant="link" className="mt-1 px-0" onClick={handleDisableFriendly} disabled={updatePreferences.isPending || act.isPending}>
           Turn off check-ins
         </Button>
       ) : null}

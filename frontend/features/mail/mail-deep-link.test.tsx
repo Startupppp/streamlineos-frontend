@@ -9,11 +9,8 @@ const replaceMock = jest.fn<void, [string, (Record<string, unknown> | undefined)
 const mailActionMutate = jest.fn();
 let canManageMail = true;
 
-let capturedReadingPaneProps: { selectedMessage: MailMessageSummary } | null = null;
-
 jest.mock("./mail-reading-pane", () => ({
   MailReadingPane: (props: { selectedMessage: MailMessageSummary }) => {
-    capturedReadingPaneProps = props;
     return (
       <div
         data-testid="reading-pane"
@@ -157,7 +154,6 @@ function renderShell() {
 beforeEach(() => {
   mockSearchParams = new URLSearchParams();
   mockAccounts = [ACCOUNT_ACTIVE];
-  capturedReadingPaneProps = null;
   canManageMail = true;
   replaceMock.mockReset();
   mailActionMutate.mockReset();

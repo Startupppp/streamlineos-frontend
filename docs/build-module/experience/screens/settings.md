@@ -494,7 +494,6 @@ The [route table](../routes-and-screen-decisions.md) distinguishes existing rout
 ## Delivery checklist
 
 Track completion in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Implement Build access and project access/member screens with current Org Owner/Admin bypass, explicit Org Member module assignment, project reachability, permission preview, and immediate revocation.
 - [ ] Implement client grants and portal settings with audience-bound capabilities, published-field preview as the actual client, expiry, resend/revoke, and separate client identity.
 - [ ] Implement workflow, custom-field, saved-view, and cycle designers as revisioned drafts with validation, dependency/impact preview, publish/restore, and no active-policy change before confirmation.

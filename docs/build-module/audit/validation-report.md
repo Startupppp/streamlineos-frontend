@@ -79,7 +79,6 @@ After future edits, compare page files to route decision table; verify every rou
 ## Delivery checklist
 
 Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Attach browser, role/tenant, target database, worker/cache, and deployment evidence before any product requirement is promoted to Current verified.
 
 ## Gate reconciliation 2026-10-04

@@ -381,7 +381,6 @@ The [route table](../routes-and-screen-decisions.md) distinguishes existing rout
 ## Delivery checklist
 
 Track completion in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Implement `/build/approvals` and project approvals as authorized queues with exact artifact/version, requester, due date, decision status, filter chips, and revision-safe Approve/Reject/Request changes sheets.
 - [ ] Implement project Intake queue and request detail with source identity, submitted fields/files, assignee/status, comments, and typed source/status/date/client filters; route accepted requests through idempotent ticket/project conversion.
 - [ ] Implement Triage as a focused mode over the same Intake records with next/previous, duplicate/link/routing decisions, keyboard actions, and return to the original filtered queue.

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useEffect, useState } from "react";
+import { useCallback, useRef, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
@@ -11,7 +11,13 @@ import { useMailAccounts, useMailAction } from "@/hooks/api/mail";
 import { useFinalizeIntegrationConnection } from "@/hooks/api/integrations";
 import { useCan, usePermissionGate } from "@/hooks/api/access";
 import { PageState } from "@/components/shared/page-state";
-import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { MailListPane } from "./mail-list-pane";
 import { MailEmptyPane } from "./mail-empty-pane";
 import { MailHeader, MAIL_ACCOUNT_SENTINEL } from "./mail-header";
@@ -27,17 +33,24 @@ import type { MailReplyParams } from "./mail-reading-ai-actions";
 import type { PageStateResolution } from "@/lib/page-state/resolve-page-state";
 
 const MailReadingPane = dynamic(
-  () => import("./mail-reading-pane").then((m) => ({ default: m.MailReadingPane })),
+  () =>
+    import("./mail-reading-pane").then((m) => ({ default: m.MailReadingPane })),
   { ssr: false, loading: () => <MailReadingPaneSkeleton /> },
 );
 
 const MailAccountsSheet = dynamic(
-  () => import("./mail-accounts-sheet").then((m) => ({ default: m.MailAccountsSheet })),
+  () =>
+    import("./mail-accounts-sheet").then((m) => ({
+      default: m.MailAccountsSheet,
+    })),
   { ssr: false, loading: () => <MailSheetSkeleton /> },
 );
 
 const MailComposeSheet = dynamic(
-  () => import("./mail-compose-sheet").then((m) => ({ default: m.MailComposeSheet })),
+  () =>
+    import("./mail-compose-sheet").then((m) => ({
+      default: m.MailComposeSheet,
+    })),
   { ssr: false, loading: () => <MailSheetSkeleton /> },
 );
 
@@ -69,16 +82,24 @@ export function MailShell() {
   const mailAction = useMailAction();
 
   const [accountsSheetOpen, setAccountsSheetOpen] = useState(false);
+  const [accountsSheetDismissed, setAccountsSheetDismissed] = useState(false);
   const [requestedAccountId, setSelectedAccountId] = useState<number | "all">(
     "all",
   );
   const selectedAccountId =
-    requestedAccountId === "all" || accounts.some((account) => account.id === requestedAccountId)
+    requestedAccountId === "all" ||
+    accounts.some((account) => account.id === requestedAccountId)
       ? requestedAccountId
       : "all";
   const [selectedMessage, setSelectedMessage] =
     useState<MailMessageSummary | null>(null);
-  const [showMobileList, setShowMobileList] = useState(true);
+  const [showMobileList, setShowMobileList] = useState(
+    () =>
+      !(
+        searchParams.get("accountId") &&
+        (searchParams.get("messageId") || searchParams.get("threadId"))
+      ),
+  );
   const [composeOpen, setComposeOpen] = useState(
     () => searchParams.get("compose") === "1",
   );
@@ -100,11 +121,8 @@ export function MailShell() {
   const urlMessageId = searchParams.get("messageId") || null;
   const urlThreadId = searchParams.get("threadId") || null;
 
-  type DeepLinkStatus = "idle" | "not_found" | "needs_reauth";
-  const [deepLinkStatus, setDeepLinkStatus] = useState<DeepLinkStatus>("idle");
-  const deepLinkConsumedRef = useRef(false);
-
-  const { summaryState, triggerSummary } = useMailInboxSummarySheet(selectedAccountId);
+  const { summaryState, triggerSummary } =
+    useMailInboxSummarySheet(selectedAccountId);
 
   const finalizeMutate = finalize.mutate;
   useEffect(() => {
@@ -133,21 +151,19 @@ export function MailShell() {
     if (composeParamConsumedRef.current) return;
     if (searchParams.get("compose") !== "1") return;
     composeParamConsumedRef.current = true;
-    setComposeMode({ type: "compose" });
-    setComposeOpen(true);
     const next = new URLSearchParams(searchParams.toString());
     next.delete("compose");
     router.replace(`/mail${next.size > 0 ? `?${next.toString()}` : ""}`);
   }, [searchParams, router]);
 
-  const handleOpenAccountsSheet = useCallback(
-    () => setAccountsSheetOpen(true),
-    [],
-  );
-  const handleCloseAccountsSheet = useCallback(
-    () => setAccountsSheetOpen(false),
-    [],
-  );
+  const handleOpenAccountsSheet = useCallback(() => {
+    setAccountsSheetDismissed(false);
+    setAccountsSheetOpen(true);
+  }, []);
+  const handleCloseAccountsSheet = useCallback(() => {
+    setAccountsSheetDismissed(true);
+    setAccountsSheetOpen(false);
+  }, []);
 
   const handleAccountChange = useCallback((value: string) => {
     if (value === MAIL_ACCOUNT_SENTINEL) {
@@ -195,48 +211,85 @@ export function MailShell() {
     },
     [canManageMail, mailActionMutate, queryClient, searchParams, router],
   );
-  const handleSelectRecentMessage = useCallback((message: MailMessageSummary) => {
-    setRecentDrawerOpen(false);
-    handleSelectMessage(message);
-  }, [handleSelectMessage]);
+  const handleSelectRecentMessage = useCallback(
+    (message: MailMessageSummary) => {
+      setRecentDrawerOpen(false);
+      handleSelectMessage(message);
+    },
+    [handleSelectMessage],
+  );
 
-  useEffect(() => {
-    if (urlAccountId === null || (urlMessageId === null && urlThreadId === null)) return;
-    if (deepLinkConsumedRef.current) return;
-    if (accountsLoading) return;
-    deepLinkConsumedRef.current = true;
-
-    const account = accounts.find((a) => a.id === urlAccountId);
-    if (!account) {
-      setDeepLinkStatus("not_found");
-      return;
+  const deepLinkRequested =
+    urlAccountId !== null && (urlMessageId !== null || urlThreadId !== null);
+  const deepLinkAccount =
+    urlAccountId === null
+      ? undefined
+      : accounts.find((account) => account.id === urlAccountId);
+  const deepLinkStatus =
+    !deepLinkRequested || accountsLoading || selectedMessage
+      ? "idle"
+      : !deepLinkAccount
+        ? "not_found"
+        : deepLinkAccount.status === "needs_reauth"
+          ? "needs_reauth"
+          : "idle";
+  const deepLinkedMessage = useMemo<MailMessageSummary | null>(() => {
+    if (
+      !deepLinkRequested ||
+      !deepLinkAccount ||
+      deepLinkAccount.status === "needs_reauth" ||
+      urlAccountId === null
+    ) {
+      return null;
     }
-    if (account.status === "needs_reauth") {
-      setDeepLinkStatus("needs_reauth");
-      setAccountsSheetOpen(true);
-      return;
-    }
-
-    const effectiveThreadId = urlThreadId;
-    const effectiveId = urlThreadId !== null ? urlThreadId : (urlMessageId ?? "");
-
-    const synthetic: MailMessageSummary = {
-      id: effectiveId,
-      threadId: effectiveThreadId,
+    return {
+      id: urlThreadId ?? urlMessageId ?? "",
+      threadId: urlThreadId,
       accountId: urlAccountId,
-      provider: account.provider,
+      provider: deepLinkAccount.provider,
       from: { name: null, email: "" },
       to: [],
       subject: "",
       snippet: "",
-      date: new Date().toISOString(),
+      date: "1970-01-01T00:00:00.000Z",
       isRead: false,
       isStarred: false,
       hasAttachments: false,
     };
+  }, [
+    deepLinkAccount,
+    deepLinkRequested,
+    urlAccountId,
+    urlMessageId,
+    urlThreadId,
+  ]);
 
-    handleSelectMessage(synthetic);
-  }, [urlAccountId, urlMessageId, urlThreadId, accountsLoading, accounts, handleSelectMessage]);
+  const deepLinkActionRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!deepLinkedMessage || !canManageMail || deepLinkedMessage.isRead)
+      return;
+    const actionKey = `${deepLinkedMessage.accountId}:${deepLinkedMessage.id}`;
+    if (deepLinkActionRef.current === actionKey) return;
+    deepLinkActionRef.current = actionKey;
+    mailActionMutate({
+      messageId: deepLinkedMessage.id,
+      body: {
+        accountId: deepLinkedMessage.accountId,
+        action: "markRead",
+        ...(deepLinkedMessage.threadId && {
+          threadId: deepLinkedMessage.threadId,
+        }),
+      },
+    });
+    const next = new URLSearchParams(searchParams.toString());
+    router.replace(`/mail?${next.toString()}`, { scroll: false });
+  }, [
+    canManageMail,
+    deepLinkedMessage,
+    mailActionMutate,
+    router,
+    searchParams,
+  ]);
 
   const handleBackToList = useCallback(() => {
     setShowMobileList(true);
@@ -269,12 +322,22 @@ export function MailShell() {
     triggerSummary(selectedAccountId);
   }, [triggerSummary, selectedAccountId]);
   const handleBriefDetails = useCallback(() => setSummarySheetOpen(true), []);
+  const handleOpenRecent = useCallback(() => setRecentDrawerOpen(true), []);
+  const handleRecentDrawerOpenChange = useCallback(
+    (open: boolean) => setRecentDrawerOpen(open),
+    [],
+  );
 
   const hasAccounts = accounts.length > 0;
-  const activeMessage =
-    selectedMessage && accounts.some((account) => account.id === selectedMessage.accountId)
+  const selectedActiveMessage =
+    selectedMessage &&
+    accounts.some((account) => account.id === selectedMessage.accountId)
       ? selectedMessage
       : null;
+  const activeMessage = selectedActiveMessage ?? deepLinkedMessage;
+  const effectiveAccountsSheetOpen =
+    accountsSheetOpen ||
+    (deepLinkStatus === "needs_reauth" && !accountsSheetDismissed);
   const handleRetryAccounts = useCallback(() => {
     void refetchAccounts();
   }, [refetchAccounts]);
@@ -308,7 +371,7 @@ export function MailShell() {
         onGenerateBrief={handleGenerateBrief}
         onOpenBrief={handleBriefDetails}
         onOpenAccounts={handleOpenAccountsSheet}
-        onOpenRecent={() => setRecentDrawerOpen(true)}
+        onOpenRecent={handleOpenRecent}
       />
 
       <PageState
@@ -323,54 +386,54 @@ export function MailShell() {
         onRetry={handleRetryAccounts}
       >
         <div className="flex flex-1 min-h-0 min-w-0">
-        <div
-          className={cn(
-            "flex flex-col h-full min-w-0 shrink-0 border-r border-border bg-card w-full lg:w-96 xl:w-1/3",
-            !showMobileList && "hidden lg:flex",
-          )}
-        >
-          <MailListPane
-            selectedMessageId={activeMessage?.id ?? null}
-            selectedAccountId={selectedAccountId}
-            onSelectMessage={handleSelectMessage}
-            onOpenAccountsSheet={handleOpenAccountsSheet}
-            accounts={accounts}
-          />
-        </div>
-
-        <div
-          className={cn(
-            "flex w-0 max-w-full flex-1 min-h-0 min-w-0 overflow-hidden bg-muted/15",
-            showMobileList && "hidden lg:flex",
-          )}
-        >
-          {deepLinkStatus === "not_found" ? (
-            <MailEmptyPane variant="not_found" />
-          ) : deepLinkStatus === "needs_reauth" ? (
-            <MailEmptyPane
-              variant="needs_reauth"
-              onReconnect={handleOpenAccountsSheet}
-            />
-          ) : activeMessage ? (
-            <MailReadingPane
-              selectedMessage={activeMessage}
-              onBack={handleBackToList}
-              onReply={handleReply}
-            />
-          ) : (
-            <MailEmptyPane
-              variant="select"
+          <div
+            className={cn(
+              "flex flex-col h-full min-w-0 shrink-0 border-r border-border bg-card w-full lg:w-96 xl:w-1/3",
+              !showMobileList && "hidden lg:flex",
+            )}
+          >
+            <MailListPane
+              selectedMessageId={activeMessage?.id ?? null}
               selectedAccountId={selectedAccountId}
               onSelectMessage={handleSelectMessage}
+              onOpenAccountsSheet={handleOpenAccountsSheet}
+              accounts={accounts}
             />
-          )}
-        </div>
+          </div>
+
+          <div
+            className={cn(
+              "flex w-0 max-w-full flex-1 min-h-0 min-w-0 overflow-hidden bg-muted/15",
+              showMobileList && "hidden lg:flex",
+            )}
+          >
+            {deepLinkStatus === "not_found" ? (
+              <MailEmptyPane variant="not_found" />
+            ) : deepLinkStatus === "needs_reauth" ? (
+              <MailEmptyPane
+                variant="needs_reauth"
+                onReconnect={handleOpenAccountsSheet}
+              />
+            ) : activeMessage ? (
+              <MailReadingPane
+                selectedMessage={activeMessage}
+                onBack={handleBackToList}
+                onReply={handleReply}
+              />
+            ) : (
+              <MailEmptyPane
+                variant="select"
+                selectedAccountId={selectedAccountId}
+                onSelectMessage={handleSelectMessage}
+              />
+            )}
+          </div>
         </div>
       </PageState>
 
-      {accountsSheetOpen && (
+      {effectiveAccountsSheetOpen && (
         <MailAccountsSheet
-          open={accountsSheetOpen}
+          open={effectiveAccountsSheetOpen}
           onClose={handleCloseAccountsSheet}
         />
       )}
@@ -392,14 +455,24 @@ export function MailShell() {
           summaryState={summaryState}
         />
       )}
-      <Drawer open={recentDrawerOpen} onOpenChange={setRecentDrawerOpen} shouldScaleBackground={false}>
+      <Drawer
+        open={recentDrawerOpen}
+        onOpenChange={handleRecentDrawerOpenChange}
+        shouldScaleBackground={false}
+      >
         <DrawerContent className="max-h-[88dvh] gap-0 overflow-hidden p-0">
           <DrawerHeader className="border-b border-border px-4 py-3 text-left">
             <DrawerTitle>Recent mail</DrawerTitle>
-            <DrawerDescription>Open a recent message without losing your place.</DrawerDescription>
+            <DrawerDescription>
+              Open a recent message without losing your place.
+            </DrawerDescription>
           </DrawerHeader>
           <div className="min-h-0 flex-1 overflow-hidden">
-            <MailEmptyPane variant="select" selectedAccountId={selectedAccountId} onSelectMessage={handleSelectRecentMessage} />
+            <MailEmptyPane
+              variant="select"
+              selectedAccountId={selectedAccountId}
+              onSelectMessage={handleSelectRecentMessage}
+            />
           </div>
         </DrawerContent>
       </Drawer>

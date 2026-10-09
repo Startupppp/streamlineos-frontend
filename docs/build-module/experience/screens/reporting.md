@@ -155,7 +155,6 @@ The [route table](../routes-and-screen-decisions.md) distinguishes existing rout
 ## Delivery checklist
 
 Track completion in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Implement project reports with authorized cycle/release/goal/intake/quality/health measures, explicit formulas and freshness, and metric clicks that open the exact filtered source rows.
 - [ ] Implement Workload report with person/team/date capacity, planned versus unplanned work, overload/underuse, and permission-safe allocation drill-down.
 - [ ] Resolve organization budget/reports compatibility routes to the canonical reporting destination without losing saved filters, source IDs, or deep links.

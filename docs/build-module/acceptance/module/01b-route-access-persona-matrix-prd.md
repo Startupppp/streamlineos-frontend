@@ -118,7 +118,6 @@ custom roles, route gates, backend decorators, and audit events.
 | `PG-PUBLIC-004` | Opaque roadmap share version, never raw organization ID authority | No mutation; publication owner controls revoke |
 
 ## Acceptance
-
 - [ ] **BLD-01B-001** every BLD-01A retained/final page ID appears exactly once
   in this matrix or an explicitly listed shared row.
 - [ ] **BLD-01B-002** every read and action key exists verbatim in the backend

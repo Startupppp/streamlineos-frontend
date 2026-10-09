@@ -84,7 +84,6 @@ The runner collects failed checks and exits nonzero; successful cleanup does not
 Root approved future additive identities `ck_organization_setup_invitation_receipts_outcome_strict`, wrapping the historical four-branch predicate in `IS TRUE`, and `idx_organization_setup_invitation_receipts_org_invitation` on `(org_id,invitation_id)`. They are outside this claim. Historical `1728` remains immutable. Isolated INSERT/index RED is now recorded; repair requires its separate claim and review.
 
 ## Tracking
-
 - [ ] Verify official migration runners, full chain, deployment, and browser activation separately.
 
 ## Delivery checklist
@@ -130,7 +129,6 @@ The runner reported `droppedCurrentRunDatabase=true`. A fresh independent IAM-ad
 |---|---|
 | `1729_organization_setup_invitation_receipts_hardening.sql` | `8d6a7bf4efc3519ee244a35f322cea5448d2fa479b830529fb9dddc52f2f642b` |
 | `rollback/1729_organization_setup_invitation_receipts_hardening.down.sql` | `151d394c72d907019b33adb101e6ec7e726401ebd4b40b08fef32d7db9365226` |
-
 - [ ] Verify both official migration runners, full-chain replay, production application, runtime readiness, and browser activation separately.
 
 ## Canonical receipt FK rebinding phase — reviewed source and isolated PostgreSQL proof
@@ -165,5 +163,4 @@ The live pre-migration observation reported `receiptUsesRetained=false` and `rec
 The runner reported `droppedCurrentRunDatabase=true`. A separate fresh IAM-admin transaction with `SET TRANSACTION READ ONLY` confirmed `proof_database_exists=false`, `production_receipt_table_exists=false`, and `production_event_key_exists=false`. The final probe used the canonical outbox index name `public.uniq_outbox_events_org_event_id`, verified against immutable 1728; an earlier probe using an incorrect suffixed index name was discarded as readiness evidence. The exact scratch database is absent and production prerequisite absence is unchanged. No production schema, ledger, business fixture, role definition, or global worker state was changed.
 
 This six-check run adds canonical-bound receipt branch evidence to the prior independent 59/59 additive result; it does not replace that result or the historical 57/62 result and its five RED findings. The sealed 0965 execution remains only its twelve-statement invitation fragment. Real REINDEX lock-timeout behavior was not induced in this run; its injected failure/connection-close coverage remains pure test evidence. No official-runner, full-chain, production deployment, actual runtime readiness-service, or browser proof is inferred.
-
 - [ ] Verify official migration runners, full-chain replay, production application, runtime readiness, and browser activation separately.

@@ -567,6 +567,5 @@ CI browser reports distinguish observed UI, blocked flows and public-document cl
 ## Delivery checklist
 
 Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Recheck historical `HAVE` and `VERIFIED` findings against the current application revision, actor, action, persistence, and access before upgrading their status.
 - [ ] Reproduce PM-011 invitation acceptance, PM-002 module assignment, and PM-001 client grant activation in order, linking each current browser/DB/role record to its finding ID.

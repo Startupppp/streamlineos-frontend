@@ -54,7 +54,6 @@ replaced by a decorative control.
 | `/build/settings` · ADD | Settings landing linking Access, Client access, terminology/defaults, templates, integrations, retention/archive | Settings search optional; no record filters/views/paging | Navigation only; each section owns forms/dirty state | One settings API owner per scope; inherited defaults show source/version |
 
 ## Completion Checks
-
 - [ ] **BLD-02C-001** every source-tree organization route appears exactly once
   in the matrix.
 - [ ] **BLD-02C-002** moved/consolidated routes retain their transitional

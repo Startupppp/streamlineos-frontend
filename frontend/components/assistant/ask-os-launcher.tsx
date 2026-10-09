@@ -7,6 +7,7 @@ import { useAskOs } from "./ask-os-context";
 import { useAskOsCompanionState } from "./ask-os-companion-state";
 import { CompanionLauncher, useCompanionPresence } from "./companion-launcher";
 import type { CompanionVoiceSettings } from "./companion-voice-settings";
+import { useOrgStorageScope } from "@/lib/org-scoped-storage";
 
 function LegacyAskOsLauncher() {
   const { open, toggle } = useAskOs();
@@ -45,10 +46,12 @@ interface AskOsLauncherProps {
 
 export function AskOsLauncher({ compact, onVoiceStart, onVoiceDismiss, onVoiceReview, voiceState, voiceSupported, voiceMessage, voiceOverlayOpen, voiceSettings, onVoiceSettingsChange }: AskOsLauncherProps = {}) {
   const companion = useCompanionPresence();
+  const scope = useOrgStorageScope();
   const state = useAskOsCompanionState();
   if (companion) {
     return (
       <CompanionLauncher
+        key={`${scope}:${compact ? "compact" : "desktop"}`}
         state={state}
         preferences={companion}
         compact={compact}

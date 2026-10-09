@@ -404,7 +404,6 @@ The [route table](../routes-and-screen-decisions.md) distinguishes existing rout
 ## Delivery checklist
 
 Track completion in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Implement Backlog and Cycles list/detail with bounded issue queries, rank/estimate/owner filters, capacity preview, start/close confirmation, and revision-safe ticket movement.
 - [ ] Implement Epics, Workstreams, and Milestones with linked tickets, target dates, progress from authorized scope, status/owner/date filters, and pane navigation; retain compatible Modules URLs while changing UI labels.
 - [ ] Implement Goals list/detail with owner, metric, baseline/target, check-ins, linked project/product/roadmap records, and explicit outcome versus output progress.

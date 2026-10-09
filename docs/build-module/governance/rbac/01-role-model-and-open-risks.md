@@ -392,6 +392,5 @@ Release requires every applicable level. A passing lower level does not imply a 
 ## Delivery checklist
 
 Track completion in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Give AI, automation, import, integration, export, and jobs named bounded principals and execution-time authorization; require human confirmation for access, publication, finance, export, destructive, and bulk effects.
 - [ ] Complete the verification matrix with source, static, focused, target-database/RLS/concurrency, browser, and deployed multi-replica evidence; leave each historical risk open until its stated closure proof exists.

@@ -88,3 +88,33 @@ it("shows a recoverable microphone error without creating a provider session", a
   expect(result.current.message).toContain("browser permission");
   expect(apiClient.post).not.toHaveBeenCalled();
 });
+
+it("runs multiple workspace calls in order and stops pending work on end", async () => {
+  const peer = new FakePeer();
+  const track = { stop: jest.fn() };
+  const media = { getAudioTracks: () => [track], getTracks: () => [track] };
+  Object.defineProperty(navigator, "mediaDevices", { configurable: true, value: { getUserMedia: jest.fn(async () => media) } });
+  global.RTCPeerConnection = jest.fn(() => peer) as unknown as typeof RTCPeerConnection;
+  global.fetch = jest.fn(async () => ({ ok: true, text: async () => "answer-sdp" })) as unknown as typeof fetch;
+  jest.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => undefined);
+  jest.mocked(apiClient.post).mockResolvedValue({ value: "ek_test", expiresAt: 12345 });
+  let finishFirst: (() => void) | undefined;
+  const firstPending = new Promise<void>((resolve) => { finishFirst = resolve; });
+  const ask = jest.fn(async (request: string) => {
+    if (request === "first") await firstPending;
+    return { text: request, requiresReview: false };
+  });
+  const { result } = renderHook(() => useCompanionRealtimeVoice("org-a", ask, { voice: "cedar" }));
+  await act(async () => { await result.current.start(); });
+  act(() => { peer.channel.emit({ type: "response.done", response: { output: [
+    { type: "function_call", name: "ask_streamlineos", call_id: "one", arguments: '{"request":"first"}' },
+    { type: "function_call", name: "ask_streamlineos", call_id: "two", arguments: '{"request":"second"}' },
+  ] } }); });
+  expect(ask).toHaveBeenCalledTimes(1);
+  finishFirst?.();
+  await waitFor(() => expect(ask).toHaveBeenNthCalledWith(2, "second"));
+  act(() => { peer.channel.emit({ type: "response.done", response: { metadata: { purpose: "working_acknowledgement" } } }); });
+  await waitFor(() => expect(peer.channel.send).toHaveBeenCalledWith(expect.stringContaining('"call_id":"two"')));
+  act(() => { result.current.stop(); });
+  expect(track.stop).toHaveBeenCalled();
+});

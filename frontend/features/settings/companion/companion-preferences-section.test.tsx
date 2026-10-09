@@ -8,6 +8,26 @@ import { apiClient } from "@/lib/api-client";
 import { CompanionPreferencesSection } from "./companion-preferences-section";
 
 jest.mock("next-auth/react", () => ({ useSession: () => ({ status: "authenticated" }) }));
+jest.mock("@/hooks/api/access", () => ({
+  usePermissionGate: () => ({ permission: "ai:chat:use", allowed: true, denied: false, pending: false, unavailable: false }),
+  useCan: () => true,
+  useAccess: () => ({ data: { isOrgOwner: true, scopes: {} }, refetch: jest.fn() }),
+}));
+jest.mock("next/navigation", () => ({
+  usePathname: () => window.location.pathname,
+  useSearchParams: () => {
+    const React = jest.requireActual<typeof import("react")>("react");
+    const query = React.useSyncExternalStore(
+      (notify) => { window.addEventListener("popstate", notify); return () => window.removeEventListener("popstate", notify); },
+      () => window.location.search,
+      () => "",
+    );
+    return new URLSearchParams(query);
+  },
+  useRouter: () => ({
+    replace: (url: string) => { window.history.replaceState(null, "", url); window.dispatchEvent(new Event("popstate")); },
+  }),
+}));
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 jest.mock("@/lib/api-client", () => ({
   apiClient: { get: jest.fn(), post: jest.fn(), patch: jest.fn(), delete: jest.fn() },
@@ -71,6 +91,7 @@ async function chooseOption(user: ReturnType<typeof userEvent.setup>, label: str
 
 beforeEach(() => {
   jest.clearAllMocks();
+  window.history.replaceState(null, "", "/settings");
 });
 
 function historyItem(id: string, title: string, overrides: Record<string, unknown> = {}) {
@@ -108,16 +129,18 @@ describe("companion preferences", () => {
   it("filters activity by category and outcome and shows source and destination", async () => {
     serve();
     const preferencesGet = get.getMockImplementation();
-    get.mockImplementation((url: string) => {
+    get.mockImplementation((url: string, params?: unknown) => {
       if (url !== "/companion/prompts/history") return preferencesGet?.(url) ?? Promise.resolve(undefined);
+      const filters = params as { status?: string } | undefined;
+      const allItems = [
+        historyItem("a", "Standup", {
+          sourceRef: { type: "calendarEvent", id: "event-1" },
+          href: "/calendar/events/event-1",
+        }),
+        historyItem("b", "Take a break", { category: "break", status: "suppressed" }),
+      ];
       return Promise.resolve({
-        items: [
-          historyItem("a", "Standup", {
-            sourceRef: { type: "calendarEvent", id: "event-1" },
-            href: "/calendar/events/event-1",
-          }),
-          historyItem("b", "Take a break", { category: "break", status: "suppressed" }),
-        ],
+        items: filters?.status ? allItems.filter((item) => item.status === filters.status) : allItems,
         nextCursor: null,
       });
     });
@@ -127,8 +150,10 @@ describe("companion preferences", () => {
     expect(screen.getByText("Source: calendarEvent (event-1)")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open destination" })).toHaveAttribute("href", "/calendar/events/event-1");
     await chooseOption(user, "Filter suggestion outcome", "Suppressed");
-    expect(screen.queryByText("Standup")).not.toBeInTheDocument();
-    expect(screen.getByText("Take a break")).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByText("Standup")).not.toBeInTheDocument());
+    expect(await screen.findByText("Take a break")).toBeInTheDocument();
+    expect(window.location.search).toContain("companionOutcome=suppressed");
+    expect(get).toHaveBeenCalledWith("/companion/prompts/history", { status: "suppressed" }, expect.anything(), expect.anything());
     expect(screen.getByText("Suppression reason: A meeting starts soon")).toBeInTheDocument();
   });
 
@@ -138,7 +163,7 @@ describe("companion preferences", () => {
     get.mockImplementation((url: string, params?: unknown) => {
       if (url !== "/companion/prompts/history") return preferencesGet?.(url) ?? Promise.resolve(undefined);
       return Promise.resolve(
-        params === undefined
+        !(params as { cursor?: string } | undefined)?.cursor
           ? { items: [historyItem("a", "Standup")], nextCursor: "c2" }
           : { items: [historyItem("b", "Retro")], nextCursor: null },
       );
@@ -146,10 +171,11 @@ describe("companion preferences", () => {
     const user = userEvent.setup();
     renderSection();
     expect(await screen.findByText("Standup")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Load more suggestions" }));
+    await user.click(screen.getByRole("button", { name: "Next page" }));
     expect(await screen.findByText("Retro")).toBeInTheDocument();
     expect(get).toHaveBeenCalledWith("/companion/prompts/history", { cursor: "c2" }, expect.anything(), expect.anything());
-    expect(screen.queryByRole("button", { name: "Load more suggestions" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Standup")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
   });
 
   it("reads the backend's lock keys and says why", async () => {

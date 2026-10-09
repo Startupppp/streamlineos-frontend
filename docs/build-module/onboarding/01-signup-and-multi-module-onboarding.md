@@ -867,32 +867,27 @@ Runtime evidence must separately cover UI behavior, database state, network/cons
 ## 25. Acceptance criteria
 
 ### Signup and resume
-
 - [ ] Google and email OTP create or authenticate without exposing whether an email already exists.
 - [ ] A saved setup resumes on another device at the canonical revision.
 - [ ] An offline edit is visibly unsynced and is never presented as saved.
 
 ### Minimal onboarding
-
 - [ ] A solo Build customer can launch in three onboarding steps with no invitation.
 - [ ] No more than five inputs are visible before launch in the default Build-only path.
 - [ ] Multi-module selection uses one flow and applies only selected/required modules.
 - [ ] Every adaptive question is owned and validated by the selected module contract.
 
 ### Templates and custom fields
-
 - [ ] The review identifies exact template versions and created objects.
 - [ ] Replaying activation does not duplicate template-created records.
 - [ ] Onboarding custom fields use module entity allowlists and the module mutation service.
 - [ ] A project-scoped Build field resolves its project alias correctly.
 
 ### Plans and access
-
 - [ ] Catalog and plan truth come from the server and changed limits invalidate previews.
 - [ ] Over-limit invitees are never silently omitted.
 
 ### Activation and recovery
-
 - [ ] Double-click, retry, timeout, and two-tab activation produce one organization and one activation run.
 - [ ] Closing the browser does not stop activation; returning shows durable status.
 - [ ] A required-stage failure blocks entry and can resume from the failed stage.
@@ -901,12 +896,10 @@ Runtime evidence must separately cover UI behavior, database state, network/cons
 - [ ] Operator replay is scoped, authorized, audited, and idempotent.
 
 ### Invitations
-
 - [ ] A cold valid invitation renders an actionable card within two seconds on apex and `www` hosts.
 - [ ] Expired, revoked, already-active, wrong-account, limit-reached, and duplicate-submit states have complete non-blank UI.
 
 ### Quality
-
 - [ ] WCAG 2.2 AA checks pass for all steps and invitation acceptance.
 - [ ] Performance budgets in section 16 are met on the deployed environment.
 - [ ] Funnel events reconcile with durable setup and invitation state and contain no prohibited personal data.
@@ -932,7 +925,6 @@ The first sellable milestone is Build-only onboarding with reliable internal inv
 ## Delivery checklist
 
 Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Workspace step has a five-visible-input Build-only default and reversible advanced settings.
 - [ ] Products step selects one or many modules, previews plan limits, and saves adaptive answers, template versions, and custom-field drafts.
 - [ ] Verify setup plan eligibility, preview agreement, and error states on the target database and browser, including mixed-selection rollback and concurrent subscription transitions.

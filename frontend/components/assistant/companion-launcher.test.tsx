@@ -15,6 +15,11 @@ const voiceDismiss = jest.fn();
 const HEARTBEAT_TEST_INTERVAL = 60_000;
 
 jest.mock("next-auth/react", () => ({ useSession: () => ({ status: "authenticated" }) }));
+jest.mock("@/hooks/api/access", () => ({
+  usePermissionGate: () => ({ permission: "ai:chat:use", allowed: true, denied: false, pending: false, unavailable: false }),
+  useCan: () => true,
+  useAccess: () => ({ data: { isOrgOwner: true, scopes: {} }, refetch: jest.fn() }),
+}));
 jest.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 jest.mock("@/components/brand/animated-logo", () => ({ AnimatedLogo: () => <span /> }));
 jest.mock("@/lib/api-client", () => ({
@@ -351,7 +356,7 @@ describe("companion keyboard focus", () => {
     await userEvent.keyboard("{Alt>}{ArrowRight}{/Alt}");
     expect(window.localStorage.getItem("unscoped::companion-position")).not.toBeNull();
     view.rerender(<Harness compact />);
-    await waitFor(() => expect(pet.parentElement?.parentElement?.getAttribute("style")).toBe(""));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Open Pip, Ready" }).parentElement?.parentElement?.getAttribute("style")).toBeNull());
     expect(window.localStorage.getItem("unscoped::companion-position-mobile-v2")).toBeNull();
   });
   it("opens from the keyboard and returns focus to the pet when the panel closes", async () => {

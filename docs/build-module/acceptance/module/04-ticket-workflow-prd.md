@@ -63,7 +63,6 @@ enforces behavior without turning display preferences into mutation blockers.
 - sensitive cost, time, client, or custom-field values are permission checked;
 - long titles clamp with accessible full text;
 - card configuration is actor-scoped unless saved into a shared view.
-
 - [ ] **BLD-04-001** one field registry owns label, renderer, permission,
   filter, sort, edit capability, and supported layouts.
 - [ ] **BLD-04-002** every configurable option renders in each declared layout
@@ -92,7 +91,6 @@ Actions appear only when applicable and authorized:
 - add to client progress or remove client visibility;
 - archive/restore;
 - delete only under the approved retention contract.
-
 - [ ] **BLD-04-005** card, row, and detail actions call the same mutation
   owners and validation.
 - [ ] **BLD-04-006** move/convert previews incompatible status, iteration,
@@ -115,7 +113,6 @@ Ticket create uses an adaptive right sheet on desktop and full-height mobile
 sheet for description, attachments, relations, and AI preview. A minimal quick
 create may remain a dialog only when it asks for title plus scope and defers
 advanced fields.
-
 - [ ] **BLD-04-009** duplicate rich-create implementations are consolidated.
 - [ ] **BLD-04-010** all overlays have dirty-state protection, initial focus,
   labelled title/description, Escape behavior, and focus return.
@@ -135,7 +132,6 @@ advanced fields.
   loss roll back only the affected optimistic fields.
 - board auto-scroll, keyboard drag, touch targets, and reduced motion are
   supported.
-
 - [ ] **BLD-04-011** remove the current Hide-done mutation block and add its
   regression.
 - [ ] **BLD-04-012** display preference has one owner and persists according to
@@ -176,7 +172,6 @@ view changes. The toolbar states count and scope.
 | Move project | Yes | Yes | Compatibility and access preview |
 | Archive/restore | Yes | Yes | Retention and dependency rules |
 | Delete | Restricted | Restricted | Impact preview and policy |
-
 - [ ] **BLD-04-016** bulk API accepts a bounded ID set or a signed,
   short-lived server query token for `all matching`.
   target; one allowed record never authorizes another.
@@ -233,7 +228,6 @@ Each project configures:
 
 Status identity is not the mutable display name. Renaming a status must not
 break tickets, saved views, automations, analytics, or webhooks.
-
 - [ ] **BLD-04-022** statuses use stable IDs throughout storage and contracts,
   or a migration proves an equally safe canonical identity.
 - [ ] **BLD-04-023** one completed category supports multiple completed states
@@ -255,7 +249,6 @@ Completion preview includes:
 - velocity/carry-over implications;
 - client-visible release/update impact; and
 - automations that will run.
-
 - [ ] **BLD-04-027** completion is one idempotent transaction plus durable
   outbox effects.
 - [ ] **BLD-04-028** active-iteration uniqueness and date overlap rules are
@@ -273,7 +266,6 @@ Completion preview includes:
 - comments, descriptions, and links are sanitized;
 - client preview shows the exact external projection;
 - stale edits receive merge/reload choices rather than silent overwrite.
-
 - [ ] **BLD-04-030** detail route `projectId` must match the ticket's project
   for read, update, rank, delete, activity, and subresources.
 - [ ] **BLD-04-031** comment, attachment, watcher, assignee, relation, and
@@ -290,7 +282,6 @@ Completion preview includes:
   supported, and copy-local-edits recovery rather than toast-only data loss.
 
 ## Acceptance
-
 - [ ] **BLD-04-A01** card field/action matrix passes in board, list, table,
   detail, and mobile layouts.
 - [ ] **BLD-04-A02** drag, keyboard move, bulk, inline edit, and detail edit

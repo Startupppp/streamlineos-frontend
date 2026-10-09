@@ -76,7 +76,6 @@ Completed requirements are preserved in the Evidence Log and are no longer
 duplicated as TODO checkboxes.
 
 ### Backend Directory Contract
-
 - [ ] **BSN-02-005** Enforce tenant, product, project, and record
   authorization in the directory query. PM Workspace is removed, so its half
   is void rather than required. **Project and tenant halves are CLOSED**
@@ -106,7 +105,6 @@ duplicated as TODO checkboxes.
 BSN-02-014 CLOSED in the sixth pass - see the Evidence Log.
 
 ### Keyboard and Responsive Interaction
-
 - [ ] **BSN-02-030** Implement keyboard movement, selection, expansion,
   dismissal, and focus restoration for the selector. **Movement, selection and
   expansion are CLOSED** with ARIA `tree`/`treeitem`/`group` and
@@ -213,7 +211,6 @@ behavior regresses:
   `liveStarred`/`liveRecents`, the reconciled lists. This did NOT need a browser.
 
 ## Acceptance Checklist
-
 - [ ] **BSN-02-A01** A scope beyond the first 50 records is discoverable by
   search and pagination.
   appears directly under the organization.

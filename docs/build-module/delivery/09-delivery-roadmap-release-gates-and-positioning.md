@@ -577,7 +577,6 @@ Every candidate release ends with this record:
 ## Delivery checklist
 
 Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Complete Phase 1 cold/new and existing-account invitation acceptance, explicit Build assignment, resumable three-step activation, and first project/ticket with negative retry and tenant cases.
 - [ ] Complete Phase 2 canonical ticket, split-pane/history, scoped board/list/table/backlog/timeline, relations, cycles, custom fields, shared filters, saved views, bulk scope, and equivalent export.
 - [ ] Complete Phase 3 atomic client grants and portal publication, Intake feedback, approvals/change control, Timesheets actions, and Accounting projections with Razorpay/direct-payment ownership.

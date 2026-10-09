@@ -205,7 +205,6 @@ Every manifest route appears exactly once above. Every sidebar destination resol
 ## Delivery checklist
 
 Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Add saved authorized landing preference to the `/build` default redirect and verify the dedicated Projects destination, sidebar/More links, and denied routes in a browser with role fixtures.
 - [ ] Implement recorded compatibility redirects and record-ID mappings for Assigned→My Work, Drafts→My Work, bug feedback→Intake, project Modules→Workstreams label, and persona aliases without breaking deep links.
 - [ ] Verify full-page and intercepted-pane refresh, modifier-click, Back/Forward, close-to-origin, mobile full-screen detail, and direct URL access for every record type.

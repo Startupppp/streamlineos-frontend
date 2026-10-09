@@ -31,7 +31,6 @@ These are trusted internal service methods, not authorization boundaries for a p
 ## Proof boundaries and remaining acceptance
 
 The SQL tests compile the actual claim implementation. The no-candidate test mocks an empty transaction result and proves null handling. The publisher tests mock database transactions and claim outcomes; their concurrent-call test proves the publisher respects a refused claim. None of these is a PostgreSQL row-lock or persisted-delivery proof.
-
 - [ ] Verify wrong tenant with the correct event identifier, and another pending event in the selected tenant remaining untouched.
 - [ ] Verify real PostgreSQL PENDING/null lease, exactly due lease, future lease, expired/live/null IN_FLIGHT lease, and all terminal states.
 - [ ] Verify a physically locked row is skipped, parallel exact/global claims have one owner, and live or delivered replay does not redeliver.

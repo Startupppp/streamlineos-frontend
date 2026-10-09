@@ -87,7 +87,6 @@ duplicated as TODO checkboxes.
 
 
 ### Unsaved Work
-
 - [ ] **BSN-04-014** Cover browser Back, sidebar links, command navigation,
   organization switching, and scope selection for every inventoried surface.
   Organization switching now uses the shared guard; **Browser Back still needs a
@@ -267,7 +266,6 @@ inert, which is what was added:
   mistaken for "everything was revoked").
 
 ## Acceptance Checklist
-
 - [ ] **BSN-04-A03** Every inventoried dirty surface is covered by the shared
   unsaved-work guard for every scope-changing entry point. **REOPENED (seventh
   pass) — surfaces are covered, entry points are not.** See the correction at the

@@ -182,7 +182,6 @@ These are product targets. Marketing may use them only after comparative tests a
 ## Delivery checklist
 
 Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Complete Build-alone and multi-module activation, role-aware default navigation, an authorized first project/ticket, and a usable first-session Command Center.
 - [ ] Make Visual and Assist modes call the same validated commands and access policy; require action preview and confirmation for sensitive AI effects.
 - [ ] Verify direct ticket URLs, contextual split panes, return state, client Intake feedback, and secure project/surface-scoped magic-link access in real browser journeys.

@@ -26,7 +26,6 @@ export const mailAccountContract = z.object({
   accountLabel: z.string().nullable(),
   status: z.enum(["active", "needs_reauth", "disabled"]),
   isPrimary: z.boolean(),
-  composioConnectedAccountId: z.string(),
 });
 
 /** `mailAccountListSchema` */

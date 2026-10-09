@@ -269,7 +269,6 @@ Normative BLD-00 contract:
 - organization roadmap is a roll-up of product roadmap records;
 - project timeline, milestones, releases, and issues own execution dates;
 - no project record is silently promoted to a product outcome.
-
 - [ ] **BLD-07-008** define explicit product-roadmap-to-project-work links and
   progress calculation.
 - [ ] **BLD-07-009** consolidate project Roadmap/Gantt/Timeline duplicates
@@ -294,7 +293,6 @@ Normative BLD-00 contract:
 | Integration connection/token | Integrations/Composio | Store connection reference and Build mapping, never provider token |
 | AI model usage/billing | AI gateway/billing | Supply scoped context and action proposals with usage metadata |
 | Client authentication/grant | Client Portal | Publish explicit Build projection under portal identity |
-
 - [ ] **BLD-07-010** every matrix row has an owner-approved read/write/event
   contract and data-retention rule.
 - [ ] **BLD-07-011** Build tables contain only canonical IDs, relation metadata,
@@ -360,7 +358,6 @@ records the actor cannot open.
   issues to clients;
 - preview as each client grant before publish;
 - revoke immediately without waiting for cache expiry.
-
 - [ ] **BLD-07-013** each workflow has positive, denied, cross-tenant,
   source-deleted, stale-cache, and retry tests.
 - [ ] **BLD-07-014** integration writes use existing idempotency and durable
@@ -381,7 +378,6 @@ Typed events include:
 - idempotency/deduplication key.
 
 Consumers re-authorize reads; an event is not a data-access grant.
-
 - [ ] **BLD-07-017** remove duplicate direct side effects where an owned outbox
   event exists.
 - [ ] **BLD-07-018** version compatibility, replay, poison message, and
@@ -398,7 +394,6 @@ Build module settings own:
 Project settings own project-specific values. Product settings own their
 scope-specific values. There is no Workspace settings scope. Operational
 queues and records remain on operational pages.
-
 - [ ] **BLD-07-019** every setting has one scope, storage owner, API, cache key,
   permission, and UI route.
 - [ ] **BLD-07-020** inherited defaults display source and override state.
@@ -415,7 +410,6 @@ queues and records remain on operational pages.
 - request/response artifacts have one generation source and drift gate;
 - files remain cohesive and under repository review gates;
 - import graph remains acyclic without `forwardRef` or dynamic-import hiding.
-
 - [ ] **BLD-07-022** duplicate-symbol and parallel-contract scan covers both
   repositories.
 - [ ] **BLD-07-023** oversized Build files are split only by responsibility,
@@ -433,7 +427,6 @@ queues and records remain on operational pages.
 - approval revalidates authorization and record versions.
 - partial or failed execution is explicit and retry safe.
 - usage is token metered and returned through the AI gateway contract.
-
 - [ ] **BLD-07-026** client-visible AI content requires human approval.
 - [ ] **BLD-07-027** prompt, tool, output, and audit retention follow data
   classification.
@@ -467,7 +460,6 @@ queues and records remain on operational pages.
   deterministic non-AI path for exhausted credits or unavailable providers.
 
 ## Acceptance
-
 - [ ] **BLD-07-A01** every Build record and configuration value has exactly one
   canonical owner.
 - [ ] **BLD-07-A02** Sprint/Cycle, bug/ticket, automation, roadmap, calendar,

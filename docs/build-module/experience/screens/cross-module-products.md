@@ -83,7 +83,6 @@ Each module must publish: `GET /module/navigation`, bounded collection queries w
 ## Delivery checklist
 
 Track completion in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Deliver CRM account/contact/lead/deal/activity indexes and details with the declared filters, stage history, consent masking, import reconciliation, and previewed Create Build project handoff.
 - [ ] Deliver Timesheets My Week, entry detail, review, project/rate/policy/report/export surfaces with effective-dated rates, lock/approval rules, bounded queries, and Build ticket return.
 - [ ] Deliver Accounting overview, customer, estimate, invoice, payment, expense, reconciliation, report, integration, and settings surfaces with currency-safe metrics and immutable numbered documents.

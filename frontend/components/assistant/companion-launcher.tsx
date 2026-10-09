@@ -325,7 +325,7 @@ export function CompanionLauncher({
           </div>
         </div>
       ) : (
-        <CompanionPromptBubble enabled={!open && !voiceOverlayOpen && !minimized} preferences={preferences} horizontal={bubbleLeft ? "left" : "right"} vertical={bubbleBelow ? "below" : "above"} />
+        <CompanionPromptBubble enabled={!open && !voiceOverlayOpen && !minimized && !paused} preferences={preferences} horizontal={bubbleLeft ? "left" : "right"} vertical={bubbleBelow ? "below" : "above"} />
       )}
       {minimized ? (
         <button

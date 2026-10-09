@@ -47,7 +47,6 @@ The additive `1728` receipt migration is not a repair for historical cold-build 
 7. Verify six journeys, roles, tenant boundaries, plan quotas, worker crash/replay, browser history, refresh, mobile, keyboard, and funnel metrics on a named deployment before release verification.
 
 ## Delivery checklist
-
 - [ ] Implement authenticated, setup-target-aware eligibility preview and prove 402 recovery on a deployed browser with owner, existing-user, and wrong-organization paths.
 - [ ] Correlate each resent invitation generation with its own email outbox row and derive later terminal failure from that row; separately prove worker claim/CAS safety against duplicate or stale transport writes.
 - [ ] Define and migrate a revisioned, identity-scoped pre-organization draft and activation run with idempotent recovery and privacy bounds.

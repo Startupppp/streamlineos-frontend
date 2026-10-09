@@ -74,6 +74,5 @@ Implementing migrations/controllers or changing permission keys in this document
 ## Delivery checklist
 
 Track completion in the [requirement ledger](../implementation/REQUIREMENT-LEDGER.md) and [work claims](../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Add same-tenant database constraints and authorized command validation for membership, grant, and record relationships; keep authorization-bearing links out of opaque JSON.
 - [ ] Route legacy Command Center reads through the canonical dashboard owner; cap widget fanout and verify layout/query/cache parity and authorized drill-down.

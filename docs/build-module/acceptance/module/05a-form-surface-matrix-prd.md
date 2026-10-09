@@ -100,7 +100,6 @@ here until it is removed or migrated. Paths are relative to
 | Ticket attachment | current create paths use different per-file limits | one platform upload policy |
 
 ## Completion Checklist
-
 - [ ] **BLD-05A-001** source census and this matrix contain the same mutation
   component set with zero unexplained additions or omissions.
 - [ ] **BLD-05A-002** every row names one save model, schema owner, request

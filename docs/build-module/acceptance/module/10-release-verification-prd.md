@@ -11,7 +11,6 @@ work. Static, mocked, database, browser, migration, provider, performance, and
 deployed evidence are distinguished. Failed or unrun checks remain open.
 
 ## Entry Criteria
-
 - [ ] **BLD-10-001** every parent workstream in the Build-module README except
   BLD-10 is complete.
 - [ ] **BLD-10-002** the subordinate Build sidebar tracker is complete,
@@ -130,7 +129,6 @@ Roles exercised:
 - external client;
 - active member without Build administration;
 - revoked/suspended actor.
-
 - [ ] **BLD-10-014** every page and API has allow/deny coverage for applicable
   roles and data scopes.
 - [ ] **BLD-10-015** reads, counts, search, filters, exports, bulk, reports,
@@ -143,7 +141,6 @@ Roles exercised:
   records and fields.
 
 ## Page and Customer Journey Matrix
-
 - [ ] **BLD-10-019** organization Command Center, Projects, All Work, My Work,
   Inbox, Approvals, Roadmap, Goals, Programs, Portfolios, Teams, Templates,
   Customers, and Settings pass.
@@ -172,7 +169,6 @@ Each check includes populated, empty, no-results, denied, loading, refresh,
 offline/stale, error, conflict, and partial-success states where applicable.
 
 ## Filters, Views, and Pagination
-
 - [ ] **BLD-10-025** URL, saved view, API predicate, count, export, and bulk
   selection parity tests pass.
 - [ ] **BLD-10-026** every filter supports valid, invalid, empty, archived,
@@ -187,7 +183,6 @@ offline/stale, error, conflict, and partial-success states where applicable.
   realistic scale.
 
 ## Forms and Mutations
-
 - [ ] **BLD-10-031** request/form/database parity gate and self-test pass.
 - [ ] **BLD-10-032** required, optional, null, boundary, Unicode, enum, date,
   URL, relation, file, and rich-text cases pass.
@@ -226,7 +221,6 @@ offline/stale, error, conflict, and partial-success states where applicable.
   references, history, events, views, automation, and analytics.
 
 ## Query, Cache, and Performance
-
 - [ ] **BLD-10-043** endpoint query-count budgets pass.
 - [ ] **BLD-10-044** representative `EXPLAIN (ANALYZE, BUFFERS)` plans use the
   intended tenant-leading indexes without unbounded scans.
@@ -238,7 +232,6 @@ offline/stale, error, conflict, and partial-success states where applicable.
 - [ ] **BLD-10-048** no N+1 or request storm appears in traces.
 
 ## Integrations and Side Effects
-
 - [ ] **BLD-10-049** CRM, Calendar, Meetings, Files/Documents, Knowledge,
   Timesheets, Accounting, Goals, Chat/Mail, Notifications, Integrations, AI,
   and Client Portal contract tests pass where enabled.
@@ -251,7 +244,6 @@ offline/stale, error, conflict, and partial-success states where applicable.
   no unintended external side effects.
 
 ## Visual, Responsive, and Accessibility
-
 - [ ] **BLD-10-053** approved light/dark screenshots cover all page anatomies,
   overlay levels, empty/error states, and dense populated states.
 - [ ] **BLD-10-054** 320, 375, 768, 1024, and 1440 CSS pixel journeys pass.
@@ -264,7 +256,6 @@ offline/stale, error, conflict, and partial-success states where applicable.
   evidence.
 
 ## AI and Agent Safety
-
 - [ ] **BLD-10-059** scoped context, citations, stale data, denied data, prompt
   injection, proposal diff, confirmation, expiration, and reauthorization pass.
 - [ ] **BLD-10-060** duplicate confirmation/retry cannot execute twice.
@@ -276,7 +267,6 @@ offline/stale, error, conflict, and partial-success states where applicable.
 ## Repository Gates
 
 Exact package commands and results are recorded at execution time.
-
 - [ ] **BLD-10-063** focused frontend unit/contract suites pass.
 - [ ] **BLD-10-064** focused backend unit and controller e2e suites pass.
 - [ ] **BLD-10-065** frontend and backend type checks/builds pass as applicable.
@@ -409,7 +399,6 @@ Exact package commands and results are recorded at execution time.
 - [ ] **BLD-10-069** dead-code removals have module-graph and real-build proof.
 
 ## Rollout
-
 - [ ] **BLD-10-070** rollout order, migration window, feature flags, tenant
   cohort, and abort criteria are documented.
 - [ ] **BLD-10-071** dashboards and alerts cover error rate, latency, slow
@@ -423,7 +412,6 @@ Exact package commands and results are recorded at execution time.
   before general availability.
 
 ## Sign-Off
-
 - [ ] **BLD-10-A01** Product signs page disposition, terminology, workflows,
   baseline, and deliberate non-goals.
 - [ ] **BLD-10-A02** Frontend signs route, state, responsive, accessibility,

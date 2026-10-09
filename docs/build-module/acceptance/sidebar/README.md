@@ -52,7 +52,6 @@ or keep a second competing definition.
 Roll up the PRDs in this order. Dispatch work only from the Build execution
 ledger. A parent checkbox may be marked only after every required criterion in
 that PRD is satisfied and its evidence section is populated.
-
 - [ ] [BSN-01 — Scope navigation parity](./01-scope-navigation-prd.md)
 - [ ] [BSN-02 — Scope directory and discovery](./02-scope-directory-prd.md)
 - [ ] [BSN-03 — Contextual actions and signals](./03-contextual-actions-prd.md)

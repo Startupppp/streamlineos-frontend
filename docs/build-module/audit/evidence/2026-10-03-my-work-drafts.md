@@ -24,7 +24,6 @@ Status: **Current verified** for the committed source, focused unit/component te
 | Independent source/spec review | Clear after named click handlers, typed keyboard mock, and JSX indentation correction |
 
 ## Open acceptance boundaries
-
 - [ ] Verify desktop/mobile section navigation, old URLs, browser Back/Forward, refresh, modifier-click, and real draft/ticket opening in a browser with permitted and denied actors.
 - [ ] Build the specified intercepted ticket pane. This commit keeps canonical full-page ticket details and an authorized return link; it does not implement the pane.
 - [ ] Verify the source's explicit unavailable state for a null-project draft in the applicable browser/contract negative and prove its owned deletion remains usable; source handling is recorded in the reviewed follow-up below.

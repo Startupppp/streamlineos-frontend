@@ -11,7 +11,6 @@ children such as `BLD-X-BE-TICKET-LIST-001A` and `001B`; never send the broad
 parent to an agent.
 
 Every implementation packet uses four local TODOs:
-
 - [ ] add or preserve the focused failing reproduction;
 - [ ] implement the single outcome inside the exact write set;
 - [ ] cover the packet's applicable negative cases; and

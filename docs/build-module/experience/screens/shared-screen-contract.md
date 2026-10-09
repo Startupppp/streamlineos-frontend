@@ -94,7 +94,6 @@ Feature visibility follows role, persona, selected modules, plan, and project te
 ## Delivery checklist
 
 Track completion in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Implement one page shell and card/table/detail anatomy with authorized fields, freshness, allowed actions, accessible focus, and responsive density.
 - [ ] Implement canonical record URLs and pane history for specified record types; prove modifier-click, refresh, Back/Forward, Escape, close-to-origin, and mobile full-screen behavior.
 - [ ] Require expectedRevision and idempotency for retryable writes; preserve drafts after 409/422/ambiguous outcomes and reconcile committed results before success feedback.

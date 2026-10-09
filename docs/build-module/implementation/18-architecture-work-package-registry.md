@@ -133,6 +133,5 @@ Every surface below is part of the Build specification. A route or source anchor
 ## Delivery checklist
 
 Track completion in the [requirement ledger](REQUIREMENT-LEDGER.md) and [work claims](WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.
-
 - [ ] Verify every one of the 26 areas adopts or explicitly defers the [universal behavior matrix](19-complete-surface-behavior-matrix.md) with screen and runtime evidence.
 - [ ] Preserve route aliases and naming constraints through deep-link, browser history, modifier-click, refresh, mobile, and authorization tests.
