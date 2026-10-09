@@ -1,5 +1,5 @@
 import { apiClient } from "@/lib/api-client";
-import { lazyContract } from "@/lib/api-envelope";
+import { isApiError, lazyContract } from "@/lib/api-envelope";
 import { useMutationState } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { getErrorStatus } from "@/lib/get-error-message";
@@ -24,6 +24,15 @@ export interface ConfirmActionResult {
 }
 
 const CONFIRM_ACTION_MUTATION_KEY = ["aiChat", "confirmAction"];
+
+export function refusedConfirmOutcome(error: unknown): ConfirmActionResult | undefined {
+  if (!isApiError(error)) return undefined;
+  const details = error.details;
+  if (typeof details !== "object" || details === null || !("receipt" in details)) return undefined;
+  const parsed = askOsActionReceiptSchema.safeParse(details.receipt);
+  if (!parsed.success) return undefined;
+  return { ok: false, result: {}, summary: parsed.data.summary, receipt: parsed.data };
+}
 
 export interface ConfirmActionActivity {
   status: "idle" | "pending" | "success" | "error";

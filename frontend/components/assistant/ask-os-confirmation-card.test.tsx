@@ -2,11 +2,13 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AskOsConfirmationCard } from "./ask-os-confirmation-card";
 import type { ConfirmActionResult } from "@/hooks/api/ai-confirm-action";
+import { ApiError } from "@/lib/api-envelope";
 
 const mutate = jest.fn();
 const toastError = jest.fn();
 
 jest.mock("@/hooks/api/ai-confirm-action", () => ({
+  refusedConfirmOutcome: jest.requireActual("@/hooks/api/ai-confirm-action").refusedConfirmOutcome,
   useConfirmAction: () => ({ mutate, isPending: false }),
 }));
 jest.mock("sonner", () => ({ toast: { error: (message: string) => toastError(message) } }));
@@ -227,5 +229,54 @@ describe("a persisted confirmation card records the proposal without allowing re
     );
 
     expect(screen.getByText("Past proposal — view only.")).toBeInTheDocument();
+  });
+});
+
+describe("a refused confirm shows the server's receipt instead of a bare toast", () => {
+  function renderLive(onConfirmed: (outcome: ConfirmActionResult) => void) {
+    render(
+      <AskOsConfirmationCard
+        mode="live"
+        summary="Clock in"
+        preview={{ change: "clock in" }}
+        token="7.secret"
+        title="Clock in"
+        onConfirmed={onConfirmed}
+        onCancelled={jest.fn()}
+      />,
+    );
+  }
+
+  it("hands a conflicted receipt from the error details to the bubble", async () => {
+    const onConfirmed = jest.fn();
+    const receipt = {
+      proposalId: 7,
+      action: "self.clockIn",
+      status: "conflicted",
+      summary: "Attendance changed since this was proposed.",
+      at: "2026-10-09T10:00:00.000Z",
+    };
+    mutate.mockImplementation((_token: string, options: { onError: (error: Error) => void }) => {
+      options.onError(new ApiError("Conflict", 409, "CONFLICT", { receipt }));
+    });
+
+    renderLive(onConfirmed);
+    await userEvent.click(screen.getByRole("button", { name: "Confirm" }));
+
+    expect(onConfirmed).toHaveBeenCalledWith(expect.objectContaining({ ok: false, receipt }));
+    expect(toastError).not.toHaveBeenCalled();
+  });
+
+  it("explains an in-flight duplicate that carries no receipt without claiming success", async () => {
+    const onConfirmed = jest.fn();
+    mutate.mockImplementation((_token: string, options: { onError: (error: Error) => void }) => {
+      options.onError(new ApiError("Proposal already confirmed or executed", 409));
+    });
+
+    renderLive(onConfirmed);
+    await userEvent.click(screen.getByRole("button", { name: "Confirm" }));
+
+    expect(onConfirmed).not.toHaveBeenCalled();
+    expect(toastError).toHaveBeenCalledWith("This action is already being processed. Check the result before trying again.");
   });
 });

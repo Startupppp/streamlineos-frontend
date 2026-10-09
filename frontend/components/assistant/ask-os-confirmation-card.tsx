@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage, getErrorStatus } from "@/lib/get-error-message";
 import {
+  refusedConfirmOutcome,
   useConfirmAction,
   useDeclineProposal,
   type ConfirmActionResult,
@@ -135,6 +136,15 @@ function ConfirmationLive({
         onConfirmed(data);
       },
       onError: (error) => {
+        const refused = refusedConfirmOutcome(error);
+        if (refused) {
+          onConfirmed(refused);
+          return;
+        }
+        if (getErrorStatus(error) === 409) {
+          toast.error("This action is already being processed. Check the result before trying again.");
+          return;
+        }
         toast.error(getErrorMessage(error));
       },
     });
