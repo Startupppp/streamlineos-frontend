@@ -1,19 +1,7 @@
 "use client";
 
 import { memo, useCallback, useState } from "react";
-import {
-  Sheet,
-  SheetBody,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
+import { AppSheet } from "@/components/shared/app-sheet";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,7 +34,6 @@ import {
   type IntegrationToolkit,
 } from "@/hooks/api/integrations";
 import { useCan } from "@/hooks/api/access";
-import { useIsMobile } from "@/hooks/common/use-mobile";
 
 const TOOLKIT_LABELS: Record<string, string> = {
   gmail: "Gmail",
@@ -170,7 +157,6 @@ export function MailAccountsSheet({ open, onClose }: MailAccountsSheetProps) {
   const disconnect = useDisconnectIntegration();
   const setPrimary = useSetPrimaryIntegration();
   const canManage = useCan("integrations:connections:manage");
-  const isMobile = useIsMobile();
   const [pendingToolkit, setPendingToolkit] = useState<IntegrationToolkit | null>(null);
   const [disconnectTarget, setDisconnectTarget] = useState<IntegrationConnection | null>(null);
 
@@ -267,7 +253,7 @@ export function MailAccountsSheet({ open, onClose }: MailAccountsSheetProps) {
   );
 
   const connectActions = canManage ? (
-    <div className="px-4 py-3 border-t shrink-0 flex flex-row flex-wrap gap-2">
+    <div className="contents">
       <LoadingButton
         variant="outline"
         size="sm"
@@ -309,38 +295,16 @@ export function MailAccountsSheet({ open, onClose }: MailAccountsSheetProps) {
 
   return (
     <>
-      {isMobile ? (
-        <Drawer open={open} onOpenChange={onClose} direction="bottom">
-          <DrawerContent
-            aria-describedby={undefined}
-            className="w-full max-h-[92dvh] gap-0 p-0 pb-[env(safe-area-inset-bottom)] overflow-hidden bg-card"
-          >
-            <DrawerHeader className="px-4 py-3 border-b shrink-0">
-              <DrawerTitle className="text-base">Mail accounts</DrawerTitle>
-            </DrawerHeader>
-            <div className="min-h-0 flex flex-1 flex-col overflow-y-auto px-4 py-3">
-              {accountsContent}
-            </div>
-            {connectActions}
-          </DrawerContent>
-        </Drawer>
-      ) : (
-        <Sheet open={open} onOpenChange={onClose}>
-          <SheetContent
-            side="right"
-            aria-describedby={undefined}
-            className="w-full gap-0 p-0 sm:max-w-md flex flex-col overflow-hidden"
-          >
-            <SheetHeader className="px-4 py-3 border-b shrink-0">
-              <SheetTitle className="text-base">Mail accounts</SheetTitle>
-            </SheetHeader>
-            <SheetBody className="flex flex-col px-4 py-3">
-              {accountsContent}
-            </SheetBody>
-            {connectActions}
-          </SheetContent>
-        </Sheet>
-      )}
+      <AppSheet
+        open={open}
+        onOpenChange={(value) => { if (!value) onClose(); }}
+        title="Mail accounts"
+        description="Manage connected Gmail and Outlook accounts."
+        footer={connectActions}
+        className="sm:max-w-md"
+      >
+        {accountsContent}
+      </AppSheet>
 
       <AlertDialog open={disconnectTarget !== null} onOpenChange={handleDisconnectAlertOpenChange}>
         <AlertDialogContent>

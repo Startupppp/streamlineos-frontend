@@ -51,6 +51,8 @@ it("uses one common page header with the daily brief in its action row", () => {
   expect(screen.getAllByLabelText("Daily mail brief")).toHaveLength(1);
   expect(screen.queryByText("Your inbox, distilled")).toBeNull();
   expect(screen.getByRole("button", { name: "Compose" })).toBeEnabled();
+  expect(screen.getByRole("button", { name: "Compose mail" })).toHaveClass("fixed", "md:hidden");
+  expect(screen.getByRole("button", { name: "Compose mail" })).toHaveClass("bottom-[calc(4rem+0.375rem+env(safe-area-inset-bottom))]");
   expect(screen.getByRole("button", { name: "Mail account settings" })).toBeEnabled();
   expect(screen.getByRole("button", { name: "Switch mail account. Current: All accounts" })).toBeInTheDocument();
   expect(screen.queryByRole("combobox", { name: "Account: All accounts" })).toBeNull();

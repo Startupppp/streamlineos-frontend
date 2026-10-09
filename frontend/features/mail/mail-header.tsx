@@ -161,7 +161,7 @@ export function MailHeader({
           {hasAccounts ? (
             <Button
               size="sm"
-              className="size-9 shrink-0 gap-2 px-0 md:h-9 md:w-auto md:px-3"
+              className="hidden shrink-0 gap-2 md:inline-flex md:h-9 md:w-auto md:px-3"
               onClick={onCompose}
               disabled={!canCompose}
               aria-label="Compose"
@@ -172,6 +172,18 @@ export function MailHeader({
           ) : null}
         </div>
       </div>
+      {hasAccounts ? (
+        <Button
+          type="button"
+          size="icon"
+          className="fixed right-3 bottom-[calc(4rem+0.375rem+env(safe-area-inset-bottom))] z-40 size-12 rounded-full shadow-lg md:hidden"
+          onClick={onCompose}
+          disabled={!canCompose}
+          aria-label="Compose mail"
+        >
+          <PenSquare className="size-5" aria-hidden="true" />
+        </Button>
+      ) : null}
     </header>
   );
 }

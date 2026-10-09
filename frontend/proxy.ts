@@ -53,6 +53,7 @@ export function buildCsp(nonce: string, apiUrl?: string): string {
     "https://checkout.razorpay.com",
     "https://cdn.razorpay.com",
     "https://lumberjack.razorpay.com",
+    "https://api.openai.com",
     /**
      * Ably, which carries chat and the support inbox (`lib/ably.ts`). This is the
      * policy a document actually receives — the middleware sets the header on every

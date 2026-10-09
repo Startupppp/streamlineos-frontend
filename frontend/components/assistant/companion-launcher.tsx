@@ -119,7 +119,7 @@ interface CompanionLauncherProps {
   onVoiceStart?: () => void;
   onVoiceDismiss?: () => void;
   onVoiceReview?: () => void;
-  voiceState?: "idle" | "requesting" | "listening" | "processing" | "error";
+  voiceState?: "idle" | "connecting" | "listening" | "thinking" | "speaking" | "error";
   voiceSupported?: boolean;
   voiceMessage?: string | null;
   voiceCaption?: string;
@@ -173,7 +173,7 @@ export function CompanionLauncher({
   const paused =
     preferences.pausedUntil !== null && Date.parse(preferences.pausedUntil) > now;
   const pet = companionPetState(chatState === "idle" && paused ? "quiet" : chatState);
-  const petVisual = voiceState === "listening" || voiceState === "requesting" ? "listening" : pet.visual;
+  const petVisual = voiceState === "listening" || voiceState === "connecting" ? "listening" : voiceState === "thinking" ? "thinking" : voiceState === "speaking" ? "success" : pet.visual;
   const name = companionDisplayName(preferences);
   const status = pet.label;
   const left = preferences.anchor === "bottom-left";
@@ -213,7 +213,7 @@ export function CompanionLauncher({
       {voiceOverlayOpen ? (
         <div
           role="group"
-          aria-label="Companion voice input"
+          aria-label="Companion live voice conversation"
           className={cn(
             "absolute bottom-full mb-2 w-72 rounded-2xl border border-border/80 bg-popover p-3 text-popover-foreground shadow-2xl backdrop-blur-xl",
             left ? "left-2" : "right-2",
@@ -222,19 +222,18 @@ export function CompanionLauncher({
           <div className="flex items-center justify-between gap-2">
             <span className="flex items-center gap-2 text-xs font-semibold">
               <span className={cn("size-2 rounded-full bg-primary", voiceState === "listening" && "animate-pulse")} />
-              {voiceState === "listening" ? "Listening to you" : voiceState === "requesting" ? "Connecting microphone" : voiceState === "processing" ? "Writing your words" : voiceState === "error" ? "Voice needs attention" : "Ready to review"}
+              {voiceState === "listening" ? "Listening to you" : voiceState === "connecting" ? "Connecting" : voiceState === "thinking" ? "Thinking" : voiceState === "speaking" ? "Speaking" : voiceState === "error" ? "Voice needs attention" : "Voice is off"}
             </span>
             <button type="button" onClick={onVoiceDismiss} aria-label="Dismiss voice input" className="rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground"><X className="size-3.5" aria-hidden /></button>
           </div>
           <p role="status" aria-live="polite" className={cn("mt-2 min-h-8 text-sm leading-snug", voiceState === "error" ? "text-destructive" : "text-foreground")}>
             {voiceCaption ? `“${voiceCaption}”` : voiceMessage ?? "Say what you need help with."}
           </p>
-          <p className="mt-1 text-micro leading-snug text-muted-foreground">Audio is sent to OpenAI for transcription and isn&apos;t saved by StreamlineOS.</p>
+          <p className="mt-1 text-micro leading-snug text-muted-foreground">Live audio goes to OpenAI while this session is on. Workspace actions still need your confirmation.</p>
           <div className="mt-2 flex items-center justify-end gap-2">
-            {voiceState === "listening" ? <button type="button" onClick={onVoiceStart} className="rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground">Finish speaking</button> : null}
+            {voiceState !== "idle" && voiceState !== "error" ? <button type="button" onClick={onVoiceStart} className="rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground">End conversation</button> : null}
             {voiceState === "error" ? <button type="button" onClick={onVoiceStart} className="rounded-full border border-border px-3 py-1.5 text-xs font-semibold">Try again</button> : null}
-            {voiceCaption ? <button type="button" onClick={onVoiceReview} className="rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground">Review in chat</button> : null}
-            {voiceState === "error" ? <button type="button" onClick={onVoiceReview} className="rounded-full border border-border px-3 py-1.5 text-xs font-semibold">Type instead</button> : null}
+            <button type="button" onClick={onVoiceReview} className="rounded-full border border-border px-3 py-1.5 text-xs font-semibold">Open chat</button>
           </div>
         </div>
       ) : showIntro ? (
@@ -295,12 +294,12 @@ export function CompanionLauncher({
           <button
             type="button"
             onClick={handleVoiceStart}
-            disabled={voiceState === "processing" || voiceState === "requesting"}
-            aria-label={voiceState === "listening" ? "Stop voice input" : `Talk to ${name}`}
-            title={voiceSupported ? "Voice input" : "Check voice input availability"}
+            disabled={voiceState === "connecting"}
+            aria-label={voiceState === "listening" || voiceState === "thinking" || voiceState === "speaking" ? "End voice conversation" : `Talk to ${name}`}
+            title={voiceSupported ? "Live voice conversation" : "Check voice availability"}
             className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-45"
           >
-            {voiceState === "listening" ? <MicOff className="size-4" aria-hidden /> : <Mic className="size-4" aria-hidden />}
+            {voiceState === "listening" || voiceState === "thinking" || voiceState === "speaking" ? <MicOff className="size-4" aria-hidden /> : <Mic className="size-4" aria-hidden />}
           </button>
         </span>
       </div>

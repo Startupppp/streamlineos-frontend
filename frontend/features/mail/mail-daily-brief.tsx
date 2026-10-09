@@ -56,10 +56,14 @@ export function MailDailyBrief({
           className="h-9 gap-2 px-2.5"
           isPending={state.status === "loading"}
           onClick={onGenerate}
-          loadingText="Reading inbox…"
+          aria-label="Daily brief"
         >
-          <Sparkles className="size-4 text-primary" aria-hidden="true" />
-          <span className="hidden lg:inline">Daily brief</span>
+          {state.status !== "loading" ? (
+            <Sparkles className="size-4 text-primary" aria-hidden="true" />
+          ) : null}
+          <span className="hidden lg:inline">
+            {state.status === "loading" ? "Reading inbox…" : "Daily brief"}
+          </span>
         </LoadingButton>
       )}
 

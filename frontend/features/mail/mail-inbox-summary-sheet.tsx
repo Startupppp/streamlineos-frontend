@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
-import { useIsMobile } from "@/hooks/common/use-mobile";
+import { AppSheet } from "@/components/shared/app-sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AiUsageChip } from "@/components/ai/ai-usage-chip";
 import { AiQuotaEmptyState } from "@/components/ai/ai-quota-empty-state";
@@ -29,17 +21,13 @@ export function MailInboxSummarySheet({
 }: MailInboxSummarySheetProps) {
   const visibleSender = (value: string) =>
     /^\[REDACTED(?:_EMAIL)?\]$/i.test(value.trim()) ? null : value;
-  const isMobile = useIsMobile();
-  const panel = (
-    <>
-        <div className="shrink-0 border-b border-border px-6 py-4">
-          <h2 className="text-base font-semibold">What needs me</h2>
-          <p className="text-label text-muted-foreground">
-            AI triage of your inbox — highlights and action items. Review before acting; never auto-sends.
-          </p>
-        </div>
-
-        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
+  return (
+    <AppSheet
+      open={open}
+      onOpenChange={(value) => { if (!value) onClose(); }}
+      title="What needs me"
+      description="Inbox highlights and next actions."
+    >
           {summaryState.status === "loading" && (
             <div className="space-y-2">
               <Skeleton className="h-4 w-3/4" />
@@ -122,16 +110,6 @@ export function MailInboxSummarySheet({
               <p className="text-sm text-muted-foreground">Loading summary...</p>
             </div>
           )}
-        </div>
-    </>
+    </AppSheet>
   );
-  if (isMobile) return (
-    <Drawer open={open} onOpenChange={(value) => { if (!value) onClose(); }} shouldScaleBackground={false}>
-      <DrawerContent className="max-h-[92dvh] gap-0 overflow-hidden p-0">
-        <DrawerHeader className="sr-only"><DrawerTitle>What needs me</DrawerTitle><DrawerDescription>AI triage of your inbox</DrawerDescription></DrawerHeader>
-        {panel}
-      </DrawerContent>
-    </Drawer>
-  );
-  return <Sheet open={open} onOpenChange={(value) => { if (!value) onClose(); }}><SheetContent className="flex flex-col gap-0 overflow-hidden p-0 sm:max-w-lg"><SheetHeader className="sr-only"><SheetTitle>What needs me</SheetTitle><SheetDescription>AI triage of your inbox</SheetDescription></SheetHeader>{panel}</SheetContent></Sheet>;
 }

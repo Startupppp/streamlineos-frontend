@@ -63,6 +63,7 @@ import {
   type AskOsDirective,
 } from "./ask-os-directive-schema";
 import { useSpeechInput, useSpeechPlayback } from "./use-browser-speech";
+import { useCompanionRealtimeVoice } from "./use-companion-realtime-voice";
 
 interface Draft {
   assistant: string;
@@ -81,7 +82,6 @@ export function GlobalAskOs() {
 
   const [input, setInput] = useState("");
   const [voiceOverlayOpen, setVoiceOverlayOpen] = useState(false);
-  const [voiceCaption, setVoiceCaption] = useState("");
   const [composerError, setComposerError] = useState<string | null>(null);
   const [failure, setFailure] = useState<AiFailureState | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -142,7 +142,7 @@ export function GlobalAskOs() {
     fetchNextPage,
   } = useAiConversationMessages(
     activeConversationId,
-    open && activeConversationId !== null,
+    (open || voiceOverlayOpen) && activeConversationId !== null,
   );
 
   const conversations = useMemo(
@@ -417,9 +417,14 @@ export function GlobalAskOs() {
         void queryClient.invalidateQueries({
           queryKey: collaborationQueryKeys.aiChat.conversations(),
         });
+        const requiresReview = outcome.status === "completed" && inFlightDirectiveRef.current.length > 0;
         setDraft(null);
         inFlightDirectiveRef.current = [];
         setInFlightDirective([]);
+        return {
+          text: outcome.status === "cancelled" ? "That request stopped before I could finish. Please ask again." : outcome.text,
+          requiresReview,
+        };
       } catch (error) {
         const refusal = askOsComposerRefusal(error);
         if (refusal) {
@@ -447,6 +452,14 @@ export function GlobalAskOs() {
       sendMessage,
     ],
   );
+  const realtimeVoice = useCompanionRealtimeVoice(voiceScope, async (request) => {
+    const result = await send(request);
+    if (!result) return { text: "I could not complete that request. Please try again or open chat.", requiresReview: false };
+    return {
+      text: `${result.text.slice(0, 6000)}${result.requiresReview ? " An action is ready to review in chat. No change has been made yet." : ""}`,
+      requiresReview: result.requiresReview,
+    };
+  });
   const panelState = useAskOsPanelState({
     draft,
     failure,
@@ -497,31 +510,24 @@ export function GlobalAskOs() {
     if (composerError) setComposerError(null);
   }
   function handleVoiceTranscript(transcript: string) {
-    setVoiceCaption(transcript);
     setInput((current) =>
       current.trim() ? `${current.trim()} ${transcript}` : transcript,
     );
     if (composerError) setComposerError(null);
   }
   function handleLauncherVoiceStart() {
-    if (speechInput.state === "requesting" || speechInput.state === "processing") return;
     setOpen(false);
     setVoiceOverlayOpen(true);
     speechPlayback.stop();
-    if (speechInput.state === "listening") speechInput.stop();
-    else {
-      setVoiceCaption("");
-      speechInput.start(handleVoiceTranscript);
-    }
+    if (realtimeVoice.state === "listening" || realtimeVoice.state === "speaking" || realtimeVoice.state === "thinking" || realtimeVoice.state === "connecting") realtimeVoice.stop();
+    else void realtimeVoice.start();
   }
   function handleVoiceDismiss() {
-    speechInput.cancel();
-    speechInput.reset();
+    realtimeVoice.stop();
     setVoiceOverlayOpen(false);
-    setVoiceCaption("");
   }
   function handleVoiceReview() {
-    speechInput.cancel();
+    realtimeVoice.stop();
     setVoiceOverlayOpen(false);
     setView("chat");
     setOpen(true);
@@ -746,10 +752,10 @@ export function GlobalAskOs() {
             onVoiceStart={handleLauncherVoiceStart}
             onVoiceDismiss={handleVoiceDismiss}
             onVoiceReview={handleVoiceReview}
-            voiceState={speechInput.state}
-            voiceSupported={speechInput.supported}
-            voiceMessage={speechInput.message}
-            voiceCaption={voiceCaption}
+            voiceState={realtimeVoice.state}
+            voiceSupported={realtimeVoice.supported}
+            voiceMessage={realtimeVoice.message}
+            voiceCaption={realtimeVoice.caption}
             voiceOverlayOpen={voiceOverlayOpen}
           />
         ) : null}

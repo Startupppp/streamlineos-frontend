@@ -2,12 +2,28 @@
 
 import { useCallback, forwardRef } from "react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { AiActionsMenu } from "@/components/ai";
 import type { AiAction } from "@/components/ai";
 import { ReplyIcon, StarIcon, Trash2Icon } from "@animateicons/react/lucide";
-import { Archive, MailOpen } from "lucide-react";
+import {
+  Archive,
+  MailOpen,
+  MoreHorizontal,
+  Reply,
+  Star,
+  Trash2,
+} from "lucide-react";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { useIsMobile } from "@/hooks/common/use-mobile";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Tooltip,
   TooltipContent,
@@ -59,6 +75,7 @@ export const MailReadingToolbar = forwardRef<
   _,
 ) {
   const { iconRef: starRef, hoverHandlers: starHover } = useAnimatedIcon();
+  const isMobile = useIsMobile();
 
   const handleArchiveClick = useCallback(
     (e: React.MouseEvent) => {
@@ -83,6 +100,72 @@ export const MailReadingToolbar = forwardRef<
     },
     [onToggleStar],
   );
+
+  if (isMobile) {
+    return (
+      <div className="flex shrink-0 items-center gap-1.5">
+        <Button
+          type="button"
+          size="sm"
+          className="h-9 gap-1.5 px-3"
+          onClick={onReply}
+        >
+          <Reply className="size-4" aria-hidden="true" />
+          Reply
+        </Button>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="size-9"
+              aria-label="More message actions"
+            >
+              <MoreHorizontal className="size-4" aria-hidden="true" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="min-w-52">
+            <DropdownMenuItem onSelect={onArchive}>
+              <Archive aria-hidden="true" />
+              Archive
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={onMarkUnread}>
+              <MailOpen aria-hidden="true" />
+              Mark as unread
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={onToggleStar}>
+              <Star
+                className={cn(
+                  message.isStarred &&
+                    "fill-current text-status-warning-ink",
+                )}
+                aria-hidden="true"
+              />
+              {message.isStarred ? "Unstar" : "Star"}
+            </DropdownMenuItem>
+            {canAi && aiActions.length > 0 ? (
+              <>
+                <DropdownMenuSeparator />
+                <AiActionsMenu
+                  actions={aiActions}
+                  triggerLabel="AI assist"
+                  menuLabel="AI assist"
+                  asSubmenu
+                />
+              </>
+            ) : null}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem variant="destructive" onSelect={onTrash}>
+              <Trash2 aria-hidden="true" />
+              Move to trash
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    );
+  }
 
   return (
     <TooltipProvider delayDuration={300}>

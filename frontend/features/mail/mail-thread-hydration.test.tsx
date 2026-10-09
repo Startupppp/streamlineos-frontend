@@ -29,6 +29,8 @@ const SEEDED_DETAIL: MailMessageDetail = {
   attachments: [],
 };
 
+let mockMobile = false;
+
 let threadResult: {
   data: MailMessageDetail[] | undefined;
   isLoading: boolean;
@@ -51,6 +53,10 @@ jest.mock("@/hooks/api/access", () => ({
     denied: key !== "mail:inbox:view",
     pending: false,
   }),
+}));
+
+jest.mock("@/hooks/common/use-mobile", () => ({
+  useIsMobile: () => mockMobile,
 }));
 
 jest.mock("@/hooks/api/integrations", () => ({
@@ -124,13 +130,17 @@ function renderShell() {
   return queryClient;
 }
 
-function renderReadingPane() {
+function renderReadingPane(onReply = jest.fn()) {
   return render(
     <TooltipProvider>
-      <MailReadingPane selectedMessage={LIST_ROW} onReply={jest.fn()} />
+      <MailReadingPane selectedMessage={LIST_ROW} onReply={onReply} />
     </TooltipProvider>,
   );
 }
+
+beforeEach(() => {
+  mockMobile = false;
+});
 
 describe("MailShell — opening a message seeds the thread cache", () => {
   beforeEach(() => {
@@ -215,5 +225,28 @@ describe("MailReadingPane — a seeded thread renders its chrome, not a full ske
 
     expect(screen.queryByTestId("mail-body-skeleton")).not.toBeInTheDocument();
     expect(await screen.findByText("the real body")).toBeInTheDocument();
+  });
+
+  it("keeps Reply direct and consolidates secondary actions on mobile", () => {
+    mockMobile = true;
+    threadResult = {
+      data: [SEEDED_DETAIL],
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    };
+    const onReply = jest.fn();
+
+    renderReadingPane(onReply);
+
+    const reply = screen.getByRole("button", { name: "Reply" });
+    expect(reply).toHaveClass("size-9", "p-0");
+    expect(reply).not.toHaveTextContent("Reply");
+    fireEvent.click(reply);
+    expect(onReply).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("button", { name: "More message actions" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Archive" })).toBeNull();
   });
 });

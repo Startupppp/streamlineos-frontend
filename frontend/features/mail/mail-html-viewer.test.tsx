@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { MailHtmlViewer } from "./mail-html-viewer";
 
 jest.mock("@/lib/utils", () => ({
@@ -105,30 +105,15 @@ describe("MailHtmlViewer — HTML sanitization", () => {
     });
   });
 
-  describe("remote image blocking", () => {
-    it("blocks remote http images by default — src removed, data-blocked-src set", async () => {
+  describe("remote images", () => {
+    it("loads remote http images by default with privacy hardening", async () => {
       const body = await renderMail('<img src="https://tracker.evil.com/pixel.gif" alt="pixel">');
       const img = body.querySelector("img");
       expect(img).not.toBeNull();
-      expect(img?.getAttribute("src")).toBeFalsy();
-      expect(img?.getAttribute("data-blocked-src")).toBe("https://tracker.evil.com/pixel.gif");
-    });
-
-    it("shows blocked image count banner when remote images are present", async () => {
-      await renderMail('<img src="https://example.com/a.png" alt="a"><img src="https://example.com/b.png" alt="b">');
-      expect(await screen.findByText(/2 remote images blocked/i)).toBeInTheDocument();
-    });
-
-    it("loads images when Load images button is clicked", async () => {
-      await renderMail('<img src="https://example.com/img.png" alt="img">');
-      expect(await screen.findByText(/remote image/i)).toBeInTheDocument();
-      fireEvent.click(screen.getByRole("button", { name: /load images/i }));
-      await waitFor(() => expect(screen.queryByText(/remote image/i)).not.toBeInTheDocument());
-      await waitFor(() =>
-        expect(getMailBody()?.querySelector("img")?.getAttribute("src")).toBe("https://example.com/img.png"),
-      );
-      expect(getMailBody()?.querySelector("img")).toHaveAttribute("referrerpolicy", "no-referrer");
-      expect(getMailBody()?.querySelector("img")).toHaveAttribute("loading", "lazy");
+      expect(img).toHaveAttribute("src", "https://tracker.evil.com/pixel.gif");
+      expect(img).toHaveAttribute("referrerpolicy", "no-referrer");
+      expect(img).toHaveAttribute("loading", "lazy");
+      expect(screen.queryByRole("button", { name: /load images/i })).toBeNull();
     });
 
     it("does not block inline data: images", async () => {
@@ -138,6 +123,12 @@ describe("MailHtmlViewer — HTML sanitization", () => {
       expect(img).not.toBeNull();
       expect(img?.getAttribute("data-blocked-src")).toBeFalsy();
     });
+  });
+
+  it("contains wide email layouts within the device width", async () => {
+    await renderMail('<table style="width:1200px"><tr><td><img width="900" src="https://example.com/wide.png"></td></tr></table>');
+    expect(document.querySelector(".mail-html-frame")).toHaveClass("overflow-x-hidden");
+    expect(getMailBody()).toHaveClass("[overflow-wrap:anywhere]");
   });
 
   describe("link target hardening", () => {

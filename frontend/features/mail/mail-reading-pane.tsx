@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared";
@@ -245,29 +246,33 @@ export function MailReadingPane({
       className="flex h-full w-full min-h-0 min-w-0 max-w-full flex-col overflow-hidden"
       data-testid="mail-reading-pane"
     >
-      <div className="shrink-0 border-b border-border/40 px-4 py-3 bg-card/60">
-        {onBack && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 text-xs mb-2 -ml-1 lg:hidden"
-            onClick={onBack}
-          >
-            ← Back
-          </Button>
-        )}
-        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0 flex-1">
+      <div className="shrink-0 border-b border-border bg-background px-3 py-2.5 sm:px-4 sm:py-3">
+        <div className="flex min-w-0 items-start gap-2 sm:gap-3">
+          {onBack ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="-ml-1 size-9 shrink-0 lg:hidden"
+              onClick={onBack}
+              aria-label="Back to messages"
+            >
+              <ArrowLeft className="size-4" aria-hidden="true" />
+            </Button>
+          ) : null}
+
+          <div className="min-w-0 flex-1 pt-0.5">
             <h2 className="text-sm font-semibold text-foreground leading-tight line-clamp-2">
               {selectedMessage.subject || "(no subject)"}
             </h2>
-            <p className="mt-1 text-dense text-muted-foreground">
+            <p className="mt-1 truncate text-dense text-muted-foreground">
               {messages.length > 1
                 ? `${messages.length} messages in thread`
                 : "Single message"}
               {canAi && threadId ? " · AI assist available" : null}
             </p>
           </div>
+
           <MailReadingToolbar
             message={selectedMessage}
             onReply={handleReply}

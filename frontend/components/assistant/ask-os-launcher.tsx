@@ -33,7 +33,7 @@ interface AskOsLauncherProps {
   onVoiceStart?: () => void;
   onVoiceDismiss?: () => void;
   onVoiceReview?: () => void;
-  voiceState?: "idle" | "requesting" | "listening" | "processing" | "error";
+  voiceState?: "idle" | "connecting" | "listening" | "thinking" | "speaking" | "error";
   voiceSupported?: boolean;
   voiceMessage?: string | null;
   voiceCaption?: string;

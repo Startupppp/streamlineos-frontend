@@ -18,3 +18,11 @@ it("does not expose AI brief controls without permission", () => {
   render(<MailDailyBrief state={{ status: "idle" }} canAi={false} onGenerate={jest.fn()} onDetails={jest.fn()} />);
   expect(screen.queryByLabelText("Daily mail brief")).toBeNull();
 });
+
+it("keeps pending copy hidden on mobile while preserving an accessible status", () => {
+  render(<MailDailyBrief state={{ status: "loading" }} canAi onGenerate={jest.fn()} onDetails={jest.fn()} />);
+
+  expect(screen.getByText("Reading inbox…")).toHaveClass("hidden", "lg:inline");
+  expect(screen.getByText("Generating daily mail brief")).toHaveClass("sr-only");
+  expect(screen.getByRole("button", { name: "Daily brief" })).toHaveAttribute("aria-busy", "true");
+});

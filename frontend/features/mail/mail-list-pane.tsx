@@ -251,12 +251,6 @@ export function MailListPane({
     pages.length,
   ]);
 
-  const handleClearFilters = useCallback(() => {
-    setSearch("");
-    setView("all");
-    setPageIndex(0);
-  }, []);
-
   if (accounts.length === 0) {
     return (
       <div className="flex flex-col flex-1 min-h-0 items-center justify-center px-4 py-8 text-center">
@@ -283,24 +277,30 @@ export function MailListPane({
             label: "Search mail",
             inputClassName: "focus-visible:ring-1 focus-visible:ring-offset-0",
           }}
-          filters={[
-            {
-              id: "view",
-              label: "Message view",
-              active: view !== "all",
-              control: (
-                <BuildFilterSelect
-                  label="Filter loaded mail"
-                  value={view}
-                  onValueChange={handleViewChange}
-                  options={MAIL_VIEW_OPTIONS}
-                  className="md:min-w-32 md:max-w-40"
-                />
-              ),
-            },
-          ]}
-          onClearAll={search || view !== "all" ? handleClearFilters : undefined}
+          trailing={(
+            <div className="hidden md:block">
+              <BuildFilterSelect
+                label="Filter loaded mail"
+                value={view}
+                onValueChange={handleViewChange}
+                options={MAIL_VIEW_OPTIONS}
+                className="w-36 min-w-36 max-w-40"
+              />
+            </div>
+          )}
         />
+        <div
+          data-slot="mail-mobile-filters"
+          className="flex px-2 pb-1.5 md:hidden"
+        >
+          <BuildFilterSelect
+            label="Filter loaded mail"
+            value={view}
+            onValueChange={handleViewChange}
+            options={MAIL_VIEW_OPTIONS}
+            className="w-full max-w-none"
+          />
+        </div>
         <nav
           className="flex gap-1 overflow-x-auto px-2 pb-1.5 scrollbar-hide"
           aria-label="Mail folders"
@@ -404,7 +404,7 @@ export function MailListPane({
           ) : null}
         </div>
       ) : (
-        <div className="flex-1 min-h-0 max-md:pb-11">
+        <div className="flex-1 min-h-0 max-md:pb-24">
           <MailVirtualList
             groups={groups}
             selectedMessageId={selectedMessageId}
@@ -418,7 +418,7 @@ export function MailListPane({
       )}
       {visibleMessages.length > 0 ? (
         <TablePagination
-          className="sticky bottom-0 z-40 min-h-11 bg-background pb-[max(0.25rem,env(safe-area-inset-bottom))] max-md:fixed max-md:inset-x-0 max-md:bottom-16"
+          className="sticky bottom-0 z-40 min-h-11 bg-background pb-[max(0.25rem,env(safe-area-inset-bottom))] max-md:fixed max-md:inset-x-0 max-md:bottom-32"
           mode="cursor"
           rowCount={visibleMessages.length}
           pageNumber={currentPageIndex + 1}
