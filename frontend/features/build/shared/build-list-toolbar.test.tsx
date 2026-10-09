@@ -157,6 +157,7 @@ describe("BuildListToolbar", () => {
 
     const overlay = await screen.findByRole("dialog");
     expect(overlay).not.toHaveAttribute("data-slot", "drawer-content");
+    expect(overlay).toHaveAttribute("aria-label", "Filters");
     expect(document.querySelector('[data-slot="drawer-content"]')).toBeNull();
     expect(within(overlay).getByRole("combobox", { name: "Status" })).toBeInTheDocument();
   });

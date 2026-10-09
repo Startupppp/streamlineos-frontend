@@ -203,17 +203,13 @@ export function BuildListToolbar({
             align="end"
             title={drawerTitle}
             description={BUILD_TOOLBAR_DRAWER_DESCRIPTION}
+            aria-label={drawerTitle}
             drawerClassName="w-full max-w-none"
             stickyFooter
+            showHeader
             className="flex max-h-[min(36rem,calc(100dvh-2rem))] w-[min(28rem,calc(100vw-2rem))] flex-col gap-0 overflow-hidden p-0"
           >
             <div className="flex min-h-0 flex-1 flex-col">
-              <div className="shrink-0 border-b border-border px-4 py-3 text-left">
-                <h2 className="text-base font-semibold">{drawerTitle}</h2>
-                <p className="mt-1 text-label text-muted-foreground">
-                  {BUILD_TOOLBAR_DRAWER_DESCRIPTION}
-                </p>
-              </div>
               <div
                 ref={overflowBodyRef}
                 tabIndex={-1}

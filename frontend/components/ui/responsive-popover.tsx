@@ -117,6 +117,7 @@ interface ResponsivePopoverContentProps
   description?: string;
   drawerClassName?: string;
   stickyFooter?: boolean;
+  showHeader?: boolean;
 }
 
 const ResponsivePopoverContent = React.forwardRef<
@@ -129,6 +130,7 @@ const ResponsivePopoverContent = React.forwardRef<
     description = DEFAULT_DRAWER_DESCRIPTION,
     drawerClassName,
     stickyFooter = false,
+    showHeader = false,
     children,
     align = "center",
     sideOffset = 4,
@@ -150,9 +152,16 @@ const ResponsivePopoverContent = React.forwardRef<
           drawerClassName,
         )}
       >
-        <DrawerHeader className="sr-only">
+        <DrawerHeader
+          className={cn(
+            !showHeader && "sr-only",
+            showHeader && "shrink-0 border-b border-border px-4 py-3 text-left",
+          )}
+        >
           <DrawerTitle>{title}</DrawerTitle>
-          <DrawerDescription>{description}</DrawerDescription>
+          <DrawerDescription className={showHeader ? "text-label" : undefined}>
+            {description}
+          </DrawerDescription>
         </DrawerHeader>
         {stickyFooter ? (
           <div
@@ -184,6 +193,12 @@ const ResponsivePopoverContent = React.forwardRef<
       className={className}
       {...props}
     >
+      {showHeader ? (
+        <div className="shrink-0 border-b border-border px-4 py-3 text-left">
+          <h2 className="text-base font-semibold">{title}</h2>
+          <p className="mt-1 text-label text-muted-foreground">{description}</p>
+        </div>
+      ) : null}
       {children}
     </PopoverContent>
   );
