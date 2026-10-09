@@ -20,6 +20,7 @@ import {
 import { COMPANION_PRESETS, type CompanionPreferences } from "@/hooks/api/companion-schema";
 import { isApiError } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useOrgTimeZone } from "@/hooks/api/org-display";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { formatDateTime } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
@@ -83,6 +84,7 @@ function CompanionPreferencesForm({ data }: { data: CompanionPreferences }) {
   const revoke = useRevokeCompanionActivity();
   const { preferences, locks, policy } = data;
   const [now] = useState(Date.now);
+  const orgTimeZone = useOrgTimeZone();
   const defaultValues = toCompanionFormValues(preferences, now);
   const form = useForm<CompanionPreferencesFormValues>({
     resolver: zodResolver(companionPreferencesFormSchema),
@@ -95,7 +97,7 @@ function CompanionPreferencesForm({ data }: { data: CompanionPreferences }) {
   const pausedUntil = defaultValues.pause === "keep" ? preferences.pausedUntil : null;
 
   function handleSave(values: CompanionPreferencesFormValues) {
-    update.mutate(toCompanionPatch(values, preferences, new Date()), {
+    update.mutate(toCompanionPatch(values, preferences, new Date(), orgTimeZone), {
       onSuccess: () => {
         if (preferences.activityConsent && !values.activityConsent) revoke.mutate();
         toast.success("Companion settings saved");

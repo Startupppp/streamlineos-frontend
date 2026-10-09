@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { endOfDayInTimeZone } from "@/lib/date-utils";
 import { COMPANION_PRESETS, type CompanionPolicy, type CompanionPreference } from "@/hooks/api/companion-schema";
 
 export const companionPreferencesFormSchema = z.object({
@@ -50,15 +51,12 @@ function pausedUntil(
   pause: CompanionPreferencesFormValues["pause"],
   current: string | null,
   now: Date,
+  timeZone: string | null,
 ): string | null {
   if (pause === "keep") return current;
   if (pause === "resume") return PAUSED_UNTIL_RESUME;
   if (pause === "1h") return new Date(now.getTime() + 60 * 60_000).toISOString();
-  if (pause === "today") {
-    const end = new Date(now);
-    end.setHours(23, 59, 59, 0);
-    return end.toISOString();
-  }
+  if (pause === "today") return endOfDayInTimeZone(now, timeZone).toISOString();
   return null;
 }
 
@@ -66,6 +64,7 @@ export function toCompanionPatch(
   values: CompanionPreferencesFormValues,
   preferences: CompanionPreference,
   now: Date,
+  timeZone: string | null,
 ) {
   return {
     version: preferences.version,
@@ -82,7 +81,7 @@ export function toCompanionPatch(
       friendly: values.friendly,
     },
     activityConsent: values.activityConsent,
-    pausedUntil: pausedUntil(values.pause, preferences.pausedUntil, now),
+    pausedUntil: pausedUntil(values.pause, preferences.pausedUntil, now, timeZone),
   };
 }
 

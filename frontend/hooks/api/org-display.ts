@@ -6,6 +6,7 @@ import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { DEFAULT_MONEY_DISPLAY, type MoneyDisplay } from "@/lib/format-utils";
 import { lazyContract } from "@/lib/api-envelope";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import type { OrgDisplay } from "@/hooks/api/org-display-schema";
 
 /** Deferred: every money-rendering surface imports this, and the schema pulls Zod. */
 const displayContract = lazyContract(() =>
@@ -24,13 +25,19 @@ const displayContract = lazyContract(() =>
  * `useUpdateOrgSettings` invalidates this key when it does.
  */
 export function useOrgDisplay(): MoneyDisplay {
-  const { data } = useQuery<MoneyDisplay, Error>({
+  return useOrgDisplayQuery().data ?? DEFAULT_MONEY_DISPLAY;
+}
+
+export function useOrgTimeZone(): string | null {
+  return useOrgDisplayQuery().data?.timezone ?? null;
+}
+
+function useOrgDisplayQuery() {
+  return useQuery<OrgDisplay, Error>({
     queryKey: platformCoreQueryKeys.organization.display(),
     queryFn: ({ signal }) =>
       apiClient.get("/me/org-display", undefined, signal, displayContract),
     staleTime: 30 * 60_000,
     ...INLINE_READ_ERROR,
   });
-
-  return data ?? DEFAULT_MONEY_DISPLAY;
 }

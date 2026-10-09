@@ -10,7 +10,12 @@ import type { MoneyDisplay } from "@/lib/format-utils";
  * `MoneyDisplay` is owned by the formatting layer, so the contract is annotated
  * with it rather than re-declaring it; the compiler keeps the two in step.
  */
-export const orgDisplayContract: ResponseContract<MoneyDisplay> = z.object({
+export interface OrgDisplay extends MoneyDisplay {
+  timezone: string;
+}
+
+export const orgDisplayContract: ResponseContract<OrgDisplay> = z.object({
   currency: z.string(),
   locale: z.string(),
+  timezone: z.string(),
 });

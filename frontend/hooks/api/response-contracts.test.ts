@@ -88,7 +88,7 @@ describe("the shipped contracts accept the response the backend actually builds"
   });
 
   it("accepts the org display payload", () => {
-    expect(orgDisplayContract.safeParse({ currency: "INR", locale: "en-IN" }).success).toBe(true);
+    expect(orgDisplayContract.safeParse({ currency: "INR", locale: "en-IN", timezone: "Asia/Kolkata" }).success).toBe(true);
   });
 
   it("accepts payslips whose net is the decimal string Postgres returns", () => {
