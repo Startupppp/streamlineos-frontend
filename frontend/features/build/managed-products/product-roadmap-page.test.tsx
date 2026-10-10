@@ -4,6 +4,7 @@ import {
   mockUseSearchParams,
   render,
   screen,
+  useCan,
   usePageState,
   useRoadmapItems,
 } from "./product-scope-pages.test-harness";
@@ -27,6 +28,22 @@ describe("ProductRoadmapPage — usePageState integration (BSN-01-027)", () => {
     usePageState.mockReturnValue({ kind: "denied", permission: "build:roadmap:view" });
     render(<ProductRoadmapPage managedProductId={7} />);
     expect(screen.queryByRole("button", { name: /new item/i })).not.toBeInTheDocument();
+  });
+
+  it("hides create actions from a viewer who cannot manage roadmap items", () => {
+    useCan.mockImplementation((permission: string) => permission !== "build:roadmap:manage");
+    const { unmount } = render(<ProductRoadmapPage managedProductId={7} />);
+    expect(screen.queryByRole("button", { name: /new item/i })).not.toBeInTheDocument();
+    unmount();
+    usePageState.mockReturnValue({ kind: "empty" });
+    render(<ProductRoadmapPage managedProductId={7} />);
+    expect(screen.queryByRole("button", { name: /add roadmap item/i })).not.toBeInTheDocument();
+  });
+
+  it("shows the create action to an actor who can manage roadmap items", () => {
+    useCan.mockImplementation((permission: string) => permission === "build:roadmap:manage");
+    render(<ProductRoadmapPage managedProductId={7} />);
+    expect(screen.getByRole("button", { name: /new item/i })).toBeInTheDocument();
   });
 
   it("shows the loading skeleton when usePageState resolves to loading", () => {

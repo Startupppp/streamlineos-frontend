@@ -14,6 +14,7 @@ import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pa
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { usePageState } from "@/hooks/api/use-page-state";
+import { useCan } from "@/hooks/api/access";
 import { PageState } from "@/components/shared/page-state";
 import { cn } from "@/lib/utils";
 import { ROADMAP_COLUMNS } from "@/features/build/roadmap/roadmap-constants";
@@ -59,6 +60,7 @@ export function RoadmapSkeleton() {
 }
 
 export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps) {
+  const canManage = useCan("build:roadmap:manage");
   const listFilters = useBuildListFilters({ filters: ROADMAP_FILTER_DEFS });
   const pager = useBuildCursorPager(listFilters.resetKey);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
@@ -157,7 +159,7 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
       subtitle="Product roadmap items"
       contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
       actions={
-        resolution.kind !== "denied" ? (
+        canManage && resolution.kind !== "denied" ? (
           <Button size="sm" onClick={handleOpenCreate}>New Item</Button>
         ) : undefined
       }
@@ -213,7 +215,7 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
                 illustrationPreset="projects"
                 title="No roadmap items yet"
                 description="Add items to plan what this product is working toward."
-                action={{ label: "Add roadmap item", onClick: handleOpenCreate }}
+                action={canManage ? { label: "Add roadmap item", onClick: handleOpenCreate } : undefined}
               />
             }
             onRetry={handleRetry}

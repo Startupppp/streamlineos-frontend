@@ -137,7 +137,11 @@ jest.mock("@/components/shared/error-state", () => ({
 }));
 
 jest.mock("@/components/ui/empty-state", () => ({
-  EmptyState: () => <div data-testid="empty-state" />,
+  EmptyState: ({ action }: { action?: { label: string; onClick: () => void } }) => (
+    <div data-testid="empty-state">
+      {action ? <button type="button" onClick={action.onClick}>{action.label}</button> : null}
+    </div>
+  ),
 }));
 
 jest.mock("@/components/ui/stat-card", () => ({

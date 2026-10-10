@@ -86,6 +86,7 @@ export function useMailMessages(params: MailMessagesParams, options?: { enabled?
     initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     staleTime: 30_000,
+    refetchOnMount: "always",
     enabled: can && options?.enabled !== false,
   });
 }

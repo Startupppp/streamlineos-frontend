@@ -1,6 +1,12 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { RoadmapItemCard, type ScorableRoadmapItem } from "./roadmap-item-card";
 
+const mockUseCan = jest.fn((permission: string) => permission === "build:roadmap:manage");
+
+jest.mock("@/hooks/api/access", () => ({
+  useCan: (permission: string) => mockUseCan(permission),
+}));
+
 jest.mock("framer-motion", () => ({
   motion: {
     div: ({ children, ...rest }: React.HTMLAttributes<HTMLDivElement>) => <div {...rest}>{children}</div>,
@@ -62,6 +68,15 @@ describe("RoadmapItemCard — canonical link targets", () => {
 });
 
 describe("RoadmapItemCard — right click opens the same authorized actions as the visible row controls", () => {
+  it("hides edit, delete, and context-menu actions when roadmap management is denied", () => {
+    mockUseCan.mockReturnValue(false);
+    render(<RoadmapItemCard item={ITEM} onEdit={jest.fn()} onDelete={jest.fn()} />);
+    expect(screen.queryByRole("button", { name: "Edit roadmap item" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Delete roadmap item" })).not.toBeInTheDocument();
+    fireEvent.contextMenu(screen.getByText("Bulk import"));
+    expect(screen.queryByRole("menuitem", { name: "Edit" })).not.toBeInTheDocument();
+    mockUseCan.mockReturnValue(true);
+  });
   it("opens Edit and Delete on contextmenu, which the card offers nowhere else as a menu", () => {
     render(<RoadmapItemCard item={ITEM} onEdit={jest.fn()} onDelete={jest.fn()} />);
     expect(screen.queryByRole("menuitem", { name: "Edit" })).not.toBeInTheDocument();

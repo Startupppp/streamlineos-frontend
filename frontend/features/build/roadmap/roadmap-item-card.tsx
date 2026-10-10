@@ -22,6 +22,7 @@ import { TEXT_ONE_LINE, TEXT_TWO_LINES } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { RoadmapOwner, RoadmapPrioritization, RoadmapTierWeighting } from "@/hooks/api/build/roadmap-schema";
 import { getUserDisplayName } from "@/lib/person-display";
+import { useCan } from "@/hooks/api/access";
 import { RoadmapPriorityScore } from "./roadmap-priority-score";
 
 export type ScorableRoadmapItem = RoadmapItem & {
@@ -48,6 +49,7 @@ export const RoadmapItemCard = memo(function RoadmapItemCard({
   onDelete,
 }: RoadmapItemCardProps) {
   const shouldReduceMotion = useReducedMotion();
+  const canManage = useCan("build:roadmap:manage");
   const [menuOpen, setMenuOpen] = useState(false);
 
   function handleEdit() {
@@ -59,9 +61,10 @@ export const RoadmapItemCard = memo(function RoadmapItemCard({
   }
 
   const handleContextMenu = useCallback((event: MouseEvent<HTMLDivElement>) => {
+    if (!canManage) return;
     event.preventDefault();
     setMenuOpen(true);
-  }, []);
+  }, [canManage]);
 
   return (
     <motion.div
@@ -76,7 +79,7 @@ export const RoadmapItemCard = memo(function RoadmapItemCard({
       <div className="space-y-2">
         <div className="flex min-w-0 items-start justify-between gap-2">
           <TruncatedText text={item.title} lines={2} className="text-sm font-medium leading-snug" />
-          <div className="flex shrink-0 items-center gap-0.5 opacity-70 transition-opacity group-hover:opacity-100">
+          {canManage ? <div className="flex shrink-0 items-center gap-0.5 opacity-70 transition-opacity group-hover:opacity-100">
             <Button size="icon" variant="ghost" className="h-6 w-6" aria-label="Edit roadmap item" onClick={handleEdit}>
               <Pencil className="h-3 w-3" />
             </Button>
@@ -98,7 +101,7 @@ export const RoadmapItemCard = memo(function RoadmapItemCard({
                 <DropdownMenuItem variant="destructive" onSelect={handleDelete}>Delete</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
+          </div> : null}
         </div>
         {item.description ? (
           <p className={cn(TEXT_TWO_LINES, "text-xs text-muted-foreground")} title={item.description}>
