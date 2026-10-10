@@ -33,7 +33,6 @@ export function OpportunityPane({
 }: OpportunityPaneProps) {
   const canWrite = useCan("build:managed-products:update");
   const [acceptOpen, setAcceptOpen] = useState(false);
-  const [_declineOpen, setDeclineOpen] = useState(false);
   const [overrideOpen, setOverrideOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"details" | "trace">("details");
 
@@ -76,7 +75,6 @@ export function OpportunityPane({
       {
         onSuccess: () => {
           toast.success("Opportunity declined.");
-          setDeclineOpen(false);
         },
         onError: (err) => toast.error(getErrorMessage(err)),
       },

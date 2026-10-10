@@ -1,16 +1,13 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { useBuildListFilters, BUILD_FILTER_ALL } from "@/features/build/shared/use-build-list-filters";
-import { useEvidenceThemes, useOpportunities, useOpportunitiesCompare, useOutcomeReviews } from "@/hooks/api/build/product-discovery";
+import { useOpportunities, useEvidenceThemes, useOpportunitiesCompare, useOutcomeReviews } from "@/hooks/api/build/product-discovery";
 import {
   useCreateOpportunity,
   useCreateOutcomeReview,
   useDeleteOutcomeReview,
   useUpdateOutcomeReview,
 } from "@/hooks/api/build/product-discovery-mutations";
-import { useFeedbucketSubmissionFacets } from "@/hooks/api/feedbucket";
-import { useOrgMembers } from "@/hooks/api/organization";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { EvidenceThemesSection } from "./evidence-themes-section";
@@ -19,78 +16,40 @@ import { OpportunitiesFilterBar } from "./opportunities-filter-bar";
 import { OpportunityPane } from "./opportunity-pane";
 import { CompareDrawer, COMPARE_MAX } from "./compare-drawer";
 import { OutcomeReviewsSection } from "./outcome-reviews-section";
+import { useOpportunityDiscoveryFilters } from "./use-opportunity-discovery-filters";
 import type { CreateOutcomeReviewInput, UpdateOutcomeReviewInput } from "@/hooks/api/build/product-discovery-mutations";
-
-const OPPORTUNITY_FILTER_DEFS = [
-  { param: "oppState" },
-  { param: "oppSort" },
-  { param: "oppThemePeriod" },
-  { param: "oppSegment" },
-  { param: "oppOwner" },
-  { param: "oppConfidence" },
-  { param: "oppEvidenceAge" },
-  { param: "oppScoreMin" },
-] as const;
 
 interface ProductDiscoverySectionProps {
   managedProductId: number;
 }
 
 export function ProductDiscoverySection({ managedProductId }: ProductDiscoverySectionProps) {
-  const filters = useBuildListFilters({
-    filters: OPPORTUNITY_FILTER_DEFS,
-    withSearch: false,
-  });
-
-  const stateFilter = filters.value("oppState");
-  const sortFilter = filters.value("oppSort");
-  const themePeriod = filters.value("oppThemePeriod");
-  const segmentFilter = filters.value("oppSegment");
-  const ownerFilter = filters.value("oppOwner");
-  const confidenceFilter = filters.value("oppConfidence");
-  const evidenceAgeFilter = filters.value("oppEvidenceAge");
-  const scoreMinFilter = filters.value("oppScoreMin");
-
-  const facetsQuery = useFeedbucketSubmissionFacets({ managedProductId });
-  const membersQuery = useOrgMembers(1, 100);
-
-  const segmentOptions = useMemo(() => [
-    { value: "all", label: "All segments" },
-    ...(facetsQuery.data?.segments ?? [])
-      .filter((s): s is { value: string; count: number } => s.value !== null)
-      .map((s) => ({ value: s.value, label: s.value })),
-  ], [facetsQuery.data?.segments]);
-
-  const ownerOptions = useMemo(() => [
-    { value: "all", label: "All owners" },
-    ...(membersQuery.data?.data ?? []).map((m) => ({
-      value: String(m.membershipId),
-      label: m.name ?? m.email,
-    })),
-  ], [membersQuery.data?.data]);
-
-  const oppQueryParams = useMemo(() => {
-    const p: Record<string, string> = {};
-    if (stateFilter && stateFilter !== "all") p.state = stateFilter;
-    if (sortFilter && sortFilter !== "all") p.sort = sortFilter;
-    if (filters.cursor) p.cursor = filters.cursor;
-    if (segmentFilter && segmentFilter !== BUILD_FILTER_ALL) p.segment = segmentFilter;
-    if (ownerFilter && ownerFilter !== BUILD_FILTER_ALL) p.ownerMembershipId = ownerFilter;
-    if (confidenceFilter && confidenceFilter !== "all") p.confidence = confidenceFilter;
-    if (evidenceAgeFilter && evidenceAgeFilter !== "all") p.evidenceAgeDays = evidenceAgeFilter;
-    if (scoreMinFilter && scoreMinFilter !== "all") p.scoreMin = scoreMinFilter;
-    return p;
-  }, [stateFilter, sortFilter, filters.cursor, segmentFilter, ownerFilter, confidenceFilter, evidenceAgeFilter, scoreMinFilter]);
-
-  const themeParams = useMemo(
-    () =>
-      themePeriod === "30d" || themePeriod === "90d" || themePeriod === "365d"
-        ? { period: themePeriod as "30d" | "90d" | "365d" }
-        : themePeriod === "all"
-          ? { period: "all" as const }
-          : undefined,
-    [themePeriod],
-  );
+  const {
+    pageNumber,
+    setPageNumber,
+    setCursor,
+    stateFilter,
+    sortFilter,
+    themePeriod,
+    segmentFilter,
+    ownerFilter,
+    confidenceFilter,
+    evidenceAgeFilter,
+    scoreMinFilter,
+    segmentOptions,
+    ownerOptions,
+    oppQueryParams,
+    themeParams,
+    isFiltered,
+    handleStateChange,
+    handleSortChange,
+    handleThemePeriodChange,
+    handleSegmentChange,
+    handleOwnerChange,
+    handleConfidenceChange,
+    handleEvidenceAgeChange,
+    handleScoreMinChange,
+  } = useOpportunityDiscoveryFilters(managedProductId);
 
   const hasFilters = Object.keys(oppQueryParams).length > 0;
   const oppsQuery = useOpportunities(managedProductId, hasFilters ? oppQueryParams : undefined);
@@ -100,7 +59,6 @@ export function ProductDiscoverySection({ managedProductId }: ProductDiscoverySe
   const [openOpportunityId, setOpenOpportunityId] = useState<number | null>(null);
   const [compareOpen, setCompareOpen] = useState(false);
   const [compareSelected, setCompareSelected] = useState<ReadonlySet<number>>(new Set());
-  const [pageNumber, setPageNumber] = useState(1);
 
   const compareIds = useMemo(
     () => (compareSelected.size >= 2 ? [...compareSelected] : []),
@@ -113,49 +71,16 @@ export function ProductDiscoverySection({ managedProductId }: ProductDiscoverySe
   const updateOutcomeReviewMutation = useUpdateOutcomeReview(managedProductId);
   const deleteOutcomeReviewMutation = useDeleteOutcomeReview(managedProductId);
 
-  const handleStateChange = useCallback(
-    (v: string) => { filters.setValue("oppState", v); setPageNumber(1); },
-    [filters],
-  );
-  const handleSortChange = useCallback(
-    (v: string) => { filters.setValue("oppSort", v); setPageNumber(1); },
-    [filters],
-  );
-  const handleThemePeriodChange = useCallback(
-    (v: string) => filters.setValue("oppThemePeriod", v),
-    [filters],
-  );
-  const handleSegmentChange = useCallback(
-    (v: string) => { filters.setValue("oppSegment", v); setPageNumber(1); },
-    [filters],
-  );
-  const handleOwnerChange = useCallback(
-    (v: string) => { filters.setValue("oppOwner", v); setPageNumber(1); },
-    [filters],
-  );
-  const handleConfidenceChange = useCallback(
-    (v: string) => { filters.setValue("oppConfidence", v); setPageNumber(1); },
-    [filters],
-  );
-  const handleEvidenceAgeChange = useCallback(
-    (v: string) => { filters.setValue("oppEvidenceAge", v); setPageNumber(1); },
-    [filters],
-  );
-  const handleScoreMinChange = useCallback(
-    (v: string) => { filters.setValue("oppScoreMin", v); setPageNumber(1); },
-    [filters],
-  );
-
   const handleNext = useCallback(() => {
     const nextCursor = oppsQuery.data?.pagination.nextCursor ?? null;
-    filters.setCursor(nextCursor);
+    setCursor(nextCursor);
     setPageNumber((n) => n + 1);
-  }, [oppsQuery.data, filters]);
+  }, [oppsQuery.data, setCursor, setPageNumber]);
 
   const handlePrevious = useCallback(() => {
-    filters.setCursor(null);
+    setCursor(null);
     setPageNumber((n) => Math.max(1, n - 1));
-  }, [filters]);
+  }, [setCursor, setPageNumber]);
 
   const handleRowClick = useCallback((row: { id: number }) => {
     setOpenOpportunityId(row.id);
@@ -218,14 +143,6 @@ export function ProductDiscoverySection({ managedProductId }: ProductDiscoverySe
 
   const oppsRows = useMemo(() => oppsQuery.data?.data ?? [], [oppsQuery.data]);
   const oppsPagination = oppsQuery.data?.pagination ?? { limit: 20, hasMore: false, nextCursor: null };
-  const isFiltered = !!(
-    (stateFilter && stateFilter !== "all") ||
-    (segmentFilter && segmentFilter !== BUILD_FILTER_ALL) ||
-    (ownerFilter && ownerFilter !== BUILD_FILTER_ALL) ||
-    (confidenceFilter && confidenceFilter !== "all") ||
-    (evidenceAgeFilter && evidenceAgeFilter !== "all") ||
-    (scoreMinFilter && scoreMinFilter !== "all")
-  );
 
   const allItemsForCompare = useMemo(
     () => oppsRows.map((r) => ({ id: r.id, title: r.title })),
