@@ -302,10 +302,6 @@ export function useProductFeedbackFilters(
     [listFilters],
   );
 
-  const handlePageChange = useCallback((next: number) => {
-    setPage(next);
-  }, [setPage]);
-
   const handleClearSelection = useCallback(() => setSelected(new Set()), [setSelected]);
 
   return {
@@ -342,7 +338,7 @@ export function useProductFeedbackFilters(
     handleConsentStatusChange,
     handleLinkedToOpportunityChange,
     handleDateRangeChange: listFilters.setValues,
-    handlePageChange,
+    handlePageChange: setPage,
     handleClearSelection,
   };
 }

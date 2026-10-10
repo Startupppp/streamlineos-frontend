@@ -99,6 +99,7 @@ export function useCreateManagedProduct() {
       }
       qc.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.scopeDirectory.all,
+        exact: true,
         refetchType: "none",
       });
     },
@@ -136,6 +137,7 @@ export function useUpdateManagedProduct() {
       }
       qc.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.scopeDirectory.all,
+        exact: true,
         refetchType: "none",
       });
     },
@@ -170,6 +172,7 @@ export function useDeleteManagedProduct() {
       });
       qc.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.scopeDirectory.all,
+        exact: true,
         refetchType: "none",
       });
     },
@@ -204,6 +207,7 @@ export function useArchiveManagedProduct() {
       }
       qc.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.scopeDirectory.all,
+        exact: true,
         refetchType: "none",
       });
     },
@@ -238,6 +242,7 @@ export function useRestoreManagedProduct() {
       }
       qc.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.scopeDirectory.all,
+        exact: true,
         refetchType: "none",
       });
     },

@@ -20,7 +20,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { isApiError, getApiErrorCode } from "@/lib/api-client";
+import { isApiError, getApiErrorCode } from "@/lib/api-envelope";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import {
   useCreateRoadmapItem,
@@ -91,6 +91,14 @@ export function RoadmapItemSheet({ item, managedProductId, onClose }: RoadmapIte
   const update = useUpdateRoadmapItem();
   const isPending = create.isPending || update.isPending;
   const [conflictFields, setConflictFields] = useState<TicketConflictFieldDiff[] | null>(null);
+
+  function handleKeepMine() {
+    setConflictFields(null);
+  }
+
+  function handleDiscardConflict() {
+    setConflictFields(null);
+  }
 
   const form = useForm<RoadmapItemFormValues, unknown, RoadmapItemFormValues>({
     resolver: zodResolver(roadmapItemSchema),
@@ -166,7 +174,7 @@ export function RoadmapItemSheet({ item, managedProductId, onClose }: RoadmapIte
           onSuccess: () => { toast.success("Roadmap item updated"); onClose(); },
           onError: (e) => {
             if (isApiError(e) && getApiErrorCode(e) === "PROJECTS_TICKET_CONFLICT") {
-              void queryClient.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.items() });
+              void queryClient.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.items(), exact: true });
               const diffs = item ? buildRoadmapConflictDiffs(values, rice, item) : [];
               if (diffs.length > 0) {
                 setConflictFields(diffs);
@@ -240,8 +248,8 @@ export function RoadmapItemSheet({ item, managedProductId, onClose }: RoadmapIte
     <TicketConflictDialog
       open={conflictFields !== null}
       fields={conflictFields ?? []}
-      onKeepMine={() => setConflictFields(null)}
-      onDiscard={() => setConflictFields(null)}
+      onKeepMine={handleKeepMine}
+      onDiscard={handleDiscardConflict}
     />
     </>
   );

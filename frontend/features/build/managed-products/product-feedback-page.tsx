@@ -227,7 +227,7 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
           <ManagedProductDetailPrimarySection>
             <BuildListSurface<SubmissionRow>
               permission="feedbucket:submissions:view"
-              rows={data?.data ?? []}
+              rows={rows}
               columns={feedbackColumns}
               isLoading={isLoading}
               isError={isError}

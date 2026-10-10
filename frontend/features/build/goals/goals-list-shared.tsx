@@ -266,7 +266,7 @@ export function GoalCard({ goal, onEdit, onDelete, onUnlink, onCheckIn }: GoalCa
             </div>
           ) : null}
 
-          {goal.outcomeReviews !== null ? (
+          {goal.outcomeReviews != null ? (
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span className="flex items-center gap-1">
                 <CheckCircle2 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />

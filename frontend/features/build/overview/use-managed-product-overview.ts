@@ -56,8 +56,8 @@ export function useManagedProductOverview(managedProductId: number) {
   const handleOpenEdit = useCallback(() => setEditOpen(true), []);
 
   const editActions = useMemo(
-    () => (canEdit ? [{ ...EDIT_ACTION_BASE, onSelect: handleOpenEdit }] : []),
-    [canEdit, handleOpenEdit],
+    () => (canEdit && !!product ? [{ ...EDIT_ACTION_BASE, onSelect: handleOpenEdit }] : []),
+    [canEdit, product, handleOpenEdit],
   );
 
   const overviewSubtitle = useMemo(() => {

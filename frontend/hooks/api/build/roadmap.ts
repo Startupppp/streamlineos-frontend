@@ -64,7 +64,7 @@ export interface RoadmapItemFilters {
   managedProductId?: number;
   sort?: string;
   projectId?: number;
-  horizon?: string;
+  horizon?: RoadmapHorizon;
   ownerId?: number;
   goalId?: number;
   releaseId?: number;

@@ -2,15 +2,22 @@ import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { ProductProjectsPage } from "./product-projects-page";
 
+jest.mock("next/navigation", () => ({
+  useRouter: jest.fn(() => ({ replace: jest.fn(), push: jest.fn() })),
+  usePathname: jest.fn(() => "/build/managed-products/5/projects"),
+  useSearchParams: jest.fn(() => new URLSearchParams()),
+}));
+
+const {
+  useRouter: mockUseRouter,
+  useSearchParams: mockUseSearchParams,
+} = jest.requireMock("next/navigation") as {
+  useRouter: jest.Mock;
+  useSearchParams: jest.Mock;
+};
+
 const mockRouterReplace = jest.fn();
 const mockRouterPush = jest.fn();
-const mockUseSearchParams = jest.fn(() => new URLSearchParams());
-
-jest.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: mockRouterReplace, push: mockRouterPush }),
-  usePathname: () => "/build/managed-products/5/projects",
-  useSearchParams: mockUseSearchParams,
-}));
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
@@ -86,16 +93,18 @@ jest.mock("@/components/ui/data-table", () => ({
   DataTable: ({
     data,
     columns,
-    getRowKey,
   }: {
-    data?: Array<{ id: number; name: string; contribution: { totalTickets: number; doneTickets: number; percent: number | null } }>;
-    columns?: unknown[];
-    getRowKey?: (row: { id: number }) => number;
+    data?: Array<Record<string, unknown>>;
+    columns?: Array<{ key: string; cell?: (row: Record<string, unknown>) => React.ReactNode }>;
   }) => (
     <div data-testid="data-table">
-      {data?.map((row) => (
-        <div key={row.id} data-testid="project-row" data-id={row.id}>
-          {row.name}
+      {data?.map((row, i) => (
+        <div key={String(row.id ?? i)} data-testid="project-row" data-id={String(row.id)}>
+          {columns?.map((col) => (
+            <div key={col.key} data-testid={`col-${col.key}`}>
+              {col.cell ? col.cell(row) : null}
+            </div>
+          ))}
         </div>
       ))}
     </div>
@@ -268,6 +277,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockUseManagedProductProjects.mockReturnValue(EMPTY_RESULT);
   mockUseSearchParams.mockReturnValue(new URLSearchParams());
+  mockUseRouter.mockReturnValue({ replace: mockRouterReplace, push: mockRouterPush });
   const { usePageState } = jest.requireMock("@/hooks/api/use-page-state") as { usePageState: jest.Mock };
   usePageState.mockReturnValue({ kind: "ready" });
   const { useCan } = jest.requireMock("@/hooks/api/access") as { useCan: jest.Mock };

@@ -4,7 +4,7 @@ import type { CreateManagedProductInput, UpdateManagedProductInput } from "@/typ
 const LIFECYCLE_VALUES = ["discovery", "build", "growth", "mature", "sunset"] as const;
 const HEALTH_VALUES = ["on_track", "at_risk", "off_track", "unknown"] as const;
 
-export const SUCCESS_METRIC_SCHEMA = z.object({
+const SUCCESS_METRIC_SCHEMA = z.object({
   label: z.string().min(1).max(100),
   target: z.string().max(100).optional(),
 });
@@ -21,10 +21,10 @@ export const createManagedProductSchema = z.object({
   lifecycle: z.enum(LIFECYCLE_VALUES).optional(),
   health: z.enum(HEALTH_VALUES).optional(),
   teamId: z.number().int().positive().optional(),
-  segments: z.array(z.string().max(40)).max(20).default([]),
-  tags: z.array(z.string().max(40)).max(20).default([]),
+  segments: z.array(z.string().max(40)).max(20),
+  tags: z.array(z.string().max(40)).max(20),
   northStarMetric: z.string().max(500).optional(),
-  successMetrics: z.array(SUCCESS_METRIC_SCHEMA).max(10).default([]),
+  successMetrics: z.array(SUCCESS_METRIC_SCHEMA).max(10),
   vision: z.string().max(2000).optional(),
   missionStatement: z.string().max(2000).optional(),
   targetCustomer: z.string().max(2000).optional(),
@@ -63,10 +63,10 @@ export const editManagedProductSchema = z.object({
   lifecycle: z.enum(LIFECYCLE_VALUES).optional(),
   health: z.enum(HEALTH_VALUES).optional(),
   teamId: z.number().int().positive().nullable().optional(),
-  segments: z.array(z.string().max(40)).max(20).default([]),
-  tags: z.array(z.string().max(40)).max(20).default([]),
+  segments: z.array(z.string().max(40)).max(20),
+  tags: z.array(z.string().max(40)).max(20),
   northStarMetric: z.string().max(500).optional(),
-  successMetrics: z.array(SUCCESS_METRIC_SCHEMA).max(10).default([]),
+  successMetrics: z.array(SUCCESS_METRIC_SCHEMA).max(10),
   vision: z.string().max(2000).optional(),
   missionStatement: z.string().max(2000).optional(),
   targetCustomer: z.string().max(2000).optional(),

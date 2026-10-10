@@ -120,10 +120,11 @@ describe("RoadmapDeliveryProgress — progress from linked project work (BLD-07-
     expect(screen.getByText(/12 votes/)).toBeInTheDocument();
   });
 
-  it("renders nothing when the read errors, rather than an empty-looking zero state", () => {
+  it("shows a retry prompt when the read errors, rather than an empty-looking zero state", () => {
     mockUseSignals.mockReturnValue({ data: undefined, isLoading: false, isError: true });
-    const { container } = render(<RoadmapDeliveryProgress roadmapItemId={7} />);
-    expect(container).toBeEmptyDOMElement();
+    render(<RoadmapDeliveryProgress roadmapItemId={7} />);
+    expect(screen.getByText("Delivery progress could not be loaded.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
   });
 });
 
@@ -133,8 +134,15 @@ describe("roadmapItemSchema — RICE entry bounds", () => {
     description: "",
     outcome: "",
     status: "planned" as const,
+    horizon: "later" as const,
     category: "",
     targetQuarter: "",
+    targetStart: "",
+    targetEnd: "",
+    projectId: "",
+    goalId: "",
+    releaseId: "",
+    teamId: "",
     isPublic: true,
     reach: "",
     impact: "",

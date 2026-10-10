@@ -293,7 +293,7 @@ function patchGoalListCacheForProduct(
         return { ...prev, items: newItems, total: Math.max(0, prev.total - 1) };
       });
     } else if (action === "link" && isProductScoped) {
-      qc.invalidateQueries({ queryKey: key as readonly unknown[], exact: true, refetchType: "active" });
+      qc.invalidateQueries({ queryKey: key as readonly unknown[], exact: true, refetchType: "none" });
     } else if (!isProductScoped) {
       qc.setQueryData(key, (prev: GoalsListPage | undefined) => {
         if (!prev) return prev;

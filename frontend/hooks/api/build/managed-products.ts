@@ -119,6 +119,13 @@ export function useInfiniteManagedProducts(
   if (params.limit) queryParams["limit"] = String(params.limit);
   if (params.ownerId) queryParams["ownerId"] = params.ownerId;
   if (params.sort) queryParams["sort"] = params.sort;
+  if (params.lifecycle) queryParams["lifecycle"] = params.lifecycle;
+  if (params.health) queryParams["health"] = params.health;
+  if (params.teamId) queryParams["teamId"] = params.teamId;
+  if (params.segment) queryParams["segment"] = params.segment;
+  if (params.tag) queryParams["tag"] = params.tag;
+  if (params.linkedProjectId) queryParams["linkedProjectId"] = params.linkedProjectId;
+  if (params.archived !== undefined) queryParams["archived"] = String(params.archived);
 
   return useInfiniteQuery({
     queryKey:

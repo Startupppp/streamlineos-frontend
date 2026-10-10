@@ -8,17 +8,20 @@ import {
   ROADMAP_SORTS,
   type RoadmapSort,
 } from "@/hooks/api/build/roadmap";
-import type { RoadmapHorizon } from "@/types/projects/roadmap";
+import type { RoadmapHorizon, RoadmapStatus } from "@/types/projects/roadmap";
+import { ROADMAP_STATUS_OPTIONS, ROADMAP_HORIZON_OPTIONS } from "./roadmap-constants";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { useCursorPager } from "@/components/ui/table-pagination";
 import type { ScorableRoadmapItem } from "./roadmap-item-card";
 
-const ROADMAP_STATUSES = ["planned", "in_progress", "completed", "cancelled"] as const;
-type ValidRoadmapStatus = (typeof ROADMAP_STATUSES)[number];
-function toRoadmapStatus(s: string): ValidRoadmapStatus | undefined {
-  return ROADMAP_STATUSES.find((v) => v === s);
+function toRoadmapStatus(s: string): RoadmapStatus | undefined {
+  return ROADMAP_STATUS_OPTIONS.find((o) => o.value === s)?.value;
+}
+
+function toRoadmapHorizon(s: string): RoadmapHorizon | undefined {
+  return ROADMAP_HORIZON_OPTIONS.find((o) => o.value === s)?.value;
 }
 
 function toRoadmapSort(s: string): RoadmapSort | undefined {
@@ -85,7 +88,7 @@ export function useRoadmapTab({
     ...(managedProductId !== undefined ? { managedProductId } : {}),
     ...(sortValue ? { sort: sortValue } : {}),
     ...(projectId !== undefined ? { projectId } : {}),
-    ...(horizon ? { horizon } : {}),
+    ...(horizon ? { horizon: toRoadmapHorizon(horizon) } : {}),
     ...(ownerId !== undefined ? { ownerId } : {}),
     ...(goalId !== undefined ? { goalId } : {}),
     ...(releaseId !== undefined ? { releaseId } : {}),

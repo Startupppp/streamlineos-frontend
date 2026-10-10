@@ -287,6 +287,13 @@ jest.mock("@/features/build/goals/goal-form-sheet", () => ({
   ),
 }));
 
+jest.mock(
+  "@/features/build/managed-products/link-existing-goal-dialog",
+  () => ({
+    LinkExistingGoalDialog: () => <div data-testid="link-existing-goal-dialog" />,
+  }),
+);
+
 jest.mock("@/features/build/goals/constants", () => ({
   STATUS_CONFIG: {
     not_started: { label: "Not started", variant: "outline" as const },
@@ -405,4 +412,6 @@ beforeEach(() => {
   jest.clearAllMocks();
   useCan.mockReturnValue(true);
   usePageState.mockReturnValue({ kind: "ready" });
+  const { useGoals: mockUseGoals } = jest.requireMock("@/hooks/api/goals") as { useGoals: jest.Mock };
+  mockUseGoals.mockReturnValue({ data: { data: [], pagination: { hasMore: false, nextCursor: null, limit: 50 } }, isLoading: false, isError: false, error: null, refetch: jest.fn() });
 });

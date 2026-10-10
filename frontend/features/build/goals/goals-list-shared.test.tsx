@@ -236,7 +236,7 @@ describe("GoalCard — check-in freshness badge (BSN-GOALS-FRESHNESS)", () => {
 
   it("shows a stale badge when checkInFreshness is stale", () => {
     render(<GoalCard goal={baseGoal({ checkInFreshness: "stale" })} />);
-    expect(screen.getByTitle("Check-in: Stale")).toBeInTheDocument();
+    expect(screen.getByTitle("Check-in: Stale check-in")).toBeInTheDocument();
   });
 
   it("shows no freshness badge when checkInFreshness is none (FE-122 negative pair)", () => {
