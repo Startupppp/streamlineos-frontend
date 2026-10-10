@@ -15,7 +15,7 @@ jest.mock("@/hooks/api/use-page-state", () => ({
 
 jest.mock("@/hooks/api/notifications-inbox", () => ({
   useInfiniteNotifications: () => ({
-    data: { pages: [[]], pageParams: [] },
+    data: { pages: [{ data: [], hasMore: false, nextCursor: null }], pageParams: [] },
     isPending: false,
     isLoading: false,
     isError: false,

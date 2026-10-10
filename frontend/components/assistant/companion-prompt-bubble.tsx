@@ -236,8 +236,9 @@ export function CompanionPromptBubble({ enabled, preferences, horizontal, vertic
         <button
           type="button"
           aria-label="Dismiss suggestion"
+          disabled={act.isPending}
           onClick={handleDismiss}
-          className="inline-flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+          className="inline-flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
         >
           <XIcon className="size-3.5" aria-hidden />
         </button>
@@ -245,7 +246,7 @@ export function CompanionPromptBubble({ enabled, preferences, horizontal, vertic
       {showReason ? <p className="mt-2 text-xs text-muted-foreground">{prompt.reason}</p> : null}
       <div className="mt-2 flex flex-wrap items-center gap-1">
         {href ? (
-          <Button type="button" size="sm" onClick={handleOpen}>
+          <Button type="button" size="sm" disabled={act.isPending} onClick={handleOpen}>
             Open
           </Button>
         ) : null}
@@ -262,7 +263,7 @@ export function CompanionPromptBubble({ enabled, preferences, horizontal, vertic
       {showSnooze ? (
         <div role="group" aria-label="Snooze for" className="mt-2 flex flex-wrap gap-1">
           {COMPANION_SNOOZE_MINUTES.map((minutes: CompanionSnoozeMinutes) => (
-            <Button key={minutes} type="button" size="sm" variant="outline" data-minutes={minutes} onClick={handleSnooze}>
+            <Button key={minutes} type="button" size="sm" variant="outline" disabled={act.isPending} data-minutes={minutes} onClick={handleSnooze}>
               {minutes} min
             </Button>
           ))}

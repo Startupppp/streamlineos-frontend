@@ -1,12 +1,13 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemberPicker } from "./member-picker";
-import { useMemberOptions } from "./member-picker-options";
+import { useMemberDirectory } from "@/hooks/api/members/use-member-directory";
 
-jest.mock("./member-picker-options", () => ({
-  useMemberOptions: jest.fn(() => ({
-    options: [{
+jest.mock("@/hooks/api/members/use-member-directory", () => ({
+  useMemberDirectory: jest.fn(() => ({
+    members: [{
       id: "u-revoked",
+      membershipId: null,
       name: "Revoked User",
       firstName: null,
       lastName: null,
@@ -17,6 +18,7 @@ jest.mock("./member-picker-options", () => ({
     }],
     selectedMembers: [{
       id: "u-revoked",
+      membershipId: null,
       name: "Revoked User",
       firstName: null,
       lastName: null,
@@ -25,7 +27,12 @@ jest.mock("./member-picker-options", () => ({
       moduleAccessRevoked: true,
       description: "Access revoked — adding restores module access",
     }],
+    isLoading: false,
+    isServerFiltered: true,
   })),
+}));
+
+jest.mock("./member-picker-options", () => ({
   filterMembers: jest.fn((members: unknown) => members),
 }));
 
@@ -37,32 +44,18 @@ describe("MemberPicker revoked module candidate", () => {
   it("routes Build ownership fields through the Build actor directory", () => {
     render(<MemberPicker directory="build" value="" onChange={jest.fn()} />);
 
-    expect(jest.mocked(useMemberOptions)).toHaveBeenCalledWith(
-      undefined,
-      undefined,
-      undefined,
-      "build",
-      true,
-      false,
-      false,
-      "",
-      [],
+    expect(jest.mocked(useMemberDirectory)).toHaveBeenCalledWith(
+      { kind: "build" },
+      expect.objectContaining({ search: "" }),
     );
   });
 
   it("leaves revoked candidate discovery disabled for ordinary pickers", () => {
     render(<MemberPicker moduleKey="build" value="" onChange={jest.fn()} />);
 
-    expect(jest.mocked(useMemberOptions)).toHaveBeenCalledWith(
-      undefined,
-      undefined,
-      "build",
-      undefined,
-      true,
-      false,
-      false,
-      "",
-      [],
+    expect(jest.mocked(useMemberDirectory)).toHaveBeenCalledWith(
+      { kind: "module", moduleKey: "build", excludeAssigned: true, includeRevoked: false },
+      expect.objectContaining({ search: "" }),
     );
   });
 
@@ -89,16 +82,9 @@ describe("MemberPicker revoked module candidate", () => {
     );
 
     expect(screen.getByText("Revoked")).toBeInTheDocument();
-    expect(jest.mocked(useMemberOptions)).toHaveBeenCalledWith(
-      undefined,
-      undefined,
-      "build",
-      undefined,
-      true,
-      true,
-      true,
-      "",
-      ["u-revoked"],
+    expect(jest.mocked(useMemberDirectory)).toHaveBeenCalledWith(
+      { kind: "module", moduleKey: "build", excludeAssigned: true, includeRevoked: true },
+      expect.objectContaining({ search: "" }),
     );
   });
 });

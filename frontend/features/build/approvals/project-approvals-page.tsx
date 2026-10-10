@@ -224,7 +224,7 @@ export function ProjectApprovalsPage({
             ? members.find(
                 (member) =>
                   member.membershipId === delegateTarget.approverMembershipId,
-              )?.userId
+              )?.id
             : undefined
         }
       />

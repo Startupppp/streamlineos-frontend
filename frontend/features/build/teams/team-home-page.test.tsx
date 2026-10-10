@@ -214,7 +214,7 @@ jest.mock("@/components/ui/confirm-dialog", () => ({
 jest.mock("@/components/ui/dropdown-menu", () => ({
   ...(() => {
     const ReactRuntime = jest.requireActual<typeof import("react")>("react");
-    const MenuContext = ReactRuntime.createContext({ open: false, setOpen: (_open: boolean) => undefined });
+    const MenuContext = ReactRuntime.createContext({ open: false, setOpen: (_open: boolean): void => {} });
     return {
       DropdownMenu: ({ children }: { children: React.ReactNode }) => {
         const [open, setOpen] = ReactRuntime.useState(false);
@@ -227,7 +227,7 @@ jest.mock("@/components/ui/dropdown-menu", () => ({
       DropdownMenuItem: ({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) => (
         <button onClick={onClick}>{children}</button>
       ),
-      DropdownMenuTrigger: ({ children }: { children: React.ReactElement }) => {
+      DropdownMenuTrigger: ({ children }: { children: React.ReactElement<{ onClick?: () => void }> }) => {
         const { setOpen } = ReactRuntime.useContext(MenuContext);
         return ReactRuntime.cloneElement(children, { onClick: () => setOpen(true) });
       },

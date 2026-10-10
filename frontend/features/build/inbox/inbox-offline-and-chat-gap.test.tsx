@@ -57,7 +57,7 @@ jest.mock("./use-inbox-keyboard-nav", () => ({
 
 function emptyPage() {
   useInfiniteNotifications.mockReturnValue({
-    data: { pages: [[]], pageParams: [] },
+    data: { pages: [{ data: [], hasMore: false, nextCursor: null }], pageParams: [] },
     isPending: false,
     isLoading: false,
     isError: false,

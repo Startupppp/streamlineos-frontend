@@ -20,6 +20,7 @@ const noContentContract = lazyContract(() =>
 );
 export interface BuildMember {
   id: string;
+  membershipId: number;
   role: string;
   addedAt: string;
   name: string | null;

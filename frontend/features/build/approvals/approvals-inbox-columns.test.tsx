@@ -6,14 +6,16 @@ const row: ApprovalInboxItem = {
   id: 7,
   revision: 1,
   projectId: 42,
+  projectName: null,
   projectKey: "WEB",
   entityType: "task",
   entityId: 9,
   title: "Approve launch checklist",
   status: "pending",
+  level: 1,
   requestedById: "user-1",
   dueAt: null,
-  createdAt: "2026-10-09T00:00:00.000Z",
+  decidedAt: null,
 };
 
 describe("ApprovalsInboxMobileCard", () => {

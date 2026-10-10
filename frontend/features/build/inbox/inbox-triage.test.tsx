@@ -35,7 +35,7 @@ let row: Notification;
 let permitted: boolean;
 let online = true;
 function response(data: Notification[]): Response {
-  const body = { success: true, data: { data: data.map((notification) => ({ ...notification, ticketContext: null })), hasMore: false, nextCursor: null } };
+  const body = { success: true, data: { data: data.map((notification) => ({ eventKey: null, entityType: null, entityId: null, reason: null, metadata: null, ...notification, ticketContext: null })), hasMore: false, nextCursor: null } };
   return { ok: true, status: 200, statusText: "OK", headers: new Headers({ "content-type": "application/json" }), body: null, bodyUsed: false,
     type: "basic", url: "http://api.test/notifications", redirected: false, json: async () => body, text: async () => JSON.stringify(body),
     arrayBuffer: async () => new ArrayBuffer(0), blob: async () => new Blob(), formData: async () => new FormData(), bytes: async () => new Uint8Array(), clone: () => response(data) };

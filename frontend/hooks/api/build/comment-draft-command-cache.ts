@@ -132,9 +132,11 @@ export function applyCommentDraftReceipt(
       return merged;
     }));
     if (!found && firstPage && !cached) {
-      updated.pages = updated.pages.map((page, index) => index === 0
-        ? page.data.length < page.pagination.limit ? { ...page, data: [merged, ...page.data] } : page
-        : page);
+      updated.pages = updated.pages.map((page, index) => {
+        if (index !== 0 || page.data.length >= page.pagination.limit) return page;
+        found = true;
+        return { ...page, data: [merged, ...page.data] };
+      });
     }
     client.setQueryData(key, updated);
     if (!found) void client.invalidateQueries({ queryKey: key, exact: true, refetchType: "none" });

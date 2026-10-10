@@ -9,7 +9,7 @@ import {
   useUpdateFeedbucketWidget,
 } from "@/hooks/api/feedbucket";
 import { useProjects } from "@/hooks/api/build/projects";
-import { useBuildOrgMembers } from "@/hooks/api/build/build-org-members";
+import { useMemberDirectory } from "@/hooks/api/members/use-member-directory";
 import type { FeedbucketWidget } from "@/types/feedbucket";
 import type { ComboboxOption } from "@/components/ui/combobox";
 
@@ -18,27 +18,29 @@ export function useWidgetSetup(widget: FeedbucketWidget, open: boolean) {
   const rotateKey = useRotateFeedbucketWidgetKey();
   const updateWidget = useUpdateFeedbucketWidget();
 
-  const projectsQuery = useProjects(undefined, { enabled: open && !widget.projectId });
-  const { buildMembersQuery, members: orgMembers } = useBuildOrgMembers({
-    enabled: open,
+  const projectsQuery = useProjects(undefined, {
+    enabled: open && !widget.projectId,
   });
+  const { members: directoryMembers } = useMemberDirectory(
+    { kind: "build" },
+    { enabled: open },
+  );
 
   const projectOptions = useMemo<ComboboxOption[]>(() => {
     if (!projectsQuery.data) return [];
-    return projectsQuery.data.data.map((p) => ({ value: String(p.id), label: p.name }));
+    return projectsQuery.data.data.map((p) => ({
+      value: String(p.id),
+      label: p.name,
+    }));
   }, [projectsQuery.data]);
 
-  const members = useMemo(
-    () => buildMembersQuery.data?.data ?? [],
-    [buildMembersQuery.data],
-  );
-  const membershipIdToUserId = useMemo(
-    () =>
-      new Map(
-        orgMembers.map((member) => [member.membershipId, member.userId]),
-      ),
-    [orgMembers],
-  );
+  const membershipIdToUserId = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const m of directoryMembers) {
+      if (m.membershipId !== null) map.set(m.membershipId, m.id);
+    }
+    return map;
+  }, [directoryMembers]);
 
   const defaultAssigneeUserId = useMemo(() => {
     if (!widget.defaultAssigneeMembershipId) return "";
@@ -97,7 +99,9 @@ export function useWidgetSetup(widget: FeedbucketWidget, open: boolean) {
         widgetId: widget.id,
         input: { autoCreateTicket: enabled },
       });
-      toast.success(enabled ? "Auto-create ticket enabled" : "Auto-create ticket disabled");
+      toast.success(
+        enabled ? "Auto-create ticket enabled" : "Auto-create ticket disabled",
+      );
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
@@ -110,7 +114,11 @@ export function useWidgetSetup(widget: FeedbucketWidget, open: boolean) {
         widgetId: widget.id,
         input: { defaultProjectId },
       });
-      toast.success(defaultProjectId ? "Default project updated" : "Default project cleared");
+      toast.success(
+        defaultProjectId
+          ? "Default project updated"
+          : "Default project cleared",
+      );
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
@@ -122,7 +130,9 @@ export function useWidgetSetup(widget: FeedbucketWidget, open: boolean) {
         widgetId: widget.id,
         input: { defaultAssigneeId: userId || null },
       });
-      toast.success(userId ? "Default assignee updated" : "Default assignee cleared");
+      toast.success(
+        userId ? "Default assignee updated" : "Default assignee cleared",
+      );
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
@@ -132,7 +142,7 @@ export function useWidgetSetup(widget: FeedbucketWidget, open: boolean) {
     confirmRotate,
     setConfirmRotate,
     projectOptions,
-    members,
+    members: directoryMembers,
     membershipIdToUserId,
     defaultAssigneeUserId,
     snippet,

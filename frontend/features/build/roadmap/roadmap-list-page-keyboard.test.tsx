@@ -70,13 +70,47 @@ jest.mock("@/components/ui/select", () => {
 });
 
 jest.mock("@/hooks/api/organization", () => ({
+  useOrgMembers: () => ({ data: undefined }),
   useOrgMembersByIds: () => ({
     data: { data: [{ membershipId: 9, userId: "user-9", name: "Fox Mulder", email: "fox@example.com", image: null }] },
   }),
 }));
 
 jest.mock("@/hooks/api/build/build-members", () => ({
-  useBuildMembers: () => ({ data: { data: [{ id: "user-9" }] } }),
+  useBuildMembers: () => ({
+    data: {
+      data: [
+        {
+          id: "user-9",
+          membershipId: 9,
+          name: "Fox Mulder",
+          firstName: null,
+          lastName: null,
+          email: "fox@example.com",
+          image: null,
+        },
+      ],
+    },
+  }),
+}));
+
+jest.mock("@/hooks/api/members/use-member-directory", () => ({
+  useMemberDirectory: () => ({
+    members: [
+      {
+        id: "user-9",
+        membershipId: 9,
+        name: "Fox Mulder",
+        firstName: null,
+        lastName: null,
+        email: "fox@example.com",
+        image: null,
+      },
+    ],
+    selectedMembers: [],
+    isLoading: false,
+    isServerFiltered: false,
+  }),
 }));
 
 jest.mock("@/components/ui/search-input", () => ({

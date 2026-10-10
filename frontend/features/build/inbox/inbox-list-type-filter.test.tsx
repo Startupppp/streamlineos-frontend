@@ -183,9 +183,12 @@ describe("InboxList — type prop wires category to the query and resets paginat
     await user.click(screen.getByRole("checkbox", { name: "notification-1" }));
     expect(screen.getByText("1 selected")).toBeVisible();
     const next = buildPages([1], false, fetchNextPage);
-    next.data.pages = next.data.pages.map((page) => page.map((notification) => ({
-      ...notification, id: 2, title: "notification-2",
-    })));
+    next.data.pages = next.data.pages.map((page) => ({
+      ...page,
+      data: page.data.map((notification) => ({
+        ...notification, id: 2, title: "notification-2",
+      })),
+    }));
     useInfiniteNotifications.mockReturnValue(next);
     rerender(
       <InboxList selectedId={null} onSelect={noop} section="UNREAD" q={null} projectId={projectId} searchInputRef={searchRef} />,

@@ -52,6 +52,7 @@ jest.mock("./filter-option-leading", () => ({
 function makeMember(id: string, name: string) {
   return {
     id,
+    membershipId: 1,
     role: "member" as const,
     addedAt: "2024-01-01T00:00:00Z",
     name,

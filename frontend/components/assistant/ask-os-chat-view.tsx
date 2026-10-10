@@ -132,6 +132,7 @@ export function AskOsChatView({
                   reduce={reduce}
                   live={row.message.id < 0}
                   onClarify={row.message.id === answerable ? onClarify : undefined}
+                  showCurrentSuggestions={row.message.id === answerable}
                   speech={speech}
                   speechKey={`message-${row.message.id}`}
                 />

@@ -51,8 +51,6 @@ export function InboxBulkToolbar({
     setConfirmDelete(open);
   }
 
-  if (count === 0) return null;
-
   return (
     <>
       <div className="flex shrink-0 items-center gap-2 border-b border-border bg-muted/30 px-3 py-1.5">
@@ -61,8 +59,10 @@ export function InboxBulkToolbar({
           onCheckedChange={handleSelectAllClick}
           aria-label="Select all notifications"
         />
-        <span className="text-xs text-muted-foreground">{count} selected</span>
-        <div className="ml-auto flex items-center gap-1">
+        {count > 0 && (
+          <>
+            <span className="text-xs text-muted-foreground">{count} selected</span>
+            <div className="ml-auto flex items-center gap-1">
               <Button
                 type="button"
                 variant="ghost"
@@ -96,7 +96,9 @@ export function InboxBulkToolbar({
               >
                 Delete
               </Button>
-        </div>
+            </div>
+          </>
+        )}
       </div>
 
       <ConfirmDialog

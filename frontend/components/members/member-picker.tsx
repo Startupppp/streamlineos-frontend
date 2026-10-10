@@ -31,14 +31,16 @@ import {
 } from "@/components/ui/field-control";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { filterMembers, type MemberOption } from "./member-picker-options";
 import {
-  filterMembers,
-  useMemberOptions,
-  type MemberOption,
-} from "./member-picker-options";
+  useMemberDirectory,
+  type DirectoryMember,
+  type DirectoryScope,
+} from "@/hooks/api/members/use-member-directory";
 
 interface MemberPickerBaseProps {
   candidates?: MemberOption[];
+  scope?: DirectoryScope;
 
   onSearchChange?: (search: string) => void;
   onOpenChange?: (open: boolean) => void;
@@ -96,7 +98,7 @@ function MemberAvatar({
   member,
   className,
 }: {
-  member: MemberOption;
+  member: DirectoryMember | MemberOption;
   className?: string;
 }) {
   return (
@@ -109,9 +111,28 @@ function MemberAvatar({
   );
 }
 
+function deriveScope(
+  candidates: MemberOption[] | undefined,
+  scope: DirectoryScope | undefined,
+  projectId: number | undefined,
+  moduleKey: string | undefined,
+  directory: "build" | undefined,
+  excludeAssigned: boolean,
+  includeRevoked: boolean,
+  candidateMembers: DirectoryMember[],
+): DirectoryScope {
+  if (scope !== undefined) return scope;
+  if (candidates !== undefined) return { kind: "explicit", members: candidateMembers };
+  if (moduleKey !== undefined) return { kind: "module", moduleKey, excludeAssigned, includeRevoked };
+  if (projectId !== undefined) return { kind: "project", projectId };
+  if (directory === "build") return { kind: "build" };
+  return { kind: "org" };
+}
+
 export function MemberPicker(props: MemberPickerProps) {
   const {
     candidates,
+    scope: scopeProp,
     onSearchChange,
     onOpenChange,
     knownMembers,
@@ -144,20 +165,40 @@ export function MemberPicker(props: MemberPickerProps) {
     [multiValues, singleValue],
   );
   const directoryEnabled = enabled && (open || selectedIds.length > 0);
-  const { options: members, selectedMembers } = useMemberOptions(
-    candidates,
-    projectId,
-    moduleKey,
-    directory,
-    excludeAssigned,
-    includeRevoked,
-    directoryEnabled,
-    search,
-    selectedIds,
+
+  const candidateMembers = useMemo<DirectoryMember[]>(
+    () =>
+      candidates?.map((c) => ({
+        ...c,
+        membershipId: null,
+        name: c.name ?? null,
+        firstName: c.firstName ?? null,
+        lastName: c.lastName ?? null,
+      })) ?? [],
+    [candidates],
   );
-  const serverFiltered =
-    (candidates === undefined && projectId === undefined) ||
-    onSearchChange !== undefined;
+
+  const derivedScope = useMemo(
+    () =>
+      deriveScope(
+        candidates,
+        scopeProp,
+        projectId,
+        moduleKey,
+        directory,
+        excludeAssigned,
+        includeRevoked,
+        candidateMembers,
+      ),
+    [candidates, scopeProp, projectId, moduleKey, directory, excludeAssigned, includeRevoked, candidateMembers],
+  );
+
+  const { members, selectedMembers, isServerFiltered } = useMemberDirectory(
+    derivedScope,
+    { search, enabled: directoryEnabled, selectedIds },
+  );
+
+  const serverFiltered = isServerFiltered || onSearchChange !== undefined;
   const filtered = useMemo(
     () =>
       filterMembers(

@@ -6,7 +6,7 @@ import { ApiError } from "@/lib/api-envelope";
 const mockInvalidateQueries = jest.fn();
 const mockRefetchQueries = jest.fn();
 const mockCancelQueries = jest.fn();
-const mockPatchAllWorkCollections = jest.fn(() => []);
+const mockPatchAllWorkCollections = jest.fn((..._args: unknown[]) => []);
 const mockRestoreAllWorkCollections = jest.fn();
 const mockRevalidateAllWorkCollections = jest.fn();
 const mockPost = jest.fn();

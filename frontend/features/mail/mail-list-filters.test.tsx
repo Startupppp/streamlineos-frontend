@@ -43,7 +43,7 @@ it("filters the current page and keeps explicit pagination outside the toolbar",
   expect(container.querySelector('[data-slot="mail-mobile-filters"]')).toBeNull();
   const mobileFilter = screen.getByRole("combobox", { name: "Filter loaded mail" });
   await user.click(mobileFilter);
-  await user.click(screen.getByRole("option", { name: "Unread", exact: true }));
+  await user.click(screen.getByRole("option", { name: /^Unread$/ }));
   expect(screen.getByText("Unread message")).toBeInTheDocument();
   expect(screen.queryByText("Attachment message")).toBeNull();
   expect(screen.getByRole("navigation", { name: "Pagination" })).toHaveClass("sticky", "bottom-0", "z-40", "max-md:fixed", "max-md:bottom-[calc(4rem+env(safe-area-inset-bottom))]");

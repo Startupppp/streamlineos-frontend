@@ -5,7 +5,7 @@ import {
   BUILD_FILTER_ALL,
   type BuildListFiltersState,
 } from "@/features/build/shared/use-build-list-filters";
-import { useBuildOrgMembers } from "@/hooks/api/build/build-org-members";
+import { useMemberDirectory } from "@/hooks/api/members/use-member-directory";
 import { getUserDisplayName } from "@/lib/person-display";
 import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import type { ScorableRoadmapItem } from "./roadmap-item-card";
@@ -46,14 +46,16 @@ export function useRoadmapListPage(listFilters: BuildListFiltersState) {
   const ownerIdValue = listFilters.value("ownerId");
   const ownerId = /^\d+$/.test(ownerIdValue) ? Number(ownerIdValue) : undefined;
 
-  const { members } = useBuildOrgMembers();
+  const { members } = useMemberDirectory({ kind: "build" });
   const ownerOptions = useMemo(
     () => [
       { value: BUILD_FILTER_ALL, label: "Any owner" },
-      ...members.map((m) => ({
-        value: String(m.membershipId),
-        label: getUserDisplayName(m),
-      })),
+      ...members
+        .filter((m) => m.membershipId !== null)
+        .map((m) => ({
+          value: String(m.membershipId),
+          label: getUserDisplayName(m),
+        })),
     ],
     [members],
   );

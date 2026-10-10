@@ -26,12 +26,12 @@ jest.mock("@/hooks/api/build/approvals", () => ({
   useDeleteApproval: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
-jest.mock("@/hooks/api/build/build-members", () => ({
-  useBuildMembers: () => ({ data: undefined }),
+jest.mock("@/hooks/api/members/use-member-directory", () => ({
+  useMemberDirectory: () => ({ members: [], selectedMembers: [], isLoading: false, isServerFiltered: false }),
 }));
 
-jest.mock("@/hooks/api/build/build-org-members", () => ({
-  useBuildOrgMembers: () => ({ members: [] }),
+jest.mock("@/hooks/api/build/build-members", () => ({
+  useBuildMembers: () => ({ data: undefined }),
 }));
 
 jest.mock("@/hooks/api/organization", () => ({

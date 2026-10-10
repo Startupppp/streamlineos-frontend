@@ -46,11 +46,21 @@ jest.mock("@/hooks/api/entitlements", () => ({
 }));
 
 jest.mock("@/hooks/api/organization", () => ({
+  useOrgMembers: () => ({ data: undefined }),
   useOrgMembersByIds: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/build/build-members", () => ({
   useBuildMembers: jest.fn(),
+}));
+
+jest.mock("@/hooks/api/members/use-member-directory", () => ({
+  useMemberDirectory: () => ({
+    members: mockUseBuildMembers()?.data?.data ?? [],
+    selectedMembers: [],
+    isLoading: false,
+    isServerFiltered: false,
+  }),
 }));
 
 jest.mock("next-auth/react", () => ({
@@ -397,7 +407,17 @@ const approvalMembers = [
 it("shows the assigned approver on mobile instead of the requester", () => {
   mockUseOrgMembersByIds.mockReturnValue({ data: { data: approvalMembers } });
   mockUseBuildMembers.mockReturnValue({
-    data: { data: approvalMembers.map((member) => ({ id: member.userId })) },
+    data: {
+      data: approvalMembers.map((member) => ({
+        id: member.userId,
+        membershipId: member.membershipId,
+        name: member.name,
+        firstName: null,
+        lastName: null,
+        email: member.email,
+        image: null,
+      })),
+    },
   });
   mockUseProjectApprovals.mockReturnValue(
     baseQueryResult({
@@ -416,7 +436,17 @@ it("shows the assigned approver on mobile instead of the requester", () => {
 it("excludes the assigned approver from delegation by resolving its membership to a user", () => {
   mockUseOrgMembersByIds.mockReturnValue({ data: { data: approvalMembers } });
   mockUseBuildMembers.mockReturnValue({
-    data: { data: approvalMembers.map((member) => ({ id: member.userId })) },
+    data: {
+      data: approvalMembers.map((member) => ({
+        id: member.userId,
+        membershipId: member.membershipId,
+        name: member.name,
+        firstName: null,
+        lastName: null,
+        email: member.email,
+        image: null,
+      })),
+    },
   });
   mockUseProjectApprovals.mockReturnValue(
     baseQueryResult({

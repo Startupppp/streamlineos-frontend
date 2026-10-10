@@ -155,7 +155,7 @@ describe("InboxList — changing the section prop resets the window", () => {
 
   it("does not claim there are no mentions while more pages are still unread", () => {
     useInfiniteNotifications.mockReturnValue({
-      data: { pages: [[]], pageParams: [] },
+      data: { pages: [{ data: [], hasMore: false, nextCursor: null }], pageParams: [] },
       isPending: false,
       isLoading: false,
       isError: false,

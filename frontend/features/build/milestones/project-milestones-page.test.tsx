@@ -25,6 +25,7 @@ jest.mock("@/hooks/api/build/milestones", () => ({
 
 jest.mock("@/hooks/api/organization", () => ({
   useOrgMembersByIds: () => ({ data: { data: [{ membershipId: 4, userId: "user-4", name: "Dana Scully", email: "dana@example.com", image: null }] } }),
+  useOrgMembers: () => ({ data: undefined, isLoading: false }),
 }));
 
 jest.mock("@/hooks/api/build/build-members", () => ({
@@ -32,6 +33,7 @@ jest.mock("@/hooks/api/build/build-members", () => ({
     data: {
       data: [{
         id: "user-4",
+        membershipId: 4,
         role: "member",
         addedAt: "2026-01-01T00:00:00.000Z",
         name: "Dana Scully",
@@ -42,6 +44,23 @@ jest.mock("@/hooks/api/build/build-members", () => ({
         teams: [],
       }],
     },
+  }),
+}));
+
+jest.mock("@/hooks/api/members/use-member-directory", () => ({
+  useMemberDirectory: () => ({
+    members: [{
+      id: "user-4",
+      membershipId: 4,
+      name: "Dana Scully",
+      firstName: "Dana",
+      lastName: "Scully",
+      email: "dana@example.com",
+      image: null,
+    }],
+    selectedMembers: [],
+    isLoading: false,
+    isServerFiltered: false,
   }),
 }));
 

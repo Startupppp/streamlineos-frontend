@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useEffectEvent } from "react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -208,19 +209,15 @@ export function InboxList({
 
   const hasUnread = rawNotifications.some((n) => !n.isRead);
   const firstNotification = rawNotifications[0] ?? null;
-  const onSelectRef = React.useRef(onSelect);
-  const firstNotificationRef = React.useRef(firstNotification);
-  React.useLayoutEffect(() => {
-    onSelectRef.current = onSelect;
-    firstNotificationRef.current = firstNotification;
+  const handleAutoSelect = useEffectEvent(() => {
+    if (firstNotification) onSelect(firstNotification);
   });
 
   React.useEffect(() => {
     if (isPending || isError) return;
     if (!isDesktopInbox) return;
     if (selectedId != null || selectionDismissed) return;
-    const first = firstNotificationRef.current;
-    if (first) onSelectRef.current(first);
+    handleAutoSelect();
   }, [
     isPending,
     isError,

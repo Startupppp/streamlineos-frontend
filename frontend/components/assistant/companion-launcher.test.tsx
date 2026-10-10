@@ -65,7 +65,7 @@ const meetingPrompt = {
 };
 
 interface ServerSetup {
-  preferences?: Partial<typeof basePreferences>;
+  preferences?: Partial<Omit<typeof basePreferences, "pausedUntil">> & { pausedUntil?: string | null };
   policy?: Partial<typeof basePolicy>;
   prefsFail?: boolean;
   prompt?: typeof meetingPrompt | null;

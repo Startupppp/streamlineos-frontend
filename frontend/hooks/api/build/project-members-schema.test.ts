@@ -7,6 +7,7 @@ import {
 
 const validMember = {
   id: "user-abc",
+  membershipId: 42,
   role: "member" as const,
   addedAt: "2024-01-01T00:00:00.000Z",
   name: "Alice Smith",

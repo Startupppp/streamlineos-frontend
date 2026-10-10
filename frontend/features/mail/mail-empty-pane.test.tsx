@@ -27,7 +27,6 @@ function message(
   overrides: Partial<MailMessageSummary> & Pick<MailMessageSummary, "id">,
 ): MailMessageSummary {
   return {
-    id: overrides.id,
     accountId: 7,
     provider: "gmail",
     threadId: null,

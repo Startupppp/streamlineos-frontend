@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from "react";
 import { useProjectApprovalsPage } from "@/hooks/api/build/approvals";
-import { useBuildOrgMembers } from "@/hooks/api/build/build-org-members";
+import { useMemberDirectory } from "@/hooks/api/members/use-member-directory";
 import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import {
   BUILD_FILTER_ALL,
@@ -39,13 +39,13 @@ export function useApprovalsData(projectId: number) {
     pager.cursor,
   );
 
-  const { members } = useBuildOrgMembers();
+  const { members } = useMemberDirectory({ kind: "build" });
   const items = useMemo(() => data?.data ?? [], [data]);
 
   const approverOptions = useMemo(
     () => [
       { value: BUILD_FILTER_ALL, label: "All approvers" },
-      ...members.map((m) => ({ value: m.userId, label: m.name ?? m.email })),
+      ...members.map((m) => ({ value: m.id, label: m.name ?? m.email })),
     ],
     [members],
   );

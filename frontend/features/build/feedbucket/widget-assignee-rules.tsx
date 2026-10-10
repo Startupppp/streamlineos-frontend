@@ -1,12 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
 import { toast } from "sonner";
 import { MemberPicker } from "@/components/members/member-picker";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useUpdateFeedbucketWidget } from "@/hooks/api/feedbucket";
 import type { FeedbucketWidget, FeedbucketSubmissionType } from "@/types/feedbucket";
-import type { BuildMember } from "@/hooks/api/build/build-members";
+import type { DirectoryMember } from "@/hooks/api/members/use-member-directory";
 
 const SUBMISSION_TYPES: { type: FeedbucketSubmissionType; label: string }[] = [
   { type: "bug", label: "Bug" },
@@ -19,7 +18,7 @@ const SUBMISSION_TYPES: { type: FeedbucketSubmissionType; label: string }[] = [
 
 interface WidgetAssigneeRulesProps {
   widget: FeedbucketWidget;
-  members: BuildMember[];
+  members: DirectoryMember[];
   membershipIdToUserId: Map<number, string>;
   disabled?: boolean;
 }
@@ -31,18 +30,6 @@ export function WidgetAssigneeRules({
   disabled = false,
 }: WidgetAssigneeRulesProps) {
   const updateWidget = useUpdateFeedbucketWidget();
-  const candidates = useMemo(
-    () =>
-      members.map((member) => ({
-        id: member.id,
-        name: member.name,
-        firstName: member.firstName,
-        lastName: member.lastName,
-        email: member.email,
-        image: member.image,
-      })),
-    [members],
-  );
 
   function resolvedUserIdForType(type: FeedbucketSubmissionType): string {
     const membershipId = widget.assigneeRules?.[type];
@@ -84,7 +71,7 @@ export function WidgetAssigneeRules({
               <AssigneeRuleRow
                 type={type}
                 value={resolvedUserIdForType(type)}
-                candidates={candidates}
+                candidates={members}
                 disabled={disabled || updateWidget.isPending}
                 onChange={handleRuleChange}
               />
@@ -99,14 +86,7 @@ export function WidgetAssigneeRules({
 interface AssigneeRuleRowProps {
   type: FeedbucketSubmissionType;
   value: string;
-  candidates: Array<{
-    id: string;
-    name: string | null;
-    firstName: string | null;
-    lastName: string | null;
-    email: string;
-    image: string | null;
-  }>;
+  candidates: DirectoryMember[];
   disabled: boolean;
   onChange: (type: FeedbucketSubmissionType, userId: string) => Promise<void>;
 }

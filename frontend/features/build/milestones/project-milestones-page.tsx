@@ -30,7 +30,7 @@ import {
 } from "@/hooks/api/build/milestones";
 import { useCan } from "@/hooks/api/access";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
-import { useBuildOrgMembers } from "@/hooks/api/build/build-org-members";
+import { useMemberDirectory } from "@/hooks/api/members/use-member-directory";
 import { getUserDisplayName } from "@/lib/person-display";
 import { MilestoneUpsertSheet } from "@/features/build/milestones/milestone-upsert-sheet";
 import { MilestoneCard } from "@/features/build/milestones/milestone-card";
@@ -95,14 +95,16 @@ export function ProjectMilestonesPage({
   const pager = useBuildCursorPager(listFilters.resetKey);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const isOnline = useOnlineStatus();
-  const { members } = useBuildOrgMembers();
+  const { members } = useMemberDirectory({ kind: "build" });
   const ownerOptions = useMemo(
     () => [
       { value: BUILD_FILTER_ALL, label: "Any owner" },
-      ...members.map((m) => ({
-        value: String(m.membershipId),
-        label: getUserDisplayName(m),
-      })),
+      ...members
+        .filter((m) => m.membershipId !== null)
+        .map((m) => ({
+          value: String(m.membershipId),
+          label: getUserDisplayName(m),
+        })),
     ],
     [members],
   );

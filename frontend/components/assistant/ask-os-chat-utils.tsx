@@ -149,6 +149,7 @@ export function AskOsBubble({
   directives: directivesProp,
   live = false,
   onClarify,
+  showCurrentSuggestions = true,
   speech,
   speechKey,
 }: {
@@ -159,6 +160,7 @@ export function AskOsBubble({
   directives?: AskOsDirective[];
   live?: boolean;
   onClarify?: (answer: AskOsClarificationAnswer) => void;
+  showCurrentSuggestions?: boolean;
   speech?: SpeechPlaybackController;
   speechKey?: string;
 }) {
@@ -207,10 +209,10 @@ export function AskOsBubble({
         {directivesOf(directives, "evidence").map((directive, index) => (
           <AskOsEvidenceCard key={`evidence-${index}`} directive={directive} />
         ))}
-        {directivesOf(directives, "action-plan").map((directive, index) => (
+        {showCurrentSuggestions && directivesOf(directives, "action-plan").map((directive, index) => (
           <AskOsPlanCard key={`plan-${index}`} directive={directive} />
         ))}
-        {directivesOf(directives, "clarify").map((directive) => (
+        {showCurrentSuggestions && directivesOf(directives, "clarify").map((directive) => (
           <AskOsClarifyCard
             key={directive.clarificationId}
             directive={directive}
@@ -231,7 +233,7 @@ export function AskOsBubble({
           <AskOsLimitCard key={`limit-${directive.reason}`} directive={directive} />
         ))}
         {showTyping ? <TypingDots reduce={reduce} /> : null}
-        {connectDirectives.map((directive) => (
+        {showCurrentSuggestions && connectDirectives.map((directive) => (
           <AskOsConnectCard
             key={directive.toolkit}
             toolkit={directive.toolkit}

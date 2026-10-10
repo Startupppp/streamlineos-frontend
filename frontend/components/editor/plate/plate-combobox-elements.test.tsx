@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import type { PlateElementProps } from "platejs/react";
 import { EmojiInputElement, SlashInputElement } from "./plate-combobox-elements";
 
 let query = "";
@@ -24,8 +25,12 @@ jest.mock("./plate-context", () => ({
   useEditorPageContext: () => ({ fetchMentionUsers: undefined }),
 }));
 
-function props() {
-  return { element: {}, children: null, attributes: {} } as never;
+function assertIsPlateProps(x: object): asserts x is PlateElementProps {}
+
+function props(): PlateElementProps {
+  const p = { element: { type: "slash", children: [] }, children: null, attributes: {}, path: [] };
+  assertIsPlateProps(p);
+  return p;
 }
 
 beforeEach(() => {

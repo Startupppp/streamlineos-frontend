@@ -389,6 +389,8 @@ export function useCompanionRealtimeVoice(
     return () => {
       document.removeEventListener("visibilitychange", onHidden);
       release();
+      setState("idle");
+      setMessage(null);
     };
   }, [scopeKey, release, stop]);
 

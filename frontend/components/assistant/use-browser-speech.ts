@@ -6,6 +6,7 @@ import { apiClient } from "@/lib/api-client";
 import { isApiError } from "@/lib/api-envelope";
 
 type SpeechInputState = "idle" | "requesting" | "listening" | "processing" | "error";
+const RESET_SK = "\0";
 const MAX_RECORDING_MS = 30_000;
 const MAX_AUDIO_BYTES = 4 * 1024 * 1024;
 const transcriptionContract = z.object({ text: z.string() });
@@ -309,6 +310,9 @@ export function useSpeechInput({ beforeStart, scopeKey }: UseSpeechInputOptions 
       uploadRef.current?.abort();
       uploadRef.current = null;
       releaseMedia();
+      setStateEntry({ sk: RESET_SK, v: "idle" });
+      setInterimEntry({ sk: RESET_SK, v: "" });
+      setMsgEntry({ sk: RESET_SK, v: null });
     };
   }, [cancel, releaseMedia]);
 
@@ -382,6 +386,7 @@ export function useSpeechPlayback(scopeKey?: string) {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       if (utteranceRef.current) window.speechSynthesis?.cancel();
       utteranceRef.current = null;
+      setActiveEntry({ sk: RESET_SK, v: null });
     };
   }, [stop]);
 

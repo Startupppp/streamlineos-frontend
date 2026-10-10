@@ -472,7 +472,7 @@ describe("ClientAccessPage — keyboard shortcuts (Requirement C3)", () => {
     mockUseCan.mockReturnValue(false);
     mockUseProjectClientGrants.mockReturnValue(baseQueryResult({ data: emptyGrantsPage }));
     render(<ClientAccessPage />);
-    const lastCall = mockUseBuildListKeyboard.mock.calls.at(-1) as [{ onCreate?: () => void }];
+    const lastCall = mockUseBuildListKeyboard.mock.calls.at(-1) as [{ onCreate?: () => void; onOpen?: () => void; onEdit?: (index: number) => void }];
     expect(lastCall?.[0]?.onCreate).toBeUndefined();
     expect(typeof lastCall?.[0]?.onOpen).toBe("function");
     expect(lastCall?.[0]?.onEdit).toBeUndefined();

@@ -5,7 +5,7 @@ import { useUpdateTicket } from "./ticket-update-mutation";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { apiClient } from "@/lib/api-client";
 
-const mockResolveTicketVersions = jest.fn(() => ({
+const mockResolveTicketVersions = jest.fn((..._args: unknown[]) => ({
   versions: { "7": 1 },
   missingTicketIds: [],
 }));

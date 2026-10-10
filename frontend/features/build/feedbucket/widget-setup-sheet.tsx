@@ -58,14 +58,6 @@ export function WidgetSetupSheet({
     handleDefaultProjectChange,
     handleDefaultAssigneeChange,
   } = useWidgetSetup(widget, open);
-  const memberCandidates = members.map((member) => ({
-    id: member.id,
-    name: member.name,
-    image: member.image,
-    email: member.email,
-    lastName: member.lastName,
-    firstName: member.firstName,
-  }));
 
   function handleOpenChange(v: boolean) {
     if (!v) onClose();
@@ -272,7 +264,7 @@ export function WidgetSetupSheet({
                   </p>
                 </div>
                 <MemberPicker
-                  candidates={memberCandidates}
+                  candidates={members}
                   value={defaultAssigneeUserId}
                   onChange={(userId) =>
                     handleDefaultAssigneeChange(userId ?? "")
