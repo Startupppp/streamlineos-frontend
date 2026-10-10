@@ -224,8 +224,33 @@ describe("ProductInsightsPage — feedback submission drill-down links (BT-6733a
 
   it("each status drill-down link uses a distinct predicate so no two stat cards share the same filtered URL", () => {
     render(<ProductInsightsPage managedProductId={7} />);
-    const links = screen.getAllByTestId("stat-card-link").map((el) => el.getAttribute("href"));
+    const statusLabels = new Set(["Open", "In progress", "Resolved", "Archived"]);
+    const links = screen.getAllByTestId("stat-card-link")
+      .filter((el) => statusLabels.has(el.getAttribute("data-label") ?? ""))
+      .map((el) => el.getAttribute("href"));
     const unique = new Set(links);
     expect(unique.size).toBe(links.length);
+  });
+
+  it("puts the range selector in the page header and keeps the long insights body scrollable", () => {
+    render(<ProductInsightsPage managedProductId={7} />);
+    expect(screen.getByTestId("page-wrapper-actions").querySelector('[aria-label="Range"]')).toBeInTheDocument();
+    expect(screen.getByTestId("page-wrapper-filters")).toBeEmptyDOMElement();
+    expect(screen.getByTestId("pm-page-shell")).toHaveClass("overflow-visible");
+  });
+
+  it.each<[string, string]>([
+    ["Needs triage", "/build/managed-products/7/feedback?status=open"],
+    ["Linked projects", "/build/managed-products/7/projects"],
+    ["Active", "/build/managed-products/7/projects?filterStatus=ACTIVE"],
+    ["Completed", "/build/managed-products/7/projects?filterStatus=COMPLETED"],
+    ["Roadmap items", "/build/managed-products/7/roadmap"],
+    ["Completed items", "/build/managed-products/7/roadmap?status=completed"],
+    ["Linked feedback", "/build/managed-products/7/roadmap"],
+    ["Feedback votes", "/build/managed-products/7/roadmap"],
+  ])("the %s insight opens its relevant source", (label, href) => {
+    render(<ProductInsightsPage managedProductId={7} />);
+    const link = screen.getAllByTestId("stat-card-link").find((el) => el.getAttribute("data-label") === label);
+    expect(link).toHaveAttribute("href", href);
   });
 });

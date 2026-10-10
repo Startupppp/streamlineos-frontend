@@ -230,6 +230,8 @@ Implementing these routes during this documentation task; public/financial actio
 
 The [route table](../routes-and-screen-decisions.md) distinguishes existing routes from proposed destinations. The [research map](../../audit/research-traceability.md) explains the evidence and priority behind the decisions.
 
+The [2026-10-10 managed-products current-state audit](../../audit/managed-products-2026-10-10.md) records source-present behavior, focused verification, and the still-open acceptance gaps. It does not change this specification's Planned status.
+
 ## Delivery checklist
 
 Track completion in the [requirement ledger](../../implementation/REQUIREMENT-LEDGER.md) and [work claims](../../implementation/WORK-CLAIMS.md). An unchecked item stays open until evidence is recorded on the current branch.

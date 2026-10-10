@@ -43,6 +43,7 @@ interface BuildListToolbarProps {
   className?: string;
   collapseActionsOnSearchFocus?: boolean;
   fillMobileActions?: boolean;
+  showFilterPanelHeader?: boolean;
 }
 
 function ToolbarFilterSlot({
@@ -98,6 +99,7 @@ export function BuildListToolbar({
   className,
   collapseActionsOnSearchFocus = false,
   fillMobileActions = false,
+  showFilterPanelHeader = true,
 }: BuildListToolbarProps) {
   const {
     value: searchValue,
@@ -202,7 +204,7 @@ export function BuildListToolbar({
             aria-label={drawerTitle}
             drawerClassName="w-full max-w-none"
             stickyFooter
-            showHeader
+            showHeader={showFilterPanelHeader}
             className="flex max-h-[min(36rem,calc(100dvh-2rem))] w-[min(28rem,calc(100vw-2rem))] flex-col gap-0 overflow-hidden p-0"
           >
             <div className="flex min-h-0 flex-1 flex-col">

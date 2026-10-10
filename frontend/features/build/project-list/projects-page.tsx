@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
-import { Plus } from "lucide-react";
+import { Link2, Plus } from "lucide-react";
 import { useProjects } from "@/hooks/api/build/projects";
 import { useAccess, useCan } from "@/hooks/api/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -49,6 +49,10 @@ const NewProjectDialog = dynamic(
     })),
   { ssr: false },
 );
+const LinkExistingProjectDialog = dynamic(
+  () => import("./link-existing-project-dialog").then((m) => ({ default: m.LinkExistingProjectDialog })),
+  { ssr: false },
+);
 
 interface ProjectsPageProps {
   managedProductId?: number;
@@ -59,11 +63,13 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
   const shouldReduceMotion = useReducedMotion();
   const { prefs, setPrefs, toggle } = useDisplayPrefs();
   const canCreate = useCan("build:create");
+  const canLinkProjects = useCan("build:managed-products:update");
   const { data: access } = useAccess();
   const resumeAction = useResumeLastProject();
 
   const [activeGroup, setActiveGroup] = useState<string | null>(null);
   const [showGroupingSidebar, setShowGroupingSidebar] = useState(false);
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
 
   const handleToggleGroupingSidebar = useCallback(() => {
     setShowGroupingSidebar((prev) => !prev);
@@ -213,7 +219,15 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
 
   const headerActions = useMemo(() => {
     const actions = [];
-    if (resumeAction) actions.push(resumeAction);
+    if (managedProductId === undefined && resumeAction) actions.push(resumeAction);
+    if (managedProductId !== undefined && canLinkProjects) {
+      actions.push({
+        id: "link-existing-project",
+        label: "Link existing project",
+        icon: Link2,
+        onSelect: () => setLinkDialogOpen(true),
+      });
+    }
     if (canCreate) {
       actions.push({
         id: "create",
@@ -224,7 +238,7 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
       });
     }
     return actions;
-  }, [resumeAction, canCreate, handleOpenCreate]);
+  }, [resumeAction, managedProductId, canLinkProjects, canCreate, handleOpenCreate]);
 
   const ContentShell = managedProductId === undefined ? PmPageShell : ManagedProductDetailShell;
   const PrimarySection = managedProductId === undefined ? PmSection : ManagedProductDetailPrimarySection;
@@ -236,6 +250,13 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
           open={createOpen}
           onOpenChange={handleCreateOpenChange}
           trigger={null}
+        />
+      )}
+      {managedProductId !== undefined && canLinkProjects && (
+        <LinkExistingProjectDialog
+          managedProductId={managedProductId}
+          open={linkDialogOpen}
+          onOpenChange={setLinkDialogOpen}
         />
       )}
       <PageWrapper
@@ -278,7 +299,17 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
                 {null}
               </PageState>
             ) : allProjects.length === 0 && !hasFiltersOrSearch ? (
-              <ProjectsEmptyState onCreate={canCreate ? handleOpenCreate : undefined} />
+              managedProductId !== undefined ? (
+                <EmptyState
+                  className={CONTENT_FILL_PANEL}
+                  illustrationPreset="search"
+                  title="No linked projects yet"
+                  description="Link an existing project to include its work in this product."
+                  action={canLinkProjects ? { label: "Link existing project", onClick: () => setLinkDialogOpen(true) } : undefined}
+                />
+              ) : (
+                <ProjectsEmptyState onCreate={canCreate ? handleOpenCreate : undefined} />
+              )
             ) : visibleProjects.length === 0 &&
               !data?.hasMore &&
               !pager.hasPrevious ? (

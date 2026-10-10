@@ -66,6 +66,7 @@ interface CreateRoadmapItemInput {
   category?: string;
   isPublic?: boolean;
   projectId?: number;
+  managedProductId?: number;
   epicTicketId?: number;
   targetQuarter?: string;
   sortOrder?: number;

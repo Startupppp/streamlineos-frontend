@@ -22,7 +22,6 @@ import { useManagedProductInsights } from "@/hooks/api/build/managed-products";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { EmptyState } from "@/components/ui/empty-state";
-import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import { getUserDisplayName } from "@/lib/person-display";
@@ -104,29 +103,17 @@ export function ProductInsightsPage({
       title="Insights"
       subtitle="Customer signals, planned work, and delivery progress"
       contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
-      filters={
-        <BuildListToolbar
-          filters={[
-            {
-              id: "range",
-              label: "Range",
-              active: listFilters.isActive("range"),
-              control: (
-                <BuildFilterSelect
-                  label="Range"
-                  value={rangeValue}
-                  onValueChange={handleRangeChange}
-                  options={RANGE_OPTIONS}
-                />
-              ),
-            },
-          ]}
-          onClearAll={listFilters.clearAll}
+      actions={
+        <BuildFilterSelect
+          label="Range"
+          value={rangeValue || "all"}
+          onValueChange={handleRangeChange}
+          options={RANGE_OPTIONS}
         />
       }
     >
-      <ManagedProductDetailShell>
-        <ManagedProductDetailPrimarySection>
+      <ManagedProductDetailShell className="h-auto min-h-full flex-none overflow-visible">
+        <ManagedProductDetailPrimarySection className="flex-none">
           <PageState
             resolution={resolution}
             loading={
@@ -178,6 +165,7 @@ export function ProductInsightsPage({
                     icon={Inbox}
                     tone="amber"
                     subtitle="Open customer submissions below"
+                    href={`/build/managed-products/${managedProductId}/feedback?status=open`}
                   />
                   <StatCard
                     label="Planned or underway"
@@ -207,18 +195,21 @@ export function ProductInsightsPage({
                     value={data?.linkedProjectCount ?? 0}
                     icon={LayoutGrid}
                     tone="default"
+                    href={`/build/managed-products/${managedProductId}/projects`}
                   />
                   <StatCard
                     label="Active"
                     value={data?.projectsByStatus.active ?? 0}
                     icon={FolderOpen}
                     tone="emerald"
+                    href={`/build/managed-products/${managedProductId}/projects?filterStatus=ACTIVE`}
                   />
                   <StatCard
                     label="Completed"
                     value={data?.projectsByStatus.completed ?? 0}
                     icon={CheckCircle2}
                     tone="blue"
+                    href={`/build/managed-products/${managedProductId}/projects?filterStatus=COMPLETED`}
                   />
                 </StatCardGrid>
               </div>
@@ -273,24 +264,28 @@ export function ProductInsightsPage({
                     value={data?.roadmapItemCount ?? 0}
                     icon={LayoutGrid}
                     tone="default"
+                    href={`/build/managed-products/${managedProductId}/roadmap`}
                   />
                   <StatCard
                     label="Completed items"
                     value={data?.roadmapItemsByStatus.completed ?? 0}
                     icon={CheckCircle2}
                     tone="blue"
+                    href={`/build/managed-products/${managedProductId}/roadmap?status=completed`}
                   />
                   <StatCard
                     label="Linked feedback"
                     value={linkedFeedback}
                     icon={MessageSquare}
                     tone="amber"
+                    href={`/build/managed-products/${managedProductId}/roadmap`}
                   />
                   <StatCard
                     label="Feedback votes"
                     value={data?.linkedFeedbackVoteCount ?? 0}
                     icon={ThumbsUp}
                     tone="emerald"
+                    href={`/build/managed-products/${managedProductId}/roadmap`}
                   />
                 </StatCardGrid>
               </div>

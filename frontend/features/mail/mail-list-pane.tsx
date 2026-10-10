@@ -385,7 +385,7 @@ export function MailListPane({
           ) : null}
         </div>
       ) : (
-        <div className="flex-1 min-h-0 max-md:pb-24">
+        <div className="flex-1 min-h-0 max-md:pb-14">
           <MailVirtualList
             groups={groups}
             selectedMessageId={selectedMessageId}

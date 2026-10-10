@@ -109,16 +109,16 @@ jest.mock("@/components/ui/page-wrapper", () => ({
     actions?: React.ReactNode;
   }) => (
     <div>
-      {actions}
-      {filters}
+      <div data-testid="page-wrapper-actions">{actions}</div>
+      <div data-testid="page-wrapper-filters">{filters}</div>
       {children}
     </div>
   ),
 }));
 
 jest.mock("@/components/pm-chrome", () => ({
-  PmPageShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  PmSection: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  PmPageShell: ({ children, className }: { children: React.ReactNode; className?: string }) => <div data-testid="pm-page-shell" className={className}>{children}</div>,
+  PmSection: ({ children, className }: { children: React.ReactNode; className?: string }) => <div className={className}>{children}</div>,
   PmPanel: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   PmStaggerList: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   CONTENT_FILL_PANEL: "",
@@ -205,7 +205,9 @@ jest.mock("@/components/ui/data-table", () => ({
 }));
 
 jest.mock("@/features/build/goals/goal-form-sheet", () => ({
-  GoalFormSheet: () => null,
+  GoalFormSheet: ({ managedProductId }: { managedProductId?: number }) => (
+    <div data-testid="goal-form-sheet" data-managed-product-id={managedProductId} />
+  ),
 }));
 
 jest.mock("@/features/build/goals/constants", () => ({

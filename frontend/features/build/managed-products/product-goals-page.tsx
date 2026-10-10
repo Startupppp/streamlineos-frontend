@@ -205,7 +205,7 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
 
       <ShortcutHelpDialog open={shortcutHelpOpen} onOpenChange={setShortcutHelpOpen} />
 
-      <GoalFormSheet open={createOpen} onOpenChange={setCreateOpen} />
+      <GoalFormSheet open={createOpen} onOpenChange={setCreateOpen} managedProductId={managedProductId} />
       {editGoalId !== null && editGoalDetail !== undefined ? (
         <GoalFormSheet
           open

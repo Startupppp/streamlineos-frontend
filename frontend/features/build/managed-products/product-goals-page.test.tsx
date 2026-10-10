@@ -87,6 +87,11 @@ describe("ProductGoalsPage — usePageState integration (BSN-01-027)", () => {
     expect(callParams).toMatchObject({ managedProductId: 7 });
   });
 
+  it("passes product scope to the create sheet, not just to the list", () => {
+    render(<ProductGoalsPage managedProductId={39} />);
+    expect(screen.getByTestId("goal-form-sheet")).toHaveAttribute("data-managed-product-id", "39");
+  });
+
   it("passes page=1 and limit=20 so the backend paginates at the server rather than loading all rows (C4)", () => {
     render(<ProductGoalsPage managedProductId={7} />);
     const [callParams] = useGoalsPage.mock.calls[0] as [Record<string, unknown>];

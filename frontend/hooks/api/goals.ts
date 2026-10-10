@@ -95,6 +95,7 @@ export interface CreateGoalInput {
   dueDate?: string;
   parentGoalId?: number;
   projectId?: number;
+  managedProductId?: number;
   keyResults?: KeyResultInput[];
 }
 

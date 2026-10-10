@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { GoalFormSheet } from "./goal-form-sheet";
 import type { GoalDetail } from "@/hooks/api/goals";
 import { ApiError } from "@/lib/api-envelope";
+import { FormProvider, useFormContext } from "react-hook-form";
 
 jest.mock("@/hooks/api/goals", () => ({
   useCreateGoal: jest.fn(),
@@ -32,7 +33,7 @@ jest.mock("@/components/ui/sheet", () => ({
 }));
 
 jest.mock("@/components/ui/form", () => ({
-  Form: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  Form: ({ children, ...methods }: { children: React.ReactNode }) => <FormProvider {...methods}>{children}</FormProvider>,
   FormField: ({ render: renderFn }: { render: (opts: unknown) => React.ReactNode }) =>
     renderFn({ field: { value: "", onChange: jest.fn(), onBlur: jest.fn(), ref: jest.fn(), name: "test" } }),
   FormItem: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -54,7 +55,10 @@ jest.mock("@/components/ui/loading-button", () => ({
 }));
 
 jest.mock("./goal-objective-fields", () => ({
-  GoalObjectiveFields: () => <div data-testid="objective-fields" />,
+  GoalObjectiveFields: () => {
+    const { register } = useFormContext();
+    return <input data-testid="objective-fields" defaultValue="Product objective" {...register("title")} />;
+  },
 }));
 
 jest.mock("./goal-ownership-fields", () => ({
@@ -118,6 +122,21 @@ beforeEach(() => {
 });
 
 describe("GoalFormSheet conflict UX (Task C)", () => {
+  it("creates a goal in its managed product so it remains visible in the scoped list", async () => {
+    const mutate = buildMutate();
+    mockUseCreateGoal.mockReturnValue({ mutate, isPending: false });
+
+    render(<GoalFormSheet open onOpenChange={jest.fn()} managedProductId={39} />);
+    fireEvent.change(screen.getByTestId("objective-fields"), { target: { value: "Product objective" } });
+    fireEvent.submit(document.querySelector("form")!);
+
+    await waitFor(() => {
+      expect(mutate).toHaveBeenCalledWith(
+        expect.objectContaining({ managedProductId: 39 }),
+        expect.any(Object),
+      );
+    });
+  });
   it("shows the conflict alert when the update returns a 409 ApiError", async () => {
     const conflictError = new ApiError("Conflict", 409, "PROJECTS_TICKET_CONFLICT", { currentVersion: 4 });
     const mutate = buildMutate((_, opts) => opts.onError?.(conflictError));

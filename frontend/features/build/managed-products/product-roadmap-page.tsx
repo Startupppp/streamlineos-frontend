@@ -260,7 +260,7 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
         </ManagedProductDetailPrimarySection>
       </ManagedProductDetailShell>
 
-      {createOpen ? <RoadmapItemSheet onClose={handleCloseCreate} /> : null}
+      {createOpen ? <RoadmapItemSheet managedProductId={managedProductId} onClose={handleCloseCreate} /> : null}
       {editTarget ? <RoadmapItemSheet item={editTarget} onClose={handleCloseEdit} /> : null}
 
       <ConfirmDialog

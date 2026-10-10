@@ -197,3 +197,20 @@ describe("RoadmapItemSheet — 409 conflict surfaces a field-level diff", () => 
     });
   });
 });
+
+describe("RoadmapItemSheet — product association", () => {
+  it("submits the product ID so a new item appears in the product-scoped list", async () => {
+    const mutate = jest.fn();
+    mockUseCreateRoadmapItem.mockReturnValue({ mutate, isPending: false });
+    mockUseUpdateRoadmapItem.mockReturnValue({ mutate: jest.fn(), isPending: false });
+
+    render(<RoadmapItemSheet managedProductId={39} onClose={jest.fn()} />);
+    await userEvent.type(screen.getByPlaceholderText("e.g. Dark mode support"), "Product initiative");
+    await userEvent.click(screen.getByText("Create Item"));
+
+    await waitFor(() => expect(mutate).toHaveBeenCalledWith(
+      expect.objectContaining({ title: "Product initiative", managedProductId: 39 }),
+      expect.any(Object),
+    ));
+  });
+});

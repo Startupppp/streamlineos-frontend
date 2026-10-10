@@ -240,6 +240,7 @@ export function GoalsListToolbar({
       }}
       filters={filters}
       onClearAll={listFilters.clearAll}
+      showFilterPanelHeader={false}
     />
   );
 }

@@ -5,6 +5,7 @@ let mockSearchParams = new URLSearchParams();
 const mockReplace = jest.fn();
 const mockUseProjects = jest.fn();
 const mockAccess = jest.fn();
+const mockUseCan = jest.fn((permission: string) => permission.length === 0);
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: mockReplace, push: jest.fn() }),
@@ -17,7 +18,7 @@ jest.mock("@/hooks/api/entitlements", () => ({
 }));
 
 jest.mock("@/hooks/api/access", () => ({
-  useCan: () => false,
+  useCan: (permission: string) => mockUseCan(permission),
   useModuleEnabled: () => true,
   useAccess: () => mockAccess(),
 }));
@@ -33,6 +34,10 @@ jest.mock("@/hooks/api/build/projects", () => ({
 
 jest.mock("./new-project-dialog", () => ({
   NewProjectDialog: () => null,
+}));
+
+jest.mock("./link-existing-project-dialog", () => ({
+  LinkExistingProjectDialog: () => null,
 }));
 
 import React from "react";
@@ -58,9 +63,19 @@ beforeEach(() => {
     isLoading: false,
   });
   mockReplace.mockReset();
+  mockUseCan.mockReturnValue(false);
 });
 
 describe("ProjectsPage — productId URL param", () => {
+  it("offers an existing-project link action on the managed-product page to an authorized actor", () => {
+    mockUseCan.mockImplementation((permission: string) => permission === "build:managed-products:update");
+    render(<ProjectsPage managedProductId={7} />);
+    expect(screen.getAllByRole("button", { name: "Link existing project" }).length).toBeGreaterThan(0);
+  });
+  it("hides the project-link action when the actor cannot update managed products", () => {
+    render(<ProjectsPage managedProductId={7} />);
+    expect(screen.queryByRole("button", { name: "Link existing project" })).not.toBeInTheDocument();
+  });
   it("passes managedProductId to useProjects from the productId URL param so the API returns only that product's projects", () => {
     mockSearchParams = new URLSearchParams("productId=7");
 

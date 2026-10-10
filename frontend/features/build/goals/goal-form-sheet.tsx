@@ -43,12 +43,14 @@ interface GoalFormSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   goal?: GoalDetail;
+  managedProductId?: number;
 }
 
 export function GoalFormSheet({
   open,
   onOpenChange,
   goal,
+  managedProductId,
 }: GoalFormSheetProps) {
   const isEdit = !!goal;
   const [keyResults, setKeyResults] = useState<DraftKeyResult[]>([]);
@@ -214,6 +216,7 @@ export function GoalFormSheet({
         ownerId: resolvedOwner ?? undefined,
         startDate: values.startDate || undefined,
         dueDate: values.dueDate || undefined,
+        managedProductId,
         keyResults: buildKeyResults(keyResults),
       },
       {

@@ -69,6 +69,7 @@ function buildRoadmapConflictDiffs(
 
 interface RoadmapItemSheetProps {
   item?: ScorableRoadmapItem;
+  managedProductId?: number;
   onClose: () => void;
 }
 
@@ -76,7 +77,7 @@ function riceDefault(value: number | null | undefined): string {
   return value === null || value === undefined ? "" : String(value);
 }
 
-export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
+export function RoadmapItemSheet({ item, managedProductId, onClose }: RoadmapItemSheetProps) {
   const queryClient = useQueryClient();
   const isEdit = !!item;
   const create = useCreateRoadmapItem();
@@ -153,6 +154,7 @@ export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
       create.mutate(
         {
           title: payload.title,
+          managedProductId,
           description: payload.description,
           outcome: payload.outcome,
           status: payload.status,
