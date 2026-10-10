@@ -1,20 +1,22 @@
 "use client";
 
 import { useReducer, useCallback } from "react";
-import { useIsMobile } from "@/hooks/common/use-mobile";
+import { useIsBelowLg } from "@/hooks/common/use-mobile";
 import { cn } from "@/lib/utils";
+import type { MailComposeMode } from "./mail-compose-schema";
 
 type MailPane = "list" | "detail";
 
 interface MailPresentationState {
   pane: MailPane;
   composeOpen: boolean;
+  composeMode: MailComposeMode;
 }
 
 type MailPresentationAction =
   | { type: "SELECT_MESSAGE" }
   | { type: "BACK_TO_LIST" }
-  | { type: "OPEN_COMPOSE" }
+  | { type: "OPEN_COMPOSE"; mode: MailComposeMode }
   | { type: "CLOSE_COMPOSE" };
 
 export const MAIL_COMPOSE_FAB_CLASS =
@@ -28,6 +30,8 @@ const DETAIL_PANE_BASE =
   "flex w-0 max-w-full flex-1 min-h-0 min-w-0 overflow-hidden bg-muted/15";
 const MOBILE_HIDE = "hidden lg:flex";
 
+const DEFAULT_COMPOSE_MODE: MailComposeMode = { type: "compose" };
+
 function mailPresentationReducer(
   state: MailPresentationState,
   action: MailPresentationAction,
@@ -38,7 +42,7 @@ function mailPresentationReducer(
     case "BACK_TO_LIST":
       return { ...state, pane: "list" };
     case "OPEN_COMPOSE":
-      return { ...state, composeOpen: true };
+      return { ...state, composeOpen: true, composeMode: action.mode };
     case "CLOSE_COMPOSE":
       return { ...state, composeOpen: false };
     default:
@@ -53,11 +57,12 @@ function buildInitialState(
   return {
     pane: startOnDetail ? "detail" : "list",
     composeOpen: startWithCompose,
+    composeMode: DEFAULT_COMPOSE_MODE,
   };
 }
 
 export function useMailOverflowMode(): "inline" | "collapse" {
-  return useIsMobile() ? "collapse" : "inline";
+  return useIsBelowLg() ? "collapse" : "inline";
 }
 
 export function useMailPresentation(
@@ -88,7 +93,8 @@ export function useMailPresentation(
     [],
   );
   const openCompose = useCallback(
-    () => dispatch({ type: "OPEN_COMPOSE" }),
+    (mode: MailComposeMode = DEFAULT_COMPOSE_MODE) =>
+      dispatch({ type: "OPEN_COMPOSE", mode }),
     [],
   );
   const closeCompose = useCallback(
@@ -99,6 +105,7 @@ export function useMailPresentation(
   return {
     pane: state.pane,
     composeOpen: state.composeOpen,
+    composeMode: state.composeMode,
     listPaneClass,
     detailPaneClass,
     selectMessage,

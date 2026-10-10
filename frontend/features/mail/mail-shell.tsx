@@ -29,7 +29,6 @@ import {
   MailSheetSkeleton,
 } from "./mail-shell-skeletons";
 import type { MailMessageSummary } from "@/types/mail";
-import type { MailComposeMode } from "./mail-compose-schema";
 import type { MailReplyParams } from "./mail-reading-ai-actions";
 import type { PageStateResolution } from "@/lib/page-state/resolve-page-state";
 
@@ -101,6 +100,7 @@ export function MailShell() {
   const startWithCompose = searchParams.get("compose") === "1";
   const {
     composeOpen,
+    composeMode,
     listPaneClass,
     detailPaneClass,
     selectMessage: presentSelectMessage,
@@ -108,9 +108,6 @@ export function MailShell() {
     openCompose,
     closeCompose,
   } = useMailPresentation(hasDeepLink, startWithCompose);
-  const [composeMode, setComposeMode] = useState<MailComposeMode>({
-    type: "compose",
-  });
   const [summarySheetOpen, setSummarySheetOpen] = useState(false);
   const [recentDrawerOpen, setRecentDrawerOpen] = useState(false);
   const composeParamConsumedRef = useRef(false);
@@ -308,14 +305,14 @@ export function MailShell() {
     setSelectedMessage(null);
   }, [presentBackToList]);
 
-  const handleOpenCompose = useCallback(() => {
-    setComposeMode({ type: "compose" });
-    openCompose();
-  }, [openCompose]);
+  const handleOpenCompose = useCallback(
+    () => openCompose({ type: "compose" }),
+    [openCompose],
+  );
 
   const handleReply = useCallback(
-    (params: MailReplyParams) => {
-      setComposeMode({
+    (params: MailReplyParams) =>
+      openCompose({
         type: "reply",
         messageId: params.messageId,
         threadId: params.threadId,
@@ -323,9 +320,7 @@ export function MailShell() {
         subject: params.subject,
         accountId: params.accountId,
         prefillBody: params.prefillBody,
-      });
-      openCompose();
-    },
+      }),
     [openCompose],
   );
 

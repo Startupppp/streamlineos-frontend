@@ -80,8 +80,8 @@ export const MailReadingToolbar = forwardRef<
   const handleArchiveClick = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      onArchive();
       setOverflowOpen(false);
+      onArchive();
     },
     [onArchive],
   );
@@ -89,8 +89,8 @@ export const MailReadingToolbar = forwardRef<
   const handleUnreadClick = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      onMarkUnread();
       setOverflowOpen(false);
+      onMarkUnread();
     },
     [onMarkUnread],
   );
@@ -98,25 +98,21 @@ export const MailReadingToolbar = forwardRef<
   const handleStarClick = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      onToggleStar();
       setOverflowOpen(false);
+      onToggleStar();
     },
     [onToggleStar],
   );
 
-  const handleTrashClick = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      onTrash();
-      setOverflowOpen(false);
-    },
-    [onTrash],
-  );
-
   const handleAiPickerOpen = useCallback(() => {
-    setAiPickerOpen(true);
     setOverflowOpen(false);
+    setAiPickerOpen(true);
   }, []);
+
+  const handleTrashClick = useCallback(() => {
+    setOverflowOpen(false);
+    onTrash();
+  }, [onTrash]);
 
   if (overflowMode === "collapse") {
     return (
@@ -132,10 +128,7 @@ export const MailReadingToolbar = forwardRef<
           <Reply className="size-4" aria-hidden="true" />
         </Button>
 
-        <ResponsivePopover
-          open={overflowOpen}
-          onOpenChange={setOverflowOpen}
-        >
+        <ResponsivePopover open={overflowOpen} onOpenChange={setOverflowOpen}>
           <ResponsivePopoverTrigger asChild>
             <Button
               type="button"
@@ -158,16 +151,14 @@ export const MailReadingToolbar = forwardRef<
                 className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 onClick={handleArchiveClick}
               >
-                <Archive className="size-4" aria-hidden="true" />
-                Archive
+                <Archive className="size-4" aria-hidden="true" /> Archive
               </button>
               <button
                 type="button"
                 className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 onClick={handleUnreadClick}
               >
-                <MailOpen className="size-4" aria-hidden="true" />
-                Mark as unread
+                <MailOpen className="size-4" aria-hidden="true" /> Mark as unread
               </button>
               <button
                 type="button"
@@ -201,8 +192,7 @@ export const MailReadingToolbar = forwardRef<
                 className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-destructive hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 onClick={handleTrashClick}
               >
-                <Trash2 className="size-4" aria-hidden="true" />
-                Move to trash
+                <Trash2 className="size-4" aria-hidden="true" /> Move to trash
               </button>
             </div>
           </ResponsivePopoverContent>

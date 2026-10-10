@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -59,6 +59,7 @@ jest.mock("@/hooks/api/access", () => ({
 
 jest.mock("@/hooks/common/use-mobile", () => ({
   useIsMobile: () => mockMobile,
+  useIsBelowLg: () => mockMobile,
 }));
 
 jest.mock("@/hooks/api/integrations", () => ({
@@ -250,6 +251,32 @@ describe("MailReadingPane — a seeded thread renders its chrome, not a full ske
     expect(onReply).toHaveBeenCalledTimes(1);
     expect(screen.getByRole("button", { name: "More message actions" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Archive" })).toBeNull();
+  });
+
+  it("closes the mobile overflow drawer after a secondary action runs", async () => {
+    mockMobile = true;
+    const user = userEvent.setup();
+    const onToggleStar = jest.fn();
+    render(
+      <MailReadingToolbar
+        message={LIST_ROW}
+        onReply={jest.fn()}
+        onArchive={jest.fn()}
+        onTrash={jest.fn()}
+        onMarkUnread={jest.fn()}
+        onToggleStar={onToggleStar}
+        canAi={false}
+        aiActions={[]}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "More message actions" }));
+    fireEvent.click(screen.getByRole("button", { name: "Star" }));
+
+    expect(onToggleStar).toHaveBeenCalledTimes(1);
+    await waitFor(() =>
+      expect(screen.queryByRole("button", { name: "Mark as unread" })).toBeNull(),
+    );
   });
 
   it("opens mobile AI actions in a drawer rather than an off-screen submenu", async () => {
