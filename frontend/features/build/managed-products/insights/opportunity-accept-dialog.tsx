@@ -4,13 +4,7 @@ import { useMemo, useCallback } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -44,9 +38,19 @@ const acceptSchema = z.object({
 
 type AcceptFormValues = z.infer<typeof acceptSchema>;
 
-interface NamedItem { id: number; name: string; }
-interface TitledItem { id: number; title: string; }
-interface Release { id: number; name: string; version: string; }
+interface NamedItem {
+  id: number;
+  name: string;
+}
+interface TitledItem {
+  id: number;
+  title: string;
+}
+interface Release {
+  id: number;
+  name: string;
+  version: string;
+}
 
 type FormRef = UseFormReturn<AcceptFormValues>;
 
@@ -66,7 +70,10 @@ function idSelectValue(id: number | undefined) {
   return id !== undefined ? String(id) : "";
 }
 
-interface NumericItem { id: number; label: string; }
+interface NumericItem {
+  id: number;
+  label: string;
+}
 type NumericFieldName = "goalId" | "projectId" | "epicTicketId" | "releaseId";
 
 interface FieldSelectProps {
@@ -79,7 +86,15 @@ interface FieldSelectProps {
   onChangeSideEffect?: () => void;
 }
 
-function FieldSelect({ form, name, label, items, placeholder, testId, onChangeSideEffect }: FieldSelectProps) {
+function FieldSelect({
+  form,
+  name,
+  label,
+  items,
+  placeholder,
+  testId,
+  onChangeSideEffect,
+}: FieldSelectProps) {
   const value = form.watch(name) as number | undefined;
   const handleChange = useCallback(
     (v: string) => {
@@ -101,7 +116,9 @@ function FieldSelect({ form, name, label, items, placeholder, testId, onChangeSi
             </SelectTrigger>
             <SelectContent>
               {items.map((i) => (
-                <SelectItem key={i.id} value={String(i.id)}>{i.label}</SelectItem>
+                <SelectItem key={i.id} value={String(i.id)}>
+                  {i.label}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -120,16 +137,26 @@ interface AcceptFieldsProps {
   roadmapItems: TitledItem[];
 }
 
-
 function AcceptFields({ form, projects, releases, goals, roadmapItems }: AcceptFieldsProps) {
   const selectedProjectId = form.watch("projectId");
   const { data: epics } = useEpics(selectedProjectId ?? 0);
 
-  const clearEpic = useCallback(() => { form.setValue("epicTicketId", undefined); }, [form]);
+  const clearEpic = useCallback(() => {
+    form.setValue("epicTicketId", undefined);
+  }, [form]);
 
-  const goalItems = useMemo<NumericItem[]>(() => goals.map((g) => ({ id: g.id, label: g.title })), [goals]);
-  const projectItems = useMemo<NumericItem[]>(() => projects.map((p) => ({ id: p.id, label: p.name })), [projects]);
-  const epicItems = useMemo<NumericItem[]>(() => (epics ?? []).map((e) => ({ id: e.id, label: e.title })), [epics]);
+  const goalItems = useMemo<NumericItem[]>(
+    () => goals.map((g) => ({ id: g.id, label: g.title })),
+    [goals],
+  );
+  const projectItems = useMemo<NumericItem[]>(
+    () => projects.map((p) => ({ id: p.id, label: p.name })),
+    [projects],
+  );
+  const epicItems = useMemo<NumericItem[]>(
+    () => (epics ?? []).map((e) => ({ id: e.id, label: e.title })),
+    [epics],
+  );
   const releaseItems = useMemo<NumericItem[]>(
     () => releases.map((r) => ({ id: r.id, label: `${r.name} ${r.version}` })),
     [releases],
@@ -143,7 +170,7 @@ function AcceptFields({ form, projects, releases, goals, roadmapItems }: AcceptF
         render={({ field }) => (
           <FormItem>
             <FormLabel>Horizon</FormLabel>
-            <Select value={field.value} onValueChange={field.onChange}>
+            <Select value={field.value} onValueChange={(v) => v && field.onChange(v)}>
               <SelectTrigger className={FIELD_CONTROL_CLASS} data-testid="horizon-select">
                 <SelectValue />
               </SelectTrigger>
@@ -158,23 +185,44 @@ function AcceptFields({ form, projects, releases, goals, roadmapItems }: AcceptF
         )}
       />
       {goalItems.length > 0 && (
-        <FieldSelect form={form} name="goalId" label="Goal (optional)" testId="goal-select"
-          items={goalItems} placeholder="Link to goal"
+        <FieldSelect
+          form={form}
+          name="goalId"
+          label="Goal (optional)"
+          testId="goal-select"
+          items={goalItems}
+          placeholder="Link to goal"
         />
       )}
       {projectItems.length > 0 && (
-        <FieldSelect form={form} name="projectId" label="Project (optional)" testId="project-select"
-          items={projectItems} placeholder="Select project" onChangeSideEffect={clearEpic}
+        <FieldSelect
+          form={form}
+          name="projectId"
+          label="Project (optional)"
+          testId="project-select"
+          items={projectItems}
+          placeholder="Select project"
+          onChangeSideEffect={clearEpic}
         />
       )}
       {selectedProjectId != null && epicItems.length > 0 && (
-        <FieldSelect form={form} name="epicTicketId" label="Epic (optional)" testId="epic-select"
-          items={epicItems} placeholder="Select epic"
+        <FieldSelect
+          form={form}
+          name="epicTicketId"
+          label="Epic (optional)"
+          testId="epic-select"
+          items={epicItems}
+          placeholder="Select epic"
         />
       )}
       {releaseItems.length > 0 && (
-        <FieldSelect form={form} name="releaseId" label="Release (optional)" testId="release-select"
-          items={releaseItems} placeholder="Select release"
+        <FieldSelect
+          form={form}
+          name="releaseId"
+          label="Release (optional)"
+          testId="release-select"
+          items={releaseItems}
+          placeholder="Select release"
         />
       )}
 
@@ -185,7 +233,11 @@ function AcceptFields({ form, projects, releases, goals, roadmapItems }: AcceptF
           <FormItem>
             <div className="flex items-center gap-3">
               <FormControl>
-                <Switch checked={field.value ?? false} onCheckedChange={field.onChange} data-testid="is-public-switch" />
+                <Switch
+                  checked={field.value ?? false}
+                  onCheckedChange={field.onChange}
+                  data-testid="is-public-switch"
+                />
               </FormControl>
               <FormLabel className="cursor-pointer">Visible to customers</FormLabel>
             </div>
@@ -201,16 +253,27 @@ function AcceptFields({ form, projects, releases, goals, roadmapItems }: AcceptF
           render={({ field }) => {
             const selected: number[] = field.value ?? [];
             const toggle = (id: number) => {
-              const next = selected.includes(id) ? selected.filter((x) => x !== id) : [...selected, id];
+              const next = selected.includes(id)
+                ? selected.filter((x) => x !== id)
+                : [...selected, id];
               field.onChange(next.length > 0 ? next : undefined);
             };
             return (
               <FormItem>
                 <FormLabel>Depends on (optional)</FormLabel>
-                <div className="rounded-md border border-input max-h-36 overflow-y-auto" data-testid="depends-on-list">
+                <div
+                  className="rounded-md border border-input max-h-36 overflow-y-auto"
+                  data-testid="depends-on-list"
+                >
                   {roadmapItems.map((item) => (
-                    <label key={item.id} className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-accent">
-                      <Checkbox checked={selected.includes(item.id)} onCheckedChange={() => toggle(item.id)} />
+                    <label
+                      key={item.id}
+                      className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-accent"
+                    >
+                      <Checkbox
+                        checked={selected.includes(item.id)}
+                        onCheckedChange={() => toggle(item.id)}
+                      />
                       {item.title}
                     </label>
                   ))}
@@ -228,7 +291,12 @@ function AcceptFields({ form, projects, releases, goals, roadmapItems }: AcceptF
         render={({ field }) => (
           <FormItem>
             <FormLabel>Note (optional)</FormLabel>
-            <Textarea {...field} className={FIELD_CONTROL_CLASS} placeholder="Why are you accepting this opportunity?" rows={3} />
+            <Textarea
+              {...field}
+              className={FIELD_CONTROL_CLASS}
+              placeholder="Why are you accepting this opportunity?"
+              rows={3}
+            />
             <FormMessage />
           </FormItem>
         )}
@@ -239,8 +307,15 @@ function AcceptFields({ form, projects, releases, goals, roadmapItems }: AcceptF
 }
 
 export function OpportunityAcceptDialog({
-  open, onOpenChange, opportunityTitle, expectedVersion, managedProductId,
-  projects = [], releases = [], isSubmitting, onAccept,
+  open,
+  onOpenChange,
+  opportunityTitle,
+  expectedVersion,
+  managedProductId,
+  projects = [],
+  releases = [],
+  isSubmitting,
+  onAccept,
 }: OpportunityAcceptDialogProps) {
   const { data: goalsRaw } = useGoals({ managedProductId });
   const goals = useMemo<TitledItem[]>(() => goalsRaw ?? [], [goalsRaw]);
@@ -261,7 +336,13 @@ export function OpportunityAcceptDialog({
       resetOnOpen
     >
       {(form) => (
-        <AcceptFields form={form} projects={projects} releases={releases} goals={goals} roadmapItems={roadmapItems} />
+        <AcceptFields
+          form={form}
+          projects={projects}
+          releases={releases}
+          goals={goals}
+          roadmapItems={roadmapItems}
+        />
       )}
     </EntityFormSheet>
   );

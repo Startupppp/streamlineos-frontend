@@ -86,7 +86,9 @@ export function AddLinkDialog({ goalId, onClose }: AddLinkDialogProps) {
               name="projectId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Project <span className="text-destructive">*</span></FormLabel>
+                  <FormLabel>
+                    Project <span className="text-destructive">*</span>
+                  </FormLabel>
                   <Select
                     value={field.value}
                     onValueChange={(v) => handleProjectChange(v, field.onChange)}
@@ -116,7 +118,7 @@ export function AddLinkDialog({ goalId, onClose }: AddLinkDialogProps) {
                   <FormLabel>Ticket (optional)</FormLabel>
                   <Select
                     value={field.value}
-                    onValueChange={field.onChange}
+                    onValueChange={(v) => v && field.onChange(v)}
                     disabled={!selectedProjectId}
                   >
                     <FormControl>

@@ -2,13 +2,7 @@
 
 import { useFormContext } from "react-hook-form";
 import { User } from "lucide-react";
-import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
@@ -63,7 +57,7 @@ export function GoalOwnershipFields({ isEdit, orgUsers }: GoalOwnershipFieldsPro
         render={({ field }) => (
           <FormItem>
             <FormLabel className="text-xs font-medium">Owner</FormLabel>
-            <Select value={field.value} onValueChange={field.onChange}>
+            <Select value={field.value} onValueChange={(v) => v && field.onChange(v)}>
               <FormControl>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Unassigned" />

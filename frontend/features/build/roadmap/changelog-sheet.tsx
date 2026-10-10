@@ -27,10 +27,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import {
-  useCreateChangelogEntry,
-  useUpdateChangelogEntry,
-} from "@/hooks/api/build/changelog";
+import { useCreateChangelogEntry, useUpdateChangelogEntry } from "@/hooks/api/build/changelog";
 import type { ChangelogEntry } from "@/types/projects";
 import { CHANGELOG_TYPE_OPTIONS } from "./roadmap-constants";
 
@@ -50,7 +47,8 @@ export function ChangelogSheet({ entry, onClose }: ChangelogSheetProps) {
     defaultValues: {
       title: entry?.title ?? "",
       content: entry?.content ?? "",
-      type: (["feature", "improvement", "fix"] as const).find((v) => v === entry?.type) ?? "feature",
+      type:
+        (["feature", "improvement", "fix"] as const).find((v) => v === entry?.type) ?? "feature",
       version: entry?.version ?? "",
       isPublished: entry?.isPublished ?? false,
     },
@@ -69,7 +67,10 @@ export function ChangelogSheet({ entry, onClose }: ChangelogSheetProps) {
           isPublished: values.isPublished,
         },
         {
-          onSuccess: () => { toast.success("Changelog entry updated"); onClose(); },
+          onSuccess: () => {
+            toast.success("Changelog entry updated");
+            onClose();
+          },
           onError: (e) => toast.error(getErrorMessage(e)),
         },
       );
@@ -83,7 +84,10 @@ export function ChangelogSheet({ entry, onClose }: ChangelogSheetProps) {
           isPublished: values.isPublished,
         },
         {
-          onSuccess: () => { toast.success("Changelog entry created"); onClose(); },
+          onSuccess: () => {
+            toast.success("Changelog entry created");
+            onClose();
+          },
           onError: (e) => toast.error(getErrorMessage(e)),
         },
       );
@@ -123,7 +127,9 @@ export function ChangelogSheet({ entry, onClose }: ChangelogSheetProps) {
             name="title"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Title <span className="text-destructive">*</span></FormLabel>
+                <FormLabel>
+                  Title <span className="text-destructive">*</span>
+                </FormLabel>
                 <FormControl>
                   <Input {...field} placeholder="e.g. Introducing the public roadmap" />
                 </FormControl>
@@ -151,13 +157,17 @@ export function ChangelogSheet({ entry, onClose }: ChangelogSheetProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Type</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <Select value={field.value} onValueChange={(v) => v && field.onChange(v)}>
                     <FormControl>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {CHANGELOG_TYPE_OPTIONS.map((o) => (
-                        <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                        <SelectItem key={o.value} value={o.value}>
+                          {o.label}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -187,7 +197,9 @@ export function ChangelogSheet({ entry, onClose }: ChangelogSheetProps) {
                 <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-3 py-2.5">
                   <div>
                     <p className="text-sm font-medium text-foreground">Published</p>
-                    <p className="text-xs text-muted-foreground">Show this entry on the public changelog</p>
+                    <p className="text-xs text-muted-foreground">
+                      Show this entry on the public changelog
+                    </p>
                   </div>
                   <FormControl>
                     <Switch

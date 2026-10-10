@@ -10,7 +10,13 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { MemberPicker } from "@/components/shared";
@@ -24,7 +30,11 @@ interface ManagedProductEditFieldsProps {
   onSubmit: (v: EditManagedProductFormValues) => void;
 }
 
-export function ManagedProductEditFields({ form, formId, onSubmit }: ManagedProductEditFieldsProps) {
+export function ManagedProductEditFields({
+  form,
+  formId,
+  onSubmit,
+}: ManagedProductEditFieldsProps) {
   const handleSegmentsChange = useCallback(
     (value: string[]) => form.setValue("segments", value, { shouldDirty: true }),
     [form],
@@ -36,12 +46,7 @@ export function ManagedProductEditFields({ form, formId, onSubmit }: ManagedProd
 
   return (
     <Form {...form}>
-      <form
-        id={formId}
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-4"
-        noValidate
-      >
+      <form id={formId} onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
         <FormField
           control={form.control}
           name="name"
@@ -61,7 +66,7 @@ export function ManagedProductEditFields({ form, formId, onSubmit }: ManagedProd
           render={({ field }) => (
             <FormItem>
               <FormLabel>Status</FormLabel>
-              <Select value={field.value} onValueChange={field.onChange}>
+              <Select value={field.value} onValueChange={(v) => v && field.onChange(v)}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue />
@@ -123,7 +128,9 @@ export function ManagedProductEditFields({ form, formId, onSubmit }: ManagedProd
                 </FormControl>
                 <SelectContent>
                   {LIFECYCLE_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -145,7 +152,9 @@ export function ManagedProductEditFields({ form, formId, onSubmit }: ManagedProd
                 </FormControl>
                 <SelectContent>
                   {HEALTH_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -160,7 +169,11 @@ export function ManagedProductEditFields({ form, formId, onSubmit }: ManagedProd
             <FormItem>
               <FormLabel>North-star metric (optional)</FormLabel>
               <FormControl>
-                <Input {...field} value={field.value ?? ""} placeholder="e.g. Monthly active users" />
+                <Input
+                  {...field}
+                  value={field.value ?? ""}
+                  placeholder="e.g. Monthly active users"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -207,7 +220,12 @@ export function ManagedProductEditFields({ form, formId, onSubmit }: ManagedProd
             <FormItem>
               <FormLabel>Vision (optional)</FormLabel>
               <FormControl>
-                <Textarea {...field} value={field.value ?? ""} rows={3} placeholder="Long-term vision for this product…" />
+                <Textarea
+                  {...field}
+                  value={field.value ?? ""}
+                  rows={3}
+                  placeholder="Long-term vision for this product…"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -220,7 +238,12 @@ export function ManagedProductEditFields({ form, formId, onSubmit }: ManagedProd
             <FormItem>
               <FormLabel>Mission (optional)</FormLabel>
               <FormControl>
-                <Textarea {...field} value={field.value ?? ""} rows={3} placeholder="Mission statement…" />
+                <Textarea
+                  {...field}
+                  value={field.value ?? ""}
+                  rows={3}
+                  placeholder="Mission statement…"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -233,7 +256,12 @@ export function ManagedProductEditFields({ form, formId, onSubmit }: ManagedProd
             <FormItem>
               <FormLabel>Target audience (optional)</FormLabel>
               <FormControl>
-                <Textarea {...field} value={field.value ?? ""} rows={2} placeholder="Who is this product for…" />
+                <Textarea
+                  {...field}
+                  value={field.value ?? ""}
+                  rows={2}
+                  placeholder="Who is this product for…"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -246,7 +274,12 @@ export function ManagedProductEditFields({ form, formId, onSubmit }: ManagedProd
             <FormItem>
               <FormLabel>Differentiators (optional)</FormLabel>
               <FormControl>
-                <Textarea {...field} value={field.value ?? ""} rows={2} placeholder="What makes this product unique…" />
+                <Textarea
+                  {...field}
+                  value={field.value ?? ""}
+                  rows={2}
+                  placeholder="What makes this product unique…"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

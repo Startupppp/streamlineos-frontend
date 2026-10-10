@@ -45,7 +45,8 @@ export function OpportunityRiceFormFields() {
   const confidence = watchedValues.confidence ?? 0;
   const effort = Number(watchedValues.effort ?? 0);
   const reachPeriod = (watchedValues.reachPeriod ?? "month") as "month" | "quarter" | "year";
-  const effortUnit = (watchedValues.effortUnit ?? "person_days") as "person_days" | "person_weeks" | "person_months";
+  const effortUnit = (watchedValues.effortUnit ?? "person_days") as
+    "person_days" | "person_weeks" | "person_months";
 
   const hasAllFields =
     reach.trim() !== "" &&
@@ -56,7 +57,14 @@ export function OpportunityRiceFormFields() {
     effort > 0;
 
   const preview = hasAllFields
-    ? computeRiceScore({ reach, reachPeriod, impact, confidence, effort, effortUnit })
+    ? computeRiceScore({
+        reach,
+        reachPeriod,
+        impact,
+        confidence,
+        effort,
+        effortUnit,
+      })
     : null;
 
   return (
@@ -68,7 +76,13 @@ export function OpportunityRiceFormFields() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Reach</FormLabel>
-              <Input {...field} type="number" min={0} className={FIELD_CONTROL_CLASS} placeholder="e.g. 500" />
+              <Input
+                {...field}
+                type="number"
+                min={0}
+                className={FIELD_CONTROL_CLASS}
+                placeholder="e.g. 500"
+              />
               <FormMessage />
             </FormItem>
           )}
@@ -79,13 +93,15 @@ export function OpportunityRiceFormFields() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Period</FormLabel>
-              <Select value={field.value} onValueChange={field.onChange}>
+              <Select value={field.value} onValueChange={(v) => v && field.onChange(v)}>
                 <SelectTrigger className={FIELD_CONTROL_CLASS}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {REACH_PERIOD_OPTIONS.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -101,13 +117,18 @@ export function OpportunityRiceFormFields() {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Impact</FormLabel>
-            <Select value={String(field.value ?? "")} onValueChange={(v) => field.onChange(Number(v))}>
+            <Select
+              value={String(field.value ?? "")}
+              onValueChange={(v) => field.onChange(Number(v))}
+            >
               <SelectTrigger className={FIELD_CONTROL_CLASS}>
                 <SelectValue placeholder="Select impact" />
               </SelectTrigger>
               <SelectContent>
                 {IMPACT_OPTIONS.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -163,13 +184,15 @@ export function OpportunityRiceFormFields() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Unit</FormLabel>
-              <Select value={field.value} onValueChange={field.onChange}>
+              <Select value={field.value} onValueChange={(v) => v && field.onChange(v)}>
                 <SelectTrigger className={FIELD_CONTROL_CLASS}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {EFFORT_UNIT_OPTIONS.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -185,7 +208,10 @@ export function OpportunityRiceFormFields() {
         data-testid="rice-score-preview"
       >
         <span className="text-xs text-muted-foreground">Live RICE score: </span>
-        <span className="font-mono text-sm font-semibold tabular-nums" data-testid="rice-score-value">
+        <span
+          className="font-mono text-sm font-semibold tabular-nums"
+          data-testid="rice-score-value"
+        >
           {hasAllFields ? formatRiceScore(preview) : "Unscored"}
         </span>
       </div>

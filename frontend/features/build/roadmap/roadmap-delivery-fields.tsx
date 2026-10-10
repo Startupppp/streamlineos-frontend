@@ -2,13 +2,7 @@
 
 import type { Control } from "react-hook-form";
 import { useWatch } from "react-hook-form";
-import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import {
   Select,
   SelectContent,
@@ -22,7 +16,7 @@ import { useEpics } from "@/hooks/api/build/epics";
 import { RoadmapDeliveryProjectField } from "./roadmap-delivery-project-field";
 import type { RoadmapItemFormValues } from "./roadmap-schema";
 
-const BUILD_FILTER_NONE = "";
+const BUILD_FILTER_NONE = "__none__";
 
 interface RoadmapDeliveryFieldsProps {
   control: Control<RoadmapItemFormValues>;
@@ -56,7 +50,10 @@ export function RoadmapDeliveryFields({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Release</FormLabel>
-              <Select value={field.value || BUILD_FILTER_NONE} onValueChange={field.onChange}>
+              <Select
+                value={field.value || BUILD_FILTER_NONE}
+                onValueChange={(v) => field.onChange(v === BUILD_FILTER_NONE ? "" : v)}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="No release" />
@@ -83,7 +80,10 @@ export function RoadmapDeliveryFields({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Team</FormLabel>
-              <Select value={field.value || BUILD_FILTER_NONE} onValueChange={field.onChange}>
+              <Select
+                value={field.value || BUILD_FILTER_NONE}
+                onValueChange={(v) => field.onChange(v === BUILD_FILTER_NONE ? "" : v)}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="No team" />
@@ -115,7 +115,10 @@ export function RoadmapDeliveryFields({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Epic</FormLabel>
-              <Select value={field.value || BUILD_FILTER_NONE} onValueChange={field.onChange}>
+              <Select
+                value={field.value || BUILD_FILTER_NONE}
+                onValueChange={(v) => field.onChange(v === BUILD_FILTER_NONE ? "" : v)}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="No epic" />

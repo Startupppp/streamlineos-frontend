@@ -6,7 +6,13 @@ import { EntityFormSheet } from "@/components/shared";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useCaptureSubmission } from "@/hooks/api/feedbucket/use-feedbucket-submissions";
 import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
 import { toast } from "sonner";
@@ -37,7 +43,11 @@ const defaultValues: CaptureSubmissionFormValues = {
   theme: "",
 };
 
-export function CaptureSubmissionSheet({ managedProductId, open, onOpenChange }: CaptureSubmissionSheetProps) {
+export function CaptureSubmissionSheet({
+  managedProductId,
+  open,
+  onOpenChange,
+}: CaptureSubmissionSheetProps) {
   const qc = useQueryClient();
   const capture = useCaptureSubmission();
 
@@ -66,10 +76,15 @@ export function CaptureSubmissionSheet({ managedProductId, open, onOpenChange }:
           });
           qc.setQueryData(firstPageKey, (old: { data: unknown[]; total: number } | undefined) => {
             if (!old) return old;
-            return { ...old, data: [{ id: result.submissionId, ...values }, ...old.data] };
+            return {
+              ...old,
+              data: [{ id: result.submissionId, ...values }, ...old.data],
+            };
           });
         },
-        onError: (err) => { toast.error(getErrorMessage(err)); },
+        onError: (err) => {
+          toast.error(getErrorMessage(err));
+        },
       },
     );
   };
@@ -108,7 +123,7 @@ export function CaptureSubmissionSheet({ managedProductId, open, onOpenChange }:
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Source channel</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select onValueChange={(v) => v && field.onChange(v)} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select channel" />
@@ -116,7 +131,9 @@ export function CaptureSubmissionSheet({ managedProductId, open, onOpenChange }:
                   </FormControl>
                   <SelectContent>
                     {SOURCE_CHANNEL_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -130,7 +147,7 @@ export function CaptureSubmissionSheet({ managedProductId, open, onOpenChange }:
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Type</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select onValueChange={(v) => v && field.onChange(v)} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select type" />
@@ -138,7 +155,9 @@ export function CaptureSubmissionSheet({ managedProductId, open, onOpenChange }:
                   </FormControl>
                   <SelectContent>
                     {TYPE_OPTIONS_CAPTURE.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -152,7 +171,7 @@ export function CaptureSubmissionSheet({ managedProductId, open, onOpenChange }:
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Consent</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select onValueChange={(v) => v && field.onChange(v)} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select consent" />
@@ -160,7 +179,9 @@ export function CaptureSubmissionSheet({ managedProductId, open, onOpenChange }:
                   </FormControl>
                   <SelectContent>
                     {CONSENT_STATUS_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -226,7 +247,7 @@ export function CaptureSubmissionSheet({ managedProductId, open, onOpenChange }:
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Sentiment</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                <Select onValueChange={(v) => v && field.onChange(v)} value={field.value ?? ""}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Optional" />
@@ -234,7 +255,9 @@ export function CaptureSubmissionSheet({ managedProductId, open, onOpenChange }:
                   </FormControl>
                   <SelectContent>
                     {SENTIMENT_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

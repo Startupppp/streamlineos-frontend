@@ -5,7 +5,13 @@ import { z } from "zod";
 import { EntityFormSheet } from "@/components/shared";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useClassifySubmission } from "@/hooks/api/feedbucket/use-feedbucket-submissions";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -64,7 +70,9 @@ export function ClassifySubmissionSheet({
           onOpenChange(false);
           toast.success("Classification saved");
         },
-        onError: (err) => { toast.error(getErrorMessage(err)); },
+        onError: (err) => {
+          toast.error(getErrorMessage(err));
+        },
       },
     );
   };
@@ -116,7 +124,7 @@ export function ClassifySubmissionSheet({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Sentiment</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                <Select onValueChange={(v) => v && field.onChange(v)} value={field.value ?? ""}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select sentiment" />
@@ -124,7 +132,9 @@ export function ClassifySubmissionSheet({
                   </FormControl>
                   <SelectContent>
                     {SENTIMENT_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -138,7 +148,7 @@ export function ClassifySubmissionSheet({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Consent</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                <Select onValueChange={(v) => v && field.onChange(v)} value={field.value ?? ""}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select consent" />
@@ -146,7 +156,9 @@ export function ClassifySubmissionSheet({
                   </FormControl>
                   <SelectContent>
                     {CONSENT_STATUS_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

@@ -136,7 +136,11 @@ export function AddProductMemberDialog({
 
   const renderRoleField = useCallback(
     ({ field }: { field: ControllerRenderProps<AddMemberFormValues, "role"> }) => (
-      <Select value={field.value} onValueChange={field.onChange} disabled={addMember.isPending}>
+      <Select
+        value={field.value}
+        onValueChange={(v) => v && field.onChange(v)}
+        disabled={addMember.isPending}
+      >
         <SelectTrigger id="add-product-member-role" className="h-9">
           <SelectValue />
         </SelectTrigger>
@@ -168,7 +172,10 @@ export function AddProductMemberDialog({
             <Controller control={form.control} name="membershipId" render={renderMemberField} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-foreground" htmlFor="add-product-member-role">
+            <label
+              className="text-xs font-medium text-foreground"
+              htmlFor="add-product-member-role"
+            >
               Role
             </label>
             <Controller control={form.control} name="role" render={renderRoleField} />

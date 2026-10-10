@@ -5,13 +5,7 @@ import { useForm } from "react-hook-form";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
 import {
   Form,
   FormField,
@@ -83,7 +77,13 @@ export function ProductReleaseFormSheet({
     resolver: zodResolver(releaseFormSchema),
     defaultValues: editTarget
       ? toFormValues(editTarget)
-      : { name: "", version: "", description: "", releaseDate: "", status: "draft" },
+      : {
+          name: "",
+          version: "",
+          description: "",
+          releaseDate: "",
+          status: "draft",
+        },
     values: editTarget ? toFormValues(editTarget) : undefined,
   });
 
@@ -185,7 +185,7 @@ export function ProductReleaseFormSheet({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Status</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
+                    <Select value={field.value} onValueChange={(v) => v && field.onChange(v)}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue />
@@ -208,7 +208,12 @@ export function ProductReleaseFormSheet({
                   <FormItem>
                     <FormLabel>Description (optional)</FormLabel>
                     <FormControl>
-                      <Textarea {...field} value={field.value ?? ""} rows={3} placeholder="What's in this release…" />
+                      <Textarea
+                        {...field}
+                        value={field.value ?? ""}
+                        rows={3}
+                        placeholder="What's in this release…"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

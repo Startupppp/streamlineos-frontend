@@ -1,13 +1,7 @@
 "use client";
 
 import type { Control } from "react-hook-form";
-import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -27,7 +21,7 @@ import type { RoadmapItemFormValues } from "./roadmap-schema";
 import type { ScorableRoadmapItem } from "./roadmap-item-card";
 import { useGoals } from "@/hooks/api/goals";
 
-const BUILD_FILTER_NONE = "";
+const BUILD_FILTER_NONE = "__none__";
 
 interface RoadmapItemFormFieldsProps {
   control: Control<RoadmapItemFormValues>;
@@ -83,11 +77,7 @@ export function RoadmapItemFormFields({
           <FormItem>
             <FormLabel>Outcome</FormLabel>
             <FormControl>
-              <Textarea
-                {...field}
-                rows={2}
-                placeholder="What success looks like when this ships"
-              />
+              <Textarea {...field} rows={2} placeholder="What success looks like when this ships" />
             </FormControl>
             <FormMessage className="text-xs" />
           </FormItem>
@@ -96,9 +86,7 @@ export function RoadmapItemFormFields({
       {isEdit && item?.owner ? (
         <div className="rounded-lg border border-border bg-muted/30 px-3 py-2.5">
           <p className="text-xs text-muted-foreground">Owner</p>
-          <p className="text-sm font-medium text-foreground">
-            {getUserDisplayName(item.owner)}
-          </p>
+          <p className="text-sm font-medium text-foreground">{getUserDisplayName(item.owner)}</p>
         </div>
       ) : null}
       <div className="grid grid-cols-2 gap-3">
@@ -108,7 +96,7 @@ export function RoadmapItemFormFields({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Horizon</FormLabel>
-              <Select value={field.value} onValueChange={field.onChange}>
+              <Select value={field.value} onValueChange={(v) => v && field.onChange(v)}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue />
@@ -132,7 +120,7 @@ export function RoadmapItemFormFields({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Status</FormLabel>
-              <Select value={field.value} onValueChange={field.onChange}>
+              <Select value={field.value} onValueChange={(v) => v && field.onChange(v)}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue />
@@ -186,7 +174,10 @@ export function RoadmapItemFormFields({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Goal</FormLabel>
-              <Select value={field.value || BUILD_FILTER_NONE} onValueChange={field.onChange}>
+              <Select
+                value={field.value || BUILD_FILTER_NONE}
+                onValueChange={(v) => field.onChange(v === BUILD_FILTER_NONE ? "" : v)}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="No goal" />
@@ -244,9 +235,7 @@ export function RoadmapItemFormFields({
         prioritization={item?.prioritization}
         tierWeighting={item?.tierWeighting}
       />
-      {isEdit && item ? (
-        <RoadmapDeliveryProgress roadmapItemId={item.id} />
-      ) : null}
+      {isEdit && item ? <RoadmapDeliveryProgress roadmapItemId={item.id} /> : null}
       {decisionSnapshot ? (
         <div className="rounded-lg border border-border bg-muted/30 px-3 py-2.5 space-y-1">
           <p className="text-xs font-medium text-foreground">Decision snapshot</p>
@@ -263,9 +252,7 @@ export function RoadmapItemFormFields({
             <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-3 py-2.5">
               <div>
                 <p className="text-sm font-medium text-foreground">Public</p>
-                <p className="text-xs text-muted-foreground">
-                  Show this item on the public board
-                </p>
+                <p className="text-xs text-muted-foreground">Show this item on the public board</p>
               </div>
               <FormControl>
                 <Switch
