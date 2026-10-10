@@ -92,19 +92,6 @@ export function useUpdateCompanionPreferences() {
   });
 }
 
-export function useRevokeCompanionActivity() {
-  return useMutation({
-    mutationKey: ["companion", "activity", "delete"],
-    mutationFn: () =>
-      apiClient.delete<void>(
-        "/companion/activity",
-        undefined,
-        undefined,
-        noContentContract,
-      ),
-  });
-}
-
 export function useCompanionHeartbeat() {
   return useAuthorizedMutation("ai:chat:use", {
     mutationKey: ["companion", "activity", "heartbeat"],

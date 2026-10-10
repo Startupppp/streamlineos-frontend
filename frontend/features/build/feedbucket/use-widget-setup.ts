@@ -9,8 +9,7 @@ import {
   useUpdateFeedbucketWidget,
 } from "@/hooks/api/feedbucket";
 import { useProjects } from "@/hooks/api/build/projects";
-import { useOrgMembersByIds } from "@/hooks/api/organization";
-import { useBuildMembers } from "@/hooks/api/build/build-members";
+import { useBuildOrgMembers } from "@/hooks/api/build/build-org-members";
 import type { FeedbucketWidget } from "@/types/feedbucket";
 import type { ComboboxOption } from "@/components/ui/combobox";
 
@@ -20,7 +19,9 @@ export function useWidgetSetup(widget: FeedbucketWidget, open: boolean) {
   const updateWidget = useUpdateFeedbucketWidget();
 
   const projectsQuery = useProjects(undefined, { enabled: open && !widget.projectId });
-  const buildMembersQuery = useBuildMembers({ limit: 100 }, { enabled: open });
+  const { buildMembersQuery, members: orgMembers } = useBuildOrgMembers({
+    enabled: open,
+  });
 
   const projectOptions = useMemo<ComboboxOption[]>(() => {
     if (!projectsQuery.data) return [];
@@ -31,21 +32,13 @@ export function useWidgetSetup(widget: FeedbucketWidget, open: boolean) {
     () => buildMembersQuery.data?.data ?? [],
     [buildMembersQuery.data],
   );
-  const buildMemberIds = useMemo(
-    () => new Set(members.map((member) => member.id)),
-    [members],
+  const membershipIdToUserId = useMemo(
+    () =>
+      new Map(
+        orgMembers.map((member) => [member.membershipId, member.userId]),
+      ),
+    [orgMembers],
   );
-  const membersQuery = useOrgMembersByIds([...buildMemberIds], { enabled: open });
-
-  const membershipIdToUserId = useMemo(() => {
-    const map = new Map<number, string>();
-    for (const member of membersQuery.data?.data ?? []) {
-      if (buildMemberIds.has(member.userId)) {
-        map.set(member.membershipId, member.userId);
-      }
-    }
-    return map;
-  }, [buildMemberIds, membersQuery.data]);
 
   const defaultAssigneeUserId = useMemo(() => {
     if (!widget.defaultAssigneeMembershipId) return "";

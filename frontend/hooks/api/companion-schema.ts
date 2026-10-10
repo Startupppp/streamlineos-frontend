@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const COMPANION_PRESETS = ["default", "dusk", "meadow", "ember", "mono"] as const;
-export const COMPANION_PROMPT_CATEGORIES = ["meeting", "clockIn", "break", "friendly"] as const;
+const COMPANION_PROMPT_CATEGORIES = ["meeting", "clockIn", "break", "friendly"] as const;
 export const COMPANION_SNOOZE_MINUTES = [5, 10, 15, 30, 60] as const;
 
 const promptSwitchesContract = z.object({

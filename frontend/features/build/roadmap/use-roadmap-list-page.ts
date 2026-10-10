@@ -5,8 +5,7 @@ import {
   BUILD_FILTER_ALL,
   type BuildListFiltersState,
 } from "@/features/build/shared/use-build-list-filters";
-import { useOrgMembersByIds } from "@/hooks/api/organization";
-import { useBuildMembers } from "@/hooks/api/build/build-members";
+import { useBuildOrgMembers } from "@/hooks/api/build/build-org-members";
 import { getUserDisplayName } from "@/lib/person-display";
 import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import type { ScorableRoadmapItem } from "./roadmap-item-card";
@@ -47,27 +46,16 @@ export function useRoadmapListPage(listFilters: BuildListFiltersState) {
   const ownerIdValue = listFilters.value("ownerId");
   const ownerId = /^\d+$/.test(ownerIdValue) ? Number(ownerIdValue) : undefined;
 
-  const { data: buildMembersPage } = useBuildMembers({ limit: 100 });
-  const buildMemberIds = useMemo(
-    () => new Set((buildMembersPage?.data ?? []).map((member) => member.id)),
-    [buildMembersPage],
-  );
-  const buildMemberIdsList = useMemo(
-    () => [...buildMemberIds],
-    [buildMemberIds],
-  );
-  const { data: membersPage } = useOrgMembersByIds(buildMemberIdsList);
+  const { members } = useBuildOrgMembers();
   const ownerOptions = useMemo(
     () => [
       { value: BUILD_FILTER_ALL, label: "Any owner" },
-      ...(membersPage?.data ?? [])
-        .filter((member) => buildMemberIds.has(member.userId))
-        .map((m) => ({
-          value: String(m.membershipId),
-          label: getUserDisplayName(m),
-        })),
+      ...members.map((m) => ({
+        value: String(m.membershipId),
+        label: getUserDisplayName(m),
+      })),
     ],
-    [buildMemberIds, membersPage],
+    [members],
   );
 
   const handleTabChange = useCallback(

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { toast } from "sonner";
@@ -228,19 +228,6 @@ export function useManagedProductsPage() {
       }),
     [canDelete, canUpdate, handleDeleteRow, handleEditRow, ownerOf],
   );
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      if (!canCreate) setCreateOpen(false);
-      if (!canUpdate) {
-        setEditTarget(null);
-        setSelected(new Set());
-      }
-      if (!canDelete) setDeleteTarget(null);
-    }, 0);
-
-    return () => window.clearTimeout(timer);
-  }, [canCreate, canDelete, canUpdate, setCreateOpen]);
 
   return {
     canCreate,

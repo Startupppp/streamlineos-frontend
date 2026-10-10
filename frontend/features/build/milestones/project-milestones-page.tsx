@@ -30,8 +30,7 @@ import {
 } from "@/hooks/api/build/milestones";
 import { useCan } from "@/hooks/api/access";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
-import { useOrgMembersByIds } from "@/hooks/api/organization";
-import { useBuildMembers } from "@/hooks/api/build/build-members";
+import { useBuildOrgMembers } from "@/hooks/api/build/build-org-members";
 import { getUserDisplayName } from "@/lib/person-display";
 import { MilestoneUpsertSheet } from "@/features/build/milestones/milestone-upsert-sheet";
 import { MilestoneCard } from "@/features/build/milestones/milestone-card";
@@ -96,23 +95,7 @@ export function ProjectMilestonesPage({
   const pager = useBuildCursorPager(listFilters.resetKey);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const isOnline = useOnlineStatus();
-  const { data: buildMembersPage } = useBuildMembers({ limit: 100 });
-  const buildMemberIds = useMemo(
-    () => new Set((buildMembersPage?.data ?? []).map((member) => member.id)),
-    [buildMembersPage],
-  );
-  const buildMemberIdsList = useMemo(
-    () => [...buildMemberIds],
-    [buildMemberIds],
-  );
-  const { data: membersPage } = useOrgMembersByIds(buildMemberIdsList);
-  const members = useMemo(
-    () =>
-      (membersPage?.data ?? []).filter((member) =>
-        buildMemberIds.has(member.userId),
-      ),
-    [buildMemberIds, membersPage],
-  );
+  const { members } = useBuildOrgMembers();
   const ownerOptions = useMemo(
     () => [
       { value: BUILD_FILTER_ALL, label: "Any owner" },
@@ -279,7 +262,7 @@ export function ProjectMilestonesPage({
               </span>
               <div className="flex items-center gap-2">
                 <Select onValueChange={actions.handleBulkStatusChange}>
-                  <SelectTrigger className="w-[160px]">
+                  <SelectTrigger className="w-40">
                     <SelectValue placeholder="Set status…" />
                   </SelectTrigger>
                   <SelectContent>

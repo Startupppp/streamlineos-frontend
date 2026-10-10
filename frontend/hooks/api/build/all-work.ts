@@ -1,6 +1,10 @@
 "use client";
 
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import {
+  useQuery,
+  keepPreviousData,
+  useInfiniteQuery,
+} from "@tanstack/react-query";
 import type {
   InfiniteData,
   UseInfiniteQueryOptions,
@@ -96,7 +100,7 @@ export function useInfiniteAllWork(
     initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     staleTime: 30_000,
-    placeholderData: (previous) => previous,
+    placeholderData: keepPreviousData,
     ...restOptions,
     enabled: canView && (enabledOption ?? true),
   });

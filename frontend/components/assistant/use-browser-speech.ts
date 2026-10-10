@@ -78,15 +78,38 @@ function recognitionErrorMessage(code: string): string {
 
 export function useSpeechInput({ beforeStart, scopeKey }: UseSpeechInputOptions = {}) {
   const supported = useSyncExternalStore(subscribeBrowserCapability, speechInputSupported, () => false);
-  const [state, setState] = useState<SpeechInputState>("idle");
-  const [interimTranscript, setInterimTranscript] = useState("");
-  const [message, setMessage] = useState<string | null>(null);
+
+  const sk = scopeKey ?? "";
+
+  const [stateEntry, setStateEntry] = useState<{ sk: string; v: SpeechInputState }>(() => ({ sk, v: "idle" }));
+  const [interimEntry, setInterimEntry] = useState<{ sk: string; v: string }>(() => ({ sk, v: "" }));
+  const [msgEntry, setMsgEntry] = useState<{ sk: string; v: string | null }>(() => ({ sk, v: null }));
+
+  const state: SpeechInputState = stateEntry.sk === sk ? stateEntry.v : "idle";
+  const interimTranscript: string = interimEntry.sk === sk ? interimEntry.v : "";
+  const message: string | null = msgEntry.sk === sk ? msgEntry.v : null;
+
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const timeoutRef = useRef<number | null>(null);
   const uploadRef = useRef<AbortController | null>(null);
   const generationRef = useRef(0);
+
+  const setState = useCallback((v: SpeechInputState | ((prev: SpeechInputState) => SpeechInputState)) => {
+    setStateEntry(prev => {
+      const curr: SpeechInputState = prev.sk === sk ? prev.v : "idle";
+      return { sk, v: typeof v === "function" ? v(curr) : v };
+    });
+  }, [sk]);
+
+  const setInterimTranscript = useCallback((v: string) => {
+    setInterimEntry({ sk, v });
+  }, [sk]);
+
+  const setMessage = useCallback((v: string | null) => {
+    setMsgEntry({ sk, v });
+  }, [sk]);
 
   const releaseMedia = useCallback(() => {
     if (timeoutRef.current !== null) window.clearTimeout(timeoutRef.current);
@@ -101,7 +124,7 @@ export function useSpeechInput({ beforeStart, scopeKey }: UseSpeechInputOptions 
     setInterimTranscript("");
     setMessage(null);
     setState("idle");
-  }, []);
+  }, [setInterimTranscript, setMessage, setState]);
 
   const cancel = useCallback(() => {
     generationRef.current += 1;
@@ -115,7 +138,7 @@ export function useSpeechInput({ beforeStart, scopeKey }: UseSpeechInputOptions 
     setInterimTranscript("");
     setMessage(null);
     setState("idle");
-  }, [releaseMedia]);
+  }, [releaseMedia, setInterimTranscript, setMessage, setState]);
 
   const stop = useCallback(() => {
     if (recorderRef.current?.state === "recording") {
@@ -129,7 +152,7 @@ export function useSpeechInput({ beforeStart, scopeKey }: UseSpeechInputOptions 
     setInterimTranscript("");
     setMessage("Processing speech…");
     recognitionRef.current.stop();
-  }, []);
+  }, [setInterimTranscript, setMessage, setState]);
 
   const start = useCallback((onTranscript: (transcript: string) => void) => {
     beforeStart?.();
@@ -269,12 +292,9 @@ export function useSpeechInput({ beforeStart, scopeKey }: UseSpeechInputOptions 
       setMessage("Voice input could not start. Try again.");
       setState("error");
     }
-  }, [beforeStart, releaseMedia]);
+  }, [beforeStart, releaseMedia, setInterimTranscript, setMessage, setState]);
 
   useEffect(() => {
-    setInterimTranscript("");
-    setMessage(null);
-    setState("idle");
     function handleVisibilityChange() {
       if (document.visibilityState === "hidden") cancel();
     }
@@ -290,7 +310,7 @@ export function useSpeechInput({ beforeStart, scopeKey }: UseSpeechInputOptions 
       uploadRef.current = null;
       releaseMedia();
     };
-  }, [cancel, releaseMedia, scopeKey]);
+  }, [cancel, releaseMedia]);
 
   return {
     cancel,
@@ -318,14 +338,23 @@ export function speechTextFromMarkdown(value: string): string {
 
 export function useSpeechPlayback(scopeKey?: string) {
   const supported = useSyncExternalStore(subscribeBrowserCapability, speechOutputSupported, () => false);
-  const [activeKey, setActiveKey] = useState<string | null>(null);
+
+  const sk = scopeKey ?? "";
+
+  const [activeEntry, setActiveEntry] = useState<{ sk: string; v: string | null }>(() => ({ sk, v: null }));
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  const activeKey: string | null = activeEntry.sk === sk ? activeEntry.v : null;
+
+  const setActiveKey = useCallback((v: string | null) => {
+    setActiveEntry({ sk, v });
+  }, [sk]);
 
   const stop = useCallback(() => {
     if (typeof window !== "undefined") window.speechSynthesis?.cancel();
     utteranceRef.current = null;
     setActiveKey(null);
-  }, []);
+  }, [setActiveKey]);
 
   const speak = useCallback((key: string, value: string) => {
     if (!speechOutputSupported()) return;
@@ -342,10 +371,9 @@ export function useSpeechPlayback(scopeKey?: string) {
     utterance.onerror = utterance.onend;
     setActiveKey(key);
     window.speechSynthesis.speak(utterance);
-  }, []);
+  }, [setActiveKey]);
 
   useEffect(() => {
-    setActiveKey(null);
     function handleVisibilityChange() {
       if (document.visibilityState === "hidden") stop();
     }
@@ -355,7 +383,7 @@ export function useSpeechPlayback(scopeKey?: string) {
       if (utteranceRef.current) window.speechSynthesis?.cancel();
       utteranceRef.current = null;
     };
-  }, [scopeKey, stop]);
+  }, [stop]);
 
   return {
     activeKey,

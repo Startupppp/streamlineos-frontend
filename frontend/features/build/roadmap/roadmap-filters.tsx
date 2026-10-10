@@ -110,7 +110,7 @@ export function RoadmapFilters({
               value={statusValue}
               onValueChange={onStatusChange}
               options={statusOptions}
-              className="!w-full"
+              className="w-full!"
             />
           </div>
           <div className="grid gap-1.5">
@@ -120,7 +120,7 @@ export function RoadmapFilters({
               value={sortValue}
               onValueChange={onSortChange}
               options={sortOptions}
-              className="!w-full"
+              className="w-full!"
             />
           </div>
           <div className="grid gap-1.5">
@@ -130,7 +130,7 @@ export function RoadmapFilters({
               value={ownerValue}
               onValueChange={onOwnerChange}
               options={ownerOptions}
-              className="!w-full"
+              className="w-full!"
             />
           </div>
           <div className="grid gap-1.5">

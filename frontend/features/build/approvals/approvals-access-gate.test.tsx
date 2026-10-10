@@ -17,11 +17,21 @@ jest.mock("@/hooks/api/entitlements", () => ({
 
 jest.mock("@/hooks/api/build/approvals", () => ({
   useApprovalInbox: () => mockUseApprovalInbox(),
+  useApprovalInboxPage: () => mockUseApprovalInbox(),
   useDecideApproval: () => ({ mutate: jest.fn(), isPending: false }),
   useProjectApprovals: () => mockUseProjectApprovals(),
+  useProjectApprovalsPage: () => mockUseProjectApprovals(),
   useCreateApproval: () => ({ mutate: jest.fn(), isPending: false }),
   useUpdateApproval: () => ({ mutate: jest.fn(), isPending: false }),
   useDeleteApproval: () => ({ mutate: jest.fn(), isPending: false }),
+}));
+
+jest.mock("@/hooks/api/build/build-members", () => ({
+  useBuildMembers: () => ({ data: undefined }),
+}));
+
+jest.mock("@/hooks/api/build/build-org-members", () => ({
+  useBuildOrgMembers: () => ({ members: [] }),
 }));
 
 jest.mock("@/hooks/api/organization", () => ({
