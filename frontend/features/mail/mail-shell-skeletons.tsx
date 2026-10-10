@@ -30,7 +30,14 @@ export function MailListPaneSkeleton() {
           ))}
         </div>
       </div>
-      <div className="min-h-0 flex-1 overflow-hidden">
+      <MailListRowsSkeleton />
+    </div>
+  );
+}
+
+export function MailListRowsSkeleton() {
+  return (
+    <div className="min-h-0 flex-1 overflow-hidden bg-card">
         <div className="flex h-8 items-center gap-2 border-b border-border/20 bg-muted/30 px-3">
           <Skeleton className="h-3 w-24 rounded" />
           <Skeleton className="ml-auto h-3 w-6 rounded" />
@@ -53,7 +60,6 @@ export function MailListPaneSkeleton() {
             </div>
           </div>
         ))}
-      </div>
     </div>
   );
 }

@@ -32,7 +32,7 @@ import { PageState } from "@/components/shared/page-state";
 import { toast } from "sonner";
 import { groupMailMessages } from "./mail-group-messages";
 import { MailVirtualList } from "./mail-virtual-list";
-import { MailListPaneSkeleton } from "./mail-shell-skeletons";
+import { MailListRowsSkeleton } from "./mail-shell-skeletons";
 import {
   MailThreadBriefSheet,
   type MailThreadBriefState,
@@ -370,7 +370,7 @@ export function MailListPane({
 
       <PageState
         resolution={listPageState}
-        loading={<MailListPaneSkeleton />}
+        loading={<MailListRowsSkeleton />}
         empty={
           <div className="flex h-full min-h-0 flex-col items-center justify-center px-4 py-10 text-center">
             <p className="text-label font-medium text-foreground/80">
