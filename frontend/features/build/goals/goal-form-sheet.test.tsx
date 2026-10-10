@@ -111,6 +111,8 @@ function baseGoal(overrides: Partial<GoalDetail> = {}): GoalDetail {
     keyResults: [],
     updates: [],
     links: [],
+    measurementSources: [],
+    linkedRoadmapItems: [],
     ...overrides,
   };
 }

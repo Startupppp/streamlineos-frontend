@@ -37,9 +37,9 @@ jest.mock("next/navigation", () => ({
 }));
 
 const BASE_PAGINATION = {
+  limit: 20,
   hasMore: false,
   nextCursor: null,
-  prevCursor: null,
 };
 
 const BASE_PROPS = {

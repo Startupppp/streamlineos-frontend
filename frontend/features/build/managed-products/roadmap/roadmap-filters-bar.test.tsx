@@ -51,6 +51,11 @@ const mockListFilters: BuildListFiltersState = {
   setValues: jest.fn(),
   clearAll: jest.fn(),
   resetKey: "k1",
+  cursor: null,
+  setCursor: jest.fn(),
+  activeCount: 0,
+  isFiltered: false,
+  isPending: false,
 };
 
 beforeEach(() => {

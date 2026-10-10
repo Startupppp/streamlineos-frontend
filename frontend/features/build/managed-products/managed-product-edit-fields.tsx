@@ -115,7 +115,7 @@ export function ManagedProductEditFields({ form, formId, onSubmit }: ManagedProd
           render={({ field }) => (
             <FormItem>
               <FormLabel>Lifecycle (optional)</FormLabel>
-              <Select value={field.value ?? ""} onValueChange={field.onChange}>
+              <Select value={field.value ?? ""} onValueChange={(v) => v && field.onChange(v)}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select lifecycle" />
@@ -137,7 +137,7 @@ export function ManagedProductEditFields({ form, formId, onSubmit }: ManagedProd
           render={({ field }) => (
             <FormItem>
               <FormLabel>Health (optional)</FormLabel>
-              <Select value={field.value ?? ""} onValueChange={field.onChange}>
+              <Select value={field.value ?? ""} onValueChange={(v) => v && field.onChange(v)}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select health" />

@@ -96,7 +96,7 @@ function CompleteReviewDialog({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Result (required)</FormLabel>
-                <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                <Select value={field.value ?? ""} onValueChange={(v) => v && field.onChange(v)}>
                   <SelectTrigger className={FIELD_CONTROL_CLASS} data-testid="result-select">
                     <SelectValue placeholder="Select result" />
                   </SelectTrigger>
