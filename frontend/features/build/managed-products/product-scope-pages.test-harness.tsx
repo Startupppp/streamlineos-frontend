@@ -102,6 +102,8 @@ jest.mock("@/hooks/api/goals", () => ({
   useGoalStats: jest.fn(() => ({ data: undefined })),
   useGoal: jest.fn(() => ({ data: undefined })),
   useDeleteGoal: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useLinkGoalProduct: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useUnlinkGoalProduct: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
 
 jest.mock("@/hooks/api/build/roadmap", () => ({
@@ -383,6 +385,15 @@ export const { useRoadmapItems }: { useRoadmapItems: jest.Mock } =
   jest.requireMock("@/hooks/api/build/roadmap");
 export const { useManagedProducts }: { useManagedProducts: jest.Mock } =
   jest.requireMock("@/hooks/api/build/managed-products");
+export const {
+  useLinkGoalProduct,
+  useUnlinkGoalProduct,
+  useGoalStats,
+}: {
+  useLinkGoalProduct: jest.Mock;
+  useUnlinkGoalProduct: jest.Mock;
+  useGoalStats: jest.Mock;
+} = jest.requireMock("@/hooks/api/goals");
 
 export {
   EMPTY_GOALS_PAGE_RESULT,

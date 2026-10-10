@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Plus } from "lucide-react";
+import { Link2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import {
@@ -8,6 +8,7 @@ import {
   useGoalsPage,
   useGoalStats,
   useDeleteGoal,
+  useUnlinkGoalProduct,
   type GoalListItem,
   type GoalLevel,
 } from "@/hooks/api/goals";
@@ -35,6 +36,7 @@ import {
 export const PAGE_SIZE = 20;
 const PAGE_PARAM = "page";
 const CREATE_ACTION = { id: "create", label: "New Goal", icon: Plus, primary: true as const };
+const LINK_GOAL_ACTION = { id: "link-goal", label: "Link existing goal", icon: Link2, primary: false as const };
 
 function parsePageParam(raw: string | null): number {
   const parsed = Number(raw);
@@ -55,10 +57,15 @@ export function useProductGoalsPage({ managedProductId }: UseProductGoalsPagePro
 
   const [editGoalId, setEditGoalId] = useState<number | null>(null);
   const [deleteGoalId, setDeleteGoalId] = useState<number | null>(null);
+  const [unlinkGoalId, setUnlinkGoalId] = useState<number | null>(null);
+  const [checkInGoalId, setCheckInGoalId] = useState<number | null>(null);
+  const [linkGoalOpen, setLinkGoalOpen] = useState(false);
   const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
 
   const { data: editGoalDetail } = useGoal(editGoalId ?? 0);
+  const { data: checkInGoalDetail } = useGoal(checkInGoalId ?? 0);
   const deleteGoalMutation = useDeleteGoal();
+  const unlinkGoalMutation = useUnlinkGoalProduct();
 
   const levelValue = listFilters.value("level");
   const statusValue = listFilters.value("status");
@@ -162,6 +169,16 @@ export function useProductGoalsPage({ managedProductId }: UseProductGoalsPagePro
     [canManage],
   );
 
+  const handleUnlinkGoalCard = useCallback(
+    (goal: GoalListItem) => { if (canManage) setUnlinkGoalId(goal.id); },
+    [canManage],
+  );
+
+  const handleCheckInGoalCard = useCallback(
+    (goal: GoalListItem) => { setCheckInGoalId(goal.id); },
+    [],
+  );
+
   const handleDeleteConfirm = useCallback(() => {
     if (!deleteGoalId) return;
     deleteGoalMutation.mutate(deleteGoalId, {
@@ -173,12 +190,34 @@ export function useProductGoalsPage({ managedProductId }: UseProductGoalsPagePro
     });
   }, [deleteGoalMutation, deleteGoalId]);
 
+  const handleUnlinkConfirm = useCallback(() => {
+    if (!unlinkGoalId) return;
+    unlinkGoalMutation.mutate(
+      { goalId: unlinkGoalId, managedProductId },
+      {
+        onSuccess: () => {
+          toast.success("Goal unlinked from product");
+          setUnlinkGoalId(null);
+        },
+        onError: (e) => toast.error(getErrorMessage(e)),
+      },
+    );
+  }, [unlinkGoalMutation, unlinkGoalId, managedProductId]);
+
   const handleEditSheetOpenChange = useCallback((open: boolean) => {
     if (!open) setEditGoalId(null);
   }, []);
 
   const handleDeleteDialogOpenChange = useCallback((open: boolean) => {
     if (!open) setDeleteGoalId(null);
+  }, []);
+
+  const handleUnlinkDialogOpenChange = useCallback((open: boolean) => {
+    if (!open) setUnlinkGoalId(null);
+  }, []);
+
+  const handleCheckInClose = useCallback(() => {
+    setCheckInGoalId(null);
   }, []);
 
   const handleShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
@@ -195,11 +234,15 @@ export function useProductGoalsPage({ managedProductId }: UseProductGoalsPagePro
   });
 
   const createActions = useMemo(
-    () =>
-      resolution.kind !== "denied" && isOnline
-        ? [{ ...CREATE_ACTION, onSelect: handleOpenCreate }]
-        : [],
-    [resolution.kind, handleOpenCreate, isOnline],
+    () => {
+      if (resolution.kind === "denied" || !isOnline) return [];
+      const base = [{ ...CREATE_ACTION, onSelect: handleOpenCreate }];
+      if (canManage) {
+        return [...base, { ...LINK_GOAL_ACTION, onSelect: () => setLinkGoalOpen(true) }];
+      }
+      return base;
+    },
+    [resolution.kind, handleOpenCreate, isOnline, canManage],
   );
 
   return {
@@ -208,13 +251,19 @@ export function useProductGoalsPage({ managedProductId }: UseProductGoalsPagePro
     listFilters,
     createOpen,
     setCreateOpen,
+    linkGoalOpen,
+    setLinkGoalOpen,
     searchInputRef,
     editGoalId,
     deleteGoalId,
+    unlinkGoalId,
+    checkInGoalId,
     shortcutHelpOpen,
     setShortcutHelpOpen,
     editGoalDetail,
+    checkInGoalDetail,
     deleteGoalMutation,
+    unlinkGoalMutation,
     isLoading,
     isError,
     error,
@@ -231,9 +280,14 @@ export function useProductGoalsPage({ managedProductId }: UseProductGoalsPagePro
     handleRetry,
     handleEditGoalCard,
     handleDeleteGoalCard,
+    handleUnlinkGoalCard,
+    handleCheckInGoalCard,
     handleDeleteConfirm,
+    handleUnlinkConfirm,
     handleEditSheetOpenChange,
     handleDeleteDialogOpenChange,
+    handleUnlinkDialogOpenChange,
+    handleCheckInClose,
     createActions,
   };
 }

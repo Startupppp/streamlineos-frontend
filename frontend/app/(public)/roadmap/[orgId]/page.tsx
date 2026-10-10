@@ -36,13 +36,13 @@ import type {
 
 const VOTER_KEY_STORAGE = "streamlineos:roadmap:voterKey";
 
-const COLUMNS: {
-  key: "planned" | "in_progress" | "completed";
+const HORIZON_COLUMNS: {
+  key: "now" | "next" | "later";
   label: string;
 }[] = [
-  { key: "planned", label: "Planned" },
-  { key: "in_progress", label: "In Progress" },
-  { key: "completed", label: "Completed" },
+  { key: "now", label: "Now" },
+  { key: "next", label: "Next" },
+  { key: "later", label: "Later" },
 ];
 
 const CHANGELOG_TYPE_LABEL: Record<ChangelogType, string> = {
@@ -326,7 +326,20 @@ export default function PublicRoadmapPage() {
   const vote = usePublicVote(orgId);
   const [votedIds, setVotedIds] = useState<Set<string>>(new Set());
 
-  const grouped = useMemo(() => data?.roadmap, [data]);
+  const grouped = useMemo(() => {
+    if (!data) return null;
+    const all: PublicRoadmapItem[] = [
+      ...(data.roadmap.planned ?? []),
+      ...(data.roadmap.in_progress ?? []),
+      ...(data.roadmap.completed ?? []),
+    ];
+    const map: Record<"now" | "next" | "later", PublicRoadmapItem[]> = { now: [], next: [], later: [] };
+    for (const item of all) {
+      const h = item.horizon ?? "later";
+      map[h].push(item);
+    }
+    return map;
+  }, [data]);
 
   const handleVote = useCallback(
     (type: "roadmap" | "feedback", id: number) => {
@@ -403,7 +416,7 @@ export default function PublicRoadmapPage() {
           <div className="space-y-10">
             <section>
               <div className="grid gap-4 md:grid-cols-3">
-                {COLUMNS.map((col) => {
+                {HORIZON_COLUMNS.map((col) => {
                   const items: PublicRoadmapItem[] = grouped
                     ? grouped[col.key]
                     : [];

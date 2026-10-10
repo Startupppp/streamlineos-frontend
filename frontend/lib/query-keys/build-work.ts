@@ -304,6 +304,36 @@ export const buildWorkQueryKeys = {
         filters === undefined
           ? ([...base, "projects", "managed-products", "insights", managedProductId] as const)
           : ([...base, "projects", "managed-products", "insights", managedProductId, filters] as const),
+      summary: (managedProductId: number, period?: string) =>
+        period === undefined
+          ? ([...base, "projects", "managed-products", "summary", managedProductId] as const)
+          : ([...base, "projects", "managed-products", "summary", managedProductId, { period }] as const),
+      opportunities: (managedProductId: number, filters?: QueryKeyParams) =>
+        filters === undefined
+          ? ([...base, "projects", "managed-products", managedProductId, "opportunities"] as const)
+          : ([...base, "projects", "managed-products", managedProductId, "opportunities", filters] as const),
+      opportunity: (managedProductId: number, opportunityId: number) =>
+        [...base, "projects", "managed-products", managedProductId, "opportunities", opportunityId] as const,
+      opportunitiesCompare: (managedProductId: number, ids: readonly number[]) =>
+        [...base, "projects", "managed-products", managedProductId, "opportunities", "compare", [...ids].sort()] as const,
+      opportunityTrace: (managedProductId: number, opportunityId: number) =>
+        [...base, "projects", "managed-products", managedProductId, "opportunities", opportunityId, "trace"] as const,
+      evidenceThemes: (managedProductId: number, filters?: QueryKeyParams) =>
+        filters === undefined
+          ? ([...base, "projects", "managed-products", managedProductId, "evidence-themes"] as const)
+          : ([...base, "projects", "managed-products", managedProductId, "evidence-themes", filters] as const),
+      outcomeReviews: (managedProductId: number, filters?: QueryKeyParams) =>
+        filters === undefined
+          ? ([...base, "projects", "managed-products", managedProductId, "outcome-reviews"] as const)
+          : ([...base, "projects", "managed-products", managedProductId, "outcome-reviews", filters] as const),
+      linkedProjects: (managedProductId: number, filters?: QueryKeyParams) =>
+        filters === undefined
+          ? ([...base, "projects", "managed-products", managedProductId, "linked-projects"] as const)
+          : ([...base, "projects", "managed-products", managedProductId, "linked-projects", filters] as const),
+      releases: (managedProductId: number) =>
+        [...base, "projects", "managed-products", "releases", managedProductId] as const,
+      members: (managedProductId: number) =>
+        [...base, "projects", "managed-products", "members", managedProductId] as const,
     },
     workflow: {
       transitions: (projectId: number) =>

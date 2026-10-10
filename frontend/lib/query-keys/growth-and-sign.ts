@@ -12,6 +12,10 @@ export const growthAndSignQueryKeys = {
         : ([...base, "feedbucket", "submissions", params] as const),
     submission: (submissionId: number) =>
       [...base, "feedbucket", "submissions", submissionId] as const,
+    submissionFacets: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "feedbucket", "submissions", "facets"] as const)
+        : ([...base, "feedbucket", "submissions", "facets", params] as const),
   },
 
   crmMetadata: {

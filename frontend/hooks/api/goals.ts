@@ -1,6 +1,6 @@
 "use client";
 
-import { useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useQueryClient, keepPreviousData, type QueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 
@@ -9,6 +9,9 @@ const goalStatsContract = lazyContract(() =>
 );
 const goalSuccessContract = lazyContract(() =>
   import("@/hooks/api/goals-schema").then((m) => m.goalSuccessContract),
+);
+const goalProductLinkContract = lazyContract(() =>
+  import("@/hooks/api/goals-schema").then((m) => m.goalProductLinkContract),
 );
 const goalsListContract = lazyContract(() =>
   import("@/hooks/api/goals-schema").then((m) => m.goalsListContract),
@@ -36,6 +39,7 @@ import type {
   goalsListContract as goalsListContractDef,
   goalLinkCreatedContract as goalLinkCreatedContractDef,
   goalDetailContract as goalDetailContractDef,
+  goalProductLinkContract as goalProductLinkContractDef,
 } from "@/hooks/api/goals-schema";
 
 export type GoalLevel = "company" | "team" | "individual";
@@ -43,6 +47,7 @@ export type GoalStatus = "not_started" | "on_track" | "at_risk" | "off_track" | 
 export type KeyResultMetric = "number" | "percentage" | "currency" | "boolean";
 
 type GoalRow = z.infer<typeof goalRowContractDef>;
+type GoalProductLink = z.infer<typeof goalProductLinkContractDef>;
 export type GoalListItem = z.infer<typeof goalListItemContractDef>;
 type GoalsListPage = z.infer<typeof goalsListContractDef>;
 type GoalLinkCreated = z.infer<typeof goalLinkCreatedContractDef>;
@@ -59,6 +64,7 @@ interface GoalStats {
   avgProgress: number;
   atRisk: number;
   completed: number;
+  staleCheckIns: number;
 }
 
 interface GoalsParams {
@@ -252,4 +258,115 @@ export function useRemoveGoalLink(goalId: number) {
       qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.detail(goalId) });
     },
   });
+}
+
+function isGoalsListPage(v: unknown): v is GoalsListPage {
+  return (
+    typeof v === "object" &&
+    v !== null &&
+    "items" in v &&
+    "total" in v &&
+    Array.isArray((v as GoalsListPage).items)
+  );
+}
+
+function patchGoalListCacheForProduct(
+  qc: QueryClient,
+  goalId: number,
+  managedProductId: number,
+  action: "link" | "unlink",
+): void {
+  const listPrefix = accountingAndSupportQueryKeys.goals.list();
+  for (const [key, cached] of qc.getQueriesData({ queryKey: listPrefix })) {
+    if (!isGoalsListPage(cached)) continue;
+    const keyArr = key as unknown[];
+    const params = (keyArr[listPrefix.length] ?? {}) as GoalsParams;
+    const isProductScoped =
+      typeof params === "object" &&
+      "managedProductId" in params &&
+      params.managedProductId === managedProductId;
+
+    if (action === "unlink" && isProductScoped) {
+      qc.setQueryData(key, (prev: GoalsListPage | undefined) => {
+        if (!prev) return prev;
+        const newItems = prev.items.filter((item) => item.id !== goalId);
+        return { ...prev, items: newItems, total: Math.max(0, prev.total - 1) };
+      });
+    } else if (action === "link" && isProductScoped) {
+      qc.invalidateQueries({ queryKey: key as readonly unknown[], exact: true, refetchType: "active" });
+    } else if (!isProductScoped) {
+      qc.setQueryData(key, (prev: GoalsListPage | undefined) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          items: prev.items.map((item) =>
+            item.id === goalId
+              ? {
+                  ...item,
+                  productLinkage:
+                    action === "link"
+                      ? { managedProductId, linkedAt: new Date().toISOString() }
+                      : null,
+                }
+              : item,
+          ),
+        };
+      });
+    }
+  }
+}
+
+interface LinkGoalProductInput {
+  goalId: number;
+  managedProductId: number;
+}
+
+export function useLinkGoalProduct() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation<GoalProductLink, Error, LinkGoalProductInput>(
+    "build:goals:manage",
+    {
+      mutationKey: ["link", "goal", "product"],
+      mutationFn: ({ goalId, managedProductId }) =>
+        apiClient.post<GoalProductLink>(
+          `/goals/${goalId}/products/${managedProductId}`,
+          undefined,
+          undefined,
+          goalProductLinkContract,
+        ),
+      onSuccess: (_, variables) => {
+        patchGoalListCacheForProduct(qc, variables.goalId, variables.managedProductId, "link");
+        qc.invalidateQueries({
+          queryKey: accountingAndSupportQueryKeys.goals.stats(variables.managedProductId),
+          exact: true,
+          refetchType: "none",
+        });
+      },
+    },
+  );
+}
+
+export function useUnlinkGoalProduct() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation<void, Error, LinkGoalProductInput>(
+    "build:goals:manage",
+    {
+      mutationKey: ["unlink", "goal", "product"],
+      mutationFn: ({ goalId, managedProductId }) =>
+        apiClient.delete<void>(
+          `/goals/${goalId}/products/${managedProductId}`,
+          undefined,
+          undefined,
+          noContentContract,
+        ),
+      onSuccess: (_, variables) => {
+        patchGoalListCacheForProduct(qc, variables.goalId, variables.managedProductId, "unlink");
+        qc.invalidateQueries({
+          queryKey: accountingAndSupportQueryKeys.goals.stats(variables.managedProductId),
+          exact: true,
+          refetchType: "none",
+        });
+      },
+    },
+  );
 }

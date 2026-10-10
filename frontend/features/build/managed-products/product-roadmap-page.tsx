@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState } from "react";
-import { useRoadmapItems, useDeleteRoadmapItem } from "@/hooks/api/build/roadmap";
-import type { RoadmapItem, RoadmapStatus } from "@/types/projects";
+import { useRoadmapItems, useDeleteRoadmapItem, usePositionRoadmapItem } from "@/hooks/api/build/roadmap";
+import type { RoadmapHorizon } from "@/types/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -15,8 +15,8 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useCan } from "@/hooks/api/access";
 import { PageState } from "@/components/shared/page-state";
-import { ROADMAP_COLUMNS } from "@/features/build/roadmap/roadmap-constants";
-import { RoadmapItemCard } from "@/features/build/roadmap/roadmap-item-card";
+import { ROADMAP_HORIZON_COLUMNS } from "@/features/build/roadmap/roadmap-constants";
+import { RoadmapItemCard, type ScorableRoadmapItem } from "@/features/build/roadmap/roadmap-item-card";
 import { RoadmapItemSheet } from "@/features/build/roadmap/roadmap-item-sheet";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
@@ -29,6 +29,7 @@ import {
 } from "@/components/pm-chrome";
 import {
   ROADMAP_STATUS_OPTS,
+  ROADMAP_HORIZON_OPTS,
   ROADMAP_SORT_OPTS,
   ROADMAP_FILTER_DEFS,
 } from "./product-roadmap-model";
@@ -50,35 +51,35 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   const statusValue = listFilters.value("status");
+  const horizonValue = listFilters.value("horizon");
   const sortValue = listFilters.value("sort");
-
-  const typedStatus = useMemo<RoadmapStatus | undefined>(() => {
-    if (!statusValue || statusValue === BUILD_FILTER_ALL) return undefined;
-    if (statusValue === "planned" || statusValue === "in_progress" || statusValue === "completed" || statusValue === "cancelled") return statusValue;
-    return undefined;
-  }, [statusValue]);
 
   const filters = useMemo(
     () => ({
       managedProductId,
-      ...(typedStatus ? { status: typedStatus } : {}),
+      ...(statusValue && statusValue !== BUILD_FILTER_ALL ? { status: statusValue as "planned" | "in_progress" | "completed" | "cancelled" } : {}),
+      ...(horizonValue && horizonValue !== BUILD_FILTER_ALL ? { horizon: horizonValue } : {}),
       ...(listFilters.debouncedSearch.trim() ? { search: listFilters.debouncedSearch.trim() } : {}),
       ...(sortValue && sortValue !== BUILD_FILTER_ALL ? { sort: sortValue } : {}),
       cursor: pager.cursor,
     }),
-    [managedProductId, typedStatus, sortValue, listFilters.debouncedSearch, pager.cursor],
+    [managedProductId, statusValue, horizonValue, sortValue, listFilters.debouncedSearch, pager.cursor],
   );
 
   const { data, isLoading, isError, error, refetch } = useRoadmapItems(filters);
   const deleteItem = useDeleteRoadmapItem();
+  const positionItem = usePositionRoadmapItem();
 
   const [createOpen, setCreateOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<RoadmapItem | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<RoadmapItem | null>(null);
+  const [editTarget, setEditTarget] = useState<ScorableRoadmapItem | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ScorableRoadmapItem | null>(null);
 
   const grouped = useMemo(() => {
-    const map: Record<string, RoadmapItem[]> = { planned: [], in_progress: [], completed: [], cancelled: [] };
-    for (const item of data?.data ?? []) map[item.status]?.push(item);
+    const map: Record<RoadmapHorizon, ScorableRoadmapItem[]> = { now: [], next: [], later: [] };
+    for (const item of data?.data ?? []) {
+      const h = item.horizon ?? "later";
+      map[h].push(item);
+    }
     return map;
   }, [data]);
 
@@ -90,8 +91,15 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
     isEmpty: (data?.data ?? []).length === 0 && !pager.hasPrevious,
   });
 
-  const handleEditItem = useCallback((item: RoadmapItem) => { setEditTarget(item); }, []);
-  const handleDeleteItem = useCallback((item: RoadmapItem) => { setDeleteTarget(item); }, []);
+  const handleEditItem = useCallback((item: ScorableRoadmapItem) => { setEditTarget(item); }, []);
+  const handleDeleteItem = useCallback((item: ScorableRoadmapItem) => { setDeleteTarget(item); }, []);
+
+  const handleMove = useCallback((item: ScorableRoadmapItem, horizon: RoadmapHorizon) => {
+    positionItem.mutate(
+      { roadmapItemId: item.id, version: item.version, horizon },
+      { onError: (e) => toast.error(getErrorMessage(e)) },
+    );
+  }, [positionItem]);
 
   const handleDelete = useCallback(() => {
     if (!deleteTarget) return;
@@ -114,7 +122,7 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
   const handleCloseCreate = useCallback(() => { setCreateOpen(false); }, []);
 
   useBuildListKeyboard({
-    itemCount: 0,
+    itemCount: (data?.data ?? []).length,
     onOpen: () => undefined,
     onClearSelection: () => undefined,
     searchInputRef,
@@ -123,6 +131,10 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
 
   const handleStatusChange = useCallback(
     (value: string) => listFilters.setValue("status", value),
+    [listFilters],
+  );
+  const handleHorizonChange = useCallback(
+    (value: string) => listFilters.setValue("horizon", value),
     [listFilters],
   );
   const handleSortChange = useCallback(
@@ -157,6 +169,19 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
             inputRef: searchInputRef,
           }}
           filters={[
+            {
+              id: "horizon",
+              label: "Horizon",
+              active: listFilters.isActive("horizon"),
+              control: (
+                <BuildFilterSelect
+                  label="Horizon"
+                  value={horizonValue}
+                  onValueChange={handleHorizonChange}
+                  options={ROADMAP_HORIZON_OPTS}
+                />
+              ),
+            },
             {
               id: "status",
               label: "Status",
@@ -207,7 +232,7 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
           >
             <BuildPaginatedContent
               ariaLabel="Product roadmap items"
-              contentClassName="grid content-start items-start gap-3 md:grid-cols-2 xl:grid-cols-4"
+              contentClassName="grid content-start items-start gap-3 md:grid-cols-3"
               footer={(
                 <TablePagination
                   mode="cursor"
@@ -220,20 +245,20 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
                 />
               )}
             >
-                {ROADMAP_COLUMNS.map((col) => (
-                  <PmPanel key={col.status} className="flex flex-col border-border/70 bg-muted/30 p-2.5 dark:bg-muted/20">
+                {ROADMAP_HORIZON_COLUMNS.map((col) => (
+                  <PmPanel key={col.horizon} className="flex flex-col border-border/70 bg-muted/30 p-2.5 dark:bg-muted/20">
                     <div className="mb-2.5 flex items-center justify-between gap-2 px-0.5">
                       <span className="text-xs font-semibold uppercase tracking-wide text-foreground">{col.label}</span>
-                      <span className="min-w-6 rounded-full border border-border bg-card px-1.5 py-0.5 text-center text-xs font-medium tabular-nums text-foreground" aria-label={`${(grouped[col.status] ?? []).length} items`}>
-                        {(grouped[col.status] ?? []).length}
+                      <span className="min-w-6 rounded-full border border-border bg-card px-1.5 py-0.5 text-center text-xs font-medium tabular-nums text-foreground" aria-label={`${(grouped[col.horizon] ?? []).length} items`}>
+                        {(grouped[col.horizon] ?? []).length}
                       </span>
                     </div>
-                    {(grouped[col.status] ?? []).length === 0 ? (
+                    {(grouped[col.horizon] ?? []).length === 0 ? (
                       <div className="rounded-lg border border-dashed border-border/70 bg-background/40 px-3 py-5 text-center text-xs text-muted-foreground">No items</div>
                     ) : (
                       <PmStaggerList className="flex flex-col gap-1.5">
-                        {(grouped[col.status] ?? []).map((item) => (
-                          <RoadmapItemCard key={item.id} item={item} onEdit={handleEditItem} onDelete={handleDeleteItem} />
+                        {(grouped[col.horizon] ?? []).map((item) => (
+                          <RoadmapItemCard key={item.id} item={item} onEdit={handleEditItem} onDelete={handleDeleteItem} onMove={handleMove} />
                         ))}
                       </PmStaggerList>
                     )}
@@ -245,7 +270,7 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
       </ManagedProductDetailShell>
 
       {createOpen ? <RoadmapItemSheet managedProductId={managedProductId} onClose={handleCloseCreate} /> : null}
-      {editTarget ? <RoadmapItemSheet item={editTarget} onClose={handleCloseEdit} /> : null}
+      {editTarget ? <RoadmapItemSheet item={editTarget} managedProductId={managedProductId} onClose={handleCloseEdit} /> : null}
 
       <ConfirmDialog
         open={!!deleteTarget}

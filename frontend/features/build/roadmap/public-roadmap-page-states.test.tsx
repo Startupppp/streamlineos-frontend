@@ -30,7 +30,7 @@ const idleMutation = { mutate: jest.fn(), isPending: false, isSuccess: false, is
 const roadmapData = {
   orgName: "Acme Corp",
   roadmap: {
-    planned: [{ id: 1, title: "New dashboard", description: null, status: "planned" as const, category: null, targetQuarter: null, votes: 3 }],
+    planned: [{ id: 1, title: "New dashboard", description: null, status: "planned" as const, category: null, targetQuarter: null, horizon: "now" as const, votes: 3 }],
     in_progress: [],
     completed: [],
   },

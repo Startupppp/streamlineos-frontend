@@ -19,12 +19,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { getUserDisplayName } from "@/lib/person-display";
-import { ROADMAP_STATUS_OPTIONS } from "./roadmap-constants";
+import { ROADMAP_STATUS_OPTIONS, ROADMAP_HORIZON_OPTIONS } from "./roadmap-constants";
 import { RoadmapDeliveryProgress } from "./roadmap-delivery-progress";
 import { RoadmapRiceFormFields } from "./roadmap-rice-form-fields";
 import { RoadmapDeliveryProjectField } from "./roadmap-delivery-project-field";
 import type { RoadmapItemFormValues } from "./roadmap-schema";
 import type { ScorableRoadmapItem } from "./roadmap-item-card";
+import { useGoals } from "@/hooks/api/goals";
+import { useManagedProductReleases } from "@/hooks/api/build/managed-product-releases";
+import { useProjectTeams } from "@/hooks/api/build/teams";
+
+const BUILD_FILTER_NONE = "";
 
 interface RoadmapItemFormFieldsProps {
   control: Control<RoadmapItemFormValues>;
@@ -39,6 +44,17 @@ export function RoadmapItemFormFields({
   item,
   managedProductId,
 }: RoadmapItemFormFieldsProps) {
+  const { data: goals } = useGoals();
+  const { data: releasesPage } = useManagedProductReleases(managedProductId ?? 0, {
+    enabled: managedProductId !== undefined && managedProductId > 0,
+  });
+  const { data: teamsPage } = useProjectTeams();
+
+  const releaseOptions = releasesPage?.data ?? [];
+  const teamOptions = teamsPage?.data ?? [];
+
+  const decisionSnapshot = item?.decisionSnapshot;
+
   return (
     <>
       <FormField
@@ -97,6 +113,30 @@ export function RoadmapItemFormFields({
       <div className="grid grid-cols-2 gap-3">
         <FormField
           control={control}
+          name="horizon"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Horizon</FormLabel>
+              <Select value={field.value} onValueChange={field.onChange}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {ROADMAP_HORIZON_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage className="text-xs" />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={control}
           name="status"
           render={({ field }) => (
             <FormItem>
@@ -119,6 +159,117 @@ export function RoadmapItemFormFields({
             </FormItem>
           )}
         />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <FormField
+          control={control}
+          name="targetStart"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Target Start</FormLabel>
+              <FormControl>
+                <Input type="date" {...field} />
+              </FormControl>
+              <FormMessage className="text-xs" />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={control}
+          name="targetEnd"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Target End</FormLabel>
+              <FormControl>
+                <Input type="date" {...field} />
+              </FormControl>
+              <FormMessage className="text-xs" />
+            </FormItem>
+          )}
+        />
+      </div>
+      {goals && goals.length > 0 ? (
+        <FormField
+          control={control}
+          name="goalId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Goal</FormLabel>
+              <Select value={field.value || BUILD_FILTER_NONE} onValueChange={field.onChange}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="No goal" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value={BUILD_FILTER_NONE}>No goal</SelectItem>
+                  {goals.map((g) => (
+                    <SelectItem key={g.id} value={String(g.id)}>
+                      {g.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage className="text-xs" />
+            </FormItem>
+          )}
+        />
+      ) : null}
+      {releaseOptions.length > 0 ? (
+        <FormField
+          control={control}
+          name="releaseId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Release</FormLabel>
+              <Select value={field.value || BUILD_FILTER_NONE} onValueChange={field.onChange}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="No release" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value={BUILD_FILTER_NONE}>No release</SelectItem>
+                  {releaseOptions.map((r) => (
+                    <SelectItem key={r.id} value={String(r.id)}>
+                      {r.name} {r.version}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage className="text-xs" />
+            </FormItem>
+          )}
+        />
+      ) : null}
+      {teamOptions.length > 0 ? (
+        <FormField
+          control={control}
+          name="teamId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Team</FormLabel>
+              <Select value={field.value || BUILD_FILTER_NONE} onValueChange={field.onChange}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="No team" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value={BUILD_FILTER_NONE}>No team</SelectItem>
+                  {teamOptions.map((t) => (
+                    <SelectItem key={t.id} value={String(t.id)}>
+                      {t.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage className="text-xs" />
+            </FormItem>
+          )}
+        />
+      ) : null}
+      <div className="grid grid-cols-2 gap-3">
         <FormField
           control={control}
           name="targetQuarter"
@@ -132,20 +283,20 @@ export function RoadmapItemFormFields({
             </FormItem>
           )}
         />
+        <FormField
+          control={control}
+          name="category"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Category</FormLabel>
+              <FormControl>
+                <Input {...field} placeholder="e.g. Integrations" />
+              </FormControl>
+              <FormMessage className="text-xs" />
+            </FormItem>
+          )}
+        />
       </div>
-      <FormField
-        control={control}
-        name="category"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Category</FormLabel>
-            <FormControl>
-              <Input {...field} placeholder="e.g. Integrations" />
-            </FormControl>
-            <FormMessage className="text-xs" />
-          </FormItem>
-        )}
-      />
       <RoadmapDeliveryProjectField
         control={control}
         managedProductId={managedProductId}
@@ -158,6 +309,14 @@ export function RoadmapItemFormFields({
       />
       {isEdit && item ? (
         <RoadmapDeliveryProgress roadmapItemId={item.id} />
+      ) : null}
+      {decisionSnapshot ? (
+        <div className="rounded-lg border border-border bg-muted/30 px-3 py-2.5 space-y-1">
+          <p className="text-xs font-medium text-foreground">Decision snapshot</p>
+          <pre className="text-xs text-muted-foreground whitespace-pre-wrap break-words">
+            {JSON.stringify(decisionSnapshot, null, 2)}
+          </pre>
+        </div>
       ) : null}
       <FormField
         control={control}

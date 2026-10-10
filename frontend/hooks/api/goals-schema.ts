@@ -45,7 +45,7 @@ export const goalRowContract = z.object({
   deletedAt: z.string().nullable(),
 });
 
-/** `goalListItemSchema` — row + owner + keyResultCount + link counts. */
+/** `goalListItemSchema` — row + owner + keyResultCount + link counts + product linkage. */
 export const goalListItemContract = goalRowContract.extend({
   target: z.string().nullable(),
   current: z.string().nullable(),
@@ -54,6 +54,22 @@ export const goalListItemContract = goalRowContract.extend({
   linkCount: z.number().int(),
   linkedTicketCount: z.number().int(),
   linkedProjectCount: z.number().int(),
+  productLinkage: z
+    .object({ managedProductId: z.number().int(), linkedAt: z.string() })
+    .nullable()
+    .default(null),
+  linkedRoadmapItemCount: z.number().int().default(0),
+  linkedOpportunityCount: z.number().int().default(0),
+  outcomeReviews: z
+    .object({
+      scheduled: z.number().int(),
+      completed: z.number().int(),
+      latestResult: z.string().nullable(),
+    })
+    .nullable()
+    .default(null),
+  lastCheckInAt: z.string().nullable().default(null),
+  checkInFreshness: z.enum(["fresh", "stale", "none"]).default("none"),
 });
 
 /** `goalsListResponseSchema` — offset page (no totalPages on this backend schema). */
@@ -71,6 +87,7 @@ export const goalStatsContract = z.object({
   avgProgress: z.number(),
   atRisk: z.number().int(),
   completed: z.number().int(),
+  staleCheckIns: z.number().int().default(0),
 });
 
 /**
@@ -123,6 +140,39 @@ export const goalDetailContract = goalRowContract.extend({
       projectKey: z.string().nullable(),
     }),
   ),
+  measurementSources: z
+    .array(
+      z.object({
+        id: z.number().int(),
+        title: z.string(),
+        metric: z.string().nullable(),
+        unit: z.string().nullable(),
+        baseline: z.string().nullable(),
+        target: z.string().nullable(),
+        actual: z.string().nullable(),
+        state: z.string(),
+        result: z.string().nullable(),
+        completedAt: z.string().nullable(),
+      }),
+    )
+    .default([]),
+  linkedRoadmapItems: z
+    .array(
+      z.object({
+        id: z.number().int(),
+        title: z.string(),
+        horizon: z.string(),
+        status: z.string(),
+      }),
+    )
+    .default([]),
+});
+
+/** `goalProductLinkSchema` — POST /goals/:goalId/products/:managedProductId 201 body. */
+export const goalProductLinkContract = z.object({
+  id: z.number().int(),
+  managedProductId: z.number().int(),
+  linkedAt: z.string(),
 });
 
 /** `goalLinkCreatedSchema` */

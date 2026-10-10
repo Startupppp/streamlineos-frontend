@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import {
   Form,
@@ -14,6 +15,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { MemberPicker } from "@/components/shared";
 import type { EditManagedProductFormValues } from "./managed-product-schema";
+import { LIFECYCLE_OPTIONS, HEALTH_OPTIONS } from "./managed-product-schema";
+import { ChipInput } from "@/features/recruitment/jobs/create-job-form/chip-input";
 
 interface ManagedProductEditFieldsProps {
   form: UseFormReturn<EditManagedProductFormValues>;
@@ -22,6 +25,15 @@ interface ManagedProductEditFieldsProps {
 }
 
 export function ManagedProductEditFields({ form, formId, onSubmit }: ManagedProductEditFieldsProps) {
+  const handleSegmentsChange = useCallback(
+    (value: string[]) => form.setValue("segments", value, { shouldDirty: true }),
+    [form],
+  );
+  const handleTagsChange = useCallback(
+    (value: string[]) => form.setValue("tags", value, { shouldDirty: true }),
+    [form],
+  );
+
   return (
     <Form {...form}>
       <form
@@ -92,6 +104,149 @@ export function ManagedProductEditFields({ form, formId, onSubmit }: ManagedProd
                   allowUnassigned
                   placeholder="Select owner"
                 />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="lifecycle"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Lifecycle (optional)</FormLabel>
+              <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select lifecycle" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {LIFECYCLE_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="health"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Health (optional)</FormLabel>
+              <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select health" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {HEALTH_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="northStarMetric"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>North-star metric (optional)</FormLabel>
+              <FormControl>
+                <Input {...field} value={field.value ?? ""} placeholder="e.g. Monthly active users" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="segments"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Segments (optional)</FormLabel>
+              <FormControl>
+                <ChipInput
+                  value={field.value}
+                  onChange={handleSegmentsChange}
+                  placeholder="Type and press Enter (max 20)"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="tags"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Tags (optional)</FormLabel>
+              <FormControl>
+                <ChipInput
+                  value={field.value}
+                  onChange={handleTagsChange}
+                  placeholder="Type and press Enter (max 20)"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="vision"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Vision (optional)</FormLabel>
+              <FormControl>
+                <Textarea {...field} value={field.value ?? ""} rows={3} placeholder="Long-term vision for this product…" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="missionStatement"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Mission (optional)</FormLabel>
+              <FormControl>
+                <Textarea {...field} value={field.value ?? ""} rows={3} placeholder="Mission statement…" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="targetCustomer"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Target audience (optional)</FormLabel>
+              <FormControl>
+                <Textarea {...field} value={field.value ?? ""} rows={2} placeholder="Who is this product for…" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="differentiators"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Differentiators (optional)</FormLabel>
+              <FormControl>
+                <Textarea {...field} value={field.value ?? ""} rows={2} placeholder="What makes this product unique…" />
               </FormControl>
               <FormMessage />
             </FormItem>

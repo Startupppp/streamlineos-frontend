@@ -9,4 +9,9 @@ export {
   useFeedbucketSubmissions,
   useDeleteFeedbucketSubmission,
   useBulkMutateFeedbucketSubmissions,
+  useFeedbucketSubmissionFacets,
+  useCaptureSubmission,
+  useClassifySubmission,
+  useMarkDuplicate,
+  useUnmarkDuplicate,
 } from "./use-feedbucket-submissions";

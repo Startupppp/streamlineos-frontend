@@ -1,22 +1,12 @@
 "use client";
 
-import { useCallback } from "react";
 import Link from "next/link";
 import { ManagedProductFormSheet } from "@/features/build/managed-products/managed-product-form-sheet";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import { PageState } from "@/components/shared/page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/ui/empty-state";
-import { Briefcase, Map, MessageSquare, Target } from "lucide-react";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
-import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
-import { LinkedProjectRow } from "./linked-project-row";
 import { BuildOfflineNotice } from "@/features/build/shared/build-offline-notice";
 import {
   MANAGED_PRODUCT_DETAIL_CONTENT_CLASS,
@@ -24,10 +14,13 @@ import {
   ManagedProductDetailShell,
 } from "@/features/build/managed-products/managed-product-detail-layout";
 import { ManagedProductOverviewSkeleton } from "@/features/build/managed-products/managed-product-page-skeletons";
+import { ManagedProductOverviewStrategyCard } from "./managed-product-overview-strategy-card";
+import { ManagedProductOverviewEvidenceCard } from "./managed-product-overview-evidence-card";
+import { ManagedProductOverviewDeliveryCard } from "./managed-product-overview-delivery-card";
+import { ManagedProductOverviewOutcomesCard } from "./managed-product-overview-outcomes-card";
 import {
   useManagedProductOverview,
-  PROJECT_SORT_OPTIONS,
-  PROJECT_STATUS_OPTIONS,
+  PERIOD_OPTIONS,
 } from "./use-managed-product-overview";
 
 interface ManagedProductOverviewPageProps {
@@ -37,50 +30,18 @@ interface ManagedProductOverviewPageProps {
 export function ManagedProductOverviewPage({ managedProductId }: ManagedProductOverviewPageProps) {
   const {
     listFilters,
-    searchInputRef,
-    rawOwner,
-    rawStatus,
-    rawSort,
-    ownerOptions,
+    rawPeriod,
     product,
     editOpen,
     setEditOpen,
     resolution,
     overviewSubtitle,
     editActions,
-    focusedIndex,
-    linkedProjects,
-    hasMoreProjects,
-    linkedProjectsLabel,
-    roadmapItems,
-    hasMoreRoadmap,
-    goalsLabel,
-    feedbackTotal,
-    insightsIsError,
-    projectsIsError,
-    roadmapIsError,
-    goalsIsError,
-    retryInsights,
-    retryProjects,
-    retryRoadmap,
-    retryGoals,
-    openFeedbackCount,
-    activeRoadmapCount,
-    deliveredRoadmapCount,
-    productDataUpdatedAt,
-    insightsIsLoading,
-    goalsIsLoading,
-    shortcutHelpOpen,
-    setShortcutHelpOpen,
+    summaryData,
+    summaryDataUpdatedAt,
     handleRetry,
-    handleStatusChange,
-    handleSortChange,
-    handleOwnerChange,
+    handlePeriodChange,
   } = useManagedProductOverview(managedProductId);
-  const handleRetrySignals = useCallback(() => { void retryInsights(); }, [retryInsights]);
-  const handleRetryProjects = useCallback(() => { void retryProjects(); }, [retryProjects]);
-  const handleRetryRoadmap = useCallback(() => { void retryRoadmap(); }, [retryRoadmap]);
-  const handleRetryGoals = useCallback(() => { void retryGoals(); }, [retryGoals]);
 
   return (
     <PageWrapper
@@ -91,50 +52,17 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
       actions={<BuildHeaderActions actions={editActions} />}
       filters={
         <BuildListToolbar
-          search={{
-            value: listFilters.search,
-            onValueChange: listFilters.setSearch,
-            placeholder: "Search linked projects…",
-            label: "Search linked projects",
-            inputRef: searchInputRef,
-          }}
           filters={[
             {
-              id: "owner",
-              label: "Owner",
-              active: listFilters.isActive("ownerId"),
+              id: "period",
+              label: "Period",
+              active: listFilters.isActive("period"),
               control: (
                 <BuildFilterSelect
-                  label="Owner"
-                  value={rawOwner}
-                  onValueChange={handleOwnerChange}
-                  options={ownerOptions}
-                />
-              ),
-            },
-            {
-              id: "sort",
-              label: "Sort",
-              active: listFilters.isActive("sort"),
-              control: (
-                <BuildFilterSelect
-                  label="Sort"
-                  value={rawSort}
-                  onValueChange={handleSortChange}
-                  options={PROJECT_SORT_OPTIONS}
-                />
-              ),
-            },
-            {
-              id: "status",
-              label: "Status",
-              active: listFilters.isActive("status"),
-              control: (
-                <BuildFilterSelect
-                  label="Status"
-                  value={rawStatus}
-                  onValueChange={handleStatusChange}
-                  options={PROJECT_STATUS_OPTIONS}
+                  label="Period"
+                  value={rawPeriod ?? "all"}
+                  onValueChange={handlePeriodChange}
+                  options={PERIOD_OPTIONS}
                 />
               ),
             },
@@ -143,7 +71,6 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
         />
       }
     >
-      <ShortcutHelpDialog open={shortcutHelpOpen} onOpenChange={setShortcutHelpOpen} />
       {product ? (
         <ManagedProductFormSheet
           open={editOpen}
@@ -157,168 +84,44 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
           <PageState
             resolution={resolution}
             loading={<ManagedProductOverviewSkeleton />}
-            empty={
-              <EmptyState
-                title="Product not found"
-                description="This product may have been deleted or moved."
-                className="flex-1"
-              />
-            }
             onRetry={handleRetry}
             className="flex-1 min-h-0"
           >
             <div className="flex flex-1 min-h-0 flex-col gap-6">
-          <BuildOfflineNotice dataUpdatedAt={productDataUpdatedAt} />
+              <BuildOfflineNotice dataUpdatedAt={summaryDataUpdatedAt} />
 
-          <StatCardGrid cols={3}>
-            <StatCard
-              label="Linked projects"
-              value={linkedProjectsLabel}
-              icon={Briefcase}
-              tone="blue"
-              isLoading={insightsIsLoading}
-              href={`/build/managed-products/${managedProductId}/projects`}
-            />
-            <StatCard
-              label="Goals"
-              value={goalsLabel}
-              icon={Target}
-              tone="emerald"
-              isLoading={goalsIsLoading}
-              href={`/build/managed-products/${managedProductId}/goals`}
-            />
-            <StatCard
-              label="Feedback"
-              value={insightsIsError ? "—" : String(feedbackTotal)}
-              icon={MessageSquare}
-              tone="amber"
-              isLoading={insightsIsLoading}
-              href={`/build/managed-products/${managedProductId}/feedback`}
-            />
-          </StatCardGrid>
-
-          {goalsIsError ? (
-            <div role="status" className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-card p-3 text-sm text-muted-foreground">
-              Goal summary is unavailable. <Button type="button" variant="outline" size="sm" onClick={handleRetryGoals}>Retry goals</Button>
-            </div>
-          ) : null}
-
-          <Card>
-            <CardHeader className="pb-2">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <h2 className="text-sm font-semibold text-foreground">Product pulse</h2>
-                  <p className="text-xs text-muted-foreground">A quick read of customer signals and delivery. Insights has the source-level detail.</p>
-                </div>
-                <Link href={`/build/managed-products/${managedProductId}/insights`} className="text-sm font-medium text-primary underline-offset-2 hover:underline">Explore insights</Link>
-              </div>
-            </CardHeader>
-            <CardContent className="grid gap-2 sm:grid-cols-3">
-              {insightsIsError ? (
-                <div role="status" className="col-span-full flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
-                  Product signals are unavailable. <Button type="button" variant="outline" size="sm" onClick={handleRetrySignals}>Retry signals</Button>
-                </div>
-              ) : insightsIsLoading ? (
-                <div role="status" aria-label="Loading product signals" className="col-span-full grid gap-2 sm:grid-cols-3">
-                  {[0, 1, 2].map((index) => <Skeleton key={index} className="h-20 rounded-md" />)}
-                </div>
-              ) : (
-              <>
-              <Link href={`/build/managed-products/${managedProductId}/feedback`} className="rounded-md border border-border bg-muted/30 p-3 hover:border-primary/40">
-                <span className="block text-xs text-muted-foreground">Needs triage</span>
-                <span className="font-mono text-lg font-semibold tabular-nums text-foreground">{openFeedbackCount}</span>
-                <span className="block text-xs text-muted-foreground">open submissions</span>
-              </Link>
-              <Link href={`/build/managed-products/${managedProductId}/roadmap`} className="rounded-md border border-border bg-muted/30 p-3 hover:border-primary/40">
-                <span className="block text-xs text-muted-foreground">Planned or underway</span>
-                <span className="font-mono text-lg font-semibold tabular-nums text-foreground">{activeRoadmapCount}</span>
-                <span className="block text-xs text-muted-foreground">roadmap items</span>
-              </Link>
-              <Link href={`/build/managed-products/${managedProductId}/insights`} className="rounded-md border border-border bg-muted/30 p-3 hover:border-primary/40">
-                <span className="block text-xs text-muted-foreground">Delivered</span>
-                <span className="font-mono text-lg font-semibold tabular-nums text-foreground">{deliveredRoadmapCount}</span>
-                <span className="block text-xs text-muted-foreground">completed items</span>
-              </Link>
-              </>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-2">
-                <Map className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                <h2 className="text-sm font-medium">Roadmap</h2>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {roadmapIsError ? (
-                <div role="status" className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">Roadmap preview is unavailable. <Button type="button" variant="outline" size="sm" onClick={handleRetryRoadmap}>Retry roadmap</Button></div>
-              ) : roadmapItems.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  No roadmap items for this product yet.
-                </p>
-              ) : (
-                roadmapItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between gap-2 text-sm"
-                  >
-                    <span className="truncate">{item.title}</span>
-                    <Badge variant="outline" className="h-5 shrink-0 px-2 py-0.5 text-micro">
-                      {item.status}
-                    </Badge>
-                  </div>
-                ))
-              )}
-              {hasMoreRoadmap && (
-                <Link
-                  href={`/build/managed-products/${managedProductId}/roadmap`}
-                  className="block text-dense text-primary hover:underline"
-                >
-                  View full roadmap
-                </Link>
-              )}
-            </CardContent>
-          </Card>
-
-          {(linkedProjects.length > 0 || projectsIsError) && (
-            <Card>
-              <CardHeader className="pb-2">
-                <h2 className="text-sm font-medium">Linked projects</h2>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {projectsIsError ? (
-                  <div role="status" className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">Linked projects are unavailable. <Button type="button" variant="outline" size="sm" onClick={handleRetryProjects}>Retry projects</Button></div>
-                ) : linkedProjects.map((proj, index) => (
-                  <LinkedProjectRow
-                    key={proj.id}
-                    project={proj}
-                    focused={focusedIndex === index}
+              {summaryData ? (
+                <>
+                  <ManagedProductOverviewStrategyCard
+                    managedProductId={managedProductId}
+                    product={summaryData.product}
                   />
-                ))}
-                {hasMoreProjects && (
+                  <ManagedProductOverviewEvidenceCard
+                    managedProductId={managedProductId}
+                    evidence={summaryData.evidence}
+                    previews={summaryData.previews}
+                  />
+                  <ManagedProductOverviewDeliveryCard
+                    managedProductId={managedProductId}
+                    delivery={summaryData.delivery}
+                    previews={summaryData.previews}
+                  />
+                  <ManagedProductOverviewOutcomesCard
+                    managedProductId={managedProductId}
+                    outcomes={summaryData.outcomes}
+                  />
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No summary data available.{" "}
                   <Link
-                    href={`/build/managed-products/${managedProductId}/projects`}
-                    className="block text-dense text-primary hover:underline"
+                    href={`/build/managed-products/${managedProductId}/insights`}
+                    className="text-primary underline-offset-2 hover:underline"
                   >
-                    View all linked projects
+                    Explore insights
                   </Link>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          {product?.vision && (
-            <Card>
-              <CardHeader className="pb-2">
-                <h2 className="text-sm font-medium">Vision</h2>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">{product.vision}</p>
-              </CardContent>
-            </Card>
-          )}
+                </p>
+              )}
             </div>
           </PageState>
         </ManagedProductDetailPrimarySection>

@@ -95,11 +95,10 @@ jest.mock("@/components/pm-chrome", () => ({
 }));
 
 jest.mock("./roadmap-constants", () => ({
-  ROADMAP_COLUMNS: [
-    { status: "planned", label: "Planned" },
-    { status: "in_progress", label: "In Progress" },
-    { status: "completed", label: "Completed" },
-    { status: "cancelled", label: "Cancelled" },
+  ROADMAP_HORIZON_COLUMNS: [
+    { horizon: "now", label: "Now" },
+    { horizon: "next", label: "Next" },
+    { horizon: "later", label: "Later" },
   ],
 }));
 
@@ -134,6 +133,7 @@ const ONE_ROW_QUERY = {
       {
         id: 1,
         status: "planned",
+        horizon: "now" as const,
         title: "Ship it",
         description: null,
         category: null,
@@ -152,6 +152,7 @@ const ONE_ROW_QUERY = {
         createdAt: "2026-01-01T00:00:00Z",
         updatedAt: "2026-01-01T00:00:00Z",
         deletedAt: null,
+        version: 1,
       },
     ],
     pagination: { hasMore: false, nextCursor: null, limit: 20 },

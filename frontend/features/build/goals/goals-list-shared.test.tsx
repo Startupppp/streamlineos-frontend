@@ -26,6 +26,7 @@ jest.mock("@/components/ui/dropdown-menu", () => ({
   DropdownMenuItem: ({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) => (
     <button type="button" onClick={onClick}>{children}</button>
   ),
+  DropdownMenuSeparator: () => <hr />,
 }));
 
 jest.mock("@animateicons/react/lucide", () => ({
@@ -110,6 +111,12 @@ function baseGoal(overrides: Partial<GoalListItem> = {}): GoalListItem {
     linkCount: 0,
     linkedTicketCount: 0,
     linkedProjectCount: 0,
+    productLinkage: null,
+    linkedRoadmapItemCount: 0,
+    linkedOpportunityCount: 0,
+    outcomeReviews: null,
+    lastCheckInAt: null,
+    checkInFreshness: "none",
     ...overrides,
   };
 }
@@ -218,5 +225,65 @@ describe("GoalCard visual identity and actions", () => {
     render(<GoalCard goal={baseGoal()} onEdit={jest.fn()} onDelete={jest.fn()} />);
     expect(screen.getByRole("button", { name: "Edit" }).querySelector("svg")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Delete" }).querySelector("svg")).toBeInTheDocument();
+  });
+});
+
+describe("GoalCard — check-in freshness badge (BSN-GOALS-FRESHNESS)", () => {
+  it("shows a fresh badge when checkInFreshness is fresh", () => {
+    render(<GoalCard goal={baseGoal({ checkInFreshness: "fresh" })} />);
+    expect(screen.getByTitle("Check-in: Fresh")).toBeInTheDocument();
+  });
+
+  it("shows a stale badge when checkInFreshness is stale", () => {
+    render(<GoalCard goal={baseGoal({ checkInFreshness: "stale" })} />);
+    expect(screen.getByTitle("Check-in: Stale")).toBeInTheDocument();
+  });
+
+  it("shows no freshness badge when checkInFreshness is none (FE-122 negative pair)", () => {
+    render(<GoalCard goal={baseGoal({ checkInFreshness: "none" })} />);
+    expect(screen.queryByTitle(/Check-in:/)).not.toBeInTheDocument();
+  });
+});
+
+describe("GoalCard — unlink from product action (BSN-GOALS-UNLINK)", () => {
+  it("shows the Unlink from product menu item when onUnlink is provided", () => {
+    const onUnlink = jest.fn();
+    render(<GoalCard goal={baseGoal()} onUnlink={onUnlink} />);
+    expect(screen.getByRole("button", { name: /Unlink from product/i })).toBeInTheDocument();
+  });
+
+  it("does not show the Unlink menu item when onUnlink is absent (FE-122 negative pair)", () => {
+    render(<GoalCard goal={baseGoal()} />);
+    expect(screen.queryByRole("button", { name: /Unlink from product/i })).not.toBeInTheDocument();
+  });
+
+  it("calls onUnlink with the goal when Unlink from product is clicked", () => {
+    const onUnlink = jest.fn();
+    const goal = baseGoal({ id: 42 });
+    render(<GoalCard goal={goal} onUnlink={onUnlink} />);
+    fireEvent.click(screen.getByRole("button", { name: /Unlink from product/i }));
+    expect(onUnlink).toHaveBeenCalledWith(goal);
+  });
+});
+
+describe("GoalCard — check in from card (BSN-GOALS-CHECKIN-CARD)", () => {
+  it("shows the Check in menu item when onCheckIn is provided and goal has key results", () => {
+    const onCheckIn = jest.fn();
+    render(<GoalCard goal={baseGoal({ keyResultCount: 1 })} onCheckIn={onCheckIn} />);
+    expect(screen.getByRole("button", { name: /Check in/i })).toBeInTheDocument();
+  });
+
+  it("does not show Check in when keyResultCount is 0 even if onCheckIn is provided", () => {
+    const onCheckIn = jest.fn();
+    render(<GoalCard goal={baseGoal({ keyResultCount: 0 })} onCheckIn={onCheckIn} />);
+    expect(screen.queryByRole("button", { name: /Check in/i })).not.toBeInTheDocument();
+  });
+
+  it("calls onCheckIn with the goal when Check in is clicked", () => {
+    const onCheckIn = jest.fn();
+    const goal = baseGoal({ id: 99, keyResultCount: 2 });
+    render(<GoalCard goal={goal} onCheckIn={onCheckIn} />);
+    fireEvent.click(screen.getByRole("button", { name: /Check in/i }));
+    expect(onCheckIn).toHaveBeenCalledWith(goal);
   });
 });

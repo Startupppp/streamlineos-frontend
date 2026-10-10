@@ -1,14 +1,13 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { ManagedProductOverviewPage } from "./managed-product-overview-page";
 
 const usePageState = jest.fn();
-const mockRouterPush = jest.fn();
-const mockUseSearchParams = jest.fn(() => new URLSearchParams());
+const mockRouterReplace = jest.fn();
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: jest.fn(), push: mockRouterPush }),
+  useRouter: () => ({ replace: mockRouterReplace, push: jest.fn() }),
   usePathname: () => "/build/managed-products/42",
-  useSearchParams: () => mockUseSearchParams(),
+  useSearchParams: jest.fn(() => new URLSearchParams()),
 }));
 
 jest.mock("@/features/build/shared/use-build-list-filters", () => ({
@@ -18,17 +17,7 @@ jest.mock("@/features/build/shared/use-build-list-filters", () => ({
     setValue: jest.fn(),
     isActive: jest.fn(() => false),
     clearAll: jest.fn(),
-    search: "",
-    debouncedSearch: "",
-    setSearch: jest.fn(),
     isFiltered: false,
-  })),
-}));
-
-jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
-  useBuildListKeyboard: jest.fn(() => ({
-    focusedIndex: null,
-    setFocusedIndex: jest.fn(),
   })),
 }));
 
@@ -36,35 +25,13 @@ jest.mock("@/hooks/api/use-page-state", () => ({
   usePageState: (...args: unknown[]) => usePageState(...args),
 }));
 
-jest.mock("@/hooks/api/build/managed-products", () => ({
-  useManagedProduct: jest.fn(() => ({
-    data: undefined,
+jest.mock("@/hooks/api/build/managed-product-summary", () => ({
+  useManagedProductSummary: jest.fn(() => ({
+    data: null,
     isLoading: false,
     isError: false,
-    refetch: jest.fn(),
-  })),
-  useManagedProductInsights: jest.fn(() => ({
-    data: undefined,
-    isLoading: false,
-    isError: false,
-    refetch: jest.fn(),
-  })),
-}));
-
-jest.mock("@/hooks/api/build/projects", () => ({
-  useProjects: jest.fn(() => ({
-    data: undefined,
-    isLoading: false,
-    isError: false,
-    refetch: jest.fn(),
-  })),
-}));
-
-jest.mock("@/hooks/api/build/roadmap", () => ({
-  useRoadmapItems: jest.fn(() => ({
-    data: undefined,
-    isLoading: false,
-    isError: false,
+    error: null,
+    dataUpdatedAt: 0,
     refetch: jest.fn(),
   })),
 }));
@@ -73,458 +40,254 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
 }));
 
-jest.mock("@/hooks/api/build/build-members", () => ({
-  useBuildMembers: jest.fn(() => ({ data: { data: [] } })),
-}));
-
 jest.mock("@/features/build/managed-products/managed-product-form-sheet", () => ({
   ManagedProductFormSheet: ({ open }: { open: boolean }) =>
     open ? <div data-testid="managed-product-edit-sheet" /> : null,
 }));
 
-jest.mock("@/hooks/api/goals", () => ({
-  useGoalsPage: jest.fn(() => ({
-    data: undefined,
-    isLoading: false,
-    isError: false,
-    refetch: jest.fn(),
-  })),
-}));
+const FULL_SUMMARY = {
+  product: {
+    id: 42,
+    orgId: "org-1",
+    name: "Payments Platform",
+    key: "PAY",
+    description: null,
+    status: "active" as const,
+    ownerId: null,
+    vision: null,
+    missionStatement: null,
+    targetCustomer: null,
+    differentiators: null,
+    currentPhase: null,
+    targetLaunchDate: null,
+    successMetrics: null,
+    ownerMembershipId: null,
+    lifecycle: "growth",
+    health: "on_track",
+    teamId: null,
+    segments: [],
+    tags: [],
+    northStarMetric: null,
+    lastReviewedAt: null,
+    owner: null,
+    version: 1,
+    deletedAt: null,
+    createdAt: "2024-01-01T00:00:00Z",
+    updatedAt: "2024-01-01T00:00:00Z",
+  },
+  evidence: {
+    feedbackCount: 12,
+    feedbackLast30d: 3,
+    themedCount: 6,
+    latestFeedbackAt: null,
+    opportunityCount: 2,
+    opportunitiesByState: { open: 1, exploring: 1 },
+  },
+  delivery: {
+    linkedProjects: 3,
+    roadmapByHorizon: { now: 2, next: 5, later: 8 },
+    roadmapCompleted: 4,
+    ticketTotals: { total: 20, done: 10 },
+    nextRelease: null,
+  },
+  outcomes: {
+    goalsLinked: 2,
+    outcomeReviews: { scheduled: 3, completed: 1, met: 1, notMet: 0 },
+    latestReviewAt: null,
+  },
+  previews: {
+    themes: [],
+    roadmap: [],
+    releases: [],
+    opportunities: [],
+  },
+  generatedAt: "2024-01-01T00:00:00Z",
+};
 
 beforeEach(() => {
   jest.clearAllMocks();
+  usePageState.mockReturnValue({ kind: "ready" });
+  const { useManagedProductSummary } = jest.requireMock(
+    "@/hooks/api/build/managed-product-summary",
+  );
+  (useManagedProductSummary as jest.Mock).mockReturnValue({
+    data: FULL_SUMMARY,
+    isLoading: false,
+    isError: false,
+    error: null,
+    dataUpdatedAt: 0,
+    refetch: jest.fn(),
+  });
 });
 
-describe("ManagedProductOverviewPage", () => {
-  it("uses the same section and card geometry as the populated overview while loading", () => {
+describe("ManagedProductOverviewPage — loading skeleton", () => {
+  it("shows the overview skeleton while the summary is loading", () => {
     usePageState.mockReturnValue({ kind: "loading" });
-
     render(<ManagedProductOverviewPage managedProductId={42} />);
-
     expect(screen.getByTestId("managed-product-overview-skeleton")).toBeInTheDocument();
   });
+});
 
+describe("ManagedProductOverviewPage — access control", () => {
   it("renders access-restricted state when permission is denied so denial is never silently empty", () => {
     usePageState.mockReturnValue({ kind: "denied", permission: "build:managed-products:view" });
-
     render(<ManagedProductOverviewPage managedProductId={42} />);
-
     expect(screen.getByRole("status")).toBeInTheDocument();
     expect(screen.getByText(/access restricted/i)).toBeInTheDocument();
   });
+});
 
-  it("renders the linked projects stat card and an empty-roadmap notice in the populated state", () => {
-    usePageState.mockReturnValue({ kind: "ready" });
-
-    const { useManagedProduct } = jest.requireMock("@/hooks/api/build/managed-products");
-    (useManagedProduct as jest.Mock).mockReturnValue({
-      data: { id: 42, name: "Payments Platform", key: "PAY", description: null, vision: null },
-      isLoading: false,
-      isError: false,
-      refetch: jest.fn(),
-    });
-
-    const { useProjects } = jest.requireMock("@/hooks/api/build/projects");
-    (useProjects as jest.Mock).mockReturnValue({
-      data: { data: [], hasMore: false },
-      isLoading: false,
-      isError: false,
-      refetch: jest.fn(),
-    });
-
+describe("ManagedProductOverviewPage — three distinct sections", () => {
+  it("renders Evidence strength, Delivery progress, and Measured outcomes section headings", () => {
     render(<ManagedProductOverviewPage managedProductId={42} />);
-
-    expect(screen.getByText("Linked projects")).toBeInTheDocument();
-    expect(screen.getByText("Roadmap")).toBeInTheDocument();
-    expect(screen.getByText(/no roadmap items for this product yet/i)).toBeInTheDocument();
+    expect(screen.getByText("Evidence strength")).toBeInTheDocument();
+    expect(screen.getByText("Delivery progress")).toBeInTheDocument();
+    expect(screen.getByText("Measured outcomes")).toBeInTheDocument();
   });
 
-  it("summarizes customer and delivery signals while keeping Insights as the deep dive", () => {
-    usePageState.mockReturnValue({ kind: "ready" });
-    const { useManagedProduct, useManagedProductInsights } = jest.requireMock("@/hooks/api/build/managed-products");
-    (useManagedProduct as jest.Mock).mockReturnValue({
-      data: { id: 42, name: "Payments Platform", key: "PAY", description: null, vision: null },
-      isLoading: false, isError: false, refetch: jest.fn(),
-    });
-    (useManagedProductInsights as jest.Mock).mockReturnValue({
-      data: {
-        linkedProjectCount: 1,
-        feedbackByStatus: {},
-        submissionsByStatus: { open: 3 },
-        roadmapItemsByStatus: { planned: 2, in_progress: 1, completed: 4 },
-      },
-      isLoading: false, isError: false, refetch: jest.fn(),
-    });
-
+  it("keeps Insights as the deep-dive by linking to the insights page from evidence", () => {
     render(<ManagedProductOverviewPage managedProductId={42} />);
-
-    expect(screen.getByRole("link", { name: /explore insights/i })).toHaveAttribute("href", "/build/managed-products/42/insights");
-    expect(screen.getByText("Needs triage").parentElement).toHaveTextContent("3");
-    expect(screen.getByText("Planned or underway").parentElement).toHaveTextContent("3");
-    expect(screen.getByText("Delivered").parentElement).toHaveTextContent("4");
+    expect(
+      screen.getByRole("link", { name: /view feedback/i }),
+    ).toHaveAttribute("href", "/build/managed-products/42/feedback");
   });
 
-  it("keeps the product overview usable when the independent insights aggregate fails", () => {
-    usePageState.mockReturnValue({ kind: "ready" });
-    const { useManagedProduct, useManagedProductInsights } = jest.requireMock("@/hooks/api/build/managed-products");
-    (useManagedProduct as jest.Mock).mockReturnValue({
-      data: { id: 42, name: "Payments Platform", key: "PAY", description: null, vision: null },
-      isLoading: false, isError: false, error: null, refetch: jest.fn(),
-    });
-    (useManagedProductInsights as jest.Mock).mockReturnValue({
-      data: undefined, isLoading: false, isError: true, error: new Error("network"), refetch: jest.fn(),
-    });
-
+  it("links delivery section to the roadmap page", () => {
     render(<ManagedProductOverviewPage managedProductId={42} />);
-
-    expect(screen.getByText("Payments Platform")).toBeInTheDocument();
-    expect(screen.getByText("Product signals are unavailable.")).toBeInTheDocument();
-    expect(screen.queryByText("Needs triage")).not.toBeInTheDocument();
-    expect(usePageState).toHaveBeenCalledWith(expect.objectContaining({ isError: false }));
+    expect(
+      screen.getByRole("link", { name: /view roadmap/i }),
+    ).toHaveAttribute("href", "/build/managed-products/42/roadmap");
   });
+});
 
-  it("does not show misleading zero-valued product signals while Insights is loading", () => {
-    usePageState.mockReturnValue({ kind: "ready" });
-    const { useManagedProduct, useManagedProductInsights } = jest.requireMock("@/hooks/api/build/managed-products");
-    (useManagedProduct as jest.Mock).mockReturnValue({
-      data: { id: 42, name: "Payments Platform", key: "PAY", description: null, vision: null },
-      isLoading: false, isError: false, refetch: jest.fn(),
-    });
-    (useManagedProductInsights as jest.Mock).mockReturnValue({
-      data: undefined, isLoading: true, isError: false, refetch: jest.fn(),
-    });
-
-    render(<ManagedProductOverviewPage managedProductId={42} />);
-
-    expect(screen.getByRole("status", { name: "Loading product signals" })).toBeInTheDocument();
-    expect(screen.queryByText("Needs triage")).not.toBeInTheDocument();
-  });
-
-  it("renders linked project names when projects exist", () => {
-    usePageState.mockReturnValue({ kind: "ready" });
-
-    const { useManagedProduct } = jest.requireMock("@/hooks/api/build/managed-products");
-    (useManagedProduct as jest.Mock).mockReturnValue({
-      data: { id: 42, name: "Payments Platform", key: "PAY", description: null, vision: null },
-      isLoading: false,
-      isError: false,
-      refetch: jest.fn(),
-    });
-
-    const { useProjects } = jest.requireMock("@/hooks/api/build/projects");
-    (useProjects as jest.Mock).mockReturnValue({
-      data: {
-        data: [
-          { id: 1, name: "Checkout Service", key: "CS-1", status: "ACTIVE" },
-          { id: 2, name: "Auth Module", key: "AM-1", status: "ACTIVE" },
-        ],
-        hasMore: false,
-      },
-      isLoading: false,
-      isError: false,
-      refetch: jest.fn(),
-    });
-
-    render(<ManagedProductOverviewPage managedProductId={42} />);
-
-    expect(screen.getByText("Checkout Service")).toBeInTheDocument();
-    expect(screen.getByText("Auth Module")).toBeInTheDocument();
-  });
-
-  it("scopes goals to this product so the count is never an org-wide total", () => {
-    usePageState.mockReturnValue({ kind: "ready" });
-
-    const { useManagedProduct } = jest.requireMock("@/hooks/api/build/managed-products");
-    (useManagedProduct as jest.Mock).mockReturnValue({
-      data: { id: 42, name: "Payments Platform", key: "PAY", description: null, vision: null },
-      isLoading: false,
-      isError: false,
-      refetch: jest.fn(),
-    });
-    const { useGoalsPage } = jest.requireMock("@/hooks/api/goals");
-
-    render(<ManagedProductOverviewPage managedProductId={42} />);
-
-    expect(useGoalsPage).toHaveBeenCalledWith({ managedProductId: 42 });
-  });
-
-  it("scopes the roadmap to this product rather than claiming the roadmap is unavailable", () => {
-    usePageState.mockReturnValue({ kind: "ready" });
-
-    const { useManagedProduct } = jest.requireMock("@/hooks/api/build/managed-products");
-    (useManagedProduct as jest.Mock).mockReturnValue({
-      data: { id: 42, name: "Payments Platform", key: "PAY", description: null, vision: null },
-      isLoading: false,
-      isError: false,
-      refetch: jest.fn(),
-    });
-    const { useRoadmapItems } = jest.requireMock("@/hooks/api/build/roadmap");
-
-    render(<ManagedProductOverviewPage managedProductId={42} />);
-
-    expect(useRoadmapItems).toHaveBeenCalledWith({ managedProductId: 42, limit: 5 });
-    expect(screen.queryByText(/not yet available/i)).not.toBeInTheDocument();
-  });
-
-  it("shows the server's filtered goal total, not the length of one capped page", () => {
-    usePageState.mockReturnValue({ kind: "ready" });
-
-    const { useManagedProduct } = jest.requireMock("@/hooks/api/build/managed-products");
-    (useManagedProduct as jest.Mock).mockReturnValue({
-      data: { id: 42, name: "Payments Platform", key: "PAY", description: null, vision: null },
-      isLoading: false,
-      isError: false,
-      refetch: jest.fn(),
-    });
-
-    const { useGoalsPage } = jest.requireMock("@/hooks/api/goals");
-    (useGoalsPage as jest.Mock).mockReturnValue({
-      data: { items: [{ id: 1 }, { id: 2 }], page: 1, pageSize: 20, total: 137 },
-      isLoading: false,
-      isError: false,
-      refetch: jest.fn(),
-    });
-
-    render(<ManagedProductOverviewPage managedProductId={42} />);
-
-    expect(screen.getByText("137")).toBeInTheDocument();
-  });
-
-  it("shows the exact linked-project aggregate instead of presenting the first cursor page as the total", () => {
-    usePageState.mockReturnValue({ kind: "ready" });
-
-    const { useManagedProduct, useManagedProductInsights } = jest.requireMock(
-      "@/hooks/api/build/managed-products",
+describe("ManagedProductOverviewPage — owner display in subtitle (FE-85)", () => {
+  it("renders the resolved owner name, never the raw ownerId", () => {
+    const { useManagedProductSummary } = jest.requireMock(
+      "@/hooks/api/build/managed-product-summary",
     );
-    (useManagedProduct as jest.Mock).mockReturnValue({
-      data: { id: 42, name: "Payments Platform", key: "PAY", description: null, vision: null },
-      isLoading: false,
-      isError: false,
-      refetch: jest.fn(),
-    });
-    (useManagedProductInsights as jest.Mock).mockReturnValue({
-      data: { linkedProjectCount: 37 },
-      isLoading: false,
-      isError: false,
-      refetch: jest.fn(),
-    });
-
-    const { useProjects } = jest.requireMock("@/hooks/api/build/projects");
-    (useProjects as jest.Mock).mockReturnValue({
+    (useManagedProductSummary as jest.Mock).mockReturnValue({
       data: {
-        data: Array.from({ length: 10 }, (_, index) => ({
-          id: index + 1,
-          name: `Project ${index + 1}`,
-          key: `P-${index + 1}`,
-          status: "ACTIVE",
-        })),
-        hasMore: true,
+        ...FULL_SUMMARY,
+        product: {
+          ...FULL_SUMMARY.product,
+          ownerId: "7f3c1b2e-0000-4000-8000-000000000001",
+          owner: { id: "7f3c1b2e-0000-4000-8000-000000000001", firstName: "Ada", lastName: "Lovelace", email: "ada@example.com", image: null },
+        },
       },
       isLoading: false,
       isError: false,
+      error: null,
+      dataUpdatedAt: 0,
       refetch: jest.fn(),
     });
-
     render(<ManagedProductOverviewPage managedProductId={42} />);
-
-    expect(useManagedProductInsights).toHaveBeenCalledWith(42);
-    expect(screen.getByText("37")).toBeInTheDocument();
-    expect(screen.queryByText("10+")).not.toBeInTheDocument();
+    expect(screen.getByText(/Owner Ada Lovelace/)).toBeInTheDocument();
+    expect(screen.queryByText(/7f3c1b2e/)).not.toBeInTheDocument();
   });
 
-  it("renders feedback stat card from insights feedbackByStatus so the core feedback field is visible on the overview (BSN-MP-01)", () => {
-    usePageState.mockReturnValue({ kind: "ready" });
-
-    const { useManagedProduct, useManagedProductInsights } = jest.requireMock(
-      "@/hooks/api/build/managed-products",
-    );
-    (useManagedProduct as jest.Mock).mockReturnValue({
-      data: { id: 42, name: "Payments Platform", key: "PAY", description: null, vision: null, status: "active", updatedAt: "2024-11-01T00:00:00Z" },
-      isLoading: false,
-      isError: false,
-      refetch: jest.fn(),
-    });
-    (useManagedProductInsights as jest.Mock).mockReturnValue({
-      data: {
-        linkedProjectCount: 3,
-        feedbackByStatus: { open: 4, planned: 2, in_progress: 1, completed: 5, declined: 1 },
-      },
-      isLoading: false,
-      isError: false,
-      refetch: jest.fn(),
-    });
-
+  it("shows Unassigned rather than blank when the product has no owner", () => {
     render(<ManagedProductOverviewPage managedProductId={42} />);
-
-    expect(screen.getByText("Feedback")).toBeInTheDocument();
-    expect(screen.getByText("13")).toBeInTheDocument();
+    expect(screen.getByText(/Owner Unassigned/)).toBeInTheDocument();
   });
+});
 
-  it("renders status and updated date in the subtitle so core fields are visible without opening a sub-page (BSN-MP-02)", () => {
-    usePageState.mockReturnValue({ kind: "ready" });
-
-    const { useManagedProduct } = jest.requireMock("@/hooks/api/build/managed-products");
-    (useManagedProduct as jest.Mock).mockReturnValue({
-      data: {
-        id: 42,
-        name: "Payments Platform",
-        key: "PAY",
-        description: null,
-        vision: null,
-        status: "active",
-        updatedAt: "2024-11-01T10:30:00Z",
-      },
-      isLoading: false,
-      isError: false,
-      refetch: jest.fn(),
-    });
-
-    render(<ManagedProductOverviewPage managedProductId={42} />);
-
-    expect(screen.getByText(/active/)).toBeInTheDocument();
-    expect(screen.getByText(/updated 2024-11-01/)).toBeInTheDocument();
-  });
-
+describe("ManagedProductOverviewPage — error handling", () => {
   it("renders the error state when the resolution reports an error", () => {
     usePageState.mockReturnValue({ kind: "error", error: new Error("Load failed") });
-
     render(<ManagedProductOverviewPage managedProductId={42} />);
-
     expect(screen.getByRole("alert")).toBeInTheDocument();
   });
 
-  it("passes the first erroring query error to usePageState so a 402 plan-upgrade or 403 response is not silently degraded", () => {
+  it("passes the summary query error to usePageState so a 402 or 403 is not silently degraded", () => {
     const networkError = new Error("MODULE_NOT_ENABLED");
-    const { useManagedProduct } = jest.requireMock("@/hooks/api/build/managed-products");
-    (useManagedProduct as jest.Mock).mockReturnValue({
-      data: undefined,
+    const { useManagedProductSummary } = jest.requireMock(
+      "@/hooks/api/build/managed-product-summary",
+    );
+    (useManagedProductSummary as jest.Mock).mockReturnValue({
+      data: null,
       isLoading: false,
       isError: true,
       error: networkError,
+      dataUpdatedAt: 0,
       refetch: jest.fn(),
     });
     usePageState.mockReturnValue({ kind: "error", error: networkError });
-
     render(<ManagedProductOverviewPage managedProductId={42} />);
-
     expect(usePageState).toHaveBeenCalledWith(
       expect.objectContaining({ error: networkError }),
     );
   });
-});
 
-describe("ManagedProductOverviewPage — URL-backed search (BSN-OVW-Q)", () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    usePageState.mockReturnValue({ kind: "ready" });
-
-    const { useManagedProduct } = jest.requireMock("@/hooks/api/build/managed-products");
-    (useManagedProduct as jest.Mock).mockReturnValue({
-      data: { id: 42, name: "Payments Platform", key: "PAY", description: null, vision: null },
+  it("summary failure shows the PageState error block rather than crashing silently", () => {
+    const { useManagedProductSummary } = jest.requireMock(
+      "@/hooks/api/build/managed-product-summary",
+    );
+    (useManagedProductSummary as jest.Mock).mockReturnValue({
+      data: null,
       isLoading: false,
-      isError: false,
+      isError: true,
+      error: new Error("network"),
+      dataUpdatedAt: 0,
       refetch: jest.fn(),
     });
-  });
-
-  it("passes undefined search to useProjects when no q param in URL so all linked projects are shown by default", () => {
-    const { useBuildListFilters } = jest.requireMock("@/features/build/shared/use-build-list-filters");
-    (useBuildListFilters as jest.Mock).mockReturnValue({
-      value: jest.fn(() => undefined),
-      setValue: jest.fn(),
-      isActive: jest.fn(() => false),
-      clearAll: jest.fn(),
-      search: "",
-      debouncedSearch: "",
-      setSearch: jest.fn(),
-      isFiltered: false,
-    });
-
-    const { useProjects } = jest.requireMock("@/hooks/api/build/projects");
-
+    usePageState.mockReturnValue({ kind: "error", error: new Error("network") });
     render(<ManagedProductOverviewPage managedProductId={42} />);
-
-    expect(useProjects).toHaveBeenCalledWith(
-      expect.objectContaining({ search: undefined }),
-      expect.anything(),
-    );
-  });
-
-  it("forwards the search input value to useProjects so the linked projects preview is filtered server-side", () => {
-    const { useBuildListFilters } = jest.requireMock("@/features/build/shared/use-build-list-filters");
-    (useBuildListFilters as jest.Mock).mockReturnValue({
-      value: jest.fn(() => undefined),
-      setValue: jest.fn(),
-      isActive: jest.fn(() => false),
-      clearAll: jest.fn(),
-      search: "checkout",
-      debouncedSearch: "checkout",
-      setSearch: jest.fn(),
-      isFiltered: true,
-    });
-
-    const { useProjects } = jest.requireMock("@/hooks/api/build/projects");
-
-    render(<ManagedProductOverviewPage managedProductId={42} />);
-
-    expect(useProjects).toHaveBeenCalledWith(
-      expect.objectContaining({ search: "checkout" }),
-      expect.anything(),
-    );
+    expect(screen.getByRole("alert")).toBeInTheDocument();
   });
 });
 
-describe("ManagedProductOverviewPage — keyboard navigation (BSN-OVW-KB)", () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    usePageState.mockReturnValue({ kind: "ready" });
-
-    const { useManagedProduct } = jest.requireMock("@/hooks/api/build/managed-products");
-    (useManagedProduct as jest.Mock).mockReturnValue({
-      data: { id: 42, name: "Payments Platform", key: "PAY", description: null, vision: null },
-      isLoading: false,
-      isError: false,
-      refetch: jest.fn(),
-    });
-
-    const { useProjects } = jest.requireMock("@/hooks/api/build/projects");
-    (useProjects as jest.Mock).mockReturnValue({
-      data: {
-        data: [
-          { id: 10, name: "Checkout Service", key: "CS-1", status: "ACTIVE" },
-          { id: 11, name: "Auth Module", key: "AM-1", status: "ACTIVE" },
-        ],
-        hasMore: false,
-      },
-      isLoading: false,
-      isError: false,
-      refetch: jest.fn(),
-    });
+describe("ManagedProductOverviewPage — edit action (BSN-OVW-EDIT)", () => {
+  it("offers the edit action to a permitted viewer and opens the versioned edit sheet", () => {
+    const { useCan } = jest.requireMock("@/hooks/api/access");
+    (useCan as jest.Mock).mockReturnValue(true);
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+    fireEvent.click(screen.getAllByRole("button", { name: /Edit product/i })[0]!);
+    expect(screen.getByTestId("managed-product-edit-sheet")).toBeInTheDocument();
   });
 
-  it("wires useBuildListKeyboard with linked project count so j/k/Enter navigate the preview rows", () => {
-    const { useBuildListKeyboard } = jest.requireMock("@/hooks/common/use-build-list-keyboard");
-
+  it("offers no edit action to a viewer without build:managed-products:update (FE-122 paired negative)", () => {
+    const { useCan } = jest.requireMock("@/hooks/api/access");
+    (useCan as jest.Mock).mockReturnValue(false);
     render(<ManagedProductOverviewPage managedProductId={42} />);
+    expect(screen.queryAllByRole("button", { name: /Edit product/i })).toHaveLength(0);
+  });
+});
 
-    expect(useBuildListKeyboard).toHaveBeenCalledWith(
-      expect.objectContaining({ itemCount: 2 }),
-    );
+describe("ManagedProductOverviewPage — offline state (BSN-OVW-OFFLINE)", () => {
+  const onlineSpy = jest.spyOn(navigator, "onLine", "get");
+
+  afterEach(() => {
+    onlineSpy.mockReturnValue(true);
   });
 
-  it("marks the keyboard-focused row with aria-selected so screen readers can announce position in the list", () => {
-    const { useBuildListKeyboard } = jest.requireMock("@/hooks/common/use-build-list-keyboard");
-    (useBuildListKeyboard as jest.Mock).mockReturnValue({
-      focusedIndex: 0,
-      setFocusedIndex: jest.fn(),
-    });
-
+  it("renders no offline notice while online", () => {
+    onlineSpy.mockReturnValue(true);
     render(<ManagedProductOverviewPage managedProductId={42} />);
+    expect(screen.queryByTestId("offline-notice")).not.toBeInTheDocument();
+  });
 
-    const rows = screen.getAllByRole("generic", { hidden: true }).filter(
-      (el) => el.getAttribute("aria-selected") !== null,
+  it("shows freshness rather than blanking the overview when the browser goes offline", () => {
+    onlineSpy.mockReturnValue(false);
+    const { useManagedProductSummary } = jest.requireMock(
+      "@/hooks/api/build/managed-product-summary",
     );
-    expect(rows.length).toBeGreaterThan(0);
-    expect(rows[0]).toHaveAttribute("aria-selected", "true");
+    (useManagedProductSummary as jest.Mock).mockReturnValue({
+      data: FULL_SUMMARY,
+      dataUpdatedAt: Date.now(),
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+    expect(screen.getByTestId("offline-notice")).toHaveTextContent(/Offline — showing data/);
+  });
+
+  it("withdraws the edit action while offline", () => {
+    onlineSpy.mockReturnValue(false);
+    const { useCan } = jest.requireMock("@/hooks/api/access");
+    (useCan as jest.Mock).mockReturnValue(true);
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+    expect(screen.queryAllByRole("button", { name: /Edit product/i })).toHaveLength(0);
   });
 });

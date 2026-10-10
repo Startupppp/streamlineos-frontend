@@ -30,13 +30,20 @@ const managedProductInsightsContractLazy = lazyContract(() =>
   ),
 );
 
-interface ListManagedProductsParams {
+export interface ListManagedProductsParams {
   limit?: number;
   cursor?: string;
   status?: string;
   search?: string;
   ownerId?: string;
   sort?: "name" | "updated" | "status";
+  lifecycle?: string;
+  health?: string;
+  teamId?: string;
+  segment?: string;
+  tag?: string;
+  linkedProjectId?: string;
+  archived?: boolean;
 }
 
 export function useManagedProducts(params?: ListManagedProductsParams) {
@@ -49,6 +56,13 @@ export function useManagedProducts(params?: ListManagedProductsParams) {
   if (params?.limit) queryParams["limit"] = String(params.limit);
   if (params?.ownerId) queryParams["ownerId"] = params.ownerId;
   if (params?.sort) queryParams["sort"] = params.sort;
+  if (params?.lifecycle) queryParams["lifecycle"] = params.lifecycle;
+  if (params?.health) queryParams["health"] = params.health;
+  if (params?.teamId) queryParams["teamId"] = params.teamId;
+  if (params?.segment) queryParams["segment"] = params.segment;
+  if (params?.tag) queryParams["tag"] = params.tag;
+  if (params?.linkedProjectId) queryParams["linkedProjectId"] = params.linkedProjectId;
+  if (params?.archived !== undefined) queryParams["archived"] = String(params.archived);
 
   return useQuery<ManagedProductsPage>({
     queryKey: buildWorkQueryKeys.projects.managedProducts.list(
@@ -190,5 +204,11 @@ export function useManagedProductInsights(
   });
 }
 
-export { useCreateManagedProduct, useUpdateManagedProduct, useDeleteManagedProduct } from "./managed-product-mutations";
+export {
+  useCreateManagedProduct,
+  useUpdateManagedProduct,
+  useDeleteManagedProduct,
+  useArchiveManagedProduct,
+  useRestoreManagedProduct,
+} from "./managed-product-mutations";
 

@@ -1,231 +1,89 @@
-import { useCallback, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import {
-  useManagedProduct,
-  useManagedProductInsights,
-} from "@/hooks/api/build/managed-products";
-import { useCan } from "@/hooks/api/access";
-import { useBuildMembers } from "@/hooks/api/build/build-members";
-import { getUserDisplayName } from "@/lib/person-display";
+import { useCallback, useMemo, useState } from "react";
 import { Pencil } from "lucide-react";
-import { useProjects } from "@/hooks/api/build/projects";
-import { useRoadmapItems } from "@/hooks/api/build/roadmap";
-import { useGoalsPage } from "@/hooks/api/goals";
+import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { BUILD_FILTER_ALL, useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
-import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
+import { useManagedProductSummary } from "@/hooks/api/build/managed-product-summary";
+import { getUserDisplayName } from "@/lib/person-display";
+import { formatRelativeTime } from "@/lib/date-utils";
+import type { SummaryPeriod } from "@/hooks/api/build/managed-product-summary";
 
-const PROJECT_SORT_VALUES = ["name_asc", "priority_desc", "due_asc", "due_desc"] as const;
+const PERIOD_VALUES = ["30d", "90d", "365d", "all"] as const;
 
 const OVERVIEW_FILTER_DEFINITIONS = [
-  { param: "ownerId" },
-  { param: "status" },
-  { param: "cursor" },
-  { param: "sort", options: PROJECT_SORT_VALUES },
+  { param: "period", options: PERIOD_VALUES },
 ] as const;
 
-export const PROJECT_SORT_OPTIONS = [
-  { value: BUILD_FILTER_ALL, label: "Newest first" },
-  { value: "name_asc", label: "Name A–Z" },
-  { value: "priority_desc", label: "Priority high to low" },
-  { value: "due_asc", label: "Due soonest" },
-  { value: "due_desc", label: "Due latest" },
-];
-
-export const PROJECT_STATUS_OPTIONS = [
-  { value: BUILD_FILTER_ALL, label: "All statuses" },
-  { value: "ACTIVE", label: "Active" },
-  { value: "COMPLETED", label: "Completed" },
-  { value: "ARCHIVED", label: "Archived" },
+export const PERIOD_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "All time" },
+  { value: "30d", label: "Last 30 days" },
+  { value: "90d", label: "Last 90 days" },
+  { value: "365d", label: "Last 365 days" },
 ];
 
 const EDIT_ACTION_BASE = { id: "edit", label: "Edit product", icon: Pencil, primary: true as const };
 
 export function useManagedProductOverview(managedProductId: number) {
-  const router = useRouter();
-  const searchInputRef = useRef<HTMLInputElement | null>(null);
-  const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
-  const listFilters = useBuildListFilters({ filters: OVERVIEW_FILTER_DEFINITIONS, withSearch: true });
-  const searchValue = listFilters.debouncedSearch.trim() || undefined;
-  const rawOwner = listFilters.value("ownerId");
-  const managerId = rawOwner && rawOwner !== BUILD_FILTER_ALL ? rawOwner : undefined;
-  const rawStatus = listFilters.value("status");
-  const statusParam =
-    rawStatus === "ACTIVE" || rawStatus === "COMPLETED" || rawStatus === "ARCHIVED" || rawStatus === "ALL"
-      ? rawStatus
-      : undefined;
-  const rawSort = listFilters.value("sort");
-  const sortParam = PROJECT_SORT_VALUES.find((value) => value === rawSort);
-  const rawCursor = listFilters.value("cursor");
-  const parsedCursor =
-    rawCursor && rawCursor !== BUILD_FILTER_ALL ? parseInt(rawCursor, 10) : undefined;
-  const afterId =
-    sortParam === undefined && Number.isInteger(parsedCursor) ? parsedCursor : undefined;
-
-  const productQuery = useManagedProduct(managedProductId);
-  const projectsQuery = useProjects(
-    {
-      managedProductId,
-      limit: 10,
-      search: searchValue,
-      managerId,
-      status: statusParam,
-      ...(sortParam ? { sort: sortParam } : {}),
-      ...(afterId === undefined ? {} : { afterId }),
-    },
-    { enabled: !!managedProductId },
-  );
-  const insightsQuery = useManagedProductInsights(managedProductId);
-  const { data: membersRes } = useBuildMembers({ limit: 100 });
+  const [editOpen, setEditOpen] = useState(false);
+  const listFilters = useBuildListFilters({ filters: OVERVIEW_FILTER_DEFINITIONS });
+  const rawPeriod = listFilters.value("period");
+  const period: SummaryPeriod | undefined = PERIOD_VALUES.find((v) => v === rawPeriod);
   const isOnline = useOnlineStatus();
   const canEdit = useCan("build:managed-products:update") && isOnline;
-  const [editOpen, setEditOpen] = useState(false);
-  const roadmapQuery = useRoadmapItems({ managedProductId, limit: 5 });
-  const goalsQuery = useGoalsPage({ managedProductId });
+
+  const summaryQuery = useManagedProductSummary(managedProductId, period);
+
+  const product = summaryQuery.data?.product ?? null;
 
   const resolution = usePageState({
     permission: "build:managed-products:view",
-    isLoading: productQuery.isLoading,
-    isError: productQuery.isError,
-    error: productQuery.error,
-    isEmpty: !productQuery.data,
+    isLoading: summaryQuery.isLoading,
+    isError: summaryQuery.isError,
+    error: summaryQuery.error,
+    isEmpty: !summaryQuery.data,
   });
 
-  const product = productQuery.data;
-  const projectsPage = projectsQuery.data;
+  const handleRetry = useCallback(() => {
+    void summaryQuery.refetch();
+  }, [summaryQuery]);
 
-  const hasMoreProjects = projectsPage?.hasMore ?? false;
-  const linkedProjectsLabel = insightsQuery.isError ? "—" : String(insightsQuery.data?.linkedProjectCount ?? 0);
-
-  function handleRetry() {
-    void productQuery.refetch();
-    void projectsQuery.refetch();
-    void insightsQuery.refetch();
-    void roadmapQuery.refetch();
-    void goalsQuery.refetch();
-  }
-
-  const linkedProjects = useMemo(() => projectsPage?.data ?? [], [projectsPage]);
-  const roadmapItems = roadmapQuery.data?.data ?? [];
-  const hasMoreRoadmap = roadmapQuery.data?.pagination?.hasMore ?? false;
-  const goalsLabel = goalsQuery.isError ? "—" : String(goalsQuery.data?.total ?? 0);
-
-  const feedbackTotal = Object.values(
-    insightsQuery.data?.feedbackByStatus ?? {},
-  ).reduce((a: number, b: number) => a + b, 0);
-  const openFeedbackCount = insightsQuery.data?.submissionsByStatus?.open ?? 0;
-  const activeRoadmapCount =
-    (insightsQuery.data?.roadmapItemsByStatus?.planned ?? 0) +
-    (insightsQuery.data?.roadmapItemsByStatus?.in_progress ?? 0);
-  const deliveredRoadmapCount = insightsQuery.data?.roadmapItemsByStatus?.completed ?? 0;
-
-  const handleOpenFocused = useCallback(
-    (index: number) => {
-      const proj = linkedProjects[index];
-      if (proj) {
-        router.push(`/build/${proj.id}`);
-      }
-    },
-    [linkedProjects, router],
-  );
-
-  const handleClearSelection = useCallback(() => {}, []);
-
-  const handleStatusChange = useCallback(
-    (value: string) => listFilters.setValue("status", value),
-    [listFilters],
-  );
-
-  const handleSortChange = useCallback(
-    (value: string) => listFilters.setValue("sort", value),
-    [listFilters],
-  );
-
-  const handleOwnerChange = useCallback(
-    (value: string) => listFilters.setValue("ownerId", value),
+  const handlePeriodChange = useCallback(
+    (value: string) => listFilters.setValue("period", value),
     [listFilters],
   );
 
   const handleOpenEdit = useCallback(() => setEditOpen(true), []);
-
-  const ownerOptions = useMemo(() => {
-    const members = membersRes?.data ?? [];
-    return [
-      { value: BUILD_FILTER_ALL, label: "All owners" },
-      ...members.map((member) => ({
-        value: member.id,
-        label: getUserDisplayName(member),
-      })),
-    ];
-  }, [membersRes]);
-
-  const overviewSubtitle = useMemo(() => {
-    if (!product) return undefined;
-    const parts: string[] = [];
-    if (product.status) parts.push(product.status);
-    parts.push(`Owner ${getUserDisplayName(product.owner)}`);
-    if (product.updatedAt) parts.push(`updated ${product.updatedAt.slice(0, 10)}`);
-    return parts.join(" · ");
-  }, [product]);
 
   const editActions = useMemo(
     () => (canEdit ? [{ ...EDIT_ACTION_BASE, onSelect: handleOpenEdit }] : []),
     [canEdit, handleOpenEdit],
   );
 
-  const handleShortcutHelp = useCallback(() => {
-    setShortcutHelpOpen(true);
-  }, []);
-
-  const { focusedIndex } = useBuildListKeyboard({
-    itemCount: linkedProjects.length,
-    onOpen: handleOpenFocused,
-    onClearSelection: handleClearSelection,
-    onShortcutHelp: handleShortcutHelp,
-    searchInputRef,
-  });
+  const overviewSubtitle = useMemo(() => {
+    if (!product) return undefined;
+    const parts: string[] = [];
+    if (product.lifecycle) parts.push(product.lifecycle);
+    if (product.health) parts.push(product.health);
+    parts.push(`Owner ${getUserDisplayName(product.owner)}`);
+    if (product.lastReviewedAt) {
+      parts.push(`Reviewed ${formatRelativeTime(product.lastReviewedAt)}`);
+    }
+    return parts.join(" · ");
+  }, [product]);
 
   return {
     listFilters,
-    searchInputRef,
-    rawOwner,
-    rawStatus,
-    rawSort,
-    ownerOptions,
+    rawPeriod,
     product,
     editOpen,
     setEditOpen,
     resolution,
-    overviewSubtitle,
     editActions,
-    focusedIndex,
-    linkedProjects,
-    hasMoreProjects,
-    linkedProjectsLabel,
-    roadmapItems,
-    hasMoreRoadmap,
-    goalsLabel,
-    feedbackTotal,
-    insightsIsError: insightsQuery.isError,
-    projectsIsError: projectsQuery.isError,
-    roadmapIsError: roadmapQuery.isError,
-    goalsIsError: goalsQuery.isError,
-    retryInsights: insightsQuery.refetch,
-    retryProjects: projectsQuery.refetch,
-    retryRoadmap: roadmapQuery.refetch,
-    retryGoals: goalsQuery.refetch,
-    openFeedbackCount,
-    activeRoadmapCount,
-    deliveredRoadmapCount,
-    productDataUpdatedAt: productQuery.dataUpdatedAt,
-    insightsIsLoading: insightsQuery.isLoading,
-    goalsIsLoading: goalsQuery.isLoading,
-    shortcutHelpOpen,
-    setShortcutHelpOpen,
+    summaryData: summaryQuery.data ?? null,
+    summaryDataUpdatedAt: summaryQuery.dataUpdatedAt,
+    overviewSubtitle,
     handleRetry,
-    handleStatusChange,
-    handleSortChange,
-    handleOwnerChange,
+    handlePeriodChange,
   };
 }

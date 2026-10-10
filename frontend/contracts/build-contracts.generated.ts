@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const OPENAPI_HASH =
-  "sha256:db5574f63eac29c3f8167463fd2da4a567210871e73c5f70fd8c9f58038ab48a" as const;
+  "sha256:562d04fb8b149ccd8c4d6362428c5eafae9a6c1cda6993dfad1c371a2c8f6067" as const;
 
 export const agentTokensListResponseSchema = z.array(
   z.object({
@@ -1151,6 +1151,18 @@ export const managedProductsListManagedProductsResponseSchema = z.object({
         .gte(-9007199254740991)
         .lte(9007199254740991)
         .nullable(),
+      lifecycle: z.string(),
+      health: z.string(),
+      teamId: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991)
+        .nullable(),
+      segments: z.array(z.string()),
+      tags: z.array(z.string()),
+      northStarMetric: z.string().nullable(),
+      lastReviewedAt: z.iso.datetime({ offset: true }).nullable(),
       owner: z
         .object({
           id: z.string(),
@@ -1164,6 +1176,27 @@ export const managedProductsListManagedProductsResponseSchema = z.object({
       deletedAt: z.iso.datetime({ offset: true }).nullable(),
       createdAt: z.iso.datetime({ offset: true }),
       updatedAt: z.iso.datetime({ offset: true }),
+      linkedProjectCount: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991),
+      nextRelease: z
+        .object({
+          id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+          name: z.string(),
+          version: z.string(),
+          releaseDate: z.string().nullable(),
+        })
+        .nullable(),
+      feedbackTrend: z.object({
+        last30d: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+        previous30d: z
+          .number()
+          .int()
+          .gte(-9007199254740991)
+          .lte(9007199254740991),
+      }),
     }),
   ),
   pagination: z.object({
@@ -1197,6 +1230,18 @@ export const managedProductsCreateManagedProductResponseSchema = z.object({
     .gte(-9007199254740991)
     .lte(9007199254740991)
     .nullable(),
+  lifecycle: z.string(),
+  health: z.string(),
+  teamId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  segments: z.array(z.string()),
+  tags: z.array(z.string()),
+  northStarMetric: z.string().nullable(),
+  lastReviewedAt: z.iso.datetime({ offset: true }).nullable(),
   owner: z
     .object({
       id: z.string(),
@@ -1223,6 +1268,29 @@ export const managedProductsCreateManagedProductBodySchema = z.strictObject({
     .optional(),
   description: z.string().optional(),
   ownerId: z.string().optional(),
+  vision: z.string().optional(),
+  missionStatement: z.string().optional(),
+  targetCustomer: z.string().optional(),
+  differentiators: z.string().optional(),
+  currentPhase: z.string().optional(),
+  northStarMetric: z.string().optional(),
+  successMetrics: z
+    .array(
+      z.strictObject({
+        label: z.string(),
+        target: z.string().optional(),
+      }),
+    )
+    .optional(),
+  lifecycle: z
+    .enum(["discovery", "build", "growth", "mature", "sunset"])
+    .optional(),
+  health: z.enum(["on_track", "at_risk", "off_track", "unknown"]).optional(),
+  teamId: z.number().int().gt(0).lte(9007199254740991).optional(),
+  segments: z.array(z.string()).optional(),
+  tags: z.array(z.string()).optional(),
+  lastReviewedAt: z.iso.datetime({ offset: true }).optional(),
+  targetLaunchDate: z.iso.datetime({ offset: true }).optional(),
 });
 export type ManagedProductsCreateManagedProductBody = z.input<
   typeof managedProductsCreateManagedProductBodySchema
@@ -1275,6 +1343,18 @@ export const managedProductsGetManagedProductResponseSchema = z.object({
     .gte(-9007199254740991)
     .lte(9007199254740991)
     .nullable(),
+  lifecycle: z.string(),
+  health: z.string(),
+  teamId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  segments: z.array(z.string()),
+  tags: z.array(z.string()),
+  northStarMetric: z.string().nullable(),
+  lastReviewedAt: z.iso.datetime({ offset: true }).nullable(),
   owner: z
     .object({
       id: z.string(),
@@ -1314,6 +1394,18 @@ export const managedProductsUpdateManagedProductResponseSchema = z.object({
     .gte(-9007199254740991)
     .lte(9007199254740991)
     .nullable(),
+  lifecycle: z.string(),
+  health: z.string(),
+  teamId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  segments: z.array(z.string()),
+  tags: z.array(z.string()),
+  northStarMetric: z.string().nullable(),
+  lastReviewedAt: z.iso.datetime({ offset: true }).nullable(),
   owner: z
     .object({
       id: z.string(),
@@ -1338,9 +1430,130 @@ export const managedProductsUpdateManagedProductBodySchema = z.strictObject({
   description: z.string().nullable().optional(),
   ownerId: z.string().nullable().optional(),
   status: z.enum(["active", "archived"]).optional(),
+  vision: z.string().nullable().optional(),
+  missionStatement: z.string().nullable().optional(),
+  targetCustomer: z.string().nullable().optional(),
+  differentiators: z.string().nullable().optional(),
+  currentPhase: z.string().nullable().optional(),
+  northStarMetric: z.string().nullable().optional(),
+  successMetrics: z
+    .array(
+      z.strictObject({
+        label: z.string(),
+        target: z.string().optional(),
+      }),
+    )
+    .optional(),
+  lifecycle: z
+    .enum(["discovery", "build", "growth", "mature", "sunset"])
+    .optional(),
+  health: z.enum(["on_track", "at_risk", "off_track", "unknown"]).optional(),
+  teamId: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
+  segments: z.array(z.string()).optional(),
+  tags: z.array(z.string()).optional(),
+  lastReviewedAt: z.iso.datetime({ offset: true }).nullable().optional(),
+  targetLaunchDate: z.iso.datetime({ offset: true }).nullable().optional(),
 });
 export type ManagedProductsUpdateManagedProductBody = z.input<
   typeof managedProductsUpdateManagedProductBodySchema
+>;
+
+export const managedProductsArchiveManagedProductResponseSchema = z.object({
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  orgId: z.string(),
+  name: z.string(),
+  key: z.string(),
+  description: z.string().nullable(),
+  status: z.enum(["active", "archived"]),
+  ownerId: z.string().nullable(),
+  vision: z.string().nullable(),
+  missionStatement: z.string().nullable(),
+  targetCustomer: z.string().nullable(),
+  differentiators: z.string().nullable(),
+  currentPhase: z.string().nullable(),
+  targetLaunchDate: z.iso.datetime({ offset: true }).nullable(),
+  successMetrics: z.unknown(),
+  ownerMembershipId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  lifecycle: z.string(),
+  health: z.string(),
+  teamId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  segments: z.array(z.string()),
+  tags: z.array(z.string()),
+  northStarMetric: z.string().nullable(),
+  lastReviewedAt: z.iso.datetime({ offset: true }).nullable(),
+  owner: z
+    .object({
+      id: z.string(),
+      firstName: z.string().nullable(),
+      lastName: z.string().nullable(),
+      email: z.string(),
+      image: z.string().nullable(),
+    })
+    .nullable(),
+  version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  deletedAt: z.iso.datetime({ offset: true }).nullable(),
+  createdAt: z.iso.datetime({ offset: true }),
+  updatedAt: z.iso.datetime({ offset: true }),
+});
+export type ManagedProductsArchiveManagedProductResponse = z.infer<
+  typeof managedProductsArchiveManagedProductResponseSchema
+>;
+
+export const managedProductsArchiveManagedProductBodySchema = z.strictObject({
+  version: z.number().int().gte(1).lte(9007199254740991),
+});
+export type ManagedProductsArchiveManagedProductBody = z.input<
+  typeof managedProductsArchiveManagedProductBodySchema
+>;
+
+export const discoveryReviewsGetEvidenceThemesResponseSchema = z.object({
+  themes: z.array(
+    z.object({
+      theme: z.string().nullable(),
+      count: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      latestAt: z.string().nullable(),
+      sentimentBreakdown: z.object({
+        positive: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+        neutral: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+        negative: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+        mixed: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      }),
+      opportunityCount: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991),
+      trend: z.array(
+        z.object({
+          weekStart: z.string(),
+          count: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+        }),
+      ),
+    }),
+  ),
+  suggestedThemes: z.array(
+    z.object({
+      label: z.string(),
+      count: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      citations: z.array(
+        z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      ),
+      suggestion: z.literal(true),
+    }),
+  ),
+});
+export type DiscoveryReviewsGetEvidenceThemesResponse = z.infer<
+  typeof discoveryReviewsGetEvidenceThemesResponseSchema
 >;
 
 export const managedProductsGetProductInsightsResponseSchema = z.object({
@@ -1402,6 +1615,1623 @@ export const managedProductsGetProductInsightsResponseSchema = z.object({
 });
 export type ManagedProductsGetProductInsightsResponse = z.infer<
   typeof managedProductsGetProductInsightsResponseSchema
+>;
+
+export const managedProductRelationsListMembersResponseSchema = z.object({
+  data: z.array(
+    z.object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      orgId: z.string(),
+      managedProductId: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991),
+      organizationMembershipId: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991),
+      role: z.enum(["member", "admin"]),
+      addedAt: z.iso.datetime({ offset: true }),
+      member: z
+        .object({
+          id: z.string(),
+          firstName: z.string().nullable(),
+          lastName: z.string().nullable(),
+          email: z.string(),
+          image: z.string().nullable(),
+        })
+        .nullable(),
+    }),
+  ),
+});
+export type ManagedProductRelationsListMembersResponse = z.infer<
+  typeof managedProductRelationsListMembersResponseSchema
+>;
+
+export const managedProductRelationsAddMemberResponseSchema = z.object({
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  orgId: z.string(),
+  managedProductId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991),
+  organizationMembershipId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991),
+  role: z.enum(["member", "admin"]),
+  addedAt: z.iso.datetime({ offset: true }),
+  member: z
+    .object({
+      id: z.string(),
+      firstName: z.string().nullable(),
+      lastName: z.string().nullable(),
+      email: z.string(),
+      image: z.string().nullable(),
+    })
+    .nullable(),
+});
+export type ManagedProductRelationsAddMemberResponse = z.infer<
+  typeof managedProductRelationsAddMemberResponseSchema
+>;
+
+export const managedProductRelationsAddMemberBodySchema = z.strictObject({
+  organizationMembershipId: z.number().int().gt(0).lte(9007199254740991),
+  role: z.enum(["member", "admin"]),
+});
+export type ManagedProductRelationsAddMemberBody = z.input<
+  typeof managedProductRelationsAddMemberBodySchema
+>;
+
+export const discoveryListOpportunitiesResponseSchema = z.object({
+  data: z.array(
+    z.object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      title: z.string(),
+      problem: z.string().nullable(),
+      hypothesis: z.string().nullable(),
+      affectedSegment: z.string().nullable(),
+      theme: z.string().nullable(),
+      owner: z
+        .object({
+          membershipId: z
+            .number()
+            .int()
+            .gte(-9007199254740991)
+            .lte(9007199254740991),
+          name: z.string().nullable(),
+        })
+        .nullable(),
+      state: z.enum([
+        "identified",
+        "validating",
+        "accepted",
+        "declined",
+        "delivered",
+        "measured",
+      ]),
+      desiredOutcome: z.string().nullable(),
+      outcomeMetric: z.string().nullable(),
+      outcomeUnit: z.string().nullable(),
+      outcomeBaseline: z.string().nullable(),
+      outcomeTarget: z.string().nullable(),
+      goalId: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991)
+        .nullable(),
+      roadmapItemId: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991)
+        .nullable(),
+      evidence: z.object({
+        count: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+        latestAt: z.iso.datetime({ offset: true }).nullable(),
+      }),
+      latestScore: z
+        .object({
+          scoreVersion: z
+            .number()
+            .int()
+            .gte(-9007199254740991)
+            .lte(9007199254740991),
+          reach: z.string().nullable(),
+          reachPeriod: z.enum(["month", "quarter", "year"]).nullable(),
+          reachUnit: z.string().nullable(),
+          impact: z.string().nullable(),
+          confidence: z.string().nullable(),
+          effort: z.string().nullable(),
+          effortUnit: z
+            .enum(["person_days", "person_weeks", "person_months"])
+            .nullable(),
+          computedScore: z.string().nullable(),
+          isOverride: z.boolean(),
+          overrideScore: z.string().nullable(),
+          overrideReason: z.string().nullable(),
+          effectiveScore: z.string().nullable(),
+          createdAt: z.iso.datetime({ offset: true }),
+          createdBy: z.string().nullable(),
+        })
+        .nullable(),
+      scoreStatus: z.enum(["scored", "unscored"]),
+      version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      updatedAt: z.iso.datetime({ offset: true }),
+      allowedActions: z.array(z.string()),
+    }),
+  ),
+  pagination: z.object({
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+export type DiscoveryListOpportunitiesResponse = z.infer<
+  typeof discoveryListOpportunitiesResponseSchema
+>;
+
+export const discoveryCreateOpportunityResponseSchema = z.object({
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  title: z.string(),
+  problem: z.string().nullable(),
+  hypothesis: z.string().nullable(),
+  affectedSegment: z.string().nullable(),
+  theme: z.string().nullable(),
+  owner: z
+    .object({
+      membershipId: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991),
+      name: z.string().nullable(),
+    })
+    .nullable(),
+  state: z.enum([
+    "identified",
+    "validating",
+    "accepted",
+    "declined",
+    "delivered",
+    "measured",
+  ]),
+  desiredOutcome: z.string().nullable(),
+  outcomeMetric: z.string().nullable(),
+  outcomeUnit: z.string().nullable(),
+  outcomeBaseline: z.string().nullable(),
+  outcomeTarget: z.string().nullable(),
+  goalId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  roadmapItemId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  evidence: z.object({
+    count: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    latestAt: z.iso.datetime({ offset: true }).nullable(),
+  }),
+  latestScore: z
+    .object({
+      scoreVersion: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991),
+      reach: z.string().nullable(),
+      reachPeriod: z.enum(["month", "quarter", "year"]).nullable(),
+      reachUnit: z.string().nullable(),
+      impact: z.string().nullable(),
+      confidence: z.string().nullable(),
+      effort: z.string().nullable(),
+      effortUnit: z
+        .enum(["person_days", "person_weeks", "person_months"])
+        .nullable(),
+      computedScore: z.string().nullable(),
+      isOverride: z.boolean(),
+      overrideScore: z.string().nullable(),
+      overrideReason: z.string().nullable(),
+      effectiveScore: z.string().nullable(),
+      createdAt: z.iso.datetime({ offset: true }),
+      createdBy: z.string().nullable(),
+    })
+    .nullable(),
+  scoreStatus: z.enum(["scored", "unscored"]),
+  version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  updatedAt: z.iso.datetime({ offset: true }),
+  allowedActions: z.array(z.string()),
+});
+export type DiscoveryCreateOpportunityResponse = z.infer<
+  typeof discoveryCreateOpportunityResponseSchema
+>;
+
+export const discoveryCreateOpportunityBodySchema = z.strictObject({
+  title: z.string(),
+  problem: z.string().optional(),
+  hypothesis: z.string().optional(),
+  affectedSegment: z.string().optional(),
+  theme: z.string().optional(),
+  ownerMembershipId: z.number().int().gt(0).lte(9007199254740991).optional(),
+  desiredOutcome: z.string().optional(),
+  outcomeMetric: z.string().optional(),
+  outcomeUnit: z.string().optional(),
+  outcomeBaseline: z.string().optional(),
+  outcomeTarget: z.string().optional(),
+  goalId: z.number().int().gt(0).lte(9007199254740991).optional(),
+  initialEvidenceIds: z
+    .array(z.number().int().gt(0).lte(9007199254740991))
+    .optional(),
+});
+export type DiscoveryCreateOpportunityBody = z.input<
+  typeof discoveryCreateOpportunityBodySchema
+>;
+
+export const discoveryCompareOpportunitiesResponseSchema = z.object({
+  items: z.array(
+    z.object({
+      opportunityId: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991),
+      title: z.string(),
+      latestScore: z
+        .object({
+          scoreVersion: z
+            .number()
+            .int()
+            .gte(-9007199254740991)
+            .lte(9007199254740991),
+          reach: z.string().nullable(),
+          reachPeriod: z.enum(["month", "quarter", "year"]).nullable(),
+          reachUnit: z.string().nullable(),
+          impact: z.string().nullable(),
+          confidence: z.string().nullable(),
+          effort: z.string().nullable(),
+          effortUnit: z
+            .enum(["person_days", "person_weeks", "person_months"])
+            .nullable(),
+          computedScore: z.string().nullable(),
+          isOverride: z.boolean(),
+          overrideScore: z.string().nullable(),
+          overrideReason: z.string().nullable(),
+          effectiveScore: z.string().nullable(),
+          createdAt: z.iso.datetime({ offset: true }),
+          createdBy: z.string().nullable(),
+        })
+        .nullable(),
+      evidenceCount: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991),
+    }),
+  ),
+});
+export type DiscoveryCompareOpportunitiesResponse = z.infer<
+  typeof discoveryCompareOpportunitiesResponseSchema
+>;
+
+export const discoveryGetOpportunityResponseSchema = z.object({
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  title: z.string(),
+  problem: z.string().nullable(),
+  hypothesis: z.string().nullable(),
+  affectedSegment: z.string().nullable(),
+  theme: z.string().nullable(),
+  owner: z
+    .object({
+      membershipId: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991),
+      name: z.string().nullable(),
+    })
+    .nullable(),
+  state: z.enum([
+    "identified",
+    "validating",
+    "accepted",
+    "declined",
+    "delivered",
+    "measured",
+  ]),
+  desiredOutcome: z.string().nullable(),
+  outcomeMetric: z.string().nullable(),
+  outcomeUnit: z.string().nullable(),
+  outcomeBaseline: z.string().nullable(),
+  outcomeTarget: z.string().nullable(),
+  goalId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  roadmapItemId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  evidence: z.object({
+    count: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    latestAt: z.iso.datetime({ offset: true }).nullable(),
+  }),
+  latestScore: z
+    .object({
+      scoreVersion: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991),
+      reach: z.string().nullable(),
+      reachPeriod: z.enum(["month", "quarter", "year"]).nullable(),
+      reachUnit: z.string().nullable(),
+      impact: z.string().nullable(),
+      confidence: z.string().nullable(),
+      effort: z.string().nullable(),
+      effortUnit: z
+        .enum(["person_days", "person_weeks", "person_months"])
+        .nullable(),
+      computedScore: z.string().nullable(),
+      isOverride: z.boolean(),
+      overrideScore: z.string().nullable(),
+      overrideReason: z.string().nullable(),
+      effectiveScore: z.string().nullable(),
+      createdAt: z.iso.datetime({ offset: true }),
+      createdBy: z.string().nullable(),
+    })
+    .nullable(),
+  scoreStatus: z.enum(["scored", "unscored"]),
+  version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  updatedAt: z.iso.datetime({ offset: true }),
+  allowedActions: z.array(z.string()),
+  decisionNote: z.string().nullable(),
+  decidedAt: z.iso.datetime({ offset: true }).nullable(),
+  decidedBy: z.string().nullable(),
+  evidenceList: z.array(
+    z.object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      sourceKind: z.enum(["feedbucket_submission", "feedback_post"]),
+      sourceId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      note: z.string().nullable(),
+      addedBy: z.string().nullable(),
+      addedAt: z.iso.datetime({ offset: true }),
+      preview: z
+        .object({
+          message: z.string().nullable(),
+          title: z.string().nullable(),
+          sourceChannel: z.string().nullable(),
+          segment: z.string().nullable(),
+          theme: z.string().nullable(),
+          sentiment: z.string().nullable(),
+          reporterName: z.string().nullable(),
+          consentStatus: z.string().nullable(),
+          votes: z
+            .number()
+            .int()
+            .gte(-9007199254740991)
+            .lte(9007199254740991)
+            .nullable(),
+          status: z.string().nullable(),
+          createdAt: z.iso.datetime({ offset: true }).nullable(),
+        })
+        .nullable(),
+    }),
+  ),
+  scoreHistory: z.array(
+    z.object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      scoreVersion: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991),
+      reach: z.string().nullable(),
+      reachPeriod: z.enum(["month", "quarter", "year"]).nullable(),
+      reachUnit: z.string().nullable(),
+      impact: z.string().nullable(),
+      confidence: z.string().nullable(),
+      effort: z.string().nullable(),
+      effortUnit: z
+        .enum(["person_days", "person_weeks", "person_months"])
+        .nullable(),
+      score: z.string().nullable(),
+      isOverride: z.boolean(),
+      overrideScore: z.string().nullable(),
+      overrideReason: z.string().nullable(),
+      createdBy: z.string().nullable(),
+      createdAt: z.iso.datetime({ offset: true }),
+    }),
+  ),
+  outcomeReviews: z.array(
+    z.object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      kind: z.enum(["experiment", "outcome_review"]),
+      title: z.string(),
+      state: z.enum(["scheduled", "running", "completed", "cancelled"]),
+      result: z
+        .enum(["met", "partially_met", "not_met", "inconclusive"])
+        .nullable(),
+      scheduledFor: z.string().nullable(),
+    }),
+  ),
+});
+export type DiscoveryGetOpportunityResponse = z.infer<
+  typeof discoveryGetOpportunityResponseSchema
+>;
+
+export const discoveryUpdateOpportunityResponseSchema = z.object({
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  title: z.string(),
+  problem: z.string().nullable(),
+  hypothesis: z.string().nullable(),
+  affectedSegment: z.string().nullable(),
+  theme: z.string().nullable(),
+  owner: z
+    .object({
+      membershipId: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991),
+      name: z.string().nullable(),
+    })
+    .nullable(),
+  state: z.enum([
+    "identified",
+    "validating",
+    "accepted",
+    "declined",
+    "delivered",
+    "measured",
+  ]),
+  desiredOutcome: z.string().nullable(),
+  outcomeMetric: z.string().nullable(),
+  outcomeUnit: z.string().nullable(),
+  outcomeBaseline: z.string().nullable(),
+  outcomeTarget: z.string().nullable(),
+  goalId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  roadmapItemId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  evidence: z.object({
+    count: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    latestAt: z.iso.datetime({ offset: true }).nullable(),
+  }),
+  latestScore: z
+    .object({
+      scoreVersion: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991),
+      reach: z.string().nullable(),
+      reachPeriod: z.enum(["month", "quarter", "year"]).nullable(),
+      reachUnit: z.string().nullable(),
+      impact: z.string().nullable(),
+      confidence: z.string().nullable(),
+      effort: z.string().nullable(),
+      effortUnit: z
+        .enum(["person_days", "person_weeks", "person_months"])
+        .nullable(),
+      computedScore: z.string().nullable(),
+      isOverride: z.boolean(),
+      overrideScore: z.string().nullable(),
+      overrideReason: z.string().nullable(),
+      effectiveScore: z.string().nullable(),
+      createdAt: z.iso.datetime({ offset: true }),
+      createdBy: z.string().nullable(),
+    })
+    .nullable(),
+  scoreStatus: z.enum(["scored", "unscored"]),
+  version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  updatedAt: z.iso.datetime({ offset: true }),
+  allowedActions: z.array(z.string()),
+});
+export type DiscoveryUpdateOpportunityResponse = z.infer<
+  typeof discoveryUpdateOpportunityResponseSchema
+>;
+
+export const discoveryUpdateOpportunityBodySchema = z.strictObject({
+  version: z.number().int().gte(1).lte(9007199254740991),
+  title: z.string().optional(),
+  problem: z.string().nullable().optional(),
+  hypothesis: z.string().nullable().optional(),
+  affectedSegment: z.string().nullable().optional(),
+  theme: z.string().nullable().optional(),
+  ownerMembershipId: z
+    .number()
+    .int()
+    .gt(0)
+    .lte(9007199254740991)
+    .nullable()
+    .optional(),
+  desiredOutcome: z.string().nullable().optional(),
+  outcomeMetric: z.string().nullable().optional(),
+  outcomeUnit: z.string().nullable().optional(),
+  outcomeBaseline: z.string().nullable().optional(),
+  outcomeTarget: z.string().nullable().optional(),
+  goalId: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
+  state: z
+    .enum([
+      "identified",
+      "validating",
+      "accepted",
+      "declined",
+      "delivered",
+      "measured",
+    ])
+    .optional(),
+});
+export type DiscoveryUpdateOpportunityBody = z.input<
+  typeof discoveryUpdateOpportunityBodySchema
+>;
+
+export const discoveryAcceptOpportunityResponseSchema = z.object({
+  roadmapItemId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+});
+export type DiscoveryAcceptOpportunityResponse = z.infer<
+  typeof discoveryAcceptOpportunityResponseSchema
+>;
+
+export const discoveryAcceptOpportunityBodySchema = z.strictObject({
+  horizon: z.enum(["now", "next", "later"]),
+  title: z.string().optional(),
+  projectId: z.number().int().gt(0).lte(9007199254740991).optional(),
+  goalId: z.number().int().gt(0).lte(9007199254740991).optional(),
+  releaseId: z.number().int().gt(0).lte(9007199254740991).optional(),
+  note: z.string().optional(),
+  expectedVersion: z.number().int().gte(1).lte(9007199254740991),
+});
+export type DiscoveryAcceptOpportunityBody = z.input<
+  typeof discoveryAcceptOpportunityBodySchema
+>;
+
+export const discoveryDeclineOpportunityResponseSchema = z.object({
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  title: z.string(),
+  problem: z.string().nullable(),
+  hypothesis: z.string().nullable(),
+  affectedSegment: z.string().nullable(),
+  theme: z.string().nullable(),
+  owner: z
+    .object({
+      membershipId: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991),
+      name: z.string().nullable(),
+    })
+    .nullable(),
+  state: z.enum([
+    "identified",
+    "validating",
+    "accepted",
+    "declined",
+    "delivered",
+    "measured",
+  ]),
+  desiredOutcome: z.string().nullable(),
+  outcomeMetric: z.string().nullable(),
+  outcomeUnit: z.string().nullable(),
+  outcomeBaseline: z.string().nullable(),
+  outcomeTarget: z.string().nullable(),
+  goalId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  roadmapItemId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  evidence: z.object({
+    count: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    latestAt: z.iso.datetime({ offset: true }).nullable(),
+  }),
+  latestScore: z
+    .object({
+      scoreVersion: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991),
+      reach: z.string().nullable(),
+      reachPeriod: z.enum(["month", "quarter", "year"]).nullable(),
+      reachUnit: z.string().nullable(),
+      impact: z.string().nullable(),
+      confidence: z.string().nullable(),
+      effort: z.string().nullable(),
+      effortUnit: z
+        .enum(["person_days", "person_weeks", "person_months"])
+        .nullable(),
+      computedScore: z.string().nullable(),
+      isOverride: z.boolean(),
+      overrideScore: z.string().nullable(),
+      overrideReason: z.string().nullable(),
+      effectiveScore: z.string().nullable(),
+      createdAt: z.iso.datetime({ offset: true }),
+      createdBy: z.string().nullable(),
+    })
+    .nullable(),
+  scoreStatus: z.enum(["scored", "unscored"]),
+  version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  updatedAt: z.iso.datetime({ offset: true }),
+  allowedActions: z.array(z.string()),
+});
+export type DiscoveryDeclineOpportunityResponse = z.infer<
+  typeof discoveryDeclineOpportunityResponseSchema
+>;
+
+export const discoveryDeclineOpportunityBodySchema = z.strictObject({
+  note: z.string(),
+  expectedVersion: z.number().int().gte(1).lte(9007199254740991),
+});
+export type DiscoveryDeclineOpportunityBody = z.input<
+  typeof discoveryDeclineOpportunityBodySchema
+>;
+
+export const discoveryAddEvidenceResponseSchema = z.object({
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+});
+export type DiscoveryAddEvidenceResponse = z.infer<
+  typeof discoveryAddEvidenceResponseSchema
+>;
+
+export const discoveryAddEvidenceBodySchema = z.strictObject({
+  sourceKind: z.enum(["feedbucket_submission", "feedback_post"]),
+  sourceId: z.number().int().gt(0).lte(9007199254740991),
+  note: z.string().optional(),
+});
+export type DiscoveryAddEvidenceBody = z.input<
+  typeof discoveryAddEvidenceBodySchema
+>;
+
+export const discoveryAddScoreOverrideResponseSchema = z.object({
+  latestScore: z
+    .object({
+      scoreVersion: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991),
+      reach: z.string().nullable(),
+      reachPeriod: z.enum(["month", "quarter", "year"]).nullable(),
+      reachUnit: z.string().nullable(),
+      impact: z.string().nullable(),
+      confidence: z.string().nullable(),
+      effort: z.string().nullable(),
+      effortUnit: z
+        .enum(["person_days", "person_weeks", "person_months"])
+        .nullable(),
+      computedScore: z.string().nullable(),
+      isOverride: z.boolean(),
+      overrideScore: z.string().nullable(),
+      overrideReason: z.string().nullable(),
+      effectiveScore: z.string().nullable(),
+      createdAt: z.iso.datetime({ offset: true }),
+      createdBy: z.string().nullable(),
+    })
+    .nullable(),
+});
+export type DiscoveryAddScoreOverrideResponse = z.infer<
+  typeof discoveryAddScoreOverrideResponseSchema
+>;
+
+export const discoveryAddScoreOverrideBodySchema = z.strictObject({
+  overrideScore: z.number().gte(0),
+  reason: z.string(),
+  expectedScoreVersion: z.number().int().gte(0).lte(9007199254740991),
+});
+export type DiscoveryAddScoreOverrideBody = z.input<
+  typeof discoveryAddScoreOverrideBodySchema
+>;
+
+export const discoveryAddScoreResponseSchema = z.object({
+  latestScore: z
+    .object({
+      scoreVersion: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991),
+      reach: z.string().nullable(),
+      reachPeriod: z.enum(["month", "quarter", "year"]).nullable(),
+      reachUnit: z.string().nullable(),
+      impact: z.string().nullable(),
+      confidence: z.string().nullable(),
+      effort: z.string().nullable(),
+      effortUnit: z
+        .enum(["person_days", "person_weeks", "person_months"])
+        .nullable(),
+      computedScore: z.string().nullable(),
+      isOverride: z.boolean(),
+      overrideScore: z.string().nullable(),
+      overrideReason: z.string().nullable(),
+      effectiveScore: z.string().nullable(),
+      createdAt: z.iso.datetime({ offset: true }),
+      createdBy: z.string().nullable(),
+    })
+    .nullable(),
+});
+export type DiscoveryAddScoreResponse = z.infer<
+  typeof discoveryAddScoreResponseSchema
+>;
+
+export const discoveryAddScoreBodySchema = z.strictObject({
+  reach: z.number().gte(0).optional(),
+  reachPeriod: z.enum(["month", "quarter", "year"]).optional(),
+  reachUnit: z.string().optional(),
+  impact: z.enum(["1", "2", "3", "0.25", "0.5"]).optional(),
+  confidence: z.number().gte(0).lte(1).optional(),
+  effort: z.number().gt(0).optional(),
+  effortUnit: z
+    .enum(["person_days", "person_weeks", "person_months"])
+    .optional(),
+  expectedScoreVersion: z.number().int().gte(0).lte(9007199254740991),
+});
+export type DiscoveryAddScoreBody = z.input<typeof discoveryAddScoreBodySchema>;
+
+export const discoveryGetTraceResponseSchema = z.object({
+  evidence: z.array(
+    z.object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      sourceKind: z.enum(["feedbucket_submission", "feedback_post"]),
+      sourceId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      addedAt: z.iso.datetime({ offset: true }),
+    }),
+  ),
+  opportunity: z.object({
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    title: z.string(),
+    problem: z.string().nullable(),
+    hypothesis: z.string().nullable(),
+    affectedSegment: z.string().nullable(),
+    theme: z.string().nullable(),
+    owner: z
+      .object({
+        membershipId: z
+          .number()
+          .int()
+          .gte(-9007199254740991)
+          .lte(9007199254740991),
+        name: z.string().nullable(),
+      })
+      .nullable(),
+    state: z.enum([
+      "identified",
+      "validating",
+      "accepted",
+      "declined",
+      "delivered",
+      "measured",
+    ]),
+    desiredOutcome: z.string().nullable(),
+    outcomeMetric: z.string().nullable(),
+    outcomeUnit: z.string().nullable(),
+    outcomeBaseline: z.string().nullable(),
+    outcomeTarget: z.string().nullable(),
+    goalId: z
+      .number()
+      .int()
+      .gte(-9007199254740991)
+      .lte(9007199254740991)
+      .nullable(),
+    roadmapItemId: z
+      .number()
+      .int()
+      .gte(-9007199254740991)
+      .lte(9007199254740991)
+      .nullable(),
+    evidence: z.object({
+      count: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      latestAt: z.iso.datetime({ offset: true }).nullable(),
+    }),
+    latestScore: z
+      .object({
+        scoreVersion: z
+          .number()
+          .int()
+          .gte(-9007199254740991)
+          .lte(9007199254740991),
+        reach: z.string().nullable(),
+        reachPeriod: z.enum(["month", "quarter", "year"]).nullable(),
+        reachUnit: z.string().nullable(),
+        impact: z.string().nullable(),
+        confidence: z.string().nullable(),
+        effort: z.string().nullable(),
+        effortUnit: z
+          .enum(["person_days", "person_weeks", "person_months"])
+          .nullable(),
+        computedScore: z.string().nullable(),
+        isOverride: z.boolean(),
+        overrideScore: z.string().nullable(),
+        overrideReason: z.string().nullable(),
+        effectiveScore: z.string().nullable(),
+        createdAt: z.iso.datetime({ offset: true }),
+        createdBy: z.string().nullable(),
+      })
+      .nullable(),
+    scoreStatus: z.enum(["scored", "unscored"]),
+    version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    updatedAt: z.iso.datetime({ offset: true }),
+    allowedActions: z.array(z.string()),
+  }),
+  scores: z.object({
+    latest: z
+      .object({
+        scoreVersion: z
+          .number()
+          .int()
+          .gte(-9007199254740991)
+          .lte(9007199254740991),
+        reach: z.string().nullable(),
+        reachPeriod: z.enum(["month", "quarter", "year"]).nullable(),
+        reachUnit: z.string().nullable(),
+        impact: z.string().nullable(),
+        confidence: z.string().nullable(),
+        effort: z.string().nullable(),
+        effortUnit: z
+          .enum(["person_days", "person_weeks", "person_months"])
+          .nullable(),
+        computedScore: z.string().nullable(),
+        isOverride: z.boolean(),
+        overrideScore: z.string().nullable(),
+        overrideReason: z.string().nullable(),
+        effectiveScore: z.string().nullable(),
+        createdAt: z.iso.datetime({ offset: true }),
+        createdBy: z.string().nullable(),
+      })
+      .nullable(),
+    count: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  }),
+  decision: z
+    .object({
+      opportunityId: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991),
+      decidedAt: z.string().nullable(),
+      decidedBy: z.string().nullable(),
+      note: z.string().nullable(),
+      scoreVersion: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991)
+        .nullable(),
+      score: z.number().nullable(),
+      evidenceCount: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991),
+    })
+    .nullable(),
+  roadmapItem: z
+    .object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      title: z.string(),
+      horizon: z.enum(["now", "next", "later"]),
+      status: z.string(),
+      projectId: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991)
+        .nullable(),
+      epicTicketId: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991)
+        .nullable(),
+      releaseId: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991)
+        .nullable(),
+    })
+    .nullable(),
+  delivery: z.object({
+    project: z
+      .object({
+        id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+        name: z.string(),
+      })
+      .nullable(),
+    tickets: z
+      .object({
+        total: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+        done: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+        percent: z
+          .number()
+          .int()
+          .gte(-9007199254740991)
+          .lte(9007199254740991)
+          .nullable(),
+      })
+      .nullable(),
+  }),
+  release: z
+    .object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      name: z.string(),
+      version: z.string(),
+    })
+    .nullable(),
+  outcomeReviews: z.array(
+    z.object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      kind: z.enum(["experiment", "outcome_review"]),
+      title: z.string(),
+      state: z.enum(["scheduled", "running", "completed", "cancelled"]),
+      result: z
+        .enum(["met", "partially_met", "not_met", "inconclusive"])
+        .nullable(),
+      scheduledFor: z.string().nullable(),
+    }),
+  ),
+});
+export type DiscoveryGetTraceResponse = z.infer<
+  typeof discoveryGetTraceResponseSchema
+>;
+
+export const discoveryReviewsListOutcomeReviewsResponseSchema = z.object({
+  data: z.array(
+    z.object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      managedProductId: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991),
+      opportunityId: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991)
+        .nullable(),
+      roadmapItemId: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991)
+        .nullable(),
+      goalId: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991)
+        .nullable(),
+      releaseId: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991)
+        .nullable(),
+      kind: z.enum(["experiment", "outcome_review"]),
+      title: z.string(),
+      hypothesis: z.string().nullable(),
+      metric: z.string().nullable(),
+      unit: z.string().nullable(),
+      baseline: z.string().nullable(),
+      target: z.string().nullable(),
+      actual: z.string().nullable(),
+      scheduledFor: z.string().nullable(),
+      completedAt: z.iso.datetime({ offset: true }).nullable(),
+      state: z.enum(["scheduled", "running", "completed", "cancelled"]),
+      result: z
+        .enum(["met", "partially_met", "not_met", "inconclusive"])
+        .nullable(),
+      notes: z.string().nullable(),
+      ownerMembershipId: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991)
+        .nullable(),
+      version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      createdBy: z.string().nullable(),
+      createdAt: z.iso.datetime({ offset: true }),
+      updatedAt: z.iso.datetime({ offset: true }),
+    }),
+  ),
+  pagination: z.object({
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+export type DiscoveryReviewsListOutcomeReviewsResponse = z.infer<
+  typeof discoveryReviewsListOutcomeReviewsResponseSchema
+>;
+
+export const discoveryReviewsCreateOutcomeReviewResponseSchema = z.object({
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  managedProductId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991),
+  opportunityId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  roadmapItemId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  goalId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  releaseId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  kind: z.enum(["experiment", "outcome_review"]),
+  title: z.string(),
+  hypothesis: z.string().nullable(),
+  metric: z.string().nullable(),
+  unit: z.string().nullable(),
+  baseline: z.string().nullable(),
+  target: z.string().nullable(),
+  actual: z.string().nullable(),
+  scheduledFor: z.string().nullable(),
+  completedAt: z.iso.datetime({ offset: true }).nullable(),
+  state: z.enum(["scheduled", "running", "completed", "cancelled"]),
+  result: z
+    .enum(["met", "partially_met", "not_met", "inconclusive"])
+    .nullable(),
+  notes: z.string().nullable(),
+  ownerMembershipId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  createdBy: z.string().nullable(),
+  createdAt: z.iso.datetime({ offset: true }),
+  updatedAt: z.iso.datetime({ offset: true }),
+});
+export type DiscoveryReviewsCreateOutcomeReviewResponse = z.infer<
+  typeof discoveryReviewsCreateOutcomeReviewResponseSchema
+>;
+
+export const discoveryReviewsCreateOutcomeReviewBodySchema = z.strictObject({
+  kind: z.enum(["experiment", "outcome_review"]),
+  title: z.string(),
+  hypothesis: z.string().optional(),
+  metric: z.string().optional(),
+  unit: z.string().optional(),
+  baseline: z.string().optional(),
+  target: z.string().optional(),
+  scheduledFor: z.string().optional(),
+  ownerMembershipId: z.number().int().gt(0).lte(9007199254740991).optional(),
+  opportunityId: z.number().int().gt(0).lte(9007199254740991).optional(),
+  roadmapItemId: z.number().int().gt(0).lte(9007199254740991).optional(),
+  goalId: z.number().int().gt(0).lte(9007199254740991).optional(),
+  releaseId: z.number().int().gt(0).lte(9007199254740991).optional(),
+});
+export type DiscoveryReviewsCreateOutcomeReviewBody = z.input<
+  typeof discoveryReviewsCreateOutcomeReviewBodySchema
+>;
+
+export const discoveryReviewsUpdateOutcomeReviewResponseSchema = z.object({
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  managedProductId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991),
+  opportunityId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  roadmapItemId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  goalId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  releaseId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  kind: z.enum(["experiment", "outcome_review"]),
+  title: z.string(),
+  hypothesis: z.string().nullable(),
+  metric: z.string().nullable(),
+  unit: z.string().nullable(),
+  baseline: z.string().nullable(),
+  target: z.string().nullable(),
+  actual: z.string().nullable(),
+  scheduledFor: z.string().nullable(),
+  completedAt: z.iso.datetime({ offset: true }).nullable(),
+  state: z.enum(["scheduled", "running", "completed", "cancelled"]),
+  result: z
+    .enum(["met", "partially_met", "not_met", "inconclusive"])
+    .nullable(),
+  notes: z.string().nullable(),
+  ownerMembershipId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  createdBy: z.string().nullable(),
+  createdAt: z.iso.datetime({ offset: true }),
+  updatedAt: z.iso.datetime({ offset: true }),
+});
+export type DiscoveryReviewsUpdateOutcomeReviewResponse = z.infer<
+  typeof discoveryReviewsUpdateOutcomeReviewResponseSchema
+>;
+
+export const discoveryReviewsUpdateOutcomeReviewBodySchema = z.strictObject({
+  version: z.number().int().gte(1).lte(9007199254740991),
+  title: z.string().optional(),
+  hypothesis: z.string().nullable().optional(),
+  metric: z.string().nullable().optional(),
+  unit: z.string().nullable().optional(),
+  baseline: z.string().nullable().optional(),
+  target: z.string().nullable().optional(),
+  actual: z.string().nullable().optional(),
+  scheduledFor: z.string().nullable().optional(),
+  ownerMembershipId: z
+    .number()
+    .int()
+    .gt(0)
+    .lte(9007199254740991)
+    .nullable()
+    .optional(),
+  state: z.enum(["scheduled", "running", "completed", "cancelled"]).optional(),
+  result: z
+    .enum(["met", "partially_met", "not_met", "inconclusive"])
+    .optional(),
+  notes: z.string().nullable().optional(),
+});
+export type DiscoveryReviewsUpdateOutcomeReviewBody = z.input<
+  typeof discoveryReviewsUpdateOutcomeReviewBodySchema
+>;
+
+export const managedProductRelationsListLinkedProjectsResponseSchema = z.object(
+  {
+    data: z.array(
+      z.object({
+        id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+        name: z.string(),
+        key: z.string(),
+        status: z.string(),
+        ownerId: z.string().nullable(),
+        ownerMembershipId: z
+          .number()
+          .int()
+          .gte(-9007199254740991)
+          .lte(9007199254740991)
+          .nullable(),
+        managerMembershipId: z
+          .number()
+          .int()
+          .gte(-9007199254740991)
+          .lte(9007199254740991)
+          .nullable(),
+        startDate: z.iso.datetime({ offset: true }).nullable(),
+        endDate: z.iso.datetime({ offset: true }).nullable(),
+        nextMilestone: z
+          .object({
+            id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+            name: z.string(),
+            targetDate: z.string(),
+          })
+          .nullable(),
+        contribution: z.object({
+          totalTickets: z
+            .number()
+            .int()
+            .gte(-9007199254740991)
+            .lte(9007199254740991),
+          doneTickets: z
+            .number()
+            .int()
+            .gte(-9007199254740991)
+            .lte(9007199254740991),
+          percent: z.number().nullable(),
+        }),
+        linkedRoadmapItemCount: z
+          .number()
+          .int()
+          .gte(-9007199254740991)
+          .lte(9007199254740991),
+        createdAt: z.iso.datetime({ offset: true }),
+        updatedAt: z.iso.datetime({ offset: true }),
+      }),
+    ),
+    pagination: z.object({
+      limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      hasMore: z.boolean(),
+      nextCursor: z.string().nullable(),
+    }),
+  },
+);
+export type ManagedProductRelationsListLinkedProjectsResponse = z.infer<
+  typeof managedProductRelationsListLinkedProjectsResponseSchema
+>;
+
+export const managedProductRelationsListReleasesResponseSchema = z.object({
+  data: z.array(
+    z.object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      orgId: z.string(),
+      managedProductId: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991),
+      name: z.string(),
+      version: z.string(),
+      description: z.string().nullable(),
+      status: z.enum(["draft", "released", "archived"]),
+      releaseDate: z.string().nullable(),
+      createdBy: z.string().nullable(),
+      createdAt: z.iso.datetime({ offset: true }),
+      updatedAt: z.iso.datetime({ offset: true }),
+    }),
+  ),
+  pagination: z.object({
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+export type ManagedProductRelationsListReleasesResponse = z.infer<
+  typeof managedProductRelationsListReleasesResponseSchema
+>;
+
+export const managedProductRelationsCreateReleaseResponseSchema = z.object({
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  orgId: z.string(),
+  managedProductId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991),
+  name: z.string(),
+  version: z.string(),
+  description: z.string().nullable(),
+  status: z.enum(["draft", "released", "archived"]),
+  releaseDate: z.string().nullable(),
+  createdBy: z.string().nullable(),
+  createdAt: z.iso.datetime({ offset: true }),
+  updatedAt: z.iso.datetime({ offset: true }),
+});
+export type ManagedProductRelationsCreateReleaseResponse = z.infer<
+  typeof managedProductRelationsCreateReleaseResponseSchema
+>;
+
+export const managedProductRelationsCreateReleaseBodySchema = z.strictObject({
+  name: z.string(),
+  version: z.string(),
+  description: z.string().optional(),
+  releaseDate: z.iso.date().optional(),
+  status: z.enum(["draft", "released", "archived"]).optional(),
+});
+export type ManagedProductRelationsCreateReleaseBody = z.input<
+  typeof managedProductRelationsCreateReleaseBodySchema
+>;
+
+export const managedProductRelationsUpdateReleaseResponseSchema = z.object({
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  orgId: z.string(),
+  managedProductId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991),
+  name: z.string(),
+  version: z.string(),
+  description: z.string().nullable(),
+  status: z.enum(["draft", "released", "archived"]),
+  releaseDate: z.string().nullable(),
+  createdBy: z.string().nullable(),
+  createdAt: z.iso.datetime({ offset: true }),
+  updatedAt: z.iso.datetime({ offset: true }),
+});
+export type ManagedProductRelationsUpdateReleaseResponse = z.infer<
+  typeof managedProductRelationsUpdateReleaseResponseSchema
+>;
+
+export const managedProductRelationsUpdateReleaseBodySchema = z.strictObject({
+  name: z.string().optional(),
+  version: z.string().optional(),
+  description: z.string().nullable().optional(),
+  releaseDate: z.iso.date().nullable().optional(),
+  status: z.enum(["draft", "released", "archived"]).optional(),
+});
+export type ManagedProductRelationsUpdateReleaseBody = z.input<
+  typeof managedProductRelationsUpdateReleaseBodySchema
+>;
+
+export const managedProductsRestoreManagedProductResponseSchema = z.object({
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  orgId: z.string(),
+  name: z.string(),
+  key: z.string(),
+  description: z.string().nullable(),
+  status: z.enum(["active", "archived"]),
+  ownerId: z.string().nullable(),
+  vision: z.string().nullable(),
+  missionStatement: z.string().nullable(),
+  targetCustomer: z.string().nullable(),
+  differentiators: z.string().nullable(),
+  currentPhase: z.string().nullable(),
+  targetLaunchDate: z.iso.datetime({ offset: true }).nullable(),
+  successMetrics: z.unknown(),
+  ownerMembershipId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  lifecycle: z.string(),
+  health: z.string(),
+  teamId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  segments: z.array(z.string()),
+  tags: z.array(z.string()),
+  northStarMetric: z.string().nullable(),
+  lastReviewedAt: z.iso.datetime({ offset: true }).nullable(),
+  owner: z
+    .object({
+      id: z.string(),
+      firstName: z.string().nullable(),
+      lastName: z.string().nullable(),
+      email: z.string(),
+      image: z.string().nullable(),
+    })
+    .nullable(),
+  version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  deletedAt: z.iso.datetime({ offset: true }).nullable(),
+  createdAt: z.iso.datetime({ offset: true }),
+  updatedAt: z.iso.datetime({ offset: true }),
+});
+export type ManagedProductsRestoreManagedProductResponse = z.infer<
+  typeof managedProductsRestoreManagedProductResponseSchema
+>;
+
+export const managedProductsRestoreManagedProductBodySchema = z.strictObject({
+  version: z.number().int().gte(1).lte(9007199254740991),
+});
+export type ManagedProductsRestoreManagedProductBody = z.input<
+  typeof managedProductsRestoreManagedProductBodySchema
+>;
+
+export const managedProductRelationsGetManagedProductSummaryResponseSchema =
+  z.object({
+    product: z.object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      orgId: z.string(),
+      name: z.string(),
+      key: z.string(),
+      description: z.string().nullable(),
+      status: z.enum(["active", "archived"]),
+      ownerId: z.string().nullable(),
+      vision: z.string().nullable(),
+      missionStatement: z.string().nullable(),
+      targetCustomer: z.string().nullable(),
+      differentiators: z.string().nullable(),
+      currentPhase: z.string().nullable(),
+      targetLaunchDate: z.iso.datetime({ offset: true }).nullable(),
+      successMetrics: z.unknown(),
+      ownerMembershipId: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991)
+        .nullable(),
+      lifecycle: z.string(),
+      health: z.string(),
+      teamId: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991)
+        .nullable(),
+      segments: z.array(z.string()),
+      tags: z.array(z.string()),
+      northStarMetric: z.string().nullable(),
+      lastReviewedAt: z.iso.datetime({ offset: true }).nullable(),
+      owner: z
+        .object({
+          id: z.string(),
+          firstName: z.string().nullable(),
+          lastName: z.string().nullable(),
+          email: z.string(),
+          image: z.string().nullable(),
+        })
+        .nullable(),
+      version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      deletedAt: z.iso.datetime({ offset: true }).nullable(),
+      createdAt: z.iso.datetime({ offset: true }),
+      updatedAt: z.iso.datetime({ offset: true }),
+    }),
+    evidence: z.object({
+      feedbackCount: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991),
+      feedbackLast30d: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991),
+      themedCount: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991),
+      latestFeedbackAt: z.string().nullable(),
+      opportunityCount: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991),
+      opportunitiesByState: z.record(
+        z.string(),
+        z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      ),
+    }),
+    delivery: z.object({
+      linkedProjects: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991),
+      roadmapByHorizon: z.object({
+        now: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+        next: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+        later: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      }),
+      roadmapCompleted: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991),
+      ticketTotals: z.object({
+        total: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+        done: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      }),
+      nextRelease: z
+        .object({
+          id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+          name: z.string(),
+          version: z.string(),
+          releaseDate: z.string().nullable(),
+        })
+        .nullable(),
+    }),
+    outcomes: z.object({
+      goalsLinked: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991),
+      outcomeReviews: z.object({
+        scheduled: z
+          .number()
+          .int()
+          .gte(-9007199254740991)
+          .lte(9007199254740991),
+        completed: z
+          .number()
+          .int()
+          .gte(-9007199254740991)
+          .lte(9007199254740991),
+        met: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+        notMet: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      }),
+      latestReviewAt: z.string().nullable(),
+    }),
+    previews: z.object({
+      themes: z.array(
+        z.object({
+          theme: z.string(),
+          count: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+        }),
+      ),
+      roadmap: z.array(
+        z.object({
+          id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+          title: z.string(),
+          horizon: z.string(),
+          status: z.string(),
+        }),
+      ),
+      releases: z.array(
+        z.object({
+          id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+          orgId: z.string(),
+          managedProductId: z
+            .number()
+            .int()
+            .gte(-9007199254740991)
+            .lte(9007199254740991),
+          name: z.string(),
+          version: z.string(),
+          description: z.string().nullable(),
+          status: z.enum(["draft", "released", "archived"]),
+          releaseDate: z.string().nullable(),
+          createdBy: z.string().nullable(),
+          createdAt: z.iso.datetime({ offset: true }),
+          updatedAt: z.iso.datetime({ offset: true }),
+        }),
+      ),
+      opportunities: z.array(
+        z.object({
+          id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+          title: z.string(),
+          state: z.string(),
+          score: z.number().nullable(),
+          scoreLabel: z.string(),
+        }),
+      ),
+    }),
+    generatedAt: z.string(),
+  });
+export type ManagedProductRelationsGetManagedProductSummaryResponse = z.infer<
+  typeof managedProductRelationsGetManagedProductSummaryResponseSchema
 >;
 
 export const buildMembersListResponseSchema = z.object({
@@ -2052,6 +3882,12 @@ export const projectsRoadmapListRoadmapResponseSchema = z.object({
         .gte(-9007199254740991)
         .lte(9007199254740991)
         .nullable(),
+      managedProductId: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991)
+        .nullable(),
       epicTicketId: z
         .number()
         .int()
@@ -2100,6 +3936,61 @@ export const projectsRoadmapListRoadmapResponseSchema = z.object({
           image: z.string().nullable(),
         })
         .nullable(),
+      horizon: z.enum(["now", "next", "later"]),
+      goalId: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991)
+        .nullable(),
+      releaseId: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991)
+        .nullable(),
+      teamId: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991)
+        .nullable(),
+      opportunityId: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991)
+        .nullable(),
+      targetStart: z.string().nullable(),
+      targetEnd: z.string().nullable(),
+      decisionSnapshot: z.record(z.string(), z.unknown()).nullable(),
+      goal: z
+        .object({
+          id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+          title: z.string(),
+        })
+        .nullable(),
+      release: z
+        .object({
+          id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+          name: z.string(),
+          version: z.string(),
+          releaseDate: z.string().nullable(),
+        })
+        .nullable(),
+      team: z
+        .object({
+          id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+          name: z.string(),
+        })
+        .nullable(),
+      opportunity: z
+        .object({
+          id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+          title: z.string(),
+          state: z.string(),
+        })
+        .nullable(),
       version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       createdBy: z.string().nullable(),
       createdAt: z.iso.datetime({ offset: true }),
@@ -2146,6 +4037,17 @@ export const projectsRoadmapListRoadmapResponseSchema = z.object({
           .gte(-9007199254740991)
           .lte(9007199254740991),
       }),
+      delivery: z.object({
+        source: z.enum(["epic_ticket", "project", "none"]),
+        total: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+        done: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+        percent: z
+          .number()
+          .int()
+          .gte(-9007199254740991)
+          .lte(9007199254740991)
+          .nullable(),
+      }),
     }),
   ),
   pagination: z.object({
@@ -2179,6 +4081,12 @@ export const projectsRoadmapCreateRoadmapResponseSchema = z.object({
     .gte(-9007199254740991)
     .lte(9007199254740991)
     .nullable(),
+  managedProductId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
   epicTicketId: z
     .number()
     .int()
@@ -2227,6 +4135,61 @@ export const projectsRoadmapCreateRoadmapResponseSchema = z.object({
       image: z.string().nullable(),
     })
     .nullable(),
+  horizon: z.enum(["now", "next", "later"]),
+  goalId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  releaseId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  teamId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  opportunityId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  targetStart: z.string().nullable(),
+  targetEnd: z.string().nullable(),
+  decisionSnapshot: z.record(z.string(), z.unknown()).nullable(),
+  goal: z
+    .object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      title: z.string(),
+    })
+    .nullable(),
+  release: z
+    .object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      name: z.string(),
+      version: z.string(),
+      releaseDate: z.string().nullable(),
+    })
+    .nullable(),
+  team: z
+    .object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      name: z.string(),
+    })
+    .nullable(),
+  opportunity: z
+    .object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      title: z.string(),
+      state: z.string(),
+    })
+    .nullable(),
   version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   createdBy: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
@@ -2271,6 +4234,17 @@ export const projectsRoadmapCreateRoadmapResponseSchema = z.object({
       .gte(-9007199254740991)
       .lte(9007199254740991),
   }),
+  delivery: z.object({
+    source: z.enum(["epic_ticket", "project", "none"]),
+    total: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    done: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    percent: z
+      .number()
+      .int()
+      .gte(-9007199254740991)
+      .lte(9007199254740991)
+      .nullable(),
+  }),
 });
 export type ProjectsRoadmapCreateRoadmapResponse = z.infer<
   typeof projectsRoadmapCreateRoadmapResponseSchema
@@ -2286,6 +4260,7 @@ export const projectsRoadmapCreateRoadmapBodySchema = z.strictObject({
   category: z.string().optional(),
   isPublic: z.boolean().optional(),
   projectId: z.number().int().gt(0).lte(9007199254740991).optional(),
+  managedProductId: z.number().int().gt(0).lte(9007199254740991).optional(),
   epicTicketId: z.number().int().gt(0).lte(9007199254740991).optional(),
   targetQuarter: z.string().optional(),
   sortOrder: z
@@ -2305,9 +4280,407 @@ export const projectsRoadmapCreateRoadmapBodySchema = z.strictObject({
     .lte(9007199254740991)
     .nullable()
     .optional(),
+  horizon: z.enum(["now", "next", "later"]).optional(),
+  goalId: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
+  releaseId: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
+  teamId: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
+  targetStart: z.string().nullable().optional(),
+  targetEnd: z.string().nullable().optional(),
 });
 export type ProjectsRoadmapCreateRoadmapBody = z.input<
   typeof projectsRoadmapCreateRoadmapBodySchema
+>;
+
+export const projectsRoadmapMoveRoadmapItemResponseSchema = z.object({
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  orgId: z.string(),
+  title: z.string(),
+  description: z.string().nullable(),
+  outcome: z.string().nullable(),
+  status: z.enum(["planned", "in_progress", "completed", "cancelled"]),
+  category: z.string().nullable(),
+  isPublic: z.boolean(),
+  projectId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  managedProductId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  epicTicketId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  targetQuarter: z.string().nullable(),
+  sortOrder: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  votes: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  reach: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  impact: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  confidence: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  effort: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  ownerMembershipId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  owner: z
+    .object({
+      name: z.string().nullable(),
+      firstName: z.string().nullable(),
+      lastName: z.string().nullable(),
+      email: z.string(),
+      image: z.string().nullable(),
+    })
+    .nullable(),
+  horizon: z.enum(["now", "next", "later"]),
+  goalId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  releaseId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  teamId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  opportunityId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  targetStart: z.string().nullable(),
+  targetEnd: z.string().nullable(),
+  decisionSnapshot: z.record(z.string(), z.unknown()).nullable(),
+  goal: z
+    .object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      title: z.string(),
+    })
+    .nullable(),
+  release: z
+    .object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      name: z.string(),
+      version: z.string(),
+      releaseDate: z.string().nullable(),
+    })
+    .nullable(),
+  team: z
+    .object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      name: z.string(),
+    })
+    .nullable(),
+  opportunity: z
+    .object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      title: z.string(),
+      state: z.string(),
+    })
+    .nullable(),
+  version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  createdBy: z.string().nullable(),
+  createdAt: z.iso.datetime({ offset: true }),
+  updatedAt: z.iso.datetime({ offset: true }),
+  deletedAt: z.iso.datetime({ offset: true }).nullable(),
+  prioritization: z.object({
+    method: z.literal("rice"),
+    score: z.number().nullable(),
+    isComplete: z.boolean(),
+    missingInputs: z.array(z.enum(["reach", "impact", "confidence", "effort"])),
+    unavailableReason: z
+      .enum(["missing_inputs", "non_positive_effort"])
+      .nullable(),
+  }),
+  tierWeighting: z.object({
+    tierWeighted: z.boolean(),
+    tier: z.enum(["free", "pro", "enterprise"]).nullable(),
+    weight: z.number().nullable(),
+    weightedScore: z.number().nullable(),
+    unweightedReason: z
+      .enum([
+        "no_linked_feedback",
+        "no_linked_account",
+        "account_tier_unset",
+        "score_unavailable",
+      ])
+      .nullable(),
+    linkedFeedbackCount: z
+      .number()
+      .int()
+      .gte(-9007199254740991)
+      .lte(9007199254740991),
+    linkedAccountCount: z
+      .number()
+      .int()
+      .gte(-9007199254740991)
+      .lte(9007199254740991),
+    linkedRevenue: z.number().nullable(),
+    revenueKnownAccountCount: z
+      .number()
+      .int()
+      .gte(-9007199254740991)
+      .lte(9007199254740991),
+  }),
+  delivery: z.object({
+    source: z.enum(["epic_ticket", "project", "none"]),
+    total: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    done: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    percent: z
+      .number()
+      .int()
+      .gte(-9007199254740991)
+      .lte(9007199254740991)
+      .nullable(),
+  }),
+});
+export type ProjectsRoadmapMoveRoadmapItemResponse = z.infer<
+  typeof projectsRoadmapMoveRoadmapItemResponseSchema
+>;
+
+export const projectsRoadmapMoveRoadmapItemBodySchema = z.strictObject({
+  version: z.number().int().gt(0).lte(9007199254740991),
+  horizon: z.enum(["now", "next", "later"]).optional(),
+  beforeItemId: z.number().int().gt(0).lte(9007199254740991).optional(),
+  afterItemId: z.number().int().gt(0).lte(9007199254740991).optional(),
+  sortOrder: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .optional(),
+});
+export type ProjectsRoadmapMoveRoadmapItemBody = z.input<
+  typeof projectsRoadmapMoveRoadmapItemBodySchema
+>;
+
+export const projectsRoadmapPublishRoadmapItemResponseSchema = z.object({
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  orgId: z.string(),
+  title: z.string(),
+  description: z.string().nullable(),
+  outcome: z.string().nullable(),
+  status: z.enum(["planned", "in_progress", "completed", "cancelled"]),
+  category: z.string().nullable(),
+  isPublic: z.boolean(),
+  projectId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  managedProductId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  epicTicketId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  targetQuarter: z.string().nullable(),
+  sortOrder: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  votes: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  reach: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  impact: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  confidence: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  effort: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  ownerMembershipId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  owner: z
+    .object({
+      name: z.string().nullable(),
+      firstName: z.string().nullable(),
+      lastName: z.string().nullable(),
+      email: z.string(),
+      image: z.string().nullable(),
+    })
+    .nullable(),
+  horizon: z.enum(["now", "next", "later"]),
+  goalId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  releaseId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  teamId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  opportunityId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  targetStart: z.string().nullable(),
+  targetEnd: z.string().nullable(),
+  decisionSnapshot: z.record(z.string(), z.unknown()).nullable(),
+  goal: z
+    .object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      title: z.string(),
+    })
+    .nullable(),
+  release: z
+    .object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      name: z.string(),
+      version: z.string(),
+      releaseDate: z.string().nullable(),
+    })
+    .nullable(),
+  team: z
+    .object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      name: z.string(),
+    })
+    .nullable(),
+  opportunity: z
+    .object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      title: z.string(),
+      state: z.string(),
+    })
+    .nullable(),
+  version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  createdBy: z.string().nullable(),
+  createdAt: z.iso.datetime({ offset: true }),
+  updatedAt: z.iso.datetime({ offset: true }),
+  deletedAt: z.iso.datetime({ offset: true }).nullable(),
+  prioritization: z.object({
+    method: z.literal("rice"),
+    score: z.number().nullable(),
+    isComplete: z.boolean(),
+    missingInputs: z.array(z.enum(["reach", "impact", "confidence", "effort"])),
+    unavailableReason: z
+      .enum(["missing_inputs", "non_positive_effort"])
+      .nullable(),
+  }),
+  tierWeighting: z.object({
+    tierWeighted: z.boolean(),
+    tier: z.enum(["free", "pro", "enterprise"]).nullable(),
+    weight: z.number().nullable(),
+    weightedScore: z.number().nullable(),
+    unweightedReason: z
+      .enum([
+        "no_linked_feedback",
+        "no_linked_account",
+        "account_tier_unset",
+        "score_unavailable",
+      ])
+      .nullable(),
+    linkedFeedbackCount: z
+      .number()
+      .int()
+      .gte(-9007199254740991)
+      .lte(9007199254740991),
+    linkedAccountCount: z
+      .number()
+      .int()
+      .gte(-9007199254740991)
+      .lte(9007199254740991),
+    linkedRevenue: z.number().nullable(),
+    revenueKnownAccountCount: z
+      .number()
+      .int()
+      .gte(-9007199254740991)
+      .lte(9007199254740991),
+  }),
+  delivery: z.object({
+    source: z.enum(["epic_ticket", "project", "none"]),
+    total: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    done: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    percent: z
+      .number()
+      .int()
+      .gte(-9007199254740991)
+      .lte(9007199254740991)
+      .nullable(),
+  }),
+});
+export type ProjectsRoadmapPublishRoadmapItemResponse = z.infer<
+  typeof projectsRoadmapPublishRoadmapItemResponseSchema
+>;
+
+export const projectsRoadmapPublishRoadmapItemBodySchema = z.strictObject({
+  version: z.number().int().gt(0).lte(9007199254740991),
+  isPublic: z.boolean(),
+});
+export type ProjectsRoadmapPublishRoadmapItemBody = z.input<
+  typeof projectsRoadmapPublishRoadmapItemBodySchema
 >;
 
 export const projectsRoadmapReadRoadmapPublicationResponseSchema = z.object({
@@ -2341,6 +4714,12 @@ export const projectsRoadmapUpdateRoadmapResponseSchema = z.object({
     .gte(-9007199254740991)
     .lte(9007199254740991)
     .nullable(),
+  managedProductId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
   epicTicketId: z
     .number()
     .int()
@@ -2389,6 +4768,61 @@ export const projectsRoadmapUpdateRoadmapResponseSchema = z.object({
       image: z.string().nullable(),
     })
     .nullable(),
+  horizon: z.enum(["now", "next", "later"]),
+  goalId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  releaseId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  teamId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  opportunityId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+  targetStart: z.string().nullable(),
+  targetEnd: z.string().nullable(),
+  decisionSnapshot: z.record(z.string(), z.unknown()).nullable(),
+  goal: z
+    .object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      title: z.string(),
+    })
+    .nullable(),
+  release: z
+    .object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      name: z.string(),
+      version: z.string(),
+      releaseDate: z.string().nullable(),
+    })
+    .nullable(),
+  team: z
+    .object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      name: z.string(),
+    })
+    .nullable(),
+  opportunity: z
+    .object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      title: z.string(),
+      state: z.string(),
+    })
+    .nullable(),
   version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   createdBy: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
@@ -2433,6 +4867,17 @@ export const projectsRoadmapUpdateRoadmapResponseSchema = z.object({
       .gte(-9007199254740991)
       .lte(9007199254740991),
   }),
+  delivery: z.object({
+    source: z.enum(["epic_ticket", "project", "none"]),
+    total: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    done: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    percent: z
+      .number()
+      .int()
+      .gte(-9007199254740991)
+      .lte(9007199254740991)
+      .nullable(),
+  }),
 });
 export type ProjectsRoadmapUpdateRoadmapResponse = z.infer<
   typeof projectsRoadmapUpdateRoadmapResponseSchema
@@ -2449,6 +4894,13 @@ export const projectsRoadmapUpdateRoadmapBodySchema = z.strictObject({
   category: z.string().nullable().optional(),
   isPublic: z.boolean().optional(),
   projectId: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
+  managedProductId: z
+    .number()
+    .int()
+    .gt(0)
+    .lte(9007199254740991)
+    .nullable()
+    .optional(),
   epicTicketId: z
     .number()
     .int()
@@ -2474,6 +4926,12 @@ export const projectsRoadmapUpdateRoadmapBodySchema = z.strictObject({
     .lte(9007199254740991)
     .nullable()
     .optional(),
+  horizon: z.enum(["now", "next", "later"]).optional(),
+  goalId: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
+  releaseId: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
+  teamId: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
+  targetStart: z.string().nullable().optional(),
+  targetEnd: z.string().nullable().optional(),
 });
 export type ProjectsRoadmapUpdateRoadmapBody = z.input<
   typeof projectsRoadmapUpdateRoadmapBodySchema
@@ -7161,6 +9619,29 @@ export type ProjectResourcesListProjectLabelsResponse = z.infer<
   typeof projectResourcesListProjectLabelsResponseSchema
 >;
 
+export const projectsByIdLinkManagedProductResponseSchema = z.object({
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  orgId: z.string(),
+  name: z.string(),
+  key: z.string(),
+  managedProductId: z
+    .number()
+    .int()
+    .gte(-9007199254740991)
+    .lte(9007199254740991)
+    .nullable(),
+});
+export type ProjectsByIdLinkManagedProductResponse = z.infer<
+  typeof projectsByIdLinkManagedProductResponseSchema
+>;
+
+export const projectsByIdLinkManagedProductBodySchema = z.strictObject({
+  managedProductId: z.number().int().gt(0).lte(9007199254740991).nullable(),
+});
+export type ProjectsByIdLinkManagedProductBody = z.input<
+  typeof projectsByIdLinkManagedProductBodySchema
+>;
+
 export const meetingsListMeetingsResponseSchema = z.object({
   data: z.array(
     z.object({
@@ -11750,7 +14231,7 @@ export type PublicGetProjectIntakeFormResponse = z.infer<
   typeof publicGetProjectIntakeFormResponseSchema
 >;
 
-export const publicGetRoadmapResponseSchema = z.object({
+export const publicRoadmapGetRoadmapResponseSchema = z.object({
   orgName: z.string().nullable(),
   roadmap: z.object({
     planned: z.array(
@@ -11761,6 +14242,7 @@ export const publicGetRoadmapResponseSchema = z.object({
         status: z.enum(["planned", "in_progress", "completed", "cancelled"]),
         category: z.string().nullable(),
         targetQuarter: z.string().nullable(),
+        horizon: z.enum(["now", "next", "later"]),
         votes: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       }),
     ),
@@ -11772,6 +14254,7 @@ export const publicGetRoadmapResponseSchema = z.object({
         status: z.enum(["planned", "in_progress", "completed", "cancelled"]),
         category: z.string().nullable(),
         targetQuarter: z.string().nullable(),
+        horizon: z.enum(["now", "next", "later"]),
         votes: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       }),
     ),
@@ -11783,6 +14266,7 @@ export const publicGetRoadmapResponseSchema = z.object({
         status: z.enum(["planned", "in_progress", "completed", "cancelled"]),
         category: z.string().nullable(),
         targetQuarter: z.string().nullable(),
+        horizon: z.enum(["now", "next", "later"]),
         votes: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       }),
     ),
@@ -11808,44 +14292,46 @@ export const publicGetRoadmapResponseSchema = z.object({
     }),
   ),
 });
-export type PublicGetRoadmapResponse = z.infer<
-  typeof publicGetRoadmapResponseSchema
+export type PublicRoadmapGetRoadmapResponse = z.infer<
+  typeof publicRoadmapGetRoadmapResponseSchema
 >;
 
-export const publicSubmitRoadmapFeedbackResponseSchema = z.object({
+export const publicRoadmapSubmitRoadmapFeedbackResponseSchema = z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   message: z.string(),
 });
-export type PublicSubmitRoadmapFeedbackResponse = z.infer<
-  typeof publicSubmitRoadmapFeedbackResponseSchema
+export type PublicRoadmapSubmitRoadmapFeedbackResponse = z.infer<
+  typeof publicRoadmapSubmitRoadmapFeedbackResponseSchema
 >;
 
-export const publicSubmitRoadmapFeedbackBodySchema = z.strictObject({
+export const publicRoadmapSubmitRoadmapFeedbackBodySchema = z.strictObject({
   title: z.string(),
   description: z.string().optional(),
   name: z.string().optional(),
   email: z.string().optional(),
 });
-export type PublicSubmitRoadmapFeedbackBody = z.input<
-  typeof publicSubmitRoadmapFeedbackBodySchema
+export type PublicRoadmapSubmitRoadmapFeedbackBody = z.input<
+  typeof publicRoadmapSubmitRoadmapFeedbackBodySchema
 >;
 
-export const publicVoteRoadmapResponseSchema = z.object({
+export const publicRoadmapVoteRoadmapResponseSchema = z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   type: z.enum(["roadmap", "feedback"]),
   votes: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   voted: z.boolean(),
 });
-export type PublicVoteRoadmapResponse = z.infer<
-  typeof publicVoteRoadmapResponseSchema
+export type PublicRoadmapVoteRoadmapResponse = z.infer<
+  typeof publicRoadmapVoteRoadmapResponseSchema
 >;
 
-export const publicVoteRoadmapBodySchema = z.strictObject({
+export const publicRoadmapVoteRoadmapBodySchema = z.strictObject({
   type: z.enum(["roadmap", "feedback"]),
   id: z.number().int().gt(0).lte(9007199254740991),
   voterKey: z.string(),
 });
-export type PublicVoteRoadmapBody = z.input<typeof publicVoteRoadmapBodySchema>;
+export type PublicRoadmapVoteRoadmapBody = z.input<
+  typeof publicRoadmapVoteRoadmapBodySchema
+>;
 
 export const publicWhiteboardLinksGetByTokenResponseSchema = z.object({
   name: z.string(),
@@ -12187,10 +14673,188 @@ export const BUILD_CONTRACT_OPERATIONS = [
     path: "/build/managed-products/{managedProductId}",
   },
   {
+    operationId: "ManagedProductsController_archiveManagedProduct",
+    method: "POST",
+    path: "/build/managed-products/{managedProductId}/archive",
+    response: "managedProductsArchiveManagedProductResponseSchema",
+    body: "managedProductsArchiveManagedProductBodySchema",
+  },
+  {
+    operationId: "DiscoveryReviewsController_getEvidenceThemes",
+    method: "GET",
+    path: "/build/managed-products/{managedProductId}/evidence-themes",
+    response: "discoveryReviewsGetEvidenceThemesResponseSchema",
+  },
+  {
     operationId: "ManagedProductsController_getProductInsights",
     method: "GET",
     path: "/build/managed-products/{managedProductId}/insights",
     response: "managedProductsGetProductInsightsResponseSchema",
+  },
+  {
+    operationId: "ManagedProductRelationsController_listMembers",
+    method: "GET",
+    path: "/build/managed-products/{managedProductId}/members",
+    response: "managedProductRelationsListMembersResponseSchema",
+  },
+  {
+    operationId: "ManagedProductRelationsController_addMember",
+    method: "POST",
+    path: "/build/managed-products/{managedProductId}/members",
+    response: "managedProductRelationsAddMemberResponseSchema",
+    body: "managedProductRelationsAddMemberBodySchema",
+  },
+  {
+    operationId: "ManagedProductRelationsController_removeMember",
+    method: "DELETE",
+    path: "/build/managed-products/{managedProductId}/members/{membershipRowId}",
+  },
+  {
+    operationId: "DiscoveryController_listOpportunities",
+    method: "GET",
+    path: "/build/managed-products/{managedProductId}/opportunities",
+    response: "discoveryListOpportunitiesResponseSchema",
+  },
+  {
+    operationId: "DiscoveryController_createOpportunity",
+    method: "POST",
+    path: "/build/managed-products/{managedProductId}/opportunities",
+    response: "discoveryCreateOpportunityResponseSchema",
+    body: "discoveryCreateOpportunityBodySchema",
+  },
+  {
+    operationId: "DiscoveryController_compareOpportunities",
+    method: "GET",
+    path: "/build/managed-products/{managedProductId}/opportunities/compare",
+    response: "discoveryCompareOpportunitiesResponseSchema",
+  },
+  {
+    operationId: "DiscoveryController_getOpportunity",
+    method: "GET",
+    path: "/build/managed-products/{managedProductId}/opportunities/{opportunityId}",
+    response: "discoveryGetOpportunityResponseSchema",
+  },
+  {
+    operationId: "DiscoveryController_updateOpportunity",
+    method: "PATCH",
+    path: "/build/managed-products/{managedProductId}/opportunities/{opportunityId}",
+    response: "discoveryUpdateOpportunityResponseSchema",
+    body: "discoveryUpdateOpportunityBodySchema",
+  },
+  {
+    operationId: "DiscoveryController_deleteOpportunity",
+    method: "DELETE",
+    path: "/build/managed-products/{managedProductId}/opportunities/{opportunityId}",
+  },
+  {
+    operationId: "DiscoveryController_acceptOpportunity",
+    method: "POST",
+    path: "/build/managed-products/{managedProductId}/opportunities/{opportunityId}/accept",
+    response: "discoveryAcceptOpportunityResponseSchema",
+    body: "discoveryAcceptOpportunityBodySchema",
+  },
+  {
+    operationId: "DiscoveryController_declineOpportunity",
+    method: "POST",
+    path: "/build/managed-products/{managedProductId}/opportunities/{opportunityId}/decline",
+    response: "discoveryDeclineOpportunityResponseSchema",
+    body: "discoveryDeclineOpportunityBodySchema",
+  },
+  {
+    operationId: "DiscoveryController_addEvidence",
+    method: "POST",
+    path: "/build/managed-products/{managedProductId}/opportunities/{opportunityId}/evidence",
+    response: "discoveryAddEvidenceResponseSchema",
+    body: "discoveryAddEvidenceBodySchema",
+  },
+  {
+    operationId: "DiscoveryController_removeEvidence",
+    method: "DELETE",
+    path: "/build/managed-products/{managedProductId}/opportunities/{opportunityId}/evidence/{evidenceId}",
+  },
+  {
+    operationId: "DiscoveryController_addScoreOverride",
+    method: "POST",
+    path: "/build/managed-products/{managedProductId}/opportunities/{opportunityId}/score-override",
+    response: "discoveryAddScoreOverrideResponseSchema",
+    body: "discoveryAddScoreOverrideBodySchema",
+  },
+  {
+    operationId: "DiscoveryController_addScore",
+    method: "POST",
+    path: "/build/managed-products/{managedProductId}/opportunities/{opportunityId}/scores",
+    response: "discoveryAddScoreResponseSchema",
+    body: "discoveryAddScoreBodySchema",
+  },
+  {
+    operationId: "DiscoveryController_getTrace",
+    method: "GET",
+    path: "/build/managed-products/{managedProductId}/opportunities/{opportunityId}/trace",
+    response: "discoveryGetTraceResponseSchema",
+  },
+  {
+    operationId: "DiscoveryReviewsController_listOutcomeReviews",
+    method: "GET",
+    path: "/build/managed-products/{managedProductId}/outcome-reviews",
+    response: "discoveryReviewsListOutcomeReviewsResponseSchema",
+  },
+  {
+    operationId: "DiscoveryReviewsController_createOutcomeReview",
+    method: "POST",
+    path: "/build/managed-products/{managedProductId}/outcome-reviews",
+    response: "discoveryReviewsCreateOutcomeReviewResponseSchema",
+    body: "discoveryReviewsCreateOutcomeReviewBodySchema",
+  },
+  {
+    operationId: "DiscoveryReviewsController_updateOutcomeReview",
+    method: "PATCH",
+    path: "/build/managed-products/{managedProductId}/outcome-reviews/{outcomeReviewId}",
+    response: "discoveryReviewsUpdateOutcomeReviewResponseSchema",
+    body: "discoveryReviewsUpdateOutcomeReviewBodySchema",
+  },
+  {
+    operationId: "DiscoveryReviewsController_deleteOutcomeReview",
+    method: "DELETE",
+    path: "/build/managed-products/{managedProductId}/outcome-reviews/{outcomeReviewId}",
+  },
+  {
+    operationId: "ManagedProductRelationsController_listLinkedProjects",
+    method: "GET",
+    path: "/build/managed-products/{managedProductId}/projects",
+    response: "managedProductRelationsListLinkedProjectsResponseSchema",
+  },
+  {
+    operationId: "ManagedProductRelationsController_listReleases",
+    method: "GET",
+    path: "/build/managed-products/{managedProductId}/releases",
+    response: "managedProductRelationsListReleasesResponseSchema",
+  },
+  {
+    operationId: "ManagedProductRelationsController_createRelease",
+    method: "POST",
+    path: "/build/managed-products/{managedProductId}/releases",
+    response: "managedProductRelationsCreateReleaseResponseSchema",
+    body: "managedProductRelationsCreateReleaseBodySchema",
+  },
+  {
+    operationId: "ManagedProductRelationsController_updateRelease",
+    method: "PATCH",
+    path: "/build/managed-products/{managedProductId}/releases/{releaseId}",
+    response: "managedProductRelationsUpdateReleaseResponseSchema",
+    body: "managedProductRelationsUpdateReleaseBodySchema",
+  },
+  {
+    operationId: "ManagedProductsController_restoreManagedProduct",
+    method: "POST",
+    path: "/build/managed-products/{managedProductId}/restore",
+    response: "managedProductsRestoreManagedProductResponseSchema",
+    body: "managedProductsRestoreManagedProductBodySchema",
+  },
+  {
+    operationId: "ManagedProductRelationsController_getManagedProductSummary",
+    method: "GET",
+    path: "/build/managed-products/{managedProductId}/summary",
+    response: "managedProductRelationsGetManagedProductSummaryResponseSchema",
   },
   {
     operationId: "BuildMembersController_list",
@@ -12339,6 +15003,20 @@ export const BUILD_CONTRACT_OPERATIONS = [
     path: "/build/roadmap",
     response: "projectsRoadmapCreateRoadmapResponseSchema",
     body: "projectsRoadmapCreateRoadmapBodySchema",
+  },
+  {
+    operationId: "ProjectsRoadmapController_moveRoadmapItem",
+    method: "PATCH",
+    path: "/build/roadmap-items/{itemId}/position",
+    response: "projectsRoadmapMoveRoadmapItemResponseSchema",
+    body: "projectsRoadmapMoveRoadmapItemBodySchema",
+  },
+  {
+    operationId: "ProjectsRoadmapController_publishRoadmapItem",
+    method: "PATCH",
+    path: "/build/roadmap-items/{itemId}/publication",
+    response: "projectsRoadmapPublishRoadmapItemResponseSchema",
+    body: "projectsRoadmapPublishRoadmapItemBodySchema",
   },
   {
     operationId: "ProjectsRoadmapController_readRoadmapPublication",
@@ -13093,6 +15771,13 @@ export const BUILD_CONTRACT_OPERATIONS = [
     method: "GET",
     path: "/build/{projectId}/labels",
     response: "projectResourcesListProjectLabelsResponseSchema",
+  },
+  {
+    operationId: "ProjectsByIdController_linkManagedProduct",
+    method: "PATCH",
+    path: "/build/{projectId}/managed-product",
+    response: "projectsByIdLinkManagedProductResponseSchema",
+    body: "projectsByIdLinkManagedProductBodySchema",
   },
   {
     operationId: "MeetingsController_listMeetings",
@@ -13919,24 +16604,24 @@ export const BUILD_CONTRACT_OPERATIONS = [
     response: "publicGetProjectIntakeFormResponseSchema",
   },
   {
-    operationId: "PublicController_getRoadmap",
+    operationId: "PublicRoadmapController_getRoadmap",
     method: "GET",
     path: "/public/roadmap",
-    response: "publicGetRoadmapResponseSchema",
+    response: "publicRoadmapGetRoadmapResponseSchema",
   },
   {
-    operationId: "PublicController_submitRoadmapFeedback",
+    operationId: "PublicRoadmapController_submitRoadmapFeedback",
     method: "POST",
     path: "/public/roadmap/feedback",
-    response: "publicSubmitRoadmapFeedbackResponseSchema",
-    body: "publicSubmitRoadmapFeedbackBodySchema",
+    response: "publicRoadmapSubmitRoadmapFeedbackResponseSchema",
+    body: "publicRoadmapSubmitRoadmapFeedbackBodySchema",
   },
   {
-    operationId: "PublicController_voteRoadmap",
+    operationId: "PublicRoadmapController_voteRoadmap",
     method: "POST",
     path: "/public/roadmap/vote",
-    response: "publicVoteRoadmapResponseSchema",
-    body: "publicVoteRoadmapBodySchema",
+    response: "publicRoadmapVoteRoadmapResponseSchema",
+    body: "publicRoadmapVoteRoadmapBodySchema",
   },
   {
     operationId: "PublicWhiteboardLinksController_getByToken",

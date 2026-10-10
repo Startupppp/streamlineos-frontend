@@ -14,10 +14,11 @@ import {
   PM_PANEL,
 } from "@/components/pm-chrome";
 import { PageState } from "@/components/shared/page-state";
-import { ROADMAP_COLUMNS } from "./roadmap-constants";
+import { ROADMAP_HORIZON_COLUMNS } from "./roadmap-constants";
 import { RoadmapItemCard, type ScorableRoadmapItem } from "./roadmap-item-card";
 import { RoadmapItemSheet } from "./roadmap-item-sheet";
 import { useRoadmapTab } from "./use-roadmap-tab";
+import type { RoadmapHorizon } from "@/types/projects";
 
 interface RoadmapTabProps {
   search: string;
@@ -35,12 +36,13 @@ interface RoadmapTabProps {
   onItemsChange?: (items: ScorableRoadmapItem[]) => void;
   externalEditTarget?: ScorableRoadmapItem | null;
   onExternalEditClose?: () => void;
+  onMove?: (item: ScorableRoadmapItem, horizon: RoadmapHorizon) => void;
 }
 
 function RoadmapBoardSkeleton() {
   return (
-    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-      {Array.from({ length: 8 }).map((_, i) => (
+    <div className="grid gap-3 md:grid-cols-3">
+      {Array.from({ length: 3 }).map((_, i) => (
         <div key={i} className={cn(PM_PANEL, "min-h-[140px] space-y-2 p-2")}>
           <Skeleton className="h-4 w-20" />
           <Skeleton className="h-16 w-full rounded-lg" />
@@ -67,6 +69,7 @@ export function RoadmapTab({
   onItemsChange,
   externalEditTarget,
   onExternalEditClose,
+  onMove,
 }: RoadmapTabProps) {
   const {
     isOnline,
@@ -165,7 +168,7 @@ export function RoadmapTab({
       >
         <BuildPaginatedContent
           ariaLabel="Roadmap items"
-          contentClassName="grid gap-3 md:grid-cols-2 xl:grid-cols-4"
+          contentClassName="grid gap-3 md:grid-cols-3"
           footer={(
             <TablePagination
               mode="cursor"
@@ -178,9 +181,9 @@ export function RoadmapTab({
             />
           )}
         >
-            {ROADMAP_COLUMNS.map((col) => (
+            {ROADMAP_HORIZON_COLUMNS.map((col) => (
               <PmPanel
-                key={col.status}
+                key={col.horizon}
                 className="flex min-h-[120px] flex-col p-2"
               >
                 <div className="mb-2 flex items-center justify-between px-1">
@@ -188,21 +191,22 @@ export function RoadmapTab({
                     {col.label}
                   </span>
                   <span className="min-w-[20px] rounded-full border border-border/50 bg-background/80 px-1.5 py-0.5 text-center text-dense tabular-nums text-muted-foreground">
-                    {(grouped[col.status] ?? []).length}
+                    {(grouped[col.horizon] ?? []).length}
                   </span>
                 </div>
-                {(grouped[col.status] ?? []).length === 0 ? (
+                {(grouped[col.horizon] ?? []).length === 0 ? (
                   <div className="rounded-lg border border-dashed border-border/60 py-6 text-center text-xs text-muted-foreground">
                     Empty
                   </div>
                 ) : (
                   <PmStaggerList className="flex flex-col gap-1.5">
-                    {(grouped[col.status] ?? []).map((item) => (
+                    {(grouped[col.horizon] ?? []).map((item) => (
                       <RoadmapItemCard
                         key={item.id}
                         item={item}
                         onEdit={handleEditItem}
                         onDelete={handleDeleteItem}
+                        onMove={onMove}
                       />
                     ))}
                   </PmStaggerList>

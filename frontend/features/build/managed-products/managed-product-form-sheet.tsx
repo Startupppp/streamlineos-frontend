@@ -10,6 +10,7 @@ import {
   editManagedProductSchema,
   type EditManagedProductFormValues,
   toCreateManagedProductInput,
+  toEditManagedProductInput,
 } from "@/features/build/managed-products/managed-product-schema";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -29,6 +30,9 @@ const CREATE_DEFAULTS: CreateManagedProductFormValues = {
   key: "",
   description: "",
   ownerId: "",
+  segments: [],
+  tags: [],
+  successMetrics: [],
 };
 
 const EDIT_DEFAULTS: EditManagedProductFormValues = {
@@ -36,6 +40,9 @@ const EDIT_DEFAULTS: EditManagedProductFormValues = {
   description: "",
   ownerId: "",
   status: "active",
+  segments: [],
+  tags: [],
+  successMetrics: [],
 };
 
 const MANAGED_PRODUCT_STATUSES = ["active", "archived"] as const;
@@ -46,6 +53,19 @@ function toEditForm(p: ManagedProduct): EditManagedProductFormValues {
     description: p.description ?? "",
     ownerId: p.ownerId ?? "",
     status: MANAGED_PRODUCT_STATUSES.find((v) => v === p.status) ?? "active",
+    lifecycle: (p.lifecycle as EditManagedProductFormValues["lifecycle"]) || undefined,
+    health: (p.health as EditManagedProductFormValues["health"]) || undefined,
+    teamId: p.teamId ?? undefined,
+    segments: p.segments ?? [],
+    tags: p.tags ?? [],
+    northStarMetric: p.northStarMetric ?? undefined,
+    successMetrics: Array.isArray(p.successMetrics)
+      ? (p.successMetrics as EditManagedProductFormValues["successMetrics"])
+      : [],
+    vision: p.vision ?? undefined,
+    missionStatement: p.missionStatement ?? undefined,
+    targetCustomer: p.targetCustomer ?? undefined,
+    differentiators: p.differentiators ?? undefined,
   };
 }
 
@@ -116,11 +136,7 @@ export function ManagedProductFormSheet({
     if (!defaultValues) return;
     const input = {
       managedProductId: defaultValues.id,
-      version: defaultValues.version,
-      name: v.name,
-      description: v.description || null,
-      ownerId: v.ownerId || null,
-      status: v.status,
+      ...toEditManagedProductInput(v, defaultValues.version),
     };
     updateProduct.mutate(input, {
       onSuccess: () => {
@@ -146,7 +162,11 @@ export function ManagedProductFormSheet({
               diffs.push({ key, label, serverValue: serverValue || "Not set", pendingValue: pendingValue || "Not set" });
             }
           }
-          setConflictFields(diffs.length > 0 ? diffs : [{ key: "version", label: "Version", serverValue: "changed on server", pendingValue: "stale" }]);
+          setConflictFields(
+            diffs.length > 0
+              ? diffs
+              : [{ key: "version", label: "Version", serverValue: "changed on server", pendingValue: "stale" }],
+          );
           return;
         }
         toast.error(getErrorMessage(e));

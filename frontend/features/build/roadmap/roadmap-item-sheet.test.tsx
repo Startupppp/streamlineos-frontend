@@ -85,6 +85,23 @@ jest.mock("./roadmap-constants", () => ({
     { value: "completed", label: "Completed" },
     { value: "cancelled", label: "Cancelled" },
   ],
+  ROADMAP_HORIZON_OPTIONS: [
+    { value: "now", label: "Now" },
+    { value: "next", label: "Next" },
+    { value: "later", label: "Later" },
+  ],
+}));
+
+jest.mock("@/hooks/api/goals", () => ({
+  useGoals: jest.fn(() => ({ data: [] })),
+}));
+
+jest.mock("@/hooks/api/build/managed-product-releases", () => ({
+  useManagedProductReleases: jest.fn(() => ({ data: null })),
+}));
+
+jest.mock("@/hooks/api/build/teams", () => ({
+  useProjectTeams: jest.fn(() => ({ data: null })),
 }));
 
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn(), warning: jest.fn() } }));
@@ -109,11 +126,19 @@ const BASELINE_ITEM = {
   title: "Original title",
   description: null,
   status: "planned" as const,
+  horizon: "later" as const,
   category: null,
   isPublic: true,
   projectId: null,
   epicTicketId: null,
   targetQuarter: null,
+  targetStart: null,
+  targetEnd: null,
+  goalId: null,
+  releaseId: null,
+  teamId: null,
+  opportunityId: null,
+  decisionSnapshot: null,
   sortOrder: 0,
   votes: 0,
   reach: null,

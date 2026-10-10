@@ -8,6 +8,13 @@ export const ROADMAP_STATUS_OPTS = [
   { value: "cancelled", label: "Cancelled" },
 ];
 
+export const ROADMAP_HORIZON_OPTS = [
+  { value: BUILD_FILTER_ALL, label: "All horizons" },
+  { value: "now", label: "Now" },
+  { value: "next", label: "Next" },
+  { value: "later", label: "Later" },
+];
+
 export const ROADMAP_SORT_OPTS = [
   { value: BUILD_FILTER_ALL, label: "Default order" },
   { value: "updated_at", label: "Last updated" },
@@ -17,5 +24,6 @@ export const ROADMAP_SORT_OPTS = [
 
 export const ROADMAP_FILTER_DEFS = [
   { param: "status", options: ROADMAP_STATUS_OPTS.map((o) => o.value) },
+  { param: "horizon", options: ROADMAP_HORIZON_OPTS.map((o) => o.value) },
   { param: "sort", options: ROADMAP_SORT_OPTS.map((o) => o.value) },
 ] as const;

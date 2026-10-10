@@ -42,7 +42,62 @@ export function useLinkProjectManagedProduct() {
         { ...variables.project, name: linked.name, key: linked.key },
         variables.managedProductId,
       );
-      // Product insights contain derived work counts that a sparse link result cannot reconstruct.
+      queryClient.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.managedProducts.insights(
+          variables.managedProductId,
+        ),
+        exact: true,
+        refetchType: "none",
+      });
+      queryClient.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.managedProducts.linkedProjects(
+          variables.managedProductId,
+        ),
+        exact: false,
+        refetchType: "active",
+      });
+    },
+  });
+}
+
+interface UnlinkProjectInput {
+  projectId: number;
+  managedProductId: number;
+}
+
+export function useUnlinkProjectManagedProduct() {
+  const queryClient = useQueryClient();
+  return useAuthorizedMutation<
+    z.infer<typeof linkedProjectContract>,
+    Error,
+    UnlinkProjectInput
+  >("build:managed-products:update", {
+    mutationKey: ["projects", "unlink-managed-product"],
+    mutationFn: ({ projectId }) =>
+      apiClient.patch(
+        `/build/${projectId}/managed-product`,
+        { managedProductId: null },
+        undefined,
+        linkedProjectContract,
+      ),
+    onSuccess: (_, variables) => {
+      queryClient.setQueryData<{ id: number; managedProductId: number | null } | null>(
+        buildWorkQueryKeys.projects.detail(variables.projectId),
+        (detail) => (detail ? { ...detail, managedProductId: null } : detail),
+      );
+      patchManagedProductLinkCache(
+        queryClient,
+        { id: variables.projectId } as ProjectListItem,
+        variables.managedProductId,
+      );
+      const linkedProjectsKey = buildWorkQueryKeys.projects.managedProducts.linkedProjects(
+        variables.managedProductId,
+      );
+      queryClient.invalidateQueries({
+        queryKey: linkedProjectsKey,
+        exact: false,
+        refetchType: "active",
+      });
       queryClient.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.managedProducts.insights(
           variables.managedProductId,

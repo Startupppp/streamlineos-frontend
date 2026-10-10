@@ -11,9 +11,9 @@ import {
   projectsTemplatesCreateTemplateResponseSchema,
   projectsTemplatesApplyTemplateResponseSchema,
   projectsRoadmapReadRoadmapPublicationResponseSchema,
-  publicGetRoadmapResponseSchema,
-  publicVoteRoadmapResponseSchema,
-  publicSubmitRoadmapFeedbackResponseSchema,
+  publicRoadmapGetRoadmapResponseSchema,
+  publicRoadmapVoteRoadmapResponseSchema,
+  publicRoadmapSubmitRoadmapFeedbackResponseSchema,
 } from "@/contracts/build-contracts.generated";
 
 export const roadmapPrioritizationContract =
@@ -33,6 +33,20 @@ export const roadmapOwnerContract =
 
 export type RoadmapOwner = z.infer<typeof roadmapOwnerContract>;
 
+const roadmapItemShape = projectsRoadmapCreateRoadmapResponseSchema.shape;
+
+export const roadmapGoalContract = roadmapItemShape.goal.unwrap();
+export const roadmapReleaseContract = roadmapItemShape.release.unwrap();
+export const roadmapTeamContract = roadmapItemShape.team.unwrap();
+export const roadmapOpportunityContract = roadmapItemShape.opportunity.unwrap();
+export const roadmapDeliveryContract = roadmapItemShape.delivery;
+
+export type RoadmapGoal = z.infer<typeof roadmapGoalContract>;
+export type RoadmapRelease = z.infer<typeof roadmapReleaseContract>;
+export type RoadmapTeam = z.infer<typeof roadmapTeamContract>;
+export type RoadmapOpportunity = z.infer<typeof roadmapOpportunityContract>;
+export type RoadmapDelivery = z.infer<typeof roadmapDeliveryContract>;
+
 export const roadmapItemContract = projectsRoadmapCreateRoadmapResponseSchema;
 export const roadmapPageContract = projectsRoadmapListRoadmapResponseSchema;
 
@@ -46,7 +60,7 @@ export const templateRowContract = projectsTemplatesCreateTemplateResponseSchema
 export const templateListContract = projectsTemplatesListTemplatesResponseSchema;
 export const applyTemplateResultContract = projectsTemplatesApplyTemplateResponseSchema;
 
-export const publicRoadmapBoardContract = publicGetRoadmapResponseSchema;
-export const publicVoteResultContract = publicVoteRoadmapResponseSchema;
-export const publicFeedbackResultContract = publicSubmitRoadmapFeedbackResponseSchema;
+export const publicRoadmapBoardContract = publicRoadmapGetRoadmapResponseSchema;
+export const publicVoteResultContract = publicRoadmapVoteRoadmapResponseSchema;
+export const publicFeedbackResultContract = publicRoadmapSubmitRoadmapFeedbackResponseSchema;
 export const roadmapPublicationContract = projectsRoadmapReadRoadmapPublicationResponseSchema;

@@ -1,4 +1,5 @@
 export type RoadmapStatus = "planned" | "in_progress" | "completed" | "cancelled";
+export type RoadmapHorizon = "now" | "next" | "later";
 export type FeedbackStatus = "open" | "planned" | "in_progress" | "completed" | "declined";
 export type ChangelogType = "feature" | "improvement" | "fix";
 
@@ -11,14 +12,24 @@ export interface RoadmapItem {
   category: string | null;
   isPublic: boolean;
   projectId: number | null;
+  managedProductId: number | null;
   epicTicketId: number | null;
   targetQuarter: string | null;
   sortOrder: number;
   votes: number;
+  horizon: RoadmapHorizon;
+  goalId: number | null;
+  releaseId: number | null;
+  teamId: number | null;
+  opportunityId: number | null;
+  targetStart: string | null;
+  targetEnd: string | null;
+  decisionSnapshot: Record<string, unknown> | null;
   version: number;
   createdBy: string | null;
   createdAt: string;
   updatedAt: string;
+  deletedAt: string | null;
 }
 
 export interface FeedbackPost {
@@ -65,6 +76,7 @@ export interface PublicRoadmapItem {
   status: RoadmapStatus;
   category: string | null;
   targetQuarter: string | null;
+  horizon: RoadmapHorizon;
   votes: number;
 }
 

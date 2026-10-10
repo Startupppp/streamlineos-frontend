@@ -6,9 +6,12 @@ import {
   useManagedProducts,
   useCreateManagedProduct,
   useDeleteManagedProduct,
+  useArchiveManagedProduct,
+  useRestoreManagedProduct,
 } from "@/hooks/api/build/managed-products";
 import { useCan } from "@/hooks/api/access";
 import { useBuildMembers } from "@/hooks/api/build/build-members";
+import { useProjectTeams } from "@/hooks/api/build/teams";
 import type {
   ManagedProduct,
   CreateManagedProductInput,
@@ -38,6 +41,23 @@ export const SORT_OPTIONS = [
   { value: "status", label: "Status" },
 ];
 
+export const LIFECYCLE_FILTER_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "All lifecycles" },
+  { value: "discovery", label: "Discovery" },
+  { value: "build", label: "Build" },
+  { value: "growth", label: "Growth" },
+  { value: "mature", label: "Mature" },
+  { value: "sunset", label: "Sunset" },
+];
+
+export const HEALTH_FILTER_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "All health" },
+  { value: "on_track", label: "On track" },
+  { value: "at_risk", label: "At risk" },
+  { value: "off_track", label: "Off track" },
+  { value: "unknown", label: "Unknown" },
+];
+
 const FILTER_DEFINITIONS = [
   {
     param: "status",
@@ -48,6 +68,22 @@ const FILTER_DEFINITIONS = [
     options: SORT_OPTIONS.map((option) => option.value),
   },
   { param: "ownerId" },
+  {
+    param: "lifecycle",
+    options: LIFECYCLE_FILTER_OPTIONS.map((o) => o.value),
+  },
+  {
+    param: "health",
+    options: HEALTH_FILTER_OPTIONS.map((o) => o.value),
+  },
+  { param: "teamId" },
+  { param: "segment" },
+  { param: "tag" },
+  { param: "linkedProjectId" },
+  {
+    param: "archived",
+    options: [BUILD_FILTER_ALL, "true"],
+  },
 ] as const;
 
 export function useManagedProductsPage() {
@@ -68,11 +104,20 @@ export function useManagedProductsPage() {
   } = useQueryParamOpen("create");
   const [editTarget, setEditTarget] = useState<ManagedProduct | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ManagedProduct | null>(null);
+  const [archiveTarget, setArchiveTarget] = useState<ManagedProduct | null>(null);
   const [selected, setSelected] = useState<Set<string | number>>(new Set());
 
   const statusValue = listFilters.value("status");
   const sortValue = listFilters.value("sort");
   const ownerIdValue = listFilters.value("ownerId");
+  const lifecycleValue = listFilters.value("lifecycle");
+  const healthValue = listFilters.value("health");
+  const teamIdValue = listFilters.value("teamId");
+  const segmentValue = listFilters.value("segment");
+  const tagValue = listFilters.value("tag");
+  const linkedProjectIdValue = listFilters.value("linkedProjectId");
+  const archivedValue = listFilters.value("archived");
+
   const { data, isLoading, isError, error, refetch } = useManagedProducts({
     cursor,
     limit: PAGE_SIZE,
@@ -82,18 +127,36 @@ export function useManagedProductsPage() {
     sort:
       sortValue &&
       sortValue !== BUILD_FILTER_ALL &&
-      (sortValue === "name" ||
-        sortValue === "updated" ||
-        sortValue === "status")
+      (sortValue === "name" || sortValue === "updated" || sortValue === "status")
         ? sortValue
         : undefined,
+    lifecycle: lifecycleValue !== BUILD_FILTER_ALL ? lifecycleValue : undefined,
+    health: healthValue !== BUILD_FILTER_ALL ? healthValue : undefined,
+    teamId: teamIdValue !== BUILD_FILTER_ALL ? teamIdValue : undefined,
+    segment: segmentValue !== BUILD_FILTER_ALL ? segmentValue : undefined,
+    tag: tagValue !== BUILD_FILTER_ALL ? tagValue : undefined,
+    linkedProjectId: linkedProjectIdValue !== BUILD_FILTER_ALL ? linkedProjectIdValue : undefined,
+    archived: archivedValue === "true" ? true : undefined,
   });
 
   const { data: membersRes } = useBuildMembers({ limit: 100 });
   const members = useMemo(() => membersRes?.data ?? [], [membersRes]);
 
+  const { data: teamsRes } = useProjectTeams({ pageSize: 100 });
+  const teams = useMemo(() => teamsRes?.data ?? [], [teamsRes]);
+
+  const teamOptions = useMemo(
+    () => [
+      { value: BUILD_FILTER_ALL, label: "All teams" },
+      ...teams.map((t) => ({ value: String(t.id), label: t.name })),
+    ],
+    [teams],
+  );
+
   const createProduct = useCreateManagedProduct();
   const deleteProduct = useDeleteManagedProduct();
+  const archiveProduct = useArchiveManagedProduct();
+  const restoreProduct = useRestoreManagedProduct();
 
   const ownerOf = useCallback(
     (ownerId: string | null): NamedUser | null => {
@@ -131,6 +194,34 @@ export function useManagedProductsPage() {
     });
   }, [canDelete, deleteProduct, deleteTarget]);
 
+  const handleArchiveConfirm = useCallback(() => {
+    if (!canUpdate || !archiveTarget) return;
+    archiveProduct.mutate(
+      { managedProductId: archiveTarget.id, version: archiveTarget.version },
+      {
+        onSuccess: () => {
+          toast.success("Managed product archived");
+          setArchiveTarget(null);
+        },
+        onError: (e) => toast.error(getErrorMessage(e)),
+      },
+    );
+  }, [canUpdate, archiveProduct, archiveTarget]);
+
+  const handleRestoreRow = useCallback(
+    (row: ManagedProduct) => {
+      if (!canUpdate) return;
+      restoreProduct.mutate(
+        { managedProductId: row.id, version: row.version },
+        {
+          onSuccess: () => toast.success("Managed product restored"),
+          onError: (e) => toast.error(getErrorMessage(e)),
+        },
+      );
+    },
+    [canUpdate, restoreProduct],
+  );
+
   const handleStatusChange = useCallback(
     (value: string) => listFilters.setValue("status", value),
     [listFilters],
@@ -138,6 +229,21 @@ export function useManagedProductsPage() {
 
   const handleSortChange = useCallback(
     (value: string) => listFilters.setValue("sort", value),
+    [listFilters],
+  );
+
+  const handleLifecycleChange = useCallback(
+    (value: string) => listFilters.setValue("lifecycle", value),
+    [listFilters],
+  );
+
+  const handleHealthChange = useCallback(
+    (value: string) => listFilters.setValue("health", value),
+    [listFilters],
+  );
+
+  const handleTeamChange = useCallback(
+    (value: string) => listFilters.setValue("teamId", value),
     [listFilters],
   );
 
@@ -157,6 +263,10 @@ export function useManagedProductsPage() {
 
   const handleDeleteDialogChange = useCallback((open: boolean) => {
     if (!open) setDeleteTarget(null);
+  }, []);
+
+  const handleArchiveDialogChange = useCallback((open: boolean) => {
+    if (!open) setArchiveTarget(null);
   }, []);
 
   const handleRetry = useCallback(() => {
@@ -212,6 +322,12 @@ export function useManagedProductsPage() {
     },
     [canDelete],
   );
+  const handleArchiveRow = useCallback(
+    (row: ManagedProduct) => {
+      if (canUpdate) setArchiveTarget(row);
+    },
+    [canUpdate],
+  );
 
   const handleNextPage = useCallback(() => {
     goNext(data?.pagination.nextCursor);
@@ -225,8 +341,10 @@ export function useManagedProductsPage() {
         ownerOf,
         onEdit: handleEditRow,
         onDelete: handleDeleteRow,
+        onArchive: handleArchiveRow,
+        onRestore: handleRestoreRow,
       }),
-    [canDelete, canUpdate, handleDeleteRow, handleEditRow, ownerOf],
+    [canDelete, canUpdate, handleDeleteRow, handleEditRow, handleArchiveRow, handleRestoreRow, ownerOf],
   );
 
   return {
@@ -242,10 +360,15 @@ export function useManagedProductsPage() {
     editTarget,
     setEditTarget,
     deleteTarget,
+    archiveTarget,
     selected,
     setSelected,
     statusValue,
     sortValue,
+    lifecycleValue,
+    healthValue,
+    teamIdValue,
+    teamOptions,
     displayed,
     data,
     isLoading,
@@ -257,16 +380,22 @@ export function useManagedProductsPage() {
     searchInputRef,
     handleCreate,
     handleDeleteConfirm,
+    handleArchiveConfirm,
     handleStatusChange,
     handleSortChange,
+    handleLifecycleChange,
+    handleHealthChange,
+    handleTeamChange,
     handleOpenCreate,
     handleSheetOpenChange,
     handleDeleteDialogChange,
+    handleArchiveDialogChange,
     handleRetry,
     handleClearKeyboardSelection,
     handleNextPage,
     handleEditRow,
     handleDeleteRow,
+    handleArchiveRow,
     columns,
   };
 }

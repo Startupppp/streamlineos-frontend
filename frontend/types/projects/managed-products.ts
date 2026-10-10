@@ -1,4 +1,6 @@
 export type ManagedProductStatus = "active" | "archived";
+export type ManagedProductLifecycle = "discovery" | "build" | "growth" | "mature" | "sunset";
+export type ManagedProductHealth = "on_track" | "at_risk" | "off_track" | "unknown";
 
 export interface ManagedProductOwner {
   id: string;
@@ -6,6 +8,23 @@ export interface ManagedProductOwner {
   lastName: string | null;
   email: string;
   image: string | null;
+}
+
+export interface ManagedProductNextRelease {
+  id: number;
+  name: string;
+  version: string;
+  releaseDate: string | null;
+}
+
+export interface ManagedProductFeedbackTrend {
+  last30d: number;
+  previous30d: number;
+}
+
+export interface ManagedProductSuccessMetric {
+  label: string;
+  target?: string;
 }
 
 export interface ManagedProduct {
@@ -24,11 +43,21 @@ export interface ManagedProduct {
   targetLaunchDate: string | null;
   successMetrics: unknown;
   ownerMembershipId: number | null;
+  lifecycle: string;
+  health: string;
+  teamId: number | null;
+  segments: string[];
+  tags: string[];
+  northStarMetric: string | null;
+  lastReviewedAt: string | null;
   owner?: ManagedProductOwner | null;
   version: number;
   deletedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  linkedProjectCount?: number;
+  nextRelease?: ManagedProductNextRelease | null;
+  feedbackTrend?: ManagedProductFeedbackTrend;
 }
 
 export interface ManagedProductsPage {
@@ -41,6 +70,19 @@ export interface CreateManagedProductInput {
   key: string;
   description?: string;
   ownerId?: string;
+  lifecycle?: ManagedProductLifecycle;
+  health?: ManagedProductHealth;
+  teamId?: number;
+  segments?: string[];
+  tags?: string[];
+  northStarMetric?: string;
+  successMetrics?: ManagedProductSuccessMetric[];
+  vision?: string;
+  missionStatement?: string;
+  targetCustomer?: string;
+  differentiators?: string;
+  lastReviewedAt?: string;
+  targetLaunchDate?: string;
 }
 
 export interface UpdateManagedProductInput {
@@ -49,4 +91,17 @@ export interface UpdateManagedProductInput {
   description?: string | null;
   ownerId?: string | null;
   status?: ManagedProductStatus;
+  lifecycle?: ManagedProductLifecycle;
+  health?: ManagedProductHealth;
+  teamId?: number | null;
+  segments?: string[];
+  tags?: string[];
+  northStarMetric?: string | null;
+  successMetrics?: ManagedProductSuccessMetric[];
+  vision?: string | null;
+  missionStatement?: string | null;
+  targetCustomer?: string | null;
+  differentiators?: string | null;
+  lastReviewedAt?: string | null;
+  targetLaunchDate?: string | null;
 }

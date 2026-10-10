@@ -4,12 +4,17 @@ import { useCallback, useState, type MouseEvent } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import {
+  AlertCircle,
   CalendarDays,
+  CheckCircle2,
+  ClipboardCheck,
   Link2 as LinkIcon,
   ListChecks,
+  Map,
   Pencil,
   Target,
   Trash2,
+  Unlink,
   Users,
 } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
@@ -21,6 +26,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { PM_PANEL } from "@/components/pm-chrome";
@@ -37,6 +43,8 @@ interface GoalCardActionsProps {
   goal: GoalListItem;
   onEdit?: (goal: GoalListItem) => void;
   onDelete?: (goal: GoalListItem) => void;
+  onUnlink?: (goal: GoalListItem) => void;
+  onCheckIn?: (goal: GoalListItem) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -45,12 +53,18 @@ function GoalCardActions({
   goal,
   onEdit,
   onDelete,
+  onUnlink,
+  onCheckIn,
   open,
   onOpenChange,
 }: GoalCardActionsProps) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   const handleEdit = useCallback(() => onEdit?.(goal), [goal, onEdit]);
   const handleDelete = useCallback(() => onDelete?.(goal), [goal, onDelete]);
+  const handleUnlink = useCallback(() => onUnlink?.(goal), [goal, onUnlink]);
+  const handleCheckIn = useCallback(() => onCheckIn?.(goal), [goal, onCheckIn]);
+
+  const hasProductActions = Boolean(onUnlink || onCheckIn);
 
   return (
     <DropdownMenu open={open} onOpenChange={onOpenChange}>
@@ -71,6 +85,21 @@ function GoalCardActions({
             Edit
           </DropdownMenuItem>
         ) : null}
+        {onCheckIn && goal.keyResultCount > 0 ? (
+          <DropdownMenuItem onClick={handleCheckIn}>
+            <ClipboardCheck className="h-4 w-4" />
+            Check in
+          </DropdownMenuItem>
+        ) : null}
+        {hasProductActions && (onEdit || onDelete) ? (
+          <DropdownMenuSeparator />
+        ) : null}
+        {onUnlink ? (
+          <DropdownMenuItem variant="destructive" onClick={handleUnlink}>
+            <Unlink className="h-4 w-4 text-destructive" />
+            Unlink from product
+          </DropdownMenuItem>
+        ) : null}
         {onDelete ? (
           <DropdownMenuItem variant="destructive" onClick={handleDelete}>
             <Trash2 className="h-4 w-4 text-destructive" />
@@ -82,18 +111,37 @@ function GoalCardActions({
   );
 }
 
+const FRESHNESS_CONFIG = {
+  fresh: {
+    label: "Fresh",
+    icon: CheckCircle2,
+    className: "text-emerald-600 dark:text-emerald-400",
+  },
+  stale: {
+    label: "Stale check-in",
+    icon: AlertCircle,
+    className: "text-amber-600 dark:text-amber-400",
+  },
+  none: null,
+} as const;
+
 interface GoalCardProps {
   goal: GoalListItem;
   onEdit?: (goal: GoalListItem) => void;
   onDelete?: (goal: GoalListItem) => void;
+  onUnlink?: (goal: GoalListItem) => void;
+  onCheckIn?: (goal: GoalListItem) => void;
 }
 
-export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
+export function GoalCard({ goal, onEdit, onDelete, onUnlink, onCheckIn }: GoalCardProps) {
   const cfg = STATUS_CONFIG[goal.status];
   const ownerName = goal.owner?.name ?? goal.owner?.email ?? null;
   const shouldReduceMotion = useReducedMotion();
   const [menuOpen, setMenuOpen] = useState(false);
-  const hasActions = Boolean(onEdit || onDelete);
+  const hasActions = Boolean(onEdit || onDelete || onUnlink || onCheckIn);
+
+  const freshnessCfg = FRESHNESS_CONFIG[goal.checkInFreshness];
+  const FreshnessIcon = freshnessCfg?.icon ?? null;
 
   const handleContextMenu = useCallback(
     (event: MouseEvent<HTMLDivElement>) => {
@@ -123,6 +171,18 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
               {LEVEL_LABEL[goal.level]} objective
             </span>
             <div className="flex shrink-0 items-center gap-1">
+              {freshnessCfg && FreshnessIcon ? (
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-1 text-micro font-medium",
+                    freshnessCfg.className,
+                  )}
+                  title={`Check-in: ${freshnessCfg.label}`}
+                >
+                  <FreshnessIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                  {freshnessCfg.label}
+                </span>
+              ) : null}
               <Badge variant={cfg.variant} className="shrink-0 text-micro">
                 {cfg.label}
               </Badge>
@@ -131,6 +191,8 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
                   goal={goal}
                   onEdit={onEdit}
                   onDelete={onDelete}
+                  onUnlink={onUnlink}
+                  onCheckIn={onCheckIn}
                   open={menuOpen}
                   onOpenChange={setMenuOpen}
                 />
@@ -186,6 +248,38 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
               </span>
             )}
           </div>
+
+          {(goal.linkedRoadmapItemCount > 0 || goal.linkedOpportunityCount > 0) ? (
+            <div className="flex min-w-0 items-center gap-3 text-xs text-muted-foreground">
+              {goal.linkedRoadmapItemCount > 0 ? (
+                <span className="flex items-center gap-1">
+                  <Map className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  {goal.linkedRoadmapItemCount} roadmap item{goal.linkedRoadmapItemCount === 1 ? "" : "s"}
+                </span>
+              ) : null}
+              {goal.linkedOpportunityCount > 0 ? (
+                <span className="flex items-center gap-1">
+                  <Target className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  {goal.linkedOpportunityCount} opportunit{goal.linkedOpportunityCount === 1 ? "y" : "ies"}
+                </span>
+              ) : null}
+            </div>
+          ) : null}
+
+          {goal.outcomeReviews !== null ? (
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <CheckCircle2 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                Outcome reviews
+              </span>
+              <span className="font-mono tabular-nums">
+                {goal.outcomeReviews.completed}/{goal.outcomeReviews.scheduled}
+                {goal.outcomeReviews.latestResult
+                  ? ` · ${goal.outcomeReviews.latestResult}`
+                  : ""}
+              </span>
+            </div>
+          ) : null}
 
           {goal.target !== null ? (
             <div className="flex items-center justify-between text-xs text-muted-foreground">

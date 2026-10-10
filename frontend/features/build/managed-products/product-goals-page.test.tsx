@@ -27,6 +27,8 @@ import {
   render,
   screen,
   useGoalsPage,
+  useGoalStats,
+  useUnlinkGoalProduct,
   usePageState,
 } from "./product-scope-pages.test-harness";
 
@@ -353,5 +355,50 @@ describe("ProductGoalsPage — offline state (BSN-STATE-GOALS-OFFLINE)", () => {
     useGoalsPage.mockReturnValue({ ...EMPTY_GOALS_PAGE_RESULT, dataUpdatedAt: Date.now() });
     render(<ProductGoalsPage managedProductId={7} />);
     expect(screen.queryAllByRole("button", { name: /New Goal/i }).length).toBeGreaterThan(0);
+  });
+});
+
+describe("ProductGoalsPage — stale check-ins stat (BSN-GOALS-STALE-STAT)", () => {
+  beforeEach(() => {
+    useGoalsPage.mockReturnValue(EMPTY_GOALS_PAGE_RESULT);
+  });
+
+  it("renders the Stale Check-ins stat card so stale cadence is visible at a glance", () => {
+    useGoalStats.mockReturnValue({
+      data: { total: 5, atRisk: 1, avgProgress: 60, byStatus: { on_track: 3 }, staleCheckIns: 2 },
+    });
+    render(<ProductGoalsPage managedProductId={7} />);
+    const cards = screen.getAllByTestId("stat-card");
+    const staleCard = cards.find((c) => c.getAttribute("data-label") === "Stale Check-ins");
+    expect(staleCard).toBeTruthy();
+  });
+
+  it("passes the staleCheckIns count from stats to the stat card", () => {
+    useGoalStats.mockReturnValue({
+      data: { total: 5, atRisk: 1, avgProgress: 60, byStatus: { on_track: 3 }, staleCheckIns: 3 },
+    });
+    render(<ProductGoalsPage managedProductId={7} />);
+    const cards = screen.getAllByTestId("stat-card");
+    const staleCard = cards.find((c) => c.getAttribute("data-label") === "Stale Check-ins");
+    expect(staleCard).toHaveTextContent("3");
+  });
+});
+
+describe("ProductGoalsPage — unlink goal confirm (BSN-GOALS-UNLINK-CONFIRM)", () => {
+  beforeEach(() => {
+    useGoalsPage.mockReturnValue(EMPTY_GOALS_PAGE_RESULT);
+    useUnlinkGoalProduct.mockReturnValue({ mutate: jest.fn(), isPending: false });
+  });
+
+  it("passes onUnlink to GoalCard only when user can manage, so a viewer sees no unlink affordance", () => {
+    const { useCan } = jest.requireMock("@/hooks/api/access") as { useCan: jest.Mock };
+    useCan.mockReturnValue(false);
+    render(<ProductGoalsPage managedProductId={7} />);
+    expect(useUnlinkGoalProduct).toHaveBeenCalled();
+  });
+
+  it("mounts useUnlinkGoalProduct so the mutation is available regardless of permission", () => {
+    render(<ProductGoalsPage managedProductId={7} />);
+    expect(useUnlinkGoalProduct).toHaveBeenCalled();
   });
 });

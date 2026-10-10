@@ -10,11 +10,31 @@ import type {
   FeedbucketSubmissionFilters,
   ListFeedbucketSubmissionsQuery,
 } from "@/types/feedbucket";
+import type {
+  FeedbucketSourceChannel,
+  FeedbucketSentiment,
+  FeedbucketConsentStatus,
+} from "@/types/feedbucket";
 import {
   FILTER_DEFINITIONS,
   TYPE_OPTIONS,
   STATUS_OPTIONS_VALUES,
+  SOURCE_CHANNEL_FILTER_OPTIONS,
+  SENTIMENT_FILTER_OPTIONS,
+  CONSENT_FILTER_OPTIONS,
 } from "./product-feedback-columns";
+
+const SOURCE_CHANNEL_VALUES = SOURCE_CHANNEL_FILTER_OPTIONS
+  .map((o) => o.value)
+  .filter((v) => v !== BUILD_FILTER_ALL) as FeedbucketSourceChannel[];
+
+const SENTIMENT_VALUES = SENTIMENT_FILTER_OPTIONS
+  .map((o) => o.value)
+  .filter((v) => v !== BUILD_FILTER_ALL) as FeedbucketSentiment[];
+
+const CONSENT_VALUES = CONSENT_FILTER_OPTIONS
+  .map((o) => o.value)
+  .filter((v) => v !== BUILD_FILTER_ALL) as FeedbucketConsentStatus[];
 
 const PAGE_SIZE = 25;
 
@@ -33,14 +53,26 @@ interface ProductFeedbackFiltersResult {
   linkedValue: string;
   assigneeIdValue: string;
   duplicateValue: string;
+  sourceChannelValue: string;
+  themeValue: string;
+  sentimentValue: string;
+  consentStatusValue: string;
+  linkedToOpportunityValue: string;
   typedFrom: string | undefined;
   typedTo: string | undefined;
   typedAssigneeId: string | undefined;
+  paneSubmissionId: number | null;
+  isFiltered: boolean;
   handleTypeChange: (value: string) => void;
   handleStatusChange: (value: string) => void;
   handleLinkedChange: (value: string) => void;
   handleAssigneeChange: (value: string) => void;
   handleDuplicateChange: (value: string) => void;
+  handleSourceChannelChange: (value: string) => void;
+  handleThemeChange: (value: string) => void;
+  handleSentimentChange: (value: string) => void;
+  handleConsentStatusChange: (value: string) => void;
+  handleLinkedToOpportunityChange: (value: string) => void;
   handleDateRangeChange: (range: { from: string; to: string }) => void;
   handlePageChange: (next: number) => void;
   handleClearSelection: () => void;
@@ -59,6 +91,12 @@ export function useProductFeedbackFilters(
   const duplicateValue = listFilters.value("duplicate");
   const fromValue = listFilters.value("from");
   const toValue = listFilters.value("to");
+  const sourceChannelValue = listFilters.value("sourceChannel");
+  const themeValue = listFilters.value("theme");
+  const sentimentValue = listFilters.value("sentiment");
+  const consentStatusValue = listFilters.value("consentStatus");
+  const linkedToOpportunityValue = listFilters.value("linkedToOpportunity");
+  const submissionIdRaw = listFilters.value("submission");
 
   const typedType = useMemo(
     () => TYPE_OPTIONS.find((v) => v === typeValue),
@@ -94,17 +132,80 @@ export function useProductFeedbackFilters(
   const typedFrom = listFilters.isActive("from") ? fromValue : undefined;
   const typedTo = listFilters.isActive("to") ? toValue : undefined;
 
+  const typedSourceChannel = useMemo(
+    () => SOURCE_CHANNEL_VALUES.includes(sourceChannelValue as FeedbucketSourceChannel)
+      ? [sourceChannelValue as FeedbucketSourceChannel]
+      : undefined,
+    [sourceChannelValue],
+  );
+
+  const typedTheme = useMemo(
+    () => themeValue && themeValue !== BUILD_FILTER_ALL
+      ? themeValue === "untagged" ? [""] : [themeValue]
+      : undefined,
+    [themeValue],
+  );
+
+  const typedSentiment = useMemo(
+    () => SENTIMENT_VALUES.includes(sentimentValue as FeedbucketSentiment)
+      ? [sentimentValue as FeedbucketSentiment]
+      : undefined,
+    [sentimentValue],
+  );
+
+  const typedConsentStatus = useMemo(
+    () => CONSENT_VALUES.includes(consentStatusValue as FeedbucketConsentStatus)
+      ? [consentStatusValue as FeedbucketConsentStatus]
+      : undefined,
+    [consentStatusValue],
+  );
+
+  const typedLinkedToOpportunity = useMemo(
+    () =>
+      linkedToOpportunityValue === "true" || linkedToOpportunityValue === "false"
+        ? linkedToOpportunityValue
+        : undefined,
+    [linkedToOpportunityValue],
+  );
+
+  const paneSubmissionId = useMemo(() => {
+    const n = submissionIdRaw ? parseInt(submissionIdRaw, 10) : NaN;
+    return Number.isFinite(n) && n > 0 ? n : null;
+  }, [submissionIdRaw]);
+
   const [page, setPage] = useSourceOverride(listFilters.resetKey, 1);
   const [selected, setSelected] = useSourceOverride(listFilters.resetKey, new Set<string | number>());
+
+  const isFiltered = useMemo(
+    () =>
+      !!(
+        typedType ||
+        typedStatus ||
+        typedLinked ||
+        typedAssigneeId ||
+        typedDuplicate ||
+        typedFrom ||
+        typedTo ||
+        typedSourceChannel ||
+        typedTheme ||
+        typedSentiment ||
+        typedConsentStatus ||
+        typedLinkedToOpportunity ||
+        listFilters.debouncedSearch.trim()
+      ),
+    [
+      typedType, typedStatus, typedLinked, typedAssigneeId, typedDuplicate,
+      typedFrom, typedTo, typedSourceChannel, typedTheme, typedSentiment,
+      typedConsentStatus, typedLinkedToOpportunity, listFilters.debouncedSearch,
+    ],
+  );
 
   const queryParams = useMemo(
     (): ListFeedbucketSubmissionsQuery => ({
       managedProductId,
       page,
       limit: PAGE_SIZE,
-      ...(listFilters.debouncedSearch.trim()
-        ? { search: listFilters.debouncedSearch.trim() }
-        : {}),
+      ...(listFilters.debouncedSearch.trim() ? { search: listFilters.debouncedSearch.trim() } : {}),
       ...(typedType ? { type: typedType } : {}),
       ...(typedStatus ? { status: typedStatus } : {}),
       ...(typedLinked ? { linked: typedLinked } : {}),
@@ -112,18 +213,17 @@ export function useProductFeedbackFilters(
       ...(typedDuplicate ? { duplicate: typedDuplicate } : {}),
       ...(typedFrom ? { from: typedFrom } : {}),
       ...(typedTo ? { to: typedTo } : {}),
+      ...(typedSourceChannel ? { sourceChannel: typedSourceChannel } : {}),
+      ...(typedTheme ? { theme: typedTheme } : {}),
+      ...(typedSentiment ? { sentiment: typedSentiment } : {}),
+      ...(typedConsentStatus ? { consentStatus: typedConsentStatus } : {}),
+      ...(typedLinkedToOpportunity ? { linkedToOpportunity: typedLinkedToOpportunity } : {}),
     }),
     [
-      managedProductId,
-      page,
-      listFilters.debouncedSearch,
-      typedType,
-      typedStatus,
-      typedLinked,
-      typedAssigneeId,
-      typedDuplicate,
-      typedFrom,
-      typedTo,
+      managedProductId, page, listFilters.debouncedSearch,
+      typedType, typedStatus, typedLinked, typedAssigneeId, typedDuplicate,
+      typedFrom, typedTo, typedSourceChannel, typedTheme, typedSentiment,
+      typedConsentStatus, typedLinkedToOpportunity,
     ],
   );
 
@@ -137,20 +237,17 @@ export function useProductFeedbackFilters(
       ...(typedDuplicate ? { duplicate: typedDuplicate } : {}),
       ...(typedFrom ? { from: typedFrom } : {}),
       ...(typedTo ? { to: typedTo } : {}),
-      ...(listFilters.debouncedSearch.trim()
-        ? { search: listFilters.debouncedSearch.trim() }
-        : {}),
+      ...(typedSourceChannel ? { sourceChannel: typedSourceChannel } : {}),
+      ...(typedTheme ? { theme: typedTheme } : {}),
+      ...(typedSentiment ? { sentiment: typedSentiment } : {}),
+      ...(typedConsentStatus ? { consentStatus: typedConsentStatus } : {}),
+      ...(typedLinkedToOpportunity ? { linkedToOpportunity: typedLinkedToOpportunity } : {}),
+      ...(listFilters.debouncedSearch.trim() ? { search: listFilters.debouncedSearch.trim() } : {}),
     }),
     [
-      managedProductId,
-      typedType,
-      typedStatus,
-      typedLinked,
-      typedAssigneeId,
-      typedDuplicate,
-      typedFrom,
-      typedTo,
-      listFilters.debouncedSearch,
+      managedProductId, typedType, typedStatus, typedLinked, typedAssigneeId, typedDuplicate,
+      typedFrom, typedTo, typedSourceChannel, typedTheme, typedSentiment,
+      typedConsentStatus, typedLinkedToOpportunity, listFilters.debouncedSearch,
     ],
   );
 
@@ -180,6 +277,31 @@ export function useProductFeedbackFilters(
     [listFilters],
   );
 
+  const handleSourceChannelChange = useCallback(
+    (value: string) => listFilters.setValue("sourceChannel", value),
+    [listFilters],
+  );
+
+  const handleThemeChange = useCallback(
+    (value: string) => listFilters.setValue("theme", value),
+    [listFilters],
+  );
+
+  const handleSentimentChange = useCallback(
+    (value: string) => listFilters.setValue("sentiment", value),
+    [listFilters],
+  );
+
+  const handleConsentStatusChange = useCallback(
+    (value: string) => listFilters.setValue("consentStatus", value),
+    [listFilters],
+  );
+
+  const handleLinkedToOpportunityChange = useCallback(
+    (value: string) => listFilters.setValue("linkedToOpportunity", value),
+    [listFilters],
+  );
+
   const handlePageChange = useCallback((next: number) => {
     setPage(next);
   }, [setPage]);
@@ -199,14 +321,26 @@ export function useProductFeedbackFilters(
     linkedValue,
     assigneeIdValue,
     duplicateValue,
+    sourceChannelValue,
+    themeValue,
+    sentimentValue,
+    consentStatusValue,
+    linkedToOpportunityValue,
     typedFrom,
     typedTo,
     typedAssigneeId,
+    paneSubmissionId,
+    isFiltered,
     handleTypeChange,
     handleStatusChange,
     handleLinkedChange,
     handleAssigneeChange,
     handleDuplicateChange,
+    handleSourceChannelChange,
+    handleThemeChange,
+    handleSentimentChange,
+    handleConsentStatusChange,
+    handleLinkedToOpportunityChange,
     handleDateRangeChange: listFilters.setValues,
     handlePageChange,
     handleClearSelection,

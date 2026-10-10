@@ -9,8 +9,11 @@ import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type {
   BulkFeedbucketSubmissionsInput,
   BulkFeedbucketSubmissionsResult,
+  CaptureSubmissionInput,
+  ClassifySubmissionInput,
   FeedbucketMediaKind,
   FeedbucketSubmission,
+  FeedbucketSubmissionFacets,
   PaginatedFeedbucketSubmissions,
   ListFeedbucketSubmissionsQuery,
   UpdateFeedbucketSubmissionInput,
@@ -37,6 +40,21 @@ const feedbucketDeleteSubmissionC = lazyContract(() =>
 );
 const feedbucketBulkSubmissionsC = lazyContract(() =>
   import("@/hooks/api/feedbucket/feedbucket-schema").then((m) => m.feedbucketBulkSubmissionsContract),
+);
+const feedbucketClassifySubmissionC = lazyContract(() =>
+  import("@/hooks/api/feedbucket/feedbucket-schema").then((m) => m.feedbucketClassifySubmissionContract),
+);
+const feedbucketMarkDuplicateC = lazyContract(() =>
+  import("@/hooks/api/feedbucket/feedbucket-schema").then((m) => m.feedbucketMarkDuplicateContract),
+);
+const feedbucketUnmarkDuplicateC = lazyContract(() =>
+  import("@/hooks/api/feedbucket/feedbucket-schema").then((m) => m.feedbucketUnmarkDuplicateContract),
+);
+const feedbucketCaptureSubmissionC = lazyContract(() =>
+  import("@/hooks/api/feedbucket/feedbucket-schema").then((m) => m.feedbucketCaptureSubmissionContract),
+);
+const feedbucketSubmissionFacetsC = lazyContract(() =>
+  import("@/hooks/api/feedbucket/feedbucket-schema").then((m) => m.feedbucketSubmissionFacetsContract),
 );
 
 export function useFeedbucketSubmissions(params?: ListFeedbucketSubmissionsQuery) {
@@ -165,6 +183,142 @@ export function useConvertFeedbucketToTicket() {
       void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.feedbucket.submission(submissionId) });
       void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.feedbucket.all });
       void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.tickets() });
+    },
+  });
+}
+
+export function useFeedbucketSubmissionFacets(params?: { managedProductId?: number; widgetId?: number }) {
+  return useGatedQuery("feedbucket:submissions:view", {
+    queryKey: growthAndSignQueryKeys.feedbucket.submissionFacets(params),
+    queryFn: ({ signal }) =>
+      apiClient.get<FeedbucketSubmissionFacets>(
+        "/feedbucket/submissions/facets",
+        params, signal, feedbucketSubmissionFacetsC,
+      ),
+    staleTime: 30_000,
+    ...INLINE_READ_ERROR,
+  });
+}
+
+export function useCaptureSubmission() {
+  const qc = useQueryClient();
+  const operation = useIdempotentOperation();
+  return useAuthorizedMutation<
+    { submissionId: number; widgetId: number; widgetCreated: boolean },
+    Error,
+    CaptureSubmissionInput
+  >("feedbucket:submissions:manage", {
+    mutationKey: ["feedbucket", "submissions", "capture"],
+    mutationFn: (input) =>
+      apiClient.post<{ submissionId: number; widgetId: number; widgetCreated: boolean }>(
+        "/feedbucket/submissions/capture",
+        input,
+        operation.configFor(input),
+        feedbucketCaptureSubmissionC,
+      ),
+    onSuccess: () => {
+      operation.settle();
+      void qc.invalidateQueries({
+        queryKey: growthAndSignQueryKeys.feedbucket.submissions(),
+        exact: false,
+        refetchType: "none",
+      });
+      void qc.invalidateQueries({
+        queryKey: growthAndSignQueryKeys.feedbucket.submissionFacets(),
+        exact: false,
+        refetchType: "none",
+      });
+    },
+  });
+}
+
+export function useClassifySubmission() {
+  const qc = useQueryClient();
+  const operation = useIdempotentOperation();
+  return useAuthorizedMutation<
+    { success: true; data: { id: number; theme: string | null; segment: string | null; sentiment: string | null; consentStatus: string; consentRecordedAt: string | null; updatedAt: string } },
+    Error,
+    { submissionId: number; input: ClassifySubmissionInput }
+  >("feedbucket:submissions:update", {
+    mutationKey: ["feedbucket", "submissions", "classify"],
+    mutationFn: ({ submissionId, input }) =>
+      apiClient.patch<{ success: true; data: { id: number; theme: string | null; segment: string | null; sentiment: string | null; consentStatus: string; consentRecordedAt: string | null; updatedAt: string } }>(
+        `/feedbucket/submissions/${submissionId}/classification`,
+        input,
+        operation.configFor(input),
+        feedbucketClassifySubmissionC,
+      ),
+    onSuccess: (result, { submissionId }) => {
+      operation.settle();
+      qc.setQueryData(
+        growthAndSignQueryKeys.feedbucket.submission(submissionId),
+        (old: Record<string, unknown> | undefined) => old ? { ...old, ...result.data } : old,
+      );
+      void qc.invalidateQueries({
+        queryKey: growthAndSignQueryKeys.feedbucket.submissions(),
+        exact: false,
+        refetchType: "none",
+      });
+    },
+  });
+}
+
+export function useMarkDuplicate() {
+  const qc = useQueryClient();
+  const operation = useIdempotentOperation();
+  return useAuthorizedMutation<
+    { success: true; data: { id: number; duplicateOfId: number } },
+    Error,
+    { submissionId: number; duplicateOfId: number }
+  >("feedbucket:submissions:update", {
+    mutationKey: ["feedbucket", "submissions", "mark-duplicate"],
+    mutationFn: ({ submissionId, duplicateOfId }) =>
+      apiClient.post<{ success: true; data: { id: number; duplicateOfId: number } }>(
+        `/feedbucket/submissions/${submissionId}/mark-duplicate`,
+        { duplicateOfId },
+        operation.configFor({ submissionId, duplicateOfId }),
+        feedbucketMarkDuplicateC,
+      ),
+    onSuccess: (result, { submissionId }) => {
+      operation.settle();
+      qc.setQueryData(
+        growthAndSignQueryKeys.feedbucket.submission(submissionId),
+        (old: Record<string, unknown> | undefined) => old ? { ...old, duplicateOfId: result.data.duplicateOfId } : old,
+      );
+      void qc.invalidateQueries({
+        queryKey: growthAndSignQueryKeys.feedbucket.submissions(),
+        exact: false,
+        refetchType: "none",
+      });
+    },
+  });
+}
+
+export function useUnmarkDuplicate() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation<
+    { success: true; data: { id: number } },
+    Error,
+    { submissionId: number }
+  >("feedbucket:submissions:update", {
+    mutationKey: ["feedbucket", "submissions", "unmark-duplicate"],
+    mutationFn: ({ submissionId }) =>
+      apiClient.post<{ success: true; data: { id: number } }>(
+        `/feedbucket/submissions/${submissionId}/unmark-duplicate`,
+        undefined,
+        undefined,
+        feedbucketUnmarkDuplicateC,
+      ),
+    onSuccess: (_, { submissionId }) => {
+      qc.setQueryData(
+        growthAndSignQueryKeys.feedbucket.submission(submissionId),
+        (old: Record<string, unknown> | undefined) => old ? { ...old, duplicateOfId: null } : old,
+      );
+      void qc.invalidateQueries({
+        queryKey: growthAndSignQueryKeys.feedbucket.submissions(),
+        exact: false,
+        refetchType: "none",
+      });
     },
   });
 }

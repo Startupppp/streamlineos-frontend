@@ -317,3 +317,112 @@ describe("buildFeedbackColumnsWithActions — route-to-intake provenance and toa
     expect(onRouteToIntake.mock.calls[0]?.[0]?.widget?.projectId).toBe(12);
   });
 });
+
+jest.mock("./feedback/capture-submission-sheet", () => ({
+  CaptureSubmissionSheet: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="capture-sheet" /> : null,
+}));
+
+jest.mock("./feedback/feedback-pane", () => ({
+  FeedbackPane: ({ submissionId }: { submissionId: number }) => (
+    <div data-testid="feedback-pane" data-submission-id={submissionId} />
+  ),
+}));
+
+describe("ProductFeedbackPage — new filter params (BSN-01-FB-FILTERS-V2)", () => {
+  it("forwards sourceChannel from URL to useFeedbucketSubmissions", () => {
+    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("sourceChannel=email"));
+    useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
+    render(<ProductFeedbackPage managedProductId={7} />);
+    const [callParams] = useFeedbucketSubmissions.mock.calls[0] as [Record<string, unknown>];
+    expect(callParams).toMatchObject({ sourceChannel: ["email"] });
+  });
+
+  it("omits sourceChannel from query when URL carries none", () => {
+    useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
+    render(<ProductFeedbackPage managedProductId={7} />);
+    const [callParams] = useFeedbucketSubmissions.mock.calls[0] as [Record<string, unknown>];
+    expect(callParams).not.toHaveProperty("sourceChannel");
+  });
+
+  it("maps theme=untagged URL param to empty-string theme array for server-side untagged filtering", () => {
+    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("theme=untagged"));
+    useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
+    render(<ProductFeedbackPage managedProductId={7} />);
+    const [callParams] = useFeedbucketSubmissions.mock.calls[0] as [Record<string, unknown>];
+    expect(callParams).toMatchObject({ theme: [""] });
+  });
+
+  it("forwards sentiment from URL to useFeedbucketSubmissions", () => {
+    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("sentiment=positive"));
+    useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
+    render(<ProductFeedbackPage managedProductId={7} />);
+    const [callParams] = useFeedbucketSubmissions.mock.calls[0] as [Record<string, unknown>];
+    expect(callParams).toMatchObject({ sentiment: ["positive"] });
+  });
+
+  it("forwards consentStatus from URL to useFeedbucketSubmissions", () => {
+    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("consentStatus=denied"));
+    useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
+    render(<ProductFeedbackPage managedProductId={7} />);
+    const [callParams] = useFeedbucketSubmissions.mock.calls[0] as [Record<string, unknown>];
+    expect(callParams).toMatchObject({ consentStatus: ["denied"] });
+  });
+
+  it("forwards linkedToOpportunity from URL to useFeedbucketSubmissions", () => {
+    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("linkedToOpportunity=true"));
+    useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
+    render(<ProductFeedbackPage managedProductId={7} />);
+    const [callParams] = useFeedbucketSubmissions.mock.calls[0] as [Record<string, unknown>];
+    expect(callParams).toMatchObject({ linkedToOpportunity: "true" });
+  });
+});
+
+describe("ProductFeedbackPage — filteredEmpty vs empty (BSN-01-FB-EMPTY)", () => {
+  it("shows Clear filters button in empty state when filters are active", () => {
+    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("type=bug"));
+    usePageState.mockReturnValue({ kind: "empty" });
+    useFeedbucketSubmissions.mockReturnValue({ ...EMPTY_FEEDBUCKET_RESULT, data: { data: [], total: 0 } });
+    render(<ProductFeedbackPage managedProductId={7} />);
+    const clearButton = screen.queryByRole("button", { name: /clear filters/i });
+    expect(clearButton).toBeInTheDocument();
+  });
+
+  it("does not show Clear filters button when no filters are active and list is empty", () => {
+    usePageState.mockReturnValue({ kind: "empty" });
+    useFeedbucketSubmissions.mockReturnValue({ ...EMPTY_FEEDBUCKET_RESULT, data: { data: [], total: 0 } });
+    render(<ProductFeedbackPage managedProductId={7} />);
+    expect(screen.queryByRole("button", { name: /clear filters/i })).not.toBeInTheDocument();
+  });
+});
+
+describe("ProductFeedbackPage — capture sheet (BSN-01-FB-CAPTURE)", () => {
+  it("renders Capture feedback button when actor has feedbucket:submissions:manage permission", () => {
+    useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
+    useCan.mockImplementation((key: string) => key === "feedbucket:submissions:manage");
+    render(<ProductFeedbackPage managedProductId={7} />);
+    expect(screen.getByRole("button", { name: /capture feedback/i })).toBeInTheDocument();
+  });
+
+  it("does not render Capture feedback button when permission is denied", () => {
+    useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
+    useCan.mockReturnValue(false);
+    render(<ProductFeedbackPage managedProductId={7} />);
+    expect(screen.queryByRole("button", { name: /capture feedback/i })).not.toBeInTheDocument();
+  });
+});
+
+describe("ProductFeedbackPage — feedback pane deep link (BSN-01-FB-PANE)", () => {
+  it("opens the feedback pane when ?submission=id is in the URL", () => {
+    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("submission=42"));
+    useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
+    render(<ProductFeedbackPage managedProductId={7} />);
+    expect(screen.getByTestId("feedback-pane")).toHaveAttribute("data-submission-id", "42");
+  });
+
+  it("does not render the feedback pane when ?submission is absent", () => {
+    useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
+    render(<ProductFeedbackPage managedProductId={7} />);
+    expect(screen.queryByTestId("feedback-pane")).not.toBeInTheDocument();
+  });
+});

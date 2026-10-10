@@ -6,6 +6,9 @@ import type { feedbucketBulkSubmissionsContract } from "@/hooks/api/feedbucket/f
 import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
 
 export type FeedbucketSubmissionType = "bug" | "idea" | "feature" | "question" | "praise" | "other";
+export type FeedbucketSourceChannel = "widget" | "email" | "support" | "sales" | "interview" | "survey" | "public_portal" | "manual" | "import";
+export type FeedbucketSentiment = "positive" | "neutral" | "negative" | "mixed";
+export type FeedbucketConsentStatus = "granted" | "denied" | "unknown";
 
 export type FeedbucketAiType = "bug" | "feature" | "improvement" | "question" | "praise" | "other";
 export type FeedbucketAiTicketType = "EPIC" | "BUG" | "STORY" | "TASK";
@@ -113,6 +116,15 @@ export interface FeedbucketSubmissionFilters {
   duplicate?: "true" | "false";
   from?: string;
   to?: string;
+  sourceChannel?: FeedbucketSourceChannel[];
+  segment?: string[];
+  theme?: string[];
+  sentiment?: FeedbucketSentiment[];
+  consentStatus?: FeedbucketConsentStatus[];
+  crmOrganizationId?: number[];
+  crmContactId?: number;
+  opportunityId?: number;
+  linkedToOpportunity?: "true" | "false";
 }
 
 export interface ListFeedbucketSubmissionsQuery extends FeedbucketSubmissionFilters {
@@ -144,5 +156,34 @@ export interface UpdateFeedbucketSubmissionInput {
 }
 
 export type FeedbucketMediaKind = "screenshot" | "recording";
+
+export interface CaptureSubmissionInput {
+  managedProductId: number;
+  message: string;
+  sourceChannel: Exclude<FeedbucketSourceChannel, "widget">;
+  type: FeedbucketSubmissionType;
+  reporterName?: string;
+  reporterEmail?: string;
+  crmOrganizationId?: number;
+  crmContactId?: number;
+  segment?: string;
+  theme?: string;
+  sentiment?: FeedbucketSentiment;
+  consentStatus: FeedbucketConsentStatus;
+  pageUrl?: string;
+}
+
+export interface ClassifySubmissionInput {
+  theme?: string | null;
+  segment?: string | null;
+  sentiment?: FeedbucketSentiment | null;
+  consentStatus?: FeedbucketConsentStatus;
+}
+
+export interface FeedbucketSubmissionFacets {
+  themes: Array<{ value: string | null; count: number }>;
+  segments: Array<{ value: string | null; count: number }>;
+  sourceChannels?: Array<{ value: string | null; count: number }>;
+}
 
 export type PaginatedFeedbucketSubmissions = z.infer<typeof feedbucketSubmissionListContract>;

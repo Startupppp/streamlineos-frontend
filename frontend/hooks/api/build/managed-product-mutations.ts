@@ -18,6 +18,16 @@ const managedProductRowContract = lazyContract(() =>
     (m) => m.managedProductsGetManagedProductResponseSchema,
   ),
 );
+const managedProductArchiveContract = lazyContract(() =>
+  import("@/contracts/build-contracts.generated").then(
+    (m) => m.managedProductsArchiveManagedProductResponseSchema,
+  ),
+);
+const managedProductRestoreContract = lazyContract(() =>
+  import("@/contracts/build-contracts.generated").then(
+    (m) => m.managedProductsRestoreManagedProductResponseSchema,
+  ),
+);
 const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
@@ -39,6 +49,21 @@ function patchManagedProductListCache(
   return patchPage(cache);
 }
 
+function removeManagedProductFromListCache(
+  cache: ManagedProductsListCache | undefined,
+  id: number,
+): ManagedProductsListCache | undefined {
+  if (cache === undefined) return cache;
+  const filterPage = (page: ManagedProductsPage): ManagedProductsPage => ({
+    ...page,
+    data: page.data.filter((row) => row.id !== id),
+  });
+  if ("pages" in cache) {
+    return { ...cache, pages: cache.pages.map(filterPage) };
+  }
+  return filterPage(cache);
+}
+
 export function useCreateManagedProduct() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:managed-products:create", {
@@ -50,12 +75,31 @@ export function useCreateManagedProduct() {
         undefined,
         managedProductRowContract,
       ),
-    onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.managedProducts.list(),
+    onSuccess: (created) => {
+      const defaultKey = buildWorkQueryKeys.projects.managedProducts.list();
+      qc.setQueryData<ManagedProductsListCache>(defaultKey, (prev) => {
+        if (!prev) return prev;
+        if ("pages" in prev) {
+          const first = prev.pages[0];
+          if (!first) return prev;
+          return {
+            ...prev,
+            pages: [{ ...first, data: [created, ...first.data] }, ...prev.pages.slice(1)],
+          };
+        }
+        return { ...prev, data: [created, ...prev.data] };
       });
+      const otherKeys = qc
+        .getQueriesData<ManagedProductsListCache>({
+          queryKey: buildWorkQueryKeys.projects.managedProducts.list(),
+        })
+        .filter(([k]) => JSON.stringify(k) !== JSON.stringify(defaultKey));
+      for (const [key] of otherKeys) {
+        qc.invalidateQueries({ queryKey: key, exact: true, refetchType: "none" });
+      }
       qc.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.scopeDirectory.all,
+        refetchType: "none",
       });
     },
   });
@@ -77,9 +121,7 @@ export function useUpdateManagedProduct() {
       ),
     onSuccess: (updated, vars) => {
       qc.setQueryData(
-        buildWorkQueryKeys.projects.managedProducts.detail(
-          vars.managedProductId,
-        ),
+        buildWorkQueryKeys.projects.managedProducts.detail(vars.managedProductId),
         updated,
       );
       const loadedPages = qc.getQueriesData<ManagedProductsListCache>({
@@ -94,6 +136,7 @@ export function useUpdateManagedProduct() {
       }
       qc.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.scopeDirectory.all,
+        refetchType: "none",
       });
     },
   });
@@ -110,12 +153,92 @@ export function useDeleteManagedProduct() {
         undefined,
         noContentContract,
       ),
-    onSuccess: () => {
-      qc.invalidateQueries({
+    onSuccess: (_data, managedProductId) => {
+      const loadedPages = qc.getQueriesData<ManagedProductsListCache>({
         queryKey: buildWorkQueryKeys.projects.managedProducts.list(),
+      });
+      for (const [key, page] of loadedPages) {
+        if (page === undefined) continue;
+        qc.setQueryData<ManagedProductsListCache>(
+          key,
+          removeManagedProductFromListCache(page, managedProductId),
+        );
+      }
+      qc.removeQueries({
+        queryKey: buildWorkQueryKeys.projects.managedProducts.detail(managedProductId),
+        exact: true,
       });
       qc.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.scopeDirectory.all,
+        refetchType: "none",
+      });
+    },
+  });
+}
+
+export function useArchiveManagedProduct() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("build:managed-products:update", {
+    mutationKey: ["projects", "managed-products", "archive"],
+    mutationFn: ({ managedProductId, version }: { managedProductId: number; version: number }) =>
+      apiClient.post<ManagedProduct>(
+        `/build/managed-products/${managedProductId}/archive`,
+        { version },
+        undefined,
+        managedProductArchiveContract,
+      ),
+    onSuccess: (updated, vars) => {
+      qc.setQueryData(
+        buildWorkQueryKeys.projects.managedProducts.detail(vars.managedProductId),
+        updated,
+      );
+      const loadedPages = qc.getQueriesData<ManagedProductsListCache>({
+        queryKey: buildWorkQueryKeys.projects.managedProducts.list(),
+      });
+      for (const [key, page] of loadedPages) {
+        if (page === undefined) continue;
+        qc.setQueryData<ManagedProductsListCache>(
+          key,
+          patchManagedProductListCache(page, updated),
+        );
+      }
+      qc.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.scopeDirectory.all,
+        refetchType: "none",
+      });
+    },
+  });
+}
+
+export function useRestoreManagedProduct() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("build:managed-products:update", {
+    mutationKey: ["projects", "managed-products", "restore"],
+    mutationFn: ({ managedProductId, version }: { managedProductId: number; version: number }) =>
+      apiClient.post<ManagedProduct>(
+        `/build/managed-products/${managedProductId}/restore`,
+        { version },
+        undefined,
+        managedProductRestoreContract,
+      ),
+    onSuccess: (updated, vars) => {
+      qc.setQueryData(
+        buildWorkQueryKeys.projects.managedProducts.detail(vars.managedProductId),
+        updated,
+      );
+      const loadedPages = qc.getQueriesData<ManagedProductsListCache>({
+        queryKey: buildWorkQueryKeys.projects.managedProducts.list(),
+      });
+      for (const [key, page] of loadedPages) {
+        if (page === undefined) continue;
+        qc.setQueryData<ManagedProductsListCache>(
+          key,
+          patchManagedProductListCache(page, updated),
+        );
+      }
+      qc.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.scopeDirectory.all,
+        refetchType: "none",
       });
     },
   });

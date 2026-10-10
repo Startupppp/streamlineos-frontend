@@ -135,6 +135,16 @@ const feedbucketSubmissionRowContract = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
   deletedAt: z.string().nullable(),
+  sourceChannel: z.enum(["widget", "email", "support", "sales", "interview", "survey", "public_portal", "manual", "import"]),
+  segment: z.string().nullable(),
+  theme: z.string().nullable(),
+  sentiment: z.enum(["positive", "neutral", "negative", "mixed"]).nullable(),
+  consentStatus: z.enum(["granted", "denied", "unknown"]),
+  consentRecordedAt: z.string().nullable(),
+  duplicateOfId: z.number().nullable(),
+  duplicateCount: z.number(),
+  opportunityIds: z.array(z.number()),
+  customer: z.object({ crmOrganizationId: z.number(), name: z.string().nullable() }).nullable(),
 });
 
 export const feedbucketSubmissionListContract = z.object({
@@ -216,5 +226,47 @@ export const feedbucketCreateTicketFromAnalysisContract = z.object({
 export const feedbucketUpdateSubmissionContract = feedbucketSubmissionRowContract;
 
 export const feedbucketDeleteSubmissionContract = z.object({ success: z.literal(true) });
+
+export const feedbucketClassifySubmissionContract = z.object({
+  success: z.literal(true),
+  data: z.object({
+    id: z.number(),
+    theme: z.string().nullable(),
+    segment: z.string().nullable(),
+    sentiment: z.enum(["positive", "neutral", "negative", "mixed"]).nullable(),
+    consentStatus: z.enum(["granted", "denied", "unknown"]),
+    consentRecordedAt: z.string().nullable(),
+    updatedAt: z.string(),
+  }),
+});
+
+export const feedbucketMarkDuplicateContract = z.object({
+  success: z.literal(true),
+  data: z.object({ id: z.number(), duplicateOfId: z.number() }),
+});
+
+export const feedbucketUnmarkDuplicateContract = z.object({
+  success: z.literal(true),
+  data: z.object({ id: z.number() }),
+});
+
+export const feedbucketCaptureSubmissionContract = z.object({
+  success: z.literal(true),
+  data: z.object({ submissionId: z.number(), widgetId: z.number(), widgetCreated: z.boolean() }),
+});
+
+const feedbucketFacetCountContract = z.object({
+  value: z.string().nullable(),
+  count: z.number(),
+});
+
+export const feedbucketSubmissionFacetsContract = z.object({
+  success: z.literal(true),
+  data: z.object({
+    themes: z.array(feedbucketFacetCountContract),
+    segments: z.array(feedbucketFacetCountContract),
+    sourceChannels: z.array(feedbucketFacetCountContract).optional(),
+  }),
+});
 
 export type FeedbucketSubmissionRow = z.infer<typeof feedbucketSubmissionRowContract>;

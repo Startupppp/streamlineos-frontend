@@ -1,4 +1,4 @@
-import type { RoadmapStatus, FeedbackStatus, ChangelogType } from "@/types/projects";
+import type { RoadmapStatus, RoadmapHorizon, FeedbackStatus, ChangelogType } from "@/types/projects";
 import type { CrmAccountTier } from "@/types/crm";
 
 export const ROADMAP_COLUMNS: { status: RoadmapStatus; label: string }[] = [
@@ -6,6 +6,24 @@ export const ROADMAP_COLUMNS: { status: RoadmapStatus; label: string }[] = [
   { status: "in_progress", label: "In Progress" },
   { status: "completed", label: "Completed" },
   { status: "cancelled", label: "Cancelled" },
+];
+
+export const ROADMAP_HORIZON_COLUMNS: { horizon: RoadmapHorizon; label: string }[] = [
+  { horizon: "now", label: "Now" },
+  { horizon: "next", label: "Next" },
+  { horizon: "later", label: "Later" },
+];
+
+export const ROADMAP_HORIZON_LABEL: Record<RoadmapHorizon, string> = {
+  now: "Now",
+  next: "Next",
+  later: "Later",
+};
+
+export const ROADMAP_HORIZON_OPTIONS: { value: RoadmapHorizon; label: string }[] = [
+  { value: "now", label: "Now" },
+  { value: "next", label: "Next" },
+  { value: "later", label: "Later" },
 ];
 
 export const ROADMAP_STATUS_OPTIONS: { value: RoadmapStatus; label: string }[] = [

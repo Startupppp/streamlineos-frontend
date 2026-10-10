@@ -8,22 +8,19 @@ import {
   ROADMAP_SORTS,
   type RoadmapSort,
 } from "@/hooks/api/build/roadmap";
-import type { RoadmapStatus } from "@/types/projects/roadmap";
+import type { RoadmapHorizon } from "@/types/projects/roadmap";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { useCursorPager } from "@/components/ui/table-pagination";
 import type { ScorableRoadmapItem } from "./roadmap-item-card";
 
-const ROADMAP_STATUSES: readonly RoadmapStatus[] = [
-  "planned",
-  "in_progress",
-  "completed",
-  "cancelled",
-];
-function toRoadmapStatus(s: string): RoadmapStatus | undefined {
+const ROADMAP_STATUSES = ["planned", "in_progress", "completed", "cancelled"] as const;
+type ValidRoadmapStatus = (typeof ROADMAP_STATUSES)[number];
+function toRoadmapStatus(s: string): ValidRoadmapStatus | undefined {
   return ROADMAP_STATUSES.find((v) => v === s);
 }
+
 function toRoadmapSort(s: string): RoadmapSort | undefined {
   return ROADMAP_SORTS.find((v) => v === s);
 }
@@ -35,6 +32,9 @@ interface UseRoadmapTabParams {
   createOpen?: boolean;
   onCreateOpenChange?: (open: boolean) => void;
   status?: string;
+  goalId?: number;
+  releaseId?: number;
+  teamId?: number;
   managedProductId?: number;
   sort?: string;
   projectId?: number;
@@ -55,6 +55,9 @@ export function useRoadmapTab({
   projectId,
   horizon,
   ownerId,
+  goalId,
+  releaseId,
+  teamId,
   onItemsChange,
 }: UseRoadmapTabParams) {
   const isOnline = useOnlineStatus();
@@ -67,6 +70,9 @@ export function useRoadmapTab({
     projectId,
     horizon,
     ownerId,
+    goalId,
+    releaseId,
+    teamId,
   ]);
   const pager = useCursorPager(cursorResetKey, {
     initialCursor: cursor ?? undefined,
@@ -81,6 +87,9 @@ export function useRoadmapTab({
     ...(projectId !== undefined ? { projectId } : {}),
     ...(horizon ? { horizon } : {}),
     ...(ownerId !== undefined ? { ownerId } : {}),
+    ...(goalId !== undefined ? { goalId } : {}),
+    ...(releaseId !== undefined ? { releaseId } : {}),
+    ...(teamId !== undefined ? { teamId } : {}),
   });
   const deleteItem = useDeleteRoadmapItem();
   const [internalCreateOpen, setInternalCreateOpen] = useState(false);
@@ -94,7 +103,10 @@ export function useRoadmapTab({
     managedProductId !== undefined ||
     projectId !== undefined ||
     horizon ||
-    ownerId !== undefined,
+    ownerId !== undefined ||
+    goalId !== undefined ||
+    releaseId !== undefined ||
+    teamId !== undefined,
   );
 
   const resolution = usePageState({
@@ -111,13 +123,15 @@ export function useRoadmapTab({
     : internalCreateOpen;
 
   const grouped = useMemo(() => {
-    const map: Record<string, ScorableRoadmapItem[]> = {
-      planned: [],
-      in_progress: [],
-      completed: [],
-      cancelled: [],
+    const map: Record<RoadmapHorizon, ScorableRoadmapItem[]> = {
+      now: [],
+      next: [],
+      later: [],
     };
-    for (const item of data?.data ?? []) map[item.status].push(item);
+    for (const item of data?.data ?? []) {
+      const h = item.horizon ?? "later";
+      map[h].push(item);
+    }
     return map;
   }, [data]);
 

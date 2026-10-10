@@ -1,6 +1,7 @@
 "use client";
 
-import { Target, TrendingUp, AlertTriangle } from "lucide-react";
+import { AlertTriangle, ClipboardCheck, Target, TrendingUp } from "lucide-react";
+import dynamic from "next/dynamic";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
@@ -29,6 +30,12 @@ import {
   ManagedProductDetailShell,
 } from "./managed-product-detail-layout";
 import { ProductGoalsGridSkeleton } from "./managed-product-page-skeletons";
+import { LinkExistingGoalDialog } from "./link-existing-goal-dialog";
+
+const CheckInDialog = dynamic(
+  () => import("@/features/build/goals/check-in-dialog").then((m) => ({ default: m.CheckInDialog })),
+  { ssr: false },
+);
 
 interface ProductGoalsPageProps {
   managedProductId: number;
@@ -40,12 +47,18 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
     searchInputRef,
     createOpen,
     setCreateOpen,
+    linkGoalOpen,
+    setLinkGoalOpen,
     editGoalId,
     deleteGoalId,
+    unlinkGoalId,
+    checkInGoalId,
     shortcutHelpOpen,
     setShortcutHelpOpen,
     editGoalDetail,
+    checkInGoalDetail,
     deleteGoalMutation,
+    unlinkGoalMutation,
     isLoading,
     dataUpdatedAt,
     totalGoals,
@@ -59,11 +72,18 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
     handleRetry,
     handleEditGoalCard,
     handleDeleteGoalCard,
+    handleUnlinkGoalCard,
+    handleCheckInGoalCard,
     handleDeleteConfirm,
+    handleUnlinkConfirm,
     handleEditSheetOpenChange,
     handleDeleteDialogOpenChange,
+    handleUnlinkDialogOpenChange,
+    handleCheckInClose,
     createActions,
   } = useProductGoalsPage({ managedProductId });
+
+  const firstKeyResult = checkInGoalDetail?.keyResults[0] ?? null;
 
   return (
     <PageWrapper
@@ -75,7 +95,7 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
     >
       <ManagedProductDetailShell>
         <PmSection index={0} className="shrink-0">
-          <StatCardGrid cols={4}>
+          <StatCardGrid cols={5}>
             <StatCard
               label="Total Goals"
               value={stats?.total ?? 0}
@@ -102,6 +122,13 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
               value={`${stats?.avgProgress ?? 0}%`}
               icon={TrendingUp}
               tone="default"
+              isLoading={isLoading}
+            />
+            <StatCard
+              label="Stale Check-ins"
+              value={stats?.staleCheckIns ?? 0}
+              icon={ClipboardCheck}
+              tone={(stats?.staleCheckIns ?? 0) > 0 ? "amber" : "default"}
               isLoading={isLoading}
             />
           </StatCardGrid>
@@ -154,6 +181,8 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
                       goal={goal}
                       onEdit={canManage ? handleEditGoalCard : undefined}
                       onDelete={canManage ? handleDeleteGoalCard : undefined}
+                      onUnlink={canManage ? handleUnlinkGoalCard : undefined}
+                      onCheckIn={handleCheckInGoalCard}
                     />
                   ))}
                 </PmStaggerList>
@@ -172,6 +201,7 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
           goal={editGoalDetail}
         />
       ) : null}
+
       <ConfirmDialog
         open={deleteGoalId !== null}
         onOpenChange={handleDeleteDialogOpenChange}
@@ -181,6 +211,31 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
         destructive
         isPending={deleteGoalMutation.isPending}
         onConfirm={handleDeleteConfirm}
+      />
+
+      <ConfirmDialog
+        open={unlinkGoalId !== null}
+        onOpenChange={handleUnlinkDialogOpenChange}
+        title="Unlink goal from product?"
+        description="The goal will be removed from this product's Goals tab. The goal itself is not deleted and remains available in the org goals list."
+        confirmLabel="Unlink"
+        destructive
+        isPending={unlinkGoalMutation.isPending}
+        onConfirm={handleUnlinkConfirm}
+      />
+
+      {checkInGoalId !== null && firstKeyResult !== null ? (
+        <CheckInDialog
+          goalId={checkInGoalId}
+          keyResult={firstKeyResult}
+          onClose={handleCheckInClose}
+        />
+      ) : null}
+
+      <LinkExistingGoalDialog
+        managedProductId={managedProductId}
+        open={linkGoalOpen}
+        onOpenChange={setLinkGoalOpen}
       />
     </PageWrapper>
   );

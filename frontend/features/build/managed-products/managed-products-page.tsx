@@ -21,6 +21,8 @@ import {
   useManagedProductsPage,
   STATUS_OPTIONS,
   SORT_OPTIONS,
+  LIFECYCLE_FILTER_OPTIONS,
+  HEALTH_FILTER_OPTIONS,
   PAGE_SIZE,
 } from "./use-managed-products-page";
 
@@ -36,10 +38,15 @@ export function ManagedProductsPage() {
     createOpen,
     editTarget,
     deleteTarget,
+    archiveTarget,
     selected,
     setSelected,
     statusValue,
     sortValue,
+    lifecycleValue,
+    healthValue,
+    teamIdValue,
+    teamOptions,
     displayed,
     data,
     isLoading,
@@ -51,16 +58,22 @@ export function ManagedProductsPage() {
     searchInputRef,
     handleCreate,
     handleDeleteConfirm,
+    handleArchiveConfirm,
     handleStatusChange,
     handleSortChange,
+    handleLifecycleChange,
+    handleHealthChange,
+    handleTeamChange,
     handleOpenCreate,
     handleSheetOpenChange,
     handleDeleteDialogChange,
+    handleArchiveDialogChange,
     handleRetry,
     handleClearKeyboardSelection,
     handleNextPage,
     handleEditRow,
     handleDeleteRow,
+    handleArchiveRow,
     columns,
   } = useManagedProductsPage();
 
@@ -73,9 +86,10 @@ export function ManagedProductsPage() {
         ownerOf={ownerOf}
         onEdit={handleEditRow}
         onDelete={handleDeleteRow}
+        onArchive={handleArchiveRow}
       />
     ),
-    [canDelete, canUpdate, handleDeleteRow, handleEditRow, ownerOf],
+    [canDelete, canUpdate, handleDeleteRow, handleEditRow, handleArchiveRow, ownerOf],
   );
 
   return (
@@ -102,6 +116,45 @@ export function ManagedProductsPage() {
                   value={statusValue}
                   onValueChange={handleStatusChange}
                   options={STATUS_OPTIONS}
+                />
+              ),
+            },
+            {
+              id: "lifecycle",
+              label: "Lifecycle",
+              active: listFilters.isActive("lifecycle"),
+              control: (
+                <BuildFilterSelect
+                  label="Lifecycle"
+                  value={lifecycleValue}
+                  onValueChange={handleLifecycleChange}
+                  options={LIFECYCLE_FILTER_OPTIONS}
+                />
+              ),
+            },
+            {
+              id: "health",
+              label: "Health",
+              active: listFilters.isActive("health"),
+              control: (
+                <BuildFilterSelect
+                  label="Health"
+                  value={healthValue}
+                  onValueChange={handleHealthChange}
+                  options={HEALTH_FILTER_OPTIONS}
+                />
+              ),
+            },
+            {
+              id: "teamId",
+              label: "Team",
+              active: listFilters.isActive("teamId"),
+              control: (
+                <BuildFilterSelect
+                  label="Team"
+                  value={teamIdValue}
+                  onValueChange={handleTeamChange}
+                  options={teamOptions}
                 />
               ),
             },
@@ -157,7 +210,7 @@ export function ManagedProductsPage() {
             error={error}
             isFiltered={listFilters.isFiltered}
             getRowKey={(row) => row.id}
-            minWidth="720px"
+            minWidth="900px"
             mobileCard={renderMobileCard}
             selection={
               canUpdate
@@ -233,6 +286,16 @@ export function ManagedProductsPage() {
         confirmLabel="Delete"
         destructive
         onConfirm={handleDeleteConfirm}
+      />
+
+      <ConfirmDialog
+        open={canUpdate && !!archiveTarget}
+        onOpenChange={handleArchiveDialogChange}
+        title="Archive this managed product?"
+        description="The product will be hidden from active views. You can restore it later from the settings page."
+        confirmLabel="Archive"
+        destructive
+        onConfirm={handleArchiveConfirm}
       />
     </PageWrapper>
   );

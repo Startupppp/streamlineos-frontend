@@ -1,0 +1,383 @@
+import React from "react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { ProductProjectsPage } from "./product-projects-page";
+
+const mockRouterReplace = jest.fn();
+const mockRouterPush = jest.fn();
+const mockUseSearchParams = jest.fn(() => new URLSearchParams());
+
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: mockRouterReplace, push: mockRouterPush }),
+  usePathname: () => "/build/managed-products/5/projects",
+  useSearchParams: mockUseSearchParams,
+}));
+
+jest.mock("@/hooks/api/access", () => ({
+  useCan: jest.fn(() => true),
+}));
+
+jest.mock("@/hooks/api/use-page-state", () => ({
+  usePageState: jest.fn(() => ({ kind: "ready" })),
+}));
+
+const mockUseManagedProductProjects = jest.fn();
+jest.mock("@/hooks/api/build/managed-product-projects", () => ({
+  useManagedProductProjects: (...args: unknown[]) => mockUseManagedProductProjects(...args),
+}));
+
+const mockUnlinkMutate = jest.fn();
+jest.mock("@/hooks/api/build/use-link-project-managed-product", () => ({
+  useUnlinkProjectManagedProduct: jest.fn(() => ({
+    mutate: mockUnlinkMutate,
+    isPending: false,
+  })),
+  useLinkProjectManagedProduct: jest.fn(() => ({
+    mutate: jest.fn(),
+    isPending: false,
+  })),
+}));
+
+jest.mock("@tanstack/react-query", () => ({
+  useQueryClient: jest.fn(() => ({ invalidateQueries: jest.fn() })),
+}));
+
+jest.mock("@/hooks/common/use-debounce", () => ({
+  useDebouncedValue: (v: string) => v,
+}));
+
+jest.mock("@/components/ui/page-wrapper", () => ({
+  PageWrapper: ({
+    children,
+    filters,
+    actions,
+  }: {
+    children: React.ReactNode;
+    filters?: React.ReactNode;
+    actions?: React.ReactNode;
+  }) => (
+    <div>
+      <div data-testid="page-wrapper-filters">{filters}</div>
+      <div data-testid="page-wrapper-actions">{actions}</div>
+      {children}
+    </div>
+  ),
+}));
+
+jest.mock("@/components/shared/page-state", () => ({
+  PageState: ({
+    resolution,
+    loading,
+    empty,
+    children,
+  }: {
+    resolution: { kind: string };
+    loading: React.ReactNode;
+    empty?: React.ReactNode;
+    children: React.ReactNode;
+  }) => {
+    if (resolution.kind === "loading") return <div data-testid="loading">{loading}</div>;
+    if (resolution.kind === "empty") return <div data-testid="empty-state">{empty}</div>;
+    if (resolution.kind === "error") return <div data-testid="error-state" />;
+    return <div data-testid="page-state-ready">{children}</div>;
+  },
+}));
+
+jest.mock("@/components/ui/data-table", () => ({
+  DataTable: ({
+    data,
+    columns,
+    getRowKey,
+  }: {
+    data?: Array<{ id: number; name: string; contribution: { totalTickets: number; doneTickets: number; percent: number | null } }>;
+    columns?: unknown[];
+    getRowKey?: (row: { id: number }) => number;
+  }) => (
+    <div data-testid="data-table">
+      {data?.map((row) => (
+        <div key={row.id} data-testid="project-row" data-id={row.id}>
+          {row.name}
+        </div>
+      ))}
+    </div>
+  ),
+  DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
+}));
+
+jest.mock("@/components/ui/empty-state", () => ({
+  EmptyState: ({
+    title,
+    onClearFilters,
+  }: {
+    title: string;
+    filtersActive?: boolean;
+    onClearFilters?: () => void;
+  }) => (
+    <div data-testid="empty-state-component">
+      <span>{title}</span>
+      {onClearFilters ? (
+        <button type="button" onClick={onClearFilters}>
+          Clear filters
+        </button>
+      ) : null}
+    </div>
+  ),
+}));
+
+jest.mock("@/components/ui/confirm-dialog", () => ({
+  ConfirmDialog: ({
+    open,
+    onConfirm,
+    title,
+  }: {
+    open: boolean;
+    onConfirm: () => void;
+    title: string;
+    onOpenChange?: (open: boolean) => void;
+    isPending?: boolean;
+    confirmLabel?: string;
+    destructive?: boolean;
+    description?: string;
+  }) =>
+    open ? (
+      <div data-testid="confirm-dialog">
+        <span>{title}</span>
+        <button type="button" onClick={onConfirm}>
+          Confirm
+        </button>
+      </div>
+    ) : null,
+}));
+
+jest.mock("@/features/build/shared/build-list-toolbar", () => ({
+  BuildListToolbar: ({
+    search,
+    filters,
+    onClearAll,
+  }: {
+    search?: { value: string; onValueChange: (v: string) => void; placeholder: string };
+    filters?: Array<{ id: string; label: string; control: React.ReactNode }>;
+    onClearAll?: () => void;
+  }) => (
+    <div data-testid="build-list-toolbar">
+      {search ? (
+        <input
+          aria-label={search.placeholder}
+          value={search.value}
+          onChange={(e) => search.onValueChange(e.target.value)}
+        />
+      ) : null}
+      {filters?.map((f) => (
+        <div key={f.id} data-testid={`filter-${f.id}`}>
+          {f.control}
+        </div>
+      ))}
+      {onClearAll ? (
+        <button type="button" onClick={onClearAll}>
+          Clear all
+        </button>
+      ) : null}
+    </div>
+  ),
+}));
+
+jest.mock("@/features/build/shared/build-filter-select", () => ({
+  BuildFilterSelect: ({
+    label,
+    value,
+    onValueChange,
+    options,
+  }: {
+    label: string;
+    value: string;
+    onValueChange: (v: string) => void;
+    options: Array<{ value: string; label: string }>;
+  }) => (
+    <select aria-label={label} value={value} onChange={(e) => onValueChange(e.target.value)}>
+      {options.map((o) => (
+        <option key={o.value} value={o.value}>
+          {o.label}
+        </option>
+      ))}
+    </select>
+  ),
+}));
+
+jest.mock("@/features/build/shared/build-header-actions", () => ({
+  BuildHeaderActions: ({ actions }: { actions: Array<{ label: string; onSelect?: () => void }> }) => (
+    <div data-testid="build-header-actions">
+      {actions.map((a) => (
+        <button key={a.label} type="button" onClick={a.onSelect}>
+          {a.label}
+        </button>
+      ))}
+    </div>
+  ),
+}));
+
+jest.mock("@/features/build/managed-products/managed-product-detail-layout", () => ({
+  ManagedProductDetailShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  ManagedProductDetailPrimarySection: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  MANAGED_PRODUCT_DETAIL_CONTENT_CLASS: "",
+}));
+
+jest.mock("@/components/illustrations", () => ({
+  EmptyProjectsIllustration: () => null,
+}));
+
+jest.mock("next/dynamic", () => (fn: () => Promise<unknown>) => {
+  const Component = () => <div data-testid="link-existing-project-dialog" />;
+  Component.displayName = "DynamicLinkExistingProjectDialog";
+  return Component;
+});
+
+const EMPTY_RESULT = {
+  data: { data: [], pagination: { hasMore: false, nextCursor: null, limit: 20 } },
+  isLoading: false,
+  isError: false,
+  error: null,
+  refetch: jest.fn(),
+};
+
+function makeRow(overrides: Partial<{
+  id: number;
+  name: string;
+  key: string;
+  status: string;
+  contribution: { totalTickets: number; doneTickets: number; percent: number | null };
+}> = {}) {
+  return {
+    id: 1,
+    name: "Alpha Project",
+    key: "AP",
+    status: "ACTIVE",
+    ownerId: null,
+    ownerMembershipId: null,
+    managerMembershipId: null,
+    startDate: null,
+    endDate: null,
+    nextMilestone: null,
+    contribution: { totalTickets: 10, doneTickets: 5, percent: 50 },
+    linkedRoadmapItemCount: 0,
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-01T00:00:00.000Z",
+    ...overrides,
+  };
+}
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  mockUseManagedProductProjects.mockReturnValue(EMPTY_RESULT);
+  mockUseSearchParams.mockReturnValue(new URLSearchParams());
+  const { usePageState } = jest.requireMock("@/hooks/api/use-page-state") as { usePageState: jest.Mock };
+  usePageState.mockReturnValue({ kind: "ready" });
+  const { useCan } = jest.requireMock("@/hooks/api/access") as { useCan: jest.Mock };
+  useCan.mockReturnValue(true);
+});
+
+describe("ProductProjectsPage — filter params forwarded to server (BSN-PROJ-FILTERS)", () => {
+  it("passes the status URL param to useManagedProductProjects so filtering runs server-side", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("pp_status=ACTIVE"));
+    render(<ProductProjectsPage managedProductId={5} />);
+    const [callParams] = mockUseManagedProductProjects.mock.calls[0] as [Record<string, unknown>];
+    expect(callParams).toMatchObject({ status: "ACTIVE" });
+  });
+
+  it("omits status from params when the URL param is absent", () => {
+    render(<ProductProjectsPage managedProductId={5} />);
+    const [callParams] = mockUseManagedProductProjects.mock.calls[0] as [Record<string, unknown>];
+    expect(callParams).not.toHaveProperty("status");
+  });
+
+  it("passes search to the server after debounce so the query filters at the API", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("pp_search=alpha"));
+    render(<ProductProjectsPage managedProductId={5} />);
+    const [callParams] = mockUseManagedProductProjects.mock.calls[0] as [Record<string, unknown>];
+    expect(callParams).toMatchObject({ search: "alpha" });
+  });
+
+  it("writes the status filter to the URL so the filtered view is shareable", () => {
+    render(<ProductProjectsPage managedProductId={5} />);
+    const statusSelect = screen.getByRole("combobox", { name: "Status" });
+    fireEvent.change(statusSelect, { target: { value: "COMPLETED" } });
+    expect(mockRouterReplace).toHaveBeenCalledWith(
+      expect.stringContaining("pp_status=COMPLETED"),
+      { scroll: false },
+    );
+  });
+
+  it("resets cursor when status filter changes", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("cursor=abc"));
+    render(<ProductProjectsPage managedProductId={5} />);
+    const statusSelect = screen.getByRole("combobox", { name: "Status" });
+    fireEvent.change(statusSelect, { target: { value: "ARCHIVED" } });
+    const call = mockRouterReplace.mock.calls[0][0] as string;
+    expect(call).not.toContain("cursor=");
+  });
+});
+
+describe("ProductProjectsPage — filteredEmpty state (BSN-PROJ-FILTERED-EMPTY)", () => {
+  it("shows a filter-clearing empty state when filters are active but results are empty", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("pp_status=COMPLETED"));
+    mockUseManagedProductProjects.mockReturnValue({
+      ...EMPTY_RESULT,
+      data: { data: [], pagination: { hasMore: false, nextCursor: null, limit: 20 } },
+    });
+    const { usePageState } = jest.requireMock("@/hooks/api/use-page-state") as { usePageState: jest.Mock };
+    usePageState.mockReturnValue({ kind: "empty" });
+    render(<ProductProjectsPage managedProductId={5} />);
+    expect(screen.getByText("No projects match filters")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Clear filters/i })).toBeInTheDocument();
+  });
+
+  it("shows a non-filter empty state when no filters are active and results are empty", () => {
+    const { usePageState } = jest.requireMock("@/hooks/api/use-page-state") as { usePageState: jest.Mock };
+    usePageState.mockReturnValue({ kind: "empty" });
+    render(<ProductProjectsPage managedProductId={5} />);
+    expect(screen.getByText("No linked projects yet")).toBeInTheDocument();
+  });
+});
+
+describe("ProductProjectsPage — unlink project confirm (BSN-PROJ-UNLINK)", () => {
+  it("does not show a confirm dialog before the user requests unlink", () => {
+    mockUseManagedProductProjects.mockReturnValue({
+      ...EMPTY_RESULT,
+      data: { data: [makeRow()], pagination: { hasMore: false, nextCursor: null, limit: 20 } },
+    });
+    render(<ProductProjectsPage managedProductId={5} />);
+    expect(screen.queryByTestId("confirm-dialog")).not.toBeInTheDocument();
+  });
+
+  it("calls useUnlinkProjectManagedProduct so the hook is wired when the component mounts", () => {
+    render(<ProductProjectsPage managedProductId={5} />);
+    const { useUnlinkProjectManagedProduct } = jest.requireMock(
+      "@/hooks/api/build/use-link-project-managed-product",
+    ) as { useUnlinkProjectManagedProduct: jest.Mock };
+    expect(useUnlinkProjectManagedProduct).toHaveBeenCalled();
+  });
+});
+
+describe("ProductProjectsPage — contribution cell (BSN-PROJ-CONTRIBUTION)", () => {
+  it("renders No tickets when totalTickets is 0 so the cell is never blank", () => {
+    mockUseManagedProductProjects.mockReturnValue({
+      ...EMPTY_RESULT,
+      data: {
+        data: [makeRow({ contribution: { totalTickets: 0, doneTickets: 0, percent: null } })],
+        pagination: { hasMore: false, nextCursor: null, limit: 20 },
+      },
+    });
+    render(<ProductProjectsPage managedProductId={5} />);
+    expect(screen.getByText("No tickets")).toBeInTheDocument();
+  });
+
+  it("renders a percentage when totalTickets is non-zero", () => {
+    mockUseManagedProductProjects.mockReturnValue({
+      ...EMPTY_RESULT,
+      data: {
+        data: [makeRow({ contribution: { totalTickets: 10, doneTickets: 5, percent: 50 } })],
+        pagination: { hasMore: false, nextCursor: null, limit: 20 },
+      },
+    });
+    render(<ProductProjectsPage managedProductId={5} />);
+    expect(screen.getByText("50%")).toBeInTheDocument();
+  });
+});
