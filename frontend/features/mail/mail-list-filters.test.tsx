@@ -39,10 +39,10 @@ beforeEach(() => {
   fetchNextPage.mockReset();
 });
 jest.mock("./mail-virtual-list", () => ({
-  MailVirtualList: ({ groups, onAiBrief }: { groups: MailTriageGroup[]; onAiBrief: (accountId: number, threadId: string) => void }) => <div>{groups.flatMap((group) => group.messages).map((message) => <p key={message.id}>{message.subject}</p>)}<button onClick={() => onAiBrief(7, "thread-1")}>Brief test thread</button></div>,
+  MailVirtualList: ({ groups, onAiBrief, onLoadMore }: { groups: MailTriageGroup[]; onAiBrief: (accountId: number, threadId: string) => void; onLoadMore: () => void }) => <div>{groups.flatMap((group) => group.messages).map((message) => <p key={message.id}>{message.subject}</p>)}<button onClick={() => onAiBrief(7, "thread-1")}>Brief test thread</button><button onClick={onLoadMore}>Load more mail</button></div>,
 }));
 
-it("filters loaded messages and keeps cumulative pagination outside the toolbar", async () => {
+it("filters loaded messages and keeps cumulative loading outside the toolbar", async () => {
   const user = userEvent.setup();
   const { container } = render(<MailListPane accounts={[{ id: 7, provider: "gmail", accountEmail: "me@example.com", accountLabel: null, status: "active", isPrimary: true }]} selectedMessageId={null} selectedAccountId="all" onSelectMessage={jest.fn()} onOpenAccountsSheet={jest.fn()} />);
   expect(screen.queryByRole("button", { name: "Filters" })).toBeNull();
@@ -52,10 +52,8 @@ it("filters loaded messages and keeps cumulative pagination outside the toolbar"
   await user.click(screen.getByRole("option", { name: /^Unread$/ }));
   expect(screen.getByText("Unread message")).toBeInTheDocument();
   expect(screen.queryByText("Attachment message")).toBeNull();
-  expect(screen.getByRole("navigation", { name: "Pagination" })).toHaveClass("sticky", "bottom-0", "z-40", "max-md:fixed", "max-md:bottom-[calc(4rem+env(safe-area-inset-bottom))]");
-  expect(screen.getByLabelText("1 page loaded")).toBeInTheDocument();
   fetchNextPage.mockResolvedValueOnce({ data: { pages: [{ messages, accountErrors: [] }, { messages: [], accountErrors: [] }] } });
-  await user.click(screen.getByRole("button", { name: "Load more" }));
+  await user.click(screen.getByRole("button", { name: "Load more mail" }));
   expect(fetchNextPage).toHaveBeenCalledTimes(1);
   await user.click(mobileFilter);
   await user.click(screen.getByRole("option", { name: "With attachments" }));
@@ -77,7 +75,7 @@ it("renders the mobile search and view filter directly without a generic Filters
   expect(screen.queryByRole("button", { name: "Filters" })).toBeNull();
 });
 
-it("keeps the first 25 messages visible when loading the next cursor page", async () => {
+it("keeps the first 25 messages visible when infinite scroll loads the next cursor page", async () => {
   const user = userEvent.setup();
   const renderPane = () => <MailListPane accounts={[{ id: 7, provider: "gmail", accountEmail: "me@example.com", accountLabel: null, status: "active", isPrimary: true }]} selectedMessageId={null} selectedAccountId="all" onSelectMessage={jest.fn()} onOpenAccountsSheet={jest.fn()} />;
   const view = render(renderPane());
@@ -87,6 +85,7 @@ it("keeps the first 25 messages visible when loading the next cursor page", asyn
       { messages, accountErrors: [] },
       {
         messages: [
+          base,
           { ...base, id: "page-two", subject: "Message from page two" },
         ],
         accountErrors: [],
@@ -95,12 +94,33 @@ it("keeps the first 25 messages visible when loading the next cursor page", asyn
     return { data: { pages: mailPages } };
   });
 
-  expect(screen.getByText("Load more")).toBeVisible();
-  await user.click(screen.getByRole("button", { name: "Load more" }));
+  await user.click(screen.getByRole("button", { name: "Load more mail" }));
   view.rerender(renderPane());
 
-  expect(screen.getByText("Unread message")).toBeInTheDocument();
+  expect(screen.getAllByText("Unread message")).toHaveLength(1);
   expect(screen.getByText("Message from page two")).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Load more" })).toBeInTheDocument();
-  expect(screen.getByLabelText("2 pages loaded")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Load more mail" })).toBeInTheDocument();
+});
+
+it("continues loading when the current client-side view has no matches yet", async () => {
+  const user = userEvent.setup();
+  mailPages = [{ messages: [{ ...base, isRead: true }], accountErrors: [] }];
+  const renderPane = () => <MailListPane accounts={[{ id: 7, provider: "gmail", accountEmail: "me@example.com", accountLabel: null, status: "active", isPrimary: true }]} selectedMessageId={null} selectedAccountId="all" onSelectMessage={jest.fn()} onOpenAccountsSheet={jest.fn()} />;
+  const view = render(renderPane());
+
+  await user.click(screen.getByRole("combobox", { name: "Filter loaded mail" }));
+  await user.click(screen.getByRole("option", { name: /^Unread$/ }));
+  expect(screen.queryByText("Unread message")).toBeNull();
+
+  fetchNextPage.mockImplementationOnce(async () => {
+    mailPages = [
+      { messages: [{ ...base, isRead: true }], accountErrors: [] },
+      { messages: [{ ...base, id: "later-unread", subject: "Unread from a later page" }], accountErrors: [] },
+    ];
+    return { data: { pages: mailPages } };
+  });
+  await user.click(screen.getByRole("button", { name: "Load more mail" }));
+  view.rerender(renderPane());
+
+  expect(screen.getByText("Unread from a later page")).toBeInTheDocument();
 });

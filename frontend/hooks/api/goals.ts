@@ -166,10 +166,11 @@ export function useGoal(id: number) {
   });
 }
 
-export function useGoalStats() {
+export function useGoalStats(managedProductId?: number) {
+  const queryParams = managedProductId === undefined ? undefined : { managedProductId };
   return useGatedQuery("build:goals:view", {
-    queryKey: accountingAndSupportQueryKeys.goals.stats(),
-    queryFn: ({ signal }) => apiClient.get<GoalStats>("/goals/stats", undefined, signal, goalStatsContract),
+    queryKey: accountingAndSupportQueryKeys.goals.stats(managedProductId),
+    queryFn: ({ signal }) => apiClient.get<GoalStats>("/goals/stats", queryParams, signal, goalStatsContract),
     staleTime: 60_000,
     ...INLINE_READ_ERROR,
   });

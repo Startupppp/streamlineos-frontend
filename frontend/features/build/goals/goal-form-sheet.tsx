@@ -52,7 +52,9 @@ export function GoalFormSheet({
 }: GoalFormSheetProps) {
   const isEdit = !!goal;
   const [keyResults, setKeyResults] = useState<DraftKeyResult[]>([]);
-  const [conflictFields, setConflictFields] = useState<TicketConflictFieldDiff[] | null>(null);
+  const [conflictFields, setConflictFields] = useState<
+    TicketConflictFieldDiff[] | null
+  >(null);
 
   const { data: orgUsers } = useChatOrgUsers(open);
   const createGoal = useCreateGoal();
@@ -73,6 +75,15 @@ export function GoalFormSheet({
   });
   useRegisterDirtyState(open && form.formState.isDirty);
 
+  const handleOpenChange = useCallback((next: boolean) => {
+    if (!next) {
+      form.reset();
+      setKeyResults([]);
+      setConflictFields(null);
+    }
+    onOpenChange(next);
+  }, [form, onOpenChange]);
+
   const handleAddKeyResult = useCallback(() => {
     setKeyResults((prev) => [...prev, { ...EMPTY_KR }]);
   }, []);
@@ -81,14 +92,18 @@ export function GoalFormSheet({
     setKeyResults((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
-  const updateKeyResult = useCallback((index: number, patch: Partial<DraftKeyResult>) => {
-    setKeyResults((prev) =>
-      prev.map((kr, i) => (i === index ? { ...kr, ...patch } : kr)),
-    );
-  }, []);
+  const updateKeyResult = useCallback(
+    (index: number, patch: Partial<DraftKeyResult>) => {
+      setKeyResults((prev) =>
+        prev.map((kr, i) => (i === index ? { ...kr, ...patch } : kr)),
+      );
+    },
+    [],
+  );
 
   function handleSubmit(values: ProjectGoalFormValues) {
-    const resolvedOwner = values.ownerId === "unassigned" ? null : values.ownerId;
+    const resolvedOwner =
+      values.ownerId === "unassigned" ? null : values.ownerId;
 
     if (isEdit) {
       updateGoal.mutate(
@@ -106,20 +121,60 @@ export function GoalFormSheet({
         {
           onSuccess: () => {
             toast.success("Goal updated");
-            onOpenChange(false);
+            handleOpenChange(false);
           },
           onError: (e) => {
             if (isApiError(e) && e.status === 409) {
               const diffs: TicketConflictFieldDiff[] = [];
-              const comparisons: Array<{ key: string; label: string; serverValue: string; pendingValue: string }> = [
-                { key: "title", label: "Title", serverValue: goal.title, pendingValue: values.title.trim() },
-                { key: "description", label: "Description", serverValue: goal.description ?? "", pendingValue: values.description.trim() },
-                { key: "level", label: "Level", serverValue: goal.level, pendingValue: values.level },
-                { key: "status", label: "Status", serverValue: goal.status, pendingValue: values.status },
-                { key: "startDate", label: "Start date", serverValue: goal.startDate ?? "", pendingValue: values.startDate ?? "" },
-                { key: "dueDate", label: "Due date", serverValue: goal.dueDate ?? "", pendingValue: values.dueDate ?? "" },
+              const comparisons: Array<{
+                key: string;
+                label: string;
+                serverValue: string;
+                pendingValue: string;
+              }> = [
+                {
+                  key: "title",
+                  label: "Title",
+                  serverValue: goal.title,
+                  pendingValue: values.title.trim(),
+                },
+                {
+                  key: "description",
+                  label: "Description",
+                  serverValue: goal.description ?? "",
+                  pendingValue: values.description.trim(),
+                },
+                {
+                  key: "level",
+                  label: "Level",
+                  serverValue: goal.level,
+                  pendingValue: values.level,
+                },
+                {
+                  key: "status",
+                  label: "Status",
+                  serverValue: goal.status,
+                  pendingValue: values.status,
+                },
+                {
+                  key: "startDate",
+                  label: "Start date",
+                  serverValue: goal.startDate ?? "",
+                  pendingValue: values.startDate ?? "",
+                },
+                {
+                  key: "dueDate",
+                  label: "Due date",
+                  serverValue: goal.dueDate ?? "",
+                  pendingValue: values.dueDate ?? "",
+                },
               ];
-              for (const { key, label, serverValue, pendingValue } of comparisons) {
+              for (const {
+                key,
+                label,
+                serverValue,
+                pendingValue,
+              } of comparisons) {
                 if (serverValue !== pendingValue) {
                   diffs.push({
                     key,
@@ -129,7 +184,18 @@ export function GoalFormSheet({
                   });
                 }
               }
-              setConflictFields(diffs.length > 0 ? diffs : [{ key: "version", label: "Version", serverValue: "changed", pendingValue: "stale" }]);
+              setConflictFields(
+                diffs.length > 0
+                  ? diffs
+                  : [
+                      {
+                        key: "version",
+                        label: "Version",
+                        serverValue: "changed",
+                        pendingValue: "stale",
+                      },
+                    ],
+              );
               return;
             }
             toast.error(getErrorMessage(e));
@@ -153,7 +219,7 @@ export function GoalFormSheet({
       {
         onSuccess: () => {
           toast.success("Goal created");
-          onOpenChange(false);
+          handleOpenChange(false);
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
@@ -161,8 +227,8 @@ export function GoalFormSheet({
   }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="flex flex-col p-0 sm:max-w-[520px]">
+    <Sheet open={open} onOpenChange={handleOpenChange}>
+      <SheetContent className="flex flex-col gap-0 p-0 sm:max-w-[520px]">
         <SheetHeader className="px-6 pt-5 pb-3 border-b shrink-0">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -182,9 +248,12 @@ export function GoalFormSheet({
         </SheetHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col flex-1 min-h-0">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="flex flex-col flex-1 min-h-0"
+          >
             <SheetBody>
-              <div className="px-6 py-4 space-y-5">
+              <div className="space-y-5 px-6 pb-4">
                 {conflictFields !== null ? (
                   <div
                     role="alert"
@@ -192,14 +261,20 @@ export function GoalFormSheet({
                     className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 space-y-2"
                   >
                     <p className="text-sm font-medium text-destructive">
-                      This goal was modified while you were editing. Your changes were not saved.
+                      This goal was modified while you were editing. Your
+                      changes were not saved.
                     </p>
                     {conflictFields.length > 0 ? (
                       <ul className="flex flex-col gap-1.5">
                         {conflictFields.map((field) => (
-                          <li key={field.key} className="rounded border border-border bg-background p-2 text-xs">
+                          <li
+                            key={field.key}
+                            className="rounded border border-border bg-background p-2 text-xs"
+                          >
                             <span className="font-medium">{field.label}:</span>{" "}
-                            <span className="text-muted-foreground">{field.serverValue}</span>
+                            <span className="text-muted-foreground">
+                              {field.serverValue}
+                            </span>
                             {" → "}
                             <span>{field.pendingValue}</span>
                           </li>
@@ -234,7 +309,7 @@ export function GoalFormSheet({
                 type="button"
                 variant="outline"
                 className="flex-1 h-9"
-                onClick={() => onOpenChange(false)}
+                onClick={() => handleOpenChange(false)}
               >
                 Cancel
               </Button>

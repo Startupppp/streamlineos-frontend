@@ -101,7 +101,7 @@ export function useProductGoalsPage({ managedProductId }: UseProductGoalsPagePro
     useGoalsPage(params);
   const goals = useMemo(() => goalsPage?.items ?? [], [goalsPage]);
   const totalGoals = goalsPage?.total ?? 0;
-  const { data: stats } = useGoalStats();
+  const { data: stats } = useGoalStats(managedProductId);
 
   const grouped = useMemo(() => {
     const map = new Map<GoalLevel, GoalListItem[]>();

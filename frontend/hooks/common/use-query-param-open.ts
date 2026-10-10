@@ -1,16 +1,17 @@
 "use client";
 
-import { useCallback, useState, useTransition } from "react";
+import { useCallback, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useSourceOverride } from "./use-source-override";
 
 export function useQueryParamOpen(param: string, value = "1") {
-  const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
   const fromUrl = searchParams.get(param) === value;
-  const [manualOpen, setManualOpen] = useState(false);
-  const open = fromUrl || manualOpen;
+
+  const [open, setOpenState] = useSourceOverride(searchParams, fromUrl);
 
   const clearParam = useCallback(() => {
     if (!searchParams.get(param)) return;
@@ -18,21 +19,23 @@ export function useQueryParamOpen(param: string, value = "1") {
     params.delete(param);
     const query = params.toString();
     startTransition(() => {
-      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+      router.replace(query ? `${pathname}?${query}` : pathname, {
+        scroll: false,
+      });
     });
   }, [param, pathname, router, searchParams, startTransition]);
 
   const onOpenChange = useCallback(
     (next: boolean) => {
-      setManualOpen(next);
+      setOpenState(next);
       if (!next) clearParam();
     },
-    [clearParam],
+    [clearParam, setOpenState],
   );
 
   const setOpen = useCallback(() => {
-    setManualOpen(true);
-  }, []);
+    setOpenState(true);
+  }, [setOpenState]);
 
   return { open, onOpenChange, setOpen, clearParam, fromUrl };
 }

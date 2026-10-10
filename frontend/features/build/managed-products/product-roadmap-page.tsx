@@ -31,7 +31,6 @@ import {
 } from "@/components/pm-chrome";
 import {
   ROADMAP_STATUS_OPTS,
-  ROADMAP_HORIZON_OPTS,
   ROADMAP_SORT_OPTS,
   ROADMAP_FILTER_DEFS,
 } from "./product-roadmap-model";
@@ -65,7 +64,6 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   const statusValue = listFilters.value("status");
-  const horizonValue = listFilters.value("horizon");
   const sortValue = listFilters.value("sort");
 
   const typedStatus = useMemo<RoadmapStatus | undefined>(() => {
@@ -141,10 +139,6 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
     (value: string) => listFilters.setValue("status", value),
     [listFilters],
   );
-  const handleHorizonChange = useCallback(
-    (value: string) => listFilters.setValue("horizon", value),
-    [listFilters],
-  );
   const handleSortChange = useCallback(
     (value: string) => listFilters.setValue("sort", value),
     [listFilters],
@@ -187,19 +181,6 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
                   value={statusValue}
                   onValueChange={handleStatusChange}
                   options={ROADMAP_STATUS_OPTS}
-                />
-              ),
-            },
-            {
-              id: "horizon",
-              label: "Horizon",
-              active: listFilters.isActive("horizon"),
-              control: (
-                <BuildFilterSelect
-                  label="Horizon"
-                  value={horizonValue}
-                  onValueChange={handleHorizonChange}
-                  options={ROADMAP_HORIZON_OPTS}
                 />
               ),
             },

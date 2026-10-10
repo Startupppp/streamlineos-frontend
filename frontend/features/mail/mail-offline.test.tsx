@@ -156,12 +156,12 @@ describe("MailListPane — offline and reconnect", () => {
     fetchNextPage.mockClear();
 
     setOnline(false);
-    fireEvent.click(screen.getByRole("button", { name: "Load more" }));
+    fireEvent.click(screen.getByRole("button", { name: "Load more mail" }));
     expect(fetchNextPage).not.toHaveBeenCalled();
 
     setOnline(true);
     fetchNextPage.mockResolvedValueOnce({ data: { pages: listState.pages } });
-    fireEvent.click(screen.getByRole("button", { name: "Load more" }));
+    fireEvent.click(screen.getByRole("button", { name: "Load more mail" }));
     expect(fetchNextPage).toHaveBeenCalledTimes(1);
   });
 

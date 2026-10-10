@@ -140,7 +140,15 @@ export function MailListPane({
 
   const pages = useMemo(() => data?.pages ?? [], [data]);
   const visibleMessages = useMemo(() => {
-    const loadedMessages = pages.flatMap((page) => page.messages);
+    const seen = new Set<string>();
+    const loadedMessages = pages
+      .flatMap((page) => page.messages)
+      .filter((message) => {
+        const key = `${message.accountId}:${message.id}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
     return loadedMessages.filter((message) =>
       view === "unread"
         ? !message.isRead
@@ -361,7 +369,7 @@ export function MailListPane({
             {getErrorMessage(error)}
           </p>
         </div>
-      ) : visibleMessages.length === 0 ? (
+      ) : visibleMessages.length === 0 && !hasNextPage ? (
         <div className="flex-1 min-h-0 flex flex-col items-center justify-center px-4 py-10 text-center">
           <p className="text-label font-medium text-foreground/80">
             {view !== "all"

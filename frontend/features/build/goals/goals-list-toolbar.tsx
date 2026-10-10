@@ -3,10 +3,7 @@
 import { useCallback, useMemo, type RefObject } from "react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
-import {
-  BuildFilterSelect,
-  BUILD_FILTER_TRIGGER_CLASS,
-} from "@/features/build/shared/build-filter-select";
+import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import type { BuildFilterOption } from "@/features/build/shared/build-filter-select";
 import {
   BUILD_FILTER_ALL,
@@ -213,7 +210,7 @@ export function GoalsListToolbar({
           value={dueValue === BUILD_FILTER_ALL ? "" : dueValue}
           onChange={handleDueChange}
           placeholder={GOAL_DUE_FILTER_LABEL}
-          className={BUILD_FILTER_TRIGGER_CLASS}
+          className="w-full min-w-0 max-w-none bg-card text-foreground"
         />
       ),
     },

@@ -21,7 +21,10 @@ export const accountingAndSupportQueryKeys = {
         ? ([...base, "goals", "list"] as const)
         : ([...base, "goals", "list", params] as const),
     detail: (goalId: number) => [...base, "goals", "detail", goalId] as const,
-    stats: () => [...base, "goals", "stats"] as const,
+    stats: (managedProductId?: number) =>
+      managedProductId === undefined
+        ? ([...base, "goals", "stats"] as const)
+        : ([...base, "goals", "stats", { managedProductId }] as const),
   },
 
   whiteboards: {
@@ -57,7 +60,12 @@ export const accountingAndSupportQueryKeys = {
     connections: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "emailInboundIntegration", "connections"] as const)
-        : ([...base, "emailInboundIntegration", "connections", params] as const),
+        : ([
+            ...base,
+            "emailInboundIntegration",
+            "connections",
+            params,
+          ] as const),
   },
 
   ticketActivity: {
@@ -104,5 +112,4 @@ export const accountingAndSupportQueryKeys = {
     publicArticle: (orgId: string, slug: string) =>
       [...base, "supportKb", "publicArticle", orgId, slug] as const,
   },
-
 } as const;
