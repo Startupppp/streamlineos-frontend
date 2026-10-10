@@ -40,6 +40,7 @@ let threadResult: {
   isError: boolean;
   error: unknown;
   refetch: () => void;
+  isFetchedAfterMount: boolean;
 };
 
 jest.mock("next/navigation", () => ({
@@ -107,6 +108,7 @@ jest.mock("@/hooks/api/mail", () => ({
     isError: false,
     error: null,
     refetch: jest.fn(),
+    isFetchedAfterMount: false,
   }),
   useMailThreadSummary: () => ({ mutateAsync: jest.fn(), isPending: false }),
   useMailAiDraft: () => ({ mutateAsync: jest.fn(), isPending: false }),
@@ -154,6 +156,7 @@ describe("MailShell — opening a message seeds the thread cache", () => {
       isError: false,
       error: null,
       refetch: jest.fn(),
+      isFetchedAfterMount: false,
     };
   });
 
@@ -189,6 +192,7 @@ describe("MailReadingPane — a seeded thread renders its chrome, not a full ske
       isError: false,
       error: null,
       refetch: jest.fn(),
+      isFetchedAfterMount: false,
     };
 
     renderReadingPane();
@@ -206,6 +210,7 @@ describe("MailReadingPane — a seeded thread renders its chrome, not a full ske
       isError: false,
       error: null,
       refetch: jest.fn(),
+      isFetchedAfterMount: true,
     };
 
     renderReadingPane();
@@ -222,6 +227,7 @@ describe("MailReadingPane — a seeded thread renders its chrome, not a full ske
       isError: false,
       error: null,
       refetch: jest.fn(),
+      isFetchedAfterMount: true,
     };
 
     renderReadingPane();
@@ -239,6 +245,7 @@ describe("MailReadingPane — a seeded thread renders its chrome, not a full ske
       isError: false,
       error: null,
       refetch: jest.fn(),
+      isFetchedAfterMount: true,
     };
     const onReply = jest.fn();
 

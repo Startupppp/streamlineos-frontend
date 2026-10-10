@@ -17,7 +17,7 @@ const mailDownloadContract = lazyContract(() =>
   import("@/hooks/api/mail-schema").then((m) => m.mailDownloadContract),
 );
 import { MailHtmlViewer } from "./mail-html-viewer";
-import type { ThreadMessageView } from "./mail-thread-view";
+import type { ThreadMessageView, ThreadAttachment } from "./mail-thread-view";
 
 function formatDetailDate(dateStr: string): string {
   const date = parseISO(dateStr);
@@ -34,18 +34,11 @@ function formatBytes(bytes: number | null): string {
 }
 
 interface AttachmentChipProps {
-  attachmentId: string;
-  messageId: string;
-  accountId: number;
-  fileName: string;
-  sizeBytes: number | null;
+  attachment: ThreadAttachment;
 }
 
 const AttachmentChip = forwardRef<HTMLButtonElement, AttachmentChipProps>(
-  function AttachmentChip(
-    { attachmentId, messageId, accountId, fileName, sizeBytes },
-    _,
-  ) {
+  function AttachmentChip({ attachment }, _) {
     const { iconRef, hoverHandlers } = useAnimatedIcon();
 
     const handleDownload = useCallback(async () => {
@@ -54,7 +47,7 @@ const AttachmentChip = forwardRef<HTMLButtonElement, AttachmentChipProps>(
           downloadUrl: string;
           fileName: string;
         }>(
-          `/mail/messages/${messageId}/attachments/${attachmentId}?accountId=${accountId}&fileName=${encodeURIComponent(fileName)}`,
+          attachment.downloadPath,
           undefined,
           undefined,
           mailDownloadContract,
@@ -63,7 +56,7 @@ const AttachmentChip = forwardRef<HTMLButtonElement, AttachmentChipProps>(
       } catch (err) {
         toast.error(getErrorMessage(err));
       }
-    }, [attachmentId, messageId, accountId, fileName]);
+    }, [attachment.downloadPath]);
 
     const handleClick = useCallback(() => {
       void handleDownload();
@@ -75,16 +68,16 @@ const AttachmentChip = forwardRef<HTMLButtonElement, AttachmentChipProps>(
         className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50 border border-border/40 text-dense text-foreground/80 hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring max-w-[200px]"
         onClick={handleClick}
         {...hoverHandlers}
-        aria-label={`Download ${fileName}`}
+        aria-label={`Download ${attachment.fileName}`}
       >
         <Paperclip
           className="h-3 w-3 shrink-0 text-muted-foreground"
           aria-hidden
         />
-        <span className="truncate min-w-0">{fileName}</span>
-        {sizeBytes != null && (
+        <span className="truncate min-w-0">{attachment.fileName}</span>
+        {attachment.sizeBytes != null && (
           <span className="text-muted-foreground shrink-0">
-            {formatBytes(sizeBytes)}
+            {formatBytes(attachment.sizeBytes)}
           </span>
         )}
         <DownloadIcon
@@ -96,14 +89,6 @@ const AttachmentChip = forwardRef<HTMLButtonElement, AttachmentChipProps>(
     );
   },
 );
-
-interface MailThreadMessageProps {
-  message: ThreadMessageView;
-  isExpanded: boolean;
-  isLatest: boolean;
-  isHydrating?: boolean;
-  onToggle: (id: string) => void;
-}
 
 function MailBodySkeleton() {
   return (
@@ -123,11 +108,39 @@ function MailBodySkeleton() {
   );
 }
 
+function renderBody(body: ThreadMessageView["body"]) {
+  switch (body.kind) {
+    case "html":
+      return <MailHtmlViewer safeHtml={body.safeHtml} className="mt-1" />;
+    case "text":
+      return (
+        <div
+          className="mt-1 overflow-x-auto rounded-lg border border-border/50 bg-white text-foreground shadow-sm"
+          style={{ colorScheme: "light" }}
+        >
+          <pre className="whitespace-pre-wrap break-words px-4 py-3 font-sans text-label leading-relaxed text-foreground">
+            {body.text}
+          </pre>
+        </div>
+      );
+    case "snippet":
+      return <MailBodySkeleton />;
+    case "empty":
+      return <p className="text-xs text-muted-foreground italic">No content</p>;
+  }
+}
+
+interface MailThreadMessageProps {
+  message: ThreadMessageView;
+  isExpanded: boolean;
+  isLatest: boolean;
+  onToggle: (id: string) => void;
+}
+
 export function MailThreadMessage({
   message,
   isExpanded,
   isLatest,
-  isHydrating,
   onToggle,
 }: MailThreadMessageProps) {
   const senderLabel = message.from.name ?? message.from.email;
@@ -204,33 +217,14 @@ export function MailThreadMessage({
       </button>
 
       <div className="min-w-0 max-w-full overflow-hidden px-3 pb-4 sm:px-4">
-        {message.safeBodyHtml ? (
-          <MailHtmlViewer safeHtml={message.safeBodyHtml} className="mt-1" />
-        ) : message.bodyText ? (
-          <div
-            className="mt-1 overflow-x-auto rounded-lg border border-border/50 bg-white text-foreground shadow-sm"
-            style={{ colorScheme: "light" }}
-          >
-            <pre className="whitespace-pre-wrap break-words px-4 py-3 font-sans text-label leading-relaxed text-foreground">
-              {message.bodyText}
-            </pre>
-          </div>
-        ) : isHydrating ? (
-          <MailBodySkeleton />
-        ) : (
-          <p className="text-xs text-muted-foreground italic">No content</p>
-        )}
+        {renderBody(message.body)}
 
         {message.attachments.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-border/20">
             {message.attachments.map((att) => (
               <AttachmentChip
                 key={att.id}
-                attachmentId={att.id}
-                messageId={message.id}
-                accountId={message.accountId}
-                fileName={att.fileName}
-                sizeBytes={att.sizeBytes}
+                attachment={att}
               />
             ))}
           </div>

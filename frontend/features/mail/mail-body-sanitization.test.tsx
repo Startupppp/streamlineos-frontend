@@ -49,6 +49,7 @@ jest.mock("@/hooks/api/mail", () => ({
     isError: false,
     error: null,
     refetch: jest.fn(),
+    isFetchedAfterMount: true,
   }),
   useMailMessage: () => ({
     data: undefined,
@@ -57,6 +58,7 @@ jest.mock("@/hooks/api/mail", () => ({
     isError: false,
     error: null,
     refetch: jest.fn(),
+    isFetchedAfterMount: false,
   }),
   useMailAction: () => ({ mutate: jest.fn(), isPending: false }),
   useMailThreadSummary: () => ({ mutateAsync: jest.fn(), isPending: false }),

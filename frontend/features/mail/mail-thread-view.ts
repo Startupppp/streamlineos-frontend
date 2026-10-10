@@ -6,19 +6,81 @@ import { sanitizeHtml, type SanitizeHtmlPolicy } from "@/lib/sanitize-html";
 import type { MailMessageDetail } from "@/types/mail";
 
 const ALLOWED_TAGS = [
-  "a", "abbr", "b", "blockquote", "br", "caption", "cite", "code", "col",
-  "colgroup", "dd", "del", "dfn", "div", "dl", "dt", "em", "figcaption",
-  "figure", "h1", "h2", "h3", "h4", "h5", "h6", "hr", "i", "img", "ins",
-  "kbd", "li", "mark", "ol", "p", "pre", "q", "s", "samp", "small",
-  "span", "strong", "sub", "sup", "table", "tbody", "td", "tfoot", "th",
-  "thead", "time", "tr", "u", "ul", "var",
+  "a",
+  "abbr",
+  "b",
+  "blockquote",
+  "br",
+  "caption",
+  "cite",
+  "code",
+  "col",
+  "colgroup",
+  "dd",
+  "del",
+  "dfn",
+  "div",
+  "dl",
+  "dt",
+  "em",
+  "figcaption",
+  "figure",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
+  "hr",
+  "i",
+  "img",
+  "ins",
+  "kbd",
+  "li",
+  "mark",
+  "ol",
+  "p",
+  "pre",
+  "q",
+  "s",
+  "samp",
+  "small",
+  "span",
+  "strong",
+  "sub",
+  "sup",
+  "table",
+  "tbody",
+  "td",
+  "tfoot",
+  "th",
+  "thead",
+  "time",
+  "tr",
+  "u",
+  "ul",
+  "var",
 ];
 
 const ALLOWED_ATTR = [
-  "align", "alt", "border", "cellpadding", "cellspacing", "class",
-  "colspan", "height", "href", "rowspan", "src", "style", "target",
-  "title", "valign", "width",
-  "loading", "referrerpolicy",
+  "align",
+  "alt",
+  "border",
+  "cellpadding",
+  "cellspacing",
+  "class",
+  "colspan",
+  "height",
+  "href",
+  "rowspan",
+  "src",
+  "style",
+  "target",
+  "title",
+  "valign",
+  "width",
+  "loading",
+  "referrerpolicy",
 ];
 
 const MAIL_POLICY: SanitizeHtmlPolicy = {
@@ -38,7 +100,10 @@ function hardenLinks(html: string): string {
 }
 
 function hardenImages(html: string): string {
-  return html.replace(/<img(\s)/gi, '<img loading="lazy" referrerpolicy="no-referrer"$1');
+  return html.replace(
+    /<img(\s)/gi,
+    '<img loading="lazy" referrerpolicy="no-referrer"$1',
+  );
 }
 
 function countRemoteImages(html: string): number {
@@ -51,11 +116,27 @@ function makeSafeHtml(raw: string): string {
   return hardenImages(hardenLinks(sanitized));
 }
 
-export interface ThreadMessageView extends Omit<MailMessageDetail, "bodyHtml"> {
-  safeBodyHtml: string | null;
-  hasBody: boolean;
+type MessageBody =
+  | { kind: "html"; safeHtml: string }
+  | { kind: "text"; text: string }
+  | { kind: "snippet"; text: string }
+  | { kind: "empty" };
+
+export interface ThreadAttachment {
+  id: string;
+  fileName: string;
+  sizeBytes: number | null;
+  mimeType: string;
+  downloadPath: string;
+}
+
+export interface ThreadMessageView extends Omit<
+  MailMessageDetail,
+  "bodyHtml" | "bodyText" | "attachments"
+> {
+  body: MessageBody;
   remoteImageCount: number;
-  blockedImageCount: number;
+  attachments: ThreadAttachment[];
 }
 
 interface ThreadView {
@@ -64,15 +145,37 @@ interface ThreadView {
   error?: unknown;
 }
 
-function toMessageView(m: MailMessageDetail): ThreadMessageView {
-  const { bodyHtml, ...rest } = m;
-  const safeBodyHtml = bodyHtml ? makeSafeHtml(bodyHtml) : null;
+function toMessageView(
+  m: MailMessageDetail,
+  isFetchedAfterMount: boolean,
+): ThreadMessageView {
+  const { bodyHtml, bodyText, attachments, ...rest } = m;
+
+  let body: MessageBody;
+  if (bodyHtml !== null) {
+    body = { kind: "html", safeHtml: makeSafeHtml(bodyHtml) };
+  } else if (bodyText !== null) {
+    body = { kind: "text", text: bodyText };
+  } else if (!isFetchedAfterMount) {
+    body = { kind: "snippet", text: m.snippet };
+  } else {
+    body = { kind: "empty" };
+  }
+
+  const threadAttachments: ThreadAttachment[] = attachments.map((att) => ({
+    id: att.id,
+    fileName: att.fileName,
+    sizeBytes: att.sizeBytes,
+    mimeType: att.mimeType,
+    downloadPath: `/mail/messages/${m.id}/attachments/${att.id}?accountId=${m.accountId}&fileName=${encodeURIComponent(att.fileName)}`,
+  }));
+
   return {
     ...rest,
-    safeBodyHtml,
-    hasBody: safeBodyHtml !== null || m.bodyText !== null,
-    remoteImageCount: safeBodyHtml ? countRemoteImages(safeBodyHtml) : 0,
-    blockedImageCount: 0,
+    body,
+    remoteImageCount:
+      body.kind === "html" ? countRemoteImages(body.safeHtml) : 0,
+    attachments: threadAttachments,
   };
 }
 
@@ -81,6 +184,7 @@ function readThreadView(
   isFetching: boolean,
   isError: boolean,
   error: unknown,
+  isFetchedAfterMount: boolean,
 ): ThreadView {
   if (isError) {
     return { status: "error", messages: [], error };
@@ -94,11 +198,17 @@ function readThreadView(
     (m) => m.bodyHtml === null && m.bodyText === null,
   );
 
-  const status: "seeded" | "hydrating" | "hydrated" = allNullBody
-    ? (isFetching ? "hydrating" : "seeded")
-    : "hydrated";
+  const status: "seeded" | "hydrating" | "hydrated" =
+    allNullBody && !isFetchedAfterMount
+      ? isFetching
+        ? "hydrating"
+        : "seeded"
+      : "hydrated";
 
-  return { status, messages: messages.map(toMessageView) };
+  return {
+    status,
+    messages: messages.map((m) => toMessageView(m, isFetchedAfterMount)),
+  };
 }
 
 interface UseMailThreadViewParams {
@@ -119,6 +229,7 @@ export function useMailThreadView({
     isError: threadError,
     error: threadErr,
     refetch: retryThread,
+    isFetchedAfterMount: threadFetchedAfterMount,
   } = useMailThread(accountId, threadId);
 
   const {
@@ -128,6 +239,7 @@ export function useMailThreadView({
     isError: singleError,
     error: singleErr,
     refetch: retrySingle,
+    isFetchedAfterMount: singleFetchedAfterMount,
   } = useMailMessage(accountId, threadId ? undefined : messageId);
 
   const isLoading = threadId ? threadLoading : singleLoading;
@@ -135,6 +247,9 @@ export function useMailThreadView({
   const isError = threadId ? threadError : singleError;
   const error = threadId ? threadErr : singleErr;
   const retry = threadId ? retryThread : retrySingle;
+  const isFetchedAfterMount = threadId
+    ? threadFetchedAfterMount
+    : singleFetchedAfterMount;
 
   const rawMessages = useMemo<MailMessageDetail[] | undefined>(() => {
     if (threadId && threadMessages) return threadMessages;
@@ -143,8 +258,15 @@ export function useMailThreadView({
   }, [threadId, threadMessages, singleMessage]);
 
   const view = useMemo(
-    () => readThreadView(rawMessages, isFetching, isError, error),
-    [rawMessages, isFetching, isError, error],
+    () =>
+      readThreadView(
+        rawMessages,
+        isFetching,
+        isError,
+        error,
+        isFetchedAfterMount,
+      ),
+    [rawMessages, isFetching, isError, error, isFetchedAfterMount],
   );
 
   return { ...view, isLoading, retry };

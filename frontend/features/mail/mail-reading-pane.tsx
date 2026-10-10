@@ -192,8 +192,6 @@ export function MailReadingPane({
     );
   }
 
-  const isHydrating = view.status === "hydrating";
-
   return (
     <div
       className="flex h-full w-full min-h-0 min-w-0 max-w-full flex-col overflow-hidden"
@@ -248,7 +246,6 @@ export function MailReadingPane({
               expandedIds.has(msg.id) || index === view.messages.length - 1
             }
             isLatest={index === view.messages.length - 1}
-            isHydrating={isHydrating}
             onToggle={handleToggleExpand}
           />
         ))}
