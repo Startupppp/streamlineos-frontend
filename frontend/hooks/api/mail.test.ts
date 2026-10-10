@@ -42,7 +42,7 @@ it("fetches the initial inbox when connected accounts become available", async (
         { enabled: accountIds.length > 0 },
       ),
     {
-      initialProps: { accountIds: [] },
+      initialProps: { accountIds: [] as number[] },
       wrapper: wrapper(client),
     },
   );
@@ -161,7 +161,7 @@ describe("query key prefix regression", () => {
 
   it("messages() matches every distinct filter combination it is meant to invalidate", () => {
     const qc = makeClient();
-    for (const folder of ["inbox", "archive", "sent"]) {
+    for (const folder of ["inbox", "archive", "sent"] as const) {
       qc.setQueryData(
         queryKeys.mail.messages({ folder, accountId: 1 }),
         makeInfiniteMailData([makeMailPage([makeMsg(`m-${folder}`, false)])]),
