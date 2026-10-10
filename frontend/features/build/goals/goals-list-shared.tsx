@@ -7,6 +7,9 @@ import {
   CalendarDays,
   Link2 as LinkIcon,
   ListChecks,
+  Pencil,
+  Target,
+  Trash2,
   Users,
 } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
@@ -26,7 +29,7 @@ import { cn } from "@/lib/utils";
 import { listItem, listItemReduced, pmSnappy } from "@/lib/motion-presets";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import type { GoalLevel, GoalListItem } from "@/hooks/api/goals";
-import { STATUS_CONFIG } from "./constants";
+import { LEVEL_LABEL, STATUS_CONFIG } from "./constants";
 
 export const GOAL_LEVEL_ORDER: GoalLevel[] = ["company", "team", "individual"];
 
@@ -63,10 +66,14 @@ function GoalCardActions({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         {onEdit ? (
-          <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
+          <DropdownMenuItem onClick={handleEdit}>
+            <Pencil className="h-4 w-4" />
+            Edit
+          </DropdownMenuItem>
         ) : null}
         {onDelete ? (
           <DropdownMenuItem variant="destructive" onClick={handleDelete}>
+            <Trash2 className="h-4 w-4 text-destructive" />
             Delete
           </DropdownMenuItem>
         ) : null}
@@ -107,21 +114,14 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
         <div
           className={cn(
             PM_PANEL,
-            "space-y-3 p-4 transition-[border-color,box-shadow] duration-200 group-hover:border-primary/40 group-hover:shadow-md",
+            "space-y-3 border-border/80 bg-card p-4 shadow-sm transition-[border-color,box-shadow,transform] duration-200 group-hover:-translate-y-0.5 group-hover:border-primary/40 group-hover:shadow-md",
           )}
         >
-          <div className="flex min-w-0 items-start justify-between gap-2">
-            <Link href={`/build/goals/${goal.id}`} className="min-w-0 flex-1">
-              <p
-                className={cn(
-                  TEXT_TWO_LINES,
-                  "text-sm font-medium leading-snug",
-                )}
-                title={goal.title}
-              >
-                {goal.title}
-              </p>
-            </Link>
+          <div className="flex min-w-0 items-center justify-between gap-2">
+            <span className="inline-flex min-w-0 items-center gap-1.5 text-micro font-medium text-muted-foreground">
+              <Target className="h-3.5 w-3.5 shrink-0 text-primary" />
+              {LEVEL_LABEL[goal.level]} objective
+            </span>
             <div className="flex shrink-0 items-center gap-1">
               <Badge variant={cfg.variant} className="shrink-0 text-micro">
                 {cfg.label}
@@ -138,10 +138,22 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
             </div>
           </div>
 
-          <div className="flex flex-col gap-1">
+          <Link href={`/build/goals/${goal.id}`} className="block min-w-0 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              <h3
+                className={cn(
+                  TEXT_TWO_LINES,
+                  "text-sm font-semibold leading-snug text-foreground transition-colors group-hover:text-primary",
+                )}
+                title={goal.title}
+              >
+                {goal.title}
+              </h3>
+          </Link>
+
+          <div className="flex flex-col gap-1.5 rounded-lg border border-border/60 bg-muted/30 px-3 py-2.5">
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span>Progress</span>
-              <span className="tabular-nums">{goal.progress}%</span>
+              <span className="font-mono tabular-nums font-semibold text-foreground">{goal.progress}%</span>
             </div>
             <Progress
               value={goal.progress}

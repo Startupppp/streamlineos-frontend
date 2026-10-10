@@ -5,12 +5,16 @@ import { useRouter } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   CalendarDays,
   Users,
   FolderKanban,
+  History,
+  Link2,
+  ListChecks,
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -154,7 +158,7 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
     >
       <PmPageShell>
         <PmSection index={0}>
-          <PmPanel className="space-y-3 p-4">
+          <PmPanel className="space-y-4 border-border bg-card p-4 shadow-sm sm:p-5">
             <div className="flex min-w-0 items-center justify-between gap-2">
               <Badge variant={cfg.variant}>{cfg.label}</Badge>
               <div className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
@@ -167,10 +171,10 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
                 {detail.description}
               </p>
             ) : null}
-            <div className="space-y-1">
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>Overall progress</span>
-                <span className="tabular-nums">{detail.progress}%</span>
+            <div className="rounded-lg border border-border bg-muted/40 p-3">
+              <div className="mb-2 flex items-center justify-between text-sm">
+                <span className="font-medium">Overall progress</span>
+                <span className="font-semibold tabular-nums">{detail.progress}%</span>
               </div>
               <Progress value={detail.progress} className="h-2" />
             </div>
@@ -197,18 +201,40 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
           </PmPanel>
         </PmSection>
 
-        <GoalKeyResultsSection
-          keyResults={detail.keyResults}
-          onCheckIn={handleCheckIn}
-          canManage={canManage}
-        />
-        <GoalLinkedItemsSection
-          links={detail.links}
-          canManage={canManage}
-          onOpenAddLink={handleOpenAddLink}
-          onRemoveLink={handleRemoveLink}
-        />
-        <GoalUpdatesTimeline updates={detail.updates} />
+        <Tabs defaultValue="key-results" className="min-h-0 flex-1 gap-3">
+          <TabsList aria-label="Goal details">
+            <TabsTrigger value="key-results">
+              <ListChecks aria-hidden="true" /> Key results
+              <span className="tabular-nums">{detail.keyResults.length}</span>
+            </TabsTrigger>
+            <TabsTrigger value="linked-work">
+              <Link2 aria-hidden="true" /> Linked work
+              <span className="tabular-nums">{detail.links.length}</span>
+            </TabsTrigger>
+            <TabsTrigger value="updates">
+              <History aria-hidden="true" /> Updates
+              <span className="tabular-nums">{detail.updates.length}</span>
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="key-results" className="mt-0 overflow-y-auto">
+            <GoalKeyResultsSection
+              keyResults={detail.keyResults}
+              onCheckIn={handleCheckIn}
+              canManage={canManage}
+            />
+          </TabsContent>
+          <TabsContent value="linked-work" className="mt-0 overflow-y-auto">
+            <GoalLinkedItemsSection
+              links={detail.links}
+              canManage={canManage}
+              onOpenAddLink={handleOpenAddLink}
+              onRemoveLink={handleRemoveLink}
+            />
+          </TabsContent>
+          <TabsContent value="updates" className="mt-0 overflow-y-auto">
+            <GoalUpdatesTimeline updates={detail.updates} />
+          </TabsContent>
+        </Tabs>
       </PmPageShell>
 
       {editOpen ? <GoalFormSheet open={editOpen} onOpenChange={setEditOpen} goal={detail} /> : null}

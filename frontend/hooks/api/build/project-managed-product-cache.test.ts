@@ -33,7 +33,12 @@ it("adds a newly linked project to the cached product list and patches existing 
   const detailKey = buildWorkQueryKeys.projects.detail(project.id);
   client.setQueryData(candidateKey, page([project]));
   client.setQueryData(productKey, page([]));
-  client.setQueryData(detailKey, { ...project, orgId: "org-1" } as ProjectWithDetails);
+  const detail: ProjectWithDetails = {
+    ...project,
+    orgId: "org-1",
+    settings: null,
+  };
+  client.setQueryData(detailKey, detail);
 
   patchManagedProductLinkCache(client, project, 39);
 

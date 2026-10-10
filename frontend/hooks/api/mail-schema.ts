@@ -1,11 +1,5 @@
 import { z } from "zod";
 
-/**
- * Response contracts for the mail module.
- * Derived from backend `mail-response.schemas.ts`.
- * NOT `.strict()`.
- */
-
 const mailAddressContract = z.object({
   name: z.string().nullable(),
   email: z.string(),

@@ -31,7 +31,7 @@ export function GoalKeyResultsSection({
   canManage,
 }: GoalKeyResultsSectionProps) {
   return (
-    <PmSection index={1} className="space-y-3">
+    <PmSection index={1} className="flex min-h-0 flex-1 flex-col gap-3">
       <div className="flex items-center gap-2">
         <ListChecks className="h-4 w-4 text-muted-foreground" />
         <h2 className="text-sm font-medium">Key Results</h2>
@@ -40,7 +40,7 @@ export function GoalKeyResultsSection({
         </Badge>
       </div>
       {keyResults.length === 0 ? (
-        <PmPanel className="flex items-center justify-center p-4">
+        <PmPanel className="flex min-h-0 flex-1 items-center justify-center border-border bg-card p-4 shadow-sm">
           <EmptyState
             illustration={<EmptyTasksIllustration />}
             compact
@@ -78,7 +78,7 @@ export function GoalLinkedItemsSection({
   onRemoveLink,
 }: GoalLinkedItemsSectionProps) {
   return (
-    <PmSection index={2} className="space-y-3">
+    <PmSection index={2} className="flex min-h-0 flex-1 flex-col gap-3">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Link2 className="h-4 w-4 text-muted-foreground" />
@@ -90,7 +90,7 @@ export function GoalLinkedItemsSection({
         {canManage ? <AddLinkButton onClick={onOpenAddLink} /> : null}
       </div>
       {links.length === 0 ? (
-        <PmPanel className="flex items-center justify-center p-4">
+        <PmPanel className="flex min-h-0 flex-1 items-center justify-center border-border bg-card p-4 shadow-sm">
           <EmptyState
             illustration={<EmptyActivityIllustration />}
             compact
@@ -120,13 +120,13 @@ interface GoalUpdatesTimelineProps {
 
 export function GoalUpdatesTimeline({ updates }: GoalUpdatesTimelineProps) {
   return (
-    <PmSection index={3} className="space-y-3">
+    <PmSection index={3} className="flex min-h-0 flex-1 flex-col gap-3">
       <div className="flex items-center gap-2">
         <History className="h-4 w-4 text-muted-foreground" />
         <h2 className="text-sm font-medium">Updates Timeline</h2>
       </div>
       {updates.length === 0 ? (
-        <PmPanel className="flex items-center justify-center p-4">
+        <PmPanel className="flex min-h-0 flex-1 items-center justify-center border-border bg-card p-4 shadow-sm">
           <EmptyState
             illustration={<EmptyActivityIllustration />}
             compact

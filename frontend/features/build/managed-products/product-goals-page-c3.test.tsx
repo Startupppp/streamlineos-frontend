@@ -302,6 +302,7 @@ describe("ProductGoalsPage — states (C3 BSN-STATE-GOALS-01)", () => {
     render(<ProductGoalsPage managedProductId={7} />);
     expect(screen.getByTestId("goal-card")).toBeInTheDocument();
     expect(screen.getByText("Grow revenue 20%")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Company" })).not.toBeInTheDocument();
   });
 });
 

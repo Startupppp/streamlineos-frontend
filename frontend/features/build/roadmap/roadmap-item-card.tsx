@@ -16,7 +16,6 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
 import type { RoadmapItem } from "@/types/projects";
 import { cn } from "@/lib/utils";
-import { PM_PANEL } from "@/components/pm-chrome";
 import { listItem, listItemReduced, pmSnappy } from "@/lib/motion-presets";
 import { TEXT_ONE_LINE, TEXT_TWO_LINES } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -71,14 +70,13 @@ export const RoadmapItemCard = memo(function RoadmapItemCard({
       variants={shouldReduceMotion ? listItemReduced : listItem}
       transition={pmSnappy}
       className={cn(
-        PM_PANEL,
-        "group p-2.5 transition-[border-color,box-shadow] duration-200 hover:border-primary/35 hover:shadow-md",
+        "group rounded-xl border border-border bg-card p-3 shadow-sm transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-md focus-within:border-primary/50",
       )}
       onContextMenu={handleContextMenu}
     >
-      <div className="space-y-2">
+      <div className="space-y-2.5">
         <div className="flex min-w-0 items-start justify-between gap-2">
-          <TruncatedText text={item.title} lines={2} className="text-sm font-medium leading-snug" />
+          <TruncatedText text={item.title} lines={2} className="text-sm font-semibold leading-snug text-foreground" />
           {canManage ? <div className="flex shrink-0 items-center gap-0.5 opacity-70 transition-opacity group-hover:opacity-100">
             <Button size="icon" variant="ghost" className="h-6 w-6" aria-label="Edit roadmap item" onClick={handleEdit}>
               <Pencil className="h-3 w-3" />
@@ -122,7 +120,7 @@ export const RoadmapItemCard = memo(function RoadmapItemCard({
             {getUserDisplayName(item.owner)}
           </p>
         ) : null}
-        <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+        <div className="flex min-w-0 flex-wrap items-center gap-1.5 border-t border-border/70 pt-2.5">
           <RoadmapPriorityScore
             prioritization={item.prioritization}
             tierWeighting={item.tierWeighting}

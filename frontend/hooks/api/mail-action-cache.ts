@@ -276,3 +276,8 @@ export function restoreMailCaches(
     qc.setQueryData(key, data);
   }
 }
+
+export function invalidateAfterMailSend(qc: QueryClient): void {
+  void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.mail.all });
+  void qc.invalidateQueries({ queryKey: platformCoreQueryKeys.inbox.all });
+}

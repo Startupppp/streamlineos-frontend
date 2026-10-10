@@ -6,14 +6,10 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { BuildPaginatedContent } from "@/features/build/shared/build-paginated-content";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTargetIllustration } from "@/components/illustrations";
 import { GoalFormSheet } from "@/features/build/goals/goal-form-sheet";
-import {
-  LEVEL_LABEL,
-} from "@/features/build/goals/constants";
 import { PageState } from "@/components/shared/page-state";
 import { cn } from "@/lib/utils";
 import {
@@ -25,10 +21,7 @@ import {
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
 import { BuildOfflineNotice } from "@/features/build/shared/build-offline-notice";
-import {
-  GoalCard,
-  GOAL_LEVEL_ORDER,
-} from "@/features/build/goals/goals-list-shared";
+import { GoalCard } from "@/features/build/goals/goals-list-shared";
 import {
   GoalsListToolbar,
 } from "@/features/build/goals/goals-list-toolbar";
@@ -75,7 +68,7 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
     dataUpdatedAt,
     totalGoals,
     stats,
-    grouped,
+    flatGoals,
     resolution,
     page,
     canManage,
@@ -162,7 +155,7 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
           >
             <BuildPaginatedContent
               ariaLabel="Product goals"
-              contentClassName="space-y-8"
+              contentClassName=""
               footer={totalGoals > 0 ? (
                 <TablePagination
                   page={page}
@@ -172,32 +165,16 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
                 />
               ) : null}
             >
-                {GOAL_LEVEL_ORDER.map((level) => {
-                  const levelGoals = grouped.get(level) ?? [];
-                  if (levelGoals.length === 0) return null;
-                  return (
-                    <div key={level} className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <h2 className="text-sm font-medium text-foreground">
-                          {LEVEL_LABEL[level]}
-                        </h2>
-                        <Badge variant="secondary" className="text-micro">
-                          {levelGoals.length}
-                        </Badge>
-                      </div>
-                      <PmStaggerList className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                        {levelGoals.map((goal) => (
-                          <GoalCard
-                            key={goal.id}
-                            goal={goal}
-                            onEdit={canManage ? handleEditGoalCard : undefined}
-                            onDelete={canManage ? handleDeleteGoalCard : undefined}
-                          />
-                        ))}
-                      </PmStaggerList>
-                    </div>
-                  );
-                })}
+                <PmStaggerList className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {flatGoals.map((goal) => (
+                    <GoalCard
+                      key={goal.id}
+                      goal={goal}
+                      onEdit={canManage ? handleEditGoalCard : undefined}
+                      onDelete={canManage ? handleDeleteGoalCard : undefined}
+                    />
+                  ))}
+                </PmStaggerList>
             </BuildPaginatedContent>
           </PageState>
         </ManagedProductDetailPrimarySection>

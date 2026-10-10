@@ -62,4 +62,11 @@ describe("goal detail header actions keep an accessible name when their label is
       controls.some((control) => control.getAttribute("aria-label") === label),
     ).toBe(true);
   });
+
+  it("uses the destructive color for the delete icon as well as its label", () => {
+    render(<GoalDetailPage goalId={1} />);
+
+    const deleteButton = screen.getByRole("button", { name: "Delete" });
+    expect(deleteButton.querySelector(".text-destructive")).toBeInTheDocument();
+  });
 });

@@ -26,7 +26,7 @@ export function GoalDetailActions({ onEdit, onDelete }: GoalDetailActionsProps) 
         onClick={onDelete}
         {...trashHandlers}
       >
-        <Trash2Icon ref={trashRef} size={16} className="sm:mr-1" />
+        <Trash2Icon ref={trashRef} size={16} className="text-destructive sm:mr-1" />
         <span className="hidden sm:inline">Delete</span>
       </Button>
     </div>

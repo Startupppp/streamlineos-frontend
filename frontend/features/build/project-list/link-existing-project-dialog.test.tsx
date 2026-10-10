@@ -19,6 +19,23 @@ jest.mock("@/hooks/api/build/use-link-project-managed-product", () => ({
 jest.mock("@/hooks/common/use-debounce", () => ({
   useDebouncedValue: (value: string) => value,
 }));
+jest.mock("@/components/ui/combobox", () => ({
+  Combobox: ({ options, value, onChange, onSearchChange, footer, emptyText }: {
+    options: { value: string; label: string; sublabel?: string }[];
+    value: string;
+    onChange: (value: string) => void;
+    onSearchChange: (value: string) => void;
+    footer?: React.ReactNode;
+    emptyText: string;
+  }) => <div>
+    <button type="button" role="combobox" aria-label="Select an existing project" aria-controls="project-options" aria-expanded="true">{value || "Select a project"}</button>
+    <input aria-label="Search by project name or key" onChange={(event) => onSearchChange(event.target.value)} />
+    {options.length === 0 ? <p>{emptyText}</p> : options.map((option) => (
+      <button key={option.value} type="button" onClick={() => { onChange(option.value); onSearchChange(""); }}>{option.sublabel} {option.label}</button>
+    ))}
+    {footer}
+  </div>,
+}));
 jest.mock("@/components/ui/dialog", () => ({
   Dialog: ({ children, open }: { children: React.ReactNode; open: boolean }) => open ? <div>{children}</div> : null,
   DialogContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -50,9 +67,9 @@ beforeEach(() => {
 it("searches existing projects and links only an unassigned project", () => {
   const onOpenChange = jest.fn();
   render(<LinkExistingProjectDialog managedProductId={39} open onOpenChange={onOpenChange} />);
-  expect(screen.getByText("Unlinked project")).toBeInTheDocument();
-  expect(screen.queryByText("Other product project")).not.toBeInTheDocument();
-  fireEvent.change(screen.getByRole("textbox", { name: "Search existing projects" }), { target: { value: "FREE" } });
+  expect(screen.getByRole("button", { name: /FREE Unlinked project/ })).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: /Other product project/ })).not.toBeInTheDocument();
+  fireEvent.change(screen.getByRole("textbox", { name: "Search by project name or key" }), { target: { value: "FREE" } });
   expect(mockUseProjects).toHaveBeenLastCalledWith({ limit: 50, search: "FREE" }, { enabled: true });
   fireEvent.click(screen.getByRole("button", { name: /FREE Unlinked project/ }));
   fireEvent.click(screen.getByRole("button", { name: "Link project" }));
@@ -73,6 +90,28 @@ it("keeps the dialog open when the link request fails", () => {
   act(() => mockMutate.mock.calls[0][1].onError(new Error("Project access denied")));
   expect(mockToastError).toHaveBeenCalledWith("Project access denied");
   expect(onOpenChange).not.toHaveBeenCalled();
+});
+
+it("keeps a searched selection linkable when the default first page does not contain it", () => {
+  mockUseProjects.mockImplementation(({ search }: { search?: string }) => ({
+    data: {
+      data: search === "REMOTE" ? [{ id: 99, key: "REMOTE", name: "Remote project", managedProductId: null }] : [],
+      hasMore: true,
+    },
+    isLoading: false,
+    isError: false,
+    refetch: jest.fn(),
+  }));
+  render(<LinkExistingProjectDialog managedProductId={39} open onOpenChange={jest.fn()} />);
+
+  fireEvent.change(screen.getByRole("textbox", { name: "Search by project name or key" }), { target: { value: "REMOTE" } });
+  fireEvent.click(screen.getByRole("button", { name: /REMOTE Remote project/ }));
+  fireEvent.click(screen.getByRole("button", { name: "Link project" }));
+
+  expect(mockMutate).toHaveBeenCalledWith(
+    { project: expect.objectContaining({ id: 99 }), managedProductId: 39 },
+    expect.any(Object),
+  );
 });
 
 it("shows a retry path when candidate projects cannot load", () => {

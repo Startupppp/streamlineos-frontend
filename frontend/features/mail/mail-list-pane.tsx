@@ -31,6 +31,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { PageState } from "@/components/shared/page-state";
 import { toast } from "sonner";
 import { groupMailMessages } from "./mail-group-messages";
+import { MAIL_LIST_BOTTOM_PADDING_CLASS } from "./mail-presentation";
 import { MailVirtualList } from "./mail-virtual-list";
 import { MailListRowsSkeleton } from "./mail-shell-skeletons";
 import {
@@ -393,7 +394,7 @@ export function MailListPane({
           </p>
         </div>
       ) : (
-        <div className="flex-1 min-h-0 max-md:pb-14">
+        <div className={cn("flex-1 min-h-0", MAIL_LIST_BOTTOM_PADDING_CLASS)}>
           <MailVirtualList
             groups={groups}
             selectedMessageId={selectedMessageId}

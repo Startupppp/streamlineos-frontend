@@ -17,7 +17,7 @@ const mailDownloadContract = lazyContract(() =>
   import("@/hooks/api/mail-schema").then((m) => m.mailDownloadContract),
 );
 import { MailHtmlViewer } from "./mail-html-viewer";
-import type { MailMessageDetail } from "@/types/mail";
+import type { ThreadMessageView } from "./mail-thread-view";
 
 function formatDetailDate(dateStr: string): string {
   const date = parseISO(dateStr);
@@ -98,7 +98,7 @@ const AttachmentChip = forwardRef<HTMLButtonElement, AttachmentChipProps>(
 );
 
 interface MailThreadMessageProps {
-  message: MailMessageDetail;
+  message: ThreadMessageView;
   isExpanded: boolean;
   isLatest: boolean;
   isHydrating?: boolean;
@@ -204,8 +204,8 @@ export function MailThreadMessage({
       </button>
 
       <div className="min-w-0 max-w-full overflow-hidden px-3 pb-4 sm:px-4">
-        {message.bodyHtml ? (
-          <MailHtmlViewer html={message.bodyHtml} className="mt-1" />
+        {message.safeBodyHtml ? (
+          <MailHtmlViewer safeHtml={message.safeBodyHtml} className="mt-1" />
         ) : message.bodyText ? (
           <div
             className="mt-1 overflow-x-auto rounded-lg border border-border/50 bg-white text-foreground shadow-sm"

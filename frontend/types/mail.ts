@@ -1,61 +1,22 @@
-export type MailProvider = "gmail" | "outlook";
+import type { z } from "zod";
+import type {
+  mailAccountContract,
+  mailListResponseContract,
+  mailMessageContract,
+} from "@/hooks/api/mail-schema";
 
 export type MailFolder = "inbox" | "sent" | "archive" | "trash" | "starred";
 
-export interface MailAccount {
-  id: number;
-  provider: MailProvider;
-  accountEmail: string | null;
-  accountLabel: string | null;
-  status: "active" | "needs_reauth" | "disabled";
-  isPrimary: boolean;
-}
+export type MailAccount = z.infer<typeof mailAccountContract>;
 
-export interface MailAddress {
-  name: string | null;
-  email: string;
-}
+export type MailMessageSummary =
+  z.infer<typeof mailListResponseContract>["messages"][number];
 
-export interface MailMessageSummary {
-  id: string;
-  threadId: string | null;
-  accountId: number;
-  provider: MailProvider;
-  from: MailAddress;
-  to: MailAddress[];
-  subject: string;
-  snippet: string;
-  date: string;
-  isRead: boolean;
-  isStarred: boolean;
-  hasAttachments: boolean;
-}
+export type MailMessageDetail = z.infer<typeof mailMessageContract>;
 
-export interface MailAttachment {
-  id: string;
-  fileName: string;
-  mimeType: string;
-  sizeBytes: number | null;
-}
+export type MailListResponse = z.infer<typeof mailListResponseContract>;
 
-export interface MailMessageDetail extends MailMessageSummary {
-  cc: MailAddress[];
-  bodyHtml: string | null;
-  bodyText: string | null;
-  attachments: MailAttachment[];
-}
-
-export interface MailListResponse {
-  messages: MailMessageSummary[];
-  nextCursor: string | null;
-  accountErrors: {
-    accountId: number;
-    accountEmail: string | null;
-    message: string;
-  }[];
-}
-
-export type MailAction =
+type MailAction =
   | "markRead"
   | "markUnread"
   | "star"

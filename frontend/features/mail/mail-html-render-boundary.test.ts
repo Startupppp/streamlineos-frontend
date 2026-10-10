@@ -2,7 +2,8 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 const MAIL_FEATURE_DIR = join(__dirname);
-const SANITIZING_RENDERER = "mail-html-viewer.tsx";
+const RENDERING_COMPONENT = "mail-html-viewer.tsx";
+const THREAD_VIEW_MODULE = "mail-thread-view.ts";
 const RAW_RENDER_RE = /dangerouslySetInnerHTML/;
 
 function collectSourceFiles(dir: string): string[] {
@@ -31,14 +32,16 @@ describe("mail HTML render boundary", () => {
       .filter((file) => RAW_RENDER_RE.test(readFileSync(file, "utf8")))
       .map((file) => file.slice(MAIL_FEATURE_DIR.length + 1).replace(/\\/g, "/"));
 
-    expect(offenders).toEqual([SANITIZING_RENDERER]);
+    expect(offenders).toEqual([RENDERING_COMPONENT]);
   });
 
-  it("the sanitizing renderer never passes provider HTML through unsanitized", () => {
-    const source = readFileSync(join(MAIL_FEATURE_DIR, SANITIZING_RENDERER), "utf8");
+  it("the rendering component uses the pre-sanitized prop and the sanitization policy lives in the thread-view module", () => {
+    const viewerSource = readFileSync(join(MAIL_FEATURE_DIR, RENDERING_COMPONENT), "utf8");
+    expect(viewerSource).toContain("dangerouslySetInnerHTML={{ __html: safeHtml }}");
+    expect(viewerSource).not.toMatch(/dangerouslySetInnerHTML=\{\{\s*__html:\s*html\s*\}\}/);
 
-    expect(source).toContain("dangerouslySetInnerHTML={{ __html: sanitized }}");
-    expect(source).not.toMatch(/dangerouslySetInnerHTML=\{\{\s*__html:\s*html\s*\}\}/);
-    expect(source).toContain("ALLOW_UNKNOWN_PROTOCOLS: false");
+    const moduleSource = readFileSync(join(MAIL_FEATURE_DIR, THREAD_VIEW_MODULE), "utf8");
+    expect(moduleSource).toContain("ALLOW_UNKNOWN_PROTOCOLS: false");
+    expect(moduleSource).toContain("sanitizeHtml(");
   });
 });

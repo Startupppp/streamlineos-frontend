@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
 import { MailDailyBrief } from "./mail-daily-brief";
+import { MAIL_COMPOSE_FAB_CLASS } from "./mail-presentation";
 import type { MailInboxSummaryState } from "./use-mail-inbox-summary";
 import type { MailAccount } from "@/types/mail";
 
@@ -158,7 +159,7 @@ export function MailHeader({
         <Button
           type="button"
           size="icon"
-          className="fixed right-3 bottom-[calc(4rem+0.375rem+env(safe-area-inset-bottom))] z-50 size-12 rounded-full shadow-lg md:hidden"
+          className={MAIL_COMPOSE_FAB_CLASS}
           onClick={onCompose}
           disabled={!canCompose}
           aria-label="Compose mail"

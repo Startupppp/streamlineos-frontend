@@ -1,5 +1,5 @@
 import { QueryClient } from "@tanstack/react-query";
-import { applyMailActionToCaches } from "./mail-action-cache";
+import { applyMailActionToCaches, invalidateAfterMailSend } from "./mail-action-cache";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import type { MailMessageDetail } from "@/types/mail";
@@ -107,5 +107,27 @@ describe("applyMailActionToCaches — unified count entry must not crash the upd
       mail: 2,
       total: 4,
     });
+  });
+});
+
+describe("invalidateAfterMailSend — cache policy owns the send/reply invalidation prefix", () => {
+  it("marks the mail prefix stale so list hooks refetch", () => {
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const spy = jest.spyOn(qc, "invalidateQueries");
+    invalidateAfterMailSend(qc);
+    const keys = spy.mock.calls.map(
+      (c) => (c[0] as { queryKey?: unknown }).queryKey,
+    );
+    expect(keys).toContainEqual(directoryAndOwnershipQueryKeys.mail.all);
+  });
+
+  it("marks the inbox prefix stale so the unified inbox refetches", () => {
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const spy = jest.spyOn(qc, "invalidateQueries");
+    invalidateAfterMailSend(qc);
+    const keys = spy.mock.calls.map(
+      (c) => (c[0] as { queryKey?: unknown }).queryKey,
+    );
+    expect(keys).toContainEqual(platformCoreQueryKeys.inbox.all);
   });
 });

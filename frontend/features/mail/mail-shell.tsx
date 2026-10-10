@@ -4,7 +4,6 @@ import { useCallback, useRef, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useMailAccounts, useMailAction } from "@/hooks/api/mail";
@@ -18,6 +17,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
+import { useMailPresentation } from "./mail-presentation";
 import { MailListPane } from "./mail-list-pane";
 import { MailEmptyPane } from "./mail-empty-pane";
 import { MailHeader, MAIL_ACCOUNT_SENTINEL } from "./mail-header";
@@ -94,16 +94,20 @@ export function MailShell() {
       : "all";
   const [selectedMessage, setSelectedMessage] =
     useState<MailMessageSummary | null>(null);
-  const [showMobileList, setShowMobileList] = useState(
-    () =>
-      !(
-        searchParams.get("accountId") &&
-        (searchParams.get("messageId") || searchParams.get("threadId"))
-      ),
+  const hasDeepLink = Boolean(
+    searchParams.get("accountId") &&
+    (searchParams.get("messageId") || searchParams.get("threadId")),
   );
-  const [composeOpen, setComposeOpen] = useState(
-    () => searchParams.get("compose") === "1",
-  );
+  const startWithCompose = searchParams.get("compose") === "1";
+  const {
+    composeOpen,
+    listPaneClass,
+    detailPaneClass,
+    selectMessage: presentSelectMessage,
+    backToList: presentBackToList,
+    openCompose,
+    closeCompose,
+  } = useMailPresentation(hasDeepLink, startWithCompose);
   const [composeMode, setComposeMode] = useState<MailComposeMode>({
     type: "compose",
   });
@@ -179,7 +183,7 @@ export function MailShell() {
   const mailActionMutate = mailAction.mutate;
   const handleSelectMessage = useCallback(
     (message: MailMessageSummary) => {
-      setShowMobileList(false);
+      presentSelectMessage();
       seedMailDetailFromSummary(queryClient, message);
 
       const next = new URLSearchParams(searchParams.toString());
@@ -210,7 +214,14 @@ export function MailShell() {
         { onError: () => setSelectedMessage(message) },
       );
     },
-    [canManageMail, mailActionMutate, queryClient, searchParams, router],
+    [
+      canManageMail,
+      mailActionMutate,
+      presentSelectMessage,
+      queryClient,
+      searchParams,
+      router,
+    ],
   );
   const handleSelectRecentMessage = useCallback(
     (message: MailMessageSummary) => {
@@ -293,29 +304,30 @@ export function MailShell() {
   ]);
 
   const handleBackToList = useCallback(() => {
-    setShowMobileList(true);
+    presentBackToList();
     setSelectedMessage(null);
-  }, []);
+  }, [presentBackToList]);
 
   const handleOpenCompose = useCallback(() => {
     setComposeMode({ type: "compose" });
-    setComposeOpen(true);
-  }, []);
+    openCompose();
+  }, [openCompose]);
 
-  const handleCloseCompose = useCallback(() => setComposeOpen(false), []);
-
-  const handleReply = useCallback((params: MailReplyParams) => {
-    setComposeMode({
-      type: "reply",
-      messageId: params.messageId,
-      threadId: params.threadId,
-      toEmail: params.toEmail,
-      subject: params.subject,
-      accountId: params.accountId,
-      prefillBody: params.prefillBody,
-    });
-    setComposeOpen(true);
-  }, []);
+  const handleReply = useCallback(
+    (params: MailReplyParams) => {
+      setComposeMode({
+        type: "reply",
+        messageId: params.messageId,
+        threadId: params.threadId,
+        toEmail: params.toEmail,
+        subject: params.subject,
+        accountId: params.accountId,
+        prefillBody: params.prefillBody,
+      });
+      openCompose();
+    },
+    [openCompose],
+  );
 
   const handleCloseSummary = useCallback(() => setSummarySheetOpen(false), []);
   const handleGenerateBrief = useCallback(() => {
@@ -387,12 +399,7 @@ export function MailShell() {
         onRetry={handleRetryAccounts}
       >
         <div className="flex flex-1 min-h-0 min-w-0">
-          <div
-            className={cn(
-              "flex flex-col h-full min-w-0 shrink-0 border-r border-border bg-card w-full lg:w-96 xl:w-1/3",
-              !showMobileList && "hidden lg:flex",
-            )}
-          >
+          <div className={listPaneClass}>
             <MailListPane
               selectedMessageId={activeMessage?.id ?? null}
               selectedAccountId={selectedAccountId}
@@ -402,12 +409,7 @@ export function MailShell() {
             />
           </div>
 
-          <div
-            className={cn(
-              "flex w-0 max-w-full flex-1 min-h-0 min-w-0 overflow-hidden bg-muted/15",
-              showMobileList && "hidden lg:flex",
-            )}
-          >
+          <div className={detailPaneClass}>
             {deepLinkStatus === "not_found" ? (
               <MailEmptyPane variant="not_found" />
             ) : deepLinkStatus === "needs_reauth" ? (
@@ -442,7 +444,7 @@ export function MailShell() {
       {composeOpen && (
         <MailComposeSheet
           open={composeOpen}
-          onClose={handleCloseCompose}
+          onClose={closeCompose}
           mode={composeMode}
           accounts={accounts}
           preferredAccountId={selectedAccountId}

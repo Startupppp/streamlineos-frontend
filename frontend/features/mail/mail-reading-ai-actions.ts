@@ -1,5 +1,5 @@
 import type { AiAction } from "@/components/ai";
-import type { MailMessageDetail } from "@/types/mail";
+import type { ThreadMessageView } from "./mail-thread-view";
 
 export interface MailReplyParams {
   accountId: number;
@@ -25,7 +25,7 @@ interface BuildMailAiActionsParams {
   threadId: string;
   accountId: number;
   subject: string;
-  latestMessage: MailMessageDetail | undefined;
+  latestMessage: ThreadMessageView | undefined;
   onReply: (params: MailReplyParams) => void;
   summarize: (params: {
     accountId: number;

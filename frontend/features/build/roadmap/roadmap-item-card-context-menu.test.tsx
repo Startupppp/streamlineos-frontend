@@ -55,6 +55,12 @@ const ITEM_WITH_PROJECT = {
 } as unknown as ScorableRoadmapItem;
 
 describe("RoadmapItemCard — canonical link targets", () => {
+  it("keeps the item visually distinct from its muted roadmap column", () => {
+    const { container } = render(<RoadmapItemCard item={ITEM} onEdit={jest.fn()} onDelete={jest.fn()} />);
+    expect(container.firstElementChild).toHaveClass("bg-card", "border-border", "shadow-sm");
+    expect(screen.getByText("Bulk import")).toHaveClass("font-semibold");
+  });
+
   it("renders a View project link whose href is the canonical project path, not an ID-less copy", () => {
     render(<RoadmapItemCard item={ITEM_WITH_PROJECT} onEdit={jest.fn()} onDelete={jest.fn()} />);
     const link = screen.getByRole("link", { name: "View project" });

@@ -169,6 +169,12 @@ describe("query key prefix regression", () => {
     }
     expect(qc.getQueriesData({ queryKey: queryKeys.mail.messages() })).toHaveLength(3);
   });
+
+  it("messages() normalizes accountIds so order-independent callers hit the same cache entry", () => {
+    expect(queryKeys.mail.messages({ folder: "inbox", accountIds: [2, 1] })).toEqual(
+      queryKeys.mail.messages({ folder: "inbox", accountIds: [1, 2] }),
+    );
+  });
 });
 
 describe("useMailAction — markRead optimistic patch", () => {

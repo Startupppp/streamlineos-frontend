@@ -317,7 +317,26 @@ it("shows edit, delete and add-link controls when build:goals:manage is granted"
 
   expect(screen.getByText("Edit")).toBeInTheDocument();
   expect(screen.getByText("Delete")).toBeInTheDocument();
+  fireEvent.mouseDown(screen.getByRole("tab", { name: /Linked work/ }), { button: 0, ctrlKey: false });
   expect(screen.getByText("Link")).toBeInTheDocument();
+});
+
+it("separates key results, linked work, and updates into accessible tabs", () => {
+  mockUseGoal.mockReturnValue({
+    data: FULL_GOAL_DETAIL,
+    isLoading: false,
+    isError: false,
+    error: undefined,
+    refetch: jest.fn(),
+  });
+
+  render(<GoalDetailPage goalId={42} />);
+
+  expect(screen.getByRole("tab", { name: /Key results/ })).toHaveAttribute("aria-selected", "true");
+  fireEvent.mouseDown(screen.getByRole("tab", { name: /Linked work/ }), { button: 0, ctrlKey: false });
+  expect(screen.getByRole("tab", { name: /Linked work/ })).toHaveAttribute("aria-selected", "true");
+  fireEvent.mouseDown(screen.getByRole("tab", { name: /Updates/ }), { button: 0, ctrlKey: false });
+  expect(screen.getByRole("tab", { name: /Updates/ })).toHaveAttribute("aria-selected", "true");
 });
 
 it("e shortcut opens the edit form sheet when build:goals:manage is granted", () => {

@@ -16,20 +16,18 @@ import {
   Trash2,
 } from "lucide-react";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { useIsMobile } from "@/hooks/common/use-mobile";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  ResponsivePopover,
+  ResponsivePopoverContent,
+  ResponsivePopoverTrigger,
+} from "@/components/ui/responsive-popover";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useMailOverflowMode } from "./mail-presentation";
 import type { MailMessageSummary } from "@/types/mail";
 
 export interface MailReadingToolbarProps {
@@ -75,8 +73,9 @@ export const MailReadingToolbar = forwardRef<
   _,
 ) {
   const { iconRef: starRef, hoverHandlers: starHover } = useAnimatedIcon();
-  const isMobile = useIsMobile();
+  const overflowMode = useMailOverflowMode();
   const [aiPickerOpen, setAiPickerOpen] = useState(false);
+  const [overflowOpen, setOverflowOpen] = useState(false);
 
   const handleArchiveClick = useCallback(
     (e: React.MouseEvent) => {
@@ -102,7 +101,10 @@ export const MailReadingToolbar = forwardRef<
     [onToggleStar],
   );
 
-  if (isMobile) {
+  const handleOverflowClose = useCallback(() => setOverflowOpen(false), []);
+  const handleAiPickerOpen = useCallback(() => setAiPickerOpen(true), []);
+
+  if (overflowMode === "collapse") {
     return (
       <div className="flex shrink-0 items-center gap-1.5">
         <Button
@@ -116,8 +118,11 @@ export const MailReadingToolbar = forwardRef<
           <Reply className="size-4" aria-hidden="true" />
         </Button>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+        <ResponsivePopover
+          open={overflowOpen}
+          onOpenChange={setOverflowOpen}
+        >
+          <ResponsivePopoverTrigger asChild>
             <Button
               type="button"
               variant="outline"
@@ -127,41 +132,70 @@ export const MailReadingToolbar = forwardRef<
             >
               <MoreHorizontal className="size-4" aria-hidden="true" />
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="min-w-52">
-            <DropdownMenuItem onSelect={onArchive}>
-              <Archive aria-hidden="true" />
-              Archive
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={onMarkUnread}>
-              <MailOpen aria-hidden="true" />
-              Mark as unread
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={onToggleStar}>
-              <Star
-                className={cn(
-                  message.isStarred &&
-                    "fill-current text-status-warning-ink",
-                )}
-                aria-hidden="true"
-              />
-              {message.isStarred ? "Unstar" : "Star"}
-            </DropdownMenuItem>
-            {canAi && aiActions.length > 0 ? (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => setAiPickerOpen(true)}>
-                  AI assist
-                </DropdownMenuItem>
-              </>
-            ) : null}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive" onSelect={onTrash}>
-              <Trash2 aria-hidden="true" />
-              Move to trash
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          </ResponsivePopoverTrigger>
+          <ResponsivePopoverContent
+            title="Message actions"
+            align="end"
+            className="min-w-52"
+          >
+            <div
+              className="flex flex-col gap-0.5 p-1"
+              onClick={handleOverflowClose}
+            >
+              <button
+                type="button"
+                className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                onClick={onArchive}
+              >
+                <Archive className="size-4" aria-hidden="true" />
+                Archive
+              </button>
+              <button
+                type="button"
+                className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                onClick={onMarkUnread}
+              >
+                <MailOpen className="size-4" aria-hidden="true" />
+                Mark as unread
+              </button>
+              <button
+                type="button"
+                className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                onClick={onToggleStar}
+              >
+                <Star
+                  className={cn(
+                    "size-4",
+                    message.isStarred && "fill-current text-status-warning-ink",
+                  )}
+                  aria-hidden="true"
+                />
+                {message.isStarred ? "Unstar" : "Star"}
+              </button>
+              {canAi && aiActions.length > 0 ? (
+                <>
+                  <div className="my-1 h-px bg-border" />
+                  <button
+                    type="button"
+                    className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    onClick={handleAiPickerOpen}
+                  >
+                    AI assist
+                  </button>
+                </>
+              ) : null}
+              <div className="my-1 h-px bg-border" />
+              <button
+                type="button"
+                className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-destructive hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                onClick={onTrash}
+              >
+                <Trash2 className="size-4" aria-hidden="true" />
+                Move to trash
+              </button>
+            </div>
+          </ResponsivePopoverContent>
+        </ResponsivePopover>
         {canAi && aiActions.length > 0 ? (
           <AiActionsMenu
             actions={aiActions}

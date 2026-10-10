@@ -223,7 +223,7 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
           >
             <BuildPaginatedContent
               ariaLabel="Product roadmap items"
-              contentClassName="grid gap-3 md:grid-cols-2 xl:grid-cols-4"
+              contentClassName="grid content-start items-start gap-3 md:grid-cols-2 xl:grid-cols-4"
               footer={(
                 <TablePagination
                   mode="cursor"
@@ -237,15 +237,15 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
               )}
             >
                 {ROADMAP_COLUMNS.map((col) => (
-                  <PmPanel key={col.status} className="flex min-h-[120px] flex-col p-2">
-                    <div className="mb-2 flex items-center justify-between px-1">
-                      <span className="text-dense font-medium uppercase tracking-wide text-muted-foreground">{col.label}</span>
-                      <span className="min-w-[20px] rounded-full border border-border/50 bg-background/80 px-1.5 py-0.5 text-center text-dense tabular-nums text-muted-foreground">
+                  <PmPanel key={col.status} className="flex flex-col border-border/70 bg-muted/30 p-2.5 dark:bg-muted/20">
+                    <div className="mb-2.5 flex items-center justify-between gap-2 px-0.5">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-foreground">{col.label}</span>
+                      <span className="min-w-6 rounded-full border border-border bg-card px-1.5 py-0.5 text-center text-xs font-medium tabular-nums text-foreground" aria-label={`${(grouped[col.status] ?? []).length} items`}>
                         {(grouped[col.status] ?? []).length}
                       </span>
                     </div>
                     {(grouped[col.status] ?? []).length === 0 ? (
-                      <div className="rounded-lg border border-dashed border-border/60 py-6 text-center text-xs text-muted-foreground">Empty</div>
+                      <div className="rounded-lg border border-dashed border-border/70 bg-background/40 px-3 py-5 text-center text-xs text-muted-foreground">No items</div>
                     ) : (
                       <PmStaggerList className="flex flex-col gap-1.5">
                         {(grouped[col.status] ?? []).map((item) => (

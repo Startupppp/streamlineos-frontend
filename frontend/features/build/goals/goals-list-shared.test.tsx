@@ -80,6 +80,7 @@ jest.mock("./constants", () => ({
     { value: "team", label: "Team" },
     { value: "individual", label: "Individual" },
   ],
+  LEVEL_LABEL: { company: "Company", team: "Team", individual: "Individual" },
 }));
 
 function baseGoal(overrides: Partial<GoalListItem> = {}): GoalListItem {
@@ -203,5 +204,19 @@ describe("GoalCard right-click mirrors the row menu (BSN-GOALS-CONTEXT)", () => 
     fireEvent.contextMenu(container.firstElementChild!);
     expect(screen.queryByText("Edit")).not.toBeInTheDocument();
     expect(screen.queryByText("Delete")).not.toBeInTheDocument();
+  });
+});
+
+describe("GoalCard visual identity and actions", () => {
+  it("keeps the objective level on the card after the product list removes group headings", () => {
+    render(<GoalCard goal={baseGoal({ level: "team", title: "Ship onboarding" })} />);
+    expect(screen.getByText("Team objective")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Ship onboarding" })).toHaveAttribute("href", "/build/goals/1");
+  });
+
+  it("pairs both menu actions with icons while retaining readable labels", () => {
+    render(<GoalCard goal={baseGoal()} onEdit={jest.fn()} onDelete={jest.fn()} />);
+    expect(screen.getByRole("button", { name: "Edit" }).querySelector("svg")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Delete" }).querySelector("svg")).toBeInTheDocument();
   });
 });
