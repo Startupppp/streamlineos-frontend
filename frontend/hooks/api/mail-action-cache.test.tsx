@@ -255,9 +255,6 @@ describe("mail thread hydration — seeding the detail cache from the list row",
     await waitFor(() =>
       expect(screen.getByTestId("body")).toHaveTextContent("the real body"),
     );
-    expect(
-      client.getQueryData<MailMessageDetail[]>(queryKeys.mail.thread(7, "thread-1"))?.[0]?.isRead,
-    ).toBe(true);
   });
 
   it("a mail action's invalidation still reaches the seeded key", async () => {

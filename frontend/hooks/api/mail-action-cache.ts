@@ -42,10 +42,7 @@ export async function applyMailActionToCaches(
 
   const hasCacheData = (query: { state: { data: unknown } }) =>
     query.state.data !== undefined;
-  await qc.cancelQueries({
-    queryKey: directoryAndOwnershipQueryKeys.mail.all,
-    predicate: hasCacheData,
-  });
+  await qc.cancelQueries({ queryKey: messagesPrefix, predicate: hasCacheData });
   await qc.cancelQueries({ queryKey: unifiedPrefix, predicate: hasCacheData });
 
   const snapshots: MailCacheSnapshot[] = [];
