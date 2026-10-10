@@ -31,6 +31,22 @@ describe("useMailPresentation — initial state", () => {
     const { result } = setup(false, false);
     expect(result.current.composeMode.type).toBe("compose");
   });
+
+  it("accounts sheet is closed and not dismissed at initial load", () => {
+    const { result } = setup(false, false);
+    expect(result.current.accountsSheetOpen).toBe(false);
+    expect(result.current.accountsSheetDismissed).toBe(false);
+  });
+
+  it("summary sheet is closed at initial load", () => {
+    const { result } = setup(false, false);
+    expect(result.current.summarySheetOpen).toBe(false);
+  });
+
+  it("recent drawer is closed at initial load", () => {
+    const { result } = setup(false, false);
+    expect(result.current.recentDrawerOpen).toBe(false);
+  });
 });
 
 describe("useMailPresentation — pane transitions", () => {
@@ -97,6 +113,61 @@ describe("useMailPresentation — pane class derivation", () => {
     expect(result.current.detailPaneClass).toContain("lg:flex");
     act(() => result.current.selectMessage());
     expect(result.current.listPaneClass).toContain("lg:flex");
+  });
+});
+
+describe("useMailPresentation — accounts sheet", () => {
+  it("BITE: openAccountsSheet opens the accounts sheet and clears dismissed", () => {
+    const { result } = setup(false, false);
+    act(() => result.current.openAccountsSheet());
+    expect(result.current.accountsSheetOpen).toBe(true);
+    expect(result.current.accountsSheetDismissed).toBe(false);
+  });
+
+  it("closeAccountsSheet closes the accounts sheet and marks it dismissed", () => {
+    const { result } = setup(false, false);
+    act(() => result.current.openAccountsSheet());
+    act(() => result.current.closeAccountsSheet());
+    expect(result.current.accountsSheetOpen).toBe(false);
+    expect(result.current.accountsSheetDismissed).toBe(true);
+  });
+
+  it("re-opening after dismissal clears the dismissed flag", () => {
+    const { result } = setup(false, false);
+    act(() => result.current.openAccountsSheet());
+    act(() => result.current.closeAccountsSheet());
+    act(() => result.current.openAccountsSheet());
+    expect(result.current.accountsSheetDismissed).toBe(false);
+  });
+});
+
+describe("useMailPresentation — summary sheet", () => {
+  it("BITE: openSummarySheet opens the summary sheet", () => {
+    const { result } = setup(false, false);
+    act(() => result.current.openSummarySheet());
+    expect(result.current.summarySheetOpen).toBe(true);
+  });
+
+  it("closeSummarySheet closes the summary sheet", () => {
+    const { result } = setup(false, false);
+    act(() => result.current.openSummarySheet());
+    act(() => result.current.closeSummarySheet());
+    expect(result.current.summarySheetOpen).toBe(false);
+  });
+});
+
+describe("useMailPresentation — recent drawer", () => {
+  it("BITE: openRecentDrawer opens the recent drawer", () => {
+    const { result } = setup(false, false);
+    act(() => result.current.openRecentDrawer());
+    expect(result.current.recentDrawerOpen).toBe(true);
+  });
+
+  it("closeRecentDrawer closes the recent drawer", () => {
+    const { result } = setup(false, false);
+    act(() => result.current.openRecentDrawer());
+    act(() => result.current.closeRecentDrawer());
+    expect(result.current.recentDrawerOpen).toBe(false);
   });
 });
 

@@ -14,6 +14,18 @@ function normalizeMailListingParams(
   return out;
 }
 
+export function mailListingSearchParams(
+  params: MailMessagesParams,
+  cursor?: string,
+): URLSearchParams {
+  const sp = new URLSearchParams();
+  for (const [key, value] of Object.entries(normalizeMailListingParams(params))) {
+    if (key !== "accountIds") sp.set(key, String(value));
+  }
+  if (cursor !== undefined) sp.set("cursor", cursor);
+  return sp;
+}
+
 export const directoryAndOwnershipQueryKeys = {
   platform: {
     all: [...base, "platform"] as const,

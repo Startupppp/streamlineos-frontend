@@ -35,7 +35,7 @@ const mailSendResultContract = lazyContract(() =>
 const mailActionSuccessContract = lazyContract(() =>
   import("@/hooks/api/mail-schema").then((m) => m.mailActionSuccessContract),
 );
-import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
+import { directoryAndOwnershipQueryKeys, mailListingSearchParams } from "@/lib/query-keys/directory-and-ownership";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 import { useCan } from "@/hooks/api/access";
 import type {
@@ -68,12 +68,7 @@ export function useMailMessages(params: MailMessagesParams, options?: { enabled?
   return useInfiniteQuery({
     queryKey: directoryAndOwnershipQueryKeys.mail.messages(params),
     queryFn: ({ pageParam, signal }) => {
-      const searchParams = new URLSearchParams();
-      if (params.folder) searchParams.set("folder", params.folder);
-      if (params.accountId !== undefined) searchParams.set("accountId", String(params.accountId));
-      if (params.q) searchParams.set("q", params.q);
-      if (params.limit) searchParams.set("limit", String(params.limit));
-      if (pageParam !== undefined) searchParams.set("cursor", String(pageParam));
+      const searchParams = mailListingSearchParams(params, pageParam);
       return apiClient.get<MailListResponse>(`/mail/messages?${searchParams.toString()}`, undefined, signal, mailListResponseContract);
     },
     initialPageParam: NO_CURSOR_YET,

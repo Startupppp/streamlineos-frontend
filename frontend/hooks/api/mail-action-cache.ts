@@ -281,3 +281,20 @@ export function invalidateAfterMailSend(qc: QueryClient): void {
   void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.mail.all });
   void qc.invalidateQueries({ queryKey: platformCoreQueryKeys.inbox.all });
 }
+
+const SEEDED_UPDATED_AT = 0;
+function mailSummaryToDetail(summary: MailMessageSummary): MailMessageDetail {
+  return { ...summary, cc: [], bodyHtml: null, bodyText: null, attachments: [] };
+}
+export function seedMailDetailFromSummary(qc: QueryClient, summary: MailMessageSummary): void {
+  const seeded = mailSummaryToDetail(summary);
+  if (summary.threadId) {
+    const key = directoryAndOwnershipQueryKeys.mail.thread(summary.accountId, summary.threadId);
+    if (qc.getQueryData(key) === undefined)
+      qc.setQueryData<MailMessageDetail[]>(key, [seeded], { updatedAt: SEEDED_UPDATED_AT });
+    return;
+  }
+  const key = directoryAndOwnershipQueryKeys.mail.message(summary.accountId, summary.id);
+  if (qc.getQueryData(key) === undefined)
+    qc.setQueryData<MailMessageDetail>(key, seeded, { updatedAt: SEEDED_UPDATED_AT });
+}

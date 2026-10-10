@@ -11,13 +11,23 @@ interface MailPresentationState {
   pane: MailPane;
   composeOpen: boolean;
   composeMode: MailComposeMode;
+  accountsSheetOpen: boolean;
+  accountsSheetDismissed: boolean;
+  summarySheetOpen: boolean;
+  recentDrawerOpen: boolean;
 }
 
 type MailPresentationAction =
   | { type: "SELECT_MESSAGE" }
   | { type: "BACK_TO_LIST" }
   | { type: "OPEN_COMPOSE"; mode: MailComposeMode }
-  | { type: "CLOSE_COMPOSE" };
+  | { type: "CLOSE_COMPOSE" }
+  | { type: "OPEN_ACCOUNTS_SHEET" }
+  | { type: "CLOSE_ACCOUNTS_SHEET" }
+  | { type: "OPEN_SUMMARY_SHEET" }
+  | { type: "CLOSE_SUMMARY_SHEET" }
+  | { type: "OPEN_RECENT_DRAWER" }
+  | { type: "CLOSE_RECENT_DRAWER" };
 
 export const MAIL_COMPOSE_FAB_CLASS =
   "fixed right-3 bottom-[calc(4rem+0.375rem+env(safe-area-inset-bottom))] z-50 size-12 rounded-full shadow-lg md:hidden";
@@ -45,6 +55,18 @@ function mailPresentationReducer(
       return { ...state, composeOpen: true, composeMode: action.mode };
     case "CLOSE_COMPOSE":
       return { ...state, composeOpen: false };
+    case "OPEN_ACCOUNTS_SHEET":
+      return { ...state, accountsSheetOpen: true, accountsSheetDismissed: false };
+    case "CLOSE_ACCOUNTS_SHEET":
+      return { ...state, accountsSheetOpen: false, accountsSheetDismissed: true };
+    case "OPEN_SUMMARY_SHEET":
+      return { ...state, summarySheetOpen: true };
+    case "CLOSE_SUMMARY_SHEET":
+      return { ...state, summarySheetOpen: false };
+    case "OPEN_RECENT_DRAWER":
+      return { ...state, recentDrawerOpen: true };
+    case "CLOSE_RECENT_DRAWER":
+      return { ...state, recentDrawerOpen: false };
     default:
       return state;
   }
@@ -58,6 +80,10 @@ function buildInitialState(
     pane: startOnDetail ? "detail" : "list",
     composeOpen: startWithCompose,
     composeMode: DEFAULT_COMPOSE_MODE,
+    accountsSheetOpen: false,
+    accountsSheetDismissed: false,
+    summarySheetOpen: false,
+    recentDrawerOpen: false,
   };
 }
 
@@ -101,16 +127,50 @@ export function useMailPresentation(
     () => dispatch({ type: "CLOSE_COMPOSE" }),
     [],
   );
+  const openAccountsSheet = useCallback(
+    () => dispatch({ type: "OPEN_ACCOUNTS_SHEET" }),
+    [],
+  );
+  const closeAccountsSheet = useCallback(
+    () => dispatch({ type: "CLOSE_ACCOUNTS_SHEET" }),
+    [],
+  );
+  const openSummarySheet = useCallback(
+    () => dispatch({ type: "OPEN_SUMMARY_SHEET" }),
+    [],
+  );
+  const closeSummarySheet = useCallback(
+    () => dispatch({ type: "CLOSE_SUMMARY_SHEET" }),
+    [],
+  );
+  const openRecentDrawer = useCallback(
+    () => dispatch({ type: "OPEN_RECENT_DRAWER" }),
+    [],
+  );
+  const closeRecentDrawer = useCallback(
+    () => dispatch({ type: "CLOSE_RECENT_DRAWER" }),
+    [],
+  );
 
   return {
     pane: state.pane,
     composeOpen: state.composeOpen,
     composeMode: state.composeMode,
+    accountsSheetOpen: state.accountsSheetOpen,
+    accountsSheetDismissed: state.accountsSheetDismissed,
+    summarySheetOpen: state.summarySheetOpen,
+    recentDrawerOpen: state.recentDrawerOpen,
     listPaneClass,
     detailPaneClass,
     selectMessage,
     backToList,
     openCompose,
     closeCompose,
+    openAccountsSheet,
+    closeAccountsSheet,
+    openSummarySheet,
+    closeSummarySheet,
+    openRecentDrawer,
+    closeRecentDrawer,
   };
 }
