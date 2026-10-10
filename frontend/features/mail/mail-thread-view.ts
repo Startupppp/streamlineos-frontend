@@ -76,7 +76,7 @@ function toMessageView(m: MailMessageDetail): ThreadMessageView {
   };
 }
 
-export function readThreadView(
+function readThreadView(
   messages: MailMessageDetail[] | undefined,
   isFetching: boolean,
   isError: boolean,

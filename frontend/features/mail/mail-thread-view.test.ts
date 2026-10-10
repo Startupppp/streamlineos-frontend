@@ -1,4 +1,5 @@
-import { readThreadView, type ThreadMessageView } from "./mail-thread-view";
+import { renderHook } from "@testing-library/react";
+import { useMailThreadView } from "./mail-thread-view";
 import type { MailMessageDetail } from "@/types/mail";
 
 const BASE: MailMessageDetail = {
@@ -20,253 +21,308 @@ const BASE: MailMessageDetail = {
   attachments: [],
 };
 
-describe("readThreadView — hydration status", () => {
+let mockThreadResult: {
+  data: MailMessageDetail[] | undefined;
+  isLoading: boolean;
+  isFetching: boolean;
+  isError: boolean;
+  error: unknown;
+  refetch: () => void;
+};
+
+jest.mock("@/hooks/api/mail", () => ({
+  useMailThread: () => mockThreadResult,
+  useMailMessage: () => ({
+    data: undefined,
+    isLoading: false,
+    isFetching: false,
+    isError: false,
+    error: null,
+    refetch: jest.fn(),
+  }),
+}));
+
+function renderWith(
+  messages: MailMessageDetail[] | undefined,
+  opts: { isFetching?: boolean; isError?: boolean; error?: unknown } = {},
+) {
+  mockThreadResult = {
+    data: messages,
+    isLoading: false,
+    isFetching: opts.isFetching ?? false,
+    isError: opts.isError ?? false,
+    error: opts.error ?? null,
+    refetch: jest.fn(),
+  };
+  const { result } = renderHook(() =>
+    useMailThreadView({ accountId: 7, threadId: "t1", messageId: undefined }),
+  );
+  return result.current;
+}
+
+describe("useMailThreadView — hydration status", () => {
   it("returns seeded status when messages all have null bodies and fetch is not active", () => {
-    const view = readThreadView([BASE], false, false, null);
+    const view = renderWith([BASE]);
     expect(view.status).toBe("seeded");
     expect(view.messages).toHaveLength(1);
   });
 
   it("returns hydrating status when messages all have null bodies and fetch is active", () => {
-    const view = readThreadView([BASE], true, false, null);
+    const view = renderWith([BASE], { isFetching: true });
     expect(view.status).toBe("hydrating");
   });
 
   it("returns hydrated status when at least one message has an html body", () => {
-    const view = readThreadView([{ ...BASE, bodyHtml: "<p>content</p>" }], false, false, null);
+    const view = renderWith([{ ...BASE, bodyHtml: "<p>content</p>" }]);
     expect(view.status).toBe("hydrated");
   });
 
   it("returns hydrated status when at least one message has a text body", () => {
-    const view = readThreadView([{ ...BASE, bodyText: "plain text" }], false, false, null);
+    const view = renderWith([{ ...BASE, bodyText: "plain text" }]);
     expect(view.status).toBe("hydrated");
   });
 
   it("returns hydrated status for an empty message list when not fetching", () => {
-    const view = readThreadView([], false, false, null);
+    const view = renderWith([]);
     expect(view.status).toBe("hydrated");
     expect(view.messages).toHaveLength(0);
   });
 
   it("returns hydrating status for an empty message list when fetching", () => {
-    const view = readThreadView([], true, false, null);
+    const view = renderWith([], { isFetching: true });
     expect(view.status).toBe("hydrating");
   });
 
   it("returns hydrating when undefined messages and fetching — seeded→hydrated transition start", () => {
-    const view = readThreadView(undefined, true, false, null);
+    const view = renderWith(undefined, { isFetching: true });
     expect(view.status).toBe("hydrating");
   });
 
   it("returns error status when isError is true, attaches the error", () => {
     const err = new Error("fetch failed");
-    const view = readThreadView(undefined, false, true, err);
+    const view = renderWith(undefined, { isError: true, error: err });
     expect(view.status).toBe("error");
     expect(view.error).toBe(err);
     expect(view.messages).toHaveLength(0);
   });
 
   it("error status takes precedence over a non-empty message list", () => {
-    const view = readThreadView([BASE], false, true, new Error("oops"));
+    const view = renderWith([BASE], { isError: true, error: new Error("oops") });
     expect(view.status).toBe("error");
     expect(view.messages).toHaveLength(0);
   });
 });
 
-describe("readThreadView — body fallback and hasBody", () => {
+describe("useMailThreadView — body fallback and hasBody", () => {
   it("null html and null text → safeBodyHtml null, bodyText null, hasBody false", () => {
-    const [msg] = readThreadView([BASE], false, false, null).messages as [ThreadMessageView];
+    const view = renderWith([BASE]);
+    const msg = view.messages[0]!;
     expect(msg.safeBodyHtml).toBeNull();
     expect(msg.bodyText).toBeNull();
     expect(msg.hasBody).toBe(false);
   });
 
   it("text-only message → bodyText preserved, safeBodyHtml null, hasBody true", () => {
-    const [msg] = readThreadView([{ ...BASE, bodyText: "plain text body" }], false, false, null).messages as [ThreadMessageView];
+    const view = renderWith([{ ...BASE, bodyText: "plain text body" }]);
+    const msg = view.messages[0]!;
     expect(msg.safeBodyHtml).toBeNull();
     expect(msg.bodyText).toBe("plain text body");
     expect(msg.hasBody).toBe(true);
   });
 
   it("html body → safeBodyHtml non-null, hasBody true", () => {
-    const [msg] = readThreadView([{ ...BASE, bodyHtml: "<p>Hello</p>" }], false, false, null).messages as [ThreadMessageView];
+    const view = renderWith([{ ...BASE, bodyHtml: "<p>Hello</p>" }]);
+    const msg = view.messages[0]!;
     expect(msg.safeBodyHtml).not.toBeNull();
     expect(msg.hasBody).toBe(true);
   });
 
   it("preserves bodyText alongside a null html body without modification", () => {
-    const [msg] = readThreadView([{ ...BASE, bodyText: "raw text\nline two" }], false, false, null).messages as [ThreadMessageView];
-    expect(msg.bodyText).toBe("raw text\nline two");
+    const view = renderWith([{ ...BASE, bodyText: "raw text\nline two" }]);
+    expect(view.messages[0]!.bodyText).toBe("raw text\nline two");
   });
 });
 
-describe("readThreadView — HTML sanitization (moved from mail-html-viewer)", () => {
+describe("useMailThreadView — HTML sanitization (moved from mail-html-viewer)", () => {
   it("strips <script> tags and their content", () => {
-    const [msg] = readThreadView([{ ...BASE, bodyHtml: '<p>Safe</p><script>alert("xss")</script>' }], false, false, null).messages as [ThreadMessageView];
-    expect(msg.safeBodyHtml).not.toContain("<script");
-    expect(msg.safeBodyHtml).not.toContain("alert");
-    expect(msg.safeBodyHtml).toContain("Safe");
+    const view = renderWith([{ ...BASE, bodyHtml: '<p>Safe</p><script>alert("xss")</script>' }]);
+    const html = view.messages[0]!.safeBodyHtml;
+    expect(html).not.toContain("<script");
+    expect(html).not.toContain("alert");
+    expect(html).toContain("Safe");
   });
 
   it("strips <iframe> elements", () => {
-    const [msg] = readThreadView([{ ...BASE, bodyHtml: '<p>Before</p><iframe src="https://evil.com"></iframe><p>After</p>' }], false, false, null).messages as [ThreadMessageView];
-    expect(msg.safeBodyHtml).not.toContain("<iframe");
-    expect(msg.safeBodyHtml).toContain("Before");
-    expect(msg.safeBodyHtml).toContain("After");
+    const view = renderWith([{ ...BASE, bodyHtml: '<p>Before</p><iframe src="https://evil.com"></iframe><p>After</p>' }]);
+    const html = view.messages[0]!.safeBodyHtml;
+    expect(html).not.toContain("<iframe");
+    expect(html).toContain("Before");
+    expect(html).toContain("After");
   });
 
   it("strips <object> elements", () => {
-    const [msg] = readThreadView([{ ...BASE, bodyHtml: '<p>Before</p><object data="https://evil.com/plugin"></object>' }], false, false, null).messages as [ThreadMessageView];
-    expect(msg.safeBodyHtml).not.toContain("<object");
-    expect(msg.safeBodyHtml).toContain("Before");
+    const view = renderWith([{ ...BASE, bodyHtml: '<p>Before</p><object data="https://evil.com/plugin"></object>' }]);
+    const html = view.messages[0]!.safeBodyHtml;
+    expect(html).not.toContain("<object");
+    expect(html).toContain("Before");
   });
 
   it("strips onerror event handler from img", () => {
-    const [msg] = readThreadView([{ ...BASE, bodyHtml: '<img src="https://example.com/img.png" onerror="alert(1)" alt="img">' }], false, false, null).messages as [ThreadMessageView];
-    expect(msg.safeBodyHtml).not.toContain("onerror");
+    const view = renderWith([{ ...BASE, bodyHtml: '<img src="https://example.com/img.png" onerror="alert(1)" alt="img">' }]);
+    expect(view.messages[0]!.safeBodyHtml).not.toContain("onerror");
   });
 
   it("strips onclick event handler from a paragraph", () => {
-    const [msg] = readThreadView([{ ...BASE, bodyHtml: '<p onclick="stealData()">Click me</p>' }], false, false, null).messages as [ThreadMessageView];
-    expect(msg.safeBodyHtml).not.toContain("onclick");
-    expect(msg.safeBodyHtml).toContain("Click me");
+    const view = renderWith([{ ...BASE, bodyHtml: '<p onclick="stealData()">Click me</p>' }]);
+    const html = view.messages[0]!.safeBodyHtml;
+    expect(html).not.toContain("onclick");
+    expect(html).toContain("Click me");
   });
 
   it("strips onload event handler", () => {
-    const [msg] = readThreadView([{ ...BASE, bodyHtml: '<body onload="xss()"><p>Content</p></body>' }], false, false, null).messages as [ThreadMessageView];
-    expect(msg.safeBodyHtml).not.toContain("onload");
-    expect(msg.safeBodyHtml).toContain("Content");
+    const view = renderWith([{ ...BASE, bodyHtml: '<body onload="xss()"><p>Content</p></body>' }]);
+    const html = view.messages[0]!.safeBodyHtml;
+    expect(html).not.toContain("onload");
+    expect(html).toContain("Content");
   });
 
   it("removes href with javascript: scheme", () => {
-    const [msg] = readThreadView([{ ...BASE, bodyHtml: '<a href="javascript:alert(1)">Click</a>' }], false, false, null).messages as [ThreadMessageView];
-    expect(msg.safeBodyHtml).not.toContain("javascript:");
-    expect(msg.safeBodyHtml).toContain("Click");
+    const view = renderWith([{ ...BASE, bodyHtml: '<a href="javascript:alert(1)">Click</a>' }]);
+    const html = view.messages[0]!.safeBodyHtml;
+    expect(html).not.toContain("javascript:");
+    expect(html).toContain("Click");
   });
 
   it("removes href with JAVASCRIPT: (uppercase) scheme", () => {
-    const [msg] = readThreadView([{ ...BASE, bodyHtml: '<a href="JAVASCRIPT:alert(1)">Link</a>' }], false, false, null).messages as [ThreadMessageView];
-    expect(msg.safeBodyHtml).not.toContain("JAVASCRIPT:");
-    expect(msg.safeBodyHtml).toContain("Link");
+    const view = renderWith([{ ...BASE, bodyHtml: '<a href="JAVASCRIPT:alert(1)">Link</a>' }]);
+    const html = view.messages[0]!.safeBodyHtml;
+    expect(html).not.toContain("JAVASCRIPT:");
+    expect(html).toContain("Link");
   });
 
   it("removes href with data: scheme on anchor", () => {
-    const [msg] = readThreadView([{ ...BASE, bodyHtml: '<a href="data:text/html,<script>alert(1)</script>">Link</a>' }], false, false, null).messages as [ThreadMessageView];
-    expect(msg.safeBodyHtml).not.toContain("data:text/html");
-    expect(msg.safeBodyHtml).toContain("Link");
+    const view = renderWith([{ ...BASE, bodyHtml: '<a href="data:text/html,<script>alert(1)</script>">Link</a>' }]);
+    const html = view.messages[0]!.safeBodyHtml;
+    expect(html).not.toContain("data:text/html");
+    expect(html).toContain("Link");
   });
 
   it("preserves paragraph text through sanitization", () => {
-    const [msg] = readThreadView([{ ...BASE, bodyHtml: "<p>Hello <strong>world</strong></p>" }], false, false, null).messages as [ThreadMessageView];
-    expect(msg.safeBodyHtml).toContain("Hello");
-    expect(msg.safeBodyHtml).toContain("world");
+    const view = renderWith([{ ...BASE, bodyHtml: "<p>Hello <strong>world</strong></p>" }]);
+    const html = view.messages[0]!.safeBodyHtml;
+    expect(html).toContain("Hello");
+    expect(html).toContain("world");
   });
 
   it("preserves table structure", () => {
-    const [msg] = readThreadView([{ ...BASE, bodyHtml: "<table><tr><td>Cell A</td><td>Cell B</td></tr></table>" }], false, false, null).messages as [ThreadMessageView];
-    expect(msg.safeBodyHtml).toContain("<table");
-    expect(msg.safeBodyHtml).toContain("Cell A");
+    const view = renderWith([{ ...BASE, bodyHtml: "<table><tr><td>Cell A</td><td>Cell B</td></tr></table>" }]);
+    const html = view.messages[0]!.safeBodyHtml;
+    expect(html).toContain("<table");
+    expect(html).toContain("Cell A");
   });
 
   it("preserves blockquote", () => {
-    const [msg] = readThreadView([{ ...BASE, bodyHtml: "<blockquote><p>Quoted text</p></blockquote>" }], false, false, null).messages as [ThreadMessageView];
-    expect(msg.safeBodyHtml).toContain("<blockquote");
+    const view = renderWith([{ ...BASE, bodyHtml: "<blockquote><p>Quoted text</p></blockquote>" }]);
+    expect(view.messages[0]!.safeBodyHtml).toContain("<blockquote");
   });
 
   it("BITE PROOF — script tags are really stripped, not just obscured", () => {
-    const [msg] = readThreadView([{ ...BASE, bodyHtml: "<div><script>window.__XSS__=1</script><p>Safe</p></div>" }], false, false, null).messages as [ThreadMessageView];
-    expect(msg.safeBodyHtml).not.toMatch(/<script/i);
-    expect(msg.safeBodyHtml).not.toContain("__XSS__");
+    const view = renderWith([{ ...BASE, bodyHtml: "<div><script>window.__XSS__=1</script><p>Safe</p></div>" }]);
+    const html = view.messages[0]!.safeBodyHtml;
+    expect(html).not.toMatch(/<script/i);
+    expect(html).not.toContain("__XSS__");
     expect(typeof (window as unknown as Record<string, unknown>)["__XSS__"]).toBe("undefined");
   });
 
   it("malformed HTML does not throw and produces sanitized output", () => {
     expect(() => {
-      readThreadView([{ ...BASE, bodyHtml: "<p>unclosed<b>bold<div>nested" }], false, false, null);
+      renderWith([{ ...BASE, bodyHtml: "<p>unclosed<b>bold<div>nested" }]);
     }).not.toThrow();
-    const [msg] = readThreadView([{ ...BASE, bodyHtml: "<p>unclosed<b>bold<div>nested" }], false, false, null).messages as [ThreadMessageView];
-    expect(msg.safeBodyHtml).toContain("bold");
+    const view = renderWith([{ ...BASE, bodyHtml: "<p>unclosed<b>bold<div>nested" }]);
+    expect(view.messages[0]!.safeBodyHtml).toContain("bold");
   });
 });
 
-describe("readThreadView — link and image hardening", () => {
+describe("useMailThreadView — link and image hardening", () => {
   it("adds target=_blank and rel=noopener noreferrer to all links", () => {
-    const [msg] = readThreadView([{ ...BASE, bodyHtml: '<a href="https://example.com">Visit</a>' }], false, false, null).messages as [ThreadMessageView];
-    expect(msg.safeBodyHtml).toContain('target="_blank"');
-    expect(msg.safeBodyHtml).toContain("noopener");
-    expect(msg.safeBodyHtml).toContain("noreferrer");
+    const view = renderWith([{ ...BASE, bodyHtml: '<a href="https://example.com">Visit</a>' }]);
+    const html = view.messages[0]!.safeBodyHtml;
+    expect(html).toContain('target="_blank"');
+    expect(html).toContain("noopener");
+    expect(html).toContain("noreferrer");
   });
 
   it("adds target and rel even when link has no existing attributes", () => {
-    const [msg] = readThreadView([{ ...BASE, bodyHtml: '<a href="https://safe.org">Link</a>' }], false, false, null).messages as [ThreadMessageView];
-    expect(msg.safeBodyHtml).toContain('target="_blank"');
+    const view = renderWith([{ ...BASE, bodyHtml: '<a href="https://safe.org">Link</a>' }]);
+    expect(view.messages[0]!.safeBodyHtml).toContain('target="_blank"');
   });
 
   it("adds loading=lazy and referrerpolicy=no-referrer to remote images", () => {
-    const [msg] = readThreadView([{ ...BASE, bodyHtml: '<img src="https://tracker.evil.com/pixel.gif" alt="pixel">' }], false, false, null).messages as [ThreadMessageView];
-    expect(msg.safeBodyHtml).toContain('loading="lazy"');
-    expect(msg.safeBodyHtml).toContain('referrerpolicy="no-referrer"');
+    const view = renderWith([{ ...BASE, bodyHtml: '<img src="https://tracker.evil.com/pixel.gif" alt="pixel">' }]);
+    const html = view.messages[0]!.safeBodyHtml;
+    expect(html).toContain('loading="lazy"');
+    expect(html).toContain('referrerpolicy="no-referrer"');
   });
 
   it("does not strip inline data: images", () => {
     const dataUri = "data:image/png;base64,abc123==";
-    const [msg] = readThreadView([{ ...BASE, bodyHtml: `<img src="${dataUri}" alt="inline">` }], false, false, null).messages as [ThreadMessageView];
-    expect(msg.safeBodyHtml).toContain(dataUri);
+    const view = renderWith([{ ...BASE, bodyHtml: `<img src="${dataUri}" alt="inline">` }]);
+    expect(view.messages[0]!.safeBodyHtml).toContain(dataUri);
   });
 });
 
-describe("readThreadView — remote image count and blocked image count", () => {
+describe("useMailThreadView — remote image count and blocked image count", () => {
   it("counts zero remote images when body has no images", () => {
-    const [msg] = readThreadView([{ ...BASE, bodyHtml: "<p>text only</p>" }], false, false, null).messages as [ThreadMessageView];
-    expect(msg.remoteImageCount).toBe(0);
+    const view = renderWith([{ ...BASE, bodyHtml: "<p>text only</p>" }]);
+    expect(view.messages[0]!.remoteImageCount).toBe(0);
   });
 
   it("counts one remote image for a single https img src", () => {
-    const [msg] = readThreadView([{ ...BASE, bodyHtml: '<img src="https://example.com/logo.png">' }], false, false, null).messages as [ThreadMessageView];
-    expect(msg.remoteImageCount).toBe(1);
+    const view = renderWith([{ ...BASE, bodyHtml: '<img src="https://example.com/logo.png">' }]);
+    expect(view.messages[0]!.remoteImageCount).toBe(1);
   });
 
   it("counts multiple remote images", () => {
-    const [msg] = readThreadView([{ ...BASE, bodyHtml: '<img src="https://a.com/1.png"><img src="https://b.com/2.png">' }], false, false, null).messages as [ThreadMessageView];
-    expect(msg.remoteImageCount).toBe(2);
+    const view = renderWith([{ ...BASE, bodyHtml: '<img src="https://a.com/1.png"><img src="https://b.com/2.png">' }]);
+    expect(view.messages[0]!.remoteImageCount).toBe(2);
   });
 
   it("does not count data: URIs as remote images", () => {
-    const [msg] = readThreadView([{ ...BASE, bodyHtml: '<img src="data:image/png;base64,abc">' }], false, false, null).messages as [ThreadMessageView];
-    expect(msg.remoteImageCount).toBe(0);
+    const view = renderWith([{ ...BASE, bodyHtml: '<img src="data:image/png;base64,abc">' }]);
+    expect(view.messages[0]!.remoteImageCount).toBe(0);
   });
 
   it("blocked image count is zero because remote images load with privacy hardening, not blocking", () => {
-    const [msg] = readThreadView([{ ...BASE, bodyHtml: '<img src="https://tracker.example.com/pixel.gif">' }], false, false, null).messages as [ThreadMessageView];
-    expect(msg.blockedImageCount).toBe(0);
+    const view = renderWith([{ ...BASE, bodyHtml: '<img src="https://tracker.example.com/pixel.gif">' }]);
+    expect(view.messages[0]!.blockedImageCount).toBe(0);
   });
 
   it("remote images count is zero when body is null", () => {
-    const [msg] = readThreadView([BASE], false, false, null).messages as [ThreadMessageView];
-    expect(msg.remoteImageCount).toBe(0);
+    const view = renderWith([BASE]);
+    expect(view.messages[0]!.remoteImageCount).toBe(0);
   });
 });
 
-describe("readThreadView — attachment descriptors", () => {
+describe("useMailThreadView — attachment descriptors", () => {
   it("passes attachments through unchanged", () => {
     const attachments = [
       { id: "att-1", fileName: "doc.pdf", mimeType: "application/pdf", sizeBytes: 102400 },
     ];
-    const [msg] = readThreadView([{ ...BASE, attachments }], false, false, null).messages as [ThreadMessageView];
-    expect(msg.attachments).toEqual(attachments);
+    const view = renderWith([{ ...BASE, attachments }]);
+    expect(view.messages[0]!.attachments).toEqual(attachments);
   });
 
   it("empty attachments array passes through", () => {
-    const [msg] = readThreadView([BASE], false, false, null).messages as [ThreadMessageView];
-    expect(msg.attachments).toEqual([]);
+    const view = renderWith([BASE]);
+    expect(view.messages[0]!.attachments).toEqual([]);
   });
 });
 
-describe("readThreadView — message ordering", () => {
+describe("useMailThreadView — message ordering", () => {
   it("preserves the order of messages", () => {
     const m1 = { ...BASE, id: "msg-1", bodyHtml: "<p>first</p>" };
     const m2 = { ...BASE, id: "msg-2", bodyHtml: "<p>second</p>" };
-    const view = readThreadView([m1, m2], false, false, null);
+    const view = renderWith([m1, m2]);
     expect(view.messages[0]?.id).toBe("msg-1");
     expect(view.messages[1]?.id).toBe("msg-2");
   });
