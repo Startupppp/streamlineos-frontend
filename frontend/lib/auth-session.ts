@@ -110,7 +110,9 @@ export async function exchangeSessionForBackendJwt(
   } finally {
     if (backendJwtInflight.get(cacheKey) === exchange)
       backendJwtInflight.delete(cacheKey);
-    if (![...backendJwtInflight.keys()].some((key) => key.startsWith(sessionKey)))
+    if (
+      ![...backendJwtInflight.keys()].some((key) => key.startsWith(sessionKey))
+    )
       backendJwtSessionGenerations.delete(sessionKey);
   }
 }
@@ -125,54 +127,60 @@ async function performSessionExchange(
   const nextAuthSecret = process.env.NEXTAUTH_SECRET ?? "";
   if (!nextAuthSecret) return null;
 
-  const nonce = randomUUID();
-  let proof: string;
-  try {
-    proof = await new SignJWT({ sessionId })
-      .setProtectedHeader({ alg: "HS256" })
-      .setSubject(userId)
-      .setIssuer("streamlineos-web-session-proof")
-      .setAudience("streamlineos-api-exchange")
-      .setJti(nonce)
-      .setIssuedAt()
-      .setExpirationTime("30s")
-      .sign(new TextEncoder().encode(nextAuthSecret));
-  } catch {
-    return null;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const nonce = randomUUID();
+    let proof: string;
+    try {
+      proof = await new SignJWT({ sessionId })
+        .setProtectedHeader({ alg: "HS256" })
+        .setSubject(userId)
+        .setIssuer("streamlineos-web-session-proof")
+        .setAudience("streamlineos-api-exchange")
+        .setJti(nonce)
+        .setIssuedAt()
+        .setExpirationTime("30s")
+        .sign(new TextEncoder().encode(nextAuthSecret));
+    } catch {
+      return null;
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8_000);
+    try {
+      const res = await fetch(`${BACKEND_URL}/auth/session-exchange`, {
+        method: "POST",
+        headers: withCorrelation(
+          new Headers({
+            "Content-Type": "application/json",
+            "x-internal-secret": internalSecret,
+            "x-session-proof": proof,
+          }),
+        ),
+        body: JSON.stringify({ orgId: orgId ?? null }),
+        cache: "no-store",
+        signal: controller.signal,
+      });
+      if (res.ok) {
+        const body: unknown = await res.json();
+        const parsed = sessionExchangeResponseSchema.safeParse(
+          unwrapBackend(body),
+        );
+        if (parsed.success) return parsed.data.token;
+      } else if (res.status < 500) {
+        return null;
+      }
+    } catch {
+      // A just-restarted API can reject the first exchange while it binds its port.
+    } finally {
+      clearTimeout(timeout);
+    }
+
+    if (attempt === 0) await new Promise((resolve) => setTimeout(resolve, 250));
   }
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 8_000);
-  try {
-    const res = await fetch(`${BACKEND_URL}/auth/session-exchange`, {
-      method: "POST",
-      headers: withCorrelation(
-        new Headers({
-          "Content-Type": "application/json",
-          "x-internal-secret": internalSecret,
-          "x-session-proof": proof,
-        }),
-      ),
-      body: JSON.stringify({ orgId: orgId ?? null }),
-      cache: "no-store",
-      signal: controller.signal,
-    });
-    if (!res.ok) return null;
-    const body: unknown = await res.json();
-    const parsed = sessionExchangeResponseSchema.safeParse(unwrapBackend(body));
-    return parsed.success ? parsed.data.token : null;
-  } catch {
-    return null;
-  } finally {
-    clearTimeout(timeout);
-  }
+  return null;
 }
 
-/**
- * `orgId` is the org this browser session selected (`token.orgId`). Omitted, the backend answers
- * the account's most-recently-activated org, so a switch in any other tab or device moved THIS
- * session to that org on its next reload (CHAT-008).
- */
 export async function fetchSessionData(
   userId: string,
   orgId?: string | null,
@@ -183,13 +191,16 @@ export async function fetchSessionData(
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 8_000);
     try {
-      const res = await fetch(`${BACKEND_URL}/auth/session-data/${userId}${scope}`, {
-        headers: withCorrelation(
-          new Headers({ "x-internal-secret": INTERNAL_SECRET }),
-        ),
-        cache: "no-store",
-        signal: controller.signal,
-      });
+      const res = await fetch(
+        `${BACKEND_URL}/auth/session-data/${userId}${scope}`,
+        {
+          headers: withCorrelation(
+            new Headers({ "x-internal-secret": INTERNAL_SECRET }),
+          ),
+          cache: "no-store",
+          signal: controller.signal,
+        },
+      );
       if (!res.ok) {
         if (res.status < 500) return null;
         continue;

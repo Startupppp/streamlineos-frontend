@@ -137,10 +137,6 @@ export function BuildListToolbar({
     setFiltersOpen(false);
   }, [onClearAll]);
 
-  const handleCloseFilters = useCallback(() => {
-    setFiltersOpen(false);
-  }, []);
-
   const handleSearchFocus = useCallback(() => {
     setSearchFocused(true);
   }, []);
@@ -231,23 +227,13 @@ export function BuildListToolbar({
                   );
                 })}
               </div>
-              <div className="shrink-0 border-t border-border p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-                <div
-                  className={cn(
-                    "grid gap-2",
-                    showClear ? "grid-cols-2" : "grid-cols-1",
-                  )}
-                >
-                  {showClear ? (
-                    <Button type="button" variant="outline" onClick={handleClearAll}>
-                      {BUILD_TOOLBAR_CLEAR_LABEL}
-                    </Button>
-                  ) : null}
-                  <Button type="button" onClick={handleCloseFilters}>
-                    Done
+              {showClear ? (
+                <div className="shrink-0 border-t border-border p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+                  <Button type="button" variant="outline" onClick={handleClearAll} className="w-full">
+                    {BUILD_TOOLBAR_CLEAR_LABEL}
                   </Button>
                 </div>
-              </div>
+              ) : null}
             </div>
           </ResponsivePopoverContent>
         </ResponsivePopover>

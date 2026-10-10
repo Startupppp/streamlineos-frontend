@@ -3,7 +3,6 @@
 import { useCallback, useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TablePagination } from "@/components/ui/table-pagination";
 import { SearchInput } from "@/components/ui/search-input";
 import {
   Select,
@@ -113,7 +112,6 @@ export function MailListPane({
   const [activeFolder, setActiveFolder] = useState<MailFolder>("inbox");
   const [search, setSearch] = useState("");
   const [view, setView] = useState("all");
-  const [pageIndex, setPageIndex] = useState(0);
   const [threadBriefOpen, setThreadBriefOpen] = useState(false);
   const [threadBriefState, setThreadBriefState] =
     useState<MailThreadBriefState>({ status: "loading" });
@@ -141,17 +139,16 @@ export function MailListPane({
   );
 
   const pages = useMemo(() => data?.pages ?? [], [data]);
-  const currentPageIndex = Math.min(pageIndex, Math.max(0, pages.length - 1));
   const visibleMessages = useMemo(() => {
-    const pageMessages = pages[currentPageIndex]?.messages ?? [];
-    return pageMessages.filter((message) =>
+    const loadedMessages = pages.flatMap((page) => page.messages);
+    return loadedMessages.filter((message) =>
       view === "unread"
         ? !message.isRead
         : view === "attachments"
           ? message.hasAttachments
           : true,
     );
-  }, [currentPageIndex, pages, view]);
+  }, [pages, view]);
   const accountErrors = useMemo(() => {
     const byAccount = new Map<
       number,
@@ -216,46 +213,20 @@ export function MailListPane({
   const handleFolderSelect = useCallback((folder: MailFolder) => {
     setActiveFolder(folder);
     setSearch("");
-    setPageIndex(0);
   }, []);
 
   const handleSearchChange = useCallback((value: string) => {
     setSearch(value);
-    setPageIndex(0);
   }, []);
 
   const handleViewChange = useCallback((value: string) => {
     setView(value);
-    setPageIndex(0);
-  }, []);
-
-  /**
-   * Offline, the next page cannot arrive. Asking for it anyway spends the
-   * scroll's one load-more trigger on a request that fails, and the failure is
-   * indistinguishable from the end of the mailbox once the user reconnects.
-   */
-  const handlePreviousPage = useCallback(() => {
-    setPageIndex((current) => Math.max(0, current - 1));
   }, []);
 
   const handleNextPage = useCallback(async () => {
-    if (currentPageIndex < pages.length - 1) {
-      setPageIndex((current) => current + 1);
-      return;
-    }
     if (!hasNextPage || !isOnline || isFetchingNextPage) return;
-    const result = await fetchNextPage();
-    if ((result.data?.pages.length ?? 0) > pages.length) {
-      setPageIndex((current) => current + 1);
-    }
-  }, [
-    currentPageIndex,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isOnline,
-    pages.length,
-  ]);
+    await fetchNextPage();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage, isOnline]);
 
   if (accounts.length === 0) {
     return (
@@ -287,12 +258,17 @@ export function MailListPane({
           />
           <div className="w-36 min-w-28 shrink-0 sm:w-40">
             <Select value={view} onValueChange={handleViewChange}>
-              <SelectTrigger aria-label="Filter loaded mail" className="h-9 w-full text-sm">
+              <SelectTrigger
+                aria-label="Filter loaded mail"
+                className="h-9 w-full text-sm"
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {MAIL_VIEW_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -407,28 +383,15 @@ export function MailListPane({
             selectedMessageId={selectedMessageId}
             activeFolder={activeFolder}
             canAi={canAi}
+            hasNextPage={Boolean(hasNextPage)}
+            isFetchingNextPage={isFetchingNextPage}
             onSelect={onSelectMessage}
             onAction={handleAction}
             onAiBrief={handleAiBrief}
+            onLoadMore={handleNextPage}
           />
         </div>
       )}
-      {visibleMessages.length > 0 ? (
-        <TablePagination
-          className="sticky bottom-0 z-40 min-h-11 bg-background pb-[max(0.25rem,env(safe-area-inset-bottom))] max-md:fixed max-md:inset-x-0 max-md:bottom-[calc(4rem+env(safe-area-inset-bottom))]"
-          mode="cursor"
-          rowCount={visibleMessages.length}
-          pageNumber={currentPageIndex + 1}
-          hasPrevious={currentPageIndex > 0}
-          hasMore={currentPageIndex < pages.length - 1 || Boolean(hasNextPage)}
-          onPrevious={handlePreviousPage}
-          onNext={() => {
-            void handleNextPage();
-          }}
-          disabled={!isOnline || isFetchingNextPage}
-          compact
-        />
-      ) : null}
       <MailThreadBriefSheet
         open={threadBriefOpen}
         onOpenChange={setThreadBriefOpen}

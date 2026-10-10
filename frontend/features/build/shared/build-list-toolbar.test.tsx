@@ -278,7 +278,7 @@ describe("BuildListToolbar", () => {
     ).toBeInTheDocument();
     expect(within(dialog).getByText("Status")).toBeInTheDocument();
     expect(within(dialog).getByText("Severity")).toBeInTheDocument();
-    expect(within(dialog).getByRole("button", { name: "Done" })).toBeInTheDocument();
+    expect(within(dialog).queryByRole("button", { name: "Done" })).toBeNull();
   });
 
   it("offers Clear all in the drawer only while something is active", async () => {
@@ -318,7 +318,7 @@ describe("BuildListToolbar", () => {
     const trigger = screen.getByRole("button", { name: /^Filters/ });
     fireEvent.click(trigger);
     const dialog = await screen.findByRole("dialog");
-    fireEvent.click(within(dialog).getByRole("button", { name: "Done" }));
+    fireEvent.keyDown(dialog, { key: "Escape" });
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     await waitFor(() => expect(trigger).toHaveFocus());
   });
@@ -410,7 +410,7 @@ describe("BuildListToolbar", () => {
     const dialog = await screen.findByRole("dialog");
     expect(within(dialog).getByRole("combobox", { name: "Status" })).toBeInTheDocument();
     expect(input).toHaveValue("QA-094");
-    fireEvent.click(within(dialog).getByRole("button", { name: "Done" }));
+    fireEvent.keyDown(dialog, { key: "Escape" });
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     expect(input).toHaveValue("QA-094");
   });
