@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useMemo, useEffect, useRef } from "react";
+import { useCallback, useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { SearchInput } from "@/components/ui/search-input";
 import {
@@ -129,7 +129,6 @@ export function MailListPane({
     isFetching,
     isError,
     error,
-    refetch,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
@@ -142,17 +141,6 @@ export function MailListPane({
     },
     { enabled: accounts.length > 0 },
   );
-
-  const accountsReadyRef = useRef(false);
-  useEffect(() => {
-    if (accounts.length === 0) {
-      accountsReadyRef.current = false;
-      return;
-    }
-    if (accountsReadyRef.current) return;
-    accountsReadyRef.current = true;
-    if (typeof refetch === "function") void refetch();
-  }, [accounts.length, refetch]);
 
   const pages = useMemo(() => data?.pages ?? [], [data]);
   const visibleMessages = useMemo(() => {

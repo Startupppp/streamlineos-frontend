@@ -40,8 +40,13 @@ export async function applyMailActionToCaches(
   ] as const;
   const unifiedCountKey = platformCoreQueryKeys.inbox.unified({ count: true });
 
-  await qc.cancelQueries({ queryKey: directoryAndOwnershipQueryKeys.mail.all });
-  await qc.cancelQueries({ queryKey: unifiedPrefix });
+  const hasCacheData = (query: { state: { data: unknown } }) =>
+    query.state.data !== undefined;
+  await qc.cancelQueries({
+    queryKey: directoryAndOwnershipQueryKeys.mail.all,
+    predicate: hasCacheData,
+  });
+  await qc.cancelQueries({ queryKey: unifiedPrefix, predicate: hasCacheData });
 
   const snapshots: MailCacheSnapshot[] = [];
   const capturedKeys = new Set<string>();
