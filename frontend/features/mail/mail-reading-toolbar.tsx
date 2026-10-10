@@ -81,6 +81,7 @@ export const MailReadingToolbar = forwardRef<
     (e: React.MouseEvent) => {
       e.stopPropagation();
       onArchive();
+      setOverflowOpen(false);
     },
     [onArchive],
   );
@@ -89,6 +90,7 @@ export const MailReadingToolbar = forwardRef<
     (e: React.MouseEvent) => {
       e.stopPropagation();
       onMarkUnread();
+      setOverflowOpen(false);
     },
     [onMarkUnread],
   );
@@ -97,12 +99,24 @@ export const MailReadingToolbar = forwardRef<
     (e: React.MouseEvent) => {
       e.stopPropagation();
       onToggleStar();
+      setOverflowOpen(false);
     },
     [onToggleStar],
   );
 
-  const handleOverflowClose = useCallback(() => setOverflowOpen(false), []);
-  const handleAiPickerOpen = useCallback(() => setAiPickerOpen(true), []);
+  const handleTrashClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onTrash();
+      setOverflowOpen(false);
+    },
+    [onTrash],
+  );
+
+  const handleAiPickerOpen = useCallback(() => {
+    setAiPickerOpen(true);
+    setOverflowOpen(false);
+  }, []);
 
   if (overflowMode === "collapse") {
     return (
@@ -138,14 +152,11 @@ export const MailReadingToolbar = forwardRef<
             align="end"
             className="min-w-52"
           >
-            <div
-              className="flex flex-col gap-0.5 p-1"
-              onClick={handleOverflowClose}
-            >
+            <div className="flex flex-col gap-0.5 p-1">
               <button
                 type="button"
                 className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                onClick={onArchive}
+                onClick={handleArchiveClick}
               >
                 <Archive className="size-4" aria-hidden="true" />
                 Archive
@@ -153,7 +164,7 @@ export const MailReadingToolbar = forwardRef<
               <button
                 type="button"
                 className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                onClick={onMarkUnread}
+                onClick={handleUnreadClick}
               >
                 <MailOpen className="size-4" aria-hidden="true" />
                 Mark as unread
@@ -161,7 +172,7 @@ export const MailReadingToolbar = forwardRef<
               <button
                 type="button"
                 className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                onClick={onToggleStar}
+                onClick={handleStarClick}
               >
                 <Star
                   className={cn(
@@ -188,7 +199,7 @@ export const MailReadingToolbar = forwardRef<
               <button
                 type="button"
                 className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-destructive hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                onClick={onTrash}
+                onClick={handleTrashClick}
               >
                 <Trash2 className="size-4" aria-hidden="true" />
                 Move to trash

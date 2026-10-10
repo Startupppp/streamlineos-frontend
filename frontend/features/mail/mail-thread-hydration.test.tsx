@@ -272,7 +272,7 @@ describe("MailReadingPane — a seeded thread renders its chrome, not a full ske
     );
 
     await user.click(screen.getByRole("button", { name: "More message actions" }));
-    await user.click(screen.getByRole("menuitem", { name: "AI assist" }));
+    fireEvent.click(screen.getByRole("button", { name: "AI assist" }));
 
     expect(screen.getByRole("dialog", { name: "AI assist" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Summarize thread" })).toBeInTheDocument();
