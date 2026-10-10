@@ -62,7 +62,8 @@ describe("ProductInsightsPage — page states (BSN-INS-STATE)", () => {
     usePageState.mockReturnValue({ kind: "loading" });
     render(<ProductInsightsPage managedProductId={7} />);
     expect(screen.getByTestId("page-state-loading")).toBeInTheDocument();
-    expect(screen.getAllByTestId("stat-card-grid-skeleton").length).toBeGreaterThan(0);
+    expect(screen.getByTestId("product-insights-skeleton")).toBeInTheDocument();
+    expect(screen.getAllByTestId("stat-card-grid-skeleton")).toHaveLength(5);
   });
 
   it("shows the error state when usePageState resolves to error so the user can retry", () => {

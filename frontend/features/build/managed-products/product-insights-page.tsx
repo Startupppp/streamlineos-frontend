@@ -15,7 +15,6 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
   StatCard,
   StatCardGrid,
-  StatCardGridSkeleton,
 } from "@/components/ui/stat-card";
 import { CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 import { useManagedProductInsights } from "@/hooks/api/build/managed-products";
@@ -30,6 +29,7 @@ import {
   ManagedProductDetailPrimarySection,
   ManagedProductDetailShell,
 } from "./managed-product-detail-layout";
+import { ProductInsightsSkeleton } from "./managed-product-page-skeletons";
 
 const RANGE_OPTIONS = [
   { label: "All time", value: "all" },
@@ -116,22 +116,7 @@ export function ProductInsightsPage({
         <ManagedProductDetailPrimarySection className="flex-none">
           <PageState
             resolution={resolution}
-            loading={
-              <div className="space-y-6">
-                <div>
-                  <h2 className="mb-3 text-sm font-medium text-foreground">
-                    Projects
-                  </h2>
-                  <StatCardGridSkeleton cols={3} />
-                </div>
-                <div>
-                  <h2 className="mb-3 text-sm font-medium text-foreground">
-                    Feedback submissions
-                  </h2>
-                  <StatCardGridSkeleton cols={4} />
-                </div>
-              </div>
-            }
+            loading={<ProductInsightsSkeleton />}
             onRetry={handleRetry}
             empty={
               <EmptyState

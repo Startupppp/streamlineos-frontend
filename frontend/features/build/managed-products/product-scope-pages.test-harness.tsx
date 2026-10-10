@@ -40,7 +40,8 @@ jest.mock("@/components/shared/page-state", () => ({
     empty?: React.ReactNode;
     children: React.ReactNode;
   }) => {
-    if (resolution.kind === "loading") return <div data-testid="page-state-loading">{loading}</div>;
+    if (resolution.kind === "loading")
+      return <div data-testid="page-state-loading">{loading}</div>;
     if (resolution.kind === "denied")
       return (
         <div
@@ -49,7 +50,8 @@ jest.mock("@/components/shared/page-state", () => ({
         />
       );
     if (resolution.kind === "error") return <div data-testid="error-state" />;
-    if (resolution.kind === "empty") return <div data-testid="page-state-empty">{empty}</div>;
+    if (resolution.kind === "empty")
+      return <div data-testid="page-state-empty">{empty}</div>;
     return <div data-testid="page-state-ready">{children}</div>;
   },
 }));
@@ -59,16 +61,31 @@ jest.mock("@/hooks/api/feedbucket", () => ({
 }));
 
 jest.mock("@/hooks/api/build/intake-mutations", () => ({
-  useRouteFeedbucketToIntake: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useRouteFeedbucketToIntake: jest.fn(() => ({
+    mutate: jest.fn(),
+    isPending: false,
+  })),
 }));
 
 jest.mock("@/hooks/api/build/managed-products", () => ({
   useManagedProductInsights: jest.fn(),
   useManagedProducts: jest.fn(),
-  useCreateManagedProduct: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
-  useUpdateManagedProduct: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
-  useDeleteManagedProduct: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
-  useBulkUpdateManagedProducts: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useCreateManagedProduct: jest.fn(() => ({
+    mutate: jest.fn(),
+    isPending: false,
+  })),
+  useUpdateManagedProduct: jest.fn(() => ({
+    mutate: jest.fn(),
+    isPending: false,
+  })),
+  useDeleteManagedProduct: jest.fn(() => ({
+    mutate: jest.fn(),
+    isPending: false,
+  })),
+  useBulkUpdateManagedProducts: jest.fn(() => ({
+    mutate: jest.fn(),
+    isPending: false,
+  })),
 }));
 
 jest.mock("@/hooks/api/organization", () => ({
@@ -117,10 +134,30 @@ jest.mock("@/components/ui/page-wrapper", () => ({
 }));
 
 jest.mock("@/components/pm-chrome", () => ({
-  PmPageShell: ({ children, className }: { children: React.ReactNode; className?: string }) => <div data-testid="pm-page-shell" className={className}>{children}</div>,
-  PmSection: ({ children, className }: { children: React.ReactNode; className?: string }) => <div className={className}>{children}</div>,
-  PmPanel: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  PmStaggerList: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  PmPageShell: ({
+    children,
+    className,
+  }: {
+    children: React.ReactNode;
+    className?: string;
+  }) => (
+    <div data-testid="pm-page-shell" className={className}>
+      {children}
+    </div>
+  ),
+  PmSection: ({
+    children,
+    className,
+  }: {
+    children: React.ReactNode;
+    className?: string;
+  }) => <div className={className}>{children}</div>,
+  PmPanel: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  PmStaggerList: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
   CONTENT_FILL_PANEL: "",
   PM_PANEL: "",
   PM_TOOLBAR: "",
@@ -137,15 +174,31 @@ jest.mock("@/components/shared/error-state", () => ({
 }));
 
 jest.mock("@/components/ui/empty-state", () => ({
-  EmptyState: ({ action }: { action?: { label: string; onClick: () => void } }) => (
+  EmptyState: ({
+    action,
+  }: {
+    action?: { label: string; onClick: () => void };
+  }) => (
     <div data-testid="empty-state">
-      {action ? <button type="button" onClick={action.onClick}>{action.label}</button> : null}
+      {action ? (
+        <button type="button" onClick={action.onClick}>
+          {action.label}
+        </button>
+      ) : null}
     </div>
   ),
 }));
 
 jest.mock("@/components/ui/stat-card", () => ({
-  StatCard: ({ label, href, value }: { label: string; href?: string; value?: number }) =>
+  StatCard: ({
+    label,
+    href,
+    value,
+  }: {
+    label: string;
+    href?: string;
+    value?: number;
+  }) =>
     href ? (
       <a data-testid="stat-card-link" data-label={label} href={href}>
         {label}: {value}
@@ -155,7 +208,9 @@ jest.mock("@/components/ui/stat-card", () => ({
         {label}: {value}
       </div>
     ),
-  StatCardGrid: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  StatCardGrid: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
   StatCardGridSkeleton: () => <div data-testid="stat-card-grid-skeleton" />,
 }));
 
@@ -175,12 +230,24 @@ jest.mock("@/components/ui/data-table", () => ({
     data?: Array<{ name?: string; message?: string; id?: unknown }>;
     emptyState?: React.ReactNode;
     isLoading?: boolean;
-    getRowKey?: (row: { name?: string; message?: string; id?: unknown }, i: number) => string | number;
-    onRowClick?: (row: { name?: string; message?: string; id?: unknown }) => void;
-    rowClassName?: (row: { name?: string; message?: string; id?: unknown }) => string;
+    getRowKey?: (
+      row: { name?: string; message?: string; id?: unknown },
+      i: number,
+    ) => string | number;
+    onRowClick?: (row: {
+      name?: string;
+      message?: string;
+      id?: unknown;
+    }) => void;
+    rowClassName?: (row: {
+      name?: string;
+      message?: string;
+      id?: unknown;
+    }) => string;
   }) => {
     if (isLoading) return <div data-testid="data-table-loading" />;
-    if (!data || data.length === 0) return emptyState ?? <div data-testid="data-table" />;
+    if (!data || data.length === 0)
+      return emptyState ?? <div data-testid="data-table" />;
     return (
       <div data-testid="data-table">
         {data.map((row, i) => {
@@ -201,12 +268,20 @@ jest.mock("@/components/ui/data-table", () => ({
       </div>
     );
   },
-  DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
+  DataTableSkeleton: ({ mobileCards }: { mobileCards?: boolean }) => (
+    <div
+      data-testid="data-table-skeleton"
+      data-mobile-cards={mobileCards ? "true" : "false"}
+    />
+  ),
 }));
 
 jest.mock("@/features/build/goals/goal-form-sheet", () => ({
   GoalFormSheet: ({ managedProductId }: { managedProductId?: number }) => (
-    <div data-testid="goal-form-sheet" data-managed-product-id={managedProductId} />
+    <div
+      data-testid="goal-form-sheet"
+      data-managed-product-id={managedProductId}
+    />
   ),
 }));
 
@@ -262,7 +337,11 @@ jest.mock("@/hooks/common/use-debounce", () => ({
 }));
 
 jest.mock("@/hooks/common/use-query-param-open", () => ({
-  useQueryParamOpen: () => ({ open: false, onOpenChange: jest.fn(), setOpen: jest.fn() }),
+  useQueryParamOpen: () => ({
+    open: false,
+    onOpenChange: jest.fn(),
+    setOpen: jest.fn(),
+  }),
 }));
 
 jest.mock("@/hooks/common/use-animated-icon", () => ({
@@ -274,20 +353,42 @@ jest.mock("@animateicons/react/lucide", () => ({
   EllipsisIcon: () => <span data-testid="ellipsis-icon" />,
 }));
 
-export const { useGoals, useGoalsPage, useGoal, useDeleteGoal }: {
+export const {
+  useGoals,
+  useGoalsPage,
+  useGoal,
+  useDeleteGoal,
+}: {
   useGoals: jest.Mock;
   useGoalsPage: jest.Mock;
   useGoal: jest.Mock;
   useDeleteGoal: jest.Mock;
 } = jest.requireMock("@/hooks/api/goals");
-export const { usePageState }: { usePageState: jest.Mock } = jest.requireMock("@/hooks/api/use-page-state");
-export const { useCan }: { useCan: jest.Mock } = jest.requireMock("@/hooks/api/access");
-export const { useFeedbucketSubmissions }: { useFeedbucketSubmissions: jest.Mock } = jest.requireMock("@/hooks/api/feedbucket");
-export const { useManagedProductInsights }: { useManagedProductInsights: jest.Mock } = jest.requireMock("@/hooks/api/build/managed-products");
-export const { useRoadmapItems }: { useRoadmapItems: jest.Mock } = jest.requireMock("@/hooks/api/build/roadmap");
-export const { useManagedProducts }: { useManagedProducts: jest.Mock } = jest.requireMock("@/hooks/api/build/managed-products");
+export const { usePageState }: { usePageState: jest.Mock } = jest.requireMock(
+  "@/hooks/api/use-page-state",
+);
+export const { useCan }: { useCan: jest.Mock } =
+  jest.requireMock("@/hooks/api/access");
+export const {
+  useFeedbucketSubmissions,
+}: { useFeedbucketSubmissions: jest.Mock } = jest.requireMock(
+  "@/hooks/api/feedbucket",
+);
+export const {
+  useManagedProductInsights,
+}: { useManagedProductInsights: jest.Mock } = jest.requireMock(
+  "@/hooks/api/build/managed-products",
+);
+export const { useRoadmapItems }: { useRoadmapItems: jest.Mock } =
+  jest.requireMock("@/hooks/api/build/roadmap");
+export const { useManagedProducts }: { useManagedProducts: jest.Mock } =
+  jest.requireMock("@/hooks/api/build/managed-products");
 
-export { EMPTY_GOALS_PAGE_RESULT, EMPTY_FEEDBUCKET_RESULT, EMPTY_MANAGED_PRODUCTS_RESULT } from "./product-scope-pages.fixtures";
+export {
+  EMPTY_GOALS_PAGE_RESULT,
+  EMPTY_FEEDBUCKET_RESULT,
+  EMPTY_MANAGED_PRODUCTS_RESULT,
+} from "./product-scope-pages.fixtures";
 
 beforeEach(() => {
   jest.clearAllMocks();

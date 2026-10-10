@@ -6,7 +6,7 @@ import { ManagedProductFormSheet } from "@/features/build/managed-products/manag
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import { PageState } from "@/components/shared/page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +23,7 @@ import {
   ManagedProductDetailPrimarySection,
   ManagedProductDetailShell,
 } from "@/features/build/managed-products/managed-product-detail-layout";
+import { ManagedProductOverviewSkeleton } from "@/features/build/managed-products/managed-product-page-skeletons";
 import {
   useManagedProductOverview,
   PROJECT_SORT_OPTIONS,
@@ -31,15 +32,6 @@ import {
 
 interface ManagedProductOverviewPageProps {
   managedProductId: number;
-}
-
-export function ManagedProductOverviewSkeleton() {
-  return (
-    <div className="flex flex-1 min-h-0 flex-col gap-6">
-      <StatCardGridSkeleton cols={2} count={1} />
-      <Skeleton className="h-40 rounded-xl" />
-    </div>
-  );
 }
 
 export function ManagedProductOverviewPage({ managedProductId }: ManagedProductOverviewPageProps) {

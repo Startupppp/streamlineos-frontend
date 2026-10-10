@@ -273,6 +273,7 @@ describe("ProductGoalsPage — states (C3 BSN-STATE-GOALS-01)", () => {
     usePageState.mockReturnValue({ kind: "loading" });
     render(<ProductGoalsPage managedProductId={7} />);
     expect(screen.getByTestId("page-state-loading")).toBeInTheDocument();
+    expect(screen.getByTestId("product-goals-skeleton")).toBeInTheDocument();
     expect(screen.getAllByTestId("skeleton").length).toBeGreaterThan(0);
   });
 

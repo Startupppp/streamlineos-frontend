@@ -96,6 +96,14 @@ beforeEach(() => {
 });
 
 describe("ManagedProductOverviewPage", () => {
+  it("uses the same section and card geometry as the populated overview while loading", () => {
+    usePageState.mockReturnValue({ kind: "loading" });
+
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+
+    expect(screen.getByTestId("managed-product-overview-skeleton")).toBeInTheDocument();
+  });
+
   it("renders access-restricted state when permission is denied so denial is never silently empty", () => {
     usePageState.mockReturnValue({ kind: "denied", permission: "build:managed-products:view" });
 

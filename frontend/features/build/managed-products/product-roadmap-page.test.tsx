@@ -50,6 +50,7 @@ describe("ProductRoadmapPage — usePageState integration (BSN-01-027)", () => {
     usePageState.mockReturnValue({ kind: "loading" });
     render(<ProductRoadmapPage managedProductId={7} />);
     expect(screen.getByTestId("page-state-loading")).toBeInTheDocument();
+    expect(screen.getByTestId("product-roadmap-skeleton")).toBeInTheDocument();
   });
 
   it("shows the error state when usePageState resolves to error", () => {

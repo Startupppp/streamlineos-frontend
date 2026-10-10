@@ -6,17 +6,14 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { BuildPaginatedContent } from "@/features/build/shared/build-paginated-content";
-import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTargetIllustration } from "@/components/illustrations";
 import { GoalFormSheet } from "@/features/build/goals/goal-form-sheet";
 import { PageState } from "@/components/shared/page-state";
-import { cn } from "@/lib/utils";
 import {
   PmSection,
   PmStaggerList,
   CONTENT_FILL_PANEL,
-  PM_PANEL,
 } from "@/components/pm-chrome";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
@@ -31,25 +28,10 @@ import {
   ManagedProductDetailPrimarySection,
   ManagedProductDetailShell,
 } from "./managed-product-detail-layout";
+import { ProductGoalsGridSkeleton } from "./managed-product-page-skeletons";
 
 interface ProductGoalsPageProps {
   managedProductId: number;
-}
-
-export function GoalsSkeleton() {
-  return (
-    <div className="space-y-6">
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className={cn(PM_PANEL, "space-y-3 p-4")}>
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-1.5 w-full rounded-full" />
-            <Skeleton className="h-3 w-1/2" />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
 }
 
 export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
@@ -130,7 +112,7 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
         <ManagedProductDetailPrimarySection index={1}>
           <PageState
             resolution={resolution}
-            loading={<GoalsSkeleton />}
+            loading={<ProductGoalsGridSkeleton />}
             empty={
               <EmptyState
                 className={CONTENT_FILL_PANEL}

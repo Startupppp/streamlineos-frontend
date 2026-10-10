@@ -4,7 +4,6 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { useRoadmapItems, useDeleteRoadmapItem } from "@/hooks/api/build/roadmap";
 import type { RoadmapItem, RoadmapStatus } from "@/types/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
@@ -16,7 +15,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useCan } from "@/hooks/api/access";
 import { PageState } from "@/components/shared/page-state";
-import { cn } from "@/lib/utils";
 import { ROADMAP_COLUMNS } from "@/features/build/roadmap/roadmap-constants";
 import { RoadmapItemCard } from "@/features/build/roadmap/roadmap-item-card";
 import { RoadmapItemSheet } from "@/features/build/roadmap/roadmap-item-sheet";
@@ -28,7 +26,6 @@ import {
   PmPanel,
   PmStaggerList,
   CONTENT_FILL_PANEL,
-  PM_PANEL,
 } from "@/components/pm-chrome";
 import {
   ROADMAP_STATUS_OPTS,
@@ -40,23 +37,10 @@ import {
   ManagedProductDetailPrimarySection,
   ManagedProductDetailShell,
 } from "./managed-product-detail-layout";
+import { ProductRoadmapSkeleton } from "./managed-product-page-skeletons";
 
 interface ProductRoadmapPageProps {
   managedProductId: number;
-}
-
-export function RoadmapSkeleton() {
-  return (
-    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className={cn(PM_PANEL, "min-h-[140px] space-y-2 p-2")}>
-          <Skeleton className="h-4 w-20" />
-          <Skeleton className="h-16 w-full rounded-lg" />
-          <Skeleton className="h-16 w-full rounded-lg" />
-        </div>
-      ))}
-    </div>
-  );
 }
 
 export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps) {
@@ -208,7 +192,7 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
         <ManagedProductDetailPrimarySection className="gap-4">
           <PageState
             resolution={resolution}
-            loading={<RoadmapSkeleton />}
+            loading={<ProductRoadmapSkeleton />}
             empty={
               <EmptyState
                 className={CONTENT_FILL_PANEL}

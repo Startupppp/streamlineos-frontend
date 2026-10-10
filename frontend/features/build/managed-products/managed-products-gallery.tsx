@@ -11,11 +11,13 @@ import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { GalleryCase as SharedGalleryCase } from "@/features/build/shared/build-list-gallery-cases";
 import { MANAGED_PRODUCT_TABLE_HEADERS } from "./managed-product-table-columns";
 import { FEEDBACK_SKELETON_HEADERS } from "./product-feedback-columns";
-import { GoalsSkeleton } from "./product-goals-page";
-import { RoadmapSkeleton } from "./product-roadmap-page";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
-import { ManagedProductOverviewSkeleton } from "@/features/build/overview/managed-product-overview-page";
+import {
+  ManagedProductOverviewSkeleton,
+  ProductGoalsGridSkeleton,
+  ProductRoadmapSkeleton,
+} from "./managed-product-page-skeletons";
 import { GridSkeleton } from "@/features/build/project-list/projects-page-skeletons";
 import {
   InsightsReadyFrame,
@@ -140,7 +142,7 @@ export function ManagedProductsGallery() {
 
       <SharedGalleryCase id="goals-loading" title="Goals — loading skeleton">
         <div className="overflow-y-auto p-4">
-          <GoalsSkeleton />
+          <ProductGoalsGridSkeleton />
         </div>
       </SharedGalleryCase>
 
@@ -156,7 +158,7 @@ export function ManagedProductsGallery() {
 
       <SharedGalleryCase id="roadmap-loading" title="Roadmap — loading skeleton">
         <div className="overflow-y-auto p-4">
-          <RoadmapSkeleton />
+          <ProductRoadmapSkeleton />
         </div>
       </SharedGalleryCase>
 

@@ -274,7 +274,7 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
               onPageChange: handlePageChange,
             }}
             tableClassName="flex flex-1 min-h-0 h-full border-0 rounded-none"
-            loading={<DataTableSkeleton rows={10} headers={FEEDBACK_SKELETON_HEADERS} />}
+            loading={<DataTableSkeleton rows={10} headers={FEEDBACK_SKELETON_HEADERS} mobileCards />}
             empty={
               <EmptyState
                 illustration={<EmptyInboxIllustration className="h-24 w-24" />}

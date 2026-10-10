@@ -67,10 +67,10 @@ export function MailListRowsSkeleton() {
 export function MailContentSkeleton() {
   return (
     <div className="flex min-h-0 min-w-0 flex-1">
-      <div className="flex min-w-0 flex-1 lg:w-96 lg:flex-none xl:w-1/3">
+      <div className="flex h-full min-w-0 flex-1 border-r border-border bg-card lg:w-96 lg:flex-none xl:w-1/3">
         <MailListPaneSkeleton />
       </div>
-      <div className="hidden min-w-0 flex-1 lg:flex">
+      <div className="hidden w-0 max-w-full min-h-0 min-w-0 flex-1 overflow-hidden bg-muted/15 lg:flex">
         <MailReadingPaneSkeleton />
       </div>
     </div>

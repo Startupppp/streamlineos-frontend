@@ -45,6 +45,18 @@ jest.mock("@/components/shared/submission-bulk-toolbar", () => ({
 }));
 
 describe("ProductFeedbackPage — usePageState integration (BSN-01-012)", () => {
+  it("uses the table's matching mobile-card skeleton while the feedback list loads", () => {
+    usePageState.mockReturnValue({ kind: "loading" });
+    useFeedbucketSubmissions.mockReturnValue({
+      ...EMPTY_FEEDBUCKET_RESULT,
+      isLoading: true,
+    });
+
+    render(<ProductFeedbackPage managedProductId={7} />);
+
+    expect(screen.getByTestId("data-table-skeleton")).toHaveAttribute("data-mobile-cards", "true");
+  });
+
   it("opens desktop filter overflow in a popover instead of a drawer", async () => {
     useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
     const { baseElement } = render(<ProductFeedbackPage managedProductId={7} />);
@@ -245,8 +257,7 @@ describe("buildFeedbackColumnsWithActions — route-to-intake column factory (BL
   it("actions column cell renders a button with route-to-intake-btn testid", () => {
     const cols = buildFeedbackColumnsWithActions({ canRouteToIntake: true, onRouteToIntake: jest.fn() });
     const actionsCol = cols.find((c) => c.key === "actions");
-    const { render: renderCell } = require("@testing-library/react");
-    const { getByTestId } = renderCell(actionsCol!.cell(row));
+    const { getByTestId } = render(actionsCol!.cell(row));
     expect(getByTestId("route-to-intake-btn")).toBeInTheDocument();
   });
 
@@ -254,8 +265,7 @@ describe("buildFeedbackColumnsWithActions — route-to-intake column factory (BL
     const onRouteToIntake = jest.fn();
     const cols = buildFeedbackColumnsWithActions({ canRouteToIntake: true, onRouteToIntake });
     const actionsCol = cols.find((c) => c.key === "actions");
-    const { render: renderCell } = require("@testing-library/react");
-    const { getByTestId } = renderCell(actionsCol!.cell(row));
+    const { getByTestId } = render(actionsCol!.cell(row));
     getByTestId("route-to-intake-btn").click();
     expect(onRouteToIntake).toHaveBeenCalledWith(row);
     expect(onRouteToIntake.mock.calls[0]?.[0]?.id).toBe(55);
@@ -300,8 +310,7 @@ describe("buildFeedbackColumnsWithActions — route-to-intake provenance and toa
     const onRouteToIntake = jest.fn();
     const cols = buildFeedbackColumnsWithActions({ canRouteToIntake: true, onRouteToIntake });
     const actionsCol = cols.find((c) => c.key === "actions");
-    const { render: renderCell } = require("@testing-library/react");
-    const { getByTestId } = renderCell(actionsCol!.cell(row));
+    const { getByTestId } = render(actionsCol!.cell(row));
     getByTestId("route-to-intake-btn").click();
     expect(onRouteToIntake).toHaveBeenCalledWith(row);
     expect(onRouteToIntake.mock.calls[0]?.[0]?.id).toBe(31);
