@@ -132,6 +132,7 @@ export function MailListPane({
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    refetch,
   } = useMailMessages(
     {
       folder: activeFolder,
@@ -238,6 +239,10 @@ export function MailListPane({
     if (!hasNextPage || !isOnline || isFetchingNextPage) return;
     await fetchNextPage();
   }, [fetchNextPage, hasNextPage, isFetchingNextPage, isOnline]);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const initialLoading =
     isLoading || isFetched === false || (isFetching && pages.length === 0);
@@ -372,21 +377,22 @@ export function MailListPane({
             ) : null}
           </div>
         }
+        onRetry={handleRetry}
       >
-      <div className={cn("flex-1 min-h-0", MAIL_LIST_BOTTOM_PADDING_CLASS)}>
-        <MailVirtualList
-          groups={groups}
-          selectedMessageId={selectedMessageId}
-          activeFolder={activeFolder}
-          canAi={canAi}
-          hasNextPage={Boolean(hasNextPage)}
-          isFetchingNextPage={isFetchingNextPage}
-          onSelect={onSelectMessage}
-          onAction={handleAction}
-          onAiBrief={handleAiBrief}
-          onLoadMore={handleNextPage}
-        />
-      </div>
+        <div className={cn("flex-1 min-h-0", MAIL_LIST_BOTTOM_PADDING_CLASS)}>
+          <MailVirtualList
+            groups={groups}
+            selectedMessageId={selectedMessageId}
+            activeFolder={activeFolder}
+            canAi={canAi}
+            hasNextPage={Boolean(hasNextPage)}
+            isFetchingNextPage={isFetchingNextPage}
+            onSelect={onSelectMessage}
+            onAction={handleAction}
+            onAiBrief={handleAiBrief}
+            onLoadMore={handleNextPage}
+          />
+        </div>
       </PageState>
       <MailThreadBriefSheet
         open={threadBriefOpen}
