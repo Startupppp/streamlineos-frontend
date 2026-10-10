@@ -209,6 +209,23 @@ describe("MailReadingPane — a seeded thread renders its chrome, not a full ske
     expect(screen.queryByText("No content")).not.toBeInTheDocument();
   });
 
+  it("keeps the body placeholder visible while a cached body-less message refetches", () => {
+    threadResult = {
+      data: [SEEDED_DETAIL],
+      isLoading: false,
+      isFetching: true,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+      isFetchedAfterMount: true,
+    };
+
+    renderReadingPane();
+
+    expect(screen.getByTestId("mail-body-skeleton")).toBeInTheDocument();
+    expect(screen.queryByText("No content")).not.toBeInTheDocument();
+  });
+
   it("a body-less message shows its snippet once the fetch has settled", () => {
     threadResult = {
       data: [SEEDED_DETAIL],

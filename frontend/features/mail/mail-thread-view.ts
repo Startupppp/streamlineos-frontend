@@ -147,7 +147,7 @@ interface ThreadView {
 
 function toMessageView(
   m: MailMessageDetail,
-  isFetchedAfterMount: boolean,
+  isFetching: boolean,
 ): ThreadMessageView {
   const { bodyHtml, bodyText, attachments, ...rest } = m;
 
@@ -155,7 +155,7 @@ function toMessageView(
   if (bodyHtml?.trim())
     body = { kind: "html", safeHtml: makeSafeHtml(bodyHtml) };
   else if (bodyText?.trim()) body = { kind: "text", text: bodyText };
-  else if (!isFetchedAfterMount) body = { kind: "snippet", text: m.snippet };
+  else if (isFetching) body = { kind: "snippet", text: m.snippet };
   else if (m.snippet.trim()) body = { kind: "text", text: m.snippet };
   else body = { kind: "empty" };
 
@@ -204,7 +204,7 @@ function readThreadView(
 
   return {
     status,
-    messages: messages.map((m) => toMessageView(m, isFetchedAfterMount)),
+    messages: messages.map((m) => toMessageView(m, isFetching)),
   };
 }
 

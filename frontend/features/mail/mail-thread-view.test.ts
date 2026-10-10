@@ -134,8 +134,8 @@ describe("useMailThreadView — hydration status", () => {
 });
 
 describe("useMailThreadView — body kinds", () => {
-  it("null bodies and not yet fetched after mount → body kind is snippet carrying the message snippet", () => {
-    const view = renderWith([BASE], { isFetchedAfterMount: false });
+  it("null bodies while hydration is in flight → body kind is snippet carrying the message snippet", () => {
+    const view = renderWith([BASE], { isFetching: true });
     const body = view.messages[0]!.body;
     expect(body.kind).toBe("snippet");
     if (body.kind !== "snippet") return;
