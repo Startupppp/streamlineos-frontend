@@ -94,9 +94,9 @@ export function ProductInsightsPage({
     RANGE_OPTIONS.find((option) => option.value === rangeValue)?.label ??
     "All time";
 
-  function handleRetry() {
+  const handleRetry = useCallback(() => {
     void refetch();
-  }
+  }, [refetch]);
 
   return (
     <PageWrapper

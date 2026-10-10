@@ -17,10 +17,14 @@ export function MailHtmlViewer({ safeHtml, className }: MailHtmlViewerProps) {
 
     body.querySelectorAll("td").forEach((cell) => {
       const children = Array.from(cell.childNodes).filter(
-        (node) => node.nodeType !== Node.TEXT_NODE || Boolean(node.textContent?.trim()),
+        (node) =>
+          node.nodeType !== Node.TEXT_NODE || Boolean(node.textContent?.trim()),
       );
-      if (children.length === 1 && children[0] instanceof Element &&
-          ["TABLE", "DIV"].includes(children[0].tagName)) {
+      if (
+        children.length === 1 &&
+        children[0] instanceof Element &&
+        ["TABLE", "DIV"].includes(children[0].tagName)
+      ) {
         cell.dataset.mailLayoutCell = "true";
       }
     });
@@ -33,7 +37,11 @@ export function MailHtmlViewer({ safeHtml, className }: MailHtmlViewerProps) {
         if (seen.has(src)) {
           image.dataset.mailDuplicateImage = "true";
           const cell = image.closest("td");
-          if (cell && cell.querySelectorAll("img").length === 1 && !cell.textContent?.trim()) {
+          if (
+            cell &&
+            cell.querySelectorAll("img").length === 1 &&
+            !cell.textContent?.trim()
+          ) {
             cell.dataset.mailDuplicateImageCell = "true";
           }
         }
@@ -71,12 +79,10 @@ export function MailHtmlViewer({ safeHtml, className }: MailHtmlViewerProps) {
         className="mail-html-frame @container w-full min-w-0 max-w-full overflow-x-hidden rounded-lg border border-border/50 bg-white text-foreground shadow-sm"
         style={{ colorScheme: "light" }}
       >
-        <div
-          className="w-full min-w-0 max-w-full overflow-hidden px-3 py-3 sm:px-4"
-        >
+        <div className="w-full min-w-0 max-w-full overflow-hidden px-3 py-3 sm:px-4">
           <div
             ref={bodyRef}
-            className="mail-html-body min-w-0 max-w-none text-label leading-relaxed text-foreground break-words [overflow-wrap:anywhere] @max-[640px]:[&_table]:!w-full @max-[640px]:[&_table]:!min-w-0 @max-[640px]:[&_table]:!max-w-full @max-[640px]:[&_tbody]:block @max-[640px]:[&_tr]:block @max-[640px]:[&_td]:block @max-[640px]:[&_td]:!w-full @max-[640px]:[&_td]:!max-w-full @max-[640px]:[&_td]:!box-sizing-border @max-[640px]:[&_td[data-mail-layout-cell=true]]:!p-0 @max-[640px]:[&_td[data-mail-duplicate-image-cell=true]]:hidden @max-[640px]:[&_th]:block @max-[640px]:[&_th]:!w-full @max-[640px]:[&_div]:!max-w-full @max-[640px]:[&_img[data-mail-duplicate-image=true]]:hidden [&_*]:max-w-full [&_a]:text-primary [&_a]:underline [&_img]:!max-w-full [&_img]:!h-auto [&_img]:rounded [&_img[data-mail-image-state=failed]]:hidden [&_table]:!max-w-full [&_table]:!min-w-0 [&_td]:align-top [&_td]:break-words [&_th]:align-top [&_th]:break-words [&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground"
+            className="mail-html-body min-w-0 max-w-none text-label leading-relaxed text-foreground break-words [overflow-wrap:anywhere] @max-[640px]:[&_table]:!w-full @max-[640px]:[&_table]:!min-w-0 @max-[640px]:[&_table]:!max-w-full @max-[640px]:[&_tbody]:block @max-[640px]:[&_tr]:block @max-[640px]:[&_td]:block @max-[640px]:[&_td]:!w-full @max-[640px]:[&_td]:!max-w-full @max-[640px]:[&_td]:!box-border @max-[640px]:[&_td[data-mail-layout-cell=true]]:!p-0 @max-[640px]:[&_td[data-mail-duplicate-image-cell=true]]:hidden @max-[640px]:[&_th]:block @max-[640px]:[&_th]:!w-full @max-[640px]:[&_div]:!max-w-full @max-[640px]:[&_img[data-mail-duplicate-image=true]]:hidden [&_*]:max-w-full [&_a]:text-primary [&_a]:underline [&_img]:!max-w-full [&_img]:!h-auto [&_img]:rounded [&_img[data-mail-image-state=failed]]:hidden [&_table]:!max-w-full [&_table]:!min-w-0 [&_td]:align-top [&_td]:break-words [&_th]:align-top [&_th]:break-words [&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground"
             style={{ width: "100%" }}
             dangerouslySetInnerHTML={{ __html: safeHtml }}
           />

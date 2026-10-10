@@ -103,7 +103,7 @@ export function MailReadingPaneSkeleton() {
         <Skeleton className="h-3 w-16 rounded" />
       </div>
       <div className="min-h-0 flex-1 overflow-hidden bg-background p-4 sm:p-5">
-        <div className="mx-auto w-full max-w-3xl space-y-3 rounded-xl border border-border/50 p-4 sm:p-6">
+        <div className="mx-auto w-full max-w-3xl space-y-3 rounded-xl border border-border/50 bg-card p-4 shadow-sm sm:p-6">
           <Skeleton className="h-4 w-full rounded" />
           <Skeleton className="h-4 w-11/12 rounded" />
           <Skeleton className="h-4 w-4/5 rounded" />

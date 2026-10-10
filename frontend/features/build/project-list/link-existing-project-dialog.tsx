@@ -90,7 +90,11 @@ export function LinkExistingProjectDialog({
     void refetch();
   };
 
-  const handleCancel = () => onOpenChange(false);
+  const handleCancel = () => {
+    setSelected(null);
+    setSearch("");
+    onOpenChange(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

@@ -43,11 +43,12 @@ export function useLinkProjectManagedProduct() {
         variables.managedProductId,
       );
       // Product insights contain derived work counts that a sparse link result cannot reconstruct.
-      void queryClient.refetchQueries({
+      queryClient.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.managedProducts.insights(
           variables.managedProductId,
         ),
-        type: "active",
+        exact: true,
+        refetchType: "none",
       });
     },
   });

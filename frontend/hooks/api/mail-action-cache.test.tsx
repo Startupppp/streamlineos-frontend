@@ -237,6 +237,29 @@ describe("mail thread hydration — seeding the detail cache from the list row",
     await waitFor(() => expect(apiGet).toHaveBeenCalledTimes(1));
   });
 
+  it("marking a just-opened unread message read does not cancel the body fetch for its seeded thread", async () => {
+    const client = makeClient();
+    let resolveThread: (value: MailMessageDetail[]) => void = () => undefined;
+    apiGet.mockReset().mockReturnValue(
+      new Promise<MailMessageDetail[]>((resolve) => { resolveThread = resolve; }),
+    );
+    seedMailDetailFromSummary(client, LIST_ROW);
+    renderWith(client, <ThreadProbe />);
+    await waitFor(() => expect(apiGet).toHaveBeenCalledTimes(1));
+
+    await applyMailActionToCaches(client, "msg-1", {
+      accountId: 7, action: "markRead", threadId: "thread-1",
+    });
+    resolveThread(SERVER_THREAD);
+
+    await waitFor(() =>
+      expect(screen.getByTestId("body")).toHaveTextContent("the real body"),
+    );
+    expect(
+      client.getQueryData<MailMessageDetail[]>(queryKeys.mail.thread(7, "thread-1"))?.[0]?.isRead,
+    ).toBe(true);
+  });
+
   it("a mail action's invalidation still reaches the seeded key", async () => {
     const client = makeClient();
     seedMailDetailFromSummary(client, LIST_ROW);

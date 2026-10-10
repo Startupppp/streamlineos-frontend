@@ -17,7 +17,6 @@ import {
   Trash2,
   Star,
   AlertCircle,
-  WifiOff,
 } from "lucide-react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
@@ -137,7 +136,6 @@ export function MailListPane({
     {
       folder: activeFolder,
       accountId: selectedAccountId,
-      accountIds: accounts.map((account) => account.id),
       q: debouncedSearch || undefined,
     },
     { enabled: accounts.length > 0 },
@@ -243,10 +241,8 @@ export function MailListPane({
 
   const initialLoading =
     isLoading || isFetched === false || (isFetching && pages.length === 0);
-  const listPageState = isError && isOnline
+  const listPageState = isError
     ? { kind: "error" as const, error }
-    : isError && !isOnline
-      ? { kind: "ready" as const }
     : initialLoading
       ? { kind: "loading" as const }
       : visibleMessages.length === 0 && !hasNextPage
@@ -377,38 +373,20 @@ export function MailListPane({
           </div>
         }
       >
-      {isError && !isOnline ? (
-        <div className="flex-1 min-h-0 flex flex-col items-center justify-center gap-2 py-8 px-4 text-center">
-          <WifiOff className="h-6 w-6 text-muted-foreground" aria-hidden />
-          <p className="text-label font-medium text-foreground/80">
-            You&apos;re offline
-          </p>
-          <p className="text-dense text-muted-foreground">
-            Mail will load again once you reconnect.
-          </p>
-        </div>
-      ) : isError ? (
-        <div className="flex-1 min-h-0 flex flex-col items-center justify-center gap-2 py-8 px-4 text-center">
-          <p className="text-sm text-muted-foreground">
-            {getErrorMessage(error)}
-          </p>
-        </div>
-      ) : (
-        <div className={cn("flex-1 min-h-0", MAIL_LIST_BOTTOM_PADDING_CLASS)}>
-          <MailVirtualList
-            groups={groups}
-            selectedMessageId={selectedMessageId}
-            activeFolder={activeFolder}
-            canAi={canAi}
-            hasNextPage={Boolean(hasNextPage)}
-            isFetchingNextPage={isFetchingNextPage}
-            onSelect={onSelectMessage}
-            onAction={handleAction}
-            onAiBrief={handleAiBrief}
-            onLoadMore={handleNextPage}
-          />
-        </div>
-      )}
+      <div className={cn("flex-1 min-h-0", MAIL_LIST_BOTTOM_PADDING_CLASS)}>
+        <MailVirtualList
+          groups={groups}
+          selectedMessageId={selectedMessageId}
+          activeFolder={activeFolder}
+          canAi={canAi}
+          hasNextPage={Boolean(hasNextPage)}
+          isFetchingNextPage={isFetchingNextPage}
+          onSelect={onSelectMessage}
+          onAction={handleAction}
+          onAiBrief={handleAiBrief}
+          onLoadMore={handleNextPage}
+        />
+      </div>
       </PageState>
       <MailThreadBriefSheet
         open={threadBriefOpen}

@@ -13,10 +13,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
+import { Badge } from "@/components/ui/badge";
 import { MailDailyBrief } from "./mail-daily-brief";
 import { MAIL_COMPOSE_FAB_CLASS } from "./mail-presentation";
 import type { MailInboxSummaryState } from "./use-mail-inbox-summary";
 import type { MailAccount } from "@/types/mail";
+import { useMailMessages } from "@/hooks/api/mail";
 
 const SENTINEL = "__all__";
 
@@ -52,6 +54,8 @@ export function MailHeader({
   onOpenRecent,
 }: MailHeaderProps) {
   const hasAccounts = accounts.length > 0;
+  const { data: messages } = useMailMessages(hasAccounts ? { limit: 1 } : undefined);
+  const unreadCount = messages?.unreadCount ?? 0;
   const accountLabel =
     selectedAccountId === "all"
       ? "All accounts"
@@ -76,6 +80,11 @@ export function MailHeader({
               <h1 className="text-base font-semibold leading-tight tracking-tight text-foreground sm:text-lg">
                 Mail
               </h1>
+              {unreadCount > 0 && (
+                <Badge variant="default" className="rounded-full px-2 py-0.5 text-xs font-medium">
+                  {unreadCount}
+                </Badge>
+              )}
             </div>
             <p className="hidden text-label leading-snug text-muted-foreground xl:block">
               Messages and follow-ups across your connected accounts

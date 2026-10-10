@@ -127,7 +127,7 @@ describe("useMailThreadView — hydration status", () => {
   });
 
   it("returns hydrated when all bodies are null but the fetch has completed after mount", () => {
-    const view = renderWith([BASE], { isFetchedAfterMount: true });
+    const view = renderWith([{ ...BASE, snippet: "" }], { isFetchedAfterMount: true });
     expect(view.status).toBe("hydrated");
     expect(view.messages[0]!.body.kind).toBe("empty");
   });
@@ -158,9 +158,25 @@ describe("useMailThreadView — body kinds", () => {
     expect(body.safeHtml).toContain("Hello");
   });
 
-  it("null bodies with isFetchedAfterMount true → body kind is empty", () => {
-    const view = renderWith([BASE], { isFetchedAfterMount: true });
+  it("null bodies and no snippet with isFetchedAfterMount true → body kind is empty", () => {
+    const view = renderWith([{ ...BASE, snippet: "  " }], { isFetchedAfterMount: true });
     expect(view.messages[0]!.body.kind).toBe("empty");
+  });
+
+  it("null bodies after the fetch settles fall back to the snippet as readable text", () => {
+    const view = renderWith([BASE], { isFetchedAfterMount: true });
+    const body = view.messages[0]!.body;
+    expect(body.kind).toBe("text");
+    if (body.kind !== "text") return;
+    expect(body.text).toBe("Hi there");
+  });
+
+  it("a whitespace-only html body is not treated as content", () => {
+    const view = renderWith([{ ...BASE, bodyHtml: "   ", bodyText: "plain" }], { isFetchedAfterMount: true });
+    const body = view.messages[0]!.body;
+    expect(body.kind).toBe("text");
+    if (body.kind !== "text") return;
+    expect(body.text).toBe("plain");
   });
 });
 

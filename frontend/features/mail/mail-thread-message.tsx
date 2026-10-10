@@ -93,7 +93,7 @@ const AttachmentChip = forwardRef<HTMLButtonElement, AttachmentChipProps>(
 function MailBodySkeleton() {
   return (
     <div
-      className="mt-1 overflow-hidden rounded-lg border border-border/50 bg-white px-4 py-4 text-foreground shadow-sm sm:px-5"
+      className="mt-1 overflow-hidden rounded-lg border border-border/50 bg-card px-4 py-4 shadow-sm sm:px-5"
       aria-hidden
       data-testid="mail-body-skeleton"
     >

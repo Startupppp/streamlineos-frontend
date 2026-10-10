@@ -198,13 +198,34 @@ describe("MailReadingPane — a seeded thread renders its chrome, not a full ske
     renderReadingPane();
 
     expect(screen.getByText("Quarterly plan")).toBeInTheDocument();
-    expect(screen.getByTestId("mail-body-skeleton")).toBeInTheDocument();
+    const bodySkeleton = screen.getByTestId("mail-body-skeleton");
+    expect(bodySkeleton).toBeInTheDocument();
+    expect(bodySkeleton).toHaveClass("bg-card", "border-border/50");
+    expect(bodySkeleton.querySelector(".skeleton-shimmer")).toHaveClass("bg-muted");
     expect(screen.queryByText("No content")).not.toBeInTheDocument();
+  });
+
+  it("a body-less message shows its snippet once the fetch has settled", () => {
+    threadResult = {
+      data: [SEEDED_DETAIL],
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+      isFetchedAfterMount: true,
+    };
+
+    renderReadingPane();
+
+    expect(screen.getAllByText("A snippet").length).toBeGreaterThan(0);
+    expect(screen.queryByText("No content")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("mail-body-skeleton")).not.toBeInTheDocument();
   });
 
   it("a genuinely empty message says so once the fetch has settled", () => {
     threadResult = {
-      data: [SEEDED_DETAIL],
+      data: [{ ...SEEDED_DETAIL, snippet: "" }],
       isLoading: false,
       isFetching: false,
       isError: false,

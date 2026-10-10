@@ -85,21 +85,23 @@ export function RoadmapDeliveryProjectField({
     <FormField
       control={control}
       name="projectId"
-      render={({ field }) => (
+      render={({ field }) => {
+        const handleProjectSelect = (value: string) => {
+          field.onChange(value);
+          setSelectedProject(
+            value
+              ? (options.find((option) => option.value === value) ?? null)
+              : null,
+          );
+        };
+        return (
         <FormItem>
           <FormLabel>Delivery project</FormLabel>
           <Combobox
             aria-label="Delivery project"
             options={options}
             value={field.value}
-            onChange={(value) => {
-              field.onChange(value);
-              setSelectedProject(
-                value
-                  ? (options.find((option) => option.value === value) ?? null)
-                  : null,
-              );
-            }}
+            onChange={handleProjectSelect}
             onSearchChange={setSearch}
             placeholder="No delivery project"
             searchPlaceholder="Search linked projects…"
@@ -147,7 +149,8 @@ export function RoadmapDeliveryProjectField({
           </p>
           <FormMessage />
         </FormItem>
-      )}
+        );
+      }}
     />
   );
 }

@@ -152,15 +152,12 @@ function toMessageView(
   const { bodyHtml, bodyText, attachments, ...rest } = m;
 
   let body: MessageBody;
-  if (bodyHtml !== null) {
+  if (bodyHtml?.trim())
     body = { kind: "html", safeHtml: makeSafeHtml(bodyHtml) };
-  } else if (bodyText !== null) {
-    body = { kind: "text", text: bodyText };
-  } else if (!isFetchedAfterMount) {
-    body = { kind: "snippet", text: m.snippet };
-  } else {
-    body = { kind: "empty" };
-  }
+  else if (bodyText?.trim()) body = { kind: "text", text: bodyText };
+  else if (!isFetchedAfterMount) body = { kind: "snippet", text: m.snippet };
+  else if (m.snippet.trim()) body = { kind: "text", text: m.snippet };
+  else body = { kind: "empty" };
 
   const threadAttachments: ThreadAttachment[] = attachments.map((att) => ({
     id: att.id,
