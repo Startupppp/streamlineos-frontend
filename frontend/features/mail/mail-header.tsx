@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import { Settings, PenSquare, Mail, UsersRound, ChevronDown, Clock3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -14,7 +13,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
-import { useMailMessages } from "@/hooks/api/mail";
 import { MailDailyBrief } from "./mail-daily-brief";
 import type { MailInboxSummaryState } from "./use-mail-inbox-summary";
 import type { MailAccount } from "@/types/mail";
@@ -53,16 +51,6 @@ export function MailHeader({
   onOpenRecent,
 }: MailHeaderProps) {
   const hasAccounts = accounts.length > 0;
-  const { data: inboxData } = useMailMessages(
-    { folder: "inbox", accountId: selectedAccountId },
-    { enabled: hasAccounts },
-  );
-
-  const unreadCount = useMemo(() => {
-    const messages = inboxData?.pages.flatMap((page) => page.messages) ?? [];
-    return messages.filter((message) => !message.isRead).length;
-  }, [inboxData]);
-
   const accountLabel =
     selectedAccountId === "all"
       ? "All accounts"
@@ -87,12 +75,6 @@ export function MailHeader({
               <h1 className="text-base font-semibold leading-tight tracking-tight text-foreground sm:text-lg">
                 Mail
               </h1>
-              {hasAccounts && unreadCount > 0 ? (
-                <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-md border border-primary/20 bg-primary/10 px-1.5 text-micro font-medium tabular-nums text-foreground">
-                  {unreadCount}
-                  <span className="sr-only"> unread in loaded inbox</span>
-                </span>
-              ) : null}
             </div>
             <p className="hidden text-label leading-snug text-muted-foreground xl:block">
               Messages and follow-ups across your connected accounts

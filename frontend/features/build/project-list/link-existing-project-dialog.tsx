@@ -47,7 +47,7 @@ export function LinkExistingProjectDialog({
   const handleLink = () => {
     if (!selected || mutation.isPending) return;
     mutation.mutate(
-      { projectId: selected.id, managedProductId },
+      { project: selected, managedProductId },
       {
         onSuccess: () => {
           toast.success(`${selected.name} linked to this product`);

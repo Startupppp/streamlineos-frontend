@@ -5,6 +5,8 @@ import { z } from "zod";
 import { apiClient } from "@/lib/api-client";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import { patchManagedProductLinkCache } from "./project-managed-product-cache";
+import type { ProjectListItem } from "@/types/projects";
 
 const linkedProjectContract = z.object({
   id: z.number().int(),
@@ -15,7 +17,7 @@ const linkedProjectContract = z.object({
 });
 
 interface LinkProjectInput {
-  projectId: number;
+  project: ProjectListItem;
   managedProductId: number;
 }
 
@@ -27,31 +29,26 @@ export function useLinkProjectManagedProduct() {
     LinkProjectInput
   >("build:managed-products:update", {
     mutationKey: ["projects", "link-managed-product"],
-    mutationFn: ({ projectId, managedProductId }) =>
+    mutationFn: ({ project, managedProductId }) =>
       apiClient.patch(
-        `/build/${projectId}/managed-product`,
+        `/build/${project.id}/managed-product`,
         { managedProductId },
         undefined,
         linkedProjectContract,
       ),
-    onSuccess: async (project, variables) => {
-      const refreshes = [
-        queryClient.invalidateQueries({
-          queryKey: buildWorkQueryKeys.projects.list(),
-        }),
-        queryClient.invalidateQueries({
-          queryKey: buildWorkQueryKeys.projects.detail(project.id),
-        }),
-      ];
-      refreshes.push(
-        queryClient.invalidateQueries({
-          queryKey: buildWorkQueryKeys.projects.managedProducts.detail(variables.managedProductId),
-        }),
-        queryClient.invalidateQueries({
-          queryKey: buildWorkQueryKeys.projects.managedProducts.insights(variables.managedProductId),
-        }),
+    onSuccess: (linked, variables) => {
+      patchManagedProductLinkCache(
+        queryClient,
+        { ...variables.project, name: linked.name, key: linked.key },
+        variables.managedProductId,
       );
-      await Promise.all(refreshes);
+      // Product insights contain derived work counts that a sparse link result cannot reconstruct.
+      void queryClient.refetchQueries({
+        queryKey: buildWorkQueryKeys.projects.managedProducts.insights(
+          variables.managedProductId,
+        ),
+        type: "active",
+      });
     },
   });
 }

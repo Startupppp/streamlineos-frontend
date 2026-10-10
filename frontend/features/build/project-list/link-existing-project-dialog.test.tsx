@@ -57,7 +57,7 @@ it("searches existing projects and links only an unassigned project", () => {
   fireEvent.click(screen.getByRole("button", { name: /FREE Unlinked project/ }));
   fireEvent.click(screen.getByRole("button", { name: "Link project" }));
   expect(mockMutate).toHaveBeenCalledWith(
-    { projectId: 11, managedProductId: 39 },
+    { project: expect.objectContaining({ id: 11 }), managedProductId: 39 },
     expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
   );
   act(() => mockMutate.mock.calls[0][1].onSuccess());
