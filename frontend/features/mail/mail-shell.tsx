@@ -303,7 +303,13 @@ export function MailShell() {
   const handleBackToList = useCallback(() => {
     presentBackToList();
     setSelectedMessage(null);
-  }, [presentBackToList]);
+    const next = new URLSearchParams(searchParams.toString());
+    next.delete("messageId");
+    next.delete("threadId");
+    router.replace(`/mail${next.size > 0 ? `?${next.toString()}` : ""}`, {
+      scroll: false,
+    });
+  }, [presentBackToList, router, searchParams]);
 
   const handleOpenCompose = useCallback(
     () => openCompose({ type: "compose" }),

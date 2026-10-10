@@ -163,11 +163,12 @@ export function MailReadingPane({
   ]);
 
   const retryView = view.retry;
-  const handleRetry = useCallback(() => { void retryView(); }, [retryView]);
 
-  if (view.isLoading) {
-    return <MailReadingPaneSkeleton />;
-  }
+  const handleRetry = useCallback(() => {
+    void retryView();
+  }, [retryView]);
+
+  if (view.isLoading) return <MailReadingPaneSkeleton />;
 
   if (view.status === "error") {
     return (
@@ -204,13 +205,12 @@ export function MailReadingPane({
             <Button
               type="button"
               variant="ghost"
-              size="sm"
-              className="-ml-1 h-9 shrink-0 px-2 lg:px-2.5"
+              size="icon"
+              className="-ml-1 size-9 shrink-0 lg:hidden"
               onClick={onBack}
               aria-label="Back to messages"
             >
               <ArrowLeft className="size-4" aria-hidden="true" />
-              <span className="hidden lg:inline">Back</span>
             </Button>
           ) : null}
 

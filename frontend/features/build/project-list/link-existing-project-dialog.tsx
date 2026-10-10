@@ -74,13 +74,15 @@ export function LinkExistingProjectDialog({
   };
 
   const handleProjectChange = (value: string) => {
-    setSelected(candidates.find((project) => project.id === Number(value)) ?? null);
+    const numId = Number(value);
+    setSelected(
+      candidates.find((project) => project.id === numId) ??
+        (selected?.id === numId ? selected : null),
+    );
   };
 
   const handleSearchChange = (value: string) => {
     setSearch(value);
-    // A new search invalidates a previous choice; Combobox also emits an empty
-    // search on selection/close, which must not clear the choice just made.
     if (value) setSelected(null);
   };
 
